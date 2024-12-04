@@ -1,7 +1,12 @@
 // @ts-nocheck
+import { EXIT_CODES } from '../../lib/enums/exitCodes';
+
 const { logger } = require('@hubspot/local-dev-lib/logger');
 const { ApiErrorContext, logError } = require('../../lib/errorHandlers/index');
-const { updateSecret } = require('@hubspot/local-dev-lib/api/secrets');
+const {
+  updateSecret,
+  fetchSecrets,
+} = require('@hubspot/local-dev-lib/api/secrets');
 
 const { loadAndValidateOptions } = require('../../lib/validation');
 const { trackCommandUsage } = require('../../lib/usageTracking');
@@ -11,31 +16,50 @@ const {
   addConfigOptions,
   addAccountOptions,
   addUseEnvironmentOptions,
-  getAccountId,
 } = require('../../lib/commonOpts');
-const { secretValuePrompt } = require('../../lib/prompts/secretPrompt');
+const {
+  secretValuePrompt,
+  secretListPrompt,
+} = require('../../lib/prompts/secretPrompt');
 const { i18n } = require('../../lib/lang');
 
-const i18nKey = 'commands.secrets.subcommands.update';
+const i18nKey = 'commands.secret.subcommands.update';
 
-exports.command = 'update <name>';
+exports.command = 'update [name]';
 exports.describe = i18n(`${i18nKey}.describe`);
 
 exports.handler = async options => {
-  const { name: secretName } = options;
+  const { name, derivedAccountId } = options;
 
+  let secretName = name;
   await loadAndValidateOptions(options);
 
-  const accountId = getAccountId(options);
-  trackCommandUsage('secrets-update', null, accountId);
+  trackCommandUsage('secrets-update', null, derivedAccountId);
 
   try {
+    const {
+      data: { results: secrets },
+    } = await fetchSecrets(derivedAccountId);
+
+    if (secretName && !secrets.includes(secretName)) {
+      logger.error(i18n(`${i18nKey}.errors.noSecret`, { secretName }));
+      process.exit(EXIT_CODES.ERROR);
+    }
+
+    if (!secretName) {
+      const { secretToModify } = await secretListPrompt(
+        secrets,
+        i18n(`${i18nKey}.selectSecret`)
+      );
+      secretName = secretToModify;
+    }
+
     const { secretValue } = await secretValuePrompt();
 
-    await updateSecret(accountId, secretName, secretValue);
+    await updateSecret(derivedAccountId, secretName, secretValue);
     logger.success(
       i18n(`${i18nKey}.success.update`, {
-        accountIdentifier: uiAccountDescription(accountId),
+        accountIdentifier: uiAccountDescription(derivedAccountId),
         secretName,
       })
     );
@@ -50,7 +74,7 @@ exports.handler = async options => {
       err,
       new ApiErrorContext({
         request: 'update secret',
-        accountId,
+        accountId: derivedAccountId,
       })
     );
   }

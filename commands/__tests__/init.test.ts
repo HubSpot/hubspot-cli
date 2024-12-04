@@ -9,9 +9,14 @@ jest.mock('../../lib/commonOpts');
 import initCommand from '../init';
 
 describe('commands/init', () => {
+  beforeEach(() => {
+    yargs.options = jest.fn().mockReturnThis();
+    yargs.conflicts = jest.fn().mockReturnThis();
+  });
+
   describe('command', () => {
     it('should have the correct command structure', () => {
-      expect(initCommand.command).toEqual('init [--account]');
+      expect(initCommand.command).toEqual('init');
     });
   });
 
@@ -27,18 +32,25 @@ describe('commands/init', () => {
 
       expect(yargs.options).toHaveBeenCalledTimes(1);
       expect(yargs.options).toHaveBeenCalledWith({
-        auth: expect.objectContaining({
+        'auth-type': expect.objectContaining({
           type: 'string',
           choices: ['personalaccesskey', 'oauth2'],
           default: 'personalaccesskey',
         }),
         account: expect.objectContaining({ type: 'string' }),
+        'use-hidden-config': expect.objectContaining({ type: 'boolean' }),
         'disable-tracking': expect.objectContaining({
           type: 'boolean',
           hidden: true,
           default: false,
         }),
       });
+
+      expect(yargs.conflicts).toHaveBeenCalledTimes(1);
+      expect(yargs.conflicts).toHaveBeenCalledWith(
+        'use-hidden-config',
+        'config'
+      );
 
       expect(addConfigOptions).toHaveBeenCalledTimes(1);
       expect(addConfigOptions).toHaveBeenCalledWith(yargs);

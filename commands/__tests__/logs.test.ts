@@ -51,11 +51,10 @@ describe('commands/logs', () => {
           type: 'boolean',
         }),
         follow: expect.objectContaining({
-          alias: ['t', 'tail', 'f'],
+          alias: ['f'],
           type: 'boolean',
         }),
         limit: expect.objectContaining({
-          alias: ['limit', 'n', 'max-count'],
           type: 'number',
         }),
       });
@@ -72,9 +71,8 @@ describe('commands/logs', () => {
 
     it('should set the correct conflicts', () => {
       logsCommand.builder(yargs);
-      expect(yargs.conflicts).toHaveBeenCalledTimes(2);
+      expect(yargs.conflicts).toHaveBeenCalledTimes(1);
       expect(yargs.conflicts).toHaveBeenCalledWith('follow', 'limit');
-      expect(yargs.conflicts).toHaveBeenCalledWith('functionName', 'endpoint');
     });
 
     it('should provide examples', () => {

@@ -2,7 +2,11 @@ import {
   LOG_LEVEL,
   setLogLevel as setLoggerLogLevel,
 } from '@hubspot/local-dev-lib/logger';
-import { DEFAULT_MODE, MODE } from '@hubspot/local-dev-lib/constants/files';
+import {
+  DEFAULT_CMS_PUBLISH_MODE,
+  CMS_PUBLISH_MODE,
+} from '@hubspot/local-dev-lib/constants/files';
+import { CmsPublishMode } from '@hubspot/local-dev-lib/types/Files';
 import {
   getAccountId as getAccountIdFromConfig,
   getAccountConfig,
@@ -10,14 +14,24 @@ import {
 } from '@hubspot/local-dev-lib/config';
 import { i18n } from './lang';
 import { Argv, Arguments } from 'yargs';
-import { Mode } from '@hubspot/local-dev-lib/types/Files';
 
 const i18nKey = 'lib.commonOpts';
 
+export function addGlobalOptions(yargs: Argv) {
+  yargs.version(false);
+
+  return yargs.option('debug', {
+    alias: 'd',
+    default: false,
+    describe: i18n(`${i18nKey}.options.debug.describe`),
+    type: 'boolean',
+  });
+}
+
 export function addAccountOptions(yargs: Argv): Argv {
-  return yargs.option('portal', {
-    alias: ['p', 'account', 'a'],
-    describe: i18n(`${i18nKey}.options.portal.describe`),
+  return yargs.option('account', {
+    alias: 'a',
+    describe: i18n(`${i18nKey}.options.account.describe`),
     type: 'string',
   });
 }
@@ -39,19 +53,19 @@ export function addOverwriteOptions(yargs: Argv): Argv {
   });
 }
 
-export function addModeOptions(
+export function addCmsPublishModeOptions(
   yargs: Argv,
   { read, write }: { read?: boolean; write?: boolean }
 ): Argv {
-  const modes = `<${Object.values(MODE).join(' | ')}>`;
+  const cmsPublishModes = `<${Object.values(CMS_PUBLISH_MODE).join(' | ')}>`;
 
-  return yargs.option('mode', {
+  return yargs.option('cms-publish-mode', {
     alias: 'm',
     describe: i18n(
       `${i18nKey}.options.modes.describe.${
         read ? 'read' : write ? 'write' : 'default'
       }`,
-      { modes }
+      { modes: cmsPublishModes }
     ),
     type: 'string',
   });
@@ -67,11 +81,13 @@ export function addTestingOptions(yargs: Argv): Argv {
 }
 
 export function addUseEnvironmentOptions(yargs: Argv): Argv {
-  return yargs.option('use-env', {
-    describe: i18n(`${i18nKey}.options.useEnv.describe`),
-    type: 'boolean',
-    default: false,
-  });
+  return yargs
+    .option('use-env', {
+      describe: i18n(`${i18nKey}.options.useEnv.describe`),
+      type: 'boolean',
+      default: false,
+    })
+    .conflicts('use-env', 'account');
 }
 
 export function setLogLevel(options: Arguments<{ debug?: boolean }>): void {
@@ -91,46 +107,60 @@ export function getCommandName(argv: Arguments<{ _?: string[] }>): string {
  * Obtains accountId using supplied --account flag or from environment variables
  */
 export function getAccountId(
-  options: Arguments<{ portal?: number | string; account?: number | string }>
+  options: Arguments<{ account?: number | string }>
 ): number | null {
-  const { portal, account } = options || {};
+  const { account } = options || {};
 
-  if (options?.useEnv && process.env.HUBSPOT_PORTAL_ID) {
-    return parseInt(process.env.HUBSPOT_PORTAL_ID, 10);
+  if (options?.useEnv && process.env.HUBSPOT_ACCOUNT_ID) {
+    return parseInt(process.env.HUBSPOT_ACCOUNT_ID, 10);
   }
 
-  return getAccountIdFromConfig(portal || account);
+  return getAccountIdFromConfig(account);
 }
 
-export function getMode(options: Arguments<{ mode?: Mode }>): Mode {
-  // 1. --mode
-  const { mode } = options;
-  if (mode && typeof mode === 'string') {
-    return mode.toLowerCase() as Mode;
+/**
+ * Auto-injects the derivedAccountId flag into all commands
+ */
+export async function injectAccountIdMiddleware(
+  options: Arguments<{
+    derivedAccountId?: number | null;
+    account?: number | string;
+  }>
+): Promise<void> {
+  const { account } = options;
+
+  // Preserves the original --account flag for certain commands.
+  options.providedAccountId = account;
+
+  if (options.useEnv && process.env.HUBSPOT_ACCOUNT_ID) {
+    options.derivedAccountId = parseInt(process.env.HUBSPOT_ACCOUNT_ID, 10);
+    return;
   }
-  // 2. config[portal].defaultMode
+
+  options.derivedAccountId = getAccountIdFromConfig(account);
+}
+
+export function getCmsPublishMode(
+  options: Arguments<{ cmsPublishMode?: CmsPublishMode }>
+): CmsPublishMode {
+  // 1. --cmsPublishMode
+  const { cmsPublishMode } = options;
+  if (cmsPublishMode && typeof cmsPublishMode === 'string') {
+    return cmsPublishMode.toLowerCase() as CmsPublishMode;
+  }
+  // 2. config[account].defaultCmsPublishMode
   const accountId = getAccountId(options);
   if (accountId) {
     const accountConfig = getAccountConfig(accountId);
-    if (accountConfig && accountConfig.defaultMode) {
-      return accountConfig.defaultMode;
+    if (accountConfig && accountConfig.defaultCmsPublishMode) {
+      return accountConfig.defaultCmsPublishMode;
     }
   }
-  // 3. config.defaultMode
-  // 4. DEFAULT_MODE
+  // 3. config.defaultCmsPublishMode
+  // 4. DEFAULT_CMS_PUBLISH_MODE
   const config = getAndLoadConfigIfNeeded();
-  return (config && (config.defaultMode as Mode)) || DEFAULT_MODE;
+  return (
+    (config && (config.defaultCmsPublishMode as CmsPublishMode)) ||
+    DEFAULT_CMS_PUBLISH_MODE
+  );
 }
-
-module.exports = {
-  addAccountOptions,
-  addConfigOptions,
-  addOverwriteOptions,
-  addModeOptions,
-  addTestingOptions,
-  addUseEnvironmentOptions,
-  getCommandName,
-  getMode,
-  getAccountId,
-  setLogLevel,
-};

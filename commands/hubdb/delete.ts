@@ -4,37 +4,59 @@ const { logError } = require('../../lib/errorHandlers/index');
 const { deleteTable } = require('@hubspot/local-dev-lib/api/hubdb');
 const { loadAndValidateOptions } = require('../../lib/validation');
 const { trackCommandUsage } = require('../../lib/usageTracking');
-
 const {
   addConfigOptions,
   addAccountOptions,
   addUseEnvironmentOptions,
-  getAccountId,
 } = require('../../lib/commonOpts');
+const {
+  selectHubDBTablePrompt,
+} = require('../../lib/prompts/selectHubDBTablePrompt');
+const { promptUser } = require('../../lib/prompts/promptUtils');
+const { EXIT_CODES } = require('../../lib/enums/exitCodes');
 const { i18n } = require('../../lib/lang');
 
 const i18nKey = 'commands.hubdb.subcommands.delete';
 
-exports.command = 'delete <tableId>';
+exports.command = 'delete [table-id]';
 exports.describe = i18n(`${i18nKey}.describe`);
 
 exports.handler = async options => {
-  const { tableId } = options;
+  const { force, derivedAccountId } = options;
 
   await loadAndValidateOptions(options);
 
-  const accountId = getAccountId(options);
-
-  trackCommandUsage('hubdb-delete', null, accountId);
+  trackCommandUsage('hubdb-delete', null, derivedAccountId);
 
   try {
-    await deleteTable(accountId, tableId);
+    const { tableId } =
+      'tableId' in options
+        ? options
+        : await selectHubDBTablePrompt({
+            accountId: derivedAccountId,
+            options,
+          });
+
+    if (!force) {
+      const { shouldDeleteTable } = await promptUser({
+        name: 'shouldDeleteTable',
+        type: 'confirm',
+        message: i18n(`${i18nKey}.shouldDeleteTable`, { tableId }),
+      });
+
+      if (!shouldDeleteTable) {
+        process.exit(EXIT_CODES.SUCCESS);
+      }
+    }
+
+    await deleteTable(derivedAccountId, tableId);
     logger.success(
       i18n(`${i18nKey}.success.delete`, {
-        accountId,
+        accountId: derivedAccountId,
         tableId,
       })
     );
+    process.exit(EXIT_CODES.SUCCESS);
   } catch (e) {
     logger.error(
       i18n(`${i18nKey}.errors.delete`, {
@@ -50,8 +72,13 @@ exports.builder = yargs => {
   addConfigOptions(yargs);
   addUseEnvironmentOptions(yargs);
 
-  yargs.positional('tableId', {
+  yargs.positional('table-id', {
     describe: i18n(`${i18nKey}.positionals.tableId.describe`),
     type: 'string',
+  });
+
+  yargs.option('force', {
+    describe: i18n(`${i18nKey}.options.force.describe`),
+    type: 'boolean',
   });
 };

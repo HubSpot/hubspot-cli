@@ -7,7 +7,6 @@ const { PROJECT_ERROR_TYPES } = require('../../lib/constants');
 const {
   addAccountOptions,
   addConfigOptions,
-  getAccountId,
   addUseEnvironmentOptions,
 } = require('../../lib/commonOpts');
 const { trackCommandUsage } = require('../../lib/usageTracking');
@@ -32,7 +31,7 @@ const { handleKeypress, handleExit } = require('../../lib/process');
 
 const i18nKey = 'commands.project.subcommands.watch';
 
-exports.command = 'watch [path]';
+exports.command = 'watch';
 exports.describe = uiBetaTag(i18n(`${i18nKey}.describe`), false);
 
 const handleBuildStatus = async (accountId, projectName, buildId) => {
@@ -89,26 +88,25 @@ const handleUserInput = (accountId, projectName, currentBuildId) => {
 exports.handler = async options => {
   await loadAndValidateOptions(options);
 
-  const { initialUpload, path: projectPath } = options;
-  const accountId = getAccountId(options);
+  const { initialUpload, derivedAccountId } = options;
 
-  trackCommandUsage('project-watch', null, accountId);
+  trackCommandUsage('project-watch', null, derivedAccountId);
 
-  const { projectConfig, projectDir } = await getProjectConfig(projectPath);
+  const { projectConfig, projectDir } = await getProjectConfig();
 
   validateProjectConfig(projectConfig, projectDir);
 
-  await ensureProjectExists(accountId, projectConfig.name);
+  await ensureProjectExists(derivedAccountId, projectConfig.name);
 
   try {
     const {
       data: { results: builds },
-    } = await fetchProjectBuilds(accountId, projectConfig.name, options);
+    } = await fetchProjectBuilds(derivedAccountId, projectConfig.name, options);
     const hasNoBuilds = !builds || !builds.length;
 
     const startWatching = async () => {
       await createWatcher(
-        accountId,
+        derivedAccountId,
         projectConfig,
         projectDir,
         handleBuildStatus,
@@ -119,7 +117,7 @@ exports.handler = async options => {
     // Upload all files if no build exists for this project yet
     if (initialUpload || hasNoBuilds) {
       const result = await handleProjectUpload(
-        accountId,
+        derivedAccountId,
         projectConfig,
         projectDir,
         startWatching
@@ -138,7 +136,7 @@ exports.handler = async options => {
           logError(
             result.uploadError,
             new ApiErrorContext({
-              accountId,
+              accountId: derivedAccountId,
               request: 'project upload',
             })
           );
@@ -149,25 +147,18 @@ exports.handler = async options => {
       await startWatching();
     }
   } catch (e) {
-    logError(e, new ApiErrorContext({ accountId }));
+    logError(e, new ApiErrorContext({ accountId: derivedAccountId }));
   }
 };
 
 exports.builder = yargs => {
-  yargs.positional('path', {
-    describe: i18n(`${i18nKey}.positionals.path.describe`),
-    type: 'string',
-  });
-
   yargs.option('initial-upload', {
     alias: 'i',
     describe: i18n(`${i18nKey}.options.initialUpload.describe`),
     type: 'boolean',
   });
 
-  yargs.example([
-    ['$0 project watch myProjectFolder', i18n(`${i18nKey}.examples.default`)],
-  ]);
+  yargs.example([['$0 project watch', i18n(`${i18nKey}.examples.default`)]]);
 
   addConfigOptions(yargs);
   addAccountOptions(yargs);
