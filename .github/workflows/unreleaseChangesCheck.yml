@@ -5,6 +5,11 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
+      - uses: actions/checkout@v2
+      - name: Use Node.js
+        uses: actions/setup-node@v2
+        with:
+          node-version: 18.x
       - uses: actions/checkout@v4
         with:
           # Always checkout the main branch
@@ -14,21 +19,7 @@ jobs:
           # Fetch all the release tags
           fetch-tags: true
       - name: Check for unreleased changes
-        id: get-diff-log
-        run: |
-          export MOST_RECENT_TAG=$(git describe --tags --abbrev=0);
-          echo $MOST_RECENT_TAG
-          
-          export LOG=`git log $MOST_RECENT_TAG..main --pretty=format:'- %s – @%al.' --no-merges`
-          echo $LOG
-          
-          echo "MOST_RECENT_TAG<<EOF" >> $GITHUB_ENV
-          echo $MOST_RECENT_TAG >> $GITHUB_ENV
-          echo "EOF" >> $GITHUB_ENV
-          
-          echo "LOG<<EOF" >> $GITHUB_ENV
-          echo "$LOG" >> $GITHUB_ENV
-          echo "EOF" >> $GITHUB_ENV
+        run: node .github/scripts/unreleasedChanges.js
       - name: Unreleased changes Slack Report
         uses: ravsamhq/notify-slack-action@v2
         if: ${{ env.LOG != '' }} # Only post if there is a log
@@ -37,6 +28,6 @@ jobs:
           notify_when: 'success'
           notification_title: 'Unreleased Changes in the CLI'
           message_format: '${{ env.LOG }}'
-          footer: '<{run_url}|View Run> | <https://github.com/HubSpot/hubspot-cli/compare/${{env.MOST_RECENT_TAG}}...main|View in GitHub>'
+          footer: '<{run_url}|View Run> | <https://github.com/HubSpot/hubspot-cli/compare/v${{env.LATEST_TAG}}...main|View latest Diff in GitHub> | <https://github.com/HubSpot/hubspot-cli/compare/v${{env.NEXT_TAG}}...main|View next Diff in GitHub>'
         env:
           SLACK_WEBHOOK_URL: ${{ secrets.ACTION_MONITORING_SLACK }}
