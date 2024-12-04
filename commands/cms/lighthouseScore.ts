@@ -1,5 +1,5 @@
 // @ts-nocheck
-import { trackCommandUsage } from '../../lib/usageTracking';
+const { trackCommandUsage } = require('../../lib/usageTracking');
 
 const SpinniesManager = require('../../lib/ui/SpinniesManager');
 const {

@@ -10,6 +10,8 @@ jest.mock('../cms/lighthouseScore');
 jest.mock('../cms/convertFields');
 jest.mock('../cms/reactModules');
 jest.mock('../../lib/commonOpts');
+jest.mock('../../lib/usageTracking');
+
 yargs.command.mockReturnValue(yargs);
 yargs.demandCommand.mockReturnValue(yargs);
 
