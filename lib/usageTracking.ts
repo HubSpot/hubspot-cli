@@ -19,7 +19,7 @@ type Meta = {
   step?: string; // "The specific step in the process"
   assetType?: string; // "The  asset type"
   mode?: string; // "The CMS publish mode (draft or publish)"
-  type?: string; // "The upload type"
+  type?: string | number; // "The upload type"
   file?: boolean; // "Whether or not the 'file' flag was used"
   successful?: boolean; // "Whether or not the CLI interaction was successful"
 };
@@ -55,7 +55,7 @@ function getPlatform(): string {
 export async function trackCommandUsage(
   command: string,
   meta: Meta = {},
-  accountId: number
+  accountId?: number
 ): Promise<void> {
   if (!isTrackingAllowed()) {
     return;
@@ -168,7 +168,7 @@ export async function trackAuthAction(
 export async function trackCommandMetadataUsage(
   command: string,
   meta: Meta = {},
-  accountId: number
+  accountId?: number
 ): Promise<void> {
   if (!isTrackingAllowed()) {
     return;
