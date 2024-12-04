@@ -1,3 +1,5 @@
+import { DeveloperTestAccount } from '@hubspot/local-dev-lib/types/developerTestAccounts';
+
 export type GenericPromptResponse = {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   [key: string]: any;
@@ -12,9 +14,23 @@ type PromptType =
   | 'number'
   | 'rawlist';
 
-export type PromptChoices =
-  | string[]
-  | Array<{ name: string; value: string | { [key: string]: string } }>;
+export type PromptChoices = Array<
+  | string
+  | {
+      name: string;
+      value:
+        | string
+        | {
+            [key: string]:
+              | string
+              | number
+              | boolean
+              | DeveloperTestAccount
+              | null;
+          };
+      disabled?: string | boolean;
+    }
+>;
 
 export type PromptWhen = boolean | (() => boolean);
 

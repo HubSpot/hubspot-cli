@@ -15,7 +15,7 @@ const templateTypeChoices: PromptChoices = [
 ] as const;
 
 interface CreateTemplatePromptResponse {
-  templateType: typeof templateTypeChoices[number]['value'];
+  templateType: typeof templateTypeChoices[number];
 }
 
 const TEMPLATE_TYPE_PROMPT: PromptConfig<CreateTemplatePromptResponse> = {
