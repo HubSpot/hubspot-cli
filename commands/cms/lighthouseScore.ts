@@ -1,4 +1,6 @@
 // @ts-nocheck
+import { trackCommandUsage } from '../../lib/usageTracking';
+
 const SpinniesManager = require('../../lib/ui/SpinniesManager');
 const {
   addAccountOptions,
@@ -70,6 +72,7 @@ const selectTheme = async accountId => {
 exports.handler = async options => {
   await loadAndValidateOptions(options);
   const accountId = getAccountId(options);
+  trackCommandUsage('cms-lighthouse-score', null, accountId);
 
   const includeDesktopScore = options.target === 'desktop' || !options.verbose;
   const includeMobileScore = options.target === 'mobile' || !options.verbose;
