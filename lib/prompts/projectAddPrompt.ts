@@ -1,10 +1,23 @@
-// @ts-nocheck
-const { promptUser } = require('./promptUtils');
-const { i18n } = require('../lang');
+import { promptUser } from './promptUtils';
+import { i18n } from '../lang';
 
 const i18nKey = 'lib.prompts.projectAddPrompt';
 
-const projectAddPrompt = async (components, promptOptions = {}) => {
+type Component = {
+  path: string;
+  label: string;
+  insertPath: string;
+};
+
+type ProjectAddPromptResponse = {
+  component: Component;
+  name: string;
+};
+
+export async function projectAddPrompt(
+  components: Component[],
+  promptOptions: { name?: string; type?: string } = {}
+): Promise<ProjectAddPromptResponse> {
   return promptUser([
     {
       name: 'component',
@@ -31,7 +44,7 @@ const projectAddPrompt = async (components, promptOptions = {}) => {
       name: 'name',
       message: i18n(`${i18nKey}.enterName`),
       when: !promptOptions.name,
-      validate: input => {
+      validate: (input?: string) => {
         if (!input) {
           return i18n(`${i18nKey}.errors.nameRequired`);
         }
@@ -39,8 +52,4 @@ const projectAddPrompt = async (components, promptOptions = {}) => {
       },
     },
   ]);
-};
-
-module.exports = {
-  projectAddPrompt,
-};
+}

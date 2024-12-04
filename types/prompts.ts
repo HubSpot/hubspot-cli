@@ -9,6 +9,7 @@ type PromptType =
   | 'checkbox'
   | 'input'
   | 'password'
+  | 'number'
   | 'rawlist';
 
 export type PromptChoices =
@@ -27,8 +28,10 @@ export type PromptConfig<T extends GenericPromptResponse> = {
   when?: PromptWhen;
   pageSize?: number;
   default?: PromptOperand | ((answers: T) => PromptOperand);
+  transformer?: (input: string) => string | undefined;
   validate?:
     | ((answer?: string) => PromptOperand | Promise<PromptOperand>)
+    | ((answer?: number) => PromptOperand | Promise<PromptOperand>)
     | ((answer: string[]) => PromptOperand | Promise<PromptOperand>);
   mask?: string;
   filter?: (input: string) => string;
