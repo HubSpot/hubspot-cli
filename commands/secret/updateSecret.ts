@@ -23,7 +23,7 @@ const {
 } = require('../../lib/prompts/secretPrompt');
 const { i18n } = require('../../lib/lang');
 
-const i18nKey = 'commands.secrets.subcommands.update';
+const i18nKey = 'commands.secret.subcommands.update';
 
 exports.command = 'update [name]';
 exports.describe = i18n(`${i18nKey}.describe`);
