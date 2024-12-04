@@ -6,6 +6,7 @@ import {
 import { API_KEY_AUTH_METHOD } from '@hubspot/local-dev-lib/constants/auth';
 import { logger } from '@hubspot/local-dev-lib/logger';
 import { version } from '../package.json';
+import { debugError } from './errorHandlers';
 
 type Meta = {
   action?: string; // "The specific action taken in the CLI"
@@ -87,9 +88,7 @@ export async function trackCommandUsage(
       );
       logger.debug('Sent usage tracking command event: %o', usageTrackingEvent);
     } catch (e) {
-      if (e instanceof Error) {
-        logger.debug('Usage tracking failed: %s', e.message);
-      }
+      debugError(e);
     }
   });
 }
@@ -112,9 +111,7 @@ export async function trackHelpUsage(command: string): Promise<void> {
       command,
     });
   } catch (e) {
-    if (e instanceof Error) {
-      logger.debug('Usage tracking failed: %s', e.message);
-    }
+    debugError(e);
   }
 }
 
@@ -132,9 +129,7 @@ export async function trackConvertFieldsUsage(command: string): Promise<void> {
       command,
     });
   } catch (e) {
-    if (e instanceof Error) {
-      logger.debug('Usage tracking failed: %s', e.message);
-    }
+    debugError(e);
   }
 }
 
@@ -166,9 +161,7 @@ export async function trackAuthAction(
 
     logger.debug('Sent usage tracking command event: %o', usageTrackingEvent);
   } catch (e) {
-    if (e instanceof Error) {
-      logger.debug('Auth action tracking failed: %s', e.message);
-    }
+    debugError(e);
   }
 }
 
@@ -208,9 +201,7 @@ export async function trackCommandMetadataUsage(
       );
       logger.debug('Sent usage tracking command event: %o', usageTrackingEvent);
     } catch (e) {
-      if (e instanceof Error) {
-        logger.debug('Metadata usage tracking failed: %s', e.message);
-      }
+      debugError(e);
     }
   });
 }
