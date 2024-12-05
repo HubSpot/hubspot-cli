@@ -32,7 +32,7 @@ type ClientSecretPromptResponse = {
   clientSecret: string;
 };
 
-type PersonalAcessKeyBrowserOpenPrepResponse = {
+type PersonalAccessKeyBrowserOpenPrepResponse = {
   personalAcessKeyBrowserOpenPrep: boolean;
 };
 
@@ -60,9 +60,9 @@ export async function personalAccessKeyPrompt({
     if (account) {
       url = `${websiteOrigin}/personal-access-key/${account}`;
     }
-    const { personalAcessKeyBrowserOpenPrep: shouldOpen } = await promptUser([
-      PERSONAL_ACCESS_KEY_BROWSER_OPEN_PREP,
-    ]);
+    const { personalAcessKeyBrowserOpenPrep: shouldOpen } = await promptUser<{
+      personalAcessKeyBrowserOpenPrep: boolean;
+    }>([PERSONAL_ACCESS_KEY_BROWSER_OPEN_PREP]);
     if (shouldOpen) {
       open(url, { url: true });
     } else {
@@ -72,7 +72,9 @@ export async function personalAccessKeyPrompt({
   }
 
   logger.log(i18n(`${i18nKey}.logs.openingWebBrowser`, { url }));
-  const { personalAccessKey } = await promptUser(PERSONAL_ACCESS_KEY);
+  const { personalAccessKey } = await promptUser<
+    PersonalAccessKeyPromptResponse
+  >(PERSONAL_ACCESS_KEY);
 
   return {
     personalAccessKey,
@@ -120,7 +122,7 @@ export const CLIENT_SECRET: PromptConfig<ClientSecretPromptResponse> = {
   },
 };
 
-export const PERSONAL_ACCESS_KEY_BROWSER_OPEN_PREP: PromptConfig<PersonalAcessKeyBrowserOpenPrepResponse> = {
+export const PERSONAL_ACCESS_KEY_BROWSER_OPEN_PREP: PromptConfig<PersonalAccessKeyBrowserOpenPrepResponse> = {
   name: 'personalAcessKeyBrowserOpenPrep',
   type: 'confirm',
   message: i18n(`${i18nKey}.personalAccessKeyBrowserOpenPrompt`),

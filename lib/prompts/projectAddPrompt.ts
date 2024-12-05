@@ -18,7 +18,7 @@ export async function projectAddPrompt(
   components: Component[],
   promptOptions: { name?: string; type?: string } = {}
 ): Promise<ProjectAddPromptResponse> {
-  return promptUser([
+  return promptUser<ProjectAddPromptResponse>([
     {
       name: 'component',
       message: () => {

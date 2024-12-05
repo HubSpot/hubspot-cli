@@ -17,7 +17,7 @@ type PreviewProjectPromptResponse = {
 export async function previewPrompt(
   promptOptions: { src?: string; dest?: string } = {}
 ): Promise<PreviewPromptResponse> {
-  return promptUser([
+  return promptUser<PreviewPromptResponse>([
     {
       name: 'src',
       message: i18n(`${i18nKey}.enterSrc`),
@@ -48,7 +48,7 @@ export async function previewPrompt(
 export async function previewProjectPrompt(
   themeComponents: { path: string }[]
 ): Promise<PreviewProjectPromptResponse> {
-  return promptUser([
+  return promptUser<PreviewProjectPromptResponse>([
     {
       name: 'themeComponentPath',
       message: i18n(`${i18nKey}.themeProjectSelect`),
