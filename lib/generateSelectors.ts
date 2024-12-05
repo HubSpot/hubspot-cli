@@ -13,7 +13,7 @@ const i18nKey = 'commands.theme.subcommands.generateSelectors';
 
 let maxFieldsDepth = 0;
 
-export function getMaxFieldsDepth() {
+export function getMaxFieldsDepth(): number {
   return maxFieldsDepth;
 }
 
@@ -151,8 +151,13 @@ export function generateInheritedSelectors(fields: Field[]): Field[] {
   return finalFieldsJson;
 }
 
-export function generateSelectorsMap(fields: Field[], fieldKey: string[] = []) {
-  let selectorsMap: { [key: string]: string[] | undefined } = {};
+type SelectorsMap = { [key: string]: string[] | undefined };
+
+export function generateSelectorsMap(
+  fields: Field[],
+  fieldKey: string[] = []
+): SelectorsMap {
+  let selectorsMap: SelectorsMap = {};
 
   fields.forEach(field => {
     const { children, name, selectors } = field;
