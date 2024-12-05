@@ -1386,7 +1386,7 @@
     react "18.3.1"
     react-dom "18.3.1"
 
-"@hubspot/cms-dev-server@^0.18.10":
+"@hubspot/cms-dev-server@^0.18.9":
   version "0.18.10"
   resolved "https://registry.yarnpkg.com/@hubspot/cms-dev-server/-/cms-dev-server-0.18.10.tgz#db7737ea03aea035e6b3f4c12e061da33d850475"
   integrity sha512-khuA4tocob2P77zW/AZ9k2RxFdfj0Oju7HtbGM7TGdw4o0gddF25bXHYD+IG+p0CgZdr7Vv0KvouVNrkPwyM1g==
@@ -1439,10 +1439,10 @@
     vite-plugin-inspect "^0.4.3"
     vite-plugin-mkcert "1.16.0"
 
-"@hubspot/local-dev-lib@0.1.0-experimental.1":
-  version "0.1.0-experimental.1"
-  resolved "https://registry.yarnpkg.com/@hubspot/local-dev-lib/-/local-dev-lib-0.1.0-experimental.1.tgz#148b4cbdd8c2ac2e28e72d5344fc2573cfbfbbe0"
-  integrity sha512-5OPGHBGoriPiiEwzgTtGT6ZpymFw2cJ6KreI8xT/FRTziprLQYAcDMEtLhPL9f2CS2CIpUV+zTZSCzY9JWklhQ==
+"@hubspot/local-dev-lib@2.0.1":
+  version "2.0.1"
+  resolved "https://registry.yarnpkg.com/@hubspot/local-dev-lib/-/local-dev-lib-2.0.1.tgz#58736428de6c79092ee7cd80ed99a69ba65886ce"
+  integrity sha512-S2Cvwx/ZyWvGMzP+69x6cD40HgrkZdqJsrytD4S0J8oo04FvhHAh4OvX6TwING1Rhb6TUPP1lhPrORT48miMIg==
   dependencies:
     address "^2.0.1"
     axios "^1.3.5"
@@ -1463,10 +1463,10 @@
     semver "^6.3.0"
     unixify "^1.0.0"
 
-"@hubspot/local-dev-lib@2.0.1":
-  version "2.0.1"
-  resolved "https://registry.yarnpkg.com/@hubspot/local-dev-lib/-/local-dev-lib-2.0.1.tgz#58736428de6c79092ee7cd80ed99a69ba65886ce"
-  integrity sha512-S2Cvwx/ZyWvGMzP+69x6cD40HgrkZdqJsrytD4S0J8oo04FvhHAh4OvX6TwING1Rhb6TUPP1lhPrORT48miMIg==
+"@hubspot/local-dev-lib@3.0.1":
+  version "3.0.1"
+  resolved "https://registry.yarnpkg.com/@hubspot/local-dev-lib/-/local-dev-lib-3.0.1.tgz#1dd22f439d6e262353f14915a354115bbc1f5f76"
+  integrity sha512-h1jOmZJNdHZFbrOA5Gn815YCsix8eY81A4dkrUuDZI4MzVaJH3o4RoRalMl+Hr2e35nDrbrbcIR1RMQADPSmwg==
   dependencies:
     address "^2.0.1"
     axios "^1.3.5"
