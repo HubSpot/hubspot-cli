@@ -18,8 +18,9 @@ export type PromptChoices = Array<
   | string
   | {
       name: string;
-      value:
+      value?:
         | string
+        | number
         | {
             [key: string]:
               | string

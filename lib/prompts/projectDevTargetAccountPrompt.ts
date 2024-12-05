@@ -185,9 +185,11 @@ async function selectTargetAccountPrompt(
   defaultAccountId: number | null,
   accountType: string,
   choices: PromptChoices
-): Promise<DeveloperTestAccount | CLIAccount> {
+): Promise<CLIAccount | DeveloperTestAccount> {
   const accountId = defaultAccountId || undefined;
-  const { targetAccountInfo } = await promptUser([
+  const { targetAccountInfo } = await promptUser<{
+    targetAccountInfo: CLIAccount | DeveloperTestAccount;
+  }>([
     {
       name: 'targetAccountInfo',
       type: 'list',
@@ -206,7 +208,9 @@ export async function confirmDefaultAccountPrompt(
   accountName: string,
   accountType: AccountType
 ): Promise<boolean> {
-  const { useDefaultAccount } = await promptUser([
+  const { useDefaultAccount } = await promptUser<{
+    useDefaultAccount: boolean;
+  }>([
     {
       name: 'useDefaultAccount',
       type: 'confirm',
@@ -222,7 +226,9 @@ export async function confirmDefaultAccountPrompt(
 export async function confirmUseExistingDeveloperTestAccountPrompt(
   account: DeveloperTestAccount
 ): Promise<boolean> {
-  const { confirmUseExistingDeveloperTestAccount } = await promptUser([
+  const { confirmUseExistingDeveloperTestAccount } = await promptUser<{
+    confirmUseExistingDeveloperTestAccount: boolean;
+  }>([
     {
       name: 'confirmUseExistingDeveloperTestAccount',
       type: 'confirm',

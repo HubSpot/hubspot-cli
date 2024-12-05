@@ -1,48 +1,54 @@
-// @ts-nocheck
-const { promptUser } = require('./promptUtils');
-const { i18n } = require('../lang');
-const { uiAccountDescription } = require('../ui');
-const {
-  HUBSPOT_ACCOUNT_TYPES,
-} = require('@hubspot/local-dev-lib/constants/config');
-const {
-  getAccountIdentifier,
-} = require('@hubspot/local-dev-lib/config/getAccountIdentifier');
-const { isSandbox } = require('../accountTypes');
-const {
+import { promptUser } from './promptUtils';
+import { i18n } from '../lang';
+import { uiAccountDescription } from '../ui';
+import { HUBSPOT_ACCOUNT_TYPES } from '@hubspot/local-dev-lib/constants/config';
+import { getAccountIdentifier } from '@hubspot/local-dev-lib/config/getAccountIdentifier';
+import { isSandbox } from '../accountTypes';
+import {
   getConfigDefaultAccount,
   getConfigAccounts,
-} = require('@hubspot/local-dev-lib/config');
+} from '@hubspot/local-dev-lib/config';
+import { CLIAccount } from '@hubspot/local-dev-lib/types/Accounts';
+import { PromptChoices, GenericPromptResponse } from '../../types/prompts';
 
 const i18nKey = 'lib.prompts.sandboxesPrompt';
 
-const mapSandboxAccountChoices = portals =>
-  portals
-    .filter(p => isSandbox(p))
-    .map(p => {
-      return {
+type SandboxTypePromptResponse = {
+  type: string;
+};
+
+function mapSandboxAccountChoices(
+  portals: CLIAccount[] | null | undefined
+): PromptChoices {
+  return (
+    portals
+      ?.filter(p => !isSandbox(p))
+      .map(p => ({
         name: uiAccountDescription(getAccountIdentifier(p), false),
         value: p.name || getAccountIdentifier(p),
-      };
-    });
+      })) || []
+  );
+}
 
-const mapNonSandboxAccountChoices = portals =>
-  portals
-    .filter(p => !isSandbox(p))
-    .map(p => {
-      return {
+function mapNonSandboxAccountChoices(
+  portals: CLIAccount[] | null | undefined
+): PromptChoices {
+  return (
+    portals
+      ?.filter(p => !isSandbox(p))
+      .map(p => ({
         name: `${p.name} (${getAccountIdentifier(p)})`,
         value: p.name || getAccountIdentifier(p),
-      };
-    });
+      })) || []
+  );
+}
 
-const sandboxTypePrompt = () => {
-  return promptUser([
+export async function sandboxTypePrompt(): Promise<SandboxTypePromptResponse> {
+  return promptUser<SandboxTypePromptResponse>([
     {
       name: 'type',
       message: i18n(`${i18nKey}.type.message`),
       type: 'list',
-      look: false,
       choices: [
         {
           name: i18n(`${i18nKey}.type.developer`),
@@ -56,17 +62,19 @@ const sandboxTypePrompt = () => {
       default: HUBSPOT_ACCOUNT_TYPES.DEVELOPMENT_SANDBOX,
     },
   ]);
-};
+}
 
-const deleteSandboxPrompt = (promptParentAccount = false) => {
+export function deleteSandboxPrompt(
+  promptParentAccount = false
+): Promise<GenericPromptResponse | undefined> {
   const accountsList = getConfigAccounts();
   const choices = promptParentAccount
     ? mapNonSandboxAccountChoices(accountsList)
     : mapSandboxAccountChoices(accountsList);
   if (!choices.length) {
-    return undefined;
+    return Promise.resolve(undefined);
   }
-  return promptUser([
+  return promptUser<GenericPromptResponse>([
     {
       name: 'account',
       message: i18n(
@@ -75,15 +83,9 @@ const deleteSandboxPrompt = (promptParentAccount = false) => {
           : `${i18nKey}.selectAccountName`
       ),
       type: 'list',
-      look: false,
       pageSize: 20,
       choices,
-      default: getConfigDefaultAccount(),
+      default: getConfigDefaultAccount() || undefined,
     },
   ]);
-};
-
-module.exports = {
-  sandboxTypePrompt,
-  deleteSandboxPrompt,
-};
+}
