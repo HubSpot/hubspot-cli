@@ -12,12 +12,12 @@ import { PromptChoices } from '../../types/prompts';
 function mapAccountChoices(
   portals: CLIAccount[] | null | undefined
 ): PromptChoices {
-  return portals
-    ? portals.map(p => ({
-        name: uiAccountDescription(getAccountIdentifier(p), false),
-        value: String(p.name || getAccountIdentifier(p)),
-      }))
-    : [];
+  return (
+    portals?.map(p => ({
+      name: uiAccountDescription(getAccountIdentifier(p), false),
+      value: String(p.name || getAccountIdentifier(p)),
+    })) || []
+  );
 }
 
 const i18nKey = 'commands.account.subcommands.use';
