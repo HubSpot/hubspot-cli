@@ -11,7 +11,7 @@ import { PromptChoices } from '../../types/prompts';
 
 function mapAccountChoices(
   portals: CLIAccount[] | null | undefined
-): PromptChoices | [] {
+): PromptChoices {
   return portals
     ? portals.map(p => ({
         name: uiAccountDescription(getAccountIdentifier(p), false),
@@ -26,7 +26,7 @@ export async function selectAccountFromConfig(prompt = ''): Promise<string> {
   const accountsList = getConfigAccounts();
   const defaultAccount = getConfigDefaultAccount();
 
-  const { default: selectedDefault } = await promptUser([
+  const { default: selectedDefault } = await promptUser<{ default: string }>([
     {
       type: 'list',
       name: 'default',

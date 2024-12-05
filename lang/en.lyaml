@@ -1291,7 +1291,6 @@ en:
         errors:
           apiSampleAppRequired: "Please select API sample app"
           languageRequired: "Please select API sample app's language"
-          sampleNotFound: "A sample app matching your selection could not be found"
       createProjectPrompt:
         enterName: "[--name] Give your project a name: "
         enterDest: "[--dest] Enter the folder to create the project in:"

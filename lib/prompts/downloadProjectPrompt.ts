@@ -15,12 +15,18 @@ type DownloadProjectPromptResponse = {
 async function createProjectsList(
   accountId: number | null
 ): Promise<Project[]> {
-  const account = accountId || undefined;
   try {
-    const { data: projects } = await fetchProjects(accountId!);
-    return projects.results;
+    if (accountId) {
+      const { data: projects } = await fetchProjects(accountId);
+      return projects.results;
+    }
+    return [];
   } catch (e) {
-    logError(e, new ApiErrorContext({ accountId: account }));
+    if (accountId) {
+      logError(e, new ApiErrorContext({ accountId }));
+    } else {
+      logError(e);
+    }
     process.exit(EXIT_CODES.ERROR);
   }
 }
@@ -30,10 +36,10 @@ export async function downloadProjectPrompt(promptOptions: {
   project?: string;
   name?: string;
 }): Promise<DownloadProjectPromptResponse> {
-  const accountId = getAccountId(promptOptions.account) || '';
-  const projectsList = accountId ? await createProjectsList(accountId) : [];
+  const accountId = getAccountId(promptOptions.account);
+  const projectsList = await createProjectsList(accountId);
 
-  return promptUser([
+  return promptUser<DownloadProjectPromptResponse>([
     {
       name: 'project',
       message: () => {
@@ -41,7 +47,7 @@ export async function downloadProjectPrompt(promptOptions: {
           !projectsList.find(p => p.name === promptOptions.name)
           ? i18n(`${i18nKey}.errors.projectNotFound`, {
               projectName: promptOptions.project,
-              accountId,
+              accountId: accountId || '',
             })
           : i18n(`${i18nKey}.selectProject`);
       },

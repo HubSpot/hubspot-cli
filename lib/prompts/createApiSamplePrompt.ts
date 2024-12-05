@@ -1,7 +1,5 @@
 import { promptUser } from './promptUtils';
 import { i18n } from '../lang';
-import { logger } from '@hubspot/local-dev-lib/logger';
-import { EXIT_CODES } from '../enums/exitCodes';
 import { PromptOperand, PromptConfig } from '../../types/prompts';
 
 const i18nKey = 'lib.prompts.createApiSamplePrompt';
@@ -17,14 +15,14 @@ type SampleConfig = {
   samples: SampleChoice[];
 };
 
-type createApiSamplePromptResponse = {
+type CreateApiSamplePromptResponse = {
   sampleType?: string;
   sampleLanguage?: string;
 };
 
 function getSampleTypesPrompt(
   choices: SampleChoice[]
-): PromptConfig<createApiSamplePromptResponse> {
+): PromptConfig<CreateApiSamplePromptResponse> {
   return {
     type: 'rawlist',
     name: 'sampleType',
@@ -33,7 +31,7 @@ function getSampleTypesPrompt(
       name: `${choice.name} - ${choice.description}`,
       value: choice.id,
     })),
-    validate: function(input?: string): Promise<PromptOperand> {
+    validate: function(input?: string) {
       return new Promise<PromptOperand>(function(resolve, reject) {
         if (input && input.length > 0) {
           resolve(true);
@@ -47,7 +45,7 @@ function getSampleTypesPrompt(
 
 function getLanguagesPrompt(
   choices: string[]
-): PromptConfig<createApiSamplePromptResponse> {
+): PromptConfig<CreateApiSamplePromptResponse> {
   return {
     type: 'rawlist',
     name: 'sampleLanguage',
@@ -56,7 +54,7 @@ function getLanguagesPrompt(
       name: choice,
       value: choice,
     })),
-    validate: function(input: string | undefined): Promise<PromptOperand> {
+    validate: function(input: string | undefined) {
       return new Promise<PromptOperand>(function(resolve, reject) {
         if (input && input.length > 0) {
           resolve(true);
@@ -69,19 +67,19 @@ function getLanguagesPrompt(
 
 export async function createApiSamplePrompt(
   samplesConfig: SampleConfig
-): Promise<createApiSamplePromptResponse> {
+): Promise<CreateApiSamplePromptResponse> {
   try {
     const { samples } = samplesConfig;
-    const sampleTypeAnswer = await promptUser(getSampleTypesPrompt(samples));
+    const sampleTypeAnswer = await promptUser<CreateApiSamplePromptResponse>(
+      getSampleTypesPrompt(samples)
+    );
     const chosenSample = samples.find(
       sample => sample.id === sampleTypeAnswer.sampleType
     );
-    if (!chosenSample) {
-      logger.log(i18n(`${i18nKey}.errors.sampleNotFound`));
-      process.exit(EXIT_CODES.ERROR);
-    }
-    const { languages } = chosenSample;
-    const languagesAnswer = await promptUser(getLanguagesPrompt(languages));
+    const { languages } = chosenSample!;
+    const languagesAnswer = await promptUser<CreateApiSamplePromptResponse>(
+      getLanguagesPrompt(languages)
+    );
     return {
       ...sampleTypeAnswer,
       ...languagesAnswer,

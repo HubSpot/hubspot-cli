@@ -34,7 +34,7 @@ export async function fieldsJsPrompt(
     value: fileChoice,
   }));
 
-  const promptVal = await promptUser([
+  const promptVal = await promptUser<{ filePathChoice: string }>([
     {
       message: i18n(`${i18nKey}.fieldsPrompt`, { dir: fileDir }),
       type: 'list',

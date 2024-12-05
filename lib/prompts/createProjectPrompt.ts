@@ -48,7 +48,7 @@ function hasAllProperties(projectList: ProjectProperties[]): boolean {
 }
 
 async function createTemplateOptions(
-  templateSource: string,
+  templateSource: RepoPath,
   githubRef: string
 ): Promise<ProjectProperties[]> {
   const hasCustomTemplateSource = Boolean(templateSource);
@@ -57,7 +57,7 @@ async function createTemplateOptions(
     : githubRef;
 
   const config: ProjectsConfig = await fetchFileFromRepository(
-    (templateSource as RepoPath) || HUBSPOT_PROJECT_COMPONENTS_GITHUB_PATH,
+    templateSource || HUBSPOT_PROJECT_COMPONENTS_GITHUB_PATH,
     'config.json',
     branch
   );
@@ -90,7 +90,7 @@ export async function createProjectPrompt(
     name: string;
     dest: string;
     template: string;
-    templateSource: string;
+    templateSource: RepoPath;
   },
   skipTemplatePrompt = false
 ): Promise<CreateProjectPromptResponse> {
@@ -108,7 +108,7 @@ export async function createProjectPrompt(
       findTemplate(projectTemplates, promptOptions.template);
   }
 
-  const result = await promptUser([
+  const result = await promptUser<CreateProjectPromptResponse>([
     {
       name: 'name',
       message: i18n(`${i18nKey}.enterName`),
@@ -173,7 +173,3 @@ export async function createProjectPrompt(
 
   return result;
 }
-
-module.exports = {
-  createProjectPrompt,
-};

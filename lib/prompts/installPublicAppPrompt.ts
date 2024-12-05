@@ -22,7 +22,9 @@ export async function installPublicAppPrompt(
     logger.log(i18n(`${i18nKey}.explanation`));
   }
 
-  const { shouldOpenBrowser } = await promptUser({
+  const { shouldOpenBrowser } = await promptUser<{
+    shouldOpenBrowser: boolean;
+  }>({
     name: 'shouldOpenBrowser',
     type: 'confirm',
     message: i18n(
