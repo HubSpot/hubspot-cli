@@ -13,7 +13,7 @@ const { i18n } = require('../../lib/lang');
 const i18nKey = 'commands.function.subcommands.server';
 
 exports.command = 'server <path>';
-exports.describe = false;
+exports.describe = i18n(`${i18nKey}.describe`);
 
 exports.handler = async options => {
   await loadAndValidateOptions(options);
