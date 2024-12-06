@@ -35,7 +35,7 @@ export type PromptChoices = Array<
 
 export type PromptWhen = boolean | (() => boolean);
 
-export type PromptOperand = string | number | boolean | string[] | boolean[];
+type PromptOperand = string | number | boolean | string[] | boolean[];
 
 export type PromptConfig<T extends GenericPromptResponse> = {
   name: keyof T;

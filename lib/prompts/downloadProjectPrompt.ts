@@ -2,6 +2,7 @@ import { promptUser } from './promptUtils';
 import { getAccountId } from '@hubspot/local-dev-lib/config';
 import { fetchProjects } from '@hubspot/local-dev-lib/api/projects';
 import { logError, ApiErrorContext } from '../errorHandlers/index';
+import { logger } from '@hubspot/local-dev-lib/logger';
 import { EXIT_CODES } from '../enums/exitCodes';
 import { i18n } from '../lang';
 import { Project } from '@hubspot/local-dev-lib/types/Project';
@@ -20,7 +21,8 @@ async function createProjectsList(
       const { data: projects } = await fetchProjects(accountId);
       return projects.results;
     }
-    return [];
+    logger.error(i18n(`${i18nKey}.errors.accountIdRequired`));
+    process.exit(EXIT_CODES.ERROR);
   } catch (e) {
     if (accountId) {
       logError(e, new ApiErrorContext({ accountId }));
