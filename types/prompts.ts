@@ -1,5 +1,3 @@
-import { DeveloperTestAccount } from '@hubspot/local-dev-lib/types/developerTestAccounts';
-
 export type GenericPromptResponse = {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   [key: string]: any;
@@ -18,24 +16,15 @@ export type PromptChoices = Array<
   | string
   | {
       name: string;
-      value?:
-        | string
-        | number
-        | {
-            [key: string]:
-              | string
-              | number
-              | boolean
-              | DeveloperTestAccount
-              | null;
-          };
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      value?: any;
       disabled?: string | boolean;
     }
 >;
 
 export type PromptWhen = boolean | (() => boolean);
 
-type PromptOperand = string | number | boolean | string[] | boolean[];
+type PromptOperand = string | number | boolean | string[] | boolean[] | null;
 
 export type PromptConfig<T extends GenericPromptResponse> = {
   name: keyof T;
@@ -46,10 +35,8 @@ export type PromptConfig<T extends GenericPromptResponse> = {
   pageSize?: number;
   default?: PromptOperand | ((answers: T) => PromptOperand);
   transformer?: (input: string) => string | undefined;
-  validate?:
-    | ((answer?: string) => PromptOperand | Promise<PromptOperand>)
-    | ((answer?: number) => PromptOperand | Promise<PromptOperand>)
-    | ((answer: string[]) => PromptOperand | Promise<PromptOperand>);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  validate?: (answer?: unknown | any) => PromptOperand | Promise<PromptOperand>;
   mask?: string;
   filter?: (input: string) => string;
 };

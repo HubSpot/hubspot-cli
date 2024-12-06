@@ -17,6 +17,10 @@ type SandboxTypePromptResponse = {
   type: string;
 };
 
+type DeleteSandboxPromptResponse = {
+  account: string;
+};
+
 function mapSandboxAccountChoices(
   portals: CLIAccount[] | null | undefined
 ): PromptChoices {
@@ -66,15 +70,15 @@ export async function sandboxTypePrompt(): Promise<SandboxTypePromptResponse> {
 
 export function deleteSandboxPrompt(
   promptParentAccount = false
-): Promise<GenericPromptResponse | undefined> {
+): Promise<GenericPromptResponse> | void {
   const accountsList = getConfigAccounts();
   const choices = promptParentAccount
     ? mapNonSandboxAccountChoices(accountsList)
     : mapSandboxAccountChoices(accountsList);
   if (!choices.length) {
-    return Promise.resolve(undefined);
+    return;
   }
-  return promptUser<GenericPromptResponse>([
+  return promptUser<DeleteSandboxPromptResponse>([
     {
       name: 'account',
       message: i18n(
@@ -85,7 +89,7 @@ export function deleteSandboxPrompt(
       type: 'list',
       pageSize: 20,
       choices,
-      default: getConfigDefaultAccount() || undefined,
+      default: getConfigDefaultAccount(),
     },
   ]);
 }

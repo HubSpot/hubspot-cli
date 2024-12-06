@@ -37,7 +37,7 @@ type PersonalAccessKeyBrowserOpenPrepResponse = {
 };
 
 type ScopesPromptResponse = {
-  scopes: string;
+  scopes: string[];
 };
 
 /**
@@ -60,9 +60,9 @@ export async function personalAccessKeyPrompt({
     if (account) {
       url = `${websiteOrigin}/personal-access-key/${account}`;
     }
-    const { personalAcessKeyBrowserOpenPrep: shouldOpen } = await promptUser<{
-      personalAcessKeyBrowserOpenPrep: boolean;
-    }>([PERSONAL_ACCESS_KEY_BROWSER_OPEN_PREP]);
+    const { personalAcessKeyBrowserOpenPrep: shouldOpen } = await promptUser<
+      PersonalAccessKeyBrowserOpenPrepResponse
+    >([PERSONAL_ACCESS_KEY_BROWSER_OPEN_PREP]);
     if (shouldOpen) {
       open(url, { url: true });
     } else {
@@ -82,7 +82,7 @@ export async function personalAccessKeyPrompt({
   };
 }
 
-export const ACCOUNT_ID: PromptConfig<AccountIdPromptResponse> = {
+const ACCOUNT_ID: PromptConfig<AccountIdPromptResponse> = {
   name: 'accountId',
   message: i18n(`${i18nKey}.enterAccountId`),
   type: 'number',
@@ -94,7 +94,7 @@ export const ACCOUNT_ID: PromptConfig<AccountIdPromptResponse> = {
   },
 };
 
-export const CLIENT_ID: PromptConfig<ClientIdPromptResponse> = {
+const CLIENT_ID: PromptConfig<ClientIdPromptResponse> = {
   name: 'clientId',
   message: i18n(`${i18nKey}.enterClientId`),
   validate(val?: string) {
@@ -107,7 +107,7 @@ export const CLIENT_ID: PromptConfig<ClientIdPromptResponse> = {
   },
 };
 
-export const CLIENT_SECRET: PromptConfig<ClientSecretPromptResponse> = {
+const CLIENT_SECRET: PromptConfig<ClientSecretPromptResponse> = {
   name: 'clientSecret',
   message: i18n(`${i18nKey}.enterClientSecret`),
   validate(val?: string) {
@@ -122,13 +122,13 @@ export const CLIENT_SECRET: PromptConfig<ClientSecretPromptResponse> = {
   },
 };
 
-export const PERSONAL_ACCESS_KEY_BROWSER_OPEN_PREP: PromptConfig<PersonalAccessKeyBrowserOpenPrepResponse> = {
+const PERSONAL_ACCESS_KEY_BROWSER_OPEN_PREP: PromptConfig<PersonalAccessKeyBrowserOpenPrepResponse> = {
   name: 'personalAcessKeyBrowserOpenPrep',
   type: 'confirm',
   message: i18n(`${i18nKey}.personalAccessKeyBrowserOpenPrompt`),
 };
 
-export const PERSONAL_ACCESS_KEY: PromptConfig<PersonalAccessKeyPromptResponse> = {
+const PERSONAL_ACCESS_KEY: PromptConfig<PersonalAccessKeyPromptResponse> = {
   name: 'personalAccessKey',
   message: i18n(`${i18nKey}.enterPersonalAccessKey`),
   transformer: (val?: string) => {
@@ -149,7 +149,7 @@ export const PERSONAL_ACCESS_KEY: PromptConfig<PersonalAccessKeyPromptResponse> 
   },
 };
 
-export const SCOPES: PromptConfig<ScopesPromptResponse> = {
+const SCOPES: PromptConfig<ScopesPromptResponse> = {
   type: 'checkbox',
   name: 'scopes',
   message: i18n(`${i18nKey}.selectScopes`),
@@ -157,7 +157,6 @@ export const SCOPES: PromptConfig<ScopesPromptResponse> = {
   choices: [...OAUTH_SCOPES],
 };
 
-// TODO: Type needed?
 export const OAUTH_FLOW = [
   getCliAccountNamePromptConfig(),
   ACCOUNT_ID,

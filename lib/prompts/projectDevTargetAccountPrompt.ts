@@ -13,7 +13,10 @@ import { logger } from '@hubspot/local-dev-lib/logger';
 import { fetchDeveloperTestAccounts } from '@hubspot/local-dev-lib/api/developerTestAccounts';
 import { CLIAccount, AccountType } from '@hubspot/local-dev-lib/types/Accounts';
 import { Usage } from '@hubspot/local-dev-lib/types/Sandbox';
-import { DeveloperTestAccount } from '@hubspot/local-dev-lib/types/DeveloperTestAccounts';
+import {
+  DeveloperTestAccount,
+  FetchDeveloperTestAccountsResponse,
+} from '@hubspot/local-dev-lib/types/developerTestAccounts';
 import { PromptChoices } from '../../types/prompts';
 
 const i18nKey = 'lib.prompts.projectDevTargetAccountPrompt';
@@ -122,7 +125,7 @@ export async function selectDeveloperTestTargetAccountPrompt(
   defaultAccountConfig: CLIAccount
 ): Promise<DeveloperTestAccount | CLIAccount> {
   const defaultAccountId = getAccountId(defaultAccountConfig.name);
-  let devTestAccountsResponse = undefined;
+  let devTestAccountsResponse: FetchDeveloperTestAccountsResponse | undefined;
   try {
     if (defaultAccountId) {
       const { data } = await fetchDeveloperTestAccounts(defaultAccountId);
@@ -186,7 +189,7 @@ async function selectTargetAccountPrompt(
   accountType: string,
   choices: PromptChoices
 ): Promise<CLIAccount | DeveloperTestAccount> {
-  const accountId = defaultAccountId || undefined;
+  const accountId = defaultAccountId;
   const { targetAccountInfo } = await promptUser<{
     targetAccountInfo: CLIAccount | DeveloperTestAccount;
   }>([

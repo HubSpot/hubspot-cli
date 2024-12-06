@@ -19,13 +19,15 @@ async function fetchPublicAppOptions(
   isMigratingApp = false
 ): Promise<PublicApp[]> {
   try {
-    let publicApps: PublicApp[] = [];
-    if (accountId) {
-      const {
-        data: { results: apps },
-      } = await fetchPublicAppsForPortal(accountId);
-      publicApps = apps;
+    if (!accountId) {
+      logger.error(i18n(`${i18nKey}.errors.noAccountId`));
+      process.exit(EXIT_CODES.ERROR);
     }
+
+    const {
+      data: { results: publicApps },
+    } = await fetchPublicAppsForPortal(accountId);
+
     const filteredPublicApps = publicApps.filter(
       app => !app.projectId && !app.sourceId
     );
@@ -53,11 +55,7 @@ async function fetchPublicAppOptions(
     }
     return filteredPublicApps;
   } catch (error) {
-    if (accountId) {
-      logError(error, { accountId });
-    } else {
-      logError(error);
-    }
+    logError(error, accountId ? { accountId } : undefined);
     logger.error(i18n(`${i18nKey}.errors.errorFetchingApps`));
     process.exit(EXIT_CODES.ERROR);
   }
