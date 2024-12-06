@@ -1,6 +1,6 @@
 import { promptUser } from './promptUtils';
 import { i18n } from '../lang';
-import { PromptOperand, PromptConfig } from '../../types/prompts';
+import { PromptConfig } from '../../types/prompts';
 
 const i18nKey = 'lib.prompts.createApiSamplePrompt';
 
@@ -15,14 +15,20 @@ type SampleConfig = {
   samples: SampleChoice[];
 };
 
-type CreateApiSamplePromptResponse = {
+type SampleTypePromptResponse = {
   sampleType?: string;
+};
+
+type LanguagePromptResponse = {
   sampleLanguage?: string;
 };
 
+type CreateApiSamplePromptResponse = SampleTypePromptResponse &
+  LanguagePromptResponse;
+
 function getSampleTypesPrompt(
   choices: SampleChoice[]
-): PromptConfig<CreateApiSamplePromptResponse> {
+): PromptConfig<SampleTypePromptResponse> {
   return {
     type: 'rawlist',
     name: 'sampleType',
@@ -32,7 +38,7 @@ function getSampleTypesPrompt(
       value: choice.id,
     })),
     validate: function(input?: string) {
-      return new Promise<PromptOperand>(function(resolve, reject) {
+      return new Promise<boolean>(function(resolve, reject) {
         if (input && input.length > 0) {
           resolve(true);
         } else {
@@ -45,7 +51,7 @@ function getSampleTypesPrompt(
 
 function getLanguagesPrompt(
   choices: string[]
-): PromptConfig<CreateApiSamplePromptResponse> {
+): PromptConfig<LanguagePromptResponse> {
   return {
     type: 'rawlist',
     name: 'sampleLanguage',
@@ -55,7 +61,7 @@ function getLanguagesPrompt(
       value: choice,
     })),
     validate: function(input: string | undefined) {
-      return new Promise<PromptOperand>(function(resolve, reject) {
+      return new Promise<boolean>(function(resolve, reject) {
         if (input && input.length > 0) {
           resolve(true);
         }
@@ -70,14 +76,14 @@ export async function createApiSamplePrompt(
 ): Promise<CreateApiSamplePromptResponse> {
   try {
     const { samples } = samplesConfig;
-    const sampleTypeAnswer = await promptUser<CreateApiSamplePromptResponse>(
+    const sampleTypeAnswer = await promptUser<SampleTypePromptResponse>(
       getSampleTypesPrompt(samples)
     );
     const chosenSample = samples.find(
       sample => sample.id === sampleTypeAnswer.sampleType
     );
     const { languages } = chosenSample!;
-    const languagesAnswer = await promptUser<CreateApiSamplePromptResponse>(
+    const languagesAnswer = await promptUser<LanguagePromptResponse>(
       getLanguagesPrompt(languages)
     );
     return {
