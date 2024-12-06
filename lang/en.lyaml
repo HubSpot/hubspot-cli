@@ -1263,6 +1263,7 @@ en:
         selectProject: "Select a project to download:"
         errors:
           projectNotFound: "Your project {{ projectName }} could not be found in {{ accountId }}. Please select a valid project:"
+          accountIdRequired: "An account ID is required to download a project."
       projectAddPrompt:
         selectType: "[--type] Select your component type:"
         enterName: "[--name] Give your component a name: "
