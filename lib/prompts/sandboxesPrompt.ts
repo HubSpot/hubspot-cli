@@ -9,7 +9,7 @@ import {
   getConfigAccounts,
 } from '@hubspot/local-dev-lib/config';
 import { CLIAccount } from '@hubspot/local-dev-lib/types/Accounts';
-import { PromptChoices, GenericPromptResponse } from '../../types/prompts';
+import { PromptChoices } from '../../types/prompts';
 
 const i18nKey = 'lib.prompts.sandboxesPrompt';
 
@@ -70,7 +70,7 @@ export async function sandboxTypePrompt(): Promise<SandboxTypePromptResponse> {
 
 export function deleteSandboxPrompt(
   promptParentAccount = false
-): Promise<GenericPromptResponse> | void {
+): Promise<DeleteSandboxPromptResponse> | void {
   const accountsList = getConfigAccounts();
   const choices = promptParentAccount
     ? mapNonSandboxAccountChoices(accountsList)
