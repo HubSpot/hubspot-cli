@@ -31,7 +31,6 @@ const { UI_COLORS, uiCommandReference } = require('../lib/ui');
 const removeCommand = require('../commands/remove');
 const initCommand = require('../commands/init');
 const logsCommand = require('../commands/logs');
-const lintCommand = require('../commands/lint');
 const hubdbCommand = require('../commands/hubdb');
 const watchCommand = require('../commands/watch');
 const authCommand = require('../commands/auth');
@@ -47,7 +46,6 @@ const openCommand = require('../commands/open');
 const mvCommand = require('../commands/mv');
 const projectCommands = require('../commands/project');
 const themeCommand = require('../commands/theme');
-const moduleCommand = require('../commands/module');
 const configCommand = require('../commands/config');
 const accountCommands = require('../commands/account');
 const sandboxesCommand = require('../commands/sandbox');
@@ -196,7 +194,6 @@ const argv = yargs
   .command(initCommand)
   .command(logsCommand)
   .command(cmsCommand)
-  .command(lintCommand)
   .command(hubdbCommand)
   .command(watchCommand)
   .command(removeCommand)
@@ -215,7 +212,6 @@ const argv = yargs
   .command(mvCommand)
   .command(projectCommands)
   .command(themeCommand)
-  .command(moduleCommand)
   .command(configCommand)
   .command(accountCommands)
   .command(sandboxesCommand)
