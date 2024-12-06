@@ -1,34 +1,28 @@
-// @ts-nocheck
-const { trackUsage } = require('@hubspot/local-dev-lib/trackUsage');
-const {
+import { trackUsage } from '@hubspot/local-dev-lib/trackUsage';
+import {
   isTrackingAllowed,
   getAccountConfig,
-} = require('@hubspot/local-dev-lib/config');
-const {
-  API_KEY_AUTH_METHOD,
-} = require('@hubspot/local-dev-lib/constants/auth');
-const { logger } = require('@hubspot/local-dev-lib/logger');
-const { version } = require('../package.json');
-const { setLogLevel } = require('./commonOpts');
+} from '@hubspot/local-dev-lib/config';
+import { API_KEY_AUTH_METHOD } from '@hubspot/local-dev-lib/constants/auth';
+import { logger } from '@hubspot/local-dev-lib/logger';
+import { version } from '../package.json';
+import { debugError } from './errorHandlers';
 
-/* **
-Available tracking meta properties
-
-  - action: "The specific action taken in the CLI"
-  - os: "The user's OS"
-  - nodeVersion: "The user's version of node.js"
-  - nodeMajorVersion: "The user's major version of node.js"
-  - version: "The user's version of the CLI"
-  - command: "The specific command that the user ran in this interaction"
-  - authType: "The configured auth type the user has for the CLI"
-  - step: "The specific step in the auth process"
-  - assetType: "The CMS asset type"
-  - mode: "The CLI mode (draft or publish"
-  - type: "The upload type (file or folder)"
-  - file: "Whether or not the 'file' flag was used"
-  - successful: "Whether or not the CLI interaction was successful"
-
-*/
+type Meta = {
+  action?: string; // "The specific action taken in the CLI"
+  os?: string; // "The user's OS"
+  nodeVersion?: string; // "The user's version of node.js"
+  nodeMajorVersion?: string; // "The user's major version of node.js"
+  version?: string; // "The user's version of the CLI"
+  command?: string; //  "The specific command that the user ran in this interaction"
+  authType?: string; // "The configured auth type the user has for the CLI"
+  step?: string; // "The specific step in the process"
+  assetType?: string; // "The  asset type"
+  mode?: string; // "The CMS publish mode (draft or publish)"
+  type?: string | number; // "The upload type"
+  file?: boolean; // "Whether or not the 'file' flag was used"
+  successful?: boolean; // "Whether or not the CLI interaction was successful"
+};
 
 const EventClass = {
   USAGE: 'USAGE',
@@ -37,12 +31,17 @@ const EventClass = {
   ACTIVATION: 'ACTIVATION',
 };
 
-const getNodeVersionData = () => ({
-  nodeVersion: process.version,
-  nodeMajorVersion: (process.version || '').split('.')[0],
-});
+function getNodeVersionData(): {
+  nodeVersion: string;
+  nodeMajorVersion: string;
+} {
+  return {
+    nodeVersion: process.version,
+    nodeMajorVersion: (process.version || '').split('.')[0],
+  };
+}
 
-const getPlatform = () => {
+function getPlatform(): string {
   switch (process.platform) {
     case 'darwin':
       return 'macos';
@@ -51,9 +50,13 @@ const getPlatform = () => {
     default:
       return process.platform;
   }
-};
+}
 
-export function trackCommandUsage(command, meta = {}, accountId) {
+export async function trackCommandUsage(
+  command: string,
+  meta: Meta = {},
+  accountId?: number
+): Promise<void> {
   if (!isTrackingAllowed()) {
     return;
   }
@@ -85,12 +88,12 @@ export function trackCommandUsage(command, meta = {}, accountId) {
       );
       logger.debug('Sent usage tracking command event: %o', usageTrackingEvent);
     } catch (e) {
-      logger.debug('Usage tracking failed: %s', e.message);
+      debugError(e);
     }
   });
 }
 
-async function trackHelpUsage(command) {
+export async function trackHelpUsage(command: string): Promise<void> {
   if (!isTrackingAllowed()) {
     return;
   }
@@ -108,11 +111,11 @@ async function trackHelpUsage(command) {
       command,
     });
   } catch (e) {
-    logger.debug('Usage tracking failed: %s', e.message);
+    debugError(e);
   }
 }
 
-async function trackConvertFieldsUsage(command) {
+export async function trackConvertFieldsUsage(command: string): Promise<void> {
   if (!isTrackingAllowed()) {
     return;
   }
@@ -126,18 +129,16 @@ async function trackConvertFieldsUsage(command) {
       command,
     });
   } catch (e) {
-    logger.debug('Usage tracking failed: %s', e.message);
+    debugError(e);
   }
 }
 
-const addHelpUsageTracking = (program, command) => {
-  program.on('--help', () => {
-    setLogLevel(program);
-    trackHelpUsage(command);
-  });
-};
-
-const trackAuthAction = async (command, authType, step, accountId) => {
+export async function trackAuthAction(
+  command: string,
+  authType: string,
+  step: string,
+  accountId: number
+): Promise<void> {
   if (!isTrackingAllowed()) {
     return;
   }
@@ -160,11 +161,15 @@ const trackAuthAction = async (command, authType, step, accountId) => {
 
     logger.debug('Sent usage tracking command event: %o', usageTrackingEvent);
   } catch (e) {
-    logger.debug('Auth action tracking failed: %s', e.message);
+    debugError(e);
   }
-};
+}
 
-export function trackCommandMetadataUsage(command, meta = {}, accountId) {
+export async function trackCommandMetadataUsage(
+  command: string,
+  meta: Meta = {},
+  accountId?: number
+): Promise<void> {
   if (!isTrackingAllowed()) {
     return;
   }
@@ -196,16 +201,7 @@ export function trackCommandMetadataUsage(command, meta = {}, accountId) {
       );
       logger.debug('Sent usage tracking command event: %o', usageTrackingEvent);
     } catch (e) {
-      logger.debug('Metadata usage tracking failed: %s', e.message);
+      debugError(e);
     }
   });
 }
-
-module.exports = {
-  trackCommandUsage,
-  trackHelpUsage,
-  addHelpUsageTracking,
-  trackConvertFieldsUsage,
-  trackAuthAction,
-  trackCommandMetadataUsage,
-};

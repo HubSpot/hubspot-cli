@@ -26,7 +26,7 @@ export const handler = async ({
 }: ArgumentsCamelCase<DoctorOptions>) => {
   const doctor = new Doctor();
 
-  trackCommandUsage(command, undefined, doctor.accountId);
+  trackCommandUsage(command, undefined, doctor.accountId || undefined);
 
   const output = await doctor.diagnose();
 
@@ -34,8 +34,8 @@ export const handler = async ({
   if (totalCount > 0) {
     trackCommandMetadataUsage(
       command,
-      { success: false, type: totalCount },
-      doctor.accountId
+      { successful: false, type: totalCount },
+      doctor.accountId || undefined
     );
   }
 

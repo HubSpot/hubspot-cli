@@ -7,7 +7,7 @@
   "dependencies": {
     "@hubspot/local-dev-lib": "3.0.1",
     "@hubspot/serverless-dev-runtime": "7.0.0",
-    "@hubspot/theme-preview-dev-server": "0.0.9",
+    "@hubspot/theme-preview-dev-server": "0.0.10",
     "@hubspot/ui-extensions-dev-server": "0.8.33",
     "archiver": "^7.0.1",
     "chalk": "^4.1.2",
@@ -52,7 +52,7 @@
     "typescript": "^5.6.2"
   },
   "optionalDependencies": {
-    "@hubspot/cms-dev-server": "^0.18.9"
+    "@hubspot/cms-dev-server": "^0.18.10"
   },
   "scripts": {
     "build": "ts-node ./scripts/build.ts",

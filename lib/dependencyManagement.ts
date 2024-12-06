@@ -38,11 +38,11 @@ export async function isGloballyInstalled(command) {
   }
 }
 
-export async function getLatestCliVersion(): string {
+export async function getLatestCliVersion(): { latest: string; next: string } {
   const exec = util.promisify(execAsync);
   const { stdout } = await exec(`npm info ${pkg.name} dist-tags --json`);
-  const { latest } = JSON.parse(stdout);
-  return latest;
+  const { latest, next } = JSON.parse(stdout);
+  return { latest, next };
 }
 
 async function installPackages({ packages, installLocations }) {

@@ -226,8 +226,12 @@ export class Doctor {
 
   private async checkCLIVersion(): Promise<void> {
     let latestCLIVersion;
+    let nextCliVersion;
+
     try {
-      latestCLIVersion = await getLatestCliVersion();
+      const { latest, next } = await getLatestCliVersion();
+      latestCLIVersion = latest;
+      nextCliVersion = next;
     } catch (e) {
       return this.diagnosis?.addCliSection({
         type: 'error',
@@ -245,14 +249,15 @@ export class Doctor {
       });
     }
 
-    if (latestCLIVersion !== pkg.version) {
+    if (latestCLIVersion !== pkg.version && nextCliVersion !== pkg.version) {
+      const onNextTag = pkg.version.includes('beta');
       this.diagnosis?.addCliSection({
         type: 'warning',
         message: i18n(`${i18nKey}.hsChecks.notLatest`, {
           hsVersion: pkg.version,
         }),
         secondaryMessaging: i18n(`${i18nKey}.hsChecks.notLatestSecondary`, {
-          hsVersion: pkg.version,
+          hsVersion: onNextTag ? nextCliVersion : latestCLIVersion,
           command: uiCommandReference(`npm install -g ${pkg.name}`),
         }),
       });
