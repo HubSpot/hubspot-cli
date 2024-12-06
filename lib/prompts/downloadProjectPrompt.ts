@@ -24,11 +24,7 @@ async function createProjectsList(
     logger.error(i18n(`${i18nKey}.errors.accountIdRequired`));
     process.exit(EXIT_CODES.ERROR);
   } catch (e) {
-    if (accountId) {
-      logError(e, new ApiErrorContext({ accountId }));
-    } else {
-      logError(e);
-    }
+    logError(e, accountId ? new ApiErrorContext({ accountId }) : undefined);
     process.exit(EXIT_CODES.ERROR);
   }
 }
