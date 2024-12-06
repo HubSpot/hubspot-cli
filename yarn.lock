@@ -1386,7 +1386,7 @@
     react "18.3.1"
     react-dom "18.3.1"
 
-"@hubspot/cms-dev-server@^0.18.9":
+"@hubspot/cms-dev-server@^0.18.10":
   version "0.18.10"
   resolved "https://registry.yarnpkg.com/@hubspot/cms-dev-server/-/cms-dev-server-0.18.10.tgz#db7737ea03aea035e6b3f4c12e061da33d850475"
   integrity sha512-khuA4tocob2P77zW/AZ9k2RxFdfj0Oju7HtbGM7TGdw4o0gddF25bXHYD+IG+p0CgZdr7Vv0KvouVNrkPwyM1g==
