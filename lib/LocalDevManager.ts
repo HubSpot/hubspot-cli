@@ -108,9 +108,9 @@ class LocalDevManager {
       return;
     }
 
-    const { data: portalPublicApps } = await fetchPublicAppsForPortal(
-      this.targetProjectAccountId
-    );
+    const {
+      data: { results: portalPublicApps },
+    } = await fetchPublicAppsForPortal(this.targetProjectAccountId);
 
     const activePublicAppData = portalPublicApps.find(
       ({ sourceId }) => sourceId === this.activeApp.config.uid
