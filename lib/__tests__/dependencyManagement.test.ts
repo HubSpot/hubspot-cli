@@ -47,13 +47,14 @@ describe('lib/dependencyManagement', () => {
   describe('getLatestCliVersion', () => {
     it('should return the version correctly', async () => {
       const latest = '1.0.0';
+      const next = '1.0.0.beta.1';
       execMock = jest
         .fn()
-        .mockResolvedValueOnce({ stdout: JSON.stringify({ latest }) });
+        .mockResolvedValueOnce({ stdout: JSON.stringify({ latest, next }) });
 
       util.promisify = jest.fn().mockReturnValueOnce(execMock);
       const actual = await getLatestCliVersion();
-      expect(actual).toBe(latest);
+      expect(actual).toEqual({ latest, next });
     });
 
     it('should throw any errors that encounter with the check', async () => {

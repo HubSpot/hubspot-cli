@@ -9,7 +9,6 @@ const {
   getAccountId,
 } = require('../../lib/commonOpts');
 const { getCwd } = require('@hubspot/local-dev-lib/path');
-const { preview } = require('@hubspot/theme-preview-dev-server');
 const { getUploadableFileList } = require('../../lib/upload');
 const { trackCommandUsage } = require('../../lib/usageTracking');
 const { loadAndValidateOptions } = require('../../lib/validation');
@@ -30,7 +29,8 @@ const {
   findProjectComponents,
   COMPONENT_TYPES,
 } = require('../../lib/projectStructure');
-
+const { preview } = require('@hubspot/theme-preview-dev-server');
+const { hasFeature } = require('../../lib/hasFeature');
 const i18nKey = 'commands.theme.subcommands.preview';
 
 exports.command = 'preview [--src] [--dest]';
@@ -108,7 +108,7 @@ const determineSrcAndDest = async options => {
 };
 
 exports.handler = async options => {
-  const { notify, skipUpload, noSsl, port, debug, resetSession } = options;
+  const { notify, noSsl, resetSession, port, generateFieldsTypes } = options;
 
   await loadAndValidateOptions(options);
 
@@ -180,17 +180,51 @@ exports.handler = async options => {
 
   trackCommandUsage('preview', accountId);
 
-  preview(accountId, absoluteSrc, dest, {
-    notify,
-    filePaths,
-    skipUpload,
-    noSsl,
-    port,
-    debug,
-    resetSession,
-    startProgressBar,
-    handleUserInput,
-  });
+  let createUnifiedDevServer;
+  try {
+    require.resolve('@hubspot/cms-dev-server');
+    const { createDevServer } = await import('@hubspot/cms-dev-server');
+    createUnifiedDevServer = createDevServer;
+  } catch (e) {
+    logger.warn(
+      'Unified dev server requires node 20 to run. Defaulting to legacy preview.'
+    );
+  }
+
+  const isUngatedForUnified = await hasFeature(
+    accountId,
+    'cms:react:unifiedThemePreview'
+  );
+  if (isUngatedForUnified && createUnifiedDevServer) {
+    if (port) {
+      process.env['PORT'] = port;
+    }
+    createUnifiedDevServer(
+      absoluteSrc,
+      false,
+      false,
+      false,
+      !noSsl,
+      generateFieldsTypes,
+      {
+        filePaths,
+        resetSession,
+        startProgressBar,
+        handleUserInput,
+        dest,
+      }
+    );
+  } else {
+    preview(accountId, absoluteSrc, dest, {
+      notify,
+      filePaths,
+      noSsl,
+      port,
+      resetSession,
+      startProgressBar,
+      handleUserInput,
+    });
+  }
 };
 
 exports.builder = yargs => {
@@ -221,16 +255,11 @@ exports.builder = yargs => {
     describe: i18n(`${i18nKey}.options.port.describe`),
     type: 'number',
   });
-  yargs.option('debug', {
-    describe: false,
-    type: 'boolean',
-  });
-  yargs.option('skipUpload', {
-    alias: 'skip',
-    describe: false,
-    type: 'boolean',
-  });
   yargs.option('resetSession', {
+    describe: false,
+    type: 'boolean',
+  });
+  yargs.option('generateFieldsTypes', {
     describe: false,
     type: 'boolean',
   });
