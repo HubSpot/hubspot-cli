@@ -1,19 +1,29 @@
-// @ts-nocheck
-const path = require('path');
-const { getCwd } = require('@hubspot/local-dev-lib/path');
-const { promptUser } = require('./promptUtils');
-const { i18n } = require('../lang');
+import path from 'path';
+import { getCwd } from '@hubspot/local-dev-lib/path';
+import { promptUser } from './promptUtils';
+import { i18n } from '../lang';
 
 const i18nKey = 'lib.prompts.previewPrompt';
 
-const previewPrompt = (promptOptions = {}) => {
-  return promptUser([
+type PreviewPromptResponse = {
+  src: string;
+  dest: string;
+};
+
+type PreviewProjectPromptResponse = {
+  themeComponentPath: string;
+};
+
+export async function previewPrompt(
+  promptOptions: { src?: string; dest?: string } = {}
+): Promise<PreviewPromptResponse> {
+  return promptUser<PreviewPromptResponse>([
     {
       name: 'src',
       message: i18n(`${i18nKey}.enterSrc`),
       when: !promptOptions.src,
       default: '.',
-      validate: input => {
+      validate: (input?: string) => {
         if (!input) {
           return i18n(`${i18nKey}.errors.srcRequired`);
         }
@@ -25,7 +35,7 @@ const previewPrompt = (promptOptions = {}) => {
       message: i18n(`${i18nKey}.enterDest`),
       when: !promptOptions.dest,
       default: path.basename(getCwd()),
-      validate: input => {
+      validate: (input?: string) => {
         if (!input) {
           return i18n(`${i18nKey}.errors.destRequired`);
         }
@@ -33,10 +43,12 @@ const previewPrompt = (promptOptions = {}) => {
       },
     },
   ]);
-};
+}
 
-const previewProjectPrompt = async themeComponents => {
-  return promptUser([
+export async function previewProjectPrompt(
+  themeComponents: { path: string }[]
+): Promise<PreviewProjectPromptResponse> {
+  return promptUser<PreviewProjectPromptResponse>([
     {
       name: 'themeComponentPath',
       message: i18n(`${i18nKey}.themeProjectSelect`),
@@ -50,9 +62,4 @@ const previewProjectPrompt = async themeComponents => {
       }),
     },
   ]);
-};
-
-module.exports = {
-  previewPrompt,
-  previewProjectPrompt,
-};
+}

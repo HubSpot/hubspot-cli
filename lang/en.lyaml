@@ -1307,6 +1307,7 @@ en:
         selectAppIdMigrate: "[--appId] Choose an app under {{ accountName }} to migrate:"
         selectAppIdClone: "[--appId] Choose an app under {{ accountName }} to clone:"
         errors:
+          noAccountId: "An account ID is required to select an app."
           noAppsMigration: "{{#bold}}No apps to migrate{{/bold}}"
           noAppsClone: "{{#bold}}No apps to clone{{/bold}}"
           noAppsMigrationMessage: "The selected developer account {{#bold}}{{ accountName }}{{/bold}} doesn't have any apps that can be migrated to the projects framework."
