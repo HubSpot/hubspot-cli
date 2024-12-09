@@ -5,6 +5,7 @@ const {
   addAccountOptions,
   addGlobalOptions,
 } = require('../lib/commonOpts');
+const lighthouseScore = require('./cms/lighthouseScore');
 const convertFields = require('./cms/convertFields');
 const getReactModule = require('./cms/getReactModule');
 
@@ -19,6 +20,7 @@ exports.builder = yargs => {
   addGlobalOptions(yargs);
 
   yargs
+    .command(lighthouseScore)
     .command(convertFields)
     .command(getReactModule)
     .demandCommand(1, '');

@@ -1,10 +1,12 @@
 // @ts-nocheck
 import yargs from 'yargs';
+import lighthouseScore from '../cms/lighthouseScore';
 import convertFields from '../cms/convertFields';
 import getReactModule from '../cms/getReactModule';
 import { addAccountOptions, addConfigOptions } from '../../lib/commonOpts';
 
 jest.mock('yargs');
+jest.mock('../cms/lighthouseScore');
 jest.mock('../cms/convertFields');
 jest.mock('../cms/getReactModule');
 jest.mock('../../lib/commonOpts');
@@ -29,6 +31,7 @@ describe('commands/cms', () => {
 
   describe('builder', () => {
     const subcommands = [
+      ['lighthouseScore', lighthouseScore],
       ['convertFields', convertFields],
       ['getReactModule', getReactModule],
     ];
