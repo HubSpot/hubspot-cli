@@ -1,29 +1,15 @@
-// @ts-nocheck
-const fs = require('fs-extra');
-const path = require('path');
-const archiver = require('archiver');
-const tmp = require('tmp');
-const chalk = require('chalk');
-const findup = require('findup-sync');
-const { logger } = require('@hubspot/local-dev-lib/logger');
-const { getEnv } = require('@hubspot/local-dev-lib/config');
-const { getHubSpotWebsiteOrigin } = require('@hubspot/local-dev-lib/urls');
-const { fetchFileFromRepository } = require('@hubspot/local-dev-lib/github');
-const {
-  ENVIRONMENTS,
-} = require('@hubspot/local-dev-lib/constants/environments');
-const {
-  FEEDBACK_INTERVAL,
-  POLLING_DELAY,
-  PROJECT_BUILD_TEXT,
-  PROJECT_DEPLOY_TEXT,
-  PROJECT_CONFIG_FILE,
-  PROJECT_TASK_TYPES,
-  PROJECT_ERROR_TYPES,
-  HUBSPOT_PROJECT_COMPONENTS_GITHUB_PATH,
-  PROJECT_COMPONENT_TYPES,
-} = require('./constants');
-const {
+import fs from 'fs-extra';
+import path from 'path';
+import archiver from 'archiver';
+import tmp from 'tmp';
+import chalk from 'chalk';
+import findup from 'findup-sync';
+import { logger } from '@hubspot/local-dev-lib/logger';
+import { getEnv } from '@hubspot/local-dev-lib/config';
+import { getHubSpotWebsiteOrigin } from '@hubspot/local-dev-lib/urls';
+import { fetchFileFromRepository } from '@hubspot/local-dev-lib/github';
+import { ENVIRONMENTS } from '@hubspot/local-dev-lib/constants/environments';
+import {
   createProject,
   getBuildStatus,
   getBuildStructure,
@@ -33,22 +19,29 @@ const {
   uploadProject,
   fetchBuildWarnLogs,
   fetchDeployWarnLogs,
-} = require('@hubspot/local-dev-lib/api/projects');
-const { isSpecifiedError } = require('@hubspot/local-dev-lib/errors/index');
-const { shouldIgnoreFile } = require('@hubspot/local-dev-lib/ignoreRules');
-const { getCwd, getAbsoluteFilePath } = require('@hubspot/local-dev-lib/path');
-const { downloadGithubRepoContents } = require('@hubspot/local-dev-lib/github');
-const { promptUser } = require('./prompts/promptUtils');
-const { EXIT_CODES } = require('./enums/exitCodes');
-const {
-  uiLine,
-  uiLink,
-  uiAccountDescription,
-  uiCommandReference,
-} = require('./ui');
-const { i18n } = require('./lang');
-const SpinniesManager = require('./ui/SpinniesManager');
-const { logError, ApiErrorContext } = require('./errorHandlers/index');
+} from '@hubspot/local-dev-lib/api/projects';
+import { isSpecifiedError } from '@hubspot/local-dev-lib/errors/index';
+import { shouldIgnoreFile } from '@hubspot/local-dev-lib/ignoreRules';
+import { getCwd, getAbsoluteFilePath } from '@hubspot/local-dev-lib/path';
+import { downloadGithubRepoContents } from '@hubspot/local-dev-lib/github';
+
+import {
+  FEEDBACK_INTERVAL,
+  POLLING_DELAY,
+  PROJECT_BUILD_TEXT,
+  PROJECT_DEPLOY_TEXT,
+  PROJECT_CONFIG_FILE,
+  PROJECT_TASK_TYPES,
+  PROJECT_ERROR_TYPES,
+  HUBSPOT_PROJECT_COMPONENTS_GITHUB_PATH,
+  PROJECT_COMPONENT_TYPES,
+} from './constants';
+import { promptUser } from './prompts/promptUtils';
+import { EXIT_CODES } from './enums/exitCodes';
+import { uiLine, uiLink, uiAccountDescription, uiCommandReference } from './ui';
+import { i18n } from './lang';
+import SpinniesManager from './ui/SpinniesManager';
+import { logError, ApiErrorContext } from './errorHandlers/index';
 
 const i18nKey = 'lib.projects';
 
