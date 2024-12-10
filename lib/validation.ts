@@ -27,13 +27,11 @@ const {
 } = require('@hubspot/local-dev-lib/path');
 const { getAccountId, getCmsPublishMode } = require('./commonOpts');
 const { EXIT_CODES } = require('./enums/exitCodes');
-const { checkAndWarnGitInclusion } = require('./ui/git');
 const { logError } = require('./errorHandlers/index');
 
 async function loadAndValidateOptions(options, shouldValidateAccount = true) {
   const { config: configPath } = options;
   loadConfig(configPath, options);
-  checkAndWarnGitInclusion(getConfigPath());
 
   let validAccount = true;
   if (shouldValidateAccount) {
