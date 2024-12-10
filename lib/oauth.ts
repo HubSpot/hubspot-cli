@@ -1,51 +1,55 @@
-// @ts-nocheck
-const express = require('express');
-const open = require('open');
-const {
-  OAuth2Manager,
-} = require('@hubspot/local-dev-lib/models/OAuth2Manager');
-const { getAccountConfig } = require('@hubspot/local-dev-lib/config');
-const {
-  getAccountIdentifier,
-} = require('@hubspot/local-dev-lib/config/getAccountIdentifier');
-const { addOauthToAccountConfig } = require('@hubspot/local-dev-lib/oauth');
-const { handleExit } = require('./process');
-const { getHubSpotWebsiteOrigin } = require('@hubspot/local-dev-lib/urls');
-const { logger } = require('@hubspot/local-dev-lib/logger');
-const {
-  ENVIRONMENTS,
-} = require('@hubspot/local-dev-lib/constants/environments');
+import express from 'express';
+import open from 'open';
+import { OAuth2Manager } from '@hubspot/local-dev-lib/models/OAuth2Manager';
+import { getAccountConfig } from '@hubspot/local-dev-lib/config';
+import { getAccountIdentifier } from '@hubspot/local-dev-lib/config/getAccountIdentifier';
+import { addOauthToAccountConfig } from '@hubspot/local-dev-lib/oauth';
+import { getHubSpotWebsiteOrigin } from '@hubspot/local-dev-lib/urls';
+import { logger } from '@hubspot/local-dev-lib/logger';
+import { ENVIRONMENTS } from '@hubspot/local-dev-lib/constants/environments';
+import { Server } from 'http';
+
+import { handleExit } from './process';
+import { i18n } from './lang';
 
 const PORT = 3000;
 const redirectUri = `http://localhost:${PORT}/oauth-callback`;
 
-const buildAuthUrl = oauthManager => {
+const i18nKey = 'lib.oauth';
+
+function buildAuthUrl(oauthManager: OAuth2Manager): string {
+  const { env, clientId, scopes } = oauthManager.account;
+
+  if (!(env && clientId && scopes)) {
+    throw new Error(i18n(`${i18nKey}.buildAuthUrlError`));
+  }
+
   return (
-    `${getHubSpotWebsiteOrigin(oauthManager.account.env)}/oauth/${
+    `${getHubSpotWebsiteOrigin(env)}/oauth/${
       oauthManager.account.accountId
     }/authorize` +
-    `?client_id=${encodeURIComponent(oauthManager.account.clientId)}` + // app's client ID
-    `&scope=${encodeURIComponent(oauthManager.account.scopes.join(' '))}` + // scopes being requested by the app
+    `?client_id=${encodeURIComponent(clientId)}` + // app's client ID
+    `&scope=${encodeURIComponent(scopes.join(' '))}` + // scopes being requested by the app
     `&redirect_uri=${encodeURIComponent(redirectUri)}` // where to send the user after the consent page
   );
-};
+}
 
-const handleServerOnProcessEnd = server => {
+function handleServerOnProcessEnd(server: Server): void {
   const shutdownServerIfRunning = () => {
     server?.close();
   };
 
   handleExit(shutdownServerIfRunning);
-};
+}
 
-const authorize = async oauthManager => {
+async function authorize(oauthManager: OAuth2Manager): Promise<void> {
   if (process.env.BROWSER !== 'none') {
     open(buildAuthUrl(oauthManager), { url: true });
   }
 
   // eslint-disable-next-line no-async-promise-executor
-  return new Promise(async (resolve, reject) => {
-    let server;
+  return new Promise<void>(async (resolve, reject) => {
+    let server: Server | null;
     const app = express();
 
     app.get('/oauth-callback', async (req, res) => {
@@ -87,9 +91,9 @@ const authorize = async oauthManager => {
 
     handleServerOnProcessEnd(server);
   });
-};
+}
 
-const setupOauth = accountConfig => {
+function setupOauth(accountConfig): OAuth2Manager {
   const id = getAccountIdentifier(accountConfig);
   const accountId = parseInt(id, 10);
   const config = getAccountConfig(accountId) || {};
@@ -97,15 +101,11 @@ const setupOauth = accountConfig => {
     ...accountConfig,
     environment: accountConfig.env || config.env || ENVIRONMENTS.PROD,
   });
-};
+}
 
-const authenticateWithOauth = async configData => {
-  const oauthManager = setupOauth(configData);
+export async function authenticateWithOauth(accountConfig) {
+  const oauthManager = setupOauth(accountConfig);
   logger.log('Authorizing');
   await authorize(oauthManager);
   addOauthToAccountConfig(oauthManager);
-};
-
-module.exports = {
-  authenticateWithOauth,
-};
+}

@@ -30,6 +30,7 @@
     "yargs-parser": "^21.1.1"
   },
   "devDependencies": {
+    "@types/express": "^5.0.0",
     "@types/fs-extra": "^11.0.4",
     "@types/jest": "^29.5.14",
     "@types/js-yaml": "^4.0.9",
