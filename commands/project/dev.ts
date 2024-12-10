@@ -110,7 +110,7 @@ exports.handler = async options => {
   // The account that we are locally testing against
   let targetTestingAccountId;
 
-  // Check that the default account or flag option is valid for the type of app in this projec
+  // Check that the default account or flag option is valid for the type of app in this project
   checkIfDefaultAccountIsSupported(accountConfig, hasPublicApps);
 
   // The user is targeting an account type that we recommend developing on
