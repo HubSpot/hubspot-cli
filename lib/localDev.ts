@@ -121,29 +121,6 @@ const checkIfParentAccountIsAuthed = accountConfig => {
   }
 };
 
-// Confirm the default account is a developer account if developing public apps
-const checkIfAccountFlagIsSupported = (accountConfig, hasPublicApps) => {
-  if (hasPublicApps) {
-    if (!isDeveloperTestAccount(accountConfig)) {
-      logger.error(
-        i18n(`${i18nKey}.validateAccountOption.invalidPublicAppAccount`, {
-          useCommand: uiCommandReference('hs accounts use'),
-          devCommand: uiCommandReference('hs project dev'),
-        })
-      );
-      process.exit(EXIT_CODES.SUCCESS);
-    }
-    checkIfParentAccountIsAuthed(accountConfig);
-  } else if (isAppDeveloperAccount(accountConfig)) {
-    logger.error(
-      i18n(`${i18nKey}.validateAccountOption.invalidPrivateAppAccount`, {
-        useCommand: uiCommandReference('hs accounts use'),
-      })
-    );
-    process.exit(EXIT_CODES.SUCCESS);
-  }
-};
-
 // If the user isn't using the recommended account type, prompt them to use or create one
 const suggestRecommendedNestedAccount = async (
   accounts,
@@ -480,7 +457,6 @@ const getAccountHomeUrl = accountId => {
 module.exports = {
   confirmDefaultAccountIsTarget,
   checkIfDefaultAccountIsSupported,
-  checkIfAccountFlagIsSupported,
   suggestRecommendedNestedAccount,
   createSandboxForLocalDev,
   createDeveloperTestAccountForLocalDev,

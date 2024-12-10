@@ -46,7 +46,6 @@ const {
   createNewProjectForLocalDev,
   createInitialBuildForNewProject,
   useExistingDevTestAccount,
-  checkIfAccountFlagIsSupported,
   checkIfParentAccountIsAuthed,
 } = require('../../lib/localDev');
 
@@ -107,23 +106,15 @@ exports.handler = async options => {
     (!hasPublicApps && isSandbox(accountConfig));
 
   // The account that the project must exist in
-  let targetProjectAccountId = derivedAccountId;
+  let targetProjectAccountId;
   // The account that we are locally testing against
-  let targetTestingAccountId = derivedAccountId;
+  let targetTestingAccountId;
 
-  // Check that the default account or flag option is valid for the type of app in this project
-  if (derivedAccountId) {
-    checkIfAccountFlagIsSupported(accountConfig, hasPublicApps);
-
-    if (hasPublicApps) {
-      targetProjectAccountId = accountConfig.parentAccountId;
-    }
-  } else {
-    checkIfDefaultAccountIsSupported(accountConfig, hasPublicApps);
-  }
+  // Check that the default account or flag option is valid for the type of app in this projec
+  checkIfDefaultAccountIsSupported(accountConfig, hasPublicApps);
 
   // The user is targeting an account type that we recommend developing on
-  if (!targetProjectAccountId && defaultAccountIsRecommendedType) {
+  if (defaultAccountIsRecommendedType) {
     targetTestingAccountId = derivedAccountId;
 
     await confirmDefaultAccountIsTarget(accountConfig, hasPublicApps);
