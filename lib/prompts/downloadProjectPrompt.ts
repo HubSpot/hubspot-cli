@@ -1,28 +1,43 @@
-// @ts-nocheck
-const { promptUser } = require('./promptUtils');
-const { getAccountId } = require('@hubspot/local-dev-lib/config');
-const { fetchProjects } = require('@hubspot/local-dev-lib/api/projects');
-const { logError, ApiErrorContext } = require('../errorHandlers/index');
-const { EXIT_CODES } = require('../enums/exitCodes');
-const { i18n } = require('../lang');
+import { promptUser } from './promptUtils';
+import { getAccountId } from '@hubspot/local-dev-lib/config';
+import { fetchProjects } from '@hubspot/local-dev-lib/api/projects';
+import { logError, ApiErrorContext } from '../errorHandlers/index';
+import { logger } from '@hubspot/local-dev-lib/logger';
+import { EXIT_CODES } from '../enums/exitCodes';
+import { i18n } from '../lang';
+import { Project } from '@hubspot/local-dev-lib/types/Project';
 
 const i18nKey = 'lib.prompts.downloadProjectPrompt';
 
-const createProjectsList = async accountId => {
-  try {
-    const { data: projects } = await fetchProjects(accountId);
-    return projects.results;
-  } catch (e) {
-    logError(e, new ApiErrorContext({ accountId }));
-    process.exit(EXIT_CODES.ERROR);
-  }
+type DownloadProjectPromptResponse = {
+  project: string;
 };
 
-const downloadProjectPrompt = async (promptOptions = {}) => {
+async function createProjectsList(
+  accountId: number | null
+): Promise<Project[]> {
+  try {
+    if (accountId) {
+      const { data: projects } = await fetchProjects(accountId);
+      return projects.results;
+    }
+    logger.error(i18n(`${i18nKey}.errors.accountIdRequired`));
+    process.exit(EXIT_CODES.ERROR);
+  } catch (e) {
+    logError(e, accountId ? new ApiErrorContext({ accountId }) : undefined);
+    process.exit(EXIT_CODES.ERROR);
+  }
+}
+
+export async function downloadProjectPrompt(promptOptions: {
+  account?: string;
+  project?: string;
+  name?: string;
+}): Promise<DownloadProjectPromptResponse> {
   const accountId = getAccountId(promptOptions.account);
   const projectsList = await createProjectsList(accountId);
 
-  return promptUser([
+  return promptUser<DownloadProjectPromptResponse>([
     {
       name: 'project',
       message: () => {
@@ -30,7 +45,7 @@ const downloadProjectPrompt = async (promptOptions = {}) => {
           !projectsList.find(p => p.name === promptOptions.name)
           ? i18n(`${i18nKey}.errors.projectNotFound`, {
               projectName: promptOptions.project,
-              accountId,
+              accountId: accountId || '',
             })
           : i18n(`${i18nKey}.selectProject`);
       },
@@ -46,8 +61,4 @@ const downloadProjectPrompt = async (promptOptions = {}) => {
       }),
     },
   ]);
-};
-
-module.exports = {
-  downloadProjectPrompt,
-};
+}

@@ -40,6 +40,7 @@ describe('doctor', () => {
 
     mockYargs = {
       option: jest.fn(() => mockYargs),
+      version: jest.fn(() => mockYargs),
     };
   });
 
@@ -60,7 +61,7 @@ describe('doctor', () => {
   describe('builder', () => {
     it('should apply the correct options', () => {
       builder(mockYargs);
-      expect(mockYargs.option).toHaveBeenCalledTimes(1);
+      expect(mockYargs.option).toHaveBeenCalledTimes(2);
       expect(mockYargs.option).toHaveBeenCalledWith('output-dir', {
         describe: 'Directory to save a detailed diagnosis JSON file in',
         type: 'string',

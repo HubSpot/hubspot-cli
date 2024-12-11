@@ -9,9 +9,7 @@ import createCommand from '../create';
 describe('commands/create', () => {
   describe('command', () => {
     it('should have the correct command structure', () => {
-      expect(createCommand.command).toEqual(
-        'create <type> [name] [dest] [--internal]'
-      );
+      expect(createCommand.command).toEqual('create <type> [name] [dest]');
     });
   });
 
@@ -43,7 +41,7 @@ describe('commands/create', () => {
     it('should support the correct options', () => {
       createCommand.builder(yargs);
 
-      expect(yargs.option).toHaveBeenCalledTimes(1);
+      expect(yargs.option).toHaveBeenCalledTimes(2);
       expect(yargs.option).toHaveBeenCalledWith(
         'internal',
         expect.objectContaining({ type: 'boolean', hidden: true })

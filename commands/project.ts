@@ -1,5 +1,5 @@
 // @ts-nocheck
-const { addConfigOptions, addAccountOptions } = require('../lib/commonOpts');
+const { addGlobalOptions } = require('../lib/commonOpts');
 const { i18n } = require('../lib/lang');
 const { uiBetaTag } = require('../lib/ui');
 const deploy = require('./project/deploy');
@@ -18,12 +18,11 @@ const installDeps = require('./project/installDeps');
 
 const i18nKey = 'commands.project';
 
-exports.command = 'project';
+exports.command = ['project', 'projects'];
 exports.describe = uiBetaTag(i18n(`${i18nKey}.describe`), false);
 
 exports.builder = yargs => {
-  addConfigOptions(yargs);
-  addAccountOptions(yargs);
+  addGlobalOptions(yargs);
 
   yargs
     .command(create)

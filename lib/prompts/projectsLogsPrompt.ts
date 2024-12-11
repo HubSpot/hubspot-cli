@@ -1,22 +1,31 @@
-// @ts-nocheck
-const { i18n } = require('../lang');
-const { promptUser } = require('./promptUtils');
+import { i18n } from '../lang';
+import { promptUser } from './promptUtils';
 
 const i18nKey = 'lib.prompts.projectLogsPrompt';
 
-const projectLogsPrompt = async ({
+type ProjectLogsPromptOptions = {
+  functionChoices?: string[];
+  promptOptions?: { function?: string };
+  projectName?: string;
+};
+
+type ProjectLogsPromptResponse = {
+  functionName?: string;
+};
+
+export async function projectLogsPrompt({
   functionChoices,
   promptOptions,
-  projectName = {},
-}) => {
+  projectName = '',
+}: ProjectLogsPromptOptions): Promise<ProjectLogsPromptResponse> {
   if (!functionChoices) {
     return {};
   }
-  if (functionChoices && functionChoices.length === 1) {
+  if (functionChoices.length === 1) {
     return { functionName: functionChoices[0] };
   }
 
-  return promptUser([
+  return promptUser<ProjectLogsPromptResponse>([
     {
       name: 'functionName',
       type: 'list',
@@ -27,8 +36,4 @@ const projectLogsPrompt = async ({
       choices: functionChoices,
     },
   ]);
-};
-
-module.exports = {
-  projectLogsPrompt,
-};
+}

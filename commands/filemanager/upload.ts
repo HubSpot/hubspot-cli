@@ -14,9 +14,9 @@ const { shouldIgnoreFile } = require('@hubspot/local-dev-lib/ignoreRules');
 const { ApiErrorContext, logError } = require('../../lib/errorHandlers/index');
 const {
   addConfigOptions,
+  addGlobalOptions,
   addAccountOptions,
   addUseEnvironmentOptions,
-  getAccountId,
 } = require('../../lib/commonOpts');
 const { loadAndValidateOptions } = require('../../lib/validation');
 const { trackCommandUsage } = require('../../lib/usageTracking');
@@ -29,11 +29,10 @@ exports.command = 'upload <src> <dest>';
 exports.describe = i18n(`${i18nKey}.describe`);
 
 exports.handler = async options => {
-  const { src, dest } = options;
+  const { src, dest, derivedAccountId } = options;
 
   await loadAndValidateOptions(options);
 
-  const accountId = getAccountId(options);
   const absoluteSrcPath = path.resolve(getCwd(), src);
 
   let stats;
@@ -64,7 +63,7 @@ exports.handler = async options => {
   trackCommandUsage(
     'filemanager-upload',
     { type: stats.isFile() ? 'file' : 'folder' },
-    accountId
+    derivedAccountId
   );
 
   const srcDestIssues = await validateSrcAndDestPaths(
@@ -86,11 +85,11 @@ exports.handler = async options => {
       return;
     }
 
-    uploadFile(accountId, absoluteSrcPath, normalizedDest)
+    uploadFile(derivedAccountId, absoluteSrcPath, normalizedDest)
       .then(() => {
         logger.success(
           i18n(`${i18nKey}.success.upload`, {
-            accountId,
+            accountId: derivedAccountId,
             dest: normalizedDest,
             src,
           })
@@ -106,7 +105,7 @@ exports.handler = async options => {
         logError(
           error,
           new ApiErrorContext({
-            accountId,
+            accountId: derivedAccountId,
             request: normalizedDest,
             payload: src,
           })
@@ -115,12 +114,12 @@ exports.handler = async options => {
   } else {
     logger.log(
       i18n(`${i18nKey}.logs.uploading`, {
-        accountId,
+        accountId: derivedAccountId,
         dest,
         src,
       })
     );
-    uploadFolder(accountId, absoluteSrcPath, dest)
+    uploadFolder(derivedAccountId, absoluteSrcPath, dest)
       .then(() => {
         logger.success(
           i18n(`${i18nKey}.success.uploadComplete`, {
@@ -131,13 +130,14 @@ exports.handler = async options => {
       .catch(error => {
         logger.error(i18n(`${i18nKey}.errors.uploadingFailed`));
         logError(error, {
-          accountId,
+          accountId: derivedAccountId,
         });
       });
   }
 };
 
 exports.builder = yargs => {
+  addGlobalOptions(yargs);
   addConfigOptions(yargs);
   addAccountOptions(yargs);
   addUseEnvironmentOptions(yargs);

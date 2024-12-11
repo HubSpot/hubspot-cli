@@ -1,13 +1,13 @@
 {
   "name": "@hubspot/cli",
-  "version": "6.4.0",
+  "version": "7.0.0-experimental.0",
   "description": "The official CLI for developing on HubSpot",
   "license": "Apache-2.0",
   "repository": "https://github.com/HubSpot/hubspot-cli",
   "dependencies": {
-    "@hubspot/local-dev-lib": "2.3.0",
+    "@hubspot/local-dev-lib": "3.0.1",
     "@hubspot/serverless-dev-runtime": "7.0.0",
-    "@hubspot/theme-preview-dev-server": "0.0.9",
+    "@hubspot/theme-preview-dev-server": "0.0.10",
     "@hubspot/ui-extensions-dev-server": "0.8.33",
     "archiver": "^7.0.1",
     "chalk": "^4.1.2",
@@ -26,7 +26,8 @@
     "table": "^6.6.0",
     "tmp": "^0.2.1",
     "update-notifier": "^5.1.0",
-    "yargs": "17.7.2"
+    "yargs": "17.7.2",
+    "yargs-parser": "^21.1.1"
   },
   "devDependencies": {
     "@types/fs-extra": "^11.0.4",
@@ -44,7 +45,7 @@
     "lint-staged": "^10.5.4",
     "madge": "^8.0.0",
     "mock-stdin": "^1.0.0",
-    "prettier": "^1.19.1",
+    "prettier": "^3.4.2",
     "semver": "^7.6.3",
     "ts-jest": "^29.2.5",
     "ts-node": "^10.9.2",
@@ -57,7 +58,7 @@
     "build": "ts-node ./scripts/build.ts",
     "lint": "eslint . && prettier --list-different ./**/*.{js,json}",
     "list-all-commands": "yarn ts-node ./scripts/get-all-commands.ts",
-    "prettier:write": "prettier --write ./**/*.{js,json}",
+    "prettier:write": "prettier --write ./**/*.{ts,js,json}",
     "test": "jest",
     "test-cli": "yarn --cwd 'acceptance-tests' test-ci",
     "test-cli-debug": "yarn --cwd 'acceptance-tests' test-debug",

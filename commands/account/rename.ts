@@ -2,16 +2,12 @@
 const { logger } = require('@hubspot/local-dev-lib/logger');
 const { renameAccount } = require('@hubspot/local-dev-lib/config');
 
-const {
-  addConfigOptions,
-  addAccountOptions,
-  getAccountId,
-} = require('../../lib/commonOpts');
+const { addConfigOptions, addAccountOptions } = require('../../lib/commonOpts');
 const { trackCommandUsage } = require('../../lib/usageTracking');
 const { loadAndValidateOptions } = require('../../lib/validation');
 const { i18n } = require('../../lib/lang');
 
-const i18nKey = 'commands.accounts.subcommands.rename';
+const i18nKey = 'commands.account.subcommands.rename';
 
 exports.command = 'rename <accountName> <newName>';
 exports.describe = i18n(`${i18nKey}.describe`);
@@ -19,10 +15,9 @@ exports.describe = i18n(`${i18nKey}.describe`);
 exports.handler = async options => {
   loadAndValidateOptions(options);
 
-  const { accountName, newName } = options;
-  const accountId = getAccountId(options);
+  const { accountName, newName, derivedAccountId } = options;
 
-  trackCommandUsage('accounts-rename', null, accountId);
+  trackCommandUsage('accounts-rename', null, derivedAccountId);
 
   await renameAccount(accountName, newName);
 
