@@ -45,7 +45,7 @@
     "lint-staged": "^10.5.4",
     "madge": "^8.0.0",
     "mock-stdin": "^1.0.0",
-    "prettier": "^1.19.1",
+    "prettier": "^3.4.2",
     "semver": "^7.6.3",
     "ts-jest": "^29.2.5",
     "ts-node": "^10.9.2",
@@ -57,7 +57,7 @@
   "scripts": {
     "build": "ts-node ./scripts/build.ts",
     "lint": "eslint . && prettier --list-different ./**/*.{js,json}",
-    "prettier:write": "prettier --write ./**/*.{js,json}",
+    "prettier:write": "prettier --write ./**/*.{ts,js,json}",
     "test": "jest",
     "test-cli": "yarn --cwd 'acceptance-tests' test-ci",
     "test-cli-debug": "yarn --cwd 'acceptance-tests' test-debug",

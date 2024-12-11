@@ -280,10 +280,8 @@ class LocalDevManager {
   }
 
   async checkPublicAppInstallation() {
-    const {
-      isInstalledWithScopeGroups,
-      previouslyAuthorizedScopeGroups,
-    } = await this.getActiveAppInstallationData();
+    const { isInstalledWithScopeGroups, previouslyAuthorizedScopeGroups } =
+      await this.getActiveAppInstallationData();
 
     const isReinstall = previouslyAuthorizedScopeGroups.length > 0;
 
@@ -364,7 +362,7 @@ class LocalDevManager {
   monitorConsoleOutput() {
     const originalStdoutWrite = process.stdout.write.bind(process.stdout);
 
-    process.stdout.write = function(chunk, encoding, callback) {
+    process.stdout.write = function (chunk, encoding, callback) {
       // Reset the most recently logged warning
       if (
         this.mostRecentUploadWarning &&
