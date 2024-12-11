@@ -1463,7 +1463,7 @@
     semver "^6.3.0"
     unixify "^1.0.0"
 
-"@hubspot/local-dev-lib@2.3.0":
+"@hubspot/local-dev-lib@2.3.0", "@hubspot/local-dev-lib@^2.3.0":
   version "2.3.0"
   resolved "https://registry.yarnpkg.com/@hubspot/local-dev-lib/-/local-dev-lib-2.3.0.tgz#3350b9902adb00b1b927d049197e7333501d90fe"
   integrity sha512-ovWE0XjuzzdyJoQ9rFXIYLotNCfowfMbN+8eIlBUu89uzBcWUZj+VQudU6GN15RlPS8ZTSSvVFnCcMxNJv1IKw==
@@ -1486,6 +1486,12 @@
     prettier "^3.3.0"
     semver "^6.3.0"
     unixify "^1.0.0"
+
+"@hubspot/project-parsing-lib@file:../project-translation-layer":
+  version "0.0.1"
+  dependencies:
+    "@hubspot/local-dev-lib" "^2.3.0"
+    ajv "^8.17.1"
 
 "@hubspot/serverless-dev-runtime@7.0.0":
   version "7.0.0"
@@ -3866,7 +3872,7 @@ ajv@^6.12.3, ajv@^6.12.4:
     json-schema-traverse "^0.4.1"
     uri-js "^4.2.2"
 
-ajv@^8.0.1:
+ajv@^8.0.1, ajv@^8.17.1:
   version "8.17.1"
   resolved "https://registry.yarnpkg.com/ajv/-/ajv-8.17.1.tgz#37d9a5c776af6bc92d7f4f9510eba4c0a60d11a6"
   integrity sha512-B/gBuNg5SiMTrPkC+A2+cW0RszwxYmn6VYxB/inlBStS5nx6xHIt/ehKRhIMhqusl7a8LjQoZnjCs5vhwxOQ1g==
