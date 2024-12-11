@@ -9,10 +9,7 @@ exports.command = 'filemanager';
 exports.describe = i18n(`${i18nKey}.describe`);
 
 exports.builder = yargs => {
-  yargs
-    .command(upload)
-    .command(fetch)
-    .demandCommand(1, '');
+  yargs.command(upload).command(fetch).demandCommand(1, '');
 
   return yargs;
 };

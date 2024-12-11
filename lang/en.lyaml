@@ -1226,6 +1226,7 @@ en:
         developerTestAccountLimit: "Your account reached the limit of {{ limit }} developer test accounts."
         confirmDefaultAccount: "Continue testing on {{#bold}}{{ accountName }} ({{ accountType }}){{/bold}}? (Y/n)"
         confirmUseExistingDeveloperTestAccount: "Continue with {{ accountName }}? This account isn't currently connected to the HubSpot CLI. By continuing, you'll be prompted to generate a personal access key and connect it."
+        noAccountId: "No account ID found for the selected account. Please try again."
       projectLogsPrompt:
         functionName: "[--function] Select function in {{#bold}}{{projectName}}{{/bold}} project"
       setAsDefaultAccountPrompt:
@@ -1307,6 +1308,7 @@ en:
         selectAppIdMigrate: "[--appId] Choose an app under {{ accountName }} to migrate:"
         selectAppIdClone: "[--appId] Choose an app under {{ accountName }} to clone:"
         errors:
+          noAccountId: "An account ID is required to select an app."
           noAppsMigration: "{{#bold}}No apps to migrate{{/bold}}"
           noAppsClone: "{{#bold}}No apps to clone{{/bold}}"
           noAppsMigrationMessage: "The selected developer account {{#bold}}{{ accountName }}{{/bold}} doesn't have any apps that can be migrated to the projects framework."

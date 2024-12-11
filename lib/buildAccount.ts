@@ -56,10 +56,7 @@ async function saveAccountToConfig({
 
   let validName = updatedConfig.name;
   if (!updatedConfig.name) {
-    const nameForConfig = accountName
-      .toLowerCase()
-      .split(' ')
-      .join('-');
+    const nameForConfig = accountName.toLowerCase().split(' ').join('-');
     validName = nameForConfig;
     const invalidAccountName = accountNameExistsInConfig(nameForConfig);
     if (invalidAccountName) {

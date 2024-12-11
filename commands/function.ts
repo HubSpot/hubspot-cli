@@ -12,11 +12,7 @@ exports.describe = i18n(`${i18nKey}.describe`);
 
 exports.builder = yargs => {
   addGlobalOptions(yargs);
-  yargs
-    .command(list)
-    .command(deploy)
-    .command(server)
-    .demandCommand(1, '');
+  yargs.command(list).command(deploy).command(server).demandCommand(1, '');
 
   return yargs;
 };

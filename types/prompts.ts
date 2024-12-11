@@ -9,15 +9,22 @@ type PromptType =
   | 'checkbox'
   | 'input'
   | 'password'
+  | 'number'
   | 'rawlist';
 
-export type PromptChoices =
-  | string[]
-  | Array<{ name: string; value: string | { [key: string]: string } }>;
+export type PromptChoices = Array<
+  | string
+  | {
+      name: string;
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      value?: any;
+      disabled?: string | boolean;
+    }
+>;
 
 export type PromptWhen = boolean | (() => boolean);
 
-type PromptOperand = string | number | boolean | string[] | boolean[];
+type PromptOperand = string | number | boolean | string[] | boolean[] | null;
 
 export type PromptConfig<T extends GenericPromptResponse> = {
   name: keyof T;
@@ -27,9 +34,9 @@ export type PromptConfig<T extends GenericPromptResponse> = {
   when?: PromptWhen;
   pageSize?: number;
   default?: PromptOperand | ((answers: T) => PromptOperand);
-  validate?:
-    | ((answer?: string) => PromptOperand | Promise<PromptOperand>)
-    | ((answer: string[]) => PromptOperand | Promise<PromptOperand>);
+  transformer?: (input: string) => string | undefined;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  validate?: (answer?: any) => PromptOperand | Promise<PromptOperand>;
   mask?: string;
   filter?: (input: string) => string;
 };

@@ -12,7 +12,7 @@ type AccountNamePromptResponse = {
 };
 
 export function getCliAccountNamePromptConfig(
-  defaultName: string
+  defaultName?: string
 ): PromptConfig<AccountNamePromptResponse> {
   return {
     name: 'name',

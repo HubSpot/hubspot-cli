@@ -539,7 +539,7 @@ const handleProjectUpload = async (
   const archive = archiver('zip');
 
   const result = new Promise(resolve =>
-    output.on('close', async function() {
+    output.on('close', async function () {
       let uploadResult = {};
 
       logger.debug(
