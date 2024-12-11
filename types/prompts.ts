@@ -36,7 +36,7 @@ export type PromptConfig<T extends GenericPromptResponse> = {
   default?: PromptOperand | ((answers: T) => PromptOperand);
   transformer?: (input: string) => string | undefined;
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  validate?: (answer?: unknown | any) => PromptOperand | Promise<PromptOperand>;
+  validate?: (answer?: any) => PromptOperand | Promise<PromptOperand>;
   mask?: string;
   filter?: (input: string) => string;
 };

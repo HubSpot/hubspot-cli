@@ -18,6 +18,7 @@ import {
   FetchDeveloperTestAccountsResponse,
 } from '@hubspot/local-dev-lib/types/developerTestAccounts';
 import { PromptChoices } from '../../types/prompts';
+import { EXIT_CODES } from '../enums/exitCodes';
 
 const i18nKey = 'lib.prompts.projectDevTargetAccountPrompt';
 
@@ -64,6 +65,9 @@ export async function selectSandboxTargetAccountPrompt(
     if (defaultAccountId) {
       const { data } = await getSandboxUsageLimits(defaultAccountId);
       sandboxUsage = data.usage;
+    } else {
+      logger.error(`${i18nKey}.noAccountId`);
+      process.exit(EXIT_CODES.ERROR);
     }
   } catch (err) {
     logger.debug('Unable to fetch sandbox usage limits: ', err);
@@ -130,6 +134,9 @@ export async function selectDeveloperTestTargetAccountPrompt(
     if (defaultAccountId) {
       const { data } = await fetchDeveloperTestAccounts(defaultAccountId);
       devTestAccountsResponse = data;
+    } else {
+      logger.error(`${i18nKey}.noAccountId`);
+      process.exit(EXIT_CODES.ERROR);
     }
   } catch (err) {
     logger.debug('Unable to fetch developer test account usage limits: ', err);

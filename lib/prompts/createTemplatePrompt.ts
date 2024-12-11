@@ -4,7 +4,7 @@ import { PromptChoices, PromptConfig } from '../../types/prompts';
 
 const i18nKey = 'lib.prompts.createTemplatePrompt';
 
-const templateTypeChoices: PromptChoices = [
+const templateTypeChoices = [
   { name: 'page', value: 'page-template' },
   { name: 'email', value: 'email-template' },
   { name: 'partial', value: 'partial' },
@@ -12,10 +12,10 @@ const templateTypeChoices: PromptChoices = [
   { name: 'blog listing', value: 'blog-listing-template' },
   { name: 'blog post', value: 'blog-post-template' },
   { name: 'search results', value: 'search-template' },
-] as const;
+] satisfies PromptChoices;
 
 interface CreateTemplatePromptResponse {
-  templateType: typeof templateTypeChoices[number];
+  templateType: typeof templateTypeChoices[number]['value'];
 }
 
 const TEMPLATE_TYPE_PROMPT: PromptConfig<CreateTemplatePromptResponse> = {
