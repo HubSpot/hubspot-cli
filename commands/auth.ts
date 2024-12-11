@@ -61,9 +61,8 @@ const ALLOWED_AUTH_METHODS = [
   OAUTH_AUTH_METHOD.value,
   PERSONAL_ACCESS_KEY_AUTH_METHOD.value,
 ];
-const SUPPORTED_AUTHENTICATION_PROTOCOLS_TEXT = commaSeparatedValues(
-  ALLOWED_AUTH_METHODS
-);
+const SUPPORTED_AUTHENTICATION_PROTOCOLS_TEXT =
+  commaSeparatedValues(ALLOWED_AUTH_METHODS);
 
 exports.command = 'auth';
 exports.describe = i18n(`${i18nKey}.describe`, {

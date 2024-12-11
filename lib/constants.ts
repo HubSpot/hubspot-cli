@@ -1,4 +1,5 @@
-export const HUBSPOT_PROJECT_COMPONENTS_GITHUB_PATH = 'HubSpot/hubspot-project-components' as const;
+export const HUBSPOT_PROJECT_COMPONENTS_GITHUB_PATH =
+  'HubSpot/hubspot-project-components' as const;
 export const DEFAULT_PROJECT_TEMPLATE_BRANCH = 'main' as const;
 
 export const FEEDBACK_INTERVAL = 10 as const;

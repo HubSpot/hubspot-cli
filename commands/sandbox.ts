@@ -13,10 +13,7 @@ exports.describe = uiBetaTag(i18n(`${i18nKey}.describe`), false);
 exports.builder = yargs => {
   addGlobalOptions(yargs);
 
-  yargs
-    .command(create)
-    .command(del)
-    .demandCommand(1, '');
+  yargs.command(create).command(del).demandCommand(1, '');
 
   return yargs;
 };
