@@ -4,14 +4,67 @@ import { walk } from '@hubspot/local-dev-lib/fs';
 import { logger } from '@hubspot/local-dev-lib/logger';
 import { logError } from './errorHandlers/index';
 
-export type ComponentType = 'private-app' | 'public-app' | 'hubl-theme';
+type ComponentTypes = 'private-app' | 'public-app' | 'hubl-theme';
 type ValueOf<T> = T[keyof T];
 
 export type Component = {
-  type: ComponentType;
+  type: ComponentTypes;
   config: object;
   runnable: boolean;
   path: string;
+};
+
+type PrivateAppComponentConfigType = {
+  name: string;
+  description: string;
+  uid: string;
+  scopes: Array<string>;
+  public: boolean;
+  extensions?: {
+    crm: {
+      cards: Array<{ file: string }>;
+    };
+  };
+};
+
+type PublicAppComponentConfigType = {
+  name: string;
+  uid: string;
+  description: string;
+  allowedUrls: Array<string>;
+  auth: {
+    redirectUrls: Array<string>;
+    requiredScopes: Array<string>;
+    optionalScopes: Array<string>;
+    conditionallyRequiredScopes: Array<string>;
+  };
+  support: {
+    supportEmail: string;
+    documentationUrl: string;
+    supportUrl: string;
+    supportPhone: string;
+  };
+  extensions?: {
+    crm: {
+      cards: Array<{ file: string }>;
+    };
+  };
+  webhooks?: {
+    file: string;
+  };
+};
+
+type AppCardComponentConfigType = {
+  type: 'crm-card';
+  data: {
+    title: string;
+    uid: string;
+    location: string;
+    module: {
+      file: string;
+    };
+    objectTypes: Array<{ name: string }>;
+  };
 };
 
 export const COMPONENT_TYPES = {
@@ -30,8 +83,8 @@ export const CONFIG_FILES: {
 
 function getTypeFromConfigFile(
   configFile: ValueOf<typeof CONFIG_FILES>
-): ComponentType | null {
-  let key: ComponentType;
+): ComponentTypes | null {
+  let key: ComponentTypes;
   for (key in CONFIG_FILES) {
     if (CONFIG_FILES[key] === configFile) {
       return key;
@@ -53,10 +106,11 @@ function loadConfigFile(configPath: string) {
   return null;
 }
 
-/* eslint-disable-next-line @typescript-eslint/no-explicit-any */
-export function getAppCardConfigs(appConfig: any, appPath: string) {
-  /* eslint-disable-next-line @typescript-eslint/no-explicit-any */
-  const cardConfigs: Array<any> = [];
+export function getAppCardConfigs(
+  appConfig: PublicAppComponentConfigType | PrivateAppComponentConfigType,
+  appPath: string
+) {
+  const cardConfigs: Array<AppCardComponentConfigType> = [];
   let cards;
 
   if (appConfig && appConfig.extensions && appConfig.extensions.crm) {
@@ -79,8 +133,10 @@ export function getAppCardConfigs(appConfig: any, appPath: string) {
   return cardConfigs;
 }
 
-/* eslint-disable-next-line @typescript-eslint/no-explicit-any */
-function getIsLegacyApp(appConfig: any, appPath: string) {
+function getIsLegacyApp(
+  appConfig: PublicAppComponentConfigType | PrivateAppComponentConfigType,
+  appPath: string
+) {
   const cardConfigs = getAppCardConfigs(appConfig, appPath);
 
   if (!cardConfigs.length) {
@@ -145,7 +201,7 @@ export async function findProjectComponents(
 }
 
 export function getProjectComponentTypes(components: Array<Component>) {
-  const projectContents: { [key in ComponentType]?: boolean } = {};
+  const projectContents: { [key in ComponentTypes]?: boolean } = {};
 
   components.forEach(({ type }) => (projectContents[type] = true));
   return projectContents;
