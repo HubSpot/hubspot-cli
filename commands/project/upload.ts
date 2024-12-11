@@ -51,14 +51,10 @@ exports.handler = async options => {
 
   if (options.translate) {
     try {
-      console.log(
-        util.inspect(
-          await translate(path.join(projectDir, projectConfig.srcDir)),
-          true,
-          3,
-          true
-        )
+      const translation = await translate(
+        path.join(projectDir, projectConfig.srcDir)
       );
+      console.log(util.inspect(translation, false, null, true));
     } catch (e) {
       if (isTranslationError(e)) {
         return logger.error(e.toString());
