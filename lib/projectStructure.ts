@@ -1,24 +1,38 @@
-// @ts-nocheck
-const fs = require('fs');
-const path = require('path');
-const { walk } = require('@hubspot/local-dev-lib/fs');
-const { logger } = require('@hubspot/local-dev-lib/logger');
-const { logError } = require('./errorHandlers/index');
+import * as fs from 'fs';
+import * as path from 'path';
+import { walk } from '@hubspot/local-dev-lib/fs';
+import { logger } from '@hubspot/local-dev-lib/logger';
+import { logError } from './errorHandlers/index';
 
-const COMPONENT_TYPES = Object.freeze({
+export type ComponentType = 'private-app' | 'public-app' | 'hubl-theme';
+type ValueOf<T> = T[keyof T];
+
+export type Component = {
+  type: ComponentType;
+  config: object;
+  runnable: boolean;
+  path: string;
+};
+
+export const COMPONENT_TYPES = {
   privateApp: 'private-app',
   publicApp: 'public-app',
   hublTheme: 'hubl-theme',
-});
+} as const;
 
-const CONFIG_FILES = {
+export const CONFIG_FILES: {
+  [k in ValueOf<typeof COMPONENT_TYPES>]: string;
+} = {
   [COMPONENT_TYPES.privateApp]: 'app.json',
   [COMPONENT_TYPES.publicApp]: 'public-app.json',
   [COMPONENT_TYPES.hublTheme]: 'theme.json',
 };
 
-function getTypeFromConfigFile(configFile) {
-  for (const key in CONFIG_FILES) {
+function getTypeFromConfigFile(
+  configFile: ValueOf<typeof CONFIG_FILES>
+): ComponentType | null {
+  let key: ComponentType;
+  for (key in CONFIG_FILES) {
     if (CONFIG_FILES[key] === configFile) {
       return key;
     }
@@ -26,11 +40,11 @@ function getTypeFromConfigFile(configFile) {
   return null;
 }
 
-function loadConfigFile(configPath) {
+function loadConfigFile(configPath: string) {
   if (configPath) {
     try {
       const source = fs.readFileSync(configPath);
-      const parsedConfig = JSON.parse(source);
+      const parsedConfig = JSON.parse(source.toString());
       return parsedConfig;
     } catch (e) {
       logger.debug(e);
@@ -39,8 +53,10 @@ function loadConfigFile(configPath) {
   return null;
 }
 
-function getAppCardConfigs(appConfig, appPath) {
-  const cardConfigs = [];
+/* eslint-disable-next-line @typescript-eslint/no-explicit-any */
+export function getAppCardConfigs(appConfig: any, appPath: string) {
+  /* eslint-disable-next-line @typescript-eslint/no-explicit-any */
+  const cardConfigs: Array<any> = [];
   let cards;
 
   if (appConfig && appConfig.extensions && appConfig.extensions.crm) {
@@ -48,7 +64,7 @@ function getAppCardConfigs(appConfig, appPath) {
   }
 
   if (cards) {
-    cards.forEach(({ file }) => {
+    cards.forEach(({ file }: { file?: string }) => {
       if (typeof file === 'string') {
         const cardConfigPath = path.join(appPath, file);
         const cardConfig = loadConfigFile(cardConfigPath);
@@ -63,7 +79,8 @@ function getAppCardConfigs(appConfig, appPath) {
   return cardConfigs;
 }
 
-function getIsLegacyApp(appConfig, appPath) {
+/* eslint-disable-next-line @typescript-eslint/no-explicit-any */
+function getIsLegacyApp(appConfig: any, appPath: string) {
   const cardConfigs = getAppCardConfigs(appConfig, appPath);
 
   if (!cardConfigs.length) {
@@ -88,9 +105,11 @@ function getIsLegacyApp(appConfig, appPath) {
   return !hasAnyReactExtensions;
 }
 
-async function findProjectComponents(projectSourceDir) {
-  const components = [];
-  let projectFiles = [];
+export async function findProjectComponents(
+  projectSourceDir: string
+): Promise<Array<Component>> {
+  const components: Array<Component> = [];
+  let projectFiles: Array<string> = [];
 
   try {
     projectFiles = await walk(projectSourceDir);
@@ -108,13 +127,16 @@ async function findProjectComponents(projectSourceDir) {
       if (parsedAppConfig) {
         const isLegacy = getIsLegacyApp(parsedAppConfig, dir);
         const isHublTheme = base === CONFIG_FILES[COMPONENT_TYPES.hublTheme];
+        const type = getTypeFromConfigFile(base);
 
-        components.push({
-          type: getTypeFromConfigFile(base),
-          config: parsedAppConfig,
-          runnable: !isLegacy && !isHublTheme,
-          path: dir,
-        });
+        if (type) {
+          components.push({
+            type,
+            config: parsedAppConfig,
+            runnable: !isLegacy && !isHublTheme,
+            path: dir,
+          });
+        }
       }
     }
   });
@@ -122,16 +144,9 @@ async function findProjectComponents(projectSourceDir) {
   return components;
 }
 
-function getProjectComponentTypes(components) {
-  const projectContents = {};
+export function getProjectComponentTypes(components: Array<Component>) {
+  const projectContents: { [key in ComponentType]?: boolean } = {};
+
   components.forEach(({ type }) => (projectContents[type] = true));
   return projectContents;
 }
-
-module.exports = {
-  CONFIG_FILES,
-  COMPONENT_TYPES,
-  findProjectComponents,
-  getAppCardConfigs,
-  getProjectComponentTypes,
-};
