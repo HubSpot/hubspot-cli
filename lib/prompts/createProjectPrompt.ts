@@ -17,31 +17,25 @@ import { i18n } from '../lang';
 import { logger } from '@hubspot/local-dev-lib/logger';
 import { EXIT_CODES } from '../enums/exitCodes';
 import { RepoPath } from '@hubspot/local-dev-lib/types/Github';
+import { ProjectTemplate } from '../../types/projects';
 
 const i18nKey = 'lib.prompts.createProjectPrompt';
 
-const PROJECT_PROPERTIES = ['name', 'label', 'path', 'insertPath'];
+const PROJECT_TEMPLATE_PROPERTIES = ['name', 'label', 'path', 'insertPath'];
 
-type ProjectsConfig = {
-  projects?: ProjectProperties[];
-};
-
-type ProjectProperties = {
-  name: string;
-  label: string;
-  path: string;
-  insertPath: string;
+type ProjectTemplateRepoConfig = {
+  projects?: ProjectTemplate[];
 };
 
 type CreateProjectPromptResponse = {
   name: string;
   dest: string;
-  template: ProjectProperties;
+  template: ProjectTemplate;
 };
 
-function hasAllProperties(projectList: ProjectProperties[]): boolean {
+function hasAllProperties(projectList: ProjectTemplate[]): boolean {
   return projectList.every(config =>
-    PROJECT_PROPERTIES.every(p =>
+    PROJECT_TEMPLATE_PROPERTIES.every(p =>
       Object.prototype.hasOwnProperty.call(config, p)
     )
   );
@@ -50,13 +44,13 @@ function hasAllProperties(projectList: ProjectProperties[]): boolean {
 async function createTemplateOptions(
   templateSource: RepoPath,
   githubRef: string
-): Promise<ProjectProperties[]> {
+): Promise<ProjectTemplate[]> {
   const hasCustomTemplateSource = Boolean(templateSource);
   const branch = hasCustomTemplateSource
     ? DEFAULT_PROJECT_TEMPLATE_BRANCH
     : githubRef;
 
-  const config: ProjectsConfig = await fetchFileFromRepository(
+  const config = await fetchFileFromRepository<ProjectTemplateRepoConfig>(
     templateSource || HUBSPOT_PROJECT_COMPONENTS_GITHUB_PATH,
     'config.json',
     branch
@@ -76,9 +70,9 @@ async function createTemplateOptions(
 }
 
 function findTemplate(
-  projectTemplates: ProjectProperties[],
+  projectTemplates: ProjectTemplate[],
   templateNameOrLabel: string
-): ProjectProperties | undefined {
+): ProjectTemplate | undefined {
   return projectTemplates.find(
     t => t.name === templateNameOrLabel || t.label === templateNameOrLabel
   );
@@ -94,7 +88,7 @@ export async function createProjectPrompt(
   },
   skipTemplatePrompt = false
 ): Promise<CreateProjectPromptResponse> {
-  let projectTemplates: ProjectProperties[] = [];
+  let projectTemplates: ProjectTemplate[] = [];
   let selectedTemplate;
 
   if (!skipTemplatePrompt) {

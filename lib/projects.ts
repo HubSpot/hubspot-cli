@@ -24,6 +24,7 @@ import { isSpecifiedError } from '@hubspot/local-dev-lib/errors/index';
 import { shouldIgnoreFile } from '@hubspot/local-dev-lib/ignoreRules';
 import { getCwd, getAbsoluteFilePath } from '@hubspot/local-dev-lib/path';
 import { downloadGithubRepoContents } from '@hubspot/local-dev-lib/github';
+import { RepoPath } from '@hubspot/local-dev-lib/types/Github';
 
 import {
   FEEDBACK_INTERVAL,
@@ -42,6 +43,9 @@ import { uiLine, uiLink, uiAccountDescription, uiCommandReference } from './ui';
 import { i18n } from './lang';
 import SpinniesManager from './ui/SpinniesManager';
 import { logError, ApiErrorContext } from './errorHandlers/index';
+import { ProjectTemplate, ProjectConfig } from '../types/projects';
+import { Project } from '@hubspot/local-dev-lib/types/Project';
+import { HubSpotPromise } from '@hubspot/local-dev-lib/types/Http';
 
 const i18nKey = 'lib.projects';
 
@@ -49,7 +53,10 @@ const SPINNER_STATUS = {
   SPINNING: 'spinning',
 };
 
-const writeProjectConfig = (configPath, config) => {
+function writeProjectConfig(
+  configPath: string,
+  config: ProjectConfig
+): boolean {
   try {
     fs.ensureFileSync(configPath);
     fs.writeFileSync(configPath, JSON.stringify(config, null, 2));
@@ -59,15 +66,15 @@ const writeProjectConfig = (configPath, config) => {
     return false;
   }
   return true;
-};
+}
 
-const getIsInProject = _dir => {
-  const configPath = getProjectConfigPath(_dir);
+function getIsInProject(dir?: string): boolean {
+  const configPath = getProjectConfigPath(dir);
   return !!configPath;
-};
+}
 
-const getProjectConfigPath = _dir => {
-  const projectDir = _dir ? getAbsoluteFilePath(_dir) : getCwd();
+function getProjectConfigPath(dir?: string): string | null {
+  const projectDir = dir ? getAbsoluteFilePath(dir) : getCwd();
 
   const configPath = findup(PROJECT_CONFIG_FILE, {
     cwd: projectDir,
@@ -75,33 +82,37 @@ const getProjectConfigPath = _dir => {
   });
 
   return configPath;
-};
+}
 
-export const getProjectConfig = async _dir => {
-  const configPath = await getProjectConfigPath(_dir);
+export async function getProjectConfig(dir: string): Promise<{
+  projectDir: string | null;
+  projectConfig: ProjectConfig | null;
+}> {
+  const configPath = await getProjectConfigPath(dir);
   if (!configPath) {
     return { projectConfig: null, projectDir: null };
   }
 
   try {
     const config = fs.readFileSync(configPath);
-    const projectConfig = JSON.parse(config);
+    const projectConfig: ProjectConfig = JSON.parse(config.toString());
     return {
       projectDir: path.dirname(configPath),
       projectConfig,
     };
   } catch (e) {
     logger.error('Could not read from project config');
+    return { projectConfig: null, projectDir: null };
   }
-};
+}
 
-const createProjectConfig = async (
-  projectPath,
-  projectName,
-  template,
-  templateSource,
-  githubRef
-) => {
+async function createProjectConfig(
+  projectPath: string,
+  projectName: string,
+  template: ProjectTemplate,
+  templateSource: RepoPath,
+  githubRef: string
+): Promise<boolean> {
   const { projectConfig, projectDir } = await getProjectConfig(projectPath);
 
   if (projectConfig) {
@@ -111,7 +122,7 @@ const createProjectConfig = async (
         : `Found an existing project definition in ${projectDir}.`
     );
 
-    const { shouldContinue } = await promptUser([
+    const { shouldContinue } = await promptUser<{ shouldContinue: boolean }>([
       {
         name: 'shouldContinue',
         message: () => {
@@ -145,7 +156,9 @@ const createProjectConfig = async (
     projectPath,
     hasCustomTemplateSource ? undefined : githubRef
   );
-  const _config = JSON.parse(fs.readFileSync(projectConfigPath));
+  const _config: ProjectConfig = JSON.parse(
+    fs.readFileSync(projectConfigPath).toString()
+  );
   writeProjectConfig(projectConfigPath, {
     ..._config,
     name: projectName,
@@ -156,9 +169,12 @@ const createProjectConfig = async (
   }
 
   return true;
-};
+}
 
-const validateProjectConfig = (projectConfig, projectDir) => {
+function validateProjectConfig(
+  projectConfig: ProjectConfig,
+  projectDir: string
+): void {
   if (!projectConfig) {
     logger.error(
       i18n(`${i18nKey}.validateProjectConfig.configNotFound`, {
@@ -198,9 +214,12 @@ const validateProjectConfig = (projectConfig, projectDir) => {
 
     return process.exit(EXIT_CODES.ERROR);
   }
-};
+}
 
-const pollFetchProject = async (accountId, projectName) => {
+async function pollFetchProject(
+  accountId: number,
+  projectName: string
+): HubSpotPromise<Project> {
   // Temporary solution for gating slowness. Retry on 403 statusCode
   return new Promise((resolve, reject) => {
     let pollCount = 0;
@@ -236,11 +255,11 @@ const pollFetchProject = async (accountId, projectName) => {
       }
     }, POLLING_DELAY);
   });
-};
+}
 
-const ensureProjectExists = async (
-  accountId,
-  projectName,
+async function ensureProjectExists(
+  accountId: number,
+  projectName: string,
   {
     forceCreate = false,
     allowCreate = true,
@@ -248,7 +267,10 @@ const ensureProjectExists = async (
     withPolling = false,
     uploadCommand = false,
   } = {}
-) => {
+): Promise<{
+  projectExists: boolean;
+  project?: Project;
+}> {
   const accountIdentifier = uiAccountDescription(accountId);
   try {
     const { data: project } = withPolling
@@ -260,16 +282,18 @@ const ensureProjectExists = async (
       let shouldCreateProject = forceCreate;
       if (allowCreate && !shouldCreateProject) {
         const promptKey = uploadCommand ? 'createPromptUpload' : 'createPrompt';
-        const promptResult = await promptUser([
-          {
-            name: 'shouldCreateProject',
-            message: i18n(`${i18nKey}.ensureProjectExists.${promptKey}`, {
-              projectName,
-              accountIdentifier,
-            }),
-            type: 'confirm',
-          },
-        ]);
+        const promptResult = await promptUser<{ shouldCreateProject: boolean }>(
+          [
+            {
+              name: 'shouldCreateProject',
+              message: i18n(`${i18nKey}.ensureProjectExists.${promptKey}`, {
+                projectName,
+                accountIdentifier,
+              }),
+              type: 'confirm',
+            },
+          ]
+        );
         shouldCreateProject = promptResult.shouldCreateProject;
       }
 
@@ -284,7 +308,8 @@ const ensureProjectExists = async (
           );
           return { projectExists: true, project };
         } catch (err) {
-          return logError(err, new ApiErrorContext({ accountId }));
+          logError(err, new ApiErrorContext({ accountId }));
+          return { projectExists: false };
         }
       } else {
         if (!noLogs) {
@@ -309,43 +334,57 @@ const ensureProjectExists = async (
     logError(err, new ApiErrorContext({ accountId }));
     process.exit(EXIT_CODES.ERROR);
   }
-};
+}
 
-const getProjectHomeUrl = accountId => {
+function getProjectHomeUrl(accountId: number): string {
   const baseUrl = getHubSpotWebsiteOrigin(
     getEnv(accountId) === 'qa' ? ENVIRONMENTS.QA : ENVIRONMENTS.PROD
   );
 
   return `${baseUrl}/developer-projects/${accountId}`;
-};
+}
 
-const getProjectDetailUrl = (projectName, accountId) => {
+function getProjectDetailUrl(
+  projectName: string,
+  accountId: number
+): string | undefined {
   if (!projectName) return;
   return `${getProjectHomeUrl(accountId)}/project/${projectName}`;
-};
+}
 
-const getProjectActivityUrl = (projectName, accountId) => {
+function getProjectActivityUrl(
+  projectName: string,
+  accountId: number
+): string | undefined {
   if (!projectName) return;
   return `${getProjectDetailUrl(projectName, accountId)}/activity`;
-};
+}
 
-const getProjectBuildDetailUrl = (projectName, buildId, accountId) => {
+function getProjectBuildDetailUrl(
+  projectName: string,
+  buildId: number,
+  accountId: number
+): string | undefined {
   if (!projectName || !buildId || !accountId) return;
   return `${getProjectActivityUrl(projectName, accountId)}/build/${buildId}`;
-};
+}
 
-const getProjectDeployDetailUrl = (projectName, deployId, accountId) => {
+function getProjectDeployDetailUrl(
+  projectName: string,
+  deployId: number,
+  accountId: number
+): string | undefined {
   if (!projectName || !deployId || !accountId) return;
   return `${getProjectActivityUrl(projectName, accountId)}/deploy/${deployId}`;
-};
+}
 
-const uploadProjectFiles = async (
-  accountId,
-  projectName,
-  filePath,
-  uploadMessage,
-  platformVersion
-) => {
+async function uploadProjectFiles(
+  accountId: number,
+  projectName: string,
+  filePath: string,
+  uploadMessage: string,
+  platformVersion: string
+): Promise<{ buildId?: number; error: unknown }> {
   SpinniesManager.init({});
   const accountIdentifier = uiAccountDescription(accountId);
 
@@ -357,8 +396,8 @@ const uploadProjectFiles = async (
     succeedColor: 'white',
   });
 
-  let buildId;
-  let error;
+  let buildId: number | undefined;
+  let error: unknown;
 
   try {
     const { data: upload } = await uploadProject(
@@ -396,7 +435,7 @@ const uploadProjectFiles = async (
   }
 
   return { buildId, error };
-};
+}
 
 const pollProjectBuildAndDeploy = async (
   accountId,
