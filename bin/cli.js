@@ -27,6 +27,7 @@ const pkg = require('../package.json');
 const { i18n } = require('../lib/lang');
 const { EXIT_CODES } = require('../lib/enums/exitCodes');
 const { UI_COLORS, uiCommandReference } = require('../lib/ui');
+const { checkAndWarnGitInclusion } = require('../lib/ui/git');
 
 const removeCommand = require('../commands/remove');
 const initCommand = require('../commands/init');
@@ -168,6 +169,10 @@ const loadConfigMiddleware = async options => {
   }
 };
 
+const checkAndWarnGitInclusionMiddleware = () => {
+  checkAndWarnGitInclusion(getConfigPath());
+};
+
 const argv = yargs
   .usage('The command line interface to interact with HubSpot.')
   // loadConfigMiddleware loads the new hidden config for all commands
@@ -176,6 +181,7 @@ const argv = yargs
     setRequestHeaders,
     loadConfigMiddleware,
     injectAccountIdMiddleware,
+    checkAndWarnGitInclusionMiddleware,
   ])
   .exitProcess(false)
   .fail(handleFailure)
