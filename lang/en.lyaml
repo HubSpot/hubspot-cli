@@ -1551,6 +1551,8 @@ en:
         counts:
           errors: '{{#bold}}Errors:{{/bold}} {{ count }}'
           warnings: "{{#bold}}Warning:{{/bold}} {{ count }}"
+    oauth:
+      missingClientId: "Error building oauth URL: missing client ID."
 
 
 

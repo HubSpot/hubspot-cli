@@ -7,10 +7,13 @@ import { addOauthToAccountConfig } from '@hubspot/local-dev-lib/oauth';
 import { getHubSpotWebsiteOrigin } from '@hubspot/local-dev-lib/urls';
 import { logger } from '@hubspot/local-dev-lib/logger';
 import { ENVIRONMENTS } from '@hubspot/local-dev-lib/constants/environments';
+import { DEFAULT_OAUTH_SCOPES } from '@hubspot/local-dev-lib/constants/auth';
+import { OAuth2ManagerAccountConfig } from '@hubspot/local-dev-lib/types/Accounts';
 import { Server } from 'http';
 
 import { handleExit } from './process';
 import { i18n } from './lang';
+import { EXIT_CODES } from './enums/exitCodes';
 
 const PORT = 3000;
 const redirectUri = `http://localhost:${PORT}/oauth-callback`;
@@ -18,10 +21,18 @@ const redirectUri = `http://localhost:${PORT}/oauth-callback`;
 const i18nKey = 'lib.oauth';
 
 function buildAuthUrl(oauthManager: OAuth2Manager): string {
-  const { env, clientId, scopes } = oauthManager.account;
+  const {
+    env: accountEnv,
+    clientId,
+    scopes: accountScopes,
+  } = oauthManager.account;
 
-  if (!(env && clientId && scopes)) {
-    throw new Error(i18n(`${i18nKey}.buildAuthUrlError`));
+  const env = accountEnv || ENVIRONMENTS.PROD;
+  const scopes = accountScopes || DEFAULT_OAUTH_SCOPES;
+
+  if (!clientId) {
+    logger.error(i18n(`${i18nKey}.missingClientId`));
+    process.exit(EXIT_CODES.ERROR);
   }
 
   return (
@@ -93,17 +104,18 @@ async function authorize(oauthManager: OAuth2Manager): Promise<void> {
   });
 }
 
-function setupOauth(accountConfig): OAuth2Manager {
-  const id = getAccountIdentifier(accountConfig);
-  const accountId = parseInt(id, 10);
-  const config = getAccountConfig(accountId) || {};
+function setupOauth(accountConfig: OAuth2ManagerAccountConfig): OAuth2Manager {
+  const accountId = getAccountIdentifier(accountConfig);
+  const config = getAccountConfig(accountId);
   return new OAuth2Manager({
     ...accountConfig,
-    environment: accountConfig.env || config.env || ENVIRONMENTS.PROD,
+    env: accountConfig.env || config?.env || ENVIRONMENTS.PROD,
   });
 }
 
-export async function authenticateWithOauth(accountConfig) {
+export async function authenticateWithOauth(
+  accountConfig: OAuth2ManagerAccountConfig
+): Promise<void> {
   const oauthManager = setupOauth(accountConfig);
   logger.log('Authorizing');
   await authorize(oauthManager);
