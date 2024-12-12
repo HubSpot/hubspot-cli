@@ -85,7 +85,6 @@ export function addUseEnvironmentOptions(yargs: Argv): Argv {
     .option('use-env', {
       describe: i18n(`${i18nKey}.options.useEnv.describe`),
       type: 'boolean',
-      default: false,
     })
     .conflicts('use-env', 'account');
 }
