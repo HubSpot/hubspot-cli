@@ -42,7 +42,7 @@ exports.handler = async options => {
   const { derivedAccountId } = options;
   const cmsPublishMode = getCmsPublishMode(options);
 
-  trackCommandUsage('fetch', { mode: cmsPublishMode }, accountId);
+  trackCommandUsage('fetch', { mode: cmsPublishMode }, derivedAccountId);
 
   try {
     // Fetch and write file/folder.
