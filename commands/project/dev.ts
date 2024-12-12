@@ -13,6 +13,7 @@ const { logger } = require('@hubspot/local-dev-lib/logger');
 const {
   getConfigAccounts,
   getAccountConfig,
+  getAccountId: getAccountIdFromConfig,
   getEnv,
 } = require('@hubspot/local-dev-lib/config');
 const {
@@ -57,7 +58,9 @@ exports.describe = uiBetaTag(i18n(`${i18nKey}.describe`), false);
 
 exports.handler = async options => {
   await loadAndValidateOptions(options);
-  const { derivedAccountId } = options;
+  const { derivedAccountId, providedAccountId } = options;
+  const parsedProvidedAccountId = getAccountIdFromConfig(providedAccountId);
+  const providedAccountConfig = getAccountConfig(parsedProvidedAccountId);
   const accountConfig = getAccountConfig(derivedAccountId);
   const env = getValidEnv(getEnv(derivedAccountId));
 
@@ -107,16 +110,20 @@ exports.handler = async options => {
     (!hasPublicApps && isSandbox(accountConfig));
 
   // The account that the project must exist in
-  let targetProjectAccountId = derivedAccountId;
+  let targetProjectAccountId = providedAccountId
+    ? parsedProvidedAccountId
+    : null;
   // The account that we are locally testing against
-  let targetTestingAccountId = derivedAccountId;
+  let targetTestingAccountId = providedAccountId
+    ? parsedProvidedAccountId
+    : null;
 
   // Check that the default account or flag option is valid for the type of app in this project
-  if (derivedAccountId) {
-    checkIfAccountFlagIsSupported(accountConfig, hasPublicApps);
+  if (providedAccountId) {
+    checkIfAccountFlagIsSupported(providedAccountConfig, hasPublicApps);
 
     if (hasPublicApps) {
-      targetProjectAccountId = accountConfig.parentAccountId;
+      targetProjectAccountId = providedAccountConfig.parentAccountId;
     }
   } else {
     checkIfDefaultAccountIsSupported(accountConfig, hasPublicApps);
