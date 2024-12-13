@@ -1,11 +1,9 @@
 import * as fs from 'fs';
 import * as path from 'path';
+import { ValueOf } from '@hubspot/local-dev-lib/types/Utils';
 import { walk } from '@hubspot/local-dev-lib/fs';
 import { logger } from '@hubspot/local-dev-lib/logger';
 import { logError } from './errorHandlers/index';
-
-type ComponentTypes = 'private-app' | 'public-app' | 'hubl-theme';
-type ValueOf<T> = T[keyof T];
 
 export type Component = {
   type: ComponentTypes;
@@ -14,7 +12,7 @@ export type Component = {
   path: string;
 };
 
-type PrivateAppComponentConfigType = {
+type PrivateAppComponentConfig = {
   name: string;
   description: string;
   uid: string;
@@ -27,7 +25,7 @@ type PrivateAppComponentConfigType = {
   };
 };
 
-type PublicAppComponentConfigType = {
+type PublicAppComponentConfig = {
   name: string;
   uid: string;
   description: string;
@@ -54,7 +52,7 @@ type PublicAppComponentConfigType = {
   };
 };
 
-type AppCardComponentConfigType = {
+type AppCardComponentConfig = {
   type: 'crm-card';
   data: {
     title: string;
@@ -67,11 +65,18 @@ type AppCardComponentConfigType = {
   };
 };
 
+type GenericComponentConfig =
+  | PublicAppComponentConfig
+  | PrivateAppComponentConfig
+  | AppCardComponentConfig;
+
 export const COMPONENT_TYPES = {
   privateApp: 'private-app',
   publicApp: 'public-app',
   hublTheme: 'hubl-theme',
 } as const;
+
+type ComponentTypes = ValueOf<typeof COMPONENT_TYPES>;
 
 export const CONFIG_FILES: {
   [k in ValueOf<typeof COMPONENT_TYPES>]: string;
@@ -93,7 +98,7 @@ function getTypeFromConfigFile(
   return null;
 }
 
-function loadConfigFile(configPath: string) {
+function loadConfigFile(configPath: string): GenericComponentConfig | null {
   if (configPath) {
     try {
       const source = fs.readFileSync(configPath);
@@ -107,10 +112,10 @@ function loadConfigFile(configPath: string) {
 }
 
 export function getAppCardConfigs(
-  appConfig: PublicAppComponentConfigType | PrivateAppComponentConfigType,
+  appConfig: PublicAppComponentConfig | PrivateAppComponentConfig,
   appPath: string
-) {
-  const cardConfigs: Array<AppCardComponentConfigType> = [];
+): Array<AppCardComponentConfig> {
+  const cardConfigs: Array<AppCardComponentConfig> = [];
   let cards;
 
   if (appConfig && appConfig.extensions && appConfig.extensions.crm) {
@@ -123,7 +128,7 @@ export function getAppCardConfigs(
         const cardConfigPath = path.join(appPath, file);
         const cardConfig = loadConfigFile(cardConfigPath);
 
-        if (cardConfig) {
+        if (cardConfig && 'type' in cardConfig) {
           cardConfigs.push(cardConfig);
         }
       }
@@ -134,29 +139,31 @@ export function getAppCardConfigs(
 }
 
 function getIsLegacyApp(
-  appConfig: PublicAppComponentConfigType | PrivateAppComponentConfigType,
+  appConfig: GenericComponentConfig,
   appPath: string
-) {
-  const cardConfigs = getAppCardConfigs(appConfig, appPath);
-
-  if (!cardConfigs.length) {
-    // Assume any app that does not have any cards is not legacy
-    return false;
-  }
-
+): boolean {
   let hasAnyReactExtensions = false;
 
-  cardConfigs.forEach(cardConfig => {
-    if (!hasAnyReactExtensions) {
-      const isReactExtension =
-        cardConfig &&
-        !!cardConfig.data &&
-        !!cardConfig.data.module &&
-        !!cardConfig.data.module.file;
+  if (appConfig && 'extensions' in appConfig) {
+    const cardConfigs = getAppCardConfigs(appConfig, appPath);
 
-      hasAnyReactExtensions = isReactExtension;
+    if (!cardConfigs.length) {
+      // Assume any app that does not have any cards is not legacy
+      return false;
     }
-  });
+
+    cardConfigs.forEach(cardConfig => {
+      if (!hasAnyReactExtensions) {
+        const isReactExtension =
+          cardConfig &&
+          !!cardConfig.data &&
+          !!cardConfig.data.module &&
+          !!cardConfig.data.module.file;
+
+        hasAnyReactExtensions = isReactExtension;
+      }
+    });
+  }
 
   return !hasAnyReactExtensions;
 }
@@ -178,17 +185,17 @@ export async function findProjectComponents(
     const { base, dir } = path.parse(projectFile);
 
     if (Object.values(CONFIG_FILES).includes(base)) {
-      const parsedAppConfig = loadConfigFile(projectFile);
+      const parsedConfig = loadConfigFile(projectFile);
 
-      if (parsedAppConfig) {
-        const isLegacy = getIsLegacyApp(parsedAppConfig, dir);
+      if (parsedConfig) {
+        const isLegacy = getIsLegacyApp(parsedConfig, dir);
         const isHublTheme = base === CONFIG_FILES[COMPONENT_TYPES.hublTheme];
         const type = getTypeFromConfigFile(base);
 
         if (type) {
           components.push({
             type,
-            config: parsedAppConfig,
+            config: parsedConfig,
             runnable: !isLegacy && !isHublTheme,
             path: dir,
           });
@@ -200,7 +207,9 @@ export async function findProjectComponents(
   return components;
 }
 
-export function getProjectComponentTypes(components: Array<Component>) {
+export function getProjectComponentTypes(
+  components: Array<Component>
+): { [key in ComponentTypes]?: boolean } {
   const projectContents: { [key in ComponentTypes]?: boolean } = {};
 
   components.forEach(({ type }) => (projectContents[type] = true));
