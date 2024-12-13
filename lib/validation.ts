@@ -10,7 +10,6 @@ const {
 } = require('@hubspot/local-dev-lib/constants/auth');
 const { commaSeparatedValues } = require('@hubspot/local-dev-lib/text');
 const {
-  loadConfig,
   getConfigPath,
   validateConfig,
   getAccountConfig,
@@ -30,9 +29,6 @@ const { EXIT_CODES } = require('./enums/exitCodes');
 const { logError } = require('./errorHandlers/index');
 
 async function loadAndValidateOptions(options, shouldValidateAccount = true) {
-  const { config: configPath } = options;
-  loadConfig(configPath, options);
-
   let validAccount = true;
   if (shouldValidateAccount) {
     validAccount = await validateAccount(options);
