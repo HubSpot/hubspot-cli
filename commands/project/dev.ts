@@ -106,7 +106,8 @@ exports.handler = async options => {
     isDeveloperTestAccount(accountConfig) ||
     (!hasPublicApps && isSandbox(accountConfig));
 
-  // The account that the project must exist in
+  // targetProjectAccountId and targetTestingAccountId are set to null if --account flag is not provided.
+  // By setting them to null, we can later check if they need to be assigned based on the default account configuration and the type of app.
   let targetProjectAccountId = providedAccountId ? derivedAccountId : null;
   // The account that we are locally testing against
   let targetTestingAccountId = providedAccountId ? derivedAccountId : null;
