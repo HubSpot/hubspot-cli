@@ -342,7 +342,8 @@ const uploadProjectFiles = async (
   projectName,
   filePath,
   uploadMessage,
-  platformVersion
+  platformVersion,
+  intermediateRepresentation
 ) => {
   SpinniesManager.init({});
   const accountIdentifier = uiAccountDescription(accountId);
@@ -359,15 +360,27 @@ const uploadProjectFiles = async (
   let error;
 
   try {
-    const { data: upload } = await uploadProject(
-      accountId,
-      projectName,
-      filePath,
-      uploadMessage,
-      platformVersion
-    );
+    if (intermediateRepresentation) {
+      const { data: upload } = await uploadProject(
+        accountId,
+        projectName,
+        filePath,
+        uploadMessage,
+        platformVersion,
+        intermediateRepresentation
+      );
+      buildId = upload.buildId;
+    } else {
+      const { data: upload } = await uploadProject(
+        accountId,
+        projectName,
+        filePath,
+        uploadMessage,
+        platformVersion
+      );
 
-    buildId = upload.buildId;
+      buildId = upload.buildId;
+    }
 
     SpinniesManager.succeed('upload', {
       text: i18n(`${i18nKey}.uploadProjectFiles.succeed`, {
@@ -511,7 +524,8 @@ const handleProjectUpload = async (
   projectConfig,
   projectDir,
   callbackFunc,
-  uploadMessage
+  uploadMessage,
+  intermediateRepresentation
 ) => {
   const srcDir = path.resolve(projectDir, projectConfig.srcDir);
 
@@ -551,7 +565,8 @@ const handleProjectUpload = async (
         projectConfig.name,
         tempFile.name,
         uploadMessage,
-        projectConfig.platformVersion
+        projectConfig.platformVersion,
+        intermediateRepresentation
       );
 
       if (error) {

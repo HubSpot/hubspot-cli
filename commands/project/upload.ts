@@ -49,12 +49,15 @@ exports.handler = async options => {
 
   const { projectConfig, projectDir } = await getProjectConfig(projectPath);
 
+  let intermediateRepresentation;
   if (options.translate) {
     try {
-      const translation = await translate(
-        path.join(projectDir, projectConfig.srcDir)
-      );
-      console.log(util.inspect(translation, false, null, true));
+      intermediateRepresentation = await translate({
+        projectSourceDir: path.join(projectDir, projectConfig.srcDir),
+        platformVersion: projectConfig.platformVersion,
+        accountId,
+      });
+      console.log(util.inspect(intermediateRepresentation, false, null, true));
     } catch (e) {
       if (isTranslationError(e)) {
         return logger.error(e.toString());
@@ -62,7 +65,6 @@ exports.handler = async options => {
       logError(e);
       return process.exit(EXIT_CODES.ERROR);
     }
-    return process.exit(EXIT_CODES.SUCCESS);
   }
 
   trackCommandUsage('project-upload', { type: accountType }, accountId);
@@ -80,7 +82,8 @@ exports.handler = async options => {
       projectConfig,
       projectDir,
       pollProjectBuildAndDeploy,
-      message
+      message,
+      intermediateRepresentation
     );
 
     if (result.uploadError) {
