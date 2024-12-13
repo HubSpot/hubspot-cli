@@ -86,8 +86,8 @@ export const CONFIG_FILES: {
   [COMPONENT_TYPES.hublTheme]: 'theme.json',
 };
 
-function getTypeFromConfigFile(
-  configFile: ValueOf<typeof CONFIG_FILES>
+function getComponentTypeFromConfigFile(
+  configFile: string
 ): ComponentTypes | null {
   let key: ComponentTypes;
   for (key in CONFIG_FILES) {
@@ -190,11 +190,11 @@ export async function findProjectComponents(
       if (parsedConfig) {
         const isLegacy = getIsLegacyApp(parsedConfig, dir);
         const isHublTheme = base === CONFIG_FILES[COMPONENT_TYPES.hublTheme];
-        const type = getTypeFromConfigFile(base);
+        const componentType = getComponentTypeFromConfigFile(base);
 
-        if (type) {
+        if (componentType) {
           components.push({
-            type,
+            type: componentType,
             config: parsedConfig,
             runnable: !isLegacy && !isHublTheme,
             path: dir,
