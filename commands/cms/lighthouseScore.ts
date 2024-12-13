@@ -4,7 +4,6 @@ const {
   addAccountOptions,
   addConfigOptions,
   addUseEnvironmentOptions,
-  getAccountId,
 } = require('../../lib/commonOpts');
 const { logger } = require('@hubspot/local-dev-lib/logger');
 const { getTableContents, getTableHeader } = require('../../lib/ui/table');
@@ -69,16 +68,16 @@ const selectTheme = async accountId => {
 
 exports.handler = async options => {
   await loadAndValidateOptions(options);
-  const accountId = getAccountId(options);
+  const { target, verbose, theme, derivedAccountId } = options;
 
-  const includeDesktopScore = options.target === 'desktop' || !options.verbose;
-  const includeMobileScore = options.target === 'mobile' || !options.verbose;
-  let themeToCheck = options.theme;
+  const includeDesktopScore = target === 'desktop' || !verbose;
+  const includeMobileScore = target === 'mobile' || !verbose;
+  let themeToCheck = theme;
 
   if (themeToCheck) {
     let isValidTheme = true;
     try {
-      const { data: result } = await fetchThemes(accountId, {
+      const { data: result } = await fetchThemes(derivedAccountId, {
         name: encodeURIComponent(themeToCheck),
       });
       isValidTheme = result && result.total;
@@ -92,14 +91,14 @@ exports.handler = async options => {
       process.exit(EXIT_CODES.ERROR);
     }
   } else {
-    themeToCheck = await selectTheme(accountId);
+    themeToCheck = await selectTheme(derivedAccountId);
     logger.log();
   }
 
   // Kick off the scoring
   let requestResult;
   try {
-    const { data } = await requestLighthouseScore(accountId, {
+    const { data } = await requestLighthouseScore(derivedAccountId, {
       themePath: themeToCheck,
     });
     requestResult = data;
@@ -123,7 +122,7 @@ exports.handler = async options => {
     const checkScoreStatus = async () => {
       let desktopScoreStatus = 'COMPLETED';
       if (includeDesktopScore) {
-        const { data } = await getLighthouseScoreStatus(accountId, {
+        const { data } = await getLighthouseScoreStatus(derivedAccountId, {
           themeId: requestResult.desktopId,
         });
         desktopScoreStatus = data;
@@ -131,7 +130,7 @@ exports.handler = async options => {
 
       let mobileScoreStatus = 'COMPLETED';
       if (includeDesktopScore) {
-        const { data } = await getLighthouseScoreStatus(accountId, {
+        const { data } = await getLighthouseScoreStatus(derivedAccountId, {
           themeId: requestResult.mobileId,
         });
         mobileScoreStatus = data;
@@ -159,10 +158,10 @@ exports.handler = async options => {
   let mobileScoreResult = {};
   let verboseViewAverageScoreResult = {};
   try {
-    const params = { isAverage: !options.verbose };
+    const params = { isAverage: !verbose };
 
     if (includeDesktopScore) {
-      const { data } = await getLighthouseScore(accountId, {
+      const { data } = await getLighthouseScore(derivedAccountId, {
         ...params,
         desktopId: requestResult.desktopId,
       });
@@ -170,15 +169,15 @@ exports.handler = async options => {
     }
 
     if (includeMobileScore) {
-      const { data } = await getLighthouseScore(accountId, {
+      const { data } = await getLighthouseScore(derivedAccountId, {
         ...params,
         mobileId: requestResult.mobileId,
       });
       mobileScoreResult = data;
     }
     // This is needed to show the average scores above the verbose output
-    if (options.verbose) {
-      const { data } = await getLighthouseScore(accountId, {
+    if (verbose) {
+      const { data } = await getLighthouseScore(derivedAccountId, {
         ...params,
         isAverage: true,
         desktopId: includeDesktopScore ? requestResult.desktopId : null,
@@ -191,8 +190,8 @@ exports.handler = async options => {
     process.exit(EXIT_CODES.ERROR);
   }
 
-  if (options.verbose) {
-    logger.log(`${themeToCheck} ${options.target} scores`);
+  if (verbose) {
+    logger.log(`${themeToCheck} ${target} scores`);
 
     const tableHeader = getTableHeader(DEFAULT_TABLE_HEADER);
 
@@ -221,7 +220,7 @@ exports.handler = async options => {
     ]);
 
     const scoreResult =
-      options.target === 'desktop' ? desktopScoreResult : mobileScoreResult;
+      target === 'desktop' ? desktopScoreResult : mobileScoreResult;
 
     const templateTableData = scoreResult.scores.map(score => {
       return [
@@ -255,9 +254,7 @@ exports.handler = async options => {
     }
 
     logger.log();
-    logger.info(
-      i18n(`${i18nKey}.info.targetDeviceNote`, { target: options.target })
-    );
+    logger.info(i18n(`${i18nKey}.info.targetDeviceNote`, { target }));
   } else {
     logger.log(`Theme: ${themeToCheck}`);
     const tableHeader = getTableHeader(['Target', ...DEFAULT_TABLE_HEADER]);

@@ -4,7 +4,6 @@ const { logError } = require('../../../lib/errorHandlers/index');
 
 const { loadAndValidateOptions } = require('../../../lib/validation');
 const { trackCommandUsage } = require('../../../lib/usageTracking');
-const { getAccountId } = require('../../../lib/commonOpts');
 const { listSchemas } = require('../../../lib/schema');
 const { i18n } = require('../../../lib/lang');
 
@@ -16,12 +15,12 @@ exports.describe = i18n(`${i18nKey}.describe`);
 exports.handler = async options => {
   await loadAndValidateOptions(options);
 
-  const accountId = getAccountId(options);
+  const { derivedAccountId } = options;
 
-  trackCommandUsage('custom-object-schema-list', null, accountId);
+  trackCommandUsage('custom-object-schema-list', null, derivedAccountId);
 
   try {
-    await listSchemas(accountId);
+    await listSchemas(derivedAccountId);
   } catch (e) {
     logError(e);
     logger.error(i18n(`${i18nKey}.errors.list`));

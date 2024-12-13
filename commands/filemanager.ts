@@ -1,9 +1,4 @@
 // @ts-nocheck
-const {
-  addConfigOptions,
-  addAccountOptions,
-  addOverwriteOptions,
-} = require('../lib/commonOpts');
 const upload = require('./filemanager/upload');
 const fetch = require('./filemanager/fetch');
 const { i18n } = require('../lib/lang');
@@ -14,14 +9,7 @@ exports.command = 'filemanager';
 exports.describe = i18n(`${i18nKey}.describe`);
 
 exports.builder = yargs => {
-  addOverwriteOptions(yargs);
-  addConfigOptions(yargs);
-  addAccountOptions(yargs);
-
-  yargs
-    .command(upload)
-    .command(fetch)
-    .demandCommand(1, '');
+  yargs.command(upload).command(fetch).demandCommand(1, '');
 
   return yargs;
 };

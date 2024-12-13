@@ -35,7 +35,9 @@ describe('lib/projects', () => {
 
       expect(exitMock).toHaveBeenCalledWith(EXIT_CODES.ERROR);
       expect(logger.error).toHaveBeenCalledWith(
-        expect.stringMatching(/.*config not found.*/)
+        expect.stringMatching(
+          /.*Unable to locate a project configuration file. Try running again from a project directory, or run*/
+        )
       );
     });
 

@@ -1,8 +1,8 @@
-// @ts-nocheck
-const fs = require('fs');
-const { EXIT_CODES } = require('./enums/exitCodes');
-const { logger } = require('@hubspot/local-dev-lib/logger');
-const { i18n } = require('./lang');
+import fs from 'fs';
+import { logger } from '@hubspot/local-dev-lib/logger';
+
+import { EXIT_CODES } from './enums/exitCodes';
+import { i18n } from './lang';
 
 const CSS_COMMENTS_REGEX = new RegExp(/\/\*.*\*\//, 'g');
 const CSS_PSEUDO_CLASS_REGEX = new RegExp(
@@ -13,11 +13,11 @@ const i18nKey = 'commands.theme.subcommands.generateSelectors';
 
 let maxFieldsDepth = 0;
 
-function getMaxFieldsDepth() {
+export function getMaxFieldsDepth(): number {
   return maxFieldsDepth;
 }
 
-function findFieldsJsonPath(basePath) {
+export function findFieldsJsonPath(basePath: string): string | null {
   const _path = basePath.endsWith('/') ? basePath.slice(0, -1) : basePath;
   if (!fs.existsSync(_path)) {
     logger.error(
@@ -46,7 +46,10 @@ function findFieldsJsonPath(basePath) {
   return null;
 }
 
-function combineThemeCss(basePath, cssString = '') {
+export function combineThemeCss(
+  basePath: string,
+  cssString = ''
+): string | null {
   const _path = basePath.endsWith('/') ? basePath.slice(0, -1) : basePath;
   const isDirectory = fs.lstatSync(_path).isDirectory();
 
@@ -63,7 +66,23 @@ function combineThemeCss(basePath, cssString = '') {
   return null;
 }
 
-function setPreviewSelectors(fields, fieldPath, selectors, depth = 0) {
+type Field = {
+  name: string;
+  children: Field[];
+  selectors?: string[];
+  inherited_value?: {
+    property_value_paths?: {
+      [key: string]: string;
+    };
+  };
+};
+
+export function setPreviewSelectors(
+  fields: Field[],
+  fieldPath: string[],
+  selectors: string[],
+  depth = 0
+): Field[] {
   fields.forEach((field, index) => {
     if (field.name === fieldPath[0]) {
       if (field.children && fieldPath.length > 0) {
@@ -81,7 +100,7 @@ function setPreviewSelectors(fields, fieldPath, selectors, depth = 0) {
         }
 
         selectors.forEach(selector => {
-          const fieldSelectors = field.selectors;
+          const fieldSelectors = field.selectors!;
           selector = selector.replace(CSS_COMMENTS_REGEX, '');
           selector = selector.replace(CSS_PSEUDO_CLASS_REGEX, '').trim();
 
@@ -99,10 +118,10 @@ function setPreviewSelectors(fields, fieldPath, selectors, depth = 0) {
   return fields;
 }
 
-function generateInheritedSelectors(fields) {
+export function generateInheritedSelectors(fields: Field[]): Field[] {
   let finalFieldsJson = [...fields];
 
-  const _generateInheritedSelectors = fieldsToCheck => {
+  function _generateInheritedSelectors(fieldsToCheck: Field[]): void {
     fieldsToCheck.forEach(field => {
       if (field.children) {
         _generateInheritedSelectors(field.children);
@@ -125,15 +144,20 @@ function generateInheritedSelectors(fields) {
         });
       }
     });
-  };
+  }
 
   _generateInheritedSelectors(fields);
 
   return finalFieldsJson;
 }
 
-function generateSelectorsMap(fields, fieldKey = []) {
-  let selectorsMap = {};
+type SelectorsMap = { [key: string]: string[] | undefined };
+
+export function generateSelectorsMap(
+  fields: Field[],
+  fieldKey: string[] = []
+): SelectorsMap {
+  let selectorsMap: SelectorsMap = {};
 
   fields.forEach(field => {
     const { children, name, selectors } = field;
@@ -151,12 +175,3 @@ function generateSelectorsMap(fields, fieldKey = []) {
 
   return selectorsMap;
 }
-
-module.exports = {
-  findFieldsJsonPath,
-  combineThemeCss,
-  setPreviewSelectors,
-  generateInheritedSelectors,
-  generateSelectorsMap,
-  getMaxFieldsDepth,
-};

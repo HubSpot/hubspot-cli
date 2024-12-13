@@ -4,6 +4,7 @@ const open = require('open');
 const { i18n } = require('../lib/lang');
 const { logger } = require('@hubspot/local-dev-lib/logger');
 const { confirmPrompt, listPrompt } = require('../lib/prompts/promptUtils');
+const { addGlobalOptions } = require('../lib/commonOpts');
 
 const i18nKey = 'commands.project.subcommands.feedback';
 
@@ -54,4 +55,6 @@ exports.builder = yargs => {
       type: 'boolean',
     },
   });
+
+  addGlobalOptions(yargs);
 };

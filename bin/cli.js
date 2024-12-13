@@ -3,11 +3,22 @@
 const yargs = require('yargs');
 const updateNotifier = require('update-notifier');
 const chalk = require('chalk');
+const fs = require('fs');
 
 const { logger } = require('@hubspot/local-dev-lib/logger');
 const { addUserAgentHeader } = require('@hubspot/local-dev-lib/http');
+const {
+  loadConfig,
+  getAndLoadConfigIfNeeded,
+  configFileExists,
+  getConfigPath,
+} = require('@hubspot/local-dev-lib/config');
 const { logError } = require('../lib/errorHandlers/index');
-const { setLogLevel, getCommandName } = require('../lib/commonOpts');
+const {
+  setLogLevel,
+  getCommandName,
+  injectAccountIdMiddleware,
+} = require('../lib/commonOpts');
 const {
   trackHelpUsage,
   trackConvertFieldsUsage,
@@ -17,6 +28,7 @@ const pkg = require('../package.json');
 const { i18n } = require('../lib/lang');
 const { EXIT_CODES } = require('../lib/enums/exitCodes');
 const { UI_COLORS, uiCommandReference } = require('../lib/ui');
+const { checkAndWarnGitInclusion } = require('../lib/ui/git');
 
 const removeCommand = require('../commands/remove');
 const initCommand = require('../commands/init');
@@ -29,9 +41,9 @@ const uploadCommand = require('../commands/upload');
 const createCommand = require('../commands/create');
 const fetchCommand = require('../commands/fetch');
 const filemanagerCommand = require('../commands/filemanager');
-const secretsCommand = require('../commands/secrets');
+const secretCommands = require('../commands/secret');
 const customObjectCommand = require('../commands/customObject');
-const functionsCommand = require('../commands/functions');
+const functionCommands = require('../commands/function');
 const listCommand = require('../commands/list');
 const openCommand = require('../commands/open');
 const mvCommand = require('../commands/mv');
@@ -39,11 +51,12 @@ const projectCommands = require('../commands/project');
 const themeCommand = require('../commands/theme');
 const moduleCommand = require('../commands/module');
 const configCommand = require('../commands/config');
-const accountsCommand = require('../commands/accounts');
+const accountCommands = require('../commands/account');
 const sandboxesCommand = require('../commands/sandbox');
 const cmsCommand = require('../commands/cms');
 const feedbackCommand = require('../commands/feedback');
 const doctorCommand = require('../commands/doctor');
+const completionCommand = require('../commands/completion');
 
 const notifier = updateNotifier({
   pkg: { ...pkg, name: '@hubspot/cli' },
@@ -135,17 +148,51 @@ const setRequestHeaders = () => {
   addUserAgentHeader('HubSpot CLI', pkg.version);
 };
 
+const loadConfigMiddleware = async options => {
+  // Load the new config and check for the conflicting config flag
+  if (configFileExists(true)) {
+    loadConfig('', options);
+
+    if (options.config) {
+      logger.error(
+        i18n(`${i18nKey}.loadConfigMiddleware.configFileExists`, {
+          configPath: getConfigPath(),
+        })
+      );
+      process.exit(EXIT_CODES.ERROR);
+    }
+    return;
+  }
+
+  // We need to load the config when options.config exists,
+  // so that getAccountIdFromConfig() in injectAccountIdMiddleware reads from the right config
+  if (options.config && fs.existsSync(options.config)) {
+    const { config: configPath } = options;
+    await loadConfig(configPath, options);
+    return;
+  }
+
+  // Load deprecated config without a config flag and with no warnings
+  getAndLoadConfigIfNeeded(options);
+  return;
+};
+
+const checkAndWarnGitInclusionMiddleware = () => {
+  checkAndWarnGitInclusion(getConfigPath());
+};
+
 const argv = yargs
   .usage('The command line interface to interact with HubSpot.')
-  .middleware([setLogLevel, setRequestHeaders])
+  // loadConfigMiddleware loads the new hidden config for all commands
+  .middleware([
+    setLogLevel,
+    setRequestHeaders,
+    loadConfigMiddleware,
+    injectAccountIdMiddleware,
+    checkAndWarnGitInclusionMiddleware,
+  ])
   .exitProcess(false)
   .fail(handleFailure)
-  .option('debug', {
-    alias: 'd',
-    default: false,
-    describe: 'Set log level to debug',
-    type: 'boolean',
-  })
   .option('noHyperlinks', {
     default: false,
     describe: 'prevent hyperlinks from displaying in the ui',
@@ -171,9 +218,9 @@ const argv = yargs
   .command(createCommand)
   .command(fetchCommand)
   .command(filemanagerCommand)
-  .command(secretsCommand)
+  .command(secretCommands)
   .command(customObjectCommand)
-  .command(functionsCommand)
+  .command(functionCommands)
   .command({
     ...listCommand,
     aliases: 'ls',
@@ -184,14 +231,15 @@ const argv = yargs
   .command(themeCommand)
   .command(moduleCommand)
   .command(configCommand)
-  .command(accountsCommand)
+  .command(accountCommands)
   .command(sandboxesCommand)
   .command(feedbackCommand)
   .command(doctorCommand)
+  .command(completionCommand)
   .help()
+  .alias('h', 'help')
   .recommendCommands()
   .demandCommand(1, '')
-  .completion()
   .wrap(getTerminalWidth())
   .strict().argv;
 

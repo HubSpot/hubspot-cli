@@ -1,4 +1,6 @@
 // @ts-nocheck
+import { inputPrompt } from '../../lib/prompts/promptUtils';
+
 const { logger } = require('@hubspot/local-dev-lib/logger');
 const { logError } = require('../../lib/errorHandlers/index');
 const { getAbsoluteFilePath } = require('@hubspot/local-dev-lib/path');
@@ -7,7 +9,6 @@ const {
   loadAndValidateOptions,
 } = require('../../lib/validation');
 const { trackCommandUsage } = require('../../lib/usageTracking');
-const { getAccountId } = require('../../lib/commonOpts');
 const {
   batchCreateObjects,
 } = require('@hubspot/local-dev-lib/api/customObjects');
@@ -16,46 +17,52 @@ const { i18n } = require('../../lib/lang');
 const i18nKey = 'commands.customObject.subcommands.create';
 const { EXIT_CODES } = require('../../lib/enums/exitCodes');
 
-exports.command = 'create <name> <definition>';
+exports.command = 'create [name]';
 exports.describe = i18n(`${i18nKey}.describe`);
 
 exports.handler = async options => {
-  const { definition, name } = options;
+  const { path, name: providedName, derivedAccountId } = options;
+  let definitionPath = path;
 
   await loadAndValidateOptions(options);
 
-  const accountId = getAccountId(options);
+  trackCommandUsage('custom-object-batch-create', null, derivedAccountId);
 
-  trackCommandUsage('custom-object-batch-create', null, accountId);
+  if (!definitionPath) {
+    definitionPath = await inputPrompt(i18n(`${i18nKey}.inputPath`));
+  }
 
-  const filePath = getAbsoluteFilePath(definition);
+  const filePath = getAbsoluteFilePath(definitionPath);
   const objectJson = checkAndConvertToJson(filePath);
 
   if (!objectJson) {
     process.exit(EXIT_CODES.ERROR);
   }
 
+  const name =
+    providedName || (await inputPrompt(i18n(`${i18nKey}.inputSchema`)));
+
   try {
-    await batchCreateObjects(accountId, name, objectJson);
+    await batchCreateObjects(derivedAccountId, name, objectJson);
     logger.success(i18n(`${i18nKey}.success.objectsCreated`));
   } catch (e) {
-    logError(e, { accountId });
+    logError(e, { accountId: derivedAccountId });
     logger.error(
       i18n(`${i18nKey}.errors.creationFailed`, {
-        definition,
+        definition: definitionPath,
       })
     );
   }
 };
 
 exports.builder = yargs => {
-  yargs.positional('name', {
-    describe: i18n(`${i18nKey}.positionals.name.describe`),
-    type: 'string',
-  });
-
-  yargs.positional('definition', {
-    describe: i18n(`${i18nKey}.positionals.definition.describe`),
-    type: 'string',
-  });
+  yargs
+    .positional('name', {
+      describe: i18n(`${i18nKey}.positionals.name.describe`),
+      type: 'string',
+    })
+    .option('path', {
+      describe: i18n(`${i18nKey}.options.path.describe`),
+      type: 'string',
+    });
 };

@@ -124,7 +124,7 @@ const checkIfParentAccountIsAuthed = accountConfig => {
 // Confirm the default account is a developer account if developing public apps
 const checkIfAccountFlagIsSupported = (accountConfig, hasPublicApps) => {
   if (hasPublicApps) {
-    if (!isDeveloperTestAccount) {
+    if (!isDeveloperTestAccount(accountConfig)) {
       logger.error(
         i18n(`${i18nKey}.validateAccountOption.invalidPublicAppAccount`, {
           useCommand: uiCommandReference('hs accounts use'),

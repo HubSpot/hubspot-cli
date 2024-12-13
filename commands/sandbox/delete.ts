@@ -15,22 +15,26 @@ const { deleteSandbox } = require('@hubspot/local-dev-lib/api/sandboxHubs');
 const { i18n } = require('../../lib/lang');
 const { deleteSandboxPrompt } = require('../../lib/prompts/sandboxesPrompt');
 const {
-  getConfig,
   getEnv,
   removeSandboxAccountFromConfig,
   updateDefaultAccount,
+  getConfigDefaultAccount,
+  getConfigAccounts,
 } = require('@hubspot/local-dev-lib/config');
+const {
+  getAccountIdentifier,
+} = require('@hubspot/local-dev-lib/config/getAccountIdentifier');
 const { selectAccountFromConfig } = require('../../lib/prompts/accountsPrompt');
 const { EXIT_CODES } = require('../../lib/enums/exitCodes');
 const { promptUser } = require('../../lib/prompts/promptUtils');
+const { uiAccountDescription, uiBetaTag } = require('../../lib/ui');
 const { getHubSpotWebsiteOrigin } = require('@hubspot/local-dev-lib/urls');
 
 const { getValidEnv } = require('@hubspot/local-dev-lib/environment');
-const { uiAccountDescription, uiBetaTag } = require('../../lib/ui');
 
 const i18nKey = 'commands.sandbox.subcommands.delete';
 
-exports.command = 'delete [--account]';
+exports.command = 'delete';
 exports.describe = exports.describe = uiBetaTag(
   i18n(`${i18nKey}.describe`),
   false
@@ -39,15 +43,14 @@ exports.describe = exports.describe = uiBetaTag(
 exports.handler = async options => {
   await loadAndValidateOptions(options, false);
 
-  const { account, force } = options;
-  const config = getConfig();
+  const { providedAccountId, force } = options;
 
   trackCommandUsage('sandbox-delete', null);
 
   let accountPrompt;
-  if (!account) {
+  if (!providedAccountId) {
     if (!force) {
-      accountPrompt = await deleteSandboxPrompt(config);
+      accountPrompt = await deleteSandboxPrompt();
     } else {
       // Account is required, throw error if force flag is present and no account is specified
       logger.log('');
@@ -62,22 +65,23 @@ exports.handler = async options => {
   }
 
   const sandboxAccountId = getAccountId({
-    account: account || accountPrompt.account,
+    account: providedAccountId || accountPrompt.account,
   });
   const isDefaultAccount =
-    sandboxAccountId === getAccountId(config.defaultPortal);
+    sandboxAccountId === getAccountId(getConfigDefaultAccount());
 
   const baseUrl = getHubSpotWebsiteOrigin(
     getValidEnv(getEnv(sandboxAccountId))
   );
 
   let parentAccountId;
-  for (const portal of config.portals) {
-    if (portal.portalId === sandboxAccountId) {
+  const accountsList = getConfigAccounts();
+  for (const portal of accountsList) {
+    if (getAccountIdentifier(portal) === sandboxAccountId) {
       if (portal.parentAccountId) {
         parentAccountId = portal.parentAccountId;
       } else if (!force) {
-        const parentAccountPrompt = await deleteSandboxPrompt(config, true);
+        const parentAccountPrompt = await deleteSandboxPrompt(true);
         parentAccountId = getAccountId({
           account: parentAccountPrompt.account,
         });
@@ -145,7 +149,7 @@ exports.handler = async options => {
     logger.log('');
     logger.success(
       i18n(deleteKey, {
-        account: account || accountPrompt.account,
+        account: providedAccountId || accountPrompt.account,
         sandboxHubId: sandboxAccountId,
       })
     );
@@ -155,7 +159,7 @@ exports.handler = async options => {
       sandboxAccountId
     );
     if (promptDefaultAccount && !force) {
-      const newDefaultAccount = await selectAccountFromConfig(getConfig());
+      const newDefaultAccount = await selectAccountFromConfig();
       updateDefaultAccount(newDefaultAccount);
     } else {
       // If force is specified, skip prompt and set the parent account id as the default account
@@ -208,7 +212,7 @@ exports.handler = async options => {
         sandboxAccountId
       );
       if (promptDefaultAccount && !force) {
-        const newDefaultAccount = await selectAccountFromConfig(getConfig());
+        const newDefaultAccount = await selectAccountFromConfig();
         updateDefaultAccount(newDefaultAccount);
       } else {
         // If force is specified, skip prompt and set the parent account id as the default account
@@ -227,10 +231,10 @@ exports.builder = yargs => {
     describe: i18n(`${i18nKey}.options.account.describe`),
     type: 'string',
   });
-  yargs.option('f', {
+  yargs.option('force', {
     type: 'boolean',
-    alias: 'force',
-    describe: i18n(`${i18nKey}.examples.force`),
+    alias: 'f',
+    describe: i18n(`${i18nKey}.options.force.describe`),
   });
 
   yargs.example([

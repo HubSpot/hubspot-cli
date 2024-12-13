@@ -4,7 +4,6 @@ import util from 'util';
 const {
   addAccountOptions,
   addConfigOptions,
-  getAccountId,
   addUseEnvironmentOptions,
 } = require('../../lib/commonOpts');
 const chalk = require('chalk');
@@ -36,18 +35,19 @@ const path = require('path');
 
 const i18nKey = 'commands.project.subcommands.upload';
 
-exports.command = 'upload [path] [--forceCreate] [--message]';
+exports.command = 'upload';
 exports.describe = uiBetaTag(i18n(`${i18nKey}.describe`), false);
 
 exports.handler = async options => {
   await loadAndValidateOptions(options);
 
-  const { forceCreate, path: projectPath, message } = options;
-  const accountId = getAccountId(options);
-  const accountConfig = getAccountConfig(accountId);
+  const { forceCreate, message, derivedAccountId } = options;
+  const accountConfig = getAccountConfig(derivedAccountId);
   const accountType = accountConfig && accountConfig.accountType;
 
-  const { projectConfig, projectDir } = await getProjectConfig(projectPath);
+  trackCommandUsage('project-upload', { type: accountType }, derivedAccountId);
+
+  const { projectConfig, projectDir } = await getProjectConfig();
 
   let intermediateRepresentation;
   if (options.translate) {
@@ -71,14 +71,14 @@ exports.handler = async options => {
 
   validateProjectConfig(projectConfig, projectDir);
 
-  await ensureProjectExists(accountId, projectConfig.name, {
+  await ensureProjectExists(derivedAccountId, projectConfig.name, {
     forceCreate,
     uploadCommand: true,
   });
 
   try {
     const result = await handleProjectUpload(
-      accountId,
+      derivedAccountId,
       projectConfig,
       projectDir,
       pollProjectBuildAndDeploy,
@@ -99,7 +99,7 @@ exports.handler = async options => {
         logError(
           result.uploadError,
           new ApiErrorContext({
-            accountId,
+            accountId: derivedAccountId,
             request: 'project upload',
           })
         );
@@ -123,32 +123,38 @@ exports.handler = async options => {
       );
       logFeedbackMessage(result.buildId);
 
-      await displayWarnLogs(accountId, projectConfig.name, result.buildId);
+      await displayWarnLogs(
+        derivedAccountId,
+        projectConfig.name,
+        result.buildId
+      );
       process.exit(EXIT_CODES.SUCCESS);
     }
   } catch (e) {
-    logError(e, new ApiErrorContext({ accountId, request: 'project upload' }));
+    logError(
+      e,
+      new ApiErrorContext({
+        accountId: derivedAccountId,
+        request: 'project upload',
+      })
+    );
     process.exit(EXIT_CODES.ERROR);
   }
 };
 
 exports.builder = yargs => {
-  yargs.positional('path', {
-    describe: i18n(`${i18nKey}.positionals.path.describe`),
-    type: 'string',
-  });
-
-  yargs.option('forceCreate', {
-    describe: i18n(`${i18nKey}.options.forceCreate.describe`),
-    type: 'boolean',
-    default: false,
-  });
-
-  yargs.option('message', {
-    alias: 'm',
-    describe: i18n(`${i18nKey}.options.message.describe`),
-    type: 'string',
-    default: '',
+  yargs.options({
+    'force-create': {
+      describe: i18n(`${i18nKey}.options.forceCreate.describe`),
+      type: 'boolean',
+      default: false,
+    },
+    message: {
+      alias: 'm',
+      describe: i18n(`${i18nKey}.options.message.describe`),
+      type: 'string',
+      default: '',
+    },
   });
 
   yargs.option('translate', {
@@ -157,9 +163,7 @@ exports.builder = yargs => {
     default: false,
   });
 
-  yargs.example([
-    ['$0 project upload myProjectFolder', i18n(`${i18nKey}.examples.default`)],
-  ]);
+  yargs.example([['$0 project upload', i18n(`${i18nKey}.examples.default`)]]);
 
   addConfigOptions(yargs);
   addAccountOptions(yargs);

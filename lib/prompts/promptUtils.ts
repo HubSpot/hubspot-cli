@@ -2,24 +2,46 @@ const inquirer = require('inquirer');
 
 // NOTE: we can eventually delete this and directly use inquirer.prompt when the files support imports
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-export const promptUser: any = inquirer.createPromptModule();
+
+import {
+  PromptConfig,
+  GenericPromptResponse,
+  PromptWhen,
+  PromptChoices,
+} from '../../types/prompts';
+
+const promptModule = inquirer.createPromptModule();
+
+export function promptUser<T extends GenericPromptResponse>(
+  config: PromptConfig<T> | PromptConfig<T>[]
+): Promise<T> {
+  return promptModule(config);
+}
+
+type ConfirmPromptResponse = {
+  choice: boolean;
+};
 
 export async function confirmPrompt(
   message: string,
-  options: { defaultAnswer?: boolean; when?: boolean | (() => boolean) } = {}
+  options: { defaultAnswer?: boolean; when?: PromptWhen } = {}
 ): Promise<boolean> {
-  const { defaultAnswer, when } = options;
-  const { choice } = await promptUser([
+  const { defaultAnswer = true, when } = options;
+  const { choice } = await promptUser<ConfirmPromptResponse>([
     {
       name: 'choice',
       type: 'confirm',
       message,
-      default: defaultAnswer || true,
+      default: defaultAnswer,
       when,
     },
   ]);
   return choice;
 }
+
+type ListPromptResponse = {
+  choice: string;
+};
 
 export async function listPrompt(
   message: string,
@@ -27,11 +49,11 @@ export async function listPrompt(
     choices,
     when,
   }: {
-    choices: Array<{ name: string; value: string }>;
-    when?: boolean | (() => boolean);
+    choices: PromptChoices;
+    when?: PromptWhen;
   }
 ): Promise<string> {
-  const { choice } = await promptUser([
+  const { choice } = await promptUser<ListPromptResponse>([
     {
       name: 'choice',
       type: 'list',
@@ -41,4 +63,23 @@ export async function listPrompt(
     },
   ]);
   return choice;
+}
+
+export async function inputPrompt(
+  message: string,
+  {
+    when,
+  }: {
+    when?: boolean | (() => boolean);
+  } = {}
+): Promise<string> {
+  const { input } = await promptUser([
+    {
+      name: 'input',
+      type: 'input',
+      message,
+      when,
+    },
+  ]);
+  return input;
 }

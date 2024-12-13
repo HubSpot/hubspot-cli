@@ -2,7 +2,6 @@
 const {
   addAccountOptions,
   addConfigOptions,
-  getAccountId,
   addUseEnvironmentOptions,
   addTestingOptions,
 } = require('../../lib/commonOpts');
@@ -53,16 +52,16 @@ const {
 
 const i18nKey = 'commands.project.subcommands.dev';
 
-exports.command = 'dev [--account]';
+exports.command = 'dev';
 exports.describe = uiBetaTag(i18n(`${i18nKey}.describe`), false);
 
 exports.handler = async options => {
   await loadAndValidateOptions(options);
-  const accountId = getAccountId(options);
-  const accountConfig = getAccountConfig(accountId);
-  const env = getValidEnv(getEnv(accountId));
+  const { derivedAccountId, providedAccountId } = options;
+  const accountConfig = getAccountConfig(derivedAccountId);
+  const env = getValidEnv(getEnv(derivedAccountId));
 
-  trackCommandUsage('project-dev', null, accountId);
+  trackCommandUsage('project-dev', null, derivedAccountId);
 
   const { projectConfig, projectDir } = await getProjectConfig();
 
@@ -107,13 +106,14 @@ exports.handler = async options => {
     isDeveloperTestAccount(accountConfig) ||
     (!hasPublicApps && isSandbox(accountConfig));
 
-  // The account that the project must exist in
-  let targetProjectAccountId = options.account ? accountId : null;
+  // targetProjectAccountId and targetTestingAccountId are set to null if --account flag is not provided.
+  // By setting them to null, we can later check if they need to be assigned based on the default account configuration and the type of app.
+  let targetProjectAccountId = providedAccountId ? derivedAccountId : null;
   // The account that we are locally testing against
-  let targetTestingAccountId = options.account ? accountId : null;
+  let targetTestingAccountId = providedAccountId ? derivedAccountId : null;
 
   // Check that the default account or flag option is valid for the type of app in this project
-  if (options.account) {
+  if (providedAccountId) {
     checkIfAccountFlagIsSupported(accountConfig, hasPublicApps);
 
     if (hasPublicApps) {
@@ -125,7 +125,7 @@ exports.handler = async options => {
 
   // The user is targeting an account type that we recommend developing on
   if (!targetProjectAccountId && defaultAccountIsRecommendedType) {
-    targetTestingAccountId = accountId;
+    targetTestingAccountId = derivedAccountId;
 
     await confirmDefaultAccountIsTarget(accountConfig, hasPublicApps);
 
@@ -133,7 +133,7 @@ exports.handler = async options => {
       checkIfParentAccountIsAuthed(accountConfig);
       targetProjectAccountId = accountConfig.parentAccountId;
     } else {
-      targetProjectAccountId = accountId;
+      targetProjectAccountId = derivedAccountId;
     }
   }
 
@@ -167,7 +167,7 @@ exports.handler = async options => {
 
   if (createNewSandbox) {
     targetProjectAccountId = await createSandboxForLocalDev(
-      accountId,
+      derivedAccountId,
       accountConfig,
       env
     );
@@ -176,11 +176,11 @@ exports.handler = async options => {
   }
   if (createNewDeveloperTestAccount) {
     targetTestingAccountId = await createDeveloperTestAccountForLocalDev(
-      accountId,
+      derivedAccountId,
       accountConfig,
       env
     );
-    targetProjectAccountId = accountId;
+    targetProjectAccountId = derivedAccountId;
   }
 
   // eslint-disable-next-line prefer-const
