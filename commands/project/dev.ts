@@ -57,7 +57,7 @@ exports.describe = uiBetaTag(i18n(`${i18nKey}.describe`), false);
 
 exports.handler = async options => {
   await loadAndValidateOptions(options);
-  const { derivedAccountId } = options;
+  const { derivedAccountId, providedAccountId } = options;
   const accountConfig = getAccountConfig(derivedAccountId);
   const env = getValidEnv(getEnv(derivedAccountId));
 
@@ -106,13 +106,14 @@ exports.handler = async options => {
     isDeveloperTestAccount(accountConfig) ||
     (!hasPublicApps && isSandbox(accountConfig));
 
-  // The account that the project must exist in
-  let targetProjectAccountId = derivedAccountId;
+  // targetProjectAccountId and targetTestingAccountId are set to null if --account flag is not provided.
+  // By setting them to null, we can later check if they need to be assigned based on the default account configuration and the type of app.
+  let targetProjectAccountId = providedAccountId ? derivedAccountId : null;
   // The account that we are locally testing against
-  let targetTestingAccountId = derivedAccountId;
+  let targetTestingAccountId = providedAccountId ? derivedAccountId : null;
 
   // Check that the default account or flag option is valid for the type of app in this project
-  if (derivedAccountId) {
+  if (providedAccountId) {
     checkIfAccountFlagIsSupported(accountConfig, hasPublicApps);
 
     if (hasPublicApps) {

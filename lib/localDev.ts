@@ -248,8 +248,9 @@ const createDeveloperTestAccountForLocalDev = async (
   let currentPortalCount = 0;
   let maxTestPortals = 10;
   try {
-    const validateResult =
-      await validateDevTestAccountUsageLimits(accountConfig);
+    const validateResult = await validateDevTestAccountUsageLimits(
+      accountConfig
+    );
     if (validateResult) {
       currentPortalCount = validateResult.results
         ? validateResult.results.length
@@ -305,8 +306,9 @@ const createDeveloperTestAccountForLocalDev = async (
 
 // Prompt user to confirm usage of an existing developer test account that is not currently in the config
 const useExistingDevTestAccount = async (env, account) => {
-  const useExistingDevTestAcct =
-    await confirmUseExistingDeveloperTestAccountPrompt(account);
+  const useExistingDevTestAcct = await confirmUseExistingDeveloperTestAccountPrompt(
+    account
+  );
   if (!useExistingDevTestAcct) {
     logger.log('');
     logger.log(
