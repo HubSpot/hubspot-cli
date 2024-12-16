@@ -9,6 +9,7 @@ const { logger } = require('@hubspot/local-dev-lib/logger');
 const { addUserAgentHeader } = require('@hubspot/local-dev-lib/http');
 const {
   loadConfig,
+  getAndLoadConfigIfNeeded,
   configFileExists,
   getConfigPath,
 } = require('@hubspot/local-dev-lib/config');
@@ -27,6 +28,7 @@ const pkg = require('../package.json');
 const { i18n } = require('../lib/lang');
 const { EXIT_CODES } = require('../lib/enums/exitCodes');
 const { UI_COLORS, uiCommandReference } = require('../lib/ui');
+const { checkAndWarnGitInclusion } = require('../lib/ui/git');
 
 const removeCommand = require('../commands/remove');
 const initCommand = require('../commands/init');
@@ -147,6 +149,7 @@ const setRequestHeaders = () => {
 };
 
 const loadConfigMiddleware = async options => {
+  // Load the new config and check for the conflicting config flag
   if (configFileExists(true)) {
     loadConfig('', options);
 
@@ -158,6 +161,7 @@ const loadConfigMiddleware = async options => {
       );
       process.exit(EXIT_CODES.ERROR);
     }
+    return;
   }
 
   // We need to load the config when options.config exists,
@@ -165,7 +169,16 @@ const loadConfigMiddleware = async options => {
   if (options.config && fs.existsSync(options.config)) {
     const { config: configPath } = options;
     await loadConfig(configPath, options);
+    return;
   }
+
+  // Load deprecated config without a config flag and with no warnings
+  getAndLoadConfigIfNeeded(options);
+  return;
+};
+
+const checkAndWarnGitInclusionMiddleware = () => {
+  checkAndWarnGitInclusion(getConfigPath());
 };
 
 const argv = yargs
@@ -176,6 +189,7 @@ const argv = yargs
     setRequestHeaders,
     loadConfigMiddleware,
     injectAccountIdMiddleware,
+    checkAndWarnGitInclusionMiddleware,
   ])
   .exitProcess(false)
   .fail(handleFailure)
