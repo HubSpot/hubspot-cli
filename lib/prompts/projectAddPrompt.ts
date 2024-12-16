@@ -1,21 +1,16 @@
 import { promptUser } from './promptUtils';
 import { i18n } from '../lang';
+import { ProjectAddComponentData } from '../../types/projects';
 
 const i18nKey = 'lib.prompts.projectAddPrompt';
 
-type Component = {
-  path: string;
-  label: string;
-  insertPath: string;
-};
-
 type ProjectAddPromptResponse = {
-  component: Component;
+  component: ProjectAddComponentData;
   name: string;
 };
 
 export async function projectAddPrompt(
-  components: Component[],
+  components: ProjectAddComponentData[],
   promptOptions: { name?: string; type?: string } = {}
 ): Promise<ProjectAddPromptResponse> {
   return promptUser<ProjectAddPromptResponse>([

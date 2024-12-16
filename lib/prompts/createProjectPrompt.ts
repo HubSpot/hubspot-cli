@@ -17,15 +17,14 @@ import { i18n } from '../lang';
 import { logger } from '@hubspot/local-dev-lib/logger';
 import { EXIT_CODES } from '../enums/exitCodes';
 import { RepoPath } from '@hubspot/local-dev-lib/types/Github';
-import { ProjectTemplate } from '../../types/projects';
+import {
+  ProjectTemplate,
+  ProjectTemplateRepoConfig,
+} from '../../types/projects';
 
 const i18nKey = 'lib.prompts.createProjectPrompt';
 
 const PROJECT_TEMPLATE_PROPERTIES = ['name', 'label', 'path', 'insertPath'];
-
-type ProjectTemplateRepoConfig = {
-  projects?: ProjectTemplate[];
-};
 
 type CreateProjectPromptResponse = {
   name: string;

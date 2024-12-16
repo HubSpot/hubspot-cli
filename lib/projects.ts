@@ -1,7 +1,7 @@
 import fs from 'fs-extra';
 import path from 'path';
 import archiver from 'archiver';
-import tmp from 'tmp';
+import tmp, { FileResult } from 'tmp';
 import chalk from 'chalk';
 import findup from 'findup-sync';
 import { logger } from '@hubspot/local-dev-lib/logger';
@@ -25,6 +25,14 @@ import { shouldIgnoreFile } from '@hubspot/local-dev-lib/ignoreRules';
 import { getCwd, getAbsoluteFilePath } from '@hubspot/local-dev-lib/path';
 import { downloadGithubRepoContents } from '@hubspot/local-dev-lib/github';
 import { RepoPath } from '@hubspot/local-dev-lib/types/Github';
+import {
+  Project,
+  WarnLogsResponse,
+} from '@hubspot/local-dev-lib/types/Project';
+import { HubSpotPromise } from '@hubspot/local-dev-lib/types/Http';
+import { ComponentStructureResponse } from '@hubspot/local-dev-lib/types/ComponentStructure';
+import { Build } from '@hubspot/local-dev-lib/types/Build';
+import { Deploy } from '@hubspot/local-dev-lib/types/Deploy';
 
 import {
   FEEDBACK_INTERVAL,
@@ -43,9 +51,16 @@ import { uiLine, uiLink, uiAccountDescription, uiCommandReference } from './ui';
 import { i18n } from './lang';
 import SpinniesManager from './ui/SpinniesManager';
 import { logError, ApiErrorContext } from './errorHandlers/index';
-import { ProjectTemplate, ProjectConfig } from '../types/projects';
-import { Project } from '@hubspot/local-dev-lib/types/Project';
-import { HubSpotPromise } from '@hubspot/local-dev-lib/types/Http';
+import {
+  ProjectTemplate,
+  ProjectConfig,
+  ProjectPollStatusFunctionText,
+  ProjectTask,
+  ProjectSubtask,
+  ProjectAddComponentData,
+  ProjectTemplateRepoConfig,
+  ComponentTemplate,
+} from '../types/projects';
 
 const i18nKey = 'lib.projects';
 
@@ -84,7 +99,7 @@ function getProjectConfigPath(dir?: string): string | null {
   return configPath;
 }
 
-export async function getProjectConfig(dir: string): Promise<{
+export async function getProjectConfig(dir?: string): Promise<{
   projectDir: string | null;
   projectConfig: ProjectConfig | null;
 }> {
@@ -352,11 +367,7 @@ function getProjectDetailUrl(
   return `${getProjectHomeUrl(accountId)}/project/${projectName}`;
 }
 
-function getProjectActivityUrl(
-  projectName: string,
-  accountId: number
-): string | undefined {
-  if (!projectName) return;
+function getProjectActivityUrl(projectName: string, accountId: number): string {
   return `${getProjectDetailUrl(projectName, accountId)}/activity`;
 }
 
@@ -364,8 +375,7 @@ function getProjectBuildDetailUrl(
   projectName: string,
   buildId: number,
   accountId: number
-): string | undefined {
-  if (!projectName || !buildId || !accountId) return;
+): string {
   return `${getProjectActivityUrl(projectName, accountId)}/build/${buildId}`;
 }
 
@@ -373,8 +383,7 @@ function getProjectDeployDetailUrl(
   projectName: string,
   deployId: number,
   accountId: number
-): string | undefined {
-  if (!projectName || !deployId || !accountId) return;
+): string {
   return `${getProjectActivityUrl(projectName, accountId)}/deploy/${deployId}`;
 }
 
@@ -437,13 +446,20 @@ async function uploadProjectFiles(
   return { buildId, error };
 }
 
-const pollProjectBuildAndDeploy = async (
-  accountId,
-  projectConfig,
-  tempFile,
-  buildId,
+type ProjectPollResult = {
+  succeeded: boolean;
+  buildId: number;
+  buildResult: Build;
+  deployResult: Deploy | null;
+};
+
+async function pollProjectBuildAndDeploy(
+  accountId: number,
+  projectConfig: ProjectConfig,
+  tempFile: FileResult,
+  buildId: number,
   silenceLogs = false
-) => {
+): Promise<ProjectPollResult> {
   let buildStatus = await pollBuildStatus(
     accountId,
     projectConfig.name,
@@ -456,7 +472,7 @@ const pollProjectBuildAndDeploy = async (
     uiLine();
   }
 
-  const result = {
+  const result: ProjectPollResult = {
     succeeded: true,
     buildId,
     buildResult: buildStatus,
@@ -498,7 +514,7 @@ const pollProjectBuildAndDeploy = async (
       const deployStatus = await pollDeployStatus(
         accountId,
         projectConfig.name,
-        buildStatus.deployStatusTaskLocator.id,
+        Number(buildStatus.deployStatusTaskLocator.id),
         buildId,
         silenceLogs
       );
@@ -545,15 +561,26 @@ const pollProjectBuildAndDeploy = async (
     );
   }
   return result;
+}
+
+type ProjectUploadCallbackFunction<T> = (
+  accountId: number,
+  projectConfig: ProjectConfig,
+  tempFile: FileResult,
+  buildId?: number
+) => Promise<T | undefined>;
+
+type ProjectUploadDefaultResult = {
+  uploadError?: unknown;
 };
 
-const handleProjectUpload = async (
-  accountId,
-  projectConfig,
-  projectDir,
-  callbackFunc,
-  uploadMessage
-) => {
+async function handleProjectUpload<T = ProjectUploadDefaultResult>(
+  accountId: number,
+  projectConfig: ProjectConfig,
+  projectDir: string,
+  callbackFunc: ProjectUploadCallbackFunction<T>,
+  uploadMessage: string
+) {
   const srcDir = path.resolve(projectDir, projectConfig.srcDir);
 
   const filenames = fs.readdirSync(srcDir);
@@ -579,7 +606,7 @@ const handleProjectUpload = async (
 
   const result = new Promise(resolve =>
     output.on('close', async function () {
-      let uploadResult = {};
+      let uploadResult: ProjectUploadDefaultResult | T | undefined;
 
       logger.debug(
         i18n(`${i18nKey}.handleProjectUpload.compressed`, {
@@ -596,7 +623,7 @@ const handleProjectUpload = async (
       );
 
       if (error) {
-        uploadResult.uploadError = error;
+        uploadResult = { uploadError: error };
       } else if (callbackFunc) {
         uploadResult = await callbackFunc(
           accountId,
@@ -636,25 +663,83 @@ const handleProjectUpload = async (
   archive.finalize();
 
   return result;
+}
+
+function getSubtasks(task: ProjectTask): ProjectSubtask[] {
+  if ('subbuildStatuses' in task) {
+    return task.subbuildStatuses;
+  }
+  return task.subdeployStatuses;
+}
+
+function getSubtaskName(task: ProjectSubtask): string {
+  if ('buildName' in task) {
+    return task.buildName;
+  }
+  return task.deployName;
+}
+
+function getSubtaskType(task: ProjectSubtask): string {
+  if ('buildType' in task) {
+    return task.buildType;
+  }
+  return task.deployType;
+}
+
+type PollTaskStatusFunctionConfig<T extends ProjectTask> = {
+  statusFn: (
+    accountId: number,
+    projectName: string,
+    taskId: number
+  ) => HubSpotPromise<T>;
+  structureFn: (
+    accountId: number,
+    projectName: string,
+    taskId: number
+  ) => HubSpotPromise<ComponentStructureResponse>;
+  statusText: ProjectPollStatusFunctionText;
+  statusStrings: PollTaskStatusStrings;
+  linkToHubSpot: (
+    accountId: number,
+    taskName: string,
+    taskId: number,
+    deployedBuildId: number
+  ) => void;
 };
 
-const makePollTaskStatusFunc = ({
+type PollTaskStatus = 'INITIALIZE' | 'SUCCESS' | 'FAIL' | 'SUBTASK_FAIL';
+
+type PollTaskStatusStringFunction = (name: string, taskId: number) => string;
+
+type PollTaskStatusStrings = {
+  [k in PollTaskStatus]: PollTaskStatusStringFunction;
+};
+
+type PollTaskStatusFunction<T extends ProjectTask> = (
+  accountId: number,
+  taskName: string,
+  taskId: number,
+  deployedBuildId: number | null,
+  silenceLogs: boolean
+) => Promise<T>;
+
+function makePollTaskStatusFunc<T extends ProjectTask>({
   statusFn,
   structureFn,
   statusText,
   statusStrings,
   linkToHubSpot,
-}) => {
-  return async (
+}: PollTaskStatusFunctionConfig<T>): PollTaskStatusFunction<T> {
+  return async function (
     accountId,
     taskName,
     taskId,
     deployedBuildId = null,
     silenceLogs = false
-  ) => {
+  ) {
     const displayId = deployedBuildId || taskId;
 
-    if (linkToHubSpot && !silenceLogs) {
+    if (linkToHubSpot && !silenceLogs && deployedBuildId) {
       logger.log(
         `\n${linkToHubSpot(accountId, taskName, taskId, deployedBuildId)}\n`
       );
@@ -681,11 +766,13 @@ const makePollTaskStatusFunc = ({
       structureFn(accountId, taskName, taskId),
     ]);
 
-    const tasksById = initialTaskStatus[statusText.SUBTASK_KEY].reduce(
-      (acc, task) => {
-        const { id, visible } = task;
+    const subtasks = getSubtasks(initialTaskStatus);
+
+    const tasksById = subtasks.reduce(
+      (acc: { [key: string]: ProjectSubtask }, subtask) => {
+        const { id, visible } = subtask;
         if (visible) {
-          acc[id] = task;
+          acc[id] = subtask;
         }
         return acc;
       },
@@ -719,9 +806,13 @@ const makePollTaskStatusFunc = ({
     });
 
     if (!silenceLogs) {
-      const addTaskSpinner = (task, indent, newline) => {
-        const taskName = task[statusText.SUBTASK_NAME_KEY];
-        const taskType = task[statusText.TYPE_KEY];
+      function addTaskSpinner(
+        subtask: ProjectSubtask,
+        indent: number,
+        newline: boolean
+      ): void {
+        const taskName = getSubtaskName(subtask);
+        const taskType = getSubtaskType(subtask);
         const formattedTaskType = PROJECT_TASK_TYPES[taskType]
           ? `[${PROJECT_TASK_TYPES[taskType]}]`
           : '';
@@ -729,13 +820,13 @@ const makePollTaskStatusFunc = ({
           taskName
         )} ${formattedTaskType} ...${newline ? '\n' : ''}`;
 
-        SpinniesManager.add(task.id, {
+        SpinniesManager.add(subtask.id, {
           text,
           indent,
           succeedColor: 'white',
           failColor: 'white',
         });
-      };
+      }
 
       structuredTasks.forEach(task => {
         addTaskSpinner(task, 2, !task.subtasks || task.subtasks.length === 0);
@@ -745,9 +836,9 @@ const makePollTaskStatusFunc = ({
       });
     }
 
-    return new Promise((resolve, reject) => {
+    return new Promise<T>((resolve, reject) => {
       const pollInterval = setInterval(async () => {
-        let taskStatus;
+        let taskStatus: T;
         try {
           const { data } = await statusFn(accountId, taskName, taskId);
           taskStatus = data;
@@ -775,11 +866,9 @@ const makePollTaskStatusFunc = ({
           );
         }
 
-        if (
-          !taskStatus ||
-          !taskStatus.status ||
-          !taskStatus[statusText.SUBTASK_KEY]
-        ) {
+        const subtasks = getSubtasks(taskStatus);
+
+        if (!taskStatus || !taskStatus.status || !subtasks) {
           return reject(
             new Error(
               i18n(
@@ -795,11 +884,11 @@ const makePollTaskStatusFunc = ({
           );
         }
 
-        const { status, [statusText.SUBTASK_KEY]: subTaskStatus } = taskStatus;
+        const { status } = taskStatus;
 
         if (SpinniesManager.hasActiveSpinners()) {
-          subTaskStatus.forEach(subTask => {
-            const { id, status } = subTask;
+          subtasks.forEach(subtask => {
+            const { id, status } = subtask;
             const spinner = SpinniesManager.pick(id);
 
             if (!spinner || spinner.status !== SPINNER_STATUS.SPINNING) {
@@ -813,12 +902,12 @@ const makePollTaskStatusFunc = ({
               status === statusText.STATES.FAILURE
             ) {
               const taskStatusText =
-                subTask.status === statusText.STATES.SUCCESS
+                subtask.status === statusText.STATES.SUCCESS
                   ? i18n(`${i18nKey}.makePollTaskStatusFunc.successStatusText`)
                   : i18n(`${i18nKey}.makePollTaskStatusFunc.failedStatusText`);
               const hasNewline =
-                spinner.text.includes('\n') || Boolean(topLevelTask);
-              const updatedText = `${spinner.text.replace(
+                spinner?.text?.includes('\n') || Boolean(topLevelTask);
+              const updatedText = `${spinner?.text?.replace(
                 '\n',
                 ''
               )} ${taskStatusText}${hasNewline ? '\n' : ''}`;
@@ -849,17 +938,17 @@ const makePollTaskStatusFunc = ({
             });
 
             if (!silenceLogs) {
-              const failedSubtasks = subTaskStatus.filter(
+              const failedSubtasks = subtasks.filter(
                 subtask => subtask.status === 'FAILURE'
               );
 
               uiLine();
               logger.log(
                 `${statusStrings.SUBTASK_FAIL(
-                  displayId,
                   failedSubtasks.length === 1
-                    ? failedSubtasks[0][statusText.SUBTASK_NAME_KEY]
-                    : failedSubtasks.length + ' components'
+                    ? getSubtaskName(failedSubtasks[0])
+                    : failedSubtasks.length + ' components',
+                  displayId
                 )}\n`
               );
               logger.log('See below for a summary of errors.');
@@ -867,16 +956,16 @@ const makePollTaskStatusFunc = ({
 
               const displayErrors = failedSubtasks.filter(
                 subtask =>
-                  subtask.standardError.subCategory !==
+                  subtask?.standardError?.subCategory !==
                     PROJECT_ERROR_TYPES.SUBBUILD_FAILED &&
-                  subtask.standardError.subCategory !==
+                  subtask?.standardError?.subCategory !==
                     PROJECT_ERROR_TYPES.SUBDEPLOY_FAILED
               );
 
               displayErrors.forEach(subTask => {
                 logger.log(
                   `\n--- ${chalk.bold(
-                    subTask[statusText.SUBTASK_NAME_KEY]
+                    getSubtaskName(subTask)
                   )} failed with the following error ---`
                 );
                 logger.error(subTask.errorMessage);
@@ -892,7 +981,7 @@ const makePollTaskStatusFunc = ({
             }
             clearInterval(pollInterval);
             resolve(taskStatus);
-          } else if (!subTaskStatus.length) {
+          } else if (!subtasks.length) {
             clearInterval(pollInterval);
             resolve(taskStatus);
           }
@@ -900,16 +989,21 @@ const makePollTaskStatusFunc = ({
       }, POLLING_DELAY);
     });
   };
-};
+}
 
-const pollBuildAutodeployStatus = (accountId, taskName, buildId) => {
+function pollBuildAutodeployStatus(
+  accountId: number,
+  taskName: string,
+  buildId: number
+): Promise<Build> {
   return new Promise((resolve, reject) => {
     let maxIntervals = (30 * 1000) / POLLING_DELAY; // Num of intervals in ~30s
 
     const pollInterval = setInterval(async () => {
-      let taskStatus;
+      let build: Build;
       try {
-        taskStatus = await getBuildStatus(accountId, taskName, buildId);
+        const response = await getBuildStatus(accountId, taskName, buildId);
+        build = response.data;
       } catch (e) {
         logger.debug(e);
         return reject(
@@ -919,7 +1013,7 @@ const pollBuildAutodeployStatus = (accountId, taskName, buildId) => {
         );
       }
 
-      if (!taskStatus || !taskStatus.status) {
+      if (!build || !build.status) {
         return reject(
           new Error(
             i18n(`${i18nKey}.pollBuildAutodeployStatusError`, { buildId })
@@ -927,17 +1021,17 @@ const pollBuildAutodeployStatus = (accountId, taskName, buildId) => {
         );
       }
 
-      if (taskStatus.deployStatusTaskLocator || maxIntervals <= 0) {
+      if (build.deployStatusTaskLocator || maxIntervals <= 0) {
         clearInterval(pollInterval);
-        resolve(taskStatus);
+        resolve(build);
       } else {
         maxIntervals -= 1;
       }
     }, POLLING_DELAY);
   });
-};
+}
 
-const pollBuildStatus = makePollTaskStatusFunc({
+const pollBuildStatus = makePollTaskStatusFunc<Build>({
   linkToHubSpot: (accountId, taskName, taskId) =>
     uiLink(
       `View build #${taskId} in HubSpot`,
@@ -957,7 +1051,7 @@ const pollBuildStatus = makePollTaskStatusFunc({
   },
 });
 
-const pollDeployStatus = makePollTaskStatusFunc({
+const pollDeployStatus = makePollTaskStatusFunc<Deploy>({
   linkToHubSpot: (accountId, taskName, taskId, deployedBuildId) =>
     uiLink(
       `View deploy of build #${deployedBuildId} in HubSpot`,
@@ -980,26 +1074,26 @@ const pollDeployStatus = makePollTaskStatusFunc({
   },
 });
 
-const logFeedbackMessage = buildId => {
+function logFeedbackMessage(buildId: number): void {
   if (buildId > 0 && buildId % FEEDBACK_INTERVAL === 0) {
     uiLine();
     logger.log(i18n(`${i18nKey}.logFeedbackMessage.feedbackHeader`));
     uiLine();
     logger.log(i18n(`${i18nKey}.logFeedbackMessage.feedbackMessage`));
   }
-};
+}
 
-const createProjectComponent = async (
-  component,
-  name,
-  projectComponentsVersion
-) => {
+async function createProjectComponent(
+  component: ProjectAddComponentData,
+  name: string,
+  projectComponentsVersion: string
+): Promise<void> {
   const i18nKey = 'commands.project.subcommands.add';
   const componentName = name;
 
   const configInfo = await getProjectConfig();
 
-  if (!configInfo.projectDir && !configInfo.projectConfig) {
+  if (!configInfo.projectDir || !configInfo.projectConfig) {
     logger.error(i18n(`${i18nKey}.error.locationInProject`));
     process.exit(EXIT_CODES.ERROR);
   }
@@ -1017,15 +1111,15 @@ const createProjectComponent = async (
     componentPath,
     projectComponentsVersion
   );
-};
+}
 
-const displayWarnLogs = async (
-  accountId,
-  projectName,
-  taskId,
+async function displayWarnLogs(
+  accountId: number,
+  projectName: string,
+  taskId: number,
   isDeploy = false
-) => {
-  let result;
+): Promise<void> {
+  let result: WarnLogsResponse | undefined;
 
   if (isDeploy) {
     try {
@@ -1056,34 +1150,16 @@ const displayWarnLogs = async (
       }
     });
   }
-};
+}
 
-const getProjectComponentsByVersion = async projectComponentsVersion => {
-  const config = await fetchFileFromRepository(
+async function getProjectComponentsByVersion(
+  projectComponentsVersion: string
+): Promise<ComponentTemplate[]> {
+  const config = await fetchFileFromRepository<ProjectTemplateRepoConfig>(
     HUBSPOT_PROJECT_COMPONENTS_GITHUB_PATH,
     'config.json',
     projectComponentsVersion
   );
 
-  return config[PROJECT_COMPONENT_TYPES.COMPONENTS];
-};
-
-module.exports = {
-  writeProjectConfig,
-  getProjectConfig,
-  getIsInProject,
-  pollProjectBuildAndDeploy,
-  handleProjectUpload,
-  createProjectConfig,
-  validateProjectConfig,
-  getProjectHomeUrl,
-  getProjectDetailUrl,
-  getProjectBuildDetailUrl,
-  pollBuildStatus,
-  pollDeployStatus,
-  ensureProjectExists,
-  logFeedbackMessage,
-  createProjectComponent,
-  displayWarnLogs,
-  getProjectComponentsByVersion,
-};
+  return config[PROJECT_COMPONENT_TYPES.COMPONENTS] || [];
+}
