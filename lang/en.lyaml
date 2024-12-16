@@ -1116,13 +1116,6 @@ en:
         notFound: "Your project {{#bold}}{{ projectName }}{{/bold}} could not be found in {{#bold}}{{ accountIdentifier }}{{/bold}}."
       pollFetchProject:
         checkingProject: "Checking if project exists in {{ accountIdentifier }}"
-      makePollTaskStatusFunc:
-        componentCountSingular: "Found 1 component in this project"
-        componentCount: "Found {{ numComponents }} components in this project"
-        successStatusText: "DONE"
-        failedStatusText: "FAILED"
-        errorFetchingTaskStatus: "Error fetching {{ taskType }} status"
-      pollBuildAutodeployStatusError: "Error fetching autodeploy status for build #{{ buildId }}"
       pollProjectBuildAndDeploy:
         buildSucceededAutomaticallyDeploying: "Build #{{ buildId }} succeeded. {{#bold}}Automatically deploying{{/bold}} to {{ accountIdentifier }}\n"
         cleanedUpTempFile: "Cleaned up temporary file {{ path }}"
@@ -1131,6 +1124,14 @@ en:
       logFeedbackMessage:
         feedbackHeader: "We'd love to hear your feedback!"
         feedbackMessage: "How are you liking the new projects and developer tools? \n > Run `{{#yellow}}hs feedback{{/yellow}}` to let us know what you think!\n"
+    projectBuildAndDeploy:
+      makePollTaskStatusFunc:
+        componentCountSingular: "Found 1 component in this project"
+        componentCount: "Found {{ numComponents }} components in this project"
+        successStatusText: "DONE"
+        failedStatusText: "FAILED"
+        errorFetchingTaskStatus: "Error fetching {{ taskType }} status"
+      pollBuildAutodeployStatusError: "Error fetching autodeploy status for build #{{ buildId }}"
     ui:
       betaTag: "{{#bold}}[BETA]{{/bold}}"
       betaWarning:

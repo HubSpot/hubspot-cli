@@ -1,6 +1,6 @@
 // @ts-nocheck
 const { i18n } = require('../../lib/lang');
-const { createWatcher } = require('../../lib/projectsWatch');
+const { createWatcher } = require('../../lib/projects/watch');
 const { logError, ApiErrorContext } = require('../../lib/errorHandlers/index');
 const { logger } = require('@hubspot/local-dev-lib/logger');
 const { PROJECT_ERROR_TYPES } = require('../../lib/constants');
@@ -15,11 +15,11 @@ const {
   ensureProjectExists,
   getProjectConfig,
   handleProjectUpload,
-  pollBuildStatus,
   pollDeployStatus,
   validateProjectConfig,
   logFeedbackMessage,
 } = require('../../lib/projects');
+const { pollBuildStatus } = require('../../lib/projectTasks');
 const {
   cancelStagedBuild,
   fetchProjectBuilds,
@@ -35,10 +35,8 @@ exports.command = 'watch';
 exports.describe = uiBetaTag(i18n(`${i18nKey}.describe`), false);
 
 const handleBuildStatus = async (accountId, projectName, buildId) => {
-  const {
-    isAutoDeployEnabled,
-    deployStatusTaskLocator,
-  } = await pollBuildStatus(accountId, projectName, buildId);
+  const { isAutoDeployEnabled, deployStatusTaskLocator } =
+    await pollBuildStatus(accountId, projectName, buildId);
 
   if (isAutoDeployEnabled && deployStatusTaskLocator) {
     await pollDeployStatus(

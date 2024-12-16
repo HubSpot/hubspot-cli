@@ -26,7 +26,7 @@ const {
   CONFIG_FILES,
   COMPONENT_TYPES,
   getAppCardConfigs,
-} = require('./projectStructure');
+} = require('./projects/structure');
 const {
   UI_COLORS,
   uiCommandReference,
