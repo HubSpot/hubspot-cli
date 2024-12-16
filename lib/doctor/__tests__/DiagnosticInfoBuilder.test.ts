@@ -26,7 +26,7 @@ import { AccessToken, CLIAccount } from '@hubspot/local-dev-lib/types/Accounts';
 import { getProjectConfig as _getProjectConfig } from '../../projects';
 import { fetchProject as _fetchProject } from '@hubspot/local-dev-lib/api/projects';
 import { Project } from '@hubspot/local-dev-lib/types/Project';
-import { AxiosPromise } from 'axios';
+import { HubSpotPromise } from '@hubspot/local-dev-lib/types/Http';
 
 const walk = _walk as jest.MockedFunction<typeof _walk>;
 const getAccessToken = _getAccessToken as jest.MockedFunction<
@@ -124,6 +124,8 @@ describe('lib/doctor/DiagnosticInfo', () => {
         projectDir,
         projectConfig: {
           name: 'My project',
+          srcDir: 'project-dir',
+          platformVersion: 'test',
         },
       };
 
@@ -133,7 +135,7 @@ describe('lib/doctor/DiagnosticInfo', () => {
         deployedBuildId: 1,
         id: 8989898,
         isLocked: false,
-        name: projectConfig.projectConfig.name,
+        name: projectConfig!.projectConfig!.name,
         portalId: accountId,
         updatedAt: 12345,
       };
@@ -143,16 +145,16 @@ describe('lib/doctor/DiagnosticInfo', () => {
         accountType: 'STANDARD',
         encodedOAuthRefreshToken: '',
         expiresAt: '',
-        hubName: projectConfig.projectConfig.name,
+        hubName: projectConfig!.projectConfig!.name,
         portalId: accountId,
         scopeGroups: [],
         enabledFeatures: {},
       };
 
       getProjectConfig.mockResolvedValue(projectConfig);
-      fetchProject.mockResolvedValue(({
+      fetchProject.mockResolvedValue({
         data: projectDetails,
-      } as unknown) as AxiosPromise<Project>);
+      } as unknown as HubSpotPromise<Project>);
       getAccessToken.mockResolvedValue(accessToken);
       getConfigPath.mockReturnValue(configPath);
       utilPromisify.mockReturnValue(jest.fn().mockResolvedValue(npmVersion));
@@ -166,7 +168,7 @@ describe('lib/doctor/DiagnosticInfo', () => {
       expect(fetchProject).toHaveBeenCalledTimes(1);
       expect(fetchProject).toHaveBeenCalledWith(
         accountId,
-        projectConfig!.projectConfig.name
+        projectConfig!.projectConfig!.name
       );
 
       expect(getAccessToken).toHaveBeenCalledTimes(1);

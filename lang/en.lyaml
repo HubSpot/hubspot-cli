@@ -1116,10 +1116,6 @@ en:
         notFound: "Your project {{#bold}}{{ projectName }}{{/bold}} could not be found in {{#bold}}{{ accountIdentifier }}{{/bold}}."
       pollFetchProject:
         checkingProject: "Checking if project exists in {{ accountIdentifier }}"
-      pollProjectBuildAndDeploy:
-        buildSucceededAutomaticallyDeploying: "Build #{{ buildId }} succeeded. {{#bold}}Automatically deploying{{/bold}} to {{ accountIdentifier }}\n"
-        cleanedUpTempFile: "Cleaned up temporary file {{ path }}"
-        viewDeploys: "View all deploys for this project in HubSpot"
         unableToFindAutodeployStatus: "Unable to find the auto deploy for build #{{ buildId }}. This deploy may have been skipped. {{ viewDeploysLink }}."
       logFeedbackMessage:
         feedbackHeader: "We'd love to hear your feedback!"
@@ -1132,6 +1128,10 @@ en:
         failedStatusText: "FAILED"
         errorFetchingTaskStatus: "Error fetching {{ taskType }} status"
       pollBuildAutodeployStatusError: "Error fetching autodeploy status for build #{{ buildId }}"
+      pollProjectBuildAndDeploy:
+        buildSucceededAutomaticallyDeploying: "Build #{{ buildId }} succeeded. {{#bold}}Automatically deploying{{/bold}} to {{ accountIdentifier }}\n"
+        cleanedUpTempFile: "Cleaned up temporary file {{ path }}"
+        viewDeploys: "View all deploys for this project in HubSpot"
     ui:
       betaTag: "{{#bold}}[BETA]{{/bold}}"
       betaWarning:

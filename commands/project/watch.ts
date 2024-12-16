@@ -15,11 +15,13 @@ const {
   ensureProjectExists,
   getProjectConfig,
   handleProjectUpload,
-  pollDeployStatus,
   validateProjectConfig,
   logFeedbackMessage,
 } = require('../../lib/projects');
-const { pollBuildStatus } = require('../../lib/projectTasks');
+const {
+  pollBuildStatus,
+  pollDeployStatus,
+} = require('../../lib/projects/buildAndDeploy');
 const {
   cancelStagedBuild,
   fetchProjectBuilds,

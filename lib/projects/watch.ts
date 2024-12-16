@@ -3,8 +3,8 @@ const chokidar = require('chokidar');
 const path = require('path');
 const chalk = require('chalk');
 const { default: PQueue } = require('p-queue');
-const { logError, ApiErrorContext } = require('./errorHandlers/index');
-const { i18n } = require('./lang');
+const { logError, ApiErrorContext } = require('../errorHandlers/index');
+const { i18n } = require('../lang');
 const { logger } = require('@hubspot/local-dev-lib/logger');
 const { isAllowedExtension } = require('@hubspot/local-dev-lib/path');
 const { shouldIgnoreFile } = require('@hubspot/local-dev-lib/ignoreRules');
@@ -16,7 +16,7 @@ const {
   queueBuild,
 } = require('@hubspot/local-dev-lib/api/projects');
 const { isSpecifiedError } = require('@hubspot/local-dev-lib/errors/index');
-const { PROJECT_ERROR_TYPES } = require('./constants');
+const { PROJECT_ERROR_TYPES } = require('../constants');
 
 const i18nKey = 'commands.project.subcommands.watch';
 

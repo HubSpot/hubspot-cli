@@ -443,8 +443,10 @@ export async function handleProjectUpload<T = ProjectUploadDefaultResult>(
       );
 
       if (error) {
+        console.log(error);
         uploadResult = { uploadError: error };
       } else if (callbackFunc) {
+        console.log('callbackfunc');
         uploadResult = await callbackFunc(
           accountId,
           projectConfig,

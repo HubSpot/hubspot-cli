@@ -370,7 +370,7 @@ function makePollTaskStatusFunc<T extends ProjectTask>({
   };
 }
 
-export function pollBuildAutodeployStatus(
+function pollBuildAutodeployStatus(
   accountId: number,
   taskName: string,
   buildId: number
@@ -430,7 +430,7 @@ export const pollBuildStatus = makePollTaskStatusFunc<Build>({
   },
 });
 
-const pollDeployStatus = makePollTaskStatusFunc<Deploy>({
+export const pollDeployStatus = makePollTaskStatusFunc<Deploy>({
   linkToHubSpot: (accountId, taskName, taskId, deployedBuildId) =>
     uiLink(
       `View deploy of build #${deployedBuildId} in HubSpot`,

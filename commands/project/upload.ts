@@ -15,9 +15,11 @@ const {
   handleProjectUpload,
   logFeedbackMessage,
   validateProjectConfig,
-  pollProjectBuildAndDeploy,
-  displayWarnLogs,
 } = require('../../lib/projects');
+const {
+  displayWarnLogs,
+  pollProjectBuildAndDeploy,
+} = require('../../lib/projects/buildAndDeploy');
 const { i18n } = require('../../lib/lang');
 const { getAccountConfig } = require('@hubspot/local-dev-lib/config');
 const { isSpecifiedError } = require('@hubspot/local-dev-lib/errors/index');
