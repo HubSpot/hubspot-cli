@@ -149,12 +149,15 @@ const setRequestHeaders = () => {
   addUserAgentHeader('HubSpot CLI', pkg.version);
 };
 
-const NO_VALIDATE_LIST = ['init', 'auth'];
+const NO_VALIDATE_LIST = {
+  init: { skip: true },
+  auth: { skip: true },
+};
 
 const loadConfigMiddleware = async options => {
   const maybeValidateConfig = () => {
     const shouldValidate = options._.every(
-      item => !NO_VALIDATE_LIST.includes(item)
+      item => !(NO_VALIDATE_LIST[item] && NO_VALIDATE_LIST[item].skip)
     );
     if (shouldValidate) {
       if (!validateConfig()) {
