@@ -80,12 +80,3 @@ export const PLATFORM_VERSION_ERROR_TYPES = {
   PLATFORM_VERSION_SPECIFIED_DOES_NOT_EXIST:
     'PlatformVersionErrorType.PLATFORM_VERSION_SPECIFIED_DOES_NOT_EXIST',
 } as const;
-
-export const NO_VALIDATE_LIST = [
-  'init',
-  'clean',
-  'list',
-  'remove',
-  'use',
-  'delete',
-] as const;
