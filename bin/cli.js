@@ -12,7 +12,9 @@ const {
   getAndLoadConfigIfNeeded,
   configFileExists,
   getConfigPath,
+  validateConfig: isValidConfig,
 } = require('@hubspot/local-dev-lib/config');
+const { NO_VALIDATE_LIST } = require('../lib/constants');
 const { logError } = require('../lib/errorHandlers/index');
 const {
   setLogLevel,
@@ -149,6 +151,17 @@ const setRequestHeaders = () => {
 };
 
 const loadConfigMiddleware = async options => {
+  const validateConfig = () => {
+    const shouldValidate = options._.every(
+      item => !NO_VALIDATE_LIST.includes(item)
+    );
+    if (shouldValidate) {
+      if (!isValidConfig()) {
+        process.exit(EXIT_CODES.ERROR);
+      }
+    }
+  };
+
   // Load the new config and check for the conflicting config flag
   if (configFileExists(true)) {
     loadConfig('', options);
@@ -161,6 +174,7 @@ const loadConfigMiddleware = async options => {
       );
       process.exit(EXIT_CODES.ERROR);
     }
+    validateConfig();
     return;
   }
 
@@ -169,11 +183,13 @@ const loadConfigMiddleware = async options => {
   if (options.config && fs.existsSync(options.config)) {
     const { config: configPath } = options;
     await loadConfig(configPath, options);
+    validateConfig();
     return;
   }
 
   // Load deprecated config without a config flag and with no warnings
   getAndLoadConfigIfNeeded(options);
+  validateConfig();
   return;
 };
 
