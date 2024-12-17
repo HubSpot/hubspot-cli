@@ -113,7 +113,7 @@ en:
             defaultMode:
               describe: "Set the default CMS publish mode"
               promptMessage: "Select CMS publish mode to be used as the default"
-              error: "The CMS publish mode \"{{ mode }}\" is invalid. Valid values are {{ validModes }}."
+              error: "The provided CMS publish mode is invalid. Valid values are {{ validModes }}."
               success: "Default mode updated to: {{ mode }}"
             allowUsageTracking:
               describe: "Enable or disable usage tracking"
