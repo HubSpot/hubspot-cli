@@ -11,6 +11,8 @@ import { uiAccountDescription } from '../ui';
 import { i18n } from '../lang';
 import { EXIT_CODES } from '../enums/exitCodes';
 import { ProjectConfig } from '../../types/Projects';
+import { isTranslationError, translate } from '@hubspot/project-parsing-lib';
+import { logError } from '../errorHandlers';
 
 const i18nKey = 'lib.projectUpload';
 
@@ -92,7 +94,7 @@ export async function handleProjectUpload<T = ProjectUploadDefaultResult>(
   projectDir: string,
   callbackFunc: ProjectUploadCallbackFunction<T>,
   uploadMessage: string,
-  intermediateRepresentation: unknown
+  sendIR: boolean = false
 ) {
   const srcDir = path.resolve(projectDir, projectConfig.srcDir);
 
@@ -126,6 +128,25 @@ export async function handleProjectUpload<T = ProjectUploadDefaultResult>(
           byteCount: archive.pointer(),
         })
       );
+
+      let intermediateRepresentation;
+
+      if (sendIR) {
+        try {
+          intermediateRepresentation = await translate({
+            projectSourceDir: path.join(projectDir, projectConfig.srcDir),
+            platformVersion: projectConfig.platformVersion,
+            accountId,
+          });
+        } catch (e) {
+          if (isTranslationError(e)) {
+            logger.error(e.toString());
+          } else {
+            logError(e);
+          }
+          return process.exit(EXIT_CODES.ERROR);
+        }
+      }
 
       const { buildId, error } = await uploadProjectFiles(
         accountId,

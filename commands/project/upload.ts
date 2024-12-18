@@ -27,12 +27,6 @@ const { PROJECT_ERROR_TYPES } = require('../../lib/constants');
 const { logError, ApiErrorContext } = require('../../lib/errorHandlers/index');
 const { EXIT_CODES } = require('../../lib/enums/exitCodes');
 
-const {
-  translate,
-  isTranslationError,
-} = require('@hubspot/project-parsing-lib');
-const path = require('path');
-
 const i18nKey = 'commands.project.subcommands.upload';
 
 exports.command = 'upload';
@@ -48,24 +42,6 @@ exports.handler = async options => {
   trackCommandUsage('project-upload', { type: accountType }, derivedAccountId);
 
   const { projectConfig, projectDir } = await getProjectConfig();
-
-  let intermediateRepresentation;
-  if (options.translate) {
-    try {
-      intermediateRepresentation = await translate({
-        projectSourceDir: path.join(projectDir, projectConfig.srcDir),
-        platformVersion: projectConfig.platformVersion,
-        accountId: derivedAccountId,
-      });
-    } catch (e) {
-      if (isTranslationError(e)) {
-        logger.error(e.toString());
-      } else {
-        logError(e);
-      }
-      return process.exit(EXIT_CODES.ERROR);
-    }
-  }
 
   trackCommandUsage('project-upload', { type: accountType }, derivedAccountId);
 
@@ -83,8 +59,10 @@ exports.handler = async options => {
       projectDir,
       pollProjectBuildAndDeploy,
       message,
-      intermediateRepresentation
+      options.translate
     );
+
+    console.log(result);
 
     if (result.uploadError) {
       if (
@@ -155,12 +133,11 @@ exports.builder = yargs => {
       type: 'string',
       default: '',
     },
-  });
-
-  yargs.option('translate', {
-    hidden: true,
-    type: 'boolean',
-    default: false,
+    translate: {
+      hidden: true,
+      type: 'boolean',
+      default: false,
+    },
   });
 
   yargs.example([['$0 project upload', i18n(`${i18nKey}.examples.default`)]]);
