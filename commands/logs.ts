@@ -13,7 +13,6 @@ const {
   getLatestFunctionLog,
 } = require('@hubspot/local-dev-lib/api/functions');
 const { tailLogs } = require('../lib/serverlessLogs');
-const { loadAndValidateOptions } = require('../lib/validation');
 const { i18n } = require('../lib/lang');
 const { promptUser } = require('../lib/prompts/promptUtils');
 const { EXIT_CODES } = require('../lib/enums/exitCodes');
@@ -100,8 +99,6 @@ exports.command = 'logs [endpoint]';
 exports.describe = i18n(`${i18nKey}.describe`);
 
 exports.handler = async options => {
-  await loadAndValidateOptions(options);
-
   const { endpoint: endpointArgValue, latest, derivedAccountId } = options;
 
   trackCommandUsage('logs', { latest }, derivedAccountId);

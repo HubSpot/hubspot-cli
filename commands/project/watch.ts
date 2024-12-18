@@ -25,7 +25,6 @@ const {
   fetchProjectBuilds,
 } = require('@hubspot/local-dev-lib/api/projects');
 const { isSpecifiedError } = require('@hubspot/local-dev-lib/errors/index');
-const { loadAndValidateOptions } = require('../../lib/validation');
 const { EXIT_CODES } = require('../../lib/enums/exitCodes');
 const { handleKeypress, handleExit } = require('../../lib/process');
 
@@ -35,10 +34,8 @@ exports.command = 'watch';
 exports.describe = uiBetaTag(i18n(`${i18nKey}.describe`), false);
 
 const handleBuildStatus = async (accountId, projectName, buildId) => {
-  const {
-    isAutoDeployEnabled,
-    deployStatusTaskLocator,
-  } = await pollBuildStatus(accountId, projectName, buildId);
+  const { isAutoDeployEnabled, deployStatusTaskLocator } =
+    await pollBuildStatus(accountId, projectName, buildId);
 
   if (isAutoDeployEnabled && deployStatusTaskLocator) {
     await pollDeployStatus(
@@ -86,8 +83,6 @@ const handleUserInput = (accountId, projectName, currentBuildId) => {
 };
 
 exports.handler = async options => {
-  await loadAndValidateOptions(options);
-
   const { initialUpload, derivedAccountId } = options;
 
   trackCommandUsage('project-watch', null, derivedAccountId);

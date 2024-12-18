@@ -17,7 +17,6 @@ const {
   addConfigOptions,
   addUseEnvironmentOptions,
 } = require('../../../lib/commonOpts');
-const { loadAndValidateOptions } = require('../../../lib/validation');
 const {
   getProjectConfig,
   pollDeployStatus,
@@ -133,12 +132,6 @@ describe('commands/project/deploy', () => {
 
       // Spy on process.exit so our tests don't close when it's called
       processExitSpy = jest.spyOn(process, 'exit').mockImplementation(() => {});
-    });
-
-    it('should load and validate the options', async () => {
-      await deployCommand.handler(options);
-      expect(loadAndValidateOptions).toHaveBeenCalledTimes(1);
-      expect(loadAndValidateOptions).toHaveBeenCalledWith(options);
     });
 
     it('should load the account config for the correct account id', async () => {

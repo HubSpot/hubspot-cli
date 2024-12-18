@@ -5,7 +5,6 @@ const { downloadHubDbTable } = require('@hubspot/local-dev-lib/hubdb');
 const {
   selectHubDBTablePrompt,
 } = require('../../lib/prompts/selectHubDBTablePrompt');
-const { loadAndValidateOptions } = require('../../lib/validation');
 const { trackCommandUsage } = require('../../lib/usageTracking');
 
 const {
@@ -22,8 +21,6 @@ exports.describe = i18n(`${i18nKey}.describe`);
 
 exports.handler = async options => {
   const { derivedAccountId } = options;
-
-  await loadAndValidateOptions(options);
 
   trackCommandUsage('hubdb-fetch', null, derivedAccountId);
 

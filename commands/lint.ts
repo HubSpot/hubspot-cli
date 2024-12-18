@@ -14,7 +14,6 @@ const {
 } = require('../lib/commonOpts');
 const { resolveLocalPath } = require('../lib/filesystem');
 const { trackCommandUsage } = require('../lib/usageTracking');
-const { loadAndValidateOptions } = require('../lib/validation');
 const { i18n } = require('../lib/lang');
 
 const i18nKey = 'commands.lint';
@@ -63,8 +62,6 @@ function printHublValidationResult({ file, validation }: LintResult): number {
 
 export const handler = async options => {
   const { path: lintPath } = options;
-
-  await loadAndValidateOptions(options);
 
   const { derivedAccountId } = options;
   const localPath = resolveLocalPath(lintPath);
