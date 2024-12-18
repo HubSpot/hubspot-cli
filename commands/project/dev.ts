@@ -36,7 +36,7 @@ const {
   findProjectComponents,
   getProjectComponentTypes,
   COMPONENT_TYPES,
-} = require('../../lib/projectStructure');
+} = require('../../lib/projects/structure');
 const {
   confirmDefaultAccountIsTarget,
   suggestRecommendedNestedAccount,

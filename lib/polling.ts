@@ -1,7 +1,21 @@
-// @ts-nocheck
-const { POLLING_DELAY, POLLING_STATUS } = require('./constants');
+import { HubSpotPromise } from '@hubspot/local-dev-lib/types/Http';
+import { ValueOf } from '@hubspot/local-dev-lib/types/Utils';
+import { POLLING_DELAY, POLLING_STATUS } from './constants';
 
-const poll = (callback, accountId, taskId) => {
+type GenericPollingResponse = {
+  status: ValueOf<typeof POLLING_STATUS>;
+};
+
+type PollingCallback<T extends GenericPollingResponse> = (
+  accountId: number,
+  taskId: number | string
+) => HubSpotPromise<T>;
+
+export function poll<T extends GenericPollingResponse>(
+  callback: PollingCallback<T>,
+  accountId: number,
+  taskId: number | string
+): Promise<T> {
   return new Promise((resolve, reject) => {
     const pollInterval = setInterval(async () => {
       try {
@@ -25,8 +39,4 @@ const poll = (callback, accountId, taskId) => {
       }
     }, POLLING_DELAY);
   });
-};
-
-module.exports = {
-  poll,
-};
+}

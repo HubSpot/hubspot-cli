@@ -20,13 +20,13 @@ const { PROJECT_CONFIG_FILE } = require('./constants');
 const SpinniesManager = require('./ui/SpinniesManager');
 const DevServerManager = require('./DevServerManager');
 const { EXIT_CODES } = require('./enums/exitCodes');
-const { getProjectDetailUrl } = require('./projects');
+const { getProjectDetailUrl } = require('./projects/urls');
 const { getAccountHomeUrl } = require('./localDev');
 const {
   CONFIG_FILES,
   COMPONENT_TYPES,
   getAppCardConfigs,
-} = require('./projectStructure');
+} = require('./projects/structure');
 const {
   UI_COLORS,
   uiCommandReference,
