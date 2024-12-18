@@ -28,17 +28,19 @@ jest.mock('util', () => ({
 const hasMissingPackages = _hasMissingPackages as jest.MockedFunction<
   typeof _hasMissingPackages
 >;
-const isPortManagerPortAvailable = _isPortManagerPortAvailable as jest.MockedFunction<
-  typeof _isPortManagerPortAvailable
->;
+const isPortManagerPortAvailable =
+  _isPortManagerPortAvailable as jest.MockedFunction<
+    typeof _isPortManagerPortAvailable
+  >;
 
 const utilPromisify = util.promisify as jest.MockedFunction<
   typeof util.promisify
 >;
 
-const accessTokenForPersonalAccessKey = _accessTokenForPersonalAccessKey as jest.MockedFunction<
-  typeof _accessTokenForPersonalAccessKey
->;
+const accessTokenForPersonalAccessKey =
+  _accessTokenForPersonalAccessKey as jest.MockedFunction<
+    typeof _accessTokenForPersonalAccessKey
+  >;
 
 const isSpecifiedError = _isSpecifiedError as jest.MockedFunction<
   typeof _isSpecifiedError
@@ -64,7 +66,11 @@ describe('lib/doctor/Doctor', () => {
     project: {
       config: {
         projectDir: '/path/to/project',
-        projectConfig: {},
+        projectConfig: {
+          name: 'my-project',
+          srcDir: '/path/to/project',
+          platformVersion: 'test',
+        },
       },
     },
     versions: {
@@ -75,11 +81,11 @@ describe('lib/doctor/Doctor', () => {
   };
 
   beforeEach(() => {
-    doctor = new Doctor(({
+    doctor = new Doctor({
       generateDiagnosticInfo: jest.fn().mockResolvedValue({
         ...diagnosticInfo,
       }),
-    } as unknown) as DiagnosticInfoBuilder);
+    } as unknown as DiagnosticInfoBuilder);
 
     utilPromisify.mockReturnValue(
       jest.fn().mockImplementationOnce((filename: string) => {
@@ -104,12 +110,12 @@ describe('lib/doctor/Doctor', () => {
       });
 
       it('should add error section if node version is not available', async () => {
-        doctor = new Doctor(({
+        doctor = new Doctor({
           generateDiagnosticInfo: jest.fn().mockResolvedValue({
             ...diagnosticInfo,
             versions: {},
           }),
-        } as unknown) as DiagnosticInfoBuilder);
+        } as unknown as DiagnosticInfoBuilder);
 
         await doctor.diagnose();
 
@@ -121,12 +127,12 @@ describe('lib/doctor/Doctor', () => {
       });
 
       it('should add error section if minimum node version is not met', async () => {
-        doctor = new Doctor(({
+        doctor = new Doctor({
           generateDiagnosticInfo: jest.fn().mockResolvedValue({
             ...diagnosticInfo,
             versions: { node: '1.0.0' },
           }),
-        } as unknown) as DiagnosticInfoBuilder);
+        } as unknown as DiagnosticInfoBuilder);
 
         await doctor.diagnose();
 
@@ -149,12 +155,12 @@ describe('lib/doctor/Doctor', () => {
       });
 
       it('should add error section if npm is not installed', async () => {
-        doctor = new Doctor(({
+        doctor = new Doctor({
           generateDiagnosticInfo: jest.fn().mockResolvedValue({
             ...diagnosticInfo,
             versions: {},
           }),
-        } as unknown) as DiagnosticInfoBuilder);
+        } as unknown as DiagnosticInfoBuilder);
 
         await doctor.diagnose();
 

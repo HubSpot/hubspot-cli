@@ -1,7 +1,7 @@
 import { accountNameExistsInConfig } from '@hubspot/local-dev-lib/config';
 import { promptUser } from './promptUtils';
 import { i18n } from '../lang';
-import { PromptConfig } from '../../types/prompts';
+import { PromptConfig } from '../../types/Prompts';
 import { HUBSPOT_ACCOUNT_TYPES } from '@hubspot/local-dev-lib/constants/config';
 import { AccountType } from '@hubspot/local-dev-lib/types/Accounts';
 

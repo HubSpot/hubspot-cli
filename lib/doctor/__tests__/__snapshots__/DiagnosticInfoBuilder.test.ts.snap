@@ -58,6 +58,8 @@ exports[`lib/doctor/DiagnosticInfo generateDiagnosticInfo should gather the requ
     "config": {
       "projectConfig": {
         "name": "My project",
+        "platformVersion": "test",
+        "srcDir": "project-dir",
       },
       "projectDir": "/Users/test/project",
     },

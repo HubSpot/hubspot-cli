@@ -87,12 +87,14 @@ export class DiagnosticInfoBuilder {
   }
 
   async generateDiagnosticInfo(): Promise<DiagnosticInfo> {
-    // @ts-expect-error getProjectConfig not typed yet
     this._projectConfig = await getProjectConfig();
 
     if (this._projectConfig?.projectConfig) {
       await this.fetchProjectDetails();
       await this.fetchAccessToken();
+    }
+
+    if (this._projectConfig?.projectDir) {
       await this.fetchProjectFilenames();
     }
 
@@ -134,7 +136,8 @@ export class DiagnosticInfoBuilder {
     try {
       const { data } = await fetchProject(
         this.accountId!,
-        this._projectConfig?.projectConfig?.name
+        // We check that config exists before running this function
+        this._projectConfig!.projectConfig!.name
       );
       this.projectDetails = data;
     } catch (e) {
@@ -158,10 +161,11 @@ export class DiagnosticInfoBuilder {
 
   private async fetchProjectFilenames(): Promise<void> {
     try {
-      this.files = (await walk(this._projectConfig?.projectDir))
+      // We check that projectDir exists before running this function
+      this.files = (await walk(this._projectConfig!.projectDir!))
         .filter(file => !path.dirname(file).includes('node_modules'))
         .map(filename =>
-          path.relative(this._projectConfig?.projectDir, filename)
+          path.relative(this._projectConfig!.projectDir!, filename)
         );
     } catch (e) {
       logger.debug(e);

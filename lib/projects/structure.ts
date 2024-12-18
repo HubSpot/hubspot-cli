@@ -3,7 +3,7 @@ import * as path from 'path';
 import { ValueOf } from '@hubspot/local-dev-lib/types/Utils';
 import { walk } from '@hubspot/local-dev-lib/fs';
 import { logger } from '@hubspot/local-dev-lib/logger';
-import { logError } from './errorHandlers/index';
+import { logError } from '../errorHandlers/index';
 
 export type Component = {
   type: ComponentTypes;
@@ -207,9 +207,9 @@ export async function findProjectComponents(
   return components;
 }
 
-export function getProjectComponentTypes(
-  components: Array<Component>
-): { [key in ComponentTypes]?: boolean } {
+export function getProjectComponentTypes(components: Array<Component>): {
+  [key in ComponentTypes]?: boolean;
+} {
   const projectContents: { [key in ComponentTypes]?: boolean } = {};
 
   components.forEach(({ type }) => (projectContents[type] = true));
