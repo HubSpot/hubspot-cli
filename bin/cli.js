@@ -12,6 +12,7 @@ const {
   getAndLoadConfigIfNeeded,
   configFileExists,
   getConfigPath,
+  validateConfig,
 } = require('@hubspot/local-dev-lib/config');
 const { logError } = require('../lib/errorHandlers/index');
 const {
@@ -148,7 +149,24 @@ const setRequestHeaders = () => {
   addUserAgentHeader('HubSpot CLI', pkg.version);
 };
 
+const NO_CONFIG_VALIDATION = {
+  init: { skip: true },
+  auth: { skip: true },
+};
+
 const loadConfigMiddleware = async options => {
+  const maybeValidateConfig = () => {
+    const shouldValidate = options._.every(
+      command =>
+        !(NO_CONFIG_VALIDATION[command] && NO_CONFIG_VALIDATION[command].skip)
+    );
+    if (shouldValidate) {
+      if (!validateConfig()) {
+        process.exit(EXIT_CODES.ERROR);
+      }
+    }
+  };
+
   // Load the new config and check for the conflicting config flag
   if (configFileExists(true)) {
     loadConfig('', options);
@@ -161,6 +179,7 @@ const loadConfigMiddleware = async options => {
       );
       process.exit(EXIT_CODES.ERROR);
     }
+    maybeValidateConfig();
     return;
   }
 
@@ -168,12 +187,14 @@ const loadConfigMiddleware = async options => {
   // so that getAccountIdFromConfig() in injectAccountIdMiddleware reads from the right config
   if (options.config && fs.existsSync(options.config)) {
     const { config: configPath } = options;
-    await loadConfig(configPath, options);
+    loadConfig(configPath, options);
+    maybeValidateConfig();
     return;
   }
 
   // Load deprecated config without a config flag and with no warnings
   getAndLoadConfigIfNeeded(options);
+  maybeValidateConfig();
   return;
 };
 
