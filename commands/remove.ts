@@ -9,7 +9,6 @@ const {
   addUseEnvironmentOptions,
   addGlobalOptions,
 } = require('../lib/commonOpts');
-const { loadAndValidateOptions } = require('../lib/validation');
 const { trackCommandUsage } = require('../lib/usageTracking');
 const { i18n } = require('../lib/lang');
 
@@ -20,8 +19,6 @@ exports.describe = i18n(`${i18nKey}.describe`);
 
 exports.handler = async options => {
   const { path: hsPath, derivedAccountId } = options;
-
-  await loadAndValidateOptions(options);
 
   trackCommandUsage('remove', null, derivedAccountId);
 

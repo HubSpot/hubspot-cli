@@ -5,7 +5,6 @@ const {
   addAccountOptions,
   addUseEnvironmentOptions,
 } = require('../../lib/commonOpts');
-const { loadAndValidateOptions } = require('../../lib/validation');
 const { trackCommandUsage } = require('../../lib/usageTracking');
 const {
   kickOffValidation,
@@ -23,8 +22,6 @@ exports.describe = i18n(`${i18nKey}.describe`);
 
 exports.handler = async options => {
   const { src, derivedAccountId } = options;
-
-  await loadAndValidateOptions(options);
 
   trackCommandUsage('validate', null, derivedAccountId);
 

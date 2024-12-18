@@ -11,7 +11,6 @@ const {
 } = require('../lib/commonOpts');
 const { trackCommandUsage } = require('../lib/usageTracking');
 const { isPathFolder } = require('../lib/filesystem');
-const { loadAndValidateOptions } = require('../lib/validation');
 const { i18n } = require('../lib/lang');
 const { uiBetaTag } = require('../lib/ui');
 
@@ -30,8 +29,6 @@ exports.command = 'mv <srcPath> <destPath>';
 exports.describe = uiBetaTag(i18n(`${i18nKey}.describe`), false);
 
 exports.handler = async options => {
-  await loadAndValidateOptions(options);
-
   const { srcPath, destPath, derivedAccountId } = options;
 
   trackCommandUsage('mv', null, derivedAccountId);

@@ -5,7 +5,6 @@ const {
   addUseEnvironmentOptions,
   addTestingOptions,
 } = require('../../lib/commonOpts');
-const { loadAndValidateOptions } = require('../../lib/validation');
 const { i18n } = require('../../lib/lang');
 const { EXIT_CODES } = require('../../lib/enums/exitCodes');
 const { getAccountConfig, getEnv } = require('@hubspot/local-dev-lib/config');
@@ -40,8 +39,6 @@ exports.command = 'create';
 exports.describe = uiBetaTag(i18n(`${i18nKey}.describe`), false);
 
 exports.handler = async options => {
-  await loadAndValidateOptions(options);
-
   const { name, type, force, derivedAccountId } = options;
   const accountConfig = getAccountConfig(derivedAccountId);
   const env = getValidEnv(getEnv(derivedAccountId));

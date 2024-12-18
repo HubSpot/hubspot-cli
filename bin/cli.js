@@ -20,6 +20,7 @@ const {
   getCommandName,
   injectAccountIdMiddleware,
 } = require('../lib/commonOpts');
+const { validateAccount } = require('../lib/validation');
 const {
   trackHelpUsage,
   trackConvertFieldsUsage,
@@ -149,6 +150,24 @@ const setRequestHeaders = () => {
   addUserAgentHeader('HubSpot CLI', pkg.version);
 };
 
+const shouldValidate = (options, validationList) => {
+  return options._.every(command => {
+    const mainCommand = command;
+    if (validationList[mainCommand]) {
+      if (validationList[mainCommand].skip) {
+        return false;
+      }
+      const subCommands = validationList[mainCommand].subCommands || {};
+      for (const subCommand in subCommands) {
+        if (subCommands[subCommand]?.skip && options._.includes(subCommand)) {
+          return false;
+        }
+      }
+    }
+    return true;
+  });
+};
+
 const NO_CONFIG_VALIDATION = {
   init: { skip: true },
   auth: { skip: true },
@@ -156,11 +175,7 @@ const NO_CONFIG_VALIDATION = {
 
 const loadConfigMiddleware = async options => {
   const maybeValidateConfig = () => {
-    const shouldValidate = options._.every(
-      command =>
-        !(NO_CONFIG_VALIDATION[command] && NO_CONFIG_VALIDATION[command].skip)
-    );
-    if (shouldValidate) {
+    if (shouldValidate(options, NO_CONFIG_VALIDATION)) {
       if (!validateConfig()) {
         process.exit(EXIT_CODES.ERROR);
       }
@@ -202,6 +217,34 @@ const checkAndWarnGitInclusionMiddleware = () => {
   checkAndWarnGitInclusion(getConfigPath());
 };
 
+const NO_ACCOUNT_VALIDATION = {
+  accounts: {
+    skip: false,
+    subCommands: {
+      clean: { skip: true },
+      list: { skip: true },
+      remove: { skip: true },
+    },
+  },
+  sandbox: {
+    skip: false,
+    subCommands: {
+      delete: { skip: true },
+    },
+  },
+};
+
+const validateAccountOptions = async options => {
+  let validAccount = true;
+  if (shouldValidate(options, NO_ACCOUNT_VALIDATION)) {
+    validAccount = await validateAccount(options);
+  }
+
+  if (!validAccount) {
+    process.exit(EXIT_CODES.ERROR);
+  }
+};
+
 const argv = yargs
   .usage('The command line interface to interact with HubSpot.')
   // loadConfigMiddleware loads the new hidden config for all commands
@@ -211,6 +254,7 @@ const argv = yargs
     loadConfigMiddleware,
     injectAccountIdMiddleware,
     checkAndWarnGitInclusionMiddleware,
+    validateAccountOptions,
   ])
   .exitProcess(false)
   .fail(handleFailure)

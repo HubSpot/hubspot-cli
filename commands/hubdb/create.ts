@@ -7,10 +7,7 @@ const { getCwd } = require('@hubspot/local-dev-lib/path');
 const { createHubDbTable } = require('@hubspot/local-dev-lib/hubdb');
 const { untildify, isValidPath } = require('@hubspot/local-dev-lib/path');
 const { promptUser } = require('../../lib/prompts/promptUtils');
-const {
-  checkAndConvertToJson,
-  loadAndValidateOptions,
-} = require('../../lib/validation');
+const { checkAndConvertToJson } = require('../../lib/validation');
 const { trackCommandUsage } = require('../../lib/usageTracking');
 const {
   addConfigOptions,
@@ -49,8 +46,6 @@ function selectPathPrompt(options) {
 
 exports.handler = async options => {
   const { derivedAccountId } = options;
-
-  await loadAndValidateOptions(options);
 
   trackCommandUsage('hubdb-create', null, derivedAccountId);
 

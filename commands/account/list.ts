@@ -12,7 +12,6 @@ const { addConfigOptions } = require('../../lib/commonOpts');
 const { getTableContents, getTableHeader } = require('../../lib/ui/table');
 
 const { trackCommandUsage } = require('../../lib/usageTracking');
-const { loadAndValidateOptions } = require('../../lib/validation');
 const { isSandbox, isDeveloperTestAccount } = require('../../lib/accountTypes');
 
 const { i18n } = require('../../lib/lang');
@@ -81,8 +80,6 @@ const getPortalData = mappedPortalData => {
 };
 
 exports.handler = async options => {
-  await loadAndValidateOptions(options, false);
-
   const { derivedAccountId } = options;
 
   trackCommandUsage('accounts-list', null, derivedAccountId);

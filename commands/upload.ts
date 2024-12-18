@@ -35,10 +35,7 @@ const {
 } = require('../lib/commonOpts');
 const { uploadPrompt } = require('../lib/prompts/uploadPrompt');
 const { confirmPrompt } = require('../lib/prompts/promptUtils');
-const {
-  validateCmsPublishMode,
-  loadAndValidateOptions,
-} = require('../lib/validation');
+const { validateCmsPublishMode } = require('../lib/validation');
 const { trackCommandUsage } = require('../lib/usageTracking');
 const { getUploadableFileList } = require('../lib/upload');
 
@@ -67,8 +64,6 @@ const logThemePreview = (filePath, accountId) => {
 };
 
 exports.handler = async options => {
-  await loadAndValidateOptions(options);
-
   if (!validateCmsPublishMode(options)) {
     process.exit(EXIT_CODES.WARNING);
   }

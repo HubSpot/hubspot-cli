@@ -10,7 +10,6 @@ const {
   createProjectComponent,
   getProjectComponentsByVersion,
 } = require('../../lib/projects');
-const { loadAndValidateOptions } = require('../../lib/validation');
 const { uiBetaTag } = require('../../lib/ui');
 const {
   HUBSPOT_PROJECT_COMPONENTS_GITHUB_PATH,
@@ -22,8 +21,6 @@ exports.command = 'add';
 exports.describe = uiBetaTag(i18n(`${i18nKey}.describe`), false);
 
 exports.handler = async options => {
-  await loadAndValidateOptions(options);
-
   const { derivedAccountId } = options;
 
   logger.log('');

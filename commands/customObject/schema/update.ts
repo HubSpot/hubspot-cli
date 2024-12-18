@@ -8,10 +8,7 @@ const { getAbsoluteFilePath } = require('@hubspot/local-dev-lib/path');
 const {
   ENVIRONMENTS,
 } = require('@hubspot/local-dev-lib/constants/environments');
-const {
-  checkAndConvertToJson,
-  loadAndValidateOptions,
-} = require('../../../lib/validation');
+const { checkAndConvertToJson } = require('../../../lib/validation');
 const { trackCommandUsage } = require('../../../lib/usageTracking');
 const { addTestingOptions } = require('../../../lib/commonOpts');
 const { CONFIG_FLAGS } = require('../../../lib/constants');
@@ -36,8 +33,6 @@ exports.describe = i18n(`${i18nKey}.describe`);
 
 exports.handler = async options => {
   const { path, name: providedName, derivedAccountId } = options;
-
-  await loadAndValidateOptions(options);
 
   trackCommandUsage('custom-object-schema-update', null, derivedAccountId);
 

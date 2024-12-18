@@ -4,7 +4,6 @@ import { confirmPrompt, listPrompt } from '../../../lib/prompts/promptUtils';
 import { fetchObjectSchemas } from '@hubspot/local-dev-lib/api/customObjects';
 
 const { logger } = require('@hubspot/local-dev-lib/logger');
-const { loadAndValidateOptions } = require('../../../lib/validation');
 const { trackCommandUsage } = require('../../../lib/usageTracking');
 const {
   deleteObjectSchema,
@@ -19,8 +18,6 @@ exports.describe = i18n(`${i18nKey}.describe`);
 
 exports.handler = async options => {
   const { name: providedName, force, derivedAccountId } = options;
-
-  await loadAndValidateOptions(options);
 
   trackCommandUsage('custom-object-schema-delete', null, derivedAccountId);
 

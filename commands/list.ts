@@ -15,7 +15,6 @@ const {
   getDirectoryContentsByPath,
 } = require('@hubspot/local-dev-lib/api/fileMapper');
 const { HUBSPOT_FOLDER, MARKETPLACE_FOLDER } = require('../lib/constants');
-const { loadAndValidateOptions } = require('../lib/validation');
 const { i18n } = require('../lib/lang');
 
 const i18nKey = 'commands.list';
@@ -25,8 +24,6 @@ exports.command = 'list [path]';
 exports.describe = i18n(`${i18nKey}.describe`);
 
 exports.handler = async options => {
-  await loadAndValidateOptions(options);
-
   const { path, derivedAccountId } = options;
   const directoryPath = path || '/';
   let contentsResp;

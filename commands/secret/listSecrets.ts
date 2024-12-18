@@ -3,7 +3,6 @@ const { logger } = require('@hubspot/local-dev-lib/logger');
 const { logError, ApiErrorContext } = require('../../lib/errorHandlers/index');
 const { fetchSecrets } = require('@hubspot/local-dev-lib/api/secrets');
 
-const { loadAndValidateOptions } = require('../../lib/validation');
 const { trackCommandUsage } = require('../../lib/usageTracking');
 const { uiAccountDescription } = require('../../lib/ui');
 
@@ -20,8 +19,6 @@ exports.command = 'list';
 exports.describe = i18n(`${i18nKey}.describe`);
 
 exports.handler = async options => {
-  await loadAndValidateOptions(options);
-
   const { derivedAccountId } = options;
   trackCommandUsage('secrets-list', null, derivedAccountId);
 

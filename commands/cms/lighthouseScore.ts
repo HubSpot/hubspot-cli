@@ -7,7 +7,6 @@ const {
 } = require('../../lib/commonOpts');
 const { logger } = require('@hubspot/local-dev-lib/logger');
 const { getTableContents, getTableHeader } = require('../../lib/ui/table');
-const { loadAndValidateOptions } = require('../../lib/validation');
 const { promptUser } = require('../../lib/prompts/promptUtils');
 const { i18n } = require('../../lib/lang');
 const { fetchThemes } = require('@hubspot/local-dev-lib/api/designManager');
@@ -67,7 +66,6 @@ const selectTheme = async accountId => {
 };
 
 exports.handler = async options => {
-  await loadAndValidateOptions(options);
   const { target, verbose, theme, derivedAccountId } = options;
 
   const includeDesktopScore = target === 'desktop' || !verbose;

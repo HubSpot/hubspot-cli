@@ -13,7 +13,6 @@ const {
 const { fetchSchema } = require('@hubspot/local-dev-lib/api/fileTransport');
 const { getCwd } = require('@hubspot/local-dev-lib/path');
 
-const { loadAndValidateOptions } = require('../../../lib/validation');
 const { trackCommandUsage } = require('../../../lib/usageTracking');
 const { i18n } = require('../../../lib/lang');
 const { logError } = require('../../../lib/errorHandlers');
@@ -25,8 +24,6 @@ exports.describe = i18n(`${i18nKey}.describe`);
 
 exports.handler = async options => {
   const { name: providedName, dest: providedDest, derivedAccountId } = options;
-
-  await loadAndValidateOptions(options);
 
   trackCommandUsage('custom-object-schema-fetch', null, derivedAccountId);
   let name;

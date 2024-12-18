@@ -4,10 +4,7 @@ import { inputPrompt } from '../../lib/prompts/promptUtils';
 const { logger } = require('@hubspot/local-dev-lib/logger');
 const { logError } = require('../../lib/errorHandlers/index');
 const { getAbsoluteFilePath } = require('@hubspot/local-dev-lib/path');
-const {
-  checkAndConvertToJson,
-  loadAndValidateOptions,
-} = require('../../lib/validation');
+const { checkAndConvertToJson } = require('../../lib/validation');
 const { trackCommandUsage } = require('../../lib/usageTracking');
 const {
   batchCreateObjects,
@@ -23,8 +20,6 @@ exports.describe = i18n(`${i18nKey}.describe`);
 exports.handler = async options => {
   const { path, name: providedName, derivedAccountId } = options;
   let definitionPath = path;
-
-  await loadAndValidateOptions(options);
 
   trackCommandUsage('custom-object-batch-create', null, derivedAccountId);
 

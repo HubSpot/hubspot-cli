@@ -14,7 +14,6 @@ const {
   buildPackage,
   getBuildStatus,
 } = require('@hubspot/local-dev-lib/api/functions');
-const { loadAndValidateOptions } = require('../../lib/validation');
 const { outputBuildLog } = require('../../lib/serverlessLogs');
 const { i18n } = require('../../lib/lang');
 const { isHubSpotHttpError } = require('@hubspot/local-dev-lib/errors/index');
@@ -25,8 +24,6 @@ exports.command = 'deploy <path>';
 exports.describe = false;
 
 exports.handler = async options => {
-  await loadAndValidateOptions(options);
-
   const { path: functionPath, derivedAccountId } = options;
   const splitFunctionPath = functionPath.split('.');
 

@@ -2,7 +2,6 @@
 import { inputPrompt } from '../../../lib/prompts/promptUtils';
 
 const { logger } = require('@hubspot/local-dev-lib/logger');
-const { loadAndValidateOptions } = require('../../../lib/validation');
 const { trackCommandUsage } = require('../../../lib/usageTracking');
 const {
   downloadSchemas,
@@ -18,8 +17,6 @@ exports.command = 'fetch-all [dest]';
 exports.describe = i18n(`${i18nKey}.describe`);
 
 exports.handler = async options => {
-  await loadAndValidateOptions(options);
-
   const { derivedAccountId, dest: providedDest } = options;
 
   trackCommandUsage('custom-object-schema-fetch-all', null, derivedAccountId);

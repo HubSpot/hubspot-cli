@@ -3,7 +3,6 @@ const { logger } = require('@hubspot/local-dev-lib/logger');
 const { getAccountConfig } = require('@hubspot/local-dev-lib/config');
 const { getAccessToken } = require('@hubspot/local-dev-lib/personalAccessKey');
 const { addConfigOptions } = require('../../lib/commonOpts');
-const { loadAndValidateOptions } = require('../../lib/validation');
 const { i18n } = require('../../lib/lang');
 const { getTableContents } = require('../../lib/ui/table');
 
@@ -13,8 +12,6 @@ exports.describe = i18n(`${i18nKey}.describe`);
 exports.command = 'info [account]';
 
 exports.handler = async options => {
-  await loadAndValidateOptions(options);
-
   const { derivedAccountId } = options;
   const config = getAccountConfig(derivedAccountId);
   // check if the provided account is using a personal access key, if not, show an error
