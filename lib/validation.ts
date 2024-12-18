@@ -11,7 +11,6 @@ const {
 const { commaSeparatedValues } = require('@hubspot/local-dev-lib/text');
 const {
   getConfigPath,
-  validateConfig,
   getAccountConfig,
   loadConfigFromEnvironment,
 } = require('@hubspot/local-dev-lib/config');
@@ -34,7 +33,7 @@ async function loadAndValidateOptions(options, shouldValidateAccount = true) {
     validAccount = await validateAccount(options);
   }
 
-  if (!(validateConfig() && validAccount)) {
+  if (!validAccount) {
     process.exit(EXIT_CODES.ERROR);
   }
 }
