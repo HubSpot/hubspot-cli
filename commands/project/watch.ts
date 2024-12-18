@@ -14,10 +14,10 @@ const { uiBetaTag } = require('../../lib/ui');
 const {
   ensureProjectExists,
   getProjectConfig,
-  handleProjectUpload,
   validateProjectConfig,
   logFeedbackMessage,
 } = require('../../lib/projects');
+const { handleProjectUpload } = require('../../lib/projects/upload');
 const {
   pollBuildStatus,
   pollDeployStatus,

@@ -20,7 +20,7 @@ import { RepoPath } from '@hubspot/local-dev-lib/types/Github';
 import {
   ProjectTemplate,
   ProjectTemplateRepoConfig,
-} from '../../types/projects';
+} from '../../types/Projects';
 
 const i18nKey = 'lib.prompts.createProjectPrompt';
 

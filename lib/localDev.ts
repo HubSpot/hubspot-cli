@@ -38,7 +38,7 @@ const {
   isAppDeveloperAccount,
   isDeveloperTestAccount,
 } = require('./accountTypes');
-const { handleProjectUpload } = require('./projects');
+const { handleProjectUpload } = require('./projects/upload');
 const { pollProjectBuildAndDeploy } = require('./projects/buildAndDeploy');
 const {
   PROJECT_ERROR_TYPES,

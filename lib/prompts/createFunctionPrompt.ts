@@ -1,6 +1,6 @@
 import { promptUser } from './promptUtils';
 import { i18n } from '../lang';
-import { PromptConfig } from '../../types/prompts';
+import { PromptConfig } from '../../types/Prompts';
 
 const i18nKey = 'lib.prompts.createFunctionPrompt';
 

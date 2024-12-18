@@ -1,6 +1,6 @@
 import { promptUser } from './promptUtils';
 import { i18n } from '../lang';
-import { ProjectAddComponentData } from '../../types/projects';
+import { ProjectAddComponentData } from '../../types/Projects';
 
 const i18nKey = 'lib.prompts.projectAddPrompt';
 

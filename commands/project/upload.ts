@@ -12,10 +12,10 @@ const { loadAndValidateOptions } = require('../../lib/validation');
 const {
   ensureProjectExists,
   getProjectConfig,
-  handleProjectUpload,
   logFeedbackMessage,
   validateProjectConfig,
 } = require('../../lib/projects');
+const { handleProjectUpload } = require('../../lib/projects/upload');
 const {
   displayWarnLogs,
   pollProjectBuildAndDeploy,

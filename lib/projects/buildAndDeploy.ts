@@ -20,7 +20,7 @@ import {
   ProjectTask,
   ProjectSubtask,
   ProjectPollStatusFunctionText,
-} from '../../types/projects';
+} from '../../types/Projects';
 import {
   POLLING_DELAY,
   PROJECT_BUILD_TEXT,
