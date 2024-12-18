@@ -369,27 +369,15 @@ const uploadProjectFiles = async (
   let error;
 
   try {
-    if (intermediateRepresentation) {
-      const { data: upload } = await uploadProject(
-        accountId,
-        projectName,
-        filePath,
-        uploadMessage,
-        platformVersion,
-        intermediateRepresentation
-      );
-      buildId = upload.buildId;
-    } else {
-      const { data: upload } = await uploadProject(
-        accountId,
-        projectName,
-        filePath,
-        uploadMessage,
-        platformVersion
-      );
-
-      buildId = upload.buildId;
-    }
+    const { data: upload } = await uploadProject(
+      accountId,
+      projectName,
+      filePath,
+      uploadMessage,
+      platformVersion,
+      intermediateRepresentation
+    );
+    buildId = upload.buildId;
 
     SpinniesManager.succeed('upload', {
       text: i18n(`${i18nKey}.uploadProjectFiles.succeed`, {
@@ -411,7 +399,6 @@ const uploadProjectFiles = async (
         projectName,
       }),
     });
-
     error = err;
   }
 
@@ -569,7 +556,7 @@ const handleProjectUpload = async (
         })
       );
 
-      const { buildId, error } = await uploadProjectFiles(
+      const data = await uploadProjectFiles(
         accountId,
         projectConfig.name,
         tempFile.name,
@@ -577,6 +564,8 @@ const handleProjectUpload = async (
         projectConfig.platformVersion,
         intermediateRepresentation
       );
+
+      const { buildId, error } = data;
 
       if (error) {
         uploadResult.uploadError = error;

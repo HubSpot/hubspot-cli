@@ -1,6 +1,4 @@
 // @ts-nocheck
-import util from 'util';
-
 const {
   addAccountOptions,
   addConfigOptions,
@@ -55,19 +53,19 @@ exports.handler = async options => {
       intermediateRepresentation = await translate({
         projectSourceDir: path.join(projectDir, projectConfig.srcDir),
         platformVersion: projectConfig.platformVersion,
-        accountId,
+        accountId: derivedAccountId,
       });
-      console.log(util.inspect(intermediateRepresentation, false, null, true));
     } catch (e) {
       if (isTranslationError(e)) {
-        return logger.error(e.toString());
+        logger.error(e.toString());
+      } else {
+        logError(e);
       }
-      logError(e);
       return process.exit(EXIT_CODES.ERROR);
     }
   }
 
-  trackCommandUsage('project-upload', { type: accountType }, accountId);
+  trackCommandUsage('project-upload', { type: accountType }, derivedAccountId);
 
   validateProjectConfig(projectConfig, projectDir);
 
@@ -158,7 +156,7 @@ exports.builder = yargs => {
   });
 
   yargs.option('translate', {
-    describe: 'Translate the project files',
+    hidden: true,
     type: 'boolean',
     default: false,
   });
