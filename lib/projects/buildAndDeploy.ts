@@ -16,12 +16,6 @@ import {
 import { WarnLogsResponse } from '@hubspot/local-dev-lib/types/Project';
 
 import {
-  ProjectConfig,
-  ProjectTask,
-  ProjectSubtask,
-  ProjectPollStatusFunctionText,
-} from '../../types/Projects';
-import {
   POLLING_DELAY,
   PROJECT_BUILD_TEXT,
   PROJECT_DEPLOY_TEXT,
@@ -37,6 +31,12 @@ import {
   getProjectDeployDetailUrl,
   getProjectActivityUrl,
 } from './urls';
+import {
+  ProjectConfig,
+  ProjectTask,
+  ProjectSubtask,
+  ProjectPollStatusFunctionText,
+} from '../../types/Projects';
 
 const i18nKey = 'lib.projectBuildAndDeploy';
 

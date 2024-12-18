@@ -9,8 +9,8 @@ import { logger } from '@hubspot/local-dev-lib/logger';
 import SpinniesManager from '../ui/SpinniesManager';
 import { uiAccountDescription } from '../ui';
 import { i18n } from '../lang';
-import { ProjectConfig } from '../../types/Projects';
 import { EXIT_CODES } from '../enums/exitCodes';
+import { ProjectConfig } from '../../types/Projects';
 
 const i18nKey = 'lib.projectUpload';
 

@@ -6,17 +6,18 @@ import {
   isValidPath,
   untildify,
 } from '@hubspot/local-dev-lib/path';
+import { RepoPath } from '@hubspot/local-dev-lib/types/Github';
+import { fetchFileFromRepository } from '@hubspot/local-dev-lib/github';
+import { logger } from '@hubspot/local-dev-lib/logger';
+
 import {
   PROJECT_COMPONENT_TYPES,
   HUBSPOT_PROJECT_COMPONENTS_GITHUB_PATH,
   DEFAULT_PROJECT_TEMPLATE_BRANCH,
 } from '../constants';
 import { promptUser } from './promptUtils';
-import { fetchFileFromRepository } from '@hubspot/local-dev-lib/github';
 import { i18n } from '../lang';
-import { logger } from '@hubspot/local-dev-lib/logger';
 import { EXIT_CODES } from '../enums/exitCodes';
-import { RepoPath } from '@hubspot/local-dev-lib/types/Github';
 import {
   ProjectTemplate,
   ProjectTemplateRepoConfig,

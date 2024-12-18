@@ -26,7 +26,6 @@ import { EXIT_CODES } from '../enums/exitCodes';
 import { uiLine, uiAccountDescription, uiCommandReference } from '../ui';
 import { i18n } from '../lang';
 import SpinniesManager from '../ui/SpinniesManager';
-import { logError, ApiErrorContext } from '../errorHandlers/index';
 import {
   ProjectTemplate,
   ProjectConfig,
@@ -34,6 +33,7 @@ import {
   ProjectTemplateRepoConfig,
   ComponentTemplate,
 } from '../../types/Projects';
+import { logError, ApiErrorContext } from '../errorHandlers/index';
 
 const i18nKey = 'lib.projects';
 
