@@ -82,7 +82,7 @@ type PollTaskStatusFunctionConfig<T extends ProjectTask> = {
     accountId: number,
     taskName: string,
     taskId: number,
-    deployedBuildId: number
+    deployedBuildId: number | null
   ) => void;
 };
 
@@ -118,7 +118,7 @@ function makePollTaskStatusFunc<T extends ProjectTask>({
   ) {
     const displayId = deployedBuildId || taskId;
 
-    if (linkToHubSpot && !silenceLogs && deployedBuildId) {
+    if (linkToHubSpot && !silenceLogs) {
       logger.log(
         `\n${linkToHubSpot(accountId, taskName, taskId, deployedBuildId)}\n`
       );
