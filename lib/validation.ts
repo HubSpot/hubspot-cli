@@ -201,9 +201,9 @@ export function fileExists(_path: string): boolean {
   return true;
 }
 
-export function checkAndConvertToJson(_path: string): object | boolean | null {
+export function checkAndConvertToJson(_path: string): object | null {
   const filePath = getAbsoluteFilePath(_path);
-  if (!fileExists(filePath)) return false;
+  if (!fileExists(filePath)) return null;
 
   if (getExt(_path) !== 'json') {
     logger.error(`The file "${_path}" must be a valid JSON file`);
