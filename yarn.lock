@@ -1463,7 +1463,7 @@
     semver "^6.3.0"
     unixify "^1.0.0"
 
-"@hubspot/local-dev-lib@^3.1.0":
+"@hubspot/local-dev-lib@3.1.0", "@hubspot/local-dev-lib@^3.1.0":
   version "3.1.0"
   resolved "https://registry.yarnpkg.com/@hubspot/local-dev-lib/-/local-dev-lib-3.1.0.tgz#76b5d524aa694aad2bfc6e199ee1dac314f15774"
   integrity sha512-iop3PgZ0ZWejCH6PmSeYnnGwV8vGIuA4F+w7SxukdX3QfhivlczClATWPaZanv1CYJHdflqoItq1kdF8ASJJmA==
@@ -1487,7 +1487,7 @@
     semver "^6.3.0"
     unixify "^1.0.0"
 
-"@hubspot/project-parsing-lib@^0.0.1":
+"@hubspot/project-parsing-lib@0.0.1":
   version "0.0.1"
   resolved "https://registry.yarnpkg.com/@hubspot/project-parsing-lib/-/project-parsing-lib-0.0.1.tgz#fd1f823abbe410d97446bd5fc804b2e9bf40402e"
   integrity sha512-7Qqc6YplKTYG2skswVtNc02iCIuPd816vZT3I4HTYzJRQ9EqYTPZ7QLrL9VSTkLNkUyHw0AJE1qeQJqye1eAfQ==
