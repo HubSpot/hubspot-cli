@@ -13,11 +13,9 @@ const {
   fetchProject,
 } = require('@hubspot/local-dev-lib/api/projects');
 const { loadAndValidateOptions } = require('../../lib/validation');
-const {
-  getProjectConfig,
-  pollDeployStatus,
-  getProjectDetailUrl,
-} = require('../../lib/projects');
+const { getProjectConfig } = require('../../lib/projects');
+const { pollDeployStatus } = require('../../lib/projects/buildAndDeploy');
+const { getProjectDetailUrl } = require('../../lib/projects/urls');
 const { projectNamePrompt } = require('../../lib/prompts/projectNamePrompt');
 const { promptUser } = require('../../lib/prompts/promptUtils');
 const { i18n } = require('../../lib/lang');

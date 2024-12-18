@@ -17,14 +17,12 @@ import {
   DeveloperTestAccount,
   FetchDeveloperTestAccountsResponse,
 } from '@hubspot/local-dev-lib/types/developerTestAccounts';
-import { PromptChoices } from '../../types/prompts';
+import { PromptChoices } from '../../types/Prompts';
 import { EXIT_CODES } from '../enums/exitCodes';
 
 const i18nKey = 'lib.prompts.projectDevTargetAccountPrompt';
 
-function mapNestedAccount(
-  accountConfig: CLIAccount
-): {
+function mapNestedAccount(accountConfig: CLIAccount): {
   name: string;
   value: {
     targetAccountId: number | null;

@@ -10,11 +10,8 @@ const { trackCommandUsage } = require('../../lib/usageTracking');
 const { loadAndValidateOptions } = require('../../lib/validation');
 const { i18n } = require('../../lib/lang');
 const { logger } = require('@hubspot/local-dev-lib/logger');
-const {
-  getProjectConfig,
-  getProjectDetailUrl,
-  ensureProjectExists,
-} = require('../../lib/projects');
+const { getProjectConfig, ensureProjectExists } = require('../../lib/projects');
+const { getProjectDetailUrl } = require('../../lib/projects/urls');
 const { projectNamePrompt } = require('../../lib/prompts/projectNamePrompt');
 const { uiBetaTag } = require('../../lib/ui');
 const { EXIT_CODES } = require('../../lib/enums/exitCodes');

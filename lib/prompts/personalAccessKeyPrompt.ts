@@ -11,7 +11,7 @@ import { getCliAccountNamePromptConfig } from './accountNamePrompt';
 import { i18n } from '../lang';
 import { uiInfoSection } from '../ui';
 import { EXIT_CODES } from '../enums/exitCodes';
-import { PromptConfig } from '../../types/prompts';
+import { PromptConfig } from '../../types/Prompts';
 
 const i18nKey = 'lib.prompts.personalAccessKeyPrompt';
 
@@ -60,9 +60,10 @@ export async function personalAccessKeyPrompt({
     if (account) {
       url = `${websiteOrigin}/personal-access-key/${account}`;
     }
-    const { personalAcessKeyBrowserOpenPrep: shouldOpen } = await promptUser<
-      PersonalAccessKeyBrowserOpenPrepResponse
-    >([PERSONAL_ACCESS_KEY_BROWSER_OPEN_PREP]);
+    const { personalAcessKeyBrowserOpenPrep: shouldOpen } =
+      await promptUser<PersonalAccessKeyBrowserOpenPrepResponse>([
+        PERSONAL_ACCESS_KEY_BROWSER_OPEN_PREP,
+      ]);
     if (shouldOpen) {
       open(url, { url: true });
     } else {
@@ -72,9 +73,8 @@ export async function personalAccessKeyPrompt({
   }
 
   logger.log(i18n(`${i18nKey}.logs.openingWebBrowser`, { url }));
-  const { personalAccessKey } = await promptUser<
-    PersonalAccessKeyPromptResponse
-  >(PERSONAL_ACCESS_KEY);
+  const { personalAccessKey } =
+    await promptUser<PersonalAccessKeyPromptResponse>(PERSONAL_ACCESS_KEY);
 
   return {
     personalAccessKey,
@@ -122,11 +122,12 @@ const CLIENT_SECRET: PromptConfig<ClientSecretPromptResponse> = {
   },
 };
 
-const PERSONAL_ACCESS_KEY_BROWSER_OPEN_PREP: PromptConfig<PersonalAccessKeyBrowserOpenPrepResponse> = {
-  name: 'personalAcessKeyBrowserOpenPrep',
-  type: 'confirm',
-  message: i18n(`${i18nKey}.personalAccessKeyBrowserOpenPrompt`),
-};
+const PERSONAL_ACCESS_KEY_BROWSER_OPEN_PREP: PromptConfig<PersonalAccessKeyBrowserOpenPrepResponse> =
+  {
+    name: 'personalAcessKeyBrowserOpenPrep',
+    type: 'confirm',
+    message: i18n(`${i18nKey}.personalAccessKeyBrowserOpenPrompt`),
+  };
 
 const PERSONAL_ACCESS_KEY: PromptConfig<PersonalAccessKeyPromptResponse> = {
   name: 'personalAccessKey',

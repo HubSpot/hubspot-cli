@@ -24,7 +24,7 @@ const { getProjectConfig } = require('../../lib/projects');
 const {
   findProjectComponents,
   COMPONENT_TYPES,
-} = require('../../lib/projectStructure');
+} = require('../../lib/projects/structure');
 const { preview } = require('@hubspot/theme-preview-dev-server');
 const { hasFeature } = require('../../lib/hasFeature');
 const i18nKey = 'commands.theme.subcommands.preview';

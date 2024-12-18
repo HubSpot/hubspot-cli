@@ -18,11 +18,9 @@ const {
   addUseEnvironmentOptions,
 } = require('../../../lib/commonOpts');
 const { loadAndValidateOptions } = require('../../../lib/validation');
-const {
-  getProjectConfig,
-  pollDeployStatus,
-  getProjectDetailUrl,
-} = require('../../../lib/projects');
+const { getProjectConfig } = require('../../../lib/projects');
+const { getProjectDetailUrl } = require('../../../lib/projects/urls');
+const { pollDeployStatus } = require('../../../lib/projects/buildAndDeploy');
 const { projectNamePrompt } = require('../../../lib/prompts/projectNamePrompt');
 const { promptUser } = require('../../../lib/prompts/promptUtils');
 const { trackCommandUsage } = require('../../../lib/usageTracking');
@@ -35,6 +33,8 @@ jest.mock('@hubspot/local-dev-lib/config');
 jest.mock('../../../lib/commonOpts');
 jest.mock('../../../lib/validation');
 jest.mock('../../../lib/projects');
+jest.mock('../../../lib/projects/urls');
+jest.mock('../../../lib/projects/buildAndDeploy');
 jest.mock('../../../lib/prompts/projectNamePrompt');
 jest.mock('../../../lib/prompts/promptUtils');
 jest.mock('../../../lib/usageTracking');
