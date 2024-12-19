@@ -62,8 +62,6 @@ exports.handler = async options => {
       options.translate
     );
 
-    console.log(result);
-
     if (result.uploadError) {
       if (
         isSpecifiedError(result.uploadError, {
