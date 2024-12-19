@@ -3,13 +3,11 @@
 const yargs = require('yargs');
 const updateNotifier = require('update-notifier');
 const chalk = require('chalk');
-const fs = require('fs');
 
 const { logger } = require('@hubspot/local-dev-lib/logger');
 const { addUserAgentHeader } = require('@hubspot/local-dev-lib/http');
 const {
   loadConfig,
-  getAndLoadConfigIfNeeded,
   configFileExists,
   getConfigPath,
   validateConfig,
@@ -177,14 +175,13 @@ const loadConfigMiddleware = async options => {
       );
       process.exit(EXIT_CODES.ERROR);
     }
-  } else if (options.config && fs.existsSync(options.config)) {
+  } else {
     // We need to load the config when options.config exists,
     // so that getAccountIdFromConfig() in injectAccountIdMiddleware reads from the right config
     const { config: configPath } = options;
-    loadConfig(configPath, options);
-  } else {
-    // Load deprecated config without a config flag and with no warnings
-    getAndLoadConfigIfNeeded(options);
+    if (!options._.includes('init')) {
+      loadConfig(configPath, options);
+    }
   }
 
   maybeValidateConfig();
