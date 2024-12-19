@@ -43,6 +43,8 @@ exports.handler = async options => {
 
   const { projectConfig, projectDir } = await getProjectConfig();
 
+  trackCommandUsage('project-upload', { type: accountType }, derivedAccountId);
+
   validateProjectConfig(projectConfig, projectDir);
 
   await ensureProjectExists(derivedAccountId, projectConfig.name, {
@@ -56,7 +58,8 @@ exports.handler = async options => {
       projectConfig,
       projectDir,
       pollProjectBuildAndDeploy,
-      message
+      message,
+      options.translate
     );
 
     if (result.uploadError) {
@@ -127,6 +130,11 @@ exports.builder = yargs => {
       describe: i18n(`${i18nKey}.options.message.describe`),
       type: 'string',
       default: '',
+    },
+    translate: {
+      hidden: true,
+      type: 'boolean',
+      default: false,
     },
   });
 
