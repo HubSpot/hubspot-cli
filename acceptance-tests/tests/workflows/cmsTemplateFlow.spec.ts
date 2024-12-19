@@ -21,7 +21,7 @@ describe('CMS Template Flow', () => {
 
   describe('hs create', () => {
     it('should create a CMS template', async () => {
-      await testState.cli.execute(
+      await testState.cli.executeWithTestConfig(
         ['create', 'template', TEMPLATE_NAME],
         [ENTER]
       );

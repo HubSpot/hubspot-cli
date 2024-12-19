@@ -26,7 +26,11 @@
 const fs = require('fs-extra');
 const { logError } = require('../lib/errorHandlers/index');
 const { logger } = require('@hubspot/local-dev-lib/logger');
-const { setLogLevel, addGlobalOptions } = require('../lib/commonOpts');
+const {
+  setLogLevel,
+  addGlobalOptions,
+  addConfigOptions,
+} = require('../lib/commonOpts');
 const { resolveLocalPath } = require('../lib/filesystem');
 const { trackCommandUsage } = require('../lib/usageTracking');
 const assets = require('./create/index');
@@ -117,6 +121,7 @@ exports.builder = yargs => {
     hidden: true,
   });
 
+  addConfigOptions(yargs);
   addGlobalOptions(yargs);
 
   return yargs;
