@@ -160,10 +160,8 @@ const loadConfigMiddleware = async options => {
       command =>
         !(NO_CONFIG_VALIDATION[command] && NO_CONFIG_VALIDATION[command].skip)
     );
-    if (shouldValidate) {
-      if (!validateConfig()) {
-        process.exit(EXIT_CODES.ERROR);
-      }
+    if (shouldValidate && !validateConfig()) {
+      process.exit(EXIT_CODES.ERROR);
     }
   };
 
@@ -179,23 +177,17 @@ const loadConfigMiddleware = async options => {
       );
       process.exit(EXIT_CODES.ERROR);
     }
-    maybeValidateConfig();
-    return;
-  }
-
-  // We need to load the config when options.config exists,
-  // so that getAccountIdFromConfig() in injectAccountIdMiddleware reads from the right config
-  if (options.config && fs.existsSync(options.config)) {
+  } else if (options.config && fs.existsSync(options.config)) {
+    // We need to load the config when options.config exists,
+    // so that getAccountIdFromConfig() in injectAccountIdMiddleware reads from the right config
     const { config: configPath } = options;
     loadConfig(configPath, options);
-    maybeValidateConfig();
-    return;
+  } else {
+    // Load deprecated config without a config flag and with no warnings
+    getAndLoadConfigIfNeeded(options);
   }
 
-  // Load deprecated config without a config flag and with no warnings
-  getAndLoadConfigIfNeeded(options);
   maybeValidateConfig();
-  return;
 };
 
 const checkAndWarnGitInclusionMiddleware = () => {
