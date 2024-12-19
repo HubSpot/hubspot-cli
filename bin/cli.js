@@ -164,17 +164,13 @@ const loadConfigMiddleware = async options => {
   };
 
   // Load the new config and check for the conflicting config flag
-  if (configFileExists(true)) {
-    loadConfig('', options);
-
-    if (options.config) {
-      logger.error(
-        i18n(`${i18nKey}.loadConfigMiddleware.configFileExists`, {
-          configPath: getConfigPath(),
-        })
-      );
-      process.exit(EXIT_CODES.ERROR);
-    }
+  if (configFileExists(true) && options.config) {
+    logger.error(
+      i18n(`${i18nKey}.loadConfigMiddleware.configFileExists`, {
+        configPath: getConfigPath(),
+      })
+    );
+    process.exit(EXIT_CODES.ERROR);
   } else {
     // We need to load the config when options.config exists,
     // so that getAccountIdFromConfig() in injectAccountIdMiddleware reads from the right config
