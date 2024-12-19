@@ -1094,16 +1094,6 @@ en:
       checkIfParentAccountIsAuthed:
         notAuthedError: "To develop this project locally, run {{ authCommand }} to authenticate the App Developer Account {{ accountId }} associated with {{ accountIdentifier }}."
     projects:
-      uploadProjectFiles:
-        add: "Uploading {{#bold}}{{ projectName }}{{/bold}} project files to {{ accountIdentifier }}"
-        fail: "Failed to upload {{#bold}}{{ projectName }}{{/bold}} project files to {{ accountIdentifier }}"
-        succeed: "Uploaded {{#bold}}{{ projectName }}{{/bold}} project files to {{ accountIdentifier }}"
-        buildCreated: "Project \"{{ projectName }}\" uploaded and build #{{ buildId }} created"
-      handleProjectUpload:
-        emptySource: "Source directory \"{{ srcDir }}\" is empty. Add files to your project and rerun `{{#yellow}}hs project upload{{/yellow}}` to upload them to HubSpot."
-        compressed: "Project files compressed: {{ byteCount }} bytes"
-        compressing: "Compressing build files to \"{{ path }}\""
-        fileFiltered: "Ignore rule triggered for \"{{ filename }}\""
       validateProjectConfig:
         configNotFound: "Unable to locate a project configuration file. Try running again from a project directory, or run {{ createCommand }} to create a new project."
         configMissingFields: "The project configuruation file is missing required fields."
@@ -1116,6 +1106,11 @@ en:
         notFound: "Your project {{#bold}}{{ projectName }}{{/bold}} could not be found in {{#bold}}{{ accountIdentifier }}{{/bold}}."
       pollFetchProject:
         checkingProject: "Checking if project exists in {{ accountIdentifier }}"
+        unableToFindAutodeployStatus: "Unable to find the auto deploy for build #{{ buildId }}. This deploy may have been skipped. {{ viewDeploysLink }}."
+      logFeedbackMessage:
+        feedbackHeader: "We'd love to hear your feedback!"
+        feedbackMessage: "How are you liking the new projects and developer tools? \n > Run `{{#yellow}}hs feedback{{/yellow}}` to let us know what you think!\n"
+    projectBuildAndDeploy:
       makePollTaskStatusFunc:
         componentCountSingular: "Found 1 component in this project"
         componentCount: "Found {{ numComponents }} components in this project"
@@ -1127,10 +1122,17 @@ en:
         buildSucceededAutomaticallyDeploying: "Build #{{ buildId }} succeeded. {{#bold}}Automatically deploying{{/bold}} to {{ accountIdentifier }}\n"
         cleanedUpTempFile: "Cleaned up temporary file {{ path }}"
         viewDeploys: "View all deploys for this project in HubSpot"
-        unableToFindAutodeployStatus: "Unable to find the auto deploy for build #{{ buildId }}. This deploy may have been skipped. {{ viewDeploysLink }}."
-      logFeedbackMessage:
-        feedbackHeader: "We'd love to hear your feedback!"
-        feedbackMessage: "How are you liking the new projects and developer tools? \n > Run `{{#yellow}}hs feedback{{/yellow}}` to let us know what you think!\n"
+    projectUpload:
+      uploadProjectFiles:
+        add: "Uploading {{#bold}}{{ projectName }}{{/bold}} project files to {{ accountIdentifier }}"
+        fail: "Failed to upload {{#bold}}{{ projectName }}{{/bold}} project files to {{ accountIdentifier }}"
+        succeed: "Uploaded {{#bold}}{{ projectName }}{{/bold}} project files to {{ accountIdentifier }}"
+        buildCreated: "Project \"{{ projectName }}\" uploaded and build #{{ buildId }} created"
+      handleProjectUpload:
+        emptySource: "Source directory \"{{ srcDir }}\" is empty. Add files to your project and rerun `{{#yellow}}hs project upload{{/yellow}}` to upload them to HubSpot."
+        compressed: "Project files compressed: {{ byteCount }} bytes"
+        compressing: "Compressing build files to \"{{ path }}\""
+        fileFiltered: "Ignore rule triggered for \"{{ filename }}\""
     ui:
       betaTag: "{{#bold}}[BETA]{{/bold}}"
       betaWarning:
@@ -1551,6 +1553,8 @@ en:
         counts:
           errors: '{{#bold}}Errors:{{/bold}} {{ count }}'
           warnings: "{{#bold}}Warning:{{/bold}} {{ count }}"
+    oauth:
+      missingClientId: "Error building oauth URL: missing client ID."
 
 
 

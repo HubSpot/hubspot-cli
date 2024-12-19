@@ -7,7 +7,7 @@ import { promptUser } from './promptUtils';
 import { i18n } from '../lang';
 import { uiAccountDescription } from '../ui';
 import { CLIAccount } from '@hubspot/local-dev-lib/types/Accounts';
-import { PromptChoices } from '../../types/prompts';
+import { PromptChoices } from '../../types/Prompts';
 
 function mapAccountChoices(
   portals: CLIAccount[] | null | undefined

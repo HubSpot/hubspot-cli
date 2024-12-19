@@ -1,6 +1,6 @@
 import { promptUser } from './promptUtils';
 import { i18n } from '../lang';
-import { PromptConfig } from '../../types/prompts';
+import { PromptConfig } from '../../types/Prompts';
 
 const i18nKey = 'lib.prompts.createApiSamplePrompt';
 
@@ -37,8 +37,8 @@ function getSampleTypesPrompt(
       name: `${choice.name} - ${choice.description}`,
       value: choice.id,
     })),
-    validate: function(input?: string) {
-      return new Promise<boolean>(function(resolve, reject) {
+    validate: function (input?: string) {
+      return new Promise<boolean>(function (resolve, reject) {
         if (input && input.length > 0) {
           resolve(true);
         } else {
@@ -60,8 +60,8 @@ function getLanguagesPrompt(
       name: choice,
       value: choice,
     })),
-    validate: function(input: string | undefined) {
-      return new Promise<boolean>(function(resolve, reject) {
+    validate: function (input: string | undefined) {
+      return new Promise<boolean>(function (resolve, reject) {
         if (input && input.length > 0) {
           resolve(true);
         }

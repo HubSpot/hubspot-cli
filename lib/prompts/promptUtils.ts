@@ -8,7 +8,7 @@ import {
   GenericPromptResponse,
   PromptWhen,
   PromptChoices,
-} from '../../types/prompts';
+} from '../../types/Prompts';
 
 const promptModule = inquirer.createPromptModule();
 
