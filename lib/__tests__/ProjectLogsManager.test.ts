@@ -158,7 +158,7 @@ describe('lib/projects/ProjectLogsManager', () => {
   });
 
   describe('setFunction', () => {
-    it('should throw an error when functions is nullable', async () => {
+    it('should throw an error when functions is empty', async () => {
       ProjectLogsManager.functions = [];
       expect(() => ProjectLogsManager.setFunction('foo')).toThrow(
         `There aren't any functions in this project`
