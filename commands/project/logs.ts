@@ -14,7 +14,7 @@ const { uiBetaTag, uiLine, uiLink } = require('../../lib/ui');
 const { projectLogsPrompt } = require('../../lib/prompts/projectsLogsPrompt');
 const { i18n } = require('../../lib/lang');
 const { EXIT_CODES } = require('../../lib/enums/exitCodes');
-const ProjectLogsManager = require('../../lib/ProjectLogsManager');
+const { ProjectLogsManager } = require('../../lib/projects/ProjectLogsManager');
 
 const i18nKey = 'commands.project.subcommands.logs';
 

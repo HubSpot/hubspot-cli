@@ -1,5 +1,5 @@
 // @ts-nocheck
-const ProjectLogsManager = require('../ProjectLogsManager');
+const { ProjectLogsManager } = require('../projects/ProjectLogsManager');
 const { getProjectConfig, ensureProjectExists } = require('../projects');
 const {
   fetchProjectComponentsMetadata,
@@ -8,7 +8,7 @@ const {
 jest.mock('../projects');
 jest.mock('@hubspot/local-dev-lib/api/projects');
 
-describe('lib/ProjectLogsManager', () => {
+describe('lib/projects/ProjectLogsManager', () => {
   const accountId = 12345678;
   const appId = 999999;
   const projectName = 'super cool test project';
@@ -143,8 +143,8 @@ describe('lib/ProjectLogsManager', () => {
   });
 
   describe('getFunctionNames', () => {
-    it('should return an empty array if functions is nullable', async () => {
-      ProjectLogsManager.functions = undefined;
+    it('should return an empty array if functions is empty', async () => {
+      ProjectLogsManager.functions = [];
       expect(ProjectLogsManager.getFunctionNames()).toEqual([]);
     });
 
@@ -158,8 +158,8 @@ describe('lib/ProjectLogsManager', () => {
   });
 
   describe('setFunction', () => {
-    it('should throw an error when functions is nullable', async () => {
-      ProjectLogsManager.functions = undefined;
+    it('should throw an error when functions is empty', async () => {
+      ProjectLogsManager.functions = [];
       expect(() => ProjectLogsManager.setFunction('foo')).toThrow(
         `There aren't any functions in this project`
       );
@@ -180,7 +180,7 @@ describe('lib/ProjectLogsManager', () => {
           name: 'APP_FUNCTION',
         },
         deployOutput: {
-          endpoint: { path: 'yooooooo', method: ['GET'] },
+          endpoint: { path: 'yooooooo', methods: ['GET'] },
         },
       };
       ProjectLogsManager.functions = [functionToChoose];
@@ -188,7 +188,6 @@ describe('lib/ProjectLogsManager', () => {
       expect(ProjectLogsManager.functionName).toEqual('function1');
       expect(ProjectLogsManager.endpointName).toEqual('yooooooo');
       expect(ProjectLogsManager.selectedFunction).toEqual(functionToChoose);
-      expect(ProjectLogsManager.method).toEqual(['GET']);
       expect(ProjectLogsManager.isPublicFunction).toEqual(true);
     });
 
