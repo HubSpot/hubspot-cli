@@ -148,25 +148,27 @@ const setRequestHeaders = () => {
   addUserAgentHeader('HubSpot CLI', pkg.version);
 };
 
-const shouldTargetCommand = (options, commandMap) => {
-  const checkCommand = (command, map) => {
-    const mainCommand = command;
+const isTargetedCommand = (options, commandMap) => {
+  const checkCommand = (options, commandMap) => {
+    const currentCommand = options._[0];
 
-    if (map[mainCommand]) {
-      if (map[mainCommand].target && options._.includes(mainCommand)) {
-        return false;
-      }
-      const subCommands = map[mainCommand].subCommands || {};
-      for (const subCommand in subCommands) {
-        if (!checkCommand(subCommand, subCommands)) {
-          return false;
-        }
-      }
+    if (!commandMap[currentCommand]) {
+      return false;
     }
+
+    if (commandMap[currentCommand].target) {
+      return true;
+    }
+
+    const subCommands = commandMap[currentCommand].subCommands || {};
+    if (options._.length > 1) {
+      return checkCommand({ _: options._.slice(1) }, subCommands);
+    }
+
     return true;
   };
 
-  return options._.every(command => checkCommand(command, commandMap));
+  return checkCommand(options, commandMap);
 };
 
 const SKIP_CONFIG_VALIDATION = {
@@ -177,7 +179,7 @@ const SKIP_CONFIG_VALIDATION = {
 const loadConfigMiddleware = async options => {
   const maybeValidateConfig = () => {
     if (
-      shouldTargetCommand(options, SKIP_CONFIG_VALIDATION) &&
+      !isTargetedCommand(options, SKIP_CONFIG_VALIDATION) &&
       !validateConfig()
     ) {
       process.exit(EXIT_CODES.ERROR);
@@ -235,7 +237,7 @@ const SKIP_ACCOUNT_VALIDATION = {
 
 const validateAccountOptions = async options => {
   let validAccount = true;
-  if (shouldTargetCommand(options, SKIP_ACCOUNT_VALIDATION)) {
+  if (!isTargetedCommand(options, SKIP_ACCOUNT_VALIDATION)) {
     validAccount = await validateAccount(options);
   }
 
