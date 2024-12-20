@@ -1,23 +1,40 @@
-// @ts-nocheck
-const { getProjectConfig, ensureProjectExists } = require('./projects');
-const {
-  fetchProjectComponentsMetadata,
-} = require('@hubspot/local-dev-lib/api/projects');
-const { i18n } = require('./lang');
-const { uiLink } = require('./ui');
+import { getProjectConfig, ensureProjectExists } from './index';
+import { fetchProjectComponentsMetadata } from '@hubspot/local-dev-lib/api/projects';
+import { AppFunctionComponentMetadata } from '@hubspot/local-dev-lib/types/ComponentStructure';
+import { logger } from '@hubspot/local-dev-lib/logger';
+import { i18n } from '../lang';
+import { uiLink } from '../ui';
 
 const i18nKey = 'commands.project.subcommands.logs';
 
 class ProjectLogsManager {
-  reset() {
-    Object.keys(this).forEach(key => {
-      if (Object.hasOwn(this, key)) {
-        this[key] = undefined;
-      }
-    });
+  projectName: string | undefined;
+  projectId: number | undefined;
+  accountId: number | undefined;
+  functions: AppFunctionComponentMetadata[];
+  selectedFunction: AppFunctionComponentMetadata | undefined;
+  functionName: string | undefined;
+  appId: number | undefined;
+  isPublicFunction: boolean | undefined;
+  endpointName: string | undefined;
+
+  reset(): void {
+    this.projectName = undefined;
+    this.projectId = undefined;
+    this.accountId = undefined;
+    this.functions = [];
+    this.selectedFunction = undefined;
+    this.functionName = undefined;
+    this.appId = undefined;
+    this.isPublicFunction = undefined;
+    this.endpointName = undefined;
   }
 
-  async init(accountId) {
+  constructor() {
+    this.functions = [];
+  }
+
+  async init(accountId: number): Promise<void> {
     const { projectConfig } = await getProjectConfig();
 
     if (!projectConfig || !projectConfig.name) {
@@ -50,9 +67,14 @@ class ProjectLogsManager {
     await this.fetchFunctionDetails();
   }
 
-  async fetchFunctionDetails() {
+  async fetchFunctionDetails(): Promise<void> {
     if (!this.projectId) {
       throw new Error(i18n(`${i18nKey}.errors.noProjectConfig`));
+    }
+
+    if (!this.accountId) {
+      logger.debug(i18n(`${i18nKey}.errors.projectLogsManagerNotInitialized`));
+      throw new Error(i18n(`${i18nKey}.errors.generic`));
     }
 
     const {
@@ -64,15 +86,12 @@ class ProjectLogsManager {
       return type && type.name === 'PRIVATE_APP';
     });
 
-    if (!this.functions) {
-      this.functions = [];
-    }
-
     apps.forEach(app => {
       this.functions.push(
-        ...app.featureComponents.filter(
+        // If component type is APP_FUNCTION, we can safely cast as AppFunctionComponentMetadata
+        ...(app.featureComponents.filter(
           component => component.type.name === 'APP_FUNCTION'
-        )
+        ) as AppFunctionComponentMetadata[])
       );
     });
 
@@ -89,26 +108,20 @@ class ProjectLogsManager {
   }
 
   getFunctionNames() {
-    if (!this.functions) {
-      return [];
-    }
     return this.functions.map(
       serverlessFunction => serverlessFunction.componentName
     );
   }
 
-  setFunction(functionName) {
-    if (!this.functions) {
+  setFunction(functionName: string) {
+    if (!(this.functions.length > 0)) {
       throw new Error(
         i18n(`${i18nKey}.errors.noFunctionsInProject`, {
           link: uiLink(
             i18n(`${i18nKey}.errors.noFunctionsLinkText`),
             'https://developers.hubspot.com/docs/platform/serverless-functions'
           ),
-        }),
-        {
-          projectName: this.projectName,
-        }
+        })
       );
     }
 
@@ -133,7 +146,6 @@ class ProjectLogsManager {
 
     if (this.selectedFunction.deployOutput.endpoint) {
       this.endpointName = this.selectedFunction.deployOutput.endpoint.path;
-      this.method = this.selectedFunction.deployOutput.endpoint.method;
       this.isPublicFunction = true;
     } else {
       this.isPublicFunction = false;
@@ -141,4 +153,4 @@ class ProjectLogsManager {
   }
 }
 
-module.exports = new ProjectLogsManager();
+export default new ProjectLogsManager();
