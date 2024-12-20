@@ -7,7 +7,7 @@ import { uiLink } from '../ui';
 
 const i18nKey = 'commands.project.subcommands.logs';
 
-class ProjectLogsManager {
+class _ProjectLogsManager {
   projectName: string | undefined;
   projectId: number | undefined;
   accountId: number | undefined;
@@ -153,4 +153,4 @@ class ProjectLogsManager {
   }
 }
 
-export default new ProjectLogsManager();
+export const ProjectLogsManager = new _ProjectLogsManager();

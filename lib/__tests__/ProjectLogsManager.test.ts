@@ -1,5 +1,5 @@
 // @ts-nocheck
-const ProjectLogsManager = require('../projects/ProjectLogsManager');
+const { ProjectLogsManager } = require('../projects/ProjectLogsManager');
 const { getProjectConfig, ensureProjectExists } = require('../projects');
 const {
   fetchProjectComponentsMetadata,
@@ -143,8 +143,8 @@ describe('lib/projects/ProjectLogsManager', () => {
   });
 
   describe('getFunctionNames', () => {
-    it('should return an empty array if functions is nullable', async () => {
-      ProjectLogsManager.functions = undefined;
+    it('should return an empty array if functions is empty', async () => {
+      ProjectLogsManager.functions = [];
       expect(ProjectLogsManager.getFunctionNames()).toEqual([]);
     });
 
@@ -159,7 +159,7 @@ describe('lib/projects/ProjectLogsManager', () => {
 
   describe('setFunction', () => {
     it('should throw an error when functions is nullable', async () => {
-      ProjectLogsManager.functions = undefined;
+      ProjectLogsManager.functions = [];
       expect(() => ProjectLogsManager.setFunction('foo')).toThrow(
         `There aren't any functions in this project`
       );
