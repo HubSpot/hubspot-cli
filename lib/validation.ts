@@ -24,19 +24,7 @@ const {
   getExt,
 } = require('@hubspot/local-dev-lib/path');
 const { getAccountId, getCmsPublishMode } = require('./commonOpts');
-const { EXIT_CODES } = require('./enums/exitCodes');
 const { logError } = require('./errorHandlers/index');
-
-async function loadAndValidateOptions(options, shouldValidateAccount = true) {
-  let validAccount = true;
-  if (shouldValidateAccount) {
-    validAccount = await validateAccount(options);
-  }
-
-  if (!validAccount) {
-    process.exit(EXIT_CODES.ERROR);
-  }
-}
 
 /**
  * Validate that an account was passed to the command and that the account's configuration is valid
@@ -227,5 +215,4 @@ module.exports = {
   validateAccount,
   checkAndConvertToJson,
   fileExists,
-  loadAndValidateOptions,
 };

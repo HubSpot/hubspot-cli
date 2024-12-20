@@ -2,7 +2,6 @@
 const { logger } = require('@hubspot/local-dev-lib/logger');
 const { logError } = require('../../../lib/errorHandlers/index');
 
-const { loadAndValidateOptions } = require('../../../lib/validation');
 const { trackCommandUsage } = require('../../../lib/usageTracking');
 const { listSchemas } = require('../../../lib/schema');
 const { i18n } = require('../../../lib/lang');
@@ -13,8 +12,6 @@ exports.command = 'list';
 exports.describe = i18n(`${i18nKey}.describe`);
 
 exports.handler = async options => {
-  await loadAndValidateOptions(options);
-
   const { derivedAccountId } = options;
 
   trackCommandUsage('custom-object-schema-list', null, derivedAccountId);

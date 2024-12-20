@@ -1,5 +1,4 @@
 // @ts-nocheck
-const { loadAndValidateOptions } = require('../../lib/validation');
 const { i18n } = require('../../lib/lang');
 const { trackCommandUsage } = require('../../lib/usageTracking');
 const { promptUser } = require('../../lib/prompts/promptUtils');
@@ -55,8 +54,6 @@ const handleConfigUpdate = async (accountId, options) => {
 };
 
 exports.handler = async options => {
-  await loadAndValidateOptions(options);
-
   const { derivedAccountId } = options;
 
   trackCommandUsage('config-set', null, derivedAccountId);

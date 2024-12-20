@@ -7,9 +7,7 @@ const { logger } = require('@hubspot/local-dev-lib/logger');
 const { logError, ApiErrorContext } = require('../../lib/errorHandlers/index');
 const { addSecret } = require('@hubspot/local-dev-lib/api/secrets');
 
-const { loadAndValidateOptions } = require('../../lib/validation');
 const { trackCommandUsage } = require('../../lib/usageTracking');
-
 const {
   addConfigOptions,
   addAccountOptions,
@@ -30,8 +28,6 @@ exports.describe = i18n(`${i18nKey}.describe`);
 exports.handler = async options => {
   const { name, derivedAccountId } = options;
   let secretName = name;
-
-  await loadAndValidateOptions(options);
 
   trackCommandUsage('secrets-add', null, derivedAccountId);
 

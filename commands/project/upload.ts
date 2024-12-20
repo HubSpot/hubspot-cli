@@ -8,7 +8,6 @@ const chalk = require('chalk');
 const { logger } = require('@hubspot/local-dev-lib/logger');
 const { uiBetaTag, uiCommandReference } = require('../../lib/ui');
 const { trackCommandUsage } = require('../../lib/usageTracking');
-const { loadAndValidateOptions } = require('../../lib/validation');
 const {
   ensureProjectExists,
   getProjectConfig,
@@ -33,8 +32,6 @@ exports.command = 'upload';
 exports.describe = uiBetaTag(i18n(`${i18nKey}.describe`), false);
 
 exports.handler = async options => {
-  await loadAndValidateOptions(options);
-
   const { forceCreate, message, derivedAccountId } = options;
   const accountConfig = getAccountConfig(derivedAccountId);
   const accountType = accountConfig && accountConfig.accountType;

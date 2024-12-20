@@ -9,7 +9,6 @@ const {
 const { trackCommandUsage } = require('../../lib/usageTracking');
 const { i18n } = require('../../lib/lang');
 const { selectAccountFromConfig } = require('../../lib/prompts/accountsPrompt');
-const { loadAndValidateOptions } = require('../../lib/validation');
 
 const i18nKey = 'commands.account.subcommands.use';
 
@@ -17,8 +16,6 @@ exports.command = 'use [account]';
 exports.describe = i18n(`${i18nKey}.describe`);
 
 exports.handler = async options => {
-  await loadAndValidateOptions(options, false);
-
   let newDefaultAccount = options.account;
 
   if (!newDefaultAccount) {

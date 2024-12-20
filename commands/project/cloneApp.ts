@@ -10,7 +10,6 @@ const {
   trackCommandUsage,
   trackCommandMetadataUsage,
 } = require('../../lib/usageTracking');
-const { loadAndValidateOptions } = require('../../lib/validation');
 const { i18n } = require('../../lib/lang');
 const {
   selectPublicAppPrompt,
@@ -47,8 +46,6 @@ exports.command = 'clone-app';
 exports.describe = uiBetaTag(i18n(`${i18nKey}.describe`), false);
 
 exports.handler = async options => {
-  await loadAndValidateOptions(options);
-
   const { derivedAccountId } = options;
   const accountConfig = getAccountConfig(derivedAccountId);
   const accountName = uiAccountDescription(derivedAccountId);

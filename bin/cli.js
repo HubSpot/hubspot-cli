@@ -18,6 +18,7 @@ const {
   getCommandName,
   injectAccountIdMiddleware,
 } = require('../lib/commonOpts');
+const { validateAccount } = require('../lib/validation');
 const {
   trackHelpUsage,
   trackConvertFieldsUsage,
@@ -147,18 +148,40 @@ const setRequestHeaders = () => {
   addUserAgentHeader('HubSpot CLI', pkg.version);
 };
 
-const NO_CONFIG_VALIDATION = {
-  init: { skip: true },
-  auth: { skip: true },
+const isTargetedCommand = (options, commandMap) => {
+  const checkCommand = (options, commandMap) => {
+    const currentCommand = options._[0];
+
+    if (!commandMap[currentCommand]) {
+      return false;
+    }
+
+    if (commandMap[currentCommand].target) {
+      return true;
+    }
+
+    const subCommands = commandMap[currentCommand].subCommands || {};
+    if (options._.length > 1) {
+      return checkCommand({ _: options._.slice(1) }, subCommands);
+    }
+
+    return false;
+  };
+
+  return checkCommand(options, commandMap);
+};
+
+const SKIP_CONFIG_VALIDATION = {
+  init: { target: true },
+  auth: { target: true },
 };
 
 const loadConfigMiddleware = async options => {
   const maybeValidateConfig = () => {
-    const shouldValidate = options._.every(
-      command =>
-        !(NO_CONFIG_VALIDATION[command] && NO_CONFIG_VALIDATION[command].skip)
-    );
-    if (shouldValidate && !validateConfig()) {
+    if (
+      !isTargetedCommand(options, SKIP_CONFIG_VALIDATION) &&
+      !validateConfig()
+    ) {
       process.exit(EXIT_CODES.ERROR);
     }
   };
@@ -182,6 +205,42 @@ const checkAndWarnGitInclusionMiddleware = () => {
   checkAndWarnGitInclusion(getConfigPath());
 };
 
+const accountsSubCommands = {
+  target: false,
+  subCommands: {
+    clean: { target: true },
+    list: { target: true },
+    ls: { target: true },
+    remove: { target: true },
+  },
+};
+const sandboxesSubCommands = {
+  target: false,
+  subCommands: {
+    delete: { target: true },
+  },
+};
+
+const SKIP_ACCOUNT_VALIDATION = {
+  init: { target: true },
+  auth: { target: true },
+  account: accountsSubCommands,
+  accounts: accountsSubCommands,
+  sandbox: sandboxesSubCommands,
+  sandboxes: sandboxesSubCommands,
+};
+
+const validateAccountOptions = async options => {
+  let validAccount = true;
+  if (!isTargetedCommand(options, SKIP_ACCOUNT_VALIDATION)) {
+    validAccount = await validateAccount(options);
+  }
+
+  if (!validAccount) {
+    process.exit(EXIT_CODES.ERROR);
+  }
+};
+
 const argv = yargs
   .usage('The command line interface to interact with HubSpot.')
   // loadConfigMiddleware loads the new hidden config for all commands
@@ -191,6 +250,7 @@ const argv = yargs
     loadConfigMiddleware,
     injectAccountIdMiddleware,
     checkAndWarnGitInclusionMiddleware,
+    validateAccountOptions,
   ])
   .exitProcess(false)
   .fail(handleFailure)
