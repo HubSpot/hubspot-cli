@@ -149,21 +149,24 @@ const setRequestHeaders = () => {
 };
 
 const shouldTargetCommand = (options, commandMap) => {
-  return options._.every(command => {
+  const checkCommand = (command, map) => {
     const mainCommand = command;
-    if (commandMap[mainCommand]) {
-      if (commandMap[mainCommand].target) {
+
+    if (map[mainCommand]) {
+      if (map[mainCommand].target && options._.includes(mainCommand)) {
         return false;
       }
-      const subCommands = commandMap[mainCommand].subCommands || {};
+      const subCommands = map[mainCommand].subCommands || {};
       for (const subCommand in subCommands) {
-        if (subCommands[subCommand]?.target && options._.includes(subCommand)) {
+        if (!checkCommand(subCommand, subCommands)) {
           return false;
         }
       }
     }
     return true;
-  });
+  };
+
+  return options._.every(command => checkCommand(command, commandMap));
 };
 
 const SKIP_CONFIG_VALIDATION = {
