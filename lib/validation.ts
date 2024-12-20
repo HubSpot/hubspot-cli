@@ -23,22 +23,7 @@ import {
   getExt,
 } from '@hubspot/local-dev-lib/path';
 import { getAccountId, getCmsPublishMode } from './commonOpts';
-import { EXIT_CODES } from './enums/exitCodes';
 import { logError } from './errorHandlers/index';
-
-export async function loadAndValidateOptions(
-  options: Arguments<{ account?: string; accountId?: string }>,
-  shouldValidateAccount = true
-): Promise<void> {
-  let validAccount = true;
-  if (shouldValidateAccount) {
-    validAccount = await validateAccount(options);
-  }
-
-  if (!validAccount) {
-    process.exit(EXIT_CODES.ERROR);
-  }
-}
 
 export async function validateAccount(
   options: Arguments<{ account?: string; accountId?: string }>

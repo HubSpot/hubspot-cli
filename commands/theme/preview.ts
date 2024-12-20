@@ -7,7 +7,6 @@ const { addAccountOptions, addConfigOptions } = require('../../lib/commonOpts');
 const { getCwd } = require('@hubspot/local-dev-lib/path');
 const { getUploadableFileList } = require('../../lib/upload');
 const { trackCommandUsage } = require('../../lib/usageTracking');
-const { loadAndValidateOptions } = require('../../lib/validation');
 const {
   previewPrompt,
   previewProjectPrompt,
@@ -112,8 +111,6 @@ exports.handler = async options => {
     port,
     generateFieldsTypes,
   } = options;
-
-  await loadAndValidateOptions(options);
 
   const { absoluteSrc, dest } = await determineSrcAndDest(options);
 

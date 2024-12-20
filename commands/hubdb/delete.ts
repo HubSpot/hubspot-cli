@@ -2,7 +2,6 @@
 const { logger } = require('@hubspot/local-dev-lib/logger');
 const { logError } = require('../../lib/errorHandlers/index');
 const { deleteTable } = require('@hubspot/local-dev-lib/api/hubdb');
-const { loadAndValidateOptions } = require('../../lib/validation');
 const { trackCommandUsage } = require('../../lib/usageTracking');
 const {
   addConfigOptions,
@@ -23,8 +22,6 @@ exports.describe = i18n(`${i18nKey}.describe`);
 
 exports.handler = async options => {
   const { force, derivedAccountId } = options;
-
-  await loadAndValidateOptions(options);
 
   trackCommandUsage('hubdb-delete', null, derivedAccountId);
 

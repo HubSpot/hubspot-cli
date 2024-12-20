@@ -8,7 +8,6 @@ const {
 } = require('../../lib/commonOpts');
 const { logger } = require('@hubspot/local-dev-lib/logger');
 const { trackCommandUsage } = require('../../lib/usageTracking');
-const { loadAndValidateOptions } = require('../../lib/validation');
 const { logError, debugError } = require('../../lib/errorHandlers/index');
 const { isSpecifiedError } = require('@hubspot/local-dev-lib/errors/index');
 const { deleteSandbox } = require('@hubspot/local-dev-lib/api/sandboxHubs');
@@ -41,8 +40,6 @@ exports.describe = exports.describe = uiBetaTag(
 );
 
 exports.handler = async options => {
-  await loadAndValidateOptions(options, false);
-
   const { providedAccountId, force } = options;
 
   trackCommandUsage('sandbox-delete', null);
@@ -155,9 +152,8 @@ exports.handler = async options => {
     );
     logger.log('');
 
-    const promptDefaultAccount = removeSandboxAccountFromConfig(
-      sandboxAccountId
-    );
+    const promptDefaultAccount =
+      removeSandboxAccountFromConfig(sandboxAccountId);
     if (promptDefaultAccount && !force) {
       const newDefaultAccount = await selectAccountFromConfig();
       updateDefaultAccount(newDefaultAccount);
@@ -208,9 +204,8 @@ exports.handler = async options => {
       );
       logger.log('');
 
-      const promptDefaultAccount = removeSandboxAccountFromConfig(
-        sandboxAccountId
-      );
+      const promptDefaultAccount =
+        removeSandboxAccountFromConfig(sandboxAccountId);
       if (promptDefaultAccount && !force) {
         const newDefaultAccount = await selectAccountFromConfig();
         updateDefaultAccount(newDefaultAccount);

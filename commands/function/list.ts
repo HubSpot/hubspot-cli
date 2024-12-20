@@ -10,7 +10,6 @@ const {
   addUseEnvironmentOptions,
 } = require('../../lib/commonOpts');
 const { trackCommandUsage } = require('../../lib/usageTracking');
-const { loadAndValidateOptions } = require('../../lib/validation');
 const { i18n } = require('../../lib/lang');
 
 const i18nKey = 'commands.function.subcommands.list';
@@ -20,8 +19,6 @@ exports.command = ['list', 'ls'];
 exports.describe = i18n(`${i18nKey}.describe`);
 
 exports.handler = async options => {
-  loadAndValidateOptions(options);
-
   const { derivedAccountId } = options;
 
   trackCommandUsage('functions-list', null, derivedAccountId);
