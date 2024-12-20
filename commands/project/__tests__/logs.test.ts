@@ -1,7 +1,9 @@
 // @ts-nocheck
 const yargs = require('yargs');
 const { addUseEnvironmentOptions } = require('../../../lib/commonOpts');
-const ProjectLogsManager = require('../../../lib/ProjectLogsManager');
+const {
+  ProjectLogsManager,
+} = require('../../../lib/projects/ProjectLogsManager');
 const {
   projectLogsPrompt,
 } = require('../../../lib/prompts/projectsLogsPrompt');
@@ -16,7 +18,7 @@ jest.mock('@hubspot/local-dev-lib/logger');
 jest.mock('../../../lib/commonOpts');
 jest.mock('../../../lib/usageTracking');
 jest.mock('../../../lib/validation');
-jest.mock('../../../lib/ProjectLogsManager');
+jest.mock('../../../lib/projects/ProjectLogsManager');
 jest.mock('../../../lib/prompts/projectsLogsPrompt');
 jest.mock('../../../lib/ui/table');
 jest.mock('../../../lib/errorHandlers');
