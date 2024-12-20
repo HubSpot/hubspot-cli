@@ -165,7 +165,7 @@ const isTargetedCommand = (options, commandMap) => {
       return checkCommand({ _: options._.slice(1) }, subCommands);
     }
 
-    return true;
+    return false;
   };
 
   return checkCommand(options, commandMap);
