@@ -148,16 +148,16 @@ const setRequestHeaders = () => {
   addUserAgentHeader('HubSpot CLI', pkg.version);
 };
 
-const shouldValidate = (options, validationList) => {
+const shouldTargetCommand = (options, commandMap) => {
   return options._.every(command => {
     const mainCommand = command;
-    if (validationList[mainCommand]) {
-      if (validationList[mainCommand].skip) {
+    if (commandMap[mainCommand]) {
+      if (commandMap[mainCommand].target) {
         return false;
       }
-      const subCommands = validationList[mainCommand].subCommands || {};
+      const subCommands = commandMap[mainCommand].subCommands || {};
       for (const subCommand in subCommands) {
-        if (subCommands[subCommand]?.skip && options._.includes(subCommand)) {
+        if (subCommands[subCommand]?.target && options._.includes(subCommand)) {
           return false;
         }
       }
@@ -166,14 +166,17 @@ const shouldValidate = (options, validationList) => {
   });
 };
 
-const NO_CONFIG_VALIDATION = {
-  init: { skip: true },
-  auth: { skip: true },
+const SKIP_CONFIG_VALIDATION = {
+  init: { target: true },
+  auth: { target: true },
 };
 
 const loadConfigMiddleware = async options => {
   const maybeValidateConfig = () => {
-    if (shouldValidate(options, NO_CONFIG_VALIDATION) && !validateConfig()) {
+    if (
+      shouldTargetCommand(options, SKIP_CONFIG_VALIDATION) &&
+      !validateConfig()
+    ) {
       process.exit(EXIT_CODES.ERROR);
     }
   };
@@ -202,26 +205,34 @@ const checkAndWarnGitInclusionMiddleware = () => {
   checkAndWarnGitInclusion(getConfigPath());
 };
 
-const NO_ACCOUNT_VALIDATION = {
-  accounts: {
-    skip: false,
-    subCommands: {
-      clean: { skip: true },
-      list: { skip: true },
-      remove: { skip: true },
-    },
+const accountsSubCommands = {
+  target: false,
+  subCommands: {
+    clean: { target: true },
+    list: { target: true },
+    ls: { target: true },
+    remove: { target: true },
   },
-  sandbox: {
-    skip: false,
-    subCommands: {
-      delete: { skip: true },
-    },
+};
+const sandboxesSubCommands = {
+  target: false,
+  subCommands: {
+    delete: { target: true },
   },
+};
+
+const SKIP_ACCOUNT_VALIDATION = {
+  init: { target: true },
+  auth: { target: true },
+  account: accountsSubCommands,
+  accounts: accountsSubCommands,
+  sandbox: sandboxesSubCommands,
+  sandboxes: sandboxesSubCommands,
 };
 
 const validateAccountOptions = async options => {
   let validAccount = true;
-  if (shouldValidate(options, NO_ACCOUNT_VALIDATION)) {
+  if (shouldTargetCommand(options, SKIP_ACCOUNT_VALIDATION)) {
     validAccount = await validateAccount(options);
   }
 
