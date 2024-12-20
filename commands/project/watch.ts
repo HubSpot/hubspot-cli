@@ -1,6 +1,6 @@
 // @ts-nocheck
 const { i18n } = require('../../lib/lang');
-const { createWatcher } = require('../../lib/projectsWatch');
+const { createWatcher } = require('../../lib/projects/watch');
 const { logError, ApiErrorContext } = require('../../lib/errorHandlers/index');
 const { logger } = require('@hubspot/local-dev-lib/logger');
 const { PROJECT_ERROR_TYPES } = require('../../lib/constants');
@@ -14,12 +14,14 @@ const { uiBetaTag } = require('../../lib/ui');
 const {
   ensureProjectExists,
   getProjectConfig,
-  handleProjectUpload,
-  pollBuildStatus,
-  pollDeployStatus,
   validateProjectConfig,
   logFeedbackMessage,
 } = require('../../lib/projects');
+const { handleProjectUpload } = require('../../lib/projects/upload');
+const {
+  pollBuildStatus,
+  pollDeployStatus,
+} = require('../../lib/projects/buildAndDeploy');
 const {
   cancelStagedBuild,
   fetchProjectBuilds,

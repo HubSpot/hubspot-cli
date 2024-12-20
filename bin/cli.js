@@ -3,13 +3,11 @@
 const yargs = require('yargs');
 const updateNotifier = require('update-notifier');
 const chalk = require('chalk');
-const fs = require('fs');
 
 const { logger } = require('@hubspot/local-dev-lib/logger');
 const { addUserAgentHeader } = require('@hubspot/local-dev-lib/http');
 const {
   loadConfig,
-  getAndLoadConfigIfNeeded,
   configFileExists,
   getConfigPath,
   validateConfig,
@@ -175,42 +173,29 @@ const NO_CONFIG_VALIDATION = {
 
 const loadConfigMiddleware = async options => {
   const maybeValidateConfig = () => {
-    if (shouldValidate(options, NO_CONFIG_VALIDATION)) {
-      if (!validateConfig()) {
-        process.exit(EXIT_CODES.ERROR);
-      }
+    if (shouldValidate(options, NO_CONFIG_VALIDATION) && !validateConfig()) {
+      process.exit(EXIT_CODES.ERROR);
     }
   };
 
   // Load the new config and check for the conflicting config flag
-  if (configFileExists(true)) {
-    loadConfig('', options);
-
-    if (options.config) {
-      logger.error(
-        i18n(`${i18nKey}.loadConfigMiddleware.configFileExists`, {
-          configPath: getConfigPath(),
-        })
-      );
-      process.exit(EXIT_CODES.ERROR);
-    }
-    maybeValidateConfig();
-    return;
-  }
-
-  // We need to load the config when options.config exists,
-  // so that getAccountIdFromConfig() in injectAccountIdMiddleware reads from the right config
-  if (options.config && fs.existsSync(options.config)) {
+  if (configFileExists(true) && options.config) {
+    logger.error(
+      i18n(`${i18nKey}.loadConfigMiddleware.configFileExists`, {
+        configPath: getConfigPath(),
+      })
+    );
+    process.exit(EXIT_CODES.ERROR);
+  } else {
+    // We need to load the config when options.config exists,
+    // so that getAccountIdFromConfig() in injectAccountIdMiddleware reads from the right config
     const { config: configPath } = options;
-    loadConfig(configPath, options);
-    maybeValidateConfig();
-    return;
+    if (!options._.includes('init')) {
+      loadConfig(configPath, options);
+    }
   }
 
-  // Load deprecated config without a config flag and with no warnings
-  getAndLoadConfigIfNeeded(options);
   maybeValidateConfig();
-  return;
 };
 
 const checkAndWarnGitInclusionMiddleware = () => {

@@ -16,9 +16,9 @@ const { getTableContents, getTableHeader } = require('../../lib/ui/table');
 const { uiBetaTag, uiLink } = require('../../lib/ui');
 const {
   getProjectConfig,
-  getProjectDetailUrl,
   validateProjectConfig,
 } = require('../../lib/projects');
+const { getProjectDetailUrl } = require('../../lib/projects/urls');
 const moment = require('moment');
 const { promptUser } = require('../../lib/prompts/promptUtils');
 const { isHubSpotHttpError } = require('@hubspot/local-dev-lib/errors/index');

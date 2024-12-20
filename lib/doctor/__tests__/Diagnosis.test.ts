@@ -28,6 +28,8 @@ describe('lib/doctor/Diagnosis', () => {
         projectDir: 'project-dir',
         projectConfig: {
           name: 'Super cool project',
+          srcDir: 'project-dir',
+          platformVersion: 'test',
         },
       },
     },

@@ -11,12 +11,14 @@ const { trackCommandUsage } = require('../../lib/usageTracking');
 const {
   ensureProjectExists,
   getProjectConfig,
-  handleProjectUpload,
   logFeedbackMessage,
   validateProjectConfig,
-  pollProjectBuildAndDeploy,
-  displayWarnLogs,
 } = require('../../lib/projects');
+const { handleProjectUpload } = require('../../lib/projects/upload');
+const {
+  displayWarnLogs,
+  pollProjectBuildAndDeploy,
+} = require('../../lib/projects/buildAndDeploy');
 const { i18n } = require('../../lib/lang');
 const { getAccountConfig } = require('@hubspot/local-dev-lib/config');
 const { isSpecifiedError } = require('@hubspot/local-dev-lib/errors/index');

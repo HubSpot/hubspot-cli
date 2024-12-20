@@ -1,4 +1,4 @@
-import { PromptConfig } from '../../types/prompts';
+import { PromptConfig } from '../../types/Prompts';
 
 import { promptUser } from './promptUtils';
 import { i18n } from '../lang';
@@ -53,7 +53,7 @@ const CONTENT_TYPES_PROMPT: PromptConfig<CreateModulePromptResponse> = {
     { name: 'Membership', value: 'MEMBERSHIP' },
   ],
   validate: (input: string[]) => {
-    return new Promise<string | boolean>(function(resolve, reject) {
+    return new Promise<string | boolean>(function (resolve, reject) {
       if (input.length > 0) {
         resolve(true);
       }

@@ -1,6 +1,6 @@
 import { promptUser } from './promptUtils';
 import { i18n } from '../lang';
-import { PromptChoices, PromptConfig } from '../../types/prompts';
+import { PromptChoices, PromptConfig } from '../../types/Prompts';
 
 const i18nKey = 'lib.prompts.createTemplatePrompt';
 
@@ -15,7 +15,7 @@ const templateTypeChoices = [
 ] satisfies PromptChoices;
 
 interface CreateTemplatePromptResponse {
-  templateType: typeof templateTypeChoices[number]['value'];
+  templateType: (typeof templateTypeChoices)[number]['value'];
 }
 
 const TEMPLATE_TYPE_PROMPT: PromptConfig<CreateTemplatePromptResponse> = {
