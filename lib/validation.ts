@@ -12,7 +12,6 @@ import {
 import { commaSeparatedValues } from '@hubspot/local-dev-lib/text';
 import {
   getConfigPath,
-  validateConfig,
   getAccountConfig,
   loadConfigFromEnvironment,
 } from '@hubspot/local-dev-lib/config';
@@ -36,7 +35,7 @@ export async function loadAndValidateOptions(
     validAccount = await validateAccount(options);
   }
 
-  if (!(validateConfig() && validAccount)) {
+  if (!validAccount) {
     process.exit(EXIT_CODES.ERROR);
   }
 }
