@@ -51,7 +51,7 @@ exports.handler = async options => {
 
   let filePath;
   try {
-    const { path: filePath } =
+    const filePath =
       'path' in options
         ? path.resolve(getCwd(), options.path)
         : await selectPathPrompt(options);
