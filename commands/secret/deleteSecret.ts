@@ -68,11 +68,13 @@ exports.handler = async options => {
       })
     );
   } catch (err) {
-    logger.error(
-      i18n(`${i18nKey}.errors.delete`, {
-        secretName,
-      })
-    );
+    if (secretName) {
+      logger.error(
+        i18n(`${i18nKey}.errors.delete`, {
+          secretName,
+        })
+      );
+    }
     logError(
       err,
       new ApiErrorContext({
