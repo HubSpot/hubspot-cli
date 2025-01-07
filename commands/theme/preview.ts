@@ -3,15 +3,10 @@ const fs = require('fs');
 const path = require('path');
 const { i18n } = require('../../lib/lang');
 const { logger } = require('@hubspot/local-dev-lib/logger');
-const {
-  addAccountOptions,
-  addConfigOptions,
-  getAccountId,
-} = require('../../lib/commonOpts');
+const { addAccountOptions, addConfigOptions } = require('../../lib/commonOpts');
 const { getCwd } = require('@hubspot/local-dev-lib/path');
 const { getUploadableFileList } = require('../../lib/upload');
 const { trackCommandUsage } = require('../../lib/usageTracking');
-const { loadAndValidateOptions } = require('../../lib/validation');
 const {
   previewPrompt,
   previewProjectPrompt,
@@ -28,7 +23,7 @@ const { getProjectConfig } = require('../../lib/projects');
 const {
   findProjectComponents,
   COMPONENT_TYPES,
-} = require('../../lib/projectStructure');
+} = require('../../lib/projects/structure');
 const { preview } = require('@hubspot/theme-preview-dev-server');
 const { hasFeature } = require('../../lib/hasFeature');
 const i18nKey = 'commands.theme.subcommands.preview';
@@ -108,11 +103,14 @@ const determineSrcAndDest = async options => {
 };
 
 exports.handler = async options => {
-  const { notify, noSsl, resetSession, port, generateFieldsTypes } = options;
-
-  await loadAndValidateOptions(options);
-
-  const accountId = getAccountId(options);
+  const {
+    derivedAccountId,
+    notify,
+    noSsl,
+    resetSession,
+    port,
+    generateFieldsTypes,
+  } = options;
 
   const { absoluteSrc, dest } = await determineSrcAndDest(options);
 
@@ -166,7 +164,7 @@ exports.handler = async options => {
             logError(
               result.error,
               new ApiErrorContext({
-                accountId,
+                accountId: derivedAccountId,
                 request: dest,
                 payload: result.file,
               })
@@ -178,7 +176,7 @@ exports.handler = async options => {
     return uploadOptions;
   };
 
-  trackCommandUsage('preview', accountId);
+  trackCommandUsage('preview', derivedAccountId);
 
   let createUnifiedDevServer;
   try {
@@ -192,7 +190,7 @@ exports.handler = async options => {
   }
 
   const isUngatedForUnified = await hasFeature(
-    accountId,
+    derivedAccountId,
     'cms:react:unifiedThemePreview'
   );
   if (isUngatedForUnified && createUnifiedDevServer) {
@@ -215,7 +213,7 @@ exports.handler = async options => {
       }
     );
   } else {
-    preview(accountId, absoluteSrc, dest, {
+    preview(derivedAccountId, absoluteSrc, dest, {
       notify,
       filePaths,
       noSsl,

@@ -1,4 +1,5 @@
-export const HUBSPOT_PROJECT_COMPONENTS_GITHUB_PATH = 'HubSpot/hubspot-project-components' as const;
+export const HUBSPOT_PROJECT_COMPONENTS_GITHUB_PATH =
+  'HubSpot/hubspot-project-components' as const;
 export const DEFAULT_PROJECT_TEMPLATE_BRANCH = 'main' as const;
 
 export const FEEDBACK_INTERVAL = 10 as const;
@@ -60,12 +61,12 @@ export const PROJECT_ERROR_TYPES = {
   SUBDEPLOY_FAILED: 'DeployPipelineErrorType.DEPENDENT_SUBDEPLOY_FAILED',
 } as const;
 
-export const PROJECT_TASK_TYPES = {
+export const PROJECT_TASK_TYPES: { [key: string]: string } = {
   PRIVATE_APP: 'private app',
   PUBLIC_APP: 'public app',
   APP_FUNCTION: 'function',
   CRM_CARD_V2: 'card',
-} as const;
+};
 
 export const PROJECT_COMPONENT_TYPES = {
   PROJECTS: 'projects',

@@ -5,10 +5,10 @@ const { resolveLocalPath } = require('../../lib/filesystem');
 const {
   addConfigOptions,
   addAccountOptions,
+  addOverwriteOptions,
+  addGlobalOptions,
   addUseEnvironmentOptions,
-  getAccountId,
 } = require('../../lib/commonOpts');
-const { loadAndValidateOptions } = require('../../lib/validation');
 const { trackCommandUsage } = require('../../lib/usageTracking');
 const { i18n } = require('../../lib/lang');
 
@@ -20,9 +20,7 @@ exports.command = 'fetch <src> [dest]';
 exports.describe = i18n(`${i18nKey}.describe`);
 
 exports.handler = async options => {
-  const { src, includeArchived } = options;
-
-  await loadAndValidateOptions(options);
+  const { src, includeArchived, derivedAccountId, overwrite } = options;
 
   if (typeof src !== 'string') {
     logger.error(i18n(`${i18nKey}.errors.sourceRequired`));
@@ -31,17 +29,15 @@ exports.handler = async options => {
 
   const dest = resolveLocalPath(options.dest);
 
-  const accountId = getAccountId(options);
-
-  trackCommandUsage('filemanager-fetch', null, accountId);
+  trackCommandUsage('filemanager-fetch', null, derivedAccountId);
 
   try {
     // Fetch and write file/folder.
     await downloadFileOrFolder(
-      accountId,
+      derivedAccountId,
       src,
       dest,
-      false,
+      overwrite,
       includeArchived || false
     );
   } catch (err) {
@@ -51,8 +47,10 @@ exports.handler = async options => {
 };
 
 exports.builder = yargs => {
+  addGlobalOptions(yargs);
   addConfigOptions(yargs);
   addAccountOptions(yargs);
+  addOverwriteOptions(yargs);
   addUseEnvironmentOptions(yargs);
 
   yargs.positional('src', {

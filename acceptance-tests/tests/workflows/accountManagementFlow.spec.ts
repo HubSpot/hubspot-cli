@@ -27,7 +27,7 @@ describe('Account Management Flow', () => {
   describe('hs init', () => {
     it('should generate a config file', async () => {
       await testState.cli.executeWithTestConfig(
-        ['init'],
+        ['init', '--disable-tracking'],
         getInitPromptSequence(testState.getPAK(), accountName)
       );
 
@@ -73,12 +73,11 @@ describe('Account Management Flow', () => {
 
   describe('hs accounts list', () => {
     it('should not list the removed authenticated account', async () => {
-      const output = await testState.cli.executeWithTestConfig([
-        'accounts',
-        'list',
-      ]);
-
-      expect(output).not.toContain(accountName);
+      await expect(() =>
+        testState.cli.executeWithTestConfig(['accounts', 'list'])
+      ).rejects.toThrow(
+        /There are no accounts defined in the configuration file/
+      );
     });
   });
 

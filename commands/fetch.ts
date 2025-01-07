@@ -5,13 +5,13 @@ const {
   addConfigOptions,
   addAccountOptions,
   addOverwriteOptions,
-  addModeOptions,
+  addCmsPublishModeOptions,
   addUseEnvironmentOptions,
-  getAccountId,
-  getMode,
+  getCmsPublishMode,
+  addGlobalOptions,
 } = require('../lib/commonOpts');
 const { resolveLocalPath } = require('../lib/filesystem');
-const { validateMode, loadAndValidateOptions } = require('../lib/validation');
+const { validateCmsPublishMode } = require('../lib/validation');
 const { trackCommandUsage } = require('../lib/usageTracking');
 const { i18n } = require('../lib/lang');
 
@@ -25,9 +25,7 @@ exports.describe = i18n(`${i18nKey}.describe`);
 exports.handler = async options => {
   const { src, dest } = options;
 
-  await loadAndValidateOptions(options);
-
-  if (!validateMode(options)) {
+  if (!validateCmsPublishMode(options)) {
     process.exit(EXIT_CODES.ERROR);
   }
 
@@ -36,18 +34,18 @@ exports.handler = async options => {
     process.exit(EXIT_CODES.ERROR);
   }
 
-  const accountId = getAccountId(options);
-  const mode = getMode(options);
+  const { derivedAccountId } = options;
+  const cmsPublishMode = getCmsPublishMode(options);
 
-  trackCommandUsage('fetch', { mode }, accountId);
+  trackCommandUsage('fetch', { mode: cmsPublishMode }, derivedAccountId);
 
   try {
     // Fetch and write file/folder.
     await downloadFileOrFolder(
-      accountId,
+      derivedAccountId,
       src,
       resolveLocalPath(dest),
-      mode,
+      cmsPublishMode,
       options
     );
   } catch (err) {
@@ -57,12 +55,6 @@ exports.handler = async options => {
 };
 
 exports.builder = yargs => {
-  addConfigOptions(yargs);
-  addAccountOptions(yargs);
-  addOverwriteOptions(yargs);
-  addModeOptions(yargs, { read: true });
-  addUseEnvironmentOptions(yargs);
-
   yargs.positional('src', {
     describe: i18n(`${i18nKey}.positionals.src.describe`),
     type: 'string',
@@ -88,6 +80,13 @@ exports.builder = yargs => {
       describe: i18n(`${i18nKey}.options.assetVersion.describe`),
     },
   });
+
+  addConfigOptions(yargs);
+  addAccountOptions(yargs);
+  addOverwriteOptions(yargs);
+  addCmsPublishModeOptions(yargs, { read: true });
+  addUseEnvironmentOptions(yargs);
+  addGlobalOptions(yargs);
 
   return yargs;
 };

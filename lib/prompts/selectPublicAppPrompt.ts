@@ -1,25 +1,33 @@
-// @ts-nocheck
-const { promptUser } = require('./promptUtils');
-const { i18n } = require('../lang');
-const { uiLine } = require('../ui');
-const { logError } = require('../errorHandlers/index');
-const { logger } = require('@hubspot/local-dev-lib/logger');
-const {
-  fetchPublicAppsForPortal,
-} = require('@hubspot/local-dev-lib/api/appsDev');
-const { EXIT_CODES } = require('../enums/exitCodes');
+import { promptUser } from './promptUtils';
+import { i18n } from '../lang';
+import { uiLine } from '../ui';
+import { logError } from '../errorHandlers/index';
+import { logger } from '@hubspot/local-dev-lib/logger';
+import { fetchPublicAppsForPortal } from '@hubspot/local-dev-lib/api/appsDev';
+import { EXIT_CODES } from '../enums/exitCodes';
+import { PublicApp } from '@hubspot/local-dev-lib/types/Apps';
 
 const i18nKey = 'lib.prompts.selectPublicAppPrompt';
 
-const fetchPublicAppOptions = async (
-  accountId,
-  accountName,
+type PublicAppPromptResponse = {
+  appId: number;
+};
+
+async function fetchPublicAppOptions(
+  accountId: number | null,
+  accountName: string,
   isMigratingApp = false
-) => {
+): Promise<PublicApp[]> {
   try {
+    if (!accountId) {
+      logger.error(i18n(`${i18nKey}.errors.noAccountId`));
+      process.exit(EXIT_CODES.ERROR);
+    }
+
     const {
       data: { results: publicApps },
     } = await fetchPublicAppsForPortal(accountId);
+
     const filteredPublicApps = publicApps.filter(
       app => !app.projectId && !app.sourceId
     );
@@ -47,18 +55,22 @@ const fetchPublicAppOptions = async (
     }
     return filteredPublicApps;
   } catch (error) {
-    logError(error, { accountId });
+    logError(error, accountId ? { accountId } : undefined);
     logger.error(i18n(`${i18nKey}.errors.errorFetchingApps`));
     process.exit(EXIT_CODES.ERROR);
   }
-};
+}
 
-const selectPublicAppPrompt = async ({
+export async function selectPublicAppPrompt({
   accountId,
   accountName,
   isMigratingApp = false,
-}) => {
-  const publicApps = await fetchPublicAppOptions(
+}: {
+  accountId: number | null;
+  accountName: string;
+  isMigratingApp?: boolean;
+}): Promise<PublicAppPromptResponse> {
+  const publicApps: PublicApp[] = await fetchPublicAppOptions(
     accountId,
     accountName,
     isMigratingApp
@@ -67,7 +79,7 @@ const selectPublicAppPrompt = async ({
     ? 'selectAppIdMigrate'
     : 'selectAppIdClone';
 
-  return promptUser([
+  return promptUser<PublicAppPromptResponse>([
     {
       name: 'appId',
       message: i18n(`${i18nKey}.${translationKey}`, {
@@ -89,8 +101,4 @@ const selectPublicAppPrompt = async ({
       }),
     },
   ]);
-};
-
-module.exports = {
-  selectPublicAppPrompt,
-};
+}

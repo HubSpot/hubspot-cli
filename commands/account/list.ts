@@ -1,15 +1,17 @@
 // @ts-nocheck
 const { logger } = require('@hubspot/local-dev-lib/logger');
-const { getConfig, getConfigPath } = require('@hubspot/local-dev-lib/config');
+const {
+  getConfigPath,
+  getConfigDefaultAccount,
+  getConfigAccounts,
+} = require('@hubspot/local-dev-lib/config');
+const {
+  getAccountIdentifier,
+} = require('@hubspot/local-dev-lib/config/getAccountIdentifier');
+const { addConfigOptions } = require('../../lib/commonOpts');
 const { getTableContents, getTableHeader } = require('../../lib/ui/table');
 
-const {
-  addConfigOptions,
-  addAccountOptions,
-  getAccountId,
-} = require('../../lib/commonOpts');
 const { trackCommandUsage } = require('../../lib/usageTracking');
-const { loadAndValidateOptions } = require('../../lib/validation');
 const { isSandbox, isDeveloperTestAccount } = require('../../lib/accountTypes');
 
 const { i18n } = require('../../lib/lang');
@@ -18,9 +20,9 @@ const {
   HUBSPOT_ACCOUNT_TYPE_STRINGS,
 } = require('@hubspot/local-dev-lib/constants/config');
 
-const i18nKey = 'commands.accounts.subcommands.list';
+const i18nKey = 'commands.account.subcommands.list';
 
-exports.command = 'list';
+exports.command = ['list', 'ls'];
 exports.describe = i18n(`${i18nKey}.describe`);
 
 const sortAndMapPortals = portals => {
@@ -34,7 +36,7 @@ const sortAndMapPortals = portals => {
           p.accountType === HUBSPOT_ACCOUNT_TYPES.APP_DEVELOPER)
     )
     .forEach(portal => {
-      mappedPortalData[portal.portalId] = [portal];
+      mappedPortalData[getAccountIdentifier(portal)] = [portal];
     });
   // Non-standard portals (sandbox, developer test account)
   portals
@@ -46,7 +48,7 @@ const sortAndMapPortals = portals => {
           p,
         ];
       } else {
-        mappedPortalData[p.portalId] = [p];
+        mappedPortalData[getAccountIdentifier(p)] = [p];
       }
     });
   return mappedPortalData;
@@ -56,7 +58,7 @@ const getPortalData = mappedPortalData => {
   const portalData = [];
   Object.entries(mappedPortalData).forEach(([key, set]) => {
     const hasParentPortal = set.filter(
-      p => p.portalId === parseInt(key, 10)
+      p => getAccountIdentifier(p) === parseInt(key, 10)
     )[0];
     set.forEach(portal => {
       let name = `${portal.name} [${
@@ -71,22 +73,20 @@ const getPortalData = mappedPortalData => {
           name = `↳ ${name}`;
         }
       }
-      portalData.push([name, portal.portalId, portal.authType]);
+      portalData.push([name, getAccountIdentifier(portal), portal.authType]);
     });
   });
   return portalData;
 };
 
 exports.handler = async options => {
-  await loadAndValidateOptions(options, false);
+  const { derivedAccountId } = options;
 
-  const accountId = getAccountId(options);
+  trackCommandUsage('accounts-list', null, derivedAccountId);
 
-  trackCommandUsage('accounts-list', null, accountId);
-
-  const config = getConfig();
   const configPath = getConfigPath();
-  const mappedPortalData = sortAndMapPortals(config.portals);
+  const accountsList = getConfigAccounts();
+  const mappedPortalData = sortAndMapPortals(accountsList);
   const portalData = getPortalData(mappedPortalData);
   portalData.unshift(
     getTableHeader([
@@ -98,7 +98,9 @@ exports.handler = async options => {
 
   logger.log(i18n(`${i18nKey}.configPath`, { configPath }));
   logger.log(
-    i18n(`${i18nKey}.defaultAccount`, { account: config.defaultPortal })
+    i18n(`${i18nKey}.defaultAccount`, {
+      account: getConfigDefaultAccount(),
+    })
   );
   logger.log(i18n(`${i18nKey}.accounts`));
   logger.log(getTableContents(portalData, { border: { bodyLeft: '  ' } }));
@@ -106,9 +108,6 @@ exports.handler = async options => {
 
 exports.builder = yargs => {
   addConfigOptions(yargs);
-  addAccountOptions(yargs);
-
   yargs.example([['$0 accounts list']]);
-
   return yargs;
 };

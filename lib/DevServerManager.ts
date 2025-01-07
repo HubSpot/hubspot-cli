@@ -1,6 +1,6 @@
 // @ts-nocheck
 const { logger } = require('@hubspot/local-dev-lib/logger');
-const { COMPONENT_TYPES } = require('./projectStructure');
+const { COMPONENT_TYPES } = require('./projects/structure');
 const { i18n } = require('./lang');
 const { promptUser } = require('./prompts/promptUtils');
 const { DevModeInterface } = require('@hubspot/ui-extensions-dev-server');

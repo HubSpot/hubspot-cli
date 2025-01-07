@@ -3,7 +3,7 @@ const chalk = require('chalk');
 const {
   addAccountOptions,
   addConfigOptions,
-  getAccountId,
+  addGlobalOptions,
   addUseEnvironmentOptions,
 } = require('../lib/commonOpts');
 const { trackCommandUsage } = require('../lib/usageTracking');
@@ -15,7 +15,6 @@ const {
   getDirectoryContentsByPath,
 } = require('@hubspot/local-dev-lib/api/fileMapper');
 const { HUBSPOT_FOLDER, MARKETPLACE_FOLDER } = require('../lib/constants');
-const { loadAndValidateOptions } = require('../lib/validation');
 const { i18n } = require('../lib/lang');
 
 const i18nKey = 'commands.list';
@@ -25,14 +24,11 @@ exports.command = 'list [path]';
 exports.describe = i18n(`${i18nKey}.describe`);
 
 exports.handler = async options => {
-  await loadAndValidateOptions(options);
-
-  const { path } = options;
+  const { path, derivedAccountId } = options;
   const directoryPath = path || '/';
-  const accountId = getAccountId(options);
   let contentsResp;
 
-  trackCommandUsage('list', null, accountId);
+  trackCommandUsage('list', null, derivedAccountId);
 
   logger.debug(
     i18n(`${i18nKey}.gettingPathContents`, {
@@ -41,7 +37,10 @@ exports.handler = async options => {
   );
 
   try {
-    const { data } = await getDirectoryContentsByPath(accountId, directoryPath);
+    const { data } = await getDirectoryContentsByPath(
+      derivedAccountId,
+      directoryPath
+    );
     contentsResp = data;
   } catch (e) {
     logError(e);
@@ -89,6 +88,7 @@ exports.builder = yargs => {
   addConfigOptions(yargs);
   addAccountOptions(yargs);
   addUseEnvironmentOptions(yargs);
+  addGlobalOptions(yargs);
 
   return yargs;
 };

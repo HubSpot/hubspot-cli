@@ -69,9 +69,9 @@ describe('hs create', () => {
   });
 
   it('creates a module', async () => {
-    await testState.cli.execute(
+    await testState.cli.executeWithTestConfig(
       ['create', 'module', FOLDERS.module.name],
-      ['label', ENTER, ENTER, ENTER, 'y', ENTER]
+      ['label', ENTER, ENTER, ENTER, 'y', ENTER, ENTER]
     );
 
     expect(testState.existsInTestOutputDirectory(FOLDERS.module.folder)).toBe(
@@ -80,7 +80,7 @@ describe('hs create', () => {
   });
 
   it('creates a template', async () => {
-    await testState.cli.execute(
+    await testState.cli.executeWithTestConfig(
       ['create', 'template', FOLDERS.template.name],
       [ENTER]
     );
@@ -90,35 +90,44 @@ describe('hs create', () => {
   });
 
   it('website-theme', async () => {
-    await testState.cli.execute(['create', FOLDERS.websiteTheme.name]);
+    await testState.cli.executeWithTestConfig([
+      'create',
+      FOLDERS.websiteTheme.name,
+    ]);
     expect(
       testState.existsInTestOutputDirectory(FOLDERS.websiteTheme.folder)
     ).toBe(true);
   });
 
   it('react-app', async () => {
-    await testState.cli.execute(['create', FOLDERS.reactApp.name]);
+    await testState.cli.executeWithTestConfig([
+      'create',
+      FOLDERS.reactApp.name,
+    ]);
     expect(testState.existsInTestOutputDirectory(FOLDERS.reactApp.folder)).toBe(
       true
     );
   });
 
   it('vue-app', async () => {
-    await testState.cli.execute(['create', FOLDERS.vueApp.name]);
+    await testState.cli.executeWithTestConfig(['create', FOLDERS.vueApp.name]);
     expect(testState.existsInTestOutputDirectory(FOLDERS.vueApp.folder)).toBe(
       true
     );
   });
 
   it('webpack-serverless', async () => {
-    await testState.cli.execute(['create', FOLDERS.webpackServerless.name]);
+    await testState.cli.executeWithTestConfig([
+      'create',
+      FOLDERS.webpackServerless.name,
+    ]);
     expect(
       testState.existsInTestOutputDirectory(FOLDERS.webpackServerless.folder)
     ).toBe(true);
   });
 
   it('api-sample', async () => {
-    await testState.cli.execute(
+    await testState.cli.executeWithTestConfig(
       ['create', FOLDERS.apiSample.name, FOLDERS.apiSample.name],
       [ENTER, ENTER]
     );
@@ -129,14 +138,14 @@ describe('hs create', () => {
   });
 
   it('app', async () => {
-    await testState.cli.execute(['create', FOLDERS.app.name]);
+    await testState.cli.executeWithTestConfig(['create', FOLDERS.app.name]);
     expect(testState.existsInTestOutputDirectory(FOLDERS.app.folder)).toBe(
       true
     );
   });
 
   it('function', async () => {
-    await testState.cli.execute(
+    await testState.cli.executeWithTestConfig(
       ['create', 'function'],
       [
         FOLDERS.function.name,

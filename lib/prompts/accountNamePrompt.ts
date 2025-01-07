@@ -1,36 +1,53 @@
-// @ts-nocheck
-const { accountNameExistsInConfig } = require('@hubspot/local-dev-lib/config');
-const { promptUser } = require('./promptUtils');
-const { i18n } = require('../lang');
-const {
-  HUBSPOT_ACCOUNT_TYPES,
-} = require('@hubspot/local-dev-lib/constants/config');
+import { accountNameExistsInConfig } from '@hubspot/local-dev-lib/config';
+import { promptUser } from './promptUtils';
+import { i18n } from '../lang';
+import { PromptConfig } from '../../types/Prompts';
+import { HUBSPOT_ACCOUNT_TYPES } from '@hubspot/local-dev-lib/constants/config';
+import { AccountType } from '@hubspot/local-dev-lib/types/Accounts';
 
 const i18nKey = 'lib.prompts.accountNamePrompt';
 
-const getCliAccountNamePromptConfig = defaultName => ({
-  name: 'name',
-  message: i18n(`${i18nKey}.enterAccountName`),
-  default: defaultName,
-  validate(val) {
-    if (typeof val !== 'string') {
-      return i18n(`${i18nKey}.errors.invalidName`);
-    } else if (!val.length) {
-      return i18n(`${i18nKey}.errors.nameRequired`);
-    } else if (val.indexOf(' ') >= 0) {
-      return i18n(`${i18nKey}.errors.spacesInName`);
-    }
-    return accountNameExistsInConfig(val)
-      ? i18n(`${i18nKey}.errors.accountNameExists`, { name: val })
-      : true;
-  },
-});
-
-const cliAccountNamePrompt = defaultName => {
-  return promptUser(getCliAccountNamePromptConfig(defaultName));
+type AccountNamePromptResponse = {
+  name: string;
 };
 
-const hubspotAccountNamePrompt = ({ accountType, currentPortalCount = 0 }) => {
+export function getCliAccountNamePromptConfig(
+  defaultName?: string
+): PromptConfig<AccountNamePromptResponse> {
+  return {
+    name: 'name',
+    message: i18n(`${i18nKey}.enterAccountName`),
+    default: defaultName,
+    validate(val?: string) {
+      if (typeof val !== 'string') {
+        return i18n(`${i18nKey}.errors.invalidName`);
+      } else if (!val.length) {
+        return i18n(`${i18nKey}.errors.nameRequired`);
+      } else if (val.indexOf(' ') >= 0) {
+        return i18n(`${i18nKey}.errors.spacesInName`);
+      }
+      return accountNameExistsInConfig(val)
+        ? i18n(`${i18nKey}.errors.accountNameExists`, { name: val })
+        : true;
+    },
+  };
+}
+
+export function cliAccountNamePrompt(
+  defaultName: string
+): Promise<AccountNamePromptResponse> {
+  return promptUser<AccountNamePromptResponse>(
+    getCliAccountNamePromptConfig(defaultName)
+  );
+}
+
+export function hubspotAccountNamePrompt({
+  accountType,
+  currentPortalCount = 0,
+}: {
+  accountType: AccountType;
+  currentPortalCount?: number;
+}): Promise<AccountNamePromptResponse> {
   const isDevelopmentSandbox =
     accountType === HUBSPOT_ACCOUNT_TYPES.DEVELOPMENT_SANDBOX;
   const isSandbox =
@@ -39,8 +56,8 @@ const hubspotAccountNamePrompt = ({ accountType, currentPortalCount = 0 }) => {
   const isDeveloperTestAccount =
     accountType === HUBSPOT_ACCOUNT_TYPES.DEVELOPER_TEST;
 
-  let promptMessageString;
-  let defaultName;
+  let promptMessageString: string | undefined;
+  let defaultName: string | undefined;
   if (isSandbox) {
     promptMessageString = isDevelopmentSandbox
       ? i18n(`${i18nKey}.enterDevelopmentSandboxName`)
@@ -52,11 +69,11 @@ const hubspotAccountNamePrompt = ({ accountType, currentPortalCount = 0 }) => {
     });
   }
 
-  return promptUser([
+  return promptUser<AccountNamePromptResponse>([
     {
       name: 'name',
       message: promptMessageString,
-      validate(val) {
+      validate(val?: string) {
         if (typeof val !== 'string') {
           return i18n(`${i18nKey}.errors.invalidName`);
         } else if (!val.trim().length) {
@@ -69,10 +86,4 @@ const hubspotAccountNamePrompt = ({ accountType, currentPortalCount = 0 }) => {
       default: defaultName,
     },
   ]);
-};
-
-module.exports = {
-  getCliAccountNamePromptConfig,
-  cliAccountNamePrompt,
-  hubspotAccountNamePrompt,
-};
+}

@@ -3,7 +3,8 @@ const path = require('path');
 const chalk = require('chalk');
 
 const {
-  getAccountId,
+  addAccountOptions,
+  addConfigOptions,
   addUseEnvironmentOptions,
 } = require('../../lib/commonOpts');
 const { trackCommandUsage } = require('../../lib/usageTracking');
@@ -16,7 +17,6 @@ const {
   fetchProjectBuilds,
 } = require('@hubspot/local-dev-lib/api/projects');
 const { ensureProjectExists, getProjectConfig } = require('../../lib/projects');
-const { loadAndValidateOptions } = require('../../lib/validation');
 const {
   downloadProjectPrompt,
 } = require('../../lib/prompts/downloadProjectPrompt');
@@ -26,12 +26,10 @@ const { uiBetaTag } = require('../../lib/ui');
 const i18nKey = 'commands.project.subcommands.download';
 const { EXIT_CODES } = require('../../lib/enums/exitCodes');
 
-exports.command = 'download [--project]';
+exports.command = 'download';
 exports.describe = uiBetaTag(i18n(`${i18nKey}.describe`), false);
 
 exports.handler = async options => {
-  await loadAndValidateOptions(options);
-
   const { projectConfig } = await getProjectConfig();
 
   if (projectConfig) {
@@ -39,17 +37,15 @@ exports.handler = async options => {
     process.exit(EXIT_CODES.ERROR);
   }
 
-  const { project, dest, buildNumber } = options;
+  const { project, dest, build, derivedAccountId } = options;
   const { project: promptedProjectName } = await downloadProjectPrompt(options);
   let projectName = promptedProjectName || project;
 
-  const accountId = getAccountId(options);
-
-  trackCommandUsage('project-download', null, accountId);
+  trackCommandUsage('project-download', null, derivedAccountId);
 
   try {
     const { projectExists } = await ensureProjectExists(
-      accountId,
+      derivedAccountId,
       projectName,
       {
         allowCreate: false,
@@ -61,22 +57,21 @@ exports.handler = async options => {
       logger.error(
         i18n(`${i18nKey}.errors.projectNotFound`, {
           projectName: chalk.bold(projectName),
-          accountId: chalk.bold(accountId),
+          accountId: chalk.bold(derivedAccountId),
         })
       );
-      const { name: promptedProjectName } = await downloadProjectPrompt(
-        options
-      );
+      const { name: promptedProjectName } =
+        await downloadProjectPrompt(options);
       projectName = promptedProjectName || project;
     }
 
     const absoluteDestPath = dest ? path.resolve(getCwd(), dest) : getCwd();
 
-    let buildNumberToDownload = buildNumber;
+    let buildNumberToDownload = build;
 
     if (!buildNumberToDownload) {
       const { data: projectBuildsResult } = await fetchProjectBuilds(
-        accountId,
+        derivedAccountId,
         projectName
       );
 
@@ -89,7 +84,7 @@ exports.handler = async options => {
     }
 
     const { data: zippedProject } = await downloadProject(
-      accountId,
+      derivedAccountId,
       projectName,
       buildNumberToDownload
     );
@@ -111,13 +106,18 @@ exports.handler = async options => {
   } catch (e) {
     logError(
       e,
-      new ApiErrorContext({ accountId, request: 'project download' })
+      new ApiErrorContext({
+        accountId: derivedAccountId,
+        request: 'project download',
+      })
     );
     process.exit(EXIT_CODES.ERROR);
   }
 };
 
 exports.builder = yargs => {
+  addAccountOptions(yargs);
+  addConfigOptions(yargs);
   addUseEnvironmentOptions(yargs);
 
   yargs.options({
@@ -129,8 +129,9 @@ exports.builder = yargs => {
       describe: i18n(`${i18nKey}.options.dest.describe`),
       type: 'string',
     },
-    buildNumber: {
-      describe: i18n(`${i18nKey}.options.buildNumber.describe`),
+    build: {
+      describe: i18n(`${i18nKey}.options.build.describe`),
+      alias: ['build-id'],
       type: 'number',
     },
   });

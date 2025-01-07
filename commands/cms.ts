@@ -1,9 +1,13 @@
 // @ts-nocheck
 const { i18n } = require('../lib/lang');
-const { addConfigOptions, addAccountOptions } = require('../lib/commonOpts');
+const {
+  addConfigOptions,
+  addAccountOptions,
+  addGlobalOptions,
+} = require('../lib/commonOpts');
 const lighthouseScore = require('./cms/lighthouseScore');
 const convertFields = require('./cms/convertFields');
-const reactModules = require('./cms/reactModules');
+const getReactModule = require('./cms/getReactModule');
 
 const i18nKey = 'commands.cms';
 
@@ -13,11 +17,12 @@ exports.describe = i18n(`${i18nKey}.describe`);
 exports.builder = yargs => {
   addConfigOptions(yargs);
   addAccountOptions(yargs);
+  addGlobalOptions(yargs);
 
   yargs
     .command(lighthouseScore)
     .command(convertFields)
-    .command(reactModules)
+    .command(getReactModule)
     .demandCommand(1, '');
 
   return yargs;

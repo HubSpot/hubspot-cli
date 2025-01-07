@@ -1,68 +1,35 @@
-// @ts-nocheck
-const fs = require('fs');
-const path = require('path');
-const { logger } = require('@hubspot/local-dev-lib/logger');
-const { MODE } = require('@hubspot/local-dev-lib/constants/files');
-const {
+import * as fs from 'fs';
+import * as path from 'path';
+import { Arguments } from 'yargs';
+import { logger } from '@hubspot/local-dev-lib/logger';
+import { CMS_PUBLISH_MODE } from '@hubspot/local-dev-lib/constants/files';
+import { CmsPublishMode } from '@hubspot/local-dev-lib/types/Files';
+import {
   API_KEY_AUTH_METHOD,
   OAUTH_AUTH_METHOD,
   PERSONAL_ACCESS_KEY_AUTH_METHOD,
-} = require('@hubspot/local-dev-lib/constants/auth');
-const { commaSeparatedValues } = require('@hubspot/local-dev-lib/text');
-const {
-  loadConfig,
+} from '@hubspot/local-dev-lib/constants/auth';
+import { commaSeparatedValues } from '@hubspot/local-dev-lib/text';
+import {
   getConfigPath,
-  validateConfig,
   getAccountConfig,
   loadConfigFromEnvironment,
-} = require('@hubspot/local-dev-lib/config');
-const { getOauthManager } = require('@hubspot/local-dev-lib/oauth');
-const {
-  accessTokenForPersonalAccessKey,
-} = require('@hubspot/local-dev-lib/personalAccessKey');
-const {
+} from '@hubspot/local-dev-lib/config';
+import { getOauthManager } from '@hubspot/local-dev-lib/oauth';
+import { accessTokenForPersonalAccessKey } from '@hubspot/local-dev-lib/personalAccessKey';
+import {
   getAbsoluteFilePath,
   getCwd,
   getExt,
-} = require('@hubspot/local-dev-lib/path');
-const { getAccountId, getMode, setLogLevel } = require('./commonOpts');
-const { EXIT_CODES } = require('./enums/exitCodes');
-const { checkAndWarnGitInclusion } = require('./ui/git');
-const { logError } = require('./errorHandlers/index');
+} from '@hubspot/local-dev-lib/path';
+import { getAccountId, getCmsPublishMode } from './commonOpts';
+import { logError } from './errorHandlers/index';
 
-async function loadAndValidateOptions(options, shouldValidateAccount = true) {
-  setLogLevel(options);
-  const { config: configPath } = options;
-  loadConfig(configPath, options);
-  checkAndWarnGitInclusion(getConfigPath());
-
-  let validAccount = true;
-  if (shouldValidateAccount) {
-    validAccount = await validateAccount(options);
-  }
-
-  if (!(validateConfig() && validAccount)) {
-    process.exit(EXIT_CODES.ERROR);
-  }
-}
-
-/**
- * Validate that an account was passed to the command and that the account's configuration is valid
- *
- *
- * @param {object} command options
- * @returns {boolean}
- */
-async function validateAccount(options) {
+export async function validateAccount(
+  options: Arguments<{ account?: string; accountId?: string }>
+): Promise<boolean> {
   const accountId = getAccountId(options);
-  const {
-    portalId: portalIdOption,
-    portal: portalOption,
-    accountId: _accountIdOption,
-    account: _accountOption,
-  } = options;
-  const accountOption = portalOption || _accountOption;
-  const accountIdOption = portalIdOption || _accountIdOption;
+  const { accountId: accountIdOption, account: accountOption } = options;
 
   if (!accountId) {
     if (accountOption) {
@@ -127,7 +94,11 @@ async function validateAccount(options) {
 
     const oauth = getOauthManager(accountId, accountConfig);
     try {
-      const accessToken = await oauth.accessToken();
+      let accessToken: string | undefined;
+
+      if (oauth) {
+        accessToken = await oauth.accessToken();
+      }
       if (!accessToken) {
         logger.error(
           `The OAuth2 access token could not be found for accountId ${accountId}`
@@ -135,7 +106,7 @@ async function validateAccount(options) {
         return false;
       }
     } catch (e) {
-      logger.error(e.message);
+      logError(e);
       return false;
     }
   } else if (authType === 'personalaccesskey') {
@@ -168,28 +139,33 @@ async function validateAccount(options) {
   return true;
 }
 
-/**
- * @param {object} command options
- * @returns {boolean}
- */
-function validateMode(options) {
-  const mode = getMode(options);
-  if (MODE[mode]) {
+export function validateCmsPublishMode(
+  options: Arguments<{ cmsPublishMode?: CmsPublishMode }>
+): boolean {
+  const cmsPublishMode = getCmsPublishMode(options);
+  if (CMS_PUBLISH_MODE[cmsPublishMode]) {
     return true;
   }
-  const modesMessage = `Available modes are: ${Object.values(MODE).join(
-    ', '
-  )}.`;
-  if (mode != null) {
-    logger.error([`The mode "${mode}" is invalid.`, modesMessage].join(' '));
+  const modesMessage = `Available CMS publish modes are: ${Object.values(
+    CMS_PUBLISH_MODE
+  ).join(', ')}.`;
+  if (cmsPublishMode != null) {
+    logger.error(
+      [
+        `The CMS publish mode "${cmsPublishMode}" is invalid.`,
+        modesMessage,
+      ].join(' ')
+    );
   } else {
-    logger.error(['The mode option is missing.', modesMessage].join(' '));
+    logger.error(
+      ['The CMS publish mode option is missing.', modesMessage].join(' ')
+    );
   }
   return false;
 }
 
-const fileExists = _path => {
-  let isFile;
+export function fileExists(_path: string): boolean {
+  let isFile: boolean;
   try {
     const absoluteSrcPath = path.resolve(getCwd(), _path);
     if (!absoluteSrcPath) return false;
@@ -207,11 +183,11 @@ const fileExists = _path => {
   }
 
   return true;
-};
+}
 
-const checkAndConvertToJson = _path => {
+export function checkAndConvertToJson(_path: string): object | null {
   const filePath = getAbsoluteFilePath(_path);
-  if (!fileExists(filePath)) return false;
+  if (!fileExists(filePath)) return null;
 
   if (getExt(_path) !== 'json') {
     logger.error(`The file "${_path}" must be a valid JSON file`);
@@ -228,12 +204,4 @@ const checkAndConvertToJson = _path => {
   }
 
   return result;
-};
-
-module.exports = {
-  validateMode,
-  validateAccount,
-  checkAndConvertToJson,
-  fileExists,
-  loadAndValidateOptions,
-};
+}

@@ -2,8 +2,8 @@
 const {
   addAccountOptions,
   addConfigOptions,
-  getAccountId,
   addUseEnvironmentOptions,
+  addGlobalOptions,
 } = require('../lib/commonOpts');
 const { trackCommandUsage } = require('../lib/usageTracking');
 const { logger } = require('@hubspot/local-dev-lib/logger');
@@ -13,8 +13,8 @@ const {
   getLatestFunctionLog,
 } = require('@hubspot/local-dev-lib/api/functions');
 const { tailLogs } = require('../lib/serverlessLogs');
-const { loadAndValidateOptions } = require('../lib/validation');
 const { i18n } = require('../lib/lang');
+const { promptUser } = require('../lib/prompts/promptUtils');
 const { EXIT_CODES } = require('../lib/enums/exitCodes');
 const { isHubSpotHttpError } = require('@hubspot/local-dev-lib/errors/index');
 
@@ -31,8 +31,15 @@ const handleLogsError = (e, accountId, functionPath) => {
   }
 };
 
-const endpointLog = async (accountId, options) => {
-  const { latest, follow, compact, endpoint: functionPath } = options;
+const endpointLog = async (accountId, functionPath, options) => {
+  const { limit, latest, follow, compact } = options;
+  const requestOptions = {
+    limit,
+    latest,
+    follow,
+    compact,
+    endpoint: functionPath,
+  };
 
   logger.debug(
     i18n(`${i18nKey}.gettingLogs`, {
@@ -71,7 +78,11 @@ const endpointLog = async (accountId, options) => {
     }
   } else {
     try {
-      const { data } = await getFunctionLogs(accountId, functionPath, options);
+      const { data } = await getFunctionLogs(
+        accountId,
+        functionPath,
+        requestOptions
+      );
       logsResp = data;
     } catch (e) {
       handleLogsError(e, accountId, functionPath);
@@ -80,7 +91,7 @@ const endpointLog = async (accountId, options) => {
   }
 
   if (logsResp) {
-    return outputLogs(logsResp, options);
+    return outputLogs(logsResp, requestOptions);
   }
 };
 
@@ -88,15 +99,21 @@ exports.command = 'logs [endpoint]';
 exports.describe = i18n(`${i18nKey}.describe`);
 
 exports.handler = async options => {
-  await loadAndValidateOptions(options);
+  const { endpoint: endpointArgValue, latest, derivedAccountId } = options;
 
-  const { latest } = options;
+  trackCommandUsage('logs', { latest }, derivedAccountId);
 
-  const accountId = getAccountId(options);
+  const { endpointPromptValue } = await promptUser({
+    name: 'endpointPromptValue',
+    message: i18n(`${i18nKey}.endpointPrompt`),
+    when: !endpointArgValue,
+  });
 
-  trackCommandUsage('logs', { latest }, accountId);
-
-  endpointLog(accountId, options);
+  endpointLog(
+    derivedAccountId,
+    endpointArgValue || endpointPromptValue,
+    options
+  );
 };
 
 exports.builder = yargs => {
@@ -116,18 +133,16 @@ exports.builder = yargs => {
         type: 'boolean',
       },
       follow: {
-        alias: ['t', 'tail', 'f'],
+        alias: ['f'],
         describe: i18n(`${i18nKey}.options.follow.describe`),
         type: 'boolean',
       },
       limit: {
-        alias: ['limit', 'n', 'max-count'],
         describe: i18n(`${i18nKey}.options.limit.describe`),
         type: 'number',
       },
     })
-    .conflicts('follow', 'limit')
-    .conflicts('functionName', 'endpoint');
+    .conflicts('follow', 'limit');
 
   yargs.example([
     ['$0 logs my-endpoint', i18n(`${i18nKey}.examples.default`)],
@@ -138,6 +153,7 @@ exports.builder = yargs => {
   addConfigOptions(yargs);
   addAccountOptions(yargs);
   addUseEnvironmentOptions(yargs);
+  addGlobalOptions(yargs);
 
   return yargs;
 };

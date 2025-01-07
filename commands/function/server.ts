@@ -2,27 +2,22 @@
 const {
   addAccountOptions,
   addConfigOptions,
-  getAccountId,
   addUseEnvironmentOptions,
 } = require('../../lib/commonOpts');
 const { trackCommandUsage } = require('../../lib/usageTracking');
 const { logger } = require('@hubspot/local-dev-lib/logger');
 const { start: startTestServer } = require('@hubspot/serverless-dev-runtime');
-const { loadAndValidateOptions } = require('../../lib/validation');
 const { i18n } = require('../../lib/lang');
 
-const i18nKey = 'commands.functions.subcommands.server';
+const i18nKey = 'commands.function.subcommands.server';
 
 exports.command = 'server <path>';
 exports.describe = false;
 
 exports.handler = async options => {
-  await loadAndValidateOptions(options);
+  const { path: functionPath, derivedAccountId } = options;
 
-  const { path: functionPath } = options;
-  const accountId = getAccountId(options);
-
-  trackCommandUsage('functions-server', null, accountId);
+  trackCommandUsage('functions-server', null, derivedAccountId);
 
   logger.debug(
     i18n(`${i18nKey}.debug.startingServer`, {
@@ -31,7 +26,7 @@ exports.handler = async options => {
   );
 
   startTestServer({
-    accountId,
+    accountId: derivedAccountId,
     ...options,
   });
 };

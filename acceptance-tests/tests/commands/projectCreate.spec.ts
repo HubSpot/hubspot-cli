@@ -28,7 +28,7 @@ describe('hs project create', () => {
       'project',
       'create',
       `--name="${PROJECT_FOLDER}"`,
-      `--location="${PROJECT_FOLDER}"`,
+      `--dest="${PROJECT_FOLDER}"`,
       '--template="getting-started-private-app"',
     ]);
     expect(testState.existsInTestOutputDirectory(PROJECT_FOLDER)).toBe(true);

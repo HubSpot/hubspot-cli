@@ -1,42 +1,56 @@
-// @ts-nocheck
-const fs = require('fs');
-const path = require('path');
-const {
+import fs from 'fs';
+import path from 'path';
+import {
   getCwd,
   sanitizeFileName,
   isValidPath,
   untildify,
-} = require('@hubspot/local-dev-lib/path');
-const { PROJECT_COMPONENT_TYPES } = require('../constants');
-const { promptUser } = require('./promptUtils');
-const { fetchFileFromRepository } = require('@hubspot/local-dev-lib/github');
-const { i18n } = require('../lang');
-const { logger } = require('@hubspot/local-dev-lib/logger');
-const { EXIT_CODES } = require('../enums/exitCodes');
-const {
+} from '@hubspot/local-dev-lib/path';
+import { RepoPath } from '@hubspot/local-dev-lib/types/Github';
+import { fetchFileFromRepository } from '@hubspot/local-dev-lib/github';
+import { logger } from '@hubspot/local-dev-lib/logger';
+
+import {
+  PROJECT_COMPONENT_TYPES,
   HUBSPOT_PROJECT_COMPONENTS_GITHUB_PATH,
   DEFAULT_PROJECT_TEMPLATE_BRANCH,
-} = require('../constants');
+} from '../constants';
+import { promptUser } from './promptUtils';
+import { i18n } from '../lang';
+import { EXIT_CODES } from '../enums/exitCodes';
+import {
+  ProjectTemplate,
+  ProjectTemplateRepoConfig,
+} from '../../types/Projects';
 
 const i18nKey = 'lib.prompts.createProjectPrompt';
 
-const PROJECT_PROPERTIES = ['name', 'label', 'path', 'insertPath'];
+const PROJECT_TEMPLATE_PROPERTIES = ['name', 'label', 'path', 'insertPath'];
 
-const hasAllProperties = projectList => {
+type CreateProjectPromptResponse = {
+  name: string;
+  dest: string;
+  template: ProjectTemplate;
+};
+
+function hasAllProperties(projectList: ProjectTemplate[]): boolean {
   return projectList.every(config =>
-    PROJECT_PROPERTIES.every(p =>
+    PROJECT_TEMPLATE_PROPERTIES.every(p =>
       Object.prototype.hasOwnProperty.call(config, p)
     )
   );
-};
+}
 
-const createTemplateOptions = async (templateSource, githubRef) => {
+async function createTemplateOptions(
+  templateSource: RepoPath,
+  githubRef: string
+): Promise<ProjectTemplate[]> {
   const hasCustomTemplateSource = Boolean(templateSource);
   const branch = hasCustomTemplateSource
     ? DEFAULT_PROJECT_TEMPLATE_BRANCH
     : githubRef;
 
-  const config = await fetchFileFromRepository(
+  const config = await fetchFileFromRepository<ProjectTemplateRepoConfig>(
     templateSource || HUBSPOT_PROJECT_COMPONENTS_GITHUB_PATH,
     'config.json',
     branch
@@ -47,26 +61,34 @@ const createTemplateOptions = async (templateSource, githubRef) => {
     process.exit(EXIT_CODES.ERROR);
   }
 
-  if (!hasAllProperties(config[PROJECT_COMPONENT_TYPES.PROJECTS])) {
+  if (!hasAllProperties(config[PROJECT_COMPONENT_TYPES.PROJECTS]!)) {
     logger.error(i18n(`${i18nKey}.errors.missingPropertiesInConfig`));
     process.exit(EXIT_CODES.ERROR);
   }
 
-  return config[PROJECT_COMPONENT_TYPES.PROJECTS];
-};
+  return config[PROJECT_COMPONENT_TYPES.PROJECTS]!;
+}
 
-function findTemplate(projectTemplates, templateNameOrLabel) {
+function findTemplate(
+  projectTemplates: ProjectTemplate[],
+  templateNameOrLabel: string
+): ProjectTemplate | undefined {
   return projectTemplates.find(
     t => t.name === templateNameOrLabel || t.label === templateNameOrLabel
   );
 }
 
-const createProjectPrompt = async (
-  githubRef,
-  promptOptions = {},
+export async function createProjectPrompt(
+  githubRef: string,
+  promptOptions: {
+    name: string;
+    dest: string;
+    template: string;
+    templateSource: RepoPath;
+  },
   skipTemplatePrompt = false
-) => {
-  let projectTemplates = [];
+): Promise<CreateProjectPromptResponse> {
+  let projectTemplates: ProjectTemplate[] = [];
   let selectedTemplate;
 
   if (!skipTemplatePrompt) {
@@ -80,12 +102,12 @@ const createProjectPrompt = async (
       findTemplate(projectTemplates, promptOptions.template);
   }
 
-  const result = await promptUser([
+  const result = await promptUser<CreateProjectPromptResponse>([
     {
       name: 'name',
       message: i18n(`${i18nKey}.enterName`),
       when: !promptOptions.name,
-      validate: input => {
+      validate: (input?: string) => {
         if (!input) {
           return i18n(`${i18nKey}.errors.nameRequired`);
         }
@@ -93,21 +115,21 @@ const createProjectPrompt = async (
       },
     },
     {
-      name: 'location',
-      message: i18n(`${i18nKey}.enterLocation`),
-      when: !promptOptions.location,
+      name: 'dest',
+      message: i18n(`${i18nKey}.enterDest`),
+      when: !promptOptions.dest,
       default: answers => {
         const projectName = sanitizeFileName(
           answers.name || promptOptions.name
         );
         return path.resolve(getCwd(), projectName);
       },
-      validate: input => {
+      validate: (input?: string) => {
         if (!input) {
-          return i18n(`${i18nKey}.errors.locationRequired`);
+          return i18n(`${i18nKey}.errors.destRequired`);
         }
         if (fs.existsSync(input)) {
-          return i18n(`${i18nKey}.errors.invalidLocation`);
+          return i18n(`${i18nKey}.errors.invalidDest`);
         }
         if (!isValidPath(input)) {
           return i18n(`${i18nKey}.errors.invalidCharacters`);
@@ -144,8 +166,4 @@ const createProjectPrompt = async (
   }
 
   return result;
-};
-
-module.exports = {
-  createProjectPrompt,
-};
+}

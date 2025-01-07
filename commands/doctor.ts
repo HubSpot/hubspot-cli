@@ -9,6 +9,7 @@ import { EXIT_CODES } from '../lib/enums/exitCodes';
 import path from 'path';
 import { ArgumentsCamelCase, BuilderCallback, Options } from 'yargs';
 import { getCwd } from '@hubspot/local-dev-lib/path';
+import { addGlobalOptions } from '../lib/commonOpts';
 const { i18n } = require('../lib/lang');
 
 export interface DoctorOptions {
@@ -25,7 +26,7 @@ export const handler = async ({
 }: ArgumentsCamelCase<DoctorOptions>) => {
   const doctor = new Doctor();
 
-  trackCommandUsage(command, undefined, doctor.accountId);
+  trackCommandUsage(command, undefined, doctor.accountId || undefined);
 
   const output = await doctor.diagnose();
 
@@ -33,8 +34,8 @@ export const handler = async ({
   if (totalCount > 0) {
     trackCommandMetadataUsage(
       command,
-      { success: false, type: totalCount },
-      doctor.accountId
+      { successful: false, type: totalCount },
+      doctor.accountId || undefined
     );
   }
 
@@ -78,4 +79,5 @@ export const builder: BuilderCallback<DoctorOptions, DoctorOptions> = yargs => {
     describe: i18n(`${i18nKey}.options.outputDir`),
     type: 'string',
   });
+  addGlobalOptions(yargs);
 };

@@ -1,13 +1,12 @@
 // @ts-nocheck
 const { i18n } = require('../../lib/lang');
-const { createWatcher } = require('../../lib/projectsWatch');
+const { createWatcher } = require('../../lib/projects/watch');
 const { logError, ApiErrorContext } = require('../../lib/errorHandlers/index');
 const { logger } = require('@hubspot/local-dev-lib/logger');
 const { PROJECT_ERROR_TYPES } = require('../../lib/constants');
 const {
   addAccountOptions,
   addConfigOptions,
-  getAccountId,
   addUseEnvironmentOptions,
 } = require('../../lib/commonOpts');
 const { trackCommandUsage } = require('../../lib/usageTracking');
@@ -15,31 +14,30 @@ const { uiBetaTag } = require('../../lib/ui');
 const {
   ensureProjectExists,
   getProjectConfig,
-  handleProjectUpload,
-  pollBuildStatus,
-  pollDeployStatus,
   validateProjectConfig,
   logFeedbackMessage,
 } = require('../../lib/projects');
+const { handleProjectUpload } = require('../../lib/projects/upload');
+const {
+  pollBuildStatus,
+  pollDeployStatus,
+} = require('../../lib/projects/buildAndDeploy');
 const {
   cancelStagedBuild,
   fetchProjectBuilds,
 } = require('@hubspot/local-dev-lib/api/projects');
 const { isSpecifiedError } = require('@hubspot/local-dev-lib/errors/index');
-const { loadAndValidateOptions } = require('../../lib/validation');
 const { EXIT_CODES } = require('../../lib/enums/exitCodes');
 const { handleKeypress, handleExit } = require('../../lib/process');
 
 const i18nKey = 'commands.project.subcommands.watch';
 
-exports.command = 'watch [path]';
+exports.command = 'watch';
 exports.describe = uiBetaTag(i18n(`${i18nKey}.describe`), false);
 
 const handleBuildStatus = async (accountId, projectName, buildId) => {
-  const {
-    isAutoDeployEnabled,
-    deployStatusTaskLocator,
-  } = await pollBuildStatus(accountId, projectName, buildId);
+  const { isAutoDeployEnabled, deployStatusTaskLocator } =
+    await pollBuildStatus(accountId, projectName, buildId);
 
   if (isAutoDeployEnabled && deployStatusTaskLocator) {
     await pollDeployStatus(
@@ -87,28 +85,25 @@ const handleUserInput = (accountId, projectName, currentBuildId) => {
 };
 
 exports.handler = async options => {
-  await loadAndValidateOptions(options);
+  const { initialUpload, derivedAccountId } = options;
 
-  const { initialUpload, path: projectPath } = options;
-  const accountId = getAccountId(options);
+  trackCommandUsage('project-watch', null, derivedAccountId);
 
-  trackCommandUsage('project-watch', null, accountId);
-
-  const { projectConfig, projectDir } = await getProjectConfig(projectPath);
+  const { projectConfig, projectDir } = await getProjectConfig();
 
   validateProjectConfig(projectConfig, projectDir);
 
-  await ensureProjectExists(accountId, projectConfig.name);
+  await ensureProjectExists(derivedAccountId, projectConfig.name);
 
   try {
     const {
       data: { results: builds },
-    } = await fetchProjectBuilds(accountId, projectConfig.name, options);
+    } = await fetchProjectBuilds(derivedAccountId, projectConfig.name, options);
     const hasNoBuilds = !builds || !builds.length;
 
     const startWatching = async () => {
       await createWatcher(
-        accountId,
+        derivedAccountId,
         projectConfig,
         projectDir,
         handleBuildStatus,
@@ -119,7 +114,7 @@ exports.handler = async options => {
     // Upload all files if no build exists for this project yet
     if (initialUpload || hasNoBuilds) {
       const result = await handleProjectUpload(
-        accountId,
+        derivedAccountId,
         projectConfig,
         projectDir,
         startWatching
@@ -138,7 +133,7 @@ exports.handler = async options => {
           logError(
             result.uploadError,
             new ApiErrorContext({
-              accountId,
+              accountId: derivedAccountId,
               request: 'project upload',
             })
           );
@@ -149,25 +144,18 @@ exports.handler = async options => {
       await startWatching();
     }
   } catch (e) {
-    logError(e, new ApiErrorContext({ accountId }));
+    logError(e, new ApiErrorContext({ accountId: derivedAccountId }));
   }
 };
 
 exports.builder = yargs => {
-  yargs.positional('path', {
-    describe: i18n(`${i18nKey}.positionals.path.describe`),
-    type: 'string',
-  });
-
   yargs.option('initial-upload', {
     alias: 'i',
     describe: i18n(`${i18nKey}.options.initialUpload.describe`),
     type: 'boolean',
   });
 
-  yargs.example([
-    ['$0 project watch myProjectFolder', i18n(`${i18nKey}.examples.default`)],
-  ]);
+  yargs.example([['$0 project watch', i18n(`${i18nKey}.examples.default`)]]);
 
   addConfigOptions(yargs);
   addAccountOptions(yargs);

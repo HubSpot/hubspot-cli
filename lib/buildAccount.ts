@@ -12,6 +12,9 @@ const {
   writeConfig,
   getAccountId,
 } = require('@hubspot/local-dev-lib/config');
+const {
+  getAccountIdentifier,
+} = require('@hubspot/local-dev-lib/config/getAccountIdentifier');
 const { logger } = require('@hubspot/local-dev-lib/logger');
 const { i18n } = require('./lang');
 const { cliAccountNamePrompt } = require('./prompts/accountNamePrompt');
@@ -53,10 +56,7 @@ async function saveAccountToConfig({
 
   let validName = updatedConfig.name;
   if (!updatedConfig.name) {
-    const nameForConfig = accountName
-      .toLowerCase()
-      .split(' ')
-      .join('-');
+    const nameForConfig = accountName.toLowerCase().split(' ').join('-');
     validName = nameForConfig;
     const invalidAccountName = accountNameExistsInConfig(nameForConfig);
     if (invalidAccountName) {
@@ -101,7 +101,8 @@ async function buildNewAccount({
   SpinniesManager.init({
     succeedColor: 'white',
   });
-  const accountId = getAccountId(accountConfig.portalId);
+  const id = getAccountIdentifier(accountConfig);
+  const accountId = getAccountId(id);
   const isSandbox =
     accountType === HUBSPOT_ACCOUNT_TYPES.STANDARD_SANDBOX ||
     accountType === HUBSPOT_ACCOUNT_TYPES.DEVELOPMENT_SANDBOX;
@@ -161,12 +162,7 @@ async function buildNewAccount({
       handleSandboxCreateError({ err, env, accountConfig, name, accountId });
     }
     if (isDeveloperTestAccount) {
-      handleDeveloperTestAccountCreateError({
-        err,
-        env,
-        accountId,
-        portalLimit,
-      });
+      handleDeveloperTestAccountCreateError(err, env, accountId, portalLimit);
     }
   }
 

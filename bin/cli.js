@@ -6,8 +6,19 @@ const chalk = require('chalk');
 
 const { logger } = require('@hubspot/local-dev-lib/logger');
 const { addUserAgentHeader } = require('@hubspot/local-dev-lib/http');
+const {
+  loadConfig,
+  configFileExists,
+  getConfigPath,
+  validateConfig,
+} = require('@hubspot/local-dev-lib/config');
 const { logError } = require('../lib/errorHandlers/index');
-const { setLogLevel, getCommandName } = require('../lib/commonOpts');
+const {
+  setLogLevel,
+  getCommandName,
+  injectAccountIdMiddleware,
+} = require('../lib/commonOpts');
+const { validateAccount } = require('../lib/validation');
 const {
   trackHelpUsage,
   trackConvertFieldsUsage,
@@ -17,6 +28,7 @@ const pkg = require('../package.json');
 const { i18n } = require('../lib/lang');
 const { EXIT_CODES } = require('../lib/enums/exitCodes');
 const { UI_COLORS, uiCommandReference } = require('../lib/ui');
+const { checkAndWarnGitInclusion } = require('../lib/ui/git');
 
 const removeCommand = require('../commands/remove');
 const initCommand = require('../commands/init');
@@ -29,9 +41,9 @@ const uploadCommand = require('../commands/upload');
 const createCommand = require('../commands/create');
 const fetchCommand = require('../commands/fetch');
 const filemanagerCommand = require('../commands/filemanager');
-const secretsCommand = require('../commands/secrets');
+const secretCommands = require('../commands/secret');
 const customObjectCommand = require('../commands/customObject');
-const functionsCommand = require('../commands/functions');
+const functionCommands = require('../commands/function');
 const listCommand = require('../commands/list');
 const openCommand = require('../commands/open');
 const mvCommand = require('../commands/mv');
@@ -39,11 +51,12 @@ const projectCommands = require('../commands/project');
 const themeCommand = require('../commands/theme');
 const moduleCommand = require('../commands/module');
 const configCommand = require('../commands/config');
-const accountsCommand = require('../commands/accounts');
+const accountCommands = require('../commands/account');
 const sandboxesCommand = require('../commands/sandbox');
 const cmsCommand = require('../commands/cms');
 const feedbackCommand = require('../commands/feedback');
 const doctorCommand = require('../commands/doctor');
+const completionCommand = require('../commands/completion');
 
 const notifier = updateNotifier({
   pkg: { ...pkg, name: '@hubspot/cli' },
@@ -95,7 +108,7 @@ const handleFailure = (msg, err, yargs) => {
   }
 
   if (msg === null) {
-    yargs.showHelp();
+    yargs.showHelp('log');
     process.exit(EXIT_CODES.SUCCESS);
   } else {
     process.exit(EXIT_CODES.ERROR);
@@ -135,17 +148,126 @@ const setRequestHeaders = () => {
   addUserAgentHeader('HubSpot CLI', pkg.version);
 };
 
+const isTargetedCommand = (options, commandMap) => {
+  const checkCommand = (options, commandMap) => {
+    const currentCommand = options._[0];
+
+    if (!commandMap[currentCommand]) {
+      return false;
+    }
+
+    if (commandMap[currentCommand].target) {
+      return true;
+    }
+
+    const subCommands = commandMap[currentCommand].subCommands || {};
+    if (options._.length > 1) {
+      return checkCommand({ _: options._.slice(1) }, subCommands);
+    }
+
+    return false;
+  };
+
+  return checkCommand(options, commandMap);
+};
+
+const SKIP_CONFIG_VALIDATION = {
+  init: { target: true },
+  auth: { target: true },
+};
+
+const loadConfigMiddleware = async options => {
+  // Skip this when no command is provided
+  if (!options._.length) {
+    return;
+  }
+
+  const maybeValidateConfig = () => {
+    if (
+      !isTargetedCommand(options, SKIP_CONFIG_VALIDATION) &&
+      !validateConfig()
+    ) {
+      process.exit(EXIT_CODES.ERROR);
+    }
+  };
+
+  if (configFileExists(true) && options.config) {
+    logger.error(
+      i18n(`${i18nKey}.loadConfigMiddleware.configFileExists`, {
+        configPath: getConfigPath(),
+      })
+    );
+    process.exit(EXIT_CODES.ERROR);
+  } else if (!options._.includes('init')) {
+    const { config: configPath } = options;
+    loadConfig(configPath, options);
+  }
+
+  maybeValidateConfig();
+};
+
+const checkAndWarnGitInclusionMiddleware = options => {
+  // Skip this when no command is provided
+  if (!options._.length) {
+    return;
+  }
+  checkAndWarnGitInclusion(getConfigPath());
+};
+
+const accountsSubCommands = {
+  target: false,
+  subCommands: {
+    clean: { target: true },
+    list: { target: true },
+    ls: { target: true },
+    remove: { target: true },
+  },
+};
+const sandboxesSubCommands = {
+  target: false,
+  subCommands: {
+    delete: { target: true },
+  },
+};
+
+const SKIP_ACCOUNT_VALIDATION = {
+  init: { target: true },
+  auth: { target: true },
+  account: accountsSubCommands,
+  accounts: accountsSubCommands,
+  sandbox: sandboxesSubCommands,
+  sandboxes: sandboxesSubCommands,
+};
+
+const validateAccountOptions = async options => {
+  // Skip this when no command is provided
+  if (!options._.length) {
+    return;
+  }
+
+  let validAccount = true;
+  if (!isTargetedCommand(options, SKIP_ACCOUNT_VALIDATION)) {
+    validAccount = await validateAccount(options);
+  }
+
+  if (!validAccount) {
+    process.exit(EXIT_CODES.ERROR);
+  }
+};
+
 const argv = yargs
   .usage('The command line interface to interact with HubSpot.')
-  .middleware([setLogLevel, setRequestHeaders])
+  // loadConfigMiddleware loads the new hidden config for all commands
+  .middleware([
+    setLogLevel,
+    setRequestHeaders,
+    loadConfigMiddleware,
+    injectAccountIdMiddleware,
+    checkAndWarnGitInclusionMiddleware,
+    validateAccountOptions,
+  ])
   .exitProcess(false)
   .fail(handleFailure)
-  .option('debug', {
-    alias: 'd',
-    default: false,
-    describe: 'Set log level to debug',
-    type: 'boolean',
-  })
   .option('noHyperlinks', {
     default: false,
     describe: 'prevent hyperlinks from displaying in the ui',
@@ -171,9 +293,9 @@ const argv = yargs
   .command(createCommand)
   .command(fetchCommand)
   .command(filemanagerCommand)
-  .command(secretsCommand)
+  .command(secretCommands)
   .command(customObjectCommand)
-  .command(functionsCommand)
+  .command(functionCommands)
   .command({
     ...listCommand,
     aliases: 'ls',
@@ -184,14 +306,15 @@ const argv = yargs
   .command(themeCommand)
   .command(moduleCommand)
   .command(configCommand)
-  .command(accountsCommand)
+  .command(accountCommands)
   .command(sandboxesCommand)
   .command(feedbackCommand)
   .command(doctorCommand)
+  .command(completionCommand)
   .help()
+  .alias('h', 'help')
   .recommendCommands()
   .demandCommand(1, '')
-  .completion()
   .wrap(getTerminalWidth())
   .strict().argv;
 

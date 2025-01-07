@@ -20,13 +20,13 @@ const { PROJECT_CONFIG_FILE } = require('./constants');
 const SpinniesManager = require('./ui/SpinniesManager');
 const DevServerManager = require('./DevServerManager');
 const { EXIT_CODES } = require('./enums/exitCodes');
-const { getProjectDetailUrl } = require('./projects');
+const { getProjectDetailUrl } = require('./projects/urls');
 const { getAccountHomeUrl } = require('./localDev');
 const {
   CONFIG_FILES,
   COMPONENT_TYPES,
   getAppCardConfigs,
-} = require('./projectStructure');
+} = require('./projects/structure');
 const {
   UI_COLORS,
   uiCommandReference,
@@ -280,10 +280,8 @@ class LocalDevManager {
   }
 
   async checkPublicAppInstallation() {
-    const {
-      isInstalledWithScopeGroups,
-      previouslyAuthorizedScopeGroups,
-    } = await this.getActiveAppInstallationData();
+    const { isInstalledWithScopeGroups, previouslyAuthorizedScopeGroups } =
+      await this.getActiveAppInstallationData();
 
     const isReinstall = previouslyAuthorizedScopeGroups.length > 0;
 
@@ -364,7 +362,7 @@ class LocalDevManager {
   monitorConsoleOutput() {
     const originalStdoutWrite = process.stdout.write.bind(process.stdout);
 
-    process.stdout.write = function(chunk, encoding, callback) {
+    process.stdout.write = function (chunk, encoding, callback) {
       // Reset the most recently logged warning
       if (
         this.mostRecentUploadWarning &&

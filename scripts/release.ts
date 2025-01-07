@@ -51,8 +51,8 @@ const PRERELEASE_IDENTIFIER = {
 const REGISTRY = publishConfig.registry;
 
 type ReleaseArguments = {
-  versionIncrement: typeof VERSION_INCREMENT_OPTIONS[number];
-  tag: typeof TAG_OPTIONS[number];
+  versionIncrement: (typeof VERSION_INCREMENT_OPTIONS)[number];
+  tag: (typeof TAG_OPTIONS)[number];
   dryRun?: boolean;
 };
 
@@ -62,7 +62,7 @@ type DistTags = {
   [TAG.EXPERIMENTAL]: string;
 };
 
-type Tag = typeof TAG_OPTIONS[number];
+type Tag = (typeof TAG_OPTIONS)[number];
 
 async function getGitBranch(): Promise<string> {
   const { stdout } = await exec('git rev-parse --abbrev-ref HEAD');
@@ -191,10 +191,8 @@ async function handler({
     process.exit(EXIT_CODES.ERROR);
   }
 
-  const {
-    next: currentNextTag,
-    experimental: currentExperimentalTag,
-  } = await getDistTags();
+  const { next: currentNextTag, experimental: currentExperimentalTag } =
+    await getDistTags();
 
   if (!isExperimental && currentNextTag !== localVersion) {
     logger.error(

@@ -1,21 +1,20 @@
-// @ts-nocheck
-const open = require('open');
-const { getHubSpotWebsiteOrigin } = require('@hubspot/local-dev-lib/urls');
-const { logger } = require('@hubspot/local-dev-lib/logger');
-const { promptUser } = require('./promptUtils');
-const { i18n } = require('../lang');
-const { EXIT_CODES } = require('../enums/exitCodes');
+import open from 'open';
+import { getHubSpotWebsiteOrigin } from '@hubspot/local-dev-lib/urls';
+import { logger } from '@hubspot/local-dev-lib/logger';
+import { promptUser } from './promptUtils';
+import { i18n } from '../lang';
+import { EXIT_CODES } from '../enums/exitCodes';
 
 const i18nKey = 'lib.prompts.installPublicAppPrompt';
 
-const installPublicAppPrompt = async (
-  env,
-  targetAccountId,
-  clientId,
-  scopes,
-  redirectUrls,
+export async function installPublicAppPrompt(
+  env: string,
+  targetAccountId: number,
+  clientId: number,
+  scopes: string[],
+  redirectUrls: string[],
   isReinstall = false
-) => {
+): Promise<void> {
   logger.log('');
   if (isReinstall) {
     logger.log(i18n(`${i18nKey}.reinstallExplanation`));
@@ -23,7 +22,9 @@ const installPublicAppPrompt = async (
     logger.log(i18n(`${i18nKey}.explanation`));
   }
 
-  const { shouldOpenBrowser } = await promptUser({
+  const { shouldOpenBrowser } = await promptUser<{
+    shouldOpenBrowser: boolean;
+  }>({
     name: 'shouldOpenBrowser',
     type: 'confirm',
     message: i18n(
@@ -47,6 +48,4 @@ const installPublicAppPrompt = async (
     `&redirect_uri=${encodeURIComponent(redirectUrls[0])}`;
 
   open(url);
-};
-
-module.exports = { installPublicAppPrompt };
+}

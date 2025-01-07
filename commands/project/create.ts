@@ -2,11 +2,9 @@
 const {
   addAccountOptions,
   addConfigOptions,
-  getAccountId,
   addUseEnvironmentOptions,
 } = require('../../lib/commonOpts');
 const { trackCommandUsage } = require('../../lib/usageTracking');
-const { loadAndValidateOptions } = require('../../lib/validation');
 const { getCwd } = require('@hubspot/local-dev-lib/path');
 const path = require('path');
 const chalk = require('chalk');
@@ -28,9 +26,7 @@ exports.command = 'create';
 exports.describe = uiBetaTag(i18n(`${i18nKey}.describe`), false);
 
 exports.handler = async options => {
-  await loadAndValidateOptions(options);
-
-  const accountId = getAccountId(options);
+  const { derivedAccountId } = options;
 
   const hasCustomTemplateSource = Boolean(options.templateSource);
 
@@ -43,15 +39,19 @@ exports.handler = async options => {
     githubRef = releaseData.tag_name;
   }
 
-  const { name, template, location } = await createProjectPrompt(
+  const { name, template, dest } = await createProjectPrompt(
     githubRef,
     options
   );
 
-  trackCommandUsage('project-create', { type: template.name }, accountId);
+  trackCommandUsage(
+    'project-create',
+    { type: template.name },
+    derivedAccountId
+  );
 
   await createProjectConfig(
-    path.resolve(getCwd(), options.location || location),
+    path.resolve(getCwd(), options.dest || dest),
     options.name || name,
     template,
     options.templateSource,
@@ -74,15 +74,15 @@ exports.builder = yargs => {
       describe: i18n(`${i18nKey}.options.name.describe`),
       type: 'string',
     },
-    location: {
-      describe: i18n(`${i18nKey}.options.location.describe`),
+    dest: {
+      describe: i18n(`${i18nKey}.options.dest.describe`),
       type: 'string',
     },
     template: {
       describe: i18n(`${i18nKey}.options.template.describe`),
       type: 'string',
     },
-    templateSource: {
+    'template-source': {
       describe: i18n(`${i18nKey}.options.templateSource.describe`),
       type: 'string',
     },

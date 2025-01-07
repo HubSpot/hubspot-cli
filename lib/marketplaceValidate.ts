@@ -1,18 +1,25 @@
-// @ts-nocheck
-const chalk = require('chalk');
-
-const { logger } = require('@hubspot/local-dev-lib/logger');
-const {
+import chalk from 'chalk';
+import {
   requestValidation,
   getValidationStatus,
   getValidationResults,
-} = require('@hubspot/local-dev-lib/api/marketplaceValidation');
-const { i18n } = require('./lang');
-const { EXIT_CODES } = require('./enums/exitCodes');
+} from '@hubspot/local-dev-lib/api/marketplaceValidation';
+import { logger } from '@hubspot/local-dev-lib/logger';
+
+import { i18n } from './lang';
+import { EXIT_CODES } from './enums/exitCodes';
+import {
+  Check,
+  GetValidationResultsResponse,
+} from '@hubspot/local-dev-lib/types/MarketplaceValidation';
 
 const SLEEP_TIME = 2000;
 
-const kickOffValidation = async (accountId, assetType, src) => {
+export async function kickOffValidation(
+  accountId: number,
+  assetType: string,
+  src: string
+): Promise<number> {
   const requestGroup = 'EXTERNAL_DEVELOPER';
   try {
     const { data: requestResult } = await requestValidation(accountId, {
@@ -25,9 +32,12 @@ const kickOffValidation = async (accountId, assetType, src) => {
     logger.debug(err);
     process.exit(EXIT_CODES.ERROR);
   }
-};
+}
 
-const pollForValidationFinish = async (accountId, validationId) => {
+export async function pollForValidationFinish(
+  accountId: number,
+  validationId: string
+): Promise<void> {
   try {
     const checkValidationStatus = async () => {
       const { data: validationStatus } = await getValidationStatus(accountId, {
@@ -44,9 +54,12 @@ const pollForValidationFinish = async (accountId, validationId) => {
     logger.debug(err);
     process.exit(EXIT_CODES.ERROR);
   }
-};
+}
 
-const fetchValidationResults = async (accountId, validationId) => {
+export async function fetchValidationResults(
+  accountId: number,
+  validationId: string
+): Promise<GetValidationResultsResponse> {
   try {
     const { data: validationResults } = await getValidationResults(accountId, {
       validationId,
@@ -56,9 +69,12 @@ const fetchValidationResults = async (accountId, validationId) => {
     logger.debug(err);
     process.exit(EXIT_CODES.ERROR);
   }
-};
+}
 
-const processValidationErrors = (i18nKey, validationResults) => {
+export function processValidationErrors(
+  i18nKey: string,
+  validationResults: GetValidationResultsResponse
+): void {
   if (validationResults.errors.length) {
     const { assetPath, errors } = validationResults;
 
@@ -75,72 +91,73 @@ const processValidationErrors = (i18nKey, validationResults) => {
     });
     process.exit(EXIT_CODES.ERROR);
   }
+}
+
+function displayFileInfo(
+  file: string,
+  line: number | null,
+  i18nKey: string
+): void {
+  if (file) {
+    logger.log(
+      i18n(`${i18nKey}.results.warnings.file`, {
+        file,
+      })
+    );
+  }
+  if (line) {
+    logger.log(
+      i18n(`${i18nKey}.results.warnings.lineNumber`, {
+        line,
+      })
+    );
+  }
+}
+
+type Result = {
+  status: string;
+  results: Check[];
 };
 
-const displayValidationResults = (i18nKey, validationResults) => {
-  const displayResults = checks => {
-    const displayFileInfo = (file, line) => {
-      if (file) {
-        logger.log(
-          i18n(`${i18nKey}.results.warnings.file`, {
-            file,
-          })
-        );
-      }
-      if (line) {
-        logger.log(
-          i18n(`${i18nKey}.results.warnings.lineNumber`, {
-            line,
-          })
-        );
-      }
-      return null;
-    };
+type ValidationType = keyof GetValidationResultsResponse['results'];
 
-    if (checks) {
-      const { status, results } = checks;
+function displayResults(checks: Result, i18nKey: string): void {
+  if (checks) {
+    const { status, results } = checks;
 
-      if (status === 'FAIL') {
-        const failedValidations = results.filter(
-          test => test.status === 'FAIL'
-        );
-        const warningValidations = results.filter(
-          test => test.status === 'WARN'
-        );
-        failedValidations.forEach(val => {
-          logger.error(`${val.message}`);
-          displayFileInfo(val.file, val.line);
-        });
-        warningValidations.forEach(val => {
-          logger.warn(`${val.message}`);
-          displayFileInfo(val.file, val.line);
-        });
-      }
-      if (status === 'PASS') {
-        logger.success(i18n(`${i18nKey}.results.noErrors`));
-
-        results.forEach(test => {
-          if (test.status === 'WARN') {
-            logger.warn(`${test.message}`);
-            displayFileInfo(test.file, test.line);
-          }
-        });
-      }
+    if (status === 'FAIL') {
+      const failedValidations = results.filter(test => test.status === 'FAIL');
+      const warningValidations = results.filter(test => test.status === 'WARN');
+      failedValidations.forEach(val => {
+        logger.error(`${val.message}`);
+        displayFileInfo(val.file, val.line, i18nKey);
+      });
+      warningValidations.forEach(val => {
+        logger.warn(`${val.message}`);
+        displayFileInfo(val.file, val.line, i18nKey);
+      });
     }
-    return null;
-  };
+    if (status === 'PASS') {
+      logger.success(i18n(`${i18nKey}.results.noErrors`));
 
+      results.forEach(test => {
+        if (test.status === 'WARN') {
+          logger.warn(`${test.message}`);
+          displayFileInfo(test.file, test.line, i18nKey);
+        }
+      });
+    }
+  }
+  return;
+}
+
+export function displayValidationResults(
+  i18nKey: string,
+  validationResults: GetValidationResultsResponse
+) {
   Object.keys(validationResults.results).forEach(type => {
     logger.log(chalk.bold(i18n(`${i18nKey}.results.${type.toLowerCase()}`)));
-    displayResults(validationResults.results[type]);
+    displayResults(validationResults.results[type as ValidationType], i18nKey);
     logger.log();
   });
-};
-
-module.exports = {
-  kickOffValidation,
-  pollForValidationFinish,
-  fetchValidationResults,
-  processValidationErrors,
-  displayValidationResults,
-};
+}

@@ -28,14 +28,14 @@ const {
 const {
   addConfigOptions,
   addAccountOptions,
-  addModeOptions,
+  addCmsPublishModeOptions,
   addUseEnvironmentOptions,
-  getAccountId,
-  getMode,
+  addGlobalOptions,
+  getCmsPublishMode,
 } = require('../lib/commonOpts');
 const { uploadPrompt } = require('../lib/prompts/uploadPrompt');
-const { cleanUploadPrompt } = require('../lib/prompts/cleanUploadPrompt');
-const { validateMode, loadAndValidateOptions } = require('../lib/validation');
+const { confirmPrompt } = require('../lib/prompts/promptUtils');
+const { validateCmsPublishMode } = require('../lib/validation');
 const { trackCommandUsage } = require('../lib/usageTracking');
 const { getUploadableFileList } = require('../lib/upload');
 
@@ -48,7 +48,7 @@ const {
   cleanupTmpDirSync,
 } = require('@hubspot/local-dev-lib/cms/handleFieldsJS');
 
-exports.command = 'upload [--src] [--dest]';
+exports.command = 'upload [src] [dest]';
 exports.describe = i18n(`${i18nKey}.describe`);
 
 const logThemePreview = (filePath, accountId) => {
@@ -64,14 +64,12 @@ const logThemePreview = (filePath, accountId) => {
 };
 
 exports.handler = async options => {
-  await loadAndValidateOptions(options);
-
-  if (!validateMode(options)) {
+  if (!validateCmsPublishMode(options)) {
     process.exit(EXIT_CODES.WARNING);
   }
 
-  const accountId = getAccountId(options);
-  const mode = getMode(options);
+  const { derivedAccountId } = options;
+  const cmsPublishMode = getCmsPublishMode(options);
 
   const uploadPromptAnswers = await uploadPrompt(options);
   const src = options.src || uploadPromptAnswers.src;
@@ -126,8 +124,8 @@ exports.handler = async options => {
   const normalizedDest = convertToUnixPath(dest);
   trackCommandUsage(
     'upload',
-    { mode, type: stats.isFile() ? 'file' : 'folder' },
-    accountId
+    { mode: cmsPublishMode, type: stats.isFile() ? 'file' : 'folder' },
+    derivedAccountId
   );
   const srcDestIssues = await validateSrcAndDestPaths(
     { isLocal: true, path: src },
@@ -157,20 +155,20 @@ exports.handler = async options => {
       return;
     }
     upload(
-      accountId,
+      derivedAccountId,
       absoluteSrcPath,
       normalizedDest,
-      getFileMapperQueryValues(mode, options)
+      getFileMapperQueryValues(cmsPublishMode, options)
     )
       .then(() => {
         logger.success(
           i18n(`${i18nKey}.success.fileUploaded`, {
-            accountId,
+            accountId: derivedAccountId,
             dest: normalizedDest,
             src,
           })
         );
-        logThemePreview(src, accountId);
+        logThemePreview(src, derivedAccountId);
       })
       .catch(error => {
         logger.error(
@@ -182,7 +180,7 @@ exports.handler = async options => {
         logError(
           error,
           new ApiErrorContext({
-            accountId,
+            accountId: derivedAccountId,
             request: normalizedDest,
             payload: src,
           })
@@ -199,7 +197,7 @@ exports.handler = async options => {
   } else {
     logger.log(
       i18n(`${i18nKey}.uploading`, {
-        accountId,
+        accountId: derivedAccountId,
         dest,
         src,
       })
@@ -215,18 +213,27 @@ exports.handler = async options => {
       //  If clean is true, will first delete the dest folder and then upload src. Cleans up files that only exist on HS.
       let cleanUpload = options.force;
       if (!options.force) {
-        cleanUpload = await cleanUploadPrompt(accountId, dest);
+        cleanUpload = await confirmPrompt(
+          i18n(`${i18nKey}.confirmCleanUpload`, {
+            accountId: derivedAccountId,
+            path: dest,
+          }),
+          { defaultAnswer: false }
+        );
       }
       if (cleanUpload) {
         try {
-          await deleteFile(accountId, dest);
+          await deleteFile(derivedAccountId, dest);
           logger.log(
-            i18n(`${i18nKey}.cleaning`, { accountId, filePath: dest })
+            i18n(`${i18nKey}.cleaning`, {
+              accountId: derivedAccountId,
+              filePath: dest,
+            })
           );
         } catch (error) {
           logger.error(
             i18n(`${i18nKey}.errors.deleteFailed`, {
-              accountId,
+              accountId: derivedAccountId,
               path: dest,
             })
           );
@@ -234,11 +241,11 @@ exports.handler = async options => {
       }
     }
     uploadFolder(
-      accountId,
+      derivedAccountId,
       absoluteSrcPath,
       dest,
       {
-        mode,
+        cmsPublishMode,
       },
       options,
       filePaths
@@ -250,7 +257,7 @@ exports.handler = async options => {
               dest,
             })
           );
-          logThemePreview(src, accountId);
+          logThemePreview(src, derivedAccountId);
         } else {
           logger.error(
             i18n(`${i18nKey}.errors.someFilesFailed`, {
@@ -268,7 +275,7 @@ exports.handler = async options => {
           })
         );
         logError(error, {
-          accountId,
+          accountId: derivedAccountId,
         });
         process.exit(EXIT_CODES.WARNING);
       });
@@ -276,11 +283,6 @@ exports.handler = async options => {
 };
 
 exports.builder = yargs => {
-  addConfigOptions(yargs);
-  addAccountOptions(yargs);
-  addModeOptions(yargs, { write: true });
-  addUseEnvironmentOptions(yargs);
-
   yargs.positional('src', {
     describe: i18n(`${i18nKey}.positionals.src.describe`),
     type: 'string',
@@ -315,5 +317,12 @@ exports.builder = yargs => {
     type: 'boolean',
     default: false,
   });
+
+  addConfigOptions(yargs);
+  addAccountOptions(yargs);
+  addCmsPublishModeOptions(yargs, { write: true });
+  addUseEnvironmentOptions(yargs);
+  addGlobalOptions(yargs);
+
   return yargs;
 };

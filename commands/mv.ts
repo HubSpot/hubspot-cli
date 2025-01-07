@@ -7,11 +7,10 @@ const {
   addConfigOptions,
   addAccountOptions,
   addUseEnvironmentOptions,
-  getAccountId,
+  addGlobalOptions,
 } = require('../lib/commonOpts');
 const { trackCommandUsage } = require('../lib/usageTracking');
 const { isPathFolder } = require('../lib/filesystem');
-const { loadAndValidateOptions } = require('../lib/validation');
 const { i18n } = require('../lib/lang');
 const { uiBetaTag } = require('../lib/ui');
 
@@ -30,18 +29,19 @@ exports.command = 'mv <srcPath> <destPath>';
 exports.describe = uiBetaTag(i18n(`${i18nKey}.describe`), false);
 
 exports.handler = async options => {
-  await loadAndValidateOptions(options);
+  const { srcPath, destPath, derivedAccountId } = options;
 
-  const { srcPath, destPath } = options;
-  const accountId = getAccountId(options);
-
-  trackCommandUsage('mv', null, accountId);
+  trackCommandUsage('mv', null, derivedAccountId);
 
   try {
-    await moveFile(accountId, srcPath, getCorrectedDestPath(srcPath, destPath));
+    await moveFile(
+      derivedAccountId,
+      srcPath,
+      getCorrectedDestPath(srcPath, destPath)
+    );
     logger.success(
       i18n(`${i18nKey}.move`, {
-        accountId,
+        accountId: derivedAccountId,
         destPath,
         srcPath,
       })
@@ -49,7 +49,7 @@ exports.handler = async options => {
   } catch (error) {
     logger.error(
       i18n(`${i18nKey}.errors.moveFailed`, {
-        accountId,
+        accountId: derivedAccountId,
         destPath,
         srcPath,
       })
@@ -65,7 +65,7 @@ exports.handler = async options => {
       logError(
         error,
         new ApiErrorContext({
-          accountId,
+          accountId: derivedAccountId,
           srcPath,
           destPath,
         })
@@ -75,9 +75,6 @@ exports.handler = async options => {
 };
 
 exports.builder = yargs => {
-  addConfigOptions(yargs);
-  addAccountOptions(yargs);
-  addUseEnvironmentOptions(yargs);
   yargs.positional('srcPath', {
     describe: 'Remote hubspot path',
     type: 'string',
@@ -86,5 +83,10 @@ exports.builder = yargs => {
     describe: 'Remote hubspot path',
     type: 'string',
   });
+
+  addConfigOptions(yargs);
+  addAccountOptions(yargs);
+  addUseEnvironmentOptions(yargs);
+  addGlobalOptions(yargs);
   return yargs;
 };

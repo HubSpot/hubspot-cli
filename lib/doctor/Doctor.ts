@@ -51,7 +51,8 @@ export class Doctor {
       text: i18n(`${i18nKey}.runningDiagnostics`),
     });
 
-    this.diagnosticInfo = await this.diagnosticInfoBuilder.generateDiagnosticInfo();
+    this.diagnosticInfo =
+      await this.diagnosticInfoBuilder.generateDiagnosticInfo();
 
     this.projectConfig = this.diagnosticInfo?.project.config;
 
@@ -279,7 +280,7 @@ export class Doctor {
       const packageDirName = path.dirname(packageFile);
       try {
         const needsInstall = await hasMissingPackages(
-          path.join(this.projectConfig?.projectDir, packageDirName)
+          path.join(this.projectConfig?.projectDir || '', packageDirName)
         );
 
         if (needsInstall) {
@@ -343,7 +344,10 @@ export class Doctor {
   private async checkProjectConfigJsonFiles(): Promise<void> {
     let foundError = false;
     for (const jsonFile of this.diagnosticInfo?.jsonFiles || []) {
-      const fileToCheck = path.join(this.projectConfig?.projectDir, jsonFile);
+      const fileToCheck = path.join(
+        this.projectConfig?.projectDir || '',
+        jsonFile
+      );
       if (!(await this.isValidJsonFile(fileToCheck))) {
         foundError = true;
         this.diagnosis?.addProjectSection({

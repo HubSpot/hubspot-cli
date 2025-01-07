@@ -1,7 +1,8 @@
 // @ts-nocheck
+const { addConfigOptions } = require('../../lib/commonOpts');
 const { logger } = require('@hubspot/local-dev-lib/logger');
 const {
-  getConfig,
+  loadConfig,
   getConfigPath,
   deleteAccount,
   getConfigDefaultAccount,
@@ -12,19 +13,15 @@ const {
 const { trackCommandUsage } = require('../../lib/usageTracking');
 const { i18n } = require('../../lib/lang');
 const { selectAccountFromConfig } = require('../../lib/prompts/accountsPrompt');
-const { loadAndValidateOptions } = require('../../lib/validation');
 
-const i18nKey = 'commands.accounts.subcommands.remove';
+const i18nKey = 'commands.account.subcommands.remove';
 
-exports.command = 'remove [--account]';
+exports.command = 'remove [account]';
 exports.describe = i18n(`${i18nKey}.describe`);
 
 exports.handler = async options => {
-  await loadAndValidateOptions(options, false);
-
-  let config = getConfig();
-
-  let accountToRemove = options.account;
+  const { account } = options;
+  let accountToRemove = account;
 
   if (accountToRemove && !getAccountIdFromConfig(accountToRemove)) {
     logger.error(
@@ -37,7 +34,6 @@ exports.handler = async options => {
 
   if (!accountToRemove || !getAccountIdFromConfig(accountToRemove)) {
     accountToRemove = await selectAccountFromConfig(
-      config,
       i18n(`${i18nKey}.prompts.selectAccountToRemove`)
     );
   }
@@ -58,27 +54,25 @@ exports.handler = async options => {
   );
 
   // Get updated version of the config
-  config = getConfig();
+  loadConfig(getConfigPath(), options);
 
   if (accountToRemove === currentDefaultAccount) {
     logger.log();
     logger.log(i18n(`${i18nKey}.logs.replaceDefaultAccount`));
-    const newDefaultAccount = await selectAccountFromConfig(config);
+    const newDefaultAccount = await selectAccountFromConfig();
     updateDefaultAccount(newDefaultAccount);
   }
 };
 
 exports.builder = yargs => {
-  yargs.option('account', {
+  addConfigOptions(yargs);
+  yargs.positional('account', {
     describe: i18n(`${i18nKey}.options.account.describe`),
     type: 'string',
   });
   yargs.example([
     ['$0 accounts remove', i18n(`${i18nKey}.examples.default`)],
-    [
-      '$0 accounts remove --account=MyAccount',
-      i18n(`${i18nKey}.examples.byName`),
-    ],
+    ['$0 accounts remove MyAccount', i18n(`${i18nKey}.examples.byName`)],
   ]);
 
   return yargs;

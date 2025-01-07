@@ -1,25 +1,56 @@
-// @ts-nocheck
-const open = require('open');
-const {
+import open from 'open';
+import {
   OAUTH_SCOPES,
   DEFAULT_OAUTH_SCOPES,
-} = require('@hubspot/local-dev-lib/constants/auth');
-const { deleteEmptyConfigFile } = require('@hubspot/local-dev-lib/config');
-const { getHubSpotWebsiteOrigin } = require('@hubspot/local-dev-lib/urls');
-const { logger } = require('@hubspot/local-dev-lib/logger');
-const { promptUser } = require('./promptUtils');
-const { getCliAccountNamePromptConfig } = require('./accountNamePrompt');
-const { i18n } = require('../lang');
-const { uiInfoSection } = require('../ui');
-const { EXIT_CODES } = require('../enums/exitCodes');
+} from '@hubspot/local-dev-lib/constants/auth';
+import { deleteEmptyConfigFile } from '@hubspot/local-dev-lib/config';
+import { getHubSpotWebsiteOrigin } from '@hubspot/local-dev-lib/urls';
+import { logger } from '@hubspot/local-dev-lib/logger';
+import { promptUser } from './promptUtils';
+import { getCliAccountNamePromptConfig } from './accountNamePrompt';
+import { i18n } from '../lang';
+import { uiInfoSection } from '../ui';
+import { EXIT_CODES } from '../enums/exitCodes';
+import { PromptConfig } from '../../types/Prompts';
 
 const i18nKey = 'lib.prompts.personalAccessKeyPrompt';
+
+type PersonalAccessKeyPromptResponse = {
+  personalAccessKey: string;
+  env: string;
+};
+
+type AccountIdPromptResponse = {
+  accountId: number;
+};
+
+type ClientIdPromptResponse = {
+  clientId: string;
+};
+
+type ClientSecretPromptResponse = {
+  clientSecret: string;
+};
+
+type PersonalAccessKeyBrowserOpenPrepResponse = {
+  personalAcessKeyBrowserOpenPrep: boolean;
+};
+
+type ScopesPromptResponse = {
+  scopes: string[];
+};
 
 /**
  * Displays notification to user that we are about to open the browser,
  * then opens their browser to the personal-access-key shortlink
  */
-const personalAccessKeyPrompt = async ({ env, account } = {}) => {
+export async function personalAccessKeyPrompt({
+  env,
+  account,
+}: {
+  env: string;
+  account?: string;
+}): Promise<PersonalAccessKeyPromptResponse> {
   const websiteOrigin = getHubSpotWebsiteOrigin(env);
   let url = `${websiteOrigin}/l/personal-access-key`;
   if (process.env.BROWSER !== 'none') {
@@ -29,9 +60,10 @@ const personalAccessKeyPrompt = async ({ env, account } = {}) => {
     if (account) {
       url = `${websiteOrigin}/personal-access-key/${account}`;
     }
-    const { personalAcessKeyBrowserOpenPrep: shouldOpen } = await promptUser([
-      PERSONAL_ACCESS_KEY_BROWSER_OPEN_PREP,
-    ]);
+    const { personalAcessKeyBrowserOpenPrep: shouldOpen } =
+      await promptUser<PersonalAccessKeyBrowserOpenPrepResponse>([
+        PERSONAL_ACCESS_KEY_BROWSER_OPEN_PREP,
+      ]);
     if (shouldOpen) {
       open(url, { url: true });
     } else {
@@ -41,30 +73,31 @@ const personalAccessKeyPrompt = async ({ env, account } = {}) => {
   }
 
   logger.log(i18n(`${i18nKey}.logs.openingWebBrowser`, { url }));
-  const { personalAccessKey } = await promptUser(PERSONAL_ACCESS_KEY);
+  const { personalAccessKey } =
+    await promptUser<PersonalAccessKeyPromptResponse>(PERSONAL_ACCESS_KEY);
 
   return {
     personalAccessKey,
     env,
   };
-};
+}
 
-const ACCOUNT_ID = {
+const ACCOUNT_ID: PromptConfig<AccountIdPromptResponse> = {
   name: 'accountId',
   message: i18n(`${i18nKey}.enterAccountId`),
   type: 'number',
-  validate(val) {
-    if (!Number.isNaN(val) && val > 0) {
+  validate(val?: number) {
+    if (!Number.isNaN(val) && val !== undefined && val > 0) {
       return true;
     }
     return i18n(`${i18nKey}.errors.invalidAccountId`);
   },
 };
 
-const CLIENT_ID = {
+const CLIENT_ID: PromptConfig<ClientIdPromptResponse> = {
   name: 'clientId',
   message: i18n(`${i18nKey}.enterClientId`),
-  validate(val) {
+  validate(val?: string) {
     if (typeof val !== 'string') {
       return i18n(`${i18nKey}.errors.invalidOauthClientId`);
     } else if (val.length !== 36) {
@@ -74,10 +107,10 @@ const CLIENT_ID = {
   },
 };
 
-const CLIENT_SECRET = {
+const CLIENT_SECRET: PromptConfig<ClientSecretPromptResponse> = {
   name: 'clientSecret',
   message: i18n(`${i18nKey}.enterClientSecret`),
-  validate(val) {
+  validate(val?: string) {
     if (typeof val !== 'string') {
       return i18n(`${i18nKey}.errors.invalidOauthClientSecret`);
     } else if (val.length !== 36) {
@@ -89,16 +122,17 @@ const CLIENT_SECRET = {
   },
 };
 
-const PERSONAL_ACCESS_KEY_BROWSER_OPEN_PREP = {
-  name: 'personalAcessKeyBrowserOpenPrep',
-  type: 'confirm',
-  message: i18n(`${i18nKey}.personalAccessKeyBrowserOpenPrompt`),
-};
+const PERSONAL_ACCESS_KEY_BROWSER_OPEN_PREP: PromptConfig<PersonalAccessKeyBrowserOpenPrepResponse> =
+  {
+    name: 'personalAcessKeyBrowserOpenPrep',
+    type: 'confirm',
+    message: i18n(`${i18nKey}.personalAccessKeyBrowserOpenPrompt`),
+  };
 
-const PERSONAL_ACCESS_KEY = {
+const PERSONAL_ACCESS_KEY: PromptConfig<PersonalAccessKeyPromptResponse> = {
   name: 'personalAccessKey',
   message: i18n(`${i18nKey}.enterPersonalAccessKey`),
-  transformer: val => {
+  transformer: (val?: string) => {
     if (!val) return val;
     let res = '';
     for (let i = 0; i < val.length; i++) {
@@ -106,7 +140,7 @@ const PERSONAL_ACCESS_KEY = {
     }
     return res;
   },
-  validate(val) {
+  validate(val?: string) {
     if (!val || typeof val !== 'string') {
       return i18n(`${i18nKey}.errors.invalidPersonalAccessKey`);
     } else if (val[0] === '•') {
@@ -116,29 +150,18 @@ const PERSONAL_ACCESS_KEY = {
   },
 };
 
-const SCOPES = {
+const SCOPES: PromptConfig<ScopesPromptResponse> = {
   type: 'checkbox',
   name: 'scopes',
   message: i18n(`${i18nKey}.selectScopes`),
-  default: DEFAULT_OAUTH_SCOPES,
-  choices: OAUTH_SCOPES,
+  default: [...DEFAULT_OAUTH_SCOPES],
+  choices: [...OAUTH_SCOPES],
 };
 
-const OAUTH_FLOW = [
+export const OAUTH_FLOW = [
   getCliAccountNamePromptConfig(),
   ACCOUNT_ID,
   CLIENT_ID,
   CLIENT_SECRET,
   SCOPES,
 ];
-
-module.exports = {
-  personalAccessKeyPrompt,
-  CLIENT_ID,
-  CLIENT_SECRET,
-  ACCOUNT_ID,
-  SCOPES,
-  PERSONAL_ACCESS_KEY,
-  // Flows
-  OAUTH_FLOW,
-};

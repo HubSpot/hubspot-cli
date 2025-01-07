@@ -1,22 +1,22 @@
 import chalk from 'chalk';
 
 export const helpers: { [key: string]: (stringValue: string) => string } = {
-  bold: function(stringValue: string): string {
+  bold: function (stringValue: string): string {
     return chalk.bold(stringValue);
   },
-  yellow: function(stringValue: string): string {
+  yellow: function (stringValue: string): string {
     return chalk.reset.yellow(stringValue);
   },
-  green: function(stringValue: string): string {
+  green: function (stringValue: string): string {
     return chalk.reset.green(stringValue);
   },
-  red: function(stringValue: string): string {
+  red: function (stringValue: string): string {
     return chalk.reset.red(stringValue);
   },
-  cyan: function(stringValue: string): string {
+  cyan: function (stringValue: string): string {
     return chalk.cyan(stringValue);
   },
-  orange: function(stringValue: string): string {
+  orange: function (stringValue: string): string {
     return chalk.hex('#FC9900')(stringValue);
   },
 };

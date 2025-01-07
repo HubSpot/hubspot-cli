@@ -1,7 +1,6 @@
 // @ts-nocheck
 const { logger } = require('@hubspot/local-dev-lib/logger');
 const {
-  getConfig,
   getConfigPath,
   updateDefaultAccount,
   getAccountId: getAccountIdFromConfig,
@@ -10,22 +9,17 @@ const {
 const { trackCommandUsage } = require('../../lib/usageTracking');
 const { i18n } = require('../../lib/lang');
 const { selectAccountFromConfig } = require('../../lib/prompts/accountsPrompt');
-const { loadAndValidateOptions } = require('../../lib/validation');
 
-const i18nKey = 'commands.accounts.subcommands.use';
+const i18nKey = 'commands.account.subcommands.use';
 
-exports.command = 'use [--account]';
+exports.command = 'use [account]';
 exports.describe = i18n(`${i18nKey}.describe`);
 
 exports.handler = async options => {
-  await loadAndValidateOptions(options, false);
-
-  const config = getConfig();
-
   let newDefaultAccount = options.account;
 
   if (!newDefaultAccount) {
-    newDefaultAccount = await selectAccountFromConfig(config);
+    newDefaultAccount = await selectAccountFromConfig();
   } else if (!getAccountIdFromConfig(newDefaultAccount)) {
     logger.error(
       i18n(`${i18nKey}.errors.accountNotFound`, {
@@ -33,7 +27,7 @@ exports.handler = async options => {
         configPath: getConfigPath(),
       })
     );
-    newDefaultAccount = await selectAccountFromConfig(config);
+    newDefaultAccount = await selectAccountFromConfig();
   }
 
   trackCommandUsage(
@@ -52,17 +46,14 @@ exports.handler = async options => {
 };
 
 exports.builder = yargs => {
-  yargs.option('account', {
+  yargs.positional('account', {
     describe: i18n(`${i18nKey}.options.account.describe`),
     type: 'string',
   });
   yargs.example([
     ['$0 accounts use', i18n(`${i18nKey}.examples.default`)],
-    [
-      '$0 accounts use --account=MyAccount',
-      i18n(`${i18nKey}.examples.nameBased`),
-    ],
-    ['$0 accounts use --account=1234567', i18n(`${i18nKey}.examples.idBased`)],
+    ['$0 accounts use MyAccount', i18n(`${i18nKey}.examples.nameBased`)],
+    ['$0 accounts use 1234567', i18n(`${i18nKey}.examples.idBased`)],
   ]);
 
   return yargs;

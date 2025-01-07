@@ -3,14 +3,12 @@ const path = require('path');
 const {
   addAccountOptions,
   addConfigOptions,
-  getAccountId,
   addUseEnvironmentOptions,
 } = require('../../lib/commonOpts');
 const {
   trackCommandUsage,
   trackCommandMetadataUsage,
 } = require('../../lib/usageTracking');
-const { loadAndValidateOptions } = require('../../lib/validation');
 const {
   createProjectPrompt,
 } = require('../../lib/prompts/createProjectPrompt');
@@ -53,13 +51,11 @@ exports.command = 'migrate-app';
 exports.describe = uiBetaTag(i18n(`${i18nKey}.describe`), false);
 
 exports.handler = async options => {
-  await loadAndValidateOptions(options);
+  const { derivedAccountId } = options;
+  const accountConfig = getAccountConfig(derivedAccountId);
+  const accountName = uiAccountDescription(derivedAccountId);
 
-  const accountId = getAccountId(options);
-  const accountConfig = getAccountConfig(accountId);
-  const accountName = uiAccountDescription(accountId);
-
-  trackCommandUsage('migrate-app', {}, accountId);
+  trackCommandUsage('migrate-app', {}, derivedAccountId);
 
   logger.log('');
   logger.log(uiBetaTag(i18n(`${i18nKey}.header.text`), false));
@@ -88,7 +84,7 @@ exports.handler = async options => {
     'appId' in options
       ? options
       : await selectPublicAppPrompt({
-          accountId,
+          accountId: derivedAccountId,
           accountName,
           isMigratingApp: true,
         });
@@ -96,7 +92,7 @@ exports.handler = async options => {
   try {
     const { data: selectedApp } = await fetchPublicAppMetadata(
       appId,
-      accountId
+      derivedAccountId
     );
     // preventProjectMigrations returns true if we have not added app to allowlist config.
     // listingInfo will only exist for marketplace apps
@@ -107,20 +103,20 @@ exports.handler = async options => {
       process.exit(EXIT_CODES.ERROR);
     }
   } catch (error) {
-    logError(error, new ApiErrorContext({ accountId }));
+    logError(error, new ApiErrorContext({ accountId: derivedAccountId }));
     process.exit(EXIT_CODES.ERROR);
   }
 
   let projectName;
-  let projectLocation;
+  let projectDest;
   try {
-    const { name, location } = await createProjectPrompt('', options, true);
+    const { name, dest } = await createProjectPrompt('', options, true);
 
     projectName = options.name || name;
-    projectLocation = options.location || location;
+    projectDest = options.dest || dest;
 
     const { projectExists } = await ensureProjectExists(
-      accountId,
+      derivedAccountId,
       projectName,
       {
         allowCreate: false,
@@ -137,9 +133,15 @@ exports.handler = async options => {
       process.exit(EXIT_CODES.ERROR);
     }
   } catch (error) {
-    logError(error, new ApiErrorContext({ accountId }));
+    logError(error, new ApiErrorContext({ accountId: derivedAccountId }));
     process.exit(EXIT_CODES.ERROR);
   }
+
+  await trackCommandMetadataUsage(
+    'migrate-app',
+    { status: 'STARTED' },
+    derivedAccountId
+  );
 
   logger.log('');
   uiLine();
@@ -182,20 +184,20 @@ exports.handler = async options => {
     });
 
     const { data: migrateResponse } = await migrateApp(
-      accountId,
+      derivedAccountId,
       appId,
       projectName
     );
     const { id } = migrateResponse;
-    const pollResponse = await poll(checkMigrationStatus, accountId, id);
+    const pollResponse = await poll(checkMigrationStatus, derivedAccountId, id);
     const { status, project } = pollResponse;
     if (status === 'SUCCESS') {
-      const absoluteDestPath = path.resolve(getCwd(), projectLocation);
-      const { env } = getAccountConfig(accountId);
+      const absoluteDestPath = path.resolve(getCwd(), projectDest);
+      const { env } = accountConfig;
       const baseUrl = getHubSpotWebsiteOrigin(env);
 
       const { data: zippedProject } = await downloadProject(
-        accountId,
+        derivedAccountId,
         projectName,
         1
       );
@@ -205,12 +207,6 @@ exports.handler = async options => {
         sanitizeFileName(projectName),
         path.resolve(absoluteDestPath),
         { includesRootDir: true, hideLogs: true }
-      );
-
-      trackCommandMetadataUsage(
-        'migrate-app',
-        { type: projectName, assetType: appId, successful: status },
-        accountId
       );
 
       SpinniesManager.succeed('migrateApp', {
@@ -224,7 +220,7 @@ exports.handler = async options => {
       logger.log(
         uiLink(
           i18n(`${i18nKey}.projectDetailsLink`),
-          `${baseUrl}/developer-projects/${accountId}/project/${encodeURIComponent(
+          `${baseUrl}/developer-projects/${derivedAccountId}/project/${encodeURIComponent(
             project.name
           )}`
         )
@@ -232,10 +228,10 @@ exports.handler = async options => {
       process.exit(EXIT_CODES.SUCCESS);
     }
   } catch (error) {
-    trackCommandMetadataUsage(
+    await trackCommandMetadataUsage(
       'migrate-app',
-      { projectName, appId, status: 'FAILURE', error },
-      accountId
+      { status: 'FAILURE' },
+      derivedAccountId
     );
     SpinniesManager.fail('migrateApp', {
       text: i18n(`${i18nKey}.migrationStatus.failure`),
@@ -244,11 +240,17 @@ exports.handler = async options => {
     if (error.errors) {
       error.errors.forEach(logError);
     } else {
-      logError(error, new ApiErrorContext({ accountId }));
+      logError(error, new ApiErrorContext({ accountId: derivedAccountId }));
     }
 
     process.exit(EXIT_CODES.ERROR);
   }
+  await trackCommandMetadataUsage(
+    'migrate-app',
+    { status: 'SUCCESS' },
+    derivedAccountId
+  );
+  process.exit(EXIT_CODES.SUCCESS);
 };
 
 exports.builder = yargs => {
@@ -257,11 +259,11 @@ exports.builder = yargs => {
       describe: i18n(`${i18nKey}.options.name.describe`),
       type: 'string',
     },
-    location: {
-      describe: i18n(`${i18nKey}.options.location.describe`),
+    dest: {
+      describe: i18n(`${i18nKey}.options.dest.describe`),
       type: 'string',
     },
-    appId: {
+    'app-id': {
       describe: i18n(`${i18nKey}.options.appId.describe`),
       type: 'number',
     },

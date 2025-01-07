@@ -10,11 +10,10 @@ const { logError } = require('../lib/errorHandlers/index');
 const {
   addConfigOptions,
   addAccountOptions,
-  getAccountId,
+  addGlobalOptions,
 } = require('../lib/commonOpts');
 const { resolveLocalPath } = require('../lib/filesystem');
 const { trackCommandUsage } = require('../lib/usageTracking');
-const { loadAndValidateOptions } = require('../lib/validation');
 const { i18n } = require('../lib/lang');
 
 const i18nKey = 'commands.lint';
@@ -64,25 +63,23 @@ function printHublValidationResult({ file, validation }: LintResult): number {
 export const handler = async options => {
   const { path: lintPath } = options;
 
-  await loadAndValidateOptions(options);
-
-  const accountId = getAccountId(options);
+  const { derivedAccountId } = options;
   const localPath = resolveLocalPath(lintPath);
   const groupName = i18n(`${i18nKey}.groupName`, {
     path: localPath,
   });
 
-  trackCommandUsage('lint', null, accountId);
+  trackCommandUsage('lint', null, derivedAccountId);
 
   logger.group(groupName);
   let count = 0;
   try {
-    await lint(accountId, localPath, result => {
+    await lint(derivedAccountId, localPath, result => {
       count += printHublValidationResult(result);
     });
   } catch (err) {
     logger.groupEnd(groupName);
-    logError(err, { accountId });
+    logError(err, { accountId: derivedAccountId });
     process.exit(EXIT_CODES.ERROR);
   }
   logger.groupEnd(groupName);
@@ -96,6 +93,7 @@ export const handler = async options => {
 export const builder = yargs => {
   addConfigOptions(yargs);
   addAccountOptions(yargs);
+  addGlobalOptions(yargs);
   yargs.positional('path', {
     describe: i18n(`${i18nKey}.positionals.path.describe`),
     type: 'string',

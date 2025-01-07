@@ -1,23 +1,22 @@
-// @ts-nocheck
-const { logger } = require('@hubspot/local-dev-lib/logger');
-const {
+import { logger } from '@hubspot/local-dev-lib/logger';
+import {
   updateAllowUsageTracking,
-  updateDefaultMode,
+  updateDefaultCmsPublishMode,
   updateHttpTimeout,
-} = require('@hubspot/local-dev-lib/config');
-const { MODE } = require('@hubspot/local-dev-lib/constants/files');
-const { commaSeparatedValues } = require('@hubspot/local-dev-lib/text');
-const { trackCommandUsage } = require('./usageTracking');
-const { promptUser } = require('./prompts/promptUtils');
-const { i18n } = require('../lib/lang');
+} from '@hubspot/local-dev-lib/config';
+import { CmsPublishMode } from '@hubspot/local-dev-lib/types/Files';
+import { CMS_PUBLISH_MODE } from '@hubspot/local-dev-lib/constants/files';
+import { commaSeparatedValues } from '@hubspot/local-dev-lib/text';
+import { trackCommandUsage } from './usageTracking';
+import { promptUser } from './prompts/promptUtils';
+import { i18n } from '../lib/lang';
 
 const i18nKey = 'commands.config.subcommands.set.options';
 
-const enableOrDisableUsageTracking = async () => {
-  const { isEnabled } = await promptUser([
+async function enableOrDisableUsageTracking(): Promise<boolean> {
+  const { isEnabled } = await promptUser<{ isEnabled: boolean }>([
     {
       type: 'list',
-      look: false,
       name: 'isEnabled',
       pageSize: 20,
       message: i18n(`${i18nKey}.allowUsageTracking.promptMessage`),
@@ -36,12 +35,18 @@ const enableOrDisableUsageTracking = async () => {
   ]);
 
   return isEnabled;
-};
+}
 
-const setAllowUsageTracking = async ({ accountId, allowUsageTracking }) => {
-  trackCommandUsage('config-set-allow-usage-tracking', null, accountId);
+export async function setAllowUsageTracking({
+  accountId,
+  allowUsageTracking,
+}: {
+  accountId: number;
+  allowUsageTracking?: boolean;
+}): Promise<void> {
+  trackCommandUsage('config-set-allow-usage-tracking', undefined, accountId);
 
-  let isEnabled;
+  let isEnabled: boolean;
 
   if (typeof allowUsageTracking === 'boolean') {
     isEnabled = allowUsageTracking;
@@ -51,59 +56,70 @@ const setAllowUsageTracking = async ({ accountId, allowUsageTracking }) => {
 
   updateAllowUsageTracking(isEnabled);
 
-  return logger.log(
-    i18n(`${i18nKey}.allowUsageTracking.success`, { isEnabled })
+  logger.success(
+    i18n(`${i18nKey}.allowUsageTracking.success`, {
+      isEnabled: isEnabled.toString(),
+    })
   );
-};
+}
 
-const ALL_MODES = Object.values(MODE);
+const ALL_CMS_PUBLISH_MODES = Object.values(CMS_PUBLISH_MODE);
 
-const selectMode = async () => {
-  const { mode } = await promptUser([
+async function selectCmsPublishMode(): Promise<CmsPublishMode> {
+  const { cmsPublishMode } = await promptUser<{
+    cmsPublishMode: CmsPublishMode;
+  }>([
     {
       type: 'list',
-      look: false,
-      name: 'mode',
+      name: 'cmsPublishMode',
       pageSize: 20,
       message: i18n(`${i18nKey}.defaultMode.promptMessage`),
-      choices: ALL_MODES,
-      default: MODE.publish,
+      choices: ALL_CMS_PUBLISH_MODES,
+      default: CMS_PUBLISH_MODE.publish,
     },
   ]);
 
-  return mode;
-};
+  return cmsPublishMode;
+}
 
-const setDefaultMode = async ({ accountId, defaultMode }) => {
-  trackCommandUsage('config-set-default-mode', null, accountId);
+export async function setDefaultCmsPublishMode({
+  accountId,
+  defaultCmsPublishMode,
+}: {
+  accountId: number;
+  defaultCmsPublishMode?: CmsPublishMode;
+}): Promise<void> {
+  trackCommandUsage('config-set-default-mode', undefined, accountId);
 
-  let newDefault;
+  let newDefault: CmsPublishMode;
 
-  if (!defaultMode) {
-    newDefault = await selectMode();
-  } else if (defaultMode && ALL_MODES.find(m => m === defaultMode)) {
-    newDefault = defaultMode;
+  if (!defaultCmsPublishMode) {
+    newDefault = await selectCmsPublishMode();
+  } else if (
+    defaultCmsPublishMode &&
+    ALL_CMS_PUBLISH_MODES.find(m => m === defaultCmsPublishMode)
+  ) {
+    newDefault = defaultCmsPublishMode;
   } else {
     logger.error(
-      i18n(`${i18nKey}.defaultMode.errors`, {
-        mode: newDefault,
-        validModes: commaSeparatedValues(ALL_MODES),
+      i18n(`${i18nKey}.defaultMode.error`, {
+        validModes: commaSeparatedValues(ALL_CMS_PUBLISH_MODES),
       })
     );
-    newDefault = await selectMode();
+    newDefault = await selectCmsPublishMode();
   }
 
-  updateDefaultMode(newDefault);
+  updateDefaultCmsPublishMode(newDefault);
 
-  return logger.success(
+  logger.success(
     i18n(`${i18nKey}.defaultMode.success`, {
       mode: newDefault,
     })
   );
-};
+}
 
-const enterTimeout = async () => {
-  const { timeout } = await promptUser([
+async function enterTimeout(): Promise<string> {
+  const { timeout } = await promptUser<{ timeout: string }>([
     {
       name: 'timeout',
       message: i18n(`${i18nKey}.httpTimeout.promptMessage`),
@@ -113,12 +129,18 @@ const enterTimeout = async () => {
   ]);
 
   return timeout;
-};
+}
 
-const setHttpTimeout = async ({ accountId, httpTimeout }) => {
-  trackCommandUsage('config-set-http-timeout', null, accountId);
+export async function setHttpTimeout({
+  accountId,
+  httpTimeout,
+}: {
+  accountId: number;
+  httpTimeout?: string;
+}): Promise<void> {
+  trackCommandUsage('config-set-http-timeout', undefined, accountId);
 
-  let newHttpTimeout;
+  let newHttpTimeout: string;
 
   if (!httpTimeout) {
     newHttpTimeout = await enterTimeout();
@@ -128,13 +150,7 @@ const setHttpTimeout = async ({ accountId, httpTimeout }) => {
 
   updateHttpTimeout(newHttpTimeout);
 
-  return logger.success(
+  logger.success(
     i18n(`${i18nKey}.httpTimeout.success`, { timeout: newHttpTimeout })
   );
-};
-
-module.exports = {
-  setAllowUsageTracking,
-  setDefaultMode,
-  setHttpTimeout,
-};
+}

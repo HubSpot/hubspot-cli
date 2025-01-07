@@ -4,9 +4,7 @@ const {
   addConfigOptions,
   addAccountOptions,
   addUseEnvironmentOptions,
-  getAccountId,
 } = require('../../lib/commonOpts');
-const { loadAndValidateOptions } = require('../../lib/validation');
 const { trackCommandUsage } = require('../../lib/usageTracking');
 const {
   kickOffValidation,
@@ -23,13 +21,9 @@ exports.command = 'marketplace-validate <src>';
 exports.describe = i18n(`${i18nKey}.describe`);
 
 exports.handler = async options => {
-  const { src } = options;
+  const { src, derivedAccountId } = options;
 
-  await loadAndValidateOptions(options);
-
-  const accountId = getAccountId(options);
-
-  trackCommandUsage('validate', null, accountId);
+  trackCommandUsage('validate', null, derivedAccountId);
 
   SpinniesManager.init();
 
@@ -40,13 +34,17 @@ exports.handler = async options => {
   });
 
   const assetType = 'MODULE';
-  const validationId = await kickOffValidation(accountId, assetType, src);
-  await pollForValidationFinish(accountId, validationId);
+  const validationId = await kickOffValidation(
+    derivedAccountId,
+    assetType,
+    src
+  );
+  await pollForValidationFinish(derivedAccountId, validationId);
 
   SpinniesManager.remove('marketplaceValidation');
 
   const validationResults = await fetchValidationResults(
-    accountId,
+    derivedAccountId,
     validationId
   );
   processValidationErrors(i18nKey, validationResults);

@@ -1,26 +1,51 @@
-// @ts-nocheck
-const { promptUser } = require('./promptUtils');
-const { i18n } = require('../lang');
+import { promptUser } from './promptUtils';
+import { i18n } from '../lang';
 
 const i18nKey = 'lib.prompts.secretPrompt';
 
-const SECRET_VALUE_PROMPT = {
-  name: 'secretValue',
-  type: 'password',
-  mask: '*',
-  message: i18n(`${i18nKey}.enterValue`),
-  validate(val) {
-    if (typeof val !== 'string') {
-      return i18n(`${i18nKey}.errors.invalidValue`);
-    }
-    return true;
-  },
+type SecretValuePromptResponse = {
+  secretValue: string;
 };
 
-function secretValuePrompt() {
-  return promptUser([SECRET_VALUE_PROMPT]);
+export function secretValuePrompt(): Promise<SecretValuePromptResponse> {
+  return promptUser<SecretValuePromptResponse>([
+    {
+      name: 'secretValue',
+      type: 'password',
+      mask: '*',
+      message: i18n(`${i18nKey}.enterValue`),
+    },
+  ]);
 }
 
-module.exports = {
-  secretValuePrompt,
+type SecretNamePromptResponse = {
+  secretName: string;
 };
+
+export function secretNamePrompt(): Promise<SecretNamePromptResponse> {
+  return promptUser<SecretNamePromptResponse>([
+    {
+      name: 'secretName',
+      type: 'input',
+      message: i18n(`${i18nKey}.enterName`),
+    },
+  ]);
+}
+
+type SecretListPromptResponse = {
+  secretToModify: string;
+};
+
+export function secretListPrompt(
+  secrets: string[],
+  message: string
+): Promise<SecretListPromptResponse> {
+  return promptUser<SecretListPromptResponse>([
+    {
+      name: 'secretToModify',
+      type: 'list',
+      choices: secrets,
+      message,
+    },
+  ]);
+}

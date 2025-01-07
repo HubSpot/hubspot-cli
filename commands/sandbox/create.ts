@@ -2,11 +2,9 @@
 const {
   addAccountOptions,
   addConfigOptions,
-  getAccountId,
   addUseEnvironmentOptions,
   addTestingOptions,
 } = require('../../lib/commonOpts');
-const { loadAndValidateOptions } = require('../../lib/validation');
 const { i18n } = require('../../lib/lang');
 const { EXIT_CODES } = require('../../lib/enums/exitCodes');
 const { getAccountConfig, getEnv } = require('@hubspot/local-dev-lib/config');
@@ -37,18 +35,15 @@ const {
 
 const i18nKey = 'commands.sandbox.subcommands.create';
 
-exports.command = 'create [--name] [--type]';
+exports.command = 'create';
 exports.describe = uiBetaTag(i18n(`${i18nKey}.describe`), false);
 
 exports.handler = async options => {
-  await loadAndValidateOptions(options);
+  const { name, type, force, derivedAccountId } = options;
+  const accountConfig = getAccountConfig(derivedAccountId);
+  const env = getValidEnv(getEnv(derivedAccountId));
 
-  const { name, type, force } = options;
-  const accountId = getAccountId(options);
-  const accountConfig = getAccountConfig(accountId);
-  const env = getValidEnv(getEnv(accountId));
-
-  trackCommandUsage('sandbox-create', null, accountId);
+  trackCommandUsage('sandbox-create', null, derivedAccountId);
 
   // Default account is not a production portal
   if (
@@ -89,14 +84,14 @@ exports.handler = async options => {
     if (isMissingScopeError(err)) {
       logger.error(
         i18n('lib.sandbox.create.failure.scopes.message', {
-          accountName: accountConfig.name || accountId,
+          accountName: accountConfig.name || derivedAccountId,
         })
       );
       const websiteOrigin = getHubSpotWebsiteOrigin(env);
-      const url = `${websiteOrigin}/personal-access-key/${accountId}`;
+      const url = `${websiteOrigin}/personal-access-key/${derivedAccountId}`;
       logger.info(
         i18n('lib.sandbox.create.failure.scopes.instructions', {
-          accountName: accountConfig.name || accountId,
+          accountName: accountConfig.name || derivedAccountId,
           url,
         })
       );
@@ -186,10 +181,10 @@ exports.handler = async options => {
 };
 
 exports.builder = yargs => {
-  yargs.option('f', {
+  yargs.option('force', {
     type: 'boolean',
-    alias: 'force',
-    describe: i18n(`${i18nKey}.examples.force`),
+    alias: 'f',
+    describe: i18n(`${i18nKey}.options.force.describe`),
   });
   yargs.option('name', {
     describe: i18n(`${i18nKey}.options.name.describe`),
