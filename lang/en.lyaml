@@ -214,8 +214,8 @@ en:
               describe: "Schema name to add the object instance to"
           success:
             objectsCreated: "Objects created"
-          inputSchema: "What would you like to name the schema?"
-          inputPath: "[--path] Where is the JSON file containing the object definitions?"
+          inputName: "Enter the name of the schema for the custom object(s) you'd like to create:"
+          inputPath: "[--path] Enter the path to the JSON file containing the object definitions:"
         schema:
           describe: "Commands for managing custom object schemas."
           subcommands:
