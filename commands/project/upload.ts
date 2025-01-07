@@ -39,8 +39,6 @@ exports.handler = async options => {
   const accountConfig = getAccountConfig(derivedAccountId);
   const accountType = accountConfig && accountConfig.accountType;
 
-  trackCommandUsage('project-upload', { type: accountType }, derivedAccountId);
-
   const { projectConfig, projectDir } = await getProjectConfig();
 
   trackCommandUsage('project-upload', { type: accountType }, derivedAccountId);
