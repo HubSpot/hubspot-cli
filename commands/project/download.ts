@@ -17,7 +17,6 @@ const {
   fetchProjectBuilds,
 } = require('@hubspot/local-dev-lib/api/projects');
 const { ensureProjectExists, getProjectConfig } = require('../../lib/projects');
-const { loadAndValidateOptions } = require('../../lib/validation');
 const {
   downloadProjectPrompt,
 } = require('../../lib/prompts/downloadProjectPrompt');
@@ -31,8 +30,6 @@ exports.command = 'download';
 exports.describe = uiBetaTag(i18n(`${i18nKey}.describe`), false);
 
 exports.handler = async options => {
-  await loadAndValidateOptions(options);
-
   const { projectConfig } = await getProjectConfig();
 
   if (projectConfig) {
@@ -63,9 +60,8 @@ exports.handler = async options => {
           accountId: chalk.bold(derivedAccountId),
         })
       );
-      const { name: promptedProjectName } = await downloadProjectPrompt(
-        options
-      );
+      const { name: promptedProjectName } =
+        await downloadProjectPrompt(options);
       projectName = promptedProjectName || project;
     }
 

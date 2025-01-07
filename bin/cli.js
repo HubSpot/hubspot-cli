@@ -3,15 +3,14 @@
 const yargs = require('yargs');
 const updateNotifier = require('update-notifier');
 const chalk = require('chalk');
-const fs = require('fs');
 
 const { logger } = require('@hubspot/local-dev-lib/logger');
 const { addUserAgentHeader } = require('@hubspot/local-dev-lib/http');
 const {
   loadConfig,
-  getAndLoadConfigIfNeeded,
   configFileExists,
   getConfigPath,
+  validateConfig,
 } = require('@hubspot/local-dev-lib/config');
 const { logError } = require('../lib/errorHandlers/index');
 const {
@@ -19,6 +18,7 @@ const {
   getCommandName,
   injectAccountIdMiddleware,
 } = require('../lib/commonOpts');
+const { validateAccount } = require('../lib/validation');
 const {
   trackHelpUsage,
   trackConvertFieldsUsage,
@@ -108,7 +108,7 @@ const handleFailure = (msg, err, yargs) => {
   }
 
   if (msg === null) {
-    yargs.showHelp();
+    yargs.showHelp('log');
     process.exit(EXIT_CODES.SUCCESS);
   } else {
     process.exit(EXIT_CODES.ERROR);
@@ -148,37 +148,111 @@ const setRequestHeaders = () => {
   addUserAgentHeader('HubSpot CLI', pkg.version);
 };
 
-const loadConfigMiddleware = async options => {
-  // Load the new config and check for the conflicting config flag
-  if (configFileExists(true)) {
-    loadConfig('', options);
+const isTargetedCommand = (options, commandMap) => {
+  const checkCommand = (options, commandMap) => {
+    const currentCommand = options._[0];
 
-    if (options.config) {
-      logger.error(
-        i18n(`${i18nKey}.loadConfigMiddleware.configFileExists`, {
-          configPath: getConfigPath(),
-        })
-      );
-      process.exit(EXIT_CODES.ERROR);
+    if (!commandMap[currentCommand]) {
+      return false;
     }
-    return;
-  }
 
-  // We need to load the config when options.config exists,
-  // so that getAccountIdFromConfig() in injectAccountIdMiddleware reads from the right config
-  if (options.config && fs.existsSync(options.config)) {
-    const { config: configPath } = options;
-    await loadConfig(configPath, options);
-    return;
-  }
+    if (commandMap[currentCommand].target) {
+      return true;
+    }
 
-  // Load deprecated config without a config flag and with no warnings
-  getAndLoadConfigIfNeeded(options);
-  return;
+    const subCommands = commandMap[currentCommand].subCommands || {};
+    if (options._.length > 1) {
+      return checkCommand({ _: options._.slice(1) }, subCommands);
+    }
+
+    return false;
+  };
+
+  return checkCommand(options, commandMap);
 };
 
-const checkAndWarnGitInclusionMiddleware = () => {
+const SKIP_CONFIG_VALIDATION = {
+  init: { target: true },
+  auth: { target: true },
+};
+
+const loadConfigMiddleware = async options => {
+  // Skip this when no command is provided
+  if (!options._.length) {
+    return;
+  }
+
+  const maybeValidateConfig = () => {
+    if (
+      !isTargetedCommand(options, SKIP_CONFIG_VALIDATION) &&
+      !validateConfig()
+    ) {
+      process.exit(EXIT_CODES.ERROR);
+    }
+  };
+
+  if (configFileExists(true) && options.config) {
+    logger.error(
+      i18n(`${i18nKey}.loadConfigMiddleware.configFileExists`, {
+        configPath: getConfigPath(),
+      })
+    );
+    process.exit(EXIT_CODES.ERROR);
+  } else if (!options._.includes('init')) {
+    const { config: configPath } = options;
+    loadConfig(configPath, options);
+  }
+
+  maybeValidateConfig();
+};
+
+const checkAndWarnGitInclusionMiddleware = options => {
+  // Skip this when no command is provided
+  if (!options._.length) {
+    return;
+  }
   checkAndWarnGitInclusion(getConfigPath());
+};
+
+const accountsSubCommands = {
+  target: false,
+  subCommands: {
+    clean: { target: true },
+    list: { target: true },
+    ls: { target: true },
+    remove: { target: true },
+  },
+};
+const sandboxesSubCommands = {
+  target: false,
+  subCommands: {
+    delete: { target: true },
+  },
+};
+
+const SKIP_ACCOUNT_VALIDATION = {
+  init: { target: true },
+  auth: { target: true },
+  account: accountsSubCommands,
+  accounts: accountsSubCommands,
+  sandbox: sandboxesSubCommands,
+  sandboxes: sandboxesSubCommands,
+};
+
+const validateAccountOptions = async options => {
+  // Skip this when no command is provided
+  if (!options._.length) {
+    return;
+  }
+
+  let validAccount = true;
+  if (!isTargetedCommand(options, SKIP_ACCOUNT_VALIDATION)) {
+    validAccount = await validateAccount(options);
+  }
+
+  if (!validAccount) {
+    process.exit(EXIT_CODES.ERROR);
+  }
 };
 
 const argv = yargs
@@ -190,6 +264,7 @@ const argv = yargs
     loadConfigMiddleware,
     injectAccountIdMiddleware,
     checkAndWarnGitInclusionMiddleware,
+    validateAccountOptions,
   ])
   .exitProcess(false)
   .fail(handleFailure)

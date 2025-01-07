@@ -14,7 +14,6 @@ const {
 } = require('@hubspot/local-dev-lib/api/projects');
 const { getTableContents, getTableHeader } = require('../../lib/ui/table');
 const { uiBetaTag, uiLink } = require('../../lib/ui');
-const { loadAndValidateOptions } = require('../../lib/validation');
 const {
   getProjectConfig,
   validateProjectConfig,
@@ -30,8 +29,6 @@ exports.command = 'list-builds';
 exports.describe = uiBetaTag(i18n(`${i18nKey}.describe`), false);
 
 exports.handler = async options => {
-  await loadAndValidateOptions(options);
-
   const { project: projectFlagValue, limit, derivedAccountId } = options;
 
   trackCommandUsage('project-list-builds', null, derivedAccountId);

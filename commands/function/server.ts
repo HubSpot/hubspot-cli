@@ -7,7 +7,6 @@ const {
 const { trackCommandUsage } = require('../../lib/usageTracking');
 const { logger } = require('@hubspot/local-dev-lib/logger');
 const { start: startTestServer } = require('@hubspot/serverless-dev-runtime');
-const { loadAndValidateOptions } = require('../../lib/validation');
 const { i18n } = require('../../lib/lang');
 
 const i18nKey = 'commands.function.subcommands.server';
@@ -16,8 +15,6 @@ exports.command = 'server <path>';
 exports.describe = false;
 
 exports.handler = async options => {
-  await loadAndValidateOptions(options);
-
   const { path: functionPath, derivedAccountId } = options;
 
   trackCommandUsage('functions-server', null, derivedAccountId);

@@ -26,7 +26,7 @@ function mapSandboxAccountChoices(
 ): PromptChoices {
   return (
     portals
-      ?.filter(p => !isSandbox(p))
+      ?.filter(p => isSandbox(p))
       .map(p => ({
         name: uiAccountDescription(getAccountIdentifier(p), false),
         value: p.name || getAccountIdentifier(p),

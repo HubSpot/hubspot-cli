@@ -57,12 +57,14 @@ async function uploadProjectFiles(
       }),
     });
 
-    logger.debug(
-      i18n(`${i18nKey}.uploadProjectFiles.buildCreated`, {
-        buildId,
-        projectName,
-      })
-    );
+    if (buildId) {
+      logger.debug(
+        i18n(`${i18nKey}.uploadProjectFiles.buildCreated`, {
+          buildId,
+          projectName,
+        })
+      );
+    }
   } catch (err) {
     SpinniesManager.fail('upload', {
       text: i18n(`${i18nKey}.uploadProjectFiles.fail`, {

@@ -10,7 +10,6 @@ const {
   fetchSecrets,
 } = require('@hubspot/local-dev-lib/api/secrets');
 
-const { loadAndValidateOptions } = require('../../lib/validation');
 const { trackCommandUsage } = require('../../lib/usageTracking');
 const { uiAccountDescription } = require('../../lib/ui');
 
@@ -29,8 +28,6 @@ exports.describe = i18n(`${i18nKey}.describe`);
 exports.handler = async options => {
   const { name, derivedAccountId, force } = options;
   let secretName = name;
-
-  await loadAndValidateOptions(options);
 
   trackCommandUsage('secrets-delete', null, derivedAccountId);
 
@@ -71,11 +68,13 @@ exports.handler = async options => {
       })
     );
   } catch (err) {
-    logger.error(
-      i18n(`${i18nKey}.errors.delete`, {
-        secretName,
-      })
-    );
+    if (secretName) {
+      logger.error(
+        i18n(`${i18nKey}.errors.delete`, {
+          secretName,
+        })
+      );
+    }
     logError(
       err,
       new ApiErrorContext({

@@ -27,7 +27,6 @@ const {
   fetchProjectBuilds,
 } = require('@hubspot/local-dev-lib/api/projects');
 const { isSpecifiedError } = require('@hubspot/local-dev-lib/errors/index');
-const { loadAndValidateOptions } = require('../../lib/validation');
 const { EXIT_CODES } = require('../../lib/enums/exitCodes');
 const { handleKeypress, handleExit } = require('../../lib/process');
 
@@ -86,8 +85,6 @@ const handleUserInput = (accountId, projectName, currentBuildId) => {
 };
 
 exports.handler = async options => {
-  await loadAndValidateOptions(options);
-
   const { initialUpload, derivedAccountId } = options;
 
   trackCommandUsage('project-watch', null, derivedAccountId);

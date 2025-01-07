@@ -10,12 +10,11 @@ const { logger } = require('@hubspot/local-dev-lib/logger');
 const { getTableContents, getTableHeader } = require('../../lib/ui/table');
 const { logError } = require('../../lib/errorHandlers/');
 
-const { loadAndValidateOptions } = require('../../lib/validation');
 const { uiBetaTag, uiLine, uiLink } = require('../../lib/ui');
 const { projectLogsPrompt } = require('../../lib/prompts/projectsLogsPrompt');
 const { i18n } = require('../../lib/lang');
 const { EXIT_CODES } = require('../../lib/enums/exitCodes');
-const ProjectLogsManager = require('../../lib/ProjectLogsManager');
+const { ProjectLogsManager } = require('../../lib/projects/ProjectLogsManager');
 
 const i18nKey = 'commands.project.subcommands.logs';
 
@@ -85,8 +84,6 @@ exports.describe = uiBetaTag(i18n(`${i18nKey}.describe`), false);
 exports.handler = async options => {
   const { derivedAccountId } = options;
   trackCommandUsage('project-logs', null, derivedAccountId);
-
-  await loadAndValidateOptions(options);
 
   try {
     await ProjectLogsManager.init(derivedAccountId);

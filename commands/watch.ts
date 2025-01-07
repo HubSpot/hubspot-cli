@@ -15,10 +15,7 @@ const {
   getCmsPublishMode,
 } = require('../lib/commonOpts');
 const { uploadPrompt } = require('../lib/prompts/uploadPrompt');
-const {
-  validateCmsPublishMode,
-  loadAndValidateOptions,
-} = require('../lib/validation');
+const { validateCmsPublishMode } = require('../lib/validation');
 const { trackCommandUsage } = require('../lib/usageTracking');
 const { i18n } = require('../lib/lang');
 const { getUploadableFileList } = require('../lib/upload');
@@ -33,8 +30,6 @@ exports.describe = i18n(`${i18nKey}.describe`);
 exports.handler = async options => {
   const { remove, initialUpload, disableInitial, notify, derivedAccountId } =
     options;
-
-  await loadAndValidateOptions(options);
 
   if (!validateCmsPublishMode(options)) {
     process.exit(EXIT_CODES.ERROR);

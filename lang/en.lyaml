@@ -113,7 +113,7 @@ en:
             defaultMode:
               describe: "Set the default CMS publish mode"
               promptMessage: "Select CMS publish mode to be used as the default"
-              error: "The CMS publish mode \"{{ mode }}\" is invalid. Valid values are {{ validModes }}."
+              error: "The provided CMS publish mode is invalid. Valid values are {{ validModes }}."
               success: "Default mode updated to: {{ mode }}"
             allowUsageTracking:
               describe: "Enable or disable usage tracking"
@@ -653,6 +653,8 @@ en:
             noFunctionsInProject: "There aren't any functions in this project\n\t- Run `{{#orange}}hs project logs --help{{/orange}}` to learn more about logs\n\t- {{link}} to learn more about serverless functions"
             noFunctionWithName: "No function with name \"{{ name }}\""
             functionNotDeployed: "The function with name \"{{ name }}\" is not deployed"
+            projectLogsManagerNotInitialized: "Function called on ProjectLogsManager before initialization"
+            generic: "Error fetching logs"
           logs:
             showingLogs: "Showing logs for:"
             hubspotLogsDirectLink: "View function logs in HubSpot"

@@ -6,7 +6,6 @@ const {
 
 const { trackCommandUsage } = require('../../lib/usageTracking');
 const { i18n } = require('../../lib/lang');
-const { loadAndValidateOptions } = require('../../lib/validation');
 const { EXIT_CODES } = require('../../lib/enums/exitCodes');
 const { addTestingOptions, addConfigOptions } = require('../../lib/commonOpts');
 const { promptUser } = require('../../lib/prompts/promptUtils');
@@ -29,7 +28,6 @@ exports.describe = i18n(`${i18nKey}.describe`);
 
 exports.handler = async options => {
   const { qa } = options;
-  await loadAndValidateOptions(options, false);
 
   trackCommandUsage('accounts-clean', null);
 

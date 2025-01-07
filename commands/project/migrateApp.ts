@@ -9,7 +9,6 @@ const {
   trackCommandUsage,
   trackCommandMetadataUsage,
 } = require('../../lib/usageTracking');
-const { loadAndValidateOptions } = require('../../lib/validation');
 const {
   createProjectPrompt,
 } = require('../../lib/prompts/createProjectPrompt');
@@ -52,8 +51,6 @@ exports.command = 'migrate-app';
 exports.describe = uiBetaTag(i18n(`${i18nKey}.describe`), false);
 
 exports.handler = async options => {
-  await loadAndValidateOptions(options);
-
   const { derivedAccountId } = options;
   const accountConfig = getAccountConfig(derivedAccountId);
   const accountName = uiAccountDescription(derivedAccountId);

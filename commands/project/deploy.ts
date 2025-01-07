@@ -12,7 +12,6 @@ const {
   deployProject,
   fetchProject,
 } = require('@hubspot/local-dev-lib/api/projects');
-const { loadAndValidateOptions } = require('../../lib/validation');
 const { getProjectConfig } = require('../../lib/projects');
 const { pollDeployStatus } = require('../../lib/projects/buildAndDeploy');
 const { getProjectDetailUrl } = require('../../lib/projects/urls');
@@ -60,8 +59,6 @@ const validateBuildId = (
 };
 
 exports.handler = async options => {
-  await loadAndValidateOptions(options);
-
   const { derivedAccountId } = options;
   const accountConfig = getAccountConfig(derivedAccountId);
   const { project: projectOption, buildId: buildIdOption } = options;
