@@ -54,7 +54,7 @@ exports.handler = async options => {
     const filePath =
       'path' in options
         ? path.resolve(getCwd(), options.path)
-        : await selectPathPrompt(options);
+        : path.resolve(getCwd(), (await selectPathPrompt(options)).path);
     if (!checkAndConvertToJson(filePath)) {
       process.exit(EXIT_CODES.ERROR);
     }
