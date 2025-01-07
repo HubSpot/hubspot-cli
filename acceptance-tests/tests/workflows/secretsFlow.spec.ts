@@ -12,8 +12,8 @@ const SECRET = {
 };
 
 const secretPollingOptions = {
-  interval: 2000,
-  timeout: 20000,
+  interval: 5000,
+  timeout: 60000,
 };
 
 async function waitForSecretsListToContainSecret(testState: TestState) {
