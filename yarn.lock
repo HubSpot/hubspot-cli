@@ -1470,10 +1470,10 @@
     semver "^6.3.0"
     unixify "^1.0.0"
 
-"@hubspot/serverless-dev-runtime@7.0.0":
-  version "7.0.0"
-  resolved "https://registry.yarnpkg.com/@hubspot/serverless-dev-runtime/-/serverless-dev-runtime-7.0.0.tgz#dffe8101e3a9b79fa768691daa2c9ba1f86c25d6"
-  integrity sha512-8r/Iasu4rjBDPbOpCe8GV9Wx/LY/NID2gRgRVKBsxxGlFAsekTzXS1XPIBNH7ulBOkzGkqJWirEEtDkl6xcn9w==
+"@hubspot/serverless-dev-runtime@7.0.1":
+  version "7.0.1"
+  resolved "https://registry.yarnpkg.com/@hubspot/serverless-dev-runtime/-/serverless-dev-runtime-7.0.1.tgz#ccb7630c36345a11c9d1a3ea3a70e12f05cff652"
+  integrity sha512-efnS086lDWrzlCp6bcSSl41XK84DTz2RNDu6nXpywH1hdGfPSg3mPGHcfD79jgHbI6tpFaXRx+zLvxA3go026w==
   dependencies:
     body-parser "^1.19.0"
     chalk "^4.1.0"
@@ -11753,6 +11753,7 @@ wordwrap@^1.0.0:
   integrity sha512-gvVzJFlPycKc5dZN4yPkP8w7Dc37BtP1yczEneOb4uq34pXZcvrtRTmWV8W+Ume+XCxKgbjM+nevkyFPMybd4Q==
 
 "wrap-ansi-cjs@npm:wrap-ansi@^7.0.0", wrap-ansi@^7.0.0:
+  name wrap-ansi-cjs
   version "7.0.0"
   resolved "https://registry.yarnpkg.com/wrap-ansi/-/wrap-ansi-7.0.0.tgz#67e145cff510a6a6984bdf1152911d69d2eb9e43"
   integrity sha512-YVGIj2kamLSTxw6NsZjoBxfSwsn0ycdesmc4p+Q21c5zPuZ1pl+NfxVdxPtdHvmNVOQ6XSYG4AUtyt/Fi7D16Q==
