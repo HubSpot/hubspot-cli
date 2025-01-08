@@ -1,36 +1,54 @@
-// @ts-nocheck
-const chokidar = require('chokidar');
-const path = require('path');
-const chalk = require('chalk');
-const { default: PQueue } = require('p-queue');
-const { logError, ApiErrorContext } = require('../errorHandlers/index');
-const { i18n } = require('../lang');
-const { logger } = require('@hubspot/local-dev-lib/logger');
-const { isAllowedExtension } = require('@hubspot/local-dev-lib/path');
-const { shouldIgnoreFile } = require('@hubspot/local-dev-lib/ignoreRules');
-const {
+import chokidar from 'chokidar';
+import path from 'path';
+import chalk from 'chalk';
+import PQueue from 'p-queue';
+import { logger } from '@hubspot/local-dev-lib/logger';
+import { isAllowedExtension } from '@hubspot/local-dev-lib/path';
+import { shouldIgnoreFile } from '@hubspot/local-dev-lib/ignoreRules';
+import {
   cancelStagedBuild,
   provisionBuild,
   uploadFileToBuild,
   deleteFileFromBuild,
   queueBuild,
-} = require('@hubspot/local-dev-lib/api/projects');
-const { isSpecifiedError } = require('@hubspot/local-dev-lib/errors/index');
-const { PROJECT_ERROR_TYPES } = require('../constants');
+} from '@hubspot/local-dev-lib/api/projects';
+import { isSpecifiedError } from '@hubspot/local-dev-lib/errors/index';
+
+import { logError, ApiErrorContext } from '../errorHandlers';
+import { i18n } from '../lang';
+import { PROJECT_ERROR_TYPES } from '../constants';
+import { ProjectConfig } from '../../types/Projects';
 
 const i18nKey = 'commands.project.subcommands.watch';
+
+type ProjectWatchHandlerFunction = (
+  accountId: number,
+  projectName: string,
+  currentBuildId: number
+) => Promise<void>;
+
+type WatchEvent = {
+  filePath: string;
+  remotePath: string;
+  action: string;
+};
 
 const queue = new PQueue({
   concurrency: 10,
 });
-const standbyeQueue = [];
-let currentBuildId = null;
-let handleBuildStatus, handleUserInput;
-let timer;
+const standbyQueue: WatchEvent[] = [];
+let currentBuildId: number;
+let handleBuildStatus: ProjectWatchHandlerFunction;
+let handleUserInput: ProjectWatchHandlerFunction;
+let timer: NodeJS.Timeout;
 
-const processStandByQueue = async (accountId, projectName, platformVersion) => {
+async function processStandByQueue(
+  accountId: number,
+  projectName: string,
+  platformVersion: string
+): Promise<void> {
   queue.addAll(
-    standbyeQueue.map(({ filePath, remotePath, action }) => {
+    standbyQueue.map(({ filePath, remotePath, action }) => {
       return async () => {
         queueFileOrFolder(
           accountId,
@@ -43,15 +61,14 @@ const processStandByQueue = async (accountId, projectName, platformVersion) => {
       };
     })
   );
-  standbyeQueue.length = 0;
+  standbyQueue.length = 0;
   debounceQueueBuild(accountId, projectName, platformVersion);
-};
-
-const createNewStagingBuild = async (
-  accountId,
-  projectName,
-  platformVersion
-) => {
+}
+async function createNewStagingBuild(
+  accountId: number,
+  projectName: string,
+  platformVersion: string
+): Promise<void> {
   currentBuildId = await createNewBuild(
     accountId,
     projectName,
@@ -59,9 +76,13 @@ const createNewStagingBuild = async (
   );
 
   handleUserInput(accountId, projectName, currentBuildId);
-};
+}
 
-const debounceQueueBuild = (accountId, projectName, platformVersion) => {
+function debounceQueueBuild(
+  accountId: number,
+  projectName: string,
+  platformVersion: string
+): void {
   if (timer) {
     clearTimeout(timer);
   }
@@ -93,7 +114,7 @@ const debounceQueueBuild = (accountId, projectName, platformVersion) => {
 
     await createNewStagingBuild(accountId, projectName, platformVersion);
 
-    if (standbyeQueue.length > 0) {
+    if (standbyQueue.length > 0) {
       await processStandByQueue(accountId, projectName, platformVersion);
     }
 
@@ -101,16 +122,16 @@ const debounceQueueBuild = (accountId, projectName, platformVersion) => {
     logger.log(i18n(`${i18nKey}.logs.resuming`));
     logger.log(`\n> Press ${chalk.bold('q')} to quit watching\n`);
   }, 2000);
-};
+}
 
-const queueFileOrFolder = async (
-  accountId,
-  projectName,
-  platformVersion,
-  filePath,
-  remotePath,
-  action
-) => {
+async function queueFileOrFolder(
+  accountId: number,
+  projectName: string,
+  platformVersion: string,
+  filePath: string,
+  remotePath: string,
+  action: string
+): Promise<void> {
   if (action === 'upload' && !isAllowedExtension(filePath)) {
     logger.debug(i18n(`${i18nKey}.debug.extensionNotAllowed`, { filePath }));
     return;
@@ -141,9 +162,13 @@ const queueFileOrFolder = async (
       );
     }
   });
-};
+}
 
-const createNewBuild = async (accountId, projectName, platformVersion) => {
+async function createNewBuild(
+  accountId: number,
+  projectName: string,
+  platformVersion: string
+) {
   try {
     logger.debug(i18n(`${i18nKey}.debug.attemptNewBuild`));
     const {
@@ -160,22 +185,22 @@ const createNewBuild = async (accountId, projectName, platformVersion) => {
     }
     process.exit(1);
   }
-};
+}
 
-const handleWatchEvent = async (
-  accountId,
-  projectName,
-  platformVersion,
-  projectSourceDir,
-  filePath,
+async function handleWatchEvent(
+  accountId: number,
+  projectName: string,
+  platformVersion: string,
+  projectSourceDir: string,
+  filePath: string,
   action = 'upload'
-) => {
+) {
   const remotePath = path.relative(projectSourceDir, filePath);
   if (queue.isPaused) {
-    if (standbyeQueue.find(file => file.filePath === filePath)) {
+    if (standbyQueue.find(file => file.filePath === filePath)) {
       logger.debug(i18n(`${i18nKey}.debug.fileAlreadyQueued`, { filePath }));
     } else {
-      standbyeQueue.push({
+      standbyQueue.push({
         filePath,
         remotePath,
         action,
@@ -191,15 +216,15 @@ const handleWatchEvent = async (
       action
     );
   }
-};
+}
 
-const createWatcher = async (
-  accountId,
-  projectConfig,
-  projectDir,
-  handleBuildStatusFn,
-  handleUserInputFn
-) => {
+export async function createWatcher(
+  accountId: number,
+  projectConfig: ProjectConfig,
+  projectDir: string,
+  handleBuildStatusFn: ProjectWatchHandlerFunction,
+  handleUserInputFn: ProjectWatchHandlerFunction
+) {
   const projectSourceDir = path.join(projectDir, projectConfig.srcDir);
 
   handleBuildStatus = handleBuildStatusFn;
@@ -257,8 +282,4 @@ const createWatcher = async (
       'deleteFolder'
     );
   });
-};
-
-module.exports = {
-  createWatcher,
-};
+}
