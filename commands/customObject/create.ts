@@ -20,8 +20,13 @@ exports.describe = i18n(`${i18nKey}.describe`);
 exports.handler = async options => {
   const { path, name: providedName, derivedAccountId } = options;
   let definitionPath = path;
+  let name = providedName;
 
   trackCommandUsage('custom-object-batch-create', null, derivedAccountId);
+
+  if (!name) {
+    name = await inputPrompt(i18n(`${i18nKey}.inputName`));
+  }
 
   if (!definitionPath) {
     definitionPath = await inputPrompt(i18n(`${i18nKey}.inputPath`));
@@ -33,9 +38,6 @@ exports.handler = async options => {
   if (!objectJson) {
     process.exit(EXIT_CODES.ERROR);
   }
-
-  const name =
-    providedName || (await inputPrompt(i18n(`${i18nKey}.inputSchema`)));
 
   try {
     await batchCreateObjects(derivedAccountId, name, objectJson);
