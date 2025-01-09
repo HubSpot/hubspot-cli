@@ -4,6 +4,7 @@ import chalk from 'chalk';
 import PQueue from 'p-queue';
 import { logger } from '@hubspot/local-dev-lib/logger';
 import { isAllowedExtension } from '@hubspot/local-dev-lib/path';
+import { JSR_ALLOWED_EXTENSIONS } from '@hubspot/local-dev-lib/constants/extensions';
 import { shouldIgnoreFile } from '@hubspot/local-dev-lib/ignoreRules';
 import {
   cancelStagedBuild,
@@ -132,7 +133,10 @@ async function queueFileOrFolder(
   remotePath: string,
   action: string
 ): Promise<void> {
-  if (action === 'upload' && !isAllowedExtension(filePath)) {
+  if (
+    action === 'upload' &&
+    !isAllowedExtension(filePath, Array.from(JSR_ALLOWED_EXTENSIONS))
+  ) {
     logger.debug(i18n(`${i18nKey}.debug.extensionNotAllowed`, { filePath }));
     return;
   }
