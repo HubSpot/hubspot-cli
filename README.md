@@ -1,6 +1,6 @@
 # @hubspot/cli
 
-[![Official Release](https://img.shields.io/npm/v/@hubspot/cli/latest?label=Official%20Release)](https://www.npmjs.com/package/@hubspot/cli) [![Latest Version](https://img.shields.io/github/v/tag/hubspot/hubspot-cli?label=Latest%20Version)](https://www.npmjs.com/package/@hubspot/cli?activeTab=versions)
+[![Official Release](https://img.shields.io/npm/v/@hubspot/cli/latest?label=Official%20Release)](https://www.npmjs.com/package/@hubspot/cli) [![Latest Beta Version](https://img.shields.io/npm/v/@hubspot/cli/next?label=Latest%20Beta%20Version)](https://www.npmjs.com/package/@hubspot/cli?activeTab=versions)
 
 A CLI for HubSpot developers to enable local development and automation. [Learn more about building on HubSpot](https://developers.hubspot.com).
 
@@ -58,13 +58,14 @@ There are two ways that the tools can authenticate with HubSpot.
 3. Select `OAuth2` and follow the steps
 
 _**Note:** The Account ID used should be the Test Account ID (not the developer app ID). Client ID and Client Secret are from the developer app._
+
 ### Exit Codes
 
 The CLI will exit with one of the following exit codes:
+
 - `0`: A successful run
 - `1`: There was a config problem or an internal error
 - `2`: There are warnings or validation issues
-
 
 ## Changelog
 

@@ -108,7 +108,7 @@ const handleFailure = (msg, err, yargs) => {
   }
 
   if (msg === null) {
-    yargs.showHelp();
+    yargs.showHelp('log');
     process.exit(EXIT_CODES.SUCCESS);
   } else {
     process.exit(EXIT_CODES.ERROR);
@@ -177,6 +177,11 @@ const SKIP_CONFIG_VALIDATION = {
 };
 
 const loadConfigMiddleware = async options => {
+  // Skip this when no command is provided
+  if (!options._.length) {
+    return;
+  }
+
   const maybeValidateConfig = () => {
     if (
       !isTargetedCommand(options, SKIP_CONFIG_VALIDATION) &&
@@ -201,7 +206,11 @@ const loadConfigMiddleware = async options => {
   maybeValidateConfig();
 };
 
-const checkAndWarnGitInclusionMiddleware = () => {
+const checkAndWarnGitInclusionMiddleware = options => {
+  // Skip this when no command is provided
+  if (!options._.length) {
+    return;
+  }
   checkAndWarnGitInclusion(getConfigPath());
 };
 
@@ -231,6 +240,11 @@ const SKIP_ACCOUNT_VALIDATION = {
 };
 
 const validateAccountOptions = async options => {
+  // Skip this when no command is provided
+  if (!options._.length) {
+    return;
+  }
+
   let validAccount = true;
   if (!isTargetedCommand(options, SKIP_ACCOUNT_VALIDATION)) {
     validAccount = await validateAccount(options);

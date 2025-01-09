@@ -114,7 +114,7 @@ exports.handler = async options => {
           latestBuild.buildId === deployedBuildId
             ? undefined
             : latestBuild.buildId,
-        validate: () =>
+        validate: buildId =>
           validateBuildId(
             buildId,
             deployedBuildId,
