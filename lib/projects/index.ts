@@ -2,7 +2,10 @@ import fs from 'fs-extra';
 import path from 'path';
 import findup from 'findup-sync';
 import { logger } from '@hubspot/local-dev-lib/logger';
-import { fetchFileFromRepository } from '@hubspot/local-dev-lib/github';
+import {
+  cloneGithubRepo,
+  fetchFileFromRepository,
+} from '@hubspot/local-dev-lib/github';
 import {
   createProject,
   fetchProject,
@@ -134,6 +137,7 @@ export async function createProjectConfig(
 
   const hasCustomTemplateSource = Boolean(templateSource);
 
+  // TODO: Swap this out
   await downloadGithubRepoContents(
     templateSource || HUBSPOT_PROJECT_COMPONENTS_GITHUB_PATH,
     template.path,
