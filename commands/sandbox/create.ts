@@ -10,9 +10,9 @@ const { EXIT_CODES } = require('../../lib/enums/exitCodes');
 const { getAccountConfig, getEnv } = require('@hubspot/local-dev-lib/config');
 const { uiFeatureHighlight, uiBetaTag } = require('../../lib/ui');
 const {
-  sandboxTypeMap,
+  SANDBOX_TYPE_MAP,
   getAvailableSyncTypes,
-  syncTypes,
+  SYNC_TYPES,
   validateSandboxUsageLimits,
 } = require('../../lib/sandboxes');
 const { getValidEnv } = require('@hubspot/local-dev-lib/environment');
@@ -65,7 +65,7 @@ exports.handler = async options => {
   let typePrompt;
   let namePrompt;
 
-  if ((type && !sandboxTypeMap[type.toLowerCase()]) || !type) {
+  if ((type && !SANDBOX_TYPE_MAP[type.toLowerCase()]) || !type) {
     if (!force) {
       typePrompt = await sandboxTypePrompt();
     } else {
@@ -74,7 +74,7 @@ exports.handler = async options => {
     }
   }
   const sandboxType = type
-    ? sandboxTypeMap[type.toLowerCase()]
+    ? SANDBOX_TYPE_MAP[type.toLowerCase()]
     : typePrompt.type;
 
   // Check usage limits and exit if parent portal has no available sandboxes for the selected type
@@ -156,7 +156,7 @@ exports.handler = async options => {
 
       if (!contactRecordsSyncPromptResult) {
         availableSyncTasks = availableSyncTasks.filter(
-          t => t.type !== syncTypes.OBJECT_RECORDS
+          t => t.type !== SYNC_TYPES.OBJECT_RECORDS
         );
       }
       await handleSyncSandbox(availableSyncTasks);

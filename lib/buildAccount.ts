@@ -27,7 +27,10 @@ const {
   HUBSPOT_ACCOUNT_TYPES,
 } = require('@hubspot/local-dev-lib/constants/config');
 const { createSandbox } = require('@hubspot/local-dev-lib/api/sandboxHubs');
-const { sandboxApiTypeMap, handleSandboxCreateError } = require('./sandboxes');
+const {
+  SANDBOX_API_TYPE_MAP,
+  handleSandboxCreateError,
+} = require('./sandboxes');
 const {
   handleDeveloperTestAccountCreateError,
 } = require('./developerTestAccounts');
@@ -132,7 +135,7 @@ async function buildNewAccount({
   let resultAccountId;
   try {
     if (isSandbox) {
-      const sandboxApiType = sandboxApiTypeMap[accountType]; // API expects sandbox type as 1 or 2.
+      const sandboxApiType = SANDBOX_API_TYPE_MAP[accountType]; // API expects sandbox type as 1 or 2.
 
       const { data } = await createSandbox(accountId, name, sandboxApiType);
       result = { name, ...data };
@@ -159,7 +162,7 @@ async function buildNewAccount({
     });
 
     if (isSandbox) {
-      handleSandboxCreateError({ err, env, accountConfig, name, accountId });
+      handleSandboxCreateError(err, env, accountConfig, name, accountId);
     }
     if (isDeveloperTestAccount) {
       handleDeveloperTestAccountCreateError(err, env, accountId, portalLimit);

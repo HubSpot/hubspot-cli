@@ -1,59 +1,59 @@
-// @ts-nocheck
-const { i18n } = require('./lang');
-const { logger } = require('@hubspot/local-dev-lib/logger');
-const {
-  getSandboxUsageLimits,
-} = require('@hubspot/local-dev-lib/api/sandboxHubs');
-const { fetchTypes } = require('@hubspot/local-dev-lib/api/sandboxSync');
-const {
+import { logger } from '@hubspot/local-dev-lib/logger';
+import { getSandboxUsageLimits } from '@hubspot/local-dev-lib/api/sandboxHubs';
+import { fetchTypes } from '@hubspot/local-dev-lib/api/sandboxSync';
+import {
   getAccountId,
   getEnv,
   getConfigAccounts,
-} = require('@hubspot/local-dev-lib/config');
-const { promptUser } = require('./prompts/promptUtils');
-const { isDevelopmentSandbox } = require('./accountTypes');
-const { getHubSpotWebsiteOrigin } = require('@hubspot/local-dev-lib/urls');
-const {
-  HUBSPOT_ACCOUNT_TYPES,
-} = require('@hubspot/local-dev-lib/constants/config');
-const {
-  getAccountIdentifier,
-} = require('@hubspot/local-dev-lib/config/getAccountIdentifier');
-const { uiAccountDescription } = require('./ui');
-const {
+} from '@hubspot/local-dev-lib/config';
+import { getHubSpotWebsiteOrigin } from '@hubspot/local-dev-lib/urls';
+import { HUBSPOT_ACCOUNT_TYPES } from '@hubspot/local-dev-lib/constants/config';
+import { getAccountIdentifier } from '@hubspot/local-dev-lib/config/getAccountIdentifier';
+import {
   isMissingScopeError,
   isSpecifiedError,
-} = require('@hubspot/local-dev-lib/errors/index');
-const { getValidEnv } = require('@hubspot/local-dev-lib/environment');
-const { logError } = require('./errorHandlers/index');
+} from '@hubspot/local-dev-lib/errors/index';
+import { getValidEnv } from '@hubspot/local-dev-lib/environment';
+import { AccountType, CLIAccount } from '@hubspot/local-dev-lib/types/Accounts';
 
-const syncTypes = {
+import { i18n } from './lang';
+import { uiAccountDescription } from './ui';
+import { logError } from './errorHandlers/index';
+import { Environment } from '@hubspot/local-dev-lib/types/Config';
+
+const i18nKey = 'lib.sandbox';
+
+export const SYNC_TYPES = {
   OBJECT_RECORDS: 'object-records',
-};
+} as const;
 
-const sandboxTypeMap = {
+export const SANDBOX_TYPE_MAP = {
   dev: HUBSPOT_ACCOUNT_TYPES.DEVELOPMENT_SANDBOX,
   developer: HUBSPOT_ACCOUNT_TYPES.DEVELOPMENT_SANDBOX,
   development: HUBSPOT_ACCOUNT_TYPES.DEVELOPMENT_SANDBOX,
   standard: HUBSPOT_ACCOUNT_TYPES.STANDARD_SANDBOX,
-};
+} as const;
 
-const sandboxApiTypeMap = {
+export const SANDBOX_API_TYPE_MAP = {
   [HUBSPOT_ACCOUNT_TYPES.STANDARD_SANDBOX]: 1,
   [HUBSPOT_ACCOUNT_TYPES.DEVELOPMENT_SANDBOX]: 2,
-};
+} as const;
 
-const getSandboxTypeAsString = accountType => {
+export function getSandboxTypeAsString(accountType: AccountType): string {
   if (accountType === HUBSPOT_ACCOUNT_TYPES.DEVELOPMENT_SANDBOX) {
     return 'development'; // Only place we're using this specific name
   }
   return 'standard';
-};
+}
 
-function getHasSandboxesByType(parentAccountConfig, type) {
+function getHasSandboxesByType(
+  parentAccountConfig: CLIAccount,
+  type: AccountType
+): boolean {
   const id = getAccountIdentifier(parentAccountConfig);
   const parentPortalId = getAccountId(id);
-  const accountsList = getConfigAccounts();
+  const accountsList = getConfigAccounts() || [];
+
   for (const portal of accountsList) {
     if (
       (portal.parentAccountId !== null ||
@@ -68,79 +68,63 @@ function getHasSandboxesByType(parentAccountConfig, type) {
   return false;
 }
 
-function getSandboxLimit(error) {
+class SandboxLimitError {
+  context?: {
+    limit?: string[];
+  };
+}
+
+function getSandboxLimit(error: unknown): number {
   // Error context should contain a limit property with a list of one number. That number is the current limit
-  const limit = error.context && error.context.limit && error.context.limit[0];
-  return limit ? parseInt(limit, 10) : 1; // Default to 1
+
+  if (error instanceof SandboxLimitError) {
+    const limit =
+      error.context && error.context.limit && error.context.limit[0];
+    return limit ? parseInt(limit, 10) : 1; // Default to 1
+  }
+  return 1;
 }
 
 // Fetches available sync types for a given sandbox portal
-async function getAvailableSyncTypes(parentAccountConfig, config) {
+export async function getAvailableSyncTypes(
+  parentAccountConfig: CLIAccount,
+  config: CLIAccount
+): Promise<Array<{ type: string }>> {
   const parentId = getAccountIdentifier(parentAccountConfig);
   const parentPortalId = getAccountId(parentId);
   const id = getAccountIdentifier(config);
   const portalId = getAccountId(id);
+
+  if (!parentPortalId || !portalId) {
+    throw new Error(i18n(`${i18nKey}.sync.failure.syncTypeFetch`));
+  }
+
   const {
     data: { results: syncTypes },
   } = await fetchTypes(parentPortalId, portalId);
   if (!syncTypes) {
-    throw new Error(
-      'Unable to fetch available sandbox sync types. Please try again.'
-    );
+    throw new Error(i18n(`${i18nKey}.sync.failure.syncTypeFetch`));
   }
   return syncTypes.map(t => ({ type: t.name }));
 }
 
-/**
- * @param {Object} accountConfig - Account config of sandbox portal
- * @param {Array} availableSyncTasks - Array of available sync tasks
- * @param {Boolean} skipPrompt - Option to skip contact records prompt and return all available sync tasks
- * @returns {Array} Adjusted available sync task items
- */
-const getSyncTypesWithContactRecordsPrompt = async (
-  accountConfig,
-  syncTasks,
-  skipPrompt = false
-) => {
-  // TODO: remove this entire helper once hs sandbox sync is fully deprecated
-  const isDevSandbox = isDevelopmentSandbox(accountConfig);
-  if (isDevSandbox) {
-    // Disable dev sandbox from syncing contacts
-    return syncTasks.filter(t => t.type !== syncTypes.OBJECT_RECORDS);
-  }
-  if (
-    syncTasks &&
-    syncTasks.some(t => t.type === syncTypes.OBJECT_RECORDS) &&
-    !skipPrompt
-  ) {
-    const { contactRecordsSyncPrompt } = await promptUser([
-      {
-        name: 'contactRecordsSyncPrompt',
-        type: 'confirm',
-        message: i18n('lib.sandbox.sync.confirm.syncContactRecords.standard'),
-      },
-    ]);
-    if (!contactRecordsSyncPrompt) {
-      return syncTasks.filter(t => t.type !== syncTypes.OBJECT_RECORDS);
-    }
-  }
-  return syncTasks;
-};
-
-/**
- * @param {Object} accountConfig - Account config of sandbox portal
- * @param {String} sandboxType - Sandbox type for limit validation
- * @param {String} env - Environment
- * @returns {null}
- */
-const validateSandboxUsageLimits = async (accountConfig, sandboxType, env) => {
+export async function validateSandboxUsageLimits(
+  accountConfig: CLIAccount,
+  sandboxType: AccountType,
+  env: Environment
+): Promise<void> {
   const id = getAccountIdentifier(accountConfig);
   const accountId = getAccountId(id);
+
+  if (!accountId) {
+    throw new Error(`${i18nKey}.create.failure.usageLimitFetch`);
+  }
+
   const {
     data: { usage },
   } = await getSandboxUsageLimits(accountId);
   if (!usage) {
-    throw new Error('Unable to fetch sandbox usage limits. Please try again.');
+    throw new Error(`${i18nKey}.create.failure.usageLimitFetch`);
   }
   if (sandboxType === HUBSPOT_ACCOUNT_TYPES.DEVELOPMENT_SANDBOX) {
     if (usage['DEVELOPER'].available === 0) {
@@ -153,7 +137,7 @@ const validateSandboxUsageLimits = async (accountConfig, sandboxType, env) => {
       if (hasDevelopmentSandboxes) {
         throw new Error(
           i18n(
-            `lib.sandbox.create.failure.alreadyInConfig.developer.${
+            `${i18nKey}.create.failure.alreadyInConfig.developer.${
               plural ? 'other' : 'one'
             }`,
             {
@@ -166,7 +150,7 @@ const validateSandboxUsageLimits = async (accountConfig, sandboxType, env) => {
         const baseUrl = getHubSpotWebsiteOrigin(env);
         throw new Error(
           i18n(
-            `lib.sandbox.create.failure.limit.developer.${
+            `${i18nKey}.create.failure.limit.developer.${
               plural ? 'other' : 'one'
             }`,
             {
@@ -190,7 +174,7 @@ const validateSandboxUsageLimits = async (accountConfig, sandboxType, env) => {
       if (hasStandardSandboxes) {
         throw new Error(
           i18n(
-            `lib.sandbox.create.failure.alreadyInConfig.standard.${
+            `${i18nKey}.create.failure.alreadyInConfig.standard.${
               plural ? 'other' : 'one'
             }`,
             {
@@ -203,7 +187,7 @@ const validateSandboxUsageLimits = async (accountConfig, sandboxType, env) => {
         const baseUrl = getHubSpotWebsiteOrigin(env);
         throw new Error(
           i18n(
-            `lib.sandbox.create.failure.limit.standard.${
+            `${i18nKey}.create.failure.limit.standard.${
               plural ? 'other' : 'one'
             }`,
             {
@@ -216,25 +200,25 @@ const validateSandboxUsageLimits = async (accountConfig, sandboxType, env) => {
       }
     }
   }
-};
+}
 
-function handleSandboxCreateError({
-  err,
-  env,
-  accountId,
-  name,
-  accountConfig,
-}) {
+export function handleSandboxCreateError(
+  err: unknown,
+  env: Environment,
+  accountConfig: CLIAccount,
+  name: string,
+  accountId: number
+) {
   if (isMissingScopeError(err)) {
     logger.error(
-      i18n('lib.sandboxes.create.failure.scopes.message', {
+      i18n(`${i18nKey}.create.failure.scopes.message`, {
         accountName: uiAccountDescription(accountId),
       })
     );
     const websiteOrigin = getHubSpotWebsiteOrigin(env);
     const url = `${websiteOrigin}/personal-access-key/${accountId}`;
     logger.info(
-      i18n('lib.sandboxes.create.failure.scopes.instructions', {
+      i18n(`${i18nKey}.create.failure.scopes.instructions`, {
         accountName: uiAccountDescription(accountId),
         url,
       })
@@ -248,7 +232,7 @@ function handleSandboxCreateError({
   ) {
     logger.log('');
     logger.error(
-      i18n('lib.sandboxes.create.failure.invalidUser', {
+      i18n(`${i18nKey}.create.failure.invalidUser`, {
         accountName: name,
         parentAccountName: uiAccountDescription(accountId),
       })
@@ -263,7 +247,7 @@ function handleSandboxCreateError({
   ) {
     logger.log('');
     logger.error(
-      i18n('lib.sandboxes.create.failure.403Gating', {
+      i18n(`${i18nKey}.create.failure.403Gating`, {
         accountName: name,
         parentAccountName: uiAccountDescription(accountId),
         accountId,
@@ -277,8 +261,8 @@ function handleSandboxCreateError({
       subCategory:
         'SandboxErrors.NUM_DEVELOPMENT_SANDBOXES_LIMIT_EXCEEDED_ERROR',
     }) &&
-    err.error &&
-    err.error.message
+    'error' in err &&
+    err.error instanceof Error
   ) {
     logger.log('');
     const devSandboxLimit = getSandboxLimit(err.error);
@@ -290,7 +274,7 @@ function handleSandboxCreateError({
     if (hasDevelopmentSandboxes) {
       logger.error(
         i18n(
-          `lib.sandboxes.create.failure.alreadyInConfig.developer.${
+          `${i18nKey}.create.failure.alreadyInConfig.developer.${
             plural ? 'other' : 'one'
           }`,
           {
@@ -303,7 +287,7 @@ function handleSandboxCreateError({
       const baseUrl = getHubSpotWebsiteOrigin(getValidEnv(getEnv(accountId)));
       logger.error(
         i18n(
-          `lib.sandboxes.create.failure.limit.developer.${
+          `${i18nKey}.create.failure.limit.developer.${
             plural ? 'other' : 'one'
           }`,
           {
@@ -321,8 +305,8 @@ function handleSandboxCreateError({
       category: 'VALIDATION_ERROR',
       subCategory: 'SandboxErrors.NUM_STANDARD_SANDBOXES_LIMIT_EXCEEDED_ERROR',
     }) &&
-    err.error &&
-    err.error.message
+    'error' in err &&
+    err.error instanceof Error
   ) {
     logger.log('');
     const standardSandboxLimit = getSandboxLimit(err.error);
@@ -334,7 +318,7 @@ function handleSandboxCreateError({
     if (hasStandardSandboxes) {
       logger.error(
         i18n(
-          `lib.sandboxes.create.failure.alreadyInConfig.standard.${
+          `${i18nKey}.create.failure.alreadyInConfig.standard.${
             plural ? 'other' : 'one'
           }`,
           {
@@ -347,7 +331,7 @@ function handleSandboxCreateError({
       const baseUrl = getHubSpotWebsiteOrigin(getValidEnv(getEnv(accountId)));
       logger.error(
         i18n(
-          `lib.sandboxes.create.failure.limit.standard.${
+          `${i18nKey}.create.failure.limit.standard.${
             plural ? 'other' : 'one'
           }`,
           {
@@ -364,16 +348,3 @@ function handleSandboxCreateError({
   }
   throw err;
 }
-
-module.exports = {
-  sandboxTypeMap,
-  sandboxApiTypeMap,
-  syncTypes,
-  getSandboxTypeAsString,
-  getHasSandboxesByType,
-  getSandboxLimit,
-  validateSandboxUsageLimits,
-  getAvailableSyncTypes,
-  getSyncTypesWithContactRecordsPrompt,
-  handleSandboxCreateError,
-};
