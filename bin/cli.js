@@ -13,11 +13,7 @@ const {
   validateConfig,
 } = require('@hubspot/local-dev-lib/config');
 const { logError } = require('../lib/errorHandlers/index');
-const {
-  setLogLevel,
-  getCommandName,
-  injectAccountIdMiddleware,
-} = require('../lib/commonOpts');
+const { setLogLevel, getCommandName } = require('../lib/commonOpts');
 const { validateAccount } = require('../lib/validation');
 const {
   trackHelpUsage,
@@ -174,6 +170,32 @@ const isTargetedCommand = (options, commandMap) => {
 const SKIP_CONFIG_VALIDATION = {
   init: { target: true },
   auth: { target: true },
+};
+
+/**
+ * Auto-injects the derivedAccountId flag into all commands
+ */
+const injectAccountIdMiddleware = async options => {
+  const { account } = options;
+
+  // Preserves the original --account flag for certain commands.
+  options.providedAccountId = account;
+
+  if (options.useEnv && process.env.HUBSPOT_ACCOUNT_ID) {
+    options.derivedAccountId = parseInt(process.env.HUBSPOT_ACCOUNT_ID, 10);
+    return;
+  }
+
+  if (options.useEnv && process.env.HUBSPOT_PORTAL_ID) {
+    logger.error(
+      i18n(`${i18nKey}.injectAccountIdMiddleware.portalEnvVarDeprecated`, {
+        configPath: getConfigPath(),
+      })
+    );
+    process.exit(EXIT_CODES.ERROR);
+  }
+
+  options.derivedAccountId = getAccountIdFromConfig(account);
 };
 
 const loadConfigMiddleware = async options => {
