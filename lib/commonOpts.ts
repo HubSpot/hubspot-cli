@@ -117,28 +117,6 @@ export function getAccountId(
   return getAccountIdFromConfig(account);
 }
 
-/**
- * Auto-injects the derivedAccountId flag into all commands
- */
-export async function injectAccountIdMiddleware(
-  options: Arguments<{
-    derivedAccountId?: number | null;
-    account?: number | string;
-  }>
-): Promise<void> {
-  const { account } = options;
-
-  // Preserves the original --account flag for certain commands.
-  options.providedAccountId = account;
-
-  if (options.useEnv && process.env.HUBSPOT_ACCOUNT_ID) {
-    options.derivedAccountId = parseInt(process.env.HUBSPOT_ACCOUNT_ID, 10);
-    return;
-  }
-
-  options.derivedAccountId = getAccountIdFromConfig(account);
-}
-
 export function getCmsPublishMode(
   options: Arguments<{ cmsPublishMode?: CmsPublishMode }>
 ): CmsPublishMode {
