@@ -8,6 +8,7 @@ const { logger } = require('@hubspot/local-dev-lib/logger');
 const { addUserAgentHeader } = require('@hubspot/local-dev-lib/http');
 const {
   loadConfig,
+  getAccountId,
   configFileExists,
   getConfigPath,
   validateConfig,
@@ -194,7 +195,7 @@ const injectAccountIdMiddleware = async options => {
     process.env.HUBSPOT_ACCOUNT_ID = process.env.HUBSPOT_PORTAL_ID;
     options.derivedAccountId = parseInt(process.env.HUBSPOT_ACCOUNT_ID, 10);
   } else {
-    options.derivedAccountId = getAccountIdFromConfig(account);
+    options.derivedAccountId = getAccountId(account);
   }
 };
 
