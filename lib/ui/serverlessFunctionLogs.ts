@@ -137,10 +137,9 @@ function processLogs(
   return processLog(logsResp as Log, options);
 }
 
-function outputLogs(logsResp: LogsResponse | Log, options: Options): void {
+export function outputLogs(
+  logsResp: LogsResponse | Log,
+  options: Options
+): void {
   logger.log(processLogs(logsResp, options));
 }
-
-module.exports = {
-  outputLogs,
-};

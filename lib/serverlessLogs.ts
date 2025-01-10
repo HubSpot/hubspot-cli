@@ -1,37 +1,37 @@
-// @ts-nocheck
-const https = require('https');
-const SpinniesManager = require('./ui/SpinniesManager');
-const { handleExit, handleKeypress } = require('./process');
-const chalk = require('chalk');
-const { logger } = require('@hubspot/local-dev-lib/logger');
-const { outputLogs } = require('./ui/serverlessFunctionLogs');
-const { logError, ApiErrorContext } = require('./errorHandlers/index');
-
-const { EXIT_CODES } = require('./enums/exitCodes');
-const {
+import https from 'https';
+import chalk from 'chalk';
+import { logger } from '@hubspot/local-dev-lib/logger';
+import {
   isHubSpotHttpError,
   isMissingScopeError,
-} = require('@hubspot/local-dev-lib/errors/index');
-const {
+} from '@hubspot/local-dev-lib/errors/index';
+import {
   SCOPE_GROUPS,
   PERSONAL_ACCESS_KEY_AUTH_METHOD,
-} = require('@hubspot/local-dev-lib/constants/auth');
-const { getAccountConfig } = require('@hubspot/local-dev-lib/config');
-const { fetchScopeData } = require('@hubspot/local-dev-lib/api/localDevAuth');
-const { i18n } = require('./lang');
+} from '@hubspot/local-dev-lib/constants/auth';
+import { getAccountConfig } from '@hubspot/local-dev-lib/config';
+import { fetchScopeData } from '@hubspot/local-dev-lib/api/localDevAuth';
+
+import { outputLogs } from './ui/serverlessFunctionLogs';
+import { logError, ApiErrorContext } from './errorHandlers/index';
+import SpinniesManager from './ui/SpinniesManager';
+import { handleExit, handleKeypress } from './process';
+import { EXIT_CODES } from './enums/exitCodes';
+import { i18n } from './lang';
+import { HubSpotPromise } from '@hubspot/local-dev-lib/types/Http';
 
 const TAIL_DELAY = 5000;
 
-const base64EncodeString = valueToEncode => {
+function base64EncodeString(valueToEncode: string): string {
   if (typeof valueToEncode !== 'string') {
     return valueToEncode;
   }
 
   const stringBuffer = Buffer.from(valueToEncode);
   return encodeURIComponent(stringBuffer.toString('base64'));
-};
+}
 
-const handleUserInput = () => {
+function handleUserInput(): void {
   const onTerminate = async () => {
     SpinniesManager.remove('tailLogs');
     SpinniesManager.remove('stopMessage');
@@ -44,10 +44,18 @@ const handleUserInput = () => {
       onTerminate();
     }
   });
-};
+}
 
-async function verifyAccessKeyAndUserAccess(accountId, scopeGroup) {
+async function verifyAccessKeyAndUserAccess(
+  accountId: number,
+  scopeGroup: string
+): Promise<void> {
   const accountConfig = getAccountConfig(accountId);
+
+  if (!accountConfig) {
+    return;
+  }
+
   // TODO[JOE]: Update this i18n key
   const i18nKey = 'lib.serverless';
   const { authType } = accountConfig;
@@ -57,14 +65,15 @@ async function verifyAccessKeyAndUserAccess(accountId, scopeGroup) {
 
   let scopesData;
   try {
-    scopesData = await fetchScopeData(accountId, scopeGroup);
+    const resp = await fetchScopeData(accountId, scopeGroup);
+    scopesData = resp.data;
   } catch (e) {
     logger.debug(
       i18n(`${i18nKey}.verifyAccessKeyAndUserAccess.fetchScopeDataError`, {
         scopeGroup,
-        error: e,
       })
     );
+    logger.debug(e);
     return;
   }
   const { portalScopesInGroup, userScopesInGroup } = scopesData;
@@ -87,14 +96,14 @@ async function verifyAccessKeyAndUserAccess(accountId, scopeGroup) {
   }
 }
 
-const tailLogs = async ({
-  accountId,
-  compact,
-  fetchLatest,
-  tailCall,
-  name,
-}) => {
-  let initialAfter;
+export async function tailLogs(
+  accountId: number,
+  name: string,
+  fetchLatest: () => HubSpotPromise<{ id: string }>,
+  tailCall: (after: string) => HubSpotPromise,
+  compact = false
+) {
+  let initialAfter: string;
 
   try {
     const { data: latestLog } = await fetchLatest();
@@ -113,7 +122,7 @@ const tailLogs = async ({
     }
   }
 
-  const tail = async after => {
+  async function tail(after: string) {
     let latestLog;
     let nextAfter;
     try {
@@ -141,7 +150,7 @@ const tailLogs = async ({
     setTimeout(async () => {
       await tail(nextAfter);
     }, TAIL_DELAY);
-  };
+  }
 
   SpinniesManager.init();
 
@@ -156,14 +165,14 @@ const tailLogs = async ({
   handleUserInput();
 
   await tail(initialAfter);
-};
+}
 
-const outputBuildLog = async buildLogUrl => {
+export async function outputBuildLog(buildLogUrl: string): Promise<string> {
   if (!buildLogUrl) {
     logger.debug(
       'Unable to display build output. No build log URL was provided.'
     );
-    return;
+    return '';
   }
 
   return new Promise(resolve => {
@@ -191,9 +200,4 @@ const outputBuildLog = async buildLogUrl => {
       resolve('');
     }
   });
-};
-
-module.exports = {
-  outputBuildLog,
-  tailLogs,
-};
+}
