@@ -15,11 +15,12 @@ import {
 } from '@hubspot/local-dev-lib/errors/index';
 import { getValidEnv } from '@hubspot/local-dev-lib/environment';
 import { AccountType, CLIAccount } from '@hubspot/local-dev-lib/types/Accounts';
+import { Environment } from '@hubspot/local-dev-lib/types/Config';
 
 import { i18n } from './lang';
 import { uiAccountDescription } from './ui';
 import { logError } from './errorHandlers/index';
-import { Environment } from '@hubspot/local-dev-lib/types/Config';
+import { SandboxSyncTask } from '../types/Sandboxes';
 
 const i18nKey = 'lib.sandbox';
 
@@ -39,7 +40,7 @@ export const SANDBOX_API_TYPE_MAP = {
   [HUBSPOT_ACCOUNT_TYPES.DEVELOPMENT_SANDBOX]: 2,
 } as const;
 
-export function getSandboxTypeAsString(accountType: AccountType): string {
+export function getSandboxTypeAsString(accountType?: AccountType): string {
   if (accountType === HUBSPOT_ACCOUNT_TYPES.DEVELOPMENT_SANDBOX) {
     return 'development'; // Only place we're using this specific name
   }
@@ -89,7 +90,7 @@ function getSandboxLimit(error: unknown): number {
 export async function getAvailableSyncTypes(
   parentAccountConfig: CLIAccount,
   config: CLIAccount
-): Promise<Array<{ type: string }>> {
+): Promise<Array<SandboxSyncTask>> {
   const parentId = getAccountIdentifier(parentAccountConfig);
   const parentPortalId = getAccountId(parentId);
   const id = getAccountIdentifier(config);
