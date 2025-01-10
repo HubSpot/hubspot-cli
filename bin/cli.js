@@ -284,8 +284,8 @@ const argv = yargs
   .middleware([
     setLogLevel,
     setRequestHeaders,
-    injectAccountIdMiddleware,
     loadConfigMiddleware,
+    injectAccountIdMiddleware,
     checkAndWarnGitInclusionMiddleware,
     validateAccountOptions,
   ])
