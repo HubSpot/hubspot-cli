@@ -5,7 +5,7 @@
   "license": "Apache-2.0",
   "repository": "https://github.com/HubSpot/hubspot-cli",
   "dependencies": {
-    "@hubspot/local-dev-lib": "3.1.1",
+    "@hubspot/local-dev-lib": "3.1.2",
     "@hubspot/serverless-dev-runtime": "7.0.1",
     "@hubspot/theme-preview-dev-server": "0.0.10",
     "@hubspot/ui-extensions-dev-server": "0.8.40",

@@ -19,6 +19,10 @@ import { handleExit, handleKeypress } from './process';
 import { EXIT_CODES } from './enums/exitCodes';
 import { i18n } from './lang';
 import { HubSpotPromise } from '@hubspot/local-dev-lib/types/Http';
+import {
+  FunctionLog,
+  GetFunctionLogsResponse,
+} from '@hubspot/local-dev-lib/types/Functions';
 
 const TAIL_DELAY = 5000;
 
@@ -99,11 +103,11 @@ async function verifyAccessKeyAndUserAccess(
 export async function tailLogs(
   accountId: number,
   name: string,
-  fetchLatest: () => HubSpotPromise<{ id: string }>,
-  tailCall: (after: string) => HubSpotPromise,
+  fetchLatest: () => HubSpotPromise<FunctionLog>,
+  tailCall: (after: string) => HubSpotPromise<GetFunctionLogsResponse>,
   compact = false
-) {
-  let initialAfter: string;
+): Promise<void> {
+  let initialAfter = '';
 
   try {
     const { data: latestLog } = await fetchLatest();
@@ -122,9 +126,9 @@ export async function tailLogs(
     }
   }
 
-  async function tail(after: string) {
-    let latestLog;
-    let nextAfter;
+  async function tail(after: string): Promise<void> {
+    let latestLog: GetFunctionLogsResponse;
+    let nextAfter: string;
     try {
       const { data } = await tailCall(after);
       latestLog = data;
@@ -164,7 +168,9 @@ export async function tailLogs(
 
   handleUserInput();
 
-  await tail(initialAfter);
+  if (initialAfter) {
+    await tail(initialAfter);
+  }
 }
 
 export async function outputBuildLog(buildLogUrl: string): Promise<string> {

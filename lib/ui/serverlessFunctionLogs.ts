@@ -2,11 +2,15 @@ import moment from 'moment';
 import chalk from 'chalk';
 import { logger, Styles } from '@hubspot/local-dev-lib/logger';
 import { i18n } from '../lang';
+import {
+  FunctionLog,
+  GetFunctionLogsResponse,
+} from '@hubspot/local-dev-lib/types/Functions';
 
 const i18nKey = 'lib.ui.serverlessFunctionLogs';
 
 const SEPARATOR = ' - ';
-const LOG_STATUS_COLORS = {
+const LOG_STATUS_COLORS: { [key: string]: (status: string) => string } = {
   SUCCESS: Styles.success,
   ERROR: Styles.error,
   UNHANDLED_ERROR: Styles.error,
@@ -15,22 +19,6 @@ const LOG_STATUS_COLORS = {
 
 type LogStatus = keyof typeof LOG_STATUS_COLORS;
 
-type Log = {
-  status: LogStatus;
-  createdAt: string;
-  executionTime: number;
-  log?: string;
-  error?: {
-    type: string;
-    message: string;
-    stackTrace?: string[];
-  };
-};
-
-type LogsResponse = {
-  results?: Log[];
-};
-
 type Options = {
   compact?: boolean;
   insertions?: {
@@ -38,22 +26,22 @@ type Options = {
   };
 };
 
-function errorHandler(log: Log, options: Options): string {
+function errorHandler(log: FunctionLog, options: Options): string {
   return `${formatLogHeader(log, options)}${formatError(log, options)}`;
 }
 
 const logHandler: {
-  [key in LogStatus]: (log: Log, options: Options) => string;
+  [key in LogStatus]: (log: FunctionLog, options: Options) => string;
 } = {
   ERROR: errorHandler,
   UNHANDLED_ERROR: errorHandler,
   HANDLED_ERROR: errorHandler,
-  SUCCESS: (log: Log, options: Options): string => {
+  SUCCESS: (log: FunctionLog, options: Options): string => {
     return `${formatLogHeader(log, options)}${formatSuccess(log, options)}`;
   },
 };
 
-function formatSuccess(log: Log, options: Options): string {
+function formatSuccess(log: FunctionLog, options: Options): string {
   if (!log.log || options.compact) {
     return '';
   }
@@ -61,7 +49,7 @@ function formatSuccess(log: Log, options: Options): string {
   return `\n${log.log}`;
 }
 
-function formatError(log: Log, options: Options): string {
+function formatError(log: FunctionLog, options: Options): string {
   if (!log.error || options.compact) {
     return '';
   }
@@ -69,7 +57,7 @@ function formatError(log: Log, options: Options): string {
   return `${log.error.type}: ${log.error.message}\n${formatStackTrace(log)}`;
 }
 
-function formatLogHeader(log: Log, options: Options): string {
+function formatLogHeader(log: FunctionLog, options: Options): string {
   const color = LOG_STATUS_COLORS[log.status];
   const headerInsertion =
     options && options.insertions && options.insertions.header;
@@ -79,7 +67,7 @@ function formatLogHeader(log: Log, options: Options): string {
   }${SEPARATOR}${formatExecutionTime(log)}`;
 }
 
-function formatStackTrace(log: Log): string {
+function formatStackTrace(log: FunctionLog): string {
   const stackTrace = log.error?.stackTrace || [];
   return stackTrace
     .map(trace => {
@@ -88,15 +76,15 @@ function formatStackTrace(log: Log): string {
     .join('');
 }
 
-function formatTimestamp(log: Log): string {
+function formatTimestamp(log: FunctionLog): string {
   return `${chalk.whiteBright(moment(log.createdAt).toISOString())}`;
 }
 
-function formatExecutionTime(log: Log): string {
+function formatExecutionTime(log: FunctionLog): string {
   return `${chalk.whiteBright('Execution Time:')} ${log.executionTime}ms`;
 }
 
-function processLog(log: Log, options: Options): string | void {
+function processLog(log: FunctionLog, options: Options): string | void {
   try {
     return logHandler[log.status](log, options);
   } catch (e) {
@@ -109,8 +97,8 @@ function processLog(log: Log, options: Options): string | void {
 }
 
 function isLogsResponse(
-  logsResp: LogsResponse | Log
-): logsResp is LogsResponse {
+  logsResp: GetFunctionLogsResponse | FunctionLog
+): logsResp is GetFunctionLogsResponse {
   return (
     logsResp &&
     'results' in logsResp &&
@@ -120,7 +108,7 @@ function isLogsResponse(
 }
 
 function processLogs(
-  logsResp: LogsResponse | Log,
+  logsResp: GetFunctionLogsResponse | FunctionLog,
   options: Options
 ): string | void {
   const isLogsResp = isLogsResponse(logsResp);
@@ -134,11 +122,11 @@ function processLogs(
       })
       .join('\n');
   }
-  return processLog(logsResp as Log, options);
+  return processLog(logsResp, options);
 }
 
 export function outputLogs(
-  logsResp: LogsResponse | Log,
+  logsResp: GetFunctionLogsResponse | FunctionLog,
   options: Options
 ): void {
   logger.log(processLogs(logsResp, options));
