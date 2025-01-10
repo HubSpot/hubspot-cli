@@ -79,6 +79,7 @@ exports.handler = async options => {
 
   // Check usage limits and exit if parent portal has no available sandboxes for the selected type
   try {
+    console.log('validate usage limit');
     await validateSandboxUsageLimits(accountConfig, sandboxType, env);
   } catch (err) {
     if (isMissingScopeError(err)) {

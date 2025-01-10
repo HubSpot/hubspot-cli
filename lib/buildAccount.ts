@@ -162,7 +162,7 @@ async function buildNewAccount({
     });
 
     if (isSandbox) {
-      handleSandboxCreateError(err, env, accountConfig, name, accountId);
+      handleSandboxCreateError(err, env, name, accountId);
     }
     if (isDeveloperTestAccount) {
       handleDeveloperTestAccountCreateError(err, env, accountId, portalLimit);
