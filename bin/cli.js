@@ -173,6 +173,23 @@ const SKIP_CONFIG_VALIDATION = {
   auth: { target: true },
 };
 
+const handleDeprecatedEnvVariables = options => {
+  // HUBSPOT_PORTAL_ID is deprecated, but we'll still support it for now
+  // The HubSpot GH Deploy Action still uses HUBSPOT_PORTAL_ID
+  if (
+    options.useEnv &&
+    process.env.HUBSPOT_PORTAL_ID &&
+    !process.env.HUBSPOT_ACCOUNT_ID
+  ) {
+    uiDeprecatedTag(
+      i18n(`${i18nKey}.injectAccountIdMiddleware.portalEnvVarDeprecated`, {
+        configPath: getConfigPath(),
+      })
+    );
+    process.env.HUBSPOT_ACCOUNT_ID = process.env.HUBSPOT_PORTAL_ID;
+  }
+};
+
 /**
  * Auto-injects the derivedAccountId flag into all commands
  */
@@ -183,16 +200,6 @@ const injectAccountIdMiddleware = async options => {
   options.providedAccountId = account;
 
   if (options.useEnv && process.env.HUBSPOT_ACCOUNT_ID) {
-    options.derivedAccountId = parseInt(process.env.HUBSPOT_ACCOUNT_ID, 10);
-  } else if (options.useEnv && process.env.HUBSPOT_PORTAL_ID) {
-    // HUBSPOT_PORTAL_ID is deprecated, but we'll still support it for now
-    // The HubSpot GH Deploy Action still uses HUBSPOT_PORTAL_ID
-    uiDeprecatedTag(
-      i18n(`${i18nKey}.injectAccountIdMiddleware.portalEnvVarDeprecated`, {
-        configPath: getConfigPath(),
-      })
-    );
-    process.env.HUBSPOT_ACCOUNT_ID = process.env.HUBSPOT_PORTAL_ID;
     options.derivedAccountId = parseInt(process.env.HUBSPOT_ACCOUNT_ID, 10);
   } else {
     options.derivedAccountId = getAccountId(account);
@@ -284,6 +291,7 @@ const argv = yargs
   .middleware([
     setLogLevel,
     setRequestHeaders,
+    handleDeprecatedEnvVariables,
     loadConfigMiddleware,
     injectAccountIdMiddleware,
     checkAndWarnGitInclusionMiddleware,
