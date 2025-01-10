@@ -1,10 +1,12 @@
 // @ts-nocheck
-const { getAccountConfig } = require('@hubspot/local-dev-lib/config');
+const {
+  getAccountId,
+  getAccountConfig,
+} = require('@hubspot/local-dev-lib/config');
 const { getOauthManager } = require('@hubspot/local-dev-lib/oauth');
 const {
   accessTokenForPersonalAccessKey,
 } = require('@hubspot/local-dev-lib/personalAccessKey');
-const { getAccountId } = require('../commonOpts');
 const { validateAccount } = require('../validation');
 
 jest.mock('@hubspot/local-dev-lib/config');

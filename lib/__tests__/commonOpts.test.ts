@@ -5,8 +5,8 @@ const {
 } = require('@hubspot/local-dev-lib/constants/files');
 const {
   getAndLoadConfigIfNeeded,
-  getAccountId,
   getAccountConfig,
+  getAccountId,
   loadConfigFromEnvironment,
 } = require('@hubspot/local-dev-lib/config');
 const { getCmsPublishMode } = require('../commonOpts');
