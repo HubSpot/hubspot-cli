@@ -23,7 +23,7 @@ const { getIsInProject } = require('../lib/projects');
 const pkg = require('../package.json');
 const { i18n } = require('../lib/lang');
 const { EXIT_CODES } = require('../lib/enums/exitCodes');
-const { UI_COLORS, uiCommandReference } = require('../lib/ui');
+const { UI_COLORS, uiCommandReference, uiDeprecatedTag } = require('../lib/ui');
 const { checkAndWarnGitInclusion } = require('../lib/ui/git');
 
 const removeCommand = require('../commands/remove');
@@ -183,19 +183,19 @@ const injectAccountIdMiddleware = async options => {
 
   if (options.useEnv && process.env.HUBSPOT_ACCOUNT_ID) {
     options.derivedAccountId = parseInt(process.env.HUBSPOT_ACCOUNT_ID, 10);
-    return;
-  }
-
-  if (options.useEnv && process.env.HUBSPOT_PORTAL_ID) {
-    logger.error(
+  } else if (options.useEnv && process.env.HUBSPOT_PORTAL_ID) {
+    // HUBSPOT_PORTAL_ID is deprecated, but we'll still support it for now
+    // The HubSpot GH Deploy Action still uses HUBSPOT_PORTAL_ID
+    uiDeprecatedTag(
       i18n(`${i18nKey}.injectAccountIdMiddleware.portalEnvVarDeprecated`, {
         configPath: getConfigPath(),
       })
     );
-    process.exit(EXIT_CODES.ERROR);
+    process.env.HUBSPOT_ACCOUNT_ID = process.env.HUBSPOT_PORTAL_ID;
+    options.derivedAccountId = parseInt(process.env.HUBSPOT_ACCOUNT_ID, 10);
+  } else {
+    options.derivedAccountId = getAccountIdFromConfig(account);
   }
-
-  options.derivedAccountId = getAccountIdFromConfig(account);
 };
 
 const loadConfigMiddleware = async options => {
@@ -283,8 +283,8 @@ const argv = yargs
   .middleware([
     setLogLevel,
     setRequestHeaders,
-    loadConfigMiddleware,
     injectAccountIdMiddleware,
+    loadConfigMiddleware,
     checkAndWarnGitInclusionMiddleware,
     validateAccountOptions,
   ])
