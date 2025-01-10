@@ -182,7 +182,7 @@ const handleDeprecatedEnvVariables = options => {
     !process.env.HUBSPOT_ACCOUNT_ID
   ) {
     uiDeprecatedTag(
-      i18n(`${i18nKey}.injectAccountIdMiddleware.portalEnvVarDeprecated`, {
+      i18n(`${i18nKey}.handleDeprecatedEnvVariables.portalEnvVarDeprecated`, {
         configPath: getConfigPath(),
       })
     );
