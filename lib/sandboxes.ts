@@ -96,14 +96,14 @@ export async function validateSandboxUsageLimits(
   const accountId = getAccountId(id);
 
   if (!accountId) {
-    throw new Error(`${i18nKey}.create.failure.usageLimitFetch`);
+    throw new Error(i18n(`${i18nKey}.create.failure.usageLimitFetch`));
   }
 
   const {
     data: { usage },
   } = await getSandboxUsageLimits(accountId);
   if (!usage) {
-    throw new Error(`${i18nKey}.create.failure.usageLimitFetch`);
+    throw new Error(i18n(`${i18nKey}.create.failure.usageLimitFetch`));
   }
   if (sandboxType === HUBSPOT_ACCOUNT_TYPES.DEVELOPMENT_SANDBOX) {
     if (usage['DEVELOPER'].available === 0) {
