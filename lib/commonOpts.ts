@@ -8,7 +8,6 @@ import {
 } from '@hubspot/local-dev-lib/constants/files';
 import { CmsPublishMode } from '@hubspot/local-dev-lib/types/Files';
 import {
-  getAccountId,
   getAccountConfig,
   getAndLoadConfigIfNeeded,
 } from '@hubspot/local-dev-lib/config';
@@ -114,9 +113,8 @@ export function getCmsPublishMode(
     return cmsPublishMode.toLowerCase() as CmsPublishMode;
   }
   // 2. config[account].defaultCmsPublishMode
-  const accountId = getAccountId(options.derivedAccountId);
-  if (accountId) {
-    const accountConfig = getAccountConfig(accountId);
+  if (options.derivedAccountId) {
+    const accountConfig = getAccountConfig(options.derivedAccountId);
     if (accountConfig && accountConfig.defaultCmsPublishMode) {
       return accountConfig.defaultCmsPublishMode;
     }

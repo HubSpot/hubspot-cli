@@ -6,7 +6,6 @@ const {
 const {
   getAndLoadConfigIfNeeded,
   getAccountConfig,
-  getAccountId,
   loadConfigFromEnvironment,
 } = require('@hubspot/local-dev-lib/config');
 const { getCmsPublishMode } = require('../commonOpts');
@@ -40,7 +39,6 @@ describe('lib/commonOpts', () => {
 
     afterEach(() => {
       getAndLoadConfigIfNeeded.mockReset();
-      getAccountId.mockReset();
       getAccountConfig.mockReset();
       loadConfigFromEnvironment.mockReset();
     });
@@ -68,7 +66,6 @@ describe('lib/commonOpts', () => {
           getAndLoadConfigIfNeeded.mockReturnValue(
             configWithDefaultCmsPublishMode
           );
-          getAccountId.mockReturnValue(accounts.DEV);
           getAccountConfig.mockReturnValue(devAccountConfig);
           loadConfigFromEnvironment.mockReturnValue(undefined);
           expect(getCmsPublishMode({ account: accounts.DEV })).toBe(
@@ -81,7 +78,6 @@ describe('lib/commonOpts', () => {
           getAndLoadConfigIfNeeded.mockReturnValue(
             configWithDefaultCmsPublishMode
           );
-          getAccountId.mockReturnValue(accounts.PROD);
           getAccountConfig.mockReturnValue(prodAccountConfig);
           loadConfigFromEnvironment.mockReturnValue(undefined);
           expect(getCmsPublishMode({ account: accounts.PROD })).toBe(
