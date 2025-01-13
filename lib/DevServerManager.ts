@@ -1,10 +1,5 @@
 import { logger } from '@hubspot/local-dev-lib/logger';
 import { Environment } from '@hubspot/local-dev-lib/types/Config';
-import {
-  COMPONENT_TYPES,
-  ComponentTypes,
-  Component,
-} from './projects/structure';
 import { i18n } from './lang';
 import { promptUser } from './prompts/promptUtils';
 import { DevModeInterface as UIEDevModeInterface } from '@hubspot/ui-extensions-dev-server';
@@ -18,7 +13,7 @@ import {
   getHubSpotWebsiteOrigin,
 } from '@hubspot/local-dev-lib/urls';
 import { getAccountConfig } from '@hubspot/local-dev-lib/config';
-import { ProjectConfig } from '../types/Projects';
+import { ProjectConfig, ComponentTypes, Component } from '../types/Projects';
 
 const i18nKey = 'lib.DevServerManager';
 
@@ -43,7 +38,7 @@ type DevServer = {
 };
 
 type ComponentsByType = {
-  [key in ComponentTypes]: { [key: string]: Component };
+  [key in ComponentTypes]?: { [key: string]: Component };
 };
 
 class DevServerManager {
@@ -55,18 +50,14 @@ class DevServerManager {
   constructor() {
     this.initialized = false;
     this.started = false;
-    this.componentsByType = {
-      [COMPONENT_TYPES.privateApp]: {},
-      [COMPONENT_TYPES.publicApp]: {},
-      [COMPONENT_TYPES.hublTheme]: {},
-    };
+    this.componentsByType = {};
     this.devServers = {
       [SERVER_KEYS.privateApp]: {
-        componentType: COMPONENT_TYPES.privateApp,
+        componentType: ComponentTypes.PrivateApp,
         serverInterface: UIEDevModeInterface,
       },
       [SERVER_KEYS.publicApp]: {
-        componentType: COMPONENT_TYPES.publicApp,
+        componentType: ComponentTypes.PublicApp,
         serverInterface: UIEDevModeInterface,
       },
     };
@@ -98,17 +89,17 @@ class DevServerManager {
   }
 
   arrangeComponentsByType(components: Component[]): ComponentsByType {
-    return components.reduce((acc, component) => {
+    return components.reduce<ComponentsByType>((acc, component) => {
       if (!acc[component.type]) {
         acc[component.type] = {};
       }
 
       if ('name' in component.config && component.config.name) {
-        acc[component.type][component.config.name] = component;
+        acc[component.type]![component.config.name] = component;
       }
 
       return acc;
-    }, {} as ComponentsByType);
+    }, {});
   }
 
   async setup({
@@ -203,4 +194,7 @@ class DevServerManager {
   }
 }
 
-export default new DevServerManager();
+const Manager = new DevServerManager();
+
+export default Manager;
+module.exports = Manager;
