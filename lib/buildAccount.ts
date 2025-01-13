@@ -1,47 +1,37 @@
-// @ts-nocheck
-const {
+import {
   getAccessToken,
   updateConfigWithAccessToken,
-} = require('@hubspot/local-dev-lib/personalAccessKey');
-const {
-  personalAccessKeyPrompt,
-} = require('./prompts/personalAccessKeyPrompt');
-const {
+} from '@hubspot/local-dev-lib/personalAccessKey';
+import {
   accountNameExistsInConfig,
   updateAccountConfig,
   writeConfig,
   getAccountId,
-} = require('@hubspot/local-dev-lib/config');
-const {
-  getAccountIdentifier,
-} = require('@hubspot/local-dev-lib/config/getAccountIdentifier');
-const { logger } = require('@hubspot/local-dev-lib/logger');
-const { i18n } = require('./lang');
-const { cliAccountNamePrompt } = require('./prompts/accountNamePrompt');
-const SpinniesManager = require('./ui/SpinniesManager');
-const { debugError, logError } = require('./errorHandlers/index');
-const {
-  createDeveloperTestAccount,
-} = require('@hubspot/local-dev-lib/api/developerTestAccounts');
-const {
-  HUBSPOT_ACCOUNT_TYPES,
-} = require('@hubspot/local-dev-lib/constants/config');
-const { createSandbox } = require('@hubspot/local-dev-lib/api/sandboxHubs');
-const {
-  SANDBOX_API_TYPE_MAP,
-  handleSandboxCreateError,
-} = require('./sandboxes');
-const {
-  handleDeveloperTestAccountCreateError,
-} = require('./developerTestAccounts');
+} from '@hubspot/local-dev-lib/config';
+import { getAccountIdentifier } from '@hubspot/local-dev-lib/config/getAccountIdentifier';
+import { logger } from '@hubspot/local-dev-lib/logger';
+import { createDeveloperTestAccount } from '@hubspot/local-dev-lib/api/developerTestAccounts';
+import { HUBSPOT_ACCOUNT_TYPES } from '@hubspot/local-dev-lib/constants/config';
+import { createSandbox } from '@hubspot/local-dev-lib/api/sandboxHubs';
+import { Environment } from '@hubspot/local-dev-lib/types/Config';
 
-async function saveAccountToConfig({
-  env,
-  personalAccessKey,
-  accountName,
-  accountId,
-  force = false,
-}) {
+import { personalAccessKeyPrompt } from './prompts/personalAccessKeyPrompt';
+import { i18n } from './lang';
+import { cliAccountNamePrompt } from './prompts/accountNamePrompt';
+import SpinniesManager from './ui/SpinniesManager';
+import { debugError, logError } from './errorHandlers/index';
+
+import { SANDBOX_API_TYPE_MAP, handleSandboxCreateError } from './sandboxes';
+import { handleDeveloperTestAccountCreateError } from './developerTestAccounts';
+import { CLIAccount } from '@hubspot/local-dev-lib/types/Accounts';
+
+export async function saveAccountToConfig(
+  accountId: number | undefined,
+  accountName: string,
+  env: Environment,
+  personalAccessKey?: string,
+  force = false
+): Promise<string> {
   if (!personalAccessKey) {
     const configData = await personalAccessKeyPrompt({
       env,
@@ -57,8 +47,8 @@ async function saveAccountToConfig({
     env
   );
 
-  let validName = updatedConfig.name;
-  if (!updatedConfig.name) {
+  let validName = updatedConfig?.name || '';
+  if (!updatedConfig?.name) {
     const nameForConfig = accountName.toLowerCase().split(' ').join('-');
     validName = nameForConfig;
     const invalidAccountName = accountNameExistsInConfig(nameForConfig);
@@ -83,8 +73,8 @@ async function saveAccountToConfig({
 
   updateAccountConfig({
     ...updatedConfig,
-    environment: updatedConfig.env,
-    tokenInfo: updatedConfig.auth.tokenInfo,
+    env: updatedConfig?.env,
+    tokenInfo: updatedConfig?.auth?.tokenInfo,
     name: validName,
   });
   writeConfig();
@@ -93,14 +83,28 @@ async function saveAccountToConfig({
   return validName;
 }
 
-async function buildNewAccount({
+type ValidBuildAccountType =
+  | typeof HUBSPOT_ACCOUNT_TYPES.STANDARD_SANDBOX
+  | typeof HUBSPOT_ACCOUNT_TYPES.DEVELOPMENT_SANDBOX
+  | typeof HUBSPOT_ACCOUNT_TYPES.DEVELOPER_TEST;
+
+type BuildNewAccountOptions = {
+  name: string;
+  accountType: ValidBuildAccountType;
+  accountConfig: CLIAccount;
+  env: Environment;
+  portalLimit?: number;
+  force?: boolean;
+};
+
+export async function buildNewAccount({
   name,
   accountType,
   accountConfig,
   env,
   portalLimit, // Used only for developer test accounts
   force = false,
-}) {
+}: BuildNewAccountOptions) {
   SpinniesManager.init({
     succeedColor: 'white',
   });
@@ -112,8 +116,12 @@ async function buildNewAccount({
   const isDeveloperTestAccount =
     accountType === HUBSPOT_ACCOUNT_TYPES.DEVELOPER_TEST;
 
+  if ((!isSandbox && !isDeveloperTestAccount) || !accountId) {
+    return;
+  }
+
   let result;
-  let spinniesI18nKey;
+  let spinniesI18nKey: string;
   if (isSandbox) {
     if (accountType === HUBSPOT_ACCOUNT_TYPES.STANDARD_SANDBOX) {
       spinniesI18nKey = 'lib.sandbox.create.loading.standard';
@@ -121,7 +129,7 @@ async function buildNewAccount({
     if (accountType === HUBSPOT_ACCOUNT_TYPES.DEVELOPMENT_SANDBOX) {
       spinniesI18nKey = 'lib.sandbox.create.loading.developer';
     }
-  } else if (isDeveloperTestAccount) {
+  } else {
     spinniesI18nKey = 'lib.developerTestAccount.create.loading';
   }
 
@@ -133,6 +141,7 @@ async function buildNewAccount({
   });
 
   let resultAccountId;
+  let resultPersonalAccessKey;
   try {
     if (isSandbox) {
       const sandboxApiType = SANDBOX_API_TYPE_MAP[accountType]; // API expects sandbox type as 1 or 2.
@@ -140,6 +149,7 @@ async function buildNewAccount({
       const { data } = await createSandbox(accountId, name, sandboxApiType);
       result = { name, ...data };
       resultAccountId = result.sandbox.sandboxHubId;
+      resultPersonalAccessKey = result.personalAccessKey;
     } else if (isDeveloperTestAccount) {
       const { data } = await createDeveloperTestAccount(accountId, name);
       result = data;
@@ -169,17 +179,17 @@ async function buildNewAccount({
     }
   }
 
-  let configAccountName;
+  let configAccountName: string;
 
   try {
     // Response contains PAK, save to config here
-    configAccountName = await saveAccountToConfig({
+    configAccountName = await saveAccountToConfig(
+      resultAccountId,
+      name,
       env,
-      personalAccessKey: result.personalAccessKey,
-      accountName: name,
-      accountId: resultAccountId,
-      force,
-    });
+      resultPersonalAccessKey,
+      force
+    );
   } catch (err) {
     logError(err);
     throw err;
@@ -190,8 +200,3 @@ async function buildNewAccount({
     result,
   };
 }
-
-module.exports = {
-  buildNewAccount,
-  saveAccountToConfig,
-};

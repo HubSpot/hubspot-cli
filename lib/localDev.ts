@@ -319,11 +319,11 @@ const useExistingDevTestAccount = async (env, account) => {
     logger.log('');
     process.exit(EXIT_CODES.SUCCESS);
   }
-  const devTestAcctConfigName = await saveAccountToConfig({
-    env,
-    accountName: account.accountName,
-    accountId: account.id,
-  });
+  const devTestAcctConfigName = await saveAccountToConfig(
+    account.id,
+    account.accountName,
+    env
+  );
   logger.success(
     i18n(`lib.developerTestAccount.create.success.configFileUpdated`, {
       accountName: devTestAcctConfigName,
