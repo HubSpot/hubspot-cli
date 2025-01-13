@@ -49,7 +49,11 @@ const { logError, ApiErrorContext } = require('./errorHandlers/index');
 const {
   PERSONAL_ACCESS_KEY_AUTH_METHOD,
 } = require('@hubspot/local-dev-lib/constants/auth');
-const { buildNewAccount, saveAccountToConfig } = require('./buildAccount');
+const {
+  buildSandbox,
+  buildDeveloperTestAccount,
+  saveAccountToConfig,
+} = require('./buildAccount');
 const { hubspotAccountNamePrompt } = require('./prompts/accountNamePrompt');
 
 const i18nKey = 'lib.localDev';
@@ -208,12 +212,12 @@ const createSandboxForLocalDev = async (accountId, accountConfig, env) => {
       accountId
     );
 
-    const { result } = await buildNewAccount({
+    const result = await buildSandbox(
       name,
-      accountType: HUBSPOT_ACCOUNT_TYPES.DEVELOPMENT_SANDBOX,
       accountConfig,
-      env,
-    });
+      HUBSPOT_ACCOUNT_TYPES.DEVELOPMENT_SANDBOX,
+      env
+    );
 
     const targetAccountId = result.sandbox.sandboxHubId;
 
@@ -286,13 +290,12 @@ const createDeveloperTestAccountForLocalDev = async (
       accountId
     );
 
-    const { result } = await buildNewAccount({
+    const result = await buildDeveloperTestAccount(
       name,
-      accountType: HUBSPOT_ACCOUNT_TYPES.DEVELOPER_TEST,
       accountConfig,
       env,
-      portalLimit: maxTestPortals,
-    });
+      maxTestPortals
+    );
 
     return result.id;
   } catch (err) {

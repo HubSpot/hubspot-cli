@@ -28,7 +28,7 @@ const {
   HUBSPOT_ACCOUNT_TYPES,
   HUBSPOT_ACCOUNT_TYPE_STRINGS,
 } = require('@hubspot/local-dev-lib/constants/config');
-const { buildNewAccount } = require('../../lib/buildAccount');
+const { buildSandbox } = require('../../lib/buildAccount');
 const {
   hubspotAccountNamePrompt,
 } = require('../../lib/prompts/accountNamePrompt');
@@ -131,13 +131,13 @@ exports.handler = async options => {
   }
 
   try {
-    const { result } = await buildNewAccount({
-      name: sandboxName,
-      accountType: sandboxType,
+    const result = await buildSandbox(
+      sandboxName,
       accountConfig,
+      sandboxType,
       env,
-      force,
-    });
+      force
+    );
 
     const sandboxAccountConfig = getAccountConfig(result.sandbox.sandboxHubId);
     // For v1 sandboxes, keep sync here. Once we migrate to v2, this will be handled by BE automatically
