@@ -61,13 +61,7 @@ const endpointLog = async (accountId, functionPath, options) => {
       }
     };
 
-    await tailLogs({
-      accountId,
-      compact,
-      tailCall,
-      fetchLatest,
-      name: functionPath,
-    });
+    await tailLogs(accountId, functionPath, fetchLatest, tailCall, compact);
   } else if (latest) {
     try {
       const { data } = await getLatestFunctionLog(accountId, functionPath);

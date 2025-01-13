@@ -104,7 +104,7 @@ export async function tailLogs(
   accountId: number,
   name: string,
   fetchLatest: () => HubSpotPromise<FunctionLog>,
-  tailCall: (after: string) => HubSpotPromise<GetFunctionLogsResponse>,
+  tailCall: (after?: string) => HubSpotPromise<GetFunctionLogsResponse>,
   compact = false
 ): Promise<void> {
   let initialAfter = '';
@@ -126,7 +126,7 @@ export async function tailLogs(
     }
   }
 
-  async function tail(after: string): Promise<void> {
+  async function tail(after?: string): Promise<void> {
     let latestLog: GetFunctionLogsResponse;
     let nextAfter: string;
     try {
@@ -168,9 +168,7 @@ export async function tailLogs(
 
   handleUserInput();
 
-  if (initialAfter) {
-    await tail(initialAfter);
-  }
+  await tail(initialAfter);
 }
 
 export async function outputBuildLog(buildLogUrl: string): Promise<string> {
