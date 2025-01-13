@@ -22,11 +22,8 @@ const DevServerManager = require('./DevServerManager');
 const { EXIT_CODES } = require('./enums/exitCodes');
 const { getProjectDetailUrl } = require('./projects/urls');
 const { getAccountHomeUrl } = require('./localDev');
-const {
-  CONFIG_FILES,
-  COMPONENT_TYPES,
-  getAppCardConfigs,
-} = require('./projects/structure');
+const { CONFIG_FILES, getAppCardConfigs } = require('./projects/structure');
+const { ComponentTypes } = require('../types/Projects');
 const {
   UI_COLORS,
   uiCommandReference,
@@ -92,7 +89,7 @@ class LocalDevManager {
       return component.config.uid === appUid;
     });
 
-    if (this.activeApp.type === COMPONENT_TYPES.publicApp) {
+    if (this.activeApp.type === ComponentTypes.PublicApp) {
       try {
         await this.setActivePublicAppData();
         await this.checkActivePublicAppInstalls();
@@ -212,7 +209,7 @@ class LocalDevManager {
       )
     );
 
-    if (this.activeApp.type === COMPONENT_TYPES.publicApp) {
+    if (this.activeApp.type === ComponentTypes.PublicApp) {
       logger.log(
         uiLink(
           i18n(`${i18nKey}.viewTestAccountLink`),
@@ -319,7 +316,7 @@ class LocalDevManager {
     let warning = reason;
     if (!reason) {
       warning =
-        this.activeApp.type === COMPONENT_TYPES.publicApp &&
+        this.activeApp.type === ComponentTypes.PublicApp &&
         this.publicAppActiveInstalls > 0
           ? i18n(`${i18nKey}.uploadWarning.defaultPublicAppWarning`, {
               installCount: this.publicAppActiveInstalls,
@@ -383,7 +380,7 @@ class LocalDevManager {
     const missingComponents = [];
 
     this.runnableComponents.forEach(({ type, config, path }) => {
-      if (Object.values(COMPONENT_TYPES).includes(type)) {
+      if (Object.values(ComponentTypes).includes(type)) {
         const cardConfigs = getAppCardConfigs(config, path);
 
         if (!deployedComponentNames.includes(config.name)) {
@@ -423,7 +420,7 @@ class LocalDevManager {
     });
 
     const configPaths = this.runnableComponents
-      .filter(({ type }) => Object.values(COMPONENT_TYPES).includes(type))
+      .filter(({ type }) => Object.values(ComponentTypes).includes(type))
       .map(component => {
         const appConfigPath = path.join(
           component.path,
