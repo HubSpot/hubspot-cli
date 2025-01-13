@@ -1420,6 +1420,7 @@ en:
         failure:
           invalidUser: "Couldn't create {{#bold}}{{ accountName }}{{/bold}} because your account has been removed from {{#bold}}{{ parentAccountName }}{{/bold}} or your permission set doesn't allow you to create the sandbox. To update your permissions, contact a super admin in {{#bold}}{{ parentAccountName }}{{/bold}}."
           403Gating: "Couldn't create {{#bold}}{{ accountName }}{{/bold}} because {{#bold}}{{ parentAccountName }}{{/bold}} does not have access to development sandboxes. To opt in to the CRM Development Beta and use development sandboxes, visit https://app.hubspot.com/l/product-updates/in-beta?update=13899236."
+          usageLimitsFetch: "Unable to fetch sandbox usage limits. Please try again."
           limit:
             developer:
               one: "{{#bold}}{{ accountName }}{{/bold}} reached the limit of {{ limit }} development sandbox.
@@ -1479,6 +1480,7 @@ en:
           syncInProgress: "Couldn't run the sync because there's another sync in progress. Wait for the current sync to finish and then try again. To check the sync status, visit the sync activity log: {{ url }}."
           notSuperAdmin: "Couldn't run the sync because you are not a super admin in {{ account }}. Ask the account owner for super admin access to the sandbox."
           objectNotFound: "Couldn't sync the sandbox because {{#bold}}{{ account }}{{/bold}} may have been deleted through the UI. Run {{#bold}}hs sandbox delete{{/bold}} to remove this account from the config. "
+          syncTypeFetch: "Unable to fetch available sandbox sync types. Please try again."
     errorHandlers:
       index:
         errorOccurred: "Error: {{ error }}"
