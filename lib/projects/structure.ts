@@ -5,13 +5,6 @@ import { walk } from '@hubspot/local-dev-lib/fs';
 import { logger } from '@hubspot/local-dev-lib/logger';
 import { logError } from '../errorHandlers/index';
 
-export type Component = {
-  type: ComponentTypes;
-  config: object;
-  runnable: boolean;
-  path: string;
-};
-
 type PrivateAppComponentConfig = {
   name: string;
   description: string;
@@ -70,13 +63,20 @@ type GenericComponentConfig =
   | PrivateAppComponentConfig
   | AppCardComponentConfig;
 
+export type Component = {
+  type: ComponentTypes;
+  config: GenericComponentConfig;
+  runnable: boolean;
+  path: string;
+};
+
 export const COMPONENT_TYPES = {
   privateApp: 'private-app',
   publicApp: 'public-app',
   hublTheme: 'hubl-theme',
 } as const;
 
-type ComponentTypes = ValueOf<typeof COMPONENT_TYPES>;
+export type ComponentTypes = ValueOf<typeof COMPONENT_TYPES>;
 
 export const CONFIG_FILES: {
   [k in ValueOf<typeof COMPONENT_TYPES>]: string;
