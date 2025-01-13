@@ -1,50 +1,50 @@
-// @ts-nocheck
-const SpinniesManager = require('./ui/SpinniesManager');
-const { getHubSpotWebsiteOrigin } = require('@hubspot/local-dev-lib/urls');
-const { logger } = require('@hubspot/local-dev-lib/logger');
-const { i18n } = require('./lang');
-const { getAvailableSyncTypes } = require('./sandboxes');
-const { initiateSync } = require('@hubspot/local-dev-lib/api/sandboxSync');
-const {
-  debugError,
-  logError,
-  ApiErrorContext,
-} = require('./errorHandlers/index');
-const { isSpecifiedError } = require('@hubspot/local-dev-lib/errors/index');
-const { getSandboxTypeAsString } = require('./sandboxes');
-const { getAccountId } = require('@hubspot/local-dev-lib/config');
-const {
-  getAccountIdentifier,
-} = require('@hubspot/local-dev-lib/config/getAccountIdentifier');
-const {
+import SpinniesManager from './ui/SpinniesManager';
+import { getHubSpotWebsiteOrigin } from '@hubspot/local-dev-lib/urls';
+import { logger } from '@hubspot/local-dev-lib/logger';
+import { initiateSync } from '@hubspot/local-dev-lib/api/sandboxSync';
+import { isSpecifiedError } from '@hubspot/local-dev-lib/errors/index';
+import { getAccountId } from '@hubspot/local-dev-lib/config';
+import { getAccountIdentifier } from '@hubspot/local-dev-lib/config/getAccountIdentifier';
+import { CLIAccount } from '@hubspot/local-dev-lib/types/Accounts';
+import { Environment } from '@hubspot/local-dev-lib/types/Config';
+
+import { i18n } from './lang';
+import { getAvailableSyncTypes } from './sandboxes';
+import { debugError, logError, ApiErrorContext } from './errorHandlers/index';
+import { getSandboxTypeAsString } from './sandboxes';
+import {
   uiAccountDescription,
   uiLine,
   uiLink,
   uiCommandDisabledBanner,
-} = require('./ui');
-const { isDevelopmentSandbox } = require('./accountTypes');
+} from './ui';
+import { isDevelopmentSandbox } from './accountTypes';
+import { SandboxSyncTask } from '../types/Sandboxes';
 
 const i18nKey = 'lib.sandbox.sync';
 
-/**
- * @param {Object} accountConfig - Account config of sandbox portal
- * @param {Object} parentAccountConfig - Account config of parent portal
- * @param {String} env - Environment (QA/Prod)
- * @param {Array} syncTasks - Array of available sync tasks
- * @returns
- */
-const syncSandbox = async ({
-  accountConfig,
-  parentAccountConfig,
-  env,
-  syncTasks,
-  slimInfoMessage = false,
-}) => {
+export async function syncSandbox(
+  accountConfig: CLIAccount,
+  parentAccountConfig: CLIAccount,
+  env: Environment,
+  syncTasks: Array<SandboxSyncTask>,
+  slimInfoMessage = false
+) {
   const id = getAccountIdentifier(accountConfig);
   const accountId = getAccountId(id);
   const parentId = getAccountIdentifier(parentAccountConfig);
   const parentAccountId = getAccountId(parentId);
   const isDevSandbox = isDevelopmentSandbox(accountConfig);
+
+  if (!accountId || !parentAccountId) {
+    throw new Error(
+      i18n(`${i18nKey}.failure.invalidUser`, {
+        accountName: uiAccountDescription(accountId),
+        parentAccountName: uiAccountDescription(parentAccountId),
+      })
+    );
+  }
+
   SpinniesManager.init({
     succeedColor: 'white',
   });
@@ -190,8 +190,4 @@ const syncSandbox = async ({
     uiLine();
     logger.log();
   }
-};
-
-module.exports = {
-  syncSandbox,
-};
+}

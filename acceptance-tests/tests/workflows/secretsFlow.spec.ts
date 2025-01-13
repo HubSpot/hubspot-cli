@@ -25,7 +25,8 @@ async function waitForSecretsListToContainSecret(testState: TestState) {
     .toContain(SECRET.name);
 }
 
-describe('Secrets Flow', () => {
+// TODO: Re-enable when the caching issue is resolved on the BE
+describe.skip('Secrets Flow', () => {
   let testState: TestState;
 
   beforeAll(async () => {

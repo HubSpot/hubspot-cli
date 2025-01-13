@@ -1,21 +1,20 @@
-// @ts-nocheck
-const { logger } = require('@hubspot/local-dev-lib/logger');
-const { getProjectConfig } = require('./projects');
-const { exec: execAsync } = require('child_process');
-const { walk } = require('@hubspot/local-dev-lib/fs');
-const path = require('path');
-const { uiLink } = require('./ui');
-const util = require('util');
-const { i18n } = require('./lang');
-const SpinniesManager = require('./ui/SpinniesManager');
-const fs = require('fs');
-const pkg = require('../package.json');
-const DEFAULT_PACKAGE_MANAGER = 'npm';
+import { logger } from '@hubspot/local-dev-lib/logger';
+import { getProjectConfig } from './projects';
+import { exec as execAsync } from 'child_process';
+import { walk } from '@hubspot/local-dev-lib/fs';
+import path from 'path';
+import { uiLink } from './ui';
+import util from 'util';
+import { i18n } from './lang';
+import SpinniesManager from './ui/SpinniesManager';
+import fs from 'fs';
+import pkg from '../package.json';
 
+const DEFAULT_PACKAGE_MANAGER = 'npm';
 const i18nKey = `commands.project.subcommands.installDeps`;
 
 class NoPackageJsonFilesError extends Error {
-  constructor(projectName) {
+  constructor(projectName: string) {
     super(
       i18n(`${i18nKey}.noPackageJsonInProject`, {
         projectName,
@@ -28,7 +27,7 @@ class NoPackageJsonFilesError extends Error {
   }
 }
 
-export async function isGloballyInstalled(command) {
+export async function isGloballyInstalled(command: string): Promise<boolean> {
   const exec = util.promisify(execAsync);
   try {
     await exec(`${command} --version`);
@@ -38,24 +37,36 @@ export async function isGloballyInstalled(command) {
   }
 }
 
-export async function getLatestCliVersion(): { latest: string; next: string } {
+export async function getLatestCliVersion(): Promise<{
+  latest: string;
+  next: string;
+}> {
   const exec = util.promisify(execAsync);
   const { stdout } = await exec(`npm info ${pkg.name} dist-tags --json`);
   const { latest, next } = JSON.parse(stdout);
   return { latest, next };
 }
 
-async function installPackages({ packages, installLocations }) {
+export async function installPackages({
+  packages,
+  installLocations,
+}: {
+  packages?: string[];
+  installLocations?: string[];
+}): Promise<void> {
   const installDirs =
     installLocations || (await getProjectPackageJsonLocations());
   await Promise.all(
     installDirs.map(async dir => {
-      await installPackagesInDirectory(packages, dir);
+      await installPackagesInDirectory(dir, packages);
     })
   );
 }
 
-async function installPackagesInDirectory(packages, directory) {
+async function installPackagesInDirectory(
+  directory: string,
+  packages?: string[]
+): Promise<void> {
   const spinner = `installingDependencies-${directory}`;
   const relativeDir = path.relative(process.cwd(), directory);
   SpinniesManager.init();
@@ -102,7 +113,7 @@ async function installPackagesInDirectory(packages, directory) {
   }
 }
 
-async function getProjectPackageJsonLocations() {
+export async function getProjectPackageJsonLocations(): Promise<string[]> {
   const projectConfig = await getProjectConfig();
 
   if (
@@ -148,7 +159,7 @@ async function getProjectPackageJsonLocations() {
     throw new NoPackageJsonFilesError(name);
   }
 
-  const packageParentDirs = [];
+  const packageParentDirs: string[] = [];
   packageJsonFiles.forEach(packageJsonFile => {
     const parentDir = path.dirname(packageJsonFile);
     packageParentDirs.push(parentDir);
@@ -157,19 +168,10 @@ async function getProjectPackageJsonLocations() {
   return packageParentDirs;
 }
 
-export async function hasMissingPackages(directory) {
+export async function hasMissingPackages(directory: string): Promise<boolean> {
   const exec = util.promisify(execAsync);
   const { stdout } = await exec(`npm install --ignore-scripts --dry-run`, {
     cwd: directory,
   });
   return !stdout?.includes('up to date in');
 }
-
-module.exports = {
-  isGloballyInstalled,
-  installPackages,
-  DEFAULT_PACKAGE_MANAGER,
-  getProjectPackageJsonLocations,
-  getLatestCliVersion,
-  hasMissingPackages,
-};
