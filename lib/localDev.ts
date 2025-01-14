@@ -64,7 +64,12 @@ export async function confirmDefaultAccountIsTarget(
   accountConfig: CLIAccount
 ): Promise<void> {
   if (!accountConfig.name || !accountConfig.accountType) {
-    throw new Error('TODO');
+    logger.error(
+      i18n(`${i18nKey}.confirmDefaultAccountIsTarget.configError`, {
+        authCommand: uiCommandReference('hs auth'),
+      })
+    );
+    process.exit(EXIT_CODES.ERROR);
   }
 
   logger.log();
@@ -245,7 +250,7 @@ export async function createSandboxForLocalDev(
     const sandboxAccountConfig = getAccountConfig(result.sandbox.sandboxHubId);
 
     if (!sandboxAccountConfig) {
-      logger.error('TODO');
+      logger.error(i18n('lib.sandbox.create.failure.generic'));
       process.exit(EXIT_CODES.ERROR);
     }
 
@@ -443,7 +448,12 @@ function projectUploadCallback(
   buildId?: number
 ): Promise<ProjectPollResult> {
   if (!buildId) {
-    throw new Error('TODO');
+    logger.error(
+      i18n(`${i18nKey}.createInitialBuildForNewProject.initialUploadMessage`, {
+        uploadCommand: uiCommandReference('hs project upload'),
+      })
+    );
+    process.exit(EXIT_CODES.ERROR);
   }
 
   return pollProjectBuildAndDeploy(
