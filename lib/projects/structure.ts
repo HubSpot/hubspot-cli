@@ -149,3 +149,30 @@ export function getProjectComponentTypes(components: Array<Component>): {
   components.forEach(({ type }) => (projectContents[type] = true));
   return projectContents;
 }
+
+export function getComponentUid(component?: Component | null): string | null {
+  if (!component) {
+    return null;
+  } else if ('uid' in component.config) {
+    return component.config.uid;
+  } else {
+    return component.config.data.uid;
+  }
+}
+
+export function componentIsApp(
+  component?: Component | null
+): component is Component<
+  PublicAppComponentConfig | PrivateAppComponentConfig
+> {
+  return (
+    component?.type === ComponentTypes.PublicApp ||
+    component?.type === ComponentTypes.PrivateApp
+  );
+}
+
+export function componentIsPublicApp(
+  component?: Component | null
+): component is Component<PublicAppComponentConfig> {
+  return component?.type === ComponentTypes.PublicApp;
+}

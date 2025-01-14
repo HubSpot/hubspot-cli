@@ -121,9 +121,9 @@ export enum ComponentTypes {
   HublTheme = 'hubl-theme',
 }
 
-export type Component = {
+export type Component<T = GenericComponentConfig> = {
   type: ComponentTypes;
-  config: GenericComponentConfig;
+  config: T;
   runnable: boolean;
   path: string;
 };
