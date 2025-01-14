@@ -20,10 +20,8 @@ const { ApiErrorContext, logError } = require('../../lib/errorHandlers/index');
 const { handleExit, handleKeypress } = require('../../lib/process');
 const { getThemeJSONPath } = require('@hubspot/local-dev-lib/cms/themes');
 const { getProjectConfig } = require('../../lib/projects');
-const {
-  findProjectComponents,
-  COMPONENT_TYPES,
-} = require('../../lib/projects/structure');
+const { findProjectComponents } = require('../../lib/projects/structure');
+const { ComponentTypes } = require('../../types/Projects');
 const { preview } = require('@hubspot/theme-preview-dev-server');
 const { hasFeature } = require('../../lib/hasFeature');
 const i18nKey = 'commands.theme.subcommands.preview';
@@ -85,7 +83,7 @@ const determineSrcAndDest = async options => {
     if (!themeJsonPath) {
       const projectComponents = await findProjectComponents(projectDir);
       const themeComponents = projectComponents.filter(
-        c => c.type === COMPONENT_TYPES.hublTheme
+        c => c.type === ComponentTypes.HublTheme
       );
       if (themeComponents.length === 0) {
         logger.error(i18n(`${i18nKey}.errors.noThemeComponents`));
