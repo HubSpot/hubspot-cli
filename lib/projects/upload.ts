@@ -160,7 +160,6 @@ export async function handleProjectUpload<T = ProjectUploadDefaultResult>(
       );
 
       if (error) {
-        console.log(error);
         uploadResult = { uploadError: error };
       } else if (callbackFunc) {
         uploadResult = await callbackFunc(
