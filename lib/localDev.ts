@@ -1,66 +1,72 @@
-// @ts-nocheck
-const { logger } = require('@hubspot/local-dev-lib/logger');
-const {
+import { logger } from '@hubspot/local-dev-lib/logger';
+import {
   HUBSPOT_ACCOUNT_TYPES,
   HUBSPOT_ACCOUNT_TYPE_STRINGS,
-} = require('@hubspot/local-dev-lib/constants/config');
-const {
+} from '@hubspot/local-dev-lib/constants/config';
+import {
   isMissingScopeError,
   isSpecifiedError,
-} = require('@hubspot/local-dev-lib/errors/index');
-const { getHubSpotWebsiteOrigin } = require('@hubspot/local-dev-lib/urls');
-const { getAccountConfig, getEnv } = require('@hubspot/local-dev-lib/config');
-const { createProject } = require('@hubspot/local-dev-lib/api/projects');
-const {
-  ENVIRONMENTS,
-} = require('@hubspot/local-dev-lib/constants/environments');
-const {
+} from '@hubspot/local-dev-lib/errors/index';
+import { getHubSpotWebsiteOrigin } from '@hubspot/local-dev-lib/urls';
+import { getAccountConfig, getEnv } from '@hubspot/local-dev-lib/config';
+import { createProject } from '@hubspot/local-dev-lib/api/projects';
+import { ENVIRONMENTS } from '@hubspot/local-dev-lib/constants/environments';
+import { PERSONAL_ACCESS_KEY_AUTH_METHOD } from '@hubspot/local-dev-lib/constants/auth';
+import { getAccountIdentifier } from '@hubspot/local-dev-lib/config/getAccountIdentifier';
+import { CLIAccount } from '@hubspot/local-dev-lib/types/Accounts';
+import { Environment } from '@hubspot/local-dev-lib/types/Config';
+import { DeveloperTestAccount } from '@hubspot/local-dev-lib/types/developerTestAccounts';
+import { Project } from '@hubspot/local-dev-lib/types/Project';
+
+import {
   confirmDefaultAccountPrompt,
   selectSandboxTargetAccountPrompt,
   selectDeveloperTestTargetAccountPrompt,
   confirmUseExistingDeveloperTestAccountPrompt,
-} = require('./prompts/projectDevTargetAccountPrompt');
-const { confirmPrompt } = require('./prompts/promptUtils');
-const {
-  validateSandboxUsageLimits,
-  getAvailableSyncTypes,
-} = require('./sandboxes');
-const { syncSandbox } = require('./sandboxSync');
-const {
-  validateDevTestAccountUsageLimits,
-} = require('./developerTestAccounts');
-const { uiCommandReference, uiLine, uiAccountDescription } = require('./ui');
-const SpinniesManager = require('./ui/SpinniesManager');
-const { i18n } = require('./lang');
-const { EXIT_CODES } = require('./enums/exitCodes');
-const { trackCommandMetadataUsage } = require('./usageTracking');
-const {
-  isAppDeveloperAccount,
-  isDeveloperTestAccount,
-} = require('./accountTypes');
-const { handleProjectUpload } = require('./projects/upload');
-const { pollProjectBuildAndDeploy } = require('./projects/buildAndDeploy');
-const {
+} from './prompts/projectDevTargetAccountPrompt';
+import { confirmPrompt } from './prompts/promptUtils';
+import { validateSandboxUsageLimits, getAvailableSyncTypes } from './sandboxes';
+import { syncSandbox } from './sandboxSync';
+import { validateDevTestAccountUsageLimits } from './developerTestAccounts';
+import { uiCommandReference, uiLine, uiAccountDescription } from './ui';
+import SpinniesManager from './ui/SpinniesManager';
+import { i18n } from './lang';
+import { EXIT_CODES } from './enums/exitCodes';
+import { trackCommandMetadataUsage } from './usageTracking';
+import { isAppDeveloperAccount, isDeveloperTestAccount } from './accountTypes';
+import { handleProjectUpload } from './projects/upload';
+import { pollProjectBuildAndDeploy } from './projects/buildAndDeploy';
+import {
   PROJECT_ERROR_TYPES,
   PROJECT_BUILD_TEXT,
   PROJECT_DEPLOY_TEXT,
-} = require('./constants');
-const { logError, ApiErrorContext } = require('./errorHandlers/index');
-const {
-  PERSONAL_ACCESS_KEY_AUTH_METHOD,
-} = require('@hubspot/local-dev-lib/constants/auth');
-const {
+} from './constants';
+import { logError, ApiErrorContext } from './errorHandlers/index';
+import {
   buildSandbox,
   buildDeveloperTestAccount,
   saveAccountToConfig,
-} = require('./buildAccount');
-const { hubspotAccountNamePrompt } = require('./prompts/accountNamePrompt');
+} from './buildAccount';
+import { hubspotAccountNamePrompt } from './prompts/accountNamePrompt';
+import {
+  ProjectConfig,
+  ProjectPollResult,
+  ProjectSubtask,
+} from '../types/Projects';
+import { FileResult } from 'tmp';
+import { Build } from '@hubspot/local-dev-lib/types/Build';
 
 const i18nKey = 'lib.localDev';
 
 // If the user passed in the --account flag, confirm they want to use that account as
 // their target account, otherwise exit
-const confirmDefaultAccountIsTarget = async accountConfig => {
+export async function confirmDefaultAccountIsTarget(
+  accountConfig: CLIAccount
+): Promise<void> {
+  if (!accountConfig.name || !accountConfig.accountType) {
+    throw new Error('TODO');
+  }
+
   logger.log();
   const useDefaultAccount = await confirmDefaultAccountPrompt(
     accountConfig.name,
@@ -79,10 +85,13 @@ const confirmDefaultAccountIsTarget = async accountConfig => {
     );
     process.exit(EXIT_CODES.SUCCESS);
   }
-};
+}
 
 // Confirm the default account is supported for the type of apps being developed
-const checkIfDefaultAccountIsSupported = (accountConfig, hasPublicApps) => {
+export function checkIfDefaultAccountIsSupported(
+  accountConfig: CLIAccount,
+  hasPublicApps: boolean
+): void {
   if (
     hasPublicApps &&
     !(
@@ -106,14 +115,19 @@ const checkIfDefaultAccountIsSupported = (accountConfig, hasPublicApps) => {
     );
     process.exit(EXIT_CODES.SUCCESS);
   }
-};
+}
 
-const checkIfParentAccountIsAuthed = accountConfig => {
-  if (!getAccountConfig(accountConfig.parentAccountId)) {
+export function checkIfParentAccountIsAuthed(accountConfig: CLIAccount): void {
+  if (
+    !accountConfig.parentAccountId ||
+    !getAccountConfig(accountConfig.parentAccountId)
+  ) {
     logger.error(
       i18n(`${i18nKey}.checkIfParentAccountIsAuthed.notAuthedError`, {
-        accountId: accountConfig.parentAccountId,
-        accountIdentifier: uiAccountDescription(accountConfig.portalId),
+        accountId: accountConfig.parentAccountId || '',
+        accountIdentifier: uiAccountDescription(
+          getAccountIdentifier(accountConfig)
+        ),
         authCommand: uiCommandReference(
           `hs auth --account=${accountConfig.parentAccountId}`
         ),
@@ -121,10 +135,13 @@ const checkIfParentAccountIsAuthed = accountConfig => {
     );
     process.exit(EXIT_CODES.SUCCESS);
   }
-};
+}
 
 // Confirm the default account is a developer account if developing public apps
-const checkIfAccountFlagIsSupported = (accountConfig, hasPublicApps) => {
+export function checkIfAccountFlagIsSupported(
+  accountConfig: CLIAccount,
+  hasPublicApps: boolean
+): void {
   if (hasPublicApps) {
     if (!isDeveloperTestAccount(accountConfig)) {
       logger.error(
@@ -144,14 +161,14 @@ const checkIfAccountFlagIsSupported = (accountConfig, hasPublicApps) => {
     );
     process.exit(EXIT_CODES.SUCCESS);
   }
-};
+}
 
 // If the user isn't using the recommended account type, prompt them to use or create one
-const suggestRecommendedNestedAccount = async (
-  accounts,
-  accountConfig,
-  hasPublicApps
-) => {
+export async function suggestRecommendedNestedAccount(
+  accounts: CLIAccount[],
+  accountConfig: CLIAccount,
+  hasPublicApps: boolean
+) {
   logger.log();
   uiLine();
   if (hasPublicApps) {
@@ -170,11 +187,15 @@ const suggestRecommendedNestedAccount = async (
     ? selectDeveloperTestTargetAccountPrompt
     : selectSandboxTargetAccountPrompt;
 
-  return targetAccountPrompt(accounts, accountConfig, hasPublicApps);
-};
+  return targetAccountPrompt(accounts, accountConfig);
+}
 
 // Create a new sandbox and return its accountId
-const createSandboxForLocalDev = async (accountId, accountConfig, env) => {
+export async function createSandboxForLocalDev(
+  accountId: number,
+  accountConfig: CLIAccount,
+  env: Environment
+): Promise<number> {
   try {
     await validateSandboxUsageLimits(
       accountConfig,
@@ -222,6 +243,12 @@ const createSandboxForLocalDev = async (accountId, accountConfig, env) => {
     const targetAccountId = result.sandbox.sandboxHubId;
 
     const sandboxAccountConfig = getAccountConfig(result.sandbox.sandboxHubId);
+
+    if (!sandboxAccountConfig) {
+      logger.error('TODO');
+      process.exit(EXIT_CODES.ERROR);
+    }
+
     const syncTasks = await getAvailableSyncTypes(
       accountConfig,
       sandboxAccountConfig
@@ -239,14 +266,14 @@ const createSandboxForLocalDev = async (accountId, accountConfig, env) => {
     logError(err);
     process.exit(EXIT_CODES.ERROR);
   }
-};
+}
 
 // Create a developer test account and return its accountId
-const createDeveloperTestAccountForLocalDev = async (
-  accountId,
-  accountConfig,
-  env
-) => {
+export async function createDeveloperTestAccountForLocalDev(
+  accountId: number,
+  accountConfig: CLIAccount,
+  env: Environment
+): Promise<number> {
   let currentPortalCount = 0;
   let maxTestPortals = 10;
   try {
@@ -302,10 +329,13 @@ const createDeveloperTestAccountForLocalDev = async (
     logError(err);
     process.exit(EXIT_CODES.ERROR);
   }
-};
+}
 
 // Prompt user to confirm usage of an existing developer test account that is not currently in the config
-const useExistingDevTestAccount = async (env, account) => {
+export async function useExistingDevTestAccount(
+  env: Environment,
+  account: DeveloperTestAccount
+): Promise<void> {
   const useExistingDevTestAcct =
     await confirmUseExistingDeveloperTestAccountPrompt(account);
   if (!useExistingDevTestAcct) {
@@ -333,15 +363,15 @@ const useExistingDevTestAccount = async (env, account) => {
       authType: PERSONAL_ACCESS_KEY_AUTH_METHOD.name,
     })
   );
-};
+}
 
 // Prompt the user to create a new project if one doesn't exist on their target account
-const createNewProjectForLocalDev = async (
-  projectConfig,
-  targetAccountId,
-  shouldCreateWithoutConfirmation,
-  hasPublicApps
-) => {
+export async function createNewProjectForLocalDev(
+  projectConfig: ProjectConfig,
+  targetAccountId: number,
+  shouldCreateWithoutConfirmation: boolean,
+  hasPublicApps: boolean
+): Promise<Project> {
   // Create the project without prompting if this is a newly created sandbox
   let shouldCreateProject = shouldCreateWithoutConfirmation;
 
@@ -404,26 +434,46 @@ const createNewProjectForLocalDev = async (
     );
     process.exit(EXIT_CODES.SUCCESS);
   }
-};
+}
+
+function projectUploadCallback(
+  accountId: number,
+  projectConfig: ProjectConfig,
+  tempFile: FileResult,
+  buildId?: number
+): Promise<ProjectPollResult> {
+  if (!buildId) {
+    throw new Error('TODO');
+  }
+
+  return pollProjectBuildAndDeploy(
+    accountId,
+    projectConfig,
+    tempFile,
+    buildId,
+    true
+  );
+}
 
 // Create an initial build if the project was newly created in the account
 // Return the newly deployed build
-const createInitialBuildForNewProject = async (
-  projectConfig,
-  projectDir,
-  targetAccountId
-) => {
-  const initialUploadResult = await handleProjectUpload(
-    targetAccountId,
-    projectConfig,
-    projectDir,
-    (...args) => pollProjectBuildAndDeploy(...args, true),
-    i18n(`${i18nKey}.createInitialBuildForNewProject.initialUploadMessage`)
-  );
+export async function createInitialBuildForNewProject(
+  projectConfig: ProjectConfig,
+  projectDir: string,
+  targetAccountId: number
+): Promise<Build> {
+  const { result: initialUploadResult, uploadError } =
+    await handleProjectUpload<ProjectPollResult>(
+      targetAccountId,
+      projectConfig,
+      projectDir,
+      projectUploadCallback,
+      i18n(`${i18nKey}.createInitialBuildForNewProject.initialUploadMessage`)
+    );
 
-  if (initialUploadResult.uploadError) {
+  if (uploadError) {
     if (
-      isSpecifiedError(initialUploadResult.uploadError, {
+      isSpecifiedError(uploadError, {
         subCategory: PROJECT_ERROR_TYPES.PROJECT_LOCKED,
       })
     ) {
@@ -434,7 +484,7 @@ const createInitialBuildForNewProject = async (
       logger.log();
     } else {
       logError(
-        initialUploadResult.uploadError,
+        uploadError,
         new ApiErrorContext({
           accountId: targetAccountId,
           projectName: projectConfig.name,
@@ -444,13 +494,13 @@ const createInitialBuildForNewProject = async (
     process.exit(EXIT_CODES.ERROR);
   }
 
-  if (!initialUploadResult.succeeded) {
-    let subTasks = [];
+  if (!initialUploadResult?.succeeded) {
+    let subTasks: ProjectSubtask[] = [];
 
-    if (initialUploadResult.buildResult.status === 'FAILURE') {
+    if (initialUploadResult?.buildResult.status === 'FAILURE') {
       subTasks =
         initialUploadResult.buildResult[PROJECT_BUILD_TEXT.SUBTASK_KEY];
-    } else if (initialUploadResult.deployResult.status === 'FAILURE') {
+    } else if (initialUploadResult?.deployResult?.status === 'FAILURE') {
       subTasks =
         initialUploadResult.deployResult[PROJECT_DEPLOY_TEXT.SUBTASK_KEY];
     }
@@ -467,25 +517,11 @@ const createInitialBuildForNewProject = async (
   }
 
   return initialUploadResult.buildResult;
-};
+}
 
-const getAccountHomeUrl = accountId => {
+export function getAccountHomeUrl(accountId: number): string {
   const baseUrl = getHubSpotWebsiteOrigin(
     getEnv(accountId) === 'qa' ? ENVIRONMENTS.QA : ENVIRONMENTS.PROD
   );
   return `${baseUrl}/home?portalId=${accountId}`;
-};
-
-module.exports = {
-  confirmDefaultAccountIsTarget,
-  checkIfDefaultAccountIsSupported,
-  checkIfAccountFlagIsSupported,
-  suggestRecommendedNestedAccount,
-  createSandboxForLocalDev,
-  createDeveloperTestAccountForLocalDev,
-  useExistingDevTestAccount,
-  createNewProjectForLocalDev,
-  createInitialBuildForNewProject,
-  getAccountHomeUrl,
-  checkIfParentAccountIsAuthed,
-};
+}

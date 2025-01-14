@@ -49,3 +49,10 @@ export type ProjectTemplateRepoConfig = {
   projects?: ProjectTemplate[];
   components?: ComponentTemplate[];
 };
+
+export type ProjectPollResult = {
+  succeeded: boolean;
+  buildId: number;
+  buildResult: Build;
+  deployResult: Deploy | null;
+};
