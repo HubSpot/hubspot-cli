@@ -30,11 +30,10 @@ const {
   isAppDeveloperAccount,
 } = require('../../lib/accountTypes');
 const { getValidEnv } = require('@hubspot/local-dev-lib/environment');
-
+const { ComponentTypes } = require('../../types/Projects');
 const {
   findProjectComponents,
   getProjectComponentTypes,
-  COMPONENT_TYPES,
 } = require('../../lib/projects/structure');
 const {
   confirmDefaultAccountIsTarget,
@@ -82,8 +81,8 @@ exports.handler = async options => {
   const components = await findProjectComponents(projectDir);
   const runnableComponents = components.filter(component => component.runnable);
   const componentTypes = getProjectComponentTypes(runnableComponents);
-  const hasPrivateApps = !!componentTypes[COMPONENT_TYPES.privateApp];
-  const hasPublicApps = !!componentTypes[COMPONENT_TYPES.publicApp];
+  const hasPrivateApps = !!componentTypes[ComponentTypes.PrivateApp];
+  const hasPublicApps = !!componentTypes[ComponentTypes.PublicApp];
 
   if (runnableComponents.length === 0) {
     logger.error(
