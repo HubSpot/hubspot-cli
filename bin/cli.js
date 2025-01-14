@@ -8,16 +8,13 @@ const { logger } = require('@hubspot/local-dev-lib/logger');
 const { addUserAgentHeader } = require('@hubspot/local-dev-lib/http');
 const {
   loadConfig,
+  getAccountId,
   configFileExists,
   getConfigPath,
   validateConfig,
 } = require('@hubspot/local-dev-lib/config');
 const { logError } = require('../lib/errorHandlers/index');
-const {
-  setLogLevel,
-  getCommandName,
-  injectAccountIdMiddleware,
-} = require('../lib/commonOpts');
+const { setLogLevel, getCommandName } = require('../lib/commonOpts');
 const { validateAccount } = require('../lib/validation');
 const {
   trackHelpUsage,
@@ -27,7 +24,7 @@ const { getIsInProject } = require('../lib/projects');
 const pkg = require('../package.json');
 const { i18n } = require('../lib/lang');
 const { EXIT_CODES } = require('../lib/enums/exitCodes');
-const { UI_COLORS, uiCommandReference } = require('../lib/ui');
+const { UI_COLORS, uiCommandReference, uiDeprecatedTag } = require('../lib/ui');
 const { checkAndWarnGitInclusion } = require('../lib/ui/git');
 
 const removeCommand = require('../commands/remove');
@@ -176,6 +173,39 @@ const SKIP_CONFIG_VALIDATION = {
   auth: { target: true },
 };
 
+const handleDeprecatedEnvVariables = options => {
+  // HUBSPOT_PORTAL_ID is deprecated, but we'll still support it for now
+  // The HubSpot GH Deploy Action still uses HUBSPOT_PORTAL_ID
+  if (
+    options.useEnv &&
+    process.env.HUBSPOT_PORTAL_ID &&
+    !process.env.HUBSPOT_ACCOUNT_ID
+  ) {
+    uiDeprecatedTag(
+      i18n(`${i18nKey}.handleDeprecatedEnvVariables.portalEnvVarDeprecated`, {
+        configPath: getConfigPath(),
+      })
+    );
+    process.env.HUBSPOT_ACCOUNT_ID = process.env.HUBSPOT_PORTAL_ID;
+  }
+};
+
+/**
+ * Auto-injects the derivedAccountId flag into all commands
+ */
+const injectAccountIdMiddleware = async options => {
+  const { account } = options;
+
+  // Preserves the original --account flag for certain commands.
+  options.providedAccountId = account;
+
+  if (options.useEnv && process.env.HUBSPOT_ACCOUNT_ID) {
+    options.derivedAccountId = parseInt(process.env.HUBSPOT_ACCOUNT_ID, 10);
+  } else {
+    options.derivedAccountId = getAccountId(account);
+  }
+};
+
 const loadConfigMiddleware = async options => {
   // Skip this when no command is provided
   if (!options._.length) {
@@ -261,6 +291,7 @@ const argv = yargs
   .middleware([
     setLogLevel,
     setRequestHeaders,
+    handleDeprecatedEnvVariables,
     loadConfigMiddleware,
     injectAccountIdMiddleware,
     checkAndWarnGitInclusionMiddleware,

@@ -1,48 +1,77 @@
-// @ts-nocheck
-const { logger } = require('@hubspot/local-dev-lib/logger');
-const { COMPONENT_TYPES } = require('./projects/structure');
-const { i18n } = require('./lang');
-const { promptUser } = require('./prompts/promptUtils');
-const { DevModeInterface } = require('@hubspot/ui-extensions-dev-server');
-const {
+import { logger } from '@hubspot/local-dev-lib/logger';
+import { Environment } from '@hubspot/local-dev-lib/types/Config';
+import { i18n } from './lang';
+import { promptUser } from './prompts/promptUtils';
+import { DevModeInterface as UIEDevModeInterface } from '@hubspot/ui-extensions-dev-server';
+import {
   startPortManagerServer,
   stopPortManagerServer,
   requestPorts,
-} = require('@hubspot/local-dev-lib/portManager');
-const {
+} from '@hubspot/local-dev-lib/portManager';
+import {
   getHubSpotApiOrigin,
   getHubSpotWebsiteOrigin,
-} = require('@hubspot/local-dev-lib/urls');
-const { getAccountConfig } = require('@hubspot/local-dev-lib/config');
+} from '@hubspot/local-dev-lib/urls';
+import { getAccountConfig } from '@hubspot/local-dev-lib/config';
+import { ProjectConfig, ComponentTypes, Component } from '../types/Projects';
 
 const i18nKey = 'lib.DevServerManager';
 
 const SERVER_KEYS = {
   privateApp: 'privateApp',
   publicApp: 'publicApp',
+} as const;
+
+type ServerKey = keyof typeof SERVER_KEYS;
+
+type DevServerInterface = {
+  // eslint-disable-next-line @typescript-eslint/no-unsafe-function-type
+  setup?: Function;
+  start?: (options: object) => Promise<void>;
+  fileChange?: (filePath: string, event: string) => Promise<void>;
+  cleanup?: () => Promise<void>;
+};
+
+type DevServer = {
+  componentType: ComponentTypes;
+  serverInterface: DevServerInterface;
+};
+
+type ComponentsByType = {
+  [key in ComponentTypes]?: { [key: string]: Component };
 };
 
 class DevServerManager {
+  private initialized: boolean;
+  private started: boolean;
+  private componentsByType: ComponentsByType;
+  private devServers: { [key in ServerKey]: DevServer };
+
   constructor() {
     this.initialized = false;
     this.started = false;
     this.componentsByType = {};
-    this.server = null;
-    this.path = null;
     this.devServers = {
       [SERVER_KEYS.privateApp]: {
-        componentType: COMPONENT_TYPES.privateApp,
-        serverInterface: DevModeInterface,
+        componentType: ComponentTypes.PrivateApp,
+        serverInterface: UIEDevModeInterface,
       },
       [SERVER_KEYS.publicApp]: {
-        componentType: COMPONENT_TYPES.publicApp,
-        serverInterface: DevModeInterface,
+        componentType: ComponentTypes.PublicApp,
+        serverInterface: UIEDevModeInterface,
       },
     };
   }
 
-  async iterateDevServers(callback) {
-    const serverKeys = Object.keys(this.devServers);
+  async iterateDevServers(
+    callback: (
+      serverInterface: DevServerInterface,
+      compatibleComponents: {
+        [key: string]: Component;
+      }
+    ) => Promise<void>
+  ): Promise<void> {
+    const serverKeys: ServerKey[] = Object.keys(this.devServers) as ServerKey[];
 
     for (let i = 0; i < serverKeys.length; i++) {
       const serverKey = serverKeys[i];
@@ -59,21 +88,37 @@ class DevServerManager {
     }
   }
 
-  arrangeComponentsByType(components) {
-    return components.reduce((acc, component) => {
+  arrangeComponentsByType(components: Component[]): ComponentsByType {
+    return components.reduce<ComponentsByType>((acc, component) => {
       if (!acc[component.type]) {
         acc[component.type] = {};
       }
 
-      acc[component.type][component.config.name] = component;
+      if ('name' in component.config && component.config.name) {
+        acc[component.type]![component.config.name] = component;
+      }
 
       return acc;
     }, {});
   }
 
-  async setup({ components, onUploadRequired, accountId, setActiveApp }) {
+  async setup({
+    components,
+    onUploadRequired,
+    accountId,
+    setActiveApp,
+  }: {
+    components: Component[];
+    onUploadRequired: () => void;
+    accountId: number;
+    setActiveApp: (appUid: string | undefined) => Promise<void>;
+  }): Promise<void> {
     this.componentsByType = this.arrangeComponentsByType(components);
-    const { env } = getAccountConfig(accountId);
+    let env: Environment;
+    const accountConfig = getAccountConfig(accountId);
+    if (accountConfig) {
+      env = accountConfig.env;
+    }
     await startPortManagerServer();
     await this.iterateDevServers(
       async (serverInterface, compatibleComponents) => {
@@ -96,7 +141,13 @@ class DevServerManager {
     this.initialized = true;
   }
 
-  async start({ accountId, projectConfig }) {
+  async start({
+    accountId,
+    projectConfig,
+  }: {
+    accountId: number;
+    projectConfig: ProjectConfig;
+  }): Promise<void> {
     if (this.initialized) {
       await this.iterateDevServers(async serverInterface => {
         if (serverInterface.start) {
@@ -114,7 +165,13 @@ class DevServerManager {
     this.started = true;
   }
 
-  fileChange({ filePath, event }) {
+  async fileChange({
+    filePath,
+    event,
+  }: {
+    filePath: string;
+    event: string;
+  }): Promise<void> {
     if (this.started) {
       this.iterateDevServers(async serverInterface => {
         if (serverInterface.fileChange) {
@@ -124,7 +181,7 @@ class DevServerManager {
     }
   }
 
-  async cleanup() {
+  async cleanup(): Promise<void> {
     if (this.started) {
       await this.iterateDevServers(async serverInterface => {
         if (serverInterface.cleanup) {
@@ -137,4 +194,7 @@ class DevServerManager {
   }
 }
 
-module.exports = new DevServerManager();
+const Manager = new DevServerManager();
+
+export default Manager;
+module.exports = Manager;
