@@ -53,9 +53,12 @@ function builder(yargs: Argv): Argv {
   return yargs;
 }
 
-export default {
+const yargsCommand = {
   describe,
   command,
   handler,
   builder,
 };
+
+export default yargsCommand;
+module.exports = yargsCommand;
