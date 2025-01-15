@@ -8,11 +8,11 @@ import { getTableContents } from '../../lib/ui/table';
 import { CommonOptions } from '../../types/Yargs';
 
 const i18nKey = 'commands.account.subcommands.info';
-const describe = i18n(`${i18nKey}.describe`);
+export const describe = i18n(`${i18nKey}.describe`);
 
-const command = 'info [account]';
+export const command = 'info [account]';
 
-async function handler(options: CommonOptions): Promise<void> {
+export async function handler(options: CommonOptions): Promise<void> {
   const { derivedAccountId } = options;
   const config = getAccountConfig(derivedAccountId);
   // check if the provided account is using a personal access key, if not, show an error
@@ -41,7 +41,7 @@ async function handler(options: CommonOptions): Promise<void> {
   }
 }
 
-function builder(yargs: Argv): Argv {
+export function builder(yargs: Argv): Argv {
   addConfigOptions(yargs);
 
   yargs.example([
@@ -52,13 +52,3 @@ function builder(yargs: Argv): Argv {
 
   return yargs;
 }
-
-const yargsCommand = {
-  describe,
-  command,
-  handler,
-  builder,
-};
-
-export default yargsCommand;
-module.exports = yargsCommand;
