@@ -1,41 +1,47 @@
-// @ts-nocheck
-const { logger } = require('@hubspot/local-dev-lib/logger');
-const { getAccountConfig } = require('@hubspot/local-dev-lib/config');
-const { getAccessToken } = require('@hubspot/local-dev-lib/personalAccessKey');
-const { addConfigOptions } = require('../../lib/commonOpts');
-const { i18n } = require('../../lib/lang');
-const { getTableContents } = require('../../lib/ui/table');
+import { Argv } from 'yargs';
+import { logger } from '@hubspot/local-dev-lib/logger';
+import { getAccountConfig } from '@hubspot/local-dev-lib/config';
+import { getAccessToken } from '@hubspot/local-dev-lib/personalAccessKey';
+import { addConfigOptions } from '../../lib/commonOpts';
+import { i18n } from '../../lib/lang';
+import { getTableContents } from '../../lib/ui/table';
+import { CommonOptions } from '../../types/Yargs';
 
 const i18nKey = 'commands.account.subcommands.info';
-exports.describe = i18n(`${i18nKey}.describe`);
+const describe = i18n(`${i18nKey}.describe`);
 
-exports.command = 'info [account]';
+const command = 'info [account]';
 
-exports.handler = async options => {
+async function handler(options: CommonOptions): Promise<void> {
   const { derivedAccountId } = options;
   const config = getAccountConfig(derivedAccountId);
   // check if the provided account is using a personal access key, if not, show an error
   if (config && config.authType === 'personalaccesskey') {
     const { name, personalAccessKey, env } = config;
+    let scopeGroups: string[][] = [];
 
-    const response = await getAccessToken(
-      personalAccessKey,
-      env,
-      derivedAccountId
-    );
+    if (personalAccessKey) {
+      const response = await getAccessToken(
+        personalAccessKey,
+        env,
+        derivedAccountId
+      );
 
-    const scopeGroups = response.scopeGroups.map(s => [s]);
+      scopeGroups = response.scopeGroups.map(s => [s]);
+    }
 
-    logger.log(i18n(`${i18nKey}.name`, { name }));
+    if (name) {
+      logger.log(i18n(`${i18nKey}.name`, { name }));
+    }
     logger.log(i18n(`${i18nKey}.accountId`, { accountId: derivedAccountId }));
     logger.log(i18n(`${i18nKey}.scopeGroups`));
     logger.log(getTableContents(scopeGroups, { border: { bodyLeft: '  ' } }));
   } else {
     logger.log(i18n(`${i18nKey}.errors.notUsingPersonalAccessKey`));
   }
-};
+}
 
-exports.builder = yargs => {
+function builder(yargs: Argv): Argv {
   addConfigOptions(yargs);
 
   yargs.example([
@@ -45,4 +51,11 @@ exports.builder = yargs => {
   ]);
 
   return yargs;
+}
+
+export default {
+  describe,
+  command,
+  handler,
+  builder,
 };
