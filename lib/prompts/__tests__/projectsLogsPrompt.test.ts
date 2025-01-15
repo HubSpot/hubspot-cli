@@ -1,13 +1,12 @@
-// @ts-nocheck
-const { projectLogsPrompt } = require('../projectsLogsPrompt');
-const { promptUser } = require('../promptUtils');
-const chalk = require('chalk');
+import { projectLogsPrompt } from '../projectsLogsPrompt';
+import { promptUser } from '../promptUtils';
+import chalk from 'chalk';
 
 jest.mock('../promptUtils');
 
 describe('lib/prompts/projectsLogsPrompt', () => {
-  it('should return undefined functionName when functionChoices is nullable', async () => {
-    const actual = await projectLogsPrompt({ functionChoices: null });
+  it('should return undefined functionName when functionChoices is undefined', async () => {
+    const actual = await projectLogsPrompt({ functionChoices: undefined });
     expect(actual).toEqual({});
     expect(promptUser).not.toHaveBeenCalled();
   });
