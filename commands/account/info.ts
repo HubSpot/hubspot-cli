@@ -14,7 +14,6 @@ export const command = 'info [account]';
 
 type AccountInfoOptions = {
   config?: string;
-  someNewField: number;
 };
 
 export async function handler(
@@ -27,15 +26,13 @@ export async function handler(
     const { name, personalAccessKey, env } = config;
     let scopeGroups: string[][] = [];
 
-    if (personalAccessKey) {
-      const response = await getAccessToken(
-        personalAccessKey,
-        env,
-        derivedAccountId
-      );
+    const response = await getAccessToken(
+      personalAccessKey!,
+      env,
+      derivedAccountId
+    );
 
-      scopeGroups = response.scopeGroups.map(s => [s]);
-    }
+    scopeGroups = response.scopeGroups.map(s => [s]);
 
     if (name) {
       logger.log(i18n(`${i18nKey}.name`, { name }));
