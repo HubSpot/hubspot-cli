@@ -5,14 +5,21 @@ import { getAccessToken } from '@hubspot/local-dev-lib/personalAccessKey';
 import { addConfigOptions } from '../../lib/commonOpts';
 import { i18n } from '../../lib/lang';
 import { getTableContents } from '../../lib/ui/table';
-import { CommonOptions } from '../../types/Yargs';
+import { CommonArguments } from '../../types/Yargs';
 
 const i18nKey = 'commands.account.subcommands.info';
 export const describe = i18n(`${i18nKey}.describe`);
 
 export const command = 'info [account]';
 
-export async function handler(options: CommonOptions): Promise<void> {
+type AccountInfoOptions = {
+  config?: string;
+  someNewField: number;
+};
+
+export async function handler(
+  options: CommonArguments<AccountInfoOptions>
+): Promise<void> {
   const { derivedAccountId } = options;
   const config = getAccountConfig(derivedAccountId);
   // check if the provided account is using a personal access key, if not, show an error
@@ -41,7 +48,7 @@ export async function handler(options: CommonOptions): Promise<void> {
   }
 }
 
-export function builder(yargs: Argv): Argv {
+export function builder(yargs: Argv): Argv<AccountInfoOptions> {
   addConfigOptions(yargs);
 
   yargs.example([

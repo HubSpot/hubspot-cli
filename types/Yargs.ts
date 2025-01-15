@@ -1,6 +1,6 @@
-import { Arguments } from 'yargs';
+import { ArgumentsCamelCase } from 'yargs';
 
-export type CommonOptions<T = object> = Arguments<
+export type CommonArguments<T = object> = ArgumentsCamelCase<
   T & {
     derivedAccountId: number;
     providedAccountId?: number;
