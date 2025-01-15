@@ -14,7 +14,6 @@ const { i18n } = require('../lib/lang');
 
 export interface DoctorOptions {
   'output-dir'?: string;
-  someNewField: number;
 }
 
 const i18nKey = 'commands.doctor';
