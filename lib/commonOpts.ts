@@ -118,7 +118,10 @@ export function getAccountId(
 }
 
 export function getCmsPublishMode(
-  options: Arguments<{ cmsPublishMode?: CmsPublishMode }>
+  options: Arguments<{
+    cmsPublishMode?: CmsPublishMode;
+    account?: number | string;
+  }>
 ): CmsPublishMode {
   // 1. --cmsPublishMode
   const { cmsPublishMode } = options;

@@ -1,9 +1,7 @@
-// @ts-nocheck
-const { ProjectLogsManager } = require('../projects/ProjectLogsManager');
-const { getProjectConfig, ensureProjectExists } = require('../projects');
-const {
-  fetchProjectComponentsMetadata,
-} = require('@hubspot/local-dev-lib/api/projects');
+import { ProjectLogsManager } from '../projects/ProjectLogsManager';
+import { getProjectConfig, ensureProjectExists } from '../projects';
+import { fetchProjectComponentsMetadata } from '@hubspot/local-dev-lib/api/projects';
+import { SUBCOMPONENT_TYPES } from '../../../hubspot-local-dev-lib/dist/enums/build';
 
 jest.mock('../projects');
 jest.mock('@hubspot/local-dev-lib/api/projects');
@@ -26,10 +24,11 @@ describe('lib/projects/ProjectLogsManager', () => {
   const function1 = {
     componentName: 'function1',
     type: {
-      name: 'APP_FUNCTION',
+      name: SUBCOMPONENT_TYPES.APP_FUNCTION,
     },
     deployOutput: {
       appId,
+      appFunctionName: 'function1',
     },
   };
   const functions = [
@@ -37,10 +36,11 @@ describe('lib/projects/ProjectLogsManager', () => {
     {
       componentName: 'function2',
       type: {
-        name: 'APP_FUNCTION',
+        name: SUBCOMPONENT_TYPES.APP_FUNCTION,
       },
       deployOutput: {
         appId,
+        appFunctionName: 'function2',
       },
     },
   ];
@@ -48,9 +48,9 @@ describe('lib/projects/ProjectLogsManager', () => {
   beforeEach(() => {
     ProjectLogsManager.reset();
 
-    getProjectConfig.mockResolvedValue(projectConfig);
-    ensureProjectExists.mockResolvedValue(projectDetails);
-    fetchProjectComponentsMetadata.mockResolvedValue({
+    (getProjectConfig as jest.Mock).mockResolvedValue(projectConfig);
+    (ensureProjectExists as jest.Mock).mockResolvedValue(projectDetails);
+    (fetchProjectComponentsMetadata as jest.Mock).mockResolvedValue({
       data: {
         topLevelComponentMetadata: [
           {
@@ -81,7 +81,7 @@ describe('lib/projects/ProjectLogsManager', () => {
     });
 
     it('should throw an error if there is a problem with the config', async () => {
-      getProjectConfig.mockResolvedValue({});
+      (getProjectConfig as jest.Mock).mockResolvedValue({});
       await expect(async () =>
         ProjectLogsManager.init(accountId)
       ).rejects.toThrow(
@@ -99,7 +99,7 @@ describe('lib/projects/ProjectLogsManager', () => {
     });
 
     it('should throw an error if there is data missing from the project details', async () => {
-      ensureProjectExists.mockResolvedValue({});
+      (ensureProjectExists as jest.Mock).mockResolvedValue({});
       await expect(async () =>
         ProjectLogsManager.init(accountId)
       ).rejects.toThrow(/There was an error fetching project details/);
@@ -177,9 +177,11 @@ describe('lib/projects/ProjectLogsManager', () => {
       const functionToChoose = {
         componentName: 'function1',
         type: {
-          name: 'APP_FUNCTION',
+          name: SUBCOMPONENT_TYPES.APP_FUNCTION,
         },
         deployOutput: {
+          appId: 123,
+          appFunctionName: 'function1',
           endpoint: { path: 'yooooooo', methods: ['GET'] },
         },
       };
@@ -202,11 +204,11 @@ describe('lib/projects/ProjectLogsManager', () => {
 
   describe('reset', () => {
     it('should reset all the values', async () => {
-      ProjectLogsManager.someRandomField = 'value';
-      expect(ProjectLogsManager.someRandomField).toBeDefined();
+      ProjectLogsManager.projectName = 'value';
+      expect(ProjectLogsManager.projectName).toBeDefined();
 
       ProjectLogsManager.reset();
-      expect(ProjectLogsManager.isPublicFunction).toBeUndefined();
+      expect(ProjectLogsManager.projectName).toBeUndefined();
     });
   });
 });

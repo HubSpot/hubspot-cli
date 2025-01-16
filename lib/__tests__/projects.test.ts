@@ -1,10 +1,9 @@
-// @ts-nocheck
-const fs = require('fs');
-const os = require('os');
-const path = require('path');
-const { EXIT_CODES } = require('../enums/exitCodes');
-const projects = require('../projects');
-const { logger } = require('@hubspot/local-dev-lib/logger');
+import fs from 'fs';
+import os from 'os';
+import path from 'path';
+import { EXIT_CODES } from '../enums/exitCodes';
+import * as projects from '../projects';
+import { logger } from '@hubspot/local-dev-lib/logger';
 
 jest.mock('@hubspot/local-dev-lib/logger');
 
@@ -31,7 +30,7 @@ describe('lib/projects', () => {
     });
 
     it('rejects undefined configuration', () => {
-      projects.validateProjectConfig(null, projectDir);
+      (projects.validateProjectConfig as jest.Mock)(null, projectDir);
 
       expect(exitMock).toHaveBeenCalledWith(EXIT_CODES.ERROR);
       expect(logger.error).toHaveBeenCalledWith(
@@ -42,7 +41,10 @@ describe('lib/projects', () => {
     });
 
     it('rejects configuration with missing name', () => {
-      projects.validateProjectConfig({ srcDir: '.' }, projectDir);
+      (projects.validateProjectConfig as jest.Mock)(
+        { srcDir: '.' },
+        projectDir
+      );
 
       expect(exitMock).toHaveBeenCalledWith(EXIT_CODES.ERROR);
       expect(logger.error).toHaveBeenCalledWith(
@@ -51,7 +53,10 @@ describe('lib/projects', () => {
     });
 
     it('rejects configuration with missing srcDir', () => {
-      projects.validateProjectConfig({ name: 'hello' }, projectDir);
+      (projects.validateProjectConfig as jest.Mock)(
+        { name: 'hello' },
+        projectDir
+      );
 
       expect(exitMock).toHaveBeenCalledWith(EXIT_CODES.ERROR);
       expect(logger.error).toHaveBeenCalledWith(
@@ -61,7 +66,7 @@ describe('lib/projects', () => {
 
     describe('rejects configuration with srcDir outside project directory', () => {
       it('for parent directory', () => {
-        projects.validateProjectConfig(
+        (projects.validateProjectConfig as jest.Mock)(
           { name: 'hello', srcDir: '..' },
           projectDir
         );
@@ -73,7 +78,7 @@ describe('lib/projects', () => {
       });
 
       it('for root directory', () => {
-        projects.validateProjectConfig(
+        (projects.validateProjectConfig as jest.Mock)(
           { name: 'hello', srcDir: '/' },
           projectDir
         );
@@ -87,7 +92,10 @@ describe('lib/projects', () => {
       it('for complicated directory', () => {
         const srcDir = './src/././../src/../../src';
 
-        projects.validateProjectConfig({ name: 'hello', srcDir }, projectDir);
+        (projects.validateProjectConfig as jest.Mock)(
+          { name: 'hello', srcDir },
+          projectDir
+        );
 
         expect(exitMock).toHaveBeenCalledWith(EXIT_CODES.ERROR);
         expect(logger.error).toHaveBeenCalledWith(
@@ -97,7 +105,7 @@ describe('lib/projects', () => {
     });
 
     it('rejects configuration with srcDir that does not exist', () => {
-      projects.validateProjectConfig(
+      (projects.validateProjectConfig as jest.Mock)(
         { name: 'hello', srcDir: 'foo' },
         projectDir
       );
@@ -110,7 +118,7 @@ describe('lib/projects', () => {
 
     describe('accepts configuration with valid srcDir', () => {
       it('for current directory', () => {
-        projects.validateProjectConfig(
+        (projects.validateProjectConfig as jest.Mock)(
           { name: 'hello', srcDir: '.' },
           projectDir
         );
@@ -120,7 +128,7 @@ describe('lib/projects', () => {
       });
 
       it('for relative directory', () => {
-        projects.validateProjectConfig(
+        (projects.validateProjectConfig as jest.Mock)(
           { name: 'hello', srcDir: './src' },
           projectDir
         );
@@ -130,7 +138,7 @@ describe('lib/projects', () => {
       });
 
       it('for implied relative directory', () => {
-        projects.validateProjectConfig(
+        (projects.validateProjectConfig as jest.Mock)(
           { name: 'hello', srcDir: 'src' },
           projectDir
         );
