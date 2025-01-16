@@ -1,56 +1,56 @@
-import { Argv, ArgumentsCamelCase, CommandModule } from 'yargs';
+import { Argv, ArgumentsCamelCase } from 'yargs';
 import { logger } from '@hubspot/local-dev-lib/logger';
 import { getAccountConfig } from '@hubspot/local-dev-lib/config';
 import { getAccessToken } from '@hubspot/local-dev-lib/personalAccessKey';
 import { addConfigOptions } from '../../lib/commonOpts';
 import { i18n } from '../../lib/lang';
 import { getTableContents } from '../../lib/ui/table';
-import { CommonOptions } from '../../types/Yargs';
+import { CommonArgs } from '../../types/Yargs';
 
 const i18nKey = 'commands.account.subcommands.info';
+export const describe = i18n(`${i18nKey}.describe`);
 
-export class AccountInfoCommand<U extends CommonOptions>
-  implements CommandModule<object, U>
-{
-  public command = 'info [account]';
-  public describe = i18n(`${i18nKey}.describe`);
+export const command = 'info [account]';
 
-  public builder = (args: Argv): Argv<U> => {
-    addConfigOptions(args);
+export async function handler(
+  args: ArgumentsCamelCase<CommonArgs>
+): Promise<void> {
+  const { derivedAccountId } = args;
+  const config = getAccountConfig(derivedAccountId);
+  // check if the provided account is using a personal access key, if not, show an error
+  if (config && config.authType === 'personalaccesskey') {
+    const { name, personalAccessKey, env } = config;
+    let scopeGroups: string[][] = [];
 
-    args.example([
-      ['$0 accounts info', i18n(`${i18nKey}.examples.default`)],
-      ['$0 accounts info MyAccount', i18n(`${i18nKey}.examples.nameBased`)],
-      ['$0 accounts info 1234567', i18n(`${i18nKey}.examples.idBased`)],
-    ]);
-
-    return args as unknown as Argv<U>;
-  };
-
-  public handler = async (args: ArgumentsCamelCase<U>) => {
-    const { derivedAccountId } = args;
-    const config = getAccountConfig(derivedAccountId);
-    // check if the provided account is using a personal access key, if not, show an error
-    if (config && config.authType === 'personalaccesskey') {
-      const { name, personalAccessKey, env } = config;
-      let scopeGroups: string[][] = [];
-
+    if (personalAccessKey) {
       const response = await getAccessToken(
-        personalAccessKey!,
+        personalAccessKey,
         env,
         derivedAccountId
       );
 
       scopeGroups = response.scopeGroups.map(s => [s]);
-
-      if (name) {
-        logger.log(i18n(`${i18nKey}.name`, { name }));
-      }
-      logger.log(i18n(`${i18nKey}.accountId`, { accountId: derivedAccountId }));
-      logger.log(i18n(`${i18nKey}.scopeGroups`));
-      logger.log(getTableContents(scopeGroups, { border: { bodyLeft: '  ' } }));
-    } else {
-      logger.log(i18n(`${i18nKey}.errors.notUsingPersonalAccessKey`));
     }
-  };
+
+    if (name) {
+      logger.log(i18n(`${i18nKey}.name`, { name }));
+    }
+    logger.log(i18n(`${i18nKey}.accountId`, { accountId: derivedAccountId }));
+    logger.log(i18n(`${i18nKey}.scopeGroups`));
+    logger.log(getTableContents(scopeGroups, { border: { bodyLeft: '  ' } }));
+  } else {
+    logger.log(i18n(`${i18nKey}.errors.notUsingPersonalAccessKey`));
+  }
+}
+
+export function builder(yargs: Argv): Argv<CommonArgs> {
+  addConfigOptions(yargs);
+
+  yargs.example([
+    ['$0 accounts info', i18n(`${i18nKey}.examples.default`)],
+    ['$0 accounts info MyAccount', i18n(`${i18nKey}.examples.nameBased`)],
+    ['$0 accounts info 1234567', i18n(`${i18nKey}.examples.idBased`)],
+  ]);
+
+  return yargs as Argv<CommonArgs>;
 }

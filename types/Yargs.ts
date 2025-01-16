@@ -1,6 +1,6 @@
 import { Options } from 'yargs';
 
-export interface CommonOptions extends Options {
+export interface CommonArgs extends Options {
   derivedAccountId: number;
   providedAccountId?: number;
   d: boolean;
