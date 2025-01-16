@@ -4,9 +4,11 @@ const { i18n } = require('../lib/lang');
 const list = require('./account/list');
 const rename = require('./account/rename');
 const use = require('./account/use');
-const info = require('./account/info');
+const { AccountInfoCommand } = require('./account/info');
 const remove = require('./account/remove');
 const clean = require('./account/clean');
+
+const info = new AccountInfoCommand();
 
 const i18nKey = 'commands.account';
 

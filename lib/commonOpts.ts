@@ -36,7 +36,7 @@ export function addAccountOptions(yargs: Argv): Argv {
   });
 }
 
-export function addConfigOptions(yargs: Argv): Argv {
+export function addConfigOptions(yargs: Argv): Argv<{ config?: string }> {
   return yargs.option('config', {
     alias: 'c',
     describe: i18n(`${i18nKey}.options.config.describe`),

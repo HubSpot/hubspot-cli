@@ -1,10 +1,8 @@
-import { ArgumentsCamelCase } from 'yargs';
+import { Options } from 'yargs';
 
-export type CommonArguments<T = object> = ArgumentsCamelCase<
-  T & {
-    derivedAccountId: number;
-    providedAccountId?: number;
-    d: boolean;
-    debug: boolean;
-  }
->;
+export interface CommonOptions extends Options {
+  derivedAccountId: number;
+  providedAccountId?: number;
+  d: boolean;
+  debug: boolean;
+}
