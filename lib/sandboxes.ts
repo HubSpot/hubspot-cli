@@ -186,7 +186,7 @@ export function handleSandboxCreateError(
   env: Environment,
   name: string,
   accountId: number
-) {
+): never {
   if (isMissingScopeError(err)) {
     logger.error(
       i18n(`${i18nKey}.create.failure.scopes.message`, {
