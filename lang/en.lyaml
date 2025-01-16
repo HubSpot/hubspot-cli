@@ -987,7 +987,7 @@ en:
       uploading: "Uploading files from \"{{ src }}\" to \"{{ dest }}\" in the Design Manager of account {{ accountId }}"
       notUploaded: "There was an error processing \"{{ src }}\". The file has not been uploaded."
       cleaning: "Removing \"{{ filePath }}\" from account {{ accountId }} and uploading local..."
-      confirmCleanUpload: "You are about to remove any remote files in \"{{ filePath }}\" on HubSpot account {{ accountId }} that don't exist locally. Are you sure you want to do this?"
+      confirmCleanUpload: "You are about to delete the directory \"{{ filePath }}\" and its contents on HubSpot account {{ accountId }} before uploading. This will also clear the global content associated with any global partial templates and modules. Are you sure you want to do this?"
     watch:
       describe: "Watch a directory on your computer for changes and upload the changed files to the HubSpot CMS."
       errors:
