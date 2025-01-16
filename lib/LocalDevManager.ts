@@ -611,3 +611,4 @@ class LocalDevManager {
 }
 
 export default LocalDevManager;
+module.exports = LocalDevManager;
