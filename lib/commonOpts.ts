@@ -14,6 +14,7 @@ import {
 } from '@hubspot/local-dev-lib/config';
 import { i18n } from './lang';
 import { Argv, Arguments } from 'yargs';
+import { ConfigOptions, StringOptionsType } from '../types/Yargs';
 
 const i18nKey = 'lib.commonOpts';
 
@@ -36,8 +37,8 @@ export function addAccountOptions(yargs: Argv): Argv {
   });
 }
 
-export function addConfigOptions(yargs: Argv): Argv {
-  return yargs.option('config', {
+export function addConfigOptions<T>(yargs: Argv<T>): Argv<T & ConfigOptions> {
+  return yargs.option<keyof ConfigOptions, StringOptionsType>('config', {
     alias: 'c',
     describe: i18n(`${i18nKey}.options.config.describe`),
     type: 'string',
