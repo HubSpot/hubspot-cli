@@ -49,7 +49,11 @@ const { logError, ApiErrorContext } = require('./errorHandlers/index');
 const {
   PERSONAL_ACCESS_KEY_AUTH_METHOD,
 } = require('@hubspot/local-dev-lib/constants/auth');
-const { buildNewAccount, saveAccountToConfig } = require('./buildAccount');
+const {
+  buildSandbox,
+  buildDeveloperTestAccount,
+  saveAccountToConfig,
+} = require('./buildAccount');
 const { hubspotAccountNamePrompt } = require('./prompts/accountNamePrompt');
 
 const i18nKey = 'lib.localDev';
@@ -208,12 +212,12 @@ const createSandboxForLocalDev = async (accountId, accountConfig, env) => {
       accountId
     );
 
-    const { result } = await buildNewAccount({
+    const result = await buildSandbox(
       name,
-      accountType: HUBSPOT_ACCOUNT_TYPES.DEVELOPMENT_SANDBOX,
       accountConfig,
-      env,
-    });
+      HUBSPOT_ACCOUNT_TYPES.DEVELOPMENT_SANDBOX,
+      env
+    );
 
     const targetAccountId = result.sandbox.sandboxHubId;
 
@@ -223,13 +227,13 @@ const createSandboxForLocalDev = async (accountId, accountConfig, env) => {
       sandboxAccountConfig
     );
     // For v1 sandboxes, keep sync here. Once we migrate to v2, this will be handled by BE automatically
-    await syncSandbox({
-      accountConfig: sandboxAccountConfig,
-      parentAccountConfig: accountConfig,
+    await syncSandbox(
+      sandboxAccountConfig,
+      accountConfig,
       env,
       syncTasks,
-      slimInfoMessage: true,
-    });
+      true
+    );
     return targetAccountId;
   } catch (err) {
     logError(err);
@@ -286,13 +290,12 @@ const createDeveloperTestAccountForLocalDev = async (
       accountId
     );
 
-    const { result } = await buildNewAccount({
+    const result = await buildDeveloperTestAccount(
       name,
-      accountType: HUBSPOT_ACCOUNT_TYPES.DEVELOPER_TEST,
       accountConfig,
       env,
-      portalLimit: maxTestPortals,
-    });
+      maxTestPortals
+    );
 
     return result.id;
   } catch (err) {
@@ -319,11 +322,11 @@ const useExistingDevTestAccount = async (env, account) => {
     logger.log('');
     process.exit(EXIT_CODES.SUCCESS);
   }
-  const devTestAcctConfigName = await saveAccountToConfig({
-    env,
-    accountName: account.accountName,
-    accountId: account.id,
-  });
+  const devTestAcctConfigName = await saveAccountToConfig(
+    account.id,
+    account.accountName,
+    env
+  );
   logger.success(
     i18n(`lib.developerTestAccount.create.success.configFileUpdated`, {
       accountName: devTestAcctConfigName,

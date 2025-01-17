@@ -49,3 +49,74 @@ export type ProjectTemplateRepoConfig = {
   projects?: ProjectTemplate[];
   components?: ComponentTemplate[];
 };
+
+export type PrivateAppComponentConfig = {
+  name: string;
+  description: string;
+  uid: string;
+  scopes: Array<string>;
+  public: boolean;
+  extensions?: {
+    crm: {
+      cards: Array<{ file: string }>;
+    };
+  };
+};
+
+export type PublicAppComponentConfig = {
+  name: string;
+  uid: string;
+  description: string;
+  allowedUrls: Array<string>;
+  auth: {
+    redirectUrls: Array<string>;
+    requiredScopes: Array<string>;
+    optionalScopes: Array<string>;
+    conditionallyRequiredScopes: Array<string>;
+  };
+  support: {
+    supportEmail: string;
+    documentationUrl: string;
+    supportUrl: string;
+    supportPhone: string;
+  };
+  extensions?: {
+    crm: {
+      cards: Array<{ file: string }>;
+    };
+  };
+  webhooks?: {
+    file: string;
+  };
+};
+
+export type AppCardComponentConfig = {
+  type: 'crm-card';
+  data: {
+    title: string;
+    uid: string;
+    location: string;
+    module: {
+      file: string;
+    };
+    objectTypes: Array<{ name: string }>;
+  };
+};
+
+export type GenericComponentConfig =
+  | PublicAppComponentConfig
+  | PrivateAppComponentConfig
+  | AppCardComponentConfig;
+
+export enum ComponentTypes {
+  PrivateApp = 'private-app',
+  PublicApp = 'public-app',
+  HublTheme = 'hubl-theme',
+}
+
+export type Component = {
+  type: ComponentTypes;
+  config: GenericComponentConfig;
+  runnable: boolean;
+  path: string;
+};
