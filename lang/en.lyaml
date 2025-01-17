@@ -1129,6 +1129,7 @@ en:
         buildSucceededAutomaticallyDeploying: "Build #{{ buildId }} succeeded. {{#bold}}Automatically deploying{{/bold}} to {{ accountIdentifier }}\n"
         cleanedUpTempFile: "Cleaned up temporary file {{ path }}"
         viewDeploys: "View all deploys for this project in HubSpot"
+        unableToFindAutodeployStatus: "Unable to find the auto deploy for build #{{ buildId }}. This deploy may have been skipped. {{ viewDeploysLink }}."
     projectUpload:
       uploadProjectFiles:
         add: "Uploading {{#bold}}{{ projectName }}{{/bold}} project files to {{ accountIdentifier }}"
