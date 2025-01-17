@@ -4,7 +4,6 @@ import {
 } from '@hubspot/local-dev-lib/constants/files';
 import {
   getAndLoadConfigIfNeeded,
-  getAccountId,
   getAccountConfig,
   loadConfigFromEnvironment,
 } from '@hubspot/local-dev-lib/config';
@@ -12,7 +11,6 @@ import { getCmsPublishMode } from '../commonOpts';
 import { CmsPublishMode } from '@hubspot/local-dev-lib/types/Files';
 import { Arguments } from 'yargs';
 
-const mockedGetAccountId = getAccountId as jest.Mock;
 const mockedGetAccountConfig = getAccountConfig as jest.Mock;
 const mockedGetAndLoadConfigIfNeeded = getAndLoadConfigIfNeeded as jest.Mock;
 const mockedLoadConfigFromEnvironment = loadConfigFromEnvironment as jest.Mock;
@@ -91,7 +89,6 @@ describe('lib/commonOpts', () => {
           mockedGetAndLoadConfigIfNeeded.mockReturnValue(
             configWithDefaultCmsPublishMode
           );
-          mockedGetAccountId.mockReturnValue(accounts.DEV);
           mockedGetAccountConfig.mockReturnValue(devAccountConfig);
           mockedLoadConfigFromEnvironment.mockReturnValue(undefined);
           expect(
@@ -108,7 +105,6 @@ describe('lib/commonOpts', () => {
           mockedGetAndLoadConfigIfNeeded.mockReturnValue(
             configWithDefaultCmsPublishMode
           );
-          mockedGetAccountId.mockReturnValue(accounts.PROD);
           mockedGetAccountConfig.mockReturnValue(prodAccountConfig);
           mockedLoadConfigFromEnvironment.mockReturnValue(undefined);
           expect(

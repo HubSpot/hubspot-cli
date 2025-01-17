@@ -11,7 +11,7 @@ import {
 import { getAccountIdentifier } from '@hubspot/local-dev-lib/config/getAccountIdentifier';
 import { logger } from '@hubspot/local-dev-lib/logger';
 import { fetchDeveloperTestAccounts } from '@hubspot/local-dev-lib/api/developerTestAccounts';
-import { CLIAccount, AccountType } from '@hubspot/local-dev-lib/types/Accounts';
+import { CLIAccount } from '@hubspot/local-dev-lib/types/Accounts';
 import { Usage } from '@hubspot/local-dev-lib/types/Sandbox';
 import {
   DeveloperTestAccount,
@@ -214,7 +214,7 @@ async function selectTargetAccountPrompt(
 
 export async function confirmDefaultAccountPrompt(
   accountName: string,
-  accountType: AccountType
+  accountType: string
 ): Promise<boolean> {
   const { useDefaultAccount } = await promptUser<{
     useDefaultAccount: boolean;
