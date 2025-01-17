@@ -5,15 +5,17 @@ import { getAccessToken } from '@hubspot/local-dev-lib/personalAccessKey';
 import { addConfigOptions } from '../../lib/commonOpts';
 import { i18n } from '../../lib/lang';
 import { getTableContents } from '../../lib/ui/table';
-import { CommonArgs } from '../../types/Yargs';
+import { CommonArgs, ConfigOptions } from '../../types/Yargs';
 
 const i18nKey = 'commands.account.subcommands.info';
-export const describe = i18n(`${i18nKey}.describe`);
 
+export const describe = i18n(`${i18nKey}.describe`);
 export const command = 'info [account]';
 
+type AccountInfoArgs = CommonArgs & ConfigOptions;
+
 export async function handler(
-  args: ArgumentsCamelCase<CommonArgs>
+  args: ArgumentsCamelCase<AccountInfoArgs>
 ): Promise<void> {
   const { derivedAccountId } = args;
   const config = getAccountConfig(derivedAccountId);
@@ -43,7 +45,7 @@ export async function handler(
   }
 }
 
-export function builder(yargs: Argv): Argv<CommonArgs> {
+export function builder(yargs: Argv): Argv<AccountInfoArgs> {
   addConfigOptions(yargs);
 
   yargs.example([
@@ -52,5 +54,5 @@ export function builder(yargs: Argv): Argv<CommonArgs> {
     ['$0 accounts info 1234567', i18n(`${i18nKey}.examples.idBased`)],
   ]);
 
-  return yargs as Argv<CommonArgs>;
+  return yargs as Argv<AccountInfoArgs>;
 }
