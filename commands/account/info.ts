@@ -24,19 +24,15 @@ export async function handler(
     const { name, personalAccessKey, env } = config;
     let scopeGroups: string[][] = [];
 
-    if (personalAccessKey) {
-      const response = await getAccessToken(
-        personalAccessKey,
-        env,
-        derivedAccountId
-      );
+    const response = await getAccessToken(
+      personalAccessKey!,
+      env,
+      derivedAccountId
+    );
 
-      scopeGroups = response.scopeGroups.map(s => [s]);
-    }
+    scopeGroups = response.scopeGroups.map(s => [s]);
 
-    if (name) {
-      logger.log(i18n(`${i18nKey}.name`, { name }));
-    }
+    logger.log(i18n(`${i18nKey}.name`, { name: name! }));
     logger.log(i18n(`${i18nKey}.accountId`, { accountId: derivedAccountId }));
     logger.log(i18n(`${i18nKey}.scopeGroups`));
     logger.log(getTableContents(scopeGroups, { border: { bodyLeft: '  ' } }));
