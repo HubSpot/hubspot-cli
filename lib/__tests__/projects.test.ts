@@ -9,9 +9,9 @@ jest.mock('@hubspot/local-dev-lib/logger');
 
 describe('lib/projects', () => {
   describe('validateProjectConfig()', () => {
-    let realProcess;
-    let projectDir;
-    let exitMock;
+    let realProcess: NodeJS.Process;
+    let projectDir: string;
+    let exitMock: jest.Mock;
 
     beforeAll(() => {
       projectDir = fs.mkdtempSync(path.join(os.tmpdir(), 'projects-'));
@@ -22,7 +22,12 @@ describe('lib/projects', () => {
 
     beforeEach(() => {
       exitMock = jest.fn();
-      global.process = { ...realProcess, exit: exitMock };
+      global.process = {
+        ...realProcess,
+        exit: exitMock as unknown as (
+          code?: number | string | null | undefined
+        ) => never,
+      };
     });
 
     afterAll(() => {

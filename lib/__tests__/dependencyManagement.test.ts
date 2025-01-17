@@ -21,7 +21,7 @@ import SpinniesManager from '../ui/SpinniesManager';
 import { existsSync } from 'fs';
 
 describe('lib/dependencyManagement', () => {
-  let execMock;
+  let execMock: jest.Mock;
 
   const projectDir = path.join('path', 'to', 'project');
   const srcDir = 'src';

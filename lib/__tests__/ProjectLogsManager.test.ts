@@ -1,7 +1,19 @@
 import { ProjectLogsManager } from '../projects/ProjectLogsManager';
 import { getProjectConfig, ensureProjectExists } from '../projects';
 import { fetchProjectComponentsMetadata } from '@hubspot/local-dev-lib/api/projects';
-import { SUBCOMPONENT_TYPES } from '../../../hubspot-local-dev-lib/dist/enums/build';
+
+const SUBCOMPONENT_TYPES = {
+  APP_ID: 'APP_ID',
+  PACKAGE_LOCK_FILE: 'PACKAGE_LOCK_FILE',
+  CRM_CARD_V2: 'CRM_CARD_V2',
+  CARD_V2: 'CARD_V2',
+  SERVERLESS_PKG: 'SERVERLESS_PKG',
+  SERVERLESS_ROUTE: 'SERVERLESS_ROUTE',
+  SERVERLESS_FUNCTION: 'SERVERLESS_FUNCTION',
+  APP_FUNCTION: 'APP_FUNCTION',
+  AUTOMATION_ACTION: 'AUTOMATION_ACTION',
+  REACT_EXTENSION: 'REACT_EXTENSION',
+} as const;
 
 jest.mock('../projects');
 jest.mock('@hubspot/local-dev-lib/api/projects');
