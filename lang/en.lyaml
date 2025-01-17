@@ -1075,6 +1075,7 @@ en:
         fileChangeError: "Failed to notify local dev server of file change: {{ message }}"
     localDev:
       confirmDefaultAccountIsTarget:
+        configError: "An error occurred while reading the default account from your config. Run {{ authCommand }} to re-auth this account"
         declineDefaultAccountExplanation: "To develop on a different account, run {{ useCommand }} to change your default account, then re-run {{ devCommand }}."
       checkIfDefaultAccountIsSupported:
         publicApp: "This project contains a public app. Local development of public apps is only supported on developer accounts and developer test accounts. Change your default account using {{ useCommand }}, or link a new account with {{ authCommand }}."
@@ -1095,6 +1096,7 @@ en:
       createInitialBuildForNewProject:
         initialUploadMessage: "HubSpot Local Dev Server Startup"
         projectLockedError: "Your project is locked. This may mean that another user is running the {{#bold}}`hs project watch`{{/bold}} command for this project. If this is you, unlock the project in Projects UI."
+        genericError: "An error occurred while creating the initial build for this project. Run {{ uploadCommand }} to try again."
       checkIfParentAccountIsAuthed:
         notAuthedError: "To develop this project locally, run {{ authCommand }} to authenticate the App Developer Account {{ accountId }} associated with {{ accountIdentifier }}."
     projects:
@@ -1421,6 +1423,7 @@ en:
           invalidUser: "Couldn't create {{#bold}}{{ accountName }}{{/bold}} because your account has been removed from {{#bold}}{{ parentAccountName }}{{/bold}} or your permission set doesn't allow you to create the sandbox. To update your permissions, contact a super admin in {{#bold}}{{ parentAccountName }}{{/bold}}."
           403Gating: "Couldn't create {{#bold}}{{ accountName }}{{/bold}} because {{#bold}}{{ parentAccountName }}{{/bold}} does not have access to development sandboxes. To opt in to the CRM Development Beta and use development sandboxes, visit https://app.hubspot.com/l/product-updates/in-beta?update=13899236."
           usageLimitsFetch: "Unable to fetch sandbox usage limits. Please try again."
+          generic: "An error occurred while creating a new sandbox. Please try again."
           limit:
             developer:
               one: "{{#bold}}{{ accountName }}{{/bold}} reached the limit of {{ limit }} development sandbox.

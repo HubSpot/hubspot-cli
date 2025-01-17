@@ -113,16 +113,16 @@ exports.handler = async options => {
 
     // Upload all files if no build exists for this project yet
     if (initialUpload || hasNoBuilds) {
-      const result = await handleProjectUpload(
+      const { uploadError } = await handleProjectUpload(
         derivedAccountId,
         projectConfig,
         projectDir,
         startWatching
       );
 
-      if (result.uploadError) {
+      if (uploadError) {
         if (
-          isSpecifiedError(result.uploadError, {
+          isSpecifiedError(uploadError, {
             subCategory: PROJECT_ERROR_TYPES.PROJECT_LOCKED,
           })
         ) {
@@ -131,7 +131,7 @@ exports.handler = async options => {
           logger.log();
         } else {
           logError(
-            result.uploadError,
+            uploadError,
             new ApiErrorContext({
               accountId: derivedAccountId,
               request: 'project upload',
