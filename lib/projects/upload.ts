@@ -13,6 +13,7 @@ import { EXIT_CODES } from '../enums/exitCodes';
 import { ProjectConfig } from '../../types/Projects';
 import { isTranslationError, translate } from '@hubspot/project-parsing-lib';
 import { logError } from '../errorHandlers';
+import util from 'node:util';
 
 const i18nKey = 'lib.projectUpload';
 
@@ -140,6 +141,10 @@ export async function handleProjectUpload<T = ProjectUploadDefaultResult>(
             platformVersion: projectConfig.platformVersion,
             accountId,
           });
+
+          logger.debug(
+            util.inspect(intermediateRepresentation, false, null, true)
+          );
         } catch (e) {
           if (isTranslationError(e)) {
             logger.error(e.toString());
