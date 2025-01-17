@@ -157,7 +157,6 @@ class LocalDevManager {
       return;
     }
 
-    // TODO: Update to account for new API with { data }
     const {
       data: { uniquePortalInstallCount },
     } = await fetchPublicAppProductionInstallCounts(
