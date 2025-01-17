@@ -12,6 +12,11 @@ import { getCmsPublishMode } from '../commonOpts';
 import { CmsPublishMode } from '@hubspot/local-dev-lib/types/Files';
 import { Arguments } from 'yargs';
 
+const mockedGetAccountId = getAccountId as jest.Mock;
+const mockedGetAccountConfig = getAccountConfig as jest.Mock;
+const mockedGetAndLoadConfigIfNeeded = getAndLoadConfigIfNeeded as jest.Mock;
+const mockedLoadConfigFromEnvironment = loadConfigFromEnvironment as jest.Mock;
+
 type CmsPublishModeArgs = {
   cmsPublishMode?: CmsPublishMode;
   account?: number | string;
@@ -61,10 +66,10 @@ describe('lib/commonOpts', () => {
     describe('cms publish mode option precedence', () => {
       describe('1. --cmsPublishMode', () => {
         it('should return the cms publish mode specified by the command option if present.', () => {
-          (getAndLoadConfigIfNeeded as jest.Mock).mockReturnValue(
+          mockedGetAndLoadConfigIfNeeded.mockReturnValue(
             configWithDefaultCmsPublishMode
           );
-          (getAccountConfig as jest.Mock).mockReturnValue(devAccountConfig);
+          mockedGetAccountConfig.mockReturnValue(devAccountConfig);
           expect(
             getCmsPublishMode(
               buildArguments({
@@ -83,12 +88,12 @@ describe('lib/commonOpts', () => {
       });
       describe('2. hubspot.config.yml -> config.accounts[x].defaultCmsPublishMode', () => {
         it('should return the defaultCmsPublishMode specified by the account specific config if present.', () => {
-          (getAndLoadConfigIfNeeded as jest.Mock).mockReturnValue(
+          mockedGetAndLoadConfigIfNeeded.mockReturnValue(
             configWithDefaultCmsPublishMode
           );
-          (getAccountId as jest.Mock).mockReturnValue(accounts.DEV);
-          (getAccountConfig as jest.Mock).mockReturnValue(devAccountConfig);
-          (loadConfigFromEnvironment as jest.Mock).mockReturnValue(undefined);
+          mockedGetAccountId.mockReturnValue(accounts.DEV);
+          mockedGetAccountConfig.mockReturnValue(devAccountConfig);
+          mockedLoadConfigFromEnvironment.mockReturnValue(undefined);
           expect(
             getCmsPublishMode(
               buildArguments({
@@ -100,12 +105,12 @@ describe('lib/commonOpts', () => {
       });
       describe('3. hubspot.config.yml -> config.defaultCmsPublishMode', () => {
         it('should return the defaultCmsPublishMode specified by the config if present.', () => {
-          (getAndLoadConfigIfNeeded as jest.Mock).mockReturnValue(
+          mockedGetAndLoadConfigIfNeeded.mockReturnValue(
             configWithDefaultCmsPublishMode
           );
-          (getAccountId as jest.Mock).mockReturnValue(accounts.PROD);
-          (getAccountConfig as jest.Mock).mockReturnValue(prodAccountConfig);
-          (loadConfigFromEnvironment as jest.Mock).mockReturnValue(undefined);
+          mockedGetAccountId.mockReturnValue(accounts.PROD);
+          mockedGetAccountConfig.mockReturnValue(prodAccountConfig);
+          mockedLoadConfigFromEnvironment.mockReturnValue(undefined);
           expect(
             getCmsPublishMode(
               buildArguments({
@@ -117,7 +122,7 @@ describe('lib/commonOpts', () => {
       });
       describe('4. DEFAULT_CMS_PUBLISH_MODE', () => {
         it('should return the defaultCmsPubishMode specified by the config if present.', () => {
-          (loadConfigFromEnvironment as jest.Mock).mockReturnValue(undefined);
+          mockedLoadConfigFromEnvironment.mockReturnValue(undefined);
           expect(
             getCmsPublishMode(
               buildArguments({

@@ -31,12 +31,19 @@ describe('lib/dependencyManagement', () => {
   const projectName = 'super cool test project';
   const installLocations = [appFunctionsDir, extensionsDir];
 
-  beforeEach(() => {
-    execMock = jest.fn();
-    util.promisify = jest
+  function mockedPromisify(execMock: jest.Mock): typeof util.promisify {
+    return jest
       .fn()
       .mockReturnValue(execMock) as unknown as typeof util.promisify;
-    (getProjectConfig as jest.Mock).mockResolvedValue({
+  }
+
+  const mockedWalk = walk as jest.Mock;
+  const mockedGetProjectConfig = getProjectConfig as jest.Mock;
+
+  beforeEach(() => {
+    execMock = jest.fn();
+    util.promisify = mockedPromisify(execMock);
+    mockedGetProjectConfig.mockResolvedValue({
       projectDir,
       projectConfig: {
         srcDir,
@@ -53,9 +60,7 @@ describe('lib/dependencyManagement', () => {
         .fn()
         .mockResolvedValueOnce({ stdout: JSON.stringify({ latest, next }) });
 
-      util.promisify = jest
-        .fn()
-        .mockReturnValueOnce(execMock) as unknown as typeof util.promisify;
+      util.promisify = mockedPromisify(execMock);
       const actual = await getLatestCliVersion();
       expect(actual).toEqual({ latest, next });
     });
@@ -65,9 +70,7 @@ describe('lib/dependencyManagement', () => {
       execMock = jest.fn().mockImplementationOnce(() => {
         throw new Error(errorMessage);
       });
-      util.promisify = jest
-        .fn()
-        .mockReturnValueOnce(execMock) as unknown as typeof util.promisify;
+      util.promisify = mockedPromisify(execMock);
       await expect(() => getLatestCliVersion()).rejects.toThrowError(
         errorMessage
       );
@@ -86,9 +89,7 @@ describe('lib/dependencyManagement', () => {
       execMock = jest.fn().mockImplementationOnce(() => {
         throw new Error('unsuccessful');
       });
-      util.promisify = jest
-        .fn()
-        .mockReturnValueOnce(execMock) as unknown as typeof util.promisify;
+      util.promisify = mockedPromisify(execMock);
       const actual = await isGloballyInstalled('npm');
       expect(actual).toBe(false);
       expect(execMock).toHaveBeenCalledTimes(1);
@@ -159,9 +160,9 @@ describe('lib/dependencyManagement', () => {
         path.join(extensionsDir, 'package.json'),
       ];
 
-      (walk as jest.Mock).mockResolvedValue(installLocations);
+      mockedWalk.mockResolvedValue(installLocations);
 
-      (getProjectConfig as jest.Mock).mockResolvedValue({
+      mockedGetProjectConfig.mockResolvedValue({
         projectDir,
         projectConfig: {
           srcDir,
@@ -186,18 +187,16 @@ describe('lib/dependencyManagement', () => {
         }
       });
 
-      util.promisify = jest
-        .fn()
-        .mockReturnValue(execMock) as unknown as typeof util.promisify;
+      util.promisify = mockedPromisify(execMock);
 
       const installLocations = [
         path.join(appFunctionsDir, 'package.json'),
         path.join(extensionsDir, 'package.json'),
       ];
 
-      (walk as jest.Mock).mockResolvedValue(installLocations);
+      mockedWalk.mockResolvedValue(installLocations);
 
-      (getProjectConfig as jest.Mock).mockResolvedValue({
+      mockedGetProjectConfig.mockResolvedValue({
         projectDir,
         projectConfig: {
           srcDir,
@@ -229,7 +228,7 @@ describe('lib/dependencyManagement', () => {
 
   describe('getProjectPackageJsonFiles', () => {
     it('should throw an error when ran outside the boundary of a project', async () => {
-      (getProjectConfig as jest.Mock).mockResolvedValue({});
+      mockedGetProjectConfig.mockResolvedValue({});
       await expect(() => getProjectPackageJsonLocations()).rejects.toThrowError(
         'No project detected. Run this command from a project directory.'
       );
@@ -239,9 +238,7 @@ describe('lib/dependencyManagement', () => {
       execMock = jest.fn().mockImplementation(() => {
         throw new Error('OH NO');
       });
-      util.promisify = jest
-        .fn()
-        .mockReturnValue(execMock) as unknown as typeof util.promisify;
+      util.promisify = mockedPromisify(execMock);
       await expect(() => getProjectPackageJsonLocations()).rejects.toThrowError(
         /This command depends on npm, install/
       );
@@ -266,14 +263,14 @@ describe('lib/dependencyManagement', () => {
         path.join(nodeModulesDir, 'package.json'),
       ];
 
-      (walk as jest.Mock).mockResolvedValue(installLocations);
+      mockedWalk.mockResolvedValue(installLocations);
 
       const actual = await getProjectPackageJsonLocations();
       expect(actual).toEqual([appFunctionsDir, extensionsDir]);
     });
 
     it('should throw an error if no package.json files are found', async () => {
-      (walk as jest.Mock).mockResolvedValue([]);
+      mockedWalk.mockResolvedValue([]);
 
       await expect(() => getProjectPackageJsonLocations()).rejects.toThrowError(
         new RegExp(
