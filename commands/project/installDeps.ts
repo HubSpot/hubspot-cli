@@ -10,7 +10,6 @@ const { promptUser } = require('../../lib/prompts/promptUtils');
 const path = require('path');
 const { i18n } = require('../../lib/lang');
 const { trackCommandUsage } = require('../../lib/usageTracking');
-const { getAccountId } = require('../../lib/commonOpts');
 const { uiBetaTag } = require('../../lib/ui');
 
 const i18nKey = `commands.project.subcommands.installDeps`;
@@ -19,10 +18,9 @@ exports.command = 'install-deps [packages..]';
 exports.describe = uiBetaTag(i18n(`${i18nKey}.help.describe`), false);
 
 exports.handler = async options => {
-  const { packages } = options || {};
+  const { derivedAccountId, packages } = options || {};
   try {
-    const accountId = getAccountId(options);
-    trackCommandUsage('project-install-deps', null, accountId);
+    trackCommandUsage('project-install-deps', null, derivedAccountId);
 
     const projectConfig = await getProjectConfig();
     if (!projectConfig || !projectConfig.projectDir) {
