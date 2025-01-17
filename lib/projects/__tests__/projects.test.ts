@@ -2,29 +2,36 @@ import fs from 'fs';
 import os from 'os';
 import path from 'path';
 import { EXIT_CODES } from '../../enums/exitCodes';
-import * as projects from '..';
+import * as projects from '../../projects';
 import { logger } from '@hubspot/local-dev-lib/logger';
 
 jest.mock('@hubspot/local-dev-lib/logger');
 
 describe('lib/projects', () => {
   describe('validateProjectConfig()', () => {
+    let realProcess: NodeJS.Process;
     let projectDir: string;
-    let exitMock: jest.SpyInstance;
+    let exitMock: jest.Mock;
 
     beforeAll(() => {
       projectDir = fs.mkdtempSync(path.join(os.tmpdir(), 'projects-'));
       fs.mkdirSync(path.join(projectDir, 'src'));
+
+      realProcess = process;
     });
 
     beforeEach(() => {
-      exitMock = jest.spyOn(process, 'exit').mockImplementation((): never => {
-        throw new Error('process.exit() was called.');
-      });
+      exitMock = jest.fn();
+      global.process = {
+        ...realProcess,
+        exit: exitMock as unknown as (
+          code?: number | string | null | undefined
+        ) => never,
+      };
     });
 
     afterAll(() => {
-      exitMock.mockRestore();
+      global.process = realProcess;
     });
 
     it('rejects undefined configuration', () => {

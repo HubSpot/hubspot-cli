@@ -15,7 +15,7 @@ const SUBCOMPONENT_TYPES = {
   REACT_EXTENSION: 'REACT_EXTENSION',
 } as const;
 
-jest.mock('../projects');
+jest.mock('../../projects');
 jest.mock('@hubspot/local-dev-lib/api/projects');
 
 describe('lib/projects/ProjectLogsManager', () => {
