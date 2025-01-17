@@ -9,29 +9,22 @@ jest.mock('@hubspot/local-dev-lib/logger');
 
 describe('lib/projects', () => {
   describe('validateProjectConfig()', () => {
-    let realProcess: NodeJS.Process;
     let projectDir: string;
-    let exitMock: jest.Mock;
+    let exitMock: jest.SpyInstance;
 
     beforeAll(() => {
       projectDir = fs.mkdtempSync(path.join(os.tmpdir(), 'projects-'));
       fs.mkdirSync(path.join(projectDir, 'src'));
-
-      realProcess = process;
     });
 
     beforeEach(() => {
-      exitMock = jest.fn();
-      global.process = {
-        ...realProcess,
-        exit: exitMock as unknown as (
-          code?: number | string | null | undefined
-        ) => never,
-      };
+      exitMock = jest
+        .spyOn(process, 'exit')
+        .mockImplementation((): never => undefined as never);
     });
 
-    afterAll(() => {
-      global.process = realProcess;
+    afterEach(() => {
+      exitMock.mockRestore();
     });
 
     it('rejects undefined configuration', () => {
