@@ -1,5 +1,5 @@
-import { ProjectLogsManager } from '../projects/ProjectLogsManager';
-import { getProjectConfig, ensureProjectExists } from '../projects';
+import { ProjectLogsManager } from '../ProjectLogsManager';
+import { getProjectConfig, ensureProjectExists } from '..';
 import { fetchProjectComponentsMetadata } from '@hubspot/local-dev-lib/api/projects';
 
 const SUBCOMPONENT_TYPES = {

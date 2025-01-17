@@ -1,8 +1,8 @@
 import fs from 'fs';
 import os from 'os';
 import path from 'path';
-import { EXIT_CODES } from '../enums/exitCodes';
-import * as projects from '../projects';
+import { EXIT_CODES } from '../../enums/exitCodes';
+import * as projects from '..';
 import { logger } from '@hubspot/local-dev-lib/logger';
 
 jest.mock('@hubspot/local-dev-lib/logger');
