@@ -1,7 +1,6 @@
-// @ts-nocheck
-const { getAccountId } = require('@hubspot/local-dev-lib/config');
-const { fetchProjects } = require('@hubspot/local-dev-lib/api/projects');
-const { downloadProjectPrompt } = require('../downloadProjectPrompt');
+import { getAccountId } from '@hubspot/local-dev-lib/config';
+import { fetchProjects } from '@hubspot/local-dev-lib/api/projects';
+import { downloadProjectPrompt } from '../downloadProjectPrompt';
 
 jest.mock('../promptUtils');
 jest.mock('@hubspot/local-dev-lib/api/projects', () => ({

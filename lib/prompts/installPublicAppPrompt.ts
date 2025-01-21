@@ -10,7 +10,7 @@ const i18nKey = 'lib.prompts.installPublicAppPrompt';
 export async function installPublicAppPrompt(
   env: string,
   targetAccountId: number,
-  clientId: number,
+  clientId: string,
   scopes: string[],
   redirectUrls: string[],
   isReinstall = false

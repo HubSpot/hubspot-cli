@@ -6,6 +6,7 @@ import {
 import { shouldSuppressError } from './suppressError';
 import { i18n } from '../lang';
 import util from 'util';
+import { isAxiosError } from 'axios';
 
 const i18nKey = 'lib.errorHandlers.index';
 
@@ -50,10 +51,12 @@ export function debugError(error: unknown, context?: ApiErrorContext): void {
     logger.debug(i18n(`${i18nKey}.errorOccurred`, { error: String(error) }));
   }
 
-  if (error instanceof Error) {
+  if (error instanceof Error && error.cause) {
     logger.debug(
       i18n(`${i18nKey}.errorCause`, {
-        cause: util.inspect(error.cause, false, null, true),
+        cause: isAxiosError(error.cause)
+          ? `${error.cause}`
+          : util.inspect(error.cause, false, null, true),
       })
     );
   }

@@ -1,89 +1,23 @@
 import * as fs from 'fs';
 import * as path from 'path';
-import { ValueOf } from '@hubspot/local-dev-lib/types/Utils';
 import { walk } from '@hubspot/local-dev-lib/fs';
 import { logger } from '@hubspot/local-dev-lib/logger';
 import { logError } from '../errorHandlers/index';
-
-export type Component = {
-  type: ComponentTypes;
-  config: object;
-  runnable: boolean;
-  path: string;
-};
-
-type PrivateAppComponentConfig = {
-  name: string;
-  description: string;
-  uid: string;
-  scopes: Array<string>;
-  public: boolean;
-  extensions?: {
-    crm: {
-      cards: Array<{ file: string }>;
-    };
-  };
-};
-
-type PublicAppComponentConfig = {
-  name: string;
-  uid: string;
-  description: string;
-  allowedUrls: Array<string>;
-  auth: {
-    redirectUrls: Array<string>;
-    requiredScopes: Array<string>;
-    optionalScopes: Array<string>;
-    conditionallyRequiredScopes: Array<string>;
-  };
-  support: {
-    supportEmail: string;
-    documentationUrl: string;
-    supportUrl: string;
-    supportPhone: string;
-  };
-  extensions?: {
-    crm: {
-      cards: Array<{ file: string }>;
-    };
-  };
-  webhooks?: {
-    file: string;
-  };
-};
-
-type AppCardComponentConfig = {
-  type: 'crm-card';
-  data: {
-    title: string;
-    uid: string;
-    location: string;
-    module: {
-      file: string;
-    };
-    objectTypes: Array<{ name: string }>;
-  };
-};
-
-type GenericComponentConfig =
-  | PublicAppComponentConfig
-  | PrivateAppComponentConfig
-  | AppCardComponentConfig;
-
-export const COMPONENT_TYPES = {
-  privateApp: 'private-app',
-  publicApp: 'public-app',
-  hublTheme: 'hubl-theme',
-} as const;
-
-type ComponentTypes = ValueOf<typeof COMPONENT_TYPES>;
+import {
+  ComponentTypes,
+  Component,
+  GenericComponentConfig,
+  PublicAppComponentConfig,
+  PrivateAppComponentConfig,
+  AppCardComponentConfig,
+} from '../../types/Projects';
 
 export const CONFIG_FILES: {
-  [k in ValueOf<typeof COMPONENT_TYPES>]: string;
+  [k in ComponentTypes]: string;
 } = {
-  [COMPONENT_TYPES.privateApp]: 'app.json',
-  [COMPONENT_TYPES.publicApp]: 'public-app.json',
-  [COMPONENT_TYPES.hublTheme]: 'theme.json',
+  [ComponentTypes.PrivateApp]: 'app.json',
+  [ComponentTypes.PublicApp]: 'public-app.json',
+  [ComponentTypes.HublTheme]: 'theme.json',
 };
 
 function getComponentTypeFromConfigFile(
@@ -189,7 +123,7 @@ export async function findProjectComponents(
 
       if (parsedConfig) {
         const isLegacy = getIsLegacyApp(parsedConfig, dir);
-        const isHublTheme = base === CONFIG_FILES[COMPONENT_TYPES.hublTheme];
+        const isHublTheme = base === CONFIG_FILES[ComponentTypes.HublTheme];
         const componentType = getComponentTypeFromConfigFile(base);
 
         if (componentType) {
@@ -214,4 +148,31 @@ export function getProjectComponentTypes(components: Array<Component>): {
 
   components.forEach(({ type }) => (projectContents[type] = true));
   return projectContents;
+}
+
+export function getComponentUid(component?: Component | null): string | null {
+  if (!component) {
+    return null;
+  } else if ('uid' in component.config) {
+    return component.config.uid;
+  } else {
+    return component.config.data.uid;
+  }
+}
+
+export function componentIsApp(
+  component?: Component | null
+): component is Component<
+  PublicAppComponentConfig | PrivateAppComponentConfig
+> {
+  return (
+    component?.type === ComponentTypes.PublicApp ||
+    component?.type === ComponentTypes.PrivateApp
+  );
+}
+
+export function componentIsPublicApp(
+  component?: Component | null
+): component is Component<PublicAppComponentConfig> {
+  return component?.type === ComponentTypes.PublicApp;
 }

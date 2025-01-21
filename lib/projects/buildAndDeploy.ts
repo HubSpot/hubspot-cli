@@ -36,6 +36,7 @@ import {
   ProjectTask,
   ProjectSubtask,
   ProjectPollStatusFunctionText,
+  ProjectPollResult,
 } from '../../types/Projects';
 
 const i18nKey = 'lib.projectBuildAndDeploy';
@@ -452,13 +453,6 @@ export const pollDeployStatus = makePollTaskStatusFunc<Deploy>({
       )}`,
   },
 });
-
-type ProjectPollResult = {
-  succeeded: boolean;
-  buildId: number;
-  buildResult: Build;
-  deployResult: Deploy | null;
-};
 
 export async function displayWarnLogs(
   accountId: number,

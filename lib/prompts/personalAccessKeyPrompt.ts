@@ -49,7 +49,7 @@ export async function personalAccessKeyPrompt({
   account,
 }: {
   env: string;
-  account?: string;
+  account?: number;
 }): Promise<PersonalAccessKeyPromptResponse> {
   const websiteOrigin = getHubSpotWebsiteOrigin(env);
   let url = `${websiteOrigin}/l/personal-access-key`;

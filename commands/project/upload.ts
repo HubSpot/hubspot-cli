@@ -48,7 +48,7 @@ exports.handler = async options => {
   });
 
   try {
-    const result = await handleProjectUpload(
+    const { result, uploadError } = await handleProjectUpload(
       derivedAccountId,
       projectConfig,
       projectDir,
@@ -56,9 +56,9 @@ exports.handler = async options => {
       message
     );
 
-    if (result.uploadError) {
+    if (uploadError) {
       if (
-        isSpecifiedError(result.uploadError, {
+        isSpecifiedError(uploadError, {
           subCategory: PROJECT_ERROR_TYPES.PROJECT_LOCKED,
         })
       ) {
@@ -67,7 +67,7 @@ exports.handler = async options => {
         logger.log();
       } else {
         logError(
-          result.uploadError,
+          uploadError,
           new ApiErrorContext({
             accountId: derivedAccountId,
             request: 'project upload',
