@@ -50,6 +50,13 @@ export type ProjectTemplateRepoConfig = {
   components?: ComponentTemplate[];
 };
 
+export type ProjectPollResult = {
+  succeeded: boolean;
+  buildId: number;
+  buildResult: Build;
+  deployResult: Deploy | null;
+};
+
 export type PrivateAppComponentConfig = {
   name: string;
   description: string;
@@ -114,9 +121,9 @@ export enum ComponentTypes {
   HublTheme = 'hubl-theme',
 }
 
-export type Component = {
+export type Component<T = GenericComponentConfig> = {
   type: ComponentTypes;
-  config: GenericComponentConfig;
+  config: T;
   runnable: boolean;
   path: string;
 };

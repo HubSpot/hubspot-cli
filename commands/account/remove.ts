@@ -6,7 +6,7 @@ const {
   getConfigPath,
   deleteAccount,
   getConfigDefaultAccount,
-  getAccountId: getAccountIdFromConfig,
+  getAccountId,
   updateDefaultAccount,
 } = require('@hubspot/local-dev-lib/config');
 
@@ -23,7 +23,7 @@ exports.handler = async options => {
   const { account } = options;
   let accountToRemove = account;
 
-  if (accountToRemove && !getAccountIdFromConfig(accountToRemove)) {
+  if (accountToRemove && !getAccountId(accountToRemove)) {
     logger.error(
       i18n(`${i18nKey}.errors.accountNotFound`, {
         specifiedAccount: accountToRemove,
@@ -32,17 +32,13 @@ exports.handler = async options => {
     );
   }
 
-  if (!accountToRemove || !getAccountIdFromConfig(accountToRemove)) {
+  if (!accountToRemove || !getAccountId(accountToRemove)) {
     accountToRemove = await selectAccountFromConfig(
       i18n(`${i18nKey}.prompts.selectAccountToRemove`)
     );
   }
 
-  trackCommandUsage(
-    'accounts-remove',
-    null,
-    getAccountIdFromConfig(accountToRemove)
-  );
+  trackCommandUsage('accounts-remove', null, getAccountId(accountToRemove));
 
   const currentDefaultAccount = getConfigDefaultAccount();
 

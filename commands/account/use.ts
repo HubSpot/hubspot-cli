@@ -3,7 +3,7 @@ const { logger } = require('@hubspot/local-dev-lib/logger');
 const {
   getConfigPath,
   updateDefaultAccount,
-  getAccountId: getAccountIdFromConfig,
+  getAccountId,
 } = require('@hubspot/local-dev-lib/config');
 
 const { trackCommandUsage } = require('../../lib/usageTracking');
@@ -20,7 +20,7 @@ exports.handler = async options => {
 
   if (!newDefaultAccount) {
     newDefaultAccount = await selectAccountFromConfig();
-  } else if (!getAccountIdFromConfig(newDefaultAccount)) {
+  } else if (!getAccountId(newDefaultAccount)) {
     logger.error(
       i18n(`${i18nKey}.errors.accountNotFound`, {
         specifiedAccount: newDefaultAccount,
@@ -30,11 +30,7 @@ exports.handler = async options => {
     newDefaultAccount = await selectAccountFromConfig();
   }
 
-  trackCommandUsage(
-    'accounts-use',
-    null,
-    getAccountIdFromConfig(newDefaultAccount)
-  );
+  trackCommandUsage('accounts-use', null, getAccountId(newDefaultAccount));
 
   updateDefaultAccount(newDefaultAccount);
 

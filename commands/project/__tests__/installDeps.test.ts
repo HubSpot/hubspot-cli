@@ -5,7 +5,6 @@ const { logger } = require('@hubspot/local-dev-lib/logger');
 const { getProjectConfig } = require('../../../lib/projects');
 const { EXIT_CODES } = require('../../../lib/enums/exitCodes');
 const { trackCommandUsage } = require('../../../lib/usageTracking');
-const { getAccountId } = require('../../../lib/commonOpts');
 const {
   installPackages,
   getProjectPackageJsonLocations,
@@ -56,10 +55,8 @@ describe('commands/project/installDeps', () => {
 
     it('should track the command usage', async () => {
       const accountId = 999999;
-      getAccountId.mockReturnValue(accountId);
-      await installDepsCommand.handler({});
+      await installDepsCommand.handler({ derivedAccountId: accountId });
 
-      expect(getAccountId).toHaveBeenCalledTimes(1);
       expect(trackCommandUsage).toHaveBeenCalledTimes(1);
       expect(trackCommandUsage).toHaveBeenCalledWith(
         'project-install-deps',

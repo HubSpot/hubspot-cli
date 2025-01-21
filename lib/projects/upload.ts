@@ -80,19 +80,20 @@ type ProjectUploadCallbackFunction<T> = (
   projectConfig: ProjectConfig,
   tempFile: FileResult,
   buildId?: number
-) => Promise<T | undefined>;
+) => Promise<T>;
 
-type ProjectUploadDefaultResult = {
+type ProjectUploadResult<T> = {
+  result?: T;
   uploadError?: unknown;
 };
 
-export async function handleProjectUpload<T = ProjectUploadDefaultResult>(
+export async function handleProjectUpload<T>(
   accountId: number,
   projectConfig: ProjectConfig,
   projectDir: string,
   callbackFunc: ProjectUploadCallbackFunction<T>,
   uploadMessage: string
-) {
+): Promise<ProjectUploadResult<T>> {
   const srcDir = path.resolve(projectDir, projectConfig.srcDir);
 
   const filenames = fs.readdirSync(srcDir);
@@ -116,10 +117,8 @@ export async function handleProjectUpload<T = ProjectUploadDefaultResult>(
   const output = fs.createWriteStream(tempFile.name);
   const archive = archiver('zip');
 
-  const result = new Promise(resolve =>
+  const result = new Promise<ProjectUploadResult<T>>(resolve =>
     output.on('close', async function () {
-      let uploadResult: ProjectUploadDefaultResult | T | undefined;
-
       logger.debug(
         i18n(`${i18nKey}.handleProjectUpload.compressed`, {
           byteCount: archive.pointer(),
@@ -136,16 +135,16 @@ export async function handleProjectUpload<T = ProjectUploadDefaultResult>(
 
       if (error) {
         console.log(error);
-        uploadResult = { uploadError: error };
+        resolve({ uploadError: error });
       } else if (callbackFunc) {
-        uploadResult = await callbackFunc(
+        const uploadResult = await callbackFunc(
           accountId,
           projectConfig,
           tempFile,
           buildId
         );
+        resolve({ result: uploadResult });
       }
-      resolve(uploadResult || {});
     })
   );
 

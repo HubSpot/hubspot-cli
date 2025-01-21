@@ -1,7 +1,6 @@
-import { getAccountConfig } from '@hubspot/local-dev-lib/config';
+import { getAccountId, getAccountConfig } from '@hubspot/local-dev-lib/config';
 import { getOauthManager } from '@hubspot/local-dev-lib/oauth';
 import { accessTokenForPersonalAccessKey } from '@hubspot/local-dev-lib/personalAccessKey';
-import { getAccountId } from '../commonOpts';
 import { validateAccount } from '../validation';
 import { Arguments } from 'yargs';
 
