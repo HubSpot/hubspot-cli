@@ -13,6 +13,7 @@ import { commaSeparatedValues } from '@hubspot/local-dev-lib/text';
 import {
   getConfigPath,
   getAccountConfig,
+  getAccountId,
   loadConfigFromEnvironment,
 } from '@hubspot/local-dev-lib/config';
 import { getOauthManager } from '@hubspot/local-dev-lib/oauth';
@@ -22,23 +23,24 @@ import {
   getCwd,
   getExt,
 } from '@hubspot/local-dev-lib/path';
-import { getAccountId, getCmsPublishMode } from './commonOpts';
+import { getCmsPublishMode } from './commonOpts';
 import { logError } from './errorHandlers/index';
 
 export async function validateAccount(
-  options: Arguments<{ account?: string; accountId?: string }>
+  options: Arguments<{
+    account?: string;
+    accountId?: string;
+    derivedAccountId?: number;
+    providedAccountId?: string;
+  }>
 ): Promise<boolean> {
-  const accountId = getAccountId(options);
-  const { accountId: accountIdOption, account: accountOption } = options;
+  const { derivedAccountId, providedAccountId } = options;
+  const accountId = getAccountId(derivedAccountId);
 
   if (!accountId) {
-    if (accountOption) {
+    if (providedAccountId) {
       logger.error(
-        `The account "${accountOption}" could not be found in the config`
-      );
-    } else if (accountIdOption) {
-      logger.error(
-        `The account "${accountIdOption}" could not be found in the config`
+        `The account "${providedAccountId}" could not be found in the config`
       );
     } else {
       logger.error(
@@ -48,7 +50,7 @@ export async function validateAccount(
     return false;
   }
 
-  if (accountOption && loadConfigFromEnvironment()) {
+  if (providedAccountId && loadConfigFromEnvironment()) {
     throw new Error(
       'Cannot specify an account when environment variables are supplied. Please unset the environment variables or do not use the "--account" flag.'
     );

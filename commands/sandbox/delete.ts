@@ -3,7 +3,6 @@ const {
   addAccountOptions,
   addConfigOptions,
   addUseEnvironmentOptions,
-  getAccountId,
   addTestingOptions,
 } = require('../../lib/commonOpts');
 const { logger } = require('@hubspot/local-dev-lib/logger');
@@ -17,7 +16,7 @@ const {
   getEnv,
   removeSandboxAccountFromConfig,
   updateDefaultAccount,
-  getConfigDefaultAccount,
+  getAccountId,
   getConfigAccounts,
 } = require('@hubspot/local-dev-lib/config');
 const {
@@ -61,11 +60,10 @@ exports.handler = async options => {
     }
   }
 
-  const sandboxAccountId = getAccountId({
-    account: providedAccountId || accountPrompt.account,
-  });
-  const isDefaultAccount =
-    sandboxAccountId === getAccountId(getConfigDefaultAccount());
+  const sandboxAccountId = getAccountId(
+    providedAccountId || accountPrompt.account
+  );
+  const isDefaultAccount = sandboxAccountId === getAccountId();
 
   const baseUrl = getHubSpotWebsiteOrigin(
     getValidEnv(getEnv(sandboxAccountId))
@@ -79,9 +77,7 @@ exports.handler = async options => {
         parentAccountId = portal.parentAccountId;
       } else if (!force) {
         const parentAccountPrompt = await deleteSandboxPrompt(true);
-        parentAccountId = getAccountId({
-          account: parentAccountPrompt.account,
-        });
+        parentAccountId = getAccountId(parentAccountPrompt.account);
       } else {
         logger.error(i18n(`${i18nKey}.failure.noParentAccount`));
         process.exit(EXIT_CODES.ERROR);
@@ -94,7 +90,7 @@ exports.handler = async options => {
     getEnv(sandboxAccountId) === 'qa' ? '--qa' : ''
   } --account=${parentAccountId}`;
 
-  if (parentAccountId && !getAccountId({ account: parentAccountId })) {
+  if (parentAccountId && !getAccountId(parentAccountId)) {
     logger.log('');
     logger.error(
       i18n(`${i18nKey}.failure.noParentPortalAvailable`, {

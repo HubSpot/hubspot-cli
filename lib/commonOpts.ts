@@ -9,7 +9,6 @@ import {
 } from '@hubspot/local-dev-lib/constants/files';
 import { CmsPublishMode } from '@hubspot/local-dev-lib/types/Files';
 import {
-  getAccountId as getAccountIdFromConfig,
   getAccountConfig,
   getAndLoadConfigIfNeeded,
 } from '@hubspot/local-dev-lib/config';
@@ -103,23 +102,11 @@ export function getCommandName(argv: Arguments<{ _?: string[] }>): string {
   return (argv && argv._ && argv._[0]) || '';
 }
 
-/**
- * Obtains accountId using supplied --account flag or from environment variables
- */
-export function getAccountId(
-  options: Arguments<{ account?: number | string }>
-): number | null {
-  const { account } = options || {};
-
-  if (options?.useEnv && process.env.HUBSPOT_ACCOUNT_ID) {
-    return parseInt(process.env.HUBSPOT_ACCOUNT_ID, 10);
-  }
-
-  return getAccountIdFromConfig(account);
-}
-
 export function getCmsPublishMode(
-  options: Arguments<{ cmsPublishMode?: CmsPublishMode }>
+  options: Arguments<{
+    cmsPublishMode?: CmsPublishMode;
+    derivedAccountId?: number;
+  }>
 ): CmsPublishMode {
   // 1. --cmsPublishMode
   const { cmsPublishMode } = options;
@@ -127,9 +114,8 @@ export function getCmsPublishMode(
     return cmsPublishMode.toLowerCase() as CmsPublishMode;
   }
   // 2. config[account].defaultCmsPublishMode
-  const accountId = getAccountId(options);
-  if (accountId) {
-    const accountConfig = getAccountConfig(accountId);
+  if (options.derivedAccountId) {
+    const accountConfig = getAccountConfig(options.derivedAccountId);
     if (accountConfig && accountConfig.defaultCmsPublishMode) {
       return accountConfig.defaultCmsPublishMode;
     }

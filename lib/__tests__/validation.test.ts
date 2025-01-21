@@ -1,11 +1,8 @@
-// @ts-nocheck
-const { getAccountConfig } = require('@hubspot/local-dev-lib/config');
-const { getOauthManager } = require('@hubspot/local-dev-lib/oauth');
-const {
-  accessTokenForPersonalAccessKey,
-} = require('@hubspot/local-dev-lib/personalAccessKey');
-const { getAccountId } = require('../commonOpts');
-const { validateAccount } = require('../validation');
+import { getAccountId, getAccountConfig } from '@hubspot/local-dev-lib/config';
+import { getOauthManager } from '@hubspot/local-dev-lib/oauth';
+import { accessTokenForPersonalAccessKey } from '@hubspot/local-dev-lib/personalAccessKey';
+import { validateAccount } from '../validation';
+import { Arguments } from 'yargs';
 
 jest.mock('@hubspot/local-dev-lib/config');
 jest.mock('@hubspot/local-dev-lib/logger');
@@ -13,45 +10,65 @@ jest.mock('@hubspot/local-dev-lib/oauth');
 jest.mock('@hubspot/local-dev-lib/personalAccessKey');
 jest.mock('../commonOpts');
 
+const yargsOption = (option: { [key: string]: string }): Arguments => ({
+  $0: '',
+  _: [''],
+  ...option,
+});
+
 describe('lib/validation', () => {
+  const getAccountIdMock = getAccountId as jest.Mock;
+  const getAccountConfigMock = getAccountConfig as jest.Mock;
+  const getOauthManagerMock = getOauthManager as jest.Mock;
+  const accessTokenForPersonalAccessKeyMock =
+    accessTokenForPersonalAccessKey as jest.Mock;
+
   describe('validateAccount', () => {
     it('returns false if an account is missing', async () => {
-      getAccountId.mockReturnValueOnce(null);
-      expect(await validateAccount({ account: 123 })).toBe(false);
+      getAccountIdMock.mockReturnValueOnce(null);
+      expect(await validateAccount(yargsOption({ account: '123' }))).toBe(
+        false
+      );
     });
     it('returns false if an account config is missing', async () => {
-      getAccountId.mockReturnValueOnce(123);
-      getAccountConfig.mockReturnValueOnce(undefined);
-      expect(await validateAccount({ account: 123 })).toBe(false);
+      getAccountIdMock.mockReturnValueOnce('123');
+      getAccountConfigMock.mockReturnValueOnce(undefined);
+      expect(await validateAccount(yargsOption({ account: '123' }))).toBe(
+        false
+      );
     });
     it('returns false for oauth2 authType if auth is missing', async () => {
-      getAccountId.mockReturnValueOnce(123);
-      getAccountConfig.mockReturnValueOnce({
-        accountId: 123,
+      getAccountIdMock.mockReturnValueOnce('123');
+      getAccountConfigMock.mockReturnValueOnce({
+        accountId: '123',
         authType: 'oauth2',
       });
-      expect(await validateAccount({ account: 123 })).toBe(false);
+      expect(await validateAccount(yargsOption({ account: '123' }))).toBe(
+        false
+      );
     });
     it('returns false if OAuth is missing configuration', async () => {
-      getAccountId.mockReturnValueOnce(123);
-      getAccountConfig.mockReturnValueOnce({
-        accountId: 123,
+      getAccountIdMock.mockReturnValueOnce('123');
+      getAccountConfigMock.mockReturnValueOnce({
+        accountId: '123',
         authType: 'oauth2',
         auth: {
           clientId: 'foo',
         },
       });
-      expect(await validateAccount({ account: 123 })).toBe(false);
+      expect(await validateAccount(yargsOption({ account: '123' }))).toBe(
+        false
+      );
     });
     it('returns false if an access token was not retrieved', async () => {
-      getAccountId.mockReturnValueOnce(123);
-      getOauthManager.mockReturnValueOnce({
+      getAccountIdMock.mockReturnValueOnce('123');
+      getOauthManagerMock.mockReturnValueOnce({
         accessToken() {
           return null;
         },
       });
-      getAccountConfig.mockReturnValueOnce({
-        accountId: 123,
+      getAccountConfigMock.mockReturnValueOnce({
+        accountId: '123',
         authType: 'oauth2',
         auth: {
           clientId: 'foo',
@@ -61,17 +78,19 @@ describe('lib/validation', () => {
           },
         },
       });
-      expect(await validateAccount({ account: 123 })).toBe(false);
+      expect(await validateAccount(yargsOption({ account: '123' }))).toBe(
+        false
+      );
     });
     it('returns false if an getting an access token throws', async () => {
-      getAccountId.mockReturnValueOnce(123);
-      getOauthManager.mockReturnValueOnce({
+      getAccountIdMock.mockReturnValueOnce('123');
+      getOauthManagerMock.mockReturnValueOnce({
         accessToken() {
           throw new Error('It failed');
         },
       });
-      getAccountConfig.mockReturnValueOnce({
-        accountId: 123,
+      getAccountConfigMock.mockReturnValueOnce({
+        accountId: '123',
         authType: 'oauth2',
         auth: {
           clientId: 'foo',
@@ -81,17 +100,19 @@ describe('lib/validation', () => {
           },
         },
       });
-      expect(await validateAccount({ account: 123 })).toBe(false);
+      expect(await validateAccount(yargsOption({ account: '123' }))).toBe(
+        false
+      );
     });
     it('returns true if OAuth is configured and an access token is received', async () => {
-      getAccountId.mockReturnValueOnce(123);
-      getOauthManager.mockReturnValueOnce({
+      getAccountIdMock.mockReturnValueOnce('123');
+      getOauthManagerMock.mockReturnValueOnce({
         accessToken() {
           return 'yep';
         },
       });
-      getAccountConfig.mockReturnValueOnce({
-        accountId: 123,
+      getAccountConfigMock.mockReturnValueOnce({
+        accountId: '123',
         authType: 'oauth2',
         auth: {
           clientId: 'foo',
@@ -101,40 +122,42 @@ describe('lib/validation', () => {
           },
         },
       });
-      expect(await validateAccount({ account: 123 })).toBe(true);
+      expect(await validateAccount(yargsOption({ account: '123' }))).toBe(true);
     });
     it('returns false if "personalaccesskey" configured and getting an access token throws', async () => {
-      getAccountId.mockReturnValueOnce(123);
-      accessTokenForPersonalAccessKey.mockImplementationOnce(() => {
+      getAccountIdMock.mockReturnValueOnce('123');
+      accessTokenForPersonalAccessKeyMock.mockImplementationOnce(() => {
         throw new Error('It failed');
       });
-      getAccountConfig.mockReturnValueOnce({
-        accountId: 123,
+      getAccountConfigMock.mockReturnValueOnce({
+        accountId: '123',
         authType: 'personalaccesskey',
         personalAccessKey: 'foo',
       });
-      expect(await validateAccount({ account: 123 })).toBe(false);
+      expect(await validateAccount(yargsOption({ account: '123' }))).toBe(
+        false
+      );
     });
     it('returns true if "personalaccesskey" configured and an access token is received', async () => {
-      getAccountId.mockReturnValueOnce(123);
-      accessTokenForPersonalAccessKey.mockImplementationOnce(() => {
+      getAccountIdMock.mockReturnValueOnce('123');
+      accessTokenForPersonalAccessKeyMock.mockImplementationOnce(() => {
         return 'secret-stuff';
       });
-      getAccountConfig.mockReturnValueOnce({
-        accountId: 123,
+      getAccountConfigMock.mockReturnValueOnce({
+        accountId: '123',
         authType: 'personalaccesskey',
         personalAccessKey: 'foo',
       });
-      expect(await validateAccount({ account: 123 })).toBe(true);
+      expect(await validateAccount(yargsOption({ account: '123' }))).toBe(true);
     });
     it('returns true if apiKey is configured and present', async () => {
-      getAccountId.mockReturnValueOnce(123);
-      getAccountConfig.mockReturnValueOnce({
-        accountId: 123,
+      getAccountIdMock.mockReturnValueOnce('123');
+      getAccountConfigMock.mockReturnValueOnce({
+        accountId: '123',
         authType: 'apikey',
         apiKey: 'my-secret-key',
       });
-      expect(await validateAccount({ account: 123 })).toBe(true);
+      expect(await validateAccount(yargsOption({ account: '123' }))).toBe(true);
     });
   });
 });

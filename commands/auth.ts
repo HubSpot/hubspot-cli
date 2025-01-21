@@ -22,6 +22,7 @@ const {
   getConfigPath,
   loadConfig,
   getConfigDefaultAccount,
+  getAccountId,
 } = require('@hubspot/local-dev-lib/config');
 const {
   commaSeparatedValues,
@@ -39,7 +40,6 @@ const {
 const {
   addConfigOptions,
   setLogLevel,
-  getAccountId,
   addTestingOptions,
   addGlobalOptions,
 } = require('../lib/commonOpts');
@@ -197,7 +197,7 @@ exports.handler = async options => {
     'accountsListCommand',
   ]);
 
-  const accountId = getAccountId({ account: accountName });
+  const accountId = getAccountId(accountName);
   await trackAuthAction('auth', authType, TRACKING_STATUS.COMPLETE, accountId);
 
   process.exit(EXIT_CODES.SUCCESS);
