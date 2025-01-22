@@ -163,9 +163,6 @@ describe('lib/developerTestAccounts', () => {
           category: 'MISSING_SCOPES',
         },
       });
-      console.log(missingScopesError);
-      console.log(missingScopesError.status);
-      console.log(missingScopesError.data);
 
       expect(() =>
         handleDeveloperTestAccountCreateError(
