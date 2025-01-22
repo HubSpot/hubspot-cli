@@ -1,3 +1,4 @@
+import { Argv, Arguments } from 'yargs';
 import {
   LOG_LEVEL,
   setLogLevel as setLoggerLogLevel,
@@ -12,7 +13,7 @@ import {
   getAndLoadConfigIfNeeded,
 } from '@hubspot/local-dev-lib/config';
 import { i18n } from './lang';
-import { Argv, Arguments } from 'yargs';
+import { ConfigArgs, StringArgType } from '../types/Yargs';
 
 const i18nKey = 'lib.commonOpts';
 
@@ -35,8 +36,8 @@ export function addAccountOptions(yargs: Argv): Argv {
   });
 }
 
-export function addConfigOptions(yargs: Argv): Argv {
-  return yargs.option('config', {
+export function addConfigOptions(yargs: Argv): Argv<ConfigArgs> {
+  return yargs.option<keyof ConfigArgs, StringArgType>('config', {
     alias: 'c',
     describe: i18n(`${i18nKey}.options.config.describe`),
     type: 'string',
