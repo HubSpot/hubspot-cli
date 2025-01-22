@@ -5,14 +5,14 @@ import { getAccessToken } from '@hubspot/local-dev-lib/personalAccessKey';
 import { addConfigOptions } from '../../lib/commonOpts';
 import { i18n } from '../../lib/lang';
 import { getTableContents } from '../../lib/ui/table';
-import { CommonArgs, ConfigOptions } from '../../types/Yargs';
+import { CommonArgs, ConfigArgs } from '../../types/Yargs';
 
 const i18nKey = 'commands.account.subcommands.info';
 
 export const describe = i18n(`${i18nKey}.describe`);
 export const command = 'info [account]';
 
-type AccountInfoArgs = CommonArgs & ConfigOptions;
+type AccountInfoArgs = CommonArgs & ConfigArgs;
 
 export async function handler(
   args: ArgumentsCamelCase<AccountInfoArgs>

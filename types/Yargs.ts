@@ -7,11 +7,11 @@ export type CommonArgs = {
   debug: boolean;
 };
 
-export type ConfigOptions = {
+export type ConfigArgs = {
   c?: string;
   config?: string;
 };
 
-export type StringOptionType = Options & {
+export type StringArgType = Options & {
   type: 'string';
 };
