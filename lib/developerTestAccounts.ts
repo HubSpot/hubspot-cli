@@ -16,7 +16,9 @@ import { logError } from './errorHandlers/index';
 import { FetchDeveloperTestAccountsResponse } from '@hubspot/local-dev-lib/types/developerTestAccounts';
 import { Environment } from '@hubspot/local-dev-lib/types/Config';
 
-function getHasDevTestAccounts(appDeveloperAccountConfig: CLIAccount): boolean {
+export function getHasDevTestAccounts(
+  appDeveloperAccountConfig: CLIAccount
+): boolean {
   const id = getAccountIdentifier(appDeveloperAccountConfig);
   const parentPortalId = getAccountId(id);
   const accountsList = getConfigAccounts();
