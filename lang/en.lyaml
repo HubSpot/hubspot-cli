@@ -21,11 +21,21 @@ en:
     account:
       describe: "Commands for managing configured accounts."
       subcommands:
+        createOverride:
+          describe: "Create a new default account override file (.hs-account) in the current working directory."
+          success: "Default account override file created at {{ overrideFilePath }}"
+          errors:
+            writeFile: "Unable to create the default account override file: {{ error }}"
+            accountNotFound: "The account \"{{ specifiedAccount }}\" could not be found in {{ configPath }}"
+          examples:
+            default: "Create a new default account override file (.hs-account) in the current working directory"
+            withAccountId: "Create a new default account override file (.hs-account) in the current working directory, using the account with accountId \"1234567\""
         list:
           accounts: "{{#bold}}Accounts{{/bold}}:"
           defaultAccount: "{{#bold}}Default account{{/bold}}: {{ account }}"
           describe: "List names of accounts defined in config."
           configPath: "{{#bold}}Config path{{/bold}}: {{ configPath }}"
+          overrideFilePath: "{{#bold}}Default account override file path{{/bold}}: {{ overrideFilePath }}"
           labels:
             accountId: "Account ID"
             authType: "Auth Type"
