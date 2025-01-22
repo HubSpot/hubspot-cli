@@ -50,7 +50,11 @@ exports.builder = yargs => {
     ['$0 accounts create-override', i18n(`${i18nKey}.examples.default`)],
     [
       '$0 accounts create-override 12345678',
-      i18n(`${i18nKey}.examples.withAccountId`),
+      i18n(`${i18nKey}.examples.idBased`),
+    ],
+    [
+      '$0 accounts create-override MyAccount',
+      i18n(`${i18nKey}.examples.nameBased`),
     ],
   ]);
 

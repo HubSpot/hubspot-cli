@@ -29,7 +29,8 @@ en:
             accountNotFound: "The account \"{{ specifiedAccount }}\" could not be found in {{ configPath }}"
           examples:
             default: "Create a new default account override file (.hs-account) in the current working directory"
-            withAccountId: "Create a new default account override file (.hs-account) in the current working directory, using the account with accountId \"1234567\""
+            idBased: "Create a new default account override file (.hs-account) in the current working directory, using the account with accountId \"1234567\""
+            nameBased: "Create a new default account override file (.hs-account) in the current working directory, using the account with name \"MyAccount\""
         list:
           accounts: "{{#bold}}Accounts{{/bold}}:"
           defaultAccount: "{{#bold}}Default account{{/bold}}: {{ account }}"
