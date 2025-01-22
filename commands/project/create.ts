@@ -89,6 +89,12 @@ exports.builder = yargs => {
   });
 
   yargs.example([['$0 project create', i18n(`${i18nKey}.examples.default`)]]);
+  yargs.example([
+    [
+      '$0 project create --template-source HubSpot/ui-extensions-examples',
+      i18n(`${i18nKey}.examples.templateSource`),
+    ],
+  ]);
 
   addConfigOptions(yargs);
   addAccountOptions(yargs);
