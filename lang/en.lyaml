@@ -532,6 +532,7 @@ en:
             welcomeMessage: "Welcome to HubSpot Developer Projects!"
           examples:
             default: "Create a new project"
+            templateSource: "Create a new project from a custom GitHub repository, the repository must contain a valid project template and a config.json file defining the available templates"
           options:
             dest:
               describe: "Directory where the project should be created"
