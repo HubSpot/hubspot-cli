@@ -6,6 +6,7 @@ import use from '../account/use';
 import info from '../account/info';
 import remove from '../account/remove';
 import clean from '../account/clean';
+import createOverride from '../account/createOverride';
 
 jest.mock('yargs');
 jest.mock('../account/list');
@@ -14,6 +15,7 @@ jest.mock('../account/use');
 jest.mock('../account/info');
 jest.mock('../account/remove');
 jest.mock('../account/clean');
+jest.mock('../account/createOverride');
 jest.mock('../../lib/commonOpts');
 yargs.command.mockReturnValue(yargs);
 yargs.demandCommand.mockReturnValue(yargs);
@@ -42,6 +44,7 @@ describe('commands/account', () => {
       ['info', info],
       ['remove', remove],
       ['clean', clean],
+      ['create-override', createOverride],
     ];
 
     it('should demand the command takes one positional argument', () => {
