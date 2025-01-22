@@ -50,11 +50,17 @@ async function createTemplateOptions(
     ? DEFAULT_PROJECT_TEMPLATE_BRANCH
     : githubRef;
 
-  const config = await fetchFileFromRepository<ProjectTemplateRepoConfig>(
-    templateSource || HUBSPOT_PROJECT_COMPONENTS_GITHUB_PATH,
-    'config.json',
-    branch
-  );
+  let config: ProjectTemplateRepoConfig;
+  try {
+    config = await fetchFileFromRepository<ProjectTemplateRepoConfig>(
+      templateSource || HUBSPOT_PROJECT_COMPONENTS_GITHUB_PATH,
+      'config.json',
+      branch
+    );
+  } catch (e) {
+    logger.error(i18n(`${i18nKey}.errors.missingConfigFileTemplateSource`));
+    process.exit(EXIT_CODES.ERROR);
+  }
 
   if (!config || !config[PROJECT_COMPONENT_TYPES.PROJECTS]) {
     logger.error(i18n(`${i18nKey}.errors.noProjectsInConfig`));
