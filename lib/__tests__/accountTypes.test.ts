@@ -58,7 +58,7 @@ describe('lib/accountTypes', () => {
   });
 
   describe('isSandbox()', () => {
-    it('should return true if the account is a standardsandbox account', () => {
+    it('should return true if the account is a standard sandbox account', () => {
       const result = isSandbox(STANDARD_SANDBOX_ACCOUNT);
       expect(result).toBe(true);
     });
