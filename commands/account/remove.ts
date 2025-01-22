@@ -1,33 +1,41 @@
-// @ts-nocheck
-const { addConfigOptions } = require('../../lib/commonOpts');
-const { logger } = require('@hubspot/local-dev-lib/logger');
-const {
+import { Argv, ArgumentsCamelCase } from 'yargs';
+import { logger } from '@hubspot/local-dev-lib/logger';
+import {
   loadConfig,
   getConfigPath,
   deleteAccount,
   getConfigDefaultAccount,
   getAccountId,
   updateDefaultAccount,
-} = require('@hubspot/local-dev-lib/config');
-
-const { trackCommandUsage } = require('../../lib/usageTracking');
-const { i18n } = require('../../lib/lang');
-const { selectAccountFromConfig } = require('../../lib/prompts/accountsPrompt');
+} from '@hubspot/local-dev-lib/config';
+import { CLIOptions } from '@hubspot/local-dev-lib/types/CLIOptions';
+import { trackCommandUsage } from '../../lib/usageTracking';
+import { i18n } from '../../lib/lang';
+import { selectAccountFromConfig } from '../../lib/prompts/accountsPrompt';
+import { addConfigOptions } from '../../lib/commonOpts';
+import { CommonArgs, ConfigArgs } from '../../types/Yargs';
 
 const i18nKey = 'commands.account.subcommands.remove';
 
-exports.command = 'remove [account]';
-exports.describe = i18n(`${i18nKey}.describe`);
+export const command = 'remove [account]';
+export const describe = i18n(`${i18nKey}.describe`);
 
-exports.handler = async options => {
-  const { account } = options;
+type AccountRemoveArgs = CommonArgs &
+  ConfigArgs & {
+    account?: string;
+  };
+
+export async function handler(
+  args: ArgumentsCamelCase<AccountRemoveArgs>
+): Promise<void> {
+  const { account } = args;
   let accountToRemove = account;
 
   if (accountToRemove && !getAccountId(accountToRemove)) {
     logger.error(
       i18n(`${i18nKey}.errors.accountNotFound`, {
         specifiedAccount: accountToRemove,
-        configPath: getConfigPath(),
+        configPath: getConfigPath()!,
       })
     );
   }
@@ -38,7 +46,11 @@ exports.handler = async options => {
     );
   }
 
-  trackCommandUsage('accounts-remove', null, getAccountId(accountToRemove));
+  trackCommandUsage(
+    'accounts-remove',
+    undefined,
+    getAccountId(accountToRemove)!
+  );
 
   const currentDefaultAccount = getConfigDefaultAccount();
 
@@ -50,7 +62,7 @@ exports.handler = async options => {
   );
 
   // Get updated version of the config
-  loadConfig(getConfigPath(), options);
+  loadConfig(getConfigPath()!, args as CLIOptions);
 
   if (accountToRemove === currentDefaultAccount) {
     logger.log();
@@ -58,18 +70,20 @@ exports.handler = async options => {
     const newDefaultAccount = await selectAccountFromConfig();
     updateDefaultAccount(newDefaultAccount);
   }
-};
+}
 
-exports.builder = yargs => {
+export function builder(yargs: Argv): Argv<AccountRemoveArgs> {
   addConfigOptions(yargs);
+
   yargs.positional('account', {
     describe: i18n(`${i18nKey}.options.account.describe`),
     type: 'string',
   });
+
   yargs.example([
     ['$0 accounts remove', i18n(`${i18nKey}.examples.default`)],
     ['$0 accounts remove MyAccount', i18n(`${i18nKey}.examples.byName`)],
   ]);
 
-  return yargs;
-};
+  return yargs as Argv<AccountRemoveArgs>;
+}

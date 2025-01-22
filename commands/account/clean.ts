@@ -1,37 +1,40 @@
-// @ts-nocheck
-const { logger } = require('@hubspot/local-dev-lib/logger');
-const {
-  accessTokenForPersonalAccessKey,
-} = require('@hubspot/local-dev-lib/personalAccessKey');
-
-const { trackCommandUsage } = require('../../lib/usageTracking');
-const { i18n } = require('../../lib/lang');
-const { EXIT_CODES } = require('../../lib/enums/exitCodes');
-const { addTestingOptions, addConfigOptions } = require('../../lib/commonOpts');
-const { promptUser } = require('../../lib/prompts/promptUtils');
-const { getTableContents } = require('../../lib/ui/table');
-const SpinniesManager = require('../../lib/ui/SpinniesManager');
-const { uiAccountDescription } = require('../../lib/ui');
-const {
+import { Argv, ArgumentsCamelCase } from 'yargs';
+import { logger } from '@hubspot/local-dev-lib/logger';
+import { accessTokenForPersonalAccessKey } from '@hubspot/local-dev-lib/personalAccessKey';
+import {
   deleteAccount,
   getConfigAccounts,
-} = require('@hubspot/local-dev-lib/config');
-const {
-  getAccountIdentifier,
-} = require('@hubspot/local-dev-lib/config/getAccountIdentifier');
-const { isSpecifiedError } = require('@hubspot/local-dev-lib/errors/index');
+} from '@hubspot/local-dev-lib/config';
+import { getAccountIdentifier } from '@hubspot/local-dev-lib/config/getAccountIdentifier';
+import { isSpecifiedError } from '@hubspot/local-dev-lib/errors/index';
+import { trackCommandUsage } from '../../lib/usageTracking';
+import { i18n } from '../../lib/lang';
+import { EXIT_CODES } from '../../lib/enums/exitCodes';
+import { addTestingOptions, addConfigOptions } from '../../lib/commonOpts';
+import { promptUser } from '../../lib/prompts/promptUtils';
+import { getTableContents } from '../../lib/ui/table';
+import SpinniesManager from '../../lib/ui/SpinniesManager';
+import { uiAccountDescription } from '../../lib/ui';
+import { CommonArgs, ConfigArgs } from '../../types/Yargs';
 
 const i18nKey = 'commands.account.subcommands.clean';
 
-exports.command = 'clean';
-exports.describe = i18n(`${i18nKey}.describe`);
+export const command = 'clean';
+export const describe = i18n(`${i18nKey}.describe`);
 
-exports.handler = async options => {
-  const { qa } = options;
+type AccountCleanArgs = CommonArgs &
+  ConfigArgs & {
+    qa?: boolean;
+  };
 
-  trackCommandUsage('accounts-clean', null);
+export async function handler(
+  args: ArgumentsCamelCase<AccountCleanArgs>
+): Promise<void> {
+  const { qa } = args;
 
-  const accountsList = getConfigAccounts();
+  trackCommandUsage('accounts-clean');
+
+  const accountsList = getConfigAccounts() || [];
   const filteredTestAccounts = accountsList.filter(p =>
     qa ? p.env === 'qa' : p.env !== 'qa'
   );
@@ -51,10 +54,10 @@ exports.handler = async options => {
 
   for (const account of filteredTestAccounts) {
     try {
-      await accessTokenForPersonalAccessKey(
-        getAccountIdentifier(account),
-        true
-      );
+      const accountId = getAccountIdentifier(account);
+      if (accountId) {
+        await accessTokenForPersonalAccessKey(accountId, true);
+      }
     } catch (error) {
       if (
         isSpecifiedError(error, {
@@ -110,10 +113,10 @@ exports.handler = async options => {
     if (accountsCleanPrompt) {
       logger.log('');
       for (const accountToRemove of accountsToRemove) {
-        await deleteAccount(accountToRemove.name);
+        await deleteAccount(accountToRemove.name!);
         logger.log(
           i18n(`${i18nKey}.removeSuccess`, {
-            accountName: accountToRemove.name,
+            accountName: accountToRemove.name!,
           })
         );
       }
@@ -126,13 +129,13 @@ exports.handler = async options => {
 
   logger.log('');
   process.exit(EXIT_CODES.SUCCESS);
-};
+}
 
-exports.builder = yargs => {
+export function builder(yargs: Argv): Argv<AccountCleanArgs> {
   addConfigOptions(yargs);
   addTestingOptions(yargs);
 
   yargs.example([['$0 accounts clean']]);
 
-  return yargs;
-};
+  return yargs as Argv<AccountCleanArgs>;
+}
