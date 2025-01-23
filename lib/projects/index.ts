@@ -2,14 +2,16 @@ import fs from 'fs-extra';
 import path from 'path';
 import findup from 'findup-sync';
 import { logger } from '@hubspot/local-dev-lib/logger';
-import { fetchFileFromRepository } from '@hubspot/local-dev-lib/github';
+import {
+  cloneGithubRepo,
+  fetchFileFromRepository,
+} from '@hubspot/local-dev-lib/github';
 import {
   createProject,
   fetchProject,
 } from '@hubspot/local-dev-lib/api/projects';
 import { isSpecifiedError } from '@hubspot/local-dev-lib/errors/index';
 import { getCwd, getAbsoluteFilePath } from '@hubspot/local-dev-lib/path';
-import { downloadGithubRepoContents } from '@hubspot/local-dev-lib/github';
 import { RepoPath } from '@hubspot/local-dev-lib/types/Github';
 import { Project } from '@hubspot/local-dev-lib/types/Project';
 import { HubSpotPromise } from '@hubspot/local-dev-lib/types/Http';
@@ -134,12 +136,15 @@ export async function createProjectConfig(
 
   const hasCustomTemplateSource = Boolean(templateSource);
 
-  await downloadGithubRepoContents(
+  await cloneGithubRepo(
     templateSource || HUBSPOT_PROJECT_COMPONENTS_GITHUB_PATH,
-    template.path,
     projectPath,
-    hasCustomTemplateSource ? undefined : githubRef
+    {
+      sourceDir: template.path,
+      tag: hasCustomTemplateSource ? undefined : githubRef,
+    }
   );
+
   const _config: ProjectConfig = JSON.parse(
     fs.readFileSync(projectConfigPath).toString()
   );
@@ -351,12 +356,10 @@ export async function createProjectComponent(
     componentName
   );
 
-  await downloadGithubRepoContents(
-    HUBSPOT_PROJECT_COMPONENTS_GITHUB_PATH,
-    component.path,
-    componentPath,
-    projectComponentsVersion
-  );
+  await cloneGithubRepo(HUBSPOT_PROJECT_COMPONENTS_GITHUB_PATH, componentPath, {
+    sourceDir: component.path,
+    tag: projectComponentsVersion,
+  });
 }
 
 export async function getProjectComponentsByVersion(

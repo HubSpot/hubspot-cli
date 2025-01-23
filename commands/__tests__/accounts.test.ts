@@ -3,7 +3,7 @@ import yargs from 'yargs';
 import list from '../account/list';
 import rename from '../account/rename';
 import use from '../account/use';
-import info from '../account/info';
+import * as info from '../account/info';
 import remove from '../account/remove';
 import clean from '../account/clean';
 

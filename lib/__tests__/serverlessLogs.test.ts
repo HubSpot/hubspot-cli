@@ -12,16 +12,10 @@ const ACCOUNT_ID = 123;
 describe('lib/serverlessLogs', () => {
   describe('tailLogs()', () => {
     let stdinMock;
-    let spinnies;
 
     beforeEach(() => {
       jest.spyOn(process, 'exit').mockImplementation(() => {});
       stdinMock = mockStdIn.stdin();
-      spinnies = {
-        succeed: jest.fn(),
-        fail: jest.fn(),
-        stopAll: jest.fn(),
-      };
     });
 
     afterEach(() => {
@@ -33,14 +27,16 @@ describe('lib/serverlessLogs', () => {
       const compact = false;
       const fetchLatest = jest.fn(() => {
         return Promise.resolve({
-          id: '1234',
-          executionTime: 510,
-          log: 'Log message',
-          error: null,
-          status: 'SUCCESS',
-          createdAt: 1620232011451,
-          memory: '70/128 MB',
-          duration: '53.40 ms',
+          data: {
+            id: '1234',
+            executionTime: 510,
+            log: 'Log message',
+            error: null,
+            status: 'SUCCESS',
+            createdAt: 1620232011451,
+            memory: '70/128 MB',
+            duration: '53.40 ms',
+          },
         });
       });
       const tailCall = jest.fn(() => {
@@ -54,13 +50,7 @@ describe('lib/serverlessLogs', () => {
         });
       });
 
-      await tailLogs({
-        accountId: ACCOUNT_ID,
-        compact,
-        spinnies,
-        fetchLatest,
-        tailCall,
-      });
+      await tailLogs(ACCOUNT_ID, 'name', fetchLatest, tailCall, compact);
       jest.runOnlyPendingTimers();
 
       expect(fetchLatest).toHaveBeenCalled();
@@ -116,13 +106,7 @@ describe('lib/serverlessLogs', () => {
         Promise.resolve({ data: latestLogResponse })
       );
 
-      await tailLogs({
-        accountId: ACCOUNT_ID,
-        compact,
-        spinnies,
-        fetchLatest,
-        tailCall,
-      });
+      await tailLogs(ACCOUNT_ID, 'name', fetchLatest, tailCall, compact);
       jest.runOnlyPendingTimers();
       expect(outputLogs).toHaveBeenCalledWith(
         latestLogResponse,
@@ -148,13 +132,7 @@ describe('lib/serverlessLogs', () => {
         )
       );
 
-      await tailLogs({
-        accountId: ACCOUNT_ID,
-        compact,
-        spinnies,
-        fetchLatest,
-        tailCall,
-      });
+      await tailLogs(ACCOUNT_ID, 'name', fetchLatest, tailCall, compact);
       jest.runOnlyPendingTimers();
       expect(tailCall).toHaveBeenCalledTimes(2);
     });
