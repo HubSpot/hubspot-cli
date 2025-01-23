@@ -8,7 +8,7 @@ import { addConfigOptions } from '../../lib/commonOpts';
 import { i18n } from '../../lib/lang';
 import { EXIT_CODES } from '../../lib/enums/exitCodes';
 import { selectAccountFromConfig } from '../../lib/prompts/accountsPrompt';
-import { CommonArgs, ConfigOptions } from '../../types/Yargs';
+import { CommonArgs, ConfigArgs } from '../../types/Yargs';
 
 const i18nKey = 'commands.account.subcommands.createOverride';
 
@@ -17,7 +17,7 @@ export const describe = null; // i18n(`${i18nKey}.describe`);
 export const command = 'create-override [account]';
 
 type AccountInfoArgs = CommonArgs &
-  ConfigOptions & {
+  ConfigArgs & {
     account?: string | number;
   };
 

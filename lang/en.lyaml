@@ -546,6 +546,7 @@ en:
             welcomeMessage: "Welcome to HubSpot Developer Projects!"
           examples:
             default: "Create a new project"
+            templateSource: "Create a new project from a custom GitHub repository. The repository must contain a valid project template and a config.json file defining the available templates"
           options:
             dest:
               describe: "Directory where the project should be created"
@@ -1325,6 +1326,7 @@ en:
           invalidCharacters: "The selected destination contains invalid characters. Please provide a new path and try again."
           invalidTemplate: "[--template] Could not find template {{ template }}. Please choose an available template."
           noProjectsInConfig: "Please ensure that there is a config.json file that contains a \"projects\" field."
+          missingConfigFileTemplateSource: "Please ensure that there is a config.json file in the repository used as the --template-source"
           missingPropertiesInConfig: "Please ensure that each of the projects in your config.json file contain the following properties: [\"name\", \"label\", \"path\", \"insertPath\"]."
       selectPublicAppPrompt:
         selectAppIdMigrate: "[--appId] Choose an app under {{ accountName }} to migrate:"
