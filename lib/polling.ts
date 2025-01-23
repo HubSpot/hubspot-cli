@@ -1,35 +1,47 @@
 import { HubSpotPromise } from '@hubspot/local-dev-lib/types/Http';
-import { ValueOf } from '@hubspot/local-dev-lib/types/Utils';
-import { POLLING_DELAY, POLLING_STATUS } from './constants';
+import { DEFAULT_POLLING_DELAY } from './constants';
 
-type GenericPollingResponse = {
-  status: ValueOf<typeof POLLING_STATUS>;
+export const DEFAULT_POLLING_STATES = {
+  STARTED: 'STARTED',
+  SUCCESS: 'SUCCESS',
+  ERROR: 'ERROR',
+  REVERTED: 'REVERTED',
+  FAILURE: 'FAILURE',
+} as const;
+
+const DEFAULT_POLLING_STATUS_LOOKUP = {
+  successStates: [DEFAULT_POLLING_STATES.SUCCESS],
+  errorStates: [
+    DEFAULT_POLLING_STATES.ERROR,
+    DEFAULT_POLLING_STATES.REVERTED,
+    DEFAULT_POLLING_STATES.FAILURE,
+  ],
 };
 
-type PollingCallback<T extends GenericPollingResponse> = (
-  accountId: number,
-  taskId: number | string
-) => HubSpotPromise<T>;
+type GenericPollingResponse = {
+  status: string;
+};
+
+type PollingCallback<T extends GenericPollingResponse> =
+  () => HubSpotPromise<T>;
 
 export function poll<T extends GenericPollingResponse>(
   callback: PollingCallback<T>,
-  accountId: number,
-  taskId: number | string
+  statusLookup?: { successStates: string[]; errorStates: string[] }
 ): Promise<T> {
+  if (!statusLookup) {
+    statusLookup = DEFAULT_POLLING_STATUS_LOOKUP;
+  }
   return new Promise((resolve, reject) => {
     const pollInterval = setInterval(async () => {
       try {
-        const { data: pollResp } = await callback(accountId, taskId);
+        const { data: pollResp } = await callback();
         const { status } = pollResp;
 
-        if (status === POLLING_STATUS.SUCCESS) {
+        if (statusLookup.successStates.includes(status)) {
           clearInterval(pollInterval);
           resolve(pollResp);
-        } else if (
-          status === POLLING_STATUS.ERROR ||
-          status === POLLING_STATUS.REVERTED ||
-          status === POLLING_STATUS.FAILURE
-        ) {
+        } else if (statusLookup.errorStates.includes(status)) {
           clearInterval(pollInterval);
           reject(pollResp);
         }
@@ -37,6 +49,6 @@ export function poll<T extends GenericPollingResponse>(
         clearInterval(pollInterval);
         reject(error);
       }
-    }, POLLING_DELAY);
+    }, DEFAULT_POLLING_DELAY);
   });
 }

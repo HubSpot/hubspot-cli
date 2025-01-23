@@ -16,7 +16,7 @@ import {
 import { WarnLogsResponse } from '@hubspot/local-dev-lib/types/Project';
 
 import {
-  POLLING_DELAY,
+  DEFAULT_POLLING_DELAY,
   PROJECT_BUILD_TEXT,
   PROJECT_DEPLOY_TEXT,
   PROJECT_TASK_TYPES,
@@ -366,7 +366,7 @@ function makePollTaskStatusFunc<T extends ProjectTask>({
             resolve(taskStatus);
           }
         }
-      }, POLLING_DELAY);
+      }, DEFAULT_POLLING_DELAY);
     });
   };
 }
@@ -377,7 +377,7 @@ function pollBuildAutodeployStatus(
   buildId: number
 ): Promise<Build> {
   return new Promise((resolve, reject) => {
-    let maxIntervals = (30 * 1000) / POLLING_DELAY; // Num of intervals in ~30s
+    let maxIntervals = (30 * 1000) / DEFAULT_POLLING_DELAY; // Num of intervals in ~30s
 
     const pollInterval = setInterval(async () => {
       let build: Build;
@@ -407,7 +407,7 @@ function pollBuildAutodeployStatus(
       } else {
         maxIntervals -= 1;
       }
-    }, POLLING_DELAY);
+    }, DEFAULT_POLLING_DELAY);
   });
 }
 
