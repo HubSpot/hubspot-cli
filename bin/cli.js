@@ -228,9 +228,15 @@ const loadConfigMiddleware = async options => {
       })
     );
     process.exit(EXIT_CODES.ERROR);
-  } else if (!options._.includes('init')) {
+  } else if (!isTargetedCommand(options, { init: { target: true } })) {
     const { config: configPath } = options;
-    loadConfig(configPath, options);
+    const config = loadConfig(configPath, options);
+
+    // We don't run validateConfig() for auth because users should be able to run it when
+    // no accounts are configured, but we still want to exit if the config file is not found
+    if (isTargetedCommand(options, { auth: { target: true } }) && !config) {
+      process.exit(EXIT_CODES.ERROR);
+    }
   }
 
   maybeValidateConfig();
@@ -253,6 +259,7 @@ const accountsSubCommands = {
     remove: { target: true },
   },
 };
+
 const sandboxesSubCommands = {
   target: false,
   subCommands: {
