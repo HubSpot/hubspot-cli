@@ -1,32 +1,41 @@
-// @ts-nocheck
-const fs = require('fs-extra');
-const path = require('path');
-const { getCwd } = require('@hubspot/local-dev-lib/path');
-const { logger } = require('@hubspot/local-dev-lib/logger');
-const {
-  getConfigPath,
-  getAccountId,
-} = require('@hubspot/local-dev-lib/config');
-const { addConfigOptions } = require('../../lib/commonOpts');
-const { i18n } = require('../../lib/lang');
+import fs from 'fs-extra';
+import path from 'path';
+import { Argv, ArgumentsCamelCase } from 'yargs';
+import { getCwd } from '@hubspot/local-dev-lib/path';
+import { logger } from '@hubspot/local-dev-lib/logger';
+import { getConfigPath, getAccountId } from '@hubspot/local-dev-lib/config';
+import { addConfigOptions } from '../../lib/commonOpts';
+import { i18n } from '../../lib/lang';
 import { EXIT_CODES } from '../../lib/enums/exitCodes';
-const { selectAccountFromConfig } = require('../../lib/prompts/accountsPrompt');
+import { selectAccountFromConfig } from '../../lib/prompts/accountsPrompt';
+import { CommonArgs, ConfigOptions } from '../../types/Yargs';
 
 const i18nKey = 'commands.account.subcommands.createOverride';
-exports.describe = null; // i18n(`${i18nKey}.describe`);
 
-exports.command = 'create-override [account]';
+export const describe = null; // i18n(`${i18nKey}.describe`);
 
-exports.handler = async options => {
-  let overrideDefaultAccount = options.account;
+export const command = 'create-override [account]';
+
+type AccountInfoArgs = CommonArgs &
+  ConfigOptions & {
+    account?: string | number;
+  };
+
+export async function handler(
+  args: ArgumentsCamelCase<AccountInfoArgs>
+): Promise<void> {
+  let overrideDefaultAccount = args.account;
 
   if (!overrideDefaultAccount) {
     overrideDefaultAccount = await selectAccountFromConfig();
-  } else if (!getAccountId(overrideDefaultAccount)) {
+  } else if (
+    (typeof overrideDefaultAccount !== 'string' &&
+      typeof overrideDefaultAccount !== 'number') ||
+    !getAccountId(overrideDefaultAccount)
+  ) {
     logger.error(
       i18n(`${i18nKey}.errors.accountNotFound`, {
-        specifiedAccount: overrideDefaultAccount,
-        configPath: getConfigPath(),
+        configPath: getConfigPath() || '',
       })
     );
     overrideDefaultAccount = await selectAccountFromConfig();
@@ -35,15 +44,19 @@ exports.handler = async options => {
 
   try {
     const overrideFilePath = path.join(getCwd(), '.hs-account');
-    await fs.writeFile(overrideFilePath, accountId.toString(), 'utf8');
+    await fs.writeFile(overrideFilePath, accountId!.toString(), 'utf8');
     logger.success(i18n(`${i18nKey}.success`, { overrideFilePath }));
-  } catch (e) {
-    logger.error(i18n(`${i18nKey}.errors.writeFile`, { error: e.message }));
+  } catch (e: unknown) {
+    if (e instanceof Error) {
+      logger.error(i18n(`${i18nKey}.errors.writeFile`, { error: e.message }));
+    } else {
+      logger.error(i18n(`${i18nKey}.errors.writeFile`, { error: String(e) }));
+    }
     process.exit(EXIT_CODES.ERROR);
   }
-};
+}
 
-exports.builder = yargs => {
+export function builder(yargs: Argv): Argv<AccountInfoArgs> {
   addConfigOptions(yargs);
 
   yargs.example([
@@ -58,5 +71,5 @@ exports.builder = yargs => {
     ],
   ]);
 
-  return yargs;
-};
+  return yargs as Argv<AccountInfoArgs>;
+}

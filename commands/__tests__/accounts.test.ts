@@ -6,7 +6,7 @@ import use from '../account/use';
 import info from '../account/info';
 import remove from '../account/remove';
 import clean from '../account/clean';
-import createOverride from '../account/createOverride';
+import * as createOverride from '../account/createOverride';
 
 jest.mock('yargs');
 jest.mock('../account/list');
@@ -44,7 +44,7 @@ describe('commands/account', () => {
       ['info', info],
       ['remove', remove],
       ['clean', clean],
-      ['create-override', createOverride],
+      ['createOverride', createOverride],
     ];
 
     it('should demand the command takes one positional argument', () => {
