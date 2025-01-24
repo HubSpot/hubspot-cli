@@ -12,8 +12,8 @@ en:
       loadConfigMiddleware:
         configFileExists: "A configuration file already exists at {{ configPath }}. To specify a new configuration file, delete the existing one and try again."
       injectAccountIdMiddleware:
-        invalidAccountId: "In the default override file (.hs-account), the account ID must be a number. Please delete the current file and generate a new one using {{ overrideCommand }}."
-        accountNotFound: "The account in the default override file (.hs-account) was not found in the centralized config file at {{ configPath }}. You can authorize this account using {{ authCommand }}."
+        invalidAccountId: "In the default override file (.hsaccount), the account ID must be a number. Please delete the current file and generate a new one using {{ overrideCommand }}."
+        accountNotFound: "The account in the default override file (.hsaccount) wasn't found in your configured accounts. You can authorize this account using {{ authCommand }}."
     completion:
       describe: "Enable bash completion shortcuts for commands. Concat the generated script to your .bashrc, .bash_profile, or .zshrc file."
       examples:

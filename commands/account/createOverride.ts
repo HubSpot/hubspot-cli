@@ -3,6 +3,7 @@ import path from 'path';
 import { Argv, ArgumentsCamelCase } from 'yargs';
 import { getCwd } from '@hubspot/local-dev-lib/path';
 import { logger } from '@hubspot/local-dev-lib/logger';
+import { DEFAULT_ACCOUNT_OVERRIDE_FILE_NAME } from '@hubspot/local-dev-lib/constants/config';
 import { getConfigPath, getAccountId } from '@hubspot/local-dev-lib/config';
 import { addConfigOptions } from '../../lib/commonOpts';
 import { i18n } from '../../lib/lang';
@@ -43,7 +44,10 @@ export async function handler(
   const accountId = getAccountId(overrideDefaultAccount);
 
   try {
-    const overrideFilePath = path.join(getCwd(), '.hs-account');
+    const overrideFilePath = path.join(
+      getCwd(),
+      DEFAULT_ACCOUNT_OVERRIDE_FILE_NAME
+    );
     await fs.writeFile(overrideFilePath, accountId!.toString(), 'utf8');
     logger.success(i18n(`${i18nKey}.success`, { overrideFilePath }));
   } catch (e: unknown) {
