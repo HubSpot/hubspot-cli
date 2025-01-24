@@ -1525,6 +1525,9 @@ en:
     doctor:
       runningDiagnostics: "Running diagnostics..."
       diagnosticsComplete: "Diagnostics complete"
+      defaultAccountOverrideFileChecks:
+        overrideActive: "Default account override file active: {{ defaultAccountOverrideFile }}"
+        overrideAccountId: "Active account ID: {{ overrideAccountId }}"
       accountChecks:
         active: "Default account active"
         inactive: "Default account isn't active"
@@ -1571,6 +1574,8 @@ en:
           defaultAccountSubHeader: "Default Account: {{accountDetails}}"
           noConfigFile: "CLI configuration not found"
           noConfigFileSecondary: "Run {{command}} and follow the prompts to create your CLI configuration file and connect it to your HubSpot account"
+        defaultAccountOverrideFile:
+          header: "Default account override file path:"
         projectConfig:
           header: "Project configuration"
           projectDirSubHeader: "Project dir: {{#bold}}{{ projectDir }}{{/bold}}"

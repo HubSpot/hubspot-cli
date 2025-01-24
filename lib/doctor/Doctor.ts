@@ -1,5 +1,8 @@
 import { logger } from '@hubspot/local-dev-lib/logger';
-import { getAccountId } from '@hubspot/local-dev-lib/config';
+import {
+  getAccountId,
+  getResolvedDefaultAccountForCWD,
+} from '@hubspot/local-dev-lib/config';
 
 import SpinniesManager from '../ui/SpinniesManager';
 import {
@@ -64,6 +67,7 @@ export class Doctor {
     await Promise.all([
       ...this.performCliChecks(),
       ...this.performCliConfigChecks(),
+      ...this.performDefaultAccountOverrideFileChecks(),
       ...(this.projectConfig?.projectConfig ? this.performProjectChecks() : []),
     ]);
 
@@ -110,6 +114,26 @@ export class Doctor {
       return [];
     }
     return [this.checkIfAccessTokenValid()];
+  }
+
+  private performDefaultAccountOverrideFileChecks(): Array<Promise<void>> {
+    const localI18nKey = `${i18nKey}.defaultAccountOverrideFileChecks`;
+    if (this.diagnosticInfo?.defaultAccountOverrideFile) {
+      this.diagnosis?.addDefaultAccountOverrideFileSection({
+        type: 'warning',
+        message: i18n(`${localI18nKey}.overrideActive`, {
+          defaultAccountOverrideFile:
+            this.diagnosticInfo.defaultAccountOverrideFile,
+        }),
+      });
+      this.diagnosis?.addDefaultAccountOverrideFileSection({
+        type: 'warning',
+        message: i18n(`${localI18nKey}.overrideAccountId`, {
+          overrideAccountId: getResolvedDefaultAccountForCWD(),
+        }),
+      });
+    }
+    return [];
   }
 
   private async checkIfAccessTokenValid(): Promise<void> {

@@ -30,6 +30,7 @@ interface DiagnosisCategories {
   cli: DiagnosisCategory;
   project: DiagnosisCategory;
   cliConfig: DiagnosisCategory;
+  defaultAccountOverrideFile: DiagnosisCategory;
 }
 
 const i18nKey = `lib.doctor.diagnosis`;
@@ -57,6 +58,10 @@ export class Diagnosis {
       },
       cliConfig: {
         header: i18n(`${i18nKey}.cliConfig.header`),
+        sections: [],
+      },
+      defaultAccountOverrideFile: {
+        header: i18n(`${i18nKey}.defaultAccountOverrideFile.header`),
         sections: [],
       },
       project: {
@@ -107,6 +112,10 @@ export class Diagnosis {
 
   addCLIConfigSection(section: Section): void {
     this.diagnosis.cliConfig.sections.push(section);
+  }
+
+  addDefaultAccountOverrideFileSection(section: Section): void {
+    this.diagnosis.defaultAccountOverrideFile.sections.push(section);
   }
 
   toString(): string {
