@@ -134,7 +134,8 @@ exports.handler = async options => {
     const { data: deployResp } = await deployProject(
       derivedAccountId,
       projectName,
-      buildIdToDeploy
+      buildIdToDeploy,
+      options.useV3
     );
 
     if (!deployResp || deployResp.error) {
@@ -186,6 +187,11 @@ exports.builder = yargs => {
       alias: ['build-id'],
       describe: i18n(`${i18nKey}.options.build.describe`),
       type: 'number',
+    },
+    'use-v3': {
+      hidden: true,
+      type: 'boolean',
+      default: false,
     },
   });
 
