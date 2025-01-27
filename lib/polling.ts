@@ -27,11 +27,11 @@ type PollingCallback<T extends GenericPollingResponse> =
 
 export function poll<T extends GenericPollingResponse>(
   callback: PollingCallback<T>,
-  statusLookup?: { successStates: string[]; errorStates: string[] }
+  statusLookup: {
+    successStates: string[];
+    errorStates: string[];
+  } = DEFAULT_POLLING_STATUS_LOOKUP
 ): Promise<T> {
-  if (!statusLookup) {
-    statusLookup = DEFAULT_POLLING_STATUS_LOOKUP;
-  }
   return new Promise((resolve, reject) => {
     const pollInterval = setInterval(async () => {
       try {
