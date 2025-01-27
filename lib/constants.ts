@@ -11,14 +11,7 @@ export const CONFIG_FLAGS = {
   USE_CUSTOM_OBJECT_HUBFILE: 'useCustomObjectHubfile',
 } as const;
 
-export const POLLING_DELAY = 2000;
-
-export const POLLING_STATUS = {
-  SUCCESS: 'SUCCESS',
-  ERROR: 'ERROR',
-  REVERTED: 'REVERTED',
-  FAILURE: 'FAILURE',
-} as const;
+export const DEFAULT_POLLING_DELAY = 2000;
 
 export const PROJECT_CONFIG_FILE = 'hsproject.json' as const;
 
