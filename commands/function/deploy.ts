@@ -61,7 +61,9 @@ exports.handler = async options => {
       derivedAccountId,
       functionPath
     );
-    const successResp = await poll(getBuildStatus, derivedAccountId, buildId);
+    const successResp = await poll(() =>
+      getBuildStatus(derivedAccountId, buildId)
+    );
     const buildTimeSeconds = (successResp.buildTime / 1000).toFixed(2);
 
     SpinniesManager.succeed('loading');

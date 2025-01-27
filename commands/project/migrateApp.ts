@@ -189,7 +189,9 @@ exports.handler = async options => {
       projectName
     );
     const { id } = migrateResponse;
-    const pollResponse = await poll(checkMigrationStatus, derivedAccountId, id);
+    const pollResponse = await poll(() =>
+      checkMigrationStatus(derivedAccountId, id)
+    );
     const { status, project } = pollResponse;
     if (status === 'SUCCESS') {
       const absoluteDestPath = path.resolve(getCwd(), projectDest);

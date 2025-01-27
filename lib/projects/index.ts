@@ -18,7 +18,7 @@ import { HubSpotPromise } from '@hubspot/local-dev-lib/types/Http';
 
 import {
   FEEDBACK_INTERVAL,
-  POLLING_DELAY,
+  DEFAULT_POLLING_DELAY,
   PROJECT_CONFIG_FILE,
   HUBSPOT_PROJECT_COMPONENTS_GITHUB_PATH,
   PROJECT_COMPONENT_TYPES,
@@ -242,7 +242,7 @@ async function pollFetchProject(
           reject(err);
         }
       }
-    }, POLLING_DELAY);
+    }, DEFAULT_POLLING_DELAY);
   });
 }
 
