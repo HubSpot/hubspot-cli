@@ -25,8 +25,10 @@ en:
           describe: "Create a new default account override file (.hs-account) in the current working directory."
           success: "Default account override file created at {{ overrideFilePath }}"
           errors:
-            writeFile: "Unable to create the default account override file: {{ error }}"
             accountNotFound: "The specified account could not be found in the config file {{ configPath }}"
+          options:
+            account:
+              describe: "Name or ID of the account to create an override file for."
           examples:
             default: "Create a new default account override file (.hs-account) in the current working directory"
             idBased: "Create a new default account override file (.hs-account) in the current working directory, using the account with accountId \"1234567\""

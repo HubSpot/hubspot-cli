@@ -9,6 +9,7 @@ import { addConfigOptions } from '../../lib/commonOpts';
 import { i18n } from '../../lib/lang';
 import { EXIT_CODES } from '../../lib/enums/exitCodes';
 import { selectAccountFromConfig } from '../../lib/prompts/accountsPrompt';
+import { logError } from '../../lib/errorHandlers/index';
 import { CommonArgs, ConfigArgs } from '../../types/Yargs';
 
 const i18nKey = 'commands.account.subcommands.createOverride';
@@ -19,7 +20,7 @@ export const command = 'create-override [account]';
 
 type AccountInfoArgs = CommonArgs &
   ConfigArgs & {
-    account?: string | number;
+    account: string | number;
   };
 
 export async function handler(
@@ -29,11 +30,7 @@ export async function handler(
 
   if (!overrideDefaultAccount) {
     overrideDefaultAccount = await selectAccountFromConfig();
-  } else if (
-    (typeof overrideDefaultAccount !== 'string' &&
-      typeof overrideDefaultAccount !== 'number') ||
-    !getAccountId(overrideDefaultAccount)
-  ) {
+  } else if (!getAccountId(overrideDefaultAccount)) {
     logger.error(
       i18n(`${i18nKey}.errors.accountNotFound`, {
         configPath: getConfigPath() || '',
@@ -50,12 +47,9 @@ export async function handler(
     );
     await fs.writeFile(overrideFilePath, accountId!.toString(), 'utf8');
     logger.success(i18n(`${i18nKey}.success`, { overrideFilePath }));
+    process.exit(EXIT_CODES.SUCCESS);
   } catch (e: unknown) {
-    if (e instanceof Error) {
-      logger.error(i18n(`${i18nKey}.errors.writeFile`, { error: e.message }));
-    } else {
-      logger.error(i18n(`${i18nKey}.errors.writeFile`, { error: String(e) }));
-    }
+    logError(e);
     process.exit(EXIT_CODES.ERROR);
   }
 }
@@ -63,14 +57,18 @@ export async function handler(
 export function builder(yargs: Argv): Argv<AccountInfoArgs> {
   addConfigOptions(yargs);
 
+  yargs.positional('account', {
+    describe: i18n(`${i18nKey}.options.account.describe`),
+    type: 'string',
+  });
   yargs.example([
-    ['$0 accounts create-override', i18n(`${i18nKey}.examples.default`)],
+    ['$0 account create-override', i18n(`${i18nKey}.examples.default`)],
     [
-      '$0 accounts create-override 12345678',
+      '$0 account create-override 12345678',
       i18n(`${i18nKey}.examples.idBased`),
     ],
     [
-      '$0 accounts create-override MyAccount',
+      '$0 account create-override MyAccount',
       i18n(`${i18nKey}.examples.nameBased`),
     ],
   ]);

@@ -209,11 +209,11 @@ const injectAccountIdMiddleware = async options => {
     try {
       options.derivedAccountId = getAccountId(account);
     } catch (error) {
-      logger.error(error.message || error);
+      logError(error);
       if (error.cause === DEFAULT_ACCOUNT_OVERRIDE_ERROR_INVALID_ID) {
         logger.log(
           i18n(`${i18nKey}.injectAccountIdMiddleware.invalidAccountId`, {
-            overrideCommand: uiCommandReference('hs accounts create-override'),
+            overrideCommand: uiCommandReference('hs account create-override'),
           })
         );
       }
@@ -221,7 +221,7 @@ const injectAccountIdMiddleware = async options => {
         logger.log(
           i18n(`${i18nKey}.injectAccountIdMiddleware.accountNotFound`, {
             configPath: getConfigPath(),
-            authCommand: uiCommandReference('hs accounts auth'),
+            authCommand: uiCommandReference('hs account auth'),
           })
         );
       }
