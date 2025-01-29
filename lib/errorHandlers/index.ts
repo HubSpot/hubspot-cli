@@ -55,7 +55,7 @@ export function debugError(error: unknown, context?: ApiErrorContext): void {
     logger.debug(
       i18n(`${i18nKey}.errorCause`, {
         cause: isAxiosError(error.cause)
-          ? `${error.cause}`
+          ? `${error.cause.message}`
           : util.inspect(error.cause, false, null, true),
       })
     );
