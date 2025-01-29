@@ -1,7 +1,7 @@
 import { logger } from '@hubspot/local-dev-lib/logger';
 import {
   getAccountId,
-  getResolvedDefaultAccountForCWD,
+  getCWDAccountOverride,
 } from '@hubspot/local-dev-lib/config';
 
 import SpinniesManager from '../ui/SpinniesManager';
@@ -129,7 +129,7 @@ export class Doctor {
       this.diagnosis?.addDefaultAccountOverrideFileSection({
         type: 'warning',
         message: i18n(`${localI18nKey}.overrideAccountId`, {
-          overrideAccountId: getResolvedDefaultAccountForCWD(),
+          overrideAccountId: getCWDAccountOverride(),
         }),
       });
     }
