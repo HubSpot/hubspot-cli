@@ -13,6 +13,7 @@ coverage
 .env
 dist
 .node-version
+yarn.lock
 
 # Acceptance Tests
 acceptance-tests/my-project
