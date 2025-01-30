@@ -443,7 +443,7 @@ en:
           success:
             fetch: "Downloaded HubDB table {{ tableId }} to {{ path }}"
     init:
-      describe: "Initialize {{ configName }} for a HubSpot account."
+      describe: "Connect the CLI to a HubSpot account. This will create a {{ configName }} file to store your account information."
       options:
         authType:
           describe: "Authentication mechanism"
