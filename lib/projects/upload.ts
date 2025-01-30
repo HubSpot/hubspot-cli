@@ -134,7 +134,6 @@ export async function handleProjectUpload<T>(
       );
 
       if (error) {
-        console.log(error);
         resolve({ uploadError: error });
       } else if (callbackFunc) {
         const uploadResult = await callbackFunc(
