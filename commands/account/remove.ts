@@ -8,7 +8,6 @@ import {
   getAccountId,
   updateDefaultAccount,
 } from '@hubspot/local-dev-lib/config';
-import { CLIOptions } from '@hubspot/local-dev-lib/types/CLIOptions';
 import { trackCommandUsage } from '../../lib/usageTracking';
 import { i18n } from '../../lib/lang';
 import { selectAccountFromConfig } from '../../lib/prompts/accountsPrompt';
@@ -62,7 +61,7 @@ export async function handler(
   );
 
   // Get updated version of the config
-  loadConfig(getConfigPath()!, args as CLIOptions);
+  loadConfig(getConfigPath()!);
 
   if (accountToRemove === currentDefaultAccount) {
     logger.log();
