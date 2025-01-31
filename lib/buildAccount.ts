@@ -86,17 +86,17 @@ export async function saveAccountToConfig(
 }
 
 export async function buildDeveloperTestAccount(
-  name: string,
-  accountConfig: CLIAccount,
+  testAccountName: string,
+  parentAccountConfig: CLIAccount,
   env: Environment,
   portalLimit: number
 ): Promise<DeveloperTestAccount> {
   const i18nKey = 'lib.developerTestAccount.create.loading';
 
-  const id = getAccountIdentifier(accountConfig);
-  const accountId = getAccountId(id);
+  const id = getAccountIdentifier(parentAccountConfig);
+  const parentAccountId = getAccountId(id);
 
-  if (!accountId) {
+  if (!parentAccountId) {
     throw new Error(i18n(`${i18nKey}.fail`));
   }
 
@@ -107,20 +107,23 @@ export async function buildDeveloperTestAccount(
   logger.log('');
   SpinniesManager.add('buildDeveloperTestAccount', {
     text: i18n(`${i18nKey}.add`, {
-      accountName: name,
+      accountName: testAccountName,
     }),
   });
 
   let developerTestAccount: DeveloperTestAccount;
 
   try {
-    const { data } = await createDeveloperTestAccount(accountId, name);
+    const { data } = await createDeveloperTestAccount(
+      parentAccountId,
+      testAccountName
+    );
 
     developerTestAccount = data;
 
     SpinniesManager.succeed('buildDeveloperTestAccount', {
       text: i18n(`${i18nKey}.succeed`, {
-        accountName: name,
+        accountName: testAccountName,
         accountId: developerTestAccount.id,
       }),
     });
@@ -129,15 +132,15 @@ export async function buildDeveloperTestAccount(
 
     SpinniesManager.fail('buildDeveloperTestAccount', {
       text: i18n(`${i18nKey}.fail`, {
-        accountName: name,
+        accountName: testAccountName,
       }),
     });
 
-    handleDeveloperTestAccountCreateError(e, accountId, env, portalLimit);
+    handleDeveloperTestAccountCreateError(e, parentAccountId, env, portalLimit);
   }
 
   try {
-    await saveAccountToConfig(accountId, name, env);
+    await saveAccountToConfig(developerTestAccount.id, testAccountName, env);
   } catch (err) {
     logError(err);
     throw err;
@@ -155,8 +158,8 @@ type SandboxAccount = SandboxResponse & {
 };
 
 export async function buildSandbox(
-  name: string,
-  accountConfig: CLIAccount,
+  sandboxName: string,
+  parentAccountConfig: CLIAccount,
   sandboxType: SandboxType,
   env: Environment,
   force = false
@@ -168,10 +171,10 @@ export async function buildSandbox(
     i18nKey = 'lib.sandbox.create.loading.developer';
   }
 
-  const id = getAccountIdentifier(accountConfig);
-  const accountId = getAccountId(id);
+  const id = getAccountIdentifier(parentAccountConfig);
+  const parentAccountId = getAccountId(id);
 
-  if (!accountId) {
+  if (!parentAccountId) {
     throw new Error(i18n(`${i18nKey}.fail`));
   }
 
@@ -182,7 +185,7 @@ export async function buildSandbox(
   logger.log('');
   SpinniesManager.add('buildSandbox', {
     text: i18n(`${i18nKey}.add`, {
-      accountName: name,
+      accountName: sandboxName,
     }),
   });
 
@@ -191,12 +194,16 @@ export async function buildSandbox(
   try {
     const sandboxApiType = SANDBOX_API_TYPE_MAP[sandboxType];
 
-    const { data } = await createSandbox(accountId, name, sandboxApiType);
-    sandbox = { name, ...data };
+    const { data } = await createSandbox(
+      parentAccountId,
+      sandboxName,
+      sandboxApiType
+    );
+    sandbox = { name: sandboxName, ...data };
 
     SpinniesManager.succeed('buildSandbox', {
       text: i18n(`${i18nKey}.succeed`, {
-        accountName: name,
+        accountName: sandboxName,
         accountId: sandbox.sandbox.sandboxHubId,
       }),
     });
@@ -205,17 +212,17 @@ export async function buildSandbox(
 
     SpinniesManager.fail('buildSandbox', {
       text: i18n(`${i18nKey}.fail`, {
-        accountName: name,
+        accountName: sandboxName,
       }),
     });
 
-    handleSandboxCreateError(e, env, name, accountId);
+    handleSandboxCreateError(e, env, sandboxName, parentAccountId);
   }
 
   try {
     await saveAccountToConfig(
-      accountId,
-      name,
+      sandbox.sandbox.sandboxHubId,
+      sandboxName,
       env,
       sandbox.personalAccessKey,
       force
