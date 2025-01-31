@@ -3,7 +3,7 @@ import { bold, green, red } from 'chalk';
 import { helpers } from '../interpolation';
 import { DiagnosticInfo } from './DiagnosticInfoBuilder';
 import { uiAccountDescription } from '../ui';
-const { i18n } = require('../lang');
+import { doctor } from '../../lang/constants';
 
 interface DiagnosisOptions {
   diagnosticInfo: DiagnosticInfo;
@@ -32,8 +32,6 @@ interface DiagnosisCategories {
   cliConfig: DiagnosisCategory;
 }
 
-const i18nKey = `lib.doctor.diagnosis`;
-
 export class Diagnosis {
   private readonly prefixes: prefixes;
   private readonly diagnosis: DiagnosisCategories;
@@ -52,22 +50,22 @@ export class Diagnosis {
 
     this.diagnosis = {
       cli: {
-        header: i18n(`${i18nKey}.cli.header`),
+        header: doctor.diagnosis.cli.header,
         sections: [],
       },
       cliConfig: {
-        header: i18n(`${i18nKey}.cliConfig.header`),
+        header: doctor.diagnosis.cliConfig.header,
         sections: [],
       },
       project: {
-        header: i18n(`${i18nKey}.projectConfig.header`),
+        header: doctor.diagnosis.projectConfig.header,
         subheaders: [
-          i18n(`${i18nKey}.projectConfig.projectDirSubHeader`, {
-            projectDir: diagnosticInfo.project?.config?.projectDir,
-          }),
-          i18n(`${i18nKey}.projectConfig.projectNameSubHeader`, {
-            projectName: diagnosticInfo.project?.config?.projectConfig?.name,
-          }),
+          doctor.diagnosis.projectConfig.projectDirSubHeader(
+            diagnosticInfo.project?.config?.projectDir
+          ),
+          doctor.diagnosis.projectConfig.projectNameSubHeader(
+            diagnosticInfo.project?.config?.projectConfig?.name
+          ),
         ],
         sections: [],
       },
@@ -75,12 +73,10 @@ export class Diagnosis {
 
     if (diagnosticInfo.config) {
       this.diagnosis.cliConfig.subheaders = [
-        i18n(`${i18nKey}.cliConfig.configFileSubHeader`, {
-          filename: diagnosticInfo.config,
-        }),
-        i18n(`${i18nKey}.cliConfig.defaultAccountSubHeader`, {
-          accountDetails: uiAccountDescription(accountId!),
-        }),
+        doctor.diagnosis.cliConfig.configFileSubHeader(diagnosticInfo.config),
+        doctor.diagnosis.cliConfig.defaultAccountSubHeader(
+          uiAccountDescription(accountId!)
+        ),
       ];
     }
   }
@@ -123,16 +119,8 @@ export class Diagnosis {
     }
 
     output.push('');
-    output.push(
-      i18n(`${i18nKey}.counts.errors`, {
-        count: this.errorCount,
-      })
-    );
-    output.push(
-      i18n(`${i18nKey}.counts.warnings`, {
-        count: this.warningCount,
-      })
-    );
+    output.push(doctor.diagnosis.counts.errors(this.errorCount));
+    output.push(doctor.diagnosis.counts.warnings(this.warningCount));
     output.push('');
 
     return output.join('\n');

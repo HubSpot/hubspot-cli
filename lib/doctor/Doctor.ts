@@ -22,12 +22,10 @@ import { isSpecifiedError } from '@hubspot/local-dev-lib/errors/index';
 import { getHubSpotWebsiteOrigin } from '@hubspot/local-dev-lib/urls';
 import { uiCommandReference } from '../ui';
 import pkg from '../../package.json';
+import { doctor } from '../../lang/constants';
 
-const { i18n } = require('../lang');
 const { uiLink } = require('../ui');
 const minMajorNodeVersion = 18;
-
-const i18nKey = `lib.doctor`;
 
 export class Doctor {
   accountId: number | null;
@@ -48,7 +46,7 @@ export class Doctor {
 
   async diagnose(): Promise<DiagnosticInfo> {
     SpinniesManager.add('runningDiagnostics', {
-      text: i18n(`${i18nKey}.runningDiagnostics`),
+      text: doctor.runningDiagnostics,
     });
 
     this.diagnosticInfo =
@@ -68,7 +66,7 @@ export class Doctor {
     ]);
 
     SpinniesManager.succeed('runningDiagnostics', {
-      text: i18n(`${i18nKey}.diagnosticsComplete`),
+      text: doctor.diagnosticsComplete,
       succeedColor: 'white',
     });
 
@@ -99,12 +97,9 @@ export class Doctor {
     if (!this.diagnosticInfo?.config) {
       this.diagnosis?.addCLIConfigSection({
         type: 'error',
-        message: i18n(`${i18nKey}.diagnosis.cliConfig.noConfigFile`),
-        secondaryMessaging: i18n(
-          `${i18nKey}.diagnosis.cliConfig.noConfigFileSecondary`,
-          {
-            command: uiCommandReference('hs init'),
-          }
+        message: doctor.diagnosis.cliConfig.noConfigFile,
+        secondaryMessaging: doctor.diagnosis.cliConfig.noConfigFileSecondary(
+          uiCommandReference('hs init')
         ),
       });
       return [];
@@ -113,23 +108,22 @@ export class Doctor {
   }
 
   private async checkIfAccessTokenValid(): Promise<void> {
-    const localI18nKey = `${i18nKey}.accountChecks`;
     try {
       await accessTokenForPersonalAccessKey(this.accountId!, true);
       this.diagnosis?.addCLIConfigSection({
         type: 'success',
-        message: i18n(`${localI18nKey}.active`),
+        message: doctor.accountChecks.active,
       });
       this.diagnosis?.addCLIConfigSection({
         type: 'success',
-        message: i18n(`${localI18nKey}.pak.valid`, {
-          link: uiLink(
-            i18n(`${localI18nKey}.pak.viewScopes`),
+        message: doctor.pak.valid(
+          uiLink(
+            doctor.pak.viewScopes,
             `${getHubSpotWebsiteOrigin(
               this.diagnosticInfoBuilder?.env || 'PROD'
             )}/personal-access-key/${this.diagnosticInfo?.account.accountId}`
-          ),
-        }),
+          )
+        ),
       });
     } catch (error) {
       const portalNotActive =
@@ -146,10 +140,10 @@ export class Doctor {
       if (portalNotActive) {
         this.diagnosis?.addCLIConfigSection({
           type: 'error',
-          message: i18n(`${localI18nKey}.inactive`),
-          secondaryMessaging: i18n(`${localI18nKey}.inactiveSecondary`, {
-            command: uiCommandReference(`hs accounts clean`),
-          }),
+          message: doctor.accountChecks.inactive,
+          secondaryMessaging: doctor.accountChecks.inactiveSecondary(
+            uiCommandReference(`hs accounts clean`)
+          ),
         });
       } else if (
         isSpecifiedError(error, {
@@ -161,30 +155,29 @@ export class Doctor {
       ) {
         this.diagnosis?.addCLIConfigSection({
           type: 'success',
-          message: i18n(`${localI18nKey}.active`),
+          message: doctor.accountChecks.active,
         });
         this.diagnosis?.addCLIConfigSection({
           type: 'error',
-          message: i18n(`${localI18nKey}.pak.invalid`),
-          secondaryMessaging: i18n(`${localI18nKey}.pak.invalidSecondary`, {
-            command: uiCommandReference(`hs auth`),
-          }),
+          message: doctor.pak.invalid,
+          secondaryMessaging: doctor.pak.invalidSecondary(
+            uiCommandReference(`hs auth`)
+          ),
         });
       } else {
         this.diagnosis?.addCLIConfigSection({
           type: 'error',
-          message: i18n(`${localI18nKey}.unableToDetermine`),
+          message: doctor.accountChecks.unableToDetermine,
         });
       }
     }
   }
 
   private async checkIfNodeIsInstalled(): Promise<void> {
-    const localI18nKey = `${i18nKey}.nodeChecks`;
     if (!this.diagnosticInfo?.versions.node) {
       return this.diagnosis?.addCliSection({
         type: 'error',
-        message: i18n(`${localI18nKey}.unableToDetermine`),
+        message: doctor.nodeChecks.unableToDetermine,
       });
     }
 
@@ -194,34 +187,29 @@ export class Doctor {
     if (!currentNodeMajor || parseInt(currentNodeMajor) < minMajorNodeVersion) {
       return this.diagnosis?.addCliSection({
         type: 'warning',
-        message: i18n(`${localI18nKey}.minimumNotMet`, {
-          nodeVersion: this.diagnosticInfo?.versions.node,
-        }),
+        message: doctor.nodeChecks.minimumNotMet(
+          this.diagnosticInfo?.versions.node
+        ),
       });
     }
     this.diagnosis?.addCliSection({
       type: 'success',
-      message: i18n(`${localI18nKey}.success`, {
-        nodeVersion: this.diagnosticInfo?.versions.node,
-      }),
+      message: doctor.nodeChecks.success(this.diagnosticInfo?.versions.node),
     });
   }
 
   private async checkIfNpmIsInstalled(): Promise<void> {
-    const localI18nKey = `${i18nKey}.npmChecks`;
     const npmVersion = this.diagnosticInfo?.versions?.npm;
     if (!npmVersion) {
       return this.diagnosis?.addCliSection({
         type: 'error',
-        message: i18n(`${localI18nKey}.notInstalled`),
+        message: doctor.npmChecks.notInstalled,
       });
     }
 
     this.diagnosis?.addCliSection({
       type: 'success',
-      message: i18n(`${localI18nKey}.installed`, {
-        npmVersion,
-      }),
+      message: doctor.npmChecks.installed(npmVersion),
     });
   }
 
@@ -236,16 +224,13 @@ export class Doctor {
     } catch (e) {
       return this.diagnosis?.addCliSection({
         type: 'error',
-        message: i18n(`${i18nKey}.hsChecks.unableToDetermine`),
-        secondaryMessaging: i18n(
-          `${i18nKey}.hsChecks.unableToDetermineSecondary`,
-          {
-            command: uiCommandReference(`hs --version`),
-            link: uiLink(
-              i18n(`${i18nKey}.hsChecks.unableToDetermineSecondaryLink`),
-              `https://www.npmjs.com/package/${pkg.name}?activeTab=versions`
-            ),
-          }
+        message: doctor.hsChecks.unableToDetermine,
+        secondaryMessaging: doctor.hsChecks.unableToDetermineSecondary(
+          uiCommandReference(`hs --version`),
+          uiLink(
+            doctor.hsChecks.unableToDetermineSecondaryLink,
+            `https://www.npmjs.com/package/${pkg.name}?activeTab=versions`
+          )
         ),
       });
     }
@@ -254,27 +239,22 @@ export class Doctor {
       const onNextTag = pkg.version.includes('beta');
       this.diagnosis?.addCliSection({
         type: 'warning',
-        message: i18n(`${i18nKey}.hsChecks.notLatest`, {
-          hsVersion: pkg.version,
-        }),
-        secondaryMessaging: i18n(`${i18nKey}.hsChecks.notLatestSecondary`, {
-          hsVersion: onNextTag ? nextCliVersion : latestCLIVersion,
-          command: uiCommandReference(`npm install -g ${pkg.name}`),
-        }),
+        message: doctor.hsChecks.notLatest(latestCLIVersion),
+        secondaryMessaging: doctor.hsChecks.notLatestSecondary(
+          uiCommandReference(`npm install -g ${pkg.name}`),
+          onNextTag ? nextCliVersion : latestCLIVersion
+        ),
       });
     } else {
       this.diagnosis?.addCliSection({
         type: 'success',
-        message: i18n(`${i18nKey}.hsChecks.latest`, {
-          hsVersion: latestCLIVersion,
-        }),
+        message: doctor.hsChecks.latest(latestCLIVersion),
       });
     }
   }
 
   private async checkIfNpmInstallRequired(): Promise<void> {
     let foundError = false;
-    const localI18nKey = `${i18nKey}.projectDependenciesChecks`;
 
     for (const packageFile of this.diagnosticInfo?.packageFiles || []) {
       const packageDirName = path.dirname(packageFile);
@@ -288,15 +268,14 @@ export class Doctor {
 
           this.diagnosis?.addProjectSection({
             type: 'warning',
-            message: i18n(`${localI18nKey}.missingDependencies`, {
-              dir: packageDirName,
-            }),
-            secondaryMessaging: i18n(
-              `${localI18nKey}.missingDependenciesSecondary`,
-              {
-                command: uiCommandReference('hs project install-deps'),
-              }
-            ),
+            message:
+              doctor.projectDependencyChecks.missingDependencies(
+                packageDirName
+              ),
+            secondaryMessaging:
+              doctor.projectDependencyChecks.missingDependenciesSecondary(
+                uiCommandReference('hs project install-deps')
+              ),
           });
         }
       } catch (e) {
@@ -305,16 +284,13 @@ export class Doctor {
         if (!(await this.isValidJsonFile(packageFile))) {
           this.diagnosis?.addProjectSection({
             type: 'error',
-            message: i18n(`${i18nKey}.files.invalidJson`, {
-              filename: packageFile,
-            }),
+            message: doctor.files.invalidJson(packageFile),
           });
         } else {
           this.diagnosis?.addProjectSection({
             type: 'error',
-            message: i18n(`${localI18nKey}.unableToDetermine`, {
-              dir: packageDirName,
-            }),
+            message:
+              doctor.projectDependencyChecks.unableToDetermine(packageDirName),
           });
         }
 
@@ -325,7 +301,7 @@ export class Doctor {
     if (!foundError) {
       this.diagnosis?.addProjectSection({
         type: 'success',
-        message: i18n(`${localI18nKey}.success`),
+        message: doctor.projectDependencyChecks.success,
       });
     }
   }
@@ -352,9 +328,7 @@ export class Doctor {
         foundError = true;
         this.diagnosis?.addProjectSection({
           type: 'error',
-          message: i18n(`${i18nKey}.files.invalidJson`, {
-            filename: jsonFile,
-          }),
+          message: doctor.files.invalidJson(fileToCheck),
         });
       }
     }
@@ -362,32 +336,26 @@ export class Doctor {
     if (!foundError) {
       this.diagnosis?.addProjectSection({
         type: 'success',
-        message: i18n(`${i18nKey}.files.validJson`),
+        message: doctor.files.validJson,
       });
     }
   }
 
   private async checkIfPortsAreAvailable(): Promise<void> {
-    const localI18nKey = `${i18nKey}.port`;
-
     if (await isPortManagerPortAvailable()) {
       this.diagnosis?.addProjectSection({
         type: 'success',
-        message: i18n(`${localI18nKey}.available`, {
-          port: PORT_MANAGER_SERVER_PORT,
-        }),
+        message: doctor.port.available(PORT_MANAGER_SERVER_PORT),
       });
       return;
     }
 
     this.diagnosis?.addProjectSection({
       type: 'warning',
-      message: i18n(`${localI18nKey}.inUse`, {
-        port: PORT_MANAGER_SERVER_PORT,
-      }),
-      secondaryMessaging: i18n(`${localI18nKey}.inUseSecondary`, {
-        command: uiCommandReference('hs project dev'),
-      }),
+      message: doctor.port.inUse(PORT_MANAGER_SERVER_PORT),
+      secondaryMessaging: doctor.port.inUseSecondary(
+        uiCommandReference('hs project dev')
+      ),
     });
   }
 }
