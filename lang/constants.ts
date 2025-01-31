@@ -17,7 +17,7 @@ export const doctor = {
   diagnosticsComplete: `Diagnostics complete`,
   accountChecks: {
     active: `Default account active`,
-    inactive: 'Default account isn`t active',
+    inactive: `Default account isn't active`,
     inactiveSecondary: (command: string) =>
       `Run ${command} to remove inactive accounts from your CLI config`,
     unableToDetermine: `Unable to determine if the portal is active`,

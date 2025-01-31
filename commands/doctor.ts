@@ -42,7 +42,7 @@ export const handler = async ({
     if (output?.diagnosis) {
       logger.log(output.diagnosis);
     } else {
-      logger.error(doctorLang.command.errors);
+      logger.error(doctorLang.command.errors.generatingDiagnosis);
       return process.exit(EXIT_CODES.ERROR);
     }
     return process.exit(EXIT_CODES.SUCCESS);

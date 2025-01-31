@@ -7,7 +7,7 @@ HubSpot CLI install
     - The CLI Section is Showing
 
 Errors: 0
-Warning: 0
+Warnings: 0
 "
 `;
 
@@ -30,6 +30,6 @@ Project name: Super cool project
     - The Project Section is Showing
 
 Errors: 1
-Warning: 1
+Warnings: 1
 "
 `;
