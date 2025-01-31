@@ -20,7 +20,7 @@ export const CONFIG_FILES: {
   [ComponentTypes.HublTheme]: 'theme.json',
 };
 
-function getComponentTypeFromConfigFile(
+export function getComponentTypeFromConfigFile(
   configFile: string
 ): ComponentTypes | null {
   let key: ComponentTypes;
@@ -32,7 +32,9 @@ function getComponentTypeFromConfigFile(
   return null;
 }
 
-function loadConfigFile(configPath: string): GenericComponentConfig | null {
+export function loadConfigFile(
+  configPath: string
+): GenericComponentConfig | null {
   if (configPath) {
     try {
       const source = fs.readFileSync(configPath);
@@ -72,7 +74,7 @@ export function getAppCardConfigs(
   return cardConfigs;
 }
 
-function getIsLegacyApp(
+export function getIsLegacyApp(
   appConfig: GenericComponentConfig,
   appPath: string
 ): boolean {
