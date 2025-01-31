@@ -103,7 +103,7 @@ exports.describe = i18n(`${i18nKey}.describe`, {
 
 exports.handler = async options => {
   const {
-    auth: authTypeFlagValue,
+    authType: authTypeFlagValue,
     c: configFlagValue,
     providedAccountId,
     disableTracking,
