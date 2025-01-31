@@ -18,6 +18,14 @@ en:
     account:
       describe: "Commands for managing configured accounts."
       subcommands:
+        auth:
+          describe: "Configure authentication for a HubSpot account."
+          options:
+            account:
+              describe: "HubSpot account to authenticate"
+          success:
+            configFileCreated: "Created config file \"{{ configPath }}\""
+            configFileUpdated: "Connected account \"{{ account }}\" and set it as the default account"
         list:
           accounts: "{{#bold}}Accounts{{/bold}}:"
           defaultAccount: "{{#bold}}Default account{{/bold}}: {{ account }}"

@@ -1,6 +1,7 @@
 // @ts-nocheck
 const { addGlobalOptions } = require('../lib/commonOpts');
 const { i18n } = require('../lib/lang');
+const auth = require('./account/auth');
 const list = require('./account/list');
 const rename = require('./account/rename');
 const use = require('./account/use');
@@ -17,6 +18,7 @@ exports.builder = yargs => {
   addGlobalOptions(yargs);
 
   yargs
+    .command(auth)
     .command(list)
     .command(rename)
     .command(use)

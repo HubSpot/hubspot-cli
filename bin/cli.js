@@ -168,9 +168,18 @@ const isTargetedCommand = (options, commandMap) => {
   return checkCommand(options, commandMap);
 };
 
+const skipConfigAccountsSubCommands = {
+  target: false,
+  subCommands: {
+    auth: { target: true },
+  },
+};
+
 const SKIP_CONFIG_VALIDATION = {
   init: { target: true },
   auth: { target: true },
+  accounts: skipConfigAccountsSubCommands,
+  account: skipConfigAccountsSubCommands,
 };
 
 const handleDeprecatedEnvVariables = options => {
@@ -253,6 +262,7 @@ const checkAndWarnGitInclusionMiddleware = options => {
 const accountsSubCommands = {
   target: false,
   subCommands: {
+    auth: { target: true },
     clean: { target: true },
     list: { target: true },
     ls: { target: true },
