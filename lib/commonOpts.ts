@@ -1,6 +1,9 @@
+import chalk from 'chalk';
+import yargsParser from 'yargs-parser';
 import { Argv, Arguments } from 'yargs';
 import {
   LOG_LEVEL,
+  logger,
   setLogLevel as setLoggerLogLevel,
 } from '@hubspot/local-dev-lib/logger';
 import {
@@ -14,6 +17,8 @@ import {
 } from '@hubspot/local-dev-lib/config';
 import { i18n } from './lang';
 import { ConfigArgs, StringArgType } from '../types/Yargs';
+import { debugError } from './errorHandlers';
+import { EXIT_CODES } from './enums/exitCodes';
 
 const i18nKey = 'lib.commonOpts';
 
@@ -87,6 +92,27 @@ export function addUseEnvironmentOptions(yargs: Argv): Argv {
       type: 'boolean',
     })
     .conflicts('use-env', 'account');
+}
+
+export async function addVerboseDescribe(
+  yargs: Argv,
+  verboseDescribe: string
+): Promise<void> {
+  try {
+    const parsedArgv = yargsParser(process.argv.slice(2));
+
+    if (parsedArgv && parsedArgv.help) {
+      const originalHelpOutput = await yargs.getHelp();
+      const commandName = `hs ${parsedArgv._.join(' ')}`;
+      const newHelpOutput = `${chalk.bold(commandName)}\n\n${verboseDescribe}\n\n${originalHelpOutput}`;
+
+      logger.log(newHelpOutput);
+      process.exit(EXIT_CODES.SUCCESS);
+    }
+  } catch (e) {
+    // Ignore error to allow yargs to show the default help output using the command description
+    debugError(e);
+  }
 }
 
 export function setLogLevel(options: Arguments<{ debug?: boolean }>): void {

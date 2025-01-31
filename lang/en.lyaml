@@ -91,7 +91,8 @@ en:
             other: "Remove {{ count }} inactive accounts from the CLI config?"
           removeSuccess: "Removed {{ accountName }} from the CLI config."
     auth:
-      describe: "Configure authentication for a HubSpot account. Supported authentication protocols are {{ supportedProtocols }}."
+      describe: "Configure authentication for a HubSpot account."
+      verboseDescribe: "Configure authentication for a HubSpot account. This will update the {{ configName }} file that stores your account information. Supported authentication protocols are..."
       errors:
         noConfigFileFound: "No config file was found. To create a new config file, use the \"hs init\" command."
         unsupportedAuthType: "Unsupported auth type: {{ type }}. The only supported authentication protocols are {{ supportedProtocols }}."
