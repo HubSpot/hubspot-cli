@@ -10,16 +10,15 @@ import path from 'path';
 import { ArgumentsCamelCase, BuilderCallback, Options } from 'yargs';
 import { getCwd } from '@hubspot/local-dev-lib/path';
 import { addGlobalOptions } from '../lib/commonOpts';
-const { i18n } = require('../lib/lang');
+
+import { doctor as doctorLang } from '../lang/constants';
 
 export interface DoctorOptions {
   'output-dir'?: string;
 }
 
-const i18nKey = 'commands.doctor';
-
 export const command = 'doctor';
-export const describe = i18n(`${i18nKey}.describe`);
+export const describe = doctorLang.command.describe;
 
 export const handler = async ({
   outputDir,
@@ -43,7 +42,7 @@ export const handler = async ({
     if (output?.diagnosis) {
       logger.log(output.diagnosis);
     } else {
-      logger.error(i18n(`${i18nKey}.errors.generatingDiagnosis`));
+      logger.error(doctorLang.command.errors);
       return process.exit(EXIT_CODES.ERROR);
     }
     return process.exit(EXIT_CODES.SUCCESS);
@@ -60,13 +59,13 @@ export const handler = async ({
 
   try {
     fs.writeFileSync(outputFile, JSON.stringify(output, null, 4));
-    logger.success(i18n(`${i18nKey}.outputWritten`, { filename: outputFile }));
+    logger.success(doctorLang.command.outputWritten(outputFile));
   } catch (e) {
     logger.error(
-      i18n(`${i18nKey}.errors.unableToWriteOutputFile`, {
-        file: outputFile,
-        errorMessage: e instanceof Error ? e.message : e,
-      })
+      doctorLang.command.errors.unableToWriteOutputFile(
+        outputFile,
+        e instanceof Error ? e.message : e
+      )
     );
     return process.exit(EXIT_CODES.ERROR);
   }
@@ -76,7 +75,7 @@ export const handler = async ({
 
 export const builder: BuilderCallback<DoctorOptions, DoctorOptions> = yargs => {
   yargs.option<keyof DoctorOptions, Options>('output-dir', {
-    describe: i18n(`${i18nKey}.options.outputDir`),
+    describe: doctorLang.command.options.outputDir,
     type: 'string',
   });
   addGlobalOptions(yargs);
