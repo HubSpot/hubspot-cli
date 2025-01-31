@@ -1,5 +1,6 @@
 // @ts-nocheck
 import yargs from 'yargs';
+import * as auth from '../account/auth';
 import list from '../account/list';
 import rename from '../account/rename';
 import use from '../account/use';
@@ -8,6 +9,7 @@ import remove from '../account/remove';
 import clean from '../account/clean';
 
 jest.mock('yargs');
+jest.mock('../account/auth');
 jest.mock('../account/list');
 jest.mock('../account/rename');
 jest.mock('../account/use');
@@ -36,6 +38,7 @@ describe('commands/account', () => {
 
   describe('builder', () => {
     const subcommands = [
+      ['auth', auth],
       ['list', list],
       ['rename', rename],
       ['use', use],
