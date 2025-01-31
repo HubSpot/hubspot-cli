@@ -55,9 +55,7 @@ export async function handler(
   for (const account of filteredTestAccounts) {
     try {
       const accountId = getAccountIdentifier(account);
-      if (accountId) {
-        await accessTokenForPersonalAccessKey(accountId, true);
-      }
+      await accessTokenForPersonalAccessKey(accountId!, true);
     } catch (error) {
       if (
         isSpecifiedError(error, {
