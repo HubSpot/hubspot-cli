@@ -42,6 +42,7 @@ const {
   setLogLevel,
   addTestingOptions,
   addGlobalOptions,
+  addVerboseDescribe,
 } = require('../lib/commonOpts');
 const { trackAuthAction, trackCommandUsage } = require('../lib/usageTracking');
 const { authenticateWithOauth } = require('../lib/oauth');
@@ -203,7 +204,7 @@ exports.handler = async options => {
   process.exit(EXIT_CODES.SUCCESS);
 };
 
-exports.builder = yargs => {
+exports.builder = async yargs => {
   yargs.options({
     'auth-type': {
       describe: i18n(`${i18nKey}.options.authType.describe`),
@@ -227,6 +228,7 @@ exports.builder = yargs => {
     },
   });
 
+  await addVerboseDescribe(yargs, i18n(`${i18nKey}.verboseDescribe`));
   addConfigOptions(yargs);
   addTestingOptions(yargs);
   addGlobalOptions(yargs);
