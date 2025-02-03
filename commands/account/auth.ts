@@ -2,8 +2,10 @@ import { Argv, ArgumentsCamelCase } from 'yargs';
 import {
   loadConfig,
   getConfigPath,
+  configFileExists,
   createEmptyConfigFile,
   deleteEmptyConfigFile,
+  getConfigDefaultAccount,
 } from '@hubspot/local-dev-lib/config';
 import { logger } from '@hubspot/local-dev-lib/logger';
 import {
@@ -23,6 +25,7 @@ import { trackCommandUsage } from '../../lib/usageTracking';
 import { addTestingOptions } from '../../lib/commonOpts';
 import { personalAccessKeyPrompt } from '../../lib/prompts/personalAccessKeyPrompt';
 import { cliAccountNamePrompt } from '../../lib/prompts/accountNamePrompt';
+import { setAsDefaultAccountPrompt } from '../../lib/prompts/setAsDefaultAccountPrompt';
 import { EXIT_CODES } from '../../lib/enums/exitCodes';
 import { uiFeatureHighlight } from '../../lib/ui';
 import { CommonArgs, ConfigArgs } from '../../types/Yargs';
@@ -31,8 +34,8 @@ const i18nKey = 'commands.account.subcommands.auth';
 
 async function createPersonalAccessKeyConfig(
   env: Environment,
-  account?: number,
-  doesConfigExist = false
+  doesConfigExist: boolean,
+  account?: number
 ): Promise<CLIAccount | null | undefined> {
   const { personalAccessKey } = await personalAccessKeyPrompt({ env, account });
   let updatedConfig;
@@ -73,33 +76,51 @@ export async function handler(
   }
 
   const env = args.qa ? ENVIRONMENTS.QA : ENVIRONMENTS.PROD;
+  const configExists = configFileExists(true);
 
-  createEmptyConfigFile({}, true);
+  if (!configExists) {
+    createEmptyConfigFile({}, true);
+  }
   // @ts-ignore TODO
   loadConfig('', true);
 
   handleExit(deleteEmptyConfigFile);
 
   try {
-    const doesConfigExist = Boolean(getConfigPath('', true));
     // @ts-ignore TODO
-    const { name, accountId } = await createPersonalAccessKeyConfig(
+    const { name } = await createPersonalAccessKeyConfig(
       env,
-      providedAccountId,
-      doesConfigExist
+      configExists,
+      providedAccountId
     );
 
-    logger.log('');
-    logger.success(
-      i18n(`${i18nKey}.success.configFileCreated`, {
-        configPath: getConfigPath('', true)!,
-      })
-    );
-    logger.success(
-      i18n(`${i18nKey}.success.configFileUpdated`, {
-        account: name || accountId,
-      })
-    );
+    if (!configExists) {
+      logger.log('');
+      logger.success(
+        i18n(`${i18nKey}.success.configFileCreated`, {
+          configPath: getConfigPath('', true)!,
+        })
+      );
+    }
+
+    if (configExists) {
+      const setAsDefault = await setAsDefaultAccountPrompt(name);
+
+      logger.log('');
+      if (setAsDefault) {
+        logger.success(
+          i18n(`lib.prompts.setAsDefaultAccountPrompt.setAsDefaultAccount`, {
+            accountName: name,
+          })
+        );
+      } else {
+        logger.info(
+          i18n(`lib.prompts.setAsDefaultAccountPrompt.keepingCurrentDefault`, {
+            accountName: getConfigDefaultAccount()!,
+          })
+        );
+      }
+    }
     uiFeatureHighlight(['helpCommand', 'authCommand', 'accountsListCommand']);
 
     process.exit(EXIT_CODES.SUCCESS);
