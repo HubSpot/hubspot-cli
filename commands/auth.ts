@@ -66,7 +66,7 @@ const SUPPORTED_AUTHENTICATION_PROTOCOLS_TEXT =
 
 exports.command = 'auth';
 exports.describe = i18n(`${i18nKey}.describe`, {
-  supportedProtocols: SUPPORTED_AUTHENTICATION_PROTOCOLS_TEXT,
+  configName: DEFAULT_HUBSPOT_CONFIG_YAML_FILE_NAME,
 });
 
 exports.handler = async options => {
