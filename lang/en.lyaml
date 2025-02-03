@@ -188,7 +188,7 @@ en:
           folderOverwritePrompt: "The folder with name \"{{ folderName }}\" already exists. Overwrite?"
           errors:
             nameRequired: "The \"name\" argument is required when creating an API Sample."
-            noSamples: "Currently there are no samples available, please try again later."
+            noSamples: "Currently there are no samples available. Please try again later."
           info:
             sampleChosen: "You've chosen {{ sampleType }} sample written on {{ sampleLanguage }} language"
           success:
