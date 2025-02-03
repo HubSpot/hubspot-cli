@@ -88,17 +88,23 @@ export async function handler(
 
   try {
     // @ts-ignore TODO
-    const { name } = await createPersonalAccessKeyConfig(
+    const { name, accountId } = await createPersonalAccessKeyConfig(
       env,
       configExists,
       providedAccountId
     );
 
+    // If the config file was just created, we don't need to prompt the user to set as default
     if (!configExists) {
       logger.log('');
       logger.success(
         i18n(`${i18nKey}.success.configFileCreated`, {
           configPath: getConfigPath('', true)!,
+        })
+      );
+      logger.success(
+        i18n(`${i18nKey}.success.configFileUpdated`, {
+          account: name || accountId,
         })
       );
     }
