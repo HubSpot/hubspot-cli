@@ -49,7 +49,7 @@ async function uploadProjectFiles(
       intermediateRepresentation
     );
 
-    buildId = upload.buildId!;
+    buildId = upload.buildId;
 
     SpinniesManager.succeed('upload', {
       text: i18n(`${i18nKey}.uploadProjectFiles.succeed`, {
