@@ -32,7 +32,7 @@ exports.command = 'upload';
 exports.describe = uiBetaTag(i18n(`${i18nKey}.describe`), false);
 
 exports.handler = async options => {
-  const { forceCreate, message, derivedAccountId } = options;
+  const { forceCreate, message, derivedAccountId, useV3 } = options;
   const accountConfig = getAccountConfig(derivedAccountId);
   const accountType = accountConfig && accountConfig.accountType;
 
@@ -54,7 +54,7 @@ exports.handler = async options => {
       projectDir,
       pollProjectBuildAndDeploy,
       message,
-      options.translate
+      useV3
     );
 
     if (uploadError) {
@@ -126,7 +126,7 @@ exports.builder = yargs => {
       type: 'string',
       default: '',
     },
-    translate: {
+    'use-v3': {
       hidden: true,
       type: 'boolean',
       default: false,
