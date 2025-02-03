@@ -3,6 +3,8 @@ import {
   loadConfig,
   getConfigPath,
   configFileExists,
+  updateAccountConfig,
+  writeConfig,
   createEmptyConfigFile,
   deleteEmptyConfigFile,
   getConfigDefaultAccount,
@@ -40,21 +42,48 @@ async function createPersonalAccessKeyConfig(
   const { personalAccessKey } = await personalAccessKeyPrompt({ env, account });
   let updatedConfig;
   let defaultName;
-  let validName;
+  let updatedName;
 
   try {
     const token = await getAccessToken(personalAccessKey, env);
-    defaultName = token.hubName ? toKebabCase(token.hubName) : null;
-    const { name: namePrompt } = await cliAccountNamePrompt(defaultName);
-    validName = namePrompt;
 
-    updatedConfig = await updateConfigWithAccessToken(
-      token,
-      personalAccessKey,
-      env,
-      validName,
-      !doesConfigExist
-    );
+    if (!doesConfigExist) {
+      defaultName = token.hubName ? toKebabCase(token.hubName) : null;
+      const { name } = await cliAccountNamePrompt(defaultName);
+
+      updatedConfig = await updateConfigWithAccessToken(
+        token,
+        personalAccessKey,
+        env,
+        name,
+        true
+      );
+    } else {
+      updatedConfig = await updateConfigWithAccessToken(
+        token,
+        personalAccessKey,
+        env
+      );
+
+      if (!updatedConfig) {
+        // Figure out if I need to throw an error
+        return null;
+      }
+
+      if (!updatedConfig!.name) {
+        const namePrompt = await cliAccountNamePrompt(defaultName);
+        updatedName = namePrompt.name;
+      }
+
+      updateAccountConfig({
+        ...updatedConfig,
+        // @ts-ignore TODO
+        environment: updatedConfig.env,
+        tokenInfo: updatedConfig!.auth!.tokenInfo,
+        name: updatedName,
+      });
+      writeConfig();
+    }
   } catch (e) {
     logError(e);
   }
