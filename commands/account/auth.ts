@@ -34,60 +34,52 @@ import { CommonArgs, ConfigArgs } from '../../types/Yargs';
 
 const i18nKey = 'commands.account.subcommands.auth';
 
-async function createPersonalAccessKeyConfig(
+async function createOrUpdateConfig(
   env: Environment,
   doesConfigExist: boolean,
   account?: number
-): Promise<CLIAccount | null | undefined> {
-  const { personalAccessKey } = await personalAccessKeyPrompt({ env, account });
-  let updatedConfig;
-  let defaultName;
-  let updatedName;
-
+): Promise<CLIAccount | null> {
   try {
+    const { personalAccessKey } = await personalAccessKeyPrompt({
+      env,
+      account,
+    });
     const token = await getAccessToken(personalAccessKey, env);
+    const defaultName = token.hubName ? toKebabCase(token.hubName) : null;
 
-    if (!doesConfigExist) {
-      defaultName = token.hubName ? toKebabCase(token.hubName) : null;
-      const { name } = await cliAccountNamePrompt(defaultName);
+    const name = doesConfigExist
+      ? undefined
+      : (await cliAccountNamePrompt(defaultName)).name;
 
-      updatedConfig = await updateConfigWithAccessToken(
-        token,
-        personalAccessKey,
-        env,
-        name,
-        true
-      );
-    } else {
-      updatedConfig = await updateConfigWithAccessToken(
-        token,
-        personalAccessKey,
-        env
-      );
+    const updatedConfig = await updateConfigWithAccessToken(
+      token,
+      personalAccessKey,
+      env,
+      name,
+      !doesConfigExist
+    );
 
-      if (!updatedConfig) {
-        // Figure out if I need to throw an error
-        return null;
-      }
+    if (!updatedConfig) return null;
 
-      if (!updatedConfig!.name) {
-        const namePrompt = await cliAccountNamePrompt(defaultName);
-        updatedName = namePrompt.name;
-      }
+    if (doesConfigExist && !updatedConfig.name) {
+      updatedConfig.name = (await cliAccountNamePrompt(defaultName)).name;
+    }
 
+    if (doesConfigExist) {
       updateAccountConfig({
         ...updatedConfig,
         // @ts-ignore TODO
         environment: updatedConfig.env,
-        tokenInfo: updatedConfig!.auth!.tokenInfo,
-        name: updatedName,
+        tokenInfo: updatedConfig.auth!.tokenInfo,
       });
       writeConfig();
     }
+
+    return updatedConfig;
   } catch (e) {
     logError(e);
+    return null;
   }
-  return updatedConfig;
 }
 
 export const describe = null; // i18n(`${i18nKey}.describe`);
@@ -110,18 +102,24 @@ export async function handler(
   if (!configExists) {
     createEmptyConfigFile({}, true);
   }
-  // @ts-ignore TODO
-  loadConfig('', true);
+  loadConfig('');
 
   handleExit(deleteEmptyConfigFile);
 
   try {
-    // @ts-ignore TODO
-    const { name, accountId } = await createPersonalAccessKeyConfig(
+    const updatedConfig = await createOrUpdateConfig(
       env,
       configExists,
       providedAccountId
     );
+
+    if (!updatedConfig) {
+      logger.error(i18n(`${i18nKey}.errors.failedToUpdateConfig`));
+      process.exit(EXIT_CODES.ERROR);
+    }
+
+    // @ts-ignore TODO
+    const { name, accountId } = updatedConfig;
 
     // If the config file was just created, we don't need to prompt the user to set as default
     if (!configExists) {
@@ -139,13 +137,13 @@ export async function handler(
     }
 
     if (configExists) {
-      const setAsDefault = await setAsDefaultAccountPrompt(name);
+      const setAsDefault = await setAsDefaultAccountPrompt(name!);
 
       logger.log('');
       if (setAsDefault) {
         logger.success(
           i18n(`lib.prompts.setAsDefaultAccountPrompt.setAsDefaultAccount`, {
-            accountName: name,
+            accountName: name!,
           })
         );
       } else {

@@ -23,6 +23,8 @@ en:
           options:
             account:
               describe: "HubSpot account to authenticate"
+          errors:
+            failedToUpdateConfig: "Failed to update the configuration file. Please try again."
           success:
             configFileCreated: "Created config file \"{{ configPath }}\""
             configFileUpdated: "Connected account \"{{ account }}\" and set it as the default account"
