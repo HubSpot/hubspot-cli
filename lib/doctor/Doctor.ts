@@ -132,6 +132,13 @@ export class Doctor {
         message: i18n(`${localI18nKey}.active`),
       });
 
+      const linkToPakUI = uiLink(
+        i18n(`${localI18nKey}.pak.viewScopes`),
+        `${getHubSpotWebsiteOrigin(
+          this.diagnosticInfoBuilder?.env || 'PROD'
+        )}/personal-access-key/${this.diagnosticInfo?.account.accountId}`
+      );
+
       if (missingScopes.length > 0) {
         this.diagnosis?.addCLIConfigSection({
           type: 'warning',
@@ -142,25 +149,13 @@ export class Doctor {
             }
           ),
           secondaryMessaging: i18n(`${localI18nKey}.pak.incompleteSecondary`, {
-            link: uiLink(
-              i18n(`${localI18nKey}.pak.viewScopes`),
-              `${getHubSpotWebsiteOrigin(
-                this.diagnosticInfoBuilder?.env || 'PROD'
-              )}/personal-access-key/${this.diagnosticInfo?.account.accountId}`
-            ),
+            link: linkToPakUI,
           }),
         });
       } else {
         this.diagnosis?.addCLIConfigSection({
           type: 'success',
-          message: i18n(`${localI18nKey}.pak.valid`, {
-            link: uiLink(
-              i18n(`${localI18nKey}.pak.viewScopes`),
-              `${getHubSpotWebsiteOrigin(
-                this.diagnosticInfoBuilder?.env || 'PROD'
-              )}/personal-access-key/${this.diagnosticInfo?.account.accountId}`
-            ),
-          }),
+          message: i18n(`${localI18nKey}.pak.valid`, { link: linkToPakUI }),
         });
       }
     } catch (error) {
