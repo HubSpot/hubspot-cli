@@ -137,7 +137,7 @@ export async function trackAuthAction(
   command: string,
   authType: string,
   step: string,
-  accountId: number
+  accountId?: number
 ): Promise<void> {
   if (!isTrackingAllowed()) {
     return;

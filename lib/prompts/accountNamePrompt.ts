@@ -12,7 +12,7 @@ type AccountNamePromptResponse = {
 };
 
 export function getCliAccountNamePromptConfig(
-  defaultName?: string
+  defaultName?: string | null
 ): PromptConfig<AccountNamePromptResponse> {
   return {
     name: 'name',
@@ -34,7 +34,7 @@ export function getCliAccountNamePromptConfig(
 }
 
 export function cliAccountNamePrompt(
-  defaultName: string
+  defaultName?: string | null
 ): Promise<AccountNamePromptResponse> {
   return promptUser<AccountNamePromptResponse>(
     getCliAccountNamePromptConfig(defaultName)
