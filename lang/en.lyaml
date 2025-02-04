@@ -1517,6 +1517,10 @@ en:
         inactiveSecondary: "Run {{ command }} to remove inactive accounts from your CLI config"
         unableToDetermine: "Unable to determine if the portal is active"
         pak:
+          incomplete:
+            one: "Personal access key is valid. {{ count }} scope available, but not included in your key."
+            other: "Personal access key is valid. {{ count }} scopes available, but not included in your key."
+          incompleteSecondary: "To add the available scopes, run `hs auth` and re-authenticate your account with a new key that has those scopes. {{ link }}"
           invalid: "Personal access key is invalid"
           invalidSecondary: "To get a new key, run {{ command }}, deactivate your access key, and generate a new one. Then use that new key to authenticate your account."
           valid: "Personal Access Key is valid. {{ link }}"
