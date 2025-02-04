@@ -32,13 +32,13 @@ exports.command = 'upload';
 exports.describe = uiBetaTag(i18n(`${i18nKey}.describe`), false);
 
 exports.handler = async options => {
-  const { forceCreate, message, derivedAccountId } = options;
+  const { forceCreate, message, derivedAccountId, useV3 } = options;
   const accountConfig = getAccountConfig(derivedAccountId);
   const accountType = accountConfig && accountConfig.accountType;
 
-  trackCommandUsage('project-upload', { type: accountType }, derivedAccountId);
-
   const { projectConfig, projectDir } = await getProjectConfig();
+
+  trackCommandUsage('project-upload', { type: accountType }, derivedAccountId);
 
   validateProjectConfig(projectConfig, projectDir);
 
@@ -53,7 +53,8 @@ exports.handler = async options => {
       projectConfig,
       projectDir,
       pollProjectBuildAndDeploy,
-      message
+      message,
+      useV3
     );
 
     if (uploadError) {
@@ -124,6 +125,11 @@ exports.builder = yargs => {
       describe: i18n(`${i18nKey}.options.message.describe`),
       type: 'string',
       default: '',
+    },
+    'use-v3': {
+      hidden: true,
+      type: 'boolean',
+      default: false,
     },
   });
 
