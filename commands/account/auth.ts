@@ -68,7 +68,6 @@ async function createOrUpdateConfig(
     if (doesConfigExist) {
       updateAccountConfig({
         ...updatedConfig,
-        // @ts-ignore TODO
         environment: updatedConfig.env,
         tokenInfo: updatedConfig.auth!.tokenInfo,
       });
