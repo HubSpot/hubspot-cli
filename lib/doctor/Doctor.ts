@@ -149,6 +149,7 @@ export class Doctor {
             }
           ),
           secondaryMessaging: i18n(`${localI18nKey}.pak.incompleteSecondary`, {
+            command: uiCommandReference(`hs auth`),
             link: linkToPakUI,
           }),
         });
