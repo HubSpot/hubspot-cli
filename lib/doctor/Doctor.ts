@@ -123,11 +123,9 @@ export class Doctor {
       const pakScopes = new Set(await scopesOnAccessToken(this.accountId!));
       const missingScopes = (
         await authorizedScopesForPortalAndUser(this.accountId!)
-      )
-        .filter(
-          data => data.userAuthorized && !pakScopes.has(data.scopeGroup.name)
-        )
-        .map(data => data.scopeGroup.name);
+      ).filter(
+        data => data.userAuthorized && !pakScopes.has(data.scopeGroup.name)
+      );
 
       this.diagnosis?.addCLIConfigSection({
         type: 'success',
