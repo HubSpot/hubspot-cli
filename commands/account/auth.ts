@@ -17,7 +17,7 @@ import {
 import { ENVIRONMENTS } from '@hubspot/local-dev-lib/constants/environments';
 import { toKebabCase } from '@hubspot/local-dev-lib/text';
 import { Environment } from '@hubspot/local-dev-lib/types/Config';
-import { CLIAccount } from '@hubspot/local-dev-lib/types/Accounts';
+import { CLIAccount_NEW } from '@hubspot/local-dev-lib/types/Accounts';
 
 import { addConfigOptions, addGlobalOptions } from '../../lib/commonOpts';
 import { handleExit } from '../../lib/process';
@@ -38,7 +38,7 @@ async function createOrUpdateConfig(
   env: Environment,
   doesConfigExist: boolean,
   account?: number
-): Promise<CLIAccount | null> {
+): Promise<CLIAccount_NEW | null> {
   try {
     const { personalAccessKey } = await personalAccessKeyPrompt({
       env,
@@ -74,7 +74,7 @@ async function createOrUpdateConfig(
       writeConfig();
     }
 
-    return updatedConfig;
+    return updatedConfig as CLIAccount_NEW;
   } catch (e) {
     logError(e);
     return null;
@@ -117,7 +117,6 @@ export async function handler(
       process.exit(EXIT_CODES.ERROR);
     }
 
-    // @ts-ignore TODO
     const { name, accountId } = updatedConfig;
 
     // If the config file was just created, we don't need to prompt the user to set as default
