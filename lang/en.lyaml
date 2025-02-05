@@ -1517,7 +1517,7 @@ en:
         inactiveSecondary: "Run {{ command }} to remove inactive accounts from your CLI config"
         unableToDetermine: "Unable to determine if the portal is active"
         pak:
-          incomplete: "Personal access key is valid. There are more scopes available to your user, but not included in your key."
+          incomplete: "Personal access key is valid, but there are more scopes available to your user that are not included in your key."
           incompleteSecondary: "To add the available scopes, run {{ command }} and re-authenticate your account with a new key that has those scopes. Visit hubspot.com to view selected and available scopes for your personal access key. {{ link }}"
           invalid: "Personal access key is invalid"
           invalidSecondary: "To get a new key, run {{ command }}, deactivate your access key, and generate a new one. Then use that new key to authenticate your account."
