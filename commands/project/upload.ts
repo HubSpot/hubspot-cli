@@ -1,5 +1,5 @@
 // @ts-nocheck
-import { useV3Api } from '../../lib/projects/buildAndDeploy';
+const { useV3Api } = require('../../lib/projects/buildAndDeploy');
 
 const {
   addAccountOptions,
