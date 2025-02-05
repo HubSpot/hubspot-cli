@@ -18,12 +18,13 @@ import { ENVIRONMENTS } from '@hubspot/local-dev-lib/constants/environments';
 import { toKebabCase } from '@hubspot/local-dev-lib/text';
 import { Environment } from '@hubspot/local-dev-lib/types/Config';
 import { CLIAccount_NEW } from '@hubspot/local-dev-lib/types/Accounts';
+import { PERSONAL_ACCESS_KEY_AUTH_METHOD } from '@hubspot/local-dev-lib/constants/auth';
 
 import { addConfigOptions, addGlobalOptions } from '../../lib/commonOpts';
 import { handleExit } from '../../lib/process';
 import { debugError } from '../../lib/errorHandlers/index';
 import { i18n } from '../../lib/lang';
-import { trackCommandUsage } from '../../lib/usageTracking';
+import { trackCommandUsage, trackAuthAction } from '../../lib/usageTracking';
 import { addTestingOptions } from '../../lib/commonOpts';
 import { personalAccessKeyPrompt } from '../../lib/prompts/personalAccessKeyPrompt';
 import { cliAccountNamePrompt } from '../../lib/prompts/accountNamePrompt';
@@ -34,9 +35,17 @@ import { CommonArgs, ConfigArgs } from '../../types/Yargs';
 
 const i18nKey = 'commands.account.subcommands.auth';
 
+const TRACKING_STATUS = {
+  STARTED: 'started',
+  ERROR: 'error',
+  COMPLETE: 'complete',
+};
+
 async function createOrUpdateConfig(
   env: Environment,
   doesConfigExist: boolean,
+  disableTracking: boolean | undefined,
+  authType: string,
   account?: number
 ): Promise<CLIAccount_NEW | null> {
   try {
@@ -71,6 +80,9 @@ async function createOrUpdateConfig(
 
     return updatedConfig as CLIAccount_NEW;
   } catch (e) {
+    if (!disableTracking) {
+      await trackAuthAction('account-auth', authType, TRACKING_STATUS.ERROR);
+    }
     debugError(e);
     return null;
   }
@@ -79,21 +91,29 @@ async function createOrUpdateConfig(
 export const describe = null; // i18n(`${i18nKey}.describe`);
 export const command = 'auth';
 
-type AccountInfoArgs = CommonArgs & ConfigArgs;
+type AccountAuthArgs = CommonArgs &
+  ConfigArgs & {
+    disableTracking?: boolean;
+  };
 
 export async function handler(
-  args: ArgumentsCamelCase<AccountInfoArgs>
+  args: ArgumentsCamelCase<AccountAuthArgs>
 ): Promise<void> {
   const { providedAccountId, disableTracking } = args;
+  const authType = PERSONAL_ACCESS_KEY_AUTH_METHOD.value;
 
   if (!disableTracking) {
     trackCommandUsage('account-auth', {}, providedAccountId);
+    await trackAuthAction('account-auth', authType, TRACKING_STATUS.STARTED);
   }
 
   const env = args.qa ? ENVIRONMENTS.QA : ENVIRONMENTS.PROD;
   const configExists = configFileExists(true);
 
   if (!configExists) {
+    if (!disableTracking) {
+      await trackAuthAction('account-auth', authType, TRACKING_STATUS.STARTED);
+    }
     createEmptyConfigFile({}, true);
   }
   loadConfig('');
@@ -103,6 +123,8 @@ export async function handler(
   const updatedConfig = await createOrUpdateConfig(
     env,
     configExists,
+    disableTracking,
+    authType,
     providedAccountId
   );
 
@@ -146,10 +168,18 @@ export async function handler(
   }
   uiFeatureHighlight(['helpCommand', 'authCommand', 'accountsListCommand']);
 
+  if (!disableTracking) {
+    await trackAuthAction(
+      'account-auth',
+      authType,
+      TRACKING_STATUS.COMPLETE,
+      accountId
+    );
+  }
   process.exit(EXIT_CODES.SUCCESS);
 }
 
-export function builder(yargs: Argv): Argv<AccountInfoArgs> {
+export function builder(yargs: Argv): Argv<AccountAuthArgs> {
   yargs.options({
     account: {
       describe: i18n(`${i18nKey}.options.account.describe`),
@@ -167,5 +197,5 @@ export function builder(yargs: Argv): Argv<AccountInfoArgs> {
   addTestingOptions(yargs);
   addGlobalOptions(yargs);
 
-  return yargs as Argv<AccountInfoArgs>;
+  return yargs as Argv<AccountAuthArgs>;
 }
