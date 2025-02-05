@@ -22,6 +22,7 @@ import {
   authorizedScopesForPortalAndUser,
   scopesOnAccessToken,
 } from '@hubspot/local-dev-lib/personalAccessKey';
+import { ScopeGroupAuthorization } from '@hubspot/local-dev-lib/types/Accounts';
 import { isSpecifiedError } from '@hubspot/local-dev-lib/errors/index';
 import { getHubSpotWebsiteOrigin } from '@hubspot/local-dev-lib/urls';
 import { uiCommandReference } from '../ui';
@@ -120,11 +121,13 @@ export class Doctor {
     const localI18nKey = `${i18nKey}.accountChecks`;
     try {
       await accessTokenForPersonalAccessKey(this.accountId!, true);
+
       const pakScopes = new Set(await scopesOnAccessToken(this.accountId!));
       const missingScopes = (
         await authorizedScopesForPortalAndUser(this.accountId!)
       ).filter(
-        data => data.userAuthorized && !pakScopes.has(data.scopeGroup.name)
+        (data: ScopeGroupAuthorization) =>
+          data.userAuthorized && !pakScopes.has(data.scopeGroup.name)
       );
 
       this.diagnosis?.addCLIConfigSection({
