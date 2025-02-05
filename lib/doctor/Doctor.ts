@@ -145,12 +145,7 @@ export class Doctor {
       if (missingScopes.length > 0) {
         this.diagnosis?.addCLIConfigSection({
           type: 'warning',
-          message: i18n(
-            `${localI18nKey}.pak.incomplete${missingScopes.length == 1 ? '.one' : '.other'}`,
-            {
-              count: missingScopes.length,
-            }
-          ),
+          message: i18n(`${localI18nKey}.pak.incomplete`),
           secondaryMessaging: i18n(`${localI18nKey}.pak.incompleteSecondary`, {
             command: uiCommandReference(`hs auth`),
             link: linkToPakUI,
