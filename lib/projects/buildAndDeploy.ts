@@ -45,6 +45,10 @@ const SPINNER_STATUS = {
   SPINNING: 'spinning',
 };
 
+export function useV3Api(platformVersion?: string | null) {
+  return platformVersion === '2025.1';
+}
+
 function getSubtasks(task: ProjectTask): ProjectSubtask[] {
   if ('subbuildStatuses' in task) {
     return task.subbuildStatuses;

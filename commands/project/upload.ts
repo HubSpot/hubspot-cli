@@ -1,4 +1,6 @@
 // @ts-nocheck
+import { useV3Api } from '../../lib/projects/buildAndDeploy';
+
 const {
   addAccountOptions,
   addConfigOptions,
@@ -32,7 +34,7 @@ exports.command = 'upload';
 exports.describe = uiBetaTag(i18n(`${i18nKey}.describe`), false);
 
 exports.handler = async options => {
-  const { forceCreate, message, derivedAccountId, useV3 } = options;
+  const { forceCreate, message, derivedAccountId } = options;
   const accountConfig = getAccountConfig(derivedAccountId);
   const accountType = accountConfig && accountConfig.accountType;
 
@@ -54,7 +56,7 @@ exports.handler = async options => {
       projectDir,
       pollProjectBuildAndDeploy,
       message,
-      useV3
+      useV3Api(projectConfig?.platformVersion)
     );
 
     if (uploadError) {
@@ -125,11 +127,6 @@ exports.builder = yargs => {
       describe: i18n(`${i18nKey}.options.message.describe`),
       type: 'string',
       default: '',
-    },
-    'use-v3': {
-      hidden: true,
-      type: 'boolean',
-      default: false,
     },
   });
 

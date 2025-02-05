@@ -1,4 +1,6 @@
 // @ts-nocheck
+import { useV3Api } from '../../lib/projects/buildAndDeploy';
+
 const chalk = require('chalk');
 const {
   addAccountOptions,
@@ -135,7 +137,7 @@ exports.handler = async options => {
       derivedAccountId,
       projectName,
       buildIdToDeploy,
-      options.useV3
+      useV3Api(projectConfig?.platformVersion)
     );
 
     if (!deployResp || deployResp.error) {
@@ -187,11 +189,6 @@ exports.builder = yargs => {
       alias: ['build-id'],
       describe: i18n(`${i18nKey}.options.build.describe`),
       type: 'number',
-    },
-    'use-v3': {
-      hidden: true,
-      type: 'boolean',
-      default: false,
     },
   });
 
