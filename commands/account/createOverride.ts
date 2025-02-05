@@ -18,13 +18,13 @@ export const describe = null; // i18n(`${i18nKey}.describe`);
 
 export const command = 'create-override [account]';
 
-type AccountInfoArgs = CommonArgs &
+type AccountCreateOverrideArgs = CommonArgs &
   ConfigArgs & {
     account: string | number;
   };
 
 export async function handler(
-  args: ArgumentsCamelCase<AccountInfoArgs>
+  args: ArgumentsCamelCase<AccountCreateOverrideArgs>
 ): Promise<void> {
   let overrideDefaultAccount = args.account;
 
@@ -54,7 +54,7 @@ export async function handler(
   }
 }
 
-export function builder(yargs: Argv): Argv<AccountInfoArgs> {
+export function builder(yargs: Argv): Argv<AccountCreateOverrideArgs> {
   addConfigOptions(yargs);
 
   yargs.positional('account', {
@@ -73,5 +73,5 @@ export function builder(yargs: Argv): Argv<AccountInfoArgs> {
     ],
   ]);
 
-  return yargs as Argv<AccountInfoArgs>;
+  return yargs as Argv<AccountCreateOverrideArgs>;
 }
