@@ -145,13 +145,15 @@ export async function createProjectConfig(
     }
   );
 
-  const _config: ProjectConfig = JSON.parse(
-    fs.readFileSync(projectConfigPath).toString()
-  );
-  writeProjectConfig(projectConfigPath, {
-    ..._config,
-    name: projectName,
-  });
+  if (fs.existsSync(projectConfigPath)) {
+    const _config: ProjectConfig = JSON.parse(
+      fs.readFileSync(projectConfigPath).toString()
+    );
+    writeProjectConfig(projectConfigPath, {
+      ..._config,
+      name: projectName,
+    });
+  }
 
   if (template.name === 'no-template') {
     fs.ensureDirSync(path.join(projectPath, 'src'));
