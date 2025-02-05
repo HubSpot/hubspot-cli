@@ -21,7 +21,7 @@ import { CLIAccount_NEW } from '@hubspot/local-dev-lib/types/Accounts';
 
 import { addConfigOptions, addGlobalOptions } from '../../lib/commonOpts';
 import { handleExit } from '../../lib/process';
-import { logError } from '../../lib/errorHandlers/index';
+import { debugError } from '../../lib/errorHandlers/index';
 import { i18n } from '../../lib/lang';
 import { trackCommandUsage } from '../../lib/usageTracking';
 import { addTestingOptions } from '../../lib/commonOpts';
@@ -45,7 +45,7 @@ async function createOrUpdateConfig(
       account,
     });
     const token = await getAccessToken(personalAccessKey, env);
-    const defaultName = token.hubName ? toKebabCase(token.hubName) : null;
+    const defaultName = token.hubName ? toKebabCase(token.hubName) : undefined;
 
     const name = doesConfigExist
       ? undefined
@@ -63,20 +63,15 @@ async function createOrUpdateConfig(
 
     if (doesConfigExist && !updatedConfig.name) {
       updatedConfig.name = (await cliAccountNamePrompt(defaultName)).name;
-    }
-
-    if (doesConfigExist) {
       updateAccountConfig({
         ...updatedConfig,
-        environment: updatedConfig.env,
-        tokenInfo: updatedConfig.auth!.tokenInfo,
       });
       writeConfig();
     }
 
     return updatedConfig as CLIAccount_NEW;
   } catch (e) {
-    logError(e);
+    debugError(e);
     return null;
   }
 }
@@ -105,60 +100,53 @@ export async function handler(
 
   handleExit(deleteEmptyConfigFile);
 
-  try {
-    const updatedConfig = await createOrUpdateConfig(
-      env,
-      configExists,
-      providedAccountId
-    );
+  const updatedConfig = await createOrUpdateConfig(
+    env,
+    configExists,
+    providedAccountId
+  );
 
-    if (!updatedConfig) {
-      logger.error(i18n(`${i18nKey}.errors.failedToUpdateConfig`));
-      process.exit(EXIT_CODES.ERROR);
-    }
-
-    const { name, accountId } = updatedConfig;
-
-    // If the config file was just created, we don't need to prompt the user to set as default
-    if (!configExists) {
-      logger.log('');
-      logger.success(
-        i18n(`${i18nKey}.success.configFileCreated`, {
-          configPath: getConfigPath('', true)!,
-        })
-      );
-      logger.success(
-        i18n(`${i18nKey}.success.configFileUpdated`, {
-          account: name || accountId,
-        })
-      );
-    }
-
-    if (configExists) {
-      const setAsDefault = await setAsDefaultAccountPrompt(name!);
-
-      logger.log('');
-      if (setAsDefault) {
-        logger.success(
-          i18n(`lib.prompts.setAsDefaultAccountPrompt.setAsDefaultAccount`, {
-            accountName: name!,
-          })
-        );
-      } else {
-        logger.info(
-          i18n(`lib.prompts.setAsDefaultAccountPrompt.keepingCurrentDefault`, {
-            accountName: getConfigDefaultAccount()!,
-          })
-        );
-      }
-    }
-    uiFeatureHighlight(['helpCommand', 'authCommand', 'accountsListCommand']);
-
-    process.exit(EXIT_CODES.SUCCESS);
-  } catch (err) {
-    logError(err);
+  if (!updatedConfig) {
+    logger.error(i18n(`${i18nKey}.errors.failedToUpdateConfig`));
     process.exit(EXIT_CODES.ERROR);
   }
+
+  const { name, accountId } = updatedConfig;
+
+  // If the config file was just created, we don't need to prompt the user to set as default
+  if (!configExists) {
+    logger.log('');
+    logger.success(
+      i18n(`${i18nKey}.success.configFileCreated`, {
+        configPath: getConfigPath('', true)!,
+      })
+    );
+    logger.success(
+      i18n(`${i18nKey}.success.configFileUpdated`, {
+        account: name || accountId,
+      })
+    );
+  } else {
+    const setAsDefault = await setAsDefaultAccountPrompt(name!);
+
+    logger.log('');
+    if (setAsDefault) {
+      logger.success(
+        i18n(`lib.prompts.setAsDefaultAccountPrompt.setAsDefaultAccount`, {
+          accountName: name!,
+        })
+      );
+    } else {
+      logger.info(
+        i18n(`lib.prompts.setAsDefaultAccountPrompt.keepingCurrentDefault`, {
+          accountName: getConfigDefaultAccount()!,
+        })
+      );
+    }
+  }
+  uiFeatureHighlight(['helpCommand', 'authCommand', 'accountsListCommand']);
+
+  process.exit(EXIT_CODES.SUCCESS);
 }
 
 export function builder(yargs: Argv): Argv<AccountInfoArgs> {
