@@ -6,7 +6,11 @@ import {
   DiagnosticInfoBuilder,
 } from '../DiagnosticInfoBuilder';
 import util from 'util';
-import { accessTokenForPersonalAccessKey as _accessTokenForPersonalAccessKey } from '@hubspot/local-dev-lib/personalAccessKey';
+import {
+  accessTokenForPersonalAccessKey as _accessTokenForPersonalAccessKey,
+  authorizedScopesForPortalAndUser as _authorizedScopesForPortalAndUser,
+  scopesOnAccessToken as _scopesOnAccessToken,
+} from '@hubspot/local-dev-lib/personalAccessKey';
 import { HubSpotHttpError } from '@hubspot/local-dev-lib/models/HubSpotHttpError';
 import { AxiosError } from 'axios';
 import { isSpecifiedError as _isSpecifiedError } from '@hubspot/local-dev-lib/errors/index';
@@ -41,6 +45,15 @@ const accessTokenForPersonalAccessKey =
   _accessTokenForPersonalAccessKey as jest.MockedFunction<
     typeof _accessTokenForPersonalAccessKey
   >;
+
+const authorizedScopesForPortalAndUser =
+  _authorizedScopesForPortalAndUser as jest.MockedFunction<
+    typeof _authorizedScopesForPortalAndUser
+  >;
+
+const scopesOnAccessToken = _scopesOnAccessToken as jest.MockedFunction<
+  typeof _scopesOnAccessToken
+>;
 
 const isSpecifiedError = _isSpecifiedError as jest.MockedFunction<
   typeof _isSpecifiedError
@@ -176,6 +189,19 @@ describe('lib/doctor/Doctor', () => {
   describe('CLI Config Checks', () => {
     describe('Personal Access Key', () => {
       it('should add success sections if the access token is valid', async () => {
+        scopesOnAccessToken.mockResolvedValueOnce(['scope1']);
+        authorizedScopesForPortalAndUser.mockResolvedValueOnce([
+          {
+            scopeGroup: {
+              name: 'scope1',
+              shortDescription: 'scope1',
+              longDescription: 'scope1',
+            },
+            portalAuthorized: true,
+            userAuthorized: true,
+          },
+        ]);
+
         await doctor.diagnose();
 
         // @ts-expect-error Testing private method
@@ -290,6 +316,127 @@ describe('lib/doctor/Doctor', () => {
         expect(doctor.diagnosis.addCLIConfigSection).toHaveBeenCalledWith({
           type: 'error',
           message: 'Unable to determine if the portal is active',
+        });
+      });
+
+      it('should warn when there are missing authorized scopes', async () => {
+        scopesOnAccessToken.mockResolvedValueOnce(['scope1', 'scope2']);
+        authorizedScopesForPortalAndUser.mockResolvedValueOnce([
+          {
+            scopeGroup: {
+              name: 'scope1',
+              shortDescription: 'scope1',
+              longDescription: 'scope1',
+            },
+            portalAuthorized: true,
+            userAuthorized: true,
+          },
+          {
+            scopeGroup: {
+              name: 'scope2',
+              shortDescription: 'scope2',
+              longDescription: 'scope2',
+            },
+            portalAuthorized: true,
+            userAuthorized: true,
+          },
+          {
+            scopeGroup: {
+              name: 'scope3',
+              shortDescription: 'scope3',
+              longDescription: 'scope3',
+            },
+            portalAuthorized: true,
+            userAuthorized: true,
+          },
+        ]);
+
+        await doctor.diagnose();
+        expect(doctor['diagnosis']?.addCLIConfigSection).toHaveBeenCalledWith({
+          type: 'warning',
+          message:
+            'Personal access key is valid. 1 scope available, but not included in your key.',
+          secondaryMessaging: expect.any(String),
+        });
+      });
+
+      it('should warn when there are multiple missing authorized scopes', async () => {
+        scopesOnAccessToken.mockResolvedValueOnce(['scope1', 'scope2']);
+        authorizedScopesForPortalAndUser.mockResolvedValueOnce([
+          {
+            scopeGroup: {
+              name: 'scope1',
+              shortDescription: 'scope1',
+              longDescription: 'scope1',
+            },
+            portalAuthorized: true,
+            userAuthorized: true,
+          },
+          {
+            scopeGroup: {
+              name: 'scope2',
+              shortDescription: 'scope2',
+              longDescription: 'scope2',
+            },
+            portalAuthorized: true,
+            userAuthorized: true,
+          },
+          {
+            scopeGroup: {
+              name: 'scope3',
+              shortDescription: 'scope3',
+              longDescription: 'scope3',
+            },
+            portalAuthorized: true,
+            userAuthorized: true,
+          },
+          {
+            scopeGroup: {
+              name: 'scope4',
+              shortDescription: 'scope4',
+              longDescription: 'scope4',
+            },
+            portalAuthorized: true,
+            userAuthorized: true,
+          },
+        ]);
+
+        await doctor.diagnose();
+        expect(doctor['diagnosis']?.addCLIConfigSection).toHaveBeenCalledWith({
+          type: 'warning',
+          message:
+            'Personal access key is valid. 2 scopes available, but not included in your key.',
+          secondaryMessaging: expect.any(String),
+        });
+      });
+
+      it('should not warn when the missing scope is not authorized', async () => {
+        scopesOnAccessToken.mockResolvedValueOnce(['scope1']);
+        authorizedScopesForPortalAndUser.mockResolvedValueOnce([
+          {
+            scopeGroup: {
+              name: 'scope1',
+              shortDescription: 'scope1',
+              longDescription: 'scope1',
+            },
+            portalAuthorized: true,
+            userAuthorized: true,
+          },
+          {
+            scopeGroup: {
+              name: 'scope2',
+              shortDescription: 'scope2',
+              longDescription: 'scope2',
+            },
+            portalAuthorized: true,
+            userAuthorized: false,
+          },
+        ]);
+
+        await doctor.diagnose();
+        expect(doctor['diagnosis']?.addCLIConfigSection).toHaveBeenCalledWith({
+          type: 'success',
+          message: expect.stringMatching(/Personal Access Key is valid./),
         });
       });
     });
