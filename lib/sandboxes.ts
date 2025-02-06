@@ -35,6 +35,13 @@ export const SANDBOX_API_TYPE_MAP = {
   [HUBSPOT_ACCOUNT_TYPES.DEVELOPMENT_SANDBOX]: 2,
 } as const;
 
+export const UNSUPPORTED_V1_SYNC_TYPES = [
+  'hub-trials',
+  'gates',
+  'lead-settings',
+  'object-schemas-full', // TODO: Remove object-schemas-full once we've migrated sandboxes to v2
+];
+
 export function getSandboxTypeAsString(accountType?: AccountType): string {
   if (accountType === HUBSPOT_ACCOUNT_TYPES.DEVELOPMENT_SANDBOX) {
     return 'development'; // Only place we're using this specific name
@@ -84,7 +91,9 @@ export async function getAvailableSyncTypes(
   if (!syncTypes) {
     throw new Error(i18n(`${i18nKey}.sync.failure.syncTypeFetch`));
   }
-  return syncTypes.map(t => ({ type: t.name }));
+  return syncTypes
+    .filter(t => !UNSUPPORTED_V1_SYNC_TYPES.includes(t.name))
+    .map(t => ({ type: t.name }));
 }
 
 export async function validateSandboxUsageLimits(
