@@ -67,9 +67,10 @@ export class Doctor {
     await Promise.all([
       ...this.performCliChecks(),
       ...this.performCliConfigChecks(),
-      ...this.performDefaultAccountOverrideFileChecks(),
       ...(this.projectConfig?.projectConfig ? this.performProjectChecks() : []),
     ]);
+
+    this.performDefaultAccountOverrideFileChecks();
 
     SpinniesManager.succeed('runningDiagnostics', {
       text: i18n(`${i18nKey}.diagnosticsComplete`),
@@ -116,7 +117,7 @@ export class Doctor {
     return [this.checkIfAccessTokenValid()];
   }
 
-  private performDefaultAccountOverrideFileChecks(): Array<Promise<void>> {
+  private performDefaultAccountOverrideFileChecks(): void {
     const localI18nKey = `${i18nKey}.defaultAccountOverrideFileChecks`;
     if (this.diagnosticInfo?.defaultAccountOverrideFile) {
       this.diagnosis?.addDefaultAccountOverrideFileSection({
@@ -133,7 +134,6 @@ export class Doctor {
         }),
       });
     }
-    return [];
   }
 
   private async checkIfAccessTokenValid(): Promise<void> {
