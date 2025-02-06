@@ -1,20 +1,28 @@
-// @ts-nocheck
-const { logger } = require('@hubspot/local-dev-lib/logger');
-const { renameAccount } = require('@hubspot/local-dev-lib/config');
-
-const { addConfigOptions, addAccountOptions } = require('../../lib/commonOpts');
-const { trackCommandUsage } = require('../../lib/usageTracking');
-const { i18n } = require('../../lib/lang');
+import { Argv, ArgumentsCamelCase } from 'yargs';
+import { logger } from '@hubspot/local-dev-lib/logger';
+import { renameAccount } from '@hubspot/local-dev-lib/config';
+import { addConfigOptions, addAccountOptions } from '../../lib/commonOpts';
+import { trackCommandUsage } from '../../lib/usageTracking';
+import { i18n } from '../../lib/lang';
+import { CommonArgs, ConfigArgs } from '../../types/Yargs';
 
 const i18nKey = 'commands.account.subcommands.rename';
 
-exports.command = 'rename <accountName> <newName>';
-exports.describe = i18n(`${i18nKey}.describe`);
+export const command = 'rename <accountName> <newName>';
+export const describe = i18n(`${i18nKey}.describe`);
 
-exports.handler = async options => {
-  const { accountName, newName, derivedAccountId } = options;
+type AccountRenameArgs = CommonArgs &
+  ConfigArgs & {
+    accountName: string;
+    newName: string;
+  };
 
-  trackCommandUsage('accounts-rename', null, derivedAccountId);
+export async function handler(
+  args: ArgumentsCamelCase<AccountRenameArgs>
+): Promise<void> {
+  const { accountName, newName, derivedAccountId } = args;
+
+  trackCommandUsage('accounts-rename', undefined, derivedAccountId);
 
   await renameAccount(accountName, newName);
 
@@ -24,9 +32,9 @@ exports.handler = async options => {
       newName,
     })
   );
-};
+}
 
-exports.builder = yargs => {
+export function builder(yargs: Argv): Argv<AccountRenameArgs> {
   addConfigOptions(yargs);
   addAccountOptions(yargs);
 
@@ -41,5 +49,5 @@ exports.builder = yargs => {
 
   yargs.example([['$0 accounts rename myExistingPortalName myNewPortalName']]);
 
-  return yargs;
-};
+  return yargs as Argv<AccountRenameArgs>;
+}
