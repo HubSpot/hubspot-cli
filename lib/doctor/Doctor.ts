@@ -17,7 +17,12 @@ import {
 } from './DiagnosticInfoBuilder';
 import { isPortManagerPortAvailable } from '@hubspot/local-dev-lib/portManager';
 import { PORT_MANAGER_SERVER_PORT } from '@hubspot/local-dev-lib/constants/ports';
-import { accessTokenForPersonalAccessKey } from '@hubspot/local-dev-lib/personalAccessKey';
+import {
+  accessTokenForPersonalAccessKey,
+  authorizedScopesForPortalAndUser,
+  scopesOnAccessToken,
+} from '@hubspot/local-dev-lib/personalAccessKey';
+import { ScopeGroupAuthorization } from '@hubspot/local-dev-lib/types/Accounts';
 import { isSpecifiedError } from '@hubspot/local-dev-lib/errors/index';
 import { getHubSpotWebsiteOrigin } from '@hubspot/local-dev-lib/urls';
 import { uiCommandReference } from '../ui';
@@ -116,21 +121,42 @@ export class Doctor {
     const localI18nKey = `${i18nKey}.accountChecks`;
     try {
       await accessTokenForPersonalAccessKey(this.accountId!, true);
+
+      const pakScopes = new Set(await scopesOnAccessToken(this.accountId!));
+      const missingScopes = (
+        await authorizedScopesForPortalAndUser(this.accountId!)
+      ).filter(
+        (data: ScopeGroupAuthorization) =>
+          data.userAuthorized && !pakScopes.has(data.scopeGroup.name)
+      );
+
       this.diagnosis?.addCLIConfigSection({
         type: 'success',
         message: i18n(`${localI18nKey}.active`),
       });
-      this.diagnosis?.addCLIConfigSection({
-        type: 'success',
-        message: i18n(`${localI18nKey}.pak.valid`, {
-          link: uiLink(
-            i18n(`${localI18nKey}.pak.viewScopes`),
-            `${getHubSpotWebsiteOrigin(
-              this.diagnosticInfoBuilder?.env || 'PROD'
-            )}/personal-access-key/${this.diagnosticInfo?.account.accountId}`
-          ),
-        }),
-      });
+
+      const linkToPakUI = uiLink(
+        i18n(`${localI18nKey}.pak.viewScopes`),
+        `${getHubSpotWebsiteOrigin(
+          this.diagnosticInfoBuilder?.env || 'PROD'
+        )}/personal-access-key/${this.diagnosticInfo?.account.accountId}`
+      );
+
+      if (missingScopes.length > 0) {
+        this.diagnosis?.addCLIConfigSection({
+          type: 'warning',
+          message: i18n(`${localI18nKey}.pak.incomplete`),
+          secondaryMessaging: i18n(`${localI18nKey}.pak.incompleteSecondary`, {
+            command: uiCommandReference(`hs auth`),
+            link: linkToPakUI,
+          }),
+        });
+      } else {
+        this.diagnosis?.addCLIConfigSection({
+          type: 'success',
+          message: i18n(`${localI18nKey}.pak.valid`, { link: linkToPakUI }),
+        });
+      }
     } catch (error) {
       const portalNotActive =
         isSpecifiedError(error, {
