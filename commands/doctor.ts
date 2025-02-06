@@ -10,6 +10,8 @@ import path from 'path';
 import { ArgumentsCamelCase, BuilderCallback, Options } from 'yargs';
 import { getCwd } from '@hubspot/local-dev-lib/path';
 import { addGlobalOptions } from '../lib/commonOpts';
+import { uiCommandDisabledBanner } from '../lib/ui';
+import { getFireAlarmForCommand } from '@hubspot/local-dev-lib/fireAlarm';
 const { i18n } = require('../lib/lang');
 
 export interface DoctorOptions {
@@ -29,6 +31,11 @@ export const handler = async ({
   trackCommandUsage(command, undefined, doctor.accountId || undefined);
 
   const output = await doctor.diagnose();
+
+  const alarm = await getFireAlarmForCommand(doctor.accountId!, 'doctor');
+  if (alarm) {
+    uiCommandDisabledBanner(command, undefined, alarm.message);
+  }
 
   const totalCount = (output?.errorCount || 0) + (output?.warningCount || 0);
   if (totalCount > 0) {
