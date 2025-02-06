@@ -1,37 +1,41 @@
-// @ts-nocheck
-const { logger } = require('@hubspot/local-dev-lib/logger');
-const { logError } = require('../../lib/errorHandlers/index');
-const { deleteTable } = require('@hubspot/local-dev-lib/api/hubdb');
-const { trackCommandUsage } = require('../../lib/usageTracking');
-const {
+import { Argv, ArgumentsCamelCase } from 'yargs';
+import { logger } from '@hubspot/local-dev-lib/logger';
+import { logError } from '../../lib/errorHandlers/index';
+import { deleteTable } from '@hubspot/local-dev-lib/api/hubdb';
+import { trackCommandUsage } from '../../lib/usageTracking';
+import {
   addConfigOptions,
   addAccountOptions,
   addUseEnvironmentOptions,
-} = require('../../lib/commonOpts');
-const {
-  selectHubDBTablePrompt,
-} = require('../../lib/prompts/selectHubDBTablePrompt');
-const { promptUser } = require('../../lib/prompts/promptUtils');
-const { EXIT_CODES } = require('../../lib/enums/exitCodes');
-const { i18n } = require('../../lib/lang');
+} from '../../lib/commonOpts';
+import { selectHubDBTablePrompt } from '../../lib/prompts/selectHubDBTablePrompt';
+import { promptUser } from '../../lib/prompts/promptUtils';
+import { EXIT_CODES } from '../../lib/enums/exitCodes';
+import { i18n } from '../../lib/lang';
+import { CommonArgs, ConfigArgs } from '../../types/Yargs';
 
 const i18nKey = 'commands.hubdb.subcommands.delete';
 
-exports.command = 'delete [table-id]';
-exports.describe = i18n(`${i18nKey}.describe`);
+export const command = 'delete [table-id]';
+export const describe = i18n(`${i18nKey}.describe`);
 
-exports.handler = async options => {
-  const { force, derivedAccountId } = options;
+type HubdbDeleteArgs = CommonArgs &
+  ConfigArgs & { tableId?: number; dest?: string };
 
-  trackCommandUsage('hubdb-delete', null, derivedAccountId);
+export async function handler(
+  args: ArgumentsCamelCase<HubdbDeleteArgs>
+): Promise<void> {
+  const { force, derivedAccountId } = args;
+
+  trackCommandUsage('hubdb-delete', {}, derivedAccountId);
 
   try {
     const { tableId } =
-      'tableId' in options
-        ? options
+      'tableId' in args && args.tableId
+        ? args
         : await selectHubDBTablePrompt({
             accountId: derivedAccountId,
-            options,
+            options: args,
           });
 
     if (!force) {
@@ -57,14 +61,14 @@ exports.handler = async options => {
   } catch (e) {
     logger.error(
       i18n(`${i18nKey}.errors.delete`, {
-        tableId,
+        tableId: args.tableId || '',
       })
     );
     logError(e);
   }
-};
+}
 
-exports.builder = yargs => {
+export function builder(yargs: Argv): Argv<HubdbDeleteArgs> {
   addAccountOptions(yargs);
   addConfigOptions(yargs);
   addUseEnvironmentOptions(yargs);
@@ -78,4 +82,6 @@ exports.builder = yargs => {
     describe: i18n(`${i18nKey}.options.force.describe`),
     type: 'boolean',
   });
-};
+
+  return yargs as Argv<HubdbDeleteArgs>;
+}

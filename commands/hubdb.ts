@@ -1,17 +1,17 @@
-// @ts-nocheck
-const { addGlobalOptions } = require('../lib/commonOpts');
-const createCommand = require('./hubdb/create');
-const fetchCommand = require('./hubdb/fetch');
-const deleteCommand = require('./hubdb/delete');
-const clearCommand = require('./hubdb/clear');
-const { i18n } = require('../lib/lang');
+import { Argv } from 'yargs';
+import { addGlobalOptions } from '../lib/commonOpts';
+import * as createCommand from './hubdb/create';
+import * as fetchCommand from './hubdb/fetch';
+import * as deleteCommand from './hubdb/delete';
+import * as clearCommand from './hubdb/clear';
+import { i18n } from '../lib/lang';
 
 const i18nKey = 'commands.hubdb';
 
-exports.command = 'hubdb';
-exports.describe = i18n(`${i18nKey}.describe`);
+export const command = 'hubdb';
+export const describe = i18n(`${i18nKey}.describe`);
 
-exports.builder = yargs => {
+export function builder(yargs: Argv): Argv {
   addGlobalOptions(yargs);
 
   yargs
@@ -22,4 +22,4 @@ exports.builder = yargs => {
     .demandCommand(1, '');
 
   return yargs;
-};
+}
