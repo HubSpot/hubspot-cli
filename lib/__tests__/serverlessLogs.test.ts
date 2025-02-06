@@ -1,7 +1,6 @@
-// @ts-nocheck
-const mockStdIn = require('mock-stdin');
-const { outputLogs } = require('../ui/serverlessFunctionLogs');
-const { tailLogs } = require('../serverlessLogs');
+import mockStdIn from 'mock-stdin';
+import { outputLogs } from '../ui/serverlessFunctionLogs';
+import { tailLogs } from '../serverlessLogs';
 
 jest.mock('../ui/serverlessFunctionLogs');
 jest.mock('@hubspot/local-dev-lib/logger');
@@ -11,9 +10,10 @@ const ACCOUNT_ID = 123;
 
 describe('lib/serverlessLogs', () => {
   describe('tailLogs()', () => {
-    let stdinMock;
+    let stdinMock: mockStdIn.MockSTDIN;
 
     beforeEach(() => {
+      // @ts-ignore - we don't need to mock the entire process object
       jest.spyOn(process, 'exit').mockImplementation(() => {});
       stdinMock = mockStdIn.stdin();
     });
@@ -31,25 +31,36 @@ describe('lib/serverlessLogs', () => {
             id: '1234',
             executionTime: 510,
             log: 'Log message',
-            error: null,
+            error: { message: '', type: '', stackTrace: [] },
             status: 'SUCCESS',
             createdAt: 1620232011451,
             memory: '70/128 MB',
             duration: '53.40 ms',
           },
+          status: 200,
+          statusText: 'OK',
+          headers: {},
+          config: {},
         });
       });
       const tailCall = jest.fn(() => {
         return Promise.resolve({
-          results: [],
-          paging: {
-            next: {
-              after: 'somehash',
+          data: {
+            results: [],
+            paging: {
+              next: {
+                after: 'somehash',
+              },
             },
           },
+          status: 200,
+          statusText: 'OK',
+          headers: {},
+          config: {},
         });
       });
 
+      // @ts-ignore - headers is not used in the actual function and does not need to be mocked
       await tailLogs(ACCOUNT_ID, 'name', fetchLatest, tailCall, compact);
       jest.runOnlyPendingTimers();
 
@@ -65,12 +76,16 @@ describe('lib/serverlessLogs', () => {
             id: '1234',
             executionTime: 510,
             log: 'Log message',
-            error: null,
+            error: { message: '', type: '', stackTrace: [], statusCode: null },
             status: 'SUCCESS',
             createdAt: 1620232011451,
             memory: '70/128 MB',
             duration: '53.40 ms',
           },
+          status: 200,
+          statusText: 'OK',
+          headers: {},
+          config: {},
         });
       });
       const latestLogResponse = {
@@ -106,6 +121,7 @@ describe('lib/serverlessLogs', () => {
         Promise.resolve({ data: latestLogResponse })
       );
 
+      // @ts-ignore - headers is not used in the actual function and does not need to be mocked
       await tailLogs(ACCOUNT_ID, 'name', fetchLatest, tailCall, compact);
       jest.runOnlyPendingTimers();
       expect(outputLogs).toHaveBeenCalledWith(
@@ -118,18 +134,20 @@ describe('lib/serverlessLogs', () => {
       const compact = false;
 
       const fetchLatest = jest.fn(() => {
-        return Promise.reject(
-          new Error({
-            statusCode: 404,
-          })
-        );
+        return Promise.reject({
+          message: '',
+          type: '',
+          stackTrace: [],
+          statusCode: 404,
+        });
       });
       const tailCall = jest.fn(() =>
-        Promise.reject(
-          new Error({
-            statusCode: 404,
-          })
-        )
+        Promise.reject({
+          message: '',
+          type: '',
+          stackTrace: [],
+          statusCode: 404,
+        })
       );
 
       await tailLogs(ACCOUNT_ID, 'name', fetchLatest, tailCall, compact);
