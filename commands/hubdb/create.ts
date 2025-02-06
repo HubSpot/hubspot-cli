@@ -1,28 +1,29 @@
-// @ts-nocheck
-const path = require('path');
-
-const { logger } = require('@hubspot/local-dev-lib/logger');
-const { logError } = require('../../lib/errorHandlers/index');
-const { getCwd } = require('@hubspot/local-dev-lib/path');
-const { createHubDbTable } = require('@hubspot/local-dev-lib/hubdb');
-const { untildify, isValidPath } = require('@hubspot/local-dev-lib/path');
-const { promptUser } = require('../../lib/prompts/promptUtils');
-const { checkAndConvertToJson } = require('../../lib/validation');
-const { trackCommandUsage } = require('../../lib/usageTracking');
-const {
+import { Argv, ArgumentsCamelCase } from 'yargs';
+import path from 'path';
+import { logger } from '@hubspot/local-dev-lib/logger';
+import { logError } from '../../lib/errorHandlers/index';
+import { getCwd, untildify, isValidPath } from '@hubspot/local-dev-lib/path';
+import { createHubDbTable } from '@hubspot/local-dev-lib/hubdb';
+import { promptUser } from '../../lib/prompts/promptUtils';
+import { checkAndConvertToJson } from '../../lib/validation';
+import { trackCommandUsage } from '../../lib/usageTracking';
+import {
   addConfigOptions,
   addAccountOptions,
   addUseEnvironmentOptions,
-} = require('../../lib/commonOpts');
-const { i18n } = require('../../lib/lang');
+} from '../../lib/commonOpts';
+import { i18n } from '../../lib/lang';
+import { EXIT_CODES } from '../../lib/enums/exitCodes';
+import { CommonArgs, ConfigArgs } from '../../types/Yargs';
 
 const i18nKey = 'commands.hubdb.subcommands.create';
-const { EXIT_CODES } = require('../../lib/enums/exitCodes');
 
 exports.command = 'create';
 exports.describe = i18n(`${i18nKey}.describe`);
 
-function selectPathPrompt(options) {
+type HubdbCreateArgs = CommonArgs & ConfigArgs & { path: string };
+
+function selectPathPrompt(options: HubdbCreateArgs): Promise<{ path: string }> {
   return promptUser([
     {
       name: 'path',
@@ -44,17 +45,19 @@ function selectPathPrompt(options) {
   ]);
 }
 
-exports.handler = async options => {
-  const { derivedAccountId } = options;
+export async function handler(
+  args: ArgumentsCamelCase<HubdbCreateArgs>
+): Promise<void> {
+  const { derivedAccountId } = args;
 
-  trackCommandUsage('hubdb-create', null, derivedAccountId);
+  trackCommandUsage('hubdb-create', {}, derivedAccountId);
 
   let filePath;
   try {
-    const filePath =
-      'path' in options
-        ? path.resolve(getCwd(), options.path)
-        : path.resolve(getCwd(), (await selectPathPrompt(options)).path);
+    filePath =
+      'path' in args && args.path
+        ? path.resolve(getCwd(), args.path)
+        : path.resolve(getCwd(), (await selectPathPrompt(args)).path);
     if (!checkAndConvertToJson(filePath)) {
       process.exit(EXIT_CODES.ERROR);
     }
@@ -73,14 +76,14 @@ exports.handler = async options => {
   } catch (e) {
     logger.error(
       i18n(`${i18nKey}.errors.create`, {
-        filePath,
+        filePath: filePath || '',
       })
     );
     logError(e);
   }
-};
+}
 
-exports.builder = yargs => {
+export function builder(yargs: Argv): Argv<HubdbCreateArgs> {
   addAccountOptions(yargs);
   addConfigOptions(yargs);
   addUseEnvironmentOptions(yargs);
@@ -89,4 +92,6 @@ exports.builder = yargs => {
     describe: i18n(`${i18nKey}.options.path.describe`),
     type: 'string',
   });
-};
+
+  return yargs as Argv<HubdbCreateArgs>;
+}
