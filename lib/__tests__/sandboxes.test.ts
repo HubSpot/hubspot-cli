@@ -52,10 +52,6 @@ describe('lib/sandboxes', () => {
       env: 'qa' as Environment,
     };
 
-    beforeEach(() => {
-      jest.resetAllMocks();
-    });
-
     it('returns true when sandbox of specified type exists', () => {
       mockedGetAccountId.mockReturnValue(mockParentAccount.portalId);
       mockedGetConfigAccounts.mockReturnValue([
@@ -99,10 +95,6 @@ describe('lib/sandboxes', () => {
       portalId: 456,
     };
 
-    beforeEach(() => {
-      jest.resetAllMocks();
-    });
-
     it('returns available sync types when fetch is successful', async () => {
       const mockSyncTypes = [{ name: 'type1' }, { name: 'type2' }];
       mockedGetAccountId
@@ -125,7 +117,7 @@ describe('lib/sandboxes', () => {
 
       await expect(
         getAvailableSyncTypes(mockParentAccount, mockChildAccount)
-      ).rejects.toThrow();
+      ).rejects.toThrow(/Unable to fetch available sandbox sync types/);
     });
   });
 
@@ -136,10 +128,6 @@ describe('lib/sandboxes', () => {
       authType: undefined,
       env: 'qa' as Environment,
     };
-
-    beforeEach(() => {
-      jest.resetAllMocks();
-    });
 
     it('validates successfully when limits are not reached', async () => {
       mockedGetAccountId.mockReturnValue(mockAccount.portalId);
@@ -173,7 +161,7 @@ describe('lib/sandboxes', () => {
           HUBSPOT_ACCOUNT_TYPES.DEVELOPMENT_SANDBOX,
           'qa'
         )
-      ).rejects.toThrow();
+      ).rejects.toThrow(/reached the limit of 1 development sandbox/);
     });
   });
 
@@ -181,10 +169,6 @@ describe('lib/sandboxes', () => {
     const mockEnv = 'qa' as Environment;
     const mockName = 'Test Sandbox';
     const mockAccountId = 123;
-
-    beforeEach(() => {
-      jest.resetAllMocks();
-    });
 
     it('handles missing scope error', () => {
       const error = new HubSpotHttpError('missing scopes error', {
@@ -202,7 +186,7 @@ describe('lib/sandboxes', () => {
 
       expect(() =>
         handleSandboxCreateError(error, mockEnv, mockName, mockAccountId)
-      ).toThrow();
+      ).toThrow(error);
       expect(mockedLogger.error).toHaveBeenCalledWith(
         expect.stringMatching(
           /The personal access key you provided doesn't include sandbox permissions/
@@ -229,7 +213,7 @@ describe('lib/sandboxes', () => {
 
       expect(() =>
         handleSandboxCreateError(error, mockEnv, mockName, mockAccountId)
-      ).toThrow();
+      ).toThrow(error);
       expect(mockedLogger.error).toHaveBeenCalledWith(
         expect.stringMatching(
           /your permission set doesn't allow you to create the sandbox/
@@ -254,7 +238,7 @@ describe('lib/sandboxes', () => {
 
       expect(() =>
         handleSandboxCreateError(error, mockEnv, mockName, mockAccountId)
-      ).toThrow();
+      ).toThrow(error);
       expect(mockedLogger.error).toHaveBeenCalledWith(
         expect.stringMatching(/does not have access to development sandboxes/)
       );
