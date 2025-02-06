@@ -60,10 +60,6 @@ describe('lib/projects/structure', () => {
   });
 
   describe('loadConfigFile()', () => {
-    afterEach(() => {
-      jest.resetAllMocks();
-    });
-
     it('returns parsed JSON when file exists', () => {
       const mockConfig = { name: 'test-app' };
       mockedReadFileSync.mockReturnValue(JSON.stringify(mockConfig));
