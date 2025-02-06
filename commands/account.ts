@@ -7,6 +7,7 @@ const use = require('./account/use');
 const info = require('./account/info');
 const remove = require('./account/remove');
 const clean = require('./account/clean');
+const createOverride = require('./account/createOverride');
 
 const i18nKey = 'commands.account';
 
@@ -23,6 +24,7 @@ exports.builder = yargs => {
     .command(info)
     .command(remove)
     .command(clean)
+    .command(createOverride)
     .demandCommand(1, '');
 
   return yargs;

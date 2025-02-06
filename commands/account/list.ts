@@ -4,6 +4,7 @@ const {
   getConfigPath,
   getConfigDefaultAccount,
   getConfigAccounts,
+  getDefaultAccountOverrideFilePath,
 } = require('@hubspot/local-dev-lib/config');
 const {
   getAccountIdentifier,
@@ -85,6 +86,7 @@ exports.handler = async options => {
   trackCommandUsage('accounts-list', null, derivedAccountId);
 
   const configPath = getConfigPath();
+  const overrideFilePath = getDefaultAccountOverrideFilePath();
   const accountsList = getConfigAccounts();
   const mappedPortalData = sortAndMapPortals(accountsList);
   const portalData = getPortalData(mappedPortalData);
@@ -97,6 +99,9 @@ exports.handler = async options => {
   );
 
   logger.log(i18n(`${i18nKey}.configPath`, { configPath }));
+  if (overrideFilePath) {
+    logger.log(i18n(`${i18nKey}.overrideFilePath`, { overrideFilePath }));
+  }
   logger.log(
     i18n(`${i18nKey}.defaultAccount`, {
       account: getConfigDefaultAccount(),
