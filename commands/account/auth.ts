@@ -20,12 +20,15 @@ import { Environment } from '@hubspot/local-dev-lib/types/Config';
 import { CLIAccount_NEW } from '@hubspot/local-dev-lib/types/Accounts';
 import { PERSONAL_ACCESS_KEY_AUTH_METHOD } from '@hubspot/local-dev-lib/constants/auth';
 
-import { addConfigOptions, addGlobalOptions } from '../../lib/commonOpts';
+import {
+  addConfigOptions,
+  addGlobalOptions,
+  addTestingOptions,
+} from '../../lib/commonOpts';
 import { handleExit } from '../../lib/process';
 import { debugError } from '../../lib/errorHandlers/index';
 import { i18n } from '../../lib/lang';
 import { trackCommandUsage, trackAuthAction } from '../../lib/usageTracking';
-import { addTestingOptions } from '../../lib/commonOpts';
 import { personalAccessKeyPrompt } from '../../lib/prompts/personalAccessKeyPrompt';
 import { cliAccountNamePrompt } from '../../lib/prompts/accountNamePrompt';
 import { setAsDefaultAccountPrompt } from '../../lib/prompts/setAsDefaultAccountPrompt';
