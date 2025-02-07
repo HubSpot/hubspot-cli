@@ -1,22 +1,28 @@
-// @ts-nocheck
-const { logger } = require('@hubspot/local-dev-lib/logger');
-const {
+import { Argv, ArgumentsCamelCase } from 'yargs';
+import { logger } from '@hubspot/local-dev-lib/logger';
+import {
   getConfigPath,
   updateDefaultAccount,
   getAccountId,
-} = require('@hubspot/local-dev-lib/config');
-
-const { trackCommandUsage } = require('../../lib/usageTracking');
-const { i18n } = require('../../lib/lang');
-const { selectAccountFromConfig } = require('../../lib/prompts/accountsPrompt');
+} from '@hubspot/local-dev-lib/config';
+import { trackCommandUsage } from '../../lib/usageTracking';
+import { i18n } from '../../lib/lang';
+import { selectAccountFromConfig } from '../../lib/prompts/accountsPrompt';
+import { CommonArgs } from '../../types/Yargs';
 
 const i18nKey = 'commands.account.subcommands.use';
 
-exports.command = 'use [account]';
-exports.describe = i18n(`${i18nKey}.describe`);
+export const command = 'use [account]';
+export const describe = i18n(`${i18nKey}.describe`);
 
-exports.handler = async options => {
-  let newDefaultAccount = options.account;
+interface AccountUseArgs extends CommonArgs {
+  account?: string;
+}
+
+export async function handler(
+  args: ArgumentsCamelCase<AccountUseArgs>
+): Promise<void> {
+  let newDefaultAccount = args.account;
 
   if (!newDefaultAccount) {
     newDefaultAccount = await selectAccountFromConfig();
@@ -24,13 +30,17 @@ exports.handler = async options => {
     logger.error(
       i18n(`${i18nKey}.errors.accountNotFound`, {
         specifiedAccount: newDefaultAccount,
-        configPath: getConfigPath(),
+        configPath: getConfigPath()!,
       })
     );
     newDefaultAccount = await selectAccountFromConfig();
   }
 
-  trackCommandUsage('accounts-use', null, getAccountId(newDefaultAccount));
+  trackCommandUsage(
+    'accounts-use',
+    undefined,
+    getAccountId(newDefaultAccount)!
+  );
 
   updateDefaultAccount(newDefaultAccount);
 
@@ -39,18 +49,19 @@ exports.handler = async options => {
       accountName: newDefaultAccount,
     })
   );
-};
+}
 
-exports.builder = yargs => {
+export function builder(yargs: Argv): Argv<AccountUseArgs> {
   yargs.positional('account', {
     describe: i18n(`${i18nKey}.options.account.describe`),
     type: 'string',
   });
+
   yargs.example([
     ['$0 accounts use', i18n(`${i18nKey}.examples.default`)],
     ['$0 accounts use MyAccount', i18n(`${i18nKey}.examples.nameBased`)],
     ['$0 accounts use 1234567', i18n(`${i18nKey}.examples.idBased`)],
   ]);
 
-  return yargs;
-};
+  return yargs as Argv<AccountUseArgs>;
+}

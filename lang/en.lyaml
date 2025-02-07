@@ -101,7 +101,7 @@ en:
             other: "Remove {{ count }} inactive accounts from the CLI config?"
           removeSuccess: "Removed {{ accountName }} from the CLI config."
     auth:
-      describe: "Configure authentication for a HubSpot account. Supported authentication protocols are {{ supportedProtocols }}."
+      describe: "Configure authentication for your HubSpot account. This will update the {{ configName }} file that stores your account information."
       errors:
         noConfigFileFound: "No config file was found. To create a new config file, use the \"hs init\" command."
         unsupportedAuthType: "Unsupported auth type: {{ type }}. The only supported authentication protocols are {{ supportedProtocols }}."
@@ -166,7 +166,7 @@ en:
             target:
               describe: "Medium to test against"
             verbose:
-              describe: "View a detailed output of the lighthouse sores"
+              describe: "View a detailed output of the lighthouse scores"
         getReactModule:
           describe: "Get a specified default React module."
           selectModulePrompt: "Select a React module to download"
@@ -198,11 +198,11 @@ en:
           folderOverwritePrompt: "The folder with name \"{{ folderName }}\" already exists. Overwrite?"
           errors:
             nameRequired: "The \"name\" argument is required when creating an API Sample."
-            noSamples: "Currently there are no samples available, please, try again later."
+            noSamples: "Currently there are no samples available. Please try again later."
           info:
             sampleChosen: "You've chosen {{ sampleType }} sample written on {{ sampleLanguage }} language"
           success:
-            sampleCreated: "Please, follow {{ filePath }}/README.md to find out how to run the sample"
+            sampleCreated: "Please follow {{ filePath }}/README.md to find out how to run the sample"
         module:
           errors:
             nameRequired: "The \"name\" argument is required when creating a Custom Module."
@@ -453,7 +453,7 @@ en:
           success:
             fetch: "Downloaded HubDB table {{ tableId }} to {{ path }}"
     init:
-      describe: "Initialize {{ configName }} for a HubSpot account."
+      describe: "Configure authentication for your HubSpot account. This will create a {{ configName }} file to store your account information."
       options:
         authType:
           describe: "Authentication mechanism"
@@ -1272,7 +1272,7 @@ en:
         selectScopes: "Select access scopes (see https://developers.hubspot.com/docs/methods/oauth2/initiate-oauth-integration#scopes)"
         personalAccessKeySetupTitle: "HubSpot Personal Access Key Setup"
         personalAccessKeyBrowserOpenPrep: "A personal access key is required to authenticate the CLI to interact with your HubSpot account. We'll open a secure page in your default browser where you can view and copy your personal access key."
-        personalAccessKeyBrowserOpenPrompt: "Open hubspot.com to copy your personal access key?"
+        personalAccessKeyBrowserOpenPrompt: "Open HubSpot to copy your personal access key?"
         logs:
           openingWebBrowser: "Opening {{ url }} in your web browser"
         errors:
@@ -1306,8 +1306,8 @@ en:
           blank: "The name may not be blank. Please try again."
           space: "The name may not contain spaces. Please try again."
       createApiSamplePrompt:
-        selectApiSampleApp: "Please, select API sample app"
-        selectLanguage: "Please, select sample app's language"
+        selectApiSampleApp: "Please select API sample app"
+        selectLanguage: "Please select sample app's language"
         errors:
           apiSampleAppRequired: "Please select API sample app"
           languageRequired: "Please select API sample app's language"
@@ -1382,8 +1382,8 @@ en:
       installPublicAppPrompt:
         explanation: "Local development requires this app to be installed in the target test account"
         reinstallExplanation: "This app's required scopes have been updated since it was last installed on the target test account. To avoid issues with local development, we recommend reinstalling the app with the updated scopes."
-        prompt: "Open hubspot.com to install this app?"
-        reinstallPrompt: "Open hubspot.com to reinstall this app?"
+        prompt: "Open HubSpot to install this app?"
+        reinstallPrompt: "Open HubSpot to reinstall this app?"
         decline: "To continue local development of this app, install it in your target test account and re-run {{#bold}}`hs project dev`{{/bold}}"
       selectHubDBTablePrompt:
         selectTable: "Select a HubDB table:"
@@ -1527,6 +1527,8 @@ en:
         inactiveSecondary: "Run {{ command }} to remove inactive accounts from your CLI config"
         unableToDetermine: "Unable to determine if the portal is active"
         pak:
+          incomplete: "Personal access key is valid, but there are more scopes available to your user that are not included in your key."
+          incompleteSecondary: "To add the available scopes, run {{ command }} and re-authenticate your account with a new key that has those scopes. Visit HubSpot to view selected and available scopes for your personal access key. {{ link }}"
           invalid: "Personal access key is invalid"
           invalidSecondary: "To get a new key, run {{ command }}, deactivate your access key, and generate a new one. Then use that new key to authenticate your account."
           valid: "Personal Access Key is valid. {{ link }}"

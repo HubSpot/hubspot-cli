@@ -312,14 +312,6 @@ export async function ensureProjectExists(
         return { projectExists: false };
       }
     }
-    if (
-      isSpecifiedError(err, {
-        statusCode: 401,
-      })
-    ) {
-      logger.error(err.message);
-      process.exit(EXIT_CODES.ERROR);
-    }
     logError(err, new ApiErrorContext({ accountId }));
     process.exit(EXIT_CODES.ERROR);
   }

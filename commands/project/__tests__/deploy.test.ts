@@ -280,7 +280,8 @@ describe('commands/project/deploy', () => {
       expect(deployProject).toHaveBeenCalledWith(
         options.derivedAccountId,
         options.project,
-        options.buildId
+        options.buildId,
+        undefined
       );
     });
 

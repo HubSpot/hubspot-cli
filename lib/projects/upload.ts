@@ -11,6 +11,9 @@ import { uiAccountDescription } from '../ui';
 import { i18n } from '../lang';
 import { EXIT_CODES } from '../enums/exitCodes';
 import { ProjectConfig } from '../../types/Projects';
+import { isTranslationError, translate } from '@hubspot/project-parsing-lib';
+import { logError } from '../errorHandlers';
+import util from 'node:util';
 
 const i18nKey = 'lib.projectUpload';
 
@@ -19,7 +22,8 @@ async function uploadProjectFiles(
   projectName: string,
   filePath: string,
   uploadMessage: string,
-  platformVersion: string
+  platformVersion: string,
+  intermediateRepresentation?: unknown
 ): Promise<{ buildId?: number; error: unknown }> {
   SpinniesManager.init({});
   const accountIdentifier = uiAccountDescription(accountId);
@@ -41,7 +45,8 @@ async function uploadProjectFiles(
       projectName,
       filePath,
       uploadMessage,
-      platformVersion
+      platformVersion,
+      intermediateRepresentation
     );
 
     buildId = upload.buildId;
@@ -92,7 +97,8 @@ export async function handleProjectUpload<T>(
   projectConfig: ProjectConfig,
   projectDir: string,
   callbackFunc: ProjectUploadCallbackFunction<T>,
-  uploadMessage: string
+  uploadMessage: string,
+  sendIR: boolean = false
 ): Promise<ProjectUploadResult<T>> {
   const srcDir = path.resolve(projectDir, projectConfig.srcDir);
 
@@ -125,12 +131,36 @@ export async function handleProjectUpload<T>(
         })
       );
 
+      let intermediateRepresentation;
+
+      if (sendIR) {
+        try {
+          intermediateRepresentation = await translate({
+            projectSourceDir: path.join(projectDir, projectConfig.srcDir),
+            platformVersion: projectConfig.platformVersion,
+            accountId,
+          });
+
+          logger.debug(
+            util.inspect(intermediateRepresentation, false, null, true)
+          );
+        } catch (e) {
+          if (isTranslationError(e)) {
+            logger.error(e.toString());
+          } else {
+            logError(e);
+          }
+          return process.exit(EXIT_CODES.ERROR);
+        }
+      }
+
       const { buildId, error } = await uploadProjectFiles(
         accountId,
         projectConfig.name,
         tempFile.name,
         uploadMessage,
-        projectConfig.platformVersion
+        projectConfig.platformVersion,
+        intermediateRepresentation
       );
 
       if (error) {
