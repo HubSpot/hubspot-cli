@@ -1,19 +1,19 @@
-// @ts-nocheck
-const { addGlobalOptions } = require('../lib/commonOpts');
-const { i18n } = require('../lib/lang');
-const list = require('./account/list');
-const rename = require('./account/rename');
-const use = require('./account/use');
-const info = require('./account/info');
-const remove = require('./account/remove');
-const clean = require('./account/clean');
+import { Argv } from 'yargs';
+import { addGlobalOptions } from '../lib/commonOpts';
+import { i18n } from '../lib/lang';
+import * as list from './account/list';
+import * as rename from './account/rename';
+import * as use from './account/use';
+import * as info from './account/info';
+import * as remove from './account/remove';
+import * as clean from './account/clean';
 
 const i18nKey = 'commands.account';
 
-exports.command = ['account', 'accounts'];
-exports.describe = i18n(`${i18nKey}.describe`);
+export const command = ['account', 'accounts'];
+export const describe = i18n(`${i18nKey}.describe`);
 
-exports.builder = yargs => {
+export function builder(yargs: Argv): Argv {
   addGlobalOptions(yargs);
 
   yargs
@@ -26,4 +26,4 @@ exports.builder = yargs => {
     .demandCommand(1, '');
 
   return yargs;
-};
+}
