@@ -5,10 +5,12 @@ import { addConfigOptions, addAccountOptions } from '../../lib/commonOpts';
 import { trackCommandUsage } from '../../lib/usageTracking';
 import { i18n } from '../../lib/lang';
 import { CommonArgs, ConfigArgs } from '../../types/Yargs';
+import { logError } from '../../lib/errorHandlers';
+import { EXIT_CODES } from '../../lib/enums/exitCodes';
 
 const i18nKey = 'commands.account.subcommands.rename';
 
-export const command = 'rename <accountName> <newName>';
+export const command = 'rename <account-name> <new-name>';
 export const describe = i18n(`${i18nKey}.describe`);
 
 type AccountRenameArgs = CommonArgs &
@@ -24,30 +26,38 @@ export async function handler(
 
   trackCommandUsage('accounts-rename', undefined, derivedAccountId);
 
-  await renameAccount(accountName, newName);
+  try {
+    await renameAccount(accountName, newName);
+  } catch (error) {
+    logError(error);
+    process.exit(EXIT_CODES.ERROR);
+  }
 
-  return logger.log(
+  logger.log(
     i18n(`${i18nKey}.success.renamed`, {
       name: accountName,
       newName,
     })
   );
+  process.exit(EXIT_CODES.SUCCESS);
 }
 
 export function builder(yargs: Argv): Argv<AccountRenameArgs> {
   addConfigOptions(yargs);
   addAccountOptions(yargs);
 
-  yargs.positional('accountName', {
+  yargs.positional('account-name', {
     describe: i18n(`${i18nKey}.positionals.accountName.describe`),
     type: 'string',
   });
-  yargs.positional('newName', {
+  yargs.positional('new-name', {
     describe: i18n(`${i18nKey}.positionals.newName.describe`),
     type: 'string',
   });
 
-  yargs.example([['$0 accounts rename myExistingPortalName myNewPortalName']]);
+  yargs.example([
+    ['$0 accounts rename myExistingAccountName myNewAccountName'],
+  ]);
 
   return yargs as Argv<AccountRenameArgs>;
 }
