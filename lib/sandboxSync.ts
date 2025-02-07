@@ -39,8 +39,12 @@ export async function syncSandbox(
   if (!accountId || !parentAccountId) {
     throw new Error(
       i18n(`${i18nKey}.failure.invalidUser`, {
-        accountName: uiAccountDescription(accountId),
-        parentAccountName: uiAccountDescription(parentAccountId),
+        accountName: accountId
+          ? uiAccountDescription(accountId)
+          : id!.toString(),
+        parentAccountName: parentAccountId
+          ? uiAccountDescription(parentAccountId)
+          : parentId!.toString(),
       })
     );
   }
