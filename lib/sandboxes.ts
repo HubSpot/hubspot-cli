@@ -42,7 +42,7 @@ export function getSandboxTypeAsString(accountType?: AccountType): string {
   return 'standard';
 }
 
-function getHasSandboxesByType(
+export function getHasSandboxesByType(
   parentAccountConfig: CLIAccount,
   type: AccountType
 ): boolean {
