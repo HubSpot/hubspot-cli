@@ -18,8 +18,8 @@ import { CommonArgs, ConfigArgs } from '../../types/Yargs';
 
 const i18nKey = 'commands.hubdb.subcommands.create';
 
-exports.command = 'create';
-exports.describe = i18n(`${i18nKey}.describe`);
+export const command = 'create';
+export const describe = i18n(`${i18nKey}.describe`);
 
 type HubdbCreateArgs = CommonArgs & ConfigArgs & { path: string };
 
