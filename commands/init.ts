@@ -233,6 +233,7 @@ exports.builder = yargs => {
       },
       'use-hidden-config': {
         describe: i18n(`${i18nKey}.options.useHiddenConfig.describe`),
+        hidden: true,
         type: 'boolean',
       },
     })
