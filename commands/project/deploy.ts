@@ -1,4 +1,6 @@
 // @ts-nocheck
+const { useV3Api } = require('../../lib/projects/buildAndDeploy');
+
 const chalk = require('chalk');
 const {
   addAccountOptions,
@@ -134,7 +136,8 @@ exports.handler = async options => {
     const { data: deployResp } = await deployProject(
       derivedAccountId,
       projectName,
-      buildIdToDeploy
+      buildIdToDeploy,
+      useV3Api(projectConfig?.platformVersion)
     );
 
     if (!deployResp || deployResp.error) {

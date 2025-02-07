@@ -1,4 +1,6 @@
 // @ts-nocheck
+const { useV3Api } = require('../../lib/projects/buildAndDeploy');
+
 const {
   addAccountOptions,
   addConfigOptions,
@@ -36,9 +38,9 @@ exports.handler = async options => {
   const accountConfig = getAccountConfig(derivedAccountId);
   const accountType = accountConfig && accountConfig.accountType;
 
-  trackCommandUsage('project-upload', { type: accountType }, derivedAccountId);
-
   const { projectConfig, projectDir } = await getProjectConfig();
+
+  trackCommandUsage('project-upload', { type: accountType }, derivedAccountId);
 
   validateProjectConfig(projectConfig, projectDir);
 
@@ -53,7 +55,8 @@ exports.handler = async options => {
       projectConfig,
       projectDir,
       pollProjectBuildAndDeploy,
-      message
+      message,
+      useV3Api(projectConfig?.platformVersion)
     );
 
     if (uploadError) {

@@ -83,6 +83,7 @@ describe('commands/project', () => {
 
     it.each(subcommands)('should attach the %s subcommand', (name, module) => {
       projectCommand.builder(yargs);
+      expect(module).toBeDefined();
       expect(yargs.command).toHaveBeenCalledWith(module);
     });
   });
