@@ -9,7 +9,11 @@ const {
   loadConfig,
   configFileExists,
 } = require('@hubspot/local-dev-lib/config');
-const { addConfigOptions, addGlobalOptions } = require('../lib/commonOpts');
+const {
+  addConfigOptions,
+  addGlobalOptions,
+  addCustomHelpOutput,
+} = require('../lib/commonOpts');
 const { handleExit } = require('../lib/process');
 const {
   checkAndAddConfigToGitignore,
@@ -43,7 +47,7 @@ const {
 const { cliAccountNamePrompt } = require('../lib/prompts/accountNamePrompt');
 const { authenticateWithOauth } = require('../lib/oauth');
 const { EXIT_CODES } = require('../lib/enums/exitCodes');
-const { uiFeatureHighlight } = require('../lib/ui');
+const { uiFeatureHighlight, uiCommandReference } = require('../lib/ui');
 
 const i18nKey = 'commands.init';
 
@@ -203,7 +207,7 @@ exports.handler = async options => {
   }
 };
 
-exports.builder = yargs => {
+exports.builder = async yargs => {
   yargs
     .options({
       'auth-type': {
@@ -214,12 +218,6 @@ exports.builder = yargs => {
           `${OAUTH_AUTH_METHOD.value}`,
         ],
         default: PERSONAL_ACCESS_KEY_AUTH_METHOD.value,
-        defaultDescription: i18n(
-          `${i18nKey}.options.authType.defaultDescription`,
-          {
-            defaultType: PERSONAL_ACCESS_KEY_AUTH_METHOD.value,
-          }
-        ),
       },
       account: {
         describe: i18n(`${i18nKey}.options.account.describe`),
@@ -242,5 +240,14 @@ exports.builder = yargs => {
   addTestingOptions(yargs);
   addGlobalOptions(yargs);
 
+  // Must go last to pick up available options
+  await addCustomHelpOutput(
+    yargs,
+    i18n(`${i18nKey}.verboseDescribe`, {
+      command: uiCommandReference('hs auth'),
+      configName: DEFAULT_HUBSPOT_CONFIG_YAML_FILE_NAME,
+      authMethod: PERSONAL_ACCESS_KEY_AUTH_METHOD.value,
+    })
+  );
   return yargs;
 };

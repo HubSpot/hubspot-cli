@@ -19,6 +19,7 @@ import { i18n } from './lang';
 import { ConfigArgs, StringArgType } from '../types/Yargs';
 import { debugError } from './errorHandlers';
 import { EXIT_CODES } from './enums/exitCodes';
+import { uiCommandReference } from './ui';
 
 const i18nKey = 'lib.commonOpts';
 
@@ -94,9 +95,9 @@ export function addUseEnvironmentOptions(yargs: Argv): Argv {
     .conflicts('use-env', 'account');
 }
 
-export async function addVerboseDescribe(
+export async function addCustomHelpOutput(
   yargs: Argv,
-  verboseDescribe: string
+  describe: string
 ): Promise<void> {
   try {
     const parsedArgv = yargsParser(process.argv.slice(2));
@@ -104,7 +105,11 @@ export async function addVerboseDescribe(
     if (parsedArgv && parsedArgv.help) {
       const originalHelpOutput = await yargs.getHelp();
       const commandName = `hs ${parsedArgv._.join(' ')}`;
-      const newHelpOutput = `${chalk.bold(commandName)}\n\n${verboseDescribe}\n\n${originalHelpOutput}`;
+      const prettyOriginalHelpOutput = originalHelpOutput.replace(
+        'Options:',
+        chalk.bold('Options:')
+      );
+      const newHelpOutput = `${uiCommandReference(commandName, false)}\n\n${describe}\n\n${prettyOriginalHelpOutput}`;
 
       logger.log(newHelpOutput);
       process.exit(EXIT_CODES.SUCCESS);

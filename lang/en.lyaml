@@ -91,15 +91,14 @@ en:
             other: "Remove {{ count }} inactive accounts from the CLI config?"
           removeSuccess: "Removed {{ accountName }} from the CLI config."
     auth:
-      describe: "Configure authentication for a HubSpot account."
-      verboseDescribe: "Configure authentication for a HubSpot account. This will update the {{ configName }} file that stores your account information."
+      describe: "Configure authentication for your HubSpot account."
+      verboseDescribe: "Configure authentication for a HubSpot account. This will update the {{ configName }} file that stores your account information.\n\nThe recommended authentication method is {{#bold}}{{ authMethod }}{{/bold}}, which uses an access token tied to a specific user account."
       errors:
         noConfigFileFound: "No config file was found. To create a new config file, use the \"hs init\" command."
         unsupportedAuthType: "Unsupported auth type: {{ type }}. The only supported authentication protocols are {{ supportedProtocols }}."
       options:
         authType:
-          describe: "Authentication mechanism"
-          defaultDescription: "\"{{ authMethod }}\": An access token tied to a specific user account. This is the recommended way of authenticating with local development tools."
+          describe: "Authentication method"
         account:
           describe: "HubSpot account to authenticate"
       success:
@@ -444,11 +443,11 @@ en:
           success:
             fetch: "Downloaded HubDB table {{ tableId }} to {{ path }}"
     init:
-      describe: "Configure authentication for your HubSpot account. This will create a {{ configName }} file to store your account information."
+      describe: "Create a CLI config file and configure authentication for your HubSpot account."
+      verboseDescribe: "Configure authentication for a HubSpot account. This will create a {{ configName }} file to store your account information. To configure authentication for additional accounts, run {{ command }}.\n\nThe recommended authentication method is {{#bold}}{{ authMethod }}{{/bold}}, which uses an access token tied to a specific user account."
       options:
         authType:
-          describe: "Authentication mechanism"
-          defaultDescription: "\"{{ authMethod }}\":  An access token tied to a specific user account. This is the recommended way of authenticating with local development tools."
+          describe: "Authentication method"
         account:
           describe: "HubSpot account to authenticate"
         useHiddenConfig:
