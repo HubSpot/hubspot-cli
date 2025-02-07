@@ -19,7 +19,7 @@ en:
       describe: "Commands for managing configured accounts."
       subcommands:
         auth:
-          describe: "Configure authentication for a HubSpot account."
+          describe: "Configure authentication for your HubSpot account."
           options:
             account:
               describe: "HubSpot account to authenticate"
