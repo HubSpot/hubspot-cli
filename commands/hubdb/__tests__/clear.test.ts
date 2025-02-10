@@ -16,7 +16,7 @@ describe('commands/account/clean', () => {
 
   describe('command', () => {
     it('should have the correct command structure', () => {
-      expect(hubdbClearCommand.command).toEqual('clear');
+      expect(hubdbClearCommand.command).toEqual('clear [table-id]');
     });
   });
 

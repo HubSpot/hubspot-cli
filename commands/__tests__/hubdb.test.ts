@@ -24,7 +24,7 @@ import * as hubdbCommands from '../hubdb';
 describe('commands/hubdb', () => {
   describe('command', () => {
     it('should have the correct command structure', () => {
-      expect(hubdbCommands.command).toEqual(['hubdb']);
+      expect(hubdbCommands.command).toEqual('hubdb');
     });
   });
 
