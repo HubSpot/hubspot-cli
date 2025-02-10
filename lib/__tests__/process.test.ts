@@ -1,6 +1,6 @@
 import readline from 'readline';
 import { logger, setLogLevel, LOG_LEVEL } from '@hubspot/local-dev-lib/logger';
-import { handleExit, handleKeypress } from '../process';
+import { handleExit, handleKeypress, TERMINATION_SIGNALS } from '../process';
 
 jest.mock('readline');
 jest.mock('@hubspot/local-dev-lib/logger');
@@ -14,20 +14,11 @@ const processOnSpy = jest.spyOn(process, 'on');
 describe('lib/process', () => {
   describe('handleExit()', () => {
     const mockCallback = jest.fn();
-    const terminationSignals = [
-      'beforeExit',
-      'SIGINT',
-      'SIGUSR1',
-      'SIGUSR2',
-      'uncaughtException',
-      'SIGTERM',
-      'SIGHUP',
-    ];
 
     it('should set up listeners for all termination signals', () => {
       handleExit(mockCallback);
 
-      terminationSignals.forEach(signal => {
+      TERMINATION_SIGNALS.forEach(signal => {
         expect(processRemoveListenerSpy).toHaveBeenCalledWith(signal);
         expect(processOnSpy).toHaveBeenCalledWith(signal, expect.any(Function));
       });
@@ -41,11 +32,9 @@ describe('lib/process', () => {
         call => call[0] === 'SIGHUP'
       )?.[1];
 
-      if (!sighupCallback) {
-        throw new Error('SIGHUP callback not found');
-      }
+      expect(sighupCallback).toBeDefined();
 
-      sighupCallback();
+      sighupCallback!();
 
       expect(mockedSetLogLevel).toHaveBeenCalledWith(LOG_LEVEL.NONE);
       expect(mockCallback).toHaveBeenCalledWith({ isSIGHUP: true });
@@ -62,11 +51,9 @@ describe('lib/process', () => {
         call => call[0] === 'SIGINT'
       )?.[1];
 
-      if (!sigintCallback) {
-        throw new Error('SIGINT callback not found');
-      }
+      expect(sigintCallback).toBeDefined();
 
-      sigintCallback();
+      sigintCallback!();
 
       expect(mockedSetLogLevel).not.toHaveBeenCalled();
       expect(mockCallback).toHaveBeenCalledWith({ isSIGHUP: false });
@@ -83,12 +70,10 @@ describe('lib/process', () => {
         call => call[0] === 'SIGINT'
       )?.[1];
 
-      if (!sigintCallback) {
-        throw new Error('SIGINT callback not found');
-      }
+      expect(sigintCallback).toBeDefined();
 
-      sigintCallback();
-      sigintCallback(); // Second call should be ignored
+      sigintCallback!();
+      sigintCallback!(); // Second call should be ignored
 
       expect(mockCallback).toHaveBeenCalledTimes(1);
     });
