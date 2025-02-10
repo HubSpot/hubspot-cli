@@ -10,15 +10,21 @@ import {
   addUseEnvironmentOptions,
 } from '../../lib/commonOpts';
 import { i18n } from '../../lib/lang';
-import { CommonArgs, ConfigArgs } from '../../types/Yargs';
+import {
+  CommonArgs,
+  ConfigArgs,
+  AccountArgs,
+  EnvironmentArgs,
+} from '../../types/Yargs';
 
 const i18nKey = 'commands.hubdb.subcommands.fetch';
 
 export const command = 'fetch [table-id] [dest]';
 export const describe = i18n(`${i18nKey}.describe`);
 
+type CombinedArgs = ConfigArgs & AccountArgs & EnvironmentArgs;
 type HubdbFetchArgs = CommonArgs &
-  ConfigArgs & { tableId?: number; dest?: string };
+  CombinedArgs & { tableId?: number; dest?: string };
 
 export async function handler(
   args: ArgumentsCamelCase<HubdbFetchArgs>

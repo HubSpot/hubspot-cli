@@ -12,15 +12,21 @@ import { selectHubDBTablePrompt } from '../../lib/prompts/selectHubDBTablePrompt
 import { promptUser } from '../../lib/prompts/promptUtils';
 import { EXIT_CODES } from '../../lib/enums/exitCodes';
 import { i18n } from '../../lib/lang';
-import { CommonArgs, ConfigArgs } from '../../types/Yargs';
+import {
+  CommonArgs,
+  ConfigArgs,
+  AccountArgs,
+  EnvironmentArgs,
+} from '../../types/Yargs';
 
 const i18nKey = 'commands.hubdb.subcommands.delete';
 
 export const command = 'delete [table-id]';
 export const describe = i18n(`${i18nKey}.describe`);
 
+type CombinedArgs = ConfigArgs & AccountArgs & EnvironmentArgs;
 type HubdbDeleteArgs = CommonArgs &
-  ConfigArgs & { tableId?: number; dest?: string };
+  CombinedArgs & { tableId?: number; dest?: string };
 
 export async function handler(
   args: ArgumentsCamelCase<HubdbDeleteArgs>

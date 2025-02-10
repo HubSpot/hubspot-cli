@@ -14,14 +14,20 @@ import {
 } from '../../lib/commonOpts';
 import { i18n } from '../../lib/lang';
 import { EXIT_CODES } from '../../lib/enums/exitCodes';
-import { CommonArgs, ConfigArgs } from '../../types/Yargs';
+import {
+  CommonArgs,
+  ConfigArgs,
+  AccountArgs,
+  EnvironmentArgs,
+} from '../../types/Yargs';
 
 const i18nKey = 'commands.hubdb.subcommands.create';
 
 export const command = 'create';
 export const describe = i18n(`${i18nKey}.describe`);
 
-type HubdbCreateArgs = CommonArgs & ConfigArgs & { path: string };
+type CombinedArgs = ConfigArgs & AccountArgs & EnvironmentArgs;
+type HubdbCreateArgs = CommonArgs & CombinedArgs & { path: string };
 
 function selectPathPrompt(options: HubdbCreateArgs): Promise<{ path: string }> {
   return promptUser([
