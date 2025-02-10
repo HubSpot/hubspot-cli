@@ -13,7 +13,7 @@ describe('commands/account/rename', () => {
   describe('command', () => {
     it('should have the correct command structure', () => {
       expect(accountRenameCommand.command).toEqual(
-        'rename <accountName> <newName>'
+        'rename <account-name> <new-name>'
       );
     });
   });
@@ -30,11 +30,11 @@ describe('commands/account/rename', () => {
 
       expect(yargsMock.example).toHaveBeenCalledTimes(1);
       expect(yargsMock.positional).toHaveBeenCalledTimes(2);
-      expect(yargsMock.positional).toHaveBeenCalledWith('accountName', {
+      expect(yargsMock.positional).toHaveBeenCalledWith('account-name', {
         describe: expect.any(String),
         type: 'string',
       });
-      expect(yargsMock.positional).toHaveBeenCalledWith('newName', {
+      expect(yargsMock.positional).toHaveBeenCalledWith('new-name', {
         describe: expect.any(String),
         type: 'string',
       });
