@@ -9,6 +9,7 @@ import {
   deleteEmptyConfigFile,
   getConfigDefaultAccount,
 } from '@hubspot/local-dev-lib/config';
+import { getAccountIdentifier } from '@hubspot/local-dev-lib/config/getAccountIdentifier';
 import { logger } from '@hubspot/local-dev-lib/logger';
 import {
   getAccessToken,
@@ -17,7 +18,7 @@ import {
 import { ENVIRONMENTS } from '@hubspot/local-dev-lib/constants/environments';
 import { toKebabCase } from '@hubspot/local-dev-lib/text';
 import { Environment } from '@hubspot/local-dev-lib/types/Config';
-import { CLIAccount_NEW } from '@hubspot/local-dev-lib/types/Accounts';
+import { CLIAccount } from '@hubspot/local-dev-lib/types/Accounts';
 import { PERSONAL_ACCESS_KEY_AUTH_METHOD } from '@hubspot/local-dev-lib/constants/auth';
 
 import {
@@ -50,7 +51,7 @@ async function createOrUpdateConfig(
   disableTracking: boolean | undefined,
   authType: string,
   account?: number
-): Promise<CLIAccount_NEW | null> {
+): Promise<CLIAccount | null> {
   try {
     const { personalAccessKey } = await personalAccessKeyPrompt({
       env,
@@ -81,7 +82,7 @@ async function createOrUpdateConfig(
       writeConfig();
     }
 
-    return updatedConfig as CLIAccount_NEW;
+    return updatedConfig;
   } catch (e) {
     if (!disableTracking) {
       await trackAuthAction('account-auth', authType, TRACKING_STATUS.ERROR);
@@ -102,8 +103,13 @@ type AccountAuthArgs = CommonArgs &
 export async function handler(
   args: ArgumentsCamelCase<AccountAuthArgs>
 ): Promise<void> {
-  const { providedAccountId, disableTracking } = args;
+  const { providedAccountId, disableTracking, config } = args;
   const authType = PERSONAL_ACCESS_KEY_AUTH_METHOD.value;
+
+  if (config) {
+    logger.error(i18n(`${i18nKey}.errors.noSpecifiedPathWithHiddenConfig`));
+    process.exit(EXIT_CODES.ERROR);
+  }
 
   if (!disableTracking) {
     trackCommandUsage('account-auth', {}, providedAccountId);
@@ -136,7 +142,8 @@ export async function handler(
     process.exit(EXIT_CODES.ERROR);
   }
 
-  const { name, accountId } = updatedConfig;
+  const { name } = updatedConfig;
+  const accountId = getAccountIdentifier(updatedConfig);
 
   // If the config file was just created, we don't need to prompt the user to set as default
   if (!configExists) {
@@ -148,7 +155,7 @@ export async function handler(
     );
     logger.success(
       i18n(`${i18nKey}.success.configFileUpdated`, {
-        account: name || accountId,
+        account: name || accountId || '',
       })
     );
   } else {
