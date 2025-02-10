@@ -1,35 +1,42 @@
-// @ts-nocheck
+import { Argv, ArgumentsCamelCase } from 'yargs';
+import { logger } from '@hubspot/local-dev-lib/logger';
+import { deleteSecret, fetchSecrets } from '@hubspot/local-dev-lib/api/secrets';
+
 import { secretListPrompt } from '../../lib/prompts/secretPrompt';
 import { confirmPrompt } from '../../lib/prompts/promptUtils';
 import { EXIT_CODES } from '../../lib/enums/exitCodes';
-
-const { logger } = require('@hubspot/local-dev-lib/logger');
-const { ApiErrorContext, logError } = require('../../lib/errorHandlers/index');
-const {
-  deleteSecret,
-  fetchSecrets,
-} = require('@hubspot/local-dev-lib/api/secrets');
-
-const { trackCommandUsage } = require('../../lib/usageTracking');
-const { uiAccountDescription } = require('../../lib/ui');
-
-const {
+import { ApiErrorContext, logError } from '../../lib/errorHandlers/index';
+import { trackCommandUsage } from '../../lib/usageTracking';
+import { uiAccountDescription } from '../../lib/ui';
+import {
   addConfigOptions,
   addAccountOptions,
   addUseEnvironmentOptions,
-} = require('../../lib/commonOpts');
-const { i18n } = require('../../lib/lang');
+} from '../../lib/commonOpts';
+import { i18n } from '../../lib/lang';
+import {
+  CommonArgs,
+  ConfigArgs,
+  AccountArgs,
+  EnvironmentArgs,
+} from '../../types/Yargs';
 
 const i18nKey = 'commands.secret.subcommands.delete';
 
-exports.command = 'delete [name]';
-exports.describe = i18n(`${i18nKey}.describe`);
+export const command = 'delete [name]';
+export const describe = i18n(`${i18nKey}.describe`);
 
-exports.handler = async options => {
-  const { name, derivedAccountId, force } = options;
+type CombinedArgs = ConfigArgs & AccountArgs & EnvironmentArgs;
+type DeleteSecretArgs = CommonArgs &
+  CombinedArgs & { name?: string; force?: boolean };
+
+export async function handler(
+  args: ArgumentsCamelCase<DeleteSecretArgs>
+): Promise<void> {
+  const { name, derivedAccountId, force } = args;
   let secretName = name;
 
-  trackCommandUsage('secrets-delete', null, derivedAccountId);
+  trackCommandUsage('secrets-delete', {}, derivedAccountId);
 
   try {
     const {
@@ -83,12 +90,13 @@ exports.handler = async options => {
       })
     );
   }
-};
+}
 
-exports.builder = yargs => {
+export function builder(yargs: Argv): Argv<DeleteSecretArgs> {
   addConfigOptions(yargs);
   addAccountOptions(yargs);
   addUseEnvironmentOptions(yargs);
+
   yargs
     .positional('name', {
       describe: i18n(`${i18nKey}.positionals.name.describe`),
@@ -98,5 +106,6 @@ exports.builder = yargs => {
       describe: 'Force the deletion',
       type: 'boolean',
     });
-  return yargs;
-};
+
+  return yargs as Argv<DeleteSecretArgs>;
+}

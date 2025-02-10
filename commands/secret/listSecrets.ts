@@ -1,26 +1,36 @@
-// @ts-nocheck
-const { logger } = require('@hubspot/local-dev-lib/logger');
-const { logError, ApiErrorContext } = require('../../lib/errorHandlers/index');
-const { fetchSecrets } = require('@hubspot/local-dev-lib/api/secrets');
+import { Argv, ArgumentsCamelCase } from 'yargs';
+import { logger } from '@hubspot/local-dev-lib/logger';
+import { fetchSecrets } from '@hubspot/local-dev-lib/api/secrets';
 
-const { trackCommandUsage } = require('../../lib/usageTracking');
-const { uiAccountDescription } = require('../../lib/ui');
-
-const {
+import { logError, ApiErrorContext } from '../../lib/errorHandlers/index';
+import { trackCommandUsage } from '../../lib/usageTracking';
+import { uiAccountDescription } from '../../lib/ui';
+import {
   addConfigOptions,
   addAccountOptions,
   addUseEnvironmentOptions,
-} = require('../../lib/commonOpts');
-const { i18n } = require('../../lib/lang');
+} from '../../lib/commonOpts';
+import { i18n } from '../../lib/lang';
+import {
+  CommonArgs,
+  ConfigArgs,
+  AccountArgs,
+  EnvironmentArgs,
+} from '../../types/Yargs';
 
 const i18nKey = 'commands.secret.subcommands.list';
 
-exports.command = 'list';
-exports.describe = i18n(`${i18nKey}.describe`);
+export const command = 'list';
+export const describe = i18n(`${i18nKey}.describe`);
 
-exports.handler = async options => {
-  const { derivedAccountId } = options;
-  trackCommandUsage('secrets-list', null, derivedAccountId);
+type CombinedArgs = ConfigArgs & AccountArgs & EnvironmentArgs;
+type ListSecretArgs = CommonArgs & CombinedArgs;
+
+export async function handler(
+  args: ArgumentsCamelCase<ListSecretArgs>
+): Promise<void> {
+  const { derivedAccountId } = args;
+  trackCommandUsage('secrets-list', {}, derivedAccountId);
 
   try {
     const {
@@ -31,7 +41,7 @@ exports.handler = async options => {
     });
     logger.group(groupLabel);
     results.forEach(secret => logger.log(secret));
-    logger.groupEnd(groupLabel);
+    logger.groupEnd();
   } catch (err) {
     logger.error(i18n(`${i18nKey}.errors.list`));
     logError(
@@ -42,11 +52,12 @@ exports.handler = async options => {
       })
     );
   }
-};
+}
 
-exports.builder = yargs => {
+export function builder(yargs: Argv): Argv<ListSecretArgs> {
   addConfigOptions(yargs);
   addAccountOptions(yargs);
   addUseEnvironmentOptions(yargs);
-  return yargs;
-};
+
+  return yargs as Argv<ListSecretArgs>;
+}
