@@ -27,7 +27,7 @@ export const command = 'create';
 export const describe = i18n(`${i18nKey}.describe`);
 
 type CombinedArgs = ConfigArgs & AccountArgs & EnvironmentArgs;
-type HubdbCreateArgs = CommonArgs & CombinedArgs & { path: string };
+type HubdbCreateArgs = CommonArgs & CombinedArgs & { path?: string };
 
 function selectPathPrompt(options: HubdbCreateArgs): Promise<{ path: string }> {
   return promptUser([

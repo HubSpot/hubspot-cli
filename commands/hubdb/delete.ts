@@ -25,8 +25,7 @@ export const command = 'delete [table-id]';
 export const describe = i18n(`${i18nKey}.describe`);
 
 type CombinedArgs = ConfigArgs & AccountArgs & EnvironmentArgs;
-type HubdbDeleteArgs = CommonArgs &
-  CombinedArgs & { tableId?: number; dest?: string };
+type HubdbDeleteArgs = CommonArgs & CombinedArgs & { tableId?: number };
 
 export async function handler(
   args: ArgumentsCamelCase<HubdbDeleteArgs>
