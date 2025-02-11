@@ -831,6 +831,7 @@ en:
           failure:
             invalidUser: "Couldn't delete {{ accountName }} because your account has been removed from {{ parentAccountName }} or your permission set doesn't allow you to delete the sandbox. To update your permissions, contact a super admin in {{ parentAccountName }}."
             noAccount: "No account specified. Specify an account by using the --account flag."
+            cannotFindParentAccountId: "Cannot fetch your accounts to find the parent account associated with your sandbox account. Please try again..."
             noSandboxAccounts: "There are no sandboxes connected to the CLI. To add a sandbox, run {{#bold}}hs auth{{/bold}}."
             noParentAccount: "This sandbox can't be deleted from the CLI because you haven't given the CLI access to its parent account. To do this, run {{#bold}}hs auth{{/bold}} and add the parent account."
             objectNotFound: "Sandbox {{#bold}}{{ account }}{{/bold}} may have been deleted through the UI. The account has been removed from the config."
