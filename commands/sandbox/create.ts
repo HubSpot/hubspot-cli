@@ -177,7 +177,7 @@ export async function handler(
     );
 
     const sandboxAccountConfig = getAccountConfig(result.sandbox.sandboxHubId);
-    // Check if account config exists
+    // Check if sandbox account config exists
     if (!sandboxAccountConfig) {
       logger.error(
         i18n(`${i18nKey}.failure.noSandboxAccountConfig`, {
