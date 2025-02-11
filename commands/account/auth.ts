@@ -21,11 +21,7 @@ import { Environment } from '@hubspot/local-dev-lib/types/Config';
 import { CLIAccount } from '@hubspot/local-dev-lib/types/Accounts';
 import { PERSONAL_ACCESS_KEY_AUTH_METHOD } from '@hubspot/local-dev-lib/constants/auth';
 
-import {
-  addConfigOptions,
-  addGlobalOptions,
-  addTestingOptions,
-} from '../../lib/commonOpts';
+import { addGlobalOptions, addTestingOptions } from '../../lib/commonOpts';
 import { handleExit } from '../../lib/process';
 import { debugError } from '../../lib/errorHandlers/index';
 import { i18n } from '../../lib/lang';
@@ -103,13 +99,8 @@ type AccountAuthArgs = CommonArgs &
 export async function handler(
   args: ArgumentsCamelCase<AccountAuthArgs>
 ): Promise<void> {
-  const { providedAccountId, disableTracking, config } = args;
+  const { providedAccountId, disableTracking } = args;
   const authType = PERSONAL_ACCESS_KEY_AUTH_METHOD.value;
-
-  if (config) {
-    logger.error(i18n(`${i18nKey}.errors.noSpecifiedPathWithHiddenConfig`));
-    process.exit(EXIT_CODES.ERROR);
-  }
 
   if (!disableTracking) {
     trackCommandUsage('account-auth', {}, providedAccountId);
@@ -203,7 +194,6 @@ export function builder(yargs: Argv): Argv<AccountAuthArgs> {
     },
   });
 
-  addConfigOptions(yargs);
   addTestingOptions(yargs);
   addGlobalOptions(yargs);
 
