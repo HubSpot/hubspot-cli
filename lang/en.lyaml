@@ -813,6 +813,8 @@ en:
             invalidAccountType: "Sandboxes must be created from a production account. Your current default account {{#bold}}{{ accountName }}{{/bold}} is a {{ accountType }}.
               \n- Run {{#bold}}hs accounts use{{/bold}} to switch to your default account to your production account.
               \n- Run {{#bold}}hs auth{{/bold}} to connect a production account to the HubSpot CLI.\n"
+            noAccountConfig: "There is no account associated with {{ accountId }} in the config file. Please choose another account and try again, or authenticate {{ accountId }} using {{ authCommand }}."
+            noSandboxAccountConfig: "There is no sandbox account associated with {{ accountId }} in the config file. Please try to re-authenticate your sandbox account using {{ authCommand}}."
         delete:
           describe: "Delete a sandbox account."
           debug:
