@@ -11,7 +11,7 @@ jest.mock('../../../lib/commonOpts');
 // Import this last so mocks apply
 import * as updateSecretCommand from '../updateSecret';
 
-describe('commands/account/clean', () => {
+describe('commands/secret/updateSecret', () => {
   const yargsMock = yargs as Argv;
 
   describe('command', () => {
