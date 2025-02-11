@@ -1,37 +1,46 @@
-// @ts-nocheck
-const { logger } = require('@hubspot/local-dev-lib/logger');
-const { logError } = require('../../lib/errorHandlers/index');
-const { downloadHubDbTable } = require('@hubspot/local-dev-lib/hubdb');
-const {
-  selectHubDBTablePrompt,
-} = require('../../lib/prompts/selectHubDBTablePrompt');
-const { trackCommandUsage } = require('../../lib/usageTracking');
-
-const {
+import { Argv, ArgumentsCamelCase } from 'yargs';
+import { logger } from '@hubspot/local-dev-lib/logger';
+import { logError } from '../../lib/errorHandlers/index';
+import { downloadHubDbTable } from '@hubspot/local-dev-lib/hubdb';
+import { selectHubDBTablePrompt } from '../../lib/prompts/selectHubDBTablePrompt';
+import { trackCommandUsage } from '../../lib/usageTracking';
+import {
   addConfigOptions,
   addAccountOptions,
   addUseEnvironmentOptions,
-} = require('../../lib/commonOpts');
-const { i18n } = require('../../lib/lang');
+} from '../../lib/commonOpts';
+import { i18n } from '../../lib/lang';
+import {
+  CommonArgs,
+  ConfigArgs,
+  AccountArgs,
+  EnvironmentArgs,
+} from '../../types/Yargs';
 
 const i18nKey = 'commands.hubdb.subcommands.fetch';
 
-exports.command = 'fetch [table-id] [dest]';
-exports.describe = i18n(`${i18nKey}.describe`);
+export const command = 'fetch [table-id] [dest]';
+export const describe = i18n(`${i18nKey}.describe`);
 
-exports.handler = async options => {
-  const { derivedAccountId } = options;
+type CombinedArgs = ConfigArgs & AccountArgs & EnvironmentArgs;
+type HubdbFetchArgs = CommonArgs &
+  CombinedArgs & { tableId?: number; dest?: string };
 
-  trackCommandUsage('hubdb-fetch', null, derivedAccountId);
+export async function handler(
+  args: ArgumentsCamelCase<HubdbFetchArgs>
+): Promise<void> {
+  const { derivedAccountId } = args;
+
+  trackCommandUsage('hubdb-fetch', {}, derivedAccountId);
 
   try {
     const promptAnswers = await selectHubDBTablePrompt({
       accountId: derivedAccountId,
-      options,
+      options: args,
       skipDestPrompt: false,
     });
-    const tableId = options.tableId || promptAnswers.tableId;
-    const dest = options.dest || promptAnswers.dest;
+    const tableId = args.tableId || promptAnswers.tableId;
+    const dest = args.dest || promptAnswers.dest;
 
     const { filePath } = await downloadHubDbTable(
       derivedAccountId,
@@ -48,9 +57,9 @@ exports.handler = async options => {
   } catch (e) {
     logError(e);
   }
-};
+}
 
-exports.builder = yargs => {
+export function builder(yargs: Argv): Argv<HubdbFetchArgs> {
   addAccountOptions(yargs);
   addConfigOptions(yargs);
   addUseEnvironmentOptions(yargs);
@@ -64,4 +73,6 @@ exports.builder = yargs => {
     describe: i18n(`${i18nKey}.positionals.dest.describe`),
     type: 'string',
   });
-};
+
+  return yargs as Argv<HubdbFetchArgs>;
+}

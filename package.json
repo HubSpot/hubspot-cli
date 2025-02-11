@@ -64,7 +64,7 @@
     "lint": "eslint . && prettier --list-different ./**/*.{js,json}",
     "list-all-commands": "yarn ts-node ./scripts/get-all-commands.ts",
     "prettier:write": "prettier --write ./**/*.{ts,js,json}",
-    "test": "jest",
+    "test": "yarn node --experimental-vm-modules $(yarn bin jest)",
     "test-cli": "yarn build && yarn --cwd 'acceptance-tests' test-ci",
     "test-cli-debug": "yarn build && yarn --cwd 'acceptance-tests' test-debug",
     "test-cli-qa": "yarn build && yarn --cwd 'acceptance-tests' test-qa",
