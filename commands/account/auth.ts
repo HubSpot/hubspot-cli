@@ -20,6 +20,7 @@ import { toKebabCase } from '@hubspot/local-dev-lib/text';
 import { Environment } from '@hubspot/local-dev-lib/types/Config';
 import { CLIAccount } from '@hubspot/local-dev-lib/types/Accounts';
 import { PERSONAL_ACCESS_KEY_AUTH_METHOD } from '@hubspot/local-dev-lib/constants/auth';
+import { DEFAULT_HUBSPOT_CONFIG_YAML_FILE_NAME } from '@hubspot/local-dev-lib/constants/config';
 
 import { addGlobalOptions, addTestingOptions } from '../../lib/commonOpts';
 import { handleExit } from '../../lib/process';
@@ -101,6 +102,16 @@ export async function handler(
 ): Promise<void> {
   const { providedAccountId, disableTracking } = args;
   const authType = PERSONAL_ACCESS_KEY_AUTH_METHOD.value;
+
+  const deprecatedConfigExists = configFileExists(false);
+  if (deprecatedConfigExists) {
+    logger.error(
+      i18n(`${i18nKey}.errors.bothConfigFilesNotAllowed`, {
+        deprecatedConfig: DEFAULT_HUBSPOT_CONFIG_YAML_FILE_NAME,
+      })
+    );
+    process.exit(EXIT_CODES.ERROR);
+  }
 
   if (!disableTracking) {
     trackCommandUsage('account-auth', {}, providedAccountId);

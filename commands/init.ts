@@ -148,6 +148,7 @@ exports.handler = async options => {
       env,
       providedAccountId
     );
+    const configPath = getConfigPath();
 
     try {
       checkAndAddConfigToGitignore(configPath);

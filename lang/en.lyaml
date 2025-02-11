@@ -25,6 +25,7 @@ en:
               describe: "HubSpot account to authenticate"
           errors:
             failedToUpdateConfig: "Failed to update the configuration file. Please try again."
+            bothConfigFilesNotAllowed: "Unable to create config file, because there is an existing \"{{ deprecatedConfig }}\" file. To create a new config file, delete the existing one and try again."
           success:
             configFileCreated: "Created config file \"{{ configPath }}\""
             configFileUpdated: "Connected account \"{{ account }}\" and set it as the default account"
@@ -460,8 +461,6 @@ en:
           defaultDescription: "\"{{ authMethod }}\":  An access token tied to a specific user account. This is the recommended way of authenticating with local development tools."
         account:
           describe: "HubSpot account to authenticate"
-        useHiddenConfig:
-          describe: "Use the new HubSpot configuration file located in a hidden file in the user's home directory"
       success:
         configFileCreated: "Created config file \"{{ configPath }}\""
         configFileUpdated: "Connected account \"{{ account }}\" using \"{{ authType }}\" and set it as the default account"
@@ -469,7 +468,6 @@ en:
         updateConfig: "To update an existing config file, use the \"hs auth\" command."
       errors:
         configFileExists: "The config file {{ configPath }} already exists."
-        bothConfigFilesNotAllowed: "Unable to create config file, because there is an existing one at \"{{ path }}\". To create a new config file, delete the existing one and try again."
     lint:
       issuesFound: "{{ count }} issues found."
       groupName: "Linting {{ path }}"
