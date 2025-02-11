@@ -63,9 +63,9 @@ describe('hs create', () => {
   });
 
   it('should require an argument', async () => {
-    expect(async () => testState.cli.execute(['create'])).rejects.toThrowError(
-      /Not enough non-option arguments/
-    );
+    await expect(async () =>
+      testState.cli.execute(['create'])
+    ).rejects.toThrowError(/Not enough non-option arguments/);
   });
 
   it('creates a module', async () => {
