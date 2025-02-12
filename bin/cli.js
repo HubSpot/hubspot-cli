@@ -215,6 +215,16 @@ const injectAccountIdMiddleware = async options => {
   }
 };
 
+const skipLoadConfigAccountSubCommands = {
+  target: true,
+  subCommands: { auth: { target: true } },
+};
+
+const skipLoadConfigCommands = {
+  account: skipLoadConfigAccountSubCommands,
+  accounts: skipLoadConfigAccountSubCommands,
+};
+
 const loadConfigMiddleware = async options => {
   // Skip this when no command is provided
   if (!options._.length) {
@@ -237,7 +247,20 @@ const loadConfigMiddleware = async options => {
       })
     );
     process.exit(EXIT_CODES.ERROR);
-  } else if (!isTargetedCommand(options, { init: { target: true } })) {
+  }
+
+  // There are two commands where we don't load config:
+  // 1. `hs init`
+  // 2. `hs account auth` only if the centralized config file does not exist
+  if (
+    !isTargetedCommand(options, {
+      init: { target: true },
+    }) &&
+    !(
+      isTargetedCommand(options, skipLoadConfigCommands) &&
+      !configFileExists(true)
+    )
+  ) {
     const { config: configPath } = options;
     const config = loadConfig(configPath, options);
 
