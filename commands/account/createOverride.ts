@@ -5,6 +5,7 @@ import { getCwd } from '@hubspot/local-dev-lib/path';
 import { logger } from '@hubspot/local-dev-lib/logger';
 import { DEFAULT_ACCOUNT_OVERRIDE_FILE_NAME } from '@hubspot/local-dev-lib/constants/config';
 import { getConfigPath, getAccountId } from '@hubspot/local-dev-lib/config';
+
 import { addConfigOptions } from '../../lib/commonOpts';
 import { i18n } from '../../lib/lang';
 import { EXIT_CODES } from '../../lib/enums/exitCodes';
@@ -14,7 +15,7 @@ import { CommonArgs, ConfigArgs } from '../../types/Yargs';
 
 const i18nKey = 'commands.account.subcommands.createOverride';
 
-export const describe = null; // i18n(`${i18nKey}.describe`);
+export const describe = undefined; // i18n(`${i18nKey}.describe`);
 
 export const command = 'create-override [account]';
 
