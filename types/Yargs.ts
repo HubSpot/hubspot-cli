@@ -12,6 +12,15 @@ export type ConfigArgs = {
   config?: string;
 };
 
+export type AccountArgs = {
+  a?: string;
+  account?: string;
+};
+
+export type EnvironmentArgs = {
+  'use-env'?: string;
+};
+
 export type StringArgType = Options & {
   type: 'string';
 };

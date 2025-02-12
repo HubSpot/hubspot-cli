@@ -49,7 +49,6 @@ describe('commands/project/deploy', () => {
   const projectFlag = 'project';
   const buildFlag = 'build';
   const buildAliases = ['build-id'];
-  const useV3Flag = 'use-v3';
 
   describe('command', () => {
     it('should have the correct command structure', () => {
@@ -77,11 +76,6 @@ describe('commands/project/deploy', () => {
         [buildFlag]: expect.objectContaining({
           alias: buildAliases,
           type: 'number',
-        }),
-        [useV3Flag]: expect.objectContaining({
-          type: 'boolean',
-          hidden: true,
-          default: false,
         }),
       });
 

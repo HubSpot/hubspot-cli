@@ -1,36 +1,45 @@
-// @ts-nocheck
-const { logger } = require('@hubspot/local-dev-lib/logger');
-const { logError } = require('../../lib/errorHandlers/index');
-const { clearHubDbTableRows } = require('@hubspot/local-dev-lib/hubdb');
-const { publishTable } = require('@hubspot/local-dev-lib/api/hubdb');
-const {
-  selectHubDBTablePrompt,
-} = require('../../lib/prompts/selectHubDBTablePrompt');
-const { trackCommandUsage } = require('../../lib/usageTracking');
-const {
+import { Argv, ArgumentsCamelCase } from 'yargs';
+import { logger } from '@hubspot/local-dev-lib/logger';
+import { logError } from '../../lib/errorHandlers/index';
+import { clearHubDbTableRows } from '@hubspot/local-dev-lib/hubdb';
+import { publishTable } from '@hubspot/local-dev-lib/api/hubdb';
+import { selectHubDBTablePrompt } from '../../lib/prompts/selectHubDBTablePrompt';
+import { trackCommandUsage } from '../../lib/usageTracking';
+import {
   addConfigOptions,
   addAccountOptions,
   addUseEnvironmentOptions,
-} = require('../../lib/commonOpts');
-const { i18n } = require('../../lib/lang');
+} from '../../lib/commonOpts';
+import { i18n } from '../../lib/lang';
+import {
+  CommonArgs,
+  ConfigArgs,
+  AccountArgs,
+  EnvironmentArgs,
+} from '../../types/Yargs';
 
 const i18nKey = 'commands.hubdb.subcommands.clear';
 
-exports.command = 'clear [table-id]';
-exports.describe = i18n(`${i18nKey}.describe`);
+export const command = 'clear [table-id]';
+export const describe = i18n(`${i18nKey}.describe`);
 
-exports.handler = async options => {
-  const { derivedAccountId } = options;
+type CombinedArgs = ConfigArgs & AccountArgs & EnvironmentArgs;
+type HubdbClearArgs = CommonArgs &
+  CombinedArgs & { tableId?: number; dest?: string };
 
-  trackCommandUsage('hubdb-clear', null, derivedAccountId);
+export async function handler(
+  args: ArgumentsCamelCase<HubdbClearArgs>
+): Promise<void> {
+  const { derivedAccountId } = args;
+  trackCommandUsage('hubdb-clear', {}, derivedAccountId);
 
   try {
     const { tableId } =
-      'tableId' in options
-        ? options
+      'tableId' in args
+        ? args
         : await selectHubDBTablePrompt({
             accountId: derivedAccountId,
-            options,
+            options: args,
           });
 
     const { deletedRowCount } = await clearHubDbTableRows(
@@ -63,9 +72,9 @@ exports.handler = async options => {
   } catch (e) {
     logError(e);
   }
-};
+}
 
-exports.builder = yargs => {
+export function builder(yargs: Argv): Argv<HubdbClearArgs> {
   addAccountOptions(yargs);
   addConfigOptions(yargs);
   addUseEnvironmentOptions(yargs);
@@ -74,4 +83,6 @@ exports.builder = yargs => {
     describe: i18n(`${i18nKey}.positionals.tableId.describe`),
     type: 'string',
   });
-};
+
+  return yargs as Argv<HubdbClearArgs>;
+}

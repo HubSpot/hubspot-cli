@@ -1,45 +1,63 @@
-// @ts-nocheck
-const { logger } = require('@hubspot/local-dev-lib/logger');
-const { renameAccount } = require('@hubspot/local-dev-lib/config');
-
-const { addConfigOptions, addAccountOptions } = require('../../lib/commonOpts');
-const { trackCommandUsage } = require('../../lib/usageTracking');
-const { i18n } = require('../../lib/lang');
+import { Argv, ArgumentsCamelCase } from 'yargs';
+import { logger } from '@hubspot/local-dev-lib/logger';
+import { renameAccount } from '@hubspot/local-dev-lib/config';
+import { addConfigOptions, addAccountOptions } from '../../lib/commonOpts';
+import { trackCommandUsage } from '../../lib/usageTracking';
+import { i18n } from '../../lib/lang';
+import { CommonArgs, ConfigArgs } from '../../types/Yargs';
+import { logError } from '../../lib/errorHandlers';
+import { EXIT_CODES } from '../../lib/enums/exitCodes';
 
 const i18nKey = 'commands.account.subcommands.rename';
 
-exports.command = 'rename <accountName> <newName>';
-exports.describe = i18n(`${i18nKey}.describe`);
+export const command = 'rename <account-name> <new-name>';
+export const describe = i18n(`${i18nKey}.describe`);
 
-exports.handler = async options => {
-  const { accountName, newName, derivedAccountId } = options;
+type AccountRenameArgs = CommonArgs &
+  ConfigArgs & {
+    accountName: string;
+    newName: string;
+  };
 
-  trackCommandUsage('accounts-rename', null, derivedAccountId);
+export async function handler(
+  args: ArgumentsCamelCase<AccountRenameArgs>
+): Promise<void> {
+  const { accountName, newName, derivedAccountId } = args;
 
-  await renameAccount(accountName, newName);
+  trackCommandUsage('accounts-rename', undefined, derivedAccountId);
 
-  return logger.log(
+  try {
+    await renameAccount(accountName, newName);
+  } catch (error) {
+    logError(error);
+    process.exit(EXIT_CODES.ERROR);
+  }
+
+  logger.log(
     i18n(`${i18nKey}.success.renamed`, {
       name: accountName,
       newName,
     })
   );
-};
+  process.exit(EXIT_CODES.SUCCESS);
+}
 
-exports.builder = yargs => {
+export function builder(yargs: Argv): Argv<AccountRenameArgs> {
   addConfigOptions(yargs);
   addAccountOptions(yargs);
 
-  yargs.positional('accountName', {
+  yargs.positional('account-name', {
     describe: i18n(`${i18nKey}.positionals.accountName.describe`),
     type: 'string',
   });
-  yargs.positional('newName', {
+  yargs.positional('new-name', {
     describe: i18n(`${i18nKey}.positionals.newName.describe`),
     type: 'string',
   });
 
-  yargs.example([['$0 accounts rename myExistingPortalName myNewPortalName']]);
+  yargs.example([
+    ['$0 accounts rename myExistingAccountName myNewAccountName'],
+  ]);
 
-  return yargs;
-};
+  return yargs as Argv<AccountRenameArgs>;
+}

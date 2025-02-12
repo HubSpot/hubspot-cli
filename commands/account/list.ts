@@ -1,96 +1,112 @@
-// @ts-nocheck
-const { logger } = require('@hubspot/local-dev-lib/logger');
-const {
+import { Argv, ArgumentsCamelCase } from 'yargs';
+import { logger } from '@hubspot/local-dev-lib/logger';
+import {
   getConfigPath,
   getConfigDefaultAccount,
   getConfigAccounts,
   getDefaultAccountOverrideFilePath,
-} = require('@hubspot/local-dev-lib/config');
-const {
-  getAccountIdentifier,
-} = require('@hubspot/local-dev-lib/config/getAccountIdentifier');
-const { addConfigOptions } = require('../../lib/commonOpts');
-const { getTableContents, getTableHeader } = require('../../lib/ui/table');
-
-const { trackCommandUsage } = require('../../lib/usageTracking');
-const { isSandbox, isDeveloperTestAccount } = require('../../lib/accountTypes');
-
-const { i18n } = require('../../lib/lang');
-const {
+} from '@hubspot/local-dev-lib/config';
+import { getAccountIdentifier } from '@hubspot/local-dev-lib/config/getAccountIdentifier';
+import { CLIAccount } from '@hubspot/local-dev-lib/types/Accounts';
+import { addConfigOptions } from '../../lib/commonOpts';
+import { getTableContents, getTableHeader } from '../../lib/ui/table';
+import { trackCommandUsage } from '../../lib/usageTracking';
+import { isSandbox, isDeveloperTestAccount } from '../../lib/accountTypes';
+import { i18n } from '../../lib/lang';
+import {
   HUBSPOT_ACCOUNT_TYPES,
   HUBSPOT_ACCOUNT_TYPE_STRINGS,
-} = require('@hubspot/local-dev-lib/constants/config');
+} from '@hubspot/local-dev-lib/constants/config';
+import { CommonArgs, ConfigArgs } from '../../types/Yargs';
 
 const i18nKey = 'commands.account.subcommands.list';
 
-exports.command = ['list', 'ls'];
-exports.describe = i18n(`${i18nKey}.describe`);
+export const command = ['list', 'ls'];
+export const describe = i18n(`${i18nKey}.describe`);
 
-const sortAndMapPortals = portals => {
-  const mappedPortalData = {};
-  // Standard and app developer portals
-  portals
+type AccountListArgs = CommonArgs & ConfigArgs;
+
+function sortAndMapAccounts(accounts: CLIAccount[]): {
+  [key: string]: CLIAccount[];
+} {
+  const mappedAccountData: { [key: string]: CLIAccount[] } = {};
+  // Standard and app developer accounts
+  accounts
     .filter(
       p =>
         p.accountType &&
         (p.accountType === HUBSPOT_ACCOUNT_TYPES.STANDARD ||
           p.accountType === HUBSPOT_ACCOUNT_TYPES.APP_DEVELOPER)
     )
-    .forEach(portal => {
-      mappedPortalData[getAccountIdentifier(portal)] = [portal];
+    .forEach(account => {
+      const accountId = getAccountIdentifier(account);
+      if (accountId) {
+        mappedAccountData[accountId] = [account];
+      }
     });
-  // Non-standard portals (sandbox, developer test account)
-  portals
+  // Non-standard accounts (sandbox, developer test account)
+  accounts
     .filter(p => p.accountType && (isSandbox(p) || isDeveloperTestAccount(p)))
     .forEach(p => {
       if (p.parentAccountId) {
-        mappedPortalData[p.parentAccountId] = [
-          ...(mappedPortalData[p.parentAccountId] || []),
+        mappedAccountData[p.parentAccountId] = [
+          ...(mappedAccountData[p.parentAccountId] || []),
           p,
         ];
       } else {
-        mappedPortalData[getAccountIdentifier(p)] = [p];
+        const accountId = getAccountIdentifier(p);
+        if (accountId) {
+          mappedAccountData[accountId] = [p];
+        }
       }
     });
-  return mappedPortalData;
-};
 
-const getPortalData = mappedPortalData => {
-  const portalData = [];
-  Object.entries(mappedPortalData).forEach(([key, set]) => {
-    const hasParentPortal = set.filter(
+  return mappedAccountData;
+}
+
+function getAccountData(mappedAccountData: {
+  [key: string]: CLIAccount[];
+}): string[][] {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const accountData: any[][] = [];
+
+  Object.entries(mappedAccountData).forEach(([key, set]) => {
+    const hasParentAccount = set.filter(
       p => getAccountIdentifier(p) === parseInt(key, 10)
     )[0];
-    set.forEach(portal => {
-      let name = `${portal.name} [${
-        HUBSPOT_ACCOUNT_TYPE_STRINGS[portal.accountType]
+    set.forEach(account => {
+      let name = `${account.name} [${
+        HUBSPOT_ACCOUNT_TYPE_STRINGS[account.accountType!]
       }]`;
-      if (isSandbox(portal)) {
-        if (hasParentPortal && set.length > 1) {
+      if (isSandbox(account)) {
+        if (hasParentAccount && set.length > 1) {
           name = `↳ ${name}`;
         }
-      } else if (isDeveloperTestAccount(portal)) {
-        if (hasParentPortal && set.length > 1) {
+      } else if (isDeveloperTestAccount(account)) {
+        if (hasParentAccount && set.length > 1) {
           name = `↳ ${name}`;
         }
       }
-      portalData.push([name, getAccountIdentifier(portal), portal.authType]);
+      accountData.push([name, getAccountIdentifier(account), account.authType]);
     });
   });
-  return portalData;
-};
 
-exports.handler = async options => {
-  const { derivedAccountId } = options;
+  return accountData;
+}
 
-  trackCommandUsage('accounts-list', null, derivedAccountId);
+export async function handler(
+  args: ArgumentsCamelCase<AccountListArgs>
+): Promise<void> {
+  const { derivedAccountId } = args;
+
+  trackCommandUsage('accounts-list', undefined, derivedAccountId);
 
   const configPath = getConfigPath();
   const overrideFilePath = getDefaultAccountOverrideFilePath();
-  const accountsList = getConfigAccounts();
-  const mappedPortalData = sortAndMapPortals(accountsList);
-  const portalData = getPortalData(mappedPortalData);
-  portalData.unshift(
+  const accountsList = getConfigAccounts() || [];
+  const mappedAccountData = sortAndMapAccounts(accountsList);
+  const accountData = getAccountData(mappedAccountData);
+  accountData.unshift(
     getTableHeader([
       i18n(`${i18nKey}.labels.name`),
       i18n(`${i18nKey}.labels.accountId`),
@@ -98,21 +114,23 @@ exports.handler = async options => {
     ])
   );
 
-  logger.log(i18n(`${i18nKey}.configPath`, { configPath }));
+  logger.log(i18n(`${i18nKey}.configPath`, { configPath: configPath! }));
   if (overrideFilePath) {
     logger.log(i18n(`${i18nKey}.overrideFilePath`, { overrideFilePath }));
   }
   logger.log(
     i18n(`${i18nKey}.defaultAccount`, {
-      account: getConfigDefaultAccount(),
+      account: getConfigDefaultAccount()!,
     })
   );
   logger.log(i18n(`${i18nKey}.accounts`));
-  logger.log(getTableContents(portalData, { border: { bodyLeft: '  ' } }));
-};
+  logger.log(getTableContents(accountData, { border: { bodyLeft: '  ' } }));
+}
 
-exports.builder = yargs => {
+export function builder(yargs: Argv): Argv<AccountListArgs> {
   addConfigOptions(yargs);
+
   yargs.example([['$0 accounts list']]);
-  return yargs;
-};
+
+  return yargs as Argv<AccountListArgs>;
+}
