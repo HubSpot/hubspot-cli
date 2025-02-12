@@ -16,6 +16,7 @@ const {
 const {
   DEFAULT_ACCOUNT_OVERRIDE_ERROR_INVALID_ID,
   DEFAULT_ACCOUNT_OVERRIDE_ERROR_ACCOUNT_NOT_FOUND,
+  DEFAULT_ACCOUNT_OVERRIDE_FILE_NAME,
 } = require('@hubspot/local-dev-lib/constants/config');
 const { logError } = require('../lib/errorHandlers/index');
 const { setLogLevel, getCommandName } = require('../lib/commonOpts');
@@ -214,6 +215,7 @@ const injectAccountIdMiddleware = async options => {
         logger.log(
           i18n(`${i18nKey}.injectAccountIdMiddleware.invalidAccountId`, {
             overrideCommand: uiCommandReference('hs account create-override'),
+            hsAccountFileName: DEFAULT_ACCOUNT_OVERRIDE_FILE_NAME,
           })
         );
       }
@@ -222,6 +224,7 @@ const injectAccountIdMiddleware = async options => {
           i18n(`${i18nKey}.injectAccountIdMiddleware.accountNotFound`, {
             configPath: getConfigPath(),
             authCommand: uiCommandReference('hs account auth'),
+            hsAccountFileName: DEFAULT_ACCOUNT_OVERRIDE_FILE_NAME,
           })
         );
       }
