@@ -216,11 +216,11 @@ const injectAccountIdMiddleware = async options => {
 };
 
 const skipLoadConfigAccountSubCommands = {
-  target: true,
+  target: false,
   subCommands: { auth: { target: true } },
 };
 
-const skipLoadConfigCommands = {
+const SKIP_LOAD_CONFIG = {
   account: skipLoadConfigAccountSubCommands,
   accounts: skipLoadConfigAccountSubCommands,
 };
@@ -256,10 +256,7 @@ const loadConfigMiddleware = async options => {
     !isTargetedCommand(options, {
       init: { target: true },
     }) &&
-    !(
-      isTargetedCommand(options, skipLoadConfigCommands) &&
-      !configFileExists(true)
-    )
+    !(isTargetedCommand(options, SKIP_LOAD_CONFIG) && !configFileExists(true))
   ) {
     const { config: configPath } = options;
     const config = loadConfig(configPath, options);
