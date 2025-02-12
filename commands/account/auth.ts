@@ -89,7 +89,7 @@ async function createOrUpdateConfig(
   }
 }
 
-export const describe = ''; // i18n(`${i18nKey}.describe`);
+export const describe = undefined; // i18n(`${i18nKey}.describe`);
 export const command = 'auth';
 
 type AccountAuthArgs = CommonArgs &

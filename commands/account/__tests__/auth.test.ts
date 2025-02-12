@@ -7,7 +7,7 @@ jest.mock('../../../lib/commonOpts');
 // Import this last so mocks apply
 import * as accountAuthCommand from '../auth';
 
-describe('commands/account/clean', () => {
+describe('commands/account/auth', () => {
   const yargsMock = yargs as Argv;
 
   describe('command', () => {
@@ -18,7 +18,8 @@ describe('commands/account/clean', () => {
 
   describe('describe', () => {
     it('should provide a description', () => {
-      expect(accountAuthCommand.describe).toBeDefined();
+      // TODO: Change to defined when we unhide the command
+      expect(accountAuthCommand.describe).toBeUndefined();
     });
   });
 
