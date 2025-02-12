@@ -6,12 +6,11 @@ import { logger } from '@hubspot/local-dev-lib/logger';
 import { DEFAULT_ACCOUNT_OVERRIDE_FILE_NAME } from '@hubspot/local-dev-lib/constants/config';
 import { getConfigPath, getAccountId } from '@hubspot/local-dev-lib/config';
 
-import { addConfigOptions } from '../../lib/commonOpts';
 import { i18n } from '../../lib/lang';
 import { EXIT_CODES } from '../../lib/enums/exitCodes';
 import { selectAccountFromConfig } from '../../lib/prompts/accountsPrompt';
 import { logError } from '../../lib/errorHandlers/index';
-import { CommonArgs, ConfigArgs } from '../../types/Yargs';
+import { CommonArgs } from '../../types/Yargs';
 
 const i18nKey = 'commands.account.subcommands.createOverride';
 
@@ -19,10 +18,9 @@ export const describe = undefined; // i18n(`${i18nKey}.describe`);
 
 export const command = 'create-override [account]';
 
-type AccountCreateOverrideArgs = CommonArgs &
-  ConfigArgs & {
-    account: string | number;
-  };
+type AccountCreateOverrideArgs = CommonArgs & {
+  account: string | number;
+};
 
 export async function handler(
   args: ArgumentsCamelCase<AccountCreateOverrideArgs>
@@ -56,8 +54,6 @@ export async function handler(
 }
 
 export function builder(yargs: Argv): Argv<AccountCreateOverrideArgs> {
-  addConfigOptions(yargs);
-
   yargs.positional('account', {
     describe: i18n(`${i18nKey}.options.account.describe`),
     type: 'string',
