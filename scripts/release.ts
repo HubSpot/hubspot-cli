@@ -308,10 +308,13 @@ async function handler({
     process.exit(EXIT_CODES.SUCCESS);
   }
 
-  logger.log();
-  logger.log(`Pushing changes to Github...`);
-  await exec(gitCommand);
-  logger.log(`Changes pushed successfully`);
+  // Only commit to git for no experimental releases
+  if (!isExperimental) {
+    logger.log();
+    logger.log(`Pushing changes to Github...`);
+    await exec(gitCommand);
+    logger.log(`Changes pushed successfully`);
+  }
 
   logger.log();
   logger.success(`HubSpot CLI version ${newVersion} published successfully`);
