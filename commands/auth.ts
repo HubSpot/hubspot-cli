@@ -42,6 +42,7 @@ const {
   setLogLevel,
   addTestingOptions,
   addGlobalOptions,
+  addCustomHelpOutput,
 } = require('../lib/commonOpts');
 const { trackAuthAction, trackCommandUsage } = require('../lib/usageTracking');
 const { authenticateWithOauth } = require('../lib/oauth');
@@ -65,9 +66,7 @@ const SUPPORTED_AUTHENTICATION_PROTOCOLS_TEXT =
   commaSeparatedValues(ALLOWED_AUTH_METHODS);
 
 exports.command = 'auth';
-exports.describe = i18n(`${i18nKey}.describe`, {
-  configName: DEFAULT_HUBSPOT_CONFIG_YAML_FILE_NAME,
-});
+exports.describe = i18n(`${i18nKey}.describe`);
 
 exports.handler = async options => {
   const {
@@ -203,7 +202,7 @@ exports.handler = async options => {
   process.exit(EXIT_CODES.SUCCESS);
 };
 
-exports.builder = yargs => {
+exports.builder = async yargs => {
   yargs.options({
     'auth-type': {
       describe: i18n(`${i18nKey}.options.authType.describe`),
@@ -213,12 +212,6 @@ exports.builder = yargs => {
         `${OAUTH_AUTH_METHOD.value}`,
       ],
       default: PERSONAL_ACCESS_KEY_AUTH_METHOD.value,
-      defaultDescription: i18n(
-        `${i18nKey}.options.authType.defaultDescription`,
-        {
-          authMethod: PERSONAL_ACCESS_KEY_AUTH_METHOD.value,
-        }
-      ),
     },
     account: {
       describe: i18n(`${i18nKey}.options.account.describe`),
@@ -231,5 +224,13 @@ exports.builder = yargs => {
   addTestingOptions(yargs);
   addGlobalOptions(yargs);
 
+  // Must go last to pick up available options
+  await addCustomHelpOutput(
+    yargs,
+    i18n(`${i18nKey}.verboseDescribe`, {
+      authMethod: PERSONAL_ACCESS_KEY_AUTH_METHOD.value,
+      configName: DEFAULT_HUBSPOT_CONFIG_YAML_FILE_NAME,
+    })
+  );
   return yargs;
 };
