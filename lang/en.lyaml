@@ -11,6 +11,9 @@ en:
         portalEnvVarDeprecated: "The HUBSPOT_PORTAL_ID environment variable is deprecated. Please use HUBSPOT_ACCOUNT_ID instead."
       loadConfigMiddleware:
         configFileExists: "A configuration file already exists at {{ configPath }}. To specify a new configuration file, delete the existing one and try again."
+      injectAccountIdMiddleware:
+        invalidAccountId: "In the default override file ({{ hsAccountFileName }}), the account ID must be a number. Please delete the current file and generate a new one using {{ overrideCommand }}."
+        accountNotFound: "The account in the default override file ({{ hsAccountFileName }}) wasn't found in your configured accounts. You can authorize this account using {{ authCommand }}."
     completion:
       describe: "Enable bash completion shortcuts for commands. Concat the generated script to your .bashrc, .bash_profile, or .zshrc file."
       examples:
@@ -29,11 +32,24 @@ en:
           success:
             configFileCreated: "Created config file \"{{ configPath }}\""
             configFileUpdated: "Connected account \"{{ account }}\" and set it as the default account"
+        createOverride:
+          describe: "Create a new default account override file (.hs-account) in the current working directory."
+          success: "Default account override file created at {{ overrideFilePath }}"
+          errors:
+            accountNotFound: "The specified account could not be found in the config file {{ configPath }}"
+          options:
+            account:
+              describe: "Name or ID of the account to create an override file for."
+          examples:
+            default: "Create a new default account override file (.hs-account) in the current working directory"
+            idBased: "Create a new default account override file (.hs-account) in the current working directory, using the account with accountId \"1234567\""
+            nameBased: "Create a new default account override file (.hs-account) in the current working directory, using the account with name \"MyAccount\""
         list:
           accounts: "{{#bold}}Accounts{{/bold}}:"
           defaultAccount: "{{#bold}}Default account{{/bold}}: {{ account }}"
           describe: "List names of accounts defined in config."
           configPath: "{{#bold}}Config path{{/bold}}: {{ configPath }}"
+          overrideFilePath: "{{#bold}}Default account override file path{{/bold}}: {{ overrideFilePath }}"
           labels:
             accountId: "Account ID"
             authType: "Auth Type"
@@ -1519,6 +1535,9 @@ en:
     doctor:
       runningDiagnostics: "Running diagnostics..."
       diagnosticsComplete: "Diagnostics complete"
+      defaultAccountOverrideFileChecks:
+        overrideActive: "Default account override file active: {{ defaultAccountOverrideFile }}"
+        overrideAccountId: "Active account ID: {{ overrideAccountId }}"
       accountChecks:
         active: "Default account active"
         inactive: "Default account isn't active"
@@ -1567,6 +1586,8 @@ en:
           defaultAccountSubHeader: "Default Account: {{accountDetails}}"
           noConfigFile: "CLI configuration not found"
           noConfigFileSecondary: "Run {{command}} and follow the prompts to create your CLI configuration file and connect it to your HubSpot account"
+        defaultAccountOverrideFile:
+          header: "Default account override file path:"
         projectConfig:
           header: "Project configuration"
           projectDirSubHeader: "Project dir: {{#bold}}{{ projectDir }}{{/bold}}"

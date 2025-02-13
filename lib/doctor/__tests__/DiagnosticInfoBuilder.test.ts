@@ -19,6 +19,7 @@ import {
   getAccountId as _getAccountId,
   getAccountConfig as _getAccountConfig,
   getConfigPath as _getConfigPath,
+  getDefaultAccountOverrideFilePath as _getDefaultAccountOverrideFilePath,
 } from '@hubspot/local-dev-lib/config';
 import { getAccessToken as _getAccessToken } from '@hubspot/local-dev-lib/personalAccessKey';
 import { walk as _walk } from '@hubspot/local-dev-lib/fs';
@@ -38,6 +39,10 @@ const getAccountConfig = _getAccountConfig as jest.MockedFunction<
 const getConfigPath = _getConfigPath as jest.MockedFunction<
   typeof _getConfigPath
 >;
+const getDefaultAccountOverrideFilePath =
+  _getDefaultAccountOverrideFilePath as jest.MockedFunction<
+    typeof _getDefaultAccountOverrideFilePath
+  >;
 const getAccountId = _getAccountId as jest.MockedFunction<typeof _getAccountId>;
 const getProjectConfig = _getProjectConfig as jest.MockedFunction<
   typeof _getProjectConfig
@@ -116,6 +121,8 @@ describe('lib/doctor/DiagnosticInfo', () => {
 
     const npmVersion = 'v8.17.0';
     const configPath = '/path/to/config';
+    const defaultAccountOverrideFile =
+      'path/to/default/account/override/.hsaccount';
 
     beforeEach(() => {
       builder = new DiagnosticInfoBuilder(processInfo);
@@ -157,6 +164,9 @@ describe('lib/doctor/DiagnosticInfo', () => {
       } as unknown as HubSpotPromise<Project>);
       getAccessToken.mockResolvedValue(accessToken);
       getConfigPath.mockReturnValue(configPath);
+      getDefaultAccountOverrideFilePath.mockReturnValue(
+        defaultAccountOverrideFile
+      );
       utilPromisify.mockReturnValue(jest.fn().mockResolvedValue(npmVersion));
     });
 

@@ -1,37 +1,43 @@
-// @ts-nocheck
+import { Argv, ArgumentsCamelCase } from 'yargs';
+import { updateSecret, fetchSecrets } from '@hubspot/local-dev-lib/api/secrets';
+
 import { EXIT_CODES } from '../../lib/enums/exitCodes';
-
-const { logger } = require('@hubspot/local-dev-lib/logger');
-const { ApiErrorContext, logError } = require('../../lib/errorHandlers/index');
-const {
-  updateSecret,
-  fetchSecrets,
-} = require('@hubspot/local-dev-lib/api/secrets');
-
-const { trackCommandUsage } = require('../../lib/usageTracking');
-const { uiAccountDescription } = require('../../lib/ui');
-
-const {
+import { logger } from '@hubspot/local-dev-lib/logger';
+import { ApiErrorContext, logError } from '../../lib/errorHandlers/index';
+import { trackCommandUsage } from '../../lib/usageTracking';
+import { uiAccountDescription } from '../../lib/ui';
+import {
   addConfigOptions,
   addAccountOptions,
   addUseEnvironmentOptions,
-} = require('../../lib/commonOpts');
-const {
+} from '../../lib/commonOpts';
+import {
   secretValuePrompt,
   secretListPrompt,
-} = require('../../lib/prompts/secretPrompt');
-const { i18n } = require('../../lib/lang');
+} from '../../lib/prompts/secretPrompt';
+import { i18n } from '../../lib/lang';
+import {
+  CommonArgs,
+  ConfigArgs,
+  AccountArgs,
+  EnvironmentArgs,
+} from '../../types/Yargs';
 
 const i18nKey = 'commands.secret.subcommands.update';
 
-exports.command = 'update [name]';
-exports.describe = i18n(`${i18nKey}.describe`);
+export const command = 'update [name]';
+export const describe = i18n(`${i18nKey}.describe`);
 
-exports.handler = async options => {
-  const { name, derivedAccountId } = options;
+type CombinedArgs = ConfigArgs & AccountArgs & EnvironmentArgs;
+type UpdateSecretArgs = CommonArgs & CombinedArgs & { name?: string };
+
+export async function handler(
+  args: ArgumentsCamelCase<UpdateSecretArgs>
+): Promise<void> {
+  const { name, derivedAccountId } = args;
   let secretName = name;
 
-  trackCommandUsage('secrets-update', null, derivedAccountId);
+  trackCommandUsage('secrets-update', {}, derivedAccountId);
 
   try {
     const {
@@ -64,7 +70,7 @@ exports.handler = async options => {
   } catch (err) {
     logger.error(
       i18n(`${i18nKey}.errors.update`, {
-        secretName,
+        secretName: secretName || '',
       })
     );
     logError(
@@ -75,15 +81,17 @@ exports.handler = async options => {
       })
     );
   }
-};
+}
 
-exports.builder = yargs => {
+export function builder(yargs: Argv): Argv<UpdateSecretArgs> {
   addConfigOptions(yargs);
   addAccountOptions(yargs);
   addUseEnvironmentOptions(yargs);
+
   yargs.positional('name', {
     describe: i18n(`${i18nKey}.positionals.name.describe`),
     type: 'string',
   });
-  return yargs;
-};
+
+  return yargs as Argv<UpdateSecretArgs>;
+}

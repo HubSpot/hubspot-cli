@@ -1,5 +1,8 @@
 import { logger } from '@hubspot/local-dev-lib/logger';
-import { getAccountId } from '@hubspot/local-dev-lib/config';
+import {
+  getAccountId,
+  getCWDAccountOverride,
+} from '@hubspot/local-dev-lib/config';
 
 import SpinniesManager from '../ui/SpinniesManager';
 import {
@@ -72,6 +75,8 @@ export class Doctor {
       ...(this.projectConfig?.projectConfig ? this.performProjectChecks() : []),
     ]);
 
+    this.performDefaultAccountOverrideFileChecks();
+
     SpinniesManager.succeed('runningDiagnostics', {
       text: i18n(`${i18nKey}.diagnosticsComplete`),
       succeedColor: 'white',
@@ -115,6 +120,25 @@ export class Doctor {
       return [];
     }
     return [this.checkIfAccessTokenValid()];
+  }
+
+  private performDefaultAccountOverrideFileChecks(): void {
+    const localI18nKey = `${i18nKey}.defaultAccountOverrideFileChecks`;
+    if (this.diagnosticInfo?.defaultAccountOverrideFile) {
+      this.diagnosis?.addDefaultAccountOverrideFileSection({
+        type: 'warning',
+        message: i18n(`${localI18nKey}.overrideActive`, {
+          defaultAccountOverrideFile:
+            this.diagnosticInfo.defaultAccountOverrideFile,
+        }),
+      });
+      this.diagnosis?.addDefaultAccountOverrideFileSection({
+        type: 'warning',
+        message: i18n(`${localI18nKey}.overrideAccountId`, {
+          overrideAccountId: getCWDAccountOverride(),
+        }),
+      });
+    }
   }
 
   private async checkIfAccessTokenValid(): Promise<void> {

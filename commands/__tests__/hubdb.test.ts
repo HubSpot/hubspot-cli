@@ -1,22 +1,14 @@
 import yargs, { Argv } from 'yargs';
-import * as auth from '../account/auth';
-import * as list from '../account/list';
-import * as rename from '../account/rename';
-import * as use from '../account/use';
-import * as info from '../account/info';
-import * as remove from '../account/remove';
-import * as clean from '../account/clean';
-import * as createOverride from '../account/createOverride';
+import * as clear from '../hubdb/clear';
+import * as create from '../hubdb/create';
+import * as deleteCommand from '../hubdb/delete';
+import * as fetch from '../hubdb/fetch';
 
 jest.mock('yargs');
-jest.mock('../account/auth');
-jest.mock('../account/list');
-jest.mock('../account/rename');
-jest.mock('../account/use');
-jest.mock('../account/info');
-jest.mock('../account/remove');
-jest.mock('../account/clean');
-jest.mock('../account/createOverride');
+jest.mock('../hubdb/clear');
+jest.mock('../hubdb/create');
+jest.mock('../hubdb/delete');
+jest.mock('../hubdb/fetch');
 jest.mock('../../lib/commonOpts');
 
 const commandSpy = jest
@@ -27,18 +19,18 @@ const demandCommandSpy = jest
   .mockReturnValue(yargs as Argv);
 
 // Import this last so mocks apply
-import * as accountCommands from '../account';
+import * as hubdbCommands from '../hubdb';
 
-describe('commands/account', () => {
+describe('commands/hubdb', () => {
   describe('command', () => {
     it('should have the correct command structure', () => {
-      expect(accountCommands.command).toEqual(['account', 'accounts']);
+      expect(hubdbCommands.command).toEqual('hubdb');
     });
   });
 
   describe('describe', () => {
     it('should provide a description', () => {
-      expect(accountCommands.describe).toBeDefined();
+      expect(hubdbCommands.describe).toBeDefined();
     });
   });
 
@@ -48,31 +40,22 @@ describe('commands/account', () => {
       demandCommandSpy.mockClear();
     });
 
-    const subcommands = [
-      auth,
-      list,
-      rename,
-      use,
-      info,
-      remove,
-      clean,
-      createOverride,
-    ];
+    const subcommands = [clear, create, deleteCommand, fetch];
 
     it('should demand the command takes one positional argument', () => {
-      accountCommands.builder(yargs as Argv);
+      hubdbCommands.builder(yargs as Argv);
 
       expect(demandCommandSpy).toHaveBeenCalledTimes(1);
       expect(demandCommandSpy).toHaveBeenCalledWith(1, '');
     });
 
     it('should add the correct number of sub commands', () => {
-      accountCommands.builder(yargs as Argv);
+      hubdbCommands.builder(yargs as Argv);
       expect(commandSpy).toHaveBeenCalledTimes(subcommands.length);
     });
 
     it.each(subcommands)('should attach the %s subcommand', module => {
-      accountCommands.builder(yargs as Argv);
+      hubdbCommands.builder(yargs as Argv);
       expect(commandSpy).toHaveBeenCalledWith(module);
     });
   });

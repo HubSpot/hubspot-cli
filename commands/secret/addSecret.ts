@@ -1,35 +1,44 @@
-// @ts-nocheck
-import { EXIT_CODES } from '../../lib/enums/exitCodes';
-import { fetchSecrets } from '@hubspot/local-dev-lib/api/secrets';
-import { uiCommandReference } from '../../lib/ui';
+import { Argv, ArgumentsCamelCase } from 'yargs';
+import { logger } from '@hubspot/local-dev-lib/logger';
+import { addSecret, fetchSecrets } from '@hubspot/local-dev-lib/api/secrets';
 
-const { logger } = require('@hubspot/local-dev-lib/logger');
-const { logError, ApiErrorContext } = require('../../lib/errorHandlers/index');
-const { addSecret } = require('@hubspot/local-dev-lib/api/secrets');
-
-const { trackCommandUsage } = require('../../lib/usageTracking');
-const {
+import { logError, ApiErrorContext } from '../../lib/errorHandlers/index';
+import { trackCommandUsage } from '../../lib/usageTracking';
+import {
   addConfigOptions,
   addAccountOptions,
   addUseEnvironmentOptions,
-} = require('../../lib/commonOpts');
-const { uiAccountDescription } = require('../../lib/ui');
-const {
+} from '../../lib/commonOpts';
+import { uiAccountDescription } from '../../lib/ui';
+import {
   secretValuePrompt,
   secretNamePrompt,
-} = require('../../lib/prompts/secretPrompt');
-const { i18n } = require('../../lib/lang');
+} from '../../lib/prompts/secretPrompt';
+import { i18n } from '../../lib/lang';
+import { EXIT_CODES } from '../../lib/enums/exitCodes';
+import { uiCommandReference } from '../../lib/ui';
+import {
+  CommonArgs,
+  ConfigArgs,
+  AccountArgs,
+  EnvironmentArgs,
+} from '../../types/Yargs';
 
 const i18nKey = 'commands.secret.subcommands.add';
 
-exports.command = 'add [name]';
-exports.describe = i18n(`${i18nKey}.describe`);
+export const command = 'add [name]';
+export const describe = i18n(`${i18nKey}.describe`);
 
-exports.handler = async options => {
-  const { name, derivedAccountId } = options;
+type CombinedArgs = ConfigArgs & AccountArgs & EnvironmentArgs;
+type AddSecretArgs = CommonArgs & CombinedArgs & { name?: string };
+
+export async function handler(
+  args: ArgumentsCamelCase<AddSecretArgs>
+): Promise<void> {
+  const { name, derivedAccountId } = args;
   let secretName = name;
 
-  trackCommandUsage('secrets-add', null, derivedAccountId);
+  trackCommandUsage('secrets-add', {}, derivedAccountId);
 
   try {
     if (!secretName) {
@@ -63,7 +72,7 @@ exports.handler = async options => {
   } catch (err) {
     logger.error(
       i18n(`${i18nKey}.errors.add`, {
-        secretName,
+        secretName: secretName || '',
       })
     );
     logError(
@@ -74,15 +83,17 @@ exports.handler = async options => {
       })
     );
   }
-};
+}
 
-exports.builder = yargs => {
+export function builder(yargs: Argv): Argv<AddSecretArgs> {
   addConfigOptions(yargs);
   addAccountOptions(yargs);
   addUseEnvironmentOptions(yargs);
+
   yargs.positional('name', {
     describe: i18n(`${i18nKey}.positionals.name.describe`),
     type: 'string',
   });
-  return yargs;
-};
+
+  return yargs as Argv<AddSecretArgs>;
+}

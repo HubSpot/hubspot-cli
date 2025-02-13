@@ -10,7 +10,10 @@ import {
   AuthType,
 } from '@hubspot/local-dev-lib/types/Accounts';
 import { Project } from '@hubspot/local-dev-lib/types/Project';
-import { getAccountId } from '@hubspot/local-dev-lib/config';
+import {
+  getAccountId,
+  getDefaultAccountOverrideFilePath,
+} from '@hubspot/local-dev-lib/config';
 import { getAccountConfig, getConfigPath } from '@hubspot/local-dev-lib/config';
 import { getAccessToken } from '@hubspot/local-dev-lib/personalAccessKey';
 import { walk } from '@hubspot/local-dev-lib/fs';
@@ -36,6 +39,7 @@ export interface DiagnosticInfo extends FilesInfo {
   path?: string;
   versions: { [hubspotCli]: string; node: string; npm: string | null };
   config: string | null;
+  defaultAccountOverrideFile: string | null | undefined;
   project: {
     details?: Project;
     config?: ProjectConfig;
@@ -110,6 +114,7 @@ export class DiagnosticInfoBuilder {
       arch,
       path: mainModule?.path,
       config: getConfigPath(),
+      defaultAccountOverrideFile: getDefaultAccountOverrideFilePath(),
       versions: {
         [hubspotCli]: pkg.version,
         node,
