@@ -6,6 +6,7 @@ const {
   createEmptyConfigFile,
   deleteEmptyConfigFile,
   updateDefaultAccount,
+  configFileExists,
 } = require('@hubspot/local-dev-lib/config');
 const { addConfigOptions, addGlobalOptions } = require('../lib/commonOpts');
 const { handleExit } = require('../lib/process');
@@ -122,6 +123,16 @@ exports.handler = async options => {
   }
 
   const env = options.qa ? ENVIRONMENTS.QA : ENVIRONMENTS.PROD;
+
+  if (configFileExists(true)) {
+    const centralConfigPath = getConfigPath('', true);
+    logger.error(
+      i18n(`${i18nKey}.errors.centralizedConfigFileExists`, {
+        configPath: centralConfigPath,
+      })
+    );
+    process.exit(EXIT_CODES.ERROR);
+  }
 
   if (fs.existsSync(configPath)) {
     logger.error(

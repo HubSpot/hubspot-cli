@@ -120,8 +120,8 @@ en:
     auth:
       describe: "Configure authentication for your HubSpot account. This will update the {{ configName }} file that stores your account information."
       errors:
-        noConfigFileFound: "No config file was found. To create a new config file, use the \"hs init\" command."
         unsupportedAuthType: "Unsupported auth type: {{ type }}. The only supported authentication protocols are {{ supportedProtocols }}."
+        centralizedConfigFileExists: "A centralized config file exists at {{ configPath }}. To authorize an account, please use {{ authCommand }}."
       options:
         authType:
           describe: "Authentication mechanism"
@@ -484,6 +484,7 @@ en:
         updateConfig: "To update an existing config file, use the \"hs auth\" command."
       errors:
         configFileExists: "The config file {{ configPath }} already exists."
+        centralizedConfigFileExists: "A centralized config file already exists at {{ configPath }}. To specify a new local config file, delete the existing one and try again."
     lint:
       issuesFound: "{{ count }} issues found."
       groupName: "Linting {{ path }}"
