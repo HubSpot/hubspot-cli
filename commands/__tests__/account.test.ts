@@ -1,4 +1,5 @@
 import yargs, { Argv } from 'yargs';
+import * as auth from '../account/auth';
 import * as list from '../account/list';
 import * as rename from '../account/rename';
 import * as use from '../account/use';
@@ -8,6 +9,7 @@ import * as clean from '../account/clean';
 import * as createOverride from '../account/createOverride';
 
 jest.mock('yargs');
+jest.mock('../account/auth');
 jest.mock('../account/list');
 jest.mock('../account/rename');
 jest.mock('../account/use');
@@ -47,6 +49,7 @@ describe('commands/account', () => {
     });
 
     const subcommands = [
+      auth,
       list,
       rename,
       use,

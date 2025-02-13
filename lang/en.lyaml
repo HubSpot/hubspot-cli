@@ -21,6 +21,17 @@ en:
     account:
       describe: "Commands for managing configured accounts."
       subcommands:
+        auth:
+          describe: "Configure authentication for your HubSpot account."
+          options:
+            account:
+              describe: "HubSpot account to authenticate"
+          errors:
+            failedToUpdateConfig: "Failed to update the configuration file. Please try again."
+            bothConfigFilesNotAllowed: "Unable to create config file, because there is an existing \"{{ deprecatedConfig }}\" file. To create a new config file, delete the existing one and try again."
+          success:
+            configFileCreated: "Created config file \"{{ configPath }}\""
+            configFileUpdated: "Connected account \"{{ account }}\" and set it as the default account"
         createOverride:
           describe: "Create a new default account override file (.hs-account) in the current working directory."
           success: "Default account override file created at {{ overrideFilePath }}"
@@ -109,8 +120,8 @@ en:
     auth:
       describe: "Configure authentication for your HubSpot account. This will update the {{ configName }} file that stores your account information."
       errors:
-        noConfigFileFound: "No config file was found. To create a new config file, use the \"hs init\" command."
         unsupportedAuthType: "Unsupported auth type: {{ type }}. The only supported authentication protocols are {{ supportedProtocols }}."
+        centralizedConfigFileExists: "A centralized config file exists at {{ configPath }}. To authorize an account, please use {{ authCommand }}."
       options:
         authType:
           describe: "Authentication mechanism"
@@ -466,8 +477,6 @@ en:
           defaultDescription: "\"{{ authMethod }}\":  An access token tied to a specific user account. This is the recommended way of authenticating with local development tools."
         account:
           describe: "HubSpot account to authenticate"
-        useHiddenConfig:
-          describe: "Use the new HubSpot configuration file located in a hidden file in the user's home directory"
       success:
         configFileCreated: "Created config file \"{{ configPath }}\""
         configFileUpdated: "Connected account \"{{ account }}\" using \"{{ authType }}\" and set it as the default account"
@@ -475,7 +484,7 @@ en:
         updateConfig: "To update an existing config file, use the \"hs auth\" command."
       errors:
         configFileExists: "The config file {{ configPath }} already exists."
-        bothConfigFilesNotAllowed: "Unable to create config file, because there is an existing one at \"{{ path }}\". To create a new config file, delete the existing one and try again."
+        centralizedConfigFileExists: "A centralized config file already exists at {{ configPath }}. To specify a new local config file, delete the existing one and try again."
     lint:
       issuesFound: "{{ count }} issues found."
       groupName: "Linting {{ path }}"

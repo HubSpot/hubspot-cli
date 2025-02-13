@@ -89,7 +89,7 @@ export function uiCommandReference(command: string): string {
   );
 }
 
-export function uiFeatureHighlight(commands: string[], title: string): void {
+export function uiFeatureHighlight(commands: string[], title?: string): void {
   const i18nKey = 'lib.ui.featureHighlight';
 
   uiInfoSection(title ? title : i18n(`${i18nKey}.defaultTitle`), () => {

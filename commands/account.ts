@@ -1,6 +1,7 @@
 import { Argv } from 'yargs';
 import { addGlobalOptions } from '../lib/commonOpts';
 import { i18n } from '../lib/lang';
+import * as auth from './account/auth';
 import * as list from './account/list';
 import * as rename from './account/rename';
 import * as use from './account/use';
@@ -18,6 +19,7 @@ export function builder(yargs: Argv): Argv {
   addGlobalOptions(yargs);
 
   yargs
+    .command(auth)
     .command(list)
     .command(rename)
     .command(use)

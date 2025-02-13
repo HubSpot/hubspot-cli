@@ -173,9 +173,18 @@ const isTargetedCommand = (options, commandMap) => {
   return checkCommand(options, commandMap);
 };
 
+const skipConfigAccountsSubCommands = {
+  target: false,
+  subCommands: {
+    auth: { target: true },
+  },
+};
+
 const SKIP_CONFIG_VALIDATION = {
   init: { target: true },
   auth: { target: true },
+  accounts: skipConfigAccountsSubCommands,
+  account: skipConfigAccountsSubCommands,
 };
 
 const handleDeprecatedEnvVariables = options => {
@@ -233,6 +242,16 @@ const injectAccountIdMiddleware = async options => {
   }
 };
 
+const skipLoadConfigAccountSubCommands = {
+  target: false,
+  subCommands: { auth: { target: true } },
+};
+
+const SKIP_LOAD_CONFIG = {
+  account: skipLoadConfigAccountSubCommands,
+  accounts: skipLoadConfigAccountSubCommands,
+};
+
 const loadConfigMiddleware = async options => {
   // Skip this when no command is provided
   if (!options._.length) {
@@ -255,7 +274,17 @@ const loadConfigMiddleware = async options => {
       })
     );
     process.exit(EXIT_CODES.ERROR);
-  } else if (!isTargetedCommand(options, { init: { target: true } })) {
+  }
+
+  // There are two commands where we don't load config:
+  // 1. `hs init`
+  // 2. `hs account auth` only if the centralized config file does not exist
+  if (
+    !isTargetedCommand(options, {
+      init: { target: true },
+    }) &&
+    !(isTargetedCommand(options, SKIP_LOAD_CONFIG) && !configFileExists(true))
+  ) {
     const { config: configPath } = options;
     const config = loadConfig(configPath, options);
 
@@ -280,6 +309,7 @@ const checkAndWarnGitInclusionMiddleware = options => {
 const accountsSubCommands = {
   target: false,
   subCommands: {
+    auth: { target: true },
     clean: { target: true },
     list: { target: true },
     ls: { target: true },
