@@ -2,8 +2,12 @@ import { useV3Api } from '../buildAndDeploy';
 
 describe('buildAndDeploy', () => {
   describe('useV3Api', () => {
+    it('returns true if platform version is UNSTABLE', () => {
+      expect(useV3Api('UNSTABLE')).toBe(true);
+    });
+
     it('returns true if platform version is equal to the minimum', () => {
-      expect(useV3Api('2025.1')).toBe(true);
+      expect(useV3Api('2025.2')).toBe(true);
     });
 
     it('returns true if platform version is greater than the minimum', () => {
