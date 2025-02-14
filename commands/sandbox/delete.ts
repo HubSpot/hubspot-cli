@@ -63,20 +63,19 @@ export async function handler(
     }
   }
 
-  if (!accountPrompt) {
-    logger.log('');
-    logger.error(i18n(`${i18nKey}.failure.noSandboxAccounts`));
+  const sandboxAccountId = getAccountId(
+    providedAccountId || accountPrompt!.account
+  );
+
+  if (!sandboxAccountId) {
+    logger.error(i18n(`${i18nKey}.failure.noSandboxAccountId`));
     process.exit(EXIT_CODES.ERROR);
   }
-
-  const sandboxAccountId = getAccountId(
-    providedAccountId || accountPrompt.account
-  );
 
   const isDefaultAccount = sandboxAccountId === getAccountId();
 
   const baseUrl = getHubSpotWebsiteOrigin(
-    getValidEnv(getEnv(sandboxAccountId!))
+    getValidEnv(getEnv(sandboxAccountId))
   );
 
   let parentAccountId;
@@ -100,9 +99,14 @@ export async function handler(
     }
   }
 
+  if (!parentAccountId) {
+    logger.error(i18n(`${i18nKey}.failure.noParentAccountId`));
+    process.exit(EXIT_CODES.ERROR);
+  }
+
   const url = `${baseUrl}/sandboxes/${parentAccountId}`;
   const command = `hs auth ${
-    getEnv(sandboxAccountId!) === 'qa' ? '--qa' : ''
+    getEnv(sandboxAccountId) === 'qa' ? '--qa' : ''
   } --account=${parentAccountId}`;
 
   if (parentAccountId && !getAccountId(parentAccountId)) {
@@ -149,7 +153,7 @@ export async function handler(
       }
     }
 
-    await deleteSandbox(parentAccountId!, sandboxAccountId!);
+    await deleteSandbox(parentAccountId, sandboxAccountId);
 
     const deleteKey = isDefaultAccount
       ? `${i18nKey}.success.deleteDefault`
@@ -157,21 +161,20 @@ export async function handler(
     logger.log('');
     logger.success(
       i18n(deleteKey, {
-        account: providedAccountId || accountPrompt.account,
+        account: providedAccountId || accountPrompt!.account,
         sandboxHubId: sandboxAccountId || '',
       })
     );
     logger.log('');
 
-    const promptDefaultAccount = removeSandboxAccountFromConfig(
-      sandboxAccountId!
-    );
+    const promptDefaultAccount =
+      removeSandboxAccountFromConfig(sandboxAccountId);
     if (promptDefaultAccount && !force) {
       const newDefaultAccount = await selectAccountFromConfig();
       updateDefaultAccount(newDefaultAccount);
     } else {
       // If force is specified, skip prompt and set the parent account id as the default account
-      updateDefaultAccount(parentAccountId!);
+      updateDefaultAccount(parentAccountId);
     }
     process.exit(EXIT_CODES.SUCCESS);
   } catch (err) {
@@ -216,15 +219,14 @@ export async function handler(
       );
       logger.log('');
 
-      const promptDefaultAccount = removeSandboxAccountFromConfig(
-        sandboxAccountId!
-      );
+      const promptDefaultAccount =
+        removeSandboxAccountFromConfig(sandboxAccountId);
       if (promptDefaultAccount && !force) {
         const newDefaultAccount = await selectAccountFromConfig();
         updateDefaultAccount(newDefaultAccount);
       } else {
         // If force is specified, skip prompt and set the parent account id as the default account
-        updateDefaultAccount(parentAccountId!);
+        updateDefaultAccount(parentAccountId);
       }
       process.exit(EXIT_CODES.SUCCESS);
     } else {

@@ -833,8 +833,10 @@ en:
             noAccount: "No account specified. Specify an account by using the --account flag."
             cannotFindParentAccountId: "Cannot fetch your accounts to find the parent account associated with your sandbox account. Please try again..."
             noSandboxAccounts: "There are no sandboxes connected to the CLI. To add a sandbox, run {{#bold}}hs auth{{/bold}}."
+            noSandboxAccountId: "This sandbox can't be deleted from the CLI because we could not find the associated sandbox account."
             noParentAccount: "This sandbox can't be deleted from the CLI because you haven't given the CLI access to its parent account. To do this, run {{#bold}}hs auth{{/bold}} and add the parent account."
             objectNotFound: "Sandbox {{#bold}}{{ account }}{{/bold}} may have been deleted through the UI. The account has been removed from the config."
+            noParentAccountId: "This sandbox can't be deleted from the CLI because we could not find the associated parent account."
             noParentPortalAvailable: "This sandbox can't be deleted from the CLI because you haven't given the CLI access to its parent account. To do this, run {{#bold}}{{ command }}{{/bold}}. You can also delete the sandbox from the HubSpot management tool: {{#bold}}{{ url }}{{/bold}}."
             invalidKey: "Your personal access key for account {{#bold}}{{ account }}{{/bold}} is inactive. To re-authenticate, please run {{#bold}}hs auth personalaccesskey{{/bold}}."
           options:
@@ -1353,6 +1355,8 @@ en:
           message: "Choose the type of sandbox you want to create"
           developer: "Development sandbox (Includes production's object definitions)"
           standard: "Standard sandbox (Includes partial copy of production's assets)"
+        failure:
+          noSandboxAccounts:  "There are no sandboxes connected to the CLI. To add a sandbox, run {{ authCommand }}."
       uploadPrompt:
         enterDest: "Enter the destination path: "
         enterSrc: "Enter the source path: "
