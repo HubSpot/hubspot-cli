@@ -10,11 +10,12 @@ import {
 } from '@hubspot/local-dev-lib/config';
 import { CLIAccount } from '@hubspot/local-dev-lib/types/Accounts';
 import { PromptChoices } from '../../types/Prompts';
+import { SandboxAccountType } from '../../types/Sandboxes';
 
 const i18nKey = 'lib.prompts.sandboxesPrompt';
 
 type SandboxTypePromptResponse = {
-  type: string;
+  type: SandboxAccountType;
 };
 
 type DeleteSandboxPromptResponse = {

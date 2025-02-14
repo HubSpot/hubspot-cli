@@ -45,12 +45,6 @@ import {
 import { getAccountIdentifier } from '@hubspot/local-dev-lib/config/getAccountIdentifier';
 import { SandboxSyncTask } from '../../types/Sandboxes';
 
-function isValidSandboxType(
-  type: string
-): type is keyof typeof SANDBOX_TYPE_MAP {
-  return type in SANDBOX_TYPE_MAP;
-}
-
 const i18nKey = 'commands.sandbox.subcommands.create';
 
 export const command = 'create';
@@ -58,7 +52,11 @@ export const describe = uiBetaTag(i18n(`${i18nKey}.describe`), false);
 
 type CombinedArgs = ConfigArgs & AccountArgs & EnvironmentArgs & TestingArgs;
 type SandboxCreateArgs = CommonArgs &
-  CombinedArgs & { name?: string; force?: boolean; type?: string };
+  CombinedArgs & {
+    name?: string;
+    force?: boolean;
+    type?: string;
+  };
 
 export async function handler(
   args: ArgumentsCamelCase<SandboxCreateArgs>
@@ -109,11 +107,7 @@ export async function handler(
     }
   }
 
-  const sandboxType =
-    type && isValidSandboxType(type.toLowerCase())
-      ? // @ts-ignore TODO Continues to be a problem even after adding a type guard
-        SANDBOX_TYPE_MAP[type]
-      : typePrompt!.type;
+  const sandboxType = type ? SANDBOX_TYPE_MAP[type] : typePrompt!.type;
 
   // Check usage limits and exit if parent portal has no available sandboxes for the selected type
   try {
@@ -238,7 +232,7 @@ export function builder(yargs: Argv): Argv<SandboxCreateArgs> {
   });
   yargs.option('type', {
     describe: i18n(`${i18nKey}.options.type.describe`),
-    type: 'string',
+    choices: Object.keys(SANDBOX_TYPE_MAP),
   });
 
   yargs.example([
