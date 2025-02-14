@@ -42,7 +42,6 @@ import {
   EnvironmentArgs,
   TestingArgs,
 } from '../../types/Yargs';
-import { getAccountIdentifier } from '@hubspot/local-dev-lib/config/getAccountIdentifier';
 import { SandboxSyncTask } from '../../types/Sandboxes';
 
 const i18nKey = 'commands.sandbox.subcommands.create';
@@ -89,7 +88,7 @@ export async function handler(
           HUBSPOT_ACCOUNT_TYPE_STRINGS[
             HUBSPOT_ACCOUNT_TYPES[accountConfig.accountType]
           ],
-        accountName: getAccountIdentifier(accountConfig) || '',
+        accountName: accountConfig.name || '',
       })
     );
     process.exit(EXIT_CODES.ERROR);
@@ -107,7 +106,9 @@ export async function handler(
     }
   }
 
-  const sandboxType = type ? SANDBOX_TYPE_MAP[type] : typePrompt!.type;
+  const sandboxType = type
+    ? SANDBOX_TYPE_MAP[type.toLowerCase()]
+    : typePrompt!.type;
 
   // Check usage limits and exit if parent portal has no available sandboxes for the selected type
   try {
