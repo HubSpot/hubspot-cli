@@ -1,18 +1,22 @@
 import yargs, { Argv } from 'yargs';
+import * as auth from '../account/auth';
 import * as list from '../account/list';
 import * as rename from '../account/rename';
 import * as use from '../account/use';
 import * as info from '../account/info';
 import * as remove from '../account/remove';
 import * as clean from '../account/clean';
+import * as createOverride from '../account/createOverride';
 
 jest.mock('yargs');
+jest.mock('../account/auth');
 jest.mock('../account/list');
 jest.mock('../account/rename');
 jest.mock('../account/use');
 jest.mock('../account/info');
 jest.mock('../account/remove');
 jest.mock('../account/clean');
+jest.mock('../account/createOverride');
 jest.mock('../../lib/commonOpts');
 
 const commandSpy = jest
@@ -44,7 +48,16 @@ describe('commands/account', () => {
       demandCommandSpy.mockClear();
     });
 
-    const subcommands = [list, rename, use, info, remove, clean];
+    const subcommands = [
+      auth,
+      list,
+      rename,
+      use,
+      info,
+      remove,
+      clean,
+      createOverride,
+    ];
 
     it('should demand the command takes one positional argument', () => {
       accountCommands.builder(yargs as Argv);

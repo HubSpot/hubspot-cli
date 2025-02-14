@@ -38,19 +38,12 @@ describe('commands/init', () => {
           default: 'personalaccesskey',
         }),
         account: expect.objectContaining({ type: 'string' }),
-        'use-hidden-config': expect.objectContaining({ type: 'boolean' }),
         'disable-tracking': expect.objectContaining({
           type: 'boolean',
           hidden: true,
           default: false,
         }),
       });
-
-      expect(yargs.conflicts).toHaveBeenCalledTimes(1);
-      expect(yargs.conflicts).toHaveBeenCalledWith(
-        'use-hidden-config',
-        'config'
-      );
 
       expect(addConfigOptions).toHaveBeenCalledTimes(1);
       expect(addConfigOptions).toHaveBeenCalledWith(yargs);

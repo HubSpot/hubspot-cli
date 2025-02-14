@@ -23,6 +23,7 @@ const {
   loadConfig,
   getConfigDefaultAccount,
   getAccountId,
+  configFileExists,
 } = require('@hubspot/local-dev-lib/config');
 const {
   commaSeparatedValues,
@@ -46,7 +47,7 @@ const {
 const { trackAuthAction, trackCommandUsage } = require('../lib/usageTracking');
 const { authenticateWithOauth } = require('../lib/oauth');
 const { EXIT_CODES } = require('../lib/enums/exitCodes');
-const { uiFeatureHighlight } = require('../lib/ui');
+const { uiFeatureHighlight, uiCommandReference } = require('../lib/ui');
 const { logError } = require('../lib/errorHandlers/index');
 
 const i18nKey = 'commands.auth';
@@ -84,10 +85,16 @@ exports.handler = async options => {
   const env = qa ? ENVIRONMENTS.QA : ENVIRONMENTS.PROD;
   // Needed to load deprecated config
   loadConfig(configFlagValue);
-  checkAndWarnGitInclusion(getConfigPath());
+  const configPath = getConfigPath(configFlagValue);
+  checkAndWarnGitInclusion(configPath);
 
-  if (!getConfigPath(configFlagValue)) {
-    logger.error(i18n(`${i18nKey}.errors.noConfigFileFound`));
+  if (configFileExists(true)) {
+    logger.error(
+      i18n(`${i18nKey}.errors.centralizedConfigFileExists`, {
+        configPath,
+        authCommand: uiCommandReference('hs account auth'),
+      })
+    );
     process.exit(EXIT_CODES.ERROR);
   }
 
