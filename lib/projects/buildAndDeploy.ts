@@ -49,7 +49,7 @@ export function useV3Api(platformVersion?: string | null) {
   if (!platformVersion || typeof platformVersion !== 'string') {
     return false;
   }
-  if (platformVersion === 'UNSTABLE') {
+  if (platformVersion.toLowerCase() === 'unstable') {
     return true;
   }
   const [year, minor] = platformVersion.split('.');
