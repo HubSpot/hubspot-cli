@@ -1,19 +1,19 @@
-// @ts-nocheck
-const { addGlobalOptions } = require('../lib/commonOpts');
-const { i18n } = require('../lib/lang');
-const { uiBetaTag } = require('../lib/ui');
-const create = require('./sandbox/create');
-const del = require('./sandbox/delete');
+import { Argv } from 'yargs';
+import { addGlobalOptions } from '../lib/commonOpts';
+import { i18n } from '../lib/lang';
+import { uiBetaTag } from '../lib/ui';
+import * as create from './sandbox/create';
+import * as del from './sandbox/delete';
 
 const i18nKey = 'commands.sandbox';
 
-exports.command = ['sandbox', 'sandboxes'];
-exports.describe = uiBetaTag(i18n(`${i18nKey}.describe`), false);
+export const command = ['sandbox', 'sandboxes'];
+export const describe = uiBetaTag(i18n(`${i18nKey}.describe`), false);
 
-exports.builder = yargs => {
+export function builder(yargs: Argv): Argv {
   addGlobalOptions(yargs);
 
   yargs.command(create).command(del).demandCommand(1, '');
 
   return yargs;
-};
+}

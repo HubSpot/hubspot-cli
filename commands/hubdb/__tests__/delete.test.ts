@@ -11,7 +11,7 @@ jest.mock('../../../lib/commonOpts');
 // Import this last so mocks apply
 import * as hubdbDeleteCommand from '../delete';
 
-describe('commands/account/clean', () => {
+describe('commands/hubdb/delete', () => {
   const yargsMock = yargs as Argv;
 
   describe('command', () => {

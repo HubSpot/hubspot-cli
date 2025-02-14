@@ -15,7 +15,7 @@ import { Environment } from '@hubspot/local-dev-lib/types/Config';
 import { i18n } from './lang';
 import { uiAccountDescription } from './ui';
 import { logError } from './errorHandlers/index';
-import { SandboxSyncTask } from '../types/Sandboxes';
+import { SandboxSyncTask, SandboxAccountType } from '../types/Sandboxes';
 
 const i18nKey = 'lib.sandbox';
 
@@ -23,12 +23,12 @@ export const SYNC_TYPES = {
   OBJECT_RECORDS: 'object-records',
 } as const;
 
-export const SANDBOX_TYPE_MAP = {
+export const SANDBOX_TYPE_MAP: { [key: string]: SandboxAccountType } = {
   dev: HUBSPOT_ACCOUNT_TYPES.DEVELOPMENT_SANDBOX,
   developer: HUBSPOT_ACCOUNT_TYPES.DEVELOPMENT_SANDBOX,
   development: HUBSPOT_ACCOUNT_TYPES.DEVELOPMENT_SANDBOX,
   standard: HUBSPOT_ACCOUNT_TYPES.STANDARD_SANDBOX,
-} as const;
+};
 
 export const SANDBOX_API_TYPE_MAP = {
   [HUBSPOT_ACCOUNT_TYPES.STANDARD_SANDBOX]: 1,

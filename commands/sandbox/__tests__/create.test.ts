@@ -3,32 +3,38 @@ import {
   addAccountOptions,
   addConfigOptions,
   addUseEnvironmentOptions,
+  addTestingOptions,
 } from '../../../lib/commonOpts';
 
 jest.mock('yargs');
 jest.mock('../../../lib/commonOpts');
 
 // Import this last so mocks apply
-import * as hubdbFetchCommand from '../fetch';
+import * as sandboxCreateCommand from '../create';
 
-describe('commands/hubdb/fetch', () => {
+describe('commands/sandbox/create', () => {
   const yargsMock = yargs as Argv;
 
   describe('command', () => {
     it('should have the correct command structure', () => {
-      expect(hubdbFetchCommand.command).toEqual('fetch [table-id] [dest]');
+      expect(sandboxCreateCommand.command).toEqual('create');
     });
   });
 
   describe('describe', () => {
     it('should provide a description', () => {
-      expect(hubdbFetchCommand.describe).toBeDefined();
+      expect(sandboxCreateCommand.describe).toBeDefined();
     });
   });
 
   describe('builder', () => {
     it('should support the correct options', () => {
-      hubdbFetchCommand.builder(yargsMock);
+      sandboxCreateCommand.builder(yargsMock);
+
+      expect(yargsMock.example).toHaveBeenCalledTimes(1);
+
+      expect(addTestingOptions).toHaveBeenCalledTimes(1);
+      expect(addTestingOptions).toHaveBeenCalledWith(yargsMock);
 
       expect(addAccountOptions).toHaveBeenCalledTimes(1);
       expect(addAccountOptions).toHaveBeenCalledWith(yargsMock);

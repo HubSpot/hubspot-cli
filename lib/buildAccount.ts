@@ -26,6 +26,7 @@ import { handleDeveloperTestAccountCreateError } from './developerTestAccounts';
 import { CLIAccount } from '@hubspot/local-dev-lib/types/Accounts';
 import { DeveloperTestAccount } from '@hubspot/local-dev-lib/types/developerTestAccounts';
 import { SandboxResponse } from '@hubspot/local-dev-lib/types/Sandbox';
+import { SandboxAccountType } from '../types/Sandboxes';
 
 export async function saveAccountToConfig(
   accountId: number | undefined,
@@ -149,10 +150,6 @@ export async function buildDeveloperTestAccount(
   return developerTestAccount;
 }
 
-type SandboxType =
-  | typeof HUBSPOT_ACCOUNT_TYPES.STANDARD_SANDBOX
-  | typeof HUBSPOT_ACCOUNT_TYPES.DEVELOPMENT_SANDBOX;
-
 type SandboxAccount = SandboxResponse & {
   name: string;
 };
@@ -160,7 +157,7 @@ type SandboxAccount = SandboxResponse & {
 export async function buildSandbox(
   sandboxName: string,
   parentAccountConfig: CLIAccount,
-  sandboxType: SandboxType,
+  sandboxType: SandboxAccountType,
   env: Environment,
   force = false
 ): Promise<SandboxAccount> {
