@@ -12,21 +12,22 @@ interface KeyPress {
   name?: string;
 }
 
+export const TERMINATION_SIGNALS = [
+  'beforeExit',
+  'SIGINT', // Terminal trying to interrupt (Ctrl + C)
+  'SIGUSR1', // Start Debugger User-defined signal 1
+  'SIGUSR2', // User-defined signal 2
+  'uncaughtException',
+  'SIGTERM', // Represents a graceful termination
+  'SIGHUP', // Parent terminal has been closed
+];
+
 export function handleExit(
   callback: (onTerminate: { isSIGHUP: boolean }) => void
 ): void {
-  const terminationSignals = [
-    'beforeExit',
-    'SIGINT', // Terminal trying to interrupt (Ctrl + C)
-    'SIGUSR1', // Start Debugger User-defined signal 1
-    'SIGUSR2', // User-defined signal 2
-    'uncaughtException',
-    'SIGTERM', // Represents a graceful termination
-    'SIGHUP', // Parent terminal has been closed
-  ];
   let exitInProgress = false;
 
-  terminationSignals.forEach(signal => {
+  TERMINATION_SIGNALS.forEach(signal => {
     process.removeAllListeners(signal);
 
     process.on(signal, async () => {
