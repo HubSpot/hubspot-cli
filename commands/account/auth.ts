@@ -42,7 +42,7 @@ const TRACKING_STATUS = {
   COMPLETE: 'complete',
 };
 
-async function createOrUpdateConfig(
+async function updateConfig(
   env: Environment,
   doesConfigExist: boolean,
   disableTracking: boolean | undefined,
@@ -119,21 +119,18 @@ export async function handler(
   }
 
   const env = args.qa ? ENVIRONMENTS.QA : ENVIRONMENTS.PROD;
-  const configExists = configFileExists(true);
+  const configAlreadyExists = configFileExists(true);
 
-  if (!configExists) {
-    if (!disableTracking) {
-      await trackAuthAction('account-auth', authType, TRACKING_STATUS.STARTED);
-    }
+  if (!configAlreadyExists) {
     createEmptyConfigFile({}, true);
   }
   loadConfig('');
 
   handleExit(deleteEmptyConfigFile);
 
-  const updatedConfig = await createOrUpdateConfig(
+  const updatedConfig = await updateConfig(
     env,
-    configExists,
+    configAlreadyExists,
     disableTracking,
     authType,
     providedAccountId
@@ -148,7 +145,7 @@ export async function handler(
   const accountId = getAccountIdentifier(updatedConfig);
 
   // If the config file was just created, we don't need to prompt the user to set as default
-  if (!configExists) {
+  if (!configAlreadyExists) {
     logger.log('');
     logger.success(
       i18n(`${i18nKey}.success.configFileCreated`, {
