@@ -49,8 +49,11 @@ export function useV3Api(platformVersion?: string | null) {
   if (!platformVersion || typeof platformVersion !== 'string') {
     return false;
   }
+  if (platformVersion === 'UNSTABLE') {
+    return true;
+  }
   const [year, minor] = platformVersion.split('.');
-  return Number(year) >= 2025 && Number(minor) >= 1;
+  return Number(year) >= 2025 && Number(minor) >= 2;
 }
 
 function getSubtasks(task: ProjectTask): ProjectSubtask[] {
