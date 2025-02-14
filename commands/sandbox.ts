@@ -13,7 +13,6 @@ export const describe = uiBetaTag(i18n(`${i18nKey}.describe`), false);
 export function builder(yargs: Argv): Argv {
   addGlobalOptions(yargs);
 
-  // @ts-ignore TODO
   yargs.command(create).command(del).demandCommand(1, '');
 
   return yargs;
