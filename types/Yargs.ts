@@ -29,3 +29,7 @@ export type OverwriteArgs = Options & {
 export type StringArgType = Options & {
   type: 'string';
 };
+
+export type TestingArgs = {
+  qa?: boolean;
+};
