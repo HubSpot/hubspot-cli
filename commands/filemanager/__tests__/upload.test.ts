@@ -5,12 +5,10 @@ import {
   addAccountOptions,
   addUseEnvironmentOptions,
 } from '../../../lib/commonOpts';
+import * as fileManagerUploadCommand from '../upload';
 
 jest.mock('yargs');
 jest.mock('../../../lib/commonOpts');
-
-// Import this last so mocks apply
-import * as fileManagerUploadCommand from '../upload';
 
 describe('commands/filemanager/upload', () => {
   const yargsMock = yargs as Argv;

@@ -6,12 +6,10 @@ import {
   addOverwriteOptions,
   addUseEnvironmentOptions,
 } from '../../../lib/commonOpts';
+import * as fileManagerFetchCommand from '../fetch';
 
 jest.mock('yargs');
 jest.mock('../../../lib/commonOpts');
-
-// Import this last so mocks apply
-import * as fileManagerFetchCommand from '../fetch';
 
 describe('commands/filemanager/fetch', () => {
   const yargsMock = yargs as Argv;

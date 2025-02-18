@@ -1,6 +1,7 @@
 import yargs, { Argv } from 'yargs';
 import * as fetch from '../filemanager/fetch';
 import * as upload from '../filemanager/upload';
+import * as fileManagerCommands from '../filemanager';
 
 jest.mock('yargs');
 jest.mock('../filemanager/fetch');
@@ -13,9 +14,6 @@ const commandSpy = jest
 const demandCommandSpy = jest
   .spyOn(yargs as Argv, 'demandCommand')
   .mockReturnValue(yargs as Argv);
-
-// Import this last so mocks apply
-import * as fileManagerCommands from '../filemanager';
 
 describe('commands/filemanager', () => {
   describe('command', () => {
