@@ -119,7 +119,7 @@ export function uiBetaTag(message: string, log = true): string | undefined {
 
   if (log) {
     logger.log(result);
-    return undefined;
+    return;
   } else {
     return result;
   }

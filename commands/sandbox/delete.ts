@@ -79,11 +79,7 @@ export async function handler(
   );
 
   let parentAccountId;
-  const accountsList = getConfigAccounts();
-  if (!accountsList) {
-    logger.error(i18n(`${i18nKey}.failure.cannotFindParentAccountId`));
-    process.exit(EXIT_CODES.ERROR);
-  }
+  const accountsList = getConfigAccounts() || [];
 
   for (const portal of accountsList) {
     if (getAccountIdentifier(portal) === sandboxAccountId) {
@@ -91,17 +87,16 @@ export async function handler(
         parentAccountId = portal.parentAccountId;
       } else if (!force) {
         const parentAccountPrompt = await deleteSandboxPrompt(true);
-        parentAccountId = getAccountId(parentAccountPrompt!.account);
+        if (!parentAccountPrompt) {
+          logger.error(i18n(`${i18nKey}.failure.noParentAccount`));
+          process.exit(EXIT_CODES.ERROR);
+        }
+        parentAccountId = getAccountId(parentAccountPrompt.account);
       } else {
         logger.error(i18n(`${i18nKey}.failure.noParentAccount`));
         process.exit(EXIT_CODES.ERROR);
       }
     }
-  }
-
-  if (!parentAccountId) {
-    logger.error(i18n(`${i18nKey}.failure.noParentAccountId`));
-    process.exit(EXIT_CODES.ERROR);
   }
 
   const url = `${baseUrl}/sandboxes/${parentAccountId}`;
@@ -153,7 +148,7 @@ export async function handler(
       }
     }
 
-    await deleteSandbox(parentAccountId, sandboxAccountId);
+    await deleteSandbox(parentAccountId!, sandboxAccountId);
 
     const deleteKey = isDefaultAccount
       ? `${i18nKey}.success.deleteDefault`
@@ -174,7 +169,7 @@ export async function handler(
       updateDefaultAccount(newDefaultAccount);
     } else {
       // If force is specified, skip prompt and set the parent account id as the default account
-      updateDefaultAccount(parentAccountId);
+      updateDefaultAccount(parentAccountId!);
     }
     process.exit(EXIT_CODES.SUCCESS);
   } catch (err) {
@@ -226,7 +221,7 @@ export async function handler(
         updateDefaultAccount(newDefaultAccount);
       } else {
         // If force is specified, skip prompt and set the parent account id as the default account
-        updateDefaultAccount(parentAccountId);
+        updateDefaultAccount(parentAccountId!);
       }
       process.exit(EXIT_CODES.SUCCESS);
     } else {

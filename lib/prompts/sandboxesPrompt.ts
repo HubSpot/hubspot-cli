@@ -1,6 +1,6 @@
 import { promptUser } from './promptUtils';
 import { i18n } from '../lang';
-import { uiAccountDescription, uiCommandReference } from '../ui';
+import { uiAccountDescription } from '../ui';
 import { HUBSPOT_ACCOUNT_TYPES } from '@hubspot/local-dev-lib/constants/config';
 import { getAccountIdentifier } from '@hubspot/local-dev-lib/config/getAccountIdentifier';
 import { isSandbox } from '../accountTypes';
@@ -71,19 +71,13 @@ export async function sandboxTypePrompt(): Promise<SandboxTypePromptResponse> {
 
 export function deleteSandboxPrompt(
   promptParentAccount = false
-): Promise<DeleteSandboxPromptResponse> {
+): Promise<DeleteSandboxPromptResponse | undefined> {
   const accountsList = getConfigAccounts();
   const choices = promptParentAccount
     ? mapNonSandboxAccountChoices(accountsList)
     : mapSandboxAccountChoices(accountsList);
   if (!choices.length) {
-    return Promise.reject(
-      new Error(
-        i18n(`${i18nKey}.failure.noSandboxAccounts`, {
-          authCommand: uiCommandReference('hs auth'),
-        })
-      )
-    );
+    return Promise.resolve(undefined);
   }
   return promptUser<DeleteSandboxPromptResponse>([
     {
