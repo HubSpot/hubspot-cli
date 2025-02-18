@@ -4,12 +4,10 @@ import {
   addAccountOptions,
   addUseEnvironmentOptions,
 } from '../../../lib/commonOpts';
+import * as listSecretCommand from '../listSecret';
 
 jest.mock('yargs');
 jest.mock('../../../lib/commonOpts');
-
-// Import this last so mocks apply
-import * as listSecretCommand from '../listSecret';
 
 describe('commands/secret/listSecret', () => {
   const yargsMock = yargs as Argv;

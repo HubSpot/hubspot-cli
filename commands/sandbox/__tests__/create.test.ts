@@ -5,11 +5,10 @@ import {
   addUseEnvironmentOptions,
   addTestingOptions,
 } from '../../../lib/commonOpts';
+import * as sandboxCreateCommand from '../create';
 
 jest.mock('yargs');
 jest.mock('../../../lib/commonOpts');
-
-import * as sandboxCreateCommand from '../create';
 
 describe('commands/sandbox/create', () => {
   const yargsMock = yargs as Argv;

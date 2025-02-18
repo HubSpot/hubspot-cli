@@ -4,12 +4,10 @@ import {
   addConfigOptions,
   addUseEnvironmentOptions,
 } from '../../../lib/commonOpts';
+import * as hubdbFetchCommand from '../fetch';
 
 jest.mock('yargs');
 jest.mock('../../../lib/commonOpts');
-
-// Import this last so mocks apply
-import * as hubdbFetchCommand from '../fetch';
 
 describe('commands/hubdb/fetch', () => {
   const yargsMock = yargs as Argv;

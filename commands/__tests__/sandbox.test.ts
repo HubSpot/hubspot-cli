@@ -1,6 +1,7 @@
 import yargs, { Argv } from 'yargs';
 import * as create from '../sandbox/create';
 import * as del from '../sandbox/delete';
+import * as sandboxCommands from '../sandbox';
 
 jest.mock('yargs');
 jest.mock('../sandbox/create');
@@ -12,9 +13,6 @@ const commandSpy = jest
 const demandCommandSpy = jest
   .spyOn(yargs as Argv, 'demandCommand')
   .mockReturnValue(yargs as Argv);
-
-// Import this last so mocks apply
-import * as sandboxCommands from '../sandbox';
 
 describe('commands/sandbox', () => {
   describe('command', () => {
