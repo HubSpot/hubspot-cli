@@ -1,15 +1,16 @@
-// @ts-nocheck
-const upload = require('./filemanager/upload');
-const fetch = require('./filemanager/fetch');
-const { i18n } = require('../lib/lang');
+import { Argv } from 'yargs';
+
+import * as upload from './filemanager/upload';
+import * as fetch from './filemanager/fetch';
+import { i18n } from '../lib/lang';
 
 const i18nKey = 'commands.filemanager';
 
-exports.command = 'filemanager';
-exports.describe = i18n(`${i18nKey}.describe`);
+export const command = 'filemanager';
+export const describe = i18n(`${i18nKey}.describe`);
 
-exports.builder = yargs => {
+export function builder(yargs: Argv): Argv {
   yargs.command(upload).command(fetch).demandCommand(1, '');
 
   return yargs;
-};
+}

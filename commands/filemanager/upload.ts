@@ -1,34 +1,46 @@
-// @ts-nocheck
-const fs = require('fs');
-const path = require('path');
+import fs from 'fs';
+import path from 'path';
+import { Argv, ArgumentsCamelCase } from 'yargs';
 
-const { uploadFolder } = require('@hubspot/local-dev-lib/fileManager');
-const { uploadFile } = require('@hubspot/local-dev-lib/api/fileManager');
-const { getCwd, convertToUnixPath } = require('@hubspot/local-dev-lib/path');
-const { logger } = require('@hubspot/local-dev-lib/logger');
-const {
-  validateSrcAndDestPaths,
-} = require('@hubspot/local-dev-lib/cms/modules');
-const { shouldIgnoreFile } = require('@hubspot/local-dev-lib/ignoreRules');
+import { uploadFolder } from '@hubspot/local-dev-lib/fileManager';
+import { uploadFile } from '@hubspot/local-dev-lib/api/fileManager';
+import { getCwd, convertToUnixPath } from '@hubspot/local-dev-lib/path';
+import { logger } from '@hubspot/local-dev-lib/logger';
+import { validateSrcAndDestPaths } from '@hubspot/local-dev-lib/cms/modules';
+import { shouldIgnoreFile } from '@hubspot/local-dev-lib/ignoreRules';
 
-const { ApiErrorContext, logError } = require('../../lib/errorHandlers/index');
-const {
+import { ApiErrorContext, logError } from '../../lib/errorHandlers/index';
+import {
   addConfigOptions,
   addGlobalOptions,
   addAccountOptions,
   addUseEnvironmentOptions,
-} = require('../../lib/commonOpts');
-const { trackCommandUsage } = require('../../lib/usageTracking');
-const { i18n } = require('../../lib/lang');
+} from '../../lib/commonOpts';
+import { trackCommandUsage } from '../../lib/usageTracking';
+import { i18n } from '../../lib/lang';
+import { EXIT_CODES } from '../../lib/enums/exitCodes';
+import {
+  AccountArgs,
+  CommonArgs,
+  ConfigArgs,
+  EnvironmentArgs,
+} from '../../types/Yargs';
 
 const i18nKey = 'commands.filemanager.subcommands.upload';
-const { EXIT_CODES } = require('../../lib/enums/exitCodes');
 
-exports.command = 'upload <src> <dest>';
-exports.describe = i18n(`${i18nKey}.describe`);
+export const command = 'upload <src> <dest>';
+export const describe = i18n(`${i18nKey}.describe`);
 
-exports.handler = async options => {
-  const { src, dest, derivedAccountId } = options;
+type CombinedArgs = CommonArgs & ConfigArgs & AccountArgs & EnvironmentArgs;
+type FileManagerUploadArgs = CombinedArgs & {
+  src: string;
+  dest: string;
+};
+
+export async function handler(
+  args: ArgumentsCamelCase<FileManagerUploadArgs>
+): Promise<void> {
+  const { src, dest, derivedAccountId } = args;
 
   const absoluteSrcPath = path.resolve(getCwd(), src);
 
@@ -131,9 +143,9 @@ exports.handler = async options => {
         });
       });
   }
-};
+}
 
-exports.builder = yargs => {
+export function builder(yargs: Argv): Argv<FileManagerUploadArgs> {
   addGlobalOptions(yargs);
   addConfigOptions(yargs);
   addAccountOptions(yargs);
@@ -147,4 +159,6 @@ exports.builder = yargs => {
     describe: i18n(`${i18nKey}.positionals.dest.describe`),
     type: 'string',
   });
-};
+
+  return yargs as Argv<FileManagerUploadArgs>;
+}

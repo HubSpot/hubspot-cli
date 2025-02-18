@@ -1,35 +1,55 @@
-// @ts-nocheck
-const { downloadFileOrFolder } = require('@hubspot/local-dev-lib/fileManager');
-const { logger } = require('@hubspot/local-dev-lib/logger');
-const { resolveLocalPath } = require('../../lib/filesystem');
-const {
+import { Argv, ArgumentsCamelCase } from 'yargs';
+import { downloadFileOrFolder } from '@hubspot/local-dev-lib/fileManager';
+import { logger } from '@hubspot/local-dev-lib/logger';
+import { resolveLocalPath } from '../../lib/filesystem';
+import {
   addConfigOptions,
   addAccountOptions,
   addOverwriteOptions,
   addGlobalOptions,
   addUseEnvironmentOptions,
-} = require('../../lib/commonOpts');
-const { trackCommandUsage } = require('../../lib/usageTracking');
-const { i18n } = require('../../lib/lang');
+} from '../../lib/commonOpts';
+import { trackCommandUsage } from '../../lib/usageTracking';
+import { i18n } from '../../lib/lang';
+import { EXIT_CODES } from '../../lib/enums/exitCodes';
+import { logError } from '../../lib/errorHandlers/index';
+import {
+  AccountArgs,
+  CommonArgs,
+  ConfigArgs,
+  EnvironmentArgs,
+  OverwriteArgs,
+} from '../../types/Yargs';
 
 const i18nKey = 'commands.filemanager.subcommands.fetch';
-const { EXIT_CODES } = require('../../lib/enums/exitCodes');
-const { logError } = require('../../lib/errorHandlers/index');
 
-exports.command = 'fetch <src> [dest]';
-exports.describe = i18n(`${i18nKey}.describe`);
+export const command = 'fetch <src> [dest]';
+export const describe = i18n(`${i18nKey}.describe`);
 
-exports.handler = async options => {
-  const { src, includeArchived, derivedAccountId, overwrite } = options;
+type CombinedArgs = CommonArgs &
+  ConfigArgs &
+  AccountArgs &
+  EnvironmentArgs &
+  OverwriteArgs;
+type FileManagerFetchArgs = CombinedArgs & {
+  src: string;
+  dest: string;
+  includeArchived?: boolean;
+};
+
+export async function handler(
+  args: ArgumentsCamelCase<FileManagerFetchArgs>
+): Promise<void> {
+  const { src, includeArchived, derivedAccountId, overwrite } = args;
 
   if (typeof src !== 'string') {
     logger.error(i18n(`${i18nKey}.errors.sourceRequired`));
     process.exit(EXIT_CODES.ERROR);
   }
 
-  const dest = resolveLocalPath(options.dest);
+  const dest = resolveLocalPath(args.dest);
 
-  trackCommandUsage('filemanager-fetch', null, derivedAccountId);
+  trackCommandUsage('filemanager-fetch', {}, derivedAccountId);
 
   try {
     // Fetch and write file/folder.
@@ -44,9 +64,9 @@ exports.handler = async options => {
     logError(err);
     process.exit(EXIT_CODES.ERROR);
   }
-};
+}
 
-exports.builder = yargs => {
+export function builder(yargs: Argv): Argv<FileManagerFetchArgs> {
   addGlobalOptions(yargs);
   addConfigOptions(yargs);
   addAccountOptions(yargs);
@@ -66,4 +86,6 @@ exports.builder = yargs => {
     describe: i18n(`${i18nKey}.options.includeArchived.describe`),
     type: 'boolean',
   });
-};
+
+  return yargs as Argv<FileManagerFetchArgs>;
+}
