@@ -16,7 +16,7 @@ const demandCommandSpy = jest
 // Import this last so mocks apply
 import * as sandboxCommands from '../sandbox';
 
-describe('commands/account', () => {
+describe('commands/sandbox', () => {
   describe('command', () => {
     it('should have the correct command structure', () => {
       expect(sandboxCommands.command).toEqual(['sandbox', 'sandboxes']);
