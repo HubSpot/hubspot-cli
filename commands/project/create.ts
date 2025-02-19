@@ -64,16 +64,15 @@ exports.handler = async options => {
     process.exit(EXIT_CODES.ERROR);
   }
 
-  const { name, template, dest } = await createProjectPrompt(
+  const createProjectPromptResponse = await createProjectPrompt(
     options,
     projectTemplates
   );
-  const projectName = name || options.name;
-  const projectDest = path.resolve(getCwd(), dest || options.dest);
+  const projectDest = path.resolve(getCwd(), createProjectPromptResponse.dest);
 
   trackCommandUsage(
     'project-create',
-    { type: template.name },
+    { type: createProjectPromptResponse.projectTemplate.name },
     derivedAccountId
   );
 
@@ -94,7 +93,7 @@ exports.handler = async options => {
 
   try {
     await cloneGithubRepo(templateSource, projectDest, {
-      sourceDir: template.path,
+      sourceDir: createProjectPromptResponse.projectTemplate.path,
       tag: latestRepoReleaseTag,
       hideLogs: true,
     });
@@ -112,16 +111,21 @@ exports.handler = async options => {
 
   writeProjectConfig(projectConfigPath, {
     ...parsedConfigFile,
-    name: projectName,
+    name: createProjectPromptResponse.name,
   });
 
   // If the template is 'no-template', we need to manually create a src directory
-  if (template.name === 'no-template') {
+  if (createProjectPromptResponse.projectTemplate.name === 'no-template') {
     fs.ensureDirSync(path.join(projectDest, 'src'));
   }
 
   logger.log('');
-  logger.success(i18n(`${i18nKey}.logs.success`, { projectName, projectDest }));
+  logger.success(
+    i18n(`${i18nKey}.logs.success`, {
+      projectName: createProjectPromptResponse.name,
+      projectDest,
+    })
+  );
 
   logger.log('');
   logger.log(chalk.bold(i18n(`${i18nKey}.logs.welcomeMessage`)));

@@ -73,6 +73,9 @@ exports.handler = async options => {
     }
   } catch (err) {
     debugError(err);
+  }
+
+  if (!latestRepoReleaseTag) {
     logger.error(i18n(`${i18nKey}.error.failedToFetchComponentList`));
     process.exit(EXIT_CODES.ERROR);
   }
@@ -85,29 +88,32 @@ exports.handler = async options => {
     process.exit(EXIT_CODES.ERROR);
   }
 
-  const { componentData, name } = await projectAddPrompt(components, options);
-  const componentName = name || options.name;
+  const projectAddPromptResponse = await projectAddPrompt(components, options);
 
   try {
     const componentPath = path.join(
       projectDir,
       projectConfig.srcDir,
-      componentData.insertPath,
-      componentName
+      projectAddPromptResponse.componentTemplate.insertPath,
+      projectAddPromptResponse.name
     );
 
     await cloneGithubRepo(
       HUBSPOT_PROJECT_COMPONENTS_GITHUB_PATH,
       componentPath,
       {
-        sourceDir: componentData.path,
+        sourceDir: projectAddPromptResponse.componentTemplate.path,
         tag: latestRepoReleaseTag,
         hideLogs: true,
       }
     );
 
     logger.log('');
-    logger.success(i18n(`${i18nKey}.success`, { componentName }));
+    logger.success(
+      i18n(`${i18nKey}.success`, {
+        componentName: projectAddPromptResponse.name,
+      })
+    );
   } catch (error) {
     debugError(error);
     logger.error(i18n(`${i18nKey}.error.failedToDownloadComponent`));

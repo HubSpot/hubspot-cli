@@ -110,10 +110,10 @@ exports.handler = async options => {
   let projectName;
   let projectDest;
   try {
-    const { name, dest } = await createProjectPrompt(options);
+    const createProjectPromptResponse = await createProjectPrompt(options);
 
-    projectName = options.name || name;
-    projectDest = options.dest || dest;
+    projectName = createProjectPromptResponse.name;
+    projectDest = createProjectPromptResponse.dest;
 
     const { projectExists } = await ensureProjectExists(
       derivedAccountId,

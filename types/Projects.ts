@@ -8,6 +8,12 @@ export type ProjectTemplate = {
   insertPath: string;
 };
 
+export type ComponentTemplate = {
+  path: string;
+  label: string;
+  insertPath: string;
+};
+
 export type ProjectConfig = {
   name: string;
   srcDir: string;
@@ -33,15 +39,9 @@ export type ProjectPollStatusFunctionText = {
   SUBTASK_NAME_KEY: string;
 };
 
-export type ProjectAddComponentData = {
-  path: string;
-  label: string;
-  insertPath: string;
-};
-
 export type ProjectTemplateRepoConfig = {
   projects?: ProjectTemplate[];
-  components?: ProjectAddComponentData[];
+  components?: ComponentTemplate[];
 };
 
 export type ProjectPollResult = {

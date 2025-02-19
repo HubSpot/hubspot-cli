@@ -9,7 +9,7 @@ import { EXIT_CODES } from '../enums/exitCodes';
 import { i18n } from '../lang';
 import {
   ProjectTemplate,
-  ProjectAddComponentData,
+  ComponentTemplate,
   ProjectTemplateRepoConfig,
 } from '../../types/Projects';
 import { debugError } from '../errorHandlers/index';
@@ -20,7 +20,7 @@ const PROJECT_TEMPLATE_PROPERTIES = ['name', 'label', 'path', 'insertPath'];
 
 export async function getProjectComponentListFromRepo(
   githubRef: string
-): Promise<ProjectAddComponentData[]> {
+): Promise<ComponentTemplate[]> {
   let config;
 
   try {

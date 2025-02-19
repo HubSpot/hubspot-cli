@@ -15,7 +15,7 @@ const i18nKey = 'lib.prompts.createProjectPrompt';
 type CreateProjectPromptResponse = {
   name: string;
   dest: string;
-  template?: ProjectTemplate;
+  projectTemplate?: ProjectTemplate;
 };
 
 function findTemplateByNameOrLabel(
@@ -29,9 +29,9 @@ function findTemplateByNameOrLabel(
 
 export async function createProjectPrompt(
   promptOptions: {
-    name: string;
-    dest: string;
-    template: string;
+    name?: string;
+    dest?: string;
+    template?: string;
   },
   projectTemplates?: ProjectTemplate[]
 ): Promise<CreateProjectPromptResponse> {
@@ -61,7 +61,7 @@ export async function createProjectPrompt(
       when: !promptOptions.dest,
       default: answers => {
         const projectName = sanitizeFileName(
-          answers.name || promptOptions.name
+          promptOptions.name || answers.name
         );
         return path.resolve(getCwd(), projectName);
       },
@@ -82,7 +82,7 @@ export async function createProjectPrompt(
       },
     },
     {
-      name: 'template',
+      name: 'projectTemplate',
       message: () => {
         return promptOptions.template && !providedTemplateIsValid
           ? i18n(`${i18nKey}.errors.invalidTemplate`, {
@@ -103,10 +103,18 @@ export async function createProjectPrompt(
     },
   ]);
 
+  if (!result.name) {
+    result.name = promptOptions.name!;
+  }
+
+  if (!result.dest) {
+    result.dest = promptOptions.dest!;
+  }
+
   if (providedTemplateIsValid) {
-    result.template = findTemplateByNameOrLabel(
+    result.projectTemplate = findTemplateByNameOrLabel(
       projectTemplates,
-      promptOptions.template
+      promptOptions.template!
     );
   }
 
