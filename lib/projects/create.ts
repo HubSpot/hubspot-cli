@@ -1,0 +1,78 @@
+import { logger } from '@hubspot/local-dev-lib/logger';
+import { fetchFileFromRepository } from '@hubspot/local-dev-lib/github';
+import { RepoPath } from '@hubspot/local-dev-lib/types/Github';
+import {
+  HUBSPOT_PROJECT_COMPONENTS_GITHUB_PATH,
+  PROJECT_COMPONENT_TYPES,
+} from '../constants';
+import { EXIT_CODES } from '../enums/exitCodes';
+import { i18n } from '../lang';
+import {
+  ProjectTemplate,
+  ProjectAddComponentData,
+  ProjectTemplateRepoConfig,
+} from '../../types/Projects';
+import { debugError } from '../errorHandlers/index';
+
+const i18nKey = 'lib.projects.create';
+
+const PROJECT_TEMPLATE_PROPERTIES = ['name', 'label', 'path', 'insertPath'];
+
+export async function getProjectComponentListFromRepo(
+  githubRef: string
+): Promise<ProjectAddComponentData[]> {
+  let config;
+
+  try {
+    config = await fetchFileFromRepository<ProjectTemplateRepoConfig>(
+      HUBSPOT_PROJECT_COMPONENTS_GITHUB_PATH,
+      'config.json',
+      githubRef
+    );
+  } catch (err) {
+    debugError(err);
+  }
+
+  if (config) {
+    return config[PROJECT_COMPONENT_TYPES.COMPONENTS] || [];
+  }
+  return [];
+}
+
+export async function getProjectTemplateListFromRepo(
+  templateSource: RepoPath,
+  githubRef: string
+): Promise<ProjectTemplate[]> {
+  let config: ProjectTemplateRepoConfig;
+
+  try {
+    config = await fetchFileFromRepository<ProjectTemplateRepoConfig>(
+      templateSource,
+      'config.json',
+      githubRef
+    );
+  } catch (e) {
+    logger.error(i18n(`${i18nKey}.errors.missingConfigFileTemplateSource`));
+    process.exit(EXIT_CODES.ERROR);
+  }
+
+  if (!config || !config[PROJECT_COMPONENT_TYPES.PROJECTS]) {
+    logger.error(i18n(`${i18nKey}.errors.noProjectsInConfig`));
+    process.exit(EXIT_CODES.ERROR);
+  }
+
+  const templates = config[PROJECT_COMPONENT_TYPES.PROJECTS]!;
+
+  const templatesContainAllProperties = templates.every(config =>
+    PROJECT_TEMPLATE_PROPERTIES.every(p =>
+      Object.prototype.hasOwnProperty.call(config, p)
+    )
+  );
+
+  if (!templatesContainAllProperties) {
+    logger.error(i18n(`${i18nKey}.errors.missingPropertiesInConfig`));
+    process.exit(EXIT_CODES.ERROR);
+  }
+
+  return templates;
+}

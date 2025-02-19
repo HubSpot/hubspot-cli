@@ -110,7 +110,7 @@ exports.handler = async options => {
   let projectName;
   let projectDest;
   try {
-    const { name, dest } = await createProjectPrompt('', options, true);
+    const { name, dest } = await createProjectPrompt(options);
 
     projectName = options.name || name;
     projectDest = options.dest || dest;

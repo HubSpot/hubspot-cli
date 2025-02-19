@@ -3,16 +3,11 @@ import path from 'path';
 import findup from 'findup-sync';
 import { logger } from '@hubspot/local-dev-lib/logger';
 import {
-  cloneGithubRepo,
-  fetchFileFromRepository,
-} from '@hubspot/local-dev-lib/github';
-import {
   createProject,
   fetchProject,
 } from '@hubspot/local-dev-lib/api/projects';
 import { isSpecifiedError } from '@hubspot/local-dev-lib/errors/index';
 import { getCwd, getAbsoluteFilePath } from '@hubspot/local-dev-lib/path';
-import { RepoPath } from '@hubspot/local-dev-lib/types/Github';
 import { Project } from '@hubspot/local-dev-lib/types/Project';
 import { HubSpotPromise } from '@hubspot/local-dev-lib/types/Http';
 
@@ -20,21 +15,13 @@ import {
   FEEDBACK_INTERVAL,
   DEFAULT_POLLING_DELAY,
   PROJECT_CONFIG_FILE,
-  HUBSPOT_PROJECT_COMPONENTS_GITHUB_PATH,
-  PROJECT_COMPONENT_TYPES,
 } from '../constants';
 import { promptUser } from '../prompts/promptUtils';
 import { EXIT_CODES } from '../enums/exitCodes';
 import { uiLine, uiAccountDescription, uiCommandReference } from '../ui';
 import { i18n } from '../lang';
 import SpinniesManager from '../ui/SpinniesManager';
-import {
-  ProjectTemplate,
-  ProjectConfig,
-  ProjectAddComponentData,
-  ProjectTemplateRepoConfig,
-  ComponentTemplate,
-} from '../../types/Projects';
+import { ProjectConfig } from '../../types/Projects';
 import { logError, ApiErrorContext } from '../errorHandlers/index';
 
 const i18nKey = 'lib.projects';
@@ -74,7 +61,7 @@ export async function getProjectConfig(dir?: string): Promise<{
   projectDir: string | null;
   projectConfig: ProjectConfig | null;
 }> {
-  const configPath = await getProjectConfigPath(dir);
+  const configPath = getProjectConfigPath(dir);
   if (!configPath) {
     return { projectConfig: null, projectDir: null };
   }
@@ -90,74 +77,6 @@ export async function getProjectConfig(dir?: string): Promise<{
     logger.error('Could not read from project config');
     return { projectConfig: null, projectDir: null };
   }
-}
-
-export async function createProjectConfig(
-  projectPath: string,
-  projectName: string,
-  template: ProjectTemplate,
-  templateSource: RepoPath,
-  githubRef: string
-): Promise<boolean> {
-  const { projectConfig, projectDir } = await getProjectConfig(projectPath);
-
-  if (projectConfig) {
-    logger.warn(
-      projectPath === projectDir
-        ? 'A project already exists in that location.'
-        : `Found an existing project definition in ${projectDir}.`
-    );
-
-    const { shouldContinue } = await promptUser<{ shouldContinue: boolean }>([
-      {
-        name: 'shouldContinue',
-        message: () => {
-          return projectPath === projectDir
-            ? 'Do you want to overwrite the existing project definition with a new one?'
-            : `Continue creating a new project in ${projectPath}?`;
-        },
-        type: 'confirm',
-        default: false,
-      },
-    ]);
-
-    if (!shouldContinue) {
-      return false;
-    }
-  }
-
-  const projectConfigPath = path.join(projectPath, PROJECT_CONFIG_FILE);
-
-  logger.log(
-    `Creating project config in ${
-      projectPath ? projectPath : 'the current folder'
-    }`
-  );
-
-  const hasCustomTemplateSource = Boolean(templateSource);
-
-  await cloneGithubRepo(
-    templateSource || HUBSPOT_PROJECT_COMPONENTS_GITHUB_PATH,
-    projectPath,
-    {
-      sourceDir: template.path,
-      tag: hasCustomTemplateSource ? undefined : githubRef,
-    }
-  );
-
-  const _config: ProjectConfig = JSON.parse(
-    fs.readFileSync(projectConfigPath).toString()
-  );
-  writeProjectConfig(projectConfigPath, {
-    ..._config,
-    name: projectName,
-  });
-
-  if (template.name === 'no-template') {
-    fs.ensureDirSync(path.join(projectPath, 'src'));
-  }
-
-  return true;
 }
 
 export function validateProjectConfig(
@@ -324,44 +243,4 @@ export function logFeedbackMessage(buildId: number): void {
     uiLine();
     logger.log(i18n(`${i18nKey}.logFeedbackMessage.feedbackMessage`));
   }
-}
-
-export async function createProjectComponent(
-  component: ProjectAddComponentData,
-  name: string,
-  projectComponentsVersion: string
-): Promise<void> {
-  const i18nKey = 'commands.project.subcommands.add';
-  const componentName = name;
-
-  const configInfo = await getProjectConfig();
-
-  if (!configInfo.projectDir || !configInfo.projectConfig) {
-    logger.error(i18n(`${i18nKey}.error.locationInProject`));
-    process.exit(EXIT_CODES.ERROR);
-  }
-
-  const componentPath = path.join(
-    configInfo.projectDir,
-    configInfo.projectConfig.srcDir,
-    component.insertPath,
-    componentName
-  );
-
-  await cloneGithubRepo(HUBSPOT_PROJECT_COMPONENTS_GITHUB_PATH, componentPath, {
-    sourceDir: component.path,
-    tag: projectComponentsVersion,
-  });
-}
-
-export async function getProjectComponentsByVersion(
-  projectComponentsVersion: string
-): Promise<ComponentTemplate[]> {
-  const config = await fetchFileFromRepository<ProjectTemplateRepoConfig>(
-    HUBSPOT_PROJECT_COMPONENTS_GITHUB_PATH,
-    'config.json',
-    projectComponentsVersion
-  );
-
-  return config[PROJECT_COMPONENT_TYPES.COMPONENTS] || [];
 }

@@ -8,12 +8,6 @@ export type ProjectTemplate = {
   insertPath: string;
 };
 
-export type ComponentTemplate = {
-  label: string;
-  path: string;
-  insertPath: string;
-};
-
 export type ProjectConfig = {
   name: string;
   srcDir: string;
@@ -47,7 +41,7 @@ export type ProjectAddComponentData = {
 
 export type ProjectTemplateRepoConfig = {
   projects?: ProjectTemplate[];
-  components?: ComponentTemplate[];
+  components?: ProjectAddComponentData[];
 };
 
 export type ProjectPollResult = {

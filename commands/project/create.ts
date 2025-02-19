@@ -1,24 +1,33 @@
 // @ts-nocheck
+const path = require('path');
+const fs = require('fs-extra');
+const chalk = require('chalk');
+const { logger } = require('@hubspot/local-dev-lib/logger');
+const {
+  fetchReleaseData,
+  cloneGithubRepo,
+} = require('@hubspot/local-dev-lib/github');
+const { getCwd } = require('@hubspot/local-dev-lib/path');
 const {
   addAccountOptions,
   addConfigOptions,
   addUseEnvironmentOptions,
 } = require('../../lib/commonOpts');
 const { trackCommandUsage } = require('../../lib/usageTracking');
-const { getCwd } = require('@hubspot/local-dev-lib/path');
-const path = require('path');
-const chalk = require('chalk');
 const {
   createProjectPrompt,
 } = require('../../lib/prompts/createProjectPrompt');
-const { createProjectConfig } = require('../../lib/projects');
+const { writeProjectConfig, getProjectConfig } = require('../../lib/projects');
+const { getProjectTemplateListFromRepo } = require('../../lib/projects/create');
 const { i18n } = require('../../lib/lang');
 const { uiBetaTag, uiFeatureHighlight } = require('../../lib/ui');
+const { debugError } = require('../../lib/errorHandlers');
+const { EXIT_CODES } = require('../../lib/enums/exitCodes');
 const {
+  PROJECT_CONFIG_FILE,
   HUBSPOT_PROJECT_COMPONENTS_GITHUB_PATH,
+  DEFAULT_PROJECT_TEMPLATE_BRANCH,
 } = require('../../lib/constants');
-const { logger } = require('@hubspot/local-dev-lib/logger');
-const { fetchReleaseData } = require('@hubspot/local-dev-lib/github');
 
 const i18nKey = 'commands.project.subcommands.create';
 
@@ -28,21 +37,39 @@ exports.describe = uiBetaTag(i18n(`${i18nKey}.describe`), false);
 exports.handler = async options => {
   const { derivedAccountId } = options;
 
-  const hasCustomTemplateSource = Boolean(options.templateSource);
+  let latestRepoReleaseTag;
+  let templateSource = options.templateSource;
+  if (!templateSource) {
+    templateSource = HUBSPOT_PROJECT_COMPONENTS_GITHUB_PATH;
+    try {
+      const releaseData = await fetchReleaseData(
+        HUBSPOT_PROJECT_COMPONENTS_GITHUB_PATH
+      );
+      if (releaseData) {
+        latestRepoReleaseTag = releaseData.tag_name;
+      }
+    } catch (err) {
+      logger.error(i18n(`${i18nKey}.error.failedToFetchProjectList`));
+      process.exit(EXIT_CODES.ERROR);
+    }
+  }
 
-  let githubRef = '';
+  const projectTemplates = await getProjectTemplateListFromRepo(
+    templateSource,
+    latestRepoReleaseTag || DEFAULT_PROJECT_TEMPLATE_BRANCH
+  );
 
-  if (!hasCustomTemplateSource) {
-    const releaseData = await fetchReleaseData(
-      HUBSPOT_PROJECT_COMPONENTS_GITHUB_PATH
-    );
-    githubRef = releaseData.tag_name;
+  if (!projectTemplates.length) {
+    logger.error(i18n(`${i18nKey}.error.failedToFetchProjectList`));
+    process.exit(EXIT_CODES.ERROR);
   }
 
   const { name, template, dest } = await createProjectPrompt(
-    githubRef,
-    options
+    options,
+    projectTemplates
   );
+  const projectName = name || options.name;
+  const projectDest = path.resolve(getCwd(), dest || options.dest);
 
   trackCommandUsage(
     'project-create',
@@ -50,13 +77,51 @@ exports.handler = async options => {
     derivedAccountId
   );
 
-  await createProjectConfig(
-    path.resolve(getCwd(), options.dest || dest),
-    options.name || name,
-    template,
-    options.templateSource,
-    githubRef
+  const {
+    projectConfig: existingProjectConfig,
+    projectDir: existingProjectDir,
+  } = await getProjectConfig(projectDest);
+
+  // Exit if the target destination is within an existing project
+  if (existingProjectConfig && projectDest.startsWith(existingProjectDir)) {
+    logger.error(
+      i18n(`${i18nKey}.errors.cannotNestProjects`, {
+        projectDir: existingProjectDir,
+      })
+    );
+    process.exit(EXIT_CODES.ERROR);
+  }
+
+  try {
+    await cloneGithubRepo(templateSource, projectDest, {
+      sourceDir: template.path,
+      tag: latestRepoReleaseTag,
+      hideLogs: true,
+    });
+  } catch (err) {
+    debugError(err);
+    logger.error(i18n(`${i18nKey}.errors.failedToDownloadProject`));
+    process.exit(EXIT_CODES.ERROR);
+  }
+
+  const projectConfigPath = path.join(projectDest, PROJECT_CONFIG_FILE);
+
+  const parsedConfigFile: ProjectConfig = JSON.parse(
+    fs.readFileSync(projectConfigPath).toString()
   );
+
+  writeProjectConfig(projectConfigPath, {
+    ...parsedConfigFile,
+    name: projectName,
+  });
+
+  // If the template is 'no-template', we need to manually create a src directory
+  if (template.name === 'no-template') {
+    fs.ensureDirSync(path.join(projectDest, 'src'));
+  }
+
+  logger.log('');
+  logger.success(i18n(`${i18nKey}.logs.success`, { projectName, projectDest }));
 
   logger.log('');
   logger.log(chalk.bold(i18n(`${i18nKey}.logs.welcomeMessage`)));
@@ -66,6 +131,7 @@ exports.handler = async options => {
     'feedbackCommand',
     'sampleProjects',
   ]);
+  process.exit(EXIT_CODES.SUCCESS);
 };
 
 exports.builder = yargs => {

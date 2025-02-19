@@ -5,7 +5,7 @@ import { i18n } from '../lang';
 const i18nKey = 'lib.prompts.projectAddPrompt';
 
 type ProjectAddPromptResponse = {
-  component: ProjectAddComponentData;
+  componentData: ProjectAddComponentData;
   name: string;
 };
 
@@ -13,20 +13,20 @@ export async function projectAddPrompt(
   components: ProjectAddComponentData[],
   promptOptions: { name?: string; type?: string } = {}
 ): Promise<ProjectAddPromptResponse> {
-  return promptUser<ProjectAddPromptResponse>([
+  const providedTypeIsValid =
+    promptOptions.type && components.find(t => t.path === promptOptions.type);
+
+  const result = await promptUser<ProjectAddPromptResponse>([
     {
-      name: 'component',
+      name: 'componentData',
       message: () => {
-        return promptOptions.type &&
-          !components.find(t => t.path === promptOptions.type)
+        return promptOptions.type && !providedTypeIsValid
           ? i18n(`${i18nKey}.errors.invalidType`, {
               type: promptOptions.type,
             })
           : i18n(`${i18nKey}.selectType`);
       },
-      when:
-        !promptOptions.type ||
-        !components.find(t => t.path === promptOptions.type),
+      when: !providedTypeIsValid,
       type: 'list',
       choices: components.map(type => {
         return {
@@ -47,4 +47,10 @@ export async function projectAddPrompt(
       },
     },
   ]);
+
+  if (providedTypeIsValid) {
+    result.componentData = components.find(t => t.path === promptOptions.type)!;
+  }
+
+  return result;
 }

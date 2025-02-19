@@ -79,7 +79,7 @@ exports.handler = async options => {
       });
       appId = appIdResponse.appId;
     }
-    const { name, dest } = await createProjectPrompt('', options, true);
+    const { name, dest } = await createProjectPrompt(options);
 
     projectName = name;
     projectDest = options.dest || dest;
