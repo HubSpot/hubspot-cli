@@ -1,5 +1,5 @@
 import { logger } from '@hubspot/local-dev-lib/logger';
-import { fetchFileFromRepository } from '@hubspot/local-dev-lib/github';
+import { fetchRepoFile } from '@hubspot/local-dev-lib/api/github';
 import { RepoPath } from '@hubspot/local-dev-lib/types/Github';
 import {
   HUBSPOT_PROJECT_COMPONENTS_GITHUB_PATH,
@@ -24,11 +24,12 @@ export async function getProjectComponentListFromRepo(
   let config;
 
   try {
-    config = await fetchFileFromRepository<ProjectTemplateRepoConfig>(
+    const { data } = await fetchRepoFile<ProjectTemplateRepoConfig>(
       HUBSPOT_PROJECT_COMPONENTS_GITHUB_PATH,
       'config.json',
       githubRef
     );
+    config = data;
   } catch (err) {
     debugError(err);
   }
@@ -46,12 +47,14 @@ export async function getProjectTemplateListFromRepo(
   let config: ProjectTemplateRepoConfig;
 
   try {
-    config = await fetchFileFromRepository<ProjectTemplateRepoConfig>(
+    const { data } = await fetchRepoFile<ProjectTemplateRepoConfig>(
       templateSource,
       'config.json',
       githubRef
     );
+    config = data;
   } catch (e) {
+    debugError(e);
     logger.error(i18n(`${i18nKey}.errors.missingConfigFileTemplateSource`));
     return process.exit(EXIT_CODES.ERROR);
   }

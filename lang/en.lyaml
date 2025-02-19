@@ -533,7 +533,7 @@ en:
             failedToFetchProjectList: "Failed to fetch the list of available project templates. Please try again later."
             cannotNestProjects: "A project already exists at {{ projectDir }}. Projects cannot be nested within other projects. Please choose a different destination and try again."
           logs:
-            success: "Project {{#bold}}{{ projectName }}{{/bold}} was successfully created in {{ projectDest }}!"
+            success: "Project {{#bold}}{{ projectName }}{{/bold}} was successfully created in {{ projectDest }}"
             welcomeMessage: "Welcome to HubSpot Developer Projects!"
           examples:
             default: "Create a new project"
@@ -1319,9 +1319,9 @@ en:
         errors:
           nameRequired: "A project name is required"
           destRequired: "A project dest is required"
-          invalidDest: "The selected destination already exists. Please provide a new path for this project."
+          invalidDest: "There is an existing project at this destination. Please provide a new path for this project."
           invalidCharacters: "The selected destination contains invalid characters. Please provide a new path and try again."
-          invalidTemplate: "[--template] Could not find template {{ template }}. Please choose an available template."
+          invalidTemplate: "[--template] Could not find template \"{{ template }}\". Please choose an available template:"
       selectPublicAppPrompt:
         selectAppIdMigrate: "[--appId] Choose an app under {{ accountName }} to migrate:"
         selectAppIdClone: "[--appId] Choose an app under {{ accountName }} to clone:"
@@ -1343,7 +1343,7 @@ en:
         enterName: "[--name] Give your component a name: "
         errors:
           nameRequired: "A component name is required"
-          invalidType: "[--type] Could not find type {{ type }}. Please choose an available type."
+          invalidType: "[--type] Could not find type \"{{ type }}\". Please choose an available type:"
       secretPrompt:
         enterValue: "Enter a value for your secret: "
         enterName: "Enter a name for your secret: "

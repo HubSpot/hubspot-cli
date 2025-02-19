@@ -1,5 +1,6 @@
 import { logger } from '@hubspot/local-dev-lib/logger';
-import * as github from '@hubspot/local-dev-lib/github';
+import * as github from '@hubspot/local-dev-lib/api/github';
+import { HubSpotPromise } from '@hubspot/local-dev-lib/types/Http';
 import { EXIT_CODES } from '../../enums/exitCodes';
 import {
   getProjectComponentListFromRepo,
@@ -12,9 +13,9 @@ import {
 } from '../../constants';
 
 jest.mock('@hubspot/local-dev-lib/logger');
-jest.mock('@hubspot/local-dev-lib/github');
+jest.mock('@hubspot/local-dev-lib/api/github');
 
-const mockFetchFileFromRepository = jest.mocked(github.fetchFileFromRepository);
+const mockedFetchRepoFile = jest.mocked(github.fetchRepoFile);
 
 const repoConfig: ProjectTemplateRepoConfig = {
   [PROJECT_COMPONENT_TYPES.COMPONENTS]: [
@@ -37,7 +38,9 @@ const repoConfig: ProjectTemplateRepoConfig = {
 describe('lib/projects/create', () => {
   describe('getProjectComponentListFromRepo()', () => {
     it('returns a list of components', async () => {
-      mockFetchFileFromRepository.mockResolvedValue(repoConfig);
+      mockedFetchRepoFile.mockResolvedValue({
+        data: repoConfig,
+      } as unknown as HubSpotPromise);
       const components = await getProjectComponentListFromRepo('gh-ref');
 
       expect(components).toEqual(
@@ -46,7 +49,7 @@ describe('lib/projects/create', () => {
     });
 
     it('returns an empty list if no components are found', async () => {
-      mockFetchFileFromRepository.mockRejectedValue(new Error('Not found'));
+      mockedFetchRepoFile.mockRejectedValue(new Error('Not found'));
       const components = await getProjectComponentListFromRepo('gh-ref');
 
       expect(components).toEqual([]);
@@ -67,7 +70,9 @@ describe('lib/projects/create', () => {
     });
 
     it('returns a list of project templates', async () => {
-      mockFetchFileFromRepository.mockResolvedValue(repoConfig);
+      mockedFetchRepoFile.mockResolvedValue({
+        data: repoConfig,
+      } as unknown as HubSpotPromise);
       const templates = await getProjectTemplateListFromRepo(
         HUBSPOT_PROJECT_COMPONENTS_GITHUB_PATH,
         'gh-ref'
@@ -77,7 +82,7 @@ describe('lib/projects/create', () => {
     });
 
     it('Logs an error and exits the process if the request for the template list fails', async () => {
-      mockFetchFileFromRepository.mockRejectedValue(new Error('Not found'));
+      mockedFetchRepoFile.mockRejectedValue(new Error('Not found'));
       await getProjectTemplateListFromRepo(
         HUBSPOT_PROJECT_COMPONENTS_GITHUB_PATH,
         'gh-ref'
@@ -91,7 +96,7 @@ describe('lib/projects/create', () => {
     });
 
     it('Logs an error and exits the process if there are no projects listed in the repo config', async () => {
-      mockFetchFileFromRepository.mockResolvedValue({});
+      mockedFetchRepoFile.mockResolvedValue({} as unknown as HubSpotPromise);
       await getProjectTemplateListFromRepo(
         HUBSPOT_PROJECT_COMPONENTS_GITHUB_PATH,
         'gh-ref'
@@ -105,15 +110,17 @@ describe('lib/projects/create', () => {
     });
 
     it('Logs an error and exits the process if any of the projects in the repo config are missing required properties', async () => {
-      mockFetchFileFromRepository.mockResolvedValue({
-        ...repoConfig,
-        [PROJECT_COMPONENT_TYPES.PROJECTS]: [
-          {
-            name: 'project1',
-            label: 'Project 1',
-          },
-        ],
-      });
+      mockedFetchRepoFile.mockResolvedValue({
+        data: {
+          ...repoConfig,
+          [PROJECT_COMPONENT_TYPES.PROJECTS]: [
+            {
+              name: 'project1',
+              label: 'Project 1',
+            },
+          ],
+        },
+      } as unknown as HubSpotPromise);
       await getProjectTemplateListFromRepo(
         HUBSPOT_PROJECT_COMPONENTS_GITHUB_PATH,
         'gh-ref'

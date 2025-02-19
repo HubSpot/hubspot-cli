@@ -9,12 +9,22 @@ type ProjectAddPromptResponse = {
   name: string;
 };
 
+function findComponentByPathOrLabel(
+  components: ProjectAddComponentData[],
+  componentPathOrLabel: string
+): ProjectAddComponentData | undefined {
+  return components.find(
+    c => c.path === componentPathOrLabel || c.label === componentPathOrLabel
+  );
+}
+
 export async function projectAddPrompt(
   components: ProjectAddComponentData[],
   promptOptions: { name?: string; type?: string } = {}
 ): Promise<ProjectAddPromptResponse> {
   const providedTypeIsValid =
-    promptOptions.type && components.find(t => t.path === promptOptions.type);
+    !!promptOptions.type &&
+    !!findComponentByPathOrLabel(components, promptOptions.type);
 
   const result = await promptUser<ProjectAddPromptResponse>([
     {
@@ -49,7 +59,10 @@ export async function projectAddPrompt(
   ]);
 
   if (providedTypeIsValid) {
-    result.componentData = components.find(t => t.path === promptOptions.type)!;
+    result.componentData = findComponentByPathOrLabel(
+      components,
+      promptOptions.type!
+    )!;
   }
 
   return result;
