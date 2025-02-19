@@ -1108,11 +1108,10 @@ en:
         notAuthedError: "To develop this project locally, run {{ authCommand }} to authenticate the App Developer Account {{ accountId }} associated with {{ accountIdentifier }}."
     projects:
       create:
-        getProjectTemplateListFromRepo:
-          errors:
-            noProjectsInConfig: "Please ensure that there is a config.json file that contains a \"projects\" field."
-            missingConfigFileTemplateSource: "Please ensure that there is a config.json file in the repository used as the --template-source"
-            missingPropertiesInConfig: "Please ensure that each of the projects in your config.json file contain the following properties: [\"name\", \"label\", \"path\", \"insertPath\"]."
+        errors:
+          noProjectsInConfig: "Unable to find any projects in the target repository's config.json file. Please ensure that there is a \"projects\" array in the config file."
+          missingConfigFileTemplateSource: "Failed to fetch the config.json file from the target repository. Please ensure that there is a valid config.json file at the root of the repository and try again."
+          missingPropertiesInConfig: "Found misconfigured projects in the target repository's config.json file. Please ensure that each project in the target repository's config.json file contains the following properties: [\"name\", \"label\", \"path\", \"insertPath\"]."
       validateProjectConfig:
         configNotFound: "Unable to locate a project configuration file. Try running again from a project directory, or run {{ createCommand }} to create a new project."
         configMissingFields: "The project configuruation file is missing required fields."

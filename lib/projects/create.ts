@@ -53,12 +53,12 @@ export async function getProjectTemplateListFromRepo(
     );
   } catch (e) {
     logger.error(i18n(`${i18nKey}.errors.missingConfigFileTemplateSource`));
-    process.exit(EXIT_CODES.ERROR);
+    return process.exit(EXIT_CODES.ERROR);
   }
 
   if (!config || !config[PROJECT_COMPONENT_TYPES.PROJECTS]) {
     logger.error(i18n(`${i18nKey}.errors.noProjectsInConfig`));
-    process.exit(EXIT_CODES.ERROR);
+    return process.exit(EXIT_CODES.ERROR);
   }
 
   const templates = config[PROJECT_COMPONENT_TYPES.PROJECTS]!;
@@ -71,7 +71,7 @@ export async function getProjectTemplateListFromRepo(
 
   if (!templatesContainAllProperties) {
     logger.error(i18n(`${i18nKey}.errors.missingPropertiesInConfig`));
-    process.exit(EXIT_CODES.ERROR);
+    return process.exit(EXIT_CODES.ERROR);
   }
 
   return templates;
