@@ -6,11 +6,11 @@ const { confirmPrompt } = require('../../lib/prompts/promptUtils');
 const { logger } = require('@hubspot/local-dev-lib/logger');
 const path = require('path');
 const fs = require('fs-extra');
-const {
-  fetchFileFromRepository,
-  cloneGithubRepo,
-} = require('@hubspot/local-dev-lib/github');
+const { fetchRepoFile } = require('@hubspot/local-dev-lib/api/github');
+const { cloneGithubRepo } = require('@hubspot/local-dev-lib/github');
 const { i18n } = require('../../lib/lang');
+const { debugError } = require('../../lib/errorHandlers');
+const { EXIT_CODES } = require('../../lib/enums/exitCodes');
 
 const i18nKey = 'commands.create.subcommands.apiSample';
 
@@ -39,23 +39,31 @@ module.exports = {
       }
     }
 
-    const samplesConfig = await fetchFileFromRepository(
-      'HubSpot/sample-apps-list',
-      'samples.json',
-      'main'
-    );
+    let samplesConfig;
+    try {
+      const { data } = await fetchRepoFile(
+        'HubSpot/sample-apps-list',
+        'samples.json',
+        'main'
+      );
+      samplesConfig = data;
+    } catch (err) {
+      debugError(err);
+    }
 
     if (!samplesConfig) {
       logger.error(i18n(`${i18nKey}.errors.noSamples`));
-      return;
+      process.exit(EXIT_CODES.ERROR);
     }
-    const { sampleType, sampleLanguage } = await createApiSamplePrompt(
-      samplesConfig
-    );
+
+    const { sampleType, sampleLanguage } =
+      await createApiSamplePrompt(samplesConfig);
+
     if (!sampleType || !sampleLanguage) {
       logger.error(i18n(`${i18nKey}.errors.noSamples`));
-      return;
+      process.exit(EXIT_CODES.ERROR);
     }
+
     logger.info(
       i18n(`${i18nKey}.info.sampleChosen`, {
         sampleType,
