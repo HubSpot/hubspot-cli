@@ -39,7 +39,7 @@ type CombinedArgs = CommonArgs &
   AccountArgs &
   EnvironmentArgs &
   TestingArgs;
-type SchemaUpdateArgs = CombinedArgs & { name: string; path: string };
+type SchemaUpdateArgs = CombinedArgs & { name?: string; path: string };
 
 export async function handler(
   args: ArgumentsCamelCase<SchemaUpdateArgs>
