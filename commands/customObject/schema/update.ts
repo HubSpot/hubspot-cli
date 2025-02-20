@@ -54,7 +54,7 @@ export async function handler(
     process.exit(EXIT_CODES.ERROR);
   }
 
-  let name: string;
+  let name;
   try {
     const {
       data: { results },
