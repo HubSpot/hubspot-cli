@@ -23,6 +23,8 @@ import {
   getCwd,
   getExt,
 } from '@hubspot/local-dev-lib/path';
+import { Schema } from '@hubspot/local-dev-lib/types/Schemas';
+
 import { getCmsPublishMode } from './commonOpts';
 import { logError } from './errorHandlers/index';
 
@@ -187,7 +189,7 @@ export function fileExists(_path: string): boolean {
   return true;
 }
 
-export function checkAndConvertToJson(_path: string): object | null {
+export function checkAndConvertToJson(_path: string): Schema | null {
   const filePath = getAbsoluteFilePath(_path);
   if (!fileExists(filePath)) return null;
 
