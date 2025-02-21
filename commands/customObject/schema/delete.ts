@@ -80,18 +80,19 @@ export function builder(yargs: Argv): Argv<SchemaDeleteArgs> {
   addAccountOptions(yargs);
   addUseEnvironmentOptions(yargs);
 
-  yargs
-    .example([
-      ['$0 schema delete schemaName', i18n(`${i18nKey}.examples.default`)],
-    ])
-    .positional('name', {
-      describe: i18n(`${i18nKey}.positionals.name.describe`),
-      type: 'string',
-    })
-    .option('force', {
-      describe: i18n(`${i18nKey}.options.force.describe`),
-      type: 'boolean',
-    });
+  yargs.example([
+    ['$0 schema delete schemaName', i18n(`${i18nKey}.examples.default`)],
+  ]);
+
+  yargs.positional('name', {
+    describe: i18n(`${i18nKey}.positionals.name.describe`),
+    type: 'string',
+  });
+
+  yargs.option('force', {
+    describe: i18n(`${i18nKey}.options.force.describe`),
+    type: 'boolean',
+  });
 
   return yargs as Argv<SchemaDeleteArgs>;
 }
