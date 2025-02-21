@@ -68,7 +68,7 @@ export async function handler(
     if (!accountPrompt) {
       logger.log('');
       logger.error(
-        i18n(`${i18nKey}.failure.noAccounts`, {
+        i18n(`${i18nKey}.failure.noSandboxAccounts`, {
           authCommand: uiCommandReference('hs auth'),
         })
       );
