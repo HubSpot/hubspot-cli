@@ -101,12 +101,20 @@ export async function handler(
       } else if (!force) {
         const parentAccountPrompt = await deleteSandboxPrompt(true);
         if (!parentAccountPrompt) {
-          logger.error(i18n(`${i18nKey}.failure.noParentAccount`));
+          logger.error(
+            i18n(`${i18nKey}.failure.noParentAccount`, {
+              authCommand: uiCommandReference('hs auth'),
+            })
+          );
           process.exit(EXIT_CODES.ERROR);
         }
         parentAccountId = getAccountId(parentAccountPrompt.account);
       } else {
-        logger.error(i18n(`${i18nKey}.failure.noParentAccount`));
+        logger.error(
+          i18n(`${i18nKey}.failure.noParentAccount`, {
+            authCommand: uiCommandReference('hs auth'),
+          })
+        );
         process.exit(EXIT_CODES.ERROR);
       }
     }
@@ -195,6 +203,7 @@ export async function handler(
       logger.error(
         i18n(`${i18nKey}.failure.invalidKey`, {
           account: uiAccountDescription(parentAccountId),
+          authCommand: uiCommandReference('hs auth personalaccesskey'),
         })
       );
     } else if (
