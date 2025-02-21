@@ -27,7 +27,6 @@ export function builder(yargs: Argv): Argv {
 
   yargs
     .middleware([logBetaMessage])
-    // @ts-ignore TODO: Fix this type error
     .command(schemaCommand)
     .command(createCommand)
     .demandCommand(1, '');

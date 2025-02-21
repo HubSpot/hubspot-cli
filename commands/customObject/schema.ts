@@ -12,6 +12,10 @@ const i18nKey = 'commands.customObject.subcommands.schema';
 export const command = ['schema', 'schemas'];
 export const describe = i18n(`${i18nKey}.describe`);
 
+export function handler(): void {
+  // No specific handler needed for the schema command
+}
+
 export function builder(yargs: Argv): Argv {
   yargs
     .command(listCommand)
