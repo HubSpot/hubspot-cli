@@ -25,11 +25,13 @@ function logBetaMessage() {
 export function builder(yargs: Argv): Argv {
   addGlobalOptions(yargs);
 
-  yargs
-    .middleware([logBetaMessage])
-    .command(schemaCommand)
-    .command(createCommand)
-    .demandCommand(1, '');
+  yargs.middleware([logBetaMessage]);
+
+  yargs.command(schemaCommand);
+
+  yargs.command(createCommand);
+
+  yargs.demandCommand(1, '');
 
   return yargs;
 }
