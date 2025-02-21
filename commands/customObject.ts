@@ -1,17 +1,17 @@
-// @ts-nocheck
-const { addGlobalOptions } = require('../lib/commonOpts');
-const schemaCommand = require('./customObject/schema');
-const createCommand = require('./customObject/create');
-const { i18n } = require('../lib/lang');
-const { logger } = require('@hubspot/local-dev-lib/logger');
-const { uiBetaTag, uiLink } = require('../lib/ui');
+import { Argv } from 'yargs';
+import { addGlobalOptions } from '../lib/commonOpts';
+import * as schemaCommand from './customObject/schema';
+import * as createCommand from './customObject/create';
+import { i18n } from '../lib/lang';
+import { logger } from '@hubspot/local-dev-lib/logger';
+import { uiBetaTag, uiLink } from '../lib/ui';
 
 const i18nKey = 'commands.customObject';
 
-exports.command = ['custom-object', 'custom-objects', 'co'];
-exports.describe = uiBetaTag(i18n(`${i18nKey}.describe`), false);
+export const command = ['custom-object', 'custom-objects', 'co'];
+export const describe = uiBetaTag(i18n(`${i18nKey}.describe`), false);
 
-const logBetaMessage = () => {
+function logBetaMessage() {
   uiBetaTag(i18n(`${i18nKey}.betaMessage`));
   logger.log(
     uiLink(
@@ -20,16 +20,17 @@ const logBetaMessage = () => {
     )
   );
   logger.log();
-};
+}
 
-exports.builder = yargs => {
+export function builder(yargs: Argv): Argv {
   addGlobalOptions(yargs);
 
   yargs
     .middleware([logBetaMessage])
+    // @ts-ignore TODO: Fix this type error
     .command(schemaCommand)
     .command(createCommand)
     .demandCommand(1, '');
 
   return yargs;
-};
+}

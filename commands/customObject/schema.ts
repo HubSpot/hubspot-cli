@@ -1,17 +1,18 @@
-// @ts-nocheck
-const createCommand = require('./schema/create');
-const fetchCommand = require('./schema/fetch');
-const fetchAllCommand = require('./schema/fetch-all');
-const deleteCommand = require('./schema/delete');
-const listCommand = require('./schema/list');
-const updateSchema = require('./schema/update');
-const { i18n } = require('../../lib/lang');
+import { Argv } from 'yargs';
+import * as createCommand from './schema/create';
+import * as fetchCommand from './schema/fetch';
+import * as fetchAllCommand from './schema/fetch-all';
+import * as deleteCommand from './schema/delete';
+import * as listCommand from './schema/list';
+import * as updateSchema from './schema/update';
+import { i18n } from '../../lib/lang';
 
 const i18nKey = 'commands.customObject.subcommands.schema';
 
-exports.command = ['schema', 'schemas'];
-exports.describe = i18n(`${i18nKey}.describe`);
-exports.builder = yargs => {
+export const command = ['schema', 'schemas'];
+export const describe = i18n(`${i18nKey}.describe`);
+
+export function builder(yargs: Argv): Argv {
   yargs
     .command(listCommand)
     .command(fetchCommand)
@@ -22,4 +23,4 @@ exports.builder = yargs => {
     .demandCommand(1, '');
 
   return yargs;
-};
+}
