@@ -16,6 +16,7 @@ import { debugError } from '../errorHandlers/index';
 
 const i18nKey = 'lib.projects.create';
 
+export const EMPTY_PROJECT_TEMPLATE_NAME = 'no-template';
 const PROJECT_TEMPLATE_PROPERTIES = ['name', 'label', 'path', 'insertPath'];
 
 export async function getProjectComponentListFromRepo(

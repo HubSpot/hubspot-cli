@@ -18,7 +18,10 @@ const {
   createProjectPrompt,
 } = require('../../lib/prompts/createProjectPrompt');
 const { writeProjectConfig, getProjectConfig } = require('../../lib/projects');
-const { getProjectTemplateListFromRepo } = require('../../lib/projects/create');
+const {
+  getProjectTemplateListFromRepo,
+  EMPTY_PROJECT_TEMPLATE_NAME,
+} = require('../../lib/projects/create');
 const { i18n } = require('../../lib/lang');
 const { uiBetaTag, uiFeatureHighlight } = require('../../lib/ui');
 const { debugError } = require('../../lib/errorHandlers');
@@ -115,7 +118,10 @@ exports.handler = async options => {
   });
 
   // If the template is 'no-template', we need to manually create a src directory
-  if (createProjectPromptResponse.projectTemplate.name === 'no-template') {
+  if (
+    createProjectPromptResponse.projectTemplate.name ===
+    EMPTY_PROJECT_TEMPLATE_NAME
+  ) {
     fs.ensureDirSync(path.join(projectDest, 'src'));
   }
 
