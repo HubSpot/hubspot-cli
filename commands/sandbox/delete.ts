@@ -26,7 +26,11 @@ import { deleteSandboxPrompt } from '../../lib/prompts/sandboxesPrompt';
 import { selectAccountFromConfig } from '../../lib/prompts/accountsPrompt';
 import { EXIT_CODES } from '../../lib/enums/exitCodes';
 import { promptUser } from '../../lib/prompts/promptUtils';
-import { uiAccountDescription, uiBetaTag } from '../../lib/ui';
+import {
+  uiAccountDescription,
+  uiBetaTag,
+  uiCommandReference,
+} from '../../lib/ui';
 import {
   CommonArgs,
   ConfigArgs,
@@ -59,6 +63,15 @@ export async function handler(
       // Account is required, throw error if force flag is present and no account is specified
       logger.log('');
       logger.error(i18n(`${i18nKey}.failure.noAccount`));
+      process.exit(EXIT_CODES.ERROR);
+    }
+    if (!accountPrompt) {
+      logger.log('');
+      logger.error(
+        i18n(`${i18nKey}.failure.noAccounts`, {
+          authCommand: uiCommandReference('hs auth'),
+        })
+      );
       process.exit(EXIT_CODES.ERROR);
     }
   }
