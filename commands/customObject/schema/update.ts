@@ -8,6 +8,7 @@ import { getAbsoluteFilePath } from '@hubspot/local-dev-lib/path';
 import { ENVIRONMENTS } from '@hubspot/local-dev-lib/constants/environments';
 import { getEnv } from '@hubspot/local-dev-lib/config';
 import { getHubSpotWebsiteOrigin } from '@hubspot/local-dev-lib/urls';
+import { Schema } from '@hubspot/local-dev-lib/types/Schemas';
 
 import { listPrompt } from '../../../lib/prompts/promptUtils';
 import { logError } from '../../../lib/errorHandlers/index';
@@ -49,12 +50,12 @@ export async function handler(
   trackCommandUsage('custom-object-schema-update', {}, derivedAccountId);
 
   const filePath = getAbsoluteFilePath(path);
-  const schemaJson = checkAndConvertToJson(filePath);
+  const schemaJson = checkAndConvertToJson<Schema>(filePath);
   if (!schemaJson) {
     process.exit(EXIT_CODES.ERROR);
   }
 
-  let name;
+  let name = providedName;
   try {
     const {
       data: { results },

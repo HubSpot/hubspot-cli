@@ -5,6 +5,7 @@ import { ENVIRONMENTS } from '@hubspot/local-dev-lib/constants/environments';
 import { getAbsoluteFilePath } from '@hubspot/local-dev-lib/path';
 import { createObjectSchema } from '@hubspot/local-dev-lib/api/customObjects';
 import { getHubSpotWebsiteOrigin } from '@hubspot/local-dev-lib/urls';
+import { Schema } from '@hubspot/local-dev-lib/types/Schemas';
 
 import { logError } from '../../../lib/errorHandlers/index';
 import { checkAndConvertToJson } from '../../../lib/validation';
@@ -45,7 +46,7 @@ export async function handler(
   trackCommandUsage('custom-object-schema-create', {}, derivedAccountId);
 
   const filePath = getAbsoluteFilePath(path);
-  const schemaJson = checkAndConvertToJson(filePath);
+  const schemaJson = checkAndConvertToJson<Schema>(filePath);
   if (!schemaJson) {
     process.exit(EXIT_CODES.ERROR);
   }

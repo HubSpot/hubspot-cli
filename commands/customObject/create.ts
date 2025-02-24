@@ -1,6 +1,7 @@
 import { Argv, ArgumentsCamelCase } from 'yargs';
 import { logger } from '@hubspot/local-dev-lib/logger';
 import { batchCreateObjects } from '@hubspot/local-dev-lib/api/customObjects';
+import { Schema } from '@hubspot/local-dev-lib/types/Schemas';
 
 import { inputPrompt } from '../../lib/prompts/promptUtils';
 import { logError } from '../../lib/errorHandlers/index';
@@ -47,7 +48,7 @@ export async function handler(
   }
 
   const filePath = getAbsoluteFilePath(definitionPath);
-  const objectJson = checkAndConvertToJson(filePath);
+  const objectJson = checkAndConvertToJson<Schema>(filePath);
 
   if (!objectJson) {
     process.exit(EXIT_CODES.ERROR);

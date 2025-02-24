@@ -64,7 +64,7 @@ export async function handler(
       'path' in args && args.path
         ? path.resolve(getCwd(), args.path)
         : path.resolve(getCwd(), (await selectPathPrompt(args)).path);
-    if (!checkAndConvertToJson(filePath)) {
+    if (!checkAndConvertToJson<JSON>(filePath)) {
       process.exit(EXIT_CODES.ERROR);
     }
 
