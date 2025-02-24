@@ -1,41 +1,39 @@
-// @ts-nocheck
-const {
+import {
   addAccountOptions,
   addConfigOptions,
   addUseEnvironmentOptions,
-  addTestingOptions,
-} = require('../../lib/commonOpts');
-const { trackCommandUsage } = require('../../lib/usageTracking');
-const { handleExit } = require('../../lib/process');
-const { i18n } = require('../../lib/lang');
-const { logger } = require('@hubspot/local-dev-lib/logger');
-const {
+} from '../../lib/commonOpts';
+import { trackCommandUsage } from '../../lib/usageTracking';
+import { handleExit } from '../../lib/process';
+import { i18n } from '../../lib/lang';
+import { logger } from '@hubspot/local-dev-lib/logger';
+import {
   getConfigAccounts,
   getAccountConfig,
   getEnv,
-} = require('@hubspot/local-dev-lib/config');
-const {
+} from '@hubspot/local-dev-lib/config';
+import {
   getProjectConfig,
   ensureProjectExists,
   validateProjectConfig,
-} = require('../../lib/projects');
-const { EXIT_CODES } = require('../../lib/enums/exitCodes');
-const { uiBetaTag, uiCommandReference, uiLink } = require('../../lib/ui');
-const SpinniesManager = require('../../lib/ui/SpinniesManager');
-const LocalDevManager = require('../../lib/LocalDevManager');
-const {
+} from '../../lib/projects';
+import { EXIT_CODES } from '../../lib/enums/exitCodes';
+import { uiBetaTag, uiCommandReference, uiLink } from '../../lib/ui';
+import SpinniesManager from '../../lib/ui/SpinniesManager';
+import LocalDevManager from '../../lib/LocalDevManager';
+import {
   isSandbox,
   isDeveloperTestAccount,
   isStandardAccount,
   isAppDeveloperAccount,
-} = require('../../lib/accountTypes');
-const { getValidEnv } = require('@hubspot/local-dev-lib/environment');
-const { ComponentTypes } = require('../../types/Projects');
-const {
+} from '../../lib/accountTypes';
+import { getValidEnv } from '@hubspot/local-dev-lib/environment';
+import { ComponentTypes } from '../../types/Projects';
+import {
   findProjectComponents,
   getProjectComponentTypes,
-} = require('../../lib/projects/structure');
-const {
+} from '../../lib/projects/structure';
+import {
   confirmDefaultAccountIsTarget,
   suggestRecommendedNestedAccount,
   checkIfDefaultAccountIsSupported,
@@ -46,19 +44,23 @@ const {
   useExistingDevTestAccount,
   checkIfAccountFlagIsSupported,
   checkIfParentAccountIsAuthed,
-} = require('../../lib/localDev');
+} from '../../lib/localDev';
+import { ArgumentsCamelCase, Argv } from 'yargs';
+import { CommonArgs, ConfigArgs, EnvironmentArgs } from '../../types/Yargs';
 
 const i18nKey = 'commands.project.subcommands.dev';
 
-exports.command = 'dev';
-exports.describe = uiBetaTag(i18n(`${i18nKey}.describe`), false);
+export const command = 'dev';
+export const describe = uiBetaTag(i18n(`${i18nKey}.describe`), false);
 
-exports.handler = async options => {
-  const { derivedAccountId, providedAccountId } = options;
+type ProjectDevArgs = CommonArgs & ConfigArgs & EnvironmentArgs;
+
+export async function handler(args: ArgumentsCamelCase<ProjectDevArgs>) {
+  const { derivedAccountId, providedAccountId } = args;
   const accountConfig = getAccountConfig(derivedAccountId);
   const env = getValidEnv(getEnv(derivedAccountId));
 
-  trackCommandUsage('project-dev', null, derivedAccountId);
+  trackCommandUsage('project-dev', {}, derivedAccountId);
 
   const { projectConfig, projectDir } = await getProjectConfig();
 
@@ -71,8 +73,18 @@ exports.handler = async options => {
     )
   );
 
-  if (!projectConfig) {
-    logger.error(i18n(`${i18nKey}.errors.noProjectConfig`));
+  if (!projectConfig || !projectDir) {
+    logger.error(
+      i18n(`${i18nKey}.errors.noProjectConfig`, {
+        accountId: derivedAccountId,
+        authCommand: uiCommandReference('hs auth'),
+      })
+    );
+    process.exit(EXIT_CODES.ERROR);
+  }
+
+  if (!accountConfig) {
+    logger.error(i18n(`${i18nKey}.errors.noAccount`));
     process.exit(EXIT_CODES.ERROR);
   }
 
@@ -99,6 +111,15 @@ exports.handler = async options => {
 
   const accounts = getConfigAccounts();
 
+  if (!accounts) {
+    logger.error(
+      i18n(`${i18nKey}.errors.noAccountsInConfig`, {
+        authCommand: uiCommandReference('hs auth'),
+      })
+    );
+    process.exit(EXIT_CODES.SUCCESS);
+  }
+
   const defaultAccountIsRecommendedType =
     isDeveloperTestAccount(accountConfig) ||
     (!hasPublicApps && isSandbox(accountConfig));
@@ -114,7 +135,7 @@ exports.handler = async options => {
     checkIfAccountFlagIsSupported(accountConfig, hasPublicApps);
 
     if (hasPublicApps) {
-      targetProjectAccountId = accountConfig.parentAccountId;
+      targetProjectAccountId = accountConfig.parentAccountId || null;
     }
   } else {
     checkIfDefaultAccountIsSupported(accountConfig, hasPublicApps);
@@ -124,11 +145,11 @@ exports.handler = async options => {
   if (!targetProjectAccountId && defaultAccountIsRecommendedType) {
     targetTestingAccountId = derivedAccountId;
 
-    await confirmDefaultAccountIsTarget(accountConfig, hasPublicApps);
+    await confirmDefaultAccountIsTarget(accountConfig);
 
     if (hasPublicApps) {
       checkIfParentAccountIsAuthed(accountConfig);
-      targetProjectAccountId = accountConfig.parentAccountId;
+      targetProjectAccountId = accountConfig.parentAccountId || null;
     } else {
       targetProjectAccountId = derivedAccountId;
     }
@@ -149,7 +170,9 @@ exports.handler = async options => {
       hasPublicApps
     );
 
-    targetProjectAccountId = hasPublicApps ? parentAccountId : targetAccountId;
+    targetProjectAccountId = hasPublicApps
+      ? parentAccountId || null
+      : targetAccountId;
     targetTestingAccountId = targetAccountId;
 
     // Only used for developer test accounts that are not yet in the config
@@ -180,6 +203,11 @@ exports.handler = async options => {
     targetProjectAccountId = derivedAccountId;
   }
 
+  if (!targetProjectAccountId || !targetTestingAccountId) {
+    logger.error(i18n(`${i18nKey}.errors.noAccount`));
+    process.exit(EXIT_CODES.ERROR);
+  }
+
   // eslint-disable-next-line prefer-const
   let { projectExists, project } = await ensureProjectExists(
     targetProjectAccountId,
@@ -192,15 +220,15 @@ exports.handler = async options => {
   );
 
   let deployedBuild;
-  let isGithubLinked;
+  let isGithubLinked = false;
 
   SpinniesManager.init();
 
-  if (projectExists) {
+  if (projectExists && project) {
     deployedBuild = project.deployedBuild;
-    isGithubLinked =
-      project.sourceIntegration &&
-      project.sourceIntegration.source === 'GITHUB';
+    isGithubLinked = Boolean(
+      project.sourceIntegration && project.sourceIntegration.source === 'GITHUB'
+    );
   } else {
     project = await createNewProjectForLocalDev(
       projectConfig,
@@ -218,13 +246,13 @@ exports.handler = async options => {
 
   const LocalDev = new LocalDevManager({
     runnableComponents,
-    debug: options.debug,
+    debug: args.debug,
     deployedBuild,
     isGithubLinked,
     parentAccountId: targetProjectAccountId,
     projectConfig,
     projectDir,
-    projectId: project.id,
+    projectId: project!.id,
     targetAccountId: targetTestingAccountId,
     env,
   });
@@ -232,15 +260,14 @@ exports.handler = async options => {
   await LocalDev.start();
 
   handleExit(({ isSIGHUP }) => LocalDev.stop(!isSIGHUP));
-};
+}
 
-exports.builder = yargs => {
+export function builder(yargs: Argv): Argv<ProjectDevArgs> {
   addConfigOptions(yargs);
   addAccountOptions(yargs);
   addUseEnvironmentOptions(yargs);
-  addTestingOptions(yargs);
 
   yargs.example([['$0 project dev', i18n(`${i18nKey}.examples.default`)]]);
 
-  return yargs;
-};
+  return yargs as Argv<ProjectDevArgs>;
+}

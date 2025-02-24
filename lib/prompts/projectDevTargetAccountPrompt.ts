@@ -19,6 +19,7 @@ import {
 } from '@hubspot/local-dev-lib/types/developerTestAccounts';
 import { PromptChoices } from '../../types/Prompts';
 import { EXIT_CODES } from '../enums/exitCodes';
+import { ProjectDevTargetAccountPromptResponse } from '../../types/Projects';
 
 const i18nKey = 'lib.prompts.projectDevTargetAccountPrompt';
 
@@ -52,7 +53,7 @@ function getNonConfigDeveloperTestAccountName(
 export async function selectSandboxTargetAccountPrompt(
   accounts: CLIAccount[],
   defaultAccountConfig: CLIAccount
-): Promise<DeveloperTestAccount | CLIAccount> {
+): Promise<ProjectDevTargetAccountPromptResponse> {
   const defaultAccountId = getAccountId(defaultAccountConfig.name);
   let choices = [];
   let sandboxUsage: Usage = {
@@ -125,7 +126,7 @@ export async function selectSandboxTargetAccountPrompt(
 export async function selectDeveloperTestTargetAccountPrompt(
   accounts: CLIAccount[],
   defaultAccountConfig: CLIAccount
-): Promise<DeveloperTestAccount | CLIAccount> {
+): Promise<ProjectDevTargetAccountPromptResponse> {
   const defaultAccountId = getAccountId(defaultAccountConfig.name);
   let devTestAccountsResponse: FetchDeveloperTestAccountsResponse | undefined;
   try {
@@ -193,10 +194,10 @@ async function selectTargetAccountPrompt(
   defaultAccountId: number | null,
   accountType: string,
   choices: PromptChoices
-): Promise<CLIAccount | DeveloperTestAccount> {
+): Promise<ProjectDevTargetAccountPromptResponse> {
   const accountId = defaultAccountId;
   const { targetAccountInfo } = await promptUser<{
-    targetAccountInfo: CLIAccount | DeveloperTestAccount;
+    targetAccountInfo: ProjectDevTargetAccountPromptResponse;
   }>([
     {
       name: 'targetAccountInfo',

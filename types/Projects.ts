@@ -1,5 +1,6 @@
 import { Build, SubbuildStatus } from '@hubspot/local-dev-lib/types/Build';
 import { Deploy, SubdeployStatus } from '@hubspot/local-dev-lib/types/Deploy';
+import { DeveloperTestAccount } from '@hubspot/local-dev-lib/types/developerTestAccounts';
 
 export type ProjectTemplate = {
   name: string;
@@ -126,4 +127,11 @@ export type Component<T = GenericComponentConfig> = {
   config: T;
   runnable: boolean;
   path: string;
+};
+
+export type ProjectDevTargetAccountPromptResponse = {
+  targetAccountId: number | null;
+  createNestedAccount: boolean;
+  parentAccountId?: number | null;
+  notInConfigAccount?: DeveloperTestAccount | null;
 };

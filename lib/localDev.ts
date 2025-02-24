@@ -50,6 +50,7 @@ import {
 import { hubspotAccountNamePrompt } from './prompts/accountNamePrompt';
 import {
   ProjectConfig,
+  ProjectDevTargetAccountPromptResponse,
   ProjectPollResult,
   ProjectSubtask,
 } from '../types/Projects';
@@ -173,7 +174,7 @@ export async function suggestRecommendedNestedAccount(
   accounts: CLIAccount[],
   accountConfig: CLIAccount,
   hasPublicApps: boolean
-) {
+): Promise<ProjectDevTargetAccountPromptResponse> {
   logger.log();
   uiLine();
   if (hasPublicApps) {
