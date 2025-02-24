@@ -203,7 +203,7 @@ export async function handler(
       logger.error(
         i18n(`${i18nKey}.failure.invalidKey`, {
           account: uiAccountDescription(parentAccountId),
-          authCommand: uiCommandReference('hs auth personalaccesskey'),
+          authCommand: uiCommandReference('hs auth'),
         })
       );
     } else if (
