@@ -59,7 +59,7 @@ type LocalDevManagerConstructorOptions = {
   projectDir: string;
   projectId: number;
   debug?: boolean;
-  deployedBuild: Build;
+  deployedBuild?: Build;
   isGithubLinked: boolean;
   runnableComponents: Component[];
   env: Environment;
@@ -72,7 +72,7 @@ class LocalDevManager {
   projectDir: string;
   projectId: number;
   debug: boolean;
-  deployedBuild: Build;
+  deployedBuild?: Build;
   isGithubLinked: boolean;
   watcher: FSWatcher | null;
   uploadWarnings: { [key: string]: boolean };
@@ -444,7 +444,7 @@ class LocalDevManager {
   }
 
   compareLocalProjectToDeployed(): void {
-    const deployedComponentNames = this.deployedBuild.subbuildStatuses.map(
+    const deployedComponentNames = this.deployedBuild!.subbuildStatuses.map(
       subbuildStatus => subbuildStatus.buildName
     );
 

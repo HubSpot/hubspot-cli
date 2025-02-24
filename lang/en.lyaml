@@ -522,6 +522,8 @@ en:
             learnMoreLocalDevServer: "Learn more about the projects local dev server"
           errors:
             noProjectConfig: "No project detected. Please run this command again from a project directory."
+            noAccount: "An error occurred while reading account {{ accountId }} from your config. Run {{ authCommand }} to re-auth this account."
+            noAccountsInConfig: "No accounts found in your config. Run {{ authCommand }} to configure a HubSpot account with the CLI."
             invalidProjectComponents: "Projects cannot contain both private and public apps. Move your apps to separate projects before attempting local development."
             noRunnableComponents: "No supported components were found in this project. Run {{ command }} to see a list of available components and add one to your project."
           examples:
