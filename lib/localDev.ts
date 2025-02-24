@@ -50,10 +50,10 @@ import {
 import { hubspotAccountNamePrompt } from './prompts/accountNamePrompt';
 import {
   ProjectConfig,
-  ProjectDevTargetAccountPromptResponse,
   ProjectPollResult,
   ProjectSubtask,
 } from '../types/Projects';
+import { ProjectDevTargetAccountPromptResponse } from '../types/Prompts';
 import { FileResult } from 'tmp';
 import { Build } from '@hubspot/local-dev-lib/types/Build';
 

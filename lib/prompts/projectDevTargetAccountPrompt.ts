@@ -17,9 +17,11 @@ import {
   DeveloperTestAccount,
   FetchDeveloperTestAccountsResponse,
 } from '@hubspot/local-dev-lib/types/developerTestAccounts';
-import { PromptChoices } from '../../types/Prompts';
+import {
+  PromptChoices,
+  ProjectDevTargetAccountPromptResponse,
+} from '../../types/Prompts';
 import { EXIT_CODES } from '../enums/exitCodes';
-import { ProjectDevTargetAccountPromptResponse } from '../../types/Projects';
 
 const i18nKey = 'lib.prompts.projectDevTargetAccountPrompt';
 

@@ -117,7 +117,7 @@ export async function handler(args: ArgumentsCamelCase<ProjectDevArgs>) {
         authCommand: uiCommandReference('hs auth'),
       })
     );
-    process.exit(EXIT_CODES.SUCCESS);
+    process.exit(EXIT_CODES.ERROR);
   }
 
   const defaultAccountIsRecommendedType =
