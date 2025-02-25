@@ -58,18 +58,21 @@ export function builder(yargs: Argv): Argv<SchemaFetchAllArgs> {
   addAccountOptions(yargs);
   addUseEnvironmentOptions(yargs);
 
-  yargs.example([
-    ['$0 custom-object schema fetch-all', i18n(`${i18nKey}.examples.default`)],
-    [
-      '$0 custom-object schema fetch-all my/folder',
-      i18n(`${i18nKey}.examples.specifyPath`),
-    ],
-  ]);
-
-  yargs.positional('dest', {
-    describe: i18n(`${i18nKey}.positionals.dest.describe`),
-    type: 'string',
-  });
+  yargs
+    .example([
+      [
+        '$0 custom-object schema fetch-all',
+        i18n(`${i18nKey}.examples.default`),
+      ],
+      [
+        '$0 custom-object schema fetch-all my/folder',
+        i18n(`${i18nKey}.examples.specifyPath`),
+      ],
+    ])
+    .positional('dest', {
+      describe: i18n(`${i18nKey}.positionals.dest.describe`),
+      type: 'string',
+    });
 
   return yargs as Argv<SchemaFetchAllArgs>;
 }

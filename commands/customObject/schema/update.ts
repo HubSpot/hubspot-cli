@@ -98,16 +98,16 @@ export function builder(yargs: Argv): Argv<SchemaUpdateArgs> {
   addUseEnvironmentOptions(yargs);
   addTestingOptions(yargs);
 
-  yargs.positional('name', {
-    describe: i18n(`${i18nKey}.positionals.name.describe`),
-    type: 'string',
-  });
-
-  yargs.option('path', {
-    describe: i18n(`${i18nKey}.options.path.describe`),
-    type: 'string',
-    required: true,
-  });
+  yargs
+    .positional('name', {
+      describe: i18n(`${i18nKey}.positionals.name.describe`),
+      type: 'string',
+    })
+    .option('path', {
+      describe: i18n(`${i18nKey}.options.path.describe`),
+      type: 'string',
+      required: true,
+    });
 
   return yargs as Argv<SchemaUpdateArgs>;
 }

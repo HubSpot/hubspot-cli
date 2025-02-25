@@ -10,7 +10,15 @@ jest.mock('yargs');
 jest.mock('../../../../lib/commonOpts');
 
 describe('commands/customObject/schema/delete', () => {
-  const yargsMock = yargs as Argv;
+  let yargsMock = yargs as Argv;
+
+  beforeEach(() => {
+    yargsMock = {
+      positional: jest.fn().mockReturnThis(),
+      option: jest.fn().mockReturnThis(),
+      example: jest.fn().mockReturnThis(),
+    } as unknown as Argv;
+  });
 
   describe('command', () => {
     it('should have the correct command structure', () => {
