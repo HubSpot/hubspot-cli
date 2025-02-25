@@ -8,7 +8,6 @@ import { getAbsoluteFilePath } from '@hubspot/local-dev-lib/path';
 import { ENVIRONMENTS } from '@hubspot/local-dev-lib/constants/environments';
 import { getEnv } from '@hubspot/local-dev-lib/config';
 import { getHubSpotWebsiteOrigin } from '@hubspot/local-dev-lib/urls';
-import { Schema } from '@hubspot/local-dev-lib/types/Schemas';
 
 import { listPrompt } from '../../../lib/prompts/promptUtils';
 import { logError } from '../../../lib/errorHandlers/index';
@@ -22,6 +21,7 @@ import {
 } from '../../../lib/commonOpts';
 import { i18n } from '../../../lib/lang';
 import { EXIT_CODES } from '../../../lib/enums/exitCodes';
+import { isSchemaDefinition } from '../../../lib/customObject';
 import {
   CommonArgs,
   ConfigArgs,
@@ -50,8 +50,9 @@ export async function handler(
   trackCommandUsage('custom-object-schema-update', {}, derivedAccountId);
 
   const filePath = getAbsoluteFilePath(path);
-  const schemaJson = checkAndConvertToJson<Schema>(filePath);
-  if (!schemaJson) {
+  const schemaJson = checkAndConvertToJson(filePath);
+  if (!isSchemaDefinition(schemaJson)) {
+    logger.error(i18n(`${i18nKey}.errors.invalidSchema`));
     process.exit(EXIT_CODES.ERROR);
   }
 

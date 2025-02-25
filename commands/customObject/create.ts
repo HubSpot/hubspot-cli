@@ -1,7 +1,6 @@
 import { Argv, ArgumentsCamelCase } from 'yargs';
 import { logger } from '@hubspot/local-dev-lib/logger';
 import { batchCreateObjects } from '@hubspot/local-dev-lib/api/customObjects';
-import { ObjectDefinition } from '@hubspot/local-dev-lib/types/CustomObject';
 
 import { inputPrompt } from '../../lib/prompts/promptUtils';
 import { logError } from '../../lib/errorHandlers/index';
@@ -10,6 +9,7 @@ import { checkAndConvertToJson } from '../../lib/validation';
 import { trackCommandUsage } from '../../lib/usageTracking';
 import { i18n } from '../../lib/lang';
 import { EXIT_CODES } from '../../lib/enums/exitCodes';
+import { isObjectDefinition } from '../../lib/customObject';
 import {
   addConfigOptions,
   addAccountOptions,
@@ -29,23 +29,6 @@ export const describe = i18n(`${i18nKey}.describe`);
 
 type CombinedArgs = CommonArgs & ConfigArgs & AccountArgs & EnvironmentArgs;
 type CustomObjectCreateArgs = CombinedArgs & { name?: string; path?: string };
-
-function isObjectDefinition(
-  objectArray: unknown
-): objectArray is ObjectDefinition[] {
-  return (
-    Array.isArray(objectArray) &&
-    objectArray.length > 0 &&
-    objectArray.every(
-      value =>
-        typeof value === 'object' &&
-        value !== null &&
-        'associations' in value &&
-        'objectTypeId' in value &&
-        'properties' in value
-    )
-  );
-}
 
 export async function handler(
   args: ArgumentsCamelCase<CustomObjectCreateArgs>

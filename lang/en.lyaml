@@ -225,6 +225,7 @@ en:
             create:
               describe: "Create a custom object schema."
               errors:
+                invalidSchema: "The schema definition is invalid. Please check the schema and try again."
                 creationFailed: "Schema creation from {{ definition }} failed"
               options:
                 definition:
@@ -286,6 +287,7 @@ en:
             update:
               describe: "Update an existing custom object schema."
               errors:
+                invalidSchema: "The schema definition is invalid. Please check the schema and try again."
                 update: "Schema update from {{ definition }} failed"
               options:
                 path:
