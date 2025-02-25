@@ -530,7 +530,12 @@ en:
             default: "Start local dev for the current project"
         create:
           describe: "Create a new project."
+          errors:
+            failedToDownloadProject: "Failed to download project. Please try again later."
+            failedToFetchProjectList: "Failed to fetch the list of available project templates. Please try again later."
+            cannotNestProjects: "A project already exists at {{ projectDir }}. Projects cannot be nested within other projects. Please choose a different destination and try again."
           logs:
+            success: "Project {{#bold}}{{ projectName }}{{/bold}} was successfully created in {{ projectDest }}"
             welcomeMessage: "Welcome to HubSpot Developer Projects!"
           examples:
             default: "Create a new project"
@@ -603,12 +608,13 @@ en:
               describe: "The name for your newly created component"
             type:
               describe: "The path to the component type's location within the hubspot-project-components Github repo: https://github.com/HubSpot/hubspot-project-components"
-          creatingComponent:
-            message: "Adding a new component to your project"
-          success:
-            message: "{{ componentName }} was added to your project"
+          creatingComponent: "Adding a new component to {{#bold}}{{ projectName }}{{/bold}}"
+          success: "{{ componentName }} was successfully added to your project."
           error:
-            locationInProject: "The component location must be within a project folder"
+            failedToDownloadComponent: "Failed to download project component. Please try again later."
+            locationInProject: "This command must be run from within a project directory."
+            failedToFetchComponentList: "Failed to fetch the list of available components. Please try again later."
+            projectContainsPublicApp: "This project contains a public app. This command is currently only compatible with projects that contain private apps."
           examples:
             default: "Create a component within your project"
             withFlags: "Use --name and --type flags to bypass the prompt."
@@ -1106,6 +1112,11 @@ en:
       checkIfParentAccountIsAuthed:
         notAuthedError: "To develop this project locally, run {{ authCommand }} to authenticate the App Developer Account {{ accountId }} associated with {{ accountIdentifier }}."
     projects:
+      create:
+        errors:
+          noProjectsInConfig: "Unable to find any projects in the target repository's config.json file. Please ensure that there is a \"projects\" array in the config file."
+          missingConfigFileTemplateSource: "Failed to fetch the config.json file from the target repository. Please ensure that there is a valid config.json file at the root of the repository and try again."
+          missingPropertiesInConfig: "Found misconfigured projects in the target repository's config.json file. Please ensure that each project in the target repository's config.json file contains the following properties: [\"name\", \"label\", \"path\", \"insertPath\"]."
       validateProjectConfig:
         configNotFound: "Unable to locate a project configuration file. Try running again from a project directory, or run {{ createCommand }} to create a new project."
         configMissingFields: "The project configuruation file is missing required fields."
@@ -1313,12 +1324,9 @@ en:
         errors:
           nameRequired: "A project name is required"
           destRequired: "A project dest is required"
-          invalidDest: "The selected destination already exists. Please provide a new path for this project."
+          invalidDest: "There is an existing project at this destination. Please provide a new path for this project."
           invalidCharacters: "The selected destination contains invalid characters. Please provide a new path and try again."
-          invalidTemplate: "[--template] Could not find template {{ template }}. Please choose an available template."
-          noProjectsInConfig: "Please ensure that there is a config.json file that contains a \"projects\" field."
-          missingConfigFileTemplateSource: "Please ensure that there is a config.json file in the repository used as the --template-source"
-          missingPropertiesInConfig: "Please ensure that each of the projects in your config.json file contain the following properties: [\"name\", \"label\", \"path\", \"insertPath\"]."
+          invalidTemplate: "[--template] Could not find template \"{{ template }}\". Please choose an available template:"
       selectPublicAppPrompt:
         selectAppIdMigrate: "[--appId] Choose an app under {{ accountName }} to migrate:"
         selectAppIdClone: "[--appId] Choose an app under {{ accountName }} to clone:"
@@ -1336,11 +1344,11 @@ en:
           projectNotFound: "Your project {{ projectName }} could not be found in {{ accountId }}. Please select a valid project:"
           accountIdRequired: "An account ID is required to download a project."
       projectAddPrompt:
-        selectType: "[--type] Select your component type:"
+        selectType: "[--type] Select a component to add: "
         enterName: "[--name] Give your component a name: "
         errors:
           nameRequired: "A component name is required"
-          invalidType: "[--type] Could not find type {{ type }}. Please choose an available type."
+          invalidType: "[--type] Could not find type \"{{ type }}\". Please choose an available type:"
       secretPrompt:
         enterValue: "Enter a value for your secret: "
         enterName: "Enter a name for your secret: "
