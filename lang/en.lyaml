@@ -207,6 +207,7 @@ en:
         create:
           describe: "Create custom object instances."
           errors:
+            invalidObjectDefinition: "The object definition is invalid. Please check the schema and try again."
             creationFailed: "Object creation from {{ definition }} failed"
           options:
             path:
