@@ -1,35 +1,48 @@
-// @ts-nocheck
-const fs = require('fs');
-const path = require('path');
-const { i18n } = require('../../lib/lang');
-const { logger } = require('@hubspot/local-dev-lib/logger');
-const { addAccountOptions, addConfigOptions } = require('../../lib/commonOpts');
-const { getCwd } = require('@hubspot/local-dev-lib/path');
-const { getUploadableFileList } = require('../../lib/upload');
-const { trackCommandUsage } = require('../../lib/usageTracking');
-const {
+import fs from 'fs';
+import path from 'path';
+import { Argv, ArgumentsCamelCase } from 'yargs';
+import cliProgress from 'cli-progress';
+import { i18n } from '../../lib/lang';
+import { logger } from '@hubspot/local-dev-lib/logger';
+import { getCwd } from '@hubspot/local-dev-lib/path';
+import { FILE_UPLOAD_RESULT_TYPES } from '@hubspot/local-dev-lib/constants/files';
+import { getThemeJSONPath } from '@hubspot/local-dev-lib/cms/themes';
+import { preview } from '@hubspot/theme-preview-dev-server';
+import { UploadFolderResults } from '@hubspot/local-dev-lib/types/Files';
+
+import { addAccountOptions, addConfigOptions } from '../../lib/commonOpts';
+import { getUploadableFileList } from '../../lib/upload';
+import { trackCommandUsage } from '../../lib/usageTracking';
+import {
   previewPrompt,
   previewProjectPrompt,
-} = require('../../lib/prompts/previewPrompt');
-const { EXIT_CODES } = require('../../lib/enums/exitCodes');
-const {
-  FILE_UPLOAD_RESULT_TYPES,
-} = require('@hubspot/local-dev-lib/constants/files');
-const cliProgress = require('cli-progress');
-const { ApiErrorContext, logError } = require('../../lib/errorHandlers/index');
-const { handleExit, handleKeypress } = require('../../lib/process');
-const { getThemeJSONPath } = require('@hubspot/local-dev-lib/cms/themes');
-const { getProjectConfig } = require('../../lib/projects');
-const { findProjectComponents } = require('../../lib/projects/structure');
-const { ComponentTypes } = require('../../types/Projects');
-const { preview } = require('@hubspot/theme-preview-dev-server');
-const { hasFeature } = require('../../lib/hasFeature');
+} from '../../lib/prompts/previewPrompt';
+import { EXIT_CODES } from '../../lib/enums/exitCodes';
+import { ApiErrorContext, logError } from '../../lib/errorHandlers/index';
+import { handleExit, handleKeypress } from '../../lib/process';
+import { getProjectConfig } from '../../lib/projects';
+import { findProjectComponents } from '../../lib/projects/structure';
+import { ComponentTypes } from '../../types/Projects';
+import { hasFeature } from '../../lib/hasFeature';
+import { CommonArgs, ConfigArgs, AccountArgs } from '../../types/Yargs';
+
 const i18nKey = 'commands.theme.subcommands.preview';
 
-exports.command = 'preview [--src] [--dest]';
-exports.describe = i18n(`${i18nKey}.describe`);
+export const command = 'preview [--src] [--dest]';
+export const describe = i18n(`${i18nKey}.describe`);
 
-const validateSrcPath = src => {
+type CombinedArgs = CommonArgs & ConfigArgs & AccountArgs;
+type ThemePreviewArgs = CombinedArgs & {
+  src: string;
+  dest: string;
+  notify: string;
+  'no-ssl'?: boolean;
+  port?: number;
+  resetSession?: boolean;
+  generateFieldsTypes?: boolean;
+};
+
+function validateSrcPath(src: string): boolean {
   const logInvalidPath = () => {
     logger.error(
       i18n(`${i18nKey}.errors.invalidPath`, {
@@ -48,9 +61,9 @@ const validateSrcPath = src => {
     return false;
   }
   return true;
-};
+}
 
-const handleUserInput = () => {
+function handleUserInput(): void {
   const onTerminate = () => {
     logger.log(i18n(`${i18nKey}.logs.processExited`));
     process.exit(EXIT_CODES.SUCCESS);
@@ -62,24 +75,26 @@ const handleUserInput = () => {
       onTerminate();
     }
   });
-};
-
-const determineSrcAndDest = async options => {
+}
+async function determineSrcAndDest(args: ThemePreviewArgs): Promise<{
+  absoluteSrc: string;
+  dest: string;
+}> {
   let absoluteSrc;
   let dest;
   const { projectDir, projectConfig } = await getProjectConfig();
   if (!(projectDir && projectConfig)) {
     // Not in a project, prompt for src and dest of traditional theme
-    const previewPromptAnswers = await previewPrompt(options);
-    const src = options.src || previewPromptAnswers.src;
-    dest = options.dest || previewPromptAnswers.dest;
+    const previewPromptAnswers = await previewPrompt(args);
+    const src = args.src || previewPromptAnswers.src;
+    dest = args.dest || previewPromptAnswers.dest;
     absoluteSrc = path.resolve(getCwd(), src);
     if (!dest || !validateSrcPath(absoluteSrc)) {
       process.exit(EXIT_CODES.ERROR);
     }
   } else {
     // In a project
-    let themeJsonPath = getThemeJSONPath();
+    let themeJsonPath = getThemeJSONPath(getCwd());
     if (!themeJsonPath) {
       const projectComponents = await findProjectComponents(projectDir);
       const themeComponents = projectComponents.filter(
@@ -98,9 +113,11 @@ const determineSrcAndDest = async options => {
     dest = `@projects/${projectConfig.name}/${themeName}`;
   }
   return { absoluteSrc, dest };
-};
+}
 
-exports.handler = async options => {
+export async function handler(
+  args: ArgumentsCamelCase<ThemePreviewArgs>
+): Promise<void> {
   const {
     derivedAccountId,
     notify,
@@ -108,13 +125,13 @@ exports.handler = async options => {
     resetSession,
     port,
     generateFieldsTypes,
-  } = options;
+  } = args;
 
-  const { absoluteSrc, dest } = await determineSrcAndDest(options);
+  const { absoluteSrc, dest } = await determineSrcAndDest(args);
 
   const filePaths = await getUploadableFileList(absoluteSrc, false);
 
-  const startProgressBar = numFiles => {
+  function startProgressBar(numFiles: number) {
     const initialUploadProgressBar = new cliProgress.SingleBar(
       {
         gracefulExit: true,
@@ -147,7 +164,7 @@ exports.handler = async options => {
         /* Intentionally blank */
       },
       onFinalErrorCallback: () => initialUploadProgressBar.increment(),
-      onFinishCallback: results => {
+      onFinishCallback: (results: UploadFolderResults[]) => {
         initialUploadProgressBar.update(numFiles, {
           label: i18n(`${i18nKey}.initialUploadProgressBar.finish`),
         });
@@ -172,9 +189,9 @@ exports.handler = async options => {
       },
     };
     return uploadOptions;
-  };
+  }
 
-  trackCommandUsage('preview', derivedAccountId);
+  trackCommandUsage('preview', {}, derivedAccountId);
 
   let createUnifiedDevServer;
   try {
@@ -193,20 +210,19 @@ exports.handler = async options => {
   );
   if (isUngatedForUnified && createUnifiedDevServer) {
     if (port) {
-      process.env['PORT'] = port;
+      process.env['PORT'] = port.toString();
     }
     createUnifiedDevServer(
       absoluteSrc,
       false,
-      false,
-      false,
+      '',
+      '',
       !noSsl,
       generateFieldsTypes,
       {
         filePaths,
-        resetSession,
+        resetSession: resetSession || false,
         startProgressBar,
-        handleUserInput,
         dest,
       }
     );
@@ -216,48 +232,50 @@ exports.handler = async options => {
       filePaths,
       noSsl,
       port,
-      resetSession,
+      resetSession: resetSession || false,
       startProgressBar,
       handleUserInput,
     });
   }
-};
+}
 
-exports.builder = yargs => {
+export function builder(yargs: Argv): Argv<ThemePreviewArgs> {
   addConfigOptions(yargs);
   addAccountOptions(yargs);
 
-  yargs.option('src', {
-    describe: i18n(`${i18nKey}.options.src.describe`),
-    type: 'string',
-    requiresArg: true,
-  });
-  yargs.option('dest', {
-    describe: i18n(`${i18nKey}.options.dest.describe`),
-    type: 'string',
-    requiresArg: true,
-  });
-  yargs.option('notify', {
-    alias: 'n',
-    describe: i18n(`${i18nKey}.options.notify.describe`),
-    type: 'string',
-    requiresArg: true,
-  });
-  yargs.option('no-ssl', {
-    describe: i18n(`${i18nKey}.options.noSsl.describe`),
-    type: 'boolean',
-  });
-  yargs.option('port', {
-    describe: i18n(`${i18nKey}.options.port.describe`),
-    type: 'number',
-  });
-  yargs.option('resetSession', {
-    describe: false,
-    type: 'boolean',
-  });
-  yargs.option('generateFieldsTypes', {
-    describe: false,
-    type: 'boolean',
-  });
-  return yargs;
-};
+  yargs
+    .option('src', {
+      describe: i18n(`${i18nKey}.options.src.describe`),
+      type: 'string',
+      requiresArg: true,
+    })
+    .option('dest', {
+      describe: i18n(`${i18nKey}.options.dest.describe`),
+      type: 'string',
+      requiresArg: true,
+    })
+    .option('notify', {
+      alias: 'n',
+      describe: i18n(`${i18nKey}.options.notify.describe`),
+      type: 'string',
+      requiresArg: true,
+    })
+    .option('no-ssl', {
+      describe: i18n(`${i18nKey}.options.noSsl.describe`),
+      type: 'boolean',
+    })
+    .option('port', {
+      describe: i18n(`${i18nKey}.options.port.describe`),
+      type: 'number',
+    })
+    .option('resetSession', {
+      hidden: true,
+      type: 'boolean',
+    })
+    .option('generateFieldsTypes', {
+      hidden: true,
+      type: 'boolean',
+    });
+
+  return yargs as Argv<ThemePreviewArgs>;
+}
