@@ -142,7 +142,7 @@ export async function handler(
          */
         if (cssSelectors && themeFieldPath) {
           const cssSelector = cssSelectors[1].replace(/\n/g, ' ');
-          const hublThemePath = themeFieldPath[0];
+          const hublThemePath = themeFieldPath?.[0] ?? '';
 
           if (!themeFieldsSelectorMap[hublThemePath]) {
             themeFieldsSelectorMap[hublThemePath] = [];
@@ -155,16 +155,15 @@ export async function handler(
         }
 
         if (cssSelectors && hublStatement) {
-          const cssSelector = cssSelectors[1].replace(/\n/g, ' ');
+          const cssSelector = cssSelectors?.[1]?.replace(/\n/g, ' ') ?? '';
           const hublVariableName =
             Object.keys(hublVariableMap).find(_hubl => {
               return hublStatement && hublStatement[0].includes(_hubl);
             }) || '';
 
-          let themeFieldKey;
-          if (hublVariableName) {
-            themeFieldKey = hublVariableMap[hublVariableName];
-          }
+          const themeFieldKey = hublVariableName
+            ? hublVariableMap[hublVariableName]
+            : undefined;
 
           /**
            * If the theme path is referenced directly add selectors
@@ -214,7 +213,7 @@ export async function handler(
 
   logger.success(
     i18n(`${i18nKey}.success`, {
-      themePath: path || '',
+      themePath: path,
       selectorsPath,
     })
   );
