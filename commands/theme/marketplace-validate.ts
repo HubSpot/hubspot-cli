@@ -1,29 +1,41 @@
-// @ts-nocheck
-const SpinniesManager = require('../../lib/ui/SpinniesManager');
-const {
+import { Argv, ArgumentsCamelCase } from 'yargs';
+
+import SpinniesManager from '../../lib/ui/SpinniesManager';
+import {
   addConfigOptions,
   addAccountOptions,
   addUseEnvironmentOptions,
-} = require('../../lib/commonOpts');
-const { trackCommandUsage } = require('../../lib/usageTracking');
-const {
+} from '../../lib/commonOpts';
+import { trackCommandUsage } from '../../lib/usageTracking';
+import {
   kickOffValidation,
   pollForValidationFinish,
   fetchValidationResults,
   processValidationErrors,
   displayValidationResults,
-} = require('../../lib/marketplaceValidate');
-const { i18n } = require('../../lib/lang');
+} from '../../lib/marketplaceValidate';
+import { i18n } from '../../lib/lang';
+import {
+  CommonArgs,
+  ConfigArgs,
+  AccountArgs,
+  EnvironmentArgs,
+} from '../../types/Yargs';
 
 const i18nKey = 'commands.theme.subcommands.marketplaceValidate';
 
-exports.command = 'marketplace-validate <path>';
-exports.describe = i18n(`${i18nKey}.describe`);
+export const command = 'marketplace-validate <path>';
+export const describe = i18n(`${i18nKey}.describe`);
 
-exports.handler = async options => {
-  const { path, derivedAccountId } = options;
+type CombinedArgs = CommonArgs & ConfigArgs & AccountArgs & EnvironmentArgs;
+type ThemeValidateArgs = CombinedArgs & { path: string };
 
-  trackCommandUsage('validate', null, derivedAccountId);
+export async function handler(
+  args: ArgumentsCamelCase<ThemeValidateArgs>
+): Promise<void> {
+  const { path, derivedAccountId } = args;
+
+  trackCommandUsage('validate', {}, derivedAccountId);
 
   SpinniesManager.init();
 
@@ -39,21 +51,21 @@ exports.handler = async options => {
     assetType,
     path
   );
-  await pollForValidationFinish(derivedAccountId, validationId);
+  await pollForValidationFinish(derivedAccountId, validationId.toString());
 
   SpinniesManager.remove('marketplaceValidation');
 
   const validationResults = await fetchValidationResults(
     derivedAccountId,
-    validationId
+    validationId.toString()
   );
   processValidationErrors(i18nKey, validationResults);
   displayValidationResults(i18nKey, validationResults);
 
   process.exit();
-};
+}
 
-exports.builder = yargs => {
+export function builder(yargs: Argv): Argv<ThemeValidateArgs> {
   addConfigOptions(yargs);
   addAccountOptions(yargs);
   addUseEnvironmentOptions(yargs);
@@ -61,6 +73,8 @@ exports.builder = yargs => {
   yargs.positional('path', {
     describe: i18n(`${i18nKey}.positionals.path.describe`),
     type: 'string',
+    required: true,
   });
-  return yargs;
-};
+
+  return yargs as Argv<ThemeValidateArgs>;
+}
