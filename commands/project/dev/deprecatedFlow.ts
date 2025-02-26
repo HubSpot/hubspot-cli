@@ -43,7 +43,7 @@ export async function deprecatedProjectDevFlow(
   accountConfig: CLIAccount,
   projectConfig: ProjectConfig,
   projectDir: string
-) {
+): Promise<void> {
   const { providedAccountId, derivedAccountId } = args;
   const env = getValidEnv(getEnv(derivedAccountId));
 

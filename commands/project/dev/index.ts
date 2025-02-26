@@ -14,6 +14,7 @@ import { uiBetaTag, uiCommandReference, uiLink } from '../../../lib/ui';
 import { ArgumentsCamelCase, Argv } from 'yargs';
 import { ProjectDevArgs } from '../../../types/Yargs';
 import { deprecatedProjectDevFlow } from './deprecatedFlow';
+import { unifiedProjectDevFlow } from './unifiedFlow';
 import { useV3Api } from '../../../lib/projects/buildAndDeploy';
 
 const i18nKey = 'commands.project.subcommands.dev';
@@ -56,7 +57,7 @@ export async function handler(args: ArgumentsCamelCase<ProjectDevArgs>) {
   validateProjectConfig(projectConfig, projectDir);
 
   if (useV3Api(projectConfig?.platformVersion)) {
-    console.log('Unified Apps Local Dev');
+    await unifiedProjectDevFlow(args, accountConfig, projectConfig, projectDir);
   } else {
     await deprecatedProjectDevFlow(
       args,

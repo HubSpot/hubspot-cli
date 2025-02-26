@@ -11,6 +11,9 @@ import {
   PrivateAppComponentConfig,
   AppCardComponentConfig,
 } from '../../types/Projects';
+import { IntermediateRepresentationNodeLocalDev } from '@hubspot/project-parsing-lib/src/lib/types';
+import { AppIRNode } from '../../types/ProjectComponents';
+import { IR_COMPONENT_TYPES } from '../constants';
 
 export const CONFIG_FILES: {
   [k in ComponentTypes]: string;
@@ -177,4 +180,10 @@ export function componentIsPublicApp(
   component?: Component | null
 ): component is Component<PublicAppComponentConfig> {
   return component?.type === ComponentTypes.PublicApp;
+}
+
+export function isAppIRNode(
+  component: IntermediateRepresentationNodeLocalDev
+): component is AppIRNode {
+  return component.componentType === IR_COMPONENT_TYPES.APPLICATION;
 }
