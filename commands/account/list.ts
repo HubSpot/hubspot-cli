@@ -4,6 +4,7 @@ import {
   getConfigPath,
   getConfigDefaultAccount,
   getConfigAccounts,
+  getDefaultAccountOverrideFilePath,
 } from '@hubspot/local-dev-lib/config';
 import { getAccountIdentifier } from '@hubspot/local-dev-lib/config/getAccountIdentifier';
 import { CLIAccount } from '@hubspot/local-dev-lib/types/Accounts';
@@ -101,6 +102,7 @@ export async function handler(
   trackCommandUsage('accounts-list', undefined, derivedAccountId);
 
   const configPath = getConfigPath();
+  const overrideFilePath = getDefaultAccountOverrideFilePath();
   const accountsList = getConfigAccounts() || [];
   const mappedAccountData = sortAndMapAccounts(accountsList);
   const accountData = getAccountData(mappedAccountData);
@@ -113,6 +115,9 @@ export async function handler(
   );
 
   logger.log(i18n(`${i18nKey}.configPath`, { configPath: configPath! }));
+  if (overrideFilePath) {
+    logger.log(i18n(`${i18nKey}.overrideFilePath`, { overrideFilePath }));
+  }
   logger.log(
     i18n(`${i18nKey}.defaultAccount`, {
       account: getConfigDefaultAccount()!,
