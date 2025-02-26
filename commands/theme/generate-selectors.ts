@@ -44,14 +44,12 @@ export async function handler(
   }
 
   let fieldsJson = JSON.parse(fs.readFileSync(fieldsJsonPath, 'utf-8'));
-  let cssString = combineThemeCss(path);
+  let cssString = combineThemeCss(path) ?? '';
 
   /**
    * Creates map of HubL variable names to theme field paths
    */
-  const HubLExpressions = cssString
-    ? cssString.match(HUBL_EXPRESSION_REGEX)
-    : [];
+  const HubLExpressions = cssString.match(HUBL_EXPRESSION_REGEX);
   const hublVariableMap = HubLExpressions
     ? HubLExpressions.reduce(
         (_hublVariableMap: { [key: string]: string }, expression) => {
@@ -65,12 +63,12 @@ export async function handler(
         },
         {}
       )
-    : [];
+    : {};
 
   /**
    * Removes HubL variable expressions
    */
-  cssString = cssString ? cssString.replace(HUBL_EXPRESSION_REGEX, '') : '';
+  cssString = cssString.replace(HUBL_EXPRESSION_REGEX, '');
 
   /**
    * Regex for HubL variable names
@@ -89,9 +87,7 @@ export async function handler(
   hublStatements.forEach((statement, index) => {
     const statementKey = `hubl_statement_${index}`;
     hublStatementsMap[statementKey] = statement;
-    if (cssString) {
-      cssString = cssString.replace(statement, statementKey);
-    }
+    cssString = cssString.replace(statement, statementKey);
   });
 
   /**
@@ -105,9 +101,7 @@ export async function handler(
 
       if (!cssVarName || !hublVariables) return acc;
 
-      if (cssString) {
-        cssString = cssString.replace(expression, '');
-      }
+      cssString = cssString.replace(expression, '');
       return { ...acc, [cssVarName[0]]: hublVariables };
     },
     {}
@@ -116,9 +110,7 @@ export async function handler(
   // replace all css variable references with corresponding hubl placeholder
   Object.keys(cssVarsMap).forEach(cssVarName => {
     const hublPlaceholders = cssVarsMap[cssVarName];
-    if (cssString) {
-      cssString = cssString.replace(cssVarName, hublPlaceholders.join('  '));
-    }
+    cssString = cssString.replace(cssVarName, hublPlaceholders.join('  '));
   });
 
   /**
@@ -134,10 +126,15 @@ export async function handler(
         cssExpression.match(HUBL_STATEMENT_PLACEHOLDER_REGEX) || [];
 
       hublStatementsPlaceholderKey.forEach(placeholderKey => {
-        const hublStatement =
-          hublStatementsMap[placeholderKey].match(HUBL_EXPRESSIONS);
-        const themeFieldPath =
-          hublStatementsMap[placeholderKey].match(/theme\.[\w|.]*/);
+        let hublStatement;
+        let themeFieldPath;
+        if (placeholderKey in hublStatementsMap) {
+          hublStatement =
+            hublStatementsMap[placeholderKey].match(HUBL_EXPRESSIONS);
+
+          themeFieldPath =
+            hublStatementsMap[placeholderKey].match(/theme\.[\w|.]*/);
+        }
         const cssSelectors = cssExpression.match(CSS_SELECTORS_REGEX);
 
         /**
@@ -166,7 +163,6 @@ export async function handler(
 
           let themeFieldKey;
           if (hublVariableName) {
-            // @ts-ignore TODO
             themeFieldKey = hublVariableMap[hublVariableName];
           }
 
