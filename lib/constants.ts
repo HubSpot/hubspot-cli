@@ -78,3 +78,13 @@ export const IR_COMPONENT_TYPES = {
   APPLICATION: 'APPLICATION',
   CARD: 'CARD',
 } as const;
+
+export const APP_DISTRIBUTION_TYPES = {
+  PUBLIC: 'PUBLIC',
+  PRIVATE: 'PRIVATE',
+} as const;
+
+export const APP_AUTH_TYPES = {
+  OAUTH: 'OAUTH',
+  STATIC: 'STATIC',
+} as const;

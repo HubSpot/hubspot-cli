@@ -1,10 +1,15 @@
 // These types are for Unified Apps and projects on platform version 2025.1 and above
 
 import { IntermediateRepresentationNodeLocalDev } from '@hubspot/project-parsing-lib/src/lib/types';
-import { IR_COMPONENT_TYPES } from '../lib/constants';
+import {
+  IR_COMPONENT_TYPES,
+  APP_DISTRIBUTION_TYPES,
+  APP_AUTH_TYPES,
+} from '../lib/constants';
+import { ValueOf } from '@hubspot/local-dev-lib/types/Utils';
 
-type AppDistributionType = 'public' | 'private';
-type AppAuthType = 'OAUTH' | 'STATIC';
+type AppDistributionType = ValueOf<typeof APP_DISTRIBUTION_TYPES>;
+type AppAuthType = ValueOf<typeof APP_AUTH_TYPES>;
 
 type AppConfig = {
   description: string;
