@@ -17,7 +17,7 @@ import { Environment } from '@hubspot/local-dev-lib/types/Config';
 
 import { APP_DISTRIBUTION_TYPES, PROJECT_CONFIG_FILE } from './constants';
 import SpinniesManager from './ui/SpinniesManager';
-import DevServerManager from './DevServerManager';
+import DevServerManagerV2 from './DevServerManagerV2';
 import { EXIT_CODES } from './enums/exitCodes';
 import { getProjectDetailUrl } from './projects/urls';
 import { isAppIRNode, isCardIRNode } from './projects/structure';
@@ -495,7 +495,7 @@ class LocalDevManagerV2 {
 
   async devServerSetup(): Promise<boolean> {
     try {
-      await DevServerManager.setup({
+      await DevServerManagerV2.setup({
         components: this.components,
         onUploadRequired: this.logUploadWarning.bind(this),
         accountId: this.targetAccountId,
@@ -506,6 +506,7 @@ class LocalDevManagerV2 {
       if (this.debug) {
         logger.error(e);
       }
+
       logger.error(
         i18n(`${i18nKey}.devServer.setupError`, {
           message: e instanceof Error ? e.message : '',
@@ -517,7 +518,7 @@ class LocalDevManagerV2 {
 
   async devServerStart(): Promise<void> {
     try {
-      await DevServerManager.start({
+      await DevServerManagerV2.start({
         accountId: this.targetAccountId,
         projectConfig: this.projectConfig,
       });
@@ -536,7 +537,7 @@ class LocalDevManagerV2 {
 
   devServerFileChange(filePath: string, event: string): void {
     try {
-      DevServerManager.fileChange({ filePath, event });
+      DevServerManagerV2.fileChange({ filePath, event });
     } catch (e) {
       if (this.debug) {
         logger.error(e);
@@ -551,7 +552,7 @@ class LocalDevManagerV2 {
 
   async devServerCleanup(): Promise<boolean> {
     try {
-      await DevServerManager.cleanup();
+      await DevServerManagerV2.cleanup();
       return true;
     } catch (e) {
       if (this.debug) {
