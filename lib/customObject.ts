@@ -1,5 +1,7 @@
-import { SchemaDefinition } from '@hubspot/local-dev-lib/types/Schemas';
-import { ObjectDefinition } from '@hubspot/local-dev-lib/types/CustomObject';
+import {
+  SchemaDefinition,
+  ObjectDefinition,
+} from '@hubspot/local-dev-lib/types/Schemas';
 
 export function isSchemaDefinition(
   schema: unknown

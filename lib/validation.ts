@@ -188,7 +188,7 @@ export function fileExists(_path: string): boolean {
   return true;
 }
 
-export function checkAndConvertToJson(_path: string): unknown {
+export function checkAndConvertToJson(_path: string): unknown | null {
   const filePath = getAbsoluteFilePath(_path);
   if (!fileExists(filePath)) return null;
 
