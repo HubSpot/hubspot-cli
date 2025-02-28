@@ -1,4 +1,3 @@
-// @ts-nocheck
 import fs from 'fs';
 import path from 'path';
 import { Argv, ArgumentsCamelCase } from 'yargs';
@@ -132,7 +131,14 @@ export async function handler(
 
   const filePaths = await getUploadableFileList(absoluteSrc, false);
 
-  function startProgressBar(numFiles: number) {
+  function startProgressBar(numFiles: number): {
+    onAttemptCallback: () => void;
+    onSuccessCallback: () => void;
+    onFirstErrorCallback: () => void;
+    onRetryCallback: () => void;
+    onFinalErrorCallback: () => void;
+    onFinishCallback: (results: UploadFolderResults[]) => void;
+  } {
     const initialUploadProgressBar = new cliProgress.SingleBar(
       {
         gracefulExit: true,
@@ -196,6 +202,7 @@ export async function handler(
 
   let createUnifiedDevServer;
   try {
+    // @ts-ignore TODO: Remove when we deprecate Node 18
     require.resolve('@hubspot/cms-dev-server');
     const { createDevServer } = await import('@hubspot/cms-dev-server');
     createUnifiedDevServer = createDevServer;

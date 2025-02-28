@@ -51,13 +51,13 @@ export async function handler(
     assetType,
     path
   );
-  await pollForValidationFinish(derivedAccountId, validationId.toString());
+  await pollForValidationFinish(derivedAccountId, validationId);
 
   SpinniesManager.remove('marketplaceValidation');
 
   const validationResults = await fetchValidationResults(
     derivedAccountId,
-    validationId.toString()
+    validationId
   );
   processValidationErrors(i18nKey, validationResults);
   displayValidationResults(i18nKey, validationResults);
