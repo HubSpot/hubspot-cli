@@ -98,7 +98,8 @@ export async function handleProjectUpload<T>(
   projectDir: string,
   callbackFunc: ProjectUploadCallbackFunction<T>,
   uploadMessage: string,
-  sendIR: boolean = false
+  sendIR: boolean = false,
+  skipValidation: boolean = false
 ): Promise<ProjectUploadResult<T>> {
   const srcDir = path.resolve(projectDir, projectConfig.srcDir);
 
@@ -135,11 +136,14 @@ export async function handleProjectUpload<T>(
 
       if (sendIR) {
         try {
-          intermediateRepresentation = await translate({
-            projectSourceDir: path.join(projectDir, projectConfig.srcDir),
-            platformVersion: projectConfig.platformVersion,
-            accountId,
-          });
+          intermediateRepresentation = await translate(
+            {
+              projectSourceDir: path.join(projectDir, projectConfig.srcDir),
+              platformVersion: projectConfig.platformVersion,
+              accountId,
+            },
+            { skipValidation }
+          );
 
           logger.debug(
             util.inspect(intermediateRepresentation, false, null, true)
