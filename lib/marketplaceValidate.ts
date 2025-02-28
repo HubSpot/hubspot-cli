@@ -36,7 +36,7 @@ export async function kickOffValidation(
 
 export async function pollForValidationFinish(
   accountId: number,
-  validationId: string
+  validationId: number
 ): Promise<void> {
   try {
     const checkValidationStatus = async () => {
@@ -58,7 +58,7 @@ export async function pollForValidationFinish(
 
 export async function fetchValidationResults(
   accountId: number,
-  validationId: string
+  validationId: number
 ): Promise<GetValidationResultsResponse> {
   try {
     const { data: validationResults } = await getValidationResults(accountId, {

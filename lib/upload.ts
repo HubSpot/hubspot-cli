@@ -1,20 +1,21 @@
-// @ts-nocheck
-const path = require('path');
-const { walk } = require('@hubspot/local-dev-lib/fs');
-const { createIgnoreFilter } = require('@hubspot/local-dev-lib/ignoreRules');
-const { fieldsJsPrompt } = require('./prompts/cmsFieldPrompt');
-const { isAllowedExtension } = require('@hubspot/local-dev-lib/path');
-const {
-  isConvertableFieldJs,
-} = require('@hubspot/local-dev-lib/cms/handleFieldsJS');
-const { logError } = require('./errorHandlers/index');
+import path from 'path';
+import { walk } from '@hubspot/local-dev-lib/fs';
+import { createIgnoreFilter } from '@hubspot/local-dev-lib/ignoreRules';
+import { isConvertableFieldJs } from '@hubspot/local-dev-lib/cms/handleFieldsJS';
+import { isAllowedExtension } from '@hubspot/local-dev-lib/path';
+
+import { fieldsJsPrompt } from './prompts/cmsFieldPrompt';
+import { logError } from './errorHandlers/index';
 
 /*
  * Walks the src folder for files, filters them based on ignore filter.
  * If convertFields is true then will check for any JS fields conflicts (i.e., JS fields file and fields.json file) and prompt to resolve
  */
-const getUploadableFileList = async (src, convertFields) => {
-  let filePaths = [];
+export async function getUploadableFileList(
+  src: string,
+  convertFields: boolean
+): Promise<string[]> {
+  let filePaths: string[] = [];
   try {
     filePaths = await walk(src);
   } catch (e) {
@@ -27,13 +28,13 @@ const getUploadableFileList = async (src, convertFields) => {
       }
       return true;
     })
-    .filter(createIgnoreFilter());
+    .filter(createIgnoreFilter(false));
   if (!convertFields) {
     return allowedFiles;
   }
 
   const uploadableFiles = [];
-  let skipFiles = [];
+  let skipFiles: string[] = [];
   for (const filePath of allowedFiles) {
     const fileName = path.basename(filePath);
     if (skipFiles.includes(filePath)) continue;
@@ -52,8 +53,4 @@ const getUploadableFileList = async (src, convertFields) => {
     uploadableFiles.push(filePath);
   }
   return uploadableFiles;
-};
-
-module.exports = {
-  getUploadableFileList,
-};
+}

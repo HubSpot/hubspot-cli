@@ -1,17 +1,16 @@
-// @ts-nocheck
-const marketplaceValidate = require('./theme/marketplace-validate');
-const generateSelectors = require('./theme/generate-selectors');
-const previewCommand = require('./theme/preview');
-const { addGlobalOptions } = require('../lib/commonOpts');
-
-const { i18n } = require('../lib/lang');
+import { Argv } from 'yargs';
+import * as marketplaceValidate from './theme/marketplace-validate';
+import * as generateSelectors from './theme/generate-selectors';
+import * as previewCommand from './theme/preview';
+import { addGlobalOptions } from '../lib/commonOpts';
+import { i18n } from '../lib/lang';
 
 const i18nKey = 'commands.theme';
 
-exports.command = ['theme', 'themes'];
-exports.describe = i18n(`${i18nKey}.describe`);
+export const command = ['theme', 'themes'];
+export const describe = i18n(`${i18nKey}.describe`);
 
-exports.builder = yargs => {
+export function builder(yargs: Argv): Argv {
   addGlobalOptions(yargs);
 
   yargs
@@ -21,4 +20,4 @@ exports.builder = yargs => {
     .demandCommand(1, '');
 
   return yargs;
-};
+}

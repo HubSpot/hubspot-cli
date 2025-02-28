@@ -1,16 +1,18 @@
-// @ts-nocheck
-const fs = require('fs');
-const { i18n } = require('../../lib/lang');
-const { logger } = require('@hubspot/local-dev-lib/logger');
-const {
+import fs from 'fs';
+import { Argv, ArgumentsCamelCase } from 'yargs';
+import { logger } from '@hubspot/local-dev-lib/logger';
+
+import { i18n } from '../../lib/lang';
+import {
   findFieldsJsonPath,
   combineThemeCss,
   setPreviewSelectors,
   generateInheritedSelectors,
   generateSelectorsMap,
   getMaxFieldsDepth,
-} = require('../../lib/generateSelectors');
-const { EXIT_CODES } = require('../../lib/enums/exitCodes');
+} from '../../lib/generateSelectors';
+import { EXIT_CODES } from '../../lib/enums/exitCodes';
+import { CommonArgs } from '../../types/Yargs';
 
 const HUBL_EXPRESSION_REGEX = new RegExp(/{%\s*(.*)\s*%}/, 'g');
 const HUBL_VARIABLE_NAME_REGEX = new RegExp(/{%\s*set\s*(\w*)/, 'i');
@@ -25,11 +27,15 @@ const THEME_PATH_REGEX = new RegExp(/=\s*.*(theme\.(\w|\.)*)/, 'i');
 
 const i18nKey = 'commands.theme.subcommands.generateSelectors';
 
-exports.command = 'generate-selectors <path>';
-exports.describe = i18n(`${i18nKey}.describe`);
+export const command = 'generate-selectors <path>';
+export const describe = i18n(`${i18nKey}.describe`);
 
-exports.handler = options => {
-  const { path } = options;
+type ThemeSelectorArgs = CommonArgs & { path: string };
+
+export async function handler(
+  args: ArgumentsCamelCase<ThemeSelectorArgs>
+): Promise<void> {
+  const { path } = args;
 
   const fieldsJsonPath = findFieldsJsonPath(path);
   if (!fieldsJsonPath) {
@@ -37,25 +43,27 @@ exports.handler = options => {
     process.exit(EXIT_CODES.ERROR);
   }
 
-  let fieldsJson = JSON.parse(fs.readFileSync(fieldsJsonPath));
-  let cssString = combineThemeCss(path);
+  let fieldsJson = JSON.parse(fs.readFileSync(fieldsJsonPath, 'utf-8'));
+  let cssString = combineThemeCss(path) ?? '';
 
   /**
    * Creates map of HubL variable names to theme field paths
    */
-  const HubLExpressions = cssString.match(HUBL_EXPRESSION_REGEX) || [];
-  const hublVariableMap = HubLExpressions.reduce(
-    (_hublVariableMap, expression) => {
-      const variableName = expression.match(HUBL_VARIABLE_NAME_REGEX);
-      const themeFieldKey = expression.match(THEME_PATH_REGEX);
+  const HubLExpressions = cssString.match(HUBL_EXPRESSION_REGEX);
+  const hublVariableMap = HubLExpressions
+    ? HubLExpressions.reduce(
+        (_hublVariableMap: { [key: string]: string }, expression) => {
+          const variableName = expression.match(HUBL_VARIABLE_NAME_REGEX);
+          const themeFieldKey = expression.match(THEME_PATH_REGEX);
 
-      if (!themeFieldKey || !variableName) return _hublVariableMap;
+          if (!themeFieldKey || !variableName) return _hublVariableMap;
 
-      _hublVariableMap[variableName[1]] = themeFieldKey[1];
-      return _hublVariableMap;
-    },
-    {}
-  );
+          _hublVariableMap[variableName[1]] = themeFieldKey[1];
+          return _hublVariableMap;
+        },
+        {}
+      )
+    : {};
 
   /**
    * Removes HubL variable expressions
@@ -75,7 +83,7 @@ exports.handler = options => {
    * This is to prevent the the css expression regex from capturing all the HubL as well
    */
   const hublStatements = cssString.match(HUBL_STATEMENT_REGEX) || [];
-  const hublStatementsMap = {};
+  const hublStatementsMap: { [key: string]: string } = {};
   hublStatements.forEach((statement, index) => {
     const statementKey = `hubl_statement_${index}`;
     hublStatementsMap[statementKey] = statement;
@@ -86,15 +94,18 @@ exports.handler = options => {
    * Matchs all css variables and determines if there are hubl within those vars.
    */
   const cssVars = cssString.match(CSS_VARS_REGEX) || [];
-  const cssVarsMap = cssVars.reduce((acc, expression) => {
-    const cssVarName = expression.match(CSS_VARS_NAME_REGEX);
-    const hublVariables = expression.match(HUBL_STATEMENT_PLACEHOLDER_REGEX);
+  const cssVarsMap: { [key: string]: string[] } = cssVars.reduce(
+    (acc, expression) => {
+      const cssVarName = expression.match(CSS_VARS_NAME_REGEX);
+      const hublVariables = expression.match(HUBL_STATEMENT_PLACEHOLDER_REGEX);
 
-    if (!cssVarName || !hublVariables) return acc;
+      if (!cssVarName || !hublVariables) return acc;
 
-    cssString = cssString.replace(expression, '');
-    return { ...acc, [cssVarName[0]]: hublVariables };
-  }, {});
+      cssString = cssString.replace(expression, '');
+      return { ...acc, [cssVarName[0]]: hublVariables };
+    },
+    {}
+  );
 
   // replace all css variable references with corresponding hubl placeholder
   Object.keys(cssVarsMap).forEach(cssVarName => {
@@ -105,23 +116,25 @@ exports.handler = options => {
   /**
    * Parses each css string for a HubL statement and tries to map theme field paths to CSS selectors
    */
-  const cssExpressions = (
-    cssString.match(CSS_EXPRESSION_REGEX) || []
-  ).map(exp => exp.replace(/\r?\n/g, ' '));
+  const cssExpressions = (cssString.match(CSS_EXPRESSION_REGEX) || []).map(
+    exp => exp.replace(/\r?\n/g, ' ')
+  );
 
   const finalMap = cssExpressions.reduce(
-    (themeFieldsSelectorMap, cssExpression) => {
+    (themeFieldsSelectorMap: { [key: string]: string[] }, cssExpression) => {
       const hublStatementsPlaceholderKey =
         cssExpression.match(HUBL_STATEMENT_PLACEHOLDER_REGEX) || [];
 
       hublStatementsPlaceholderKey.forEach(placeholderKey => {
-        const hublStatement = hublStatementsMap[placeholderKey].match(
-          HUBL_EXPRESSIONS
-        );
-        const themeFieldPath = hublStatementsMap[placeholderKey].match(
-          /theme\.[\w|.]*/,
-          'g'
-        );
+        let hublStatement;
+        let themeFieldPath;
+        if (placeholderKey in hublStatementsMap) {
+          hublStatement =
+            hublStatementsMap[placeholderKey].match(HUBL_EXPRESSIONS);
+
+          themeFieldPath =
+            hublStatementsMap[placeholderKey].match(/theme\.[\w|.]*/);
+        }
         const cssSelectors = cssExpression.match(CSS_SELECTORS_REGEX);
 
         /**
@@ -129,26 +142,28 @@ exports.handler = options => {
          */
         if (cssSelectors && themeFieldPath) {
           const cssSelector = cssSelectors[1].replace(/\n/g, ' ');
-          const hublThemePath = themeFieldPath[0];
+          const hublThemePath = themeFieldPath?.[0] ?? '';
 
           if (!themeFieldsSelectorMap[hublThemePath]) {
             themeFieldsSelectorMap[hublThemePath] = [];
           }
 
           if (!themeFieldsSelectorMap[hublThemePath].includes(cssSelector)) {
-            themeFieldsSelectorMap[hublThemePath] = themeFieldsSelectorMap[
-              hublThemePath
-            ].concat(cssSelector);
+            themeFieldsSelectorMap[hublThemePath] =
+              themeFieldsSelectorMap[hublThemePath].concat(cssSelector);
           }
         }
 
         if (cssSelectors && hublStatement) {
-          const cssSelector = cssSelectors[1].replace(/\n/g, ' ');
-          const hublVariableName = Object.keys(hublVariableMap).find(_hubl => {
-            return hublStatement[0].includes(_hubl);
-          });
+          const cssSelector = cssSelectors?.[1]?.replace(/\n/g, ' ') ?? '';
+          const hublVariableName =
+            Object.keys(hublVariableMap).find(_hubl => {
+              return hublStatement && hublStatement[0].includes(_hubl);
+            }) || '';
 
-          const themeFieldKey = hublVariableMap[hublVariableName];
+          const themeFieldKey = hublVariableName
+            ? hublVariableMap[hublVariableName]
+            : undefined;
 
           /**
            * If the theme path is referenced directly add selectors
@@ -159,9 +174,8 @@ exports.handler = options => {
             }
 
             if (!themeFieldsSelectorMap[themeFieldKey].includes(cssSelector)) {
-              themeFieldsSelectorMap[themeFieldKey] = themeFieldsSelectorMap[
-                themeFieldKey
-              ].concat(cssSelector);
+              themeFieldsSelectorMap[themeFieldKey] =
+                themeFieldsSelectorMap[themeFieldKey].concat(cssSelector);
             }
           }
         }
@@ -186,7 +200,7 @@ exports.handler = options => {
   // multiple times to make sure all inherted selectors are bubbled up.
   const maxFieldsDepth = getMaxFieldsDepth();
   for (let i = 0; i < maxFieldsDepth; i += 1) {
-    fieldsJson = generateInheritedSelectors(fieldsJson, fieldsJson);
+    fieldsJson = generateInheritedSelectors(fieldsJson);
   }
 
   const selectorsMap = generateSelectorsMap(fieldsJson);
@@ -203,13 +217,14 @@ exports.handler = options => {
       selectorsPath,
     })
   );
-};
+}
 
-exports.builder = yargs => {
+export function builder(yargs: Argv): Argv<ThemeSelectorArgs> {
   yargs.positional('path', {
     describe: i18n(`${i18nKey}.positionals.path.describe`),
     type: 'string',
+    required: true,
   });
 
-  return yargs;
-};
+  return yargs as Argv<ThemeSelectorArgs>;
+}
