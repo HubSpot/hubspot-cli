@@ -53,6 +53,7 @@ import {
   ProjectPollResult,
   ProjectSubtask,
 } from '../types/Projects';
+import { ProjectDevTargetAccountPromptResponse } from '../types/Prompts';
 import { FileResult } from 'tmp';
 import { Build } from '@hubspot/local-dev-lib/types/Build';
 
@@ -173,7 +174,7 @@ export async function suggestRecommendedNestedAccount(
   accounts: CLIAccount[],
   accountConfig: CLIAccount,
   hasPublicApps: boolean
-) {
+): Promise<ProjectDevTargetAccountPromptResponse> {
   logger.log();
   uiLine();
   if (hasPublicApps) {

@@ -522,6 +522,8 @@ en:
             learnMoreLocalDevServer: "Learn more about the projects local dev server"
           errors:
             noProjectConfig: "No project detected. Please run this command again from a project directory."
+            noAccount: "An error occurred while reading account {{ accountId }} from your config. Run {{ authCommand }} to re-auth this account."
+            noAccountsInConfig: "No accounts found in your config. Run {{ authCommand }} to configure a HubSpot account with the CLI."
             invalidProjectComponents: "Projects cannot contain both private and public apps. Move your apps to separate projects before attempting local development."
             noRunnableComponents: "No supported components were found in this project. Run {{ command }} to see a list of available components and add one to your project."
           examples:
@@ -819,6 +821,8 @@ en:
             invalidAccountType: "Sandboxes must be created from a production account. Your current default account {{#bold}}{{ accountName }}{{/bold}} is a {{ accountType }}.
               \n- Run {{#bold}}hs accounts use{{/bold}} to switch to your default account to your production account.
               \n- Run {{#bold}}hs auth{{/bold}} to connect a production account to the HubSpot CLI.\n"
+            noAccountConfig: "There is no account associated with {{ accountId }} in the config file. Please choose another account and try again, or authenticate {{ accountId }} using {{ authCommand }}."
+            noSandboxAccountConfig: "There is no sandbox account associated with {{ accountId }} in the config file. Please try to re-authenticate your sandbox account using {{ authCommand}}."
         delete:
           describe: "Delete a sandbox account."
           debug:
@@ -835,11 +839,12 @@ en:
           failure:
             invalidUser: "Couldn't delete {{ accountName }} because your account has been removed from {{ parentAccountName }} or your permission set doesn't allow you to delete the sandbox. To update your permissions, contact a super admin in {{ parentAccountName }}."
             noAccount: "No account specified. Specify an account by using the --account flag."
-            noSandboxAccounts: "There are no sandboxes connected to the CLI. To add a sandbox, run {{#bold}}hs auth{{/bold}}."
-            noParentAccount: "This sandbox can't be deleted from the CLI because you haven't given the CLI access to its parent account. To do this, run {{#bold}}hs auth{{/bold}} and add the parent account."
+            noSandboxAccounts: "There are no sandboxes connected to the CLI. To add a sandbox, run {{ authCommand }}."
+            noSandboxAccountId: "This sandbox can't be deleted from the CLI because we could not find the associated sandbox account."
+            noParentAccount: "This sandbox can't be deleted from the CLI because you haven't given the CLI access to its parent account. To do this, run {{ authCommand }} and add the parent account."
             objectNotFound: "Sandbox {{#bold}}{{ account }}{{/bold}} may have been deleted through the UI. The account has been removed from the config."
-            noParentPortalAvailable: "This sandbox can't be deleted from the CLI because you haven't given the CLI access to its parent account. To do this, run {{#bold}}{{ command }}{{/bold}}. You can also delete the sandbox from the HubSpot management tool: {{#bold}}{{ url }}{{/bold}}."
-            invalidKey: "Your personal access key for account {{#bold}}{{ account }}{{/bold}} is inactive. To re-authenticate, please run {{#bold}}hs auth personalaccesskey{{/bold}}."
+            noParentPortalAvailable: "This sandbox can't be deleted from the CLI because you haven't given the CLI access to its parent account. To do this, run {{ command }}. You can also delete the sandbox from the HubSpot management tool: {{#bold}}{{ url }}{{/bold}}."
+            invalidKey: "Your personal access key for account {{#bold}}{{ account }}{{/bold}} is inactive. To re-authenticate, please run {{ authCommand }}."
           options:
             force:
               describe: "Skips all confirmation prompts when deleting a sandbox account."
