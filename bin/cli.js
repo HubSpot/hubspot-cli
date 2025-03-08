@@ -55,6 +55,8 @@ const feedbackCommand = require('../commands/feedback');
 const doctorCommand = require('../commands/doctor');
 const completionCommand = require('../commands/completion');
 
+console.log('test')
+
 const notifier = updateNotifier({
   pkg: { ...pkg, name: '@hubspot/cli' },
   distTag: 'latest',
