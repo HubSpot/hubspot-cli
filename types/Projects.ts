@@ -9,8 +9,8 @@ export type ProjectTemplate = {
 };
 
 export type ComponentTemplate = {
-  label: string;
   path: string;
+  label: string;
   insertPath: string;
 };
 
@@ -37,12 +37,6 @@ export type ProjectPollStatusFunctionText = {
   STATUS_TEXT: string;
   TYPE_KEY: string;
   SUBTASK_NAME_KEY: string;
-};
-
-export type ProjectAddComponentData = {
-  path: string;
-  label: string;
-  insertPath: string;
 };
 
 export type ProjectTemplateRepoConfig = {

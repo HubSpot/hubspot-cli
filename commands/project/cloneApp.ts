@@ -79,10 +79,10 @@ exports.handler = async options => {
       });
       appId = appIdResponse.appId;
     }
-    const { name, dest } = await createProjectPrompt('', options, true);
+    const createProjectPromptResponse = await createProjectPrompt(options);
 
-    projectName = name;
-    projectDest = options.dest || dest;
+    projectName = createProjectPromptResponse.name;
+    projectDest = createProjectPromptResponse.dest;
   } catch (error) {
     logError(error, new ApiErrorContext({ accountId: derivedAccountId }));
     process.exit(EXIT_CODES.ERROR);
