@@ -1,49 +1,81 @@
-// @ts-nocheck
-const {
+import { Argv, ArgumentsCamelCase } from 'yargs';
+import { getAccountConfig, getEnv } from '@hubspot/local-dev-lib/config';
+import { logger } from '@hubspot/local-dev-lib/logger';
+import { isMissingScopeError } from '@hubspot/local-dev-lib/errors/index';
+import { getHubSpotWebsiteOrigin } from '@hubspot/local-dev-lib/urls';
+import {
+  HUBSPOT_ACCOUNT_TYPES,
+  HUBSPOT_ACCOUNT_TYPE_STRINGS,
+} from '@hubspot/local-dev-lib/constants/config';
+import { getValidEnv } from '@hubspot/local-dev-lib/environment';
+
+import {
   addAccountOptions,
   addConfigOptions,
   addUseEnvironmentOptions,
   addTestingOptions,
-} = require('../../lib/commonOpts');
-const { i18n } = require('../../lib/lang');
-const { EXIT_CODES } = require('../../lib/enums/exitCodes');
-const { getAccountConfig, getEnv } = require('@hubspot/local-dev-lib/config');
-const { uiFeatureHighlight, uiBetaTag } = require('../../lib/ui');
-const {
+} from '../../lib/commonOpts';
+import { i18n } from '../../lib/lang';
+import { EXIT_CODES } from '../../lib/enums/exitCodes';
+import {
+  uiFeatureHighlight,
+  uiBetaTag,
+  uiCommandReference,
+} from '../../lib/ui';
+import {
   SANDBOX_TYPE_MAP,
   getAvailableSyncTypes,
   SYNC_TYPES,
   validateSandboxUsageLimits,
-} = require('../../lib/sandboxes');
-const { getValidEnv } = require('@hubspot/local-dev-lib/environment');
-const { logger } = require('@hubspot/local-dev-lib/logger');
-const { trackCommandUsage } = require('../../lib/usageTracking');
-const { sandboxTypePrompt } = require('../../lib/prompts/sandboxesPrompt');
-const { promptUser } = require('../../lib/prompts/promptUtils');
-const { syncSandbox } = require('../../lib/sandboxSync');
-const { logError } = require('../../lib/errorHandlers/index');
-const { isMissingScopeError } = require('@hubspot/local-dev-lib/errors/index');
-const { getHubSpotWebsiteOrigin } = require('@hubspot/local-dev-lib/urls');
-const {
-  HUBSPOT_ACCOUNT_TYPES,
-  HUBSPOT_ACCOUNT_TYPE_STRINGS,
-} = require('@hubspot/local-dev-lib/constants/config');
-const { buildSandbox } = require('../../lib/buildAccount');
-const {
-  hubspotAccountNamePrompt,
-} = require('../../lib/prompts/accountNamePrompt');
+} from '../../lib/sandboxes';
+import { trackCommandUsage } from '../../lib/usageTracking';
+import { sandboxTypePrompt } from '../../lib/prompts/sandboxesPrompt';
+import { promptUser } from '../../lib/prompts/promptUtils';
+import { syncSandbox } from '../../lib/sandboxSync';
+import { logError } from '../../lib/errorHandlers/index';
+import { buildSandbox } from '../../lib/buildAccount';
+import { hubspotAccountNamePrompt } from '../../lib/prompts/accountNamePrompt';
+import {
+  CommonArgs,
+  ConfigArgs,
+  AccountArgs,
+  EnvironmentArgs,
+  TestingArgs,
+} from '../../types/Yargs';
+import { SandboxSyncTask } from '../../types/Sandboxes';
 
 const i18nKey = 'commands.sandbox.subcommands.create';
 
-exports.command = 'create';
-exports.describe = uiBetaTag(i18n(`${i18nKey}.describe`), false);
+export const command = 'create';
+export const describe = uiBetaTag(i18n(`${i18nKey}.describe`), false);
 
-exports.handler = async options => {
-  const { name, type, force, derivedAccountId } = options;
+type CombinedArgs = ConfigArgs & AccountArgs & EnvironmentArgs & TestingArgs;
+type SandboxCreateArgs = CommonArgs &
+  CombinedArgs & {
+    name?: string;
+    force?: boolean;
+    type?: string;
+  };
+
+export async function handler(
+  args: ArgumentsCamelCase<SandboxCreateArgs>
+): Promise<void> {
+  const { name, type, force, derivedAccountId } = args;
   const accountConfig = getAccountConfig(derivedAccountId);
   const env = getValidEnv(getEnv(derivedAccountId));
 
-  trackCommandUsage('sandbox-create', null, derivedAccountId);
+  trackCommandUsage('sandbox-create', {}, derivedAccountId);
+
+  // Check if account config exists
+  if (!accountConfig) {
+    logger.error(
+      i18n(`${i18nKey}.failure.noAccountConfig`, {
+        accountId: derivedAccountId,
+        authCommand: uiCommandReference('hs auth'),
+      })
+    );
+    process.exit(EXIT_CODES.ERROR);
+  }
 
   // Default account is not a production portal
   if (
@@ -56,7 +88,7 @@ exports.handler = async options => {
           HUBSPOT_ACCOUNT_TYPE_STRINGS[
             HUBSPOT_ACCOUNT_TYPES[accountConfig.accountType]
           ],
-        accountName: accountConfig.name,
+        accountName: accountConfig.name || '',
       })
     );
     process.exit(EXIT_CODES.ERROR);
@@ -65,7 +97,7 @@ exports.handler = async options => {
   let typePrompt;
   let namePrompt;
 
-  if ((type && !SANDBOX_TYPE_MAP[type.toLowerCase()]) || !type) {
+  if ((type && !(type.toLowerCase() in SANDBOX_TYPE_MAP)) || !type) {
     if (!force) {
       typePrompt = await sandboxTypePrompt();
     } else {
@@ -73,9 +105,10 @@ exports.handler = async options => {
       process.exit(EXIT_CODES.ERROR);
     }
   }
+
   const sandboxType = type
     ? SANDBOX_TYPE_MAP[type.toLowerCase()]
-    : typePrompt.type;
+    : typePrompt!.type;
 
   // Check usage limits and exit if parent portal has no available sandboxes for the selected type
   try {
@@ -109,7 +142,7 @@ exports.handler = async options => {
       process.exit(EXIT_CODES.ERROR);
     }
   }
-  const sandboxName = name || namePrompt.name;
+  const sandboxName = name || namePrompt!.name;
 
   let contactRecordsSyncPromptResult = false;
   if (!force) {
@@ -139,10 +172,23 @@ exports.handler = async options => {
     );
 
     const sandboxAccountConfig = getAccountConfig(result.sandbox.sandboxHubId);
+    // Check if sandbox account config exists
+    if (!sandboxAccountConfig) {
+      logger.error(
+        i18n(`${i18nKey}.failure.noSandboxAccountConfig`, {
+          accountId: result.sandbox.sandboxHubId,
+          authCommand: uiCommandReference('hs auth'),
+        })
+      );
+      process.exit(EXIT_CODES.ERROR);
+    }
+
     // For v1 sandboxes, keep sync here. Once we migrate to v2, this will be handled by BE automatically
-    const handleSyncSandbox = async syncTasks => {
-      await syncSandbox(sandboxAccountConfig, accountConfig, env, syncTasks);
-    };
+    async function handleSyncSandbox(
+      syncTasks: SandboxSyncTask[]
+    ): Promise<void> {
+      await syncSandbox(sandboxAccountConfig!, accountConfig!, env, syncTasks);
+    }
     try {
       let availableSyncTasks = await getAvailableSyncTypes(
         accountConfig,
@@ -173,9 +219,9 @@ exports.handler = async options => {
     // Errors are logged in util functions
     process.exit(EXIT_CODES.ERROR);
   }
-};
+}
 
-exports.builder = yargs => {
+export function builder(yargs: Argv): Argv<SandboxCreateArgs> {
   yargs.option('force', {
     type: 'boolean',
     alias: 'f',
@@ -187,7 +233,7 @@ exports.builder = yargs => {
   });
   yargs.option('type', {
     describe: i18n(`${i18nKey}.options.type.describe`),
-    type: 'string',
+    choices: Object.keys(SANDBOX_TYPE_MAP),
   });
 
   yargs.example([
@@ -202,5 +248,5 @@ exports.builder = yargs => {
   addUseEnvironmentOptions(yargs);
   addTestingOptions(yargs);
 
-  return yargs;
-};
+  return yargs as Argv<SandboxCreateArgs>;
+}

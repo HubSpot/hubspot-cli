@@ -1,16 +1,11 @@
 import yargs, { Argv } from 'yargs';
-import * as addSecret from '../secret/addSecret';
-import * as deleteSecret from '../secret/deleteSecret';
-import * as listSecret from '../secret/listSecret';
-import * as updateSecret from '../secret/updateSecret';
-import * as secretCommands from '../secret';
+import * as create from '../sandbox/create';
+import * as del from '../sandbox/delete';
+import * as sandboxCommands from '../sandbox';
 
 jest.mock('yargs');
-jest.mock('../secret/addSecret');
-jest.mock('../secret/deleteSecret');
-jest.mock('../secret/listSecret');
-jest.mock('../secret/updateSecret');
-jest.mock('../../lib/commonOpts');
+jest.mock('../sandbox/create');
+jest.mock('../sandbox/delete');
 
 const commandSpy = jest
   .spyOn(yargs as Argv, 'command')
@@ -19,16 +14,16 @@ const demandCommandSpy = jest
   .spyOn(yargs as Argv, 'demandCommand')
   .mockReturnValue(yargs as Argv);
 
-describe('commands/account', () => {
+describe('commands/sandbox', () => {
   describe('command', () => {
     it('should have the correct command structure', () => {
-      expect(secretCommands.command).toEqual(['secret', 'secrets']);
+      expect(sandboxCommands.command).toEqual(['sandbox', 'sandboxes']);
     });
   });
 
   describe('describe', () => {
     it('should provide a description', () => {
-      expect(secretCommands.describe).toBeDefined();
+      expect(sandboxCommands.describe).toBeDefined();
     });
   });
 
@@ -38,22 +33,22 @@ describe('commands/account', () => {
       demandCommandSpy.mockClear();
     });
 
-    const subcommands = [addSecret, deleteSecret, listSecret, updateSecret];
+    const subcommands = [create, del];
 
     it('should demand the command takes one positional argument', () => {
-      secretCommands.builder(yargs as Argv);
+      sandboxCommands.builder(yargs as Argv);
 
       expect(demandCommandSpy).toHaveBeenCalledTimes(1);
       expect(demandCommandSpy).toHaveBeenCalledWith(1, '');
     });
 
     it('should add the correct number of sub commands', () => {
-      secretCommands.builder(yargs as Argv);
+      sandboxCommands.builder(yargs as Argv);
       expect(commandSpy).toHaveBeenCalledTimes(subcommands.length);
     });
 
     it.each(subcommands)('should attach the %s subcommand', module => {
-      secretCommands.builder(yargs as Argv);
+      sandboxCommands.builder(yargs as Argv);
       expect(commandSpy).toHaveBeenCalledWith(module);
     });
   });

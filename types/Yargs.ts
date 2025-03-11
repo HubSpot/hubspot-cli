@@ -31,3 +31,7 @@ export type StringArgType = Options & {
 };
 
 export type ProjectDevArgs = CommonArgs & ConfigArgs & EnvironmentArgs;
+
+export type TestingArgs = {
+  qa?: boolean;
+};
