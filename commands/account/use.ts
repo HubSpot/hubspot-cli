@@ -1,9 +1,9 @@
 import { Argv, ArgumentsCamelCase } from 'yargs';
 import { logger } from '@hubspot/local-dev-lib/logger';
 import {
-  getConfigPath,
-  updateDefaultAccount,
-  getAccountId,
+  getConfigFilePath,
+  setConfigAccountAsDefault,
+  getConfigAccountIfExists,
 } from '@hubspot/local-dev-lib/config';
 import { trackCommandUsage } from '../../lib/usageTracking';
 import { i18n } from '../../lib/lang';
@@ -22,31 +22,31 @@ interface AccountUseArgs extends CommonArgs {
 export async function handler(
   args: ArgumentsCamelCase<AccountUseArgs>
 ): Promise<void> {
-  let newDefaultAccount = args.account;
+  let newDefaultAccountIdentifier = args.account;
 
-  if (!newDefaultAccount) {
-    newDefaultAccount = await selectAccountFromConfig();
-  } else if (!getAccountId(newDefaultAccount)) {
+  if (!newDefaultAccountIdentifier) {
+    newDefaultAccountIdentifier = await selectAccountFromConfig();
+  } else if (!getConfigAccountIfExists(newDefaultAccountIdentifier)) {
     logger.error(
       i18n(`${i18nKey}.errors.accountNotFound`, {
-        specifiedAccount: newDefaultAccount,
-        configPath: getConfigPath()!,
+        specifiedAccount: newDefaultAccountIdentifier,
+        configPath: getConfigFilePath(),
       })
     );
-    newDefaultAccount = await selectAccountFromConfig();
+    newDefaultAccountIdentifier = await selectAccountFromConfig();
   }
 
-  trackCommandUsage(
-    'accounts-use',
-    undefined,
-    getAccountId(newDefaultAccount)!
-  );
+  const newDefaultAccount = getConfigAccountIfExists(
+    newDefaultAccountIdentifier
+  )!;
 
-  updateDefaultAccount(newDefaultAccount);
+  trackCommandUsage('accounts-use', undefined, newDefaultAccount.accountId);
+
+  setConfigAccountAsDefault(newDefaultAccountIdentifier);
 
   return logger.success(
     i18n(`${i18nKey}.success.defaultAccountUpdated`, {
-      accountName: newDefaultAccount,
+      accountName: newDefaultAccount.name,
     })
   );
 }

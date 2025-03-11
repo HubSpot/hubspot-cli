@@ -1,6 +1,6 @@
 import { Argv, ArgumentsCamelCase } from 'yargs';
 import { logger } from '@hubspot/local-dev-lib/logger';
-import { renameAccount } from '@hubspot/local-dev-lib/config';
+import { renameConfigAccount } from '@hubspot/local-dev-lib/config';
 import { addConfigOptions, addAccountOptions } from '../../lib/commonOpts';
 import { trackCommandUsage } from '../../lib/usageTracking';
 import { i18n } from '../../lib/lang';
@@ -27,7 +27,7 @@ export async function handler(
   trackCommandUsage('accounts-rename', undefined, derivedAccountId);
 
   try {
-    await renameAccount(accountName, newName);
+    await renameConfigAccount(accountName, newName);
   } catch (error) {
     logError(error);
     process.exit(EXIT_CODES.ERROR);

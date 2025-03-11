@@ -1,18 +1,18 @@
 import { Argv, ArgumentsCamelCase } from 'yargs';
 import { logger } from '@hubspot/local-dev-lib/logger';
 import {
-  loadConfig,
-  getConfigPath,
-  deleteAccount,
+  getConfigFilePath,
+  removeAccountFromConfig,
   getConfigDefaultAccount,
-  getAccountId,
-  updateDefaultAccount,
+  setConfigAccountAsDefault,
+  getConfigAccountIfExists,
 } from '@hubspot/local-dev-lib/config';
 import { trackCommandUsage } from '../../lib/usageTracking';
 import { i18n } from '../../lib/lang';
 import { selectAccountFromConfig } from '../../lib/prompts/accountsPrompt';
 import { addConfigOptions } from '../../lib/commonOpts';
 import { CommonArgs, ConfigArgs } from '../../types/Yargs';
+import { EXIT_CODES } from '../../lib/enums/exitCodes';
 
 const i18nKey = 'commands.account.subcommands.remove';
 
@@ -27,47 +27,43 @@ type AccountRemoveArgs = CommonArgs &
 export async function handler(
   args: ArgumentsCamelCase<AccountRemoveArgs>
 ): Promise<void> {
-  const { account } = args;
-  let accountToRemove = account;
+  const { account: accountArg } = args;
+  let accountToRemoveIdentifier = accountArg;
 
-  if (accountToRemove && !getAccountId(accountToRemove)) {
-    logger.error(
-      i18n(`${i18nKey}.errors.accountNotFound`, {
-        specifiedAccount: accountToRemove,
-        configPath: getConfigPath()!,
-      })
-    );
-  }
-
-  if (!accountToRemove || !getAccountId(accountToRemove)) {
-    accountToRemove = await selectAccountFromConfig(
+  if (!accountToRemoveIdentifier) {
+    accountToRemoveIdentifier = await selectAccountFromConfig(
       i18n(`${i18nKey}.prompts.selectAccountToRemove`)
     );
   }
 
-  trackCommandUsage(
-    'accounts-remove',
-    undefined,
-    getAccountId(accountToRemove)!
-  );
+  const account = getConfigAccountIfExists(accountToRemoveIdentifier);
+
+  if (!account) {
+    logger.error(
+      i18n(`${i18nKey}.errors.accountNotFound`, {
+        specifiedAccount: accountToRemoveIdentifier,
+        configPath: getConfigFilePath(),
+      })
+    );
+    process.exit(EXIT_CODES.ERROR);
+  }
+
+  trackCommandUsage('accounts-remove', undefined, account.accountId);
 
   const currentDefaultAccount = getConfigDefaultAccount();
 
-  await deleteAccount(accountToRemove);
+  await removeAccountFromConfig(account.accountId);
   logger.success(
     i18n(`${i18nKey}.success.accountRemoved`, {
-      accountName: accountToRemove,
+      accountName: accountToRemoveIdentifier,
     })
   );
 
-  // Get updated version of the config
-  loadConfig(getConfigPath()!);
-
-  if (accountToRemove === currentDefaultAccount) {
+  if (account.accountId === currentDefaultAccount.accountId) {
     logger.log();
     logger.log(i18n(`${i18nKey}.logs.replaceDefaultAccount`));
     const newDefaultAccount = await selectAccountFromConfig();
-    updateDefaultAccount(newDefaultAccount);
+    setConfigAccountAsDefault(newDefaultAccount);
   }
 }
 
