@@ -39,7 +39,7 @@ export interface DiagnosticInfo extends FilesInfo {
   path?: string;
   versions: { [hubspotCli]: string; node: string; npm: string | null };
   config: string | null;
-  configSettings: Record<string, unknown>;
+  configSettings: { [key: string]: unknown };
   project: {
     details?: Project;
     config?: ProjectConfig;
