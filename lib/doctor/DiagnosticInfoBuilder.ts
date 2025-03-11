@@ -10,7 +10,10 @@ import {
   AuthType,
 } from '@hubspot/local-dev-lib/types/Accounts';
 import { Project } from '@hubspot/local-dev-lib/types/Project';
-import { getAccountId } from '@hubspot/local-dev-lib/config';
+import {
+  getAccountId,
+  isConfigFlagEnabled,
+} from '@hubspot/local-dev-lib/config';
 import { getAccountConfig, getConfigPath } from '@hubspot/local-dev-lib/config';
 import { getAccessToken } from '@hubspot/local-dev-lib/personalAccessKey';
 import { walk } from '@hubspot/local-dev-lib/fs';
@@ -36,6 +39,7 @@ export interface DiagnosticInfo extends FilesInfo {
   path?: string;
   versions: { [hubspotCli]: string; node: string; npm: string | null };
   config: string | null;
+  configSettings: Record<string, unknown>;
   project: {
     details?: Project;
     config?: ProjectConfig;
@@ -66,6 +70,7 @@ const configFiles = [
 
 export class DiagnosticInfoBuilder {
   accountId: number | null;
+  readonly configSettings: { [key: string]: unknown };
   readonly env?: Environment;
   readonly authType?: AuthType;
   readonly accountType?: AccountType;
@@ -79,6 +84,9 @@ export class DiagnosticInfoBuilder {
   constructor(processInfo: NodeJS.Process) {
     this.accountId = getAccountId();
     const accountConfig = getAccountConfig(this.accountId!);
+    this.configSettings = {
+      httpUseLocalhost: isConfigFlagEnabled('httpUseLocalhost'),
+    };
     this.env = accountConfig?.env;
     this.authType = accountConfig?.authType;
     this.accountType = accountConfig?.accountType;
@@ -110,6 +118,7 @@ export class DiagnosticInfoBuilder {
       arch,
       path: mainModule?.path,
       config: getConfigPath(),
+      configSettings: this.configSettings,
       versions: {
         [hubspotCli]: pkg.version,
         node,

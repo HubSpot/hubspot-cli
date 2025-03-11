@@ -113,6 +113,16 @@ export class Doctor {
         ),
       });
       return [];
+    } else if (this.diagnosticInfo?.configSettings.httpUseLocalhost) {
+      this.diagnosis?.addCLIConfigSection({
+        type: 'warning',
+        message: i18n(
+          `${i18nKey}.diagnosis.cliConfig.settings.httpUseLocalhost`
+        ),
+        secondaryMessaging: i18n(
+          `${i18nKey}.diagnosis.cliConfig.settings.httpUseLocalhostSecondary`
+        ),
+      });
     }
     return [this.checkIfAccessTokenValid()];
   }
