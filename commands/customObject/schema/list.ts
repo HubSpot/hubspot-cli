@@ -1,20 +1,35 @@
-// @ts-nocheck
-const { logger } = require('@hubspot/local-dev-lib/logger');
-const { logError } = require('../../../lib/errorHandlers/index');
+import { Argv, ArgumentsCamelCase } from 'yargs';
+import { logger } from '@hubspot/local-dev-lib/logger';
 
-const { trackCommandUsage } = require('../../../lib/usageTracking');
-const { listSchemas } = require('../../../lib/schema');
-const { i18n } = require('../../../lib/lang');
+import {
+  addConfigOptions,
+  addAccountOptions,
+  addUseEnvironmentOptions,
+} from '../../../lib/commonOpts';
+import { logError } from '../../../lib/errorHandlers/index';
+import { trackCommandUsage } from '../../../lib/usageTracking';
+import { listSchemas } from '../../../lib/schema';
+import { i18n } from '../../../lib/lang';
+import {
+  CommonArgs,
+  ConfigArgs,
+  AccountArgs,
+  EnvironmentArgs,
+} from '../../../types/Yargs';
 
 const i18nKey = 'commands.customObject.subcommands.schema.subcommands.list';
 
-exports.command = 'list';
-exports.describe = i18n(`${i18nKey}.describe`);
+export const command = 'list';
+export const describe = i18n(`${i18nKey}.describe`);
 
-exports.handler = async options => {
-  const { derivedAccountId } = options;
+type CombinedArgs = CommonArgs & ConfigArgs & AccountArgs & EnvironmentArgs;
 
-  trackCommandUsage('custom-object-schema-list', null, derivedAccountId);
+export async function handler(
+  args: ArgumentsCamelCase<CombinedArgs>
+): Promise<void> {
+  const { derivedAccountId } = args;
+
+  trackCommandUsage('custom-object-schema-list', {}, derivedAccountId);
 
   try {
     await listSchemas(derivedAccountId);
@@ -22,4 +37,12 @@ exports.handler = async options => {
     logError(e);
     logger.error(i18n(`${i18nKey}.errors.list`));
   }
-};
+}
+
+export function builder(yargs: Argv): Argv<CombinedArgs> {
+  addConfigOptions(yargs);
+  addAccountOptions(yargs);
+  addUseEnvironmentOptions(yargs);
+
+  return yargs as Argv<CombinedArgs>;
+}
