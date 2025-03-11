@@ -1,41 +1,40 @@
 import yargs, { Argv } from 'yargs';
-import {
-  addAccountOptions,
-  addConfigOptions,
-  addUseEnvironmentOptions,
-} from '../../../lib/commonOpts';
-import * as hubdbCreateCommand from '../create';
+import { addAccountOptions, addConfigOptions } from '../../../lib/commonOpts';
+import * as themePreviewCommand from '../preview';
 
 jest.mock('yargs');
 jest.mock('../../../lib/commonOpts');
 
-describe('commands/hubdb/create', () => {
-  const yargsMock = yargs as Argv;
+describe('commands/theme/preview', () => {
+  let yargsMock = yargs as Argv;
+
+  beforeEach(() => {
+    yargsMock = {
+      option: jest.fn().mockReturnThis(),
+    } as unknown as Argv;
+  });
 
   describe('command', () => {
     it('should have the correct command structure', () => {
-      expect(hubdbCreateCommand.command).toEqual('create');
+      expect(themePreviewCommand.command).toEqual('preview [--src] [--dest]');
     });
   });
 
   describe('describe', () => {
     it('should provide a description', () => {
-      expect(hubdbCreateCommand.describe).toBeDefined();
+      expect(themePreviewCommand.describe).toBeDefined();
     });
   });
 
   describe('builder', () => {
     it('should support the correct options', () => {
-      hubdbCreateCommand.builder(yargsMock);
+      themePreviewCommand.builder(yargsMock);
 
       expect(addAccountOptions).toHaveBeenCalledTimes(1);
       expect(addAccountOptions).toHaveBeenCalledWith(yargsMock);
 
       expect(addConfigOptions).toHaveBeenCalledTimes(1);
       expect(addConfigOptions).toHaveBeenCalledWith(yargsMock);
-
-      expect(addUseEnvironmentOptions).toHaveBeenCalledTimes(1);
-      expect(addUseEnvironmentOptions).toHaveBeenCalledWith(yargsMock);
     });
   });
 });

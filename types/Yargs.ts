@@ -21,6 +21,11 @@ export type EnvironmentArgs = {
   'use-env'?: string;
 };
 
+export type OverwriteArgs = Options & {
+  o?: boolean;
+  overwrite?: boolean;
+};
+
 export type StringArgType = Options & {
   type: 'string';
 };

@@ -1,11 +1,13 @@
 import yargs, { Argv } from 'yargs';
-import * as fetch from '../filemanager/fetch';
-import * as upload from '../filemanager/upload';
-import * as fileManagerCommands from '../filemanager';
+import * as preview from '../theme/preview';
+import * as generateSelectors from '../theme/generate-selectors';
+import * as marketplaceValidate from '../theme/marketplace-validate';
+import * as themeCommands from '../theme';
 
 jest.mock('yargs');
-jest.mock('../filemanager/fetch');
-jest.mock('../filemanager/upload');
+jest.mock('../theme/preview');
+jest.mock('../theme/generate-selectors');
+jest.mock('../theme/marketplace-validate');
 jest.mock('../../lib/commonOpts');
 
 const commandSpy = jest
@@ -15,16 +17,16 @@ const demandCommandSpy = jest
   .spyOn(yargs as Argv, 'demandCommand')
   .mockReturnValue(yargs as Argv);
 
-describe('commands/filemanager', () => {
+describe('commands/theme', () => {
   describe('command', () => {
     it('should have the correct command structure', () => {
-      expect(fileManagerCommands.command).toEqual('filemanager');
+      expect(themeCommands.command).toEqual(['theme', 'themes']);
     });
   });
 
   describe('describe', () => {
     it('should provide a description', () => {
-      expect(fileManagerCommands.describe).toBeDefined();
+      expect(themeCommands.describe).toBeDefined();
     });
   });
 
@@ -34,22 +36,22 @@ describe('commands/filemanager', () => {
       demandCommandSpy.mockClear();
     });
 
-    const subcommands = [fetch, upload];
+    const subcommands = [preview, generateSelectors, marketplaceValidate];
 
     it('should demand the command takes one positional argument', () => {
-      fileManagerCommands.builder(yargs as Argv);
+      themeCommands.builder(yargs as Argv);
 
       expect(demandCommandSpy).toHaveBeenCalledTimes(1);
       expect(demandCommandSpy).toHaveBeenCalledWith(1, '');
     });
 
     it('should add the correct number of sub commands', () => {
-      fileManagerCommands.builder(yargs as Argv);
+      themeCommands.builder(yargs as Argv);
       expect(commandSpy).toHaveBeenCalledTimes(subcommands.length);
     });
 
     it.each(subcommands)('should attach the %s subcommand', module => {
-      fileManagerCommands.builder(yargs as Argv);
+      themeCommands.builder(yargs as Argv);
       expect(commandSpy).toHaveBeenCalledWith(module);
     });
   });

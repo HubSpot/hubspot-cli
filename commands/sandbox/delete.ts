@@ -1,47 +1,59 @@
-// @ts-nocheck
-const {
-  addAccountOptions,
-  addConfigOptions,
-  addUseEnvironmentOptions,
-  addTestingOptions,
-} = require('../../lib/commonOpts');
-const { logger } = require('@hubspot/local-dev-lib/logger');
-const { trackCommandUsage } = require('../../lib/usageTracking');
-const { logError, debugError } = require('../../lib/errorHandlers/index');
-const { isSpecifiedError } = require('@hubspot/local-dev-lib/errors/index');
-const { deleteSandbox } = require('@hubspot/local-dev-lib/api/sandboxHubs');
-const { i18n } = require('../../lib/lang');
-const { deleteSandboxPrompt } = require('../../lib/prompts/sandboxesPrompt');
-const {
+import { Argv, ArgumentsCamelCase } from 'yargs';
+import { logger } from '@hubspot/local-dev-lib/logger';
+import { isSpecifiedError } from '@hubspot/local-dev-lib/errors/index';
+import { deleteSandbox } from '@hubspot/local-dev-lib/api/sandboxHubs';
+import {
   getEnv,
   removeSandboxAccountFromConfig,
   updateDefaultAccount,
   getAccountId,
   getConfigAccounts,
-} = require('@hubspot/local-dev-lib/config');
-const {
-  getAccountIdentifier,
-} = require('@hubspot/local-dev-lib/config/getAccountIdentifier');
-const { selectAccountFromConfig } = require('../../lib/prompts/accountsPrompt');
-const { EXIT_CODES } = require('../../lib/enums/exitCodes');
-const { promptUser } = require('../../lib/prompts/promptUtils');
-const { uiAccountDescription, uiBetaTag } = require('../../lib/ui');
-const { getHubSpotWebsiteOrigin } = require('@hubspot/local-dev-lib/urls');
+} from '@hubspot/local-dev-lib/config';
+import { getAccountIdentifier } from '@hubspot/local-dev-lib/config/getAccountIdentifier';
+import { getHubSpotWebsiteOrigin } from '@hubspot/local-dev-lib/urls';
+import { getValidEnv } from '@hubspot/local-dev-lib/environment';
 
-const { getValidEnv } = require('@hubspot/local-dev-lib/environment');
+import {
+  addAccountOptions,
+  addConfigOptions,
+  addUseEnvironmentOptions,
+  addTestingOptions,
+} from '../../lib/commonOpts';
+import { trackCommandUsage } from '../../lib/usageTracking';
+import { logError, debugError } from '../../lib/errorHandlers/index';
+import { i18n } from '../../lib/lang';
+import { deleteSandboxPrompt } from '../../lib/prompts/sandboxesPrompt';
+import { selectAccountFromConfig } from '../../lib/prompts/accountsPrompt';
+import { EXIT_CODES } from '../../lib/enums/exitCodes';
+import { promptUser } from '../../lib/prompts/promptUtils';
+import {
+  uiAccountDescription,
+  uiBetaTag,
+  uiCommandReference,
+} from '../../lib/ui';
+import {
+  CommonArgs,
+  ConfigArgs,
+  AccountArgs,
+  EnvironmentArgs,
+  TestingArgs,
+} from '../../types/Yargs';
 
 const i18nKey = 'commands.sandbox.subcommands.delete';
 
-exports.command = 'delete';
-exports.describe = exports.describe = uiBetaTag(
-  i18n(`${i18nKey}.describe`),
-  false
-);
+export const command = 'delete';
+export const describe = uiBetaTag(i18n(`${i18nKey}.describe`), false);
 
-exports.handler = async options => {
-  const { providedAccountId, force } = options;
+type CombinedArgs = ConfigArgs & AccountArgs & EnvironmentArgs & TestingArgs;
+type SandboxDeleteArgs = CommonArgs &
+  CombinedArgs & { account?: string; force?: boolean };
 
-  trackCommandUsage('sandbox-delete', null);
+export async function handler(
+  args: ArgumentsCamelCase<SandboxDeleteArgs>
+): Promise<void> {
+  const { providedAccountId, force } = args;
+
+  trackCommandUsage('sandbox-delete', {}, providedAccountId);
 
   let accountPrompt;
   if (!providedAccountId) {
@@ -55,14 +67,24 @@ exports.handler = async options => {
     }
     if (!accountPrompt) {
       logger.log('');
-      logger.error(i18n(`${i18nKey}.failure.noSandboxAccounts`));
+      logger.error(
+        i18n(`${i18nKey}.failure.noSandboxAccounts`, {
+          authCommand: uiCommandReference('hs auth'),
+        })
+      );
       process.exit(EXIT_CODES.ERROR);
     }
   }
 
   const sandboxAccountId = getAccountId(
-    providedAccountId || accountPrompt.account
+    providedAccountId || accountPrompt!.account
   );
+
+  if (!sandboxAccountId) {
+    logger.error(i18n(`${i18nKey}.failure.noSandboxAccountId`));
+    process.exit(EXIT_CODES.ERROR);
+  }
+
   const isDefaultAccount = sandboxAccountId === getAccountId();
 
   const baseUrl = getHubSpotWebsiteOrigin(
@@ -70,16 +92,29 @@ exports.handler = async options => {
   );
 
   let parentAccountId;
-  const accountsList = getConfigAccounts();
+  const accountsList = getConfigAccounts() || [];
+
   for (const portal of accountsList) {
     if (getAccountIdentifier(portal) === sandboxAccountId) {
       if (portal.parentAccountId) {
         parentAccountId = portal.parentAccountId;
       } else if (!force) {
         const parentAccountPrompt = await deleteSandboxPrompt(true);
+        if (!parentAccountPrompt) {
+          logger.error(
+            i18n(`${i18nKey}.failure.noParentAccount`, {
+              authCommand: uiCommandReference('hs auth'),
+            })
+          );
+          process.exit(EXIT_CODES.ERROR);
+        }
         parentAccountId = getAccountId(parentAccountPrompt.account);
       } else {
-        logger.error(i18n(`${i18nKey}.failure.noParentAccount`));
+        logger.error(
+          i18n(`${i18nKey}.failure.noParentAccount`, {
+            authCommand: uiCommandReference('hs auth'),
+          })
+        );
         process.exit(EXIT_CODES.ERROR);
       }
     }
@@ -134,7 +169,7 @@ exports.handler = async options => {
       }
     }
 
-    await deleteSandbox(parentAccountId, sandboxAccountId);
+    await deleteSandbox(parentAccountId!, sandboxAccountId);
 
     const deleteKey = isDefaultAccount
       ? `${i18nKey}.success.deleteDefault`
@@ -142,8 +177,8 @@ exports.handler = async options => {
     logger.log('');
     logger.success(
       i18n(deleteKey, {
-        account: providedAccountId || accountPrompt.account,
-        sandboxHubId: sandboxAccountId,
+        account: providedAccountId || accountPrompt!.account,
+        sandboxHubId: sandboxAccountId || '',
       })
     );
     logger.log('');
@@ -155,7 +190,7 @@ exports.handler = async options => {
       updateDefaultAccount(newDefaultAccount);
     } else {
       // If force is specified, skip prompt and set the parent account id as the default account
-      updateDefaultAccount(parentAccountId);
+      updateDefaultAccount(parentAccountId!);
     }
     process.exit(EXIT_CODES.SUCCESS);
   } catch (err) {
@@ -168,6 +203,7 @@ exports.handler = async options => {
       logger.error(
         i18n(`${i18nKey}.failure.invalidKey`, {
           account: uiAccountDescription(parentAccountId),
+          authCommand: uiCommandReference('hs auth'),
         })
       );
     } else if (
@@ -207,7 +243,7 @@ exports.handler = async options => {
         updateDefaultAccount(newDefaultAccount);
       } else {
         // If force is specified, skip prompt and set the parent account id as the default account
-        updateDefaultAccount(parentAccountId);
+        updateDefaultAccount(parentAccountId!);
       }
       process.exit(EXIT_CODES.SUCCESS);
     } else {
@@ -215,9 +251,9 @@ exports.handler = async options => {
     }
     process.exit(EXIT_CODES.ERROR);
   }
-};
+}
 
-exports.builder = yargs => {
+export function builder(yargs: Argv): Argv<SandboxDeleteArgs> {
   yargs.option('account', {
     describe: i18n(`${i18nKey}.options.account.describe`),
     type: 'string',
@@ -240,5 +276,5 @@ exports.builder = yargs => {
   addUseEnvironmentOptions(yargs);
   addTestingOptions(yargs);
 
-  return yargs;
-};
+  return yargs as Argv<SandboxDeleteArgs>;
+}

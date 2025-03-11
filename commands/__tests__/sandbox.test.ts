@@ -1,12 +1,11 @@
 import yargs, { Argv } from 'yargs';
-import * as fetch from '../filemanager/fetch';
-import * as upload from '../filemanager/upload';
-import * as fileManagerCommands from '../filemanager';
+import * as create from '../sandbox/create';
+import * as del from '../sandbox/delete';
+import * as sandboxCommands from '../sandbox';
 
 jest.mock('yargs');
-jest.mock('../filemanager/fetch');
-jest.mock('../filemanager/upload');
-jest.mock('../../lib/commonOpts');
+jest.mock('../sandbox/create');
+jest.mock('../sandbox/delete');
 
 const commandSpy = jest
   .spyOn(yargs as Argv, 'command')
@@ -15,16 +14,16 @@ const demandCommandSpy = jest
   .spyOn(yargs as Argv, 'demandCommand')
   .mockReturnValue(yargs as Argv);
 
-describe('commands/filemanager', () => {
+describe('commands/sandbox', () => {
   describe('command', () => {
     it('should have the correct command structure', () => {
-      expect(fileManagerCommands.command).toEqual('filemanager');
+      expect(sandboxCommands.command).toEqual(['sandbox', 'sandboxes']);
     });
   });
 
   describe('describe', () => {
     it('should provide a description', () => {
-      expect(fileManagerCommands.describe).toBeDefined();
+      expect(sandboxCommands.describe).toBeDefined();
     });
   });
 
@@ -34,22 +33,22 @@ describe('commands/filemanager', () => {
       demandCommandSpy.mockClear();
     });
 
-    const subcommands = [fetch, upload];
+    const subcommands = [create, del];
 
     it('should demand the command takes one positional argument', () => {
-      fileManagerCommands.builder(yargs as Argv);
+      sandboxCommands.builder(yargs as Argv);
 
       expect(demandCommandSpy).toHaveBeenCalledTimes(1);
       expect(demandCommandSpy).toHaveBeenCalledWith(1, '');
     });
 
     it('should add the correct number of sub commands', () => {
-      fileManagerCommands.builder(yargs as Argv);
+      sandboxCommands.builder(yargs as Argv);
       expect(commandSpy).toHaveBeenCalledTimes(subcommands.length);
     });
 
     it.each(subcommands)('should attach the %s subcommand', module => {
-      fileManagerCommands.builder(yargs as Argv);
+      sandboxCommands.builder(yargs as Argv);
       expect(commandSpy).toHaveBeenCalledWith(module);
     });
   });
