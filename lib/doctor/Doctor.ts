@@ -72,6 +72,8 @@ export class Doctor {
       ...(this.projectConfig?.projectConfig ? this.performProjectChecks() : []),
     ]);
 
+    this.performCliConfigSettingsChecks();
+
     SpinniesManager.succeed('runningDiagnostics', {
       text: i18n(`${i18nKey}.diagnosticsComplete`),
       succeedColor: 'white',
@@ -113,7 +115,13 @@ export class Doctor {
         ),
       });
       return [];
-    } else if (this.diagnosticInfo?.configSettings.httpUseLocalhost) {
+    }
+
+    return [this.checkIfAccessTokenValid()];
+  }
+
+  private performCliConfigSettingsChecks(): void {
+    if (this.diagnosticInfo?.configSettings.httpUseLocalhost) {
       this.diagnosis?.addCLIConfigSection({
         type: 'warning',
         message: i18n(
@@ -124,7 +132,6 @@ export class Doctor {
         ),
       });
     }
-    return [this.checkIfAccessTokenValid()];
   }
 
   private async checkIfAccessTokenValid(): Promise<void> {
