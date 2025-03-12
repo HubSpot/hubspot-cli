@@ -64,10 +64,10 @@ export async function unifiedProjectDevFlow(
 
   // TODO Ideally this should require the user to target a Combined account
   // For now, check if the account is either developer or standard
-  const defaultAccountIsRecommendedType =
+  const derivedAccountIsRecommendedType =
     isAppDeveloperAccount(accountConfig) || isStandardAccount(accountConfig);
 
-  if (!defaultAccountIsRecommendedType) {
+  if (!derivedAccountIsRecommendedType) {
     logger.error(
       'You must target a Combined account to use Unified Apps Local Dev'
     );
