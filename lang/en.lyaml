@@ -1575,6 +1575,9 @@ en:
           defaultAccountSubHeader: "Default Account: {{accountDetails}}"
           noConfigFile: "CLI configuration not found"
           noConfigFileSecondary: "Run {{command}} and follow the prompts to create your CLI configuration file and connect it to your HubSpot account"
+          settings:
+            httpUseLocalhost: "The setting {{#bold}}httpUseLocalhost{{/bold}} is enabled"
+            httpUseLocalhostSecondary: "This setting causes all CLI requests to route to localhost"
         projectConfig:
           header: "Project configuration"
           projectDirSubHeader: "Project dir: {{#bold}}{{ projectDir }}{{/bold}}"
