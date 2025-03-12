@@ -84,7 +84,8 @@ async function cleanup(newVersion: string): Promise<void> {
 async function publish(
   tag: Tag,
   otp: string,
-  isDryRun: boolean
+  isDryRun: boolean,
+  isExperimental: boolean
 ): Promise<void> {
   logger.log();
   logger.log(`Publishing to ${tag}...`);
@@ -103,6 +104,10 @@ async function publish(
 
   if (isDryRun) {
     commandArgs.push('--dry-run');
+  }
+
+  if (isExperimental) {
+    commandArgs.push('--no-git-tag-version');
   }
 
   return new Promise((resolve, reject) => {
@@ -277,7 +282,7 @@ async function handler({
   }
 
   try {
-    await publish(tag, otp, isDryRun);
+    await publish(tag, otp, isDryRun, isExperimental);
   } catch (e) {
     logger.error(
       'An error occurred while releasing the CLI. Correct the error and re-run `yarn build`.'
@@ -308,10 +313,15 @@ async function handler({
     process.exit(EXIT_CODES.SUCCESS);
   }
 
-  logger.log();
-  logger.log(`Pushing changes to Github...`);
-  await exec(gitCommand);
-  logger.log(`Changes pushed successfully`);
+  if (isExperimental) {
+    logger.log();
+    logger.log(`Experimental release: Skipping push to Github`);
+  } else {
+    logger.log();
+    logger.log(`Pushing changes to Github...`);
+    await exec(gitCommand);
+    logger.log(`Changes pushed successfully`);
+  }
 
   logger.log();
   logger.success(`HubSpot CLI version ${newVersion} published successfully`);
