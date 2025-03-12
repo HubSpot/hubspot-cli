@@ -207,6 +207,7 @@ en:
         create:
           describe: "Create custom object instances."
           errors:
+            invalidObjectDefinition: "The object definition is invalid. Please check the schema and try again."
             creationFailed: "Object creation from {{ definition }} failed"
           options:
             path:
@@ -224,6 +225,7 @@ en:
             create:
               describe: "Create a custom object schema."
               errors:
+                invalidSchema: "The schema definition is invalid. Please check the schema and try again."
                 creationFailed: "Schema creation from {{ definition }} failed"
               options:
                 definition:
@@ -285,6 +287,7 @@ en:
             update:
               describe: "Update an existing custom object schema."
               errors:
+                invalidSchema: "The schema definition is invalid. Please check the schema and try again."
                 update: "Schema update from {{ definition }} failed"
               options:
                 path:
@@ -1572,6 +1575,9 @@ en:
           defaultAccountSubHeader: "Default Account: {{accountDetails}}"
           noConfigFile: "CLI configuration not found"
           noConfigFileSecondary: "Run {{command}} and follow the prompts to create your CLI configuration file and connect it to your HubSpot account"
+          settings:
+            httpUseLocalhost: "The setting {{#bold}}httpUseLocalhost{{/bold}} is enabled"
+            httpUseLocalhostSecondary: "This setting causes all CLI requests to route to localhost"
         projectConfig:
           header: "Project configuration"
           projectDirSubHeader: "Project dir: {{#bold}}{{ projectDir }}{{/bold}}"

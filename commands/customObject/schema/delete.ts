@@ -1,25 +1,41 @@
-// @ts-nocheck
+import { Argv, ArgumentsCamelCase } from 'yargs';
+import {
+  fetchObjectSchemas,
+  deleteObjectSchema,
+} from '@hubspot/local-dev-lib/api/customObjects';
+
 import { EXIT_CODES } from '../../../lib/enums/exitCodes';
 import { confirmPrompt, listPrompt } from '../../../lib/prompts/promptUtils';
-import { fetchObjectSchemas } from '@hubspot/local-dev-lib/api/customObjects';
-
-const { logger } = require('@hubspot/local-dev-lib/logger');
-const { trackCommandUsage } = require('../../../lib/usageTracking');
-const {
-  deleteObjectSchema,
-} = require('@hubspot/local-dev-lib/api/customObjects');
-const { i18n } = require('../../../lib/lang');
-const { logError } = require('../../../lib/errorHandlers');
+import { logger } from '@hubspot/local-dev-lib/logger';
+import { trackCommandUsage } from '../../../lib/usageTracking';
+import { i18n } from '../../../lib/lang';
+import { logError } from '../../../lib/errorHandlers';
+import {
+  addConfigOptions,
+  addAccountOptions,
+  addUseEnvironmentOptions,
+} from '../../../lib/commonOpts';
+import {
+  CommonArgs,
+  ConfigArgs,
+  AccountArgs,
+  EnvironmentArgs,
+} from '../../../types/Yargs';
 
 const i18nKey = 'commands.customObject.subcommands.schema.subcommands.delete';
 
-exports.command = 'delete [name]';
-exports.describe = i18n(`${i18nKey}.describe`);
+export const command = 'delete [name]';
+export const describe = i18n(`${i18nKey}.describe`);
 
-exports.handler = async options => {
-  const { name: providedName, force, derivedAccountId } = options;
+type CombinedArgs = CommonArgs & ConfigArgs & AccountArgs & EnvironmentArgs;
+type SchemaDeleteArgs = CombinedArgs & { name?: string; force?: boolean };
 
-  trackCommandUsage('custom-object-schema-delete', null, derivedAccountId);
+export async function handler(
+  args: ArgumentsCamelCase<SchemaDeleteArgs>
+): Promise<void> {
+  const { name: providedName, force, derivedAccountId } = args;
+
+  trackCommandUsage('custom-object-schema-delete', {}, derivedAccountId);
 
   let name;
   try {
@@ -28,10 +44,11 @@ exports.handler = async options => {
     } = await fetchObjectSchemas(derivedAccountId);
     const schemaNames = results?.map(({ name: schemaName }) => schemaName);
     name =
-      providedName ||
-      (await listPrompt(i18n(`${i18nKey}.selectSchema`), {
-        choices: schemaNames,
-      }));
+      providedName && typeof providedName === 'string'
+        ? providedName
+        : await listPrompt(i18n(`${i18nKey}.selectSchema`), {
+            choices: schemaNames,
+          });
 
     const shouldDelete =
       force ||
@@ -52,13 +69,17 @@ exports.handler = async options => {
     logError(e);
     logger.error(
       i18n(`${i18nKey}.errors.delete`, {
-        name,
+        name: name || '',
       })
     );
   }
-};
+}
 
-exports.builder = yargs => {
+export function builder(yargs: Argv): Argv<SchemaDeleteArgs> {
+  addConfigOptions(yargs);
+  addAccountOptions(yargs);
+  addUseEnvironmentOptions(yargs);
+
   yargs
     .example([
       ['$0 schema delete schemaName', i18n(`${i18nKey}.examples.default`)],
@@ -71,4 +92,6 @@ exports.builder = yargs => {
       describe: i18n(`${i18nKey}.options.force.describe`),
       type: 'boolean',
     });
-};
+
+  return yargs as Argv<SchemaDeleteArgs>;
+}

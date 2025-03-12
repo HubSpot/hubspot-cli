@@ -67,6 +67,7 @@ describe('lib/doctor/Doctor', () => {
     account: {},
     arch: 'x64',
     config: 'path/to/config',
+    configSettings: { httpUseLocalhost: false },
     configFiles: ['src/serverless.json'],
     diagnosis: '',
     envFiles: [],

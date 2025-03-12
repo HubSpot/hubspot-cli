@@ -18,6 +18,9 @@ exports[`lib/doctor/DiagnosticInfo generateDiagnosticInfo should gather the requ
     "src/app/public-app.json",
     "src/app/app.functions/serverless.json",
   ],
+  "configSettings": {
+    "httpUseLocalhost": false,
+  },
   "envFiles": [
     "src/app/app.functions/.env",
   ],

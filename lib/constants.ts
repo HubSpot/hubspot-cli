@@ -7,10 +7,6 @@ export const FEEDBACK_INTERVAL = 10 as const;
 export const HUBSPOT_FOLDER = '@hubspot' as const;
 export const MARKETPLACE_FOLDER = '@marketplace' as const;
 
-export const CONFIG_FLAGS = {
-  USE_CUSTOM_OBJECT_HUBFILE: 'useCustomObjectHubfile',
-} as const;
-
 export const DEFAULT_POLLING_DELAY = 2000;
 
 export const PROJECT_CONFIG_FILE = 'hsproject.json' as const;
