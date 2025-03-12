@@ -1,24 +1,31 @@
+import path from 'path';
+import util from 'util';
 import { ArgumentsCamelCase } from 'yargs';
-import { ProjectDevArgs } from '../../../types/Yargs';
-import { CLIAccount } from '@hubspot/local-dev-lib/types/Accounts';
-import { ProjectConfig } from '../../../types/Projects';
 import { logger } from '@hubspot/local-dev-lib/logger';
 import { isTranslationError } from '@hubspot/project-parsing-lib/src/lib/errors';
 import { translateForLocalDev } from '@hubspot/project-parsing-lib';
+import { CLIAccount } from '@hubspot/local-dev-lib/types/Accounts';
+import { getEnv, getConfigAccounts } from '@hubspot/local-dev-lib/config';
+import { getValidEnv } from '@hubspot/local-dev-lib/environment';
+import { ProjectDevArgs } from '../../../types/Yargs';
+import { ProjectConfig } from '../../../types/Projects';
 import { logError } from '../../../lib/errorHandlers';
 import { EXIT_CODES } from '../../../lib/enums/exitCodes';
-import path from 'path';
-import util from 'util';
 import { ensureProjectExists } from '../../../lib/projects';
 import {
   createInitialBuildForNewProject,
   createNewProjectForLocalDev,
+  useExistingDevTestAccount,
+  createDeveloperTestAccountForLocalDev,
 } from '../../../lib/localDev';
+import { selectDeveloperTestTargetAccountPrompt } from '../../../lib/prompts/projectDevTargetAccountPrompt';
 import SpinniesManager from '../../../lib/ui/SpinniesManager';
 import LocalDevManagerV2 from '../../../lib/LocalDevManagerV2';
-import { getEnv } from '@hubspot/local-dev-lib/config';
-import { getValidEnv } from '@hubspot/local-dev-lib/environment';
 import { handleExit } from '../../../lib/process';
+import {
+  isAppDeveloperAccount,
+  isStandardAccount,
+} from '../../../lib/accountTypes';
 
 export async function unifiedProjectDevFlow(
   args: ArgumentsCamelCase<ProjectDevArgs>,
@@ -53,7 +60,44 @@ export async function unifiedProjectDevFlow(
 
   // @TODO: Check if there are runnable components and exit if not
 
-  // @TODO: Add account selection logic
+  const accounts = getConfigAccounts();
+
+  // TODO Ideally this should require the user to target a Combined account
+  // For now, check if the account is either developer or standard
+  const derivedAccountIsRecommendedType =
+    isAppDeveloperAccount(accountConfig) || isStandardAccount(accountConfig);
+
+  if (!derivedAccountIsRecommendedType) {
+    logger.error(
+      'You must target a Combined account to use Unified Apps Local Dev'
+    );
+    process.exit(EXIT_CODES.ERROR);
+  }
+
+  let targetTestingAccountId = null;
+
+  const devAccountPromptResponse = await selectDeveloperTestTargetAccountPrompt(
+    accounts!,
+    accountConfig
+  );
+
+  targetTestingAccountId = devAccountPromptResponse.targetAccountId;
+
+  if (!!devAccountPromptResponse.notInConfigAccount) {
+    // When the developer test account isn't configured in the CLI config yet
+    // Walk the user through adding the account's PAK to the config
+    await useExistingDevTestAccount(
+      env,
+      devAccountPromptResponse.notInConfigAccount
+    );
+  } else if (devAccountPromptResponse.createNestedAccount) {
+    // Create a new developer test account and automatically add it to the CLI config
+    targetTestingAccountId = await createDeveloperTestAccountForLocalDev(
+      targetAccountId,
+      accountConfig,
+      env
+    );
+  }
 
   // Check if project exists in HubSpot
   const { projectExists, project: uploadedProject } = await ensureProjectExists(
@@ -97,6 +141,7 @@ export async function unifiedProjectDevFlow(
     deployedBuild,
     isGithubLinked,
     targetAccountId,
+    targetTestingAccountId: targetTestingAccountId!,
     projectConfig,
     projectDir,
     projectId: project.id,
