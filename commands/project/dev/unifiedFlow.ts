@@ -62,7 +62,8 @@ export async function unifiedProjectDevFlow(
 
   const accounts = getConfigAccounts();
 
-  // TODO ideally this should require the user to target a Combined account
+  // TODO Ideally this should require the user to target a Combined account
+  // For now, check if the account is either developer or standard
   const defaultAccountIsRecommendedType =
     isAppDeveloperAccount(accountConfig) || isStandardAccount(accountConfig);
 
@@ -74,7 +75,6 @@ export async function unifiedProjectDevFlow(
   }
 
   let targetTestingAccountId = null;
-  let createNewDeveloperTestAccount = false;
 
   const devAccountPromptResponse = await selectDeveloperTestTargetAccountPrompt(
     accounts!,
@@ -82,25 +82,22 @@ export async function unifiedProjectDevFlow(
   );
 
   targetTestingAccountId = devAccountPromptResponse.targetAccountId;
-  createNewDeveloperTestAccount = devAccountPromptResponse.createNestedAccount;
 
-  // When the developer test account isn't in the CLI config yet
   if (!!devAccountPromptResponse.notInConfigAccount) {
+    // When the developer test account isn't configured in the CLI config yet
+    // Walk the user through adding the account's PAK to the config
     await useExistingDevTestAccount(
       env,
       devAccountPromptResponse.notInConfigAccount
     );
-  }
-
-  if (createNewDeveloperTestAccount) {
+  } else if (devAccountPromptResponse.createNestedAccount) {
+    // Create a new developer test account and automatically add it to the CLI config
     targetTestingAccountId = await createDeveloperTestAccountForLocalDev(
       targetAccountId,
       accountConfig,
       env
     );
   }
-
-  console.log('targetTestingAccountId: ', targetTestingAccountId);
 
   // Check if project exists in HubSpot
   const { projectExists, project: uploadedProject } = await ensureProjectExists(
