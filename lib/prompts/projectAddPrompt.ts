@@ -1,32 +1,42 @@
 import { promptUser } from './promptUtils';
-import { ProjectAddComponentData } from '../../types/Projects';
+import { ComponentTemplate } from '../../types/Projects';
 import { i18n } from '../lang';
 
 const i18nKey = 'lib.prompts.projectAddPrompt';
 
 type ProjectAddPromptResponse = {
-  component: ProjectAddComponentData;
+  componentTemplate: ComponentTemplate;
   name: string;
 };
 
+function findComponentByPathOrLabel(
+  components: ComponentTemplate[],
+  componentPathOrLabel: string
+): ComponentTemplate | undefined {
+  return components.find(
+    c => c.path === componentPathOrLabel || c.label === componentPathOrLabel
+  );
+}
+
 export async function projectAddPrompt(
-  components: ProjectAddComponentData[],
+  components: ComponentTemplate[],
   promptOptions: { name?: string; type?: string } = {}
 ): Promise<ProjectAddPromptResponse> {
-  return promptUser<ProjectAddPromptResponse>([
+  const providedTypeIsValid =
+    !!promptOptions.type &&
+    !!findComponentByPathOrLabel(components, promptOptions.type);
+
+  const result = await promptUser<ProjectAddPromptResponse>([
     {
-      name: 'component',
+      name: 'componentTemplate',
       message: () => {
-        return promptOptions.type &&
-          !components.find(t => t.path === promptOptions.type)
+        return promptOptions.type && !providedTypeIsValid
           ? i18n(`${i18nKey}.errors.invalidType`, {
               type: promptOptions.type,
             })
           : i18n(`${i18nKey}.selectType`);
       },
-      when:
-        !promptOptions.type ||
-        !components.find(t => t.path === promptOptions.type),
+      when: !providedTypeIsValid,
       type: 'list',
       choices: components.map(type => {
         return {
@@ -47,4 +57,17 @@ export async function projectAddPrompt(
       },
     },
   ]);
+
+  if (!result.name) {
+    result.name = promptOptions.name!;
+  }
+
+  if (providedTypeIsValid) {
+    result.componentTemplate = findComponentByPathOrLabel(
+      components,
+      promptOptions.type!
+    )!;
+  }
+
+  return result;
 }
