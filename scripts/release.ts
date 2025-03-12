@@ -107,7 +107,8 @@ async function publish(
   }
 
   if (isExperimental) {
-    commandArgs.push('--no-git-tag-version');
+    commandArgs.push('--git-tag-version');
+    commandArgs.push('false');
   }
 
   return new Promise((resolve, reject) => {
