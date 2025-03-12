@@ -26,6 +26,10 @@ import {
   isAppDeveloperAccount,
   isStandardAccount,
 } from '../../../lib/accountTypes';
+import { uiCommandReference } from '../../../lib/ui';
+import { i18n } from '../../../lib/lang';
+
+const i18nKey = 'commands.project.subcommands.dev';
 
 export async function unifiedProjectDevFlow(
   args: ArgumentsCamelCase<ProjectDevArgs>,
@@ -62,7 +66,12 @@ export async function unifiedProjectDevFlow(
 
   // @TODO Do we need to do more than this or leave it to the dev servers?
   if (!Object.keys(components).length) {
-    logger.error('No runnable components found in the project');
+    logger.error(
+      i18n(`${i18nKey}.errors.noRunnableComponents`, {
+        projectDir,
+        command: uiCommandReference('hs project add'),
+      })
+    );
     process.exit(EXIT_CODES.SUCCESS);
   }
 
@@ -76,10 +85,8 @@ export async function unifiedProjectDevFlow(
     isAppDeveloperAccount(accountConfig) || isStandardAccount(accountConfig);
 
   if (!derivedAccountIsRecommendedType) {
-    logger.error(
-      'You must target a Combined account to use Unified Apps Local Dev'
-    );
-    process.exit(EXIT_CODES.ERROR);
+    logger.error(i18n(`${i18nKey}.errors.invalidUnifiedAppsAccount`));
+    process.exit(EXIT_CODES.SUCCESS);
   }
 
   let targetTestingAccountId = null;
