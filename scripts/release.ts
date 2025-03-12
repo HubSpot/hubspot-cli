@@ -84,8 +84,7 @@ async function cleanup(newVersion: string): Promise<void> {
 async function publish(
   tag: Tag,
   otp: string,
-  isDryRun: boolean,
-  isExperimental: boolean
+  isDryRun: boolean
 ): Promise<void> {
   logger.log();
   logger.log(`Publishing to ${tag}...`);
@@ -104,11 +103,6 @@ async function publish(
 
   if (isDryRun) {
     commandArgs.push('--dry-run');
-  }
-
-  if (isExperimental) {
-    commandArgs.push('--git-tag-version');
-    commandArgs.push('false');
   }
 
   return new Promise((resolve, reject) => {
@@ -263,7 +257,11 @@ async function handler({
 
   logger.log();
   logger.log(`Updating version to ${newVersion}...`);
-  await exec(`yarn version --new-version ${newVersion}`);
+  if (isExperimental) {
+    await exec(`yarn version --new-version --no-git-tag-version ${newVersion}`);
+  } else {
+    await exec(`yarn version --new-version ${newVersion}`);
+  }
   logger.success('Version updated successfully');
 
   logger.log();
@@ -283,7 +281,7 @@ async function handler({
   }
 
   try {
-    await publish(tag, otp, isDryRun, isExperimental);
+    await publish(tag, otp, isDryRun);
   } catch (e) {
     logger.error(
       'An error occurred while releasing the CLI. Correct the error and re-run `yarn build`.'
