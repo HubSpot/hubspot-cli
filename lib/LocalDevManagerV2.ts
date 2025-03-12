@@ -52,6 +52,7 @@ const i18nKey = 'lib.LocalDevManager';
 
 type LocalDevManagerConstructorOptions = {
   targetAccountId: number;
+  targetTestingAccountId: number;
   projectConfig: ProjectConfig;
   projectDir: string;
   projectId: number;
@@ -64,6 +65,7 @@ type LocalDevManagerConstructorOptions = {
 
 class LocalDevManagerV2 {
   targetAccountId: number;
+  targetTestingAccountId: number;
   projectConfig: ProjectConfig;
   projectDir: string;
   projectId: number;
@@ -82,6 +84,7 @@ class LocalDevManagerV2 {
 
   constructor(options: LocalDevManagerConstructorOptions) {
     this.targetAccountId = options.targetAccountId;
+    this.targetTestingAccountId = options.targetTestingAccountId;
     this.projectConfig = options.projectConfig;
     this.projectDir = options.projectDir;
     this.projectId = options.projectId;
@@ -498,7 +501,7 @@ class LocalDevManagerV2 {
       await DevServerManagerV2.setup({
         components: this.components,
         onUploadRequired: this.logUploadWarning.bind(this),
-        accountId: this.targetAccountId,
+        accountId: this.targetTestingAccountId,
         setActiveApp: this.setActiveApp.bind(this),
       });
       return true;
@@ -519,7 +522,7 @@ class LocalDevManagerV2 {
   async devServerStart(): Promise<void> {
     try {
       await DevServerManagerV2.start({
-        accountId: this.targetAccountId,
+        accountId: this.targetTestingAccountId,
         projectConfig: this.projectConfig,
       });
     } catch (e) {

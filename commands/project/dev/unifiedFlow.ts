@@ -144,6 +144,7 @@ export async function unifiedProjectDevFlow(
     deployedBuild,
     isGithubLinked,
     targetAccountId,
+    targetTestingAccountId: targetTestingAccountId!,
     projectConfig,
     projectDir,
     projectId: project.id,
