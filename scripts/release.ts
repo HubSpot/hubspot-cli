@@ -258,7 +258,7 @@ async function handler({
   logger.log();
   logger.log(`Updating version to ${newVersion}...`);
   if (isExperimental) {
-    await exec(`yarn version --new-version --no-git-tag-version ${newVersion}`);
+    await exec(`yarn version --no-git-tag-version --new-version ${newVersion}`);
   } else {
     await exec(`yarn version --new-version ${newVersion}`);
   }
