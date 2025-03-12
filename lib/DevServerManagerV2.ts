@@ -2,7 +2,7 @@ import { logger } from '@hubspot/local-dev-lib/logger';
 import { Environment } from '@hubspot/local-dev-lib/types/Config';
 import { i18n } from './lang';
 import { promptUser } from './prompts/promptUtils';
-import { DevModeInterface as UIEDevModeInterface } from '@hubspot/ui-extensions-dev-server';
+import { DevModeUnifiedInterface as UIEDevModeInterface } from '@hubspot/ui-extensions-dev-server';
 import {
   startPortManagerServer,
   stopPortManagerServer,
@@ -40,9 +40,7 @@ class DevServerManagerV2 {
   async iterateDevServers(
     callback: (serverInterface: DevServerInterface) => Promise<void>
   ): Promise<void> {
-    this.devServers.forEach(devServer => {
-      callback(devServer);
-    });
+    await Promise.all(this.devServers.map(devServer => callback(devServer)));
   }
 
   async setup({

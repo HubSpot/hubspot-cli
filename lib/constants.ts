@@ -80,8 +80,8 @@ export const IR_COMPONENT_TYPES = {
 } as const;
 
 export const APP_DISTRIBUTION_TYPES = {
-  PUBLIC: 'PUBLIC',
-  PRIVATE: 'PRIVATE',
+  PUBLIC: 'public',
+  PRIVATE: 'private',
 } as const;
 
 export const APP_AUTH_TYPES = {

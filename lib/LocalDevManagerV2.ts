@@ -35,10 +35,7 @@ import { installPublicAppPrompt } from './prompts/installPublicAppPrompt';
 import { confirmPrompt } from './prompts/promptUtils';
 import { i18n } from './lang';
 import { handleKeypress } from './process';
-import {
-  IntermediateRepresentationLocalDev,
-  IntermediateRepresentationNodeLocalDev,
-} from '@hubspot/project-parsing-lib/src/lib/types';
+import { IntermediateRepresentationNodeLocalDev } from '@hubspot/project-parsing-lib/src/lib/types';
 import { AppIRNode } from '../types/ProjectComponents';
 
 const WATCH_EVENTS = {
@@ -51,7 +48,7 @@ const WATCH_EVENTS = {
 const i18nKey = 'lib.LocalDevManager';
 
 type LocalDevManagerConstructorOptions = {
-  targetAccountId: number;
+  targetProjectAccountId: number;
   targetTestingAccountId: number;
   projectConfig: ProjectConfig;
   projectDir: string;
@@ -59,12 +56,12 @@ type LocalDevManagerConstructorOptions = {
   debug?: boolean;
   deployedBuild?: Build;
   isGithubLinked: boolean;
-  intermediateRepresentation: IntermediateRepresentationLocalDev;
+  components: { [key: string]: IntermediateRepresentationNodeLocalDev };
   env: Environment;
 };
 
 class LocalDevManagerV2 {
-  targetAccountId: number;
+  targetProjectAccountId: number;
   targetTestingAccountId: number;
   projectConfig: ProjectConfig;
   projectDir: string;
@@ -83,7 +80,7 @@ class LocalDevManagerV2 {
   mostRecentUploadWarning: string | null;
 
   constructor(options: LocalDevManagerConstructorOptions) {
-    this.targetAccountId = options.targetAccountId;
+    this.targetProjectAccountId = options.targetProjectAccountId;
     this.targetTestingAccountId = options.targetTestingAccountId;
     this.projectConfig = options.projectConfig;
     this.projectDir = options.projectDir;
@@ -93,8 +90,7 @@ class LocalDevManagerV2 {
     this.isGithubLinked = options.isGithubLinked;
     this.watcher = null;
     this.uploadWarnings = {};
-    this.components =
-      options.intermediateRepresentation.intermediateNodesIndexedByUid;
+    this.components = options.components;
     this.activeApp = null;
     this.activePublicAppData = null;
     this.env = options.env;
@@ -106,7 +102,11 @@ class LocalDevManagerV2 {
       this.projectConfig.srcDir
     );
 
-    if (!this.targetAccountId || !this.projectConfig || !this.projectDir) {
+    if (
+      !this.targetProjectAccountId ||
+      !this.projectConfig ||
+      !this.projectDir
+    ) {
       logger.log(i18n(`${i18nKey}.failedToInitialize`));
       process.exit(EXIT_CODES.ERROR);
     }
@@ -146,7 +146,7 @@ class LocalDevManagerV2 {
   async setActivePublicAppData(): Promise<void> {
     const {
       data: { results: portalPublicApps },
-    } = await fetchPublicAppsForPortal(this.targetAccountId);
+    } = await fetchPublicAppsForPortal(this.targetProjectAccountId);
 
     const activePublicAppData = portalPublicApps.find(
       ({ sourceId }) => sourceId === this.activeApp?.uid
@@ -160,7 +160,7 @@ class LocalDevManagerV2 {
       data: { uniquePortalInstallCount },
     } = await fetchPublicAppProductionInstallCounts(
       activePublicAppData.id,
-      this.targetAccountId
+      this.targetProjectAccountId
     );
 
     this.activePublicAppData = activePublicAppData;
@@ -207,7 +207,7 @@ class LocalDevManagerV2 {
       logger.error(
         i18n(`${i18nKey}.noDeployedBuild`, {
           projectName: this.projectConfig.name,
-          accountIdentifier: uiAccountDescription(this.targetAccountId),
+          accountIdentifier: uiAccountDescription(this.targetProjectAccountId),
           uploadCommand: this.getUploadCommand(),
         })
       );
@@ -236,7 +236,7 @@ class LocalDevManagerV2 {
     logger.log(
       chalk.hex(UI_COLORS.SORBET)(
         i18n(`${i18nKey}.running`, {
-          accountIdentifier: uiAccountDescription(this.targetAccountId),
+          accountIdentifier: uiAccountDescription(this.targetProjectAccountId),
           projectName: this.projectConfig.name,
         })
       )
@@ -244,7 +244,10 @@ class LocalDevManagerV2 {
     logger.log(
       uiLink(
         i18n(`${i18nKey}.viewProjectLink`),
-        getProjectDetailUrl(this.projectConfig.name, this.targetAccountId) || ''
+        getProjectDetailUrl(
+          this.projectConfig.name,
+          this.targetProjectAccountId
+        ) || ''
       )
     );
 
@@ -302,7 +305,7 @@ class LocalDevManagerV2 {
     const {
       data: { isInstalledWithScopeGroups, previouslyAuthorizedScopeGroups },
     } = await fetchAppInstallationData(
-      this.targetAccountId,
+      this.targetTestingAccountId,
       this.projectId,
       this.activeApp.uid,
       this.activeApp.config.auth.requiredScopes,
@@ -313,7 +316,7 @@ class LocalDevManagerV2 {
     if (!isInstalledWithScopeGroups) {
       await installPublicAppPrompt(
         this.env,
-        this.targetAccountId,
+        this.targetTestingAccountId,
         this.activePublicAppData.clientId,
         this.activeApp.config.auth.requiredScopes,
         this.activeApp.config.auth.redirectUrls,
@@ -333,9 +336,9 @@ class LocalDevManagerV2 {
   getUploadCommand(): string {
     const currentDefaultAccount = getConfigDefaultAccount() || undefined;
 
-    return this.targetAccountId !== getAccountId(currentDefaultAccount)
+    return this.targetProjectAccountId !== getAccountId(currentDefaultAccount)
       ? uiCommandReference(
-          `hs project upload --account=${this.targetAccountId}`
+          `hs project upload --account=${this.targetProjectAccountId}`
         )
       : uiCommandReference('hs project upload');
   }

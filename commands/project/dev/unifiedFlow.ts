@@ -35,20 +35,22 @@ export async function unifiedProjectDevFlow(
 ): Promise<void> {
   logger.log('Unified Apps Local Dev');
 
-  const targetAccountId = args.derivedAccountId;
-  const env = getValidEnv(getEnv(targetAccountId));
+  const targetProjectAccountId = args.derivedAccountId;
+  const env = getValidEnv(getEnv(targetProjectAccountId));
 
-  let intermediateRepresentation;
+  let components;
 
   // Get IR
   try {
-    intermediateRepresentation = await translateForLocalDev({
+    const intermediateRepresentation = await translateForLocalDev({
       projectSourceDir: path.join(projectDir, projectConfig.srcDir),
       platformVersion: projectConfig.platformVersion,
-      accountId: targetAccountId,
+      accountId: targetProjectAccountId,
     });
 
-    logger.debug(util.inspect(intermediateRepresentation, false, null, true));
+    components = intermediateRepresentation.intermediateNodesIndexedByUid;
+
+    logger.debug(util.inspect(components, false, null, true));
   } catch (e) {
     if (isTranslationError(e)) {
       logger.error(e.toString());
@@ -58,7 +60,13 @@ export async function unifiedProjectDevFlow(
     return process.exit(EXIT_CODES.ERROR);
   }
 
-  // @TODO: Check if there are runnable components and exit if not
+  // @TODO Do we need to do more than this or leave it to the dev servers?
+  if (!Object.keys(components).length) {
+    logger.error('No runnable components found in the project');
+    process.exit(EXIT_CODES.SUCCESS);
+  }
+
+  // @TODO Validate component types (i.e. previously you could not have both private and public apps)
 
   const accounts = getConfigAccounts();
 
@@ -93,7 +101,7 @@ export async function unifiedProjectDevFlow(
   } else if (devAccountPromptResponse.createNestedAccount) {
     // Create a new developer test account and automatically add it to the CLI config
     targetTestingAccountId = await createDeveloperTestAccountForLocalDev(
-      targetAccountId,
+      targetProjectAccountId,
       accountConfig,
       env
     );
@@ -101,7 +109,7 @@ export async function unifiedProjectDevFlow(
 
   // Check if project exists in HubSpot
   const { projectExists, project: uploadedProject } = await ensureProjectExists(
-    targetAccountId,
+    targetProjectAccountId,
     projectConfig.name,
     {
       allowCreate: false,
@@ -123,7 +131,7 @@ export async function unifiedProjectDevFlow(
   } else {
     project = await createNewProjectForLocalDev(
       projectConfig,
-      targetAccountId,
+      targetProjectAccountId,
       false,
       false
     );
@@ -131,16 +139,16 @@ export async function unifiedProjectDevFlow(
     deployedBuild = await createInitialBuildForNewProject(
       projectConfig,
       projectDir,
-      targetAccountId
+      targetProjectAccountId
     );
   }
 
   const LocalDev = new LocalDevManagerV2({
-    intermediateRepresentation,
+    components,
     debug: args.debug,
     deployedBuild,
     isGithubLinked,
-    targetAccountId,
+    targetProjectAccountId,
     targetTestingAccountId: targetTestingAccountId!,
     projectConfig,
     projectDir,
