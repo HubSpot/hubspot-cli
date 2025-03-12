@@ -315,6 +315,11 @@ async function handler({
   if (isExperimental) {
     logger.log();
     logger.log(`Experimental release: Skipping push to Github`);
+
+    // Reset the version back to the current version
+    await exec(
+      `yarn version --no-git-tag-version --new-version ${currentVersion}`
+    );
   } else {
     logger.log();
     logger.log(`Pushing changes to Github...`);
