@@ -11,6 +11,8 @@ en:
         portalEnvVarDeprecated: "The HUBSPOT_PORTAL_ID environment variable is deprecated. Please use HUBSPOT_ACCOUNT_ID instead."
       loadConfigMiddleware:
         configFileExists: "A configuration file already exists at {{ configPath }}. To specify a new configuration file, delete the existing one and try again."
+      injectAccountIdMiddleware:
+        accountNotFound: "An account with the provided identifier {{ accountIdentifier }} was not found in your config. Run {{ authCommand }} to add a new account to your config."
     completion:
       describe: "Enable bash completion shortcuts for commands. Concat the generated script to your .bashrc, .bash_profile, or .zshrc file."
       examples:
