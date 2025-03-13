@@ -44,12 +44,12 @@ class DevServerManagerV2 {
   }
 
   async setup({
-    components,
+    projectNodes,
     onUploadRequired,
     accountId,
     setActiveApp,
   }: {
-    components: { [key: string]: IntermediateRepresentationNodeLocalDev };
+    projectNodes: { [key: string]: IntermediateRepresentationNodeLocalDev };
     onUploadRequired: () => void;
     accountId: number;
     setActiveApp: (appUid: string | undefined) => Promise<void>;
@@ -63,7 +63,7 @@ class DevServerManagerV2 {
     await this.iterateDevServers(async serverInterface => {
       if (serverInterface.setup) {
         await serverInterface.setup({
-          components: components,
+          components: projectNodes,
           onUploadRequired,
           promptUser,
           logger,

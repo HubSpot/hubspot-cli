@@ -42,7 +42,7 @@ export async function unifiedProjectDevFlow(
   const targetProjectAccountId = args.derivedAccountId;
   const env = getValidEnv(getEnv(targetProjectAccountId));
 
-  let components;
+  let projectNodes;
 
   // Get IR
   try {
@@ -52,9 +52,9 @@ export async function unifiedProjectDevFlow(
       accountId: targetProjectAccountId,
     });
 
-    components = intermediateRepresentation.intermediateNodesIndexedByUid;
+    projectNodes = intermediateRepresentation.intermediateNodesIndexedByUid;
 
-    logger.debug(util.inspect(components, false, null, true));
+    logger.debug(util.inspect(projectNodes, false, null, true));
   } catch (e) {
     if (isTranslationError(e)) {
       logger.error(e.toString());
@@ -65,7 +65,7 @@ export async function unifiedProjectDevFlow(
   }
 
   // @TODO Do we need to do more than this or leave it to the dev servers?
-  if (!Object.keys(components).length) {
+  if (!Object.keys(projectNodes).length) {
     logger.error(
       i18n(`${i18nKey}.errors.noRunnableComponents`, {
         projectDir,
@@ -151,7 +151,7 @@ export async function unifiedProjectDevFlow(
   }
 
   const LocalDev = new LocalDevManagerV2({
-    components,
+    projectNodes,
     debug: args.debug,
     deployedBuild,
     isGithubLinked,

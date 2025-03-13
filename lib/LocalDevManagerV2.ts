@@ -56,7 +56,7 @@ type LocalDevManagerConstructorOptions = {
   debug?: boolean;
   deployedBuild?: Build;
   isGithubLinked: boolean;
-  components: { [key: string]: IntermediateRepresentationNodeLocalDev };
+  projectNodes: { [key: string]: IntermediateRepresentationNodeLocalDev };
   env: Environment;
 };
 
@@ -71,7 +71,7 @@ class LocalDevManagerV2 {
   isGithubLinked: boolean;
   watcher: FSWatcher | null;
   uploadWarnings: { [key: string]: boolean };
-  components: { [key: string]: IntermediateRepresentationNodeLocalDev };
+  projectNodes: { [key: string]: IntermediateRepresentationNodeLocalDev };
   activeApp: AppIRNode | null;
   activePublicAppData: PublicApp | null;
   env: Environment;
@@ -90,7 +90,7 @@ class LocalDevManagerV2 {
     this.isGithubLinked = options.isGithubLinked;
     this.watcher = null;
     this.uploadWarnings = {};
-    this.components = options.components;
+    this.projectNodes = options.projectNodes;
     this.activeApp = null;
     this.activePublicAppData = null;
     this.env = options.env;
@@ -122,7 +122,7 @@ class LocalDevManagerV2 {
       process.exit(EXIT_CODES.ERROR);
     }
     const app =
-      Object.values(this.components).find(
+      Object.values(this.projectNodes).find(
         component => component.uid === appUid
       ) || null;
 
@@ -436,22 +436,22 @@ class LocalDevManagerV2 {
       subbuildStatus => subbuildStatus.buildName
     );
 
-    const missingComponents: string[] = [];
+    const missingProjectNodes: string[] = [];
 
-    Object.values(this.components).forEach(component => {
-      if (isAppIRNode(component) || isCardIRNode(component)) {
-        if (!deployedComponentNames.includes(component.config.name)) {
-          missingComponents.push(
-            `${i18n(`${i18nKey}.uploadWarning.appLabel`)} ${component.config.name}`
+    Object.values(this.projectNodes).forEach(node => {
+      if (isAppIRNode(node) || isCardIRNode(node)) {
+        if (!deployedComponentNames.includes(node.config.name)) {
+          missingProjectNodes.push(
+            `${i18n(`${i18nKey}.uploadWarning.appLabel`)} ${node.config.name}`
           );
         }
       }
     });
 
-    if (missingComponents.length) {
+    if (missingProjectNodes.length) {
       this.logUploadWarning(
         i18n(`${i18nKey}.uploadWarning.missingComponents`, {
-          missingComponents: missingComponents.join(', '),
+          missingComponents: missingProjectNodes.join(', '),
         })
       );
     }
@@ -462,7 +462,7 @@ class LocalDevManagerV2 {
       ignoreInitial: true,
     });
 
-    const configPaths = Object.values(this.components)
+    const configPaths = Object.values(this.projectNodes)
       .filter(isAppIRNode)
       .map(component => component.localDev.componentConfigPath);
 
@@ -502,7 +502,7 @@ class LocalDevManagerV2 {
   async devServerSetup(): Promise<boolean> {
     try {
       await DevServerManagerV2.setup({
-        components: this.components,
+        projectNodes: this.projectNodes,
         onUploadRequired: this.logUploadWarning.bind(this),
         accountId: this.targetTestingAccountId,
         setActiveApp: this.setActiveApp.bind(this),
