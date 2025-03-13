@@ -226,7 +226,12 @@ const injectAccountIdMiddleware = async options => {
     if (account) {
       options.derivedAccountId = account.accountId;
     } else {
-      logger.error('@TODO Provided account does not exist');
+      logger.error(
+        i18n(`${i18nKey}.injectAccountIdMiddleware.accountNotFound`, {
+          accountIdentifier: accountOption,
+          authCommand: uiCommandReference('{authCommand}'),
+        })
+      );
       process.exit(EXIT_CODES.ERROR);
     }
   }
