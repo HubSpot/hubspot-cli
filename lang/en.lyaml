@@ -133,6 +133,13 @@ en:
     config:
       describe: "Commands for managing the CLI config file."
       subcommands:
+        migrate:
+          describe: "Migrate from the deprecated {{ deprecatedConfigPath }} file to the new centralized config file at {{ centralizedConfigPath }}."
+          migrateConfigPrompt: "Migrate from the deprecated {{ deprecatedConfigPath }} file to the new centralized config file at {{ centralizedConfigPath }}? (This action will delete the deprecated config file)."
+          success: "Success! The deprecated config file has been migrated to the new centralized config file at {{ configPath }}."
+          examples:
+            default: "Migrate from the deprecated {{ deprecatedConfigPath }} file to the new centralized config file at {{ centralizedConfigPath }}"
+            configFlag: "Migrate a specific config file (specified with the config flag) to the new centralized config file at {{ centralizedConfigPath }}"
         set:
           describe: "Set various configuration options within the hubspot.config.yml file."
           promptMessage: "Select a config option to update"
