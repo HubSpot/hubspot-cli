@@ -1,4 +1,3 @@
-import { describe, beforeAll, afterAll, it, expect } from 'vitest';
 import rimraf from 'rimraf';
 import { ENTER } from '../../lib/prompt';
 import { TestState } from '../../lib/TestState';
