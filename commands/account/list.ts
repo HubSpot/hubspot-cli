@@ -1,12 +1,11 @@
 import { Argv, ArgumentsCamelCase } from 'yargs';
 import { logger } from '@hubspot/local-dev-lib/logger';
 import {
-  getConfigPath,
+  getConfigFilePath,
   getConfigDefaultAccount,
-  getConfigAccounts,
+  getAllConfigAccounts,
 } from '@hubspot/local-dev-lib/config';
-import { getAccountIdentifier } from '@hubspot/local-dev-lib/config/getAccountIdentifier';
-import { CLIAccount } from '@hubspot/local-dev-lib/types/Accounts';
+import { HubSpotConfigAccount } from '@hubspot/local-dev-lib/types/Accounts';
 import { addConfigOptions } from '../../lib/commonOpts';
 import { getTableContents, getTableHeader } from '../../lib/ui/table';
 import { trackCommandUsage } from '../../lib/usageTracking';
@@ -25,37 +24,35 @@ export const describe = i18n(`${i18nKey}.describe`);
 
 type AccountListArgs = CommonArgs & ConfigArgs;
 
-function sortAndMapAccounts(accounts: CLIAccount[]): {
-  [key: string]: CLIAccount[];
+function sortAndMapAccounts(accounts: HubSpotConfigAccount[]): {
+  [key: string]: HubSpotConfigAccount[];
 } {
-  const mappedAccountData: { [key: string]: CLIAccount[] } = {};
+  const mappedAccountData: { [key: string]: HubSpotConfigAccount[] } = {};
   // Standard and app developer accounts
   accounts
     .filter(
-      p =>
-        p.accountType &&
-        (p.accountType === HUBSPOT_ACCOUNT_TYPES.STANDARD ||
-          p.accountType === HUBSPOT_ACCOUNT_TYPES.APP_DEVELOPER)
+      a =>
+        a.accountType === HUBSPOT_ACCOUNT_TYPES.STANDARD ||
+        a.accountType === HUBSPOT_ACCOUNT_TYPES.APP_DEVELOPER
     )
+
     .forEach(account => {
-      const accountId = getAccountIdentifier(account);
-      if (accountId) {
-        mappedAccountData[accountId] = [account];
+      if (account.accountId) {
+        mappedAccountData[account.accountId] = [account];
       }
     });
   // Non-standard accounts (sandbox, developer test account)
   accounts
-    .filter(p => p.accountType && (isSandbox(p) || isDeveloperTestAccount(p)))
-    .forEach(p => {
-      if (p.parentAccountId) {
-        mappedAccountData[p.parentAccountId] = [
-          ...(mappedAccountData[p.parentAccountId] || []),
-          p,
+    .filter(a => a.accountType && (isSandbox(a) || isDeveloperTestAccount(a)))
+    .forEach(a => {
+      if (a.parentAccountId) {
+        mappedAccountData[a.parentAccountId] = [
+          ...(mappedAccountData[a.parentAccountId] || []),
+          a,
         ];
       } else {
-        const accountId = getAccountIdentifier(p);
-        if (accountId) {
-          mappedAccountData[accountId] = [p];
+        if (a.accountId) {
+          mappedAccountData[a.accountId] = [a];
         }
       }
     });
@@ -64,14 +61,14 @@ function sortAndMapAccounts(accounts: CLIAccount[]): {
 }
 
 function getAccountData(mappedAccountData: {
-  [key: string]: CLIAccount[];
+  [key: string]: HubSpotConfigAccount[];
 }): string[][] {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const accountData: any[][] = [];
 
   Object.entries(mappedAccountData).forEach(([key, set]) => {
     const hasParentAccount = set.filter(
-      p => getAccountIdentifier(p) === parseInt(key, 10)
+      a => a.accountId === parseInt(key, 10)
     )[0];
     set.forEach(account => {
       let name = `${account.name} [${
@@ -86,7 +83,7 @@ function getAccountData(mappedAccountData: {
           name = `↳ ${name}`;
         }
       }
-      accountData.push([name, getAccountIdentifier(account), account.authType]);
+      accountData.push([name, account.accountId, account.authType]);
     });
   });
 
@@ -100,8 +97,8 @@ export async function handler(
 
   trackCommandUsage('accounts-list', undefined, derivedAccountId);
 
-  const configPath = getConfigPath();
-  const accountsList = getConfigAccounts() || [];
+  const configPath = getConfigFilePath();
+  const accountsList = getAllConfigAccounts();
   const mappedAccountData = sortAndMapAccounts(accountsList);
   const accountData = getAccountData(mappedAccountData);
   accountData.unshift(
@@ -112,12 +109,22 @@ export async function handler(
     ])
   );
 
+  let defaultAccount;
+
+  try {
+    defaultAccount = getConfigDefaultAccount();
+  } catch (e) {}
+
   logger.log(i18n(`${i18nKey}.configPath`, { configPath: configPath! }));
-  logger.log(
-    i18n(`${i18nKey}.defaultAccount`, {
-      account: getConfigDefaultAccount()!,
-    })
-  );
+
+  if (defaultAccount) {
+    logger.log(
+      i18n(`${i18nKey}.defaultAccount`, {
+        account: defaultAccount.name,
+      })
+    );
+  }
+
   logger.log(i18n(`${i18nKey}.accounts`));
   logger.log(getTableContents(accountData, { border: { bodyLeft: '  ' } }));
 }

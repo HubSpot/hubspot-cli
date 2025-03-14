@@ -1,6 +1,6 @@
 import { Argv, ArgumentsCamelCase } from 'yargs';
 import { logger } from '@hubspot/local-dev-lib/logger';
-import { getAccountConfig } from '@hubspot/local-dev-lib/config';
+import { getConfigAccountById } from '@hubspot/local-dev-lib/config';
 import { getAccessToken } from '@hubspot/local-dev-lib/personalAccessKey';
 import { addConfigOptions } from '../../lib/commonOpts';
 import { i18n } from '../../lib/lang';
@@ -18,21 +18,21 @@ export async function handler(
   args: ArgumentsCamelCase<AccountInfoArgs>
 ): Promise<void> {
   const { derivedAccountId } = args;
-  const config = getAccountConfig(derivedAccountId);
+  const config = getConfigAccountById(derivedAccountId);
   // check if the provided account is using a personal access key, if not, show an error
   if (config && config.authType === 'personalaccesskey') {
     const { name, personalAccessKey, env } = config;
     let scopeGroups: string[][] = [];
 
     const response = await getAccessToken(
-      personalAccessKey!,
+      personalAccessKey,
       env,
       derivedAccountId
     );
 
     scopeGroups = response.scopeGroups.map(s => [s]);
 
-    logger.log(i18n(`${i18nKey}.name`, { name: name! }));
+    logger.log(i18n(`${i18nKey}.name`, { name: name }));
     logger.log(i18n(`${i18nKey}.accountId`, { accountId: derivedAccountId }));
     logger.log(i18n(`${i18nKey}.scopeGroups`));
     logger.log(getTableContents(scopeGroups, { border: { bodyLeft: '  ' } }));
