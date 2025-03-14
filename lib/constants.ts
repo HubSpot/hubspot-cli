@@ -76,11 +76,11 @@ export const IR_COMPONENT_TYPES = {
 } as const;
 
 export const APP_DISTRIBUTION_TYPES = {
-  PUBLIC: 'public',
+  MARKETPLACE: 'marketplace',
   PRIVATE: 'private',
 } as const;
 
 export const APP_AUTH_TYPES = {
-  OAUTH: 'OAUTH',
-  STATIC: 'STATIC',
+  OAUTH: 'oauth',
+  STATIC: 'static',
 } as const;

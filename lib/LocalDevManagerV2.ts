@@ -129,7 +129,7 @@ class LocalDevManagerV2 {
     if (app && isAppIRNode(app)) {
       this.activeApp = app;
 
-      if (app.config.distribution === APP_DISTRIBUTION_TYPES.PUBLIC) {
+      if (app.config.distribution === APP_DISTRIBUTION_TYPES.MARKETPLACE) {
         try {
           await this.setActivePublicAppData();
           await this.checkActivePublicAppInstalls();
