@@ -69,3 +69,18 @@ export const PLATFORM_VERSION_ERROR_TYPES = {
   PLATFORM_VERSION_SPECIFIED_DOES_NOT_EXIST:
     'PlatformVersionErrorType.PLATFORM_VERSION_SPECIFIED_DOES_NOT_EXIST',
 } as const;
+
+export const IR_COMPONENT_TYPES = {
+  APPLICATION: 'APPLICATION',
+  CARD: 'CARD',
+} as const;
+
+export const APP_DISTRIBUTION_TYPES = {
+  MARKETPLACE: 'marketplace',
+  PRIVATE: 'private',
+} as const;
+
+export const APP_AUTH_TYPES = {
+  OAUTH: 'oauth',
+  STATIC: 'static',
+} as const;
