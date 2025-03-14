@@ -7,10 +7,7 @@ import {
   fetchPublicAppsForPortal,
   fetchPublicAppProductionInstallCounts,
 } from '@hubspot/local-dev-lib/api/appsDev';
-import {
-  getAccountId,
-  getConfigDefaultAccount,
-} from '@hubspot/local-dev-lib/config';
+import { getConfigDefaultAccount } from '@hubspot/local-dev-lib/config';
 import { Build } from '@hubspot/local-dev-lib/types/Build';
 import { PublicApp } from '@hubspot/local-dev-lib/types/Apps';
 import { Environment } from '@hubspot/local-dev-lib/types/Config';
@@ -344,13 +341,17 @@ class LocalDevManager {
   }
 
   getUploadCommand(): string {
-    const currentDefaultAccount = getConfigDefaultAccount() || undefined;
+    try {
+      const defaultAccount = getConfigDefaultAccount();
 
-    return this.targetProjectAccountId !== getAccountId(currentDefaultAccount)
-      ? uiCommandReference(
-          `hs project upload --account=${this.targetProjectAccountId}`
-        )
-      : uiCommandReference('hs project upload');
+      if (this.targetProjectAccountId === defaultAccount.accountId) {
+        return uiCommandReference('hs project upload');
+      }
+    } catch (e) {}
+
+    return uiCommandReference(
+      `hs project upload --account=${this.targetProjectAccountId}`
+    );
   }
 
   logUploadWarning(reason?: string): void {
