@@ -540,7 +540,6 @@ en:
           logs:
             success: "Project {{#bold}}{{ projectName }}{{/bold}} was successfully created in {{ projectDest }}"
             welcomeMessage: "Welcome to HubSpot Developer Projects!"
-            navigateToProject: "Navigate into your new project directory to get started"
           examples:
             default: "Create a new project"
             templateSource: "Create a new project from a custom GitHub repository. The repository must contain a valid project template and a config.json file defining the available templates"
