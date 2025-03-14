@@ -109,12 +109,22 @@ export async function handler(
     ])
   );
 
+  let defaultAccount;
+
+  try {
+    defaultAccount = getConfigDefaultAccount();
+  } catch (e) {}
+
   logger.log(i18n(`${i18nKey}.configPath`, { configPath: configPath! }));
-  logger.log(
-    i18n(`${i18nKey}.defaultAccount`, {
-      account: getConfigDefaultAccount().accountId,
-    })
-  );
+
+  if (defaultAccount) {
+    logger.log(
+      i18n(`${i18nKey}.defaultAccount`, {
+        account: defaultAccount.name,
+      })
+    );
+  }
+
   logger.log(i18n(`${i18nKey}.accounts`));
   logger.log(getTableContents(accountData, { border: { bodyLeft: '  ' } }));
 }

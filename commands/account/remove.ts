@@ -50,7 +50,11 @@ export async function handler(
 
   trackCommandUsage('accounts-remove', undefined, account.accountId);
 
-  const currentDefaultAccount = getConfigDefaultAccount();
+  let currentDefaultAccount;
+
+  try {
+    currentDefaultAccount = getConfigDefaultAccount();
+  } catch (e) {}
 
   await removeAccountFromConfig(account.accountId);
   logger.success(
@@ -59,7 +63,10 @@ export async function handler(
     })
   );
 
-  if (account.accountId === currentDefaultAccount.accountId) {
+  if (
+    currentDefaultAccount &&
+    account.accountId === currentDefaultAccount.accountId
+  ) {
     logger.log();
     logger.log(i18n(`${i18nKey}.logs.replaceDefaultAccount`));
     const newDefaultAccount = await selectAccountFromConfig();
