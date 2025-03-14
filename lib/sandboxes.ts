@@ -1,15 +1,17 @@
 import { logger } from '@hubspot/local-dev-lib/logger';
 import { getSandboxUsageLimits } from '@hubspot/local-dev-lib/api/sandboxHubs';
 import { fetchTypes } from '@hubspot/local-dev-lib/api/sandboxSync';
-import { getAccountId, getConfigAccounts } from '@hubspot/local-dev-lib/config';
+import { getAllConfigAccounts } from '@hubspot/local-dev-lib/config';
 import { getHubSpotWebsiteOrigin } from '@hubspot/local-dev-lib/urls';
 import { HUBSPOT_ACCOUNT_TYPES } from '@hubspot/local-dev-lib/constants/config';
-import { getAccountIdentifier } from '@hubspot/local-dev-lib/config/getAccountIdentifier';
 import {
   isMissingScopeError,
   isSpecifiedError,
 } from '@hubspot/local-dev-lib/errors/index';
-import { AccountType, CLIAccount } from '@hubspot/local-dev-lib/types/Accounts';
+import {
+  AccountType,
+  HubSpotConfigAccount,
+} from '@hubspot/local-dev-lib/types/Accounts';
 import { Environment } from '@hubspot/local-dev-lib/types/Config';
 
 import { i18n } from './lang';
@@ -43,20 +45,19 @@ export function getSandboxTypeAsString(accountType?: AccountType): string {
 }
 
 export function getHasSandboxesByType(
-  parentAccountConfig: CLIAccount,
+  parentAccount: HubSpotConfigAccount,
   type: AccountType
 ): boolean {
-  const id = getAccountIdentifier(parentAccountConfig);
-  const parentPortalId = getAccountId(id);
-  const accountsList = getConfigAccounts() || [];
+  const parentAccountId = parentAccount.accountId;
 
-  for (const portal of accountsList) {
+  const accountsList = getAllConfigAccounts();
+
+  for (const account of accountsList) {
     if (
-      (portal.parentAccountId !== null ||
-        portal.parentAccountId !== undefined) &&
-      portal.parentAccountId === parentPortalId &&
-      portal.accountType &&
-      portal.accountType === type
+      Boolean(account.parentAccountId) &&
+      account.parentAccountId === parentAccountId &&
+      account.accountType &&
+      account.accountType === type
     ) {
       return true;
     }
@@ -66,21 +67,19 @@ export function getHasSandboxesByType(
 
 // Fetches available sync types for a given sandbox portal
 export async function getAvailableSyncTypes(
-  parentAccountConfig: CLIAccount,
-  config: CLIAccount
+  parentAccount: HubSpotConfigAccount,
+  account: HubSpotConfigAccount
 ): Promise<Array<SandboxSyncTask>> {
-  const parentId = getAccountIdentifier(parentAccountConfig);
-  const parentPortalId = getAccountId(parentId);
-  const id = getAccountIdentifier(config);
-  const portalId = getAccountId(id);
+  const parentAccountId = parentAccount.accountId;
+  const accountId = account.accountId;
 
-  if (!parentPortalId || !portalId) {
+  if (!parentAccountId || !accountId) {
     throw new Error(i18n(`${i18nKey}.sync.failure.syncTypeFetch`));
   }
 
   const {
     data: { results: syncTypes },
-  } = await fetchTypes(parentPortalId, portalId);
+  } = await fetchTypes(parentAccountId, accountId);
   if (!syncTypes) {
     throw new Error(i18n(`${i18nKey}.sync.failure.syncTypeFetch`));
   }
@@ -88,16 +87,11 @@ export async function getAvailableSyncTypes(
 }
 
 export async function validateSandboxUsageLimits(
-  accountConfig: CLIAccount,
+  account: HubSpotConfigAccount,
   sandboxType: AccountType,
   env: Environment
 ): Promise<void> {
-  const id = getAccountIdentifier(accountConfig);
-  const accountId = getAccountId(id);
-
-  if (!accountId) {
-    throw new Error(i18n(`${i18nKey}.create.failure.usageLimitFetch`));
-  }
+  const accountId = account.accountId;
 
   const {
     data: { usage },
@@ -110,7 +104,7 @@ export async function validateSandboxUsageLimits(
       const devSandboxLimit = usage['DEVELOPER'].limit;
       const plural = devSandboxLimit !== 1;
       const hasDevelopmentSandboxes = getHasSandboxesByType(
-        accountConfig,
+        account,
         HUBSPOT_ACCOUNT_TYPES.DEVELOPMENT_SANDBOX
       );
       if (hasDevelopmentSandboxes) {
@@ -120,7 +114,7 @@ export async function validateSandboxUsageLimits(
               plural ? 'other' : 'one'
             }`,
             {
-              accountName: accountConfig.name || accountId,
+              accountName: account.name,
               limit: devSandboxLimit,
             }
           )
@@ -133,7 +127,7 @@ export async function validateSandboxUsageLimits(
               plural ? 'other' : 'one'
             }`,
             {
-              accountName: accountConfig.name || accountId,
+              accountName: account.name,
               limit: devSandboxLimit,
               link: `${baseUrl}/sandboxes-developer/${accountId}/development`,
             }
@@ -147,7 +141,7 @@ export async function validateSandboxUsageLimits(
       const standardSandboxLimit = usage['STANDARD'].limit;
       const plural = standardSandboxLimit !== 1;
       const hasStandardSandboxes = getHasSandboxesByType(
-        accountConfig,
+        account,
         HUBSPOT_ACCOUNT_TYPES.STANDARD_SANDBOX
       );
       if (hasStandardSandboxes) {
@@ -157,7 +151,7 @@ export async function validateSandboxUsageLimits(
               plural ? 'other' : 'one'
             }`,
             {
-              accountName: accountConfig.name || accountId,
+              accountName: account.name,
               limit: standardSandboxLimit,
             }
           )
@@ -170,7 +164,7 @@ export async function validateSandboxUsageLimits(
               plural ? 'other' : 'one'
             }`,
             {
-              accountName: accountConfig.name || accountId,
+              accountName: account.name,
               limit: standardSandboxLimit,
               link: `${baseUrl}/sandboxes-developer/${accountId}/standard`,
             }

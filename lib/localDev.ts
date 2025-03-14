@@ -8,12 +8,14 @@ import {
   isSpecifiedError,
 } from '@hubspot/local-dev-lib/errors/index';
 import { getHubSpotWebsiteOrigin } from '@hubspot/local-dev-lib/urls';
-import { getAccountConfig, getEnv } from '@hubspot/local-dev-lib/config';
+import {
+  getConfigAccountById,
+  getConfigAccountEnvironment,
+  getConfigAccountIfExists,
+} from '@hubspot/local-dev-lib/config';
 import { createProject } from '@hubspot/local-dev-lib/api/projects';
-import { ENVIRONMENTS } from '@hubspot/local-dev-lib/constants/environments';
 import { PERSONAL_ACCESS_KEY_AUTH_METHOD } from '@hubspot/local-dev-lib/constants/auth';
-import { getAccountIdentifier } from '@hubspot/local-dev-lib/config/getAccountIdentifier';
-import { CLIAccount } from '@hubspot/local-dev-lib/types/Accounts';
+import { HubSpotConfigAccount } from '@hubspot/local-dev-lib/types/Accounts';
 import { Environment } from '@hubspot/local-dev-lib/types/Config';
 import { DeveloperTestAccount } from '@hubspot/local-dev-lib/types/developerTestAccounts';
 import { Project } from '@hubspot/local-dev-lib/types/Project';
@@ -62,9 +64,9 @@ const i18nKey = 'lib.localDev';
 // If the user passed in the --account flag, confirm they want to use that account as
 // their target account, otherwise exit
 export async function confirmDefaultAccountIsTarget(
-  accountConfig: CLIAccount
+  account: HubSpotConfigAccount
 ): Promise<void> {
-  if (!accountConfig.name || !accountConfig.accountType) {
+  if (!account.name || !account.accountType) {
     logger.error(
       i18n(`${i18nKey}.confirmDefaultAccountIsTarget.configError`, {
         authCommand: uiCommandReference('hs auth'),
@@ -75,8 +77,8 @@ export async function confirmDefaultAccountIsTarget(
 
   logger.log();
   const useDefaultAccount = await confirmDefaultAccountPrompt(
-    accountConfig.name,
-    HUBSPOT_ACCOUNT_TYPE_STRINGS[accountConfig.accountType]
+    account.name,
+    HUBSPOT_ACCOUNT_TYPE_STRINGS[account.accountType]
   );
 
   if (!useDefaultAccount) {
@@ -95,15 +97,12 @@ export async function confirmDefaultAccountIsTarget(
 
 // Confirm the default account is supported for the type of apps being developed
 export function checkIfDefaultAccountIsSupported(
-  accountConfig: CLIAccount,
+  account: HubSpotConfigAccount,
   hasPublicApps: boolean
 ): void {
   if (
     hasPublicApps &&
-    !(
-      isAppDeveloperAccount(accountConfig) ||
-      isDeveloperTestAccount(accountConfig)
-    )
+    !(isAppDeveloperAccount(account) || isDeveloperTestAccount(account))
   ) {
     logger.error(
       i18n(`${i18nKey}.checkIfDefaultAccountIsSupported.publicApp`, {
@@ -112,7 +111,7 @@ export function checkIfDefaultAccountIsSupported(
       })
     );
     process.exit(EXIT_CODES.SUCCESS);
-  } else if (!hasPublicApps && isAppDeveloperAccount(accountConfig)) {
+  } else if (!hasPublicApps && isAppDeveloperAccount(account)) {
     logger.error(
       i18n(`${i18nKey}.checkIfDefaultAccountIsSupported.privateApp`, {
         useCommand: uiCommandReference('hs accounts use'),
@@ -123,19 +122,19 @@ export function checkIfDefaultAccountIsSupported(
   }
 }
 
-export function checkIfParentAccountIsAuthed(accountConfig: CLIAccount): void {
+export function checkIfParentAccountIsAuthed(
+  account: HubSpotConfigAccount
+): void {
   if (
-    !accountConfig.parentAccountId ||
-    !getAccountConfig(accountConfig.parentAccountId)
+    !account.parentAccountId ||
+    !getConfigAccountIfExists(account.parentAccountId)
   ) {
     logger.error(
       i18n(`${i18nKey}.checkIfParentAccountIsAuthed.notAuthedError`, {
-        accountId: accountConfig.parentAccountId || '',
-        accountIdentifier: uiAccountDescription(
-          getAccountIdentifier(accountConfig)
-        ),
+        accountId: account.parentAccountId || '',
+        accountIdentifier: uiAccountDescription(account.accountId),
         authCommand: uiCommandReference(
-          `hs auth --account=${accountConfig.parentAccountId}`
+          `hs auth --account=${account.parentAccountId}`
         ),
       })
     );
@@ -145,11 +144,11 @@ export function checkIfParentAccountIsAuthed(accountConfig: CLIAccount): void {
 
 // Confirm the default account is a developer account if developing public apps
 export function checkIfAccountFlagIsSupported(
-  accountConfig: CLIAccount,
+  account: HubSpotConfigAccount,
   hasPublicApps: boolean
 ): void {
   if (hasPublicApps) {
-    if (!isDeveloperTestAccount(accountConfig)) {
+    if (!isDeveloperTestAccount(account)) {
       logger.error(
         i18n(`${i18nKey}.validateAccountOption.invalidPublicAppAccount`, {
           useCommand: uiCommandReference('hs accounts use'),
@@ -158,8 +157,8 @@ export function checkIfAccountFlagIsSupported(
       );
       process.exit(EXIT_CODES.SUCCESS);
     }
-    checkIfParentAccountIsAuthed(accountConfig);
-  } else if (isAppDeveloperAccount(accountConfig)) {
+    checkIfParentAccountIsAuthed(account);
+  } else if (isAppDeveloperAccount(account)) {
     logger.error(
       i18n(`${i18nKey}.validateAccountOption.invalidPrivateAppAccount`, {
         useCommand: uiCommandReference('hs accounts use'),
@@ -171,8 +170,8 @@ export function checkIfAccountFlagIsSupported(
 
 // If the user isn't using the recommended account type, prompt them to use or create one
 export async function suggestRecommendedNestedAccount(
-  accounts: CLIAccount[],
-  accountConfig: CLIAccount,
+  accounts: HubSpotConfigAccount[],
+  account: HubSpotConfigAccount,
   hasPublicApps: boolean
 ): Promise<ProjectDevTargetAccountPromptResponse> {
   logger.log();
@@ -189,22 +188,22 @@ export async function suggestRecommendedNestedAccount(
   uiLine();
   logger.log();
 
-  const targetAccountPrompt = isAppDeveloperAccount(accountConfig)
+  const targetAccountPrompt = isAppDeveloperAccount(account)
     ? selectDeveloperTestTargetAccountPrompt
     : selectSandboxTargetAccountPrompt;
 
-  return targetAccountPrompt(accounts, accountConfig);
+  return targetAccountPrompt(accounts, account);
 }
 
 // Create a new sandbox and return its accountId
 export async function createSandboxForLocalDev(
   accountId: number,
-  accountConfig: CLIAccount,
+  account: HubSpotConfigAccount,
   env: Environment
 ): Promise<number> {
   try {
     await validateSandboxUsageLimits(
-      accountConfig,
+      account,
       HUBSPOT_ACCOUNT_TYPES.DEVELOPMENT_SANDBOX,
       env
     );
@@ -212,14 +211,14 @@ export async function createSandboxForLocalDev(
     if (isMissingScopeError(err)) {
       logger.error(
         i18n('lib.sandbox.create.failure.scopes.message', {
-          accountName: accountConfig.name || accountId,
+          accountName: account.name || accountId,
         })
       );
       const websiteOrigin = getHubSpotWebsiteOrigin(env);
       const url = `${websiteOrigin}/personal-access-key/${accountId}`;
       logger.info(
         i18n('lib.sandbox.create.failure.scopes.instructions', {
-          accountName: accountConfig.name || accountId,
+          accountName: account.name || accountId,
           url,
         })
       );
@@ -241,32 +240,25 @@ export async function createSandboxForLocalDev(
 
     const result = await buildSandbox(
       name,
-      accountConfig,
+      account,
       HUBSPOT_ACCOUNT_TYPES.DEVELOPMENT_SANDBOX,
       env
     );
 
     const targetAccountId = result.sandbox.sandboxHubId;
 
-    const sandboxAccountConfig = getAccountConfig(result.sandbox.sandboxHubId);
-
-    if (!sandboxAccountConfig) {
+    let sandboxAccount;
+    try {
+      sandboxAccount = getConfigAccountById(result.sandbox.sandboxHubId);
+    } catch (e) {
+      logger.debug(e);
       logger.error(i18n('lib.sandbox.create.failure.generic'));
       process.exit(EXIT_CODES.ERROR);
     }
 
-    const syncTasks = await getAvailableSyncTypes(
-      accountConfig,
-      sandboxAccountConfig
-    );
+    const syncTasks = await getAvailableSyncTypes(account, sandboxAccount);
     // For v1 sandboxes, keep sync here. Once we migrate to v2, this will be handled by BE automatically
-    await syncSandbox(
-      sandboxAccountConfig,
-      accountConfig,
-      env,
-      syncTasks,
-      true
-    );
+    await syncSandbox(sandboxAccount, account, env, syncTasks, true);
     return targetAccountId;
   } catch (err) {
     logError(err);
@@ -277,14 +269,13 @@ export async function createSandboxForLocalDev(
 // Create a developer test account and return its accountId
 export async function createDeveloperTestAccountForLocalDev(
   accountId: number,
-  accountConfig: CLIAccount,
+  account: HubSpotConfigAccount,
   env: Environment
 ): Promise<number> {
   let currentPortalCount = 0;
   let maxTestPortals = 10;
   try {
-    const validateResult =
-      await validateDevTestAccountUsageLimits(accountConfig);
+    const validateResult = await validateDevTestAccountUsageLimits(account);
     if (validateResult) {
       currentPortalCount = validateResult.results
         ? validateResult.results.length
@@ -295,14 +286,14 @@ export async function createDeveloperTestAccountForLocalDev(
     if (isMissingScopeError(err)) {
       logger.error(
         i18n('lib.developerTestAccount.create.failure.scopes.message', {
-          accountName: accountConfig.name || accountId,
+          accountName: account.name || accountId,
         })
       );
       const websiteOrigin = getHubSpotWebsiteOrigin(env);
       const url = `${websiteOrigin}/personal-access-key/${accountId}`;
       logger.info(
         i18n('lib.developerTestAccount.create.failure.scopes.instructions', {
-          accountName: accountConfig.name || accountId,
+          accountName: account.name || accountId,
           url,
         })
       );
@@ -325,7 +316,7 @@ export async function createDeveloperTestAccountForLocalDev(
 
     const result = await buildDeveloperTestAccount(
       name,
-      accountConfig,
+      account,
       env,
       maxTestPortals
     );
@@ -532,7 +523,7 @@ export async function createInitialBuildForNewProject(
 
 export function getAccountHomeUrl(accountId: number): string {
   const baseUrl = getHubSpotWebsiteOrigin(
-    getEnv(accountId) === 'qa' ? ENVIRONMENTS.QA : ENVIRONMENTS.PROD
+    getConfigAccountEnvironment(accountId)
   );
   return `${baseUrl}/home?portalId=${accountId}`;
 }

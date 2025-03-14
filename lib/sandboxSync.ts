@@ -3,9 +3,7 @@ import { getHubSpotWebsiteOrigin } from '@hubspot/local-dev-lib/urls';
 import { logger } from '@hubspot/local-dev-lib/logger';
 import { initiateSync } from '@hubspot/local-dev-lib/api/sandboxSync';
 import { isSpecifiedError } from '@hubspot/local-dev-lib/errors/index';
-import { getAccountId } from '@hubspot/local-dev-lib/config';
-import { getAccountIdentifier } from '@hubspot/local-dev-lib/config/getAccountIdentifier';
-import { CLIAccount } from '@hubspot/local-dev-lib/types/Accounts';
+import { HubSpotConfigAccount } from '@hubspot/local-dev-lib/types/Accounts';
 import { Environment } from '@hubspot/local-dev-lib/types/Config';
 
 import { i18n } from './lang';
@@ -24,27 +22,23 @@ import { SandboxSyncTask } from '../types/Sandboxes';
 const i18nKey = 'lib.sandbox.sync';
 
 export async function syncSandbox(
-  accountConfig: CLIAccount,
-  parentAccountConfig: CLIAccount,
+  account: HubSpotConfigAccount,
+  parentAccount: HubSpotConfigAccount,
   env: Environment,
   syncTasks: Array<SandboxSyncTask>,
   slimInfoMessage = false
 ) {
-  const id = getAccountIdentifier(accountConfig);
-  const accountId = getAccountId(id);
-  const parentId = getAccountIdentifier(parentAccountConfig);
-  const parentAccountId = getAccountId(parentId);
-  const isDevSandbox = isDevelopmentSandbox(accountConfig);
+  const accountId = account.accountId;
+  const parentAccountId = parentAccount.accountId;
+  const isDevSandbox = isDevelopmentSandbox(account);
 
   if (!accountId || !parentAccountId) {
     throw new Error(
       i18n(`${i18nKey}.failure.invalidUser`, {
-        accountName: accountId
-          ? uiAccountDescription(accountId)
-          : id!.toString(),
+        accountName: accountId ? uiAccountDescription(accountId) : accountId,
         parentAccountName: parentAccountId
           ? uiAccountDescription(parentAccountId)
-          : parentId!.toString(),
+          : parentAccountId,
       })
     );
   }
@@ -56,7 +50,7 @@ export async function syncSandbox(
 
   const baseUrl = getHubSpotWebsiteOrigin(env);
   const syncStatusUrl = `${baseUrl}/sandboxes-developer/${parentAccountId}/${getSandboxTypeAsString(
-    accountConfig.accountType
+    account.accountType
   )}`;
 
   try {
@@ -66,10 +60,7 @@ export async function syncSandbox(
       (typeof availableSyncTasks === 'object' &&
         availableSyncTasks.length === 0)
     ) {
-      availableSyncTasks = await getAvailableSyncTypes(
-        parentAccountConfig,
-        accountConfig
-      );
+      availableSyncTasks = await getAvailableSyncTypes(parentAccount, account);
     }
 
     SpinniesManager.add('sandboxSync', {
