@@ -42,6 +42,7 @@ import { installPublicAppPrompt } from './prompts/installPublicAppPrompt';
 import { confirmPrompt } from './prompts/promptUtils';
 import { i18n } from './lang';
 import { handleKeypress } from './process';
+import { hasFeature, UNIFIED_APPS_BETA } from './hasFeature';
 
 const WATCH_EVENTS = {
   add: 'add',
@@ -242,12 +243,14 @@ class LocalDevManager {
         })
       )
     );
+    const useV2Urls = await hasFeature(this.targetAccountId, UNIFIED_APPS_BETA);
     logger.log(
       uiLink(
         i18n(`${i18nKey}.viewProjectLink`),
         getProjectDetailUrl(
           this.projectConfig.name,
-          this.targetProjectAccountId
+          this.targetProjectAccountId,
+          useV2Urls
         ) || ''
       )
     );

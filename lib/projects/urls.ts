@@ -12,31 +12,41 @@ function getProjectHomeUrl(accountId: number): string {
 
 export function getProjectDetailUrl(
   projectName: string,
-  accountId: number
+  accountId: number,
+  v2: boolean = false
 ): string | undefined {
   if (!projectName) return;
-  return `${getProjectHomeUrl(accountId)}/project/${projectName}`;
+  return v2
+    ? `${getProjectHomeUrl(accountId)}/${projectName}`
+    : `${getProjectHomeUrl(accountId)}/project/${projectName}`;
 }
 
 export function getProjectActivityUrl(
   projectName: string,
-  accountId: number
+  accountId: number,
+  v2: boolean = false
 ): string {
-  return `${getProjectDetailUrl(projectName, accountId)}/activity`;
+  return `${getProjectDetailUrl(projectName, accountId, v2)}/activity`;
 }
 
 export function getProjectBuildDetailUrl(
   projectName: string,
   buildId: number,
-  accountId: number
+  accountId: number,
+  v2: boolean = false
 ): string {
-  return `${getProjectActivityUrl(projectName, accountId)}/build/${buildId}`;
+  return v2
+    ? `${getProjectActivityUrl(projectName, accountId, v2)}/activity/build/${buildId}`
+    : `${getProjectActivityUrl(projectName, accountId)}/build/${buildId}`;
 }
 
 export function getProjectDeployDetailUrl(
   projectName: string,
   deployId: number,
-  accountId: number
+  accountId: number,
+  v2: boolean = false
 ): string {
-  return `${getProjectActivityUrl(projectName, accountId)}/deploy/${deployId}`;
+  return v2
+    ? `${getProjectActivityUrl(projectName, accountId, v2)}/activity/deploy/${deployId}`
+    : `${getProjectActivityUrl(projectName, accountId)}/deploy/${deployId}`;
 }

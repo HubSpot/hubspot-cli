@@ -22,6 +22,7 @@ const { getProjectDetailUrl } = require('../../lib/projects/urls');
 const moment = require('moment');
 const { promptUser } = require('../../lib/prompts/promptUtils');
 const { isHubSpotHttpError } = require('@hubspot/local-dev-lib/errors/index');
+const { hasUnifiedAppsAccess } = require('../../lib/hasFeature');
 
 const i18nKey = 'commands.project.subcommands.listBuilds';
 
@@ -54,13 +55,14 @@ exports.handler = async options => {
         })
       );
     } else {
+      const useV2Urls = await hasUnifiedAppsAccess(derivedAccountId);
       logger.log(
         i18n(`${i18nKey}.logs.showingRecentBuilds`, {
           count: results.length,
           projectName: project.name,
           viewBuildsLink: uiLink(
             i18n(`${i18nKey}.logs.viewAllBuildsLink`),
-            getProjectDetailUrl(project.name, derivedAccountId)
+            getProjectDetailUrl(project.name, derivedAccountId, useV2Urls)
           ),
         })
       );

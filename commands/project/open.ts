@@ -1,29 +1,43 @@
-// @ts-nocheck
-const open = require('open');
-const {
-  addAccountOptions,
+import open from 'open';
+import { Argv, ArgumentsCamelCase } from 'yargs';
+import { logger } from '@hubspot/local-dev-lib/logger';
+import { getProjectDetailUrl } from '../../lib/projects/urls';
+import { projectNamePrompt } from '../../lib/prompts/projectNamePrompt';
+import { uiBetaTag } from '../../lib/ui';
+import { EXIT_CODES } from '../../lib/enums/exitCodes';
+import { getProjectConfig, ensureProjectExists } from '../../lib/projects';
+import { trackCommandUsage } from '../../lib/usageTracking';
+import { i18n } from '../../lib/lang';
+import { hasUnifiedAppsAccess } from '../../lib/hasFeature';
+import {
+  AccountArgs,
+  CommonArgs,
+  ConfigArgs,
+  EnvironmentArgs,
+} from '../../types/Yargs';
+import {
   addConfigOptions,
-  addUseEnvironmentOptions,
+  addAccountOptions,
   addTestingOptions,
-} = require('../../lib/commonOpts');
-const { trackCommandUsage } = require('../../lib/usageTracking');
-const { i18n } = require('../../lib/lang');
-const { logger } = require('@hubspot/local-dev-lib/logger');
-const { getProjectConfig, ensureProjectExists } = require('../../lib/projects');
-const { getProjectDetailUrl } = require('../../lib/projects/urls');
-const { projectNamePrompt } = require('../../lib/prompts/projectNamePrompt');
-const { uiBetaTag } = require('../../lib/ui');
-const { EXIT_CODES } = require('../../lib/enums/exitCodes');
+  addUseEnvironmentOptions,
+} from '../../lib/commonOpts';
 
 const i18nKey = 'commands.project.subcommands.open';
 
-exports.command = 'open';
-exports.describe = uiBetaTag(i18n(`${i18nKey}.describe`), false);
+export const command = 'open';
+export const describe = uiBetaTag(i18n(`${i18nKey}.describe`), false);
 
-exports.handler = async options => {
-  const { project, derivedAccountId } = options;
+type ProjectOpenArgs = CommonArgs &
+  ConfigArgs &
+  AccountArgs &
+  EnvironmentArgs & { project?: string };
 
-  trackCommandUsage('project-open', null, derivedAccountId);
+export async function handler(
+  args: ArgumentsCamelCase<ProjectOpenArgs>
+): Promise<void> {
+  const { project, derivedAccountId } = args;
+
+  trackCommandUsage('project-open', undefined, derivedAccountId);
 
   const { projectConfig } = await getProjectConfig();
 
@@ -52,13 +66,15 @@ exports.handler = async options => {
     projectName = namePrompt.projectName;
   }
 
-  const url = getProjectDetailUrl(projectName, derivedAccountId);
-  open(url, { url: true });
-  logger.success(i18n(`${i18nKey}.success`, { projectName }));
-  process.exit(EXIT_CODES.SUCCESS);
-};
+  const useV2Urls = await hasUnifiedAppsAccess(derivedAccountId);
 
-exports.builder = yargs => {
+  const url = getProjectDetailUrl(projectName!, derivedAccountId, useV2Urls);
+  open(url!, { url: true });
+  logger.success(i18n(`${i18nKey}.success`, { projectName: projectName! }));
+  process.exit(EXIT_CODES.SUCCESS);
+}
+
+export function builder(yargs: Argv): Argv<ProjectOpenArgs> {
   addConfigOptions(yargs);
   addAccountOptions(yargs);
   addUseEnvironmentOptions(yargs);
@@ -73,5 +89,5 @@ exports.builder = yargs => {
 
   yargs.example([['$0 project open', i18n(`${i18nKey}.examples.default`)]]);
 
-  return yargs;
-};
+  return yargs as Argv<ProjectOpenArgs>;
+}

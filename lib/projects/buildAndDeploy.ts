@@ -38,6 +38,7 @@ import {
   ProjectPollStatusFunctionText,
   ProjectPollResult,
 } from '../../types/Projects';
+import { hasUnifiedAppsAccess } from '../hasFeature';
 
 const i18nKey = 'lib.projectBuildAndDeploy';
 
@@ -94,7 +95,8 @@ type PollTaskStatusFunctionConfig<T extends ProjectTask> = {
     accountId: number,
     taskName: string,
     taskId: number,
-    deployedBuildId: number | null
+    deployedBuildId: number | null,
+    useV2Urls: boolean
   ) => void;
 };
 
@@ -131,8 +133,9 @@ function makePollTaskStatusFunc<T extends ProjectTask>({
     const displayId = deployedBuildId || taskId;
 
     if (linkToHubSpot && !silenceLogs) {
+      const useV2Urls = await hasUnifiedAppsAccess(accountId);
       logger.log(
-        `\n${linkToHubSpot(accountId, taskName, taskId, deployedBuildId)}\n`
+        `\n${linkToHubSpot(accountId, taskName, taskId, deployedBuildId, useV2Urls)}\n`
       );
     }
 
@@ -423,10 +426,10 @@ function pollBuildAutodeployStatus(
 }
 
 export const pollBuildStatus = makePollTaskStatusFunc<Build>({
-  linkToHubSpot: (accountId, taskName, taskId) =>
+  linkToHubSpot: (accountId, taskName, taskId, _deployedBuildId, useV2Urls) =>
     uiLink(
       `View build #${taskId} in HubSpot`,
-      getProjectBuildDetailUrl(taskName, taskId, accountId)
+      getProjectBuildDetailUrl(taskName, taskId, accountId, useV2Urls)
     ),
   statusFn: getBuildStatus,
   structureFn: getBuildStructure,
@@ -443,10 +446,10 @@ export const pollBuildStatus = makePollTaskStatusFunc<Build>({
 });
 
 export const pollDeployStatus = makePollTaskStatusFunc<Deploy>({
-  linkToHubSpot: (accountId, taskName, taskId, deployedBuildId) =>
+  linkToHubSpot: (accountId, taskName, taskId, deployedBuildId, useV2Urls) =>
     uiLink(
       `View deploy of build #${deployedBuildId} in HubSpot`,
-      getProjectDeployDetailUrl(taskName, taskId, accountId)
+      getProjectDeployDetailUrl(taskName, taskId, accountId, useV2Urls)
     ),
   statusFn: getDeployStatus,
   structureFn: getDeployStructure,
@@ -575,6 +578,7 @@ export async function pollProjectBuildAndDeploy(
         result.succeeded = false;
       }
     } else if (!silenceLogs) {
+      const useV2Urls = await hasUnifiedAppsAccess(accountId);
       logger.log(
         i18n(
           `${i18nKey}.pollProjectBuildAndDeploy.unableToFindAutodeployStatus`,
@@ -582,7 +586,7 @@ export async function pollProjectBuildAndDeploy(
             buildId,
             viewDeploysLink: uiLink(
               i18n(`${i18nKey}.pollProjectBuildAndDeploy.viewDeploys`),
-              getProjectActivityUrl(projectConfig.name, accountId)
+              getProjectActivityUrl(projectConfig.name, accountId, useV2Urls)
             ),
           }
         )
