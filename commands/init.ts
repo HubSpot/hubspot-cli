@@ -246,40 +246,40 @@ export function builder(yargs: Argv): Argv<InitArgs> {
   addTestingOptions(yargs);
   addGlobalOptions(yargs);
 
-  yargs
-    .options({
-      'auth-type': {
-        describe: i18n(`${i18nKey}.options.authType.describe`),
-        type: 'string',
-        choices: [
-          `${PERSONAL_ACCESS_KEY_AUTH_METHOD.value}`,
-          `${OAUTH_AUTH_METHOD.value}`,
-        ],
-        default: PERSONAL_ACCESS_KEY_AUTH_METHOD.value,
-        defaultDescription: i18n(
-          `${i18nKey}.options.authType.defaultDescription`,
-          {
-            authMethod: PERSONAL_ACCESS_KEY_AUTH_METHOD.value,
-          }
-        ),
-      },
-      account: {
-        describe: i18n(`${i18nKey}.options.account.describe`),
-        type: 'string',
-        alias: 'a',
-      },
-      'disable-tracking': {
-        type: 'boolean',
-        hidden: true,
-        default: false,
-      },
-      'use-hidden-config': {
-        describe: i18n(`${i18nKey}.options.useHiddenConfig.describe`),
-        hidden: true,
-        type: 'boolean',
-      },
-    })
-    .conflicts('use-hidden-config', 'config');
+  yargs.options({
+    'auth-type': {
+      describe: i18n(`${i18nKey}.options.authType.describe`),
+      type: 'string',
+      choices: [
+        `${PERSONAL_ACCESS_KEY_AUTH_METHOD.value}`,
+        `${OAUTH_AUTH_METHOD.value}`,
+      ],
+      default: PERSONAL_ACCESS_KEY_AUTH_METHOD.value,
+      defaultDescription: i18n(
+        `${i18nKey}.options.authType.defaultDescription`,
+        {
+          authMethod: PERSONAL_ACCESS_KEY_AUTH_METHOD.value,
+        }
+      ),
+    },
+    account: {
+      describe: i18n(`${i18nKey}.options.account.describe`),
+      type: 'string',
+      alias: 'a',
+    },
+    'disable-tracking': {
+      type: 'boolean',
+      hidden: true,
+      default: false,
+    },
+    'use-hidden-config': {
+      describe: i18n(`${i18nKey}.options.useHiddenConfig.describe`),
+      hidden: true,
+      type: 'boolean',
+    },
+  });
+
+  yargs.conflicts('use-hidden-config', 'config');
 
   return yargs as Argv<InitArgs>;
 }
