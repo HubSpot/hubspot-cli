@@ -7,7 +7,7 @@ import { AccountType } from '@hubspot/local-dev-lib/types/Accounts';
 
 const i18nKey = 'lib.prompts.accountNamePrompt';
 
-type AccountNamePromptResponse = {
+export type AccountNamePromptResponse = {
   name: string;
 };
 
@@ -34,7 +34,7 @@ export function getCliAccountNamePromptConfig(
 }
 
 export function cliAccountNamePrompt(
-  defaultName: string
+  defaultName?: string
 ): Promise<AccountNamePromptResponse> {
   return promptUser<AccountNamePromptResponse>(
     getCliAccountNamePromptConfig(defaultName)

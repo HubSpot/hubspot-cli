@@ -7,7 +7,10 @@ import { deleteEmptyConfigFile } from '@hubspot/local-dev-lib/config';
 import { getHubSpotWebsiteOrigin } from '@hubspot/local-dev-lib/urls';
 import { logger } from '@hubspot/local-dev-lib/logger';
 import { promptUser } from './promptUtils';
-import { getCliAccountNamePromptConfig } from './accountNamePrompt';
+import {
+  AccountNamePromptResponse,
+  getCliAccountNamePromptConfig,
+} from './accountNamePrompt';
 import { i18n } from '../lang';
 import { uiInfoSection } from '../ui';
 import { EXIT_CODES } from '../enums/exitCodes';
@@ -39,6 +42,12 @@ type PersonalAccessKeyBrowserOpenPrepResponse = {
 type ScopesPromptResponse = {
   scopes: string[];
 };
+
+export type OauthPromptResponse = AccountNamePromptResponse &
+  AccountIdPromptResponse &
+  ClientIdPromptResponse &
+  ClientSecretPromptResponse &
+  ScopesPromptResponse;
 
 /**
  * Displays notification to user that we are about to open the browser,
