@@ -27,7 +27,9 @@ type RemoveArgs = CommonArgs &
   EnvironmentArgs &
   AccountArgs & { path: string };
 
-export async function handler(args: ArgumentsCamelCase<RemoveArgs>) {
+export async function handler(
+  args: ArgumentsCamelCase<RemoveArgs>
+): Promise<void> {
   const { path: hsPath, derivedAccountId } = args;
 
   trackCommandUsage('remove', undefined, derivedAccountId);

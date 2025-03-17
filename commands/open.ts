@@ -38,7 +38,7 @@ async function createListPrompt(accountId: number) {
 export const command = 'open [shortcut]';
 export const describe = i18n(`${i18nKey}.describe`);
 
-type AccountInfoArgs = CommonArgs &
+type OpenArgs = CommonArgs &
   ConfigArgs &
   EnvironmentArgs &
   AccountArgs & {
@@ -46,7 +46,9 @@ type AccountInfoArgs = CommonArgs &
     list?: boolean;
   };
 
-export async function handler(args: ArgumentsCamelCase<AccountInfoArgs>) {
+export async function handler(
+  args: ArgumentsCamelCase<OpenArgs>
+): Promise<void> {
   const { shortcut, list, derivedAccountId } = args;
 
   trackCommandUsage('open', undefined, derivedAccountId);
@@ -87,5 +89,5 @@ export function builder(yargs: Argv) {
     ['$0 open sn'],
   ]);
 
-  return yargs as Argv<AccountInfoArgs>;
+  return yargs as Argv<OpenArgs>;
 }

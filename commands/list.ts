@@ -60,7 +60,9 @@ type ListArgs = CommonArgs &
   EnvironmentArgs &
   AccountArgs & { path: string };
 
-export async function handler(args: ArgumentsCamelCase<ListArgs>) {
+export async function handler(
+  args: ArgumentsCamelCase<ListArgs>
+): Promise<void> {
   const { path, derivedAccountId } = args;
   const directoryPath = path || '/';
   let contentsResp;

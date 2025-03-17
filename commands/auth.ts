@@ -69,7 +69,9 @@ type AuthArgs = CommonArgs &
     account?: string;
   };
 
-export async function handler(args: ArgumentsCamelCase<AuthArgs>) {
+export async function handler(
+  args: ArgumentsCamelCase<AuthArgs>
+): Promise<void> {
   const {
     authType: authTypeFlagValue,
     config: configFlagValue,
