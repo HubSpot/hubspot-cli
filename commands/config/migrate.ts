@@ -3,6 +3,7 @@ import {
   configFileExists,
   getAndLoadConfigIfNeeded,
   getConfigPath,
+  getConfig,
 } from '@hubspot/local-dev-lib/config';
 import { getCwd } from '@hubspot/local-dev-lib/path';
 import {
@@ -12,7 +13,7 @@ import {
 } from '@hubspot/local-dev-lib/constants/config';
 import { logger } from '@hubspot/local-dev-lib/logger';
 
-import { migrateConfig } from '../../lib/configMigrate';
+import { migrateConfig, mergeExistingConfigs } from '../../lib/configMigrate';
 import { promptUser } from '../../lib/prompts/promptUtils';
 import { addConfigOptions } from '../../lib/commonOpts';
 import { i18n } from '../../lib/lang';
@@ -20,11 +21,11 @@ import { CommonArgs, ConfigArgs } from '../../types/Yargs';
 import { EXIT_CODES } from '../../lib/enums/exitCodes';
 
 const i18nKey = 'commands.config.subcommands.migrate';
-const centralizedConfigPath = `${getCwd()}/${HUBSPOT_CONFIGURATION_FOLDER}/${HUBSPOT_CONFIGURATION_FILE}`;
+const globalConfigPath = `${getCwd()}/${HUBSPOT_CONFIGURATION_FOLDER}/${HUBSPOT_CONFIGURATION_FILE}`;
 
 export const describe = i18n(`${i18nKey}.describe`, {
   deprecatedConfigPath: DEFAULT_HUBSPOT_CONFIG_YAML_FILE_NAME,
-  centralizedConfigPath,
+  globalConfigPath,
 });
 export const command = 'migrate';
 
@@ -33,14 +34,18 @@ type ConfigMigrateArgs = CommonArgs & ConfigArgs;
 export async function handler(
   args: ArgumentsCamelCase<ConfigMigrateArgs>
 ): Promise<void> {
-  // User hasn't migrated; need to create a new centralized config file
+  const { config: configPath } = args;
+
+  // User hasn't migrated; need to create a new global config file
   if (!configFileExists(true)) {
     const { shouldMigrateConfig } = await promptUser({
       name: 'shouldMigrateConfig',
       type: 'confirm',
       message: i18n(`${i18nKey}.migrateConfigPrompt`, {
-        deprecatedConfigPath: DEFAULT_HUBSPOT_CONFIG_YAML_FILE_NAME,
-        centralizedConfigPath,
+        deprecatedConfigPath:
+          getConfigPath(configPath, false, true) ||
+          DEFAULT_HUBSPOT_CONFIG_YAML_FILE_NAME,
+        globalConfigPath,
       }),
     });
 
@@ -49,12 +54,51 @@ export async function handler(
     }
 
     // @ts-ignore TODO
-    const config = getAndLoadConfigIfNeeded(args);
+    const deprecatedConfig = getAndLoadConfigIfNeeded(args, false, true);
     // @ts-ignore TODO
-    migrateConfig(config);
+    migrateConfig(deprecatedConfig);
     logger.log(
-      i18n(`${i18nKey}.success`, {
-        configPath: getConfigPath('', true)!,
+      i18n(`${i18nKey}.migrationSuccess`, {
+        globalConfigPath,
+      })
+    );
+    process.exit(EXIT_CODES.SUCCESS);
+    // User has already migrated; need to add properties from deprecated config to global config
+  } else if (configFileExists(true) && configFileExists(false, configPath)) {
+    const { shouldMergeConfigs } = await promptUser({
+      name: 'shouldMergeConfigs',
+      type: 'confirm',
+      message: i18n(`${i18nKey}.mergeConfigsPrompt`, {
+        deprecatedConfigPath:
+          getConfigPath(configPath, false, true) ||
+          DEFAULT_HUBSPOT_CONFIG_YAML_FILE_NAME,
+        globalConfigPath,
+      }),
+    });
+
+    if (!shouldMergeConfigs) {
+      process.exit(EXIT_CODES.SUCCESS);
+    }
+
+    // @ts-ignore TODO
+    const deprecatedConfig = getAndLoadConfigIfNeeded(args, false, true);
+    // @ts-ignore TODO
+    const globalConfig = getConfig(true);
+
+    // @ts-ignore TODO
+    mergeExistingConfigs(globalConfig, deprecatedConfig);
+    logger.log(
+      i18n(`${i18nKey}.mergeSuccess`, {
+        globalConfigPath,
+      })
+    );
+    process.exit(EXIT_CODES.SUCCESS);
+
+    // User has already migrated; no need to do anything
+  } else if (configFileExists(true) && !configFileExists(false, configPath)) {
+    logger.log(
+      i18n(`${i18nKey}.migrationAlreadyCompleted`, {
+        globalConfigPath,
       })
     );
     process.exit(EXIT_CODES.SUCCESS);
@@ -69,12 +113,12 @@ export function builder(yargs: Argv): Argv<ConfigMigrateArgs> {
       '$0 config migrate',
       i18n(`${i18nKey}.examples.default`, {
         deprecatedConfigPath: DEFAULT_HUBSPOT_CONFIG_YAML_FILE_NAME,
-        centralizedConfigPath,
+        globalConfigPath,
       }),
     ],
     [
       '$0 config migrate --config=/path/to/config.yml',
-      i18n(`${i18nKey}.examples.configFlag`, { centralizedConfigPath }),
+      i18n(`${i18nKey}.examples.configFlag`, { globalConfigPath }),
     ],
   ]);
 

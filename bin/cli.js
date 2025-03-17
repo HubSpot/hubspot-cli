@@ -279,7 +279,7 @@ const loadConfigMiddleware = async options => {
 
   // There are two commands where we don't load config:
   // 1. `hs init`
-  // 2. `hs account auth` only if the centralized config file does not exist
+  // 2. `hs account auth` only if the global config file does not exist
   if (
     !isTargetedCommand(options, {
       init: { target: true },
