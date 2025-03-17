@@ -128,7 +128,7 @@ export function builder(yargs: Argv): Argv<ListArgs> {
     describe: i18n(`${i18nKey}.positionals.path.describe`),
     type: 'string',
   });
-  yargs.example([['$0 list'], ['$0 list /'], ['$0 list serverless']]);
+  yargs.example([['$0 list'], ['$0 list /'], ['$0 list my-modules']]);
 
   return yargs as Argv<ListArgs>;
 }
