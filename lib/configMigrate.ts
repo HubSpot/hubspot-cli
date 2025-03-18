@@ -64,16 +64,12 @@ function mergeConfigPropertes(
   }> = [];
 
   propertiesToCheck.forEach(prop => {
-    if (prop in globalConfig) {
-      if (
-        globalConfig[prop] &&
-        deprecatedConfig[prop] &&
-        globalConfig[prop] !== deprecatedConfig[prop]
-      ) {
+    if (prop in globalConfig && prop in deprecatedConfig) {
+      if (globalConfig[prop] !== deprecatedConfig[prop]) {
         conflicts.push({
           property: prop,
-          oldValue: deprecatedConfig[prop],
-          newValue: globalConfig[prop],
+          oldValue: deprecatedConfig[prop]!,
+          newValue: globalConfig[prop]!,
         });
       }
     } else {
