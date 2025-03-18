@@ -33,3 +33,14 @@ export type StringArgType = Options & {
 export type TestingArgs = {
   qa?: boolean;
 };
+
+export interface MigrateAppOptions
+  extends CommonArgs,
+    AccountArgs,
+    EnvironmentArgs,
+    ConfigArgs {
+  name: string;
+  dest: string;
+  appId: number;
+  platformVersion: string;
+}

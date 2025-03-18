@@ -1,4 +1,6 @@
 // @ts-nocheck
+import { uiDeprecatedTag } from '../../lib/ui';
+
 const path = require('path');
 const fs = require('fs');
 const {
@@ -19,7 +21,6 @@ const {
 } = require('../../lib/prompts/createProjectPrompt');
 const { poll } = require('../../lib/polling');
 const {
-  uiBetaTag,
   uiLine,
   uiCommandReference,
   uiAccountDescription,
@@ -43,7 +44,7 @@ const { extractZipArchive } = require('@hubspot/local-dev-lib/archive');
 const i18nKey = 'commands.project.subcommands.cloneApp';
 
 exports.command = 'clone-app';
-exports.describe = uiBetaTag(i18n(`${i18nKey}.describe`), false);
+exports.describe = uiDeprecatedTag(i18n(`${i18nKey}.describe`), false);
 
 exports.handler = async options => {
   const { derivedAccountId } = options;
