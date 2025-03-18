@@ -13,17 +13,11 @@ import { EXIT_CODES } from '../../lib/enums/exitCodes';
 import { getAccountConfig } from '@hubspot/local-dev-lib/config';
 import { ArgumentsCamelCase, Argv } from 'yargs';
 import { MigrateAppOptions } from '../../types/Yargs';
-import { migrateAppTo2023_2, migrateToUnifiedApp } from '../../lib/app/migrate';
+import { migrateApp2023_2, migrateApp2025_2 } from '../../lib/app/migrate';
+import { PLATFORM_VERSIONS } from '@hubspot/local-dev-lib/constants/platformVersion';
 
-// TODO: Move this somewhere else
-const platformVersions = {
-  v2023_2: '2023.2',
-  v2025_2: '2025.2',
-  unstable: 'unstable',
-};
-
-const { v2023_2, v2025_2 } = platformVersions;
-const supportedPlatformVersions = [v2023_2, v2025_2];
+const { v2023_2, v2025_2 } = PLATFORM_VERSIONS;
+const validMigrationTargets = [v2023_2, v2025_2];
 
 const i18nKey = 'commands.project.subcommands.migrateApp';
 
@@ -39,15 +33,15 @@ export async function handler(options: ArgumentsCamelCase<MigrateAppOptions>) {
     throw new Error('Account is not configured');
   }
 
-  if (!supportedPlatformVersions.includes(platformVersion)) {
+  if (!validMigrationTargets.includes(platformVersion)) {
     throw new Error('Unsupported platform version');
   }
 
   try {
     if (platformVersion === v2025_2) {
-      await migrateToUnifiedApp(derivedAccountId, accountConfig, options);
+      await migrateApp2025_2(derivedAccountId, accountConfig, options);
     } else if (platformVersion === v2023_2) {
-      await migrateAppTo2023_2(accountConfig, options, derivedAccountId);
+      await migrateApp2023_2(accountConfig, options, derivedAccountId);
     }
     await trackCommandMetadataUsage(
       'migrate-app',
@@ -82,6 +76,10 @@ export async function handler(options: ArgumentsCamelCase<MigrateAppOptions>) {
 }
 
 export function builder(yargs: Argv) {
+  addConfigOptions(yargs);
+  addAccountOptions(yargs);
+  addUseEnvironmentOptions(yargs);
+
   yargs.options({
     name: {
       describe: i18n(`${i18nKey}.options.name.describe`),
@@ -104,10 +102,6 @@ export function builder(yargs: Argv) {
   });
 
   yargs.example([['$0 app migrate', i18n(`${i18nKey}.examples.default`)]]);
-
-  addConfigOptions(yargs);
-  addAccountOptions(yargs);
-  addUseEnvironmentOptions(yargs);
 
   return yargs;
 }

@@ -566,6 +566,7 @@ en:
           header:
             text: "Migrate an app to the projects framework"
             link: "Learn more about migrating apps to the projects framework"
+          deprecationWarning: "The {{ oldCommand }} command is deprecated and will be removed. Use {{ newCommand }} going forward."
           migrationStatus:
             inProgress: "Converting app configuration to {{#bold}}public-app.json{{/bold}} component definition ..."
             success: "{{#bold}}Your app was converted and build #1 is deployed{{/bold}}"

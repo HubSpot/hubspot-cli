@@ -1,5 +1,5 @@
 import { i18n } from '../../lib/lang';
-import { uiDeprecatedTag } from '../../lib/ui';
+import { uiCommandReference, uiDeprecatedTag } from '../../lib/ui';
 import { handler as migrateHandler } from '../app/migrate';
 
 import { ArgumentsCamelCase } from 'yargs';
@@ -15,7 +15,10 @@ export const describe = uiDeprecatedTag(i18n(`${i18nKey}.describe`), false);
 
 export async function handler(yargs: ArgumentsCamelCase<MigrateAppOptions>) {
   logger.warn(
-    "The 'hs project migrate-app' command is deprecated and will be removed. Use 'hs app migrate' going forward."
+    i18n(`${i18nKey}.describe.deprecationWarning`, {
+      oldCommand: uiCommandReference('hs project migrate-app'),
+      newCommand: uiCommandReference('hs app migrate'),
+    })
   );
   await migrateHandler(yargs);
 }
