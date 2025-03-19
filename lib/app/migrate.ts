@@ -34,14 +34,11 @@ import { MigrateAppOptions } from '../../types/Yargs';
 
 export async function migrateApp2025_2(
   derivedAccountId: number,
-  accountConfig: CLIAccount,
   options: ArgumentsCamelCase<MigrateAppOptions>
 ) {
-  SpinniesManager.init();
+  const { name, dest, appId } = options;
 
-  console.log(accountConfig);
-  console.log(options);
-  // let appId: number;
+  SpinniesManager.init();
 
   const { apps } = await getEligibleApps(derivedAccountId);
 
@@ -56,20 +53,21 @@ export async function migrateApp2025_2(
     disabled: app.projectName !== undefined ? 'Already migrated' : false,
   }));
 
-  const appToMigrate = await listPrompt<EligibleApp>(
-    'Choose the app you want to migrate: ',
-    {
-      choices: appChoices,
-    }
-  );
+  const appToMigrate = appId
+    ? { appId }
+    : await listPrompt<EligibleApp>('Choose the app you want to migrate: ', {
+        choices: appChoices,
+      });
 
   // Make the call to get the list of the non project apps eligible to migrate
   // Prompt the user to select the app to migrate
   // Prompt the user for a project name and destination
-  const projectName = await inputPrompt('Enter the name for the project');
-  const projectDest = await inputPrompt(
-    'Where do you want to save the project?: '
-  );
+  const projectName =
+    name || (await inputPrompt('[--name] Enter the name for the project'));
+
+  const projectDest =
+    dest ||
+    (await inputPrompt('[--dest] Where do you want to save the project?: '));
 
   SpinniesManager.add('beginningMigration', {
     text: 'Beginning migration',
@@ -241,9 +239,9 @@ export function logInvalidAccountError(i18nKey: string) {
 }
 
 export async function migrateApp2023_2(
-  accountConfig: CLIAccount,
+  derivedAccountId: number,
   options: ArgumentsCamelCase<MigrateAppOptions>,
-  derivedAccountId: number
+  accountConfig: CLIAccount
 ) {
   const i18nKey = 'commands.project.subcommands.migrateApp';
   const accountName = uiAccountDescription(derivedAccountId);

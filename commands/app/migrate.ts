@@ -39,9 +39,9 @@ export async function handler(options: ArgumentsCamelCase<MigrateAppOptions>) {
 
   try {
     if (platformVersion === v2025_2) {
-      await migrateApp2025_2(derivedAccountId, accountConfig, options);
+      await migrateApp2025_2(derivedAccountId, options);
     } else if (platformVersion === v2023_2) {
-      await migrateApp2023_2(accountConfig, options, derivedAccountId);
+      await migrateApp2023_2(derivedAccountId, options, accountConfig);
     }
     await trackCommandMetadataUsage(
       'migrate-app',
@@ -75,7 +75,7 @@ export async function handler(options: ArgumentsCamelCase<MigrateAppOptions>) {
   process.exit(EXIT_CODES.SUCCESS);
 }
 
-export function builder(yargs: Argv) {
+export async function builder(yargs: Argv) {
   addConfigOptions(yargs);
   addAccountOptions(yargs);
   addUseEnvironmentOptions(yargs);
@@ -101,7 +101,10 @@ export function builder(yargs: Argv) {
     },
   });
 
-  yargs.example([['$0 app migrate', i18n(`${i18nKey}.examples.default`)]]);
+  // This is a hack so we can use the same function for both the app migrate and project migrate-app commands
+  // and have the examples be correct.  If we don't can about that we can remove this.
+  const { _ } = await yargs.argv;
+  yargs.example([[`$0 ${_.join(' ')}`, i18n(`${i18nKey}.examples.default`)]]);
 
   return yargs;
 }
