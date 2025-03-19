@@ -86,13 +86,13 @@ export async function saveAccountToConfig(
 
 export async function buildDeveloperTestAccount(
   testAccountName: string,
-  parentAccountConfig: HubSpotConfigAccount,
+  parentAccount: HubSpotConfigAccount,
   env: Environment,
   portalLimit: number
 ): Promise<DeveloperTestAccount> {
   const i18nKey = 'lib.developerTestAccount.create.loading';
 
-  const parentAccountId = parentAccountConfig.accountId;
+  const parentAccountId = parentAccount.accountId;
 
   if (!parentAccountId) {
     throw new Error(i18n(`${i18nKey}.fail`));
@@ -153,7 +153,7 @@ type SandboxAccount = SandboxResponse & {
 
 export async function buildSandbox(
   sandboxName: string,
-  parentAccountConfig: HubSpotConfigAccount,
+  parentAccount: HubSpotConfigAccount,
   sandboxType: SandboxAccountType,
   env: Environment,
   force = false
@@ -165,7 +165,7 @@ export async function buildSandbox(
     i18nKey = 'lib.sandbox.create.loading.developer';
   }
 
-  const parentAccountId = parentAccountConfig.accountId;
+  const parentAccountId = parentAccount.accountId;
 
   if (!parentAccountId) {
     throw new Error(i18n(`${i18nKey}.fail`));
