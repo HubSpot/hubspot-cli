@@ -135,11 +135,8 @@ en:
       subcommands:
         migrate:
           describe: "Migrate from the deprecated {{ deprecatedConfigPath }} file to the new global config file at {{ globalConfigPath }}."
-          migrateConfigPrompt: "Migrate from the deprecated config file at {{ deprecatedConfigPath }} to the new global config file at {{ globalConfigPath }}? (This action will delete the deprecated config file)."
-          mergeConfigsPrompt: "Two config files detected: A deprecated configuration file  at {{ deprecatedConfigPath }} and a global config at {{ globalConfigPath }}. Would you like to merge the two files? (This action will delete the deprecated config file)."
           migrationAlreadyCompleted: "A global configuration file already exists at {{ globalConfigPath }}. No migration necessary."
-          migrationSuccess: "Success! The deprecated config file has been migrated to the new global config file at {{ globalConfigPath }}."
-          mergeSuccess: "Success! The deprecated config file has been merged with the global config file at {{ globalConfigPath }}."
+          noConfigFilesFound: "No configuration files found. Use {{ authCommand }} to authorize a new account."
           examples:
             default: "Migrate from the deprecated {{ deprecatedConfigPath }} file to the new global config file at {{ globalConfigPath }}"
             configFlag: "Migrate a specific config file (specified with the config flag) to the new global config file at {{ globalConfigPath }}"
@@ -1259,6 +1256,11 @@ en:
           describe: "Use environment variable config"
         debug:
           describe: "Set log level to debug"
+    configMigrate:
+      migrateConfigPrompt: "Migrate from the deprecated config file at {{ deprecatedConfigPath }} to the new global config file at {{ globalConfigPath }}? (This action will delete the deprecated config file)."
+      mergeConfigsPrompt: "Two config files detected: A deprecated configuration file  at {{ deprecatedConfigPath }} and a global config at {{ globalConfigPath }}. Would you like to merge the two files? (This action will delete the deprecated config file)."
+      migrationSuccess: "Success! The deprecated config file has been migrated to the new global config file at {{ globalConfigPath }}."
+      mergeSuccess: "Success! The deprecated config file has been merged with the global config file at {{ globalConfigPath }}."
     prompts:
       projectDevTargetAccountPrompt:
         createNewSandboxOption: "<Test on a new development sandbox>"
