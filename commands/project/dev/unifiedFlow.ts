@@ -22,7 +22,10 @@ import { selectDeveloperTestTargetAccountPrompt } from '../../../lib/prompts/pro
 import SpinniesManager from '../../../lib/ui/SpinniesManager';
 import LocalDevManagerV2 from '../../../lib/LocalDevManagerV2';
 import { handleExit } from '../../../lib/process';
-import { isAppDeveloperAccount } from '../../../lib/accountTypes';
+import {
+  isAppDeveloperAccount,
+  isStandardAccount,
+} from '../../../lib/accountTypes';
 import { uiCommandReference } from '../../../lib/ui';
 import { i18n } from '../../../lib/lang';
 
@@ -78,7 +81,8 @@ export async function unifiedProjectDevFlow(
 
   // TODO Ideally this should require the user to target a Combined account
   // For now, check if the account is either developer or standard
-  const derivedAccountIsRecommendedType = isAppDeveloperAccount(accountConfig);
+  const derivedAccountIsRecommendedType =
+    isAppDeveloperAccount(accountConfig) || isStandardAccount(accountConfig);
 
   if (!derivedAccountIsRecommendedType) {
     logger.error(i18n(`${i18nKey}.errors.invalidUnifiedAppsAccount`), {

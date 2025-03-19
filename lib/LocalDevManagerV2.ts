@@ -440,9 +440,9 @@ class LocalDevManagerV2 {
 
     Object.values(this.projectNodes).forEach(node => {
       if (isAppIRNode(node) || isCardIRNode(node)) {
-        if (!deployedComponentNames.includes(node.config.name)) {
+        if (!deployedComponentNames.includes(node.uid)) {
           missingProjectNodes.push(
-            `${i18n(`${i18nKey}.uploadWarning.appLabel`)} ${node.config.name}`
+            `${i18n(`${i18nKey}.uploadWarning.appLabel`)} ${node.uid}`
           );
         }
       }
