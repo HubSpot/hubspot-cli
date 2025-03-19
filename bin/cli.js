@@ -253,6 +253,10 @@ const SKIP_LOAD_CONFIG = {
   accounts: skipLoadConfigAccountSubCommands,
 };
 
+const SKIP_CONFIG_FLAG_VALIDATION = {
+  config: { target: false, subCommands: { migrate: { target: true } } },
+};
+
 const loadConfigMiddleware = async options => {
   // Skip this when no command is provided
   if (!options._.length) {
@@ -268,7 +272,11 @@ const loadConfigMiddleware = async options => {
     }
   };
 
-  if (configFileExists(true) && options.config) {
+  if (
+    configFileExists(true) &&
+    options.config &&
+    !isTargetedCommand(options, SKIP_CONFIG_FLAG_VALIDATION)
+  ) {
     logger.error(
       i18n(`${i18nKey}.loadConfigMiddleware.configFileExists`, {
         configPath: getConfigPath(),

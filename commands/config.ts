@@ -1,7 +1,7 @@
 import { Argv } from 'yargs';
 import { addConfigOptions, addGlobalOptions } from '../lib/commonOpts';
 import { i18n } from '../lib/lang';
-const set = require('./config/set');
+import * as set from './config/set';
 import * as migrate from './config/migrate';
 
 const i18nKey = 'commands.config';

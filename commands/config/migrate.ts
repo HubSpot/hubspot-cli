@@ -1,4 +1,5 @@
 import { Argv, ArgumentsCamelCase } from 'yargs';
+import fs from 'fs';
 import {
   DEFAULT_HUBSPOT_CONFIG_YAML_FILE_NAME,
   GLOBAL_CONFIG_PATH,
@@ -26,6 +27,15 @@ export async function handler(
   args: ArgumentsCamelCase<ConfigMigrateArgs>
 ): Promise<void> {
   const { config: configPath } = args;
+
+  if (configPath && !fs.existsSync(configPath)) {
+    logger.log(
+      i18n(`${i18nKey}.errors.configNotFound`, {
+        configPath,
+      })
+    );
+    process.exit(EXIT_CODES.ERROR);
+  }
 
   const deprecatedConfigExists = configFileExists(false, configPath);
   const globalConfigExists = configFileExists(true);

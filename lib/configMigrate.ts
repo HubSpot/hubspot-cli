@@ -32,7 +32,7 @@ export async function handleMigration(configPath?: string) {
     process.exit(EXIT_CODES.SUCCESS);
   }
 
-  const deprecatedConfig = getConfig(false);
+  const deprecatedConfig = getConfig(false, configPath);
   // @ts-ignore Cannot reconcile CLIConfig_NEW and CLIConfig_DEPRECATED
   migrateConfig(deprecatedConfig);
   logger.log(
@@ -59,7 +59,7 @@ export async function handleMerge(configPath?: string) {
     process.exit(EXIT_CODES.SUCCESS);
   }
 
-  const deprecatedConfig = getConfig(false);
+  const deprecatedConfig = getConfig(false, configPath);
   const globalConfig = getConfig(true);
   // @ts-ignore Cannot reconcile CLIConfig_NEW and CLIConfig_DEPRECATED
   mergeExistingConfigs(globalConfig, deprecatedConfig);
