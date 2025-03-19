@@ -11,10 +11,8 @@ import {
 } from '@hubspot/local-dev-lib/constants/auth';
 import { commaSeparatedValues } from '@hubspot/local-dev-lib/text';
 import {
-  getConfigPath,
-  getAccountConfig,
-  getAccountId,
-  loadConfigFromEnvironment,
+  getConfigFilePath,
+  getConfigAccountById,
 } from '@hubspot/local-dev-lib/config';
 import { getOauthManager } from '@hubspot/local-dev-lib/oauth';
 import { accessTokenForPersonalAccessKey } from '@hubspot/local-dev-lib/personalAccessKey';
@@ -26,6 +24,7 @@ import {
 
 import { getCmsPublishMode } from './commonOpts';
 import { logError } from './errorHandlers/index';
+import { ENVIRONMENT_VARIABLES } from '@hubspot/local-dev-lib/constants/config';
 
 export async function validateAccount(
   options: Arguments<{
@@ -36,38 +35,38 @@ export async function validateAccount(
   }>
 ): Promise<boolean> {
   const { derivedAccountId, providedAccountId } = options;
-  const accountId = getAccountId(derivedAccountId);
 
-  if (!accountId) {
-    if (providedAccountId) {
-      logger.error(
-        `The account "${providedAccountId}" could not be found in the config`
-      );
-    } else {
-      logger.error(
-        'An account needs to be supplied either via "--account" or through setting a "defaultPortal"'
-      );
-    }
+  if (!derivedAccountId) {
+    logger.error(
+      'An account needs to be supplied either via "--account" or through setting a "defaultPortal"'
+    );
+
     return false;
   }
 
-  if (providedAccountId && loadConfigFromEnvironment()) {
+  if (
+    providedAccountId &&
+    process.env[ENVIRONMENT_VARIABLES.USE_ENVIRONMENT_HUBSPOT_CONFIG]
+  ) {
     throw new Error(
       'Cannot specify an account when environment variables are supplied. Please unset the environment variables or do not use the "--account" flag.'
     );
   }
 
-  const accountConfig = getAccountConfig(accountId);
-  if (!accountConfig) {
-    logger.error(`The account ${accountId} has not been configured`);
+  let account;
+
+  try {
+    account = getConfigAccountById(derivedAccountId);
+  } catch (e) {
+    logger.error(`The account ${derivedAccountId} has not been configured`);
     return false;
   }
 
-  const { authType, auth, apiKey, personalAccessKey } = accountConfig;
+  const { authType, accountId } = account;
 
   if (typeof authType === 'string' && authType !== authType.toLowerCase()) {
     logger.error(
-      `Invalid "authType" value "${authType}" for account "${accountId}" in config file: ${getConfigPath()}. Valid values are ${commaSeparatedValues(
+      `Invalid "authType" value "${authType}" for account "${accountId}" in config file: ${getConfigFilePath()}. Valid values are ${commaSeparatedValues(
         [
           PERSONAL_ACCESS_KEY_AUTH_METHOD,
           OAUTH_AUTH_METHOD,
@@ -78,14 +77,14 @@ export async function validateAccount(
   }
 
   if (authType === 'oauth2') {
-    if (typeof auth !== 'object') {
+    if (typeof account.auth !== 'object') {
       logger.error(
         `The OAuth2 auth configuration for account ${accountId} is missing`
       );
       return false;
     }
 
-    const { clientId, clientSecret, tokenInfo } = auth;
+    const { clientId, clientSecret, tokenInfo } = account.auth;
 
     if (!clientId || !clientSecret || !tokenInfo || !tokenInfo.refreshToken) {
       logger.error(
@@ -95,7 +94,7 @@ export async function validateAccount(
       return false;
     }
 
-    const oauth = getOauthManager(accountId, accountConfig);
+    const oauth = getOauthManager(account);
     try {
       let accessToken: string | undefined;
 
@@ -113,7 +112,7 @@ export async function validateAccount(
       return false;
     }
   } else if (authType === 'personalaccesskey') {
-    if (!personalAccessKey) {
+    if (!account.personalAccessKey) {
       logger.error(
         `The account "${accountId}" is configured to use a access key for authentication and is missing a "personalAccessKey" in the configuration file`
       );
@@ -132,7 +131,7 @@ export async function validateAccount(
       logError(e);
       return false;
     }
-  } else if (!apiKey) {
+  } else if (!account.apiKey) {
     logger.error(
       `The accountId ${accountId} is missing authentication configuration`
     );

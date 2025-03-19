@@ -9,7 +9,7 @@ import {
   SCOPE_GROUPS,
   PERSONAL_ACCESS_KEY_AUTH_METHOD,
 } from '@hubspot/local-dev-lib/constants/auth';
-import { getAccountConfig } from '@hubspot/local-dev-lib/config';
+import { getConfigAccountIfExists } from '@hubspot/local-dev-lib/config';
 import { fetchScopeData } from '@hubspot/local-dev-lib/api/localDevAuth';
 
 import { outputLogs } from './ui/serverlessFunctionLogs';
@@ -54,15 +54,15 @@ async function verifyAccessKeyAndUserAccess(
   accountId: number,
   scopeGroup: string
 ): Promise<void> {
-  const accountConfig = getAccountConfig(accountId);
+  const account = getConfigAccountIfExists(accountId);
 
-  if (!accountConfig) {
+  if (!account) {
     return;
   }
 
   // TODO[JOE]: Update this i18n key
   const i18nKey = 'lib.serverless';
-  const { authType } = accountConfig;
+  const { authType } = account;
   if (authType !== PERSONAL_ACCESS_KEY_AUTH_METHOD.value) {
     return;
   }

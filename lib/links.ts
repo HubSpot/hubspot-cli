@@ -1,6 +1,5 @@
 import open from 'open';
-import { getEnv } from '@hubspot/local-dev-lib/config';
-import { ENVIRONMENTS } from '@hubspot/local-dev-lib/constants/environments';
+import { getConfigAccountEnvironment } from '@hubspot/local-dev-lib/config';
 import { getHubSpotWebsiteOrigin } from '@hubspot/local-dev-lib/urls';
 import { logger } from '@hubspot/local-dev-lib/logger';
 import { getTableContents, getTableHeader } from './ui/table';
@@ -97,7 +96,7 @@ const SITE_LINKS: { [key: string]: SiteLink } = {
 
 export function getSiteLinksAsArray(accountId: number): SiteLink[] {
   const baseUrl = getHubSpotWebsiteOrigin(
-    getEnv() === 'qa' ? ENVIRONMENTS.QA : ENVIRONMENTS.PROD
+    getConfigAccountEnvironment(accountId)
   );
 
   return Object.values(SITE_LINKS)
@@ -130,7 +129,7 @@ export function openLink(accountId: number, shortcut: string): void {
   }
 
   const baseUrl = getHubSpotWebsiteOrigin(
-    getEnv() === 'qa' ? ENVIRONMENTS.QA : ENVIRONMENTS.PROD
+    getConfigAccountEnvironment(accountId)
   );
 
   open(match.getUrl(accountId, baseUrl), { url: true });

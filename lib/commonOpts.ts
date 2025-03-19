@@ -8,10 +8,7 @@ import {
   CMS_PUBLISH_MODE,
 } from '@hubspot/local-dev-lib/constants/files';
 import { CmsPublishMode } from '@hubspot/local-dev-lib/types/Files';
-import {
-  getAccountConfig,
-  getAndLoadConfigIfNeeded,
-} from '@hubspot/local-dev-lib/config';
+import { getConfig, getConfigAccountById } from '@hubspot/local-dev-lib/config';
 import { i18n } from './lang';
 import { ConfigArgs, StringArgType } from '../types/Yargs';
 
@@ -115,16 +112,13 @@ export function getCmsPublishMode(
   }
   // 2. config[account].defaultCmsPublishMode
   if (options.derivedAccountId) {
-    const accountConfig = getAccountConfig(options.derivedAccountId);
-    if (accountConfig && accountConfig.defaultCmsPublishMode) {
-      return accountConfig.defaultCmsPublishMode;
+    const account = getConfigAccountById(options.derivedAccountId);
+    if (account && account.defaultCmsPublishMode) {
+      return account.defaultCmsPublishMode;
     }
   }
   // 3. config.defaultCmsPublishMode
   // 4. DEFAULT_CMS_PUBLISH_MODE
-  const config = getAndLoadConfigIfNeeded();
-  return (
-    (config && (config.defaultCmsPublishMode as CmsPublishMode)) ||
-    DEFAULT_CMS_PUBLISH_MODE
-  );
+  const config = getConfig();
+  return (config && config.defaultCmsPublishMode) || DEFAULT_CMS_PUBLISH_MODE;
 }
