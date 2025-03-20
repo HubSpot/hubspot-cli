@@ -237,10 +237,12 @@ const injectAccountIdMiddleware = async options => {
   }
 
   // If no provided account or environment variable, use the default account
-  try {
-    const defaultAccount = getConfigDefaultAccount();
-    options.derivedAccountId = defaultAccount.accountId;
-  } catch (e) {}
+  if (!options.derivedAccountId) {
+    try {
+      const defaultAccount = getConfigDefaultAccount();
+      options.derivedAccountId = defaultAccount.accountId;
+    } catch (e) {}
+  }
 };
 
 const validateConfigMiddleware = async options => {
