@@ -9,7 +9,7 @@ const {
   loadConfig,
   configFileExists,
 } = require('@hubspot/local-dev-lib/config');
-const { addConfigOptions, addGlobalOptions } = require('../lib/commonOpts');
+const { setLogLevel, makeYargsBuilder } = require('../lib/commonOpts');
 const { handleExit } = require('../lib/process');
 const {
   checkAndAddConfigToGitignore,
@@ -34,7 +34,6 @@ const {
 const { getCwd } = require('@hubspot/local-dev-lib/path');
 const { toKebabCase } = require('@hubspot/local-dev-lib/text');
 const { trackCommandUsage, trackAuthAction } = require('../lib/usageTracking');
-const { setLogLevel, addTestingOptions } = require('../lib/commonOpts');
 const { promptUser } = require('../lib/prompts/promptUtils');
 const {
   OAUTH_FLOW,
@@ -43,7 +42,7 @@ const {
 const { cliAccountNamePrompt } = require('../lib/prompts/accountNamePrompt');
 const { authenticateWithOauth } = require('../lib/oauth');
 const { EXIT_CODES } = require('../lib/enums/exitCodes');
-const { uiFeatureHighlight } = require('../lib/ui');
+const { uiFeatureHighlight, uiCommandReference } = require('../lib/ui');
 
 const i18nKey = 'commands.init';
 
@@ -96,7 +95,8 @@ const AUTH_TYPE_NAMES = {
   [OAUTH_AUTH_METHOD.value]: OAUTH_AUTH_METHOD.name,
 };
 
-exports.command = 'init';
+const command = 'init';
+exports.command = command;
 exports.describe = i18n(`${i18nKey}.describe`, {
   configName: DEFAULT_HUBSPOT_CONFIG_YAML_FILE_NAME,
 });
@@ -203,7 +203,7 @@ exports.handler = async options => {
   }
 };
 
-exports.builder = yargs => {
+const initBuilder = yargs => {
   yargs
     .options({
       'auth-type': {
@@ -214,12 +214,6 @@ exports.builder = yargs => {
           `${OAUTH_AUTH_METHOD.value}`,
         ],
         default: PERSONAL_ACCESS_KEY_AUTH_METHOD.value,
-        defaultDescription: i18n(
-          `${i18nKey}.options.authType.defaultDescription`,
-          {
-            authMethod: PERSONAL_ACCESS_KEY_AUTH_METHOD.value,
-          }
-        ),
       },
       account: {
         describe: i18n(`${i18nKey}.options.account.describe`),
@@ -239,9 +233,20 @@ exports.builder = yargs => {
     })
     .conflicts('use-hidden-config', 'config');
 
-  addConfigOptions(yargs);
-  addTestingOptions(yargs);
-  addGlobalOptions(yargs);
-
   return yargs;
 };
+
+exports.builder = makeYargsBuilder<InitArgs>(
+  initBuilder,
+  command,
+  i18n(`${i18nKey}.verboseDescribe`, {
+    command: uiCommandReference('hs auth'),
+    configName: DEFAULT_HUBSPOT_CONFIG_YAML_FILE_NAME,
+    authMethod: PERSONAL_ACCESS_KEY_AUTH_METHOD.value,
+  }),
+  {
+    useGlobalOptions: true,
+    useConfigOptions: true,
+    useTestingOptions: true,
+  }
+);

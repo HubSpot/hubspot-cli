@@ -37,12 +37,7 @@ const { cliAccountNamePrompt } = require('../lib/prompts/accountNamePrompt');
 const {
   setAsDefaultAccountPrompt,
 } = require('../lib/prompts/setAsDefaultAccountPrompt');
-const {
-  addConfigOptions,
-  setLogLevel,
-  addTestingOptions,
-  addGlobalOptions,
-} = require('../lib/commonOpts');
+const { setLogLevel, makeYargsBuilder } = require('../lib/commonOpts');
 const { trackAuthAction, trackCommandUsage } = require('../lib/usageTracking');
 const { authenticateWithOauth } = require('../lib/oauth');
 const { EXIT_CODES } = require('../lib/enums/exitCodes');
@@ -64,10 +59,10 @@ const ALLOWED_AUTH_METHODS = [
 const SUPPORTED_AUTHENTICATION_PROTOCOLS_TEXT =
   commaSeparatedValues(ALLOWED_AUTH_METHODS);
 
-exports.command = 'auth';
-exports.describe = i18n(`${i18nKey}.describe`, {
-  configName: DEFAULT_HUBSPOT_CONFIG_YAML_FILE_NAME,
-});
+const command = 'auth';
+
+exports.command = command;
+exports.describe = i18n(`${i18nKey}.describe`);
 
 exports.handler = async options => {
   const {
@@ -203,7 +198,7 @@ exports.handler = async options => {
   process.exit(EXIT_CODES.SUCCESS);
 };
 
-exports.builder = yargs => {
+const authBuilder = yargs => {
   yargs.options({
     'auth-type': {
       describe: i18n(`${i18nKey}.options.authType.describe`),
@@ -213,12 +208,6 @@ exports.builder = yargs => {
         `${OAUTH_AUTH_METHOD.value}`,
       ],
       default: PERSONAL_ACCESS_KEY_AUTH_METHOD.value,
-      defaultDescription: i18n(
-        `${i18nKey}.options.authType.defaultDescription`,
-        {
-          authMethod: PERSONAL_ACCESS_KEY_AUTH_METHOD.value,
-        }
-      ),
     },
     account: {
       describe: i18n(`${i18nKey}.options.account.describe`),
@@ -227,9 +216,19 @@ exports.builder = yargs => {
     },
   });
 
-  addConfigOptions(yargs);
-  addTestingOptions(yargs);
-  addGlobalOptions(yargs);
-
   return yargs;
 };
+
+exports.builder = makeYargsBuilder(
+  authBuilder,
+  command,
+  i18n(`${i18nKey}.verboseDescribe`, {
+    authMethod: PERSONAL_ACCESS_KEY_AUTH_METHOD.value,
+    configName: DEFAULT_HUBSPOT_CONFIG_YAML_FILE_NAME,
+  }),
+  {
+    useGlobalOptions: true,
+    useConfigOptions: true,
+    useTestingOptions: true,
+  }
+);
