@@ -95,7 +95,8 @@ const AUTH_TYPE_NAMES = {
   [OAUTH_AUTH_METHOD.value]: OAUTH_AUTH_METHOD.name,
 };
 
-exports.command = 'init';
+const command = 'init';
+exports.command = command;
 exports.describe = i18n(`${i18nKey}.describe`, {
   configName: DEFAULT_HUBSPOT_CONFIG_YAML_FILE_NAME,
 });
@@ -237,6 +238,7 @@ const initBuilder = yargs => {
 
 exports.builder = makeYargsBuilder<InitArgs>(
   initBuilder,
+  command,
   i18n(`${i18nKey}.verboseDescribe`, {
     command: uiCommandReference('hs auth'),
     configName: DEFAULT_HUBSPOT_CONFIG_YAML_FILE_NAME,

@@ -25,6 +25,7 @@ const i18nKey = 'lib.commonOpts';
 
 export function makeYargsBuilder<T>(
   callback: (yargs: Argv) => Argv<T>,
+  command: string,
   describe: string,
   options: {
     useGlobalOptions?: boolean;
@@ -53,7 +54,8 @@ export function makeYargsBuilder<T>(
 
     const result = callback(yargs);
 
-    await addCustomHelpOutput(result, describe);
+    // Must go last to pick up available options
+    await addCustomHelpOutput(result, command, describe);
 
     return result;
   };
@@ -133,6 +135,7 @@ export function addUseEnvironmentOptions(yargs: Argv): Argv {
 
 export async function addCustomHelpOutput(
   yargs: Argv,
+  command: string,
   describe: string
 ): Promise<void> {
   try {
@@ -140,13 +143,19 @@ export async function addCustomHelpOutput(
 
     if (parsedArgv && parsedArgv.help) {
       const originalHelpOutput = await yargs.getHelp();
-      const commandName = `hs ${parsedArgv._.join(' ')}`;
-      const prettyOriginalHelpOutput = originalHelpOutput.replace(
-        'Options:',
-        chalk.bold('Options:')
-      );
-      const newHelpOutput = `${uiCommandReference(commandName, false)}\n\n${describe}\n\n${prettyOriginalHelpOutput}`;
+      const commandBase = `hs ${parsedArgv._.slice(0, -1).join(' ')}`;
+      const fullCommand = `${commandBase.trim()} ${command}`;
 
+      // Format the original help output to be more readable
+      let prettyOriginalHelpOutput = originalHelpOutput;
+      ['Options:', 'Examples:', 'Positionals:'].forEach(header => {
+        prettyOriginalHelpOutput = prettyOriginalHelpOutput.replace(
+          header,
+          chalk.bold(header)
+        );
+      });
+
+      const newHelpOutput = `${uiCommandReference(fullCommand, false)}\n\n${describe}\n\n${prettyOriginalHelpOutput}`;
       logger.log(newHelpOutput);
       process.exit(EXIT_CODES.SUCCESS);
     }

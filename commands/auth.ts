@@ -59,7 +59,9 @@ const ALLOWED_AUTH_METHODS = [
 const SUPPORTED_AUTHENTICATION_PROTOCOLS_TEXT =
   commaSeparatedValues(ALLOWED_AUTH_METHODS);
 
-exports.command = 'auth';
+const command = 'auth';
+
+exports.command = command;
 exports.describe = i18n(`${i18nKey}.describe`);
 
 exports.handler = async options => {
@@ -219,6 +221,7 @@ const authBuilder = yargs => {
 
 exports.builder = makeYargsBuilder(
   authBuilder,
+  command,
   i18n(`${i18nKey}.verboseDescribe`, {
     authMethod: PERSONAL_ACCESS_KEY_AUTH_METHOD.value,
     configName: DEFAULT_HUBSPOT_CONFIG_YAML_FILE_NAME,

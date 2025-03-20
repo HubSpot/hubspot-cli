@@ -42,6 +42,11 @@ export async function handler(
 }
 
 function accountInfoBuilder(yargs: Argv): Argv<AccountInfoArgs> {
+  yargs.positional('account', {
+    describe: 'the account positional',
+    type: 'string',
+  });
+
   yargs.example([
     ['$0 accounts info', i18n(`${i18nKey}.examples.default`)],
     ['$0 accounts info MyAccount', i18n(`${i18nKey}.examples.nameBased`)],
@@ -53,6 +58,7 @@ function accountInfoBuilder(yargs: Argv): Argv<AccountInfoArgs> {
 
 export const builder = makeYargsBuilder<AccountInfoArgs>(
   accountInfoBuilder,
+  command,
   describe,
   { useConfigOptions: true }
 );
