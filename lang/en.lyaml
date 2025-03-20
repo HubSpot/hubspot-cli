@@ -529,6 +529,7 @@ en:
             noAccountsInConfig: "No accounts found in your config. Run {{ authCommand }} to configure a HubSpot account with the CLI."
             invalidProjectComponents: "Projects cannot contain both private and public apps. Move your apps to separate projects before attempting local development."
             noRunnableComponents: "No supported components were found in this project. Run {{ command }} to see a list of available components and add one to your project."
+            invalidUnifiedAppsAccount: "Local development of Unified Apps is currently only supported in standard and developer accounts. Target a standard or developer account with {{ authCommand }} and try again."
           examples:
             default: "Start local dev for the current project"
         create:
