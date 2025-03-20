@@ -142,21 +142,19 @@ export async function addCustomHelpOutput(
     const parsedArgv = yargsParser(process.argv.slice(2));
 
     if (parsedArgv && parsedArgv.help) {
-      const originalHelpOutput = await yargs.getHelp();
+      // Construct the full command, including positional arguments
       const commandBase = `hs ${parsedArgv._.slice(0, -1).join(' ')}`;
       const fullCommand = `${commandBase.trim()} ${command}`;
 
       // Format the original help output to be more readable
-      let prettyOriginalHelpOutput = originalHelpOutput;
+      let commandHelp = await yargs.getHelp();
       ['Options:', 'Examples:', 'Positionals:'].forEach(header => {
-        prettyOriginalHelpOutput = prettyOriginalHelpOutput.replace(
-          header,
-          chalk.bold(header)
-        );
+        commandHelp = commandHelp.replace(header, chalk.bold(header));
       });
 
-      const newHelpOutput = `${uiCommandReference(fullCommand, false)}\n\n${describe}\n\n${prettyOriginalHelpOutput}`;
-      logger.log(newHelpOutput);
+      logger.log(
+        `${uiCommandReference(fullCommand, false)}\n\n${describe}\n\n${commandHelp}`
+      );
       process.exit(EXIT_CODES.SUCCESS);
     }
   } catch (e) {
