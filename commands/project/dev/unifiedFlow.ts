@@ -148,7 +148,8 @@ export async function unifiedProjectDevFlow(
     deployedBuild = await createInitialBuildForNewProject(
       projectConfig,
       projectDir,
-      targetProjectAccountId
+      targetProjectAccountId,
+      true
     );
   }
 
