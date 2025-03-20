@@ -72,6 +72,9 @@ en:
           describe: "Print information about the default account, or about the account specified with the \"account\" option."
           errors:
             notUsingPersonalAccessKey: "This command currently only supports fetching scopes for the personal access key auth type."
+          options:
+            account:
+              describe: "Account name or id to show info for"
           examples:
             default: "Print information for the default account"
             idBased: "Print information for the account with accountId equal to \"1234567\""

@@ -43,7 +43,7 @@ export async function handler(
 
 function accountInfoBuilder(yargs: Argv): Argv<AccountInfoArgs> {
   yargs.positional('account', {
-    describe: 'the account positional',
+    describe: i18n(`${i18nKey}.options.account.describe`),
     type: 'string',
   });
 
