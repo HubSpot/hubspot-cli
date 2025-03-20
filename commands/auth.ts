@@ -37,13 +37,7 @@ const { cliAccountNamePrompt } = require('../lib/prompts/accountNamePrompt');
 const {
   setAsDefaultAccountPrompt,
 } = require('../lib/prompts/setAsDefaultAccountPrompt');
-const {
-  addConfigOptions,
-  setLogLevel,
-  addTestingOptions,
-  addGlobalOptions,
-  addCustomHelpOutput,
-} = require('../lib/commonOpts');
+const { setLogLevel, makeYargsBuilder } = require('../lib/commonOpts');
 const { trackAuthAction, trackCommandUsage } = require('../lib/usageTracking');
 const { authenticateWithOauth } = require('../lib/oauth');
 const { EXIT_CODES } = require('../lib/enums/exitCodes');
@@ -202,7 +196,7 @@ exports.handler = async options => {
   process.exit(EXIT_CODES.SUCCESS);
 };
 
-exports.builder = async yargs => {
+const authBuilder = yargs => {
   yargs.options({
     'auth-type': {
       describe: i18n(`${i18nKey}.options.authType.describe`),
@@ -220,17 +214,18 @@ exports.builder = async yargs => {
     },
   });
 
-  addConfigOptions(yargs);
-  addTestingOptions(yargs);
-  addGlobalOptions(yargs);
-
-  // Must go last to pick up available options
-  await addCustomHelpOutput(
-    yargs,
-    i18n(`${i18nKey}.verboseDescribe`, {
-      authMethod: PERSONAL_ACCESS_KEY_AUTH_METHOD.value,
-      configName: DEFAULT_HUBSPOT_CONFIG_YAML_FILE_NAME,
-    })
-  );
   return yargs;
 };
+
+exports.builder = makeYargsBuilder(
+  authBuilder,
+  i18n(`${i18nKey}.verboseDescribe`, {
+    authMethod: PERSONAL_ACCESS_KEY_AUTH_METHOD.value,
+    configName: DEFAULT_HUBSPOT_CONFIG_YAML_FILE_NAME,
+  }),
+  {
+    useGlobalOptions: true,
+    useConfigOptions: true,
+    useTestingOptions: true,
+  }
+);

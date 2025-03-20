@@ -9,11 +9,7 @@ const {
   loadConfig,
   configFileExists,
 } = require('@hubspot/local-dev-lib/config');
-const {
-  addConfigOptions,
-  addGlobalOptions,
-  addCustomHelpOutput,
-} = require('../lib/commonOpts');
+const { setLogLevel, makeYargsBuilder } = require('../lib/commonOpts');
 const { handleExit } = require('../lib/process');
 const {
   checkAndAddConfigToGitignore,
@@ -38,7 +34,6 @@ const {
 const { getCwd } = require('@hubspot/local-dev-lib/path');
 const { toKebabCase } = require('@hubspot/local-dev-lib/text');
 const { trackCommandUsage, trackAuthAction } = require('../lib/usageTracking');
-const { setLogLevel, addTestingOptions } = require('../lib/commonOpts');
 const { promptUser } = require('../lib/prompts/promptUtils');
 const {
   OAUTH_FLOW,
@@ -207,7 +202,7 @@ exports.handler = async options => {
   }
 };
 
-exports.builder = async yargs => {
+const initBuilder = yargs => {
   yargs
     .options({
       'auth-type': {
@@ -237,18 +232,19 @@ exports.builder = async yargs => {
     })
     .conflicts('use-hidden-config', 'config');
 
-  addConfigOptions(yargs);
-  addTestingOptions(yargs);
-  addGlobalOptions(yargs);
-
-  // Must go last to pick up available options
-  await addCustomHelpOutput(
-    yargs,
-    i18n(`${i18nKey}.verboseDescribe`, {
-      command: uiCommandReference('hs auth'),
-      configName: DEFAULT_HUBSPOT_CONFIG_YAML_FILE_NAME,
-      authMethod: PERSONAL_ACCESS_KEY_AUTH_METHOD.value,
-    })
-  );
   return yargs;
 };
+
+exports.builder = makeYargsBuilder<InitArgs>(
+  initBuilder,
+  i18n(`${i18nKey}.verboseDescribe`, {
+    command: uiCommandReference('hs auth'),
+    configName: DEFAULT_HUBSPOT_CONFIG_YAML_FILE_NAME,
+    authMethod: PERSONAL_ACCESS_KEY_AUTH_METHOD.value,
+  }),
+  {
+    useGlobalOptions: true,
+    useConfigOptions: true,
+    useTestingOptions: true,
+  }
+);
