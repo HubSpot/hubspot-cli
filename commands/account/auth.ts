@@ -30,6 +30,7 @@ import { trackCommandUsage, trackAuthAction } from '../../lib/usageTracking';
 import { personalAccessKeyPrompt } from '../../lib/prompts/personalAccessKeyPrompt';
 import { cliAccountNamePrompt } from '../../lib/prompts/accountNamePrompt';
 import { setAsDefaultAccountPrompt } from '../../lib/prompts/setAsDefaultAccountPrompt';
+import { logError } from '../../lib/errorHandlers/index';
 import { EXIT_CODES } from '../../lib/enums/exitCodes';
 import { uiFeatureHighlight } from '../../lib/ui';
 import { CommonArgs, ConfigArgs } from '../../types/Yargs';
@@ -107,9 +108,21 @@ export async function handler(
   const globalConfigExists = configFileExists(true);
   if (deprecatedConfigExists) {
     if (globalConfigExists) {
-      await handleMerge();
+      try {
+        await handleMerge();
+        process.exit(EXIT_CODES.SUCCESS);
+      } catch (error) {
+        logError(error);
+        process.exit(EXIT_CODES.ERROR);
+      }
     } else {
-      await handleMigration();
+      try {
+        await handleMigration();
+        process.exit(EXIT_CODES.SUCCESS);
+      } catch (error) {
+        logError(error);
+        process.exit(EXIT_CODES.ERROR);
+      }
     }
   }
 

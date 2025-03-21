@@ -11,6 +11,7 @@ import { handleMigration, handleMerge } from '../../lib/configMigrate';
 import { addConfigOptions } from '../../lib/commonOpts';
 import { i18n } from '../../lib/lang';
 import { CommonArgs, ConfigArgs } from '../../types/Yargs';
+import { logError } from '../../lib/errorHandlers/index';
 import { EXIT_CODES } from '../../lib/enums/exitCodes';
 
 const i18nKey = 'commands.config.subcommands.migrate';
@@ -41,9 +42,21 @@ export async function handler(
   const globalConfigExists = configFileExists(true);
 
   if (!globalConfigExists && deprecatedConfigExists) {
-    await handleMigration(configPath);
+    try {
+      await handleMigration(configPath);
+      process.exit(EXIT_CODES.SUCCESS);
+    } catch (error) {
+      logError(error);
+      process.exit(EXIT_CODES.ERROR);
+    }
   } else if (globalConfigExists && deprecatedConfigExists) {
-    await handleMerge(configPath);
+    try {
+      await handleMerge(configPath);
+      process.exit(EXIT_CODES.SUCCESS);
+    } catch (error) {
+      logError(error);
+      process.exit(EXIT_CODES.ERROR);
+    }
   } else if (globalConfigExists && !deprecatedConfigExists) {
     logger.log(
       i18n(`${i18nKey}.migrationAlreadyCompleted`, {
