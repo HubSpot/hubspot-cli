@@ -120,12 +120,14 @@ export function uiBetaTag(message: string, log = true): string | undefined {
   if (log) {
     logger.log(result);
     return;
-  } else {
-    return result;
   }
+  return result;
 }
 
-export function uiDeprecatedTag(message: string): void {
+export function uiDeprecatedTag(
+  message: string,
+  log = true
+): string | undefined {
   const i18nKey = 'lib.ui';
 
   const terminalUISupport = getTerminalUISupport();
@@ -136,6 +138,12 @@ export function uiDeprecatedTag(message: string): void {
   } ${message}`;
 
   logger.log(result);
+
+  if (log) {
+    logger.log(result);
+    return;
+  }
+  return result;
 }
 
 export function uiCommandDisabledBanner(
