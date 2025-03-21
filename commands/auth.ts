@@ -90,7 +90,7 @@ exports.handler = async options => {
 
   if (configFileExists(true)) {
     logger.error(
-      i18n(`${i18nKey}.errors.centralizedConfigFileExists`, {
+      i18n(`${i18nKey}.errors.globalConfigFileExists`, {
         configPath,
         authCommand: uiCommandReference('hs account auth'),
       })
