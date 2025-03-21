@@ -606,6 +606,8 @@ en:
             downloadingProjectContentsFailed: "Unable to fetch migrated project"
           migrationFailureReasons:
             upToDate: 'App is already up to date'
+            isPrivateApp: 'Private apps are not currently migratable'
+            listedInMarketplace: 'App is listed in marketplace'
             generic: "Unable to migrate app: {{ reasonCode }}"
         cloneApp:
           describe: "Clone a public app using the projects framework."

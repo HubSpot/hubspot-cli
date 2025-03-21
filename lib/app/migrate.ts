@@ -27,6 +27,7 @@ import {
   finishMigration,
   listAppsForMigration,
   MigrationApp,
+  UNMIGRATABLE_REASONS,
 } from '@hubspot/local-dev-lib/api/projects';
 import { poll } from '../polling';
 import path from 'path';
@@ -36,11 +37,19 @@ import { extractZipArchive } from '@hubspot/local-dev-lib/archive';
 import { ArgumentsCamelCase } from 'yargs';
 import { MigrateAppOptions } from '../../types/Yargs';
 
-function getUnmigrateableReason(reasonCode: string) {
+function getUnmigratableReason(reasonCode: string) {
   switch (reasonCode) {
-    case 'UP_TO_DATE':
+    case UNMIGRATABLE_REASONS.UP_TO_DATE:
       return i18n(
         'commands.project.subcommands.migrateApp.migrationFailureReasons.upToDate'
+      );
+    case UNMIGRATABLE_REASONS.IS_A_PRIVATE_APP:
+      return i18n(
+        'commands.project.subcommands.migrateApp.migrationFailureReasons.isPrivateApp'
+      );
+    case UNMIGRATABLE_REASONS.LISTED_IN_MARKETPLACE:
+      return i18n(
+        'commands.project.subcommands.migrateApp.migrationFailureReasons.listedInMarketplace'
       );
     default:
       return i18n(
@@ -75,7 +84,7 @@ export async function migrateApp2025_2(
 
   if (migratableApps.length === 0) {
     const reasons = unmigratableApps.map(
-      app => `${app.appName}: ${getUnmigrateableReason(app.unmigratableReason)}`
+      app => `${app.appName}: ${getUnmigratableReason(app.unmigratableReason)}`
     );
 
     logger.error(
@@ -92,7 +101,7 @@ export async function migrateApp2025_2(
     value: app,
     disabled: app.isMigratable
       ? false
-      : getUnmigrateableReason(app.unmigratableReason),
+      : getUnmigratableReason(app.unmigratableReason),
   }));
 
   const appToMigrate = appId
