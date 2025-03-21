@@ -2,10 +2,9 @@ import { Argv, ArgumentsCamelCase } from 'yargs';
 import { logger } from '@hubspot/local-dev-lib/logger';
 import { accessTokenForPersonalAccessKey } from '@hubspot/local-dev-lib/personalAccessKey';
 import {
-  deleteAccount,
-  getConfigAccounts,
+  removeAccountFromConfig,
+  getAllConfigAccounts,
 } from '@hubspot/local-dev-lib/config';
-import { getAccountIdentifier } from '@hubspot/local-dev-lib/config/getAccountIdentifier';
 import { isSpecifiedError } from '@hubspot/local-dev-lib/errors/index';
 import { trackCommandUsage } from '../../lib/usageTracking';
 import { i18n } from '../../lib/lang';
@@ -34,9 +33,9 @@ export async function handler(
 
   trackCommandUsage('accounts-clean');
 
-  const accountsList = getConfigAccounts() || [];
-  const filteredTestAccounts = accountsList.filter(p =>
-    qa ? p.env === 'qa' : p.env !== 'qa'
+  const accountsList = getAllConfigAccounts();
+  const filteredTestAccounts = accountsList.filter(a =>
+    qa ? a.env === 'qa' : a.env !== 'qa'
   );
 
   if (filteredTestAccounts && filteredTestAccounts.length === 0) {
@@ -54,8 +53,7 @@ export async function handler(
 
   for (const account of filteredTestAccounts) {
     try {
-      const accountId = getAccountIdentifier(account);
-      await accessTokenForPersonalAccessKey(accountId!, true);
+      await accessTokenForPersonalAccessKey(account.accountId, true);
     } catch (error) {
       if (
         isSpecifiedError(error, {
@@ -88,9 +86,7 @@ export async function handler(
     });
     logger.log(
       getTableContents(
-        accountsToRemove.map(p => [
-          uiAccountDescription(getAccountIdentifier(p)),
-        ]),
+        accountsToRemove.map(a => [uiAccountDescription(a.accountId)]),
         { border: { bodyLeft: '  ' } }
       )
     );
@@ -111,10 +107,10 @@ export async function handler(
     if (accountsCleanPrompt) {
       logger.log('');
       for (const accountToRemove of accountsToRemove) {
-        await deleteAccount(accountToRemove.name!);
+        await removeAccountFromConfig(accountToRemove.accountId);
         logger.log(
           i18n(`${i18nKey}.removeSuccess`, {
-            accountName: accountToRemove.name!,
+            accountName: accountToRemove.name,
           })
         );
       }

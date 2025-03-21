@@ -9,7 +9,7 @@ import { CMS_PUBLISH_MODE } from '@hubspot/local-dev-lib/constants/files';
 import { commaSeparatedValues } from '@hubspot/local-dev-lib/text';
 import { trackCommandUsage } from './usageTracking';
 import { promptUser } from './prompts/promptUtils';
-import { i18n } from '../lib/lang';
+import { i18n } from './lang';
 
 const i18nKey = 'commands.config.subcommands.set.options';
 
