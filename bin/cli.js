@@ -183,7 +183,6 @@ const skipConfigAccountsSubCommands = {
 const SKIP_CONFIG_VALIDATION = {
   init: { target: true },
   auth: { target: true },
-  config: { target: false, subCommands: { migrate: { target: true } } },
   accounts: skipConfigAccountsSubCommands,
   account: skipConfigAccountsSubCommands,
 };
