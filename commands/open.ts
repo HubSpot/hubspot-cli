@@ -20,7 +20,8 @@ import {
 const i18nKey = 'commands.open';
 
 const separator = ' => ';
-async function createListPrompt(accountId: number) {
+
+async function createListPrompt(accountId: number): Promise<{ open: string }> {
   return promptUser([
     {
       type: 'rawlist',
