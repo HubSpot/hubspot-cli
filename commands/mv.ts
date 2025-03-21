@@ -1,37 +1,42 @@
-// @ts-nocheck
-const { logger } = require('@hubspot/local-dev-lib/logger');
-const { moveFile } = require('@hubspot/local-dev-lib/api/fileMapper');
-const { isSpecifiedError } = require('@hubspot/local-dev-lib/errors/index');
-const { logError, ApiErrorContext } = require('../lib/errorHandlers/index');
-const {
+import { Argv, ArgumentsCamelCase } from 'yargs';
+import { logger } from '@hubspot/local-dev-lib/logger';
+import { moveFile } from '@hubspot/local-dev-lib/api/fileMapper';
+import { isSpecifiedError } from '@hubspot/local-dev-lib/errors/index';
+import { logError, ApiErrorContext } from '../lib/errorHandlers/index';
+import {
   addConfigOptions,
   addAccountOptions,
   addUseEnvironmentOptions,
   addGlobalOptions,
-} = require('../lib/commonOpts');
-const { trackCommandUsage } = require('../lib/usageTracking');
-const { isPathFolder } = require('../lib/filesystem');
-const { i18n } = require('../lib/lang');
-const { uiBetaTag } = require('../lib/ui');
+} from '../lib/commonOpts';
+import { trackCommandUsage } from '../lib/usageTracking';
+import { isPathFolder } from '../lib/filesystem';
+import { i18n } from '../lib/lang';
+import { uiBetaTag } from '../lib/ui';
+import { CommonArgs, ConfigArgs, EnvironmentArgs } from '../types/Yargs';
 
 const i18nKey = 'commands.mv';
 
-const getCorrectedDestPath = (srcPath, destPath) => {
+function getCorrectedDestPath(srcPath: string, destPath: string): string {
   if (!isPathFolder(srcPath)) {
     return destPath;
   }
 
   // Makes sure that nested folders are moved independently
   return `${destPath}/${srcPath.split('/').pop()}`;
-};
+}
 
-exports.command = 'mv <srcPath> <destPath>';
-exports.describe = uiBetaTag(i18n(`${i18nKey}.describe`), false);
+export const command = 'mv <srcPath> <destPath>';
+export const describe = uiBetaTag(i18n(`${i18nKey}.describe`), false);
 
-exports.handler = async options => {
-  const { srcPath, destPath, derivedAccountId } = options;
+type MvArgs = CommonArgs &
+  ConfigArgs &
+  EnvironmentArgs & { srcPath: string; destPath: string };
 
-  trackCommandUsage('mv', null, derivedAccountId);
+export async function handler(args: ArgumentsCamelCase<MvArgs>) {
+  const { srcPath, destPath, derivedAccountId } = args;
+
+  trackCommandUsage('mv', undefined, derivedAccountId);
 
   try {
     await moveFile(
@@ -66,15 +71,18 @@ exports.handler = async options => {
         error,
         new ApiErrorContext({
           accountId: derivedAccountId,
-          srcPath,
-          destPath,
         })
       );
     }
   }
-};
+}
 
-exports.builder = yargs => {
+export function builder(yargs: Argv): Argv<MvArgs> {
+  addConfigOptions(yargs);
+  addAccountOptions(yargs);
+  addUseEnvironmentOptions(yargs);
+  addGlobalOptions(yargs);
+
   yargs.positional('srcPath', {
     describe: 'Remote hubspot path',
     type: 'string',
@@ -84,9 +92,5 @@ exports.builder = yargs => {
     type: 'string',
   });
 
-  addConfigOptions(yargs);
-  addAccountOptions(yargs);
-  addUseEnvironmentOptions(yargs);
-  addGlobalOptions(yargs);
-  return yargs;
-};
+  return yargs as Argv<MvArgs>;
+}

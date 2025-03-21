@@ -1,16 +1,20 @@
-// @ts-nocheck
-import yargs from 'yargs';
+import yargs, { Argv } from 'yargs';
 import {
   addConfigOptions,
   addAccountOptions,
   addUseEnvironmentOptions,
 } from '../../lib/commonOpts';
+import * as listCommand from '../list';
 
 jest.mock('yargs');
 jest.mock('../../lib/commonOpts');
 
-// Import this last so mocks apply
-import listCommand from '../list';
+const positionalSpy = jest
+  .spyOn(yargs as Argv, 'positional')
+  .mockReturnValue(yargs as Argv);
+const exampleSpy = jest
+  .spyOn(yargs as Argv, 'example')
+  .mockReturnValue(yargs as Argv);
 
 describe('commands/list', () => {
   describe('command', () => {
@@ -27,17 +31,17 @@ describe('commands/list', () => {
 
   describe('builder', () => {
     it('should support the correct positional arguments', () => {
-      listCommand.builder(yargs);
+      listCommand.builder(yargs as Argv);
 
-      expect(yargs.positional).toHaveBeenCalledTimes(1);
-      expect(yargs.positional).toHaveBeenCalledWith(
+      expect(positionalSpy).toHaveBeenCalledTimes(1);
+      expect(positionalSpy).toHaveBeenCalledWith(
         'path',
         expect.objectContaining({ type: 'string' })
       );
     });
 
     it('should support the correct options', () => {
-      listCommand.builder(yargs);
+      listCommand.builder(yargs as Argv);
 
       expect(addConfigOptions).toHaveBeenCalledTimes(1);
       expect(addConfigOptions).toHaveBeenCalledWith(yargs);
@@ -50,8 +54,8 @@ describe('commands/list', () => {
     });
 
     it('should provide examples', () => {
-      listCommand.builder(yargs);
-      expect(yargs.example).toHaveBeenCalledTimes(1);
+      listCommand.builder(yargs as Argv);
+      expect(exampleSpy).toHaveBeenCalledTimes(1);
     });
   });
 });

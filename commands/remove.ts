@@ -1,26 +1,38 @@
-// @ts-nocheck
-const { deleteFile } = require('@hubspot/local-dev-lib/api/fileMapper');
-const { logger } = require('@hubspot/local-dev-lib/logger');
-const { logError, ApiErrorContext } = require('../lib/errorHandlers/index');
-
-const {
+import { Argv, ArgumentsCamelCase } from 'yargs';
+import { deleteFile } from '@hubspot/local-dev-lib/api/fileMapper';
+import { logger } from '@hubspot/local-dev-lib/logger';
+import { logError, ApiErrorContext } from '../lib/errorHandlers/index';
+import {
   addConfigOptions,
   addAccountOptions,
   addUseEnvironmentOptions,
   addGlobalOptions,
-} = require('../lib/commonOpts');
-const { trackCommandUsage } = require('../lib/usageTracking');
-const { i18n } = require('../lib/lang');
+} from '../lib/commonOpts';
+import { trackCommandUsage } from '../lib/usageTracking';
+import { i18n } from '../lib/lang';
+import {
+  AccountArgs,
+  CommonArgs,
+  ConfigArgs,
+  EnvironmentArgs,
+} from '../types/Yargs';
 
 const i18nKey = 'commands.remove';
 
-exports.command = 'remove <path>';
-exports.describe = i18n(`${i18nKey}.describe`);
+export const command = 'remove <path>';
+export const describe = i18n(`${i18nKey}.describe`);
 
-exports.handler = async options => {
-  const { path: hsPath, derivedAccountId } = options;
+type RemoveArgs = CommonArgs &
+  ConfigArgs &
+  EnvironmentArgs &
+  AccountArgs & { path: string };
 
-  trackCommandUsage('remove', null, derivedAccountId);
+export async function handler(
+  args: ArgumentsCamelCase<RemoveArgs>
+): Promise<void> {
+  const { path: hsPath, derivedAccountId } = args;
+
+  trackCommandUsage('remove', undefined, derivedAccountId);
 
   try {
     await deleteFile(derivedAccountId, hsPath);
@@ -42,18 +54,18 @@ exports.handler = async options => {
       })
     );
   }
-};
+}
 
-exports.builder = yargs => {
-  yargs.positional('path', {
-    describe: i18n(`${i18nKey}.positionals.path.describe`),
-    type: 'string',
-  });
-
+export function builder(yargs: Argv): Argv<RemoveArgs> {
   addConfigOptions(yargs);
   addAccountOptions(yargs);
   addUseEnvironmentOptions(yargs);
   addGlobalOptions(yargs);
 
-  return yargs;
-};
+  yargs.positional('path', {
+    describe: i18n(`${i18nKey}.positionals.path.describe`),
+    type: 'string',
+  });
+
+  return yargs as Argv<RemoveArgs>;
+}

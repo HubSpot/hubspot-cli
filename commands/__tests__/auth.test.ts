@@ -1,12 +1,13 @@
-// @ts-nocheck
-import yargs from 'yargs';
+import yargs, { Argv } from 'yargs';
 import { addConfigOptions, addTestingOptions } from '../../lib/commonOpts';
+import * as authCommand from '../auth';
 
 jest.mock('yargs');
 jest.mock('../../lib/commonOpts');
 
-// Import this last so mocks apply
-import authCommand from '../auth';
+const optionsSpy = jest
+  .spyOn(yargs as Argv, 'options')
+  .mockReturnValue(yargs as Argv);
 
 describe('commands/auth', () => {
   describe('command', () => {
@@ -23,10 +24,10 @@ describe('commands/auth', () => {
 
   describe('builder', () => {
     it('should support the correct options', () => {
-      authCommand.builder(yargs);
+      authCommand.builder(yargs as Argv);
 
-      expect(yargs.options).toHaveBeenCalledTimes(1);
-      expect(yargs.options).toHaveBeenCalledWith({
+      expect(optionsSpy).toHaveBeenCalledTimes(1);
+      expect(optionsSpy).toHaveBeenCalledWith({
         'auth-type': expect.objectContaining({
           type: 'string',
           choices: ['personalaccesskey', 'oauth2'],
