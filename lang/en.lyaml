@@ -138,6 +138,8 @@ en:
           migrationAlreadyCompleted: "A global configuration file already exists at {{ globalConfigPath }}. No migration necessary."
           errors:
             configNotFound: "A configuration file at {{ configPath }} could not be found. Please try again with a valid file path."
+          options:
+            force: "When merging a deprecated configuration file with an existing global configuration file, overwrite any conflicting values in the global config with the deprecated config values."
           examples:
             default: "Migrate from the deprecated {{ deprecatedConfigPath }} file to the new global config file at {{ globalConfigPath }}"
             configFlag: "Migrate a specific config file (specified with the config flag) to the new global config file at {{ globalConfigPath }}"

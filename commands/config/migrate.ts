@@ -22,12 +22,12 @@ export const describe = i18n(`${i18nKey}.describe`, {
 });
 export const command = 'migrate';
 
-type ConfigMigrateArgs = CommonArgs & ConfigArgs;
+type ConfigMigrateArgs = CommonArgs & ConfigArgs & { force?: boolean };
 
 export async function handler(
   args: ArgumentsCamelCase<ConfigMigrateArgs>
 ): Promise<void> {
-  const { config: configPath } = args;
+  const { config: configPath, force } = args;
 
   if (configPath && !fs.existsSync(configPath)) {
     logger.log(
@@ -51,7 +51,7 @@ export async function handler(
     }
   } else if (globalConfigExists && deprecatedConfigExists) {
     try {
-      await handleMerge(configPath);
+      await handleMerge(configPath, force);
       process.exit(EXIT_CODES.SUCCESS);
     } catch (error) {
       logError(error);
@@ -70,21 +70,28 @@ export async function handler(
 export function builder(yargs: Argv): Argv<ConfigMigrateArgs> {
   addConfigOptions(yargs);
 
-  yargs.example([
-    [
-      '$0 config migrate',
-      i18n(`${i18nKey}.examples.default`, {
-        deprecatedConfigPath: DEFAULT_HUBSPOT_CONFIG_YAML_FILE_NAME,
-        globalConfigPath: GLOBAL_CONFIG_PATH,
-      }),
-    ],
-    [
-      '$0 config migrate --config=/path/to/config.yml',
-      i18n(`${i18nKey}.examples.configFlag`, {
-        globalConfigPath: GLOBAL_CONFIG_PATH,
-      }),
-    ],
-  ]);
+  yargs
+    .option('force', {
+      alias: 'f',
+      type: 'boolean',
+      default: false,
+      description: i18n(`${i18nKey}.options.force`),
+    })
+    .example([
+      [
+        '$0 config migrate',
+        i18n(`${i18nKey}.examples.default`, {
+          deprecatedConfigPath: DEFAULT_HUBSPOT_CONFIG_YAML_FILE_NAME,
+          globalConfigPath: GLOBAL_CONFIG_PATH,
+        }),
+      ],
+      [
+        '$0 config migrate --config=/path/to/config.yml',
+        i18n(`${i18nKey}.examples.configFlag`, {
+          globalConfigPath: GLOBAL_CONFIG_PATH,
+        }),
+      ],
+    ]);
 
   return yargs as Argv<ConfigMigrateArgs>;
 }

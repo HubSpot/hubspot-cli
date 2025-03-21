@@ -50,15 +50,16 @@ export async function handleMigration(configPath?: string): Promise<void> {
 
 async function mergeConfigProperties(
   globalConfig: CLIConfig_NEW,
-  deprecatedConfig: CLIConfig_DEPRECATED
+  deprecatedConfig: CLIConfig_DEPRECATED,
+  force?: boolean
 ): Promise<CLIConfig_NEW> {
   const {
     initialConfig,
     conflicts,
   }: { initialConfig: CLIConfig_NEW; conflicts: ConflictProperty[] } =
-    _mergeConfigProperties(globalConfig, deprecatedConfig);
+    _mergeConfigProperties(globalConfig, deprecatedConfig, force);
 
-  if (conflicts.length > 0) {
+  if (conflicts.length > 0 && !force) {
     for (const conflict of conflicts) {
       const { property, newValue, oldValue } = conflict;
       const { shouldOverwrite } = await promptUser({
@@ -79,7 +80,10 @@ async function mergeConfigProperties(
   return initialConfig;
 }
 
-export async function handleMerge(configPath?: string): Promise<void> {
+export async function handleMerge(
+  configPath?: string,
+  force?: boolean
+): Promise<void> {
   const { shouldMergeConfigs } = await promptUser({
     name: 'shouldMergeConfigs',
     type: 'confirm',
@@ -101,7 +105,8 @@ export async function handleMerge(configPath?: string): Promise<void> {
   const mergedConfig = await mergeConfigProperties(
     // @ts-ignore Cannot reconcile CLIConfig_NEW and CLIConfig_DEPRECATED
     globalConfig,
-    deprecatedConfig
+    deprecatedConfig,
+    force
   );
 
   const { skippedAccountIds } = mergeExistingConfigs(
