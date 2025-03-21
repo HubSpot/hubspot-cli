@@ -7,12 +7,12 @@ const chalk = require('chalk');
 const { logger } = require('@hubspot/local-dev-lib/logger');
 const { addUserAgentHeader } = require('@hubspot/local-dev-lib/http');
 const {
-  loadConfig,
-  getAccountId,
-  configFileExists,
-  getConfigPath,
-  validateConfig,
+  globalConfigFileExists,
+  getConfigFilePath,
+  isConfigValid,
+  getConfigAccountIfExists,
 } = require('@hubspot/local-dev-lib/config');
+import { ENVIRONMENT_VARIABLES } from '@hubspot/local-dev-lib/constants/config';
 const { logError } = require('../lib/errorHandlers/index');
 const { setLogLevel, getCommandName } = require('../lib/commonOpts');
 const { validateAccount } = require('../lib/validation');
@@ -183,30 +183,69 @@ const handleDeprecatedEnvVariables = options => {
   ) {
     uiDeprecatedTag(
       i18n(`${i18nKey}.handleDeprecatedEnvVariables.portalEnvVarDeprecated`, {
-        configPath: getConfigPath(),
+        configPath: getConfigFilePath(),
       })
     );
     process.env.HUBSPOT_ACCOUNT_ID = process.env.HUBSPOT_PORTAL_ID;
   }
 };
 
+function addConfigEnvironmentVariablesMiddleware(options) {
+  const { useEnv, config } = options;
+
+  if (useEnv) {
+    process.env[ENVIRONMENT_VARIABLES.USE_ENVIRONMENT_HUBSPOT_CONFIG] = true;
+  }
+
+  if (config) {
+    process.env[ENVIRONMENT_VARIABLES.HUBSPOT_CONFIG_PATH] = config;
+  }
+}
+
 /**
  * Auto-injects the derivedAccountId flag into all commands
  */
 const injectAccountIdMiddleware = async options => {
-  const { account } = options;
+  const { account: accountOption } = options;
 
   // Preserves the original --account flag for certain commands.
-  options.providedAccountId = account;
+  options.providedAccountId = accountOption;
 
-  if (options.useEnv && process.env.HUBSPOT_ACCOUNT_ID) {
-    options.derivedAccountId = parseInt(process.env.HUBSPOT_ACCOUNT_ID, 10);
-  } else {
-    options.derivedAccountId = getAccountId(account);
+  // Check environment variables for accountId
+  if (options.useEnv && process.env[ENVIRONMENT_VARIABLES.HUBSPOT_ACCOUNT_ID]) {
+    options.derivedAccountId = parseInt(
+      process.env[ENVIRONMENT_VARIABLES.HUBSPOT_ACCOUNT_ID],
+      10
+    );
+    return;
+  }
+
+  // If not using environment variables, check if provided account exists
+  if (accountOption) {
+    const account = getConfigAccountIfExists(accountOption);
+    if (account) {
+      options.derivedAccountId = account.accountId;
+    } else {
+      logger.error(
+        i18n(`${i18nKey}.injectAccountIdMiddleware.accountNotFound`, {
+          accountIdentifier: accountOption,
+          authCommand: uiCommandReference('{authCommand}'),
+        })
+      );
+      process.exit(EXIT_CODES.ERROR);
+    }
+  }
+
+  // If no provided account or environment variable, use the default account
+  if (!options.derivedAccountId) {
+    try {
+      const defaultAccount = getConfigDefaultAccount();
+      options.derivedAccountId = defaultAccount.accountId;
+    } catch (e) {}
   }
 };
 
-const loadConfigMiddleware = async options => {
+const validateConfigMiddleware = async options => {
   // Skip this when no command is provided
   if (!options._.length) {
     return;
@@ -215,24 +254,21 @@ const loadConfigMiddleware = async options => {
   const maybeValidateConfig = () => {
     if (
       !isTargetedCommand(options, SKIP_CONFIG_VALIDATION) &&
-      !validateConfig()
+      !isConfigValid()
     ) {
       process.exit(EXIT_CODES.ERROR);
     }
   };
 
-  if (configFileExists(true) && options.config) {
+  if (globalConfigFileExists() && options.config) {
     logger.error(
       i18n(`${i18nKey}.loadConfigMiddleware.configFileExists`, {
-        configPath: getConfigPath(),
+        configPath: getConfigFilePath(),
       })
     );
     process.exit(EXIT_CODES.ERROR);
   } else if (!isTargetedCommand(options, { init: { target: true } })) {
-    const { config: configPath } = options;
-    const config = loadConfig(configPath, options);
-
-    // We don't run validateConfig() for auth because users should be able to run it when
+    // We don't run isConfigValid() for auth because users should be able to run it when
     // no accounts are configured, but we still want to exit if the config file is not found
     if (isTargetedCommand(options, { auth: { target: true } }) && !config) {
       process.exit(EXIT_CODES.ERROR);
@@ -294,12 +330,12 @@ const validateAccountOptions = async options => {
 
 const argv = yargs
   .usage('The command line interface to interact with HubSpot.')
-  // loadConfigMiddleware loads the new hidden config for all commands
   .middleware([
     setLogLevel,
     setRequestHeaders,
+    addConfigEnvironmentVariablesMiddleware,
     handleDeprecatedEnvVariables,
-    loadConfigMiddleware,
+    validateConfigMiddleware,
     injectAccountIdMiddleware,
     checkAndWarnGitInclusionMiddleware,
     validateAccountOptions,
