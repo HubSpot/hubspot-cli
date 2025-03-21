@@ -12,7 +12,7 @@ import {
   getHubSpotApiOrigin,
   getHubSpotWebsiteOrigin,
 } from '@hubspot/local-dev-lib/urls';
-import { getAccountConfig } from '@hubspot/local-dev-lib/config';
+import { getConfigAccountById } from '@hubspot/local-dev-lib/config';
 import { ProjectConfig } from '../types/Projects';
 import { IntermediateRepresentationNodeLocalDev } from '@hubspot/project-parsing-lib/src/lib/types';
 
@@ -55,7 +55,7 @@ class DevServerManagerV2 {
     setActiveApp: (appUid: string | undefined) => Promise<void>;
   }): Promise<void> {
     let env: Environment;
-    const accountConfig = getAccountConfig(accountId);
+    const accountConfig = getConfigAccountById(accountId);
     if (accountConfig) {
       env = accountConfig.env;
     }
