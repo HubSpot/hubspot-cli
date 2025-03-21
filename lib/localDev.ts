@@ -462,7 +462,8 @@ function projectUploadCallback(
 export async function createInitialBuildForNewProject(
   projectConfig: ProjectConfig,
   projectDir: string,
-  targetAccountId: number
+  targetAccountId: number,
+  sendIr?: boolean
 ): Promise<Build> {
   const { result: initialUploadResult, uploadError } =
     await handleProjectUpload<ProjectPollResult>(
@@ -470,7 +471,8 @@ export async function createInitialBuildForNewProject(
       projectConfig,
       projectDir,
       projectUploadCallback,
-      i18n(`${i18nKey}.createInitialBuildForNewProject.initialUploadMessage`)
+      i18n(`${i18nKey}.createInitialBuildForNewProject.initialUploadMessage`),
+      sendIr
     );
 
   if (uploadError) {
