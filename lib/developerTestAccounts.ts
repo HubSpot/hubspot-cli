@@ -1,6 +1,5 @@
 import { HUBSPOT_ACCOUNT_TYPES } from '@hubspot/local-dev-lib/constants/config';
-import { getAccountId, getConfigAccounts } from '@hubspot/local-dev-lib/config';
-import { getAccountIdentifier } from '@hubspot/local-dev-lib/config/getAccountIdentifier';
+import { getAllConfigAccounts } from '@hubspot/local-dev-lib/config';
 import { fetchDeveloperTestAccounts } from '@hubspot/local-dev-lib/api/developerTestAccounts';
 import {
   isMissingScopeError,
@@ -8,7 +7,7 @@ import {
 } from '@hubspot/local-dev-lib/errors/index';
 import { logger } from '@hubspot/local-dev-lib/logger';
 import { getHubSpotWebsiteOrigin } from '@hubspot/local-dev-lib/urls';
-import { CLIAccount } from '@hubspot/local-dev-lib/types/Accounts';
+import { HubSpotConfigAccount } from '@hubspot/local-dev-lib/types/Accounts';
 
 import { i18n } from './lang';
 import { uiAccountDescription } from './ui';
@@ -17,21 +16,20 @@ import { FetchDeveloperTestAccountsResponse } from '@hubspot/local-dev-lib/types
 import { Environment } from '@hubspot/local-dev-lib/types/Config';
 
 export function getHasDevTestAccounts(
-  appDeveloperAccountConfig: CLIAccount
+  appDeveloperAccount: HubSpotConfigAccount
 ): boolean {
-  const id = getAccountIdentifier(appDeveloperAccountConfig);
-  const parentPortalId = getAccountId(id);
-  const accountsList = getConfigAccounts();
+  const parentAccountId = appDeveloperAccount.accountId;
+  const accountsList = getAllConfigAccounts();
 
   if (!accountsList) {
     return false;
   }
 
-  for (const portal of accountsList) {
+  for (const account of accountsList) {
     if (
-      Boolean(portal.parentAccountId) &&
-      portal.parentAccountId === parentPortalId &&
-      portal.accountType === HUBSPOT_ACCOUNT_TYPES.DEVELOPER_TEST
+      Boolean(account.parentAccountId) &&
+      account.parentAccountId === parentAccountId &&
+      account.accountType === HUBSPOT_ACCOUNT_TYPES.DEVELOPER_TEST
     ) {
       return true;
     }
@@ -40,14 +38,9 @@ export function getHasDevTestAccounts(
 }
 
 export async function validateDevTestAccountUsageLimits(
-  accountConfig: CLIAccount
+  account: HubSpotConfigAccount
 ): Promise<FetchDeveloperTestAccountsResponse | null> {
-  const id = getAccountIdentifier(accountConfig);
-  const accountId = getAccountId(id);
-
-  if (!accountId) {
-    return null;
-  }
+  const accountId = account.accountId;
 
   const { data } = await fetchDeveloperTestAccounts(accountId);
 
@@ -58,18 +51,18 @@ export async function validateDevTestAccountUsageLimits(
   const limit = data.maxTestPortals;
   const count = data.results.length;
   if (count >= limit) {
-    const hasDevTestAccounts = getHasDevTestAccounts(accountConfig);
+    const hasDevTestAccounts = getHasDevTestAccounts(account);
     if (hasDevTestAccounts) {
       throw new Error(
         i18n('lib.developerTestAccount.create.failure.alreadyInConfig', {
-          accountName: accountConfig.name || accountId,
+          accountName: account.name,
           limit,
         })
       );
     } else {
       throw new Error(
         i18n('lib.developerTestAccount.create.failure.limit', {
-          accountName: accountConfig.name || accountId,
+          accountName: account.name,
           limit,
         })
       );

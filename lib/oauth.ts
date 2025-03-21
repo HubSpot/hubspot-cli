@@ -1,14 +1,12 @@
 import express from 'express';
 import open from 'open';
 import { OAuth2Manager } from '@hubspot/local-dev-lib/models/OAuth2Manager';
-import { getAccountConfig } from '@hubspot/local-dev-lib/config';
-import { getAccountIdentifier } from '@hubspot/local-dev-lib/config/getAccountIdentifier';
 import { addOauthToAccountConfig } from '@hubspot/local-dev-lib/oauth';
 import { getHubSpotWebsiteOrigin } from '@hubspot/local-dev-lib/urls';
 import { logger } from '@hubspot/local-dev-lib/logger';
 import { ENVIRONMENTS } from '@hubspot/local-dev-lib/constants/environments';
 import { DEFAULT_OAUTH_SCOPES } from '@hubspot/local-dev-lib/constants/auth';
-import { OAuth2ManagerAccountConfig } from '@hubspot/local-dev-lib/types/Accounts';
+import { OAuthConfigAccount } from '@hubspot/local-dev-lib/types/Accounts';
 import { Server } from 'http';
 
 import { handleExit } from './process';
@@ -23,8 +21,7 @@ const i18nKey = 'lib.oauth';
 function buildAuthUrl(oauthManager: OAuth2Manager): string {
   const {
     env: accountEnv,
-    clientId,
-    scopes: accountScopes,
+    auth: { clientId, scopes: accountScopes },
   } = oauthManager.account;
 
   const env = accountEnv || ENVIRONMENTS.PROD;
@@ -67,8 +64,8 @@ async function authorize(oauthManager: OAuth2Manager): Promise<void> {
       if (req.query.code) {
         const authCodeProof = {
           grant_type: 'authorization_code',
-          client_id: oauthManager.account.clientId,
-          client_secret: oauthManager.account.clientSecret,
+          client_id: oauthManager.account.auth.clientId,
+          client_secret: oauthManager.account.auth.clientSecret,
           redirect_uri: redirectUri,
           code: req.query.code,
         };
@@ -104,19 +101,10 @@ async function authorize(oauthManager: OAuth2Manager): Promise<void> {
   });
 }
 
-function setupOauth(accountConfig: OAuth2ManagerAccountConfig): OAuth2Manager {
-  const accountId = getAccountIdentifier(accountConfig);
-  const config = getAccountConfig(accountId);
-  return new OAuth2Manager({
-    ...accountConfig,
-    env: accountConfig.env || config?.env || ENVIRONMENTS.PROD,
-  });
-}
-
 export async function authenticateWithOauth(
-  accountConfig: OAuth2ManagerAccountConfig
+  account: OAuthConfigAccount
 ): Promise<void> {
-  const oauthManager = setupOauth(accountConfig);
+  const oauthManager = new OAuth2Manager(account);
   logger.log('Authorizing');
   await authorize(oauthManager);
   addOauthToAccountConfig(oauthManager);

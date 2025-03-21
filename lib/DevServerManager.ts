@@ -1,5 +1,4 @@
 import { logger } from '@hubspot/local-dev-lib/logger';
-import { Environment } from '@hubspot/local-dev-lib/types/Config';
 import { i18n } from './lang';
 import { promptUser } from './prompts/promptUtils';
 import { DevModeInterface as UIEDevModeInterface } from '@hubspot/ui-extensions-dev-server';
@@ -12,7 +11,7 @@ import {
   getHubSpotApiOrigin,
   getHubSpotWebsiteOrigin,
 } from '@hubspot/local-dev-lib/urls';
-import { getAccountConfig } from '@hubspot/local-dev-lib/config';
+import { getConfigAccountById } from '@hubspot/local-dev-lib/config';
 import { ProjectConfig, ComponentTypes, Component } from '../types/Projects';
 
 const i18nKey = 'lib.DevServerManager';
@@ -114,11 +113,10 @@ class DevServerManager {
     setActiveApp: (appUid: string | undefined) => Promise<void>;
   }): Promise<void> {
     this.componentsByType = this.arrangeComponentsByType(components);
-    let env: Environment;
-    const accountConfig = getAccountConfig(accountId);
-    if (accountConfig) {
-      env = accountConfig.env;
-    }
+
+    const account = getConfigAccountById(accountId);
+    const env = account.env;
+
     await startPortManagerServer();
     await this.iterateDevServers(
       async (serverInterface, compatibleComponents) => {

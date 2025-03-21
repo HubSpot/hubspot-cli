@@ -1,7 +1,7 @@
 import { trackUsage } from '@hubspot/local-dev-lib/trackUsage';
 import {
-  isTrackingAllowed,
-  getAccountConfig,
+  getConfig,
+  getConfigAccountIfExists,
 } from '@hubspot/local-dev-lib/config';
 import { API_KEY_AUTH_METHOD } from '@hubspot/local-dev-lib/constants/auth';
 import { logger } from '@hubspot/local-dev-lib/logger';
@@ -57,16 +57,18 @@ export async function trackCommandUsage(
   meta: Meta = {},
   accountId?: number
 ): Promise<void> {
-  if (!isTrackingAllowed()) {
+  const config = getConfig();
+
+  if (!config.allowUsageTracking) {
     return;
   }
   logger.debug('Attempting to track usage of "%s" command', command);
   let authType = 'unknown';
   if (accountId) {
-    const accountConfig = getAccountConfig(accountId);
+    const account = getConfigAccountIfExists(accountId);
     authType =
-      accountConfig && accountConfig.authType
-        ? accountConfig.authType
+      account && account.authType
+        ? account.authType
         : API_KEY_AUTH_METHOD.value;
   }
   setImmediate(async () => {
@@ -94,7 +96,9 @@ export async function trackCommandUsage(
 }
 
 export async function trackHelpUsage(command: string): Promise<void> {
-  if (!isTrackingAllowed()) {
+  const config = getConfig();
+
+  if (!config.allowUsageTracking) {
     return;
   }
   try {
@@ -116,7 +120,9 @@ export async function trackHelpUsage(command: string): Promise<void> {
 }
 
 export async function trackConvertFieldsUsage(command: string): Promise<void> {
-  if (!isTrackingAllowed()) {
+  const config = getConfig();
+
+  if (!config.allowUsageTracking) {
     return;
   }
   try {
@@ -139,7 +145,9 @@ export async function trackAuthAction(
   step: string,
   accountId: number
 ): Promise<void> {
-  if (!isTrackingAllowed()) {
+  const config = getConfig();
+
+  if (!config.allowUsageTracking) {
     return;
   }
   const usageTrackingEvent = {
@@ -170,16 +178,18 @@ export async function trackCommandMetadataUsage(
   meta: Meta = {},
   accountId?: number
 ): Promise<void> {
-  if (!isTrackingAllowed()) {
+  const config = getConfig();
+
+  if (!config.allowUsageTracking) {
     return;
   }
   logger.debug('Attempting to track metadata usage of "%s" command', command);
   let authType = 'unknown';
   if (accountId) {
-    const accountConfig = getAccountConfig(accountId);
+    const account = getConfigAccountIfExists(accountId);
     authType =
-      accountConfig && accountConfig.authType
-        ? accountConfig.authType
+      account && account.authType
+        ? account.authType
         : API_KEY_AUTH_METHOD.value;
   }
   setImmediate(async () => {

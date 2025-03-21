@@ -3,12 +3,9 @@ import {
   updateConfigWithAccessToken,
 } from '@hubspot/local-dev-lib/personalAccessKey';
 import {
-  accountNameExistsInConfig,
-  updateAccountConfig,
-  writeConfig,
-  getAccountId,
+  getConfigAccountIfExists,
+  updateConfigAccount,
 } from '@hubspot/local-dev-lib/config';
-import { getAccountIdentifier } from '@hubspot/local-dev-lib/config/getAccountIdentifier';
 import { logger } from '@hubspot/local-dev-lib/logger';
 import { createDeveloperTestAccount } from '@hubspot/local-dev-lib/api/developerTestAccounts';
 import { HUBSPOT_ACCOUNT_TYPES } from '@hubspot/local-dev-lib/constants/config';
@@ -23,7 +20,7 @@ import { debugError, logError } from './errorHandlers/index';
 
 import { SANDBOX_API_TYPE_MAP, handleSandboxCreateError } from './sandboxes';
 import { handleDeveloperTestAccountCreateError } from './developerTestAccounts';
-import { CLIAccount } from '@hubspot/local-dev-lib/types/Accounts';
+import { HubSpotConfigAccount } from '@hubspot/local-dev-lib/types/Accounts';
 import { DeveloperTestAccount } from '@hubspot/local-dev-lib/types/developerTestAccounts';
 import { SandboxResponse } from '@hubspot/local-dev-lib/types/Sandbox';
 import { SandboxAccountType } from '../types/Sandboxes';
@@ -54,8 +51,8 @@ export async function saveAccountToConfig(
   if (!updatedConfig?.name) {
     const nameForConfig = accountName.toLowerCase().split(' ').join('-');
     validName = nameForConfig;
-    const invalidAccountName = accountNameExistsInConfig(nameForConfig);
-    if (invalidAccountName) {
+    const exitingAccount = getConfigAccountIfExists(nameForConfig);
+    if (exitingAccount) {
       if (!force) {
         logger.log('');
         logger.warn(
@@ -74,13 +71,14 @@ export async function saveAccountToConfig(
     }
   }
 
-  updateAccountConfig({
+  updateConfigAccount({
     ...updatedConfig,
-    env: updatedConfig?.env,
-    tokenInfo: updatedConfig?.auth?.tokenInfo,
+    auth: {
+      ...updatedConfig.auth,
+      tokenInfo: updatedConfig.auth.tokenInfo,
+    },
     name: validName,
   });
-  writeConfig();
 
   logger.log('');
   return validName;
@@ -88,14 +86,13 @@ export async function saveAccountToConfig(
 
 export async function buildDeveloperTestAccount(
   testAccountName: string,
-  parentAccountConfig: CLIAccount,
+  parentAccount: HubSpotConfigAccount,
   env: Environment,
   portalLimit: number
 ): Promise<DeveloperTestAccount> {
   const i18nKey = 'lib.developerTestAccount.create.loading';
 
-  const id = getAccountIdentifier(parentAccountConfig);
-  const parentAccountId = getAccountId(id);
+  const parentAccountId = parentAccount.accountId;
 
   if (!parentAccountId) {
     throw new Error(i18n(`${i18nKey}.fail`));
@@ -156,7 +153,7 @@ type SandboxAccount = SandboxResponse & {
 
 export async function buildSandbox(
   sandboxName: string,
-  parentAccountConfig: CLIAccount,
+  parentAccount: HubSpotConfigAccount,
   sandboxType: SandboxAccountType,
   env: Environment,
   force = false
@@ -168,8 +165,7 @@ export async function buildSandbox(
     i18nKey = 'lib.sandbox.create.loading.developer';
   }
 
-  const id = getAccountIdentifier(parentAccountConfig);
-  const parentAccountId = getAccountId(id);
+  const parentAccountId = parentAccount.accountId;
 
   if (!parentAccountId) {
     throw new Error(i18n(`${i18nKey}.fail`));
