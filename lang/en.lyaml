@@ -583,10 +583,30 @@ en:
           createAppPrompt: "Proceed with migrating this app to a project component (this process can't be aborted)?"
           projectDetailsLink: "View project details in your developer account"
           errors:
+            noApps: "No apps found in account {{ accountId }}"
+            noAppsEligible: "No apps in account {{ accountId }} are eligible for migration"
             invalidAccountTypeTitle: "{{#bold}}Developer account not targeted{{/bold}}"
             invalidAccountTypeDescription: "Only public apps created in a developer account can be converted to a project component. Select a connected developer account with {{useCommand}} or {{authCommand}} and try again."
             projectAlreadyExists: "A project with name {{ projectName }} already exists. Please choose another name."
             invalidApp: "Could not migrate appId {{ appId }}. This app cannot be migrated at this time. Please choose another public app."
+          prompt:
+            chooseApp: 'Choose the app you want to migrate: '
+            inputName: '[--name] Enter the name for the project'
+            inputDest: '[--dest] Where do you want to save the project?'
+            uidForComponent: "Enter a UID for {{ componentName }}:"
+          spinners:
+            beginningMigration: "Beginning migration"
+            migrationStarted: "Migration started"
+            unableToStartMigration: "Unable to begin migration"
+            finishingMigration: "Finishing migration"
+            migrationComplete: "Migration complete"
+            migrationFailed: "Migration failed"
+            downloadingProjectContents: "Fetching migrated project"
+            downloadingProjectContentsComplete: "Fetching migrated project complete"
+            downloadingProjectContentsFailed: "Unable to fetch migrated project"
+          migrationFailureReasons:
+            upToDate: 'App is already up to date'
+            generic: "Unable to migrate app: {{ reasonCode }}"
         cloneApp:
           describe: "Clone a public app using the projects framework."
           examples:
