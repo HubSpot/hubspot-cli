@@ -7,6 +7,7 @@ import {
 } from '@hubspot/local-dev-lib/constants/auth';
 import { ENVIRONMENTS } from '@hubspot/local-dev-lib/constants/environments';
 import { DEFAULT_HUBSPOT_CONFIG_YAML_FILE_NAME } from '@hubspot/local-dev-lib/constants/config';
+import { AccessToken, CLIAccount } from '@hubspot/local-dev-lib/types/Accounts';
 import { i18n } from '../lib/lang';
 import {
   getAccessToken,
@@ -26,6 +27,7 @@ import {
   personalAccessKeyPrompt,
   OAUTH_FLOW,
   OauthPromptResponse,
+  PersonalAccessKeyPromptResponse,
 } from '../lib/prompts/personalAccessKeyPrompt';
 import { cliAccountNamePrompt } from '../lib/prompts/accountNamePrompt';
 import { setAsDefaultAccountPrompt } from '../lib/prompts/setAsDefaultAccountPrompt';
@@ -40,7 +42,12 @@ import { authenticateWithOauth } from '../lib/oauth';
 import { EXIT_CODES } from '../lib/enums/exitCodes';
 import { uiFeatureHighlight } from '../lib/ui';
 import { logError } from '../lib/errorHandlers/index';
-import { CommonArgs, ConfigArgs, TestingArgs } from '../types/Yargs';
+import {
+  AccountArgs,
+  CommonArgs,
+  ConfigArgs,
+  TestingArgs,
+} from '../types/Yargs';
 
 const i18nKey = 'commands.auth';
 
@@ -64,9 +71,9 @@ export const describe = i18n(`${i18nKey}.describe`, {
 
 type AuthArgs = CommonArgs &
   ConfigArgs &
-  TestingArgs & {
+  TestingArgs &
+  AccountArgs & {
     authType?: string;
-    account?: string;
   };
 
 export async function handler(
@@ -97,19 +104,17 @@ export async function handler(
   }
 
   trackCommandUsage('auth');
-  trackAuthAction(
-    'auth',
-    authType,
-    TRACKING_STATUS.STARTED,
-    providedAccountId!
-  );
+  trackAuthAction('auth', authType, TRACKING_STATUS.STARTED, providedAccountId);
 
-  let configData;
-  let updatedConfig;
-  let validName;
-  let successAuthMethod;
-  let token;
-  let defaultName;
+  let configData:
+    | OauthPromptResponse
+    | PersonalAccessKeyPromptResponse
+    | undefined;
+  let updatedConfig: CLIAccount | null | undefined;
+  let validName: string | undefined;
+  let successAuthMethod: string | undefined;
+  let token: AccessToken | undefined;
+  let defaultName: string | undefined;
 
   switch (authType) {
     case OAUTH_AUTH_METHOD.value:
@@ -175,7 +180,7 @@ export async function handler(
       'auth',
       authType,
       TRACKING_STATUS.ERROR,
-      providedAccountId!
+      providedAccountId
     );
     process.exit(EXIT_CODES.ERROR);
   }

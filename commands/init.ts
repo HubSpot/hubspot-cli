@@ -10,7 +10,10 @@ import {
   configFileExists,
 } from '@hubspot/local-dev-lib/config';
 import { Environment } from '@hubspot/local-dev-lib/types/Config';
-import { OAuth2ManagerAccountConfig } from '@hubspot/local-dev-lib/types/Accounts';
+import {
+  CLIAccount,
+  OAuth2ManagerAccountConfig,
+} from '@hubspot/local-dev-lib/types/Accounts';
 import { addConfigOptions, addGlobalOptions } from '../lib/commonOpts';
 import { handleExit } from '../lib/process';
 import { checkAndAddConfigToGitignore } from '@hubspot/local-dev-lib/gitignore';
@@ -41,7 +44,12 @@ import { cliAccountNamePrompt } from '../lib/prompts/accountNamePrompt';
 import { authenticateWithOauth } from '../lib/oauth';
 import { EXIT_CODES } from '../lib/enums/exitCodes';
 import { uiFeatureHighlight } from '../lib/ui';
-import { ConfigArgs, CommonArgs, TestingArgs } from '../types/Yargs';
+import {
+  ConfigArgs,
+  CommonArgs,
+  TestingArgs,
+  AccountArgs,
+} from '../types/Yargs';
 import { getAccountIdentifier } from '@hubspot/local-dev-lib/config/getAccountIdentifier';
 import { CLIOptions } from '@hubspot/local-dev-lib/types/CLIOptions';
 
@@ -56,16 +64,16 @@ const TRACKING_STATUS = {
 async function personalAccessKeyConfigCreationFlow(
   env: Environment,
   account?: number
-) {
+): Promise<CLIAccount | null> {
   const { personalAccessKey } = await personalAccessKeyPrompt({ env, account });
-  let updatedConfig;
+  let updatedConfig: CLIAccount | null;
 
   try {
     const token = await getAccessToken(personalAccessKey, env);
     const defaultName = token.hubName ? toKebabCase(token.hubName) : undefined;
     const { name } = await cliAccountNamePrompt(defaultName);
 
-    updatedConfig = updateConfigWithAccessToken(
+    updatedConfig = await updateConfigWithAccessToken(
       token,
       personalAccessKey,
       env,
@@ -75,10 +83,13 @@ async function personalAccessKeyConfigCreationFlow(
   } catch (e) {
     logError(e);
   }
-  return updatedConfig;
+
+  return updatedConfig!;
 }
 
-async function oauthConfigCreationFlow(env: Environment) {
+async function oauthConfigCreationFlow(
+  env: Environment
+): Promise<OAuth2ManagerAccountConfig> {
   const configData = await promptUser<OauthPromptResponse>(OAUTH_FLOW);
   const accountConfig: OAuth2ManagerAccountConfig = {
     ...configData,
@@ -101,9 +112,9 @@ export const describe = i18n(`${i18nKey}.describe`, {
 
 type InitArgs = CommonArgs &
   ConfigArgs &
-  TestingArgs & {
+  TestingArgs &
+  AccountArgs & {
     authType?: string;
-    account?: string;
     'disable-tracking'?: boolean;
     'use-hidden-config'?: boolean;
   };
@@ -150,7 +161,7 @@ export async function handler(
       'init',
       authType,
       TRACKING_STATUS.STARTED,
-      providedAccountId!
+      providedAccountId
     );
   }
 
@@ -163,12 +174,7 @@ export async function handler(
     process.exit(EXIT_CODES.ERROR);
   }
 
-  trackAuthAction(
-    'init',
-    authType,
-    TRACKING_STATUS.STARTED,
-    providedAccountId!
-  );
+  trackAuthAction('init', authType, TRACKING_STATUS.STARTED, providedAccountId);
   createEmptyConfigFile({ path: configPath! }, useHiddenConfig);
   //Needed to load deprecated config
   loadConfig(configPath!, args as CLIOptions);
@@ -177,7 +183,7 @@ export async function handler(
 
   try {
     let accountId: number;
-    let name;
+    let name: string | undefined;
     if (authType === PERSONAL_ACCESS_KEY_AUTH_METHOD.value) {
       const personalAccessKeyResult = await personalAccessKeyConfigCreationFlow(
         env,
@@ -234,7 +240,7 @@ export async function handler(
         'init',
         authType,
         TRACKING_STATUS.ERROR,
-        providedAccountId!
+        providedAccountId
       );
     }
     process.exit(EXIT_CODES.ERROR);

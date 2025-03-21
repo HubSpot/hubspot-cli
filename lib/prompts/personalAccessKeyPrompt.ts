@@ -18,7 +18,7 @@ import { PromptConfig } from '../../types/Prompts';
 
 const i18nKey = 'lib.prompts.personalAccessKeyPrompt';
 
-type PersonalAccessKeyPromptResponse = {
+export type PersonalAccessKeyPromptResponse = {
   personalAccessKey: string;
   env: string;
 };
