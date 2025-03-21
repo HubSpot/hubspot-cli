@@ -1260,12 +1260,12 @@ en:
         debug:
           describe: "Set log level to debug"
     configMigrate:
-      migrateConfigPrompt: "Migrate from the deprecated config file at {{ deprecatedConfigPath }} to the new global config file at {{ globalConfigPath }}? (This action will delete the deprecated config file)."
-      mergeConfigConflictPrompt: "Overwrite the conflicting property in the global config? {{ property }}: {{ values }} "
-      mergeConfigsPrompt: "Two config files detected: A deprecated configuration file  at {{ deprecatedConfigPath }} and a global config at {{ globalConfigPath }}. Would you like to merge the two files? (This action will delete the deprecated config file)."
+      migrateConfigPrompt: "Migrate config?\n From deprecated config file: {{ deprecatedConfigPath }}\n To new global config file: {{ globalConfigPath }}\n (This action will delete the deprecated config file).\n"
+      mergeConfigConflictPrompt: "Overwrite the conflicting property in the global config?\n {{ property }}: {{ values }} "
+      mergeConfigsPrompt: "Two config files detected. Merge them?\n Deprecated config file: {{ deprecatedConfigPath }}\n Global config: {{ globalConfigPath }}\n (This action will delete the deprecated config file).\n"
       migrationSuccess: "The deprecated config file has been migrated to the new global config file at {{ globalConfigPath }}."
       mergeSuccess: "The deprecated config file has been merged with the global config file at {{ globalConfigPath }}."
-      skippedExistingAccounts: "The following accounts were not merged, because they already exist in the global config: {{ skippedAccountIds }}."
+      skippedExistingAccounts: "\nThe following accounts were not merged, because they already exist in the global config: {{ skippedAccountIds }}.\n"
     prompts:
       projectDevTargetAccountPrompt:
         createNewSandboxOption: "<Test on a new development sandbox>"

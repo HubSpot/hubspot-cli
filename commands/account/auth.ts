@@ -110,7 +110,6 @@ export async function handler(
     if (globalConfigExists) {
       try {
         await handleMerge();
-        process.exit(EXIT_CODES.SUCCESS);
       } catch (error) {
         logError(error);
         process.exit(EXIT_CODES.ERROR);
@@ -118,7 +117,6 @@ export async function handler(
     } else {
       try {
         await handleMigration();
-        process.exit(EXIT_CODES.SUCCESS);
       } catch (error) {
         logError(error);
         process.exit(EXIT_CODES.ERROR);
