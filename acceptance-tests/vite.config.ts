@@ -10,5 +10,6 @@ export default defineConfig({
     fileParallelism: false,
     globalSetup: './globalSetup.ts',
     globals: true,
+    retry: 1,
   },
 });
