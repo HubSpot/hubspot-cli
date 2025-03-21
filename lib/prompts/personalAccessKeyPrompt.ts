@@ -3,7 +3,7 @@ import {
   OAUTH_SCOPES,
   DEFAULT_OAUTH_SCOPES,
 } from '@hubspot/local-dev-lib/constants/auth';
-import { deleteEmptyConfigFile } from '@hubspot/local-dev-lib/config';
+import { deleteConfigFile } from '@hubspot/local-dev-lib/config';
 import { getHubSpotWebsiteOrigin } from '@hubspot/local-dev-lib/urls';
 import { logger } from '@hubspot/local-dev-lib/logger';
 import { promptUser } from './promptUtils';
@@ -67,7 +67,7 @@ export async function personalAccessKeyPrompt({
     if (shouldOpen) {
       open(url, { url: true });
     } else {
-      deleteEmptyConfigFile();
+      deleteConfigFile();
       process.exit(EXIT_CODES.SUCCESS);
     }
   }
