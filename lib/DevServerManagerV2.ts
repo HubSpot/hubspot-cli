@@ -1,5 +1,4 @@
 import { logger } from '@hubspot/local-dev-lib/logger';
-import { Environment } from '@hubspot/local-dev-lib/types/Config';
 import { i18n } from './lang';
 import { promptUser } from './prompts/promptUtils';
 import { DevModeUnifiedInterface as UIEDevModeInterface } from '@hubspot/ui-extensions-dev-server';
@@ -54,11 +53,9 @@ class DevServerManagerV2 {
     accountId: number;
     setActiveApp: (appUid: string | undefined) => Promise<void>;
   }): Promise<void> {
-    let env: Environment;
-    const accountConfig = getConfigAccountById(accountId);
-    if (accountConfig) {
-      env = accountConfig.env;
-    }
+    const account = getConfigAccountById(accountId);
+    const env = account.env;
+
     await startPortManagerServer();
     await this.iterateDevServers(async serverInterface => {
       if (serverInterface.setup) {
