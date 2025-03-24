@@ -41,29 +41,25 @@ export async function handler(
   const deprecatedConfigExists = configFileExists(false, configPath);
   const globalConfigExists = configFileExists(true);
 
-  if (!globalConfigExists && deprecatedConfigExists) {
-    try {
-      await handleMigration(configPath);
-      process.exit(EXIT_CODES.SUCCESS);
-    } catch (error) {
-      logError(error);
-      process.exit(EXIT_CODES.ERROR);
-    }
-  } else if (globalConfigExists && deprecatedConfigExists) {
-    try {
-      await handleMerge(configPath, force);
-      process.exit(EXIT_CODES.SUCCESS);
-    } catch (error) {
-      logError(error);
-      process.exit(EXIT_CODES.ERROR);
-    }
-  } else if (globalConfigExists && !deprecatedConfigExists) {
+  if (!deprecatedConfigExists) {
     logger.log(
       i18n(`${i18nKey}.migrationAlreadyCompleted`, {
-        globalConfigPath: GLOBAL_CONFIG_PATH,
+        deprecatedConfigPath: DEFAULT_HUBSPOT_CONFIG_YAML_FILE_NAME,
       })
     );
     process.exit(EXIT_CODES.SUCCESS);
+  }
+
+  try {
+    if (!globalConfigExists) {
+      await handleMigration(configPath);
+    } else {
+      await handleMerge(configPath, force);
+    }
+    process.exit(EXIT_CODES.SUCCESS);
+  } catch (error) {
+    logError(error);
+    process.exit(EXIT_CODES.ERROR);
   }
 }
 

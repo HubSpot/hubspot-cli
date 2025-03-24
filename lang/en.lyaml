@@ -135,7 +135,7 @@ en:
       subcommands:
         migrate:
           describe: "Migrate from the deprecated {{ deprecatedConfigPath }} file to the new global config file at {{ globalConfigPath }}."
-          migrationAlreadyCompleted: "A global configuration file already exists at {{ globalConfigPath }}. No migration necessary."
+          migrationAlreadyCompleted: "No {{ deprecatedConfigPath }} deprecated configuration file found. No migration necessary."
           errors:
             configNotFound: "A configuration file at {{ configPath }} could not be found. Please try again with a valid file path."
           options:
