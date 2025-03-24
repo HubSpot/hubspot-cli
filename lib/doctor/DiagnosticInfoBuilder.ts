@@ -11,15 +11,16 @@ import {
 } from '@hubspot/local-dev-lib/types/Accounts';
 import { Project } from '@hubspot/local-dev-lib/types/Project';
 import {
-  getAccountId,
   isConfigFlagEnabled,
+  getConfigDefaultAccountIfExists,
+  getConfigFilePath,
 } from '@hubspot/local-dev-lib/config';
-import { getAccountConfig, getConfigPath } from '@hubspot/local-dev-lib/config';
 import { getAccessToken } from '@hubspot/local-dev-lib/personalAccessKey';
 import { walk } from '@hubspot/local-dev-lib/fs';
 import util from 'util';
 import { exec as execAsync } from 'child_process';
 import process from 'process';
+import { PERSONAL_ACCESS_KEY_AUTH_METHOD } from '@hubspot/local-dev-lib/constants/auth';
 
 export type ProjectConfig = Awaited<ReturnType<typeof getProjectConfig>>;
 
@@ -69,7 +70,7 @@ const configFiles = [
 ];
 
 export class DiagnosticInfoBuilder {
-  accountId: number | null;
+  accountId: number | undefined;
   readonly configSettings: { [key: string]: unknown };
   readonly env?: Environment;
   readonly authType?: AuthType;
@@ -82,15 +83,18 @@ export class DiagnosticInfoBuilder {
   readonly processInfo: NodeJS.Process;
 
   constructor(processInfo: NodeJS.Process) {
-    this.accountId = getAccountId();
-    const accountConfig = getAccountConfig(this.accountId!);
+    const account = getConfigDefaultAccountIfExists();
+    this.accountId = account?.accountId;
     this.configSettings = {
       httpUseLocalhost: isConfigFlagEnabled('httpUseLocalhost'),
     };
-    this.env = accountConfig?.env;
-    this.authType = accountConfig?.authType;
-    this.accountType = accountConfig?.accountType;
-    this.personalAccessKey = accountConfig?.personalAccessKey;
+    this.env = account?.env;
+    this.authType = account?.authType;
+    this.accountType = account?.accountType;
+    this.personalAccessKey =
+      account?.authType === PERSONAL_ACCESS_KEY_AUTH_METHOD.value
+        ? account?.personalAccessKey
+        : undefined;
     this.processInfo = processInfo;
   }
 
@@ -117,7 +121,7 @@ export class DiagnosticInfoBuilder {
       platform,
       arch,
       path: mainModule?.path,
-      config: getConfigPath(),
+      config: getConfigFilePath(),
       configSettings: this.configSettings,
       versions: {
         [hubspotCli]: pkg.version,

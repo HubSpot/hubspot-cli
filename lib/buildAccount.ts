@@ -51,8 +51,8 @@ export async function saveAccountToConfig(
   if (!updatedConfig?.name) {
     const nameForConfig = accountName.toLowerCase().split(' ').join('-');
     validName = nameForConfig;
-    const exitingAccount = getConfigAccountIfExists(nameForConfig);
-    if (exitingAccount) {
+    const existingAccount = getConfigAccountIfExists(nameForConfig);
+    if (existingAccount) {
       if (!force) {
         logger.log('');
         logger.warn(

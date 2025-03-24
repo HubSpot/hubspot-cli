@@ -1,4 +1,4 @@
-import { accountNameExistsInConfig } from '@hubspot/local-dev-lib/config';
+import { getConfigAccountIfExists } from '@hubspot/local-dev-lib/config';
 import { promptUser } from './promptUtils';
 import { i18n } from '../lang';
 import { PromptConfig } from '../../types/Prompts';
@@ -26,7 +26,7 @@ export function getCliAccountNamePromptConfig(
       } else if (val.indexOf(' ') >= 0) {
         return i18n(`${i18nKey}.errors.spacesInName`);
       }
-      return accountNameExistsInConfig(val)
+      return Boolean(getConfigAccountIfExists(val))
         ? i18n(`${i18nKey}.errors.accountNameExists`, { name: val })
         : true;
     },
@@ -79,7 +79,7 @@ export function hubspotAccountNamePrompt({
         } else if (!val.trim().length) {
           return i18n(`${i18nKey}.errors.nameRequired`);
         }
-        return accountNameExistsInConfig(val)
+        return Boolean(getConfigAccountIfExists(val))
           ? i18n(`${i18nKey}.errors.accountNameExists`, { name: val })
           : true;
       },

@@ -1,21 +1,20 @@
 import {
-  getConfigDefaultAccount,
-  getConfigAccounts,
+  getConfigDefaultAccountIfExists,
+  getAllConfigAccounts,
 } from '@hubspot/local-dev-lib/config';
-import { getAccountIdentifier } from '@hubspot/local-dev-lib/config/getAccountIdentifier';
 import { promptUser } from './promptUtils';
 import { i18n } from '../lang';
 import { uiAccountDescription } from '../ui';
-import { CLIAccount } from '@hubspot/local-dev-lib/types/Accounts';
+import { HubSpotConfigAccount } from '@hubspot/local-dev-lib/types/Accounts';
 import { PromptChoices } from '../../types/Prompts';
 
 function mapAccountChoices(
-  portals: CLIAccount[] | null | undefined
+  portals: HubSpotConfigAccount[] | null | undefined
 ): PromptChoices {
   return (
     portals?.map(p => ({
-      name: uiAccountDescription(getAccountIdentifier(p), false),
-      value: String(p.name || getAccountIdentifier(p)),
+      name: uiAccountDescription(p.accountId, false),
+      value: p.name,
     })) || []
   );
 }
@@ -23,8 +22,8 @@ function mapAccountChoices(
 const i18nKey = 'commands.account.subcommands.use';
 
 export async function selectAccountFromConfig(prompt = ''): Promise<string> {
-  const accountsList = getConfigAccounts();
-  const defaultAccount = getConfigDefaultAccount();
+  const accountsList = getAllConfigAccounts();
+  const defaultAccount = getConfigDefaultAccountIfExists();
 
   const { default: selectedDefault } = await promptUser<{ default: string }>([
     {
@@ -33,7 +32,7 @@ export async function selectAccountFromConfig(prompt = ''): Promise<string> {
       pageSize: 20,
       message: prompt || i18n(`${i18nKey}.promptMessage`),
       choices: mapAccountChoices(accountsList),
-      default: defaultAccount ?? undefined,
+      default: defaultAccount?.name,
     },
   ]);
 

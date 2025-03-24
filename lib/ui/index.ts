@@ -1,5 +1,5 @@
 import chalk from 'chalk';
-import { getAccountConfig } from '@hubspot/local-dev-lib/config';
+import { getConfigAccountIfExists } from '@hubspot/local-dev-lib/config';
 import { logger } from '@hubspot/local-dev-lib/logger';
 import { supportsHyperlinkModule } from './supportHyperlinks';
 import { supportsColor } from './supportsColor';
@@ -58,7 +58,11 @@ export function uiAccountDescription(
   accountId?: number | null,
   bold = true
 ): string {
-  const account = getAccountConfig(accountId || undefined);
+  if (!accountId) {
+    return '';
+  }
+
+  const account = getConfigAccountIfExists(accountId);
   let message;
   if (account && account.accountType) {
     message = `${account.name} [${

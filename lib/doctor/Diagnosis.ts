@@ -7,7 +7,7 @@ const { i18n } = require('../lang');
 
 interface DiagnosisOptions {
   diagnosticInfo: DiagnosticInfo;
-  accountId: number | null;
+  accountId: number | undefined;
 }
 
 interface Section {
