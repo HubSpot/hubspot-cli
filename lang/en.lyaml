@@ -1261,7 +1261,7 @@ en:
           describe: "Set log level to debug"
     configMigrate:
       migrateConfigPrompt: "Migrate config?\n From deprecated config file: {{ deprecatedConfigPath }}\n To new global config file: {{ globalConfigPath }}\n (This action will delete the deprecated config file).\n"
-      mergeConfigConflictPrompt: "Overwrite the conflicting property in the global config?\n {{ property }}: {{ values }} "
+      mergeConfigConflictPrompt: "Change the {{ property }} property in the global config from {{ oldValue }} to {{ newValue }}?"
       mergeConfigsPrompt: "Two config files detected. Merge them?\n Deprecated config file: {{ deprecatedConfigPath }}\n Global config: {{ globalConfigPath }}\n (This action will delete the deprecated config file).\n"
       migrationSuccess: "The deprecated config file has been migrated to the new global config file at {{ globalConfigPath }}."
       mergeSuccess: "The deprecated config file has been merged with the global config file at {{ globalConfigPath }}."

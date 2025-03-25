@@ -67,7 +67,8 @@ async function mergeConfigProperties(
         type: 'confirm',
         message: i18n(`${i18nKey}.mergeConfigConflictPrompt`, {
           property,
-          values: `${oldValue} (deprecated) vs ${newValue} (global)`,
+          oldValue: `${oldValue}`,
+          newValue: `${newValue}`,
         }),
       });
 
