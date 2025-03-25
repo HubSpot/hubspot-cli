@@ -45,11 +45,14 @@ en:
             idBased: "Create a new default account override file (.hs-account) in the current working directory, using the account with accountId \"1234567\""
             nameBased: "Create a new default account override file (.hs-account) in the current working directory, using the account with name \"MyAccount\""
         list:
-          accounts: "{{#bold}}Accounts{{/bold}}:"
-          defaultAccount: "{{#bold}}Default account{{/bold}}: {{ account }}"
           describe: "List names of accounts defined in config."
-          configPath: "{{#bold}}Config path{{/bold}}: {{ configPath }}"
-          overrideFilePath: "{{#bold}}Default account override file path{{/bold}}: {{ overrideFilePath }}"
+          accounts: "{{#bold}}Accounts{{/bold}}:"
+          defaultAccountTitle: "{{#bold}}Default Account{{/bold}}"
+          defaultAccount: "Account: {{ account }}"
+          configPath: "Source: {{ configPath }}"
+          overrideFilePathTitle: "{{#bold}}Default Account Override{{/bold}}"
+          overrideFilePath: "Source: {{ overrideFilePath }}"
+          overrideAccount: "Account: {{ account }}"
           labels:
             accountId: "Account ID"
             authType: "Auth Type"
@@ -97,6 +100,12 @@ en:
         info:
           accountId: "{{#bold}}Account ID{{/bold}}: {{ accountId }}"
           describe: "Print information about the default account, or about the account specified with the \"account\" option."
+          defaultAccountTitle: "{{#bold}}Default Account{{/bold}}"
+          defaultAccount: "Account: {{ account }}"
+          configPath: "Source: {{ configPath }}"
+          overrideFilePathTitle: "{{#bold}}Default Account Override{{/bold}}"
+          overrideFilePath: "Source: {{ overrideFilePath }}"
+          overrideAccount: "Account: {{ account }}"
           errors:
             notUsingPersonalAccessKey: "This command currently only supports fetching scopes for the personal access key auth type."
           examples:
