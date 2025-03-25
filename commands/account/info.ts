@@ -9,6 +9,7 @@ import {
 import { getAccessToken } from '@hubspot/local-dev-lib/personalAccessKey';
 import { addConfigOptions } from '../../lib/commonOpts';
 import { i18n } from '../../lib/lang';
+import { indent } from '../../lib/ui/index';
 import { getTableContents } from '../../lib/ui/table';
 import { CommonArgs, ConfigArgs } from '../../types/Yargs';
 
@@ -41,11 +42,19 @@ export async function handler(
     const configPath = getConfigPath();
     if (configPath) {
       logger.log(i18n(`${i18nKey}.defaultAccountTitle`));
-      logger.log(i18n(`${i18nKey}.configPath`, { configPath }));
       logger.log(
-        i18n(`${i18nKey}.defaultAccount`, {
-          account: getDisplayDefaultAccount(false)!,
-        })
+        indent(
+          i18n(`${i18nKey}.configPath`, {
+            configPath,
+          })
+        )
+      );
+      logger.log(
+        indent(
+          i18n(`${i18nKey}.defaultAccount`, {
+            account: getDisplayDefaultAccount(false)!,
+          })
+        )
       );
     }
 

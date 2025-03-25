@@ -192,3 +192,7 @@ export function uiDeprecatedMessage(
   uiDeprecatedTag(tag);
   logger.log();
 }
+
+export function indent(str: string, spacing?: string) {
+  return `${spacing || '  '}${str}`;
+}

@@ -9,6 +9,7 @@ import {
 import { getAccountIdentifier } from '@hubspot/local-dev-lib/config/getAccountIdentifier';
 import { CLIAccount } from '@hubspot/local-dev-lib/types/Accounts';
 import { addConfigOptions } from '../../lib/commonOpts';
+import { indent } from '../../lib/ui/index';
 import { getTableContents, getTableHeader } from '../../lib/ui/table';
 import { trackCommandUsage } from '../../lib/usageTracking';
 import { isSandbox, isDeveloperTestAccount } from '../../lib/accountTypes';
@@ -116,11 +117,13 @@ export async function handler(
   // If a default account is present in the config, display it
   if (configPath) {
     logger.log(i18n(`${i18nKey}.defaultAccountTitle`));
-    logger.log(i18n(`${i18nKey}.configPath`, { configPath }));
+    logger.log(indent(i18n(`${i18nKey}.configPath`, { configPath })));
     logger.log(
-      i18n(`${i18nKey}.defaultAccount`, {
-        account: getDisplayDefaultAccount(false)!,
-      })
+      indent(
+        i18n(`${i18nKey}.defaultAccount`, {
+          account: getDisplayDefaultAccount(false)!,
+        })
+      )
     );
     logger.log('');
   }
@@ -129,11 +132,15 @@ export async function handler(
   const overrideFilePath = getDefaultAccountOverrideFilePath();
   if (overrideFilePath) {
     logger.log(i18n(`${i18nKey}.overrideFilePathTitle`));
-    logger.log(i18n(`${i18nKey}.overrideFilePath`, { overrideFilePath }));
     logger.log(
-      i18n(`${i18nKey}.overrideAccount`, {
-        account: getDisplayDefaultAccount(true)!,
-      })
+      indent(i18n(`${i18nKey}.overrideFilePath`, { overrideFilePath }))
+    );
+    logger.log(
+      indent(
+        i18n(`${i18nKey}.overrideAccount`, {
+          account: getDisplayDefaultAccount(true)!,
+        })
+      )
     );
     logger.log('');
   }
