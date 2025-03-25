@@ -63,11 +63,15 @@ export async function handler(
     if (overrideFilePath) {
       logger.log('');
       logger.log(i18n(`${i18nKey}.overrideFilePathTitle`));
-      logger.log(i18n(`${i18nKey}.overrideFilePath`, { overrideFilePath }));
       logger.log(
-        i18n(`${i18nKey}.overrideAccount`, {
-          account: getDisplayDefaultAccount(true)!,
-        })
+        indent(i18n(`${i18nKey}.overrideFilePath`, { overrideFilePath }))
+      );
+      logger.log(
+        indent(
+          i18n(`${i18nKey}.overrideAccount`, {
+            account: getDisplayDefaultAccount(true)!,
+          })
+        )
       );
     }
 
