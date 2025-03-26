@@ -111,7 +111,7 @@ type PollTaskStatusFunction<T extends ProjectTask> = (
   taskName: string,
   taskId: number,
   deployedBuildId: number | null,
-  silenceLogs: boolean
+  silenceLogs?: boolean
 ) => Promise<T>;
 
 function makePollTaskStatusFunc<T extends ProjectTask>({
@@ -122,11 +122,11 @@ function makePollTaskStatusFunc<T extends ProjectTask>({
   linkToHubSpot,
 }: PollTaskStatusFunctionConfig<T>): PollTaskStatusFunction<T> {
   return async function (
-    accountId,
-    taskName,
-    taskId,
-    deployedBuildId = null,
-    silenceLogs = false
+    accountId: number,
+    taskName: string,
+    taskId: number,
+    deployedBuildId: number | null,
+    silenceLogs: boolean = false
   ) {
     const displayId = deployedBuildId || taskId;
 
