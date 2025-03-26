@@ -7,8 +7,8 @@ import {
   createEmptyConfigFile,
   deleteEmptyConfigFile,
   getConfigDefaultAccount,
-  configFileExists,
 } from '@hubspot/local-dev-lib/config';
+import { configFileExists } from '@hubspot/local-dev-lib/config/migrate';
 import { getAccountIdentifier } from '@hubspot/local-dev-lib/config/getAccountIdentifier';
 import { logger } from '@hubspot/local-dev-lib/logger';
 import {

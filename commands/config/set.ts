@@ -17,7 +17,7 @@ const i18nKey = 'commands.config.subcommands.set';
 export const command = 'set';
 export const describe = i18n(`${i18nKey}.describe`);
 
-async function selectOptions() {
+async function selectOptions(): Promise<ConfigSetArgs> {
   const { cmsPublishMode } = await promptUser([
     {
       type: 'list',

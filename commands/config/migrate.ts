@@ -4,7 +4,7 @@ import {
   DEFAULT_HUBSPOT_CONFIG_YAML_FILE_NAME,
   GLOBAL_CONFIG_PATH,
 } from '@hubspot/local-dev-lib/constants/config';
-import { configFileExists } from '@hubspot/local-dev-lib/config';
+import { configFileExists } from '@hubspot/local-dev-lib/config/migrate';
 import { logger } from '@hubspot/local-dev-lib/logger';
 
 import { handleMigration, handleMerge } from '../../lib/configMigrate';

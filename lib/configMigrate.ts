@@ -1,5 +1,6 @@
 import {
-  getConfig,
+  getDeprecatedConfig,
+  getGlobalConfig,
   getConfigPath,
   migrateConfig,
   mergeConfigProperties as _mergeConfigProperties,
@@ -37,8 +38,7 @@ export async function handleMigration(configPath?: string): Promise<void> {
     return;
   }
 
-  const deprecatedConfig = getConfig(false, configPath);
-  // @ts-ignore Cannot reconcile CLIConfig_NEW and CLIConfig_DEPRECATED
+  const deprecatedConfig = getDeprecatedConfig(configPath);
   migrateConfig(deprecatedConfig);
   logger.success(
     i18n(`${i18nKey}.migrationSuccess`, {
@@ -100,11 +100,14 @@ export async function handleMerge(
     return;
   }
 
-  const deprecatedConfig = getConfig(false, configPath);
-  const globalConfig = getConfig(true);
+  const deprecatedConfig = getDeprecatedConfig(configPath);
+  const globalConfig = getGlobalConfig();
+
+  if (!deprecatedConfig || !globalConfig) {
+    return;
+  }
 
   const mergedConfig = await mergeConfigProperties(
-    // @ts-ignore Cannot reconcile CLIConfig_NEW and CLIConfig_DEPRECATED
     globalConfig,
     deprecatedConfig,
     force
@@ -112,7 +115,6 @@ export async function handleMerge(
 
   const { skippedAccountIds } = mergeExistingConfigs(
     mergedConfig,
-    // @ts-ignore Cannot reconcile CLIConfig_NEW and CLIConfig_DEPRECATED
     deprecatedConfig
   );
 
