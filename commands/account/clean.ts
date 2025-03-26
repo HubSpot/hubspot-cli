@@ -1,12 +1,16 @@
+import fs from 'fs';
 import { Argv, ArgumentsCamelCase } from 'yargs';
 import { logger } from '@hubspot/local-dev-lib/logger';
 import { accessTokenForPersonalAccessKey } from '@hubspot/local-dev-lib/personalAccessKey';
 import {
   deleteAccount,
   getConfigAccounts,
+  getConfigDefaultAccount,
 } from '@hubspot/local-dev-lib/config';
 import { getAccountIdentifier } from '@hubspot/local-dev-lib/config/getAccountIdentifier';
 import { isSpecifiedError } from '@hubspot/local-dev-lib/errors/index';
+import { getDefaultAccountOverrideFilePath } from '@hubspot/local-dev-lib/config';
+
 import { trackCommandUsage } from '../../lib/usageTracking';
 import { i18n } from '../../lib/lang';
 import { EXIT_CODES } from '../../lib/enums/exitCodes';
@@ -94,22 +98,47 @@ export async function handler(
         { border: { bodyLeft: '  ' } }
       )
     );
+
+    let promptMessage = i18n(
+      oneAccountFound ? `${i18nKey}.confirm.one` : `${i18nKey}.confirm.other`,
+      {
+        count: accountsToRemove.length,
+      }
+    );
+    const overrideFilePath = getDefaultAccountOverrideFilePath();
+    if (overrideFilePath) {
+      const defaultAccount = getConfigDefaultAccount();
+
+      if (
+        defaultAccount &&
+        accountsToRemove.some(
+          account =>
+            account.name === defaultAccount ||
+            // @ts-ignore: Default account override files can only exist with global config
+            account.accountId === defaultAccount
+        )
+      ) {
+        promptMessage =
+          promptMessage +
+          i18n(`${i18nKey}.defaultAccountOverride`, {
+            overrideFilePath,
+          });
+      }
+    }
+
     const { accountsCleanPrompt } = await promptUser([
       {
         name: 'accountsCleanPrompt',
         type: 'confirm',
-        message: i18n(
-          oneAccountFound
-            ? `${i18nKey}.confirm.one`
-            : `${i18nKey}.confirm.other`,
-          {
-            count: accountsToRemove.length,
-          }
-        ),
+        message: promptMessage,
       },
     ]);
     if (accountsCleanPrompt) {
       logger.log('');
+      if (overrideFilePath) {
+        fs.unlinkSync(overrideFilePath);
+      }
+
       for (const accountToRemove of accountsToRemove) {
         await deleteAccount(accountToRemove.name!);
         logger.log(
