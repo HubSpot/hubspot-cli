@@ -5,6 +5,7 @@ import {
   getConfigAccounts,
   getDefaultAccountOverrideFilePath,
   getDisplayDefaultAccount,
+  getConfigDefaultAccount,
 } from '@hubspot/local-dev-lib/config';
 import { getAccountIdentifier } from '@hubspot/local-dev-lib/config/getAccountIdentifier';
 import { CLIAccount } from '@hubspot/local-dev-lib/types/Accounts';
@@ -126,7 +127,7 @@ export async function handler(
     logger.log(
       indent(1) +
         i18n(`${i18nKey}.defaultAccount`, {
-          account: getDisplayDefaultAccount(false)!,
+          account: getDisplayDefaultAccount()!,
         })
     );
     logger.log('');
@@ -142,7 +143,7 @@ export async function handler(
     logger.log(
       indent(1) +
         i18n(`${i18nKey}.overrideAccount`, {
-          account: getDisplayDefaultAccount(true)!,
+          account: getConfigDefaultAccount()!,
         })
     );
     logger.log('');

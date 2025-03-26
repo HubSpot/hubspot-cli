@@ -3,6 +3,7 @@ import { logger } from '@hubspot/local-dev-lib/logger';
 import {
   getAccountConfig,
   getDisplayDefaultAccount,
+  getConfigDefaultAccount,
   getDefaultAccountOverrideFilePath,
   getConfigPath,
 } from '@hubspot/local-dev-lib/config';
@@ -51,7 +52,7 @@ export async function handler(
       logger.log(
         indent(1) +
           i18n(`${i18nKey}.defaultAccount`, {
-            account: getDisplayDefaultAccount(false)!,
+            account: getDisplayDefaultAccount()!,
           })
       );
     }
@@ -67,7 +68,7 @@ export async function handler(
       logger.log(
         indent(1) +
           i18n(`${i18nKey}.overrideAccount`, {
-            account: getDisplayDefaultAccount(true)!,
+            account: getConfigDefaultAccount()!,
           })
       );
     }
