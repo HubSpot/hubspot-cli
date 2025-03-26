@@ -12,6 +12,26 @@ export type ConfigArgs = {
   config?: string;
 };
 
+export type AccountArgs = {
+  a?: string;
+  account?: string;
+};
+
+export type EnvironmentArgs = {
+  'use-env'?: string;
+};
+
+export type OverwriteArgs = Options & {
+  o?: boolean;
+  overwrite?: boolean;
+};
+
 export type StringArgType = Options & {
   type: 'string';
+};
+
+export type ProjectDevArgs = CommonArgs & ConfigArgs & EnvironmentArgs;
+
+export type TestingArgs = {
+  qa?: boolean;
 };

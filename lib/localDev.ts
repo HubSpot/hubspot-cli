@@ -53,6 +53,7 @@ import {
   ProjectPollResult,
   ProjectSubtask,
 } from '../types/Projects';
+import { ProjectDevTargetAccountPromptResponse } from '../types/Prompts';
 import { FileResult } from 'tmp';
 import { Build } from '@hubspot/local-dev-lib/types/Build';
 
@@ -173,7 +174,7 @@ export async function suggestRecommendedNestedAccount(
   accounts: CLIAccount[],
   accountConfig: CLIAccount,
   hasPublicApps: boolean
-) {
+): Promise<ProjectDevTargetAccountPromptResponse> {
   logger.log();
   uiLine();
   if (hasPublicApps) {
@@ -470,7 +471,8 @@ function projectUploadCallback(
 export async function createInitialBuildForNewProject(
   projectConfig: ProjectConfig,
   projectDir: string,
-  targetAccountId: number
+  targetAccountId: number,
+  sendIr?: boolean
 ): Promise<Build> {
   const { result: initialUploadResult, uploadError } =
     await handleProjectUpload<ProjectPollResult>(
@@ -478,7 +480,8 @@ export async function createInitialBuildForNewProject(
       projectConfig,
       projectDir,
       projectUploadCallback,
-      i18n(`${i18nKey}.createInitialBuildForNewProject.initialUploadMessage`)
+      i18n(`${i18nKey}.createInitialBuildForNewProject.initialUploadMessage`),
+      sendIr
     );
 
   if (uploadError) {

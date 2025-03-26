@@ -210,6 +210,7 @@ en:
         create:
           describe: "Create custom object instances."
           errors:
+            invalidObjectDefinition: "The object definition is invalid. Please check the schema and try again."
             creationFailed: "Object creation from {{ definition }} failed"
           options:
             path:
@@ -227,6 +228,7 @@ en:
             create:
               describe: "Create a custom object schema."
               errors:
+                invalidSchema: "The schema definition is invalid. Please check the schema and try again."
                 creationFailed: "Schema creation from {{ definition }} failed"
               options:
                 definition:
@@ -288,6 +290,7 @@ en:
             update:
               describe: "Update an existing custom object schema."
               errors:
+                invalidSchema: "The schema definition is invalid. Please check the schema and try again."
                 update: "Schema update from {{ definition }} failed"
               options:
                 path:
@@ -525,13 +528,21 @@ en:
             learnMoreLocalDevServer: "Learn more about the projects local dev server"
           errors:
             noProjectConfig: "No project detected. Please run this command again from a project directory."
+            noAccount: "An error occurred while reading account {{ accountId }} from your config. Run {{ authCommand }} to re-auth this account."
+            noAccountsInConfig: "No accounts found in your config. Run {{ authCommand }} to configure a HubSpot account with the CLI."
             invalidProjectComponents: "Projects cannot contain both private and public apps. Move your apps to separate projects before attempting local development."
             noRunnableComponents: "No supported components were found in this project. Run {{ command }} to see a list of available components and add one to your project."
+            invalidUnifiedAppsAccount: "Local development of Unified Apps is currently only supported in standard and developer accounts. Target a standard or developer account with {{ authCommand }} and try again."
           examples:
             default: "Start local dev for the current project"
         create:
           describe: "Create a new project."
+          errors:
+            failedToDownloadProject: "Failed to download project. Please try again later."
+            failedToFetchProjectList: "Failed to fetch the list of available project templates. Please try again later."
+            cannotNestProjects: "A project already exists at {{ projectDir }}. Projects cannot be nested within other projects. Please choose a different destination and try again."
           logs:
+            success: "Project {{#bold}}{{ projectName }}{{/bold}} was successfully created in {{ projectDest }}"
             welcomeMessage: "Welcome to HubSpot Developer Projects!"
           examples:
             default: "Create a new project"
@@ -604,12 +615,13 @@ en:
               describe: "The name for your newly created component"
             type:
               describe: "The path to the component type's location within the hubspot-project-components Github repo: https://github.com/HubSpot/hubspot-project-components"
-          creatingComponent:
-            message: "Adding a new component to your project"
-          success:
-            message: "{{ componentName }} was added to your project"
+          creatingComponent: "Adding a new component to {{#bold}}{{ projectName }}{{/bold}}"
+          success: "{{ componentName }} was successfully added to your project."
           error:
-            locationInProject: "The component location must be within a project folder"
+            failedToDownloadComponent: "Failed to download project component. Please try again later."
+            locationInProject: "This command must be run from within a project directory."
+            failedToFetchComponentList: "Failed to fetch the list of available components. Please try again later."
+            projectContainsPublicApp: "This project contains a public app. This command is currently only compatible with projects that contain private apps."
           examples:
             default: "Create a component within your project"
             withFlags: "Use --name and --type flags to bypass the prompt."
@@ -816,6 +828,8 @@ en:
             invalidAccountType: "Sandboxes must be created from a production account. Your current default account {{#bold}}{{ accountName }}{{/bold}} is a {{ accountType }}.
               \n- Run {{#bold}}hs accounts use{{/bold}} to switch to your default account to your production account.
               \n- Run {{#bold}}hs auth{{/bold}} to connect a production account to the HubSpot CLI.\n"
+            noAccountConfig: "There is no account associated with {{ accountId }} in the config file. Please choose another account and try again, or authenticate {{ accountId }} using {{ authCommand }}."
+            noSandboxAccountConfig: "There is no sandbox account associated with {{ accountId }} in the config file. Please try to re-authenticate your sandbox account using {{ authCommand}}."
         delete:
           describe: "Delete a sandbox account."
           debug:
@@ -832,11 +846,12 @@ en:
           failure:
             invalidUser: "Couldn't delete {{ accountName }} because your account has been removed from {{ parentAccountName }} or your permission set doesn't allow you to delete the sandbox. To update your permissions, contact a super admin in {{ parentAccountName }}."
             noAccount: "No account specified. Specify an account by using the --account flag."
-            noSandboxAccounts: "There are no sandboxes connected to the CLI. To add a sandbox, run {{#bold}}hs auth{{/bold}}."
-            noParentAccount: "This sandbox can't be deleted from the CLI because you haven't given the CLI access to its parent account. To do this, run {{#bold}}hs auth{{/bold}} and add the parent account."
+            noSandboxAccounts: "There are no sandboxes connected to the CLI. To add a sandbox, run {{ authCommand }}."
+            noSandboxAccountId: "This sandbox can't be deleted from the CLI because we could not find the associated sandbox account."
+            noParentAccount: "This sandbox can't be deleted from the CLI because you haven't given the CLI access to its parent account. To do this, run {{ authCommand }} and add the parent account."
             objectNotFound: "Sandbox {{#bold}}{{ account }}{{/bold}} may have been deleted through the UI. The account has been removed from the config."
-            noParentPortalAvailable: "This sandbox can't be deleted from the CLI because you haven't given the CLI access to its parent account. To do this, run {{#bold}}{{ command }}{{/bold}}. You can also delete the sandbox from the HubSpot management tool: {{#bold}}{{ url }}{{/bold}}."
-            invalidKey: "Your personal access key for account {{#bold}}{{ account }}{{/bold}} is inactive. To re-authenticate, please run {{#bold}}hs auth personalaccesskey{{/bold}}."
+            noParentPortalAvailable: "This sandbox can't be deleted from the CLI because you haven't given the CLI access to its parent account. To do this, run {{ command }}. You can also delete the sandbox from the HubSpot management tool: {{#bold}}{{ url }}{{/bold}}."
+            invalidKey: "Your personal access key for account {{#bold}}{{ account }}{{/bold}} is inactive. To re-authenticate, please run {{ authCommand }}."
           options:
             force:
               describe: "Skips all confirmation prompts when deleting a sandbox account."
@@ -1104,6 +1119,11 @@ en:
       checkIfParentAccountIsAuthed:
         notAuthedError: "To develop this project locally, run {{ authCommand }} to authenticate the App Developer Account {{ accountId }} associated with {{ accountIdentifier }}."
     projects:
+      create:
+        errors:
+          noProjectsInConfig: "Unable to find any projects in the target repository's config.json file. Please ensure that there is a \"projects\" array in the config file."
+          missingConfigFileTemplateSource: "Failed to fetch the config.json file from the target repository. Please ensure that there is a valid config.json file at the root of the repository and try again."
+          missingPropertiesInConfig: "Found misconfigured projects in the target repository's config.json file. Please ensure that each project in the target repository's config.json file contains the following properties: [\"name\", \"label\", \"path\", \"insertPath\"]."
       validateProjectConfig:
         configNotFound: "Unable to locate a project configuration file. Try running again from a project directory, or run {{ createCommand }} to create a new project."
         configMissingFields: "The project configuruation file is missing required fields."
@@ -1311,12 +1331,9 @@ en:
         errors:
           nameRequired: "A project name is required"
           destRequired: "A project dest is required"
-          invalidDest: "The selected destination already exists. Please provide a new path for this project."
+          invalidDest: "There is an existing project at this destination. Please provide a new path for this project."
           invalidCharacters: "The selected destination contains invalid characters. Please provide a new path and try again."
-          invalidTemplate: "[--template] Could not find template {{ template }}. Please choose an available template."
-          noProjectsInConfig: "Please ensure that there is a config.json file that contains a \"projects\" field."
-          missingConfigFileTemplateSource: "Please ensure that there is a config.json file in the repository used as the --template-source"
-          missingPropertiesInConfig: "Please ensure that each of the projects in your config.json file contain the following properties: [\"name\", \"label\", \"path\", \"insertPath\"]."
+          invalidTemplate: "[--template] Could not find template \"{{ template }}\". Please choose an available template:"
       selectPublicAppPrompt:
         selectAppIdMigrate: "[--appId] Choose an app under {{ accountName }} to migrate:"
         selectAppIdClone: "[--appId] Choose an app under {{ accountName }} to clone:"
@@ -1334,11 +1351,11 @@ en:
           projectNotFound: "Your project {{ projectName }} could not be found in {{ accountId }}. Please select a valid project:"
           accountIdRequired: "An account ID is required to download a project."
       projectAddPrompt:
-        selectType: "[--type] Select your component type:"
+        selectType: "[--type] Select a component to add: "
         enterName: "[--name] Give your component a name: "
         errors:
           nameRequired: "A component name is required"
-          invalidType: "[--type] Could not find type {{ type }}. Please choose an available type."
+          invalidType: "[--type] Could not find type \"{{ type }}\". Please choose an available type:"
       secretPrompt:
         enterValue: "Enter a value for your secret: "
         enterName: "Enter a name for your secret: "
@@ -1562,6 +1579,9 @@ en:
           defaultAccountSubHeader: "Default Account: {{accountDetails}}"
           noConfigFile: "CLI configuration not found"
           noConfigFileSecondary: "Run {{command}} and follow the prompts to create your CLI configuration file and connect it to your HubSpot account"
+          settings:
+            httpUseLocalhost: "The setting {{#bold}}httpUseLocalhost{{/bold}} is enabled"
+            httpUseLocalhostSecondary: "This setting causes all CLI requests to route to localhost"
         projectConfig:
           header: "Project configuration"
           projectDirSubHeader: "Project dir: {{#bold}}{{ projectDir }}{{/bold}}"

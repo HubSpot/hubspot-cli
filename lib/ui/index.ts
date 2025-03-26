@@ -89,7 +89,7 @@ export function uiCommandReference(command: string, withQuotes = true): string {
   );
 }
 
-export function uiFeatureHighlight(commands: string[], title: string): void {
+export function uiFeatureHighlight(commands: string[], title?: string): void {
   const i18nKey = 'lib.ui.featureHighlight';
 
   uiInfoSection(title ? title : i18n(`${i18nKey}.defaultTitle`), () => {
@@ -107,7 +107,7 @@ export function uiFeatureHighlight(commands: string[], title: string): void {
   });
 }
 
-export function uiBetaTag(message: string, log = true): void | string {
+export function uiBetaTag(message: string, log = true): string | undefined {
   const i18nKey = 'lib.ui';
 
   const terminalUISupport = getTerminalUISupport();
@@ -119,6 +119,7 @@ export function uiBetaTag(message: string, log = true): void | string {
 
   if (log) {
     logger.log(result);
+    return;
   } else {
     return result;
   }

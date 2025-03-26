@@ -1,3 +1,5 @@
+import { DeveloperTestAccount } from '@hubspot/local-dev-lib/types/developerTestAccounts';
+
 export type GenericPromptResponse = {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   [key: string]: any;
@@ -39,4 +41,11 @@ export type PromptConfig<T extends GenericPromptResponse> = {
   validate?: (answer?: any) => PromptOperand | Promise<PromptOperand>;
   mask?: string;
   filter?: (input: string) => string;
+};
+
+export type ProjectDevTargetAccountPromptResponse = {
+  targetAccountId: number | null;
+  createNestedAccount: boolean;
+  parentAccountId?: number | null;
+  notInConfigAccount?: DeveloperTestAccount | null;
 };
