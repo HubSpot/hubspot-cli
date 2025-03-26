@@ -36,24 +36,25 @@ import { getHubSpotWebsiteOrigin } from '@hubspot/local-dev-lib/urls';
 import { extractZipArchive } from '@hubspot/local-dev-lib/archive';
 import { ArgumentsCamelCase } from 'yargs';
 import { MigrateAppOptions } from '../../types/Yargs';
+import chalk from 'chalk';
 
 function getUnmigratableReason(reasonCode: string) {
   switch (reasonCode) {
     case UNMIGRATABLE_REASONS.UP_TO_DATE:
       return i18n(
-        'commands.project.subcommands.migrateApp.migrationFailureReasons.upToDate'
+        'commands.project.subcommands.migrateApp.migrationNotAllowedReasons.upToDate'
       );
     case UNMIGRATABLE_REASONS.IS_A_PRIVATE_APP:
       return i18n(
-        'commands.project.subcommands.migrateApp.migrationFailureReasons.isPrivateApp'
+        'commands.project.subcommands.migrateApp.migrationNotAllowedReasons.isPrivateApp'
       );
     case UNMIGRATABLE_REASONS.LISTED_IN_MARKETPLACE:
       return i18n(
-        'commands.project.subcommands.migrateApp.migrationFailureReasons.listedInMarketplace'
+        'commands.project.subcommands.migrateApp.migrationNotAllowedReasons.listedInMarketplace'
       );
     default:
       return i18n(
-        'commands.project.subcommands.migrateApp.migrationFailureReasons.generic',
+        'commands.project.subcommands.migrateApp.migrationNotAllowedReasons.generic',
         {
           reasonCode,
         }
@@ -61,17 +62,13 @@ function getUnmigratableReason(reasonCode: string) {
   }
 }
 
-export async function migrateApp2025_2(
+async function handleMigrationSetup(
   derivedAccountId: number,
   options: ArgumentsCamelCase<MigrateAppOptions>
 ) {
   const { name, dest, appId } = options;
-
-  SpinniesManager.init();
-
-  const { migratableApps, unmigratableApps } =
-    await listAppsForMigration(derivedAccountId);
-
+  const { data } = await listAppsForMigration(derivedAccountId);
+  const { migratableApps, unmigratableApps } = data;
   const allApps = [...migratableApps, ...unmigratableApps];
 
   if (allApps.length === 0) {
@@ -84,20 +81,23 @@ export async function migrateApp2025_2(
 
   if (migratableApps.length === 0) {
     const reasons = unmigratableApps.map(
-      app => `${app.appName}: ${getUnmigratableReason(app.unmigratableReason)}`
+      app =>
+        `${chalk.bold(app.appName)}: ${getUnmigratableReason(app.unmigratableReason)}`
     );
 
     logger.error(
       `${i18n(`commands.project.subcommands.migrateApp.errors.noAppsEligible`, {
         accountId: derivedAccountId,
-      })} \n\t${reasons.join('\n\t')}`
+      })} \n  - ${reasons.join('\n  - ')}`
     );
 
     return process.exit(EXIT_CODES.SUCCESS);
   }
 
   const appChoices = allApps.map(app => ({
-    name: app.appName,
+    name: app.isMigratable
+      ? app.appName
+      : `[${chalk.yellow('DISABLED')}] ${app.appName} `,
     value: app,
     disabled: app.isMigratable
       ? false
@@ -113,9 +113,6 @@ export async function migrateApp2025_2(
         }
       );
 
-  // Make the call to get the list of the non project apps eligible to migrate
-  // Prompt the user to select the app to migrate
-  // Prompt the user for a project name and destination
   const projectName =
     name ||
     (await inputPrompt(
@@ -145,6 +142,10 @@ export async function migrateApp2025_2(
       i18n('commands.project.subcommands.migrateApp.prompt.inputDest')
     ));
 
+  return { appToMigrate, projectName, projectDest };
+}
+
+async function handleMigrationProcess(appToMigrate: { appId: number }) {
   SpinniesManager.add('beginningMigration', {
     text: i18n(
       'commands.project.subcommands.migrateApp.spinners.beginningMigration'
@@ -155,7 +156,6 @@ export async function migrateApp2025_2(
   let migrationId: number | undefined;
 
   try {
-    // Call the migration end points
     const { migrationId: mid, uidsRequired } = await beginMigration(
       appToMigrate.appId
     );
@@ -187,6 +187,22 @@ export async function migrateApp2025_2(
     return process.exit(EXIT_CODES.ERROR);
   }
 
+  return { migrationId, uidMap };
+}
+
+export async function migrateApp2025_2(
+  derivedAccountId: number,
+  options: ArgumentsCamelCase<MigrateAppOptions>
+) {
+  SpinniesManager.init();
+
+  const { appToMigrate, projectName, projectDest } = await handleMigrationSetup(
+    derivedAccountId,
+    options
+  );
+
+  const { migrationId, uidMap } = await handleMigrationProcess(appToMigrate);
+
   let buildId: number;
 
   try {
@@ -202,7 +218,6 @@ export async function migrateApp2025_2(
       projectName
     );
     buildId = migration.buildId;
-    // Poll using the projectId and the build id?
     SpinniesManager.succeed('finishingMigration', {
       text: i18n(
         `commands.project.subcommands.migrateApp.spinners.migrationComplete`
@@ -231,7 +246,9 @@ export async function migrateApp2025_2(
       buildId
     );
 
-    const absoluteDestPath = dest ? path.resolve(getCwd(), dest) : getCwd();
+    const absoluteDestPath = projectDest
+      ? path.resolve(getCwd(), projectDest)
+      : getCwd();
 
     await extractZipArchive(
       zippedProject,
