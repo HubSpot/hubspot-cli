@@ -220,8 +220,8 @@ export async function handler(
     'accountsListCommand',
   ]);
 
-  const accountId = getAccountId(accountName);
-  await trackAuthAction('auth', authType, TRACKING_STATUS.COMPLETE, accountId!);
+  const accountId = getAccountId(accountName) || undefined;
+  await trackAuthAction('auth', authType, TRACKING_STATUS.COMPLETE, accountId);
 
   process.exit(EXIT_CODES.SUCCESS);
 }
