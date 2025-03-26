@@ -193,6 +193,7 @@ export function uiDeprecatedMessage(
   logger.log();
 }
 
-export function indent(str: string, spacing?: string) {
-  return `${spacing || '  '}${str}`;
+export function indent(level: number): string {
+  const indentation = '  ';
+  return indentation.repeat(level);
 }

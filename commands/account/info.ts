@@ -43,18 +43,16 @@ export async function handler(
     if (configPath) {
       logger.log(i18n(`${i18nKey}.defaultAccountTitle`));
       logger.log(
-        indent(
+        indent(1) +
           i18n(`${i18nKey}.configPath`, {
             configPath,
           })
-        )
       );
       logger.log(
-        indent(
+        indent(1) +
           i18n(`${i18nKey}.defaultAccount`, {
             account: getDisplayDefaultAccount(false)!,
           })
-        )
       );
     }
 
@@ -64,14 +62,13 @@ export async function handler(
       logger.log('');
       logger.log(i18n(`${i18nKey}.overrideFilePathTitle`));
       logger.log(
-        indent(i18n(`${i18nKey}.overrideFilePath`, { overrideFilePath }))
+        indent(1) + i18n(`${i18nKey}.overrideFilePath`, { overrideFilePath })
       );
       logger.log(
-        indent(
+        indent(1) +
           i18n(`${i18nKey}.overrideAccount`, {
             account: getDisplayDefaultAccount(true)!,
           })
-        )
       );
     }
 
