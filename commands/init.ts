@@ -1,49 +1,57 @@
-// @ts-nocheck
-const path = require('path');
-const fs = require('fs-extra');
-const {
+import path from 'path';
+import { ArgumentsCamelCase, Argv } from 'yargs';
+import fs from 'fs-extra';
+import {
   getConfigPath,
   createEmptyConfigFile,
   deleteEmptyConfigFile,
   updateDefaultAccount,
   loadConfig,
   configFileExists,
-} = require('@hubspot/local-dev-lib/config');
-const { addConfigOptions, addGlobalOptions } = require('../lib/commonOpts');
-const { handleExit } = require('../lib/process');
-const {
-  checkAndAddConfigToGitignore,
-} = require('@hubspot/local-dev-lib/gitignore');
-const { debugError, logError } = require('../lib/errorHandlers/index');
-const {
+} from '@hubspot/local-dev-lib/config';
+import { Environment } from '@hubspot/local-dev-lib/types/Config';
+import {
+  CLIAccount,
+  OAuth2ManagerAccountConfig,
+} from '@hubspot/local-dev-lib/types/Accounts';
+import { addConfigOptions, addGlobalOptions } from '../lib/commonOpts';
+import { handleExit } from '../lib/process';
+import { checkAndAddConfigToGitignore } from '@hubspot/local-dev-lib/gitignore';
+import { debugError, logError } from '../lib/errorHandlers/index';
+import {
   OAUTH_AUTH_METHOD,
   PERSONAL_ACCESS_KEY_AUTH_METHOD,
-} = require('@hubspot/local-dev-lib/constants/auth');
-const {
-  ENVIRONMENTS,
-} = require('@hubspot/local-dev-lib/constants/environments');
-const {
-  DEFAULT_HUBSPOT_CONFIG_YAML_FILE_NAME,
-} = require('@hubspot/local-dev-lib/constants/config');
-const { i18n } = require('../lib/lang');
-const { logger } = require('@hubspot/local-dev-lib/logger');
-const {
+} from '@hubspot/local-dev-lib/constants/auth';
+import { ENVIRONMENTS } from '@hubspot/local-dev-lib/constants/environments';
+import { DEFAULT_HUBSPOT_CONFIG_YAML_FILE_NAME } from '@hubspot/local-dev-lib/constants/config';
+import { i18n } from '../lib/lang';
+import { logger } from '@hubspot/local-dev-lib/logger';
+import {
   getAccessToken,
   updateConfigWithAccessToken,
-} = require('@hubspot/local-dev-lib/personalAccessKey');
-const { getCwd } = require('@hubspot/local-dev-lib/path');
-const { toKebabCase } = require('@hubspot/local-dev-lib/text');
-const { trackCommandUsage, trackAuthAction } = require('../lib/usageTracking');
-const { setLogLevel, addTestingOptions } = require('../lib/commonOpts');
-const { promptUser } = require('../lib/prompts/promptUtils');
-const {
+} from '@hubspot/local-dev-lib/personalAccessKey';
+import { getCwd } from '@hubspot/local-dev-lib/path';
+import { toKebabCase } from '@hubspot/local-dev-lib/text';
+import { trackCommandUsage, trackAuthAction } from '../lib/usageTracking';
+import { setLogLevel, addTestingOptions } from '../lib/commonOpts';
+import { promptUser } from '../lib/prompts/promptUtils';
+import {
   OAUTH_FLOW,
   personalAccessKeyPrompt,
-} = require('../lib/prompts/personalAccessKeyPrompt');
-const { cliAccountNamePrompt } = require('../lib/prompts/accountNamePrompt');
-const { authenticateWithOauth } = require('../lib/oauth');
-const { EXIT_CODES } = require('../lib/enums/exitCodes');
-const { uiFeatureHighlight } = require('../lib/ui');
+  OauthPromptResponse,
+} from '../lib/prompts/personalAccessKeyPrompt';
+import { cliAccountNamePrompt } from '../lib/prompts/accountNamePrompt';
+import { authenticateWithOauth } from '../lib/oauth';
+import { EXIT_CODES } from '../lib/enums/exitCodes';
+import { uiFeatureHighlight } from '../lib/ui';
+import {
+  ConfigArgs,
+  CommonArgs,
+  TestingArgs,
+  AccountArgs,
+} from '../types/Yargs';
+import { getAccountIdentifier } from '@hubspot/local-dev-lib/config/getAccountIdentifier';
+import { CLIOptions } from '@hubspot/local-dev-lib/types/CLIOptions';
 
 const i18nKey = 'commands.init';
 
@@ -53,16 +61,19 @@ const TRACKING_STATUS = {
   COMPLETE: 'complete',
 };
 
-const personalAccessKeyConfigCreationFlow = async (env, account) => {
+async function personalAccessKeyConfigCreationFlow(
+  env: Environment,
+  account?: number
+): Promise<CLIAccount | null> {
   const { personalAccessKey } = await personalAccessKeyPrompt({ env, account });
-  let updatedConfig;
+  let updatedConfig: CLIAccount | null;
 
   try {
     const token = await getAccessToken(personalAccessKey, env);
-    const defaultName = token.hubName ? toKebabCase(token.hubName) : null;
+    const defaultName = token.hubName ? toKebabCase(token.hubName) : undefined;
     const { name } = await cliAccountNamePrompt(defaultName);
 
-    updatedConfig = updateConfigWithAccessToken(
+    updatedConfig = await updateConfigWithAccessToken(
       token,
       personalAccessKey,
       env,
@@ -72,43 +83,52 @@ const personalAccessKeyConfigCreationFlow = async (env, account) => {
   } catch (e) {
     logError(e);
   }
-  return updatedConfig;
-};
 
-const oauthConfigCreationFlow = async env => {
-  const configData = await promptUser(OAUTH_FLOW);
-  const accountConfig = {
+  return updatedConfig!;
+}
+
+async function oauthConfigCreationFlow(
+  env: Environment
+): Promise<OAuth2ManagerAccountConfig> {
+  const configData = await promptUser<OauthPromptResponse>(OAUTH_FLOW);
+  const accountConfig: OAuth2ManagerAccountConfig = {
     ...configData,
     env,
   };
   await authenticateWithOauth(accountConfig);
-  updateDefaultAccount(accountConfig.name);
+  updateDefaultAccount(accountConfig.name!);
   return accountConfig;
-};
-
-const CONFIG_CREATION_FLOWS = {
-  [PERSONAL_ACCESS_KEY_AUTH_METHOD.value]: personalAccessKeyConfigCreationFlow,
-  [OAUTH_AUTH_METHOD.value]: oauthConfigCreationFlow,
-};
+}
 
 const AUTH_TYPE_NAMES = {
   [PERSONAL_ACCESS_KEY_AUTH_METHOD.value]: PERSONAL_ACCESS_KEY_AUTH_METHOD.name,
   [OAUTH_AUTH_METHOD.value]: OAUTH_AUTH_METHOD.name,
 };
 
-exports.command = 'init';
-exports.describe = i18n(`${i18nKey}.describe`, {
+export const command = 'init';
+export const describe = i18n(`${i18nKey}.describe`, {
   configName: DEFAULT_HUBSPOT_CONFIG_YAML_FILE_NAME,
 });
 
-exports.handler = async options => {
+type InitArgs = CommonArgs &
+  ConfigArgs &
+  TestingArgs &
+  AccountArgs & {
+    authType?: string;
+    'disable-tracking'?: boolean;
+    'use-hidden-config'?: boolean;
+  };
+
+export async function handler(
+  args: ArgumentsCamelCase<InitArgs>
+): Promise<void> {
   const {
     authType: authTypeFlagValue,
     c: configFlagValue,
     providedAccountId,
     disableTracking,
     useHiddenConfig,
-  } = options;
+  } = args;
   const authType =
     (authTypeFlagValue && authTypeFlagValue.toLowerCase()) ||
     PERSONAL_ACCESS_KEY_AUTH_METHOD.value;
@@ -116,7 +136,7 @@ exports.handler = async options => {
   const configPath =
     (configFlagValue && path.join(getCwd(), configFlagValue)) ||
     getConfigPath('', useHiddenConfig);
-  setLogLevel(options);
+  setLogLevel(args);
 
   if (!disableTracking) {
     trackCommandUsage('init', {
@@ -124,12 +144,12 @@ exports.handler = async options => {
     });
   }
 
-  const env = options.qa ? ENVIRONMENTS.QA : ENVIRONMENTS.PROD;
+  const env = args.qa ? ENVIRONMENTS.QA : ENVIRONMENTS.PROD;
 
-  if (fs.existsSync(configPath)) {
+  if (fs.existsSync(configPath!)) {
     logger.error(
       i18n(`${i18nKey}.errors.configFileExists`, {
-        configPath,
+        configPath: configPath!,
       })
     );
     logger.info(i18n(`${i18nKey}.logs.updateConfig`));
@@ -137,31 +157,50 @@ exports.handler = async options => {
   }
 
   if (!disableTracking) {
-    await trackAuthAction('init', authType, TRACKING_STATUS.STARTED);
+    await trackAuthAction(
+      'init',
+      authType,
+      TRACKING_STATUS.STARTED,
+      providedAccountId
+    );
   }
 
   const doesOtherConfigFileExist = configFileExists(!useHiddenConfig);
   if (doesOtherConfigFileExist) {
     const path = getConfigPath('', !useHiddenConfig);
-    logger.error(i18n(`${i18nKey}.errors.bothConfigFilesNotAllowed`, { path }));
+    logger.error(
+      i18n(`${i18nKey}.errors.bothConfigFilesNotAllowed`, { path: path! })
+    );
     process.exit(EXIT_CODES.ERROR);
   }
 
-  trackAuthAction('init', authType, TRACKING_STATUS.STARTED);
-  createEmptyConfigFile({ path: configPath }, useHiddenConfig);
+  trackAuthAction('init', authType, TRACKING_STATUS.STARTED, providedAccountId);
+  createEmptyConfigFile({ path: configPath! }, useHiddenConfig);
   //Needed to load deprecated config
-  loadConfig(configPath, options);
+  loadConfig(configPath!, args as CLIOptions);
 
   handleExit(deleteEmptyConfigFile);
 
   try {
-    const { accountId, name } = await CONFIG_CREATION_FLOWS[authType](
-      env,
-      providedAccountId
-    );
+    let accountId: number;
+    let name: string | undefined;
+    if (authType === PERSONAL_ACCESS_KEY_AUTH_METHOD.value) {
+      const personalAccessKeyResult = await personalAccessKeyConfigCreationFlow(
+        env,
+        providedAccountId
+      );
+      if (personalAccessKeyResult) {
+        accountId = getAccountIdentifier(personalAccessKeyResult)!;
+        name = personalAccessKeyResult.name;
+      }
+    } else {
+      const oauthResult = await oauthConfigCreationFlow(env);
+      accountId = oauthResult.accountId!;
+      name = oauthResult.name;
+    }
 
     try {
-      checkAndAddConfigToGitignore(configPath);
+      checkAndAddConfigToGitignore(configPath!);
     } catch (e) {
       debugError(e);
     }
@@ -174,13 +213,13 @@ exports.handler = async options => {
     logger.log('');
     logger.success(
       i18n(`${i18nKey}.success.configFileCreated`, {
-        configPath: newConfigPath,
+        configPath: newConfigPath!,
       })
     );
     logger.success(
       i18n(`${i18nKey}.success.configFileUpdated`, {
-        authType: AUTH_TYPE_NAMES[authType],
-        account: name || accountId,
+        authType: AUTH_TYPE_NAMES[authType as keyof typeof AUTH_TYPE_NAMES],
+        account: name || accountId!,
       })
     );
     uiFeatureHighlight(['helpCommand', 'authCommand', 'accountsListCommand']);
@@ -190,58 +229,63 @@ exports.handler = async options => {
         'init',
         authType,
         TRACKING_STATUS.COMPLETE,
-        accountId
+        accountId!
       );
     }
     process.exit(EXIT_CODES.SUCCESS);
   } catch (err) {
     logError(err);
     if (!disableTracking) {
-      await trackAuthAction('init', authType, TRACKING_STATUS.ERROR);
+      await trackAuthAction(
+        'init',
+        authType,
+        TRACKING_STATUS.ERROR,
+        providedAccountId
+      );
     }
     process.exit(EXIT_CODES.ERROR);
   }
-};
+}
 
-exports.builder = yargs => {
-  yargs
-    .options({
-      'auth-type': {
-        describe: i18n(`${i18nKey}.options.authType.describe`),
-        type: 'string',
-        choices: [
-          `${PERSONAL_ACCESS_KEY_AUTH_METHOD.value}`,
-          `${OAUTH_AUTH_METHOD.value}`,
-        ],
-        default: PERSONAL_ACCESS_KEY_AUTH_METHOD.value,
-        defaultDescription: i18n(
-          `${i18nKey}.options.authType.defaultDescription`,
-          {
-            authMethod: PERSONAL_ACCESS_KEY_AUTH_METHOD.value,
-          }
-        ),
-      },
-      account: {
-        describe: i18n(`${i18nKey}.options.account.describe`),
-        type: 'string',
-        alias: 'a',
-      },
-      'disable-tracking': {
-        type: 'boolean',
-        hidden: true,
-        default: false,
-      },
-      'use-hidden-config': {
-        describe: i18n(`${i18nKey}.options.useHiddenConfig.describe`),
-        hidden: true,
-        type: 'boolean',
-      },
-    })
-    .conflicts('use-hidden-config', 'config');
-
+export function builder(yargs: Argv): Argv<InitArgs> {
   addConfigOptions(yargs);
   addTestingOptions(yargs);
   addGlobalOptions(yargs);
 
-  return yargs;
-};
+  yargs.options({
+    'auth-type': {
+      describe: i18n(`${i18nKey}.options.authType.describe`),
+      type: 'string',
+      choices: [
+        `${PERSONAL_ACCESS_KEY_AUTH_METHOD.value}`,
+        `${OAUTH_AUTH_METHOD.value}`,
+      ],
+      default: PERSONAL_ACCESS_KEY_AUTH_METHOD.value,
+      defaultDescription: i18n(
+        `${i18nKey}.options.authType.defaultDescription`,
+        {
+          authMethod: PERSONAL_ACCESS_KEY_AUTH_METHOD.value,
+        }
+      ),
+    },
+    account: {
+      describe: i18n(`${i18nKey}.options.account.describe`),
+      type: 'string',
+      alias: 'a',
+    },
+    'disable-tracking': {
+      type: 'boolean',
+      hidden: true,
+      default: false,
+    },
+    'use-hidden-config': {
+      describe: i18n(`${i18nKey}.options.useHiddenConfig.describe`),
+      hidden: true,
+      type: 'boolean',
+    },
+  });
+
+  yargs.conflicts('use-hidden-config', 'config');
+
+  return yargs as Argv<InitArgs>;
+}

@@ -1,53 +1,53 @@
-// @ts-nocheck
-const { checkAndWarnGitInclusion } = require('../lib/ui/git');
-const { logger } = require('@hubspot/local-dev-lib/logger');
-const {
+import { Argv, ArgumentsCamelCase } from 'yargs';
+import { checkAndWarnGitInclusion } from '../lib/ui/git';
+import { logger } from '@hubspot/local-dev-lib/logger';
+import {
   OAUTH_AUTH_METHOD,
   PERSONAL_ACCESS_KEY_AUTH_METHOD,
-} = require('@hubspot/local-dev-lib/constants/auth');
-const {
-  ENVIRONMENTS,
-} = require('@hubspot/local-dev-lib/constants/environments');
-const {
-  DEFAULT_HUBSPOT_CONFIG_YAML_FILE_NAME,
-} = require('@hubspot/local-dev-lib/constants/config');
-const { i18n } = require('../lib/lang');
-const {
+} from '@hubspot/local-dev-lib/constants/auth';
+import { ENVIRONMENTS } from '@hubspot/local-dev-lib/constants/environments';
+import { DEFAULT_HUBSPOT_CONFIG_YAML_FILE_NAME } from '@hubspot/local-dev-lib/constants/config';
+import { AccessToken, CLIAccount } from '@hubspot/local-dev-lib/types/Accounts';
+import { i18n } from '../lib/lang';
+import {
   getAccessToken,
   updateConfigWithAccessToken,
-} = require('@hubspot/local-dev-lib/personalAccessKey');
-const {
+} from '@hubspot/local-dev-lib/personalAccessKey';
+import {
   updateAccountConfig,
   writeConfig,
   getConfigPath,
   loadConfig,
   getConfigDefaultAccount,
   getAccountId,
-} = require('@hubspot/local-dev-lib/config');
-const {
-  commaSeparatedValues,
-  toKebabCase,
-} = require('@hubspot/local-dev-lib/text');
-const { promptUser } = require('../lib/prompts/promptUtils');
-const {
+} from '@hubspot/local-dev-lib/config';
+import { commaSeparatedValues, toKebabCase } from '@hubspot/local-dev-lib/text';
+import { promptUser } from '../lib/prompts/promptUtils';
+import {
   personalAccessKeyPrompt,
   OAUTH_FLOW,
-} = require('../lib/prompts/personalAccessKeyPrompt');
-const { cliAccountNamePrompt } = require('../lib/prompts/accountNamePrompt');
-const {
-  setAsDefaultAccountPrompt,
-} = require('../lib/prompts/setAsDefaultAccountPrompt');
-const {
+  OauthPromptResponse,
+  PersonalAccessKeyPromptResponse,
+} from '../lib/prompts/personalAccessKeyPrompt';
+import { cliAccountNamePrompt } from '../lib/prompts/accountNamePrompt';
+import { setAsDefaultAccountPrompt } from '../lib/prompts/setAsDefaultAccountPrompt';
+import {
   addConfigOptions,
   setLogLevel,
   addTestingOptions,
   addGlobalOptions,
-} = require('../lib/commonOpts');
-const { trackAuthAction, trackCommandUsage } = require('../lib/usageTracking');
-const { authenticateWithOauth } = require('../lib/oauth');
-const { EXIT_CODES } = require('../lib/enums/exitCodes');
-const { uiFeatureHighlight } = require('../lib/ui');
-const { logError } = require('../lib/errorHandlers/index');
+} from '../lib/commonOpts';
+import { trackAuthAction, trackCommandUsage } from '../lib/usageTracking';
+import { authenticateWithOauth } from '../lib/oauth';
+import { EXIT_CODES } from '../lib/enums/exitCodes';
+import { uiFeatureHighlight } from '../lib/ui';
+import { logError } from '../lib/errorHandlers/index';
+import {
+  AccountArgs,
+  CommonArgs,
+  ConfigArgs,
+  TestingArgs,
+} from '../types/Yargs';
 
 const i18nKey = 'commands.auth';
 
@@ -64,27 +64,39 @@ const ALLOWED_AUTH_METHODS = [
 const SUPPORTED_AUTHENTICATION_PROTOCOLS_TEXT =
   commaSeparatedValues(ALLOWED_AUTH_METHODS);
 
-exports.command = 'auth';
-exports.describe = i18n(`${i18nKey}.describe`, {
+export const command = 'auth';
+export const describe = i18n(`${i18nKey}.describe`, {
   configName: DEFAULT_HUBSPOT_CONFIG_YAML_FILE_NAME,
 });
 
-exports.handler = async options => {
+type AuthArgs = CommonArgs &
+  ConfigArgs &
+  TestingArgs &
+  AccountArgs & {
+    authType?: string;
+  };
+
+export async function handler(
+  args: ArgumentsCamelCase<AuthArgs>
+): Promise<void> {
   const {
     authType: authTypeFlagValue,
     config: configFlagValue,
     qa,
     providedAccountId,
-  } = options;
+  } = args;
   const authType =
     (authTypeFlagValue && authTypeFlagValue.toLowerCase()) ||
     PERSONAL_ACCESS_KEY_AUTH_METHOD.value;
-  setLogLevel(options);
+  setLogLevel(args);
 
   const env = qa ? ENVIRONMENTS.QA : ENVIRONMENTS.PROD;
   // Needed to load deprecated config
-  loadConfig(configFlagValue);
-  checkAndWarnGitInclusion(getConfigPath());
+  loadConfig(configFlagValue!);
+  const configPath = getConfigPath();
+  if (configPath) {
+    checkAndWarnGitInclusion(configPath);
+  }
 
   if (!getConfigPath(configFlagValue)) {
     logger.error(i18n(`${i18nKey}.errors.noConfigFileFound`));
@@ -92,18 +104,21 @@ exports.handler = async options => {
   }
 
   trackCommandUsage('auth');
-  trackAuthAction('auth', authType, TRACKING_STATUS.STARTED);
+  trackAuthAction('auth', authType, TRACKING_STATUS.STARTED, providedAccountId);
 
-  let configData;
-  let updatedConfig;
-  let validName;
-  let successAuthMethod;
-  let token;
-  let defaultName;
+  let configData:
+    | OauthPromptResponse
+    | PersonalAccessKeyPromptResponse
+    | undefined;
+  let updatedConfig: CLIAccount | null | undefined;
+  let validName: string | undefined;
+  let successAuthMethod: string | undefined;
+  let token: AccessToken | undefined;
+  let defaultName: string | undefined;
 
   switch (authType) {
     case OAUTH_AUTH_METHOD.value:
-      configData = await promptUser(OAUTH_FLOW);
+      configData = await promptUser<OauthPromptResponse>(OAUTH_FLOW);
       await authenticateWithOauth({
         ...configData,
         env,
@@ -142,8 +157,8 @@ exports.handler = async options => {
 
       updateAccountConfig({
         ...updatedConfig,
-        environment: updatedConfig.env,
-        tokenInfo: updatedConfig.auth.tokenInfo,
+        env: updatedConfig.env,
+        tokenInfo: updatedConfig.auth!.tokenInfo,
         name: validName,
       });
       writeConfig();
@@ -154,19 +169,27 @@ exports.handler = async options => {
       logger.error(
         i18n(`${i18nKey}.errors.unsupportedAuthType`, {
           supportedProtocols: SUPPORTED_AUTHENTICATION_PROTOCOLS_TEXT,
-          type,
+          type: authType,
         })
       );
       break;
   }
 
   if (!successAuthMethod) {
-    await trackAuthAction('auth', authType, TRACKING_STATUS.ERROR);
+    await trackAuthAction(
+      'auth',
+      authType,
+      TRACKING_STATUS.ERROR,
+      providedAccountId
+    );
     process.exit(EXIT_CODES.ERROR);
   }
 
+  const nameFromConfigData =
+    'name' in configData! ? configData!.name : undefined;
+
   const accountName =
-    (updatedConfig && updatedConfig.name) || validName || configData.name;
+    (updatedConfig && updatedConfig.name) || validName || nameFromConfigData!;
 
   const setAsDefault = await setAsDefaultAccountPrompt(accountName);
 
@@ -180,7 +203,7 @@ exports.handler = async options => {
   } else {
     logger.info(
       i18n(`lib.prompts.setAsDefaultAccountPrompt.keepingCurrentDefault`, {
-        accountName: getConfigDefaultAccount(),
+        accountName: getConfigDefaultAccount()!,
       })
     );
   }
@@ -197,13 +220,17 @@ exports.handler = async options => {
     'accountsListCommand',
   ]);
 
-  const accountId = getAccountId(accountName);
+  const accountId = getAccountId(accountName) || undefined;
   await trackAuthAction('auth', authType, TRACKING_STATUS.COMPLETE, accountId);
 
   process.exit(EXIT_CODES.SUCCESS);
-};
+}
 
-exports.builder = yargs => {
+export function builder(yargs: Argv): Argv<AuthArgs> {
+  addConfigOptions(yargs);
+  addTestingOptions(yargs);
+  addGlobalOptions(yargs);
+
   yargs.options({
     'auth-type': {
       describe: i18n(`${i18nKey}.options.authType.describe`),
@@ -227,9 +254,5 @@ exports.builder = yargs => {
     },
   });
 
-  addConfigOptions(yargs);
-  addTestingOptions(yargs);
-  addGlobalOptions(yargs);
-
-  return yargs;
-};
+  return yargs as Argv<AuthArgs>;
+}

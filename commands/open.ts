@@ -1,24 +1,30 @@
-// @ts-nocheck
-import { EXIT_CODES } from '../lib/enums/exitCodes';
-const {
+import { Argv, ArgumentsCamelCase } from 'yargs';
+import {
   addAccountOptions,
   addConfigOptions,
   addUseEnvironmentOptions,
   addGlobalOptions,
-} = require('../lib/commonOpts');
-const { trackCommandUsage } = require('../lib/usageTracking');
-const { logSiteLinks, getSiteLinksAsArray, openLink } = require('../lib/links');
-const { promptUser } = require('../lib/prompts/promptUtils');
-const { i18n } = require('../lib/lang');
+} from '../lib/commonOpts';
+import { trackCommandUsage } from '../lib/usageTracking';
+import { logSiteLinks, getSiteLinksAsArray, openLink } from '../lib/links';
+import { promptUser } from '../lib/prompts/promptUtils';
+import { i18n } from '../lib/lang';
+import { EXIT_CODES } from '../lib/enums/exitCodes';
+import {
+  CommonArgs,
+  ConfigArgs,
+  EnvironmentArgs,
+  AccountArgs,
+} from '../types/Yargs';
 
 const i18nKey = 'commands.open';
 
 const separator = ' => ';
-const createListPrompt = async accountId =>
-  promptUser([
+
+async function createListPrompt(accountId: number): Promise<{ open: string }> {
+  return promptUser([
     {
       type: 'rawlist',
-      look: false,
       name: 'open',
       pageSize: 20,
       message: i18n(`${i18nKey}.selectLink`),
@@ -28,27 +34,43 @@ const createListPrompt = async accountId =>
       filter: val => val.split(separator)[0],
     },
   ]);
+}
 
-exports.command = 'open [shortcut]';
-exports.describe = i18n(`${i18nKey}.describe`);
+export const command = 'open [shortcut]';
+export const describe = i18n(`${i18nKey}.describe`);
 
-exports.handler = async options => {
-  const { shortcut, list, derivedAccountId } = options;
+type OpenArgs = CommonArgs &
+  ConfigArgs &
+  EnvironmentArgs &
+  AccountArgs & {
+    shortcut?: string;
+    list?: boolean;
+  };
 
-  trackCommandUsage('open', null, derivedAccountId);
+export async function handler(
+  args: ArgumentsCamelCase<OpenArgs>
+): Promise<void> {
+  const { shortcut, list, derivedAccountId } = args;
+
+  trackCommandUsage('open', undefined, derivedAccountId);
 
   if (shortcut === undefined && !list) {
     const choice = await createListPrompt(derivedAccountId);
     openLink(derivedAccountId, choice.open);
   } else if (list) {
     logSiteLinks(derivedAccountId);
-  } else {
+  } else if (shortcut) {
     openLink(derivedAccountId, shortcut);
   }
   process.exit(EXIT_CODES.SUCCESS);
-};
+}
 
-exports.builder = yargs => {
+export function builder(yargs: Argv) {
+  addConfigOptions(yargs);
+  addAccountOptions(yargs);
+  addUseEnvironmentOptions(yargs);
+  addGlobalOptions(yargs);
+
   yargs.positional('[shortcut]', {
     describe: i18n(`${i18nKey}.positionals.shortcut.describe`),
     type: 'string',
@@ -68,10 +90,5 @@ exports.builder = yargs => {
     ['$0 open sn'],
   ]);
 
-  addConfigOptions(yargs);
-  addAccountOptions(yargs);
-  addUseEnvironmentOptions(yargs);
-  addGlobalOptions(yargs);
-
-  return yargs;
-};
+  return yargs as Argv<OpenArgs>;
+}
