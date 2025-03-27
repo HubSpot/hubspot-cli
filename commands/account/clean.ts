@@ -120,6 +120,7 @@ export async function handler(
       if (
         accountsToRemove.some(
           account =>
+            account.name === accountOverride ||
             // @ts-ignore: Default account override files can only exist with global config
             account.accountId === accountOverride
         )
