@@ -11,29 +11,31 @@ import {
 } from '@hubspot/local-dev-lib/config';
 import { Environment } from '@hubspot/local-dev-lib/types/Config';
 import {
-  CLIAccount,
-  OAuth2ManagerAccountConfig,
-} from '@hubspot/local-dev-lib/types/Accounts';
-import { addConfigOptions, addGlobalOptions } from '../lib/commonOpts';
-import { handleExit } from '../lib/process';
-import { checkAndAddConfigToGitignore } from '@hubspot/local-dev-lib/gitignore';
-import { debugError, logError } from '../lib/errorHandlers/index';
-import {
   OAUTH_AUTH_METHOD,
   PERSONAL_ACCESS_KEY_AUTH_METHOD,
 } from '@hubspot/local-dev-lib/constants/auth';
-import { ENVIRONMENTS } from '@hubspot/local-dev-lib/constants/environments';
+import { checkAndAddConfigToGitignore } from '@hubspot/local-dev-lib/gitignore';
 import { DEFAULT_HUBSPOT_CONFIG_YAML_FILE_NAME } from '@hubspot/local-dev-lib/constants/config';
-import { i18n } from '../lib/lang';
-import { logger } from '@hubspot/local-dev-lib/logger';
 import {
   getAccessToken,
   updateConfigWithAccessToken,
 } from '@hubspot/local-dev-lib/personalAccessKey';
 import { getCwd } from '@hubspot/local-dev-lib/path';
 import { toKebabCase } from '@hubspot/local-dev-lib/text';
+import {
+  CLIAccount,
+  OAuth2ManagerAccountConfig,
+} from '@hubspot/local-dev-lib/types/Accounts';
+import { ENVIRONMENTS } from '@hubspot/local-dev-lib/constants/environments';
+import { logger } from '@hubspot/local-dev-lib/logger';
+import { getAccountIdentifier } from '@hubspot/local-dev-lib/config/getAccountIdentifier';
+import { CLIOptions } from '@hubspot/local-dev-lib/types/CLIOptions';
+import { setLogLevel } from '../lib/commonOpts';
+import { makeYargsBuilder } from '../lib/yargsUtils';
+import { handleExit } from '../lib/process';
+import { debugError, logError } from '../lib/errorHandlers/index';
+import { i18n } from '../lib/lang';
 import { trackCommandUsage, trackAuthAction } from '../lib/usageTracking';
-import { setLogLevel, addTestingOptions } from '../lib/commonOpts';
 import { promptUser } from '../lib/prompts/promptUtils';
 import {
   OAUTH_FLOW,
@@ -43,15 +45,13 @@ import {
 import { cliAccountNamePrompt } from '../lib/prompts/accountNamePrompt';
 import { authenticateWithOauth } from '../lib/oauth';
 import { EXIT_CODES } from '../lib/enums/exitCodes';
-import { uiFeatureHighlight } from '../lib/ui';
+import { uiCommandReference, uiFeatureHighlight } from '../lib/ui';
 import {
   ConfigArgs,
   CommonArgs,
   TestingArgs,
   AccountArgs,
 } from '../types/Yargs';
-import { getAccountIdentifier } from '@hubspot/local-dev-lib/config/getAccountIdentifier';
-import { CLIOptions } from '@hubspot/local-dev-lib/types/CLIOptions';
 
 const i18nKey = 'commands.init';
 
@@ -106,9 +106,7 @@ const AUTH_TYPE_NAMES = {
 };
 
 export const command = 'init';
-export const describe = i18n(`${i18nKey}.describe`, {
-  configName: DEFAULT_HUBSPOT_CONFIG_YAML_FILE_NAME,
-});
+export const describe = i18n(`${i18nKey}.describe`);
 
 type InitArgs = CommonArgs &
   ConfigArgs &
@@ -247,11 +245,7 @@ export async function handler(
   }
 }
 
-export function builder(yargs: Argv): Argv<InitArgs> {
-  addConfigOptions(yargs);
-  addTestingOptions(yargs);
-  addGlobalOptions(yargs);
-
+function initBuilder(yargs: Argv): Argv<InitArgs> {
   yargs.options({
     'auth-type': {
       describe: i18n(`${i18nKey}.options.authType.describe`),
@@ -261,12 +255,6 @@ export function builder(yargs: Argv): Argv<InitArgs> {
         `${OAUTH_AUTH_METHOD.value}`,
       ],
       default: PERSONAL_ACCESS_KEY_AUTH_METHOD.value,
-      defaultDescription: i18n(
-        `${i18nKey}.options.authType.defaultDescription`,
-        {
-          authMethod: PERSONAL_ACCESS_KEY_AUTH_METHOD.value,
-        }
-      ),
     },
     account: {
       describe: i18n(`${i18nKey}.options.account.describe`),
@@ -289,3 +277,18 @@ export function builder(yargs: Argv): Argv<InitArgs> {
 
   return yargs as Argv<InitArgs>;
 }
+
+export const builder = makeYargsBuilder<InitArgs>(
+  initBuilder,
+  command,
+  i18n(`${i18nKey}.verboseDescribe`, {
+    command: uiCommandReference('hs auth'),
+    configName: DEFAULT_HUBSPOT_CONFIG_YAML_FILE_NAME,
+    authMethod: PERSONAL_ACCESS_KEY_AUTH_METHOD.value,
+  }),
+  {
+    useGlobalOptions: true,
+    useConfigOptions: true,
+    useTestingOptions: true,
+  }
+);

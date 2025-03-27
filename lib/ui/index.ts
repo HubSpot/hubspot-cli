@@ -77,10 +77,10 @@ export function uiInfoSection(title: string, logContent: () => void): void {
   uiLine();
 }
 
-export function uiCommandReference(command: string): string {
+export function uiCommandReference(command: string, withQuotes = true): string {
   const terminalUISupport = getTerminalUISupport();
 
-  const commandReference = `\`${command}\``;
+  const commandReference = withQuotes ? `\`${command}\`` : command;
 
   return chalk.bold(
     terminalUISupport.color

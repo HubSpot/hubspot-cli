@@ -31,12 +31,8 @@ import {
 } from '../lib/prompts/personalAccessKeyPrompt';
 import { cliAccountNamePrompt } from '../lib/prompts/accountNamePrompt';
 import { setAsDefaultAccountPrompt } from '../lib/prompts/setAsDefaultAccountPrompt';
-import {
-  addConfigOptions,
-  setLogLevel,
-  addTestingOptions,
-  addGlobalOptions,
-} from '../lib/commonOpts';
+import { setLogLevel } from '../lib/commonOpts';
+import { makeYargsBuilder } from '../lib/yargsUtils';
 import { trackAuthAction, trackCommandUsage } from '../lib/usageTracking';
 import { authenticateWithOauth } from '../lib/oauth';
 import { EXIT_CODES } from '../lib/enums/exitCodes';
@@ -65,9 +61,7 @@ const SUPPORTED_AUTHENTICATION_PROTOCOLS_TEXT =
   commaSeparatedValues(ALLOWED_AUTH_METHODS);
 
 export const command = 'auth';
-export const describe = i18n(`${i18nKey}.describe`, {
-  configName: DEFAULT_HUBSPOT_CONFIG_YAML_FILE_NAME,
-});
+export const describe = i18n(`${i18nKey}.describe`);
 
 type AuthArgs = CommonArgs &
   ConfigArgs &
@@ -226,11 +220,7 @@ export async function handler(
   process.exit(EXIT_CODES.SUCCESS);
 }
 
-export function builder(yargs: Argv): Argv<AuthArgs> {
-  addConfigOptions(yargs);
-  addTestingOptions(yargs);
-  addGlobalOptions(yargs);
-
+function authBuilder(yargs: Argv): Argv<AuthArgs> {
   yargs.options({
     'auth-type': {
       describe: i18n(`${i18nKey}.options.authType.describe`),
@@ -240,12 +230,6 @@ export function builder(yargs: Argv): Argv<AuthArgs> {
         `${OAUTH_AUTH_METHOD.value}`,
       ],
       default: PERSONAL_ACCESS_KEY_AUTH_METHOD.value,
-      defaultDescription: i18n(
-        `${i18nKey}.options.authType.defaultDescription`,
-        {
-          authMethod: PERSONAL_ACCESS_KEY_AUTH_METHOD.value,
-        }
-      ),
     },
     account: {
       describe: i18n(`${i18nKey}.options.account.describe`),
@@ -256,3 +240,17 @@ export function builder(yargs: Argv): Argv<AuthArgs> {
 
   return yargs as Argv<AuthArgs>;
 }
+
+export const builder = makeYargsBuilder<AuthArgs>(
+  authBuilder,
+  command,
+  i18n(`${i18nKey}.verboseDescribe`, {
+    authMethod: PERSONAL_ACCESS_KEY_AUTH_METHOD.value,
+    configName: DEFAULT_HUBSPOT_CONFIG_YAML_FILE_NAME,
+  }),
+  {
+    useGlobalOptions: true,
+    useConfigOptions: true,
+    useTestingOptions: true,
+  }
+);
