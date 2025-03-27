@@ -66,7 +66,7 @@ export async function handler(
     name =
       providedName && typeof providedName === 'string'
         ? providedName
-        : await listPrompt(i18n(`${i18nKey}.selectSchema`), {
+        : await listPrompt<string>(i18n(`${i18nKey}.selectSchema`), {
             choices: schemaNames,
           });
 
