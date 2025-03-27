@@ -1,6 +1,6 @@
 {
   "name": "@hubspot/cli",
-  "version": "7.2.0-beta.0",
+  "version": "7.2.0",
   "description": "The official CLI for developing on HubSpot",
   "license": "Apache-2.0",
   "repository": "https://github.com/HubSpot/hubspot-cli",
