@@ -1178,7 +1178,7 @@ en:
       disabledUrlText: "See all HubSpot CLI commands here."
       featureHighlight:
         defaultTitle: "What's next?"
-        commandKeys:
+        featureKeys:
           accountOption:
             command: "--account"
             message: "Use the {{ command }} option with any command to override the default account"
@@ -1208,10 +1208,12 @@ en:
             message: "Run {{ command }} to learn more about available project commands"
           projectUploadCommand:
             command: "hs project upload"
-            message: "Run {{ command }} to upload your project to HubSpot and trigger builds"
+            message: "Run {{ command }} to upload your project to your HubSpot account"
           projectDevCommand:
             command: "hs project dev"
             message: "Run {{ command }} to set up your test environment and start local development"
+          projectCommandTip:
+            message: "Tip: All project commands must be run from within a project directory"
           sampleProjects:
             linkText: "HubSpot's sample projects"
             url: "https://developers.hubspot.com/docs/platform/sample-projects?utm_source=cli&utm_content=project_create_whats_next"
