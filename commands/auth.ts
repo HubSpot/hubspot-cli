@@ -31,7 +31,8 @@ import {
 } from '../lib/prompts/personalAccessKeyPrompt';
 import { cliAccountNamePrompt } from '../lib/prompts/accountNamePrompt';
 import { setAsDefaultAccountPrompt } from '../lib/prompts/setAsDefaultAccountPrompt';
-import { setLogLevel, makeYargsBuilder } from '../lib/commonOpts';
+import { setLogLevel } from '../lib/commonOpts';
+import { makeYargsBuilder } from '../lib/yargsUtils';
 import { trackAuthAction, trackCommandUsage } from '../lib/usageTracking';
 import { authenticateWithOauth } from '../lib/oauth';
 import { EXIT_CODES } from '../lib/enums/exitCodes';
@@ -240,7 +241,7 @@ function authBuilder(yargs: Argv): Argv<AuthArgs> {
   return yargs as Argv<AuthArgs>;
 }
 
-exports.builder = makeYargsBuilder<AuthArgs>(
+export const builder = makeYargsBuilder<AuthArgs>(
   authBuilder,
   command,
   i18n(`${i18nKey}.verboseDescribe`, {

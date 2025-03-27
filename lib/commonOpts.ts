@@ -23,44 +23,6 @@ import { uiCommandReference } from './ui';
 
 const i18nKey = 'lib.commonOpts';
 
-export function makeYargsBuilder<T>(
-  callback: (yargs: Argv) => Argv<T>,
-  command: string,
-  describe: string,
-  options: {
-    useGlobalOptions?: boolean;
-    useAccountOptions?: boolean;
-    useConfigOptions?: boolean;
-    useUseEnvironmentOptions?: boolean;
-    useTestingOptions?: boolean;
-  }
-): (yargs: Argv) => Promise<Argv<T>> {
-  return async function (yargs: Argv): Promise<Argv<T>> {
-    if (options.useGlobalOptions) {
-      addGlobalOptions(yargs);
-    }
-    if (options.useAccountOptions) {
-      addAccountOptions(yargs);
-    }
-    if (options.useConfigOptions) {
-      addConfigOptions(yargs);
-    }
-    if (options.useUseEnvironmentOptions) {
-      addUseEnvironmentOptions(yargs);
-    }
-    if (options.useTestingOptions) {
-      addTestingOptions(yargs);
-    }
-
-    const result = callback(yargs);
-
-    // Must go last to pick up available options
-    await addCustomHelpOutput(result, command, describe);
-
-    return result;
-  };
-}
-
 export function addGlobalOptions(yargs: Argv) {
   yargs.version(false);
 

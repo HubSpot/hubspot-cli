@@ -30,7 +30,8 @@ import { ENVIRONMENTS } from '@hubspot/local-dev-lib/constants/environments';
 import { logger } from '@hubspot/local-dev-lib/logger';
 import { getAccountIdentifier } from '@hubspot/local-dev-lib/config/getAccountIdentifier';
 import { CLIOptions } from '@hubspot/local-dev-lib/types/CLIOptions';
-import { setLogLevel, makeYargsBuilder } from '../lib/commonOpts';
+import { setLogLevel } from '../lib/commonOpts';
+import { makeYargsBuilder } from '../lib/yargsUtils';
 import { handleExit } from '../lib/process';
 import { debugError, logError } from '../lib/errorHandlers/index';
 import { i18n } from '../lib/lang';
@@ -277,7 +278,7 @@ function initBuilder(yargs: Argv): Argv<InitArgs> {
   return yargs as Argv<InitArgs>;
 }
 
-exports.builder = makeYargsBuilder<InitArgs>(
+export const builder = makeYargsBuilder<InitArgs>(
   initBuilder,
   command,
   i18n(`${i18nKey}.verboseDescribe`, {

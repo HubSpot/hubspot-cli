@@ -2,7 +2,7 @@ import { Argv, ArgumentsCamelCase } from 'yargs';
 import { logger } from '@hubspot/local-dev-lib/logger';
 import { getAccountConfig } from '@hubspot/local-dev-lib/config';
 import { getAccessToken } from '@hubspot/local-dev-lib/personalAccessKey';
-import { makeYargsBuilder } from '../../lib/commonOpts';
+import { makeYargsBuilder } from '../../lib/yargsUtils';
 import { i18n } from '../../lib/lang';
 import { getTableContents } from '../../lib/ui/table';
 import { CommonArgs, ConfigArgs } from '../../types/Yargs';
