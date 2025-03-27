@@ -1,50 +1,64 @@
-// @ts-nocheck
-const { useV3Api } = require('../../lib/projects/buildAndDeploy');
-
-const chalk = require('chalk');
-const {
+import { Argv, ArgumentsCamelCase } from 'yargs';
+import chalk from 'chalk';
+import {
+  deployProject,
+  fetchProject,
+} from '@hubspot/local-dev-lib/api/projects';
+import { getAccountConfig } from '@hubspot/local-dev-lib/config';
+import { logger } from '@hubspot/local-dev-lib/logger';
+import { isHubSpotHttpError } from '@hubspot/local-dev-lib/errors/index';
+import {
   addAccountOptions,
   addConfigOptions,
   addUseEnvironmentOptions,
-} = require('../../lib/commonOpts');
-const { trackCommandUsage } = require('../../lib/usageTracking');
-const { logError, ApiErrorContext } = require('../../lib/errorHandlers/index');
-const { logger } = require('@hubspot/local-dev-lib/logger');
-const {
-  deployProject,
-  fetchProject,
-} = require('@hubspot/local-dev-lib/api/projects');
-const { getProjectConfig } = require('../../lib/projects');
-const { pollDeployStatus } = require('../../lib/projects/buildAndDeploy');
-const { getProjectDetailUrl } = require('../../lib/projects/urls');
-const { projectNamePrompt } = require('../../lib/prompts/projectNamePrompt');
-const { promptUser } = require('../../lib/prompts/promptUtils');
-const { i18n } = require('../../lib/lang');
-const { uiBetaTag, uiLink } = require('../../lib/ui');
-const { getAccountConfig } = require('@hubspot/local-dev-lib/config');
-const { EXIT_CODES } = require('../../lib/enums/exitCodes');
-const { uiCommandReference, uiAccountDescription } = require('../../lib/ui');
-const { isHubSpotHttpError } = require('@hubspot/local-dev-lib/errors/index');
+} from '../../lib/commonOpts';
+import { useV3Api } from '../../lib/projects/buildAndDeploy';
+import { trackCommandUsage } from '../../lib/usageTracking';
+import { logError, ApiErrorContext } from '../../lib/errorHandlers/index';
+import { getProjectConfig } from '../../lib/projects';
+import { pollDeployStatus } from '../../lib/projects/buildAndDeploy';
+import { getProjectDetailUrl } from '../../lib/projects/urls';
+import { projectNamePrompt } from '../../lib/prompts/projectNamePrompt';
+import { promptUser } from '../../lib/prompts/promptUtils';
+import { i18n } from '../../lib/lang';
+import { uiBetaTag, uiLink } from '../../lib/ui';
+import { EXIT_CODES } from '../../lib/enums/exitCodes';
+import { uiCommandReference, uiAccountDescription } from '../../lib/ui';
+import {
+  CommonArgs,
+  ConfigArgs,
+  AccountArgs,
+  EnvironmentArgs,
+} from '../../types/Yargs';
 
 const i18nKey = 'commands.project.subcommands.deploy';
 
-exports.command = 'deploy';
-exports.describe = uiBetaTag(i18n(`${i18nKey}.describe`), false);
+export const command = 'deploy';
+export const describe = uiBetaTag(i18n(`${i18nKey}.describe`), false);
 
-const validateBuildId = (
-  buildId,
-  deployedBuildId,
-  latestBuildId,
-  projectName,
-  accountId
-) => {
+export type ProjectDeployArgs = CommonArgs &
+  ConfigArgs &
+  AccountArgs &
+  EnvironmentArgs & {
+    project?: string;
+    build?: number;
+    buildId?: number;
+  };
+
+function validateBuildId(
+  buildId: number,
+  deployedBuildId: number | undefined,
+  latestBuildId: number,
+  projectName: string | undefined,
+  accountId: number
+): boolean | string {
   if (Number(buildId) > latestBuildId) {
     return i18n(`${i18nKey}.errors.buildIdDoesNotExist`, {
       buildId: buildId,
-      projectName,
+      projectName: projectName!,
       linkToProject: uiLink(
         i18n(`${i18nKey}.errors.viewProjectsBuilds`),
-        getProjectDetailUrl(projectName, accountId)
+        getProjectDetailUrl(projectName!, accountId)!
       ),
     });
   }
@@ -53,20 +67,22 @@ const validateBuildId = (
       buildId: buildId,
       linkToProject: uiLink(
         i18n(`${i18nKey}.errors.viewProjectsBuilds`),
-        getProjectDetailUrl(projectName, accountId)
+        getProjectDetailUrl(projectName!, accountId)!
       ),
     });
   }
   return true;
-};
+}
 
-exports.handler = async options => {
-  const { derivedAccountId } = options;
+export async function handler(
+  args: ArgumentsCamelCase<ProjectDeployArgs>
+): Promise<void> {
+  const { derivedAccountId } = args;
   const accountConfig = getAccountConfig(derivedAccountId);
-  const { project: projectOption, buildId: buildIdOption } = options;
+  const { project: projectOption, buildId: buildIdOption } = args;
   const accountType = accountConfig && accountConfig.accountType;
 
-  trackCommandUsage('project-deploy', { type: accountType }, derivedAccountId);
+  trackCommandUsage('project-deploy', { type: accountType! }, derivedAccountId);
 
   const { projectConfig } = await getProjectConfig();
 
@@ -89,7 +105,7 @@ exports.handler = async options => {
   try {
     const {
       data: { latestBuild, deployedBuildId },
-    } = await fetchProject(derivedAccountId, projectName);
+    } = await fetchProject(derivedAccountId, projectName!);
 
     if (!latestBuild || !latestBuild.buildId) {
       logger.error(i18n(`${i18nKey}.errors.noBuilds`));
@@ -135,24 +151,21 @@ exports.handler = async options => {
 
     const { data: deployResp } = await deployProject(
       derivedAccountId,
-      projectName,
+      projectName!,
       buildIdToDeploy,
       useV3Api(projectConfig?.platformVersion)
     );
 
-    if (!deployResp || deployResp.error) {
-      logger.error(
-        i18n(`${i18nKey}.errors.deploy`, {
-          details: deployResp.error.message,
-        })
-      );
+    // TODO: Validate this change. Were we actually using deployResp.error.message?
+    if (!deployResp) {
+      logger.error(i18n(`${i18nKey}.errors.deploy`));
       return process.exit(EXIT_CODES.ERROR);
     }
 
     await pollDeployStatus(
       derivedAccountId,
-      projectName,
-      deployResp.id,
+      projectName!,
+      Number(deployResp.id),
       buildIdToDeploy
     );
   } catch (e) {
@@ -177,9 +190,9 @@ exports.handler = async options => {
     }
     return process.exit(EXIT_CODES.ERROR);
   }
-};
+}
 
-exports.builder = yargs => {
+export function builder(yargs: Argv): Argv<ProjectDeployArgs> {
   yargs.options({
     project: {
       describe: i18n(`${i18nKey}.options.project.describe`),
@@ -204,5 +217,12 @@ exports.builder = yargs => {
   addAccountOptions(yargs);
   addUseEnvironmentOptions(yargs);
 
-  return yargs;
+  return yargs as Argv<ProjectDeployArgs>;
+}
+
+module.exports = {
+  command,
+  describe,
+  builder,
+  handler,
 };

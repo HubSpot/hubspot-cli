@@ -631,7 +631,7 @@ en:
           debug:
             deploying: "Deploying project at path: {{ path }}"
           errors:
-            deploy: "Deploy error: {{ details }}"
+            deploy: "Deploy error: an unknown error occurred."
             noBuilds: "Deploy error: no builds for this project were found."
             noBuildId: "You must specify a build to deploy"
             projectNotFound: "The project {{ projectName }} does not exist in account {{ accountIdentifier }}. Run {{ command }} to upload your project files to HubSpot."

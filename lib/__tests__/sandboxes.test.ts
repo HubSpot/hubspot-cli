@@ -4,7 +4,7 @@ import { fetchTypes } from '@hubspot/local-dev-lib/api/sandboxSync';
 import { getAccountId, getConfigAccounts } from '@hubspot/local-dev-lib/config';
 import { HUBSPOT_ACCOUNT_TYPES } from '@hubspot/local-dev-lib/constants/config';
 import { Environment } from '@hubspot/local-dev-lib/types/Config';
-import { makeHubSpotHttpError } from '../testUtils';
+import { mockHubSpotHttpError } from '../testUtils';
 import {
   getSandboxTypeAsString,
   getHasSandboxesByType,
@@ -171,7 +171,7 @@ describe('lib/sandboxes', () => {
     const mockAccountId = 123;
 
     it('handles missing scope error', () => {
-      const error = makeHubSpotHttpError('missing scopes error', {
+      const error = mockHubSpotHttpError('missing scopes error', {
         status: 403,
         data: {
           message: 'Missing scopes error',
@@ -193,7 +193,7 @@ describe('lib/sandboxes', () => {
     });
 
     it('handles user access not allowed error', () => {
-      const error = makeHubSpotHttpError('user access not allowed error', {
+      const error = mockHubSpotHttpError('user access not allowed error', {
         status: 403,
         data: {
           category: 'BANNED',
@@ -212,7 +212,7 @@ describe('lib/sandboxes', () => {
     });
 
     it('handles 403 gating error', () => {
-      const error = makeHubSpotHttpError('403 gating error', {
+      const error = mockHubSpotHttpError('403 gating error', {
         status: 403,
         data: {
           category: 'BANNED',

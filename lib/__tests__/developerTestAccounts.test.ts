@@ -3,7 +3,7 @@ import { logger } from '@hubspot/local-dev-lib/logger';
 import { CLIAccount } from '@hubspot/local-dev-lib/types/Accounts';
 import { HUBSPOT_ACCOUNT_TYPES } from '@hubspot/local-dev-lib/constants/config';
 import { fetchDeveloperTestAccounts } from '@hubspot/local-dev-lib/api/developerTestAccounts';
-import { makeHubSpotHttpError } from '../testUtils';
+import { mockHubSpotHttpError } from '../testUtils';
 import * as errorHandlers from '../errorHandlers';
 import {
   getHasDevTestAccounts,
@@ -147,7 +147,7 @@ describe('lib/developerTestAccounts', () => {
     });
 
     it('should log and throw an error if the account is missing the required scopes', () => {
-      const missingScopesError = makeHubSpotHttpError('Missing scopes error', {
+      const missingScopesError = mockHubSpotHttpError('Missing scopes error', {
         status: 403,
         data: {
           message: 'Missing scopes error',
@@ -167,7 +167,7 @@ describe('lib/developerTestAccounts', () => {
     });
 
     it('should log and throw an error if the account is missing the required scopes', () => {
-      const portalLimitReachedError = makeHubSpotHttpError(
+      const portalLimitReachedError = mockHubSpotHttpError(
         'Portal limit reached error',
         {
           status: 400,
@@ -190,7 +190,7 @@ describe('lib/developerTestAccounts', () => {
     });
 
     it('should log a generic error message for an unknown error type', () => {
-      const someUnknownError = makeHubSpotHttpError('Some unknown error', {
+      const someUnknownError = mockHubSpotHttpError('Some unknown error', {
         status: 400,
         data: {
           message: 'Some unknown error',

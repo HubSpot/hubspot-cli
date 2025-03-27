@@ -3,7 +3,7 @@ import { initiateSync } from '@hubspot/local-dev-lib/api/sandboxSync';
 import { getAccountId } from '@hubspot/local-dev-lib/config';
 import { HUBSPOT_ACCOUNT_TYPES } from '@hubspot/local-dev-lib/constants/config';
 import { Environment } from '@hubspot/local-dev-lib/types/Config';
-import { makeHubSpotHttpError } from '../testUtils';
+import { mockHubSpotHttpError } from '../testUtils';
 import { getAvailableSyncTypes } from '../sandboxes';
 import { syncSandbox } from '../sandboxSync';
 import SpinniesManager from '../ui/SpinniesManager';
@@ -99,7 +99,7 @@ describe('lib/sandboxSync', () => {
     });
 
     it('handles sync in progress error', async () => {
-      const error = makeHubSpotHttpError('', {
+      const error = mockHubSpotHttpError('', {
         status: 429,
         data: {
           category: 'RATE_LIMITS',
@@ -121,7 +121,7 @@ describe('lib/sandboxSync', () => {
     });
 
     it('handles invalid user error', async () => {
-      const error = makeHubSpotHttpError('', {
+      const error = mockHubSpotHttpError('', {
         status: 403,
         data: {
           category: 'BANNED',
@@ -141,7 +141,7 @@ describe('lib/sandboxSync', () => {
     });
 
     it('handles not super admin error', async () => {
-      const error = makeHubSpotHttpError('', {
+      const error = mockHubSpotHttpError('', {
         status: 403,
         data: {
           category: 'BANNED',
@@ -163,7 +163,7 @@ describe('lib/sandboxSync', () => {
     });
 
     it('handles sandbox not found error', async () => {
-      const error = makeHubSpotHttpError('', {
+      const error = mockHubSpotHttpError('', {
         status: 404,
         data: {
           category: 'OBJECT_NOT_FOUND',
