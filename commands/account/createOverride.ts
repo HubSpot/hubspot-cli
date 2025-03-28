@@ -4,9 +4,15 @@ import { Argv, ArgumentsCamelCase } from 'yargs';
 import { getCwd } from '@hubspot/local-dev-lib/path';
 import { logger } from '@hubspot/local-dev-lib/logger';
 import { DEFAULT_ACCOUNT_OVERRIDE_FILE_NAME } from '@hubspot/local-dev-lib/constants/config';
-import { getConfigPath, getAccountId } from '@hubspot/local-dev-lib/config';
+import {
+  getCWDAccountOverride,
+  getDefaultAccountOverrideFilePath,
+  getConfigPath,
+  getAccountId,
+} from '@hubspot/local-dev-lib/config';
 
 import { i18n } from '../../lib/lang';
+import { promptUser } from '../../lib/prompts/promptUtils';
 import { EXIT_CODES } from '../../lib/enums/exitCodes';
 import { selectAccountFromConfig } from '../../lib/prompts/accountsPrompt';
 import { logError } from '../../lib/errorHandlers/index';
@@ -26,6 +32,27 @@ export async function handler(
   args: ArgumentsCamelCase<AccountCreateOverrideArgs>
 ): Promise<void> {
   let overrideDefaultAccount = args.account;
+
+  const accountOverride = getCWDAccountOverride();
+  const overrideFilePath = getDefaultAccountOverrideFilePath();
+  if (accountOverride && overrideFilePath) {
+    logger.log(
+      i18n(`${i18nKey}.accountOverride`, {
+        accountOverride,
+        overrideFilePath,
+      })
+    );
+
+    const { replaceOverrideFile } = await promptUser({
+      type: 'confirm',
+      name: 'replaceOverrideFile',
+      message: i18n(`${i18nKey}.prompts.replaceOverrideFile`),
+    });
+
+    if (!replaceOverrideFile) {
+      process.exit(EXIT_CODES.SUCCESS);
+    }
+  }
 
   if (!overrideDefaultAccount) {
     overrideDefaultAccount = await selectAccountFromConfig();

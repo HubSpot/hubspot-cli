@@ -35,6 +35,9 @@ en:
         createOverride:
           describe: "Create a new default account override file (.hs-account) in the current working directory."
           success: "Default account override file created at {{ overrideFilePath }}"
+          accountOverride: "An account override file already exists at {{ overrideFilePath }} associated with account \"{{ accountOverride }}\"."
+          prompts:
+            replaceOverrideFile: "Replace existing account override file?"
           errors:
             accountNotFound: "The specified account could not be found in the config file {{ configPath }}"
           options:
