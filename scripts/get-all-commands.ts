@@ -43,7 +43,7 @@ async function extractCommands(
   return commands;
 }
 
-(async function() {
+(async function () {
   SpinniesManager.init();
   SpinniesManager.add('extractingCommands', { text: 'Extracting commands' });
 

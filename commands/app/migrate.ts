@@ -16,8 +16,8 @@ import { MigrateAppOptions } from '../../types/Yargs';
 import { migrateApp2023_2, migrateApp2025_2 } from '../../lib/app/migrate';
 import { PLATFORM_VERSIONS } from '@hubspot/local-dev-lib/constants/platformVersion';
 
-const { v2023_2, v2025_2 } = PLATFORM_VERSIONS;
-const validMigrationTargets = [v2023_2, v2025_2];
+const { v2023_2, v2025_2, unstable } = PLATFORM_VERSIONS;
+const validMigrationTargets = [v2023_2, v2025_2, unstable];
 
 const i18nKey = 'commands.project.subcommands.migrateApp';
 
@@ -33,12 +33,8 @@ export async function handler(options: ArgumentsCamelCase<MigrateAppOptions>) {
     throw new Error('Account is not configured');
   }
 
-  if (!validMigrationTargets.includes(platformVersion)) {
-    throw new Error('Unsupported platform version');
-  }
-
   try {
-    if (platformVersion === v2025_2) {
+    if (platformVersion === v2025_2 || platformVersion === unstable) {
       await migrateApp2025_2(derivedAccountId, options);
     } else if (platformVersion === v2023_2) {
       await migrateApp2023_2(derivedAccountId, options, accountConfig);
@@ -95,7 +91,7 @@ export async function builder(yargs: Argv) {
     },
     'platform-version': {
       type: 'string',
-      choices: ['2023.2', '2025.2'],
+      choices: validMigrationTargets,
       hidden: true,
       default: '2023.2',
     },
