@@ -44,6 +44,7 @@ export async function handler(
           overrideFilePath,
         }),
       });
+      logger.log('');
 
       if (!deleteOverrideFile) {
         process.exit(EXIT_CODES.SUCCESS);

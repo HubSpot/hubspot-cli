@@ -48,6 +48,7 @@ export async function handler(
       name: 'replaceOverrideFile',
       message: i18n(`${i18nKey}.prompts.replaceOverrideFile`),
     });
+    logger.log('');
 
     if (!replaceOverrideFile) {
       process.exit(EXIT_CODES.SUCCESS);
