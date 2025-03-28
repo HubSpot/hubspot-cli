@@ -47,6 +47,16 @@ en:
             default: "Create a new default account override file (.hs-account) in the current working directory"
             idBased: "Create a new default account override file (.hs-account) in the current working directory, using the account with accountId \"1234567\""
             nameBased: "Create a new default account override file (.hs-account) in the current working directory, using the account with name \"MyAccount\""
+        removeOverride:
+          describe: "Remove the default account override file ({{ overrideFile }}) from the current working directory."
+          accountOverride: "There is an account override file at {{ overrideFilePath }} associated with account \"{{ accountOverride }}\"."
+          prompts:
+            deleteOverrideFile: "Delete account override file?"
+          success: "Removed the default account override file."
+          noOverrideFile: "No default account override file found in the current working directory. No action required."
+          options:
+            force:
+              describe: "Skip confirmation prompt when removing the override file"
         list:
           accounts: "{{#bold}}Accounts{{/bold}}:"
           defaultAccount: "{{#bold}}Default account{{/bold}}: {{ account }}"
