@@ -116,21 +116,19 @@ export async function handler(
 
     const accountOverride = getCWDAccountOverride();
     const overrideFilePath = getDefaultAccountOverrideFilePath();
-    if (overrideFilePath && accountOverride) {
-      if (
-        accountsToRemove.some(
-          account =>
-            account.name === accountOverride ||
-            // @ts-ignore: Default account override files can only exist with global config
-            account.accountId === accountOverride
-        )
-      ) {
-        promptMessage =
-          promptMessage +
-          i18n(`${i18nKey}.defaultAccountOverride`, {
-            overrideFilePath,
-          });
-      }
+    const accountOverrideMatches = accountsToRemove.some(
+      account =>
+        account.name === accountOverride ||
+        // @ts-expect-error: Default account override files can only exist with global config
+        account.accountId === accountOverride
+    );
+    if (overrideFilePath && accountOverride && accountOverrideMatches) {
+      promptMessage = `${promptMessage}${i18n(
+        `${i18nKey}.defaultAccountOverride`,
+        {
+          overrideFilePath,
+        }
+      )}`;
     }
 
     const { accountsCleanPrompt } = await promptUser([
