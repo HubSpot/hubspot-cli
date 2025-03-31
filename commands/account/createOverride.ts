@@ -14,9 +14,7 @@ import { CommonArgs } from '../../types/Yargs';
 
 const i18nKey = 'commands.account.subcommands.createOverride';
 
-export const describe = i18n(`${i18nKey}.describe`, {
-  hsAccountFileName: DEFAULT_ACCOUNT_OVERRIDE_FILE_NAME,
-});
+export const describe = undefined; // i18n(`${i18nKey}.describe`, { hsAccountFileName: DEFAULT_ACCOUNT_OVERRIDE_FILE_NAME });
 
 export const command = 'create-override [account]';
 
