@@ -1,5 +1,4 @@
 import { logger } from '@hubspot/local-dev-lib/logger';
-import { getAccountId } from '@hubspot/local-dev-lib/config';
 
 import SpinniesManager from '../ui/SpinniesManager';
 import {
@@ -27,7 +26,7 @@ import { isSpecifiedError } from '@hubspot/local-dev-lib/errors/index';
 import { getHubSpotWebsiteOrigin } from '@hubspot/local-dev-lib/urls';
 import { uiCommandReference } from '../ui';
 import pkg from '../../package.json';
-
+import { getConfigDefaultAccountIfExists } from '@hubspot/local-dev-lib/config';
 const { i18n } = require('../lang');
 const { uiLink } = require('../ui');
 const minMajorNodeVersion = 18;
@@ -35,7 +34,7 @@ const minMajorNodeVersion = 18;
 const i18nKey = `lib.doctor`;
 
 export class Doctor {
-  accountId: number | null;
+  accountId: number | undefined;
   private diagnosis?: Diagnosis;
   private projectConfig?: ProjectConfig;
   private diagnosticInfo?: DiagnosticInfo;
@@ -47,7 +46,7 @@ export class Doctor {
     )
   ) {
     SpinniesManager.init();
-    this.accountId = getAccountId();
+    this.accountId = getConfigDefaultAccountIfExists()?.accountId;
     this.diagnosticInfoBuilder = diagnosticInfoBuilder;
   }
 

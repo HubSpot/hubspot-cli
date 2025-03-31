@@ -1,11 +1,9 @@
 import { getHubSpotWebsiteOrigin } from '@hubspot/local-dev-lib/urls';
-import { getEnv } from '@hubspot/local-dev-lib/config';
-import { ENVIRONMENTS } from '@hubspot/local-dev-lib/constants/environments';
+import { getConfigAccountById } from '@hubspot/local-dev-lib/config';
 
 function getProjectHomeUrl(accountId: number): string {
-  const baseUrl = getHubSpotWebsiteOrigin(
-    getEnv(accountId) === 'qa' ? ENVIRONMENTS.QA : ENVIRONMENTS.PROD
-  );
+  const account = getConfigAccountById(accountId);
+  const baseUrl = getHubSpotWebsiteOrigin(account.env);
 
   return `${baseUrl}/developer-projects/${accountId}`;
 }

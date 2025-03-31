@@ -1,11 +1,14 @@
 import { promptUser } from './promptUtils';
-import { getAccountId } from '@hubspot/local-dev-lib/config';
 import { fetchProjects } from '@hubspot/local-dev-lib/api/projects';
 import { logError, ApiErrorContext } from '../errorHandlers/index';
 import { logger } from '@hubspot/local-dev-lib/logger';
 import { EXIT_CODES } from '../enums/exitCodes';
 import { i18n } from '../lang';
 import { Project } from '@hubspot/local-dev-lib/types/Project';
+import {
+  getConfigAccountIfExists,
+  getConfigDefaultAccount,
+} from '@hubspot/local-dev-lib/config';
 
 const i18nKey = 'lib.prompts.downloadProjectPrompt';
 
@@ -14,7 +17,7 @@ type DownloadProjectPromptResponse = {
 };
 
 async function createProjectsList(
-  accountId: number | null
+  accountId: number | undefined
 ): Promise<Project[]> {
   try {
     if (accountId) {
@@ -34,8 +37,11 @@ export async function downloadProjectPrompt(promptOptions: {
   project?: string;
   name?: string;
 }): Promise<DownloadProjectPromptResponse> {
-  const accountId = getAccountId(promptOptions.account);
-  const projectsList = await createProjectsList(accountId);
+  const account =
+    (promptOptions.account &&
+      getConfigAccountIfExists(promptOptions.account)) ||
+    getConfigDefaultAccount();
+  const projectsList = await createProjectsList(account.accountId);
 
   return promptUser<DownloadProjectPromptResponse>([
     {
@@ -45,7 +51,7 @@ export async function downloadProjectPrompt(promptOptions: {
           !projectsList.find(p => p.name === promptOptions.name)
           ? i18n(`${i18nKey}.errors.projectNotFound`, {
               projectName: promptOptions.project,
-              accountId: accountId || '',
+              accountId: account.accountId,
             })
           : i18n(`${i18nKey}.selectProject`);
       },
