@@ -69,7 +69,12 @@ export async function createProjectPrompt(
         if (!input) {
           return i18n(`${i18nKey}.errors.destRequired`);
         }
-        if (fs.existsSync(input)) {
+        console.log('INPUT: ', path.resolve(getCwd(), input));
+        console.log('CWD: ', getCwd());
+        if (
+          fs.existsSync(input) &&
+          path.resolve(getCwd(), input) !== getCwd()
+        ) {
           return i18n(`${i18nKey}.errors.invalidDest`);
         }
         if (!isValidPath(input)) {
