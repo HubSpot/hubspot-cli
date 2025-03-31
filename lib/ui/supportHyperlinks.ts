@@ -1,10 +1,12 @@
-import { hasFlag } from '../hasFlag';
+import { hasFlag } from '../yargsUtils';
 
 //See https://github.com/jamestalmage/supports-hyperlinks (License: https://github.com/jamestalmage/supports-hyperlinks/blob/master/license)
 
-function parseVersion(
-  versionString: string
-): { major: number; minor: number; patch: number } {
+function parseVersion(versionString: string): {
+  major: number;
+  minor: number;
+  patch: number;
+} {
   if (/^\d{3,4}$/.test(versionString)) {
     // Env var doesn't always use dots. example: 4601 => 46.1.0
     const m = /(\d{1,2})(\d{2})/.exec(versionString);

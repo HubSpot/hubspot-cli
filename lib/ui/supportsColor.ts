@@ -1,7 +1,7 @@
 import process from 'process';
 import os from 'os';
 import tty from 'tty';
-import { hasFlag } from '../hasFlag';
+import { hasFlag } from '../yargsUtils';
 
 const { env } = process;
 

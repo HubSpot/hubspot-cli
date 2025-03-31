@@ -77,10 +77,10 @@ export function uiInfoSection(title: string, logContent: () => void): void {
   uiLine();
 }
 
-export function uiCommandReference(command: string): string {
+export function uiCommandReference(command: string, withQuotes = true): string {
   const terminalUISupport = getTerminalUISupport();
 
-  const commandReference = `\`${command}\``;
+  const commandReference = withQuotes ? `\`${command}\`` : command;
 
   return chalk.bold(
     terminalUISupport.color
@@ -107,7 +107,7 @@ export function uiFeatureHighlight(commands: string[], title?: string): void {
   });
 }
 
-export function uiBetaTag(message: string, log = true): void | string {
+export function uiBetaTag(message: string, log = true): string | undefined {
   const i18nKey = 'lib.ui';
 
   const terminalUISupport = getTerminalUISupport();
@@ -119,6 +119,7 @@ export function uiBetaTag(message: string, log = true): void | string {
 
   if (log) {
     logger.log(result);
+    return;
   } else {
     return result;
   }

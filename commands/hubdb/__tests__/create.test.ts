@@ -4,14 +4,12 @@ import {
   addConfigOptions,
   addUseEnvironmentOptions,
 } from '../../../lib/commonOpts';
+import * as hubdbCreateCommand from '../create';
 
 jest.mock('yargs');
 jest.mock('../../../lib/commonOpts');
 
-// Import this last so mocks apply
-import * as hubdbCreateCommand from '../create';
-
-describe('commands/account/clean', () => {
+describe('commands/hubdb/create', () => {
   const yargsMock = yargs as Argv;
 
   describe('command', () => {

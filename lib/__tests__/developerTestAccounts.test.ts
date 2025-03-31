@@ -1,9 +1,9 @@
 import { getAccountId, getConfigAccounts } from '@hubspot/local-dev-lib/config';
 import { logger } from '@hubspot/local-dev-lib/logger';
 import { CLIAccount } from '@hubspot/local-dev-lib/types/Accounts';
-import { HubSpotHttpError } from '@hubspot/local-dev-lib/models/HubSpotHttpError';
 import { HUBSPOT_ACCOUNT_TYPES } from '@hubspot/local-dev-lib/constants/config';
 import { fetchDeveloperTestAccounts } from '@hubspot/local-dev-lib/api/developerTestAccounts';
+import { makeHubSpotHttpError } from '../testUtils';
 import * as errorHandlers from '../errorHandlers';
 import {
   getHasDevTestAccounts,
@@ -46,15 +46,6 @@ const accounts: CLIAccount[] = [
     env: 'prod',
   },
 ];
-
-const makeHubSpotHttpError = (
-  message: string,
-  response: object
-): HubSpotHttpError => {
-  return new HubSpotHttpError(message, {
-    cause: { isAxiosError: true, response },
-  });
-};
 
 describe('lib/developerTestAccounts', () => {
   describe('getHasDevTestAccounts()', () => {

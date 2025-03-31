@@ -20,6 +20,7 @@ import {
   getAccountConfig as _getAccountConfig,
   getConfigPath as _getConfigPath,
   getDefaultAccountOverrideFilePath as _getDefaultAccountOverrideFilePath,
+  isConfigFlagEnabled as _isConfigFlagEnabled,
 } from '@hubspot/local-dev-lib/config';
 import { getAccessToken as _getAccessToken } from '@hubspot/local-dev-lib/personalAccessKey';
 import { walk as _walk } from '@hubspot/local-dev-lib/fs';
@@ -47,7 +48,9 @@ const getAccountId = _getAccountId as jest.MockedFunction<typeof _getAccountId>;
 const getProjectConfig = _getProjectConfig as jest.MockedFunction<
   typeof _getProjectConfig
 >;
-
+const isConfigFlagEnabled = _isConfigFlagEnabled as jest.MockedFunction<
+  typeof _isConfigFlagEnabled
+>;
 const fetchProject = _fetchProject as jest.MockedFunction<typeof _fetchProject>;
 
 const utilPromisify = util.promisify as jest.MockedFunction<
@@ -96,6 +99,7 @@ describe('lib/doctor/DiagnosticInfo', () => {
     getAccountId.mockReturnValue(accountId);
     getAccountConfig.mockReturnValue(accountConfig);
     walk.mockResolvedValue(projectFiles);
+    isConfigFlagEnabled.mockReturnValue(false);
   });
 
   it('should initialize the required state on creation', () => {

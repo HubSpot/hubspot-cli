@@ -19,6 +19,9 @@ exports[`lib/doctor/DiagnosticInfo generateDiagnosticInfo should gather the requ
     "src/app/app.functions/serverless.json",
   ],
   "defaultAccountOverrideFile": "path/to/default/account/override/.hsaccount",
+  "configSettings": {
+    "httpUseLocalhost": false,
+  },
   "envFiles": [
     "src/app/app.functions/.env",
   ],

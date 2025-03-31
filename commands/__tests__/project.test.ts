@@ -8,7 +8,7 @@ import logs from '../project/logs';
 import watch from '../project/watch';
 import download from '../project/download';
 import open from '../project/open';
-import dev from '../project/dev';
+import * as dev from '../project/dev';
 import add from '../project/add';
 import migrateApp from '../project/migrateApp';
 import cloneApp from '../project/cloneApp';

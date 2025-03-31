@@ -1,25 +1,41 @@
-// @ts-nocheck
-import { inputPrompt } from '../../../lib/prompts/promptUtils';
-
-const { logger } = require('@hubspot/local-dev-lib/logger');
-const { trackCommandUsage } = require('../../../lib/usageTracking');
-const {
+import { Argv, ArgumentsCamelCase } from 'yargs';
+import { logger } from '@hubspot/local-dev-lib/logger';
+import {
   downloadSchemas,
   getResolvedPath,
-} = require('@hubspot/local-dev-lib/customObjects');
-const { i18n } = require('../../../lib/lang');
-const { logSchemas } = require('../../../lib/schema');
-const { logError } = require('../../../lib/errorHandlers');
+} from '@hubspot/local-dev-lib/customObjects';
+
+import { inputPrompt } from '../../../lib/prompts/promptUtils';
+import { trackCommandUsage } from '../../../lib/usageTracking';
+import { i18n } from '../../../lib/lang';
+import { logSchemas } from '../../../lib/schema';
+import { logError } from '../../../lib/errorHandlers';
+import {
+  addAccountOptions,
+  addConfigOptions,
+  addUseEnvironmentOptions,
+} from '../../../lib/commonOpts';
+import {
+  AccountArgs,
+  CommonArgs,
+  ConfigArgs,
+  EnvironmentArgs,
+} from '../../../types/Yargs';
 
 const i18nKey = 'commands.customObject.subcommands.schema.subcommands.fetchAll';
 
-exports.command = 'fetch-all [dest]';
-exports.describe = i18n(`${i18nKey}.describe`);
+export const command = 'fetch-all [dest]';
+export const describe = i18n(`${i18nKey}.describe`);
 
-exports.handler = async options => {
-  const { derivedAccountId, dest: providedDest } = options;
+type CombinedArgs = CommonArgs & ConfigArgs & AccountArgs & EnvironmentArgs;
+type SchemaFetchAllArgs = CombinedArgs & { dest?: string };
 
-  trackCommandUsage('custom-object-schema-fetch-all', null, derivedAccountId);
+export async function handler(
+  args: ArgumentsCamelCase<SchemaFetchAllArgs>
+): Promise<void> {
+  const { derivedAccountId, dest: providedDest } = args;
+
+  trackCommandUsage('custom-object-schema-fetch-all', {}, derivedAccountId);
 
   try {
     const dest =
@@ -35,9 +51,13 @@ exports.handler = async options => {
     logError(e);
     logger.error(i18n(`${i18nKey}.errors.fetch`));
   }
-};
+}
 
-exports.builder = yargs => {
+export function builder(yargs: Argv): Argv<SchemaFetchAllArgs> {
+  addConfigOptions(yargs);
+  addAccountOptions(yargs);
+  addUseEnvironmentOptions(yargs);
+
   yargs
     .example([
       [
@@ -53,4 +73,6 @@ exports.builder = yargs => {
       describe: i18n(`${i18nKey}.positionals.dest.describe`),
       type: 'string',
     });
-};
+
+  return yargs as Argv<SchemaFetchAllArgs>;
+}

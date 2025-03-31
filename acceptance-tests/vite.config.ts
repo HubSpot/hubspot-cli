@@ -1,4 +1,3 @@
-/// <reference types="vitest" />
 import { defineConfig } from 'vite';
 
 export default defineConfig({
@@ -10,5 +9,7 @@ export default defineConfig({
     hookTimeout: 30000,
     fileParallelism: false,
     globalSetup: './globalSetup.ts',
+    globals: true,
+    retry: 1,
   },
 });
