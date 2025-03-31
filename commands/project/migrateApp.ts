@@ -15,7 +15,7 @@ export const describe = uiDeprecatedTag(i18n(`${i18nKey}.describe`), false);
 
 export async function handler(yargs: ArgumentsCamelCase<MigrateAppOptions>) {
   logger.warn(
-    i18n(`${i18nKey}.describe.deprecationWarning`, {
+    i18n(`${i18nKey}.deprecationWarning`, {
       oldCommand: uiCommandReference('hs project migrate-app'),
       newCommand: uiCommandReference('hs app migrate'),
     })

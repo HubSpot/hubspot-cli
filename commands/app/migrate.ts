@@ -15,6 +15,8 @@ import { ArgumentsCamelCase, Argv } from 'yargs';
 import { MigrateAppOptions } from '../../types/Yargs';
 import { migrateApp2023_2, migrateApp2025_2 } from '../../lib/app/migrate';
 import { PLATFORM_VERSIONS } from '@hubspot/local-dev-lib/constants/platformVersion';
+import { logger } from '@hubspot/local-dev-lib/logger';
+import { uiBetaTag, uiLink } from '../../lib/ui';
 
 const { v2023_2, v2025_2, unstable } = PLATFORM_VERSIONS;
 const validMigrationTargets = [v2023_2, v2025_2, unstable];
@@ -32,6 +34,16 @@ export async function handler(options: ArgumentsCamelCase<MigrateAppOptions>) {
   if (!accountConfig) {
     throw new Error('Account is not configured');
   }
+
+  logger.log('');
+  logger.log(uiBetaTag(i18n(`${i18nKey}.header.text`), false));
+  logger.log(
+    uiLink(
+      i18n(`${i18nKey}.header.link`),
+      'https://developers.hubspot.com/docs/platform/migrate-a-public-app-to-projects'
+    )
+  );
+  logger.log('');
 
   try {
     if (platformVersion === v2025_2 || platformVersion === unstable) {

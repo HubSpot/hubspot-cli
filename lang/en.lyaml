@@ -567,6 +567,7 @@ en:
             text: "Migrate an app to the projects framework"
             link: "Learn more about migrating apps to the projects framework"
           deprecationWarning: "The {{ oldCommand }} command is deprecated and will be removed. Use {{ newCommand }} going forward."
+
           migrationStatus:
             inProgress: "Converting app configuration to {{#bold}}public-app.json{{/bold}} component definition ..."
             success: "{{#bold}}Your app was converted and build #1 is deployed{{/bold}}"
@@ -582,6 +583,8 @@ en:
           migrationInterrupted: "\nThe command is terminated, but app migration is still in progress. Please check your account to ensure that the project and associated app have been created successfully."
           createAppPrompt: "Proceed with migrating this app to a project component (this process can't be aborted)?"
           projectDetailsLink: "View project details in your developer account"
+          componentsToBeMigrated: "The following component types will be migrated: {{ components }}"
+          componentsThatWillNotBeMigrated: "[NOTE] These component types are not yet supported for migration but will be available later: {{ components }}"
           errors:
             noApps: "No apps found in account {{ accountId }}"
             noAppsEligible: "No apps in account {{ accountId }} are currently migratable"
@@ -589,11 +592,13 @@ en:
             invalidAccountTypeDescription: "Only public apps created in a developer account can be converted to a project component. Select a connected developer account with {{useCommand}} or {{authCommand}} and try again."
             projectAlreadyExists: "A project with name {{ projectName }} already exists. Please choose another name."
             invalidApp: "Could not migrate appId {{ appId }}. This app cannot be migrated at this time. Please choose another public app."
+            appWithAppIdNotFound: "Could not find an app with the id {{ appId }} "
           prompt:
             chooseApp: 'Which app would you like to migrate?'
             inputName: '[--name] What would you like to name the project?'
             inputDest: '[--dest] Where would you like to save the project?'
             uidForComponent: 'What UID would you like to use for {{ componentName }}?'
+            proceed: 'Would you like to proceed?'
           spinners:
             beginningMigration: "Beginning migration"
             migrationStarted: "Migration started"

@@ -1,11 +1,15 @@
 import { CLIAccount } from '@hubspot/local-dev-lib/types/Accounts';
-import { inputPrompt, listPrompt, promptUser } from '../prompts/promptUtils';
+import {
+  confirmPrompt,
+  inputPrompt,
+  listPrompt,
+  promptUser,
+} from '../prompts/promptUtils';
 import { ApiErrorContext, logError } from '../errorHandlers';
 import { EXIT_CODES } from '../enums/exitCodes';
 import { logger } from '@hubspot/local-dev-lib/logger';
 import {
   uiAccountDescription,
-  uiBetaTag,
   uiCommandReference,
   uiLine,
   uiLink,
@@ -95,6 +99,20 @@ async function handleMigrationSetup(
     return process.exit(EXIT_CODES.SUCCESS);
   }
 
+  if (
+    appId &&
+    !allApps.some(app => {
+      return app.appId === appId;
+    })
+  ) {
+    logger.error(
+      i18n('commands.project.subcommands.migrateApp.prompt.chooseApp', {
+        appId,
+      })
+    );
+    return process.exit(EXIT_CODES.ERROR);
+  }
+
   const appChoices = allApps.map(app => ({
     name: app.isMigratable
       ? app.appName
@@ -114,6 +132,47 @@ async function handleMigrationSetup(
       }
     );
     appIdToMigrate = selectedAppId;
+  }
+
+  const selectedApp = allApps.find(app => app.appId === appIdToMigrate);
+
+  const migratableComponents: string[] = ['Application'];
+  const unmigratableComponents: string[] = [];
+
+  selectedApp?.migrationComponents.forEach(component => {
+    if (component.isSupported) {
+      migratableComponents.push(component.componentType);
+    } else {
+      unmigratableComponents.push(component.componentType);
+    }
+  });
+
+  if (migratableComponents.length !== 0) {
+    logger.log(
+      i18n('commands.project.subcommands.migrateApp.componentsToBeMigrated', {
+        components: `\n - ${migratableComponents.join('\n - ')}`,
+      })
+    );
+  }
+
+  if (unmigratableComponents.length !== 0) {
+    logger.log(
+      i18n(
+        'commands.project.subcommands.migrateApp.componentsThatWillNotBeMigrated',
+        {
+          components: `\n - ${unmigratableComponents.join('\n - ')}`,
+        }
+      )
+    );
+  }
+
+  logger.log();
+  const proceed = await confirmPrompt(
+    i18n('commands.project.subcommands.migrateApp.prompt.proceed')
+  );
+
+  if (!proceed) {
+    process.exit(EXIT_CODES.SUCCESS);
   }
 
   const projectName =
@@ -305,15 +364,6 @@ export async function migrateApp2023_2(
 ) {
   const i18nKey = 'commands.project.subcommands.migrateApp';
   const accountName = uiAccountDescription(derivedAccountId);
-  logger.log('');
-  logger.log(uiBetaTag(i18n(`${i18nKey}.header.text`), false));
-  logger.log(
-    uiLink(
-      i18n(`${i18nKey}.header.link`),
-      'https://developers.hubspot.com/docs/platform/migrate-a-public-app-to-projects'
-    )
-  );
-  logger.log('');
 
   if (!isAppDeveloperAccount(accountConfig)) {
     logInvalidAccountError(i18nKey);

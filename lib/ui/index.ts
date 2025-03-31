@@ -137,11 +137,8 @@ export function uiDeprecatedTag(
     terminalUISupport.color ? chalk.yellow(tag) : tag
   } ${message}`;
 
-  logger.log(result);
-
   if (log) {
     logger.log(result);
-    return;
   }
   return result;
 }
