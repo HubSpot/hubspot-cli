@@ -1,12 +1,14 @@
-// @ts-nocheck
-const { promptUser } = require('./promptUtils');
-const { i18n } = require('../lang');
-const { ensureProjectExists } = require('../projects');
-const { uiAccountDescription } = require('../ui');
+import { promptUser } from './promptUtils';
+import { i18n } from '../lang';
+import { ensureProjectExists } from '../projects';
+import { uiAccountDescription } from '../ui';
 
 const i18nKey = 'lib.prompts.projectNamePrompt';
 
-const projectNamePrompt = (accountId, options = {}) => {
+export function projectNamePrompt(
+  accountId: number,
+  options: { project?: string } = {}
+) {
   return promptUser({
     name: 'projectName',
     message: i18n(`${i18nKey}.enterName`),
@@ -28,8 +30,4 @@ const projectNamePrompt = (accountId, options = {}) => {
       return true;
     },
   });
-};
-
-module.exports = {
-  projectNamePrompt,
-};
+}

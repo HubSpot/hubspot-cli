@@ -1,35 +1,38 @@
-// @ts-nocheck
-const path = require('path');
-const chalk = require('chalk');
-
-const {
-  addAccountOptions,
-  addConfigOptions,
-  addUseEnvironmentOptions,
-} = require('../../lib/commonOpts');
-const { trackCommandUsage } = require('../../lib/usageTracking');
-const { getCwd, sanitizeFileName } = require('@hubspot/local-dev-lib/path');
-const { logError, ApiErrorContext } = require('../../lib/errorHandlers/index');
-const { logger } = require('@hubspot/local-dev-lib/logger');
-const { extractZipArchive } = require('@hubspot/local-dev-lib/archive');
-const {
+import { Argv, ArgumentsCamelCase } from 'yargs';
+import path from 'path';
+import { getCwd, sanitizeFileName } from '@hubspot/local-dev-lib/path';
+import { logger } from '@hubspot/local-dev-lib/logger';
+import { extractZipArchive } from '@hubspot/local-dev-lib/archive';
+import {
   downloadProject,
   fetchProjectBuilds,
-} = require('@hubspot/local-dev-lib/api/projects');
-const { ensureProjectExists, getProjectConfig } = require('../../lib/projects');
-const {
-  downloadProjectPrompt,
-} = require('../../lib/prompts/downloadProjectPrompt');
-const { i18n } = require('../../lib/lang');
-const { uiBetaTag } = require('../../lib/ui');
+} from '@hubspot/local-dev-lib/api/projects';
+import { logError, ApiErrorContext } from '../../lib/errorHandlers/index';
+import { getProjectConfig } from '../../lib/projects';
+import { downloadProjectPrompt } from '../../lib/prompts/downloadProjectPrompt';
+import { i18n } from '../../lib/lang';
+import { uiBetaTag } from '../../lib/ui';
+import { trackCommandUsage } from '../../lib/usageTracking';
+import { EXIT_CODES } from '../../lib/enums/exitCodes';
+import {
+  CommonArgs,
+  ConfigArgs,
+  AccountArgs,
+  EnvironmentArgs,
+} from '../../types/Yargs';
+import { makeYargsBuilder } from '../../lib/yargsUtils';
 
 const i18nKey = 'commands.project.subcommands.download';
-const { EXIT_CODES } = require('../../lib/enums/exitCodes');
 
-exports.command = 'download';
-exports.describe = uiBetaTag(i18n(`${i18nKey}.describe`), false);
+export const command = 'download';
+export const describe = uiBetaTag(i18n(`${i18nKey}.describe`), false);
 
-exports.handler = async options => {
+type ProjectDownloadArgs = CommonArgs &
+  ConfigArgs &
+  AccountArgs &
+  EnvironmentArgs & { project?: string; dest?: string; build?: number };
+
+export async function handler(args: ArgumentsCamelCase<ProjectDownloadArgs>) {
   const { projectConfig } = await getProjectConfig();
 
   if (projectConfig) {
@@ -37,38 +40,13 @@ exports.handler = async options => {
     process.exit(EXIT_CODES.ERROR);
   }
 
-  const { project, dest, build, derivedAccountId } = options;
-  const { project: promptedProjectName } = await downloadProjectPrompt(options);
-  let projectName = promptedProjectName || project;
+  const { dest, build, derivedAccountId } = args;
+  const { project: projectName } = await downloadProjectPrompt(args);
+  let buildNumberToDownload = build;
 
-  trackCommandUsage('project-download', null, derivedAccountId);
+  trackCommandUsage('project-download', undefined, derivedAccountId);
 
   try {
-    const { projectExists } = await ensureProjectExists(
-      derivedAccountId,
-      projectName,
-      {
-        allowCreate: false,
-        noLogs: true,
-      }
-    );
-
-    if (!projectExists) {
-      logger.error(
-        i18n(`${i18nKey}.errors.projectNotFound`, {
-          projectName: chalk.bold(projectName),
-          accountId: chalk.bold(derivedAccountId),
-        })
-      );
-      const { name: promptedProjectName } =
-        await downloadProjectPrompt(options);
-      projectName = promptedProjectName || project;
-    }
-
-    const absoluteDestPath = dest ? path.resolve(getCwd(), dest) : getCwd();
-
-    let buildNumberToDownload = build;
-
     if (!buildNumberToDownload) {
       const { data: projectBuildsResult } = await fetchProjectBuilds(
         derivedAccountId,
@@ -83,10 +61,12 @@ exports.handler = async options => {
       }
     }
 
+    const absoluteDestPath = dest ? path.resolve(getCwd(), dest) : getCwd();
+
     const { data: zippedProject } = await downloadProject(
       derivedAccountId,
       projectName,
-      buildNumberToDownload
+      buildNumberToDownload!
     );
 
     await extractZipArchive(
@@ -98,7 +78,7 @@ exports.handler = async options => {
 
     logger.log(
       i18n(`${i18nKey}.logs.downloadSucceeded`, {
-        buildId: buildNumberToDownload,
+        buildId: buildNumberToDownload!,
         projectName,
       })
     );
@@ -113,13 +93,9 @@ exports.handler = async options => {
     );
     process.exit(EXIT_CODES.ERROR);
   }
-};
+}
 
-exports.builder = yargs => {
-  addAccountOptions(yargs);
-  addConfigOptions(yargs);
-  addUseEnvironmentOptions(yargs);
-
+function projectDownloadBuilder(yargs: Argv): Argv<ProjectDownloadArgs> {
   yargs.options({
     project: {
       describe: i18n(`${i18nKey}.options.project.describe`),
@@ -143,5 +119,23 @@ exports.builder = yargs => {
     ],
   ]);
 
-  return yargs;
+  return yargs as Argv<ProjectDownloadArgs>;
+}
+
+export const builder = makeYargsBuilder<ProjectDownloadArgs>(
+  projectDownloadBuilder,
+  command,
+  describe,
+  {
+    useConfigOptions: true,
+    useAccountOptions: true,
+    useEnvironmentOptions: true,
+  }
+);
+
+module.exports = {
+  command,
+  describe,
+  builder,
+  handler,
 };
