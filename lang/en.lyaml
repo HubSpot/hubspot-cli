@@ -33,7 +33,7 @@ en:
             configFileCreated: "Created config file \"{{ configPath }}\""
             configFileUpdated: "Connected account \"{{ account }}\" and set it as the default account"
         createOverride:
-          describe: "Create a new default account override file (.hs-account) in the current working directory."
+          describe: "Create a new default account override file ({{ hsAccountFileName }}) in the current working directory."
           success: "Default account override file created at {{ overrideFilePath }}"
           errors:
             accountNotFound: "The specified account could not be found in the config file {{ configPath }}"
@@ -41,9 +41,9 @@ en:
             account:
               describe: "Name or ID of the account to create an override file for."
           examples:
-            default: "Create a new default account override file (.hs-account) in the current working directory"
-            idBased: "Create a new default account override file (.hs-account) in the current working directory, using the account with accountId \"1234567\""
-            nameBased: "Create a new default account override file (.hs-account) in the current working directory, using the account with name \"MyAccount\""
+            default: "Create a new default account override file ({{ hsAccountFileName }}) in the current working directory"
+            idBased: "Create a new default account override file ({{ hsAccountFileName }}) in the current working directory, using the account with accountId \"1234567\""
+            nameBased: "Create a new default account override file ({{ hsAccountFileName }}) in the current working directory, using the account with name \"MyAccount\""
         list:
           accounts: "{{#bold}}Accounts{{/bold}}:"
           defaultAccount: "{{#bold}}Default account{{/bold}}: {{ account }}"

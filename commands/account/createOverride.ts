@@ -14,7 +14,9 @@ import { CommonArgs } from '../../types/Yargs';
 
 const i18nKey = 'commands.account.subcommands.createOverride';
 
-export const describe = undefined; // i18n(`${i18nKey}.describe`);
+export const describe = i18n(`${i18nKey}.describe`, {
+  hsAccountFileName: DEFAULT_ACCOUNT_OVERRIDE_FILE_NAME,
+});
 
 export const command = 'create-override [account]';
 
@@ -59,14 +61,23 @@ export function builder(yargs: Argv): Argv<AccountCreateOverrideArgs> {
     type: 'string',
   });
   yargs.example([
-    ['$0 account create-override', i18n(`${i18nKey}.examples.default`)],
+    [
+      '$0 account create-override',
+      i18n(`${i18nKey}.examples.default`, {
+        hsAccountFileName: DEFAULT_ACCOUNT_OVERRIDE_FILE_NAME,
+      }),
+    ],
     [
       '$0 account create-override 12345678',
-      i18n(`${i18nKey}.examples.idBased`),
+      i18n(`${i18nKey}.examples.idBased`, {
+        hsAccountFileName: DEFAULT_ACCOUNT_OVERRIDE_FILE_NAME,
+      }),
     ],
     [
       '$0 account create-override MyAccount',
-      i18n(`${i18nKey}.examples.nameBased`),
+      i18n(`${i18nKey}.examples.nameBased`, {
+        hsAccountFileName: DEFAULT_ACCOUNT_OVERRIDE_FILE_NAME,
+      }),
     ],
   ]);
 
