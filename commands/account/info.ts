@@ -1,9 +1,16 @@
 import { Argv, ArgumentsCamelCase } from 'yargs';
 import { logger } from '@hubspot/local-dev-lib/logger';
-import { getAccountConfig } from '@hubspot/local-dev-lib/config';
+import {
+  getAccountConfig,
+  getDisplayDefaultAccount,
+  getConfigDefaultAccount,
+  getDefaultAccountOverrideFilePath,
+  getConfigPath,
+} from '@hubspot/local-dev-lib/config';
 import { getAccessToken } from '@hubspot/local-dev-lib/personalAccessKey';
 import { makeYargsBuilder } from '../../lib/yargsUtils';
 import { i18n } from '../../lib/lang';
+import { indent } from '../../lib/ui/index';
 import { getTableContents } from '../../lib/ui/table';
 import { CommonArgs, ConfigArgs } from '../../types/Yargs';
 
@@ -32,6 +39,38 @@ export async function handler(
 
     scopeGroups = response.scopeGroups.map(s => [s]);
 
+    // If a default account is present in the config, display it
+    const configPath = getConfigPath();
+    if (configPath) {
+      logger.log(i18n(`${i18nKey}.defaultAccountTitle`));
+      logger.log(
+        `${indent(1)}${i18n(`${i18nKey}.configPath`, {
+          configPath,
+        })}`
+      );
+      logger.log(
+        `${indent(1)}${i18n(`${i18nKey}.defaultAccount`, {
+          account: getDisplayDefaultAccount()!,
+        })}`
+      );
+    }
+
+    // If a default account override is present, display it
+    const overrideFilePath = getDefaultAccountOverrideFilePath();
+    if (overrideFilePath) {
+      logger.log('');
+      logger.log(i18n(`${i18nKey}.overrideFilePathTitle`));
+      logger.log(
+        `${indent(1)}${i18n(`${i18nKey}.overrideFilePath`, { overrideFilePath })}`
+      );
+      logger.log(
+        `${indent(1)}${i18n(`${i18nKey}.overrideAccount`, {
+          account: getConfigDefaultAccount()!,
+        })}`
+      );
+    }
+
+    logger.log('');
     logger.log(i18n(`${i18nKey}.name`, { name: name! }));
     logger.log(i18n(`${i18nKey}.accountId`, { accountId: derivedAccountId }));
     logger.log(i18n(`${i18nKey}.scopeGroups`));

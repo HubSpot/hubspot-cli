@@ -2,13 +2,15 @@ import { Argv, ArgumentsCamelCase } from 'yargs';
 import { logger } from '@hubspot/local-dev-lib/logger';
 import {
   getConfigPath,
-  getConfigDefaultAccount,
   getConfigAccounts,
   getDefaultAccountOverrideFilePath,
+  getDisplayDefaultAccount,
+  getConfigDefaultAccount,
 } from '@hubspot/local-dev-lib/config';
 import { getAccountIdentifier } from '@hubspot/local-dev-lib/config/getAccountIdentifier';
 import { CLIAccount } from '@hubspot/local-dev-lib/types/Accounts';
 import { addConfigOptions } from '../../lib/commonOpts';
+import { indent } from '../../lib/ui/index';
 import { getTableContents, getTableHeader } from '../../lib/ui/table';
 import { trackCommandUsage } from '../../lib/usageTracking';
 import { isSandbox, isDeveloperTestAccount } from '../../lib/accountTypes';
@@ -102,7 +104,6 @@ export async function handler(
   trackCommandUsage('accounts-list', undefined, derivedAccountId);
 
   const configPath = getConfigPath();
-  const overrideFilePath = getDefaultAccountOverrideFilePath();
   const accountsList = getConfigAccounts() || [];
   const mappedAccountData = sortAndMapAccounts(accountsList);
   const accountData = getAccountData(mappedAccountData);
@@ -114,15 +115,36 @@ export async function handler(
     ])
   );
 
-  logger.log(i18n(`${i18nKey}.configPath`, { configPath: configPath! }));
-  if (overrideFilePath) {
-    logger.log(i18n(`${i18nKey}.overrideFilePath`, { overrideFilePath }));
+  // If a default account is present in the config, display it
+  if (configPath) {
+    logger.log(i18n(`${i18nKey}.defaultAccountTitle`));
+    logger.log(
+      `${indent(1)}${i18n(`${i18nKey}.configPath`, {
+        configPath,
+      })}`
+    );
+    logger.log(
+      `${indent(1)}${i18n(`${i18nKey}.defaultAccount`, {
+        account: getDisplayDefaultAccount()!,
+      })}`
+    );
+    logger.log('');
   }
-  logger.log(
-    i18n(`${i18nKey}.defaultAccount`, {
-      account: getConfigDefaultAccount()!,
-    })
-  );
+
+  // If a default account override is present, display it
+  const overrideFilePath = getDefaultAccountOverrideFilePath();
+  if (overrideFilePath) {
+    logger.log(i18n(`${i18nKey}.overrideFilePathTitle`));
+    logger.log(
+      `${indent(1)}${i18n(`${i18nKey}.overrideFilePath`, { overrideFilePath })}`
+    );
+    logger.log(
+      `${indent(1)}${i18n(`${i18nKey}.overrideAccount`, {
+        account: getConfigDefaultAccount()!,
+      })}`
+    );
+    logger.log('');
+  }
   logger.log(i18n(`${i18nKey}.accounts`));
   logger.log(getTableContents(accountData, { border: { bodyLeft: '  ' } }));
 }
