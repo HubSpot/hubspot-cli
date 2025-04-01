@@ -2,7 +2,7 @@ import { Argv, ArgumentsCamelCase } from 'yargs';
 import { logger } from '@hubspot/local-dev-lib/logger';
 import { getAccountConfig } from '@hubspot/local-dev-lib/config';
 import { getAccessToken } from '@hubspot/local-dev-lib/personalAccessKey';
-import { addConfigOptions } from '../../lib/commonOpts';
+import { makeYargsBuilder } from '../../lib/yargsUtils';
 import { i18n } from '../../lib/lang';
 import { getTableContents } from '../../lib/ui/table';
 import { CommonArgs, ConfigArgs } from '../../types/Yargs';
@@ -41,8 +41,11 @@ export async function handler(
   }
 }
 
-export function builder(yargs: Argv): Argv<AccountInfoArgs> {
-  addConfigOptions(yargs);
+function accountInfoBuilder(yargs: Argv): Argv<AccountInfoArgs> {
+  yargs.positional('account', {
+    describe: i18n(`${i18nKey}.options.account.describe`),
+    type: 'string',
+  });
 
   yargs.example([
     ['$0 accounts info', i18n(`${i18nKey}.examples.default`)],
@@ -52,3 +55,10 @@ export function builder(yargs: Argv): Argv<AccountInfoArgs> {
 
   return yargs as Argv<AccountInfoArgs>;
 }
+
+export const builder = makeYargsBuilder<AccountInfoArgs>(
+  accountInfoBuilder,
+  command,
+  describe,
+  { useConfigOptions: true }
+);

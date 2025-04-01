@@ -7,10 +7,6 @@ export const FEEDBACK_INTERVAL = 10 as const;
 export const HUBSPOT_FOLDER = '@hubspot' as const;
 export const MARKETPLACE_FOLDER = '@marketplace' as const;
 
-export const CONFIG_FLAGS = {
-  USE_CUSTOM_OBJECT_HUBFILE: 'useCustomObjectHubfile',
-} as const;
-
 export const DEFAULT_POLLING_DELAY = 2000;
 
 export const PROJECT_CONFIG_FILE = 'hsproject.json' as const;
@@ -72,4 +68,19 @@ export const PLATFORM_VERSION_ERROR_TYPES = {
   PLATFORM_VERSION_RETIRED: 'PlatformVersionErrorType.PLATFORM_VERSION_RETIRED',
   PLATFORM_VERSION_SPECIFIED_DOES_NOT_EXIST:
     'PlatformVersionErrorType.PLATFORM_VERSION_SPECIFIED_DOES_NOT_EXIST',
+} as const;
+
+export const IR_COMPONENT_TYPES = {
+  APPLICATION: 'APPLICATION',
+  CARD: 'CARD',
+} as const;
+
+export const APP_DISTRIBUTION_TYPES = {
+  MARKETPLACE: 'marketplace',
+  PRIVATE: 'private',
+} as const;
+
+export const APP_AUTH_TYPES = {
+  OAUTH: 'oauth',
+  STATIC: 'static',
 } as const;

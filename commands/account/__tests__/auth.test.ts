@@ -1,11 +1,9 @@
 import yargs, { Argv } from 'yargs';
 import { addGlobalOptions, addTestingOptions } from '../../../lib/commonOpts';
+import * as accountAuthCommand from '../auth';
 
 jest.mock('yargs');
 jest.mock('../../../lib/commonOpts');
-
-// Import this last so mocks apply
-import * as accountAuthCommand from '../auth';
 
 describe('commands/account/auth', () => {
   const yargsMock = yargs as Argv;

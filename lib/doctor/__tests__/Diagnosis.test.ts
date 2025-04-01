@@ -17,6 +17,7 @@ describe('lib/doctor/Diagnosis', () => {
     arch: process.arch,
     config: 'path/to/config.json',
     defaultAccountOverrideFile: 'path/to/default/account/override/.hsaccount',
+    configSettings: { httpUseLocalhost: false },
     configFiles: [],
     envFiles: [],
     files: [],

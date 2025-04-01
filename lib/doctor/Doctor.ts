@@ -76,6 +76,7 @@ export class Doctor {
     ]);
 
     this.performDefaultAccountOverrideFileChecks();
+    this.performCliConfigSettingsChecks();
 
     SpinniesManager.succeed('runningDiagnostics', {
       text: i18n(`${i18nKey}.diagnosticsComplete`),
@@ -119,6 +120,7 @@ export class Doctor {
       });
       return [];
     }
+
     return [this.checkIfAccessTokenValid()];
   }
 
@@ -137,6 +139,20 @@ export class Doctor {
         message: i18n(`${localI18nKey}.overrideAccountId`, {
           overrideAccountId: getCWDAccountOverride(),
         }),
+      });
+    }
+  }
+
+  private performCliConfigSettingsChecks(): void {
+    if (this.diagnosticInfo?.configSettings.httpUseLocalhost) {
+      this.diagnosis?.addCLIConfigSection({
+        type: 'warning',
+        message: i18n(
+          `${i18nKey}.diagnosis.cliConfig.settings.httpUseLocalhost`
+        ),
+        secondaryMessaging: i18n(
+          `${i18nKey}.diagnosis.cliConfig.settings.httpUseLocalhostSecondary`
+        ),
       });
     }
   }

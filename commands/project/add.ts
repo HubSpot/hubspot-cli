@@ -1,19 +1,25 @@
 // @ts-nocheck
+const path = require('path');
 const { logger } = require('@hubspot/local-dev-lib/logger');
-const { logError } = require('../../lib/errorHandlers/index');
-const { fetchReleaseData } = require('@hubspot/local-dev-lib/github');
-
+const {
+  cloneGithubRepo,
+  fetchReleaseData,
+} = require('@hubspot/local-dev-lib/github');
+const { debugError } = require('../../lib/errorHandlers');
 const { trackCommandUsage } = require('../../lib/usageTracking');
 const { i18n } = require('../../lib/lang');
 const { projectAddPrompt } = require('../../lib/prompts/projectAddPrompt');
+const { getProjectConfig } = require('../../lib/projects');
 const {
-  createProjectComponent,
-  getProjectComponentsByVersion,
-} = require('../../lib/projects');
+  getProjectComponentListFromRepo,
+} = require('../../lib/projects/create');
+const { findProjectComponents } = require('../../lib/projects/structure');
+const { ComponentTypes } = require('../../types/Projects');
 const { uiBetaTag } = require('../../lib/ui');
 const {
   HUBSPOT_PROJECT_COMPONENTS_GITHUB_PATH,
 } = require('../../lib/constants');
+const { EXIT_CODES } = require('../../lib/enums/exitCodes');
 
 const i18nKey = 'commands.project.subcommands.add';
 
@@ -23,40 +29,97 @@ exports.describe = uiBetaTag(i18n(`${i18nKey}.describe`), false);
 exports.handler = async options => {
   const { derivedAccountId } = options;
 
-  logger.log('');
-  logger.log(i18n(`${i18nKey}.creatingComponent.message`));
-  logger.log('');
-
-  const releaseData = await fetchReleaseData(
-    HUBSPOT_PROJECT_COMPONENTS_GITHUB_PATH
-  );
-  const projectComponentsVersion = releaseData.tag_name;
-
-  const components = await getProjectComponentsByVersion(
-    projectComponentsVersion
-  );
-
-  let { component, name } = await projectAddPrompt(components, options);
-
-  name = name || options.name;
-
-  if (!component) {
-    component = components.find(t => t.path === options.type);
-  }
-
   trackCommandUsage('project-add', null, derivedAccountId);
 
+  const { projectConfig, projectDir } = await getProjectConfig();
+
+  if (!projectDir || !projectConfig) {
+    logger.error(i18n(`${i18nKey}.error.locationInProject`));
+    process.exit(EXIT_CODES.ERROR);
+  }
+
+  // We currently only support adding private apps to projects
+  let projectContainsPublicApp = false;
   try {
-    await createProjectComponent(component, name, projectComponentsVersion);
+    const components = await findProjectComponents(projectDir);
+    projectContainsPublicApp = components.some(
+      c => c.type === ComponentTypes.PublicApp
+    );
+  } catch (err) {
+    debugError(err);
+  }
+
+  if (projectContainsPublicApp) {
+    logger.error(i18n(`${i18nKey}.error.projectContainsPublicApp`));
+    process.exit(EXIT_CODES.ERROR);
+  }
+
+  logger.log('');
+  logger.log(
+    i18n(`${i18nKey}.creatingComponent`, {
+      projectName: projectConfig.name,
+    })
+  );
+  logger.log('');
+
+  let latestRepoReleaseTag;
+  try {
+    // We want the tag_name from the latest release of the components repo
+    const repoReleaseData = await fetchReleaseData(
+      HUBSPOT_PROJECT_COMPONENTS_GITHUB_PATH
+    );
+    if (repoReleaseData) {
+      latestRepoReleaseTag = repoReleaseData.tag_name;
+    }
+  } catch (err) {
+    debugError(err);
+  }
+
+  if (!latestRepoReleaseTag) {
+    logger.error(i18n(`${i18nKey}.error.failedToFetchComponentList`));
+    process.exit(EXIT_CODES.ERROR);
+  }
+
+  const components =
+    await getProjectComponentListFromRepo(latestRepoReleaseTag);
+
+  if (!components.length) {
+    logger.error(i18n(`${i18nKey}.error.failedToFetchComponentList`));
+    process.exit(EXIT_CODES.ERROR);
+  }
+
+  const projectAddPromptResponse = await projectAddPrompt(components, options);
+
+  try {
+    const componentPath = path.join(
+      projectDir,
+      projectConfig.srcDir,
+      projectAddPromptResponse.componentTemplate.insertPath,
+      projectAddPromptResponse.name
+    );
+
+    await cloneGithubRepo(
+      HUBSPOT_PROJECT_COMPONENTS_GITHUB_PATH,
+      componentPath,
+      {
+        sourceDir: projectAddPromptResponse.componentTemplate.path,
+        tag: latestRepoReleaseTag,
+        hideLogs: true,
+      }
+    );
+
     logger.log('');
-    logger.log(
-      i18n(`${i18nKey}.success.message`, {
-        componentName: name,
+    logger.success(
+      i18n(`${i18nKey}.success`, {
+        componentName: projectAddPromptResponse.name,
       })
     );
   } catch (error) {
-    logError(error);
+    debugError(error);
+    logger.error(i18n(`${i18nKey}.error.failedToDownloadComponent`));
+    process.exit(EXIT_CODES.ERROR);
   }
+  process.exit(EXIT_CODES.SUCCESS);
 };
 
 exports.builder = yargs => {

@@ -1,10 +1,10 @@
 import { logger } from '@hubspot/local-dev-lib/logger';
-import { HubSpotHttpError } from '@hubspot/local-dev-lib/models/HubSpotHttpError';
 import { getSandboxUsageLimits } from '@hubspot/local-dev-lib/api/sandboxHubs';
 import { fetchTypes } from '@hubspot/local-dev-lib/api/sandboxSync';
 import { getAccountId, getConfigAccounts } from '@hubspot/local-dev-lib/config';
 import { HUBSPOT_ACCOUNT_TYPES } from '@hubspot/local-dev-lib/constants/config';
 import { Environment } from '@hubspot/local-dev-lib/types/Config';
+import { makeHubSpotHttpError } from '../testUtils';
 import {
   getSandboxTypeAsString,
   getHasSandboxesByType,
@@ -171,16 +171,11 @@ describe('lib/sandboxes', () => {
     const mockAccountId = 123;
 
     it('handles missing scope error', () => {
-      const error = new HubSpotHttpError('missing scopes error', {
-        cause: {
-          isAxiosError: true,
-          response: {
-            status: 403,
-            data: {
-              message: 'Missing scopes error',
-              category: 'MISSING_SCOPES',
-            },
-          },
+      const error = makeHubSpotHttpError('missing scopes error', {
+        status: 403,
+        data: {
+          message: 'Missing scopes error',
+          category: 'MISSING_SCOPES',
         },
       });
 
@@ -198,16 +193,11 @@ describe('lib/sandboxes', () => {
     });
 
     it('handles user access not allowed error', () => {
-      const error = new HubSpotHttpError('user access not allowed error', {
-        cause: {
-          isAxiosError: true,
-          response: {
-            status: 403,
-            data: {
-              category: 'BANNED',
-              subCategory: 'SandboxErrors.USER_ACCESS_NOT_ALLOWED',
-            },
-          },
+      const error = makeHubSpotHttpError('user access not allowed error', {
+        status: 403,
+        data: {
+          category: 'BANNED',
+          subCategory: 'SandboxErrors.USER_ACCESS_NOT_ALLOWED',
         },
       });
 
@@ -222,17 +212,11 @@ describe('lib/sandboxes', () => {
     });
 
     it('handles 403 gating error', () => {
-      const error = new HubSpotHttpError('403 gating error', {
-        cause: {
-          isAxiosError: true,
-          response: {
-            status: 403,
-            data: {
-              category: 'BANNED',
-              subCategory:
-                'SandboxErrors.DEVELOPMENT_SANDBOX_ACCESS_NOT_ALLOWED',
-            },
-          },
+      const error = makeHubSpotHttpError('403 gating error', {
+        status: 403,
+        data: {
+          category: 'BANNED',
+          subCategory: 'SandboxErrors.DEVELOPMENT_SANDBOX_ACCESS_NOT_ALLOWED',
         },
       });
 

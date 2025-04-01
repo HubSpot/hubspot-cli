@@ -34,7 +34,7 @@ exports.command = 'upload';
 exports.describe = uiBetaTag(i18n(`${i18nKey}.describe`), false);
 
 exports.handler = async options => {
-  const { forceCreate, message, derivedAccountId } = options;
+  const { forceCreate, message, derivedAccountId, skipValidation } = options;
   const accountConfig = getAccountConfig(derivedAccountId);
   const accountType = accountConfig && accountConfig.accountType;
 
@@ -56,7 +56,8 @@ exports.handler = async options => {
       projectDir,
       pollProjectBuildAndDeploy,
       message,
-      useV3Api(projectConfig?.platformVersion)
+      useV3Api(projectConfig?.platformVersion),
+      skipValidation
     );
 
     if (uploadError) {
@@ -127,6 +128,11 @@ exports.builder = yargs => {
       describe: i18n(`${i18nKey}.options.message.describe`),
       type: 'string',
       default: '',
+    },
+    'skip-validation': {
+      type: 'boolean',
+      hidden: true,
+      default: false,
     },
   });
 

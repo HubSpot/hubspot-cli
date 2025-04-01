@@ -3,6 +3,7 @@ import * as clear from '../hubdb/clear';
 import * as create from '../hubdb/create';
 import * as deleteCommand from '../hubdb/delete';
 import * as fetch from '../hubdb/fetch';
+import * as hubdbCommands from '../hubdb';
 
 jest.mock('yargs');
 jest.mock('../hubdb/clear');
@@ -17,9 +18,6 @@ const commandSpy = jest
 const demandCommandSpy = jest
   .spyOn(yargs as Argv, 'demandCommand')
   .mockReturnValue(yargs as Argv);
-
-// Import this last so mocks apply
-import * as hubdbCommands from '../hubdb';
 
 describe('commands/hubdb', () => {
   describe('command', () => {
