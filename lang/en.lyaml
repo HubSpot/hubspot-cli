@@ -1145,7 +1145,7 @@ en:
         componentCount: "Found {{ numComponents }} components in this project"
         successStatusText: "DONE"
         failedStatusText: "FAILED"
-        errorFetchingTaskStatus: "Error fetching {{ taskType }} status"
+        errorFetchingTaskStatus: "An error occurred while fetching the status of the current {{ taskType }}. For more information, view this project in HubSpot by running {{ openCommand }}."
       pollBuildAutodeployStatusError: "Error fetching autodeploy status for build #{{ buildId }}"
       pollProjectBuildAndDeploy:
         buildSucceededAutomaticallyDeploying: "Build #{{ buildId }} succeeded. {{#bold}}Automatically deploying{{/bold}} to {{ accountIdentifier }}\n"
