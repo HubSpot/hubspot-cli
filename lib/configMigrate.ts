@@ -73,7 +73,7 @@ async function mergeConfigProperties(
       });
 
       if (shouldOverwrite) {
-        // @ts-ignore Cannot reconcile CLIConfig_NEW and CLIConfig_DEPRECATED
+        // @ts-expect-error Cannot reconcile CLIConfig_NEW and CLIConfig_DEPRECATED
         initialConfig[property] = oldValue;
       }
     }
