@@ -1,55 +1,57 @@
-// @ts-nocheck
-import yargs from 'yargs';
-import set from '../config/set';
-import { addConfigOptions } from '../../lib/commonOpts';
+import yargs, { Argv } from 'yargs';
+import * as set from '../config/set';
+import * as migrate from '../config/migrate';
 
 jest.mock('yargs');
 jest.mock('../config/set');
-jest.mock('../../lib/commonOpts');
-yargs.command.mockReturnValue(yargs);
-yargs.demandCommand.mockReturnValue(yargs);
+jest.mock('../config/set');
+
+const commandSpy = jest
+  .spyOn(yargs as Argv, 'command')
+  .mockReturnValue(yargs as Argv);
+const demandCommandSpy = jest
+  .spyOn(yargs as Argv, 'demandCommand')
+  .mockReturnValue(yargs as Argv);
 
 // Import this last so mocks apply
-import configCommand from '../config';
+import * as configCommands from '../config';
 
 describe('commands/config', () => {
   describe('command', () => {
     it('should have the correct command structure', () => {
-      expect(configCommand.command).toEqual('config');
+      expect(configCommands.command).toEqual('config');
     });
   });
 
   describe('describe', () => {
     it('should provide a description', () => {
-      expect(configCommand.describe).toBeDefined();
+      expect(configCommands.describe).toBeDefined();
     });
   });
 
   describe('builder', () => {
-    const subcommands = [['set', set]];
-
-    it('should demand the command takes one positional argument', () => {
-      configCommand.builder(yargs);
-
-      expect(yargs.demandCommand).toHaveBeenCalledTimes(1);
-      expect(yargs.demandCommand).toHaveBeenCalledWith(1, '');
+    beforeEach(() => {
+      commandSpy.mockClear();
+      demandCommandSpy.mockClear();
     });
 
-    it('should support the correct options', () => {
-      configCommand.builder(yargs);
+    const subcommands = [set, migrate];
 
-      expect(addConfigOptions).toHaveBeenCalledTimes(1);
-      expect(addConfigOptions).toHaveBeenCalledWith(yargs);
+    it('should demand the command takes one positional argument', () => {
+      configCommands.builder(yargs as Argv);
+
+      expect(demandCommandSpy).toHaveBeenCalledTimes(1);
+      expect(demandCommandSpy).toHaveBeenCalledWith(1, '');
     });
 
     it('should add the correct number of sub commands', () => {
-      configCommand.builder(yargs);
-      expect(yargs.command).toHaveBeenCalledTimes(subcommands.length);
+      configCommands.builder(yargs as Argv);
+      expect(commandSpy).toHaveBeenCalledTimes(subcommands.length);
     });
 
-    it.each(subcommands)('should attach the %s subcommand', (name, module) => {
-      configCommand.builder(yargs);
-      expect(yargs.command).toHaveBeenCalledWith(module);
+    it.each(subcommands)('should attach the %s subcommand', module => {
+      configCommands.builder(yargs as Argv);
+      expect(commandSpy).toHaveBeenCalledWith(module);
     });
   });
 });

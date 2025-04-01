@@ -13,6 +13,7 @@ import { Project } from '@hubspot/local-dev-lib/types/Project';
 import {
   getAccountId,
   getDefaultAccountOverrideFilePath,
+  isConfigFlagEnabled,
 } from '@hubspot/local-dev-lib/config';
 import { getAccountConfig, getConfigPath } from '@hubspot/local-dev-lib/config';
 import { getAccessToken } from '@hubspot/local-dev-lib/personalAccessKey';
@@ -40,6 +41,7 @@ export interface DiagnosticInfo extends FilesInfo {
   versions: { [hubspotCli]: string; node: string; npm: string | null };
   config: string | null;
   defaultAccountOverrideFile: string | null | undefined;
+  configSettings: { [key: string]: unknown };
   project: {
     details?: Project;
     config?: ProjectConfig;
@@ -70,6 +72,7 @@ const configFiles = [
 
 export class DiagnosticInfoBuilder {
   accountId: number | null;
+  readonly configSettings: { [key: string]: unknown };
   readonly env?: Environment;
   readonly authType?: AuthType;
   readonly accountType?: AccountType;
@@ -83,6 +86,9 @@ export class DiagnosticInfoBuilder {
   constructor(processInfo: NodeJS.Process) {
     this.accountId = getAccountId();
     const accountConfig = getAccountConfig(this.accountId!);
+    this.configSettings = {
+      httpUseLocalhost: isConfigFlagEnabled('httpUseLocalhost'),
+    };
     this.env = accountConfig?.env;
     this.authType = accountConfig?.authType;
     this.accountType = accountConfig?.accountType;
@@ -115,6 +121,7 @@ export class DiagnosticInfoBuilder {
       path: mainModule?.path,
       config: getConfigPath(),
       defaultAccountOverrideFile: getDefaultAccountOverrideFilePath(),
+      configSettings: this.configSettings,
       versions: {
         [hubspotCli]: pkg.version,
         node,

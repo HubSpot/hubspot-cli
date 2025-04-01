@@ -1,31 +1,41 @@
-// @ts-nocheck
-import { inputPrompt, listPrompt } from '../../../lib/prompts/promptUtils';
+import { Argv, ArgumentsCamelCase } from 'yargs';
 import { fetchObjectSchemas } from '@hubspot/local-dev-lib/api/customObjects';
-
-const path = require('path');
-const { isConfigFlagEnabled } = require('@hubspot/local-dev-lib/config');
-const { logger } = require('@hubspot/local-dev-lib/logger');
-const { CONFIG_FLAGS } = require('../../../lib/constants');
-const {
+import { logger } from '@hubspot/local-dev-lib/logger';
+import {
   downloadSchema,
   getResolvedPath,
-} = require('@hubspot/local-dev-lib/customObjects');
-const { fetchSchema } = require('@hubspot/local-dev-lib/api/fileTransport');
-const { getCwd } = require('@hubspot/local-dev-lib/path');
+} from '@hubspot/local-dev-lib/customObjects';
 
-const { trackCommandUsage } = require('../../../lib/usageTracking');
-const { i18n } = require('../../../lib/lang');
-const { logError } = require('../../../lib/errorHandlers');
+import { inputPrompt, listPrompt } from '../../../lib/prompts/promptUtils';
+import { trackCommandUsage } from '../../../lib/usageTracking';
+import { i18n } from '../../../lib/lang';
+import { logError } from '../../../lib/errorHandlers';
+import {
+  CommonArgs,
+  ConfigArgs,
+  AccountArgs,
+  EnvironmentArgs,
+} from '../../../types/Yargs';
+import {
+  addAccountOptions,
+  addConfigOptions,
+  addUseEnvironmentOptions,
+} from '../../../lib/commonOpts';
 
 const i18nKey = 'commands.customObject.subcommands.schema.subcommands.fetch';
 
-exports.command = 'fetch [name] [dest]';
-exports.describe = i18n(`${i18nKey}.describe`);
+export const command = 'fetch [name] [dest]';
+export const describe = i18n(`${i18nKey}.describe`);
 
-exports.handler = async options => {
-  const { name: providedName, dest: providedDest, derivedAccountId } = options;
+type CombinedArgs = CommonArgs & ConfigArgs & AccountArgs & EnvironmentArgs;
+type SchemaFetchArgs = CombinedArgs & { name?: string; dest?: string };
 
-  trackCommandUsage('custom-object-schema-fetch', null, derivedAccountId);
+export async function handler(
+  args: ArgumentsCamelCase<SchemaFetchArgs>
+): Promise<void> {
+  const { name: providedName, dest: providedDest, derivedAccountId } = args;
+
+  trackCommandUsage('custom-object-schema-fetch', {}, derivedAccountId);
   let name;
 
   try {
@@ -43,34 +53,27 @@ exports.handler = async options => {
     const dest =
       providedDest || (await inputPrompt(i18n(`${i18nKey}.inputDest`)));
 
-    if (isConfigFlagEnabled(CONFIG_FLAGS.USE_CUSTOM_OBJECT_HUBFILE)) {
-      const fullpath = path.resolve(getCwd(), dest);
-      await fetchSchema(derivedAccountId, name, fullpath);
-      logger.success(
-        i18n(`${i18nKey}.success.save`, {
-          name,
-          path: fullpath,
-        })
-      );
-    } else {
-      await downloadSchema(derivedAccountId, name, dest);
-      logger.success(
-        i18n(`${i18nKey}.success.savedToPath`, {
-          path: getResolvedPath(dest, name),
-        })
-      );
-    }
+    await downloadSchema(derivedAccountId, name, dest);
+    logger.success(
+      i18n(`${i18nKey}.success.savedToPath`, {
+        path: getResolvedPath(dest, name),
+      })
+    );
   } catch (e) {
     logError(e);
     logger.error(
       i18n(`${i18nKey}.errors.fetch`, {
-        name,
+        name: name || '',
       })
     );
   }
-};
+}
 
-exports.builder = yargs => {
+export function builder(yargs: Argv): Argv<SchemaFetchArgs> {
+  addConfigOptions(yargs);
+  addAccountOptions(yargs);
+  addUseEnvironmentOptions(yargs);
+
   yargs
     .example([
       [
@@ -90,4 +93,6 @@ exports.builder = yargs => {
       describe: i18n(`${i18nKey}.positionals.dest.describe`),
       type: 'string',
     });
-};
+
+  return yargs as Argv<SchemaFetchArgs>;
+}

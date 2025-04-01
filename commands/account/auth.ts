@@ -2,13 +2,13 @@ import { Argv, ArgumentsCamelCase } from 'yargs';
 import {
   loadConfig,
   getConfigPath,
-  configFileExists,
   updateAccountConfig,
   writeConfig,
   createEmptyConfigFile,
   deleteEmptyConfigFile,
   getConfigDefaultAccount,
 } from '@hubspot/local-dev-lib/config';
+import { configFileExists } from '@hubspot/local-dev-lib/config/migrate';
 import { getAccountIdentifier } from '@hubspot/local-dev-lib/config/getAccountIdentifier';
 import { logger } from '@hubspot/local-dev-lib/logger';
 import {
@@ -20,9 +20,9 @@ import { toKebabCase } from '@hubspot/local-dev-lib/text';
 import { Environment } from '@hubspot/local-dev-lib/types/Config';
 import { CLIAccount } from '@hubspot/local-dev-lib/types/Accounts';
 import { PERSONAL_ACCESS_KEY_AUTH_METHOD } from '@hubspot/local-dev-lib/constants/auth';
-import { DEFAULT_HUBSPOT_CONFIG_YAML_FILE_NAME } from '@hubspot/local-dev-lib/constants/config';
 
 import { addGlobalOptions, addTestingOptions } from '../../lib/commonOpts';
+import { handleMerge, handleMigration } from '../../lib/configMigrate';
 import { handleExit } from '../../lib/process';
 import { debugError } from '../../lib/errorHandlers/index';
 import { i18n } from '../../lib/lang';
@@ -30,6 +30,7 @@ import { trackCommandUsage, trackAuthAction } from '../../lib/usageTracking';
 import { personalAccessKeyPrompt } from '../../lib/prompts/personalAccessKeyPrompt';
 import { cliAccountNamePrompt } from '../../lib/prompts/accountNamePrompt';
 import { setAsDefaultAccountPrompt } from '../../lib/prompts/setAsDefaultAccountPrompt';
+import { logError } from '../../lib/errorHandlers/index';
 import { EXIT_CODES } from '../../lib/enums/exitCodes';
 import { uiFeatureHighlight } from '../../lib/ui';
 import { CommonArgs, ConfigArgs } from '../../types/Yargs';
@@ -104,13 +105,23 @@ export async function handler(
   const authType = PERSONAL_ACCESS_KEY_AUTH_METHOD.value;
 
   const deprecatedConfigExists = configFileExists(false);
+  const globalConfigExists = configFileExists(true);
   if (deprecatedConfigExists) {
-    logger.error(
-      i18n(`${i18nKey}.errors.bothConfigFilesNotAllowed`, {
-        deprecatedConfig: DEFAULT_HUBSPOT_CONFIG_YAML_FILE_NAME,
-      })
-    );
-    process.exit(EXIT_CODES.ERROR);
+    if (globalConfigExists) {
+      try {
+        await handleMerge();
+      } catch (error) {
+        logError(error);
+        process.exit(EXIT_CODES.ERROR);
+      }
+    } else {
+      try {
+        await handleMigration();
+      } catch (error) {
+        logError(error);
+        process.exit(EXIT_CODES.ERROR);
+      }
+    }
   }
 
   if (!disableTracking) {
@@ -175,7 +186,11 @@ export async function handler(
       );
     }
   }
-  uiFeatureHighlight(['helpCommand', 'authCommand', 'accountsListCommand']);
+  uiFeatureHighlight([
+    'helpCommand',
+    'accountAuthCommand',
+    'accountsListCommand',
+  ]);
 
   if (!disableTracking) {
     await trackAuthAction(

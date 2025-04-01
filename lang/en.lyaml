@@ -33,7 +33,7 @@ en:
             configFileCreated: "Created config file \"{{ configPath }}\""
             configFileUpdated: "Connected account \"{{ account }}\" and set it as the default account"
         createOverride:
-          describe: "Create a new default account override file (.hs-account) in the current working directory."
+          describe: "Create a new default account override file ({{ hsAccountFileName }}) in the current working directory."
           success: "Default account override file created at {{ overrideFilePath }}"
           errors:
             accountNotFound: "The specified account could not be found in the config file {{ configPath }}"
@@ -41,9 +41,9 @@ en:
             account:
               describe: "Name or ID of the account to create an override file for."
           examples:
-            default: "Create a new default account override file (.hs-account) in the current working directory"
-            idBased: "Create a new default account override file (.hs-account) in the current working directory, using the account with accountId \"1234567\""
-            nameBased: "Create a new default account override file (.hs-account) in the current working directory, using the account with name \"MyAccount\""
+            default: "Create a new default account override file ({{ hsAccountFileName }}) in the current working directory"
+            idBased: "Create a new default account override file ({{ hsAccountFileName }}) in the current working directory, using the account with accountId \"1234567\""
+            nameBased: "Create a new default account override file ({{ hsAccountFileName }}) in the current working directory, using the account with name \"MyAccount\""
         list:
           describe: "List names of accounts defined in config."
           accounts: "{{#bold}}Accounts{{/bold}}:"
@@ -108,6 +108,9 @@ en:
           overrideAccount: "Account: {{ account }}"
           errors:
             notUsingPersonalAccessKey: "This command currently only supports fetching scopes for the personal access key auth type."
+          options:
+            account:
+              describe: "Account name or id to show info for"
           examples:
             default: "Print information for the default account"
             idBased: "Print information for the account with accountId equal to \"1234567\""
@@ -127,14 +130,14 @@ en:
             other: "Remove {{ count }} inactive accounts from the CLI config?"
           removeSuccess: "Removed {{ accountName }} from the CLI config."
     auth:
-      describe: "Configure authentication for your HubSpot account. This will update the {{ configName }} file that stores your account information."
+      describe: "Configure authentication for your HubSpot account."
+      verboseDescribe: "Configure authentication for a HubSpot account. This will update the {{ configName }} file that stores your account information.\n\nThe recommended authentication method is {{#bold}}{{ authMethod }}{{/bold}}, which uses an access token tied to a specific user account."
       errors:
         unsupportedAuthType: "Unsupported auth type: {{ type }}. The only supported authentication protocols are {{ supportedProtocols }}."
-        centralizedConfigFileExists: "A centralized config file exists at {{ configPath }}. To authorize an account, please use {{ authCommand }}."
+        globalConfigFileExists: "A global config file exists at {{ configPath }}. To authorize an account, please use {{ authCommand }}."
       options:
         authType:
-          describe: "Authentication mechanism"
-          defaultDescription: "\"{{ authMethod }}\": An access token tied to a specific user account. This is the recommended way of authenticating with local development tools."
+          describe: "Authentication method"
         account:
           describe: "HubSpot account to authenticate"
       success:
@@ -142,6 +145,16 @@ en:
     config:
       describe: "Commands for managing the CLI config file."
       subcommands:
+        migrate:
+          describe: "Migrate from the deprecated {{ deprecatedConfigPath }} file to the new global config file at {{ globalConfigPath }}."
+          migrationAlreadyCompleted: "No {{ deprecatedConfigPath }} deprecated configuration file found. No migration necessary."
+          errors:
+            configNotFound: "A configuration file at {{ configPath }} could not be found. Please try again with a valid file path."
+          options:
+            force: "When merging a deprecated configuration file with an existing global configuration file, overwrite any conflicting values in the global config with the deprecated config values."
+          examples:
+            default: "Migrate from the deprecated {{ deprecatedConfigPath }} file to the new global config file at {{ globalConfigPath }}"
+            configFlag: "Migrate a specific config file (specified with the config flag) to the new global config file at {{ globalConfigPath }}"
         set:
           describe: "Set various configuration options within the hubspot.config.yml file."
           promptMessage: "Select a config option to update"
@@ -243,6 +256,7 @@ en:
         create:
           describe: "Create custom object instances."
           errors:
+            invalidObjectDefinition: "The object definition is invalid. Please check the schema and try again."
             creationFailed: "Object creation from {{ definition }} failed"
           options:
             path:
@@ -260,6 +274,7 @@ en:
             create:
               describe: "Create a custom object schema."
               errors:
+                invalidSchema: "The schema definition is invalid. Please check the schema and try again."
                 creationFailed: "Schema creation from {{ definition }} failed"
               options:
                 definition:
@@ -321,6 +336,7 @@ en:
             update:
               describe: "Update an existing custom object schema."
               errors:
+                invalidSchema: "The schema definition is invalid. Please check the schema and try again."
                 update: "Schema update from {{ definition }} failed"
               options:
                 path:
@@ -479,11 +495,11 @@ en:
           success:
             fetch: "Downloaded HubDB table {{ tableId }} to {{ path }}"
     init:
-      describe: "Configure authentication for your HubSpot account. This will create a {{ configName }} file to store your account information."
+      describe: "Create a CLI config file and configure authentication for your HubSpot account."
+      verboseDescribe: "Configure authentication for a HubSpot account. This will create a {{ configName }} file to store your account information. To configure authentication for additional accounts, run {{ command }}.\n\nThe recommended authentication method is {{#bold}}{{ authMethod }}{{/bold}}, which uses an access token tied to a specific user account."
       options:
         authType:
-          describe: "Authentication mechanism"
-          defaultDescription: "\"{{ authMethod }}\":  An access token tied to a specific user account. This is the recommended way of authenticating with local development tools."
+          describe: "Authentication method"
         account:
           describe: "HubSpot account to authenticate"
       success:
@@ -493,7 +509,7 @@ en:
         updateConfig: "To update an existing config file, use the \"hs auth\" command."
       errors:
         configFileExists: "The config file {{ configPath }} already exists."
-        centralizedConfigFileExists: "A centralized config file already exists at {{ configPath }}. To specify a new local config file, delete the existing one and try again."
+        globalConfigFileExists: "A global config file already exists at {{ configPath }}. To specify a new local config file, delete the existing one and try again."
     lint:
       issuesFound: "{{ count }} issues found."
       groupName: "Linting {{ path }}"
@@ -556,13 +572,21 @@ en:
             learnMoreLocalDevServer: "Learn more about the projects local dev server"
           errors:
             noProjectConfig: "No project detected. Please run this command again from a project directory."
+            noAccount: "An error occurred while reading account {{ accountId }} from your config. Run {{ authCommand }} to re-auth this account."
+            noAccountsInConfig: "No accounts found in your config. Run {{ authCommand }} to configure a HubSpot account with the CLI."
             invalidProjectComponents: "Projects cannot contain both private and public apps. Move your apps to separate projects before attempting local development."
             noRunnableComponents: "No supported components were found in this project. Run {{ command }} to see a list of available components and add one to your project."
+            invalidUnifiedAppsAccount: "Local development of Unified Apps is currently only supported in standard and developer accounts. Target a standard or developer account with {{ authCommand }} and try again."
           examples:
             default: "Start local dev for the current project"
         create:
           describe: "Create a new project."
+          errors:
+            failedToDownloadProject: "Failed to download project. Please try again later."
+            failedToFetchProjectList: "Failed to fetch the list of available project templates. Please try again later."
+            cannotNestProjects: "A project already exists at {{ projectDir }}. Projects cannot be nested within other projects. Please choose a different destination and try again."
           logs:
+            success: "Project {{#bold}}{{ projectName }}{{/bold}} was successfully created in {{ projectDest }}"
             welcomeMessage: "Welcome to HubSpot Developer Projects!"
           examples:
             default: "Create a new project"
@@ -635,12 +659,13 @@ en:
               describe: "The name for your newly created component"
             type:
               describe: "The path to the component type's location within the hubspot-project-components Github repo: https://github.com/HubSpot/hubspot-project-components"
-          creatingComponent:
-            message: "Adding a new component to your project"
-          success:
-            message: "{{ componentName }} was added to your project"
+          creatingComponent: "Adding a new component to {{#bold}}{{ projectName }}{{/bold}}"
+          success: "{{ componentName }} was successfully added to your project."
           error:
-            locationInProject: "The component location must be within a project folder"
+            failedToDownloadComponent: "Failed to download project component. Please try again later."
+            locationInProject: "This command must be run from within a project directory."
+            failedToFetchComponentList: "Failed to fetch the list of available components. Please try again later."
+            projectContainsPublicApp: "This project contains a public app. This command is currently only compatible with projects that contain private apps."
           examples:
             default: "Create a component within your project"
             withFlags: "Use --name and --type flags to bypass the prompt."
@@ -847,6 +872,8 @@ en:
             invalidAccountType: "Sandboxes must be created from a production account. Your current default account {{#bold}}{{ accountName }}{{/bold}} is a {{ accountType }}.
               \n- Run {{#bold}}hs accounts use{{/bold}} to switch to your default account to your production account.
               \n- Run {{#bold}}hs auth{{/bold}} to connect a production account to the HubSpot CLI.\n"
+            noAccountConfig: "There is no account associated with {{ accountId }} in the config file. Please choose another account and try again, or authenticate {{ accountId }} using {{ authCommand }}."
+            noSandboxAccountConfig: "There is no sandbox account associated with {{ accountId }} in the config file. Please try to re-authenticate your sandbox account using {{ authCommand}}."
         delete:
           describe: "Delete a sandbox account."
           debug:
@@ -863,11 +890,12 @@ en:
           failure:
             invalidUser: "Couldn't delete {{ accountName }} because your account has been removed from {{ parentAccountName }} or your permission set doesn't allow you to delete the sandbox. To update your permissions, contact a super admin in {{ parentAccountName }}."
             noAccount: "No account specified. Specify an account by using the --account flag."
-            noSandboxAccounts: "There are no sandboxes connected to the CLI. To add a sandbox, run {{#bold}}hs auth{{/bold}}."
-            noParentAccount: "This sandbox can't be deleted from the CLI because you haven't given the CLI access to its parent account. To do this, run {{#bold}}hs auth{{/bold}} and add the parent account."
+            noSandboxAccounts: "There are no sandboxes connected to the CLI. To add a sandbox, run {{ authCommand }}."
+            noSandboxAccountId: "This sandbox can't be deleted from the CLI because we could not find the associated sandbox account."
+            noParentAccount: "This sandbox can't be deleted from the CLI because you haven't given the CLI access to its parent account. To do this, run {{ authCommand }} and add the parent account."
             objectNotFound: "Sandbox {{#bold}}{{ account }}{{/bold}} may have been deleted through the UI. The account has been removed from the config."
-            noParentPortalAvailable: "This sandbox can't be deleted from the CLI because you haven't given the CLI access to its parent account. To do this, run {{#bold}}{{ command }}{{/bold}}. You can also delete the sandbox from the HubSpot management tool: {{#bold}}{{ url }}{{/bold}}."
-            invalidKey: "Your personal access key for account {{#bold}}{{ account }}{{/bold}} is inactive. To re-authenticate, please run {{#bold}}hs auth personalaccesskey{{/bold}}."
+            noParentPortalAvailable: "This sandbox can't be deleted from the CLI because you haven't given the CLI access to its parent account. To do this, run {{ command }}. You can also delete the sandbox from the HubSpot management tool: {{#bold}}{{ url }}{{/bold}}."
+            invalidKey: "Your personal access key for account {{#bold}}{{ account }}{{/bold}} is inactive. To re-authenticate, please run {{ authCommand }}."
           options:
             force:
               describe: "Skips all confirmation prompts when deleting a sandbox account."
@@ -1135,6 +1163,11 @@ en:
       checkIfParentAccountIsAuthed:
         notAuthedError: "To develop this project locally, run {{ authCommand }} to authenticate the App Developer Account {{ accountId }} associated with {{ accountIdentifier }}."
     projects:
+      create:
+        errors:
+          noProjectsInConfig: "Unable to find any projects in the target repository's config.json file. Please ensure that there is a \"projects\" array in the config file."
+          missingConfigFileTemplateSource: "Failed to fetch the config.json file from the target repository. Please ensure that there is a valid config.json file at the root of the repository and try again."
+          missingPropertiesInConfig: "Found misconfigured projects in the target repository's config.json file. Please ensure that each project in the target repository's config.json file contains the following properties: [\"name\", \"label\", \"path\", \"insertPath\"]."
       validateProjectConfig:
         configNotFound: "Unable to locate a project configuration file. Try running again from a project directory, or run {{ createCommand }} to create a new project."
         configMissingFields: "The project configuruation file is missing required fields."
@@ -1194,11 +1227,14 @@ en:
             command: "--account"
             message: "Use the {{ command }} option with any command to override the default account"
           accountsListCommand:
-            command: hs accounts list
+            command: "hs account list"
             message: "Run {{ command }} to see a list of configured HubSpot accounts"
           accountsUseCommand:
-            command: "hs accounts use"
+            command: "hs account use"
             message: "Run {{ command }} to set the Hubspot account that the CLI will target by default"
+          accountAuthCommand:
+            command: "hs account auth"
+            message: "Run {{ command }} to connect the CLI to additional HubSpot accounts"
           authCommand:
             command: "hs auth"
             message: "Run {{ command }} to connect the CLI to additional HubSpot accounts"
@@ -1258,6 +1294,13 @@ en:
           describe: "Use environment variable config"
         debug:
           describe: "Set log level to debug"
+    configMigrate:
+      migrateConfigPrompt: "Migrate config?\n From deprecated config file: {{ deprecatedConfigPath }}\n To new global config file: {{ globalConfigPath }}\n (This action will delete the deprecated config file).\n"
+      mergeConfigConflictPrompt: "Change the {{ property }} property in the global config from {{ newValue }} to {{ oldValue }}?"
+      mergeConfigsPrompt: "Two config files detected. Merge them?\n Deprecated config file: {{ deprecatedConfigPath }}\n Global config: {{ globalConfigPath }}\n (This action will delete the deprecated config file).\n"
+      migrationSuccess: "The deprecated config file has been migrated to the new global config file at {{ globalConfigPath }}."
+      mergeSuccess: "The deprecated config file has been merged with the global config file at {{ globalConfigPath }}."
+      skippedExistingAccounts: "\nThe following accounts were not merged, because they already exist in the global config: {{ skippedAccountIds }}.\n"
     prompts:
       projectDevTargetAccountPrompt:
         createNewSandboxOption: "<Test on a new development sandbox>"
@@ -1342,12 +1385,9 @@ en:
         errors:
           nameRequired: "A project name is required"
           destRequired: "A project dest is required"
-          invalidDest: "The selected destination already exists. Please provide a new path for this project."
+          invalidDest: "There is an existing project at this destination. Please provide a new path for this project."
           invalidCharacters: "The selected destination contains invalid characters. Please provide a new path and try again."
-          invalidTemplate: "[--template] Could not find template {{ template }}. Please choose an available template."
-          noProjectsInConfig: "Please ensure that there is a config.json file that contains a \"projects\" field."
-          missingConfigFileTemplateSource: "Please ensure that there is a config.json file in the repository used as the --template-source"
-          missingPropertiesInConfig: "Please ensure that each of the projects in your config.json file contain the following properties: [\"name\", \"label\", \"path\", \"insertPath\"]."
+          invalidTemplate: "[--template] Could not find template \"{{ template }}\". Please choose an available template:"
       selectPublicAppPrompt:
         selectAppIdMigrate: "[--appId] Choose an app under {{ accountName }} to migrate:"
         selectAppIdClone: "[--appId] Choose an app under {{ accountName }} to clone:"
@@ -1365,11 +1405,11 @@ en:
           projectNotFound: "Your project {{ projectName }} could not be found in {{ accountId }}. Please select a valid project:"
           accountIdRequired: "An account ID is required to download a project."
       projectAddPrompt:
-        selectType: "[--type] Select your component type:"
+        selectType: "[--type] Select a component to add: "
         enterName: "[--name] Give your component a name: "
         errors:
           nameRequired: "A component name is required"
-          invalidType: "[--type] Could not find type {{ type }}. Please choose an available type."
+          invalidType: "[--type] Could not find type \"{{ type }}\". Please choose an available type:"
       secretPrompt:
         enterValue: "Enter a value for your secret: "
         enterName: "Enter a name for your secret: "
@@ -1596,6 +1636,9 @@ en:
           defaultAccountSubHeader: "Default Account: {{accountDetails}}"
           noConfigFile: "CLI configuration not found"
           noConfigFileSecondary: "Run {{command}} and follow the prompts to create your CLI configuration file and connect it to your HubSpot account"
+          settings:
+            httpUseLocalhost: "The setting {{#bold}}httpUseLocalhost{{/bold}} is enabled"
+            httpUseLocalhostSecondary: "This setting causes all CLI requests to route to localhost"
         defaultAccountOverrideFile:
           header: "Default account override file path:"
         projectConfig:
