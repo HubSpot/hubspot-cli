@@ -35,6 +35,9 @@ en:
         createOverride:
           describe: "Create a new default account override file ({{ hsAccountFileName }}) in the current working directory."
           success: "Default account override file created at {{ overrideFilePath }}"
+          accountOverride: "An account override file already exists at {{ overrideFilePath }} associated with account \"{{ accountOverride }}\"."
+          prompts:
+            replaceOverrideFile: "Replace existing account override file?"
           errors:
             accountNotFound: "The specified account could not be found in the config file {{ configPath }}"
           options:
@@ -44,6 +47,16 @@ en:
             default: "Create a new default account override file ({{ hsAccountFileName }}) in the current working directory"
             idBased: "Create a new default account override file ({{ hsAccountFileName }}) in the current working directory, using the account with accountId \"1234567\""
             nameBased: "Create a new default account override file ({{ hsAccountFileName }}) in the current working directory, using the account with name \"MyAccount\""
+        removeOverride:
+          describe: "Remove the default account override file ({{ overrideFile }}) from the current working directory."
+          accountOverride: "There is an account override file at {{ overrideFilePath }} associated with account \"{{ accountOverride }}\"."
+          prompts:
+            deleteOverrideFile: "Delete account override file?"
+          success: "Removed the default account override file."
+          noOverrideFile: "No default account override file found in the current working directory. No action required."
+          options:
+            force:
+              describe: "Skip confirmation prompt when removing the override file"
         list:
           describe: "List names of accounts defined in config."
           accounts: "{{#bold}}Accounts{{/bold}}:"
@@ -70,6 +83,8 @@ en:
           describe: "Set the Hubspot account to use as the default account. The default account can be overridden with the \"--account\" option."
           errors:
             accountNotFound: "The account \"{{ specifiedAccount }}\" could not be found in {{ configPath }}"
+          accountOverride: "This project currently has an account override set: \"{{ accountOverride }}\". Account \"{{accountOverride}}\" will continue to act as the default account for this project."
+          accountOverrideCommands: "Use {{ createOverrideCommand }} to change override accounts, or {{ removeOverrideCommand }} to remove the override and use your default account."
           examples:
             default: "Select a HubSpot account to use as the default account"
             idBased: "Set the default account to the account in the config with accountId equal to \"1234567\""

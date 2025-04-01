@@ -4,11 +4,14 @@ import {
   getConfigPath,
   updateDefaultAccount,
   getAccountId,
+  getCWDAccountOverride,
+  getDefaultAccountOverrideFilePath,
 } from '@hubspot/local-dev-lib/config';
 import { trackCommandUsage } from '../../lib/usageTracking';
 import { i18n } from '../../lib/lang';
 import { selectAccountFromConfig } from '../../lib/prompts/accountsPrompt';
 import { CommonArgs } from '../../types/Yargs';
+import { uiCommandReference } from '../../lib/ui';
 
 const i18nKey = 'commands.account.subcommands.use';
 
@@ -41,6 +44,23 @@ export async function handler(
     undefined,
     getAccountId(newDefaultAccount)!
   );
+
+  const accountOverride = getCWDAccountOverride();
+  const overrideFilePath = getDefaultAccountOverrideFilePath();
+  if (accountOverride && overrideFilePath) {
+    logger.warn(
+      i18n(`${i18nKey}.accountOverride`, {
+        accountOverride,
+      })
+    );
+    logger.log(
+      i18n(`${i18nKey}.accountOverrideCommands`, {
+        createOverrideCommand: uiCommandReference('hs account create-override'),
+        removeOverrideCommand: uiCommandReference('hs account remove-override'),
+      })
+    );
+    logger.log('');
+  }
 
   updateDefaultAccount(newDefaultAccount);
 

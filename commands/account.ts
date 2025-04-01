@@ -9,6 +9,7 @@ import * as info from './account/info';
 import * as remove from './account/remove';
 import * as clean from './account/clean';
 import * as createOverride from './account/createOverride';
+import * as removeOverride from './account/removeOverride';
 
 const i18nKey = 'commands.account';
 
@@ -27,6 +28,7 @@ export function builder(yargs: Argv): Argv {
     .command(remove)
     .command(clean)
     .command(createOverride)
+    .command(removeOverride)
     .demandCommand(1, '');
 
   return yargs;
