@@ -72,6 +72,9 @@ en:
           describe: "Print information about the default account, or about the account specified with the \"account\" option."
           errors:
             notUsingPersonalAccessKey: "This command currently only supports fetching scopes for the personal access key auth type."
+          options:
+            account:
+              describe: "Account name or id to show info for"
           examples:
             default: "Print information for the default account"
             idBased: "Print information for the account with accountId equal to \"1234567\""
@@ -91,14 +94,14 @@ en:
             other: "Remove {{ count }} inactive accounts from the CLI config?"
           removeSuccess: "Removed {{ accountName }} from the CLI config."
     auth:
-      describe: "Configure authentication for your HubSpot account. This will update the {{ configName }} file that stores your account information."
+      describe: "Configure authentication for your HubSpot account."
+      verboseDescribe: "Configure authentication for a HubSpot account. This will update the {{ configName }} file that stores your account information.\n\nThe recommended authentication method is {{#bold}}{{ authMethod }}{{/bold}}, which uses an access token tied to a specific user account."
       errors:
         noConfigFileFound: "No config file was found. To create a new config file, use the \"hs init\" command."
         unsupportedAuthType: "Unsupported auth type: {{ type }}. The only supported authentication protocols are {{ supportedProtocols }}."
       options:
         authType:
-          describe: "Authentication mechanism"
-          defaultDescription: "\"{{ authMethod }}\": An access token tied to a specific user account. This is the recommended way of authenticating with local development tools."
+          describe: "Authentication method"
         account:
           describe: "HubSpot account to authenticate"
       success:
@@ -446,11 +449,11 @@ en:
           success:
             fetch: "Downloaded HubDB table {{ tableId }} to {{ path }}"
     init:
-      describe: "Configure authentication for your HubSpot account. This will create a {{ configName }} file to store your account information."
+      describe: "Create a CLI config file and configure authentication for your HubSpot account."
+      verboseDescribe: "Configure authentication for a HubSpot account. This will create a {{ configName }} file to store your account information. To configure authentication for additional accounts, run {{ command }}.\n\nThe recommended authentication method is {{#bold}}{{ authMethod }}{{/bold}}, which uses an access token tied to a specific user account."
       options:
         authType:
-          describe: "Authentication mechanism"
-          defaultDescription: "\"{{ authMethod }}\":  An access token tied to a specific user account. This is the recommended way of authenticating with local development tools."
+          describe: "Authentication method"
         account:
           describe: "HubSpot account to authenticate"
         useHiddenConfig:
@@ -1175,7 +1178,7 @@ en:
       disabledUrlText: "See all HubSpot CLI commands here."
       featureHighlight:
         defaultTitle: "What's next?"
-        commandKeys:
+        featureKeys:
           accountOption:
             command: "--account"
             message: "Use the {{ command }} option with any command to override the default account"
@@ -1205,10 +1208,12 @@ en:
             message: "Run {{ command }} to learn more about available project commands"
           projectUploadCommand:
             command: "hs project upload"
-            message: "Run {{ command }} to upload your project to HubSpot and trigger builds"
+            message: "Run {{ command }} to upload your project to your HubSpot account"
           projectDevCommand:
             command: "hs project dev"
             message: "Run {{ command }} to set up your test environment and start local development"
+          projectCommandTip:
+            message: "Tip: All project commands must be run from within a project directory"
           sampleProjects:
             linkText: "HubSpot's sample projects"
             url: "https://developers.hubspot.com/docs/platform/sample-projects?utm_source=cli&utm_content=project_create_whats_next"
