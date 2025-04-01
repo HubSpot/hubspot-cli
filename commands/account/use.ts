@@ -48,10 +48,9 @@ export async function handler(
   const accountOverride = getCWDAccountOverride();
   const overrideFilePath = getDefaultAccountOverrideFilePath();
   if (accountOverride && overrideFilePath) {
-    logger.log(
+    logger.warn(
       i18n(`${i18nKey}.accountOverride`, {
         accountOverride,
-        overrideFilePath,
       })
     );
     logger.log(
