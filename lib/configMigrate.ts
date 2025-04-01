@@ -59,7 +59,7 @@ async function mergeConfigProperties(
   }: { initialConfig: CLIConfig_NEW; conflicts: ConflictProperty[] } =
     _mergeConfigProperties(globalConfig, deprecatedConfig, force);
 
-  if (conflicts.length > 0 && !force) {
+  if (conflicts.length > 0) {
     for (const conflict of conflicts) {
       const { property, newValue, oldValue } = conflict;
       const { shouldOverwrite } = await promptUser({
