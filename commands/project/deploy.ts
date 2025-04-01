@@ -7,11 +7,6 @@ import {
 import { getAccountConfig } from '@hubspot/local-dev-lib/config';
 import { logger } from '@hubspot/local-dev-lib/logger';
 import { isHubSpotHttpError } from '@hubspot/local-dev-lib/errors/index';
-import {
-  addAccountOptions,
-  addConfigOptions,
-  addUseEnvironmentOptions,
-} from '../../lib/commonOpts';
 import { useV3Api } from '../../lib/projects/buildAndDeploy';
 import { trackCommandUsage } from '../../lib/usageTracking';
 import { logError, ApiErrorContext } from '../../lib/errorHandlers/index';
@@ -30,6 +25,7 @@ import {
   AccountArgs,
   EnvironmentArgs,
 } from '../../types/Yargs';
+import { makeYargsBuilder } from '../../lib/yargsUtils';
 
 const i18nKey = 'commands.project.subcommands.deploy';
 
@@ -192,7 +188,7 @@ export async function handler(
   }
 }
 
-export function builder(yargs: Argv): Argv<ProjectDeployArgs> {
+function projectDeployBuilder(yargs: Argv): Argv<ProjectDeployArgs> {
   yargs.options({
     project: {
       describe: i18n(`${i18nKey}.options.project.describe`),
@@ -213,12 +209,19 @@ export function builder(yargs: Argv): Argv<ProjectDeployArgs> {
     ],
   ]);
 
-  addConfigOptions(yargs);
-  addAccountOptions(yargs);
-  addUseEnvironmentOptions(yargs);
-
   return yargs as Argv<ProjectDeployArgs>;
 }
+
+export const builder = makeYargsBuilder<ProjectDeployArgs>(
+  projectDeployBuilder,
+  command,
+  describe!,
+  {
+    useConfigOptions: true,
+    useAccountOptions: true,
+    useEnvironmentOptions: true,
+  }
+);
 
 module.exports = {
   command,

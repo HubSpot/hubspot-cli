@@ -17,13 +17,13 @@ import * as projectNamePrompt from '../../../lib/prompts/projectNamePrompt';
 import * as promptUtils from '../../../lib/prompts/promptUtils';
 import { trackCommandUsage } from '../../../lib/usageTracking';
 import { EXIT_CODES } from '../../../lib/enums/exitCodes';
-import * as deployCommand from '../deploy';
 import { ProjectConfig } from '../../../types/Projects';
 import exampleProject from './fixtures/exampleProject.json';
 import {
   mockHubSpotHttpResponse,
   mockHubSpotHttpError,
 } from '../../../lib/testUtils';
+import * as deployCommand from '../deploy';
 
 jest.mock('yargs');
 jest.mock('@hubspot/local-dev-lib/logger');
@@ -37,6 +37,7 @@ jest.mock('../../../lib/projects/buildAndDeploy');
 jest.mock('../../../lib/prompts/projectNamePrompt');
 jest.mock('../../../lib/prompts/promptUtils');
 jest.mock('../../../lib/usageTracking');
+
 jest.spyOn(ui, 'uiLine');
 
 const uiLinkSpy = jest.spyOn(ui, 'uiLink').mockImplementation(text => text);
@@ -115,7 +116,7 @@ describe('commands/project/deploy', () => {
   describe('handler', () => {
     let projectConfig: ProjectConfig;
     const accountType = 'STANDARD';
-    let options: ArgumentsCamelCase<deployCommand.ProjectDeployArgs>;
+    let args: ArgumentsCamelCase<deployCommand.ProjectDeployArgs>;
     const deployDetails = {
       id: 123,
     };
@@ -123,7 +124,7 @@ describe('commands/project/deploy', () => {
     const viewProjectsInHubSpot = 'View project builds in HubSpot';
 
     beforeEach(() => {
-      options = {
+      args = {
         project: 'project name from options',
         buildId: 2,
         derivedAccountId: 1234567890,
@@ -156,64 +157,56 @@ describe('commands/project/deploy', () => {
     });
 
     it('should load the account config for the correct account id', async () => {
-      await deployCommand.handler(options);
+      await deployCommand.handler(args);
       expect(getAccountConfigSpy).toHaveBeenCalledTimes(1);
-      expect(getAccountConfigSpy).toHaveBeenCalledWith(
-        options.derivedAccountId
-      );
+      expect(getAccountConfigSpy).toHaveBeenCalledWith(args.derivedAccountId);
     });
 
     it('should track the command usage', async () => {
-      await deployCommand.handler(options);
+      await deployCommand.handler(args);
       expect(trackCommandUsage).toHaveBeenCalledTimes(1);
       expect(trackCommandUsage).toHaveBeenCalledWith(
         'project-deploy',
         { type: accountType },
-        options.derivedAccountId
+        args.derivedAccountId
       );
     });
 
     it('should load the project config', async () => {
-      await deployCommand.handler(options);
+      await deployCommand.handler(args);
       expect(getProjectConfigSpy).toHaveBeenCalledTimes(1);
       expect(getProjectConfigSpy).toHaveBeenCalledWith();
     });
 
     it('should prompt for the project name', async () => {
-      await deployCommand.handler(options);
+      await deployCommand.handler(args);
       expect(projectNamePromptSpy).toHaveBeenCalledTimes(1);
-      expect(projectNamePromptSpy).toHaveBeenCalledWith(
-        options.derivedAccountId,
-        {
-          project: options.project,
-        }
-      );
+      expect(projectNamePromptSpy).toHaveBeenCalledWith(args.derivedAccountId, {
+        project: args.project,
+      });
     });
 
-    it('should use the project name from the config is a project options is not provided', async () => {
-      delete options.project;
-      await deployCommand.handler(options);
+    it('should use the project name from the config is a project args is not provided', async () => {
+      delete args.project;
+      await deployCommand.handler(args);
       expect(projectNamePromptSpy).toHaveBeenCalledTimes(1);
-      expect(projectNamePromptSpy).toHaveBeenCalledWith(
-        options.derivedAccountId,
-        {
-          project: projectConfig.name,
-        }
-      );
+      expect(projectNamePromptSpy).toHaveBeenCalledWith(args.derivedAccountId, {
+        project: projectConfig.name,
+      });
     });
 
     it('should fetch the project details', async () => {
-      await deployCommand.handler(options);
+      await deployCommand.handler(args);
       expect(fetchProjectSpy).toHaveBeenCalledTimes(1);
       expect(fetchProjectSpy).toHaveBeenCalledWith(
-        options.derivedAccountId,
-        options.project
+        args.derivedAccountId,
+        args.project
       );
     });
 
     it('should use the name from the prompt if no others are defined', async () => {
       // eslint-disable-next-line @typescript-eslint/no-unused-vars
-      const { project: __project, ...optionsWithoutProject } = options;
+      const { project: __project, ...argsWithoutProject } = args;
 
       const promptProjectName = 'project name from the prompt';
       projectNamePromptSpy.mockResolvedValue({
@@ -224,23 +217,23 @@ describe('commands/project/deploy', () => {
         projectDir: null,
       });
 
-      await deployCommand.handler(optionsWithoutProject);
+      await deployCommand.handler(argsWithoutProject);
 
       expect(projectNamePromptSpy).toHaveBeenCalledTimes(1);
       expect(projectNamePromptSpy).toHaveBeenCalledWith(
-        options.derivedAccountId,
+        args.derivedAccountId,
         {}
       );
       expect(fetchProjectSpy).toHaveBeenCalledTimes(1);
       expect(fetchProjectSpy).toHaveBeenCalledWith(
-        options.derivedAccountId,
+        args.derivedAccountId,
         promptProjectName
       );
     });
 
     it('should log an error and exit when latest build is not defined', async () => {
       fetchProjectSpy.mockResolvedValue(mockHubSpotHttpResponse({}));
-      await deployCommand.handler(options);
+      await deployCommand.handler(args);
       expect(logger.error).toHaveBeenCalledTimes(1);
       expect(logger.error).toHaveBeenCalledWith(
         'Deploy error: no builds for this project were found.'
@@ -250,8 +243,8 @@ describe('commands/project/deploy', () => {
     });
 
     it('should log an error and exit when buildId option is not a valid build', async () => {
-      options.buildId = exampleProject.latestBuild.buildId + 1;
-      await deployCommand.handler(options);
+      args.buildId = exampleProject.latestBuild.buildId + 1;
+      await deployCommand.handler(args);
       expect(uiLinkSpy).toHaveBeenCalledTimes(1);
       expect(uiLinkSpy).toHaveBeenCalledWith(
         viewProjectsInHubSpot,
@@ -259,15 +252,15 @@ describe('commands/project/deploy', () => {
       );
       expect(logger.error).toHaveBeenCalledTimes(1);
       expect(logger.error).toHaveBeenCalledWith(
-        `Build ${options.buildId} does not exist for project ${options.project}. ${viewProjectsInHubSpot}`
+        `Build ${args.buildId} does not exist for project ${args.project}. ${viewProjectsInHubSpot}`
       );
       expect(processExitSpy).toHaveBeenCalledTimes(1);
       expect(processExitSpy).toHaveBeenCalledWith(EXIT_CODES.ERROR);
     });
 
     it('should log an error and exit when buildId option is already deployed', async () => {
-      options.buildId = exampleProject.deployedBuildId;
-      await deployCommand.handler(options);
+      args.buildId = exampleProject.deployedBuildId;
+      await deployCommand.handler(args);
       expect(uiLinkSpy).toHaveBeenCalledTimes(1);
       expect(uiLinkSpy).toHaveBeenCalledWith(
         viewProjectsInHubSpot,
@@ -275,25 +268,25 @@ describe('commands/project/deploy', () => {
       );
       expect(logger.error).toHaveBeenCalledTimes(1);
       expect(logger.error).toHaveBeenCalledWith(
-        `Build ${options.buildId} is already deployed. ${viewProjectsInHubSpot}`
+        `Build ${args.buildId} is already deployed. ${viewProjectsInHubSpot}`
       );
       expect(processExitSpy).toHaveBeenCalledTimes(1);
       expect(processExitSpy).toHaveBeenCalledWith(EXIT_CODES.ERROR);
     });
 
     it('should prompt for build id if no option is provided', async () => {
-      delete options.buildId;
+      delete args.buildId;
       promptUserSpy.mockResolvedValue({
         buildId: exampleProject.latestBuild.buildId,
       });
-      await deployCommand.handler(options);
+      await deployCommand.handler(args);
       expect(promptUserSpy).toHaveBeenCalledTimes(1);
     });
 
     it('should log an error and exit if the prompted value is invalid', async () => {
-      delete options.buildId;
+      delete args.buildId;
       promptUserSpy.mockResolvedValue({});
-      await deployCommand.handler(options);
+      await deployCommand.handler(args);
 
       expect(promptUserSpy).toHaveBeenCalledTimes(1);
       expect(logger.error).toHaveBeenCalledTimes(1);
@@ -305,12 +298,12 @@ describe('commands/project/deploy', () => {
     });
 
     it('should deploy the project', async () => {
-      await deployCommand.handler(options);
+      await deployCommand.handler(args);
       expect(deployProjectSpy).toHaveBeenCalledTimes(1);
       expect(deployProjectSpy).toHaveBeenCalledWith(
-        options.derivedAccountId,
-        options.project,
-        options.buildId,
+        args.derivedAccountId,
+        args.project,
+        args.buildId,
         undefined
       );
     });
@@ -319,7 +312,7 @@ describe('commands/project/deploy', () => {
       // @ts-expect-error Testing an edge case where the response is empty
       deployProjectSpy.mockResolvedValue({});
 
-      await deployCommand.handler(options);
+      await deployCommand.handler(args);
       expect(logger.error).toHaveBeenCalledTimes(1);
       expect(logger.error).toHaveBeenCalledWith(
         `Deploy error: an unknown error occurred.`
@@ -329,13 +322,13 @@ describe('commands/project/deploy', () => {
     });
 
     it('should poll the deploy status', async () => {
-      await deployCommand.handler(options);
+      await deployCommand.handler(args);
       expect(pollDeployStatus).toHaveBeenCalledTimes(1);
       expect(pollDeployStatus).toHaveBeenCalledWith(
-        options.derivedAccountId,
-        options.project,
+        args.derivedAccountId,
+        args.project,
         deployDetails.id,
-        options.buildId
+        args.buildId
       );
     });
 
@@ -350,12 +343,12 @@ describe('commands/project/deploy', () => {
           data: {},
         });
       });
-      await deployCommand.handler(options);
+      await deployCommand.handler(args);
 
       expect(logger.error).toHaveBeenCalledTimes(1);
       expect(logger.error).toHaveBeenCalledWith(
         `The project ${chalk.bold(
-          options.project
+          args.project
         )} does not exist in account ${accountDescription}. Run ${commandReference} to upload your project files to HubSpot.`
       );
       expect(processExitSpy).toHaveBeenCalledTimes(1);
@@ -370,7 +363,7 @@ describe('commands/project/deploy', () => {
           data: {},
         });
       });
-      await deployCommand.handler(options);
+      await deployCommand.handler(args);
 
       expect(logger.error).toHaveBeenCalledTimes(1);
       expect(logger.error).toHaveBeenCalledWith('The request was bad.');
@@ -386,11 +379,11 @@ describe('commands/project/deploy', () => {
           data: {},
         });
       });
-      await deployCommand.handler(options);
+      await deployCommand.handler(args);
 
       expect(logger.error).toHaveBeenCalledTimes(1);
       expect(logger.error).toHaveBeenCalledWith(
-        `The request for 'project deploy' in account ${options.derivedAccountId} failed due to a client error.`
+        `The request for 'project deploy' in account ${args.derivedAccountId} failed due to a client error.`
       );
       expect(processExitSpy).toHaveBeenCalledTimes(1);
       expect(processExitSpy).toHaveBeenCalledWith(EXIT_CODES.ERROR);

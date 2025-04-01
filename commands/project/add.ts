@@ -17,6 +17,7 @@ import { uiBetaTag } from '../../lib/ui';
 import { HUBSPOT_PROJECT_COMPONENTS_GITHUB_PATH } from '../../lib/constants';
 import { EXIT_CODES } from '../../lib/enums/exitCodes';
 import { CommonArgs } from '../../types/Yargs';
+import { makeYargsBuilder } from '../../lib/yargsUtils';
 
 const i18nKey = 'commands.project.subcommands.add';
 
@@ -126,7 +127,7 @@ export async function handler(
   process.exit(EXIT_CODES.SUCCESS);
 }
 
-export function builder(yargs: Argv): Argv<ProjectAddArgs> {
+function projectAddBuilder(yargs: Argv): Argv<ProjectAddArgs> {
   yargs.options({
     type: {
       describe: i18n(`${i18nKey}.options.type.describe`),
@@ -148,6 +149,12 @@ export function builder(yargs: Argv): Argv<ProjectAddArgs> {
 
   return yargs as Argv<ProjectAddArgs>;
 }
+
+export const builder = makeYargsBuilder<ProjectAddArgs>(
+  projectAddBuilder,
+  command,
+  describe!
+);
 
 module.exports = {
   command,
