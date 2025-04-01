@@ -69,8 +69,10 @@ export async function inputPrompt(
   message: string,
   {
     when,
+    validate,
   }: {
     when?: boolean | (() => boolean);
+    validate?: (input: string) => boolean | string;
   } = {}
 ): Promise<string> {
   const { input } = await promptUser([
@@ -79,6 +81,7 @@ export async function inputPrompt(
       type: 'input',
       message,
       when,
+      validate,
     },
   ]);
   return input;
