@@ -125,7 +125,7 @@ en:
       verboseDescribe: "Configure authentication for a HubSpot account. This will update the {{ configName }} file that stores your account information.\n\nThe recommended authentication method is {{#bold}}{{ authMethod }}{{/bold}}, which uses an access token tied to a specific user account."
       errors:
         unsupportedAuthType: "Unsupported auth type: {{ type }}. The only supported authentication protocols are {{ supportedProtocols }}."
-        centralizedConfigFileExists: "A centralized config file exists at {{ configPath }}. To authorize an account, please use {{ authCommand }}."
+        globalConfigFileExists: "A global config file exists at {{ configPath }}. To authorize an account, please use {{ authCommand }}."
       options:
         authType:
           describe: "Authentication method"
@@ -136,6 +136,16 @@ en:
     config:
       describe: "Commands for managing the CLI config file."
       subcommands:
+        migrate:
+          describe: "Migrate from the deprecated {{ deprecatedConfigPath }} file to the new global config file at {{ globalConfigPath }}."
+          migrationAlreadyCompleted: "No {{ deprecatedConfigPath }} deprecated configuration file found. No migration necessary."
+          errors:
+            configNotFound: "A configuration file at {{ configPath }} could not be found. Please try again with a valid file path."
+          options:
+            force: "When merging a deprecated configuration file with an existing global configuration file, overwrite any conflicting values in the global config with the deprecated config values."
+          examples:
+            default: "Migrate from the deprecated {{ deprecatedConfigPath }} file to the new global config file at {{ globalConfigPath }}"
+            configFlag: "Migrate a specific config file (specified with the config flag) to the new global config file at {{ globalConfigPath }}"
         set:
           describe: "Set various configuration options within the hubspot.config.yml file."
           promptMessage: "Select a config option to update"
@@ -490,7 +500,7 @@ en:
         updateConfig: "To update an existing config file, use the \"hs auth\" command."
       errors:
         configFileExists: "The config file {{ configPath }} already exists."
-        centralizedConfigFileExists: "A centralized config file already exists at {{ configPath }}. To specify a new local config file, delete the existing one and try again."
+        globalConfigFileExists: "A global config file already exists at {{ configPath }}. To specify a new local config file, delete the existing one and try again."
     lint:
       issuesFound: "{{ count }} issues found."
       groupName: "Linting {{ path }}"
@@ -1208,11 +1218,14 @@ en:
             command: "--account"
             message: "Use the {{ command }} option with any command to override the default account"
           accountsListCommand:
-            command: hs accounts list
+            command: "hs account list"
             message: "Run {{ command }} to see a list of configured HubSpot accounts"
           accountsUseCommand:
-            command: "hs accounts use"
+            command: "hs account use"
             message: "Run {{ command }} to set the Hubspot account that the CLI will target by default"
+          accountAuthCommand:
+            command: "hs account auth"
+            message: "Run {{ command }} to connect the CLI to additional HubSpot accounts"
           authCommand:
             command: "hs auth"
             message: "Run {{ command }} to connect the CLI to additional HubSpot accounts"
@@ -1272,6 +1285,13 @@ en:
           describe: "Use environment variable config"
         debug:
           describe: "Set log level to debug"
+    configMigrate:
+      migrateConfigPrompt: "Migrate config?\n From deprecated config file: {{ deprecatedConfigPath }}\n To new global config file: {{ globalConfigPath }}\n (This action will delete the deprecated config file).\n"
+      mergeConfigConflictPrompt: "Change the {{ property }} property in the global config from {{ newValue }} to {{ oldValue }}?"
+      mergeConfigsPrompt: "Two config files detected. Merge them?\n Deprecated config file: {{ deprecatedConfigPath }}\n Global config: {{ globalConfigPath }}\n (This action will delete the deprecated config file).\n"
+      migrationSuccess: "The deprecated config file has been migrated to the new global config file at {{ globalConfigPath }}."
+      mergeSuccess: "The deprecated config file has been merged with the global config file at {{ globalConfigPath }}."
+      skippedExistingAccounts: "\nThe following accounts were not merged, because they already exist in the global config: {{ skippedAccountIds }}.\n"
     prompts:
       projectDevTargetAccountPrompt:
         createNewSandboxOption: "<Test on a new development sandbox>"

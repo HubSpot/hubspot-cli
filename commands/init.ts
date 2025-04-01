@@ -147,7 +147,7 @@ export async function handler(
   if (configFileExists(true)) {
     const globalConfigPath = getConfigPath('', true);
     logger.error(
-      i18n(`${i18nKey}.errors.centralizedConfigFileExists`, {
+      i18n(`${i18nKey}.errors.globalConfigFileExists`, {
         configPath: globalConfigPath!,
       })
     );
