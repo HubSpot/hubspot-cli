@@ -257,7 +257,11 @@ async function handler({
 
   logger.log();
   logger.log(`Updating version to ${newVersion}...`);
-  await exec(`yarn version --new-version ${newVersion}`);
+  if (isExperimental) {
+    await exec(`yarn version --no-git-tag-version --new-version ${newVersion}`);
+  } else {
+    await exec(`yarn version --new-version ${newVersion}`);
+  }
   logger.success('Version updated successfully');
 
   logger.log();
@@ -308,10 +312,20 @@ async function handler({
     process.exit(EXIT_CODES.SUCCESS);
   }
 
-  logger.log();
-  logger.log(`Pushing changes to Github...`);
-  await exec(gitCommand);
-  logger.log(`Changes pushed successfully`);
+  if (isExperimental) {
+    logger.log();
+    logger.log(`Experimental release: Skipping push to Github`);
+
+    // Reset the version back to the local version
+    await exec(
+      `yarn version --no-git-tag-version --new-version ${localVersion}`
+    );
+  } else {
+    logger.log();
+    logger.log(`Pushing changes to Github...`);
+    await exec(gitCommand);
+    logger.log(`Changes pushed successfully`);
+  }
 
   logger.log();
   logger.success(`HubSpot CLI version ${newVersion} published successfully`);

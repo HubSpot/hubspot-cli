@@ -252,6 +252,10 @@ const SKIP_LOAD_CONFIG = {
   accounts: skipLoadConfigAccountSubCommands,
 };
 
+const SKIP_CONFIG_FLAG_VALIDATION = {
+  config: { target: false, subCommands: { migrate: { target: true } } },
+};
+
 const loadConfigMiddleware = async options => {
   // Skip this when no command is provided
   if (!options._.length) {
@@ -267,7 +271,11 @@ const loadConfigMiddleware = async options => {
     }
   };
 
-  if (configFileExists(true) && options.config) {
+  if (
+    configFileExists(true) &&
+    options.config &&
+    !isTargetedCommand(options, SKIP_CONFIG_FLAG_VALIDATION)
+  ) {
     logger.error(
       i18n(`${i18nKey}.loadConfigMiddleware.configFileExists`, {
         configPath: getConfigPath(),
@@ -278,7 +286,7 @@ const loadConfigMiddleware = async options => {
 
   // There are two commands where we don't load config:
   // 1. `hs init`
-  // 2. `hs account auth` only if the centralized config file does not exist
+  // 2. `hs account auth` only if the global config file does not exist
   if (
     !isTargetedCommand(options, {
       init: { target: true },
@@ -327,6 +335,7 @@ const sandboxesSubCommands = {
 const SKIP_ACCOUNT_VALIDATION = {
   init: { target: true },
   auth: { target: true },
+  config: { target: false, subCommands: { migrate: { target: true } } },
   account: accountsSubCommands,
   accounts: accountsSubCommands,
   sandbox: sandboxesSubCommands,

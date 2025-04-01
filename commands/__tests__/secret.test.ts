@@ -3,6 +3,7 @@ import * as addSecret from '../secret/addSecret';
 import * as deleteSecret from '../secret/deleteSecret';
 import * as listSecret from '../secret/listSecret';
 import * as updateSecret from '../secret/updateSecret';
+import * as secretCommands from '../secret';
 
 jest.mock('yargs');
 jest.mock('../secret/addSecret');
@@ -17,9 +18,6 @@ const commandSpy = jest
 const demandCommandSpy = jest
   .spyOn(yargs as Argv, 'demandCommand')
   .mockReturnValue(yargs as Argv);
-
-// Import this last so mocks apply
-import * as secretCommands from '../secret';
 
 describe('commands/account', () => {
   describe('command', () => {
