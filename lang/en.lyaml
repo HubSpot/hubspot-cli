@@ -1218,11 +1218,14 @@ en:
             command: "--account"
             message: "Use the {{ command }} option with any command to override the default account"
           accountsListCommand:
-            command: hs accounts list
+            command: "hs account list"
             message: "Run {{ command }} to see a list of configured HubSpot accounts"
           accountsUseCommand:
-            command: "hs accounts use"
+            command: "hs account use"
             message: "Run {{ command }} to set the Hubspot account that the CLI will target by default"
+          accountAuthCommand:
+            command: "hs account auth"
+            message: "Run {{ command }} to connect the CLI to additional HubSpot accounts"
           authCommand:
             command: "hs auth"
             message: "Run {{ command }} to connect the CLI to additional HubSpot accounts"

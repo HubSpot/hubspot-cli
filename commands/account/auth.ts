@@ -186,7 +186,11 @@ export async function handler(
       );
     }
   }
-  uiFeatureHighlight(['helpCommand', 'authCommand', 'accountsListCommand']);
+  uiFeatureHighlight([
+    'helpCommand',
+    'accountAuthCommand',
+    'accountsListCommand',
+  ]);
 
   if (!disableTracking) {
     await trackAuthAction(
