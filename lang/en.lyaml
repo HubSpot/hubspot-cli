@@ -85,6 +85,7 @@ en:
           logs:
             replaceDefaultAccount: "The removed account was the default account."
           prompts:
+            deleteOverrideFile: "Delete the override file ({{ overrideFilePath }}) associated with {{ accountName }}?"
             selectAccountToRemove: "Select an account to remove from the config"
           errors:
             accountNotFound: "The account \"{{ specifiedAccount }}\" could not be found in {{ configPath }}"
@@ -128,6 +129,8 @@ en:
           confirm:
             one: "Remove 1 inactive account from the CLI config?"
             other: "Remove {{ count }} inactive accounts from the CLI config?"
+          defaultAccountOverride: "\n(This will also delete the default account override file at {{ overrideFilePath }})"
+          replaceDefaultAccount: "The default account was removed."
           removeSuccess: "Removed {{ accountName }} from the CLI config."
     auth:
       describe: "Configure authentication for your HubSpot account."
