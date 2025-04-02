@@ -6,7 +6,7 @@
   "repository": "https://github.com/HubSpot/hubspot-cli",
   "dependencies": {
     "@hubspot/local-dev-lib": "3.3.2",
-    "@hubspot/project-parsing-lib": "0.1.3-beta.0",
+    "@hubspot/project-parsing-lib": "0.1.4",
     "@hubspot/serverless-dev-runtime": "7.0.2",
     "@hubspot/theme-preview-dev-server": "0.0.10",
     "@hubspot/ui-extensions-dev-server": "0.8.48",
