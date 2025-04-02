@@ -71,7 +71,7 @@ export async function handler(args: ArgumentsCamelCase<ProjectDownloadArgs>) {
     const { data: zippedProject } = await downloadProject(
       derivedAccountId,
       projectName,
-      buildNumberToDownload!
+      buildNumberToDownload
     );
 
     await extractZipArchive(
@@ -83,7 +83,7 @@ export async function handler(args: ArgumentsCamelCase<ProjectDownloadArgs>) {
 
     logger.log(
       i18n(`${i18nKey}.logs.downloadSucceeded`, {
-        buildId: buildNumberToDownload!,
+        buildId: buildNumberToDownload,
         projectName,
       })
     );
