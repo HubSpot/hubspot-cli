@@ -105,6 +105,7 @@ describe('commands/project/deploy', () => {
       latestBuild: { buildId: 8 },
       deployedBuildId: 1,
     };
+    const projectNameFromPrompt = 'project name from prompt';
     const deployDetails = {
       id: 123,
     };
@@ -121,7 +122,9 @@ describe('commands/project/deploy', () => {
         name: 'project name from config',
       };
       getProjectConfig.mockResolvedValue({ projectConfig });
-      projectNamePrompt.mockResolvedValue({ projectName: 'fooo' });
+      projectNamePrompt.mockResolvedValue({
+        projectName: projectNameFromPrompt,
+      });
       getProjectDetailUrl.mockReturnValue(projectDetailUrl);
       uiLinkSpy.mockImplementation(text => {
         return text;
@@ -184,14 +187,14 @@ describe('commands/project/deploy', () => {
       expect(fetchProject).toHaveBeenCalledTimes(1);
       expect(fetchProject).toHaveBeenCalledWith(
         options.derivedAccountId,
-        options.project
+        projectNameFromPrompt
       );
     });
 
     it('should use the name from the prompt if no others are defined', async () => {
       delete options.project;
       const promptProjectName = 'project name from the prompt';
-      projectNamePrompt.mockReturnValue({ projectName: promptProjectName });
+      projectNamePrompt.mockResolvedValue({ projectName: promptProjectName });
       getProjectConfig.mockResolvedValue({});
 
       await deployCommand.handler(options);
@@ -229,7 +232,7 @@ describe('commands/project/deploy', () => {
       );
       expect(logger.error).toHaveBeenCalledTimes(1);
       expect(logger.error).toHaveBeenCalledWith(
-        `Build ${options.buildId} does not exist for project ${options.project}. ${viewProjectsInHubSpot}`
+        `Build ${options.buildId} does not exist for project ${projectNameFromPrompt}. ${viewProjectsInHubSpot}`
       );
       expect(processExitSpy).toHaveBeenCalledTimes(1);
       expect(processExitSpy).toHaveBeenCalledWith(EXIT_CODES.ERROR);
@@ -279,7 +282,7 @@ describe('commands/project/deploy', () => {
       expect(deployProject).toHaveBeenCalledTimes(1);
       expect(deployProject).toHaveBeenCalledWith(
         options.derivedAccountId,
-        options.project,
+        projectNameFromPrompt,
         options.buildId,
         undefined
       );
@@ -307,7 +310,7 @@ describe('commands/project/deploy', () => {
       expect(pollDeployStatus).toHaveBeenCalledTimes(1);
       expect(pollDeployStatus).toHaveBeenCalledWith(
         options.derivedAccountId,
-        options.project,
+        projectNameFromPrompt,
         deployDetails.id,
         options.buildId
       );
@@ -334,7 +337,7 @@ describe('commands/project/deploy', () => {
       expect(logger.error).toHaveBeenCalledTimes(1);
       expect(logger.error).toHaveBeenCalledWith(
         `The project ${chalk.bold(
-          options.project
+          projectNameFromPrompt
         )} does not exist in account ${accountDescription}. Run ${commandReference} to upload your project files to HubSpot.`
       );
       expect(processExitSpy).toHaveBeenCalledTimes(1);
