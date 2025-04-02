@@ -17,9 +17,8 @@ describe('commands/account/createOverride', () => {
   });
 
   describe('describe', () => {
-    it('should not provide a description while in internal testing', () => {
-      // TODO: Change this when we release the global config work
-      expect(accountCreateOverrideCommand.describe).toBeUndefined();
+    it('should provide a description', () => {
+      expect(accountCreateOverrideCommand.describe).toBeDefined();
     });
   });
 

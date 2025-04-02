@@ -16,8 +16,7 @@ describe('commands/account/auth', () => {
 
   describe('describe', () => {
     it('should provide a description', () => {
-      // TODO: Change to defined when we unhide the command
-      expect(accountAuthCommand.describe).toBeUndefined();
+      expect(accountAuthCommand.describe).toBeDefined();
     });
   });
 

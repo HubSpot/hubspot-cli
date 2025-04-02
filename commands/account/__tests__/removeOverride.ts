@@ -19,9 +19,8 @@ describe('commands/account/removeOverride', () => {
   });
 
   describe('describe', () => {
-    it('should not provide a description while in internal testing', () => {
-      // TODO: Change this when we release the centralized config work
-      expect(accountRemoveOverrideCommand.describe).toBeUndefined();
+    it('should provide a description', () => {
+      expect(accountRemoveOverrideCommand.describe).toBeDefined();
     });
   });
 
