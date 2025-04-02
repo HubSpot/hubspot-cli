@@ -31,6 +31,7 @@ import { personalAccessKeyPrompt } from '../../lib/prompts/personalAccessKeyProm
 import { cliAccountNamePrompt } from '../../lib/prompts/accountNamePrompt';
 import { setAsDefaultAccountPrompt } from '../../lib/prompts/setAsDefaultAccountPrompt';
 import { logError } from '../../lib/errorHandlers/index';
+import { trackCommandMetadataUsage } from '../../lib/usageTracking';
 import { EXIT_CODES } from '../../lib/enums/exitCodes';
 import { uiFeatureHighlight } from '../../lib/ui';
 import { CommonArgs, ConfigArgs } from '../../types/Yargs';
@@ -90,7 +91,7 @@ async function updateConfig(
   }
 }
 
-export const describe = undefined; // i18n(`${i18nKey}.describe`);
+export const describe = i18n(`${i18nKey}.describe`);
 export const command = 'auth';
 
 type AccountAuthArgs = CommonArgs &
@@ -109,16 +110,34 @@ export async function handler(
   if (deprecatedConfigExists) {
     if (globalConfigExists) {
       try {
-        await handleMerge();
+        await handleMerge(providedAccountId);
       } catch (error) {
         logError(error);
+        trackCommandMetadataUsage(
+          'account-auth',
+          {
+            command: 'hs account auth',
+            type: 'Merge configs',
+            successful: false,
+          },
+          providedAccountId
+        );
         process.exit(EXIT_CODES.ERROR);
       }
     } else {
       try {
-        await handleMigration();
+        await handleMigration(providedAccountId);
       } catch (error) {
         logError(error);
+        trackCommandMetadataUsage(
+          'account-auth',
+          {
+            command: 'hs account auth',
+            type: 'Migrate a single config',
+            successful: false,
+          },
+          providedAccountId
+        );
         process.exit(EXIT_CODES.ERROR);
       }
     }

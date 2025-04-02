@@ -19,10 +19,14 @@ import {
 
 import { promptUser } from './prompts/promptUtils';
 import { i18n } from './lang';
+import { trackCommandMetadataUsage } from './usageTracking';
 
 const i18nKey = 'lib.configMigrate';
 
-export async function handleMigration(configPath?: string): Promise<void> {
+export async function handleMigration(
+  accountId: number | undefined,
+  configPath?: string
+): Promise<void> {
   const { shouldMigrateConfig } = await promptUser({
     name: 'shouldMigrateConfig',
     type: 'confirm',
@@ -35,11 +39,30 @@ export async function handleMigration(configPath?: string): Promise<void> {
   });
 
   if (!shouldMigrateConfig) {
+    trackCommandMetadataUsage(
+      'config-migrate',
+      {
+        command: 'hs config migrate',
+        type: 'migration',
+        step: 'Reject migration via prompt',
+      },
+      accountId
+    );
     return;
   }
 
   const deprecatedConfig = getDeprecatedConfig(configPath);
   migrateConfig(deprecatedConfig);
+  trackCommandMetadataUsage(
+    'config-migrate',
+    {
+      command: 'hs config migrate',
+      type: 'migration',
+      step: 'Confirm migration via prompt',
+      successful: true,
+    },
+    accountId
+  );
   logger.success(
     i18n(`${i18nKey}.migrationSuccess`, {
       globalConfigPath: GLOBAL_CONFIG_PATH,
@@ -82,6 +105,7 @@ async function mergeConfigProperties(
 }
 
 export async function handleMerge(
+  accountId: number | undefined,
   configPath?: string,
   force?: boolean
 ): Promise<void> {
@@ -97,6 +121,15 @@ export async function handleMerge(
   });
 
   if (!shouldMergeConfigs) {
+    trackCommandMetadataUsage(
+      'config-migrate',
+      {
+        command: 'hs config migrate',
+        type: 'merge',
+        step: 'Reject merge via prompt',
+      },
+      accountId
+    );
     return;
   }
 
@@ -130,6 +163,16 @@ export async function handleMerge(
     i18n(`${i18nKey}.mergeSuccess`, {
       globalConfigPath: GLOBAL_CONFIG_PATH,
     })
+  );
+  trackCommandMetadataUsage(
+    'config-migrate',
+    {
+      command: 'hs config migrate',
+      type: 'merge',
+      step: 'Confirm merge via prompt',
+      successful: true,
+    },
+    accountId
   );
   return;
 }

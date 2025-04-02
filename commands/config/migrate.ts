@@ -11,6 +11,7 @@ import { handleMigration, handleMerge } from '../../lib/configMigrate';
 import { addConfigOptions } from '../../lib/commonOpts';
 import { i18n } from '../../lib/lang';
 import { CommonArgs, ConfigArgs } from '../../types/Yargs';
+import { trackCommandMetadataUsage } from '../../lib/usageTracking';
 import { logError } from '../../lib/errorHandlers/index';
 import { EXIT_CODES } from '../../lib/enums/exitCodes';
 
@@ -27,7 +28,7 @@ type ConfigMigrateArgs = CommonArgs & ConfigArgs & { force?: boolean };
 export async function handler(
   args: ArgumentsCamelCase<ConfigMigrateArgs>
 ): Promise<void> {
-  const { config: configPath, force } = args;
+  const { config: configPath, force, derivedAccountId } = args;
 
   if (configPath && !fs.existsSync(configPath)) {
     logger.log(
@@ -52,12 +53,21 @@ export async function handler(
 
   try {
     if (!globalConfigExists) {
-      await handleMigration(configPath);
+      await handleMigration(derivedAccountId, configPath);
     } else {
-      await handleMerge(configPath, force);
+      await handleMerge(derivedAccountId, configPath, force);
     }
     process.exit(EXIT_CODES.SUCCESS);
   } catch (error) {
+    trackCommandMetadataUsage(
+      'config-migrate',
+      {
+        command: 'hs config migrate',
+        type: 'Migration/merge',
+        successful: false,
+      },
+      derivedAccountId
+    );
     logError(error);
     process.exit(EXIT_CODES.ERROR);
   }

@@ -4,17 +4,22 @@ import { logger } from '@hubspot/local-dev-lib/logger';
 import {
   getCWDAccountOverride,
   getDefaultAccountOverrideFilePath,
+  getAccountId,
 } from '@hubspot/local-dev-lib/config';
+import { DEFAULT_ACCOUNT_OVERRIDE_FILE_NAME } from '@hubspot/local-dev-lib/constants/config';
 
 import { i18n } from '../../lib/lang';
 import { promptUser } from '../../lib/prompts/promptUtils';
+import { trackCommandMetadataUsage } from '../../lib/usageTracking';
 import { EXIT_CODES } from '../../lib/enums/exitCodes';
 import { logError } from '../../lib/errorHandlers/index';
 import { CommonArgs } from '../../types/Yargs';
 
 const i18nKey = 'commands.account.subcommands.removeOverride';
 
-export const describe = undefined; // i18n(`${i18nKey}.describe`, {overrideFile: DEFAULT_ACCOUNT_OVERRIDE_FILE_NAME,});
+export const describe = i18n(`${i18nKey}.describe`, {
+  overrideFile: DEFAULT_ACCOUNT_OVERRIDE_FILE_NAME,
+});
 
 export const command = 'remove-override';
 
@@ -28,6 +33,8 @@ export async function handler(
   const accountOverride = getCWDAccountOverride();
   const overrideFilePath = getDefaultAccountOverrideFilePath();
   if (accountOverride && overrideFilePath) {
+    const accountId = getAccountId(accountOverride) || undefined;
+
     if (!force) {
       logger.log(
         i18n(`${i18nKey}.accountOverride`, {
@@ -47,6 +54,14 @@ export async function handler(
       logger.log('');
 
       if (!deleteOverrideFile) {
+        trackCommandMetadataUsage(
+          'account-removeOverride',
+          {
+            command: 'hs account remove-override',
+            step: 'Reject removing override via prompt',
+          },
+          accountId
+        );
         process.exit(EXIT_CODES.SUCCESS);
       }
     }
@@ -54,6 +69,15 @@ export async function handler(
     try {
       fs.unlinkSync(overrideFilePath);
       logger.success(i18n(`${i18nKey}.success`));
+      trackCommandMetadataUsage(
+        'account-removeOverride',
+        {
+          command: 'hs account remove-override',
+          step: 'Confirm removing override file (via prompt/force)',
+          successful: true,
+        },
+        accountId
+      );
       process.exit(EXIT_CODES.SUCCESS);
     } catch (error) {
       logError(error);

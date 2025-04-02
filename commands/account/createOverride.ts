@@ -14,13 +14,16 @@ import {
 import { i18n } from '../../lib/lang';
 import { promptUser } from '../../lib/prompts/promptUtils';
 import { EXIT_CODES } from '../../lib/enums/exitCodes';
+import { trackCommandMetadataUsage } from '../../lib/usageTracking';
 import { selectAccountFromConfig } from '../../lib/prompts/accountsPrompt';
 import { logError } from '../../lib/errorHandlers/index';
 import { CommonArgs } from '../../types/Yargs';
 
 const i18nKey = 'commands.account.subcommands.createOverride';
 
-export const describe = undefined; // i18n(`${i18nKey}.describe`, { hsAccountFileName: DEFAULT_ACCOUNT_OVERRIDE_FILE_NAME });
+export const describe = i18n(`${i18nKey}.describe`, {
+  hsAccountFileName: DEFAULT_ACCOUNT_OVERRIDE_FILE_NAME,
+});
 
 export const command = 'create-override [account]';
 
@@ -51,6 +54,15 @@ export async function handler(
     logger.log('');
 
     if (!replaceOverrideFile) {
+      const accountId = getAccountId(accountOverride) || undefined;
+      trackCommandMetadataUsage(
+        'account-createOverride',
+        {
+          command: 'hs account create-override',
+          step: 'Reject overwriting an override via prompt',
+        },
+        accountId
+      );
       process.exit(EXIT_CODES.SUCCESS);
     }
   }
@@ -74,6 +86,16 @@ export async function handler(
     );
     await fs.writeFile(overrideFilePath, accountId!.toString(), 'utf8');
     logger.success(i18n(`${i18nKey}.success`, { overrideFilePath }));
+    const trackingId = accountId || undefined;
+    trackCommandMetadataUsage(
+      'config-migrate',
+      {
+        command: 'hs config migrate',
+        step: 'Confirm overwriting an override via prompt',
+        successful: true,
+      },
+      trackingId
+    );
     process.exit(EXIT_CODES.SUCCESS);
   } catch (e: unknown) {
     logError(e);
