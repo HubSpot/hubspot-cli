@@ -3,10 +3,12 @@ import {
   isHubSpotHttpError,
   isValidationError,
 } from '@hubspot/local-dev-lib/errors/index';
+import { getConfig } from '@hubspot/local-dev-lib/config';
+
 import { shouldSuppressError } from './suppressError';
 import { i18n } from '../lang';
 import util from 'util';
-
+import { uiCommandReference } from '../ui';
 const i18nKey = 'lib.errorHandlers.index';
 
 export function logError(error: unknown, context?: ApiErrorContext): void {
@@ -40,6 +42,21 @@ export function logError(error: unknown, context?: ApiErrorContext): void {
   } else {
     // Unknown errors
     logger.error(i18n(`${i18nKey}.unknownErrorOccurred`));
+  }
+
+  if (isHubSpotHttpError(error) && error.code === 'ETIMEDOUT') {
+    const config = getConfig();
+    const defaultTimeout = config?.httpTimeout;
+
+    if (defaultTimeout === error.timeout) {
+      const timeout = error.timeout ? ` of ${error.timeout}ms` : '';
+      logger.error(
+        i18n(`${i18nKey}.timeoutErrorOccurred`, {
+          timeout,
+          configSetCommand: uiCommandReference('hs config set'),
+        })
+      );
+    }
   }
 }
 
