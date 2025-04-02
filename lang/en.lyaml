@@ -750,6 +750,7 @@ en:
             downloadSucceeded: "Downloaded build \"{{ buildId }}\" from project \"{{ projectName }}\""
           errors:
             downloadFailed: "Something went wrong downloading the project"
+            noBuildIdToDownload: "This project is empty. There is no build content to download"
           warnings:
             cannotDownloadWithinProject: "Cancelling project download. Please run the command again outside the context of an existing project."
           options:

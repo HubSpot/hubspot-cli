@@ -61,6 +61,11 @@ export async function handler(args: ArgumentsCamelCase<ProjectDownloadArgs>) {
       }
     }
 
+    if (!buildNumberToDownload) {
+      logger.error(i18n(`${i18nKey}.errors.noBuildIdToDownload`));
+      process.exit(EXIT_CODES.ERROR);
+    }
+
     const absoluteDestPath = dest ? path.resolve(getCwd(), dest) : getCwd();
 
     const { data: zippedProject } = await downloadProject(
