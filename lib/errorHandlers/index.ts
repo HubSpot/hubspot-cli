@@ -48,11 +48,10 @@ export function logError(error: unknown, context?: ApiErrorContext): void {
     const config = getConfig();
     const defaultTimeout = config?.httpTimeout;
 
-    if (defaultTimeout === error.timeout) {
-      const timeout = error.timeout ? ` of ${error.timeout}ms` : '';
+    if (error.timeout && defaultTimeout === error.timeout) {
       logger.error(
         i18n(`${i18nKey}.timeoutErrorOccurred`, {
-          timeout,
+          timeout: error.timeout,
           configSetCommand: uiCommandReference('hs config set'),
         })
       );
