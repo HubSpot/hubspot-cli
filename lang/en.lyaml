@@ -1145,10 +1145,10 @@ en:
         restartDev: "  * Re-run {{ command }}"
         pushToGithub: "  * Commit and push your changes to GitHub"
       activeInstallWarning:
-        installCount: "{{#bold}}The app {{ appName }} has {{ installCount }} production {{ installText }}{{/bold}}"
+        installCount: "{{#bold}}The app {{ appName }} is installed in {{ installCount }} {{ accountText }}{{/bold}}"
         explanation: "Some changes made during local development may need to be synced to HubSpot, which will impact those existing installs. We strongly recommend creating a copy of this app to use instead."
         confirmation: "You will always be asked to confirm any permanent changes to your app’s configuration before uploading them."
-        confirmationPrompt: "Proceed with local development of this {{#bold}}production{{/bold}} app?"
+        confirmationPrompt: "Proceed with local development of this app with existing installs?"
       devServer:
         cleanupError: "Failed to cleanup local dev server: {{ message }}"
         setupError: "Failed to setup local dev server: {{ message }}"
@@ -1207,7 +1207,7 @@ en:
         componentCount: "Found {{ numComponents }} components in this project"
         successStatusText: "DONE"
         failedStatusText: "FAILED"
-        errorFetchingTaskStatus: "Error fetching {{ taskType }} status"
+        errorFetchingTaskStatus: "An error occurred while fetching the status of the current {{ taskType }}. For more information, view this project in HubSpot by running {{ openCommand }}."
       pollBuildAutodeployStatusError: "Error fetching autodeploy status for build #{{ buildId }}"
       pollProjectBuildAndDeploy:
         buildSucceededAutomaticallyDeploying: "Build #{{ buildId }} succeeded. {{#bold}}Automatically deploying{{/bold}} to {{ accountIdentifier }}\n"
@@ -1240,7 +1240,7 @@ en:
       disabledUrlText: "See all HubSpot CLI commands here."
       featureHighlight:
         defaultTitle: "What's next?"
-        commandKeys:
+        featureKeys:
           accountOption:
             command: "--account"
             message: "Use the {{ command }} option with any command to override the default account"
@@ -1273,10 +1273,12 @@ en:
             message: "Run {{ command }} to learn more about available project commands"
           projectUploadCommand:
             command: "hs project upload"
-            message: "Run {{ command }} to upload your project to HubSpot and trigger builds"
+            message: "Run {{ command }} to upload your project to your HubSpot account"
           projectDevCommand:
             command: "hs project dev"
             message: "Run {{ command }} to set up your test environment and start local development"
+          projectCommandTip:
+            message: "Tip: All project commands must be run from within a project directory"
           sampleProjects:
             linkText: "HubSpot's sample projects"
             url: "https://developers.hubspot.com/docs/platform/sample-projects?utm_source=cli&utm_content=project_create_whats_next"

@@ -181,8 +181,8 @@ class LocalDevManagerV2 {
       i18n(`${i18nKey}.activeInstallWarning.installCount`, {
         appName: this.activePublicAppData.name,
         installCount: this.publicAppActiveInstalls,
-        installText:
-          this.publicAppActiveInstalls === 1 ? 'install' : 'installs',
+        accountText:
+          this.publicAppActiveInstalls === 1 ? 'account' : 'accounts',
       })
     );
     logger.log(i18n(`${i18nKey}.activeInstallWarning.explanation`));
