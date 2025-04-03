@@ -750,6 +750,7 @@ en:
             downloadSucceeded: "Downloaded build \"{{ buildId }}\" from project \"{{ projectName }}\""
           errors:
             downloadFailed: "Something went wrong downloading the project"
+            noBuildIdToDownload: "This project is empty. There is no build content to download"
           warnings:
             cannotDownloadWithinProject: "Cancelling project download. Please run the command again outside the context of an existing project."
           options:
@@ -1082,10 +1083,10 @@ en:
         restartDev: "  * Re-run {{ command }}"
         pushToGithub: "  * Commit and push your changes to GitHub"
       activeInstallWarning:
-        installCount: "{{#bold}}The app {{ appName }} has {{ installCount }} production {{ installText }}{{/bold}}"
+        installCount: "{{#bold}}The app {{ appName }} is installed in {{ installCount }} {{ accountText }}{{/bold}}"
         explanation: "Some changes made during local development may need to be synced to HubSpot, which will impact those existing installs. We strongly recommend creating a copy of this app to use instead."
         confirmation: "You will always be asked to confirm any permanent changes to your app’s configuration before uploading them."
-        confirmationPrompt: "Proceed with local development of this {{#bold}}production{{/bold}} app?"
+        confirmationPrompt: "Proceed with local development of this app with existing installs?"
       devServer:
         cleanupError: "Failed to cleanup local dev server: {{ message }}"
         setupError: "Failed to setup local dev server: {{ message }}"
@@ -1144,7 +1145,7 @@ en:
         componentCount: "Found {{ numComponents }} components in this project"
         successStatusText: "DONE"
         failedStatusText: "FAILED"
-        errorFetchingTaskStatus: "Error fetching {{ taskType }} status"
+        errorFetchingTaskStatus: "An error occurred while fetching the status of the current {{ taskType }}. For more information, view this project in HubSpot by running {{ openCommand }}."
       pollBuildAutodeployStatusError: "Error fetching autodeploy status for build #{{ buildId }}"
       pollProjectBuildAndDeploy:
         buildSucceededAutomaticallyDeploying: "Build #{{ buildId }} succeeded. {{#bold}}Automatically deploying{{/bold}} to {{ accountIdentifier }}\n"
@@ -1513,6 +1514,8 @@ en:
         errorContext: "Context: {{ context }}"
         errorCause: "Cause: {{ cause }}"
         unknownErrorOccurred: "An unknown error has occurred."
+        configTimeoutErrorOccurred: "This error occurred because a request exceeded the default HTTP timeout of {{ timeout }}ms. To increase the default HTTP timeout, run {{ configSetCommand }}."
+        genericTimeoutErrorOccurred: "This error occurred because an HTTP request timed out. Re-running the command may resolve this issue."
       suppressErrors:
         platformVersionErrors:
           header: "Platform version update required"

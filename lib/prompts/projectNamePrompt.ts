@@ -5,11 +5,15 @@ import { uiAccountDescription } from '../ui';
 
 const i18nKey = 'lib.prompts.projectNamePrompt';
 
-export function projectNamePrompt(
+export type ProjectNamePromptResponse = {
+  projectName: string;
+};
+
+export async function projectNamePrompt(
   accountId: number,
   options: { project?: string } = {}
 ) {
-  return promptUser({
+  const result = await promptUser<ProjectNamePromptResponse>({
     name: 'projectName',
     message: i18n(`${i18nKey}.enterName`),
     when: !options.project,
@@ -30,4 +34,10 @@ export function projectNamePrompt(
       return true;
     },
   });
+
+  if (!result.projectName && options.project) {
+    result.projectName = options.project;
+  }
+
+  return result;
 }

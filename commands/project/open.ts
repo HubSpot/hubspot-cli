@@ -57,12 +57,8 @@ export async function handler(args: ArgumentsCamelCase<ProjectOpenArgs>) {
   } else if (!projectName && projectConfig) {
     projectName = projectConfig.name;
   } else if (!projectName && !projectConfig) {
-    const namePrompt = await projectNamePrompt(derivedAccountId);
-
-    if (!namePrompt.projectName) {
-      process.exit(EXIT_CODES.ERROR);
-    }
-    projectName = namePrompt.projectName;
+    const namePromptResponse = await projectNamePrompt(derivedAccountId);
+    projectName = namePromptResponse.projectName;
   }
 
   const url = getProjectDetailUrl(projectName!, derivedAccountId)!;
