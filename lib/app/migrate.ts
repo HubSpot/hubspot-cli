@@ -259,13 +259,26 @@ async function handleMigrationProcess(derivedAccountId: number, appId: number) {
   return { migrationId, uidMap };
 }
 
+async function pollMigrationStatus(
+  derivedAccountId: number,
+  migrationId: number,
+  platformVersion: string
+) {
+  const pollResponse = await poll(() =>
+    checkMigrationStatus(derivedAccountId, migrationId, platformVersion)
+  );
+
+  const { status } = pollResponse;
+  return status === 'SUCCESS';
+}
+
 async function finalizeMigration(
   derivedAccountId: number,
   migrationId: number,
   uidMap: Record<string, string>,
   projectName: string,
   platformVersion: string
-) {
+): Promise<number | undefined> {
   let buildId: number;
   try {
     SpinniesManager.add('finishingMigration', {
@@ -283,20 +296,26 @@ async function finalizeMigration(
 
     buildId = data.buildId;
 
-    // const pollResponse = await poll(() =>
-    //   checkMigrationStatus(derivedAccountId, migrationId, platformVersion)
-    // );
-    // const { status } = pollResponse;
-    // if (status === 'SUCCESS') {
+    const success = await pollMigrationStatus(
+      derivedAccountId,
+      migrationId,
+      platformVersion
+    );
 
-    SpinniesManager.succeed('finishingMigration', {
-      text: i18n(
-        `commands.project.subcommands.migrateApp.spinners.migrationComplete`
-      ),
-    });
+    if (success) {
+      SpinniesManager.succeed('finishingMigration', {
+        text: i18n(
+          `commands.project.subcommands.migrateApp.spinners.migrationComplete`
+        ),
+      });
+    } else {
+      SpinniesManager.fail('finishingMigration', {
+        text: i18n(
+          `commands.project.subcommands.migrateApp.spinners.migrationFailed`
+        ),
+      });
+    }
     return buildId;
-
-    // }
   } catch (error) {
     SpinniesManager.fail('finishingMigration', {
       text: i18n(
@@ -379,6 +398,10 @@ export async function migrateApp2025_2(
     projectName,
     options.platformVersion
   );
+
+  if (!buildId) {
+    throw new Error('Migration Failed');
+  }
 
   await downloadProjectFiles(
     derivedAccountId,
