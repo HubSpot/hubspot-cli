@@ -17,8 +17,6 @@ import { uiAccountDescription } from './ui';
 import { logError } from './errorHandlers/index';
 import { SandboxSyncTask, SandboxAccountType } from '../types/Sandboxes';
 
-const i18nKey = 'lib.sandbox';
-
 export const SYNC_TYPES = {
   OBJECT_RECORDS: 'object-records',
 } as const;
@@ -75,14 +73,14 @@ export async function getAvailableSyncTypes(
   const portalId = getAccountId(id);
 
   if (!parentPortalId || !portalId) {
-    throw new Error(i18n(`${i18nKey}.sync.failure.syncTypeFetch`));
+    throw new Error(i18n(`lib.sandbox.sync.failure.syncTypeFetch`));
   }
 
   const {
     data: { results: syncTypes },
   } = await fetchTypes(parentPortalId, portalId);
   if (!syncTypes) {
-    throw new Error(i18n(`${i18nKey}.sync.failure.syncTypeFetch`));
+    throw new Error(i18n(`lib.sandbox.sync.failure.syncTypeFetch`));
   }
   return syncTypes.map(t => ({ type: t.name }));
 }
@@ -96,14 +94,14 @@ export async function validateSandboxUsageLimits(
   const accountId = getAccountId(id);
 
   if (!accountId) {
-    throw new Error(i18n(`${i18nKey}.create.failure.usageLimitFetch`));
+    throw new Error(i18n(`lib.sandbox.create.failure.usageLimitFetch`));
   }
 
   const {
     data: { usage },
   } = await getSandboxUsageLimits(accountId);
   if (!usage) {
-    throw new Error(i18n(`${i18nKey}.create.failure.usageLimitFetch`));
+    throw new Error(i18n(`lib.sandbox.create.failure.usageLimitFetch`));
   }
   if (sandboxType === HUBSPOT_ACCOUNT_TYPES.DEVELOPMENT_SANDBOX) {
     if (usage['DEVELOPER'].available === 0) {
@@ -116,7 +114,7 @@ export async function validateSandboxUsageLimits(
       if (hasDevelopmentSandboxes) {
         throw new Error(
           i18n(
-            `${i18nKey}.create.failure.alreadyInConfig.developer.${
+            `lib.sandbox.create.failure.alreadyInConfig.developer.${
               plural ? 'other' : 'one'
             }`,
             {
@@ -129,7 +127,7 @@ export async function validateSandboxUsageLimits(
         const baseUrl = getHubSpotWebsiteOrigin(env);
         throw new Error(
           i18n(
-            `${i18nKey}.create.failure.limit.developer.${
+            `lib.sandbox.create.failure.limit.developer.${
               plural ? 'other' : 'one'
             }`,
             {
@@ -153,7 +151,7 @@ export async function validateSandboxUsageLimits(
       if (hasStandardSandboxes) {
         throw new Error(
           i18n(
-            `${i18nKey}.create.failure.alreadyInConfig.standard.${
+            `lib.sandbox.create.failure.alreadyInConfig.standard.${
               plural ? 'other' : 'one'
             }`,
             {
@@ -166,7 +164,7 @@ export async function validateSandboxUsageLimits(
         const baseUrl = getHubSpotWebsiteOrigin(env);
         throw new Error(
           i18n(
-            `${i18nKey}.create.failure.limit.standard.${
+            `lib.sandbox.create.failure.limit.standard.${
               plural ? 'other' : 'one'
             }`,
             {
@@ -189,14 +187,14 @@ export function handleSandboxCreateError(
 ): never {
   if (isMissingScopeError(err)) {
     logger.error(
-      i18n(`${i18nKey}.create.failure.scopes.message`, {
+      i18n(`lib.sandbox.create.failure.scopes.message`, {
         accountName: uiAccountDescription(accountId),
       })
     );
     const websiteOrigin = getHubSpotWebsiteOrigin(env);
     const url = `${websiteOrigin}/personal-access-key/${accountId}`;
     logger.info(
-      i18n(`${i18nKey}.create.failure.scopes.instructions`, {
+      i18n(`lib.sandbox.create.failure.scopes.instructions`, {
         accountName: uiAccountDescription(accountId),
         url,
       })
@@ -210,7 +208,7 @@ export function handleSandboxCreateError(
   ) {
     logger.log('');
     logger.error(
-      i18n(`${i18nKey}.create.failure.invalidUser`, {
+      i18n(`lib.sandbox.create.failure.invalidUser`, {
         accountName: name,
         parentAccountName: uiAccountDescription(accountId),
       })
@@ -225,7 +223,7 @@ export function handleSandboxCreateError(
   ) {
     logger.log('');
     logger.error(
-      i18n(`${i18nKey}.create.failure.403Gating`, {
+      i18n(`lib.sandbox.create.failure.403Gating`, {
         accountName: name,
         parentAccountName: uiAccountDescription(accountId),
         accountId,

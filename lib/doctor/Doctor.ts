@@ -32,7 +32,6 @@ const { i18n } = require('../lang');
 const { uiLink } = require('../ui');
 const minMajorNodeVersion = 18;
 
-const i18nKey = `lib.doctor`;
 
 export class Doctor {
   accountId: number | null;
@@ -53,7 +52,7 @@ export class Doctor {
 
   async diagnose(): Promise<DiagnosticInfo> {
     SpinniesManager.add('runningDiagnostics', {
-      text: i18n(`${i18nKey}.runningDiagnostics`),
+      text: i18n(`lib.doctor.runningDiagnostics`),
     });
 
     this.diagnosticInfo =
@@ -75,7 +74,7 @@ export class Doctor {
     this.performCliConfigSettingsChecks();
 
     SpinniesManager.succeed('runningDiagnostics', {
-      text: i18n(`${i18nKey}.diagnosticsComplete`),
+      text: i18n(`lib.doctor.diagnosticsComplete`),
       succeedColor: 'white',
     });
 
@@ -106,9 +105,9 @@ export class Doctor {
     if (!this.diagnosticInfo?.config) {
       this.diagnosis?.addCLIConfigSection({
         type: 'error',
-        message: i18n(`${i18nKey}.diagnosis.cliConfig.noConfigFile`),
+        message: i18n(`lib.doctor.diagnosis.cliConfig.noConfigFile`),
         secondaryMessaging: i18n(
-          `${i18nKey}.diagnosis.cliConfig.noConfigFileSecondary`,
+          `lib.doctor.diagnosis.cliConfig.noConfigFileSecondary`,
           {
             command: uiCommandReference('hs init'),
           }
@@ -125,17 +124,17 @@ export class Doctor {
       this.diagnosis?.addCLIConfigSection({
         type: 'warning',
         message: i18n(
-          `${i18nKey}.diagnosis.cliConfig.settings.httpUseLocalhost`
+          `lib.doctor.diagnosis.cliConfig.settings.httpUseLocalhost`
         ),
         secondaryMessaging: i18n(
-          `${i18nKey}.diagnosis.cliConfig.settings.httpUseLocalhostSecondary`
+          `lib.doctor.diagnosis.cliConfig.settings.httpUseLocalhostSecondary`
         ),
       });
     }
   }
 
   private async checkIfAccessTokenValid(): Promise<void> {
-    const localI18nKey = `${i18nKey}.accountChecks`;
+    const localI18nKey = `lib.doctor.accountChecks`;
     try {
       await accessTokenForPersonalAccessKey(this.accountId!, true);
 
@@ -223,7 +222,7 @@ export class Doctor {
   }
 
   private async checkIfNodeIsInstalled(): Promise<void> {
-    const localI18nKey = `${i18nKey}.nodeChecks`;
+    const localI18nKey = `lib.doctor.nodeChecks`;
     if (!this.diagnosticInfo?.versions.node) {
       return this.diagnosis?.addCliSection({
         type: 'error',
@@ -251,7 +250,7 @@ export class Doctor {
   }
 
   private async checkIfNpmIsInstalled(): Promise<void> {
-    const localI18nKey = `${i18nKey}.npmChecks`;
+    const localI18nKey = `lib.doctor.npmChecks`;
     const npmVersion = this.diagnosticInfo?.versions?.npm;
     if (!npmVersion) {
       return this.diagnosis?.addCliSection({
@@ -279,13 +278,13 @@ export class Doctor {
     } catch (e) {
       return this.diagnosis?.addCliSection({
         type: 'error',
-        message: i18n(`${i18nKey}.hsChecks.unableToDetermine`),
+        message: i18n(`lib.doctor.hsChecks.unableToDetermine`),
         secondaryMessaging: i18n(
-          `${i18nKey}.hsChecks.unableToDetermineSecondary`,
+          `lib.doctor.hsChecks.unableToDetermineSecondary`,
           {
             command: uiCommandReference(`hs --version`),
             link: uiLink(
-              i18n(`${i18nKey}.hsChecks.unableToDetermineSecondaryLink`),
+              i18n(`lib.doctor.hsChecks.unableToDetermineSecondaryLink`),
               `https://www.npmjs.com/package/${pkg.name}?activeTab=versions`
             ),
           }
@@ -297,10 +296,10 @@ export class Doctor {
       const onNextTag = pkg.version.includes('beta');
       this.diagnosis?.addCliSection({
         type: 'warning',
-        message: i18n(`${i18nKey}.hsChecks.notLatest`, {
+        message: i18n(`lib.doctor.hsChecks.notLatest`, {
           hsVersion: pkg.version,
         }),
-        secondaryMessaging: i18n(`${i18nKey}.hsChecks.notLatestSecondary`, {
+        secondaryMessaging: i18n(`lib.doctor.hsChecks.notLatestSecondary`, {
           hsVersion: onNextTag ? nextCliVersion : latestCLIVersion,
           command: uiCommandReference(`npm install -g ${pkg.name}`),
         }),
@@ -308,7 +307,7 @@ export class Doctor {
     } else {
       this.diagnosis?.addCliSection({
         type: 'success',
-        message: i18n(`${i18nKey}.hsChecks.latest`, {
+        message: i18n(`lib.doctor.hsChecks.latest`, {
           hsVersion: latestCLIVersion,
         }),
       });
@@ -317,7 +316,7 @@ export class Doctor {
 
   private async checkIfNpmInstallRequired(): Promise<void> {
     let foundError = false;
-    const localI18nKey = `${i18nKey}.projectDependenciesChecks`;
+    const localI18nKey = `lib.doctor.projectDependenciesChecks`;
 
     for (const packageFile of this.diagnosticInfo?.packageFiles || []) {
       const packageDirName = path.dirname(packageFile);
@@ -348,7 +347,7 @@ export class Doctor {
         if (!(await this.isValidJsonFile(packageFile))) {
           this.diagnosis?.addProjectSection({
             type: 'error',
-            message: i18n(`${i18nKey}.files.invalidJson`, {
+            message: i18n(`lib.doctor.files.invalidJson`, {
               filename: packageFile,
             }),
           });
@@ -395,7 +394,7 @@ export class Doctor {
         foundError = true;
         this.diagnosis?.addProjectSection({
           type: 'error',
-          message: i18n(`${i18nKey}.files.invalidJson`, {
+          message: i18n(`lib.doctor.files.invalidJson`, {
             filename: jsonFile,
           }),
         });
@@ -405,13 +404,13 @@ export class Doctor {
     if (!foundError) {
       this.diagnosis?.addProjectSection({
         type: 'success',
-        message: i18n(`${i18nKey}.files.validJson`),
+        message: i18n(`lib.doctor.files.validJson`),
       });
     }
   }
 
   private async checkIfPortsAreAvailable(): Promise<void> {
-    const localI18nKey = `${i18nKey}.port`;
+    const localI18nKey = `lib.doctor.port`;
 
     if (await isPortManagerPortAvailable()) {
       this.diagnosis?.addProjectSection({

@@ -23,10 +23,9 @@ const moment = require('moment');
 const { promptUser } = require('../../lib/prompts/promptUtils');
 const { isHubSpotHttpError } = require('@hubspot/local-dev-lib/errors/index');
 
-const i18nKey = 'commands.project.subcommands.listBuilds';
 
 exports.command = 'list-builds';
-exports.describe = uiBetaTag(i18n(`${i18nKey}.describe`), false);
+exports.describe = uiBetaTag(i18n(`commands.project.subcommands.listBuilds.describe`), false);
 
 exports.handler = async options => {
   const { project: projectFlagValue, limit, derivedAccountId } = options;
@@ -48,18 +47,18 @@ exports.handler = async options => {
     const currentDeploy = project.deployedBuildId;
     if (options && options.after) {
       logger.log(
-        i18n(`${i18nKey}.logs.showingNextBuilds`, {
+        i18n(`commands.project.subcommands.listBuilds.logs.showingNextBuilds`, {
           count: results.length,
           projectName: project.name,
         })
       );
     } else {
       logger.log(
-        i18n(`${i18nKey}.logs.showingRecentBuilds`, {
+        i18n(`commands.project.subcommands.listBuilds.logs.showingRecentBuilds`, {
           count: results.length,
           projectName: project.name,
           viewBuildsLink: uiLink(
-            i18n(`${i18nKey}.logs.viewAllBuildsLink`),
+            i18n(`commands.project.subcommands.listBuilds.logs.viewAllBuildsLink`),
             getProjectDetailUrl(project.name, derivedAccountId)
           ),
         })
@@ -67,7 +66,7 @@ exports.handler = async options => {
     }
 
     if (results.length === 0) {
-      logger.log(i18n(`${i18nKey}.errors.noBuilds`));
+      logger.log(i18n(`commands.project.subcommands.listBuilds.errors.noBuilds`));
     } else {
       const builds = results.map(build => {
         const isCurrentlyDeployed = build.buildId === currentDeploy;
@@ -109,7 +108,7 @@ exports.handler = async options => {
     if (paging && paging.next) {
       await promptUser({
         name: 'more',
-        message: i18n(`${i18nKey}.continueOrExitPrompt`),
+        message: i18n(`commands.project.subcommands.listBuilds.continueOrExitPrompt`),
       });
       await fetchAndDisplayBuilds(project, { limit, after: paging.next.after });
     }
@@ -121,7 +120,7 @@ exports.handler = async options => {
     await fetchAndDisplayBuilds(project, { limit });
   } catch (e) {
     if (isHubSpotHttpError(e) && e.status === 404) {
-      logger.error(i18n(`${i18nKey}.errors.projectNotFound`, { projectName }));
+      logger.error(i18n(`commands.project.subcommands.listBuilds.errors.projectNotFound`, { projectName }));
     } else {
       logError(
         e,
@@ -137,17 +136,17 @@ exports.handler = async options => {
 exports.builder = yargs => {
   yargs.options({
     project: {
-      describe: i18n(`${i18nKey}.options.project.describe`),
+      describe: i18n(`commands.project.subcommands.listBuilds.options.project.describe`),
       type: 'string',
     },
     limit: {
-      describe: i18n(`${i18nKey}.options.limit.describe`),
+      describe: i18n(`commands.project.subcommands.listBuilds.options.limit.describe`),
       type: 'string',
     },
   });
 
   yargs.example([
-    ['$0 project list-builds', i18n(`${i18nKey}.examples.default`)],
+    ['$0 project list-builds', i18n(`commands.project.subcommands.listBuilds.examples.default`)],
   ]);
 
   addConfigOptions(yargs);

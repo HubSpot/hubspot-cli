@@ -2,8 +2,6 @@ import { promptUser } from './promptUtils';
 import { ComponentTemplate } from '../../types/Projects';
 import { i18n } from '../lang';
 
-const i18nKey = 'lib.prompts.projectAddPrompt';
-
 type ProjectAddPromptResponse = {
   componentTemplate: ComponentTemplate;
   name: string;
@@ -31,10 +29,10 @@ export async function projectAddPrompt(
       name: 'componentTemplate',
       message: () => {
         return promptOptions.type && !providedTypeIsValid
-          ? i18n(`${i18nKey}.errors.invalidType`, {
+          ? i18n('lib.prompts.projectAddPrompt.errors.invalidType', {
               type: promptOptions.type,
             })
-          : i18n(`${i18nKey}.selectType`);
+          : i18n('lib.prompts.projectAddPrompt.selectType');
       },
       when: !providedTypeIsValid,
       type: 'list',
@@ -47,11 +45,11 @@ export async function projectAddPrompt(
     },
     {
       name: 'name',
-      message: i18n(`${i18nKey}.enterName`),
+      message: i18n('lib.prompts.projectAddPrompt.enterName'),
       when: !promptOptions.name,
       validate: (input?: string) => {
         if (!input) {
-          return i18n(`${i18nKey}.errors.nameRequired`);
+          return i18n('lib.prompts.projectAddPrompt.errors.nameRequired');
         }
         return true;
       },

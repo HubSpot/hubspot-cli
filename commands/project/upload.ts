@@ -28,10 +28,9 @@ const { PROJECT_ERROR_TYPES } = require('../../lib/constants');
 const { logError, ApiErrorContext } = require('../../lib/errorHandlers/index');
 const { EXIT_CODES } = require('../../lib/enums/exitCodes');
 
-const i18nKey = 'commands.project.subcommands.upload';
 
 exports.command = 'upload';
-exports.describe = uiBetaTag(i18n(`${i18nKey}.describe`), false);
+exports.describe = uiBetaTag(i18n(`commands.project.subcommands.upload.describe`), false);
 
 exports.handler = async options => {
   const { forceCreate, message, derivedAccountId, skipValidation } = options;
@@ -67,7 +66,7 @@ exports.handler = async options => {
         })
       ) {
         logger.log();
-        logger.error(i18n(`${i18nKey}.errors.projectLockedError`));
+        logger.error(i18n(`commands.project.subcommands.upload.errors.projectLockedError`));
         logger.log();
       } else {
         logError(
@@ -83,13 +82,13 @@ exports.handler = async options => {
     if (result.succeeded && !result.buildResult.isAutoDeployEnabled) {
       logger.log(
         chalk.bold(
-          i18n(`${i18nKey}.logs.buildSucceeded`, {
+          i18n(`commands.project.subcommands.upload.logs.buildSucceeded`, {
             buildId: result.buildId,
           })
         )
       );
       logger.log(
-        i18n(`${i18nKey}.logs.autoDeployDisabled`, {
+        i18n(`commands.project.subcommands.upload.logs.autoDeployDisabled`, {
           deployCommand: uiCommandReference(
             `hs project deploy --build=${result.buildId}`
           ),
@@ -119,13 +118,13 @@ exports.handler = async options => {
 exports.builder = yargs => {
   yargs.options({
     'force-create': {
-      describe: i18n(`${i18nKey}.options.forceCreate.describe`),
+      describe: i18n(`commands.project.subcommands.upload.options.forceCreate.describe`),
       type: 'boolean',
       default: false,
     },
     message: {
       alias: 'm',
-      describe: i18n(`${i18nKey}.options.message.describe`),
+      describe: i18n(`commands.project.subcommands.upload.options.message.describe`),
       type: 'string',
       default: '',
     },
@@ -136,7 +135,7 @@ exports.builder = yargs => {
     },
   });
 
-  yargs.example([['$0 project upload', i18n(`${i18nKey}.examples.default`)]]);
+  yargs.example([['$0 project upload', i18n(`commands.project.subcommands.upload.examples.default`)]]);
 
   addConfigOptions(yargs);
   addAccountOptions(yargs);

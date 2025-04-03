@@ -15,10 +15,9 @@ const { projectNamePrompt } = require('../../lib/prompts/projectNamePrompt');
 const { uiBetaTag } = require('../../lib/ui');
 const { EXIT_CODES } = require('../../lib/enums/exitCodes');
 
-const i18nKey = 'commands.project.subcommands.open';
 
 exports.command = 'open';
-exports.describe = uiBetaTag(i18n(`${i18nKey}.describe`), false);
+exports.describe = uiBetaTag(i18n(`commands.project.subcommands.open.describe`), false);
 
 exports.handler = async options => {
   const { project, derivedAccountId } = options;
@@ -54,7 +53,7 @@ exports.handler = async options => {
 
   const url = getProjectDetailUrl(projectName, derivedAccountId);
   open(url, { url: true });
-  logger.success(i18n(`${i18nKey}.success`, { projectName }));
+  logger.success(i18n(`commands.project.subcommands.open.success`, { projectName }));
   process.exit(EXIT_CODES.SUCCESS);
 };
 
@@ -66,12 +65,12 @@ exports.builder = yargs => {
 
   yargs.options({
     project: {
-      describe: i18n(`${i18nKey}.options.project.describe`),
+      describe: i18n(`commands.project.subcommands.open.options.project.describe`),
       type: 'string',
     },
   });
 
-  yargs.example([['$0 project open', i18n(`${i18nKey}.examples.default`)]]);
+  yargs.example([['$0 project open', i18n(`commands.project.subcommands.open.examples.default`)]]);
 
   return yargs;
 };

@@ -21,10 +21,9 @@ const {
 } = require('../../lib/constants');
 const { EXIT_CODES } = require('../../lib/enums/exitCodes');
 
-const i18nKey = 'commands.project.subcommands.add';
 
 exports.command = 'add';
-exports.describe = uiBetaTag(i18n(`${i18nKey}.describe`), false);
+exports.describe = uiBetaTag(i18n(`commands.project.subcommands.add.describe`), false);
 
 exports.handler = async options => {
   const { derivedAccountId } = options;
@@ -34,7 +33,7 @@ exports.handler = async options => {
   const { projectConfig, projectDir } = await getProjectConfig();
 
   if (!projectDir || !projectConfig) {
-    logger.error(i18n(`${i18nKey}.error.locationInProject`));
+    logger.error(i18n(`commands.project.subcommands.add.error.locationInProject`));
     process.exit(EXIT_CODES.ERROR);
   }
 
@@ -50,13 +49,13 @@ exports.handler = async options => {
   }
 
   if (projectContainsPublicApp) {
-    logger.error(i18n(`${i18nKey}.error.projectContainsPublicApp`));
+    logger.error(i18n(`commands.project.subcommands.add.error.projectContainsPublicApp`));
     process.exit(EXIT_CODES.ERROR);
   }
 
   logger.log('');
   logger.log(
-    i18n(`${i18nKey}.creatingComponent`, {
+    i18n(`commands.project.subcommands.add.creatingComponent`, {
       projectName: projectConfig.name,
     })
   );
@@ -76,7 +75,7 @@ exports.handler = async options => {
   }
 
   if (!latestRepoReleaseTag) {
-    logger.error(i18n(`${i18nKey}.error.failedToFetchComponentList`));
+    logger.error(i18n(`commands.project.subcommands.add.error.failedToFetchComponentList`));
     process.exit(EXIT_CODES.ERROR);
   }
 
@@ -84,7 +83,7 @@ exports.handler = async options => {
     await getProjectComponentListFromRepo(latestRepoReleaseTag);
 
   if (!components.length) {
-    logger.error(i18n(`${i18nKey}.error.failedToFetchComponentList`));
+    logger.error(i18n(`commands.project.subcommands.add.error.failedToFetchComponentList`));
     process.exit(EXIT_CODES.ERROR);
   }
 
@@ -110,13 +109,13 @@ exports.handler = async options => {
 
     logger.log('');
     logger.success(
-      i18n(`${i18nKey}.success`, {
+      i18n(`commands.project.subcommands.add.success`, {
         componentName: projectAddPromptResponse.name,
       })
     );
   } catch (error) {
     debugError(error);
-    logger.error(i18n(`${i18nKey}.error.failedToDownloadComponent`));
+    logger.error(i18n(`commands.project.subcommands.add.error.failedToDownloadComponent`));
     process.exit(EXIT_CODES.ERROR);
   }
   process.exit(EXIT_CODES.SUCCESS);
@@ -125,20 +124,20 @@ exports.handler = async options => {
 exports.builder = yargs => {
   yargs.options({
     type: {
-      describe: i18n(`${i18nKey}.options.type.describe`),
+      describe: i18n(`commands.project.subcommands.add.options.type.describe`),
       type: 'string',
     },
     name: {
-      describe: i18n(`${i18nKey}.options.name.describe`),
+      describe: i18n(`commands.project.subcommands.add.options.name.describe`),
       type: 'string',
     },
   });
 
-  yargs.example([['$0 project add', i18n(`${i18nKey}.examples.default`)]]);
+  yargs.example([['$0 project add', i18n(`commands.project.subcommands.add.examples.default`)]]);
   yargs.example([
     [
       '$0 project add --name="my-component" --type="components/example-app"',
-      i18n(`${i18nKey}.examples.withFlags`),
+      i18n(`commands.project.subcommands.add.examples.withFlags`),
     ],
   ]);
 

@@ -23,17 +23,16 @@ const {
 const { i18n } = require('../../lib/lang');
 const { uiBetaTag } = require('../../lib/ui');
 
-const i18nKey = 'commands.project.subcommands.download';
 const { EXIT_CODES } = require('../../lib/enums/exitCodes');
 
 exports.command = 'download';
-exports.describe = uiBetaTag(i18n(`${i18nKey}.describe`), false);
+exports.describe = uiBetaTag(i18n(`commands.project.subcommands.download.describe`), false);
 
 exports.handler = async options => {
   const { projectConfig } = await getProjectConfig();
 
   if (projectConfig) {
-    logger.error(i18n(`${i18nKey}.warnings.cannotDownloadWithinProject`));
+    logger.error(i18n(`commands.project.subcommands.download.warnings.cannotDownloadWithinProject`));
     process.exit(EXIT_CODES.ERROR);
   }
 
@@ -55,7 +54,7 @@ exports.handler = async options => {
 
     if (!projectExists) {
       logger.error(
-        i18n(`${i18nKey}.errors.projectNotFound`, {
+        i18n(`commands.project.subcommands.download.errors.projectNotFound`, {
           projectName: chalk.bold(projectName),
           accountId: chalk.bold(derivedAccountId),
         })
@@ -97,7 +96,7 @@ exports.handler = async options => {
     );
 
     logger.log(
-      i18n(`${i18nKey}.logs.downloadSucceeded`, {
+      i18n(`commands.project.subcommands.download.logs.downloadSucceeded`, {
         buildId: buildNumberToDownload,
         projectName,
       })
@@ -122,15 +121,15 @@ exports.builder = yargs => {
 
   yargs.options({
     project: {
-      describe: i18n(`${i18nKey}.options.project.describe`),
+      describe: i18n(`commands.project.subcommands.download.options.project.describe`),
       type: 'string',
     },
     dest: {
-      describe: i18n(`${i18nKey}.options.dest.describe`),
+      describe: i18n(`commands.project.subcommands.download.options.dest.describe`),
       type: 'string',
     },
     build: {
-      describe: i18n(`${i18nKey}.options.build.describe`),
+      describe: i18n(`commands.project.subcommands.download.options.build.describe`),
       alias: ['build-id'],
       type: 'number',
     },
@@ -139,7 +138,7 @@ exports.builder = yargs => {
   yargs.example([
     [
       '$0 project download --project=myProject --dest=myProjectFolder',
-      i18n(`${i18nKey}.examples.default`),
+      i18n(`commands.project.subcommands.download.examples.default`),
     ],
   ]);
 

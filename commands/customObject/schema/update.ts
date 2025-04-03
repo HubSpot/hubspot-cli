@@ -30,10 +30,9 @@ import {
   TestingArgs,
 } from '../../../types/Yargs';
 
-const i18nKey = 'commands.customObject.subcommands.schema.subcommands.update';
 
 export const command = 'update [name]';
-export const describe = i18n(`${i18nKey}.describe`);
+export const describe = i18n(`commands.customObject.subcommands.schema.subcommands.update.describe`);
 
 type CombinedArgs = CommonArgs &
   ConfigArgs &
@@ -52,7 +51,7 @@ export async function handler(
   const filePath = getAbsoluteFilePath(path);
   const schemaJson = checkAndConvertToJson(filePath);
   if (!isSchemaDefinition(schemaJson)) {
-    logger.error(i18n(`${i18nKey}.errors.invalidSchema`));
+    logger.error(i18n(`commands.customObject.subcommands.schema.subcommands.update.errors.invalidSchema`));
     process.exit(EXIT_CODES.ERROR);
   }
 
@@ -66,7 +65,7 @@ export async function handler(
     name =
       providedName && typeof providedName === 'string'
         ? providedName
-        : await listPrompt(i18n(`${i18nKey}.selectSchema`), {
+        : await listPrompt(i18n(`commands.customObject.subcommands.schema.subcommands.update.selectSchema`), {
             choices: schemaNames,
           });
 
@@ -76,7 +75,7 @@ export async function handler(
       schemaJson
     );
     logger.success(
-      i18n(`${i18nKey}.success.viewAtUrl`, {
+      i18n(`commands.customObject.subcommands.schema.subcommands.update.success.viewAtUrl`, {
         url: `${getHubSpotWebsiteOrigin(
           getEnv() === 'qa' ? ENVIRONMENTS.QA : ENVIRONMENTS.PROD
         )}/contacts/${derivedAccountId}/objects/${data.objectTypeId}`,
@@ -85,7 +84,7 @@ export async function handler(
   } catch (e) {
     logError(e, { accountId: derivedAccountId });
     logger.error(
-      i18n(`${i18nKey}.errors.update`, {
+      i18n(`commands.customObject.subcommands.schema.subcommands.update.errors.update`, {
         definition: path,
       })
     );
@@ -100,11 +99,11 @@ export function builder(yargs: Argv): Argv<SchemaUpdateArgs> {
 
   yargs
     .positional('name', {
-      describe: i18n(`${i18nKey}.positionals.name.describe`),
+      describe: i18n(`commands.customObject.subcommands.schema.subcommands.update.positionals.name.describe`),
       type: 'string',
     })
     .option('path', {
-      describe: i18n(`${i18nKey}.options.path.describe`),
+      describe: i18n(`commands.customObject.subcommands.schema.subcommands.update.options.path.describe`),
       type: 'string',
       required: true,
     });

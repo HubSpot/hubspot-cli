@@ -3,7 +3,6 @@ import { getCwd } from '@hubspot/local-dev-lib/path';
 import { promptUser } from './promptUtils';
 import { i18n } from '../lang';
 
-const i18nKey = 'lib.prompts.uploadPrompt';
 
 type UploadPromptResponse = {
   src: string;
@@ -16,24 +15,24 @@ export async function uploadPrompt(
   return promptUser<UploadPromptResponse>([
     {
       name: 'src',
-      message: i18n(`${i18nKey}.enterSrc`),
+      message: i18n(`lib.prompts.uploadPrompt.enterSrc`),
       when: !promptOptions.src,
       default: '.',
       validate: (input?: string) => {
         if (!input) {
-          return i18n(`${i18nKey}.errors.srcRequired`);
+          return i18n(`lib.prompts.uploadPrompt.errors.srcRequired`);
         }
         return true;
       },
     },
     {
       name: 'dest',
-      message: i18n(`${i18nKey}.enterDest`),
+      message: i18n(`lib.prompts.uploadPrompt.enterDest`),
       when: !promptOptions.dest,
       default: path.basename(getCwd()),
       validate: (input?: string) => {
         if (!input) {
-          return i18n(`${i18nKey}.errors.destRequired`);
+          return i18n(`lib.prompts.uploadPrompt.errors.destRequired`);
         }
         return true;
       },

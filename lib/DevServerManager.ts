@@ -15,8 +15,6 @@ import {
 import { getAccountConfig } from '@hubspot/local-dev-lib/config';
 import { ProjectConfig, ComponentTypes, Component } from '../types/Projects';
 
-const i18nKey = 'lib.DevServerManager';
-
 const SERVER_KEYS = {
   privateApp: 'privateApp',
   publicApp: 'publicApp',
@@ -83,7 +81,9 @@ class DevServerManager {
       if (Object.keys(compatibleComponents).length) {
         await callback(devServer.serverInterface, compatibleComponents);
       } else {
-        logger.debug(i18n(`${i18nKey}.noCompatibleComponents`, { serverKey }));
+        logger.debug(
+          i18n(`lib.DevServerManager.noCompatibleComponents`, { serverKey })
+        );
       }
     }
   }
@@ -159,7 +159,7 @@ class DevServerManager {
         }
       });
     } else {
-      throw new Error(i18n(`${i18nKey}.notInitialized`));
+      throw new Error(i18n(`lib.DevServerManager.notInitialized`));
     }
 
     this.started = true;

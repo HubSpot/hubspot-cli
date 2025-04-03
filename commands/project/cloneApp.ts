@@ -40,10 +40,9 @@ const { logger } = require('@hubspot/local-dev-lib/logger');
 const { getAccountConfig } = require('@hubspot/local-dev-lib/config');
 const { extractZipArchive } = require('@hubspot/local-dev-lib/archive');
 
-const i18nKey = 'commands.project.subcommands.cloneApp';
 
 exports.command = 'clone-app';
-exports.describe = uiBetaTag(i18n(`${i18nKey}.describe`), false);
+exports.describe = uiBetaTag(i18n(`commands.project.subcommands.cloneApp.describe`), false);
 
 exports.handler = async options => {
   const { derivedAccountId } = options;
@@ -54,9 +53,9 @@ exports.handler = async options => {
 
   if (!isAppDeveloperAccount(accountConfig)) {
     uiLine();
-    logger.error(i18n(`${i18nKey}.errors.invalidAccountTypeTitle`));
+    logger.error(i18n(`commands.project.subcommands.cloneApp.errors.invalidAccountTypeTitle`));
     logger.log(
-      i18n(`${i18nKey}.errors.invalidAccountTypeDescription`, {
+      i18n(`commands.project.subcommands.cloneApp.errors.invalidAccountTypeDescription`, {
         useCommand: uiCommandReference('hs accounts use'),
         authCommand: uiCommandReference('hs auth'),
       })
@@ -98,7 +97,7 @@ exports.handler = async options => {
     SpinniesManager.init();
 
     SpinniesManager.add('cloneApp', {
-      text: i18n(`${i18nKey}.cloneStatus.inProgress`),
+      text: i18n(`commands.project.subcommands.cloneApp.cloneStatus.inProgress`),
     });
 
     const {
@@ -138,18 +137,18 @@ exports.handler = async options => {
       const success = writeProjectConfig(configPath, configContent);
 
       SpinniesManager.succeed('cloneApp', {
-        text: i18n(`${i18nKey}.cloneStatus.done`),
+        text: i18n(`commands.project.subcommands.cloneApp.cloneStatus.done`),
         succeedColor: 'white',
       });
       if (!success) {
         logger.error(
-          i18n(`${i18nKey}.errors.couldNotWriteConfigPath`),
+          i18n(`commands.project.subcommands.cloneApp.errors.couldNotWriteConfigPath`),
           configPath
         );
       }
       logger.log('');
       uiLine();
-      logger.success(i18n(`${i18nKey}.cloneStatus.success`, { dest }));
+      logger.success(i18n(`commands.project.subcommands.cloneApp.cloneStatus.success`, { dest }));
       logger.log('');
       process.exit(EXIT_CODES.SUCCESS);
     }
@@ -161,7 +160,7 @@ exports.handler = async options => {
     );
 
     SpinniesManager.fail('cloneApp', {
-      text: i18n(`${i18nKey}.cloneStatus.failure`),
+      text: i18n(`commands.project.subcommands.cloneApp.cloneStatus.failure`),
       failColor: 'white',
     });
     // Migrations endpoints return a response object with an errors property. The errors property contains an array of errors.
@@ -185,17 +184,17 @@ exports.handler = async options => {
 exports.builder = yargs => {
   yargs.options({
     dest: {
-      describe: i18n(`${i18nKey}.options.dest.describe`),
+      describe: i18n(`commands.project.subcommands.cloneApp.options.dest.describe`),
       type: 'string',
     },
     'app-id': {
-      describe: i18n(`${i18nKey}.options.appId.describe`),
+      describe: i18n(`commands.project.subcommands.cloneApp.options.appId.describe`),
       type: 'number',
     },
   });
 
   yargs.example([
-    ['$0 project clone-app', i18n(`${i18nKey}.examples.default`)],
+    ['$0 project clone-app', i18n(`commands.project.subcommands.cloneApp.examples.default`)],
   ]);
 
   addConfigOptions(yargs);

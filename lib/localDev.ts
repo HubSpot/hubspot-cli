@@ -57,8 +57,6 @@ import { ProjectDevTargetAccountPromptResponse } from '../types/Prompts';
 import { FileResult } from 'tmp';
 import { Build } from '@hubspot/local-dev-lib/types/Build';
 
-const i18nKey = 'lib.localDev';
-
 // If the user passed in the --account flag, confirm they want to use that account as
 // their target account, otherwise exit
 export async function confirmDefaultAccountIsTarget(
@@ -66,7 +64,7 @@ export async function confirmDefaultAccountIsTarget(
 ): Promise<void> {
   if (!accountConfig.name || !accountConfig.accountType) {
     logger.error(
-      i18n(`${i18nKey}.confirmDefaultAccountIsTarget.configError`, {
+      i18n(`lib.localDev.confirmDefaultAccountIsTarget.configError`, {
         authCommand: uiCommandReference('hs auth'),
       })
     );
@@ -82,7 +80,7 @@ export async function confirmDefaultAccountIsTarget(
   if (!useDefaultAccount) {
     logger.log(
       i18n(
-        `${i18nKey}.confirmDefaultAccountIsTarget.declineDefaultAccountExplanation`,
+        `lib.localDev.confirmDefaultAccountIsTarget.declineDefaultAccountExplanation`,
         {
           useCommand: uiCommandReference('hs accounts use'),
           devCommand: uiCommandReference('hs project dev'),
@@ -106,7 +104,7 @@ export function checkIfDefaultAccountIsSupported(
     )
   ) {
     logger.error(
-      i18n(`${i18nKey}.checkIfDefaultAccountIsSupported.publicApp`, {
+      i18n(`lib.localDev.checkIfDefaultAccountIsSupported.publicApp`, {
         useCommand: uiCommandReference('hs accounts use'),
         authCommand: uiCommandReference('hs auth'),
       })
@@ -114,7 +112,7 @@ export function checkIfDefaultAccountIsSupported(
     process.exit(EXIT_CODES.SUCCESS);
   } else if (!hasPublicApps && isAppDeveloperAccount(accountConfig)) {
     logger.error(
-      i18n(`${i18nKey}.checkIfDefaultAccountIsSupported.privateApp`, {
+      i18n(`lib.localDev.checkIfDefaultAccountIsSupported.privateApp`, {
         useCommand: uiCommandReference('hs accounts use'),
         authCommand: uiCommandReference('hs auth'),
       })
@@ -129,7 +127,7 @@ export function checkIfParentAccountIsAuthed(accountConfig: CLIAccount): void {
     !getAccountConfig(accountConfig.parentAccountId)
   ) {
     logger.error(
-      i18n(`${i18nKey}.checkIfParentAccountIsAuthed.notAuthedError`, {
+      i18n(`lib.localDev.checkIfParentAccountIsAuthed.notAuthedError`, {
         accountId: accountConfig.parentAccountId || '',
         accountIdentifier: uiAccountDescription(
           getAccountIdentifier(accountConfig)
@@ -151,7 +149,7 @@ export function checkIfAccountFlagIsSupported(
   if (hasPublicApps) {
     if (!isDeveloperTestAccount(accountConfig)) {
       logger.error(
-        i18n(`${i18nKey}.validateAccountOption.invalidPublicAppAccount`, {
+        i18n(`lib.localDev.validateAccountOption.invalidPublicAppAccount`, {
           useCommand: uiCommandReference('hs accounts use'),
           devCommand: uiCommandReference('hs project dev'),
         })
@@ -161,7 +159,7 @@ export function checkIfAccountFlagIsSupported(
     checkIfParentAccountIsAuthed(accountConfig);
   } else if (isAppDeveloperAccount(accountConfig)) {
     logger.error(
-      i18n(`${i18nKey}.validateAccountOption.invalidPrivateAppAccount`, {
+      i18n(`lib.localDev.validateAccountOption.invalidPrivateAppAccount`, {
         useCommand: uiCommandReference('hs accounts use'),
       })
     );
@@ -180,11 +178,11 @@ export async function suggestRecommendedNestedAccount(
   if (hasPublicApps) {
     logger.log(
       i18n(
-        `${i18nKey}.validateAccountOption.publicAppNonDeveloperTestAccountWarning`
+        `lib.localDev.validateAccountOption.publicAppNonDeveloperTestAccountWarning`
       )
     );
   } else {
-    logger.log(i18n(`${i18nKey}.validateAccountOption.nonSandboxWarning`));
+    logger.log(i18n(`lib.localDev.validateAccountOption.nonSandboxWarning`));
   }
   uiLine();
   logger.log();
@@ -348,7 +346,7 @@ export async function useExistingDevTestAccount(
     logger.log('');
     logger.log(
       i18n(
-        `${i18nKey}.confirmDefaultAccountIsTarget.declineDefaultAccountExplanation`,
+        `lib.localDev.confirmDefaultAccountIsTarget.declineDefaultAccountExplanation`,
         {
           useCommand: uiCommandReference('hs accounts use'),
           devCommand: uiCommandReference('hs project dev'),
@@ -384,8 +382,8 @@ export async function createNewProjectForLocalDev(
   if (!shouldCreateProject) {
     const explanationString = i18n(
       hasPublicApps
-        ? `${i18nKey}.createNewProjectForLocalDev.publicAppProjectMustExistExplanation`
-        : `${i18nKey}.createNewProjectForLocalDev.projectMustExistExplanation`,
+        ? `lib.localDev.createNewProjectForLocalDev.publicAppProjectMustExistExplanation`
+        : `lib.localDev.createNewProjectForLocalDev.projectMustExistExplanation`,
       {
         accountIdentifier: uiAccountDescription(targetAccountId),
         projectName: projectConfig.name,
@@ -397,7 +395,7 @@ export async function createNewProjectForLocalDev(
     uiLine();
 
     shouldCreateProject = await confirmPrompt(
-      i18n(`${i18nKey}.createNewProjectForLocalDev.createProject`, {
+      i18n(`lib.localDev.createNewProjectForLocalDev.createProject`, {
         accountIdentifier: uiAccountDescription(targetAccountId),
         projectName: projectConfig.name,
       })
@@ -406,7 +404,7 @@ export async function createNewProjectForLocalDev(
 
   if (shouldCreateProject) {
     SpinniesManager.add('createProject', {
-      text: i18n(`${i18nKey}.createNewProjectForLocalDev.creatingProject`, {
+      text: i18n(`lib.localDev.createNewProjectForLocalDev.creatingProject`, {
         accountIdentifier: uiAccountDescription(targetAccountId),
         projectName: projectConfig.name,
       }),
@@ -418,7 +416,7 @@ export async function createNewProjectForLocalDev(
         projectConfig.name
       );
       SpinniesManager.succeed('createProject', {
-        text: i18n(`${i18nKey}.createNewProjectForLocalDev.createdProject`, {
+        text: i18n(`lib.localDev.createNewProjectForLocalDev.createdProject`, {
           accountIdentifier: uiAccountDescription(targetAccountId),
           projectName: projectConfig.name,
         }),
@@ -428,7 +426,7 @@ export async function createNewProjectForLocalDev(
     } catch (err) {
       SpinniesManager.fail('createProject');
       logger.log(
-        i18n(`${i18nKey}.createNewProjectForLocalDev.failedToCreateProject`)
+        i18n(`lib.localDev.createNewProjectForLocalDev.failedToCreateProject`)
       );
       process.exit(EXIT_CODES.ERROR);
     }
@@ -436,7 +434,7 @@ export async function createNewProjectForLocalDev(
     // We cannot continue if the project does not exist in the target account
     logger.log();
     logger.log(
-      i18n(`${i18nKey}.createNewProjectForLocalDev.choseNotToCreateProject`)
+      i18n(`lib.localDev.createNewProjectForLocalDev.choseNotToCreateProject`)
     );
     process.exit(EXIT_CODES.SUCCESS);
   }
@@ -450,9 +448,12 @@ function projectUploadCallback(
 ): Promise<ProjectPollResult> {
   if (!buildId) {
     logger.error(
-      i18n(`${i18nKey}.createInitialBuildForNewProject.initialUploadMessage`, {
-        uploadCommand: uiCommandReference('hs project upload'),
-      })
+      i18n(
+        `lib.localDev.createInitialBuildForNewProject.initialUploadMessage`,
+        {
+          uploadCommand: uiCommandReference('hs project upload'),
+        }
+      )
     );
     process.exit(EXIT_CODES.ERROR);
   }
@@ -480,7 +481,7 @@ export async function createInitialBuildForNewProject(
       projectConfig,
       projectDir,
       projectUploadCallback,
-      i18n(`${i18nKey}.createInitialBuildForNewProject.initialUploadMessage`),
+      i18n(`lib.localDev.createInitialBuildForNewProject.initialUploadMessage`),
       sendIr
     );
 
@@ -492,7 +493,7 @@ export async function createInitialBuildForNewProject(
     ) {
       logger.log();
       logger.error(
-        i18n(`${i18nKey}.createInitialBuildForNewProject.projectLockedError`)
+        i18n(`lib.localDev.createInitialBuildForNewProject.projectLockedError`)
       );
       logger.log();
     } else {

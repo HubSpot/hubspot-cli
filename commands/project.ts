@@ -16,10 +16,8 @@ const migrateApp = require('./project/migrateApp');
 const cloneApp = require('./project/cloneApp');
 const installDeps = require('./project/installDeps');
 
-const i18nKey = 'commands.project';
-
 exports.command = ['project', 'projects'];
-exports.describe = uiBetaTag(i18n(`${i18nKey}.describe`), false);
+exports.describe = uiBetaTag(i18n(`commands.project.describe`), false);
 
 exports.builder = yargs => {
   addGlobalOptions(yargs);

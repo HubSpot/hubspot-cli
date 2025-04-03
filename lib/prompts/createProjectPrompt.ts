@@ -10,19 +10,18 @@ import { promptUser } from './promptUtils';
 import { i18n } from '../lang';
 import { ProjectTemplate } from '../../types/Projects';
 import { PROJECT_CONFIG_FILE } from '../constants';
-const i18nKey = 'lib.prompts.createProjectPrompt';
 
 function validateProjectDirectory(input?: string): string | boolean {
   if (!input) {
-    return i18n(`${i18nKey}.errors.destRequired`);
+    return i18n(`lib.prompts.createProjectPrompt.errors.destRequired`);
   }
   if (
     fs.existsSync(path.resolve(getCwd(), path.join(input, PROJECT_CONFIG_FILE)))
   ) {
-    return i18n(`${i18nKey}.errors.invalidDest`);
+    return i18n(`lib.prompts.createProjectPrompt.errors.invalidDest`);
   }
   if (!isValidPath(input)) {
-    return i18n(`${i18nKey}.errors.invalidCharacters`);
+    return i18n(`lib.prompts.createProjectPrompt.errors.invalidCharacters`);
   }
   return true;
 }
@@ -61,18 +60,18 @@ export async function createProjectPrompt(
   const result = await promptUser<CreateProjectPromptResponse>([
     {
       name: 'name',
-      message: i18n(`${i18nKey}.enterName`),
+      message: i18n(`lib.prompts.createProjectPrompt.enterName`),
       when: !promptOptions.name,
       validate: (input?: string) => {
         if (!input) {
-          return i18n(`${i18nKey}.errors.nameRequired`);
+          return i18n(`lib.prompts.createProjectPrompt.errors.nameRequired`);
         }
         return true;
       },
     },
     {
       name: 'dest',
-      message: i18n(`${i18nKey}.enterDest`),
+      message: i18n(`lib.prompts.createProjectPrompt.enterDest`),
       when: !promptOptions.dest,
       default: answers => {
         const projectName = sanitizeFileName(
@@ -89,10 +88,10 @@ export async function createProjectPrompt(
       name: 'projectTemplate',
       message: () => {
         return promptOptions.template && !providedTemplateIsValid
-          ? i18n(`${i18nKey}.errors.invalidTemplate`, {
+          ? i18n(`lib.prompts.createProjectPrompt.errors.invalidTemplate`, {
               template: promptOptions.template,
             })
-          : i18n(`${i18nKey}.selectTemplate`);
+          : i18n(`lib.prompts.createProjectPrompt.selectTemplate`);
       },
       when: createProjectFromTemplate && !providedTemplateIsValid,
       type: 'list',

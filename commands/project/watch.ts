@@ -30,10 +30,9 @@ const { isSpecifiedError } = require('@hubspot/local-dev-lib/errors/index');
 const { EXIT_CODES } = require('../../lib/enums/exitCodes');
 const { handleKeypress, handleExit } = require('../../lib/process');
 
-const i18nKey = 'commands.project.subcommands.watch';
 
 exports.command = 'watch';
-exports.describe = uiBetaTag(i18n(`${i18nKey}.describe`), false);
+exports.describe = uiBetaTag(i18n(`commands.project.subcommands.watch.describe`), false);
 
 const handleBuildStatus = async (accountId, projectName, buildId) => {
   const { isAutoDeployEnabled, deployStatusTaskLocator } =
@@ -53,7 +52,7 @@ const handleBuildStatus = async (accountId, projectName, buildId) => {
 
 const handleUserInput = (accountId, projectName, currentBuildId) => {
   const onTerminate = async () => {
-    logger.log(i18n(`${i18nKey}.logs.processExited`));
+    logger.log(i18n(`commands.project.subcommands.watch.logs.processExited`));
 
     if (currentBuildId) {
       try {
@@ -127,7 +126,7 @@ exports.handler = async options => {
           })
         ) {
           logger.log();
-          logger.error(i18n(`${i18nKey}.errors.projectLockedError`));
+          logger.error(i18n(`commands.project.subcommands.watch.errors.projectLockedError`));
           logger.log();
         } else {
           logError(
@@ -151,11 +150,11 @@ exports.handler = async options => {
 exports.builder = yargs => {
   yargs.option('initial-upload', {
     alias: 'i',
-    describe: i18n(`${i18nKey}.options.initialUpload.describe`),
+    describe: i18n(`commands.project.subcommands.watch.options.initialUpload.describe`),
     type: 'boolean',
   });
 
-  yargs.example([['$0 project watch', i18n(`${i18nKey}.examples.default`)]]);
+  yargs.example([['$0 project watch', i18n(`commands.project.subcommands.watch.examples.default`)]]);
 
   addConfigOptions(yargs);
   addAccountOptions(yargs);

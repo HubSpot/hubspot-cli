@@ -39,7 +39,6 @@ import {
   ProjectPollResult,
 } from '../../types/Projects';
 
-const i18nKey = 'lib.projectBuildAndDeploy';
 
 const SPINNER_STATUS = {
   SPINNING: 'spinning',
@@ -184,8 +183,8 @@ function makePollTaskStatusFunc<T extends ProjectTask>({
       ? ''
       : i18n(
           numComponents === 1
-            ? `${i18nKey}.makePollTaskStatusFunc.componentCountSingular`
-            : `${i18nKey}.makePollTaskStatusFunc.componentCount`,
+            ? `lib.projectBuildAndDeploy.makePollTaskStatusFunc.componentCountSingular`
+            : `lib.projectBuildAndDeploy.makePollTaskStatusFunc.componentCount`,
           { numComponents }
         ) + '\n';
 
@@ -245,7 +244,7 @@ function makePollTaskStatusFunc<T extends ProjectTask>({
           return reject(
             new Error(
               i18n(
-                `${i18nKey}.makePollTaskStatusFunc.errorFetchingTaskStatus`,
+                `lib.projectBuildAndDeploy.makePollTaskStatusFunc.errorFetchingTaskStatus`,
                 {
                   taskType:
                     statusText.TYPE_KEY === PROJECT_BUILD_TEXT.TYPE_KEY
@@ -263,7 +262,7 @@ function makePollTaskStatusFunc<T extends ProjectTask>({
           return reject(
             new Error(
               i18n(
-                `${i18nKey}.makePollTaskStatusFunc.errorFetchingTaskStatus`,
+                `lib.projectBuildAndDeploy.makePollTaskStatusFunc.errorFetchingTaskStatus`,
                 {
                   taskType:
                     statusText.TYPE_KEY === PROJECT_BUILD_TEXT.TYPE_KEY
@@ -294,8 +293,8 @@ function makePollTaskStatusFunc<T extends ProjectTask>({
             ) {
               const taskStatusText =
                 subtask.status === statusText.STATES.SUCCESS
-                  ? i18n(`${i18nKey}.makePollTaskStatusFunc.successStatusText`)
-                  : i18n(`${i18nKey}.makePollTaskStatusFunc.failedStatusText`);
+                  ? i18n(`lib.projectBuildAndDeploy.makePollTaskStatusFunc.successStatusText`)
+                  : i18n(`lib.projectBuildAndDeploy.makePollTaskStatusFunc.failedStatusText`);
               const hasNewline =
                 spinner?.text?.includes('\n') || Boolean(topLevelTask);
               const updatedText = `${spinner?.text?.replace(
@@ -399,7 +398,7 @@ function pollBuildAutodeployStatus(
         logger.debug(e);
         return reject(
           new Error(
-            i18n(`${i18nKey}.pollBuildAutodeployStatusError`, { buildId })
+            i18n(`lib.projectBuildAndDeploy.pollBuildAutodeployStatusError`, { buildId })
           )
         );
       }
@@ -407,7 +406,7 @@ function pollBuildAutodeployStatus(
       if (!build || !build.status) {
         return reject(
           new Error(
-            i18n(`${i18nKey}.pollBuildAutodeployStatusError`, { buildId })
+            i18n(`lib.projectBuildAndDeploy.pollBuildAutodeployStatusError`, { buildId })
           )
         );
       }
@@ -537,7 +536,7 @@ export async function pollProjectBuildAndDeploy(
     if (!silenceLogs) {
       logger.log(
         i18n(
-          `${i18nKey}.pollProjectBuildAndDeploy.buildSucceededAutomaticallyDeploying`,
+          `lib.projectBuildAndDeploy.pollProjectBuildAndDeploy.buildSucceededAutomaticallyDeploying`,
           {
             accountIdentifier: uiAccountDescription(accountId),
             buildId,
@@ -577,11 +576,11 @@ export async function pollProjectBuildAndDeploy(
     } else if (!silenceLogs) {
       logger.log(
         i18n(
-          `${i18nKey}.pollProjectBuildAndDeploy.unableToFindAutodeployStatus`,
+          `lib.projectBuildAndDeploy.pollProjectBuildAndDeploy.unableToFindAutodeployStatus`,
           {
             buildId,
             viewDeploysLink: uiLink(
-              i18n(`${i18nKey}.pollProjectBuildAndDeploy.viewDeploys`),
+              i18n(`lib.projectBuildAndDeploy.pollProjectBuildAndDeploy.viewDeploys`),
               getProjectActivityUrl(projectConfig.name, accountId)
             ),
           }
@@ -594,7 +593,7 @@ export async function pollProjectBuildAndDeploy(
     if (tempFile) {
       tempFile.removeCallback();
       logger.debug(
-        i18n(`${i18nKey}.pollProjectBuildAndDeploy.cleanedUpTempFile`, {
+        i18n(`lib.projectBuildAndDeploy.pollProjectBuildAndDeploy.cleanedUpTempFile`, {
           path: tempFile.name,
         })
       );

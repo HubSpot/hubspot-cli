@@ -8,10 +8,9 @@ import { CommonArgs, ConfigArgs } from '../../types/Yargs';
 import { logError } from '../../lib/errorHandlers';
 import { EXIT_CODES } from '../../lib/enums/exitCodes';
 
-const i18nKey = 'commands.account.subcommands.rename';
 
 export const command = 'rename <account-name> <new-name>';
-export const describe = i18n(`${i18nKey}.describe`);
+export const describe = i18n(`commands.account.subcommands.rename.describe`);
 
 type AccountRenameArgs = CommonArgs &
   ConfigArgs & {
@@ -34,7 +33,7 @@ export async function handler(
   }
 
   logger.log(
-    i18n(`${i18nKey}.success.renamed`, {
+    i18n(`commands.account.subcommands.rename.success.renamed`, {
       name: accountName,
       newName,
     })
@@ -47,11 +46,11 @@ export function builder(yargs: Argv): Argv<AccountRenameArgs> {
   addAccountOptions(yargs);
 
   yargs.positional('account-name', {
-    describe: i18n(`${i18nKey}.positionals.accountName.describe`),
+    describe: i18n(`commands.account.subcommands.rename.positionals.accountName.describe`),
     type: 'string',
   });
   yargs.positional('new-name', {
-    describe: i18n(`${i18nKey}.positionals.newName.describe`),
+    describe: i18n(`commands.account.subcommands.rename.positionals.newName.describe`),
     type: 'string',
   });
 

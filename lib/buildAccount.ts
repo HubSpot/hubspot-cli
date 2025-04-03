@@ -92,13 +92,11 @@ export async function buildDeveloperTestAccount(
   env: Environment,
   portalLimit: number
 ): Promise<DeveloperTestAccount> {
-  const i18nKey = 'lib.developerTestAccount.create.loading';
-
   const id = getAccountIdentifier(parentAccountConfig);
   const parentAccountId = getAccountId(id);
 
   if (!parentAccountId) {
-    throw new Error(i18n(`${i18nKey}.fail`));
+    throw new Error(i18n(`lib.developerTestAccount.create.loading.fail`));
   }
 
   SpinniesManager.init({
@@ -107,7 +105,7 @@ export async function buildDeveloperTestAccount(
 
   logger.log('');
   SpinniesManager.add('buildDeveloperTestAccount', {
-    text: i18n(`${i18nKey}.add`, {
+    text: i18n(`lib.developerTestAccount.create.loading.add`, {
       accountName: testAccountName,
     }),
   });
@@ -123,7 +121,7 @@ export async function buildDeveloperTestAccount(
     developerTestAccount = data;
 
     SpinniesManager.succeed('buildDeveloperTestAccount', {
-      text: i18n(`${i18nKey}.succeed`, {
+      text: i18n(`lib.developerTestAccount.create.loading.succeed`, {
         accountName: testAccountName,
         accountId: developerTestAccount.id,
       }),
@@ -132,7 +130,7 @@ export async function buildDeveloperTestAccount(
     debugError(e);
 
     SpinniesManager.fail('buildDeveloperTestAccount', {
-      text: i18n(`${i18nKey}.fail`, {
+      text: i18n(`lib.developerTestAccount.create.loading.fail`, {
         accountName: testAccountName,
       }),
     });

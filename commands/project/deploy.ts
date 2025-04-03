@@ -26,10 +26,9 @@ const { EXIT_CODES } = require('../../lib/enums/exitCodes');
 const { uiCommandReference, uiAccountDescription } = require('../../lib/ui');
 const { isHubSpotHttpError } = require('@hubspot/local-dev-lib/errors/index');
 
-const i18nKey = 'commands.project.subcommands.deploy';
 
 exports.command = 'deploy';
-exports.describe = uiBetaTag(i18n(`${i18nKey}.describe`), false);
+exports.describe = uiBetaTag(i18n(`commands.project.subcommands.deploy.describe`), false);
 
 const validateBuildId = (
   buildId,
@@ -39,20 +38,20 @@ const validateBuildId = (
   accountId
 ) => {
   if (Number(buildId) > latestBuildId) {
-    return i18n(`${i18nKey}.errors.buildIdDoesNotExist`, {
+    return i18n(`commands.project.subcommands.deploy.errors.buildIdDoesNotExist`, {
       buildId: buildId,
       projectName,
       linkToProject: uiLink(
-        i18n(`${i18nKey}.errors.viewProjectsBuilds`),
+        i18n(`commands.project.subcommands.deploy.errors.viewProjectsBuilds`),
         getProjectDetailUrl(projectName, accountId)
       ),
     });
   }
   if (Number(buildId) === deployedBuildId) {
-    return i18n(`${i18nKey}.errors.buildAlreadyDeployed`, {
+    return i18n(`commands.project.subcommands.deploy.errors.buildAlreadyDeployed`, {
       buildId: buildId,
       linkToProject: uiLink(
-        i18n(`${i18nKey}.errors.viewProjectsBuilds`),
+        i18n(`commands.project.subcommands.deploy.errors.viewProjectsBuilds`),
         getProjectDetailUrl(projectName, accountId)
       ),
     });
@@ -92,7 +91,7 @@ exports.handler = async options => {
     } = await fetchProject(derivedAccountId, projectName);
 
     if (!latestBuild || !latestBuild.buildId) {
-      logger.error(i18n(`${i18nKey}.errors.noBuilds`));
+      logger.error(i18n(`commands.project.subcommands.deploy.errors.noBuilds`));
       return process.exit(EXIT_CODES.ERROR);
     }
 
@@ -111,7 +110,7 @@ exports.handler = async options => {
     } else {
       const deployBuildIdPromptResponse = await promptUser({
         name: 'buildId',
-        message: i18n(`${i18nKey}.deployBuildIdPrompt`),
+        message: i18n(`commands.project.subcommands.deploy.deployBuildIdPrompt`),
         default:
           latestBuild.buildId === deployedBuildId
             ? undefined
@@ -129,7 +128,7 @@ exports.handler = async options => {
     }
 
     if (!buildIdToDeploy) {
-      logger.error(i18n(`${i18nKey}.errors.noBuildId`));
+      logger.error(i18n(`commands.project.subcommands.deploy.errors.noBuildId`));
       return process.exit(EXIT_CODES.ERROR);
     }
 
@@ -142,7 +141,7 @@ exports.handler = async options => {
 
     if (!deployResp || deployResp.error) {
       logger.error(
-        i18n(`${i18nKey}.errors.deploy`, {
+        i18n(`commands.project.subcommands.deploy.errors.deploy`, {
           details: deployResp.error.message,
         })
       );
@@ -158,7 +157,7 @@ exports.handler = async options => {
   } catch (e) {
     if (isHubSpotHttpError(e) && e.status === 404) {
       logger.error(
-        i18n(`${i18nKey}.errors.projectNotFound`, {
+        i18n(`commands.project.subcommands.deploy.errors.projectNotFound`, {
           projectName: chalk.bold(projectName),
           accountIdentifier: uiAccountDescription(derivedAccountId),
           command: uiCommandReference('hs project upload'),
@@ -182,21 +181,21 @@ exports.handler = async options => {
 exports.builder = yargs => {
   yargs.options({
     project: {
-      describe: i18n(`${i18nKey}.options.project.describe`),
+      describe: i18n(`commands.project.subcommands.deploy.options.project.describe`),
       type: 'string',
     },
     build: {
       alias: ['build-id'],
-      describe: i18n(`${i18nKey}.options.build.describe`),
+      describe: i18n(`commands.project.subcommands.deploy.options.build.describe`),
       type: 'number',
     },
   });
 
   yargs.example([
-    ['$0 project deploy', i18n(`${i18nKey}.examples.default`)],
+    ['$0 project deploy', i18n(`commands.project.subcommands.deploy.examples.default`)],
     [
       '$0 project deploy --project="my-project" --build=5',
-      i18n(`${i18nKey}.examples.withOptions`),
+      i18n(`commands.project.subcommands.deploy.examples.withOptions`),
     ],
   ]);
 

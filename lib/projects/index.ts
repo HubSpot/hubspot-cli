@@ -24,7 +24,6 @@ import SpinniesManager from '../ui/SpinniesManager';
 import { ProjectConfig } from '../../types/Projects';
 import { logError, ApiErrorContext } from '../errorHandlers/index';
 
-const i18nKey = 'lib.projects';
 
 export function writeProjectConfig(
   configPath: string,
@@ -85,7 +84,7 @@ export function validateProjectConfig(
 ): void {
   if (!projectConfig) {
     logger.error(
-      i18n(`${i18nKey}.validateProjectConfig.configNotFound`, {
+      i18n(`lib.projects.validateProjectConfig.configNotFound`, {
         createCommand: uiCommandReference('hs project create'),
       })
     );
@@ -93,7 +92,7 @@ export function validateProjectConfig(
   }
 
   if (!projectConfig.name || !projectConfig.srcDir) {
-    logger.error(i18n(`${i18nKey}.validateProjectConfig.configMissingFields`));
+    logger.error(i18n(`lib.projects.validateProjectConfig.configMissingFields`));
     return process.exit(EXIT_CODES.ERROR);
   }
 
@@ -104,7 +103,7 @@ export function validateProjectConfig(
       path.join(projectDir, PROJECT_CONFIG_FILE)
     );
     logger.error(
-      i18n(`${i18nKey}.validateProjectConfig.srcOutsideProjectDir`, {
+      i18n(`lib.projects.validateProjectConfig.srcOutsideProjectDir`, {
         srcDir: projectConfig.srcDir,
         projectConfig: projectConfigFile,
       })
@@ -114,7 +113,7 @@ export function validateProjectConfig(
 
   if (!fs.existsSync(resolvedPath)) {
     logger.error(
-      i18n(`${i18nKey}.validateProjectConfig.srcDirNotFound`, {
+      i18n(`lib.projects.validateProjectConfig.srcDirNotFound`, {
         srcDir: projectConfig.srcDir,
         projectDir: projectDir,
       })
@@ -133,7 +132,7 @@ async function pollFetchProject(
     let pollCount = 0;
     SpinniesManager.init();
     SpinniesManager.add('pollFetchProject', {
-      text: i18n(`${i18nKey}.pollFetchProject.checkingProject`, {
+      text: i18n(`lib.projects.pollFetchProject.checkingProject`, {
         accountIdentifier: uiAccountDescription(accountId),
       }),
     });
@@ -194,7 +193,7 @@ export async function ensureProjectExists(
           [
             {
               name: 'shouldCreateProject',
-              message: i18n(`${i18nKey}.ensureProjectExists.${promptKey}`, {
+              message: i18n(`lib.projects.ensureProjectExists.${promptKey}`, {
                 projectName,
                 accountIdentifier,
               }),
@@ -209,7 +208,7 @@ export async function ensureProjectExists(
         try {
           const { data: project } = await createProject(accountId, projectName);
           logger.success(
-            i18n(`${i18nKey}.ensureProjectExists.createSuccess`, {
+            i18n(`lib.projects.ensureProjectExists.createSuccess`, {
               projectName,
               accountIdentifier,
             })
@@ -222,7 +221,7 @@ export async function ensureProjectExists(
       } else {
         if (!noLogs) {
           logger.log(
-            i18n(`${i18nKey}.ensureProjectExists.notFound`, {
+            i18n(`lib.projects.ensureProjectExists.notFound`, {
               projectName,
               accountIdentifier,
             })
@@ -239,8 +238,8 @@ export async function ensureProjectExists(
 export function logFeedbackMessage(buildId: number): void {
   if (buildId > 0 && buildId % FEEDBACK_INTERVAL === 0) {
     uiLine();
-    logger.log(i18n(`${i18nKey}.logFeedbackMessage.feedbackHeader`));
+    logger.log(i18n(`lib.projects.logFeedbackMessage.feedbackHeader`));
     uiLine();
-    logger.log(i18n(`${i18nKey}.logFeedbackMessage.feedbackMessage`));
+    logger.log(i18n(`lib.projects.logFeedbackMessage.feedbackMessage`));
   }
 }

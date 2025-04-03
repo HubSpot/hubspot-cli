@@ -16,8 +16,6 @@ import { getAccountConfig } from '@hubspot/local-dev-lib/config';
 import { ProjectConfig } from '../types/Projects';
 import { IntermediateRepresentationNodeLocalDev } from '@hubspot/project-parsing-lib/src/lib/types';
 
-const i18nKey = 'lib.DevServerManager';
-
 type DevServerInterface = {
   // eslint-disable-next-line @typescript-eslint/no-unsafe-function-type
   setup?: Function;
@@ -97,7 +95,7 @@ class DevServerManagerV2 {
         }
       });
     } else {
-      throw new Error(i18n(`${i18nKey}.notInitialized`));
+      throw new Error(i18n('lib.DevServerManager.notInitialized'));
     }
 
     this.started = true;

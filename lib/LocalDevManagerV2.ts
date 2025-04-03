@@ -45,8 +45,6 @@ const WATCH_EVENTS = {
   unlinkDir: 'unlinkDir',
 };
 
-const i18nKey = 'lib.LocalDevManager';
-
 type LocalDevManagerConstructorOptions = {
   targetProjectAccountId: number;
   targetTestingAccountId: number;
@@ -107,7 +105,7 @@ class LocalDevManagerV2 {
       !this.projectConfig ||
       !this.projectDir
     ) {
-      logger.log(i18n(`${i18nKey}.failedToInitialize`));
+      logger.log(i18n(`lib.LocalDevManager.failedToInitialize`));
       process.exit(EXIT_CODES.ERROR);
     }
   }
@@ -115,7 +113,7 @@ class LocalDevManagerV2 {
   async setActiveApp(appUid?: string): Promise<void> {
     if (!appUid) {
       logger.error(
-        i18n(`${i18nKey}.missingUid`, {
+        i18n(`lib.LocalDevManager.missingUid`, {
           devCommand: uiCommandReference('hs project dev'),
         })
       );
@@ -178,18 +176,18 @@ class LocalDevManagerV2 {
     uiLine();
 
     logger.warn(
-      i18n(`${i18nKey}.activeInstallWarning.installCount`, {
+      i18n(`lib.LocalDevManager.activeInstallWarning.installCount`, {
         appName: this.activePublicAppData.name,
         installCount: this.publicAppActiveInstalls,
         accountText:
           this.publicAppActiveInstalls === 1 ? 'account' : 'accounts',
       })
     );
-    logger.log(i18n(`${i18nKey}.activeInstallWarning.explanation`));
+    logger.log(i18n(`lib.LocalDevManager.activeInstallWarning.explanation`));
     uiLine();
 
     const proceed = await confirmPrompt(
-      i18n(`${i18nKey}.activeInstallWarning.confirmationPrompt`),
+      i18n(`lib.LocalDevManager.activeInstallWarning.confirmationPrompt`),
       { defaultAnswer: false }
     );
 
@@ -205,7 +203,7 @@ class LocalDevManagerV2 {
     // Local dev currently relies on the existence of a deployed build in the target account
     if (!this.deployedBuild) {
       logger.error(
-        i18n(`${i18nKey}.noDeployedBuild`, {
+        i18n(`lib.LocalDevManager.noDeployedBuild`, {
           projectName: this.projectConfig.name,
           accountIdentifier: uiAccountDescription(this.targetProjectAccountId),
           uploadCommand: this.getUploadCommand(),
@@ -223,11 +221,11 @@ class LocalDevManagerV2 {
       console.clear();
     }
 
-    uiBetaTag(i18n(`${i18nKey}.betaMessage`));
+    uiBetaTag(i18n(`lib.LocalDevManager.betaMessage`));
 
     logger.log(
       uiLink(
-        i18n(`${i18nKey}.learnMoreLocalDevServer`),
+        i18n(`lib.LocalDevManager.learnMoreLocalDevServer`),
         'https://developers.hubspot.com/docs/platform/project-cli-commands#start-a-local-development-server'
       )
     );
@@ -235,7 +233,7 @@ class LocalDevManagerV2 {
     logger.log();
     logger.log(
       chalk.hex(UI_COLORS.SORBET)(
-        i18n(`${i18nKey}.running`, {
+        i18n(`lib.LocalDevManager.running`, {
           accountIdentifier: uiAccountDescription(this.targetProjectAccountId),
           projectName: this.projectConfig.name,
         })
@@ -243,7 +241,7 @@ class LocalDevManagerV2 {
     );
     logger.log(
       uiLink(
-        i18n(`${i18nKey}.viewProjectLink`),
+        i18n(`lib.LocalDevManager.viewProjectLink`),
         getProjectDetailUrl(
           this.projectConfig.name,
           this.targetProjectAccountId
@@ -252,7 +250,7 @@ class LocalDevManagerV2 {
     );
 
     logger.log();
-    logger.log(i18n(`${i18nKey}.quitHelper`));
+    logger.log(i18n(`lib.LocalDevManager.quitHelper`));
     uiLine();
     logger.log();
 
@@ -273,7 +271,7 @@ class LocalDevManagerV2 {
   async stop(showProgress = true): Promise<void> {
     if (showProgress) {
       SpinniesManager.add('cleanupMessage', {
-        text: i18n(`${i18nKey}.exitingStart`),
+        text: i18n(`lib.LocalDevManager.exitingStart`),
       });
     }
     await this.stopWatching();
@@ -283,7 +281,7 @@ class LocalDevManagerV2 {
     if (!cleanupSucceeded) {
       if (showProgress) {
         SpinniesManager.fail('cleanupMessage', {
-          text: i18n(`${i18nKey}.exitingFail`),
+          text: i18n(`lib.LocalDevManager.exitingFail`),
         });
       }
       process.exit(EXIT_CODES.ERROR);
@@ -291,7 +289,7 @@ class LocalDevManagerV2 {
 
     if (showProgress) {
       SpinniesManager.succeed('cleanupMessage', {
-        text: i18n(`${i18nKey}.exitingSucceed`),
+        text: i18n(`lib.LocalDevManager.exitingSucceed`),
       });
     }
     process.exit(EXIT_CODES.SUCCESS);
@@ -351,35 +349,37 @@ class LocalDevManagerV2 {
     } else {
       warning =
         this.publicAppActiveInstalls && this.publicAppActiveInstalls > 0
-          ? i18n(`${i18nKey}.uploadWarning.defaultPublicAppWarning`, {
+          ? i18n(`lib.LocalDevManager.uploadWarning.defaultPublicAppWarning`, {
               installCount: this.publicAppActiveInstalls,
               installText:
                 this.publicAppActiveInstalls === 1 ? 'install' : 'installs',
             })
-          : i18n(`${i18nKey}.uploadWarning.defaultWarning`);
+          : i18n(`lib.LocalDevManager.uploadWarning.defaultWarning`);
     }
 
     // Avoid logging the warning to the console if it is currently the most
     // recently logged warning. We do not want to spam the console with the same message.
     if (!this.uploadWarnings[warning]) {
       logger.log();
-      logger.warn(i18n(`${i18nKey}.uploadWarning.header`, { warning }));
+      logger.warn(
+        i18n(`lib.LocalDevManager.uploadWarning.header`, { warning })
+      );
       logger.log(
-        i18n(`${i18nKey}.uploadWarning.stopDev`, {
+        i18n(`lib.LocalDevManager.uploadWarning.stopDev`, {
           command: uiCommandReference('hs project dev'),
         })
       );
       if (this.isGithubLinked) {
-        logger.log(i18n(`${i18nKey}.uploadWarning.pushToGithub`));
+        logger.log(i18n(`lib.LocalDevManager.uploadWarning.pushToGithub`));
       } else {
         logger.log(
-          i18n(`${i18nKey}.uploadWarning.runUpload`, {
+          i18n(`lib.LocalDevManager.uploadWarning.runUpload`, {
             command: this.getUploadCommand(),
           })
         );
       }
       logger.log(
-        i18n(`${i18nKey}.uploadWarning.restartDev`, {
+        i18n(`lib.LocalDevManager.uploadWarning.restartDev`, {
           command: uiCommandReference('hs project dev'),
         })
       );
@@ -442,7 +442,7 @@ class LocalDevManagerV2 {
       if (isAppIRNode(node) || isCardIRNode(node)) {
         if (!deployedComponentNames.includes(node.uid)) {
           missingProjectNodes.push(
-            `${i18n(`${i18nKey}.uploadWarning.appLabel`)} ${node.uid}`
+            `${i18n(`lib.LocalDevManager.uploadWarning.appLabel`)} ${node.uid}`
           );
         }
       }
@@ -450,7 +450,7 @@ class LocalDevManagerV2 {
 
     if (missingProjectNodes.length) {
       this.logUploadWarning(
-        i18n(`${i18nKey}.uploadWarning.missingComponents`, {
+        i18n(`lib.LocalDevManager.uploadWarning.missingComponents`, {
           missingComponents: missingProjectNodes.join(', '),
         })
       );
@@ -514,7 +514,7 @@ class LocalDevManagerV2 {
       }
 
       logger.error(
-        i18n(`${i18nKey}.devServer.setupError`, {
+        i18n(`lib.LocalDevManager.devServer.setupError`, {
           message: e instanceof Error ? e.message : '',
         })
       );
@@ -533,7 +533,7 @@ class LocalDevManagerV2 {
         logger.error(e);
       }
       logger.error(
-        i18n(`${i18nKey}.devServer.startError`, {
+        i18n(`lib.LocalDevManager.devServer.startError`, {
           message: e instanceof Error ? e.message : '',
         })
       );
@@ -549,7 +549,7 @@ class LocalDevManagerV2 {
         logger.error(e);
       }
       logger.error(
-        i18n(`${i18nKey}.devServer.fileChangeError`, {
+        i18n(`lib.LocalDevManager.devServer.fileChangeError`, {
           message: e instanceof Error ? e.message : '',
         })
       );
@@ -565,7 +565,7 @@ class LocalDevManagerV2 {
         logger.error(e);
       }
       logger.error(
-        i18n(`${i18nKey}.devServer.cleanupError`, {
+        i18n(`lib.LocalDevManager.devServer.cleanupError`, {
           message: e instanceof Error ? e.message : '',
         })
       );

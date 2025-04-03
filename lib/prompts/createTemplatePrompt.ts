@@ -2,7 +2,6 @@ import { promptUser } from './promptUtils';
 import { i18n } from '../lang';
 import { PromptChoices, PromptConfig } from '../../types/Prompts';
 
-const i18nKey = 'lib.prompts.createTemplatePrompt';
 
 const templateTypeChoices = [
   { name: 'page', value: 'page-template' },
@@ -21,7 +20,7 @@ interface CreateTemplatePromptResponse {
 const TEMPLATE_TYPE_PROMPT: PromptConfig<CreateTemplatePromptResponse> = {
   type: 'list',
   name: 'templateType',
-  message: i18n(`${i18nKey}.selectTemplate`),
+  message: i18n(`lib.prompts.createTemplatePrompt.selectTemplate`),
   default: 'page',
   choices: templateTypeChoices,
 };
