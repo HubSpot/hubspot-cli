@@ -61,18 +61,16 @@ const notifier = updateNotifier({
   shouldNotifyInNpmScript: true,
 });
 
-const i18nKey = 'commands.generalErrors';
-
 const CMS_CLI_PACKAGE_NAME = '@hubspot/cms-cli';
 
 notifier.notify({
   message:
     pkg.name === CMS_CLI_PACKAGE_NAME
-      ? i18n(`${i18nKey}.updateNotify.cmsUpdateNotification`, {
+      ? i18n(`commands.generalErrors.updateNotify.cmsUpdateNotification`, {
           packageName: CMS_CLI_PACKAGE_NAME,
           updateCommand: uiCommandReference('{updateCommand}'),
         })
-      : i18n(`${i18nKey}.updateNotify.cliUpdateNotification`, {
+      : i18n(`commands.generalErrors.updateNotify.cliUpdateNotification`, {
           updateCommand: uiCommandReference('{updateCommand}'),
         }),
   defer: false,
@@ -85,7 +83,7 @@ notifier.notify({
     title:
       pkg.name === CMS_CLI_PACKAGE_NAME
         ? null
-        : chalk.bold(i18n(`${i18nKey}.updateNotify.notifyTitle`)),
+        : chalk.bold(i18n(`commands.generalErrors.updateNotify.notifyTitle`)),
   },
 });
 
@@ -119,7 +117,7 @@ const performChecks = argv => {
     argv._[1] === 'set' &&
     argv._[2] === 'default-account'
   ) {
-    logger.error(i18n(`${i18nKey}.setDefaultAccountMoved`));
+    logger.error(i18n(`commands.generalErrors.setDefaultAccountMoved`));
     process.exit(EXIT_CODES.ERROR);
   }
 
@@ -127,7 +125,7 @@ const performChecks = argv => {
   if (argv._.length === 1 && ['upload', 'watch'].includes(argv._[0])) {
     if (getIsInProject(argv.src)) {
       logger.error(
-        i18n(`${i18nKey}.srcIsProject`, {
+        i18n(`commands.generalErrors.srcIsProject`, {
           src: argv.src || './',
           command: argv._.join(' '),
         })
@@ -182,9 +180,12 @@ const handleDeprecatedEnvVariables = options => {
     !process.env.HUBSPOT_ACCOUNT_ID
   ) {
     uiDeprecatedTag(
-      i18n(`${i18nKey}.handleDeprecatedEnvVariables.portalEnvVarDeprecated`, {
-        configPath: getConfigPath(),
-      })
+      i18n(
+        `commands.generalErrors.handleDeprecatedEnvVariables.portalEnvVarDeprecated`,
+        {
+          configPath: getConfigPath(),
+        }
+      )
     );
     process.env.HUBSPOT_ACCOUNT_ID = process.env.HUBSPOT_PORTAL_ID;
   }
@@ -223,7 +224,7 @@ const loadConfigMiddleware = async options => {
 
   if (configFileExists(true) && options.config) {
     logger.error(
-      i18n(`${i18nKey}.loadConfigMiddleware.configFileExists`, {
+      i18n(`commands.generalErrors.loadConfigMiddleware.configFileExists`, {
         configPath: getConfigPath(),
       })
     );

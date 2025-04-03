@@ -12,14 +12,13 @@ const { i18n } = require('../../lib/lang');
 const { debugError } = require('../../lib/errorHandlers');
 const { EXIT_CODES } = require('../../lib/enums/exitCodes');
 
-const i18nKey = 'commands.create.subcommands.apiSample';
 
 module.exports = {
   hidden: true,
   dest: ({ dest }) => dest,
   validate: ({ name }) => {
     if (!name) {
-      logger.error(i18n(`${i18nKey}.errors.nameRequired`));
+      logger.error(i18n(`commands.create.subcommands.apiSample.errors.nameRequired`));
       return false;
     }
 
@@ -29,7 +28,7 @@ module.exports = {
     const filePath = path.join(dest, name);
     if (fs.existsSync(filePath)) {
       const overwrite = await confirmPrompt(
-        i18n(`${i18nKey}.folderOverwritePrompt`, { folderName: filePath }),
+        i18n(`commands.create.subcommands.apiSample.folderOverwritePrompt`, { folderName: filePath }),
         { defaultAnswer: false }
       );
       if (overwrite) {
@@ -52,7 +51,7 @@ module.exports = {
     }
 
     if (!samplesConfig) {
-      logger.error(i18n(`${i18nKey}.errors.noSamples`));
+      logger.error(i18n(`commands.create.subcommands.apiSample.errors.noSamples`));
       process.exit(EXIT_CODES.ERROR);
     }
 
@@ -60,12 +59,12 @@ module.exports = {
       await createApiSamplePrompt(samplesConfig);
 
     if (!sampleType || !sampleLanguage) {
-      logger.error(i18n(`${i18nKey}.errors.noSamples`));
+      logger.error(i18n(`commands.create.subcommands.apiSample.errors.noSamples`));
       process.exit(EXIT_CODES.ERROR);
     }
 
     logger.info(
-      i18n(`${i18nKey}.info.sampleChosen`, {
+      i18n(`commands.create.subcommands.apiSample.info.sampleChosen`, {
         sampleType,
         sampleLanguage,
       })
@@ -80,7 +79,7 @@ module.exports = {
         fs.copySync(`${filePath}/.env.template`, `${filePath}/.env`);
       }
       logger.success(
-        i18n(`${i18nKey}.success.sampleCreated`, {
+        i18n(`commands.create.subcommands.apiSample.success.sampleCreated`, {
           filePath,
         })
       );
