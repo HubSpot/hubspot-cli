@@ -3,10 +3,12 @@ import {
   isHubSpotHttpError,
   isValidationError,
 } from '@hubspot/local-dev-lib/errors/index';
+import { getConfig } from '@hubspot/local-dev-lib/config';
+
 import { shouldSuppressError } from './suppressError';
 import { i18n } from '../lang';
 import util from 'util';
-
+import { uiCommandReference } from '../ui';
 
 export function logError(error: unknown, context?: ApiErrorContext): void {
   debugError(error, context);
@@ -39,6 +41,25 @@ export function logError(error: unknown, context?: ApiErrorContext): void {
   } else {
     // Unknown errors
     logger.error(i18n(`lib.errorHandlers.index.unknownErrorOccurred`));
+  }
+
+  if (isHubSpotHttpError(error) && error.code === 'ETIMEDOUT') {
+    const config = getConfig();
+    const defaultTimeout = config?.httpTimeout;
+
+    // Timeout was caused by the default timeout
+    if (error.timeout && defaultTimeout === error.timeout) {
+      logger.error(
+        i18n(`lib.errorHandlers.index.configTimeoutErrorOccurred`, {
+          timeout: error.timeout,
+          configSetCommand: uiCommandReference('hs config set'),
+        })
+      );
+    }
+    // Timeout was caused by a custom timeout set by the CLI or LDL
+    else {
+      logger.error(i18n(`lib.errorHandlers.index.genericTimeoutErrorOccurred`));
+    }
   }
 }
 

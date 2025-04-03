@@ -106,6 +106,8 @@ export function uiFeatureHighlight(features: string[], title?: string): void {
   });
 }
 
+export function uiBetaTag(message: string, log?: true): undefined;
+export function uiBetaTag(message: string, log: false): string;
 export function uiBetaTag(message: string, log = true): string | undefined {
 
   const terminalUISupport = getTerminalUISupport();

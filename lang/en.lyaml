@@ -750,7 +750,7 @@ en:
             downloadSucceeded: "Downloaded build \"{{ buildId }}\" from project \"{{ projectName }}\""
           errors:
             downloadFailed: "Something went wrong downloading the project"
-            projectNotFound: "Your project {{ projectName }} could not be found in {{ accountId }}"
+            noBuildIdToDownload: "This project is empty. There is no build content to download"
           warnings:
             cannotDownloadWithinProject: "Cancelling project download. Please run the command again outside the context of an existing project."
           options:
@@ -1145,7 +1145,7 @@ en:
         componentCount: "Found {{ numComponents }} components in this project"
         successStatusText: "DONE"
         failedStatusText: "FAILED"
-        errorFetchingTaskStatus: "Error fetching {{ taskType }} status"
+        errorFetchingTaskStatus: "An error occurred while fetching the status of the current {{ taskType }}. For more information, view this project in HubSpot by running {{ openCommand }}."
       pollBuildAutodeployStatusError: "Error fetching autodeploy status for build #{{ buildId }}"
       pollProjectBuildAndDeploy:
         buildSucceededAutomaticallyDeploying: "Build #{{ buildId }} succeeded. {{#bold}}Automatically deploying{{/bold}} to {{ accountIdentifier }}\n"
@@ -1514,6 +1514,8 @@ en:
         errorContext: "Context: {{ context }}"
         errorCause: "Cause: {{ cause }}"
         unknownErrorOccurred: "An unknown error has occurred."
+        configTimeoutErrorOccurred: "This error occurred because a request exceeded the default HTTP timeout of {{ timeout }}ms. To increase the default HTTP timeout, run {{ configSetCommand }}."
+        genericTimeoutErrorOccurred: "This error occurred because an HTTP request timed out. Re-running the command may resolve this issue."
       suppressErrors:
         platformVersionErrors:
           header: "Platform version update required"

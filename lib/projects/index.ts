@@ -79,10 +79,10 @@ export async function getProjectConfig(dir?: string): Promise<{
 }
 
 export function validateProjectConfig(
-  projectConfig: ProjectConfig,
-  projectDir: string
+  projectConfig: ProjectConfig | null,
+  projectDir: string | null
 ): void {
-  if (!projectConfig) {
+  if (!projectConfig || !projectDir) {
     logger.error(
       i18n(`lib.projects.validateProjectConfig.configNotFound`, {
         createCommand: uiCommandReference('hs project create'),

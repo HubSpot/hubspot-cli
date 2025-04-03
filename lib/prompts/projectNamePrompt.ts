@@ -1,12 +1,18 @@
-// @ts-nocheck
-const { promptUser } = require('./promptUtils');
-const { i18n } = require('../lang');
-const { ensureProjectExists } = require('../projects');
-const { uiAccountDescription } = require('../ui');
+import { promptUser } from './promptUtils';
+import { i18n } from '../lang';
+import { ensureProjectExists } from '../projects';
+import { uiAccountDescription } from '../ui';
 
 
-const projectNamePrompt = (accountId, options = {}) => {
-  return promptUser({
+export type ProjectNamePromptResponse = {
+  projectName: string;
+};
+
+export async function projectNamePrompt(
+  accountId: number,
+  options: { project?: string } = {}
+) {
+  const result = await promptUser<ProjectNamePromptResponse>({
     name: 'projectName',
     message: i18n(`lib.prompts.projectNamePrompt.enterName`),
     when: !options.project,
@@ -27,8 +33,10 @@ const projectNamePrompt = (accountId, options = {}) => {
       return true;
     },
   });
-};
 
-module.exports = {
-  projectNamePrompt,
-};
+  if (!result.projectName && options.project) {
+    result.projectName = options.project;
+  }
+
+  return result;
+}
