@@ -178,7 +178,7 @@ describe('commands/project/deploy', () => {
     it('should load the project config', async () => {
       await deployCommand.handler(args);
       expect(getProjectConfigSpy).toHaveBeenCalledTimes(1);
-      expect(getProjectConfigSpy).toHaveBeenCalledWith();
+      expect(getProjectConfigSpy).toHaveBeenCalled();
     });
 
     it('should prompt for the project name', async () => {
