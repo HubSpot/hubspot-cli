@@ -1515,7 +1515,7 @@ en:
         errorCause: "Cause: {{ cause }}"
         unknownErrorOccurred: "An unknown error has occurred."
         configTimeoutErrorOccurred: "This error occurred because a request exceeded the default HTTP timeout of {{ timeout }}ms. To increase the default HTTP timeout, run {{ configSetCommand }}."
-        genericTimeoutErrorOccurred: "This error occurred because an HTTP request timed out. Re-running the command may resolve this issue.
+        genericTimeoutErrorOccurred: "This error occurred because an HTTP request timed out. Re-running the command may resolve this issue."
       suppressErrors:
         platformVersionErrors:
           header: "Platform version update required"
