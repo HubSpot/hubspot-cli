@@ -67,15 +67,99 @@ function getUnmigratableReason(reasonCode: string) {
   }
 }
 
+async function promptForAppToMigrate(
+  appId: number | undefined,
+  allApps: MigrationApp[],
+  isProjectMigration: boolean
+): Promise<MigrationApp | undefined> {
+  const appChoices = allApps
+    .filter(() => {
+      if (!isProjectMigration) {
+        return true;
+      }
+    })
+    .map(app => ({
+      name: app.isMigratable
+        ? app.appName
+        : `[${chalk.yellow('DISABLED')}] ${app.appName} `,
+      value: app,
+      disabled: app.isMigratable
+        ? false
+        : getUnmigratableReason(app.unmigratableReason),
+    }));
+
+  let appIdToMigrate = appId;
+  if (!appIdToMigrate) {
+    const { appId: selectedAppId } = await listPrompt<MigrationApp>(
+      i18n('commands.project.subcommands.migrateApp.prompt.chooseApp'),
+      {
+        choices: appChoices,
+      }
+    );
+    appIdToMigrate = selectedAppId;
+  }
+
+  return allApps.find(app => app.appId === appIdToMigrate);
+}
+
+async function promptForConfirmation(selectedApp: MigrationApp) {
+  const migratableComponents: string[] = ['Application'];
+  const unmigratableComponents: string[] = [];
+
+  selectedApp.migrationComponents.forEach(component => {
+    if (component.isSupported) {
+      migratableComponents.push(component.componentType);
+    } else {
+      unmigratableComponents.push(component.componentType);
+    }
+  });
+
+  if (migratableComponents.length !== 0) {
+    logger.log(
+      i18n('commands.project.subcommands.migrateApp.componentsToBeMigrated', {
+        components: `\n - ${migratableComponents.join('\n - ')}`,
+      })
+    );
+  }
+
+  if (unmigratableComponents.length !== 0) {
+    logger.log(
+      i18n(
+        'commands.project.subcommands.migrateApp.componentsThatWillNotBeMigrated',
+        {
+          components: `\n - ${unmigratableComponents.join('\n - ')}`,
+        }
+      )
+    );
+  }
+
+  logger.log();
+  return confirmPrompt(
+    i18n('commands.project.subcommands.migrateApp.prompt.proceed')
+  );
+}
+
 async function handleMigrationSetup(
   derivedAccountId: number,
-  options: ArgumentsCamelCase<MigrateAppOptions>
-) {
+  options: {
+    name?: string;
+    dest?: string;
+    appId?: number;
+  },
+  isProjectMigration = false
+): Promise<
+  | undefined
+  | {
+      appIdToMigrate: number;
+      projectName: string;
+      projectDest: string;
+    }
+> {
   const { name, dest, appId } = options;
   const { data } = await listAppsForMigration(derivedAccountId);
 
   const { migratableApps, unmigratableApps } = data;
-  const allApps = [...migratableApps, ...unmigratableApps];
+  const allApps: MigrationApp[] = [...migratableApps, ...unmigratableApps];
 
   if (allApps.length === 0) {
     throw new Error(
@@ -105,72 +189,31 @@ async function handleMigrationSetup(
     })
   ) {
     throw new Error(
-      i18n('commands.project.subcommands.migrateApp.prompt.chooseApp', {
-        appId,
-      })
-    );
-  }
-
-  const appChoices = allApps.map(app => ({
-    name: app.isMigratable
-      ? app.appName
-      : `[${chalk.yellow('DISABLED')}] ${app.appName} `,
-    value: app,
-    disabled: app.isMigratable
-      ? false
-      : getUnmigratableReason(app.unmigratableReason),
-  }));
-
-  let appIdToMigrate = appId;
-  if (!appIdToMigrate) {
-    const { appId: selectedAppId } = await listPrompt<MigrationApp>(
-      i18n('commands.project.subcommands.migrateApp.prompt.chooseApp'),
-      {
-        choices: appChoices,
-      }
-    );
-    appIdToMigrate = selectedAppId;
-  }
-
-  const selectedApp = allApps.find(app => app.appId === appIdToMigrate);
-
-  const migratableComponents: string[] = ['Application'];
-  const unmigratableComponents: string[] = [];
-
-  selectedApp?.migrationComponents.forEach(component => {
-    if (component.isSupported) {
-      migratableComponents.push(component.componentType);
-    } else {
-      unmigratableComponents.push(component.componentType);
-    }
-  });
-
-  if (migratableComponents.length !== 0) {
-    logger.log(
-      i18n('commands.project.subcommands.migrateApp.componentsToBeMigrated', {
-        components: `\n - ${migratableComponents.join('\n - ')}`,
-      })
-    );
-  }
-
-  if (unmigratableComponents.length !== 0) {
-    logger.log(
       i18n(
-        'commands.project.subcommands.migrateApp.componentsThatWillNotBeMigrated',
+        'commands.project.subcommands.migrateApp.errors.appWithAppIdNotFound',
         {
-          components: `\n - ${unmigratableComponents.join('\n - ')}`,
+          appId,
         }
       )
     );
   }
 
-  logger.log();
-  const proceed = await confirmPrompt(
-    i18n('commands.project.subcommands.migrateApp.prompt.proceed')
+  const selectedApp = await promptForAppToMigrate(
+    appId,
+    allApps,
+    isProjectMigration
   );
 
+  if (!selectedApp) {
+    throw new Error(
+      i18n('commands.project.subcommands.migrateApp.errors.noSelectedApp')
+    );
+  }
+
+  const proceed = await promptForConfirmation(selectedApp);
+
   if (!proceed) {
-    return {};
+    return;
   }
 
   const projectName =
@@ -202,7 +245,7 @@ async function handleMigrationSetup(
       i18n('commands.project.subcommands.migrateApp.prompt.inputDest')
     ));
 
-  return { appIdToMigrate, projectName, projectDest };
+  return { appIdToMigrate: selectedApp.appId, projectName, projectDest };
 }
 
 async function handleMigrationProcess(derivedAccountId: number, appId: number) {
@@ -375,16 +418,28 @@ export async function downloadProjectFiles(
 
 export async function migrateApp2025_2(
   derivedAccountId: number,
-  options: ArgumentsCamelCase<MigrateAppOptions>
+  options: {
+    name?: string;
+    dest?: string;
+    appId?: number;
+    platformVersion: string;
+  },
+  isProjectMigration = false
 ) {
   SpinniesManager.init();
 
-  const { appIdToMigrate, projectName, projectDest } =
-    await handleMigrationSetup(derivedAccountId, options);
+  const setupResults = await handleMigrationSetup(
+    derivedAccountId,
+    options,
+    isProjectMigration
+  );
 
-  if (!appIdToMigrate) {
+  if (!setupResults) {
+    // If setup results are undefined, it means the user chose not to proceed with the migration
     return;
   }
+
+  const { appIdToMigrate, projectName, projectDest } = setupResults;
 
   const { migrationId, uidMap } = await handleMigrationProcess(
     derivedAccountId,
@@ -409,6 +464,11 @@ export async function migrateApp2025_2(
     buildId,
     projectDest
   );
+
+  if (isProjectMigration) {
+    // Copy all the source code to the existing project
+    // yada yada yada
+  }
 }
 
 export function logInvalidAccountError(i18nKey: string) {

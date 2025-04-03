@@ -46,6 +46,13 @@ export type MigrateAppOptions = CommonArgs &
     platformVersion: string;
   };
 
+export type ProjectMigrateOptions = CommonArgs &
+  AccountArgs &
+  EnvironmentArgs &
+  ConfigArgs & {
+    dest?: string;
+  };
+
 export type CloneAppArgs = ConfigArgs &
   EnvironmentArgs &
   AccountArgs &
