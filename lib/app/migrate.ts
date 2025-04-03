@@ -30,7 +30,6 @@ import {
   beginMigration,
   finishMigration,
   listAppsForMigration,
-  MigrationApp,
   UNMIGRATABLE_REASONS,
 } from '@hubspot/local-dev-lib/api/projects';
 import { poll } from '../polling';
@@ -42,6 +41,7 @@ import { ArgumentsCamelCase } from 'yargs';
 import { MigrateAppOptions } from '../../types/Yargs';
 import chalk from 'chalk';
 import { validateUid } from '@hubspot/project-parsing-lib';
+import { MigrationApp } from '@hubspot/local-dev-lib/types/Project';
 
 function getUnmigratableReason(reasonCode: string) {
   switch (reasonCode) {
