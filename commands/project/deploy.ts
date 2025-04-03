@@ -212,7 +212,7 @@ function projectDeployBuilder(yargs: Argv): Argv<ProjectDeployArgs> {
 export const builder = makeYargsBuilder<ProjectDeployArgs>(
   projectDeployBuilder,
   command,
-  describe!,
+  describe,
   {
     useConfigOptions: true,
     useAccountOptions: true,
