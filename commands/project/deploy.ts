@@ -78,7 +78,11 @@ export async function handler(
   const { project: projectOption, buildId: buildIdOption } = args;
   const accountType = accountConfig && accountConfig.accountType;
 
-  trackCommandUsage('project-deploy', { type: accountType! }, derivedAccountId);
+  trackCommandUsage(
+    'project-deploy',
+    accountType ? { type: accountType } : undefined,
+    derivedAccountId
+  );
 
   const { projectConfig } = await getProjectConfig();
 
