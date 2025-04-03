@@ -30,30 +30,16 @@ import { logger } from '@hubspot/local-dev-lib/logger';
 import { extractZipArchive } from '@hubspot/local-dev-lib/archive';
 import { getAccountConfig } from '@hubspot/local-dev-lib/config';
 import SpinniesManager from '../../lib/ui/SpinniesManager';
-import { ArgumentsCamelCase, Argv } from 'yargs';
-import {
-  AccountArgs,
-  CommonArgs,
-  ConfigArgs,
-  EnvironmentArgs,
-} from '../../types/Yargs';
+import { ArgumentsCamelCase, Argv, CommandModule } from 'yargs';
+import { CloneAppArgs } from '../../types/Yargs';
 import { logInvalidAccountError } from '../../lib/app/migrate';
 
 const i18nKey = 'commands.project.subcommands.cloneApp';
 
-exports.command = 'clone-app';
-exports.describe = uiDeprecatedTag(i18n(`${i18nKey}.describe`), false);
+export const command = 'clone-app';
+export const describe = uiDeprecatedTag(i18n(`${i18nKey}.describe`), false);
 
-export interface CloneAppArgs
-  extends ConfigArgs,
-    EnvironmentArgs,
-    AccountArgs,
-    CommonArgs {
-  dest: string;
-  appId: number;
-}
-
-exports.handler = async (options: ArgumentsCamelCase<CloneAppArgs>) => {
+export const handler = async (options: ArgumentsCamelCase<CloneAppArgs>) => {
   const { derivedAccountId } = options;
   await trackCommandUsage('clone-app', {}, derivedAccountId);
 
@@ -193,7 +179,7 @@ exports.handler = async (options: ArgumentsCamelCase<CloneAppArgs>) => {
   process.exit(EXIT_CODES.SUCCESS);
 };
 
-exports.builder = (yargs: Argv) => {
+export const builder = (yargs: Argv) => {
   yargs.options({
     dest: {
       describe: i18n(`${i18nKey}.options.dest.describe`),
@@ -213,5 +199,14 @@ exports.builder = (yargs: Argv) => {
   addAccountOptions(yargs);
   addUseEnvironmentOptions(yargs);
 
-  return yargs;
+  return yargs as Argv<CloneAppArgs>;
 };
+
+const cloneAppCommand: CommandModule<unknown, CloneAppArgs> = {
+  command,
+  describe,
+  handler,
+  builder,
+};
+
+export default cloneAppCommand;

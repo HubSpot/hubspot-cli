@@ -45,3 +45,11 @@ export type MigrateAppOptions = CommonArgs &
     appId: number;
     platformVersion: string;
   };
+
+export type CloneAppArgs = ConfigArgs &
+  EnvironmentArgs &
+  AccountArgs &
+  CommonArgs & {
+    dest: string;
+    appId: number;
+  };
