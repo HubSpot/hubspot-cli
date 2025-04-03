@@ -117,6 +117,7 @@ describe('commands/project/deploy', () => {
     let projectConfig: ProjectConfig;
     const accountType = 'STANDARD';
     let args: ArgumentsCamelCase<deployCommand.ProjectDeployArgs>;
+    const projectNameFromPrompt = 'project name from prompt';
     const deployDetails = {
       id: 123,
     };
@@ -138,7 +139,9 @@ describe('commands/project/deploy', () => {
         projectConfig,
         projectDir: 'projectDir',
       });
-      projectNamePromptSpy.mockResolvedValue({ projectName: 'fooo' });
+      projectNamePromptSpy.mockResolvedValue({
+        projectName: projectNameFromPrompt,
+      });
       getProjectDetailUrlSpy.mockReturnValue(projectDetailUrl);
       uiLinkSpy.mockImplementation(text => {
         return text;
@@ -200,7 +203,7 @@ describe('commands/project/deploy', () => {
       expect(fetchProjectSpy).toHaveBeenCalledTimes(1);
       expect(fetchProjectSpy).toHaveBeenCalledWith(
         args.derivedAccountId,
-        args.project
+        projectNameFromPrompt
       );
     });
 
@@ -252,7 +255,7 @@ describe('commands/project/deploy', () => {
       );
       expect(logger.error).toHaveBeenCalledTimes(1);
       expect(logger.error).toHaveBeenCalledWith(
-        `Build ${args.buildId} does not exist for project ${args.project}. ${viewProjectsInHubSpot}`
+        `Build ${args.buildId} does not exist for project ${projectNameFromPrompt}. ${viewProjectsInHubSpot}`
       );
       expect(processExitSpy).toHaveBeenCalledTimes(1);
       expect(processExitSpy).toHaveBeenCalledWith(EXIT_CODES.ERROR);
@@ -302,7 +305,7 @@ describe('commands/project/deploy', () => {
       expect(deployProjectSpy).toHaveBeenCalledTimes(1);
       expect(deployProjectSpy).toHaveBeenCalledWith(
         args.derivedAccountId,
-        args.project,
+        projectNameFromPrompt,
         args.buildId,
         undefined
       );
@@ -326,7 +329,7 @@ describe('commands/project/deploy', () => {
       expect(pollDeployStatus).toHaveBeenCalledTimes(1);
       expect(pollDeployStatus).toHaveBeenCalledWith(
         args.derivedAccountId,
-        args.project,
+        projectNameFromPrompt,
         deployDetails.id,
         args.buildId
       );
@@ -348,7 +351,7 @@ describe('commands/project/deploy', () => {
       expect(logger.error).toHaveBeenCalledTimes(1);
       expect(logger.error).toHaveBeenCalledWith(
         `The project ${chalk.bold(
-          args.project
+          projectNameFromPrompt
         )} does not exist in account ${accountDescription}. Run ${commandReference} to upload your project files to HubSpot.`
       );
       expect(processExitSpy).toHaveBeenCalledTimes(1);
