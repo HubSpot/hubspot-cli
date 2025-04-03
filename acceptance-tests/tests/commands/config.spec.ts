@@ -1,4 +1,3 @@
-import { describe, beforeAll, it, expect, afterAll } from 'vitest';
 import { TestState } from '../../lib/TestState';
 import { DOWN, ENTER } from '../../lib/prompt';
 

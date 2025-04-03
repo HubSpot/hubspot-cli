@@ -1,4 +1,3 @@
-import { describe, beforeAll, it, expect, afterAll } from 'vitest';
 import rimraf from 'rimraf';
 import { v4 as uuidv4 } from 'uuid';
 import { TestState } from '../../lib/TestState';

@@ -15,20 +15,13 @@ import { Build } from '@hubspot/local-dev-lib/types/Build';
 import { PublicApp } from '@hubspot/local-dev-lib/types/Apps';
 import { Environment } from '@hubspot/local-dev-lib/types/Config';
 
-import { PROJECT_CONFIG_FILE } from './constants';
+import { APP_DISTRIBUTION_TYPES, PROJECT_CONFIG_FILE } from './constants';
 import SpinniesManager from './ui/SpinniesManager';
-import DevServerManager from './DevServerManager';
+import DevServerManagerV2 from './DevServerManagerV2';
 import { EXIT_CODES } from './enums/exitCodes';
 import { getProjectDetailUrl } from './projects/urls';
-import { getAccountHomeUrl } from './localDev';
-import {
-  componentIsApp,
-  componentIsPublicApp,
-  CONFIG_FILES,
-  getAppCardConfigs,
-  getComponentUid,
-} from './projects/structure';
-import { Component, ComponentTypes, ProjectConfig } from '../types/Projects';
+import { isAppIRNode, isCardIRNode } from './projects/structure';
+import { ProjectConfig } from '../types/Projects';
 import {
   UI_COLORS,
   uiCommandReference,
@@ -42,6 +35,8 @@ import { installPublicAppPrompt } from './prompts/installPublicAppPrompt';
 import { confirmPrompt } from './prompts/promptUtils';
 import { i18n } from './lang';
 import { handleKeypress } from './process';
+import { IntermediateRepresentationNodeLocalDev } from '@hubspot/project-parsing-lib/src/lib/types';
+import { AppIRNode } from '../types/ProjectComponents';
 
 const WATCH_EVENTS = {
   add: 'add',
@@ -53,21 +48,21 @@ const WATCH_EVENTS = {
 const i18nKey = 'lib.LocalDevManager';
 
 type LocalDevManagerConstructorOptions = {
-  targetAccountId: number;
-  parentAccountId: number;
+  targetProjectAccountId: number;
+  targetTestingAccountId: number;
   projectConfig: ProjectConfig;
   projectDir: string;
   projectId: number;
   debug?: boolean;
   deployedBuild?: Build;
   isGithubLinked: boolean;
-  runnableComponents: Component[];
+  projectNodes: { [key: string]: IntermediateRepresentationNodeLocalDev };
   env: Environment;
 };
 
-class LocalDevManager {
-  targetAccountId: number;
+class LocalDevManagerV2 {
   targetProjectAccountId: number;
+  targetTestingAccountId: number;
   projectConfig: ProjectConfig;
   projectDir: string;
   projectId: number;
@@ -76,8 +71,8 @@ class LocalDevManager {
   isGithubLinked: boolean;
   watcher: FSWatcher | null;
   uploadWarnings: { [key: string]: boolean };
-  runnableComponents: Component[];
-  activeApp: Component | null;
+  projectNodes: { [key: string]: IntermediateRepresentationNodeLocalDev };
+  activeApp: AppIRNode | null;
   activePublicAppData: PublicApp | null;
   env: Environment;
   publicAppActiveInstalls: number | null;
@@ -85,10 +80,8 @@ class LocalDevManager {
   mostRecentUploadWarning: string | null;
 
   constructor(options: LocalDevManagerConstructorOptions) {
-    this.targetAccountId = options.targetAccountId;
-    // The account that the project exists in. This is not always the targetAccountId
-    this.targetProjectAccountId = options.parentAccountId;
-
+    this.targetProjectAccountId = options.targetProjectAccountId;
+    this.targetTestingAccountId = options.targetTestingAccountId;
     this.projectConfig = options.projectConfig;
     this.projectDir = options.projectDir;
     this.projectId = options.projectId;
@@ -97,7 +90,7 @@ class LocalDevManager {
     this.isGithubLinked = options.isGithubLinked;
     this.watcher = null;
     this.uploadWarnings = {};
-    this.runnableComponents = options.runnableComponents;
+    this.projectNodes = options.projectNodes;
     this.activeApp = null;
     this.activePublicAppData = null;
     this.env = options.env;
@@ -109,7 +102,11 @@ class LocalDevManager {
       this.projectConfig.srcDir
     );
 
-    if (!this.targetAccountId || !this.projectConfig || !this.projectDir) {
+    if (
+      !this.targetProjectAccountId ||
+      !this.projectConfig ||
+      !this.projectDir
+    ) {
       logger.log(i18n(`${i18nKey}.failedToInitialize`));
       process.exit(EXIT_CODES.ERROR);
     }
@@ -124,33 +121,35 @@ class LocalDevManager {
       );
       process.exit(EXIT_CODES.ERROR);
     }
-    this.activeApp =
-      this.runnableComponents.find(component => {
-        return getComponentUid(component) === appUid;
-      }) || null;
+    const app =
+      Object.values(this.projectNodes).find(
+        component => component.uid === appUid
+      ) || null;
 
-    if (componentIsPublicApp(this.activeApp)) {
-      try {
-        await this.setActivePublicAppData();
-        await this.checkActivePublicAppInstalls();
-        await this.checkPublicAppInstallation();
-      } catch (e) {
-        logError(e);
+    if (app && isAppIRNode(app)) {
+      this.activeApp = app;
+
+      if (app.config.distribution === APP_DISTRIBUTION_TYPES.MARKETPLACE) {
+        try {
+          await this.setActivePublicAppData();
+          await this.checkActivePublicAppInstalls();
+          await this.checkPublicAppInstallation();
+        } catch (e) {
+          logError(e);
+        }
       }
     }
+
+    return;
   }
 
   async setActivePublicAppData(): Promise<void> {
-    if (!this.activeApp) {
-      return;
-    }
-
     const {
       data: { results: portalPublicApps },
     } = await fetchPublicAppsForPortal(this.targetProjectAccountId);
 
     const activePublicAppData = portalPublicApps.find(
-      ({ sourceId }) => sourceId === getComponentUid(this.activeApp)
+      ({ sourceId }) => sourceId === this.activeApp?.uid
     );
 
     if (!activePublicAppData) {
@@ -237,7 +236,7 @@ class LocalDevManager {
     logger.log(
       chalk.hex(UI_COLORS.SORBET)(
         i18n(`${i18nKey}.running`, {
-          accountIdentifier: uiAccountDescription(this.targetAccountId),
+          accountIdentifier: uiAccountDescription(this.targetProjectAccountId),
           projectName: this.projectConfig.name,
         })
       )
@@ -251,15 +250,6 @@ class LocalDevManager {
         ) || ''
       )
     );
-
-    if (this.activeApp?.type === ComponentTypes.PublicApp) {
-      logger.log(
-        uiLink(
-          i18n(`${i18nKey}.viewTestAccountLink`),
-          getAccountHomeUrl(this.targetAccountId)
-        )
-      );
-    }
 
     logger.log();
     logger.log(i18n(`${i18nKey}.quitHelper`));
@@ -308,16 +298,16 @@ class LocalDevManager {
   }
 
   async checkPublicAppInstallation(): Promise<void> {
-    if (!componentIsPublicApp(this.activeApp) || !this.activePublicAppData) {
+    if (!this.activeApp || !this.activePublicAppData) {
       return;
     }
 
     const {
       data: { isInstalledWithScopeGroups, previouslyAuthorizedScopeGroups },
     } = await fetchAppInstallationData(
-      this.targetAccountId,
+      this.targetTestingAccountId,
       this.projectId,
-      this.activeApp.config.uid,
+      this.activeApp.uid,
       this.activeApp.config.auth.requiredScopes,
       this.activeApp.config.auth.optionalScopes
     );
@@ -326,7 +316,7 @@ class LocalDevManager {
     if (!isInstalledWithScopeGroups) {
       await installPublicAppPrompt(
         this.env,
-        this.targetAccountId,
+        this.targetTestingAccountId,
         this.activePublicAppData.clientId,
         this.activeApp.config.auth.requiredScopes,
         this.activeApp.config.auth.redirectUrls,
@@ -360,9 +350,7 @@ class LocalDevManager {
       warning = reason;
     } else {
       warning =
-        componentIsPublicApp(this.activeApp) &&
-        this.publicAppActiveInstalls &&
-        this.publicAppActiveInstalls > 0
+        this.publicAppActiveInstalls && this.publicAppActiveInstalls > 0
           ? i18n(`${i18nKey}.uploadWarning.defaultPublicAppWarning`, {
               installCount: this.publicAppActiveInstalls,
               installText:
@@ -408,18 +396,18 @@ class LocalDevManager {
 
     // Need to provide both overloads for process.stdout.write to satisfy TS
     function customStdoutWrite(
-      this: LocalDevManager,
+      this: LocalDevManagerV2,
       buffer: Uint8Array | string,
       cb?: StdoutCallback
     ): boolean;
     function customStdoutWrite(
-      this: LocalDevManager,
+      this: LocalDevManagerV2,
       str: Uint8Array | string,
       encoding?: BufferEncoding,
       cb?: StdoutCallback
     ): boolean;
     function customStdoutWrite(
-      this: LocalDevManager,
+      this: LocalDevManagerV2,
       chunk: Uint8Array | string,
       encoding?: BufferEncoding | StdoutCallback,
       callback?: StdoutCallback
@@ -448,40 +436,22 @@ class LocalDevManager {
       subbuildStatus => subbuildStatus.buildName
     );
 
-    const missingComponents: string[] = [];
+    const missingProjectNodes: string[] = [];
 
-    this.runnableComponents
-      .filter(componentIsApp)
-      .forEach(({ type, config, path }) => {
-        if (Object.values(ComponentTypes).includes(type)) {
-          const cardConfigs = getAppCardConfigs(config, path);
-
-          if (!deployedComponentNames.includes(config.name)) {
-            missingComponents.push(
-              `${i18n(`${i18nKey}.uploadWarning.appLabel`)} ${config.name}`
-            );
-          }
-
-          cardConfigs.forEach(cardConfig => {
-            if (
-              cardConfig.data &&
-              cardConfig.data.title &&
-              !deployedComponentNames.includes(cardConfig.data.title)
-            ) {
-              missingComponents.push(
-                `${i18n(`${i18nKey}.uploadWarning.uiExtensionLabel`)} ${
-                  cardConfig.data.title
-                }`
-              );
-            }
-          });
+    Object.values(this.projectNodes).forEach(node => {
+      if (isAppIRNode(node) || isCardIRNode(node)) {
+        if (!deployedComponentNames.includes(node.uid)) {
+          missingProjectNodes.push(
+            `${i18n(`${i18nKey}.uploadWarning.appLabel`)} ${node.uid}`
+          );
         }
-      });
+      }
+    });
 
-    if (missingComponents.length) {
+    if (missingProjectNodes.length) {
       this.logUploadWarning(
         i18n(`${i18nKey}.uploadWarning.missingComponents`, {
-          missingComponents: missingComponents.join(', '),
+          missingComponents: missingProjectNodes.join(', '),
         })
       );
     }
@@ -492,15 +462,9 @@ class LocalDevManager {
       ignoreInitial: true,
     });
 
-    const configPaths = this.runnableComponents
-      .filter(({ type }) => Object.values(ComponentTypes).includes(type))
-      .map(component => {
-        const appConfigPath = path.join(
-          component.path,
-          CONFIG_FILES[component.type]
-        );
-        return appConfigPath;
-      });
+    const configPaths = Object.values(this.projectNodes)
+      .filter(isAppIRNode)
+      .map(component => component.localDev.componentConfigPath);
 
     const projectConfigPath = path.join(this.projectDir, PROJECT_CONFIG_FILE);
     configPaths.push(projectConfigPath);
@@ -537,10 +501,10 @@ class LocalDevManager {
 
   async devServerSetup(): Promise<boolean> {
     try {
-      await DevServerManager.setup({
-        components: this.runnableComponents,
+      await DevServerManagerV2.setup({
+        projectNodes: this.projectNodes,
         onUploadRequired: this.logUploadWarning.bind(this),
-        accountId: this.targetAccountId,
+        accountId: this.targetTestingAccountId,
         setActiveApp: this.setActiveApp.bind(this),
       });
       return true;
@@ -548,6 +512,7 @@ class LocalDevManager {
       if (this.debug) {
         logger.error(e);
       }
+
       logger.error(
         i18n(`${i18nKey}.devServer.setupError`, {
           message: e instanceof Error ? e.message : '',
@@ -559,8 +524,8 @@ class LocalDevManager {
 
   async devServerStart(): Promise<void> {
     try {
-      await DevServerManager.start({
-        accountId: this.targetAccountId,
+      await DevServerManagerV2.start({
+        accountId: this.targetTestingAccountId,
         projectConfig: this.projectConfig,
       });
     } catch (e) {
@@ -578,7 +543,7 @@ class LocalDevManager {
 
   devServerFileChange(filePath: string, event: string): void {
     try {
-      DevServerManager.fileChange({ filePath, event });
+      DevServerManagerV2.fileChange({ filePath, event });
     } catch (e) {
       if (this.debug) {
         logger.error(e);
@@ -593,7 +558,7 @@ class LocalDevManager {
 
   async devServerCleanup(): Promise<boolean> {
     try {
-      await DevServerManager.cleanup();
+      await DevServerManagerV2.cleanup();
       return true;
     } catch (e) {
       if (this.debug) {
@@ -609,5 +574,4 @@ class LocalDevManager {
   }
 }
 
-export default LocalDevManager;
-module.exports = LocalDevManager;
+export default LocalDevManagerV2;

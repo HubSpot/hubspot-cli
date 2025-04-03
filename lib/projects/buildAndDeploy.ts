@@ -25,7 +25,12 @@ import {
 import SpinniesManager from '../ui/SpinniesManager';
 import { i18n } from '../lang';
 import { logError, ApiErrorContext } from '../errorHandlers';
-import { uiLine, uiLink, uiAccountDescription } from '../ui';
+import {
+  uiLine,
+  uiLink,
+  uiAccountDescription,
+  uiCommandReference,
+} from '../ui';
 import {
   getProjectBuildDetailUrl,
   getProjectDeployDetailUrl,
@@ -38,6 +43,7 @@ import {
   ProjectPollStatusFunctionText,
   ProjectPollResult,
 } from '../../types/Projects';
+import { EXIT_CODES } from '../enums/exitCodes';
 
 const i18nKey = 'lib.projectBuildAndDeploy';
 
@@ -113,6 +119,21 @@ type PollTaskStatusFunction<T extends ProjectTask> = (
   deployedBuildId: number | null,
   silenceLogs: boolean
 ) => Promise<T>;
+
+function handleTaskStatusError(
+  statusText: ProjectPollStatusFunctionText
+): never {
+  logger.error(
+    i18n(`${i18nKey}.makePollTaskStatusFunc.errorFetchingTaskStatus`, {
+      taskType:
+        statusText.TYPE_KEY === PROJECT_BUILD_TEXT.TYPE_KEY
+          ? 'build'
+          : 'deploy',
+      openCommand: uiCommandReference('hs project open'),
+    })
+  );
+  process.exit(EXIT_CODES.ERROR);
+}
 
 function makePollTaskStatusFunc<T extends ProjectTask>({
   statusFn,
@@ -227,7 +248,7 @@ function makePollTaskStatusFunc<T extends ProjectTask>({
       });
     }
 
-    return new Promise<T>((resolve, reject) => {
+    return new Promise<T>(resolve => {
       const pollInterval = setInterval(async () => {
         let taskStatus: T;
         try {
@@ -242,37 +263,14 @@ function makePollTaskStatusFunc<T extends ProjectTask>({
               projectName: taskName,
             })
           );
-          return reject(
-            new Error(
-              i18n(
-                `${i18nKey}.makePollTaskStatusFunc.errorFetchingTaskStatus`,
-                {
-                  taskType:
-                    statusText.TYPE_KEY === PROJECT_BUILD_TEXT.TYPE_KEY
-                      ? 'build'
-                      : 'deploy',
-                }
-              )
-            )
-          );
+
+          handleTaskStatusError(statusText);
         }
 
         const subtasks = getSubtasks(taskStatus);
 
         if (!taskStatus || !taskStatus.status || !subtasks) {
-          return reject(
-            new Error(
-              i18n(
-                `${i18nKey}.makePollTaskStatusFunc.errorFetchingTaskStatus`,
-                {
-                  taskType:
-                    statusText.TYPE_KEY === PROJECT_BUILD_TEXT.TYPE_KEY
-                      ? 'build'
-                      : 'deploy',
-                }
-              )
-            )
-          );
+          handleTaskStatusError(statusText);
         }
 
         const { status } = taskStatus;

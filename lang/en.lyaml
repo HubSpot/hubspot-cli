@@ -72,6 +72,9 @@ en:
           describe: "Print information about the default account, or about the account specified with the \"account\" option."
           errors:
             notUsingPersonalAccessKey: "This command currently only supports fetching scopes for the personal access key auth type."
+          options:
+            account:
+              describe: "Account name or id to show info for"
           examples:
             default: "Print information for the default account"
             idBased: "Print information for the account with accountId equal to \"1234567\""
@@ -91,14 +94,14 @@ en:
             other: "Remove {{ count }} inactive accounts from the CLI config?"
           removeSuccess: "Removed {{ accountName }} from the CLI config."
     auth:
-      describe: "Configure authentication for your HubSpot account. This will update the {{ configName }} file that stores your account information."
+      describe: "Configure authentication for your HubSpot account."
+      verboseDescribe: "Configure authentication for a HubSpot account. This will update the {{ configName }} file that stores your account information.\n\nThe recommended authentication method is {{#bold}}{{ authMethod }}{{/bold}}, which uses an access token tied to a specific user account."
       errors:
         noConfigFileFound: "No config file was found. To create a new config file, use the \"hs init\" command."
         unsupportedAuthType: "Unsupported auth type: {{ type }}. The only supported authentication protocols are {{ supportedProtocols }}."
       options:
         authType:
-          describe: "Authentication mechanism"
-          defaultDescription: "\"{{ authMethod }}\": An access token tied to a specific user account. This is the recommended way of authenticating with local development tools."
+          describe: "Authentication method"
         account:
           describe: "HubSpot account to authenticate"
       success:
@@ -446,11 +449,11 @@ en:
           success:
             fetch: "Downloaded HubDB table {{ tableId }} to {{ path }}"
     init:
-      describe: "Configure authentication for your HubSpot account. This will create a {{ configName }} file to store your account information."
+      describe: "Create a CLI config file and configure authentication for your HubSpot account."
+      verboseDescribe: "Configure authentication for a HubSpot account. This will create a {{ configName }} file to store your account information. To configure authentication for additional accounts, run {{ command }}.\n\nThe recommended authentication method is {{#bold}}{{ authMethod }}{{/bold}}, which uses an access token tied to a specific user account."
       options:
         authType:
-          describe: "Authentication mechanism"
-          defaultDescription: "\"{{ authMethod }}\":  An access token tied to a specific user account. This is the recommended way of authenticating with local development tools."
+          describe: "Authentication method"
         account:
           describe: "HubSpot account to authenticate"
         useHiddenConfig:
@@ -529,6 +532,7 @@ en:
             noAccountsInConfig: "No accounts found in your config. Run {{ authCommand }} to configure a HubSpot account with the CLI."
             invalidProjectComponents: "Projects cannot contain both private and public apps. Move your apps to separate projects before attempting local development."
             noRunnableComponents: "No supported components were found in this project. Run {{ command }} to see a list of available components and add one to your project."
+            invalidUnifiedAppsAccount: "Local development of Unified Apps is currently only supported in standard and developer accounts. Target a standard or developer account with {{ authCommand }} and try again."
           examples:
             default: "Start local dev for the current project"
         create:
@@ -1110,10 +1114,10 @@ en:
         restartDev: "  * Re-run {{ command }}"
         pushToGithub: "  * Commit and push your changes to GitHub"
       activeInstallWarning:
-        installCount: "{{#bold}}The app {{ appName }} has {{ installCount }} production {{ installText }}{{/bold}}"
+        installCount: "{{#bold}}The app {{ appName }} is installed in {{ installCount }} {{ accountText }}{{/bold}}"
         explanation: "Some changes made during local development may need to be synced to HubSpot, which will impact those existing installs. We strongly recommend creating a copy of this app to use instead."
         confirmation: "You will always be asked to confirm any permanent changes to your app’s configuration before uploading them."
-        confirmationPrompt: "Proceed with local development of this {{#bold}}production{{/bold}} app?"
+        confirmationPrompt: "Proceed with local development of this app with existing installs?"
       devServer:
         cleanupError: "Failed to cleanup local dev server: {{ message }}"
         setupError: "Failed to setup local dev server: {{ message }}"
@@ -1172,7 +1176,7 @@ en:
         componentCount: "Found {{ numComponents }} components in this project"
         successStatusText: "DONE"
         failedStatusText: "FAILED"
-        errorFetchingTaskStatus: "Error fetching {{ taskType }} status"
+        errorFetchingTaskStatus: "An error occurred while fetching the status of the current {{ taskType }}. For more information, view this project in HubSpot by running {{ openCommand }}."
       pollBuildAutodeployStatusError: "Error fetching autodeploy status for build #{{ buildId }}"
       pollProjectBuildAndDeploy:
         buildSucceededAutomaticallyDeploying: "Build #{{ buildId }} succeeded. {{#bold}}Automatically deploying{{/bold}} to {{ accountIdentifier }}\n"
@@ -1205,7 +1209,7 @@ en:
       disabledUrlText: "See all HubSpot CLI commands here."
       featureHighlight:
         defaultTitle: "What's next?"
-        commandKeys:
+        featureKeys:
           accountOption:
             command: "--account"
             message: "Use the {{ command }} option with any command to override the default account"
@@ -1235,10 +1239,12 @@ en:
             message: "Run {{ command }} to learn more about available project commands"
           projectUploadCommand:
             command: "hs project upload"
-            message: "Run {{ command }} to upload your project to HubSpot and trigger builds"
+            message: "Run {{ command }} to upload your project to your HubSpot account"
           projectDevCommand:
             command: "hs project dev"
             message: "Run {{ command }} to set up your test environment and start local development"
+          projectCommandTip:
+            message: "Tip: All project commands must be run from within a project directory"
           sampleProjects:
             linkText: "HubSpot's sample projects"
             url: "https://developers.hubspot.com/docs/platform/sample-projects?utm_source=cli&utm_content=project_create_whats_next"
@@ -1539,6 +1545,8 @@ en:
         errorContext: "Context: {{ context }}"
         errorCause: "Cause: {{ cause }}"
         unknownErrorOccurred: "An unknown error has occurred."
+        configTimeoutErrorOccurred: "This error occurred because a request exceeded the default HTTP timeout of {{ timeout }}ms. To increase the default HTTP timeout, run {{ configSetCommand }}."
+        genericTimeoutErrorOccurred: "This error occurred because an HTTP request timed out. Re-running the command may resolve this issue."
       suppressErrors:
         platformVersionErrors:
           header: "Platform version update required"
@@ -1606,6 +1614,9 @@ en:
           defaultAccountSubHeader: "Default Account: {{accountDetails}}"
           noConfigFile: "CLI configuration not found"
           noConfigFileSecondary: "Run {{command}} and follow the prompts to create your CLI configuration file and connect it to your HubSpot account"
+          settings:
+            httpUseLocalhost: "The setting {{#bold}}httpUseLocalhost{{/bold}} is enabled"
+            httpUseLocalhostSecondary: "This setting causes all CLI requests to route to localhost"
         projectConfig:
           header: "Project configuration"
           projectDirSubHeader: "Project dir: {{#bold}}{{ projectDir }}{{/bold}}"
