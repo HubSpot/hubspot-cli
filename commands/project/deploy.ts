@@ -79,10 +79,7 @@ exports.handler = async options => {
   const namePromptResponse = await projectNamePrompt(derivedAccountId, {
     project: projectName,
   });
-
-  if (!projectName && namePromptResponse.projectName) {
-    projectName = namePromptResponse.projectName;
-  }
+  projectName = namePromptResponse.projectName;
 
   let buildIdToDeploy = buildIdOption;
 

@@ -2,7 +2,9 @@ import { getAccountId } from '@hubspot/local-dev-lib/config';
 import { fetchProjects } from '@hubspot/local-dev-lib/api/projects';
 import { downloadProjectPrompt } from '../downloadProjectPrompt';
 
-jest.mock('../promptUtils');
+jest.mock('../promptUtils', () => ({
+  promptUser: jest.fn().mockResolvedValue({ project: 'test-project' }),
+}));
 jest.mock('@hubspot/local-dev-lib/api/projects', () => ({
   fetchProjects: jest.fn().mockResolvedValue({
     data: { results: [] },
