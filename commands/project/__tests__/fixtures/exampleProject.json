@@ -28,7 +28,6 @@
   "updatedAt": 123456,
   "id": 123,
   "isLocked": false,
-  "links": {},
   "name": "project name",
   "portalId": 123
 }
