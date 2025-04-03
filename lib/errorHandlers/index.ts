@@ -48,13 +48,18 @@ export function logError(error: unknown, context?: ApiErrorContext): void {
     const config = getConfig();
     const defaultTimeout = config?.httpTimeout;
 
+    // Timeout was caused by the default timeout
     if (error.timeout && defaultTimeout === error.timeout) {
       logger.error(
-        i18n(`${i18nKey}.timeoutErrorOccurred`, {
+        i18n(`${i18nKey}.configTimeoutErrorOccurred`, {
           timeout: error.timeout,
           configSetCommand: uiCommandReference('hs config set'),
         })
       );
+    }
+    // Timeout was caused by a custom timeout set by the CLI or LDL
+    else {
+      logger.error(i18n(`${i18nKey}.genericTimeoutErrorOccurred`));
     }
   }
 }
