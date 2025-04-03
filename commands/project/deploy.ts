@@ -98,7 +98,7 @@ export async function handler(
   try {
     const {
       data: { latestBuild, deployedBuildId },
-    } = await fetchProject(derivedAccountId, projectName!);
+    } = await fetchProject(derivedAccountId, projectName);
 
     if (!latestBuild || !latestBuild.buildId) {
       logger.error(i18n(`${i18nKey}.errors.noBuilds`));
@@ -144,12 +144,11 @@ export async function handler(
 
     const { data: deployResp } = await deployProject(
       derivedAccountId,
-      projectName!,
+      projectName,
       buildIdToDeploy,
       useV3Api(projectConfig?.platformVersion)
     );
 
-    // TODO: Validate this change. Were we actually using deployResp.error.message?
     if (!deployResp) {
       logger.error(i18n(`${i18nKey}.errors.deploy`));
       return process.exit(EXIT_CODES.ERROR);
@@ -157,7 +156,7 @@ export async function handler(
 
     await pollDeployStatus(
       derivedAccountId,
-      projectName!,
+      projectName,
       Number(deployResp.id),
       buildIdToDeploy
     );
