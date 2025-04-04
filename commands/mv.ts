@@ -15,8 +15,6 @@ import { i18n } from '../lib/lang';
 import { uiBetaTag } from '../lib/ui';
 import { CommonArgs, ConfigArgs, EnvironmentArgs } from '../types/Yargs';
 
-const i18nKey = 'commands.mv';
-
 function getCorrectedDestPath(srcPath: string, destPath: string): string {
   if (!isPathFolder(srcPath)) {
     return destPath;
@@ -27,7 +25,7 @@ function getCorrectedDestPath(srcPath: string, destPath: string): string {
 }
 
 export const command = 'mv <srcPath> <destPath>';
-export const describe = uiBetaTag(i18n(`${i18nKey}.describe`), false);
+export const describe = uiBetaTag(i18n(`commands.mv.describe`), false);
 
 type MvArgs = CommonArgs &
   ConfigArgs &
@@ -45,7 +43,7 @@ export async function handler(args: ArgumentsCamelCase<MvArgs>) {
       getCorrectedDestPath(srcPath, destPath)
     );
     logger.success(
-      i18n(`${i18nKey}.move`, {
+      i18n(`commands.mv.move`, {
         accountId: derivedAccountId,
         destPath,
         srcPath,
@@ -53,7 +51,7 @@ export async function handler(args: ArgumentsCamelCase<MvArgs>) {
     );
   } catch (error) {
     logger.error(
-      i18n(`${i18nKey}.errors.moveFailed`, {
+      i18n(`commands.mv.errors.moveFailed`, {
         accountId: derivedAccountId,
         destPath,
         srcPath,
@@ -61,7 +59,7 @@ export async function handler(args: ArgumentsCamelCase<MvArgs>) {
     );
     if (isSpecifiedError(error, { statusCode: 409 })) {
       logger.error(
-        i18n(`${i18nKey}.errors.sourcePathExists`, {
+        i18n(`commands.mv.errors.sourcePathExists`, {
           destPath,
           srcPath,
         })
