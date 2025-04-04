@@ -12,10 +12,9 @@ const { i18n } = require('../../lib/lang');
 const { trackCommandUsage } = require('../../lib/usageTracking');
 const { uiBetaTag } = require('../../lib/ui');
 
-const i18nKey = `commands.project.subcommands.installDeps`;
 
 exports.command = 'install-deps [packages..]';
-exports.describe = uiBetaTag(i18n(`${i18nKey}.help.describe`), false);
+exports.describe = uiBetaTag(i18n(`commands.project.subcommands.installDeps.help.describe`), false);
 
 exports.handler = async options => {
   const { derivedAccountId, packages } = options || {};
@@ -24,7 +23,7 @@ exports.handler = async options => {
 
     const projectConfig = await getProjectConfig();
     if (!projectConfig || !projectConfig.projectDir) {
-      logger.error(i18n(`${i18nKey}.noProjectConfig`));
+      logger.error(i18n(`commands.project.subcommands.installDeps.noProjectConfig`));
       return process.exit(EXIT_CODES.ERROR);
     }
 
@@ -37,14 +36,14 @@ exports.handler = async options => {
           name: 'selectedInstallLocations',
           type: 'checkbox',
           when: () => packages && packages.length > 0,
-          message: i18n(`${i18nKey}.installLocationPrompt`),
+          message: i18n(`commands.project.subcommands.installDeps.installLocationPrompt`),
           choices: installLocations.map(dir => ({
             name: path.relative(projectDir, dir),
             value: dir,
           })),
           validate: choices => {
             if (choices === undefined || choices.length === 0) {
-              return i18n(`${i18nKey}.installLocationPromptRequired`);
+              return i18n(`commands.project.subcommands.installDeps.installLocationPromptRequired`);
             }
             return true;
           },
@@ -68,10 +67,10 @@ exports.handler = async options => {
 
 exports.builder = yargs => {
   yargs.example([
-    ['$0 project install-deps', i18n(`${i18nKey}.help.installAppDepsExample`)],
+    ['$0 project install-deps', i18n(`commands.project.subcommands.installDeps.help.installAppDepsExample`)],
     [
       '$0 project install-deps dependency1 dependency2',
-      i18n(`${i18nKey}.help.addDepToSubComponentExample`),
+      i18n(`commands.project.subcommands.installDeps.help.addDepToSubComponentExample`),
     ],
   ]);
 };

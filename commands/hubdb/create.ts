@@ -21,10 +21,9 @@ import {
   EnvironmentArgs,
 } from '../../types/Yargs';
 
-const i18nKey = 'commands.hubdb.subcommands.create';
 
 export const command = 'create';
-export const describe = i18n(`${i18nKey}.describe`);
+export const describe = i18n(`commands.hubdb.subcommands.create.describe`);
 
 type CombinedArgs = ConfigArgs & AccountArgs & EnvironmentArgs;
 type HubdbCreateArgs = CommonArgs & CombinedArgs & { path?: string };
@@ -33,14 +32,14 @@ function selectPathPrompt(options: HubdbCreateArgs): Promise<{ path: string }> {
   return promptUser([
     {
       name: 'path',
-      message: i18n(`${i18nKey}.enterPath`),
+      message: i18n(`commands.hubdb.subcommands.create.enterPath`),
       when: !options.path,
       validate: (input: string) => {
         if (!input) {
-          return i18n(`${i18nKey}.errors.pathRequired`);
+          return i18n(`commands.hubdb.subcommands.create.errors.pathRequired`);
         }
         if (!isValidPath(input)) {
-          return i18n(`${i18nKey}.errors.invalidCharacters`);
+          return i18n(`commands.hubdb.subcommands.create.errors.invalidCharacters`);
         }
         return true;
       },
@@ -73,7 +72,7 @@ export async function handler(
       path.resolve(getCwd(), filePath)
     );
     logger.success(
-      i18n(`${i18nKey}.success.create`, {
+      i18n(`commands.hubdb.subcommands.create.success.create`, {
         accountId: derivedAccountId,
         rowCount: table.rowCount,
         tableId: table.tableId,
@@ -81,7 +80,7 @@ export async function handler(
     );
   } catch (e) {
     logger.error(
-      i18n(`${i18nKey}.errors.create`, {
+      i18n(`commands.hubdb.subcommands.create.errors.create`, {
         filePath: filePath || '',
       })
     );
@@ -95,7 +94,7 @@ export function builder(yargs: Argv): Argv<HubdbCreateArgs> {
   addUseEnvironmentOptions(yargs);
 
   yargs.options('path', {
-    describe: i18n(`${i18nKey}.options.path.describe`),
+    describe: i18n(`commands.hubdb.subcommands.create.options.path.describe`),
     type: 'string',
   });
 
