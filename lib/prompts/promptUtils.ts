@@ -39,21 +39,21 @@ export async function confirmPrompt(
   return choice;
 }
 
-type ListPromptResponse = {
-  choice: string;
+type ListPromptResponse<T = string> = {
+  choice: T;
 };
 
-export async function listPrompt(
+export async function listPrompt<T = string>(
   message: string,
   {
     choices,
     when,
   }: {
-    choices: PromptChoices;
+    choices: PromptChoices<T>;
     when?: PromptWhen;
   }
-): Promise<string> {
-  const { choice } = await promptUser<ListPromptResponse>([
+): Promise<T> {
+  const { choice } = await promptUser<ListPromptResponse<T>>([
     {
       name: 'choice',
       type: 'list',
@@ -69,8 +69,10 @@ export async function inputPrompt(
   message: string,
   {
     when,
+    validate,
   }: {
     when?: boolean | (() => boolean);
+    validate?: (input: string) => boolean | string;
   } = {}
 ): Promise<string> {
   const { input } = await promptUser([
@@ -79,6 +81,7 @@ export async function inputPrompt(
       type: 'input',
       message,
       when,
+      validate,
     },
   ]);
   return input;

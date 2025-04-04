@@ -25,10 +25,11 @@ jest.mock('../project/download');
 jest.mock('../project/open');
 jest.mock('../project/dev');
 jest.mock('../project/add');
-jest.mock('../project/migrateApp');
-jest.mock('../project/cloneApp');
+jest.mock('../project/migrateApp', () => ({}));
+jest.mock('../project/cloneApp', () => ({}));
 jest.mock('../project/installDeps');
 jest.mock('../../lib/commonOpts');
+
 yargs.command.mockReturnValue(yargs);
 yargs.demandCommand.mockReturnValue(yargs);
 

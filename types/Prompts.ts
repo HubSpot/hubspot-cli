@@ -14,12 +14,12 @@ type PromptType =
   | 'number'
   | 'rawlist';
 
-export type PromptChoices = Array<
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export type PromptChoices<T = any> = Array<
   | string
   | {
       name: string;
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      value?: any;
+      value?: T;
       disabled?: string | boolean;
     }
 >;
