@@ -9,10 +9,9 @@ import * as projectDownloadCommand from '../download';
 jest.mock('yargs');
 jest.mock('../../../lib/commonOpts');
 
-const optionsSpy = jest.spyOn(yargs as Argv, 'options');
-const exampleSpy = jest.spyOn(yargs as Argv, 'example');
-
 describe('commands/project/download', () => {
+  const yargsMock = yargs as Argv;
+
   describe('command', () => {
     it('should have the correct command structure', () => {
       expect(projectDownloadCommand.command).toEqual('download');
@@ -27,7 +26,7 @@ describe('commands/project/download', () => {
 
   describe('builder', () => {
     it('should support the correct options', () => {
-      projectDownloadCommand.builder(yargs as Argv);
+      projectDownloadCommand.builder(yargsMock);
 
       expect(addAccountOptions).toHaveBeenCalledTimes(1);
       expect(addAccountOptions).toHaveBeenCalledWith(yargs);
@@ -40,7 +39,10 @@ describe('commands/project/download', () => {
     });
 
     it('should define project, dest, and build options', () => {
-      projectDownloadCommand.builder(yargs as Argv);
+      const optionsSpy = jest.spyOn(yargsMock, 'options');
+      const exampleSpy = jest.spyOn(yargsMock, 'example');
+
+      projectDownloadCommand.builder(yargsMock);
 
       expect(optionsSpy).toHaveBeenCalledWith(
         expect.objectContaining({
