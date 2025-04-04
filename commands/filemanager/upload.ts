@@ -26,10 +26,9 @@ import {
   EnvironmentArgs,
 } from '../../types/Yargs';
 
-const i18nKey = 'commands.filemanager.subcommands.upload';
 
 export const command = 'upload <src> <dest>';
-export const describe = i18n(`${i18nKey}.describe`);
+export const describe = i18n(`commands.filemanager.subcommands.upload.describe`);
 
 type CombinedArgs = CommonArgs & ConfigArgs & AccountArgs & EnvironmentArgs;
 type FileManagerUploadArgs = CombinedArgs & {
@@ -49,7 +48,7 @@ export async function handler(
     stats = fs.statSync(absoluteSrcPath);
     if (!stats.isFile() && !stats.isDirectory()) {
       logger.error(
-        i18n(`${i18nKey}.errors.invalidPath`, {
+        i18n(`commands.filemanager.subcommands.upload.errors.invalidPath`, {
           path: src,
         })
       );
@@ -57,7 +56,7 @@ export async function handler(
     }
   } catch (e) {
     logger.error(
-      i18n(`${i18nKey}.errors.invalidPath`, {
+      i18n(`commands.filemanager.subcommands.upload.errors.invalidPath`, {
         path: src,
       })
     );
@@ -65,7 +64,7 @@ export async function handler(
   }
 
   if (!dest) {
-    logger.error(i18n(`${i18nKey}.errors.destinationRequired`));
+    logger.error(i18n(`commands.filemanager.subcommands.upload.errors.destinationRequired`));
     return;
   }
   const normalizedDest = convertToUnixPath(dest);
@@ -87,7 +86,7 @@ export async function handler(
   if (stats.isFile()) {
     if (shouldIgnoreFile(absoluteSrcPath)) {
       logger.error(
-        i18n(`${i18nKey}.errors.fileIgnored`, {
+        i18n(`commands.filemanager.subcommands.upload.errors.fileIgnored`, {
           path: src,
         })
       );
@@ -97,7 +96,7 @@ export async function handler(
     uploadFile(derivedAccountId, absoluteSrcPath, normalizedDest)
       .then(() => {
         logger.success(
-          i18n(`${i18nKey}.success.upload`, {
+          i18n(`commands.filemanager.subcommands.upload.success.upload`, {
             accountId: derivedAccountId,
             dest: normalizedDest,
             src,
@@ -106,7 +105,7 @@ export async function handler(
       })
       .catch(error => {
         logger.error(
-          i18n(`${i18nKey}.errors.upload`, {
+          i18n(`commands.filemanager.subcommands.upload.errors.upload`, {
             dest: normalizedDest,
             src,
           })
@@ -122,7 +121,7 @@ export async function handler(
       });
   } else {
     logger.log(
-      i18n(`${i18nKey}.logs.uploading`, {
+      i18n(`commands.filemanager.subcommands.upload.logs.uploading`, {
         accountId: derivedAccountId,
         dest,
         src,
@@ -131,13 +130,13 @@ export async function handler(
     uploadFolder(derivedAccountId, absoluteSrcPath, dest)
       .then(() => {
         logger.success(
-          i18n(`${i18nKey}.success.uploadComplete`, {
+          i18n(`commands.filemanager.subcommands.upload.success.uploadComplete`, {
             dest,
           })
         );
       })
       .catch(error => {
-        logger.error(i18n(`${i18nKey}.errors.uploadingFailed`));
+        logger.error(i18n(`commands.filemanager.subcommands.upload.errors.uploadingFailed`));
         logError(error, {
           accountId: derivedAccountId,
         });
@@ -152,11 +151,11 @@ export function builder(yargs: Argv): Argv<FileManagerUploadArgs> {
   addUseEnvironmentOptions(yargs);
 
   yargs.positional('src', {
-    describe: i18n(`${i18nKey}.positionals.src.describe`),
+    describe: i18n(`commands.filemanager.subcommands.upload.positionals.src.describe`),
     type: 'string',
   });
   yargs.positional('dest', {
-    describe: i18n(`${i18nKey}.positionals.dest.describe`),
+    describe: i18n(`commands.filemanager.subcommands.upload.positionals.dest.describe`),
     type: 'string',
   });
 

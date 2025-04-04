@@ -12,18 +12,17 @@ const {
 const { trackCommandUsage } = require('../../lib/usageTracking');
 const { i18n } = require('../../lib/lang');
 
-const i18nKey = 'commands.function.subcommands.list';
 const { EXIT_CODES } = require('../../lib/enums/exitCodes');
 
 exports.command = ['list', 'ls'];
-exports.describe = i18n(`${i18nKey}.describe`);
+exports.describe = i18n('commands.function.subcommands.list.describe');
 
 exports.handler = async options => {
   const { derivedAccountId } = options;
 
   trackCommandUsage('functions-list', null, derivedAccountId);
 
-  logger.debug(i18n(`${i18nKey}.debug.gettingFunctions`));
+  logger.debug(i18n('commands.function.subcommands.list.debug.gettingFunctions'));
 
   const { data: routesResp } = await getRoutes(derivedAccountId).catch(
     async e => {
@@ -33,7 +32,7 @@ exports.handler = async options => {
   );
 
   if (!routesResp.objects.length) {
-    return logger.info(i18n(`${i18nKey}.info.noFunctions`));
+    return logger.info(i18n('commands.function.subcommands.list.info.noFunctions'));
   }
 
   if (options.json) {
@@ -64,7 +63,7 @@ exports.builder = yargs => {
 
   yargs.options({
     json: {
-      describe: i18n(`${i18nKey}.options.json.describe`),
+      describe: i18n('commands.function.subcommands.list.options.json.describe'),
       type: 'boolean',
     },
   });

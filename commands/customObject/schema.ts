@@ -7,10 +7,9 @@ import * as listCommand from './schema/list';
 import * as updateSchema from './schema/update';
 import { i18n } from '../../lib/lang';
 
-const i18nKey = 'commands.customObject.subcommands.schema';
 
 export const command = ['schema', 'schemas'];
-export const describe = i18n(`${i18nKey}.describe`);
+export const describe = i18n(`commands.customObject.subcommands.schema.describe`);
 
 export function handler(): void {
   // No specific handler needed for the schema command
