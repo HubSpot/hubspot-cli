@@ -5,10 +5,8 @@ import * as previewCommand from './theme/preview';
 import { addGlobalOptions } from '../lib/commonOpts';
 import { i18n } from '../lib/lang';
 
-const i18nKey = 'commands.theme';
-
 export const command = ['theme', 'themes'];
-export const describe = i18n(`${i18nKey}.describe`);
+export const describe = i18n('commands.theme.describe');
 
 export function builder(yargs: Argv): Argv {
   addGlobalOptions(yargs);

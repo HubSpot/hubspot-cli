@@ -17,8 +17,6 @@ import {
   AccountArgs,
 } from '../types/Yargs';
 
-const i18nKey = 'commands.open';
-
 const separator = ' => ';
 
 async function createListPrompt(accountId: number): Promise<{ open: string }> {
@@ -27,7 +25,7 @@ async function createListPrompt(accountId: number): Promise<{ open: string }> {
       type: 'rawlist',
       name: 'open',
       pageSize: 20,
-      message: i18n(`${i18nKey}.selectLink`),
+      message: i18n('commands.open.selectLink'),
       choices: getSiteLinksAsArray(accountId).map(
         l => `${l.shortcut}${separator}${l.url}`
       ),
@@ -37,7 +35,7 @@ async function createListPrompt(accountId: number): Promise<{ open: string }> {
 }
 
 export const command = 'open [shortcut]';
-export const describe = i18n(`${i18nKey}.describe`);
+export const describe = i18n('commands.open.describe');
 
 type OpenArgs = CommonArgs &
   ConfigArgs &
@@ -72,13 +70,13 @@ export function builder(yargs: Argv) {
   addGlobalOptions(yargs);
 
   yargs.positional('[shortcut]', {
-    describe: i18n(`${i18nKey}.positionals.shortcut.describe`),
+    describe: i18n('commands.open.positionals.shortcut.describe'),
     type: 'string',
   });
 
   yargs.option('list', {
     alias: 'l',
-    describe: i18n(`${i18nKey}.options.list.describe`),
+    describe: i18n('commands.open.options.list.describe'),
     type: 'boolean',
   });
 

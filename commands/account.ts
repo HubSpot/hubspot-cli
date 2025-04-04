@@ -8,10 +8,8 @@ import * as info from './account/info';
 import * as remove from './account/remove';
 import * as clean from './account/clean';
 
-const i18nKey = 'commands.account';
-
 export const command = ['account', 'accounts'];
-export const describe = i18n(`${i18nKey}.describe`);
+export const describe = i18n(`commands.account.describe`);
 
 export function builder(yargs: Argv): Argv {
   addGlobalOptions(yargs);

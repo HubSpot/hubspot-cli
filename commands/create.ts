@@ -36,14 +36,12 @@ const { trackCommandUsage } = require('../lib/usageTracking');
 const assets = require('./create/index');
 const { i18n } = require('../lib/lang');
 
-const i18nKey = 'commands.create';
-
 const SUPPORTED_ASSET_TYPES = Object.keys(assets)
   .filter(t => !assets[t].hidden)
   .join(', ');
 
 exports.command = 'create <type> [name] [dest]';
-exports.describe = i18n(`${i18nKey}.describe`, {
+exports.describe = i18n(`commands.create.describe`, {
   supportedAssetTypes: SUPPORTED_ASSET_TYPES,
 });
 
@@ -56,7 +54,7 @@ exports.handler = async options => {
 
   if (assetType === 'global-partial') {
     logger.error(
-      i18n(`${i18nKey}.errors.deprecatedAssetType`, {
+      i18n(`commands.create.errors.deprecatedAssetType`, {
         assetType,
         newCommand: 'hs create template',
         type: 'global partial',
@@ -67,7 +65,7 @@ exports.handler = async options => {
 
   if (!assetType || !assets[assetType]) {
     logger.error(
-      i18n(`${i18nKey}.errors.unsupportedAssetType`, {
+      i18n(`commands.create.errors.unsupportedAssetType`, {
         assetType,
         supportedAssetTypes: SUPPORTED_ASSET_TYPES,
       })
@@ -86,7 +84,7 @@ exports.handler = async options => {
     await fs.ensureDir(dest);
   } catch (e) {
     logger.error(
-      i18n(`${i18nKey}.errors.unusablePath`, {
+      i18n(`commands.create.errors.unusablePath`, {
         path: dest,
       })
     );
@@ -104,15 +102,15 @@ exports.handler = async options => {
 
 exports.builder = yargs => {
   yargs.positional('type', {
-    describe: i18n(`${i18nKey}.positionals.type.describe`),
+    describe: i18n(`commands.create.positionals.type.describe`),
     type: 'string',
   });
   yargs.positional('name', {
-    describe: i18n(`${i18nKey}.positionals.name.describe`),
+    describe: i18n(`commands.create.positionals.name.describe`),
     type: 'string',
   });
   yargs.positional('dest', {
-    describe: i18n(`${i18nKey}.positionals.dest.describe`),
+    describe: i18n(`commands.create.positionals.dest.describe`),
     type: 'string',
   });
   yargs.option('internal', {

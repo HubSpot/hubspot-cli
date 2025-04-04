@@ -40,7 +40,6 @@ const { trackCommandUsage } = require('../lib/usageTracking');
 const { getUploadableFileList } = require('../lib/upload');
 
 const { i18n } = require('../lib/lang');
-const i18nKey = 'commands.upload';
 const { EXIT_CODES } = require('../lib/enums/exitCodes');
 const {
   FieldsJs,
@@ -49,14 +48,14 @@ const {
 } = require('@hubspot/local-dev-lib/cms/handleFieldsJS');
 
 exports.command = 'upload [src] [dest]';
-exports.describe = i18n(`${i18nKey}.describe`);
+exports.describe = i18n('commands.upload.describe');
 
 const logThemePreview = (filePath, accountId) => {
   const previewUrl = getThemePreviewUrl(filePath, accountId);
   // Only log if we are actually in a theme
   if (previewUrl) {
     logger.log(
-      i18n(`${i18nKey}.previewUrl`, {
+      i18n('commands.upload.previewUrl', {
         previewUrl,
       })
     );
@@ -77,7 +76,7 @@ exports.handler = async options => {
   let dest = options.dest || uploadPromptAnswers.dest;
   let absoluteSrcPath = path.resolve(getCwd(), src);
   if (!dest) {
-    logger.error(i18n(`${i18nKey}.errors.destinationRequired`));
+    logger.error(i18n('commands.upload.errors.destinationRequired'));
     return;
   }
   // Check for theme.json file and determine the root path for the project based on it if it exists
@@ -106,7 +105,7 @@ exports.handler = async options => {
     stats = fs.statSync(absoluteSrcPath);
     if (!stats.isFile() && !stats.isDirectory()) {
       logger.error(
-        i18n(`${i18nKey}.errors.invalidPath`, {
+        i18n('commands.upload.errors.invalidPath', {
           path: src,
         })
       );
@@ -114,7 +113,7 @@ exports.handler = async options => {
     }
   } catch (e) {
     logger.error(
-      i18n(`${i18nKey}.errors.invalidPath`, {
+      i18n('commands.upload.errors.invalidPath', {
         path: src,
       })
     );
@@ -139,7 +138,7 @@ exports.handler = async options => {
   if (stats.isFile()) {
     if (!isAllowedExtension(src) && !convertFields) {
       logger.error(
-        i18n(`${i18nKey}.errors.invalidPath`, {
+        i18n('commands.upload.errors.invalidPath', {
           path: src,
         })
       );
@@ -148,7 +147,7 @@ exports.handler = async options => {
 
     if (shouldIgnoreFile(absoluteSrcPath)) {
       logger.error(
-        i18n(`${i18nKey}.errors.fileIgnored`, {
+        i18n('commands.upload.errors.fileIgnored', {
           path: src,
         })
       );
@@ -162,7 +161,7 @@ exports.handler = async options => {
     )
       .then(() => {
         logger.success(
-          i18n(`${i18nKey}.success.fileUploaded`, {
+          i18n('commands.upload.success.fileUploaded', {
             accountId: derivedAccountId,
             dest: normalizedDest,
             src,
@@ -172,7 +171,7 @@ exports.handler = async options => {
       })
       .catch(error => {
         logger.error(
-          i18n(`${i18nKey}.errors.uploadFailed`, {
+          i18n('commands.upload.errors.uploadFailed', {
             dest: normalizedDest,
             src,
           })
@@ -196,7 +195,7 @@ exports.handler = async options => {
       });
   } else {
     logger.log(
-      i18n(`${i18nKey}.uploading`, {
+      i18n('commands.upload.uploading', {
         accountId: derivedAccountId,
         dest,
         src,
@@ -214,7 +213,7 @@ exports.handler = async options => {
       let cleanUpload = options.force;
       if (!options.force) {
         cleanUpload = await confirmPrompt(
-          i18n(`${i18nKey}.confirmCleanUpload`, {
+          i18n('commands.upload.confirmCleanUpload', {
             accountId: derivedAccountId,
             path: dest,
           }),
@@ -225,14 +224,14 @@ exports.handler = async options => {
         try {
           await deleteFile(derivedAccountId, dest);
           logger.log(
-            i18n(`${i18nKey}.cleaning`, {
+            i18n('commands.upload.cleaning', {
               accountId: derivedAccountId,
               filePath: dest,
             })
           );
         } catch (error) {
           logger.error(
-            i18n(`${i18nKey}.errors.deleteFailed`, {
+            i18n('commands.upload.errors.deleteFailed', {
               accountId: derivedAccountId,
               path: dest,
             })
@@ -253,14 +252,14 @@ exports.handler = async options => {
       .then(results => {
         if (!hasUploadErrors(results)) {
           logger.success(
-            i18n(`${i18nKey}.success.uploadComplete`, {
+            i18n('commands.upload.success.uploadComplete', {
               dest,
             })
           );
           logThemePreview(src, derivedAccountId);
         } else {
           logger.error(
-            i18n(`${i18nKey}.errors.someFilesFailed`, {
+            i18n('commands.upload.errors.someFilesFailed', {
               dest,
             })
           );
@@ -269,7 +268,7 @@ exports.handler = async options => {
       })
       .catch(error => {
         logger.error(
-          i18n(`${i18nKey}.errors.uploadFailed`, {
+          i18n('commands.upload.errors.uploadFailed', {
             dest,
             src,
           })
@@ -284,36 +283,36 @@ exports.handler = async options => {
 
 exports.builder = yargs => {
   yargs.positional('src', {
-    describe: i18n(`${i18nKey}.positionals.src.describe`),
+    describe: i18n('commands.upload.positionals.src.describe'),
     type: 'string',
   });
   yargs.positional('dest', {
-    describe: i18n(`${i18nKey}.positionals.dest.describe`),
+    describe: i18n('commands.upload.positionals.dest.describe'),
     type: 'string',
   });
   yargs.option('fieldOptions', {
-    describe: i18n(`${i18nKey}.options.options.describe`),
+    describe: i18n('commands.upload.options.options.describe'),
     type: 'array',
     default: [''],
     hidden: true,
   });
   yargs.option('saveOutput', {
-    describe: i18n(`${i18nKey}.options.saveOutput.describe`),
+    describe: i18n('commands.upload.options.saveOutput.describe'),
     type: 'boolean',
     default: false,
   });
   yargs.option('convertFields', {
-    describe: i18n(`${i18nKey}.options.convertFields.describe`),
+    describe: i18n('commands.upload.options.convertFields.describe'),
     type: 'boolean',
     default: false,
   });
   yargs.option('clean', {
-    describe: i18n(`${i18nKey}.options.clean.describe`),
+    describe: i18n('commands.upload.options.clean.describe'),
     type: 'boolean',
     default: false,
   });
   yargs.option('force', {
-    describe: i18n(`${i18nKey}.options.force.describe`),
+    describe: i18n('commands.upload.options.force.describe'),
     type: 'boolean',
     default: false,
   });

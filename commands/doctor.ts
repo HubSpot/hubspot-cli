@@ -16,10 +16,8 @@ export interface DoctorOptions {
   'output-dir'?: string;
 }
 
-const i18nKey = 'commands.doctor';
-
 export const command = 'doctor';
-export const describe = i18n(`${i18nKey}.describe`);
+export const describe = i18n(`commands.doctor.describe`);
 
 export const handler = async ({
   outputDir,
@@ -43,7 +41,7 @@ export const handler = async ({
     if (output?.diagnosis) {
       logger.log(output.diagnosis);
     } else {
-      logger.error(i18n(`${i18nKey}.errors.generatingDiagnosis`));
+      logger.error(i18n(`commands.doctor.errors.generatingDiagnosis`));
       return process.exit(EXIT_CODES.ERROR);
     }
     return process.exit(EXIT_CODES.SUCCESS);
@@ -60,10 +58,12 @@ export const handler = async ({
 
   try {
     fs.writeFileSync(outputFile, JSON.stringify(output, null, 4));
-    logger.success(i18n(`${i18nKey}.outputWritten`, { filename: outputFile }));
+    logger.success(
+      i18n(`commands.doctor.outputWritten`, { filename: outputFile })
+    );
   } catch (e) {
     logger.error(
-      i18n(`${i18nKey}.errors.unableToWriteOutputFile`, {
+      i18n(`commands.doctor.errors.unableToWriteOutputFile`, {
         file: outputFile,
         errorMessage: e instanceof Error ? e.message : e,
       })
@@ -76,7 +76,7 @@ export const handler = async ({
 
 export const builder: BuilderCallback<DoctorOptions, DoctorOptions> = yargs => {
   yargs.option<keyof DoctorOptions, Options>('output-dir', {
-    describe: i18n(`${i18nKey}.options.outputDir`),
+    describe: i18n(`commands.doctor.options.outputDir`),
     type: 'string',
   });
   addGlobalOptions(yargs);

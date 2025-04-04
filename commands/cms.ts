@@ -9,10 +9,8 @@ const lighthouseScore = require('./cms/lighthouseScore');
 const convertFields = require('./cms/convertFields');
 const getReactModule = require('./cms/getReactModule');
 
-const i18nKey = 'commands.cms';
-
 exports.command = 'cms';
-exports.describe = i18n(`${i18nKey}.describe`);
+exports.describe = i18n(`commands.cms.describe`);
 
 exports.builder = yargs => {
   addConfigOptions(yargs);

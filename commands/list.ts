@@ -22,8 +22,6 @@ import {
 } from '../types/Yargs';
 import { FileMapperNode } from '@hubspot/local-dev-lib/types/Files';
 
-const i18nKey = 'commands.list';
-
 function addColorToContents(fileOrFolder: string | FileMapperNode): string {
   if (!isPathFolder(fileOrFolder as string)) {
     return chalk.reset.cyan(fileOrFolder);
@@ -53,7 +51,7 @@ function sortContents(a: string, b: string): number {
 }
 
 export const command = 'list [path]';
-export const describe = i18n(`${i18nKey}.describe`);
+export const describe = i18n(`commands.list.describe`);
 
 type ListArgs = CommonArgs &
   ConfigArgs &
@@ -70,7 +68,7 @@ export async function handler(
   trackCommandUsage('list', undefined, derivedAccountId);
 
   logger.debug(
-    i18n(`${i18nKey}.gettingPathContents`, {
+    i18n(`commands.list.gettingPathContents`, {
       path: directoryPath,
     })
   );
@@ -88,7 +86,7 @@ export async function handler(
 
   if (!contentsResp.folder) {
     logger.info(
-      i18n(`${i18nKey}.noFilesFoundAtPath`, {
+      i18n(`commands.list.noFilesFoundAtPath`, {
         path: directoryPath,
       })
     );
@@ -102,7 +100,7 @@ export async function handler(
 
   if (contents.length === 0) {
     logger.info(
-      i18n(`${i18nKey}.noFilesFoundAtPath`, {
+      i18n(`commands.list.noFilesFoundAtPath`, {
         path: directoryPath,
       })
     );
@@ -125,7 +123,7 @@ export function builder(yargs: Argv): Argv<ListArgs> {
   addGlobalOptions(yargs);
 
   yargs.positional('path', {
-    describe: i18n(`${i18nKey}.positionals.path.describe`),
+    describe: i18n(`commands.list.positionals.path.describe`),
     type: 'string',
   });
   yargs.example([['$0 list'], ['$0 list /'], ['$0 list my-modules']]);

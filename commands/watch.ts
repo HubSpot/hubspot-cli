@@ -20,12 +20,11 @@ const { trackCommandUsage } = require('../lib/usageTracking');
 const { i18n } = require('../lib/lang');
 const { getUploadableFileList } = require('../lib/upload');
 const { logError, ApiErrorContext } = require('../lib/errorHandlers/index');
-const i18nKey = 'commands.watch';
 
 const { EXIT_CODES } = require('../lib/enums/exitCodes');
 
 exports.command = 'watch [src] [dest]';
-exports.describe = i18n(`${i18nKey}.describe`);
+exports.describe = i18n(`commands.watch.describe`);
 
 exports.handler = async options => {
   const { remove, initialUpload, disableInitial, notify, derivedAccountId } =
@@ -47,7 +46,7 @@ exports.handler = async options => {
     const stats = fs.statSync(absoluteSrcPath);
     if (!stats.isDirectory()) {
       logger.log(
-        i18n(`${i18nKey}.errors.invalidPath`, {
+        i18n(`commands.watch.errors.invalidPath`, {
           path: src,
         })
       );
@@ -55,7 +54,7 @@ exports.handler = async options => {
     }
   } catch (e) {
     logger.log(
-      i18n(`${i18nKey}.errors.invalidPath`, {
+      i18n(`commands.watch.errors.invalidPath`, {
         path: src,
       })
     );
@@ -63,17 +62,17 @@ exports.handler = async options => {
   }
 
   if (!dest) {
-    logger.log(i18n(`${i18nKey}.errors.destinationRequired`));
+    logger.log(i18n(`commands.watch.errors.destinationRequired`));
     return;
   }
 
   let filesToUpload = [];
 
   if (disableInitial) {
-    logger.info(i18n(`${i18nKey}.warnings.disableInitial`));
+    logger.info(i18n(`commands.watch.warnings.disableInitial`));
   } else if (!initialUpload) {
-    logger.info(i18n(`${i18nKey}.warnings.notUploaded`, { path: src }));
-    logger.info(i18n(`${i18nKey}.warnings.initialUpload`));
+    logger.info(i18n(`commands.watch.warnings.notUploaded`, { path: src }));
+    logger.info(i18n(`commands.watch.warnings.initialUpload`));
   }
 
   if (initialUpload) {
@@ -88,7 +87,7 @@ exports.handler = async options => {
   const postInitialUploadCallback = null;
   const onUploadFolderError = error => {
     logger.error(
-      i18n(`${i18nKey}.errors.folderFailed`, {
+      i18n(`commands.watch.errors.folderFailed`, {
         src,
         dest,
         accountId: derivedAccountId,
@@ -101,7 +100,7 @@ exports.handler = async options => {
   const onQueueAddError = null;
   const onUploadFileError = (file, dest, derivedAccountId) => error => {
     logger.error(
-      i18n(`${i18nKey}.errors.fileFailed`, {
+      i18n(`commands.watch.errors.fileFailed`, {
         file,
         dest,
         accountId: derivedAccountId,
@@ -137,47 +136,47 @@ exports.handler = async options => {
 
 exports.builder = yargs => {
   yargs.positional('src', {
-    describe: i18n(`${i18nKey}.positionals.src.describe`),
+    describe: i18n(`commands.watch.positionals.src.describe`),
     type: 'string',
   });
   yargs.positional('dest', {
-    describe: i18n(`${i18nKey}.positionals.dest.describe`),
+    describe: i18n(`commands.watch.positionals.dest.describe`),
     type: 'string',
   });
   yargs.option('fieldOptions', {
-    describe: i18n(`${i18nKey}.options.options.describe`),
+    describe: i18n(`commands.watch.options.options.describe`),
     type: 'array',
     default: [''],
     hidden: true,
   });
   yargs.option('remove', {
     alias: 'r',
-    describe: i18n(`${i18nKey}.options.remove.describe`),
+    describe: i18n(`commands.watch.options.remove.describe`),
     type: 'boolean',
   });
   yargs.option('initial-upload', {
     alias: 'i',
-    describe: i18n(`${i18nKey}.options.initialUpload.describe`),
+    describe: i18n(`commands.watch.options.initialUpload.describe`),
     type: 'boolean',
   });
   yargs.option('disable-initial', {
-    describe: i18n(`${i18nKey}.options.disableInitial.describe`),
+    describe: i18n(`commands.watch.options.disableInitial.describe`),
     type: 'boolean',
     hidden: true,
   });
   yargs.option('notify', {
     alias: 'n',
-    describe: i18n(`${i18nKey}.options.notify.describe`),
+    describe: i18n(`commands.watch.options.notify.describe`),
     type: 'string',
     requiresArg: true,
   });
   yargs.option('convertFields', {
-    describe: i18n(`${i18nKey}.options.convertFields.describe`),
+    describe: i18n(`commands.watch.options.convertFields.describe`),
     type: 'boolean',
     default: false,
   });
   yargs.option('saveOutput', {
-    describe: i18n(`${i18nKey}.options.saveOutput.describe`),
+    describe: i18n(`commands.watch.options.saveOutput.describe`),
     type: 'boolean',
     default: false,
   });

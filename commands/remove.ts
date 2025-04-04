@@ -17,10 +17,8 @@ import {
   EnvironmentArgs,
 } from '../types/Yargs';
 
-const i18nKey = 'commands.remove';
-
 export const command = 'remove <path>';
-export const describe = i18n(`${i18nKey}.describe`);
+export const describe = i18n(`commands.remove.describe`);
 
 type RemoveArgs = CommonArgs &
   ConfigArgs &
@@ -37,11 +35,14 @@ export async function handler(
   try {
     await deleteFile(derivedAccountId, hsPath);
     logger.log(
-      i18n(`${i18nKey}.deleted`, { accountId: derivedAccountId, path: hsPath })
+      i18n(`commands.remove.deleted`, {
+        accountId: derivedAccountId,
+        path: hsPath,
+      })
     );
   } catch (error) {
     logger.error(
-      i18n(`${i18nKey}.errors.deleteFailed`, {
+      i18n(`commands.remove.errors.deleteFailed`, {
         accountId: derivedAccountId,
         path: hsPath,
       })
@@ -63,7 +64,7 @@ export function builder(yargs: Argv): Argv<RemoveArgs> {
   addGlobalOptions(yargs);
 
   yargs.positional('path', {
-    describe: i18n(`${i18nKey}.positionals.path.describe`),
+    describe: i18n(`commands.remove.positionals.path.describe`),
     type: 'string',
   });
 

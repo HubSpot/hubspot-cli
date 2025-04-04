@@ -16,7 +16,6 @@ const { resolveLocalPath } = require('../lib/filesystem');
 const { trackCommandUsage } = require('../lib/usageTracking');
 const { i18n } = require('../lib/lang');
 
-const i18nKey = 'commands.lint';
 const { EXIT_CODES } = require('../lib/enums/exitCodes');
 
 export const command = 'lint <path>';
@@ -65,7 +64,7 @@ export const handler = async options => {
 
   const { derivedAccountId } = options;
   const localPath = resolveLocalPath(lintPath);
-  const groupName = i18n(`${i18nKey}.groupName`, {
+  const groupName = i18n(`commands.lint.groupName`, {
     path: localPath,
   });
 
@@ -84,7 +83,7 @@ export const handler = async options => {
   }
   logger.groupEnd(groupName);
   logger.log(
-    i18n(`${i18nKey}.issuesFound`, {
+    i18n(`commands.lint.issuesFound`, {
       count,
     })
   );
@@ -95,7 +94,7 @@ export const builder = yargs => {
   addAccountOptions(yargs);
   addGlobalOptions(yargs);
   yargs.positional('path', {
-    describe: i18n(`${i18nKey}.positionals.path.describe`),
+    describe: i18n(`commands.lint.positionals.path.describe`),
     type: 'string',
   });
   return yargs;
