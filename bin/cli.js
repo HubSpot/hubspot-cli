@@ -26,6 +26,7 @@ const { i18n } = require('../lib/lang');
 const { EXIT_CODES } = require('../lib/enums/exitCodes');
 const { UI_COLORS, uiCommandReference, uiDeprecatedTag } = require('../lib/ui');
 const { checkAndWarnGitInclusion } = require('../lib/ui/git');
+const { logFireAlarms } = require('../lib/fireAlarm');
 
 const removeCommand = require('../commands/remove');
 const initCommand = require('../commands/init');
@@ -292,6 +293,11 @@ const validateAccountOptions = async options => {
   }
 };
 
+const checkForFireAlarm = async options => {
+  const { derivedAccountId } = options;
+  await logFireAlarms(derivedAccountId, options._.join(' '), pkg.version);
+};
+
 const argv = yargs
   .usage('The command line interface to interact with HubSpot.')
   // loadConfigMiddleware loads the new hidden config for all commands
@@ -303,6 +309,7 @@ const argv = yargs
     injectAccountIdMiddleware,
     checkAndWarnGitInclusionMiddleware,
     validateAccountOptions,
+    checkForFireAlarm,
   ])
   .exitProcess(false)
   .fail(handleFailure)
