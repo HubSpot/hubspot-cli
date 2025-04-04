@@ -22,10 +22,9 @@ import {
   TestingArgs,
 } from '../../types/Yargs';
 
-const i18nKey = 'commands.project.subcommands.open';
 
 export const command = 'open';
-export const describe = uiBetaTag(i18n(`${i18nKey}.describe`), false);
+export const describe = uiBetaTag(i18n(`commands.project.subcommands.open.describe`), false);
 
 type ProjectOpenArgs = CommonArgs &
   ConfigArgs &
@@ -63,7 +62,7 @@ export async function handler(args: ArgumentsCamelCase<ProjectOpenArgs>) {
 
   const url = getProjectDetailUrl(projectName!, derivedAccountId)!;
   open(url, { url: true });
-  logger.success(i18n(`${i18nKey}.success`, { projectName: projectName! }));
+  logger.success(i18n(`commands.project.subcommands.open.success`, { projectName: projectName! }));
   process.exit(EXIT_CODES.SUCCESS);
 }
 
@@ -75,12 +74,12 @@ export function builder(yargs: Argv): Argv<ProjectOpenArgs> {
 
   yargs.options({
     project: {
-      describe: i18n(`${i18nKey}.options.project.describe`),
+      describe: i18n(`commands.project.subcommands.open.options.project.describe`),
       type: 'string',
     },
   });
 
-  yargs.example([['$0 project open', i18n(`${i18nKey}.examples.default`)]]);
+  yargs.example([['$0 project open', i18n(`commands.project.subcommands.open.examples.default`)]]);
 
   return yargs as Argv<ProjectOpenArgs>;
 }

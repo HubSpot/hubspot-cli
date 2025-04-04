@@ -16,7 +16,6 @@ const { i18n } = require('../../lib/lang');
 const { EXIT_CODES } = require('../../lib/enums/exitCodes');
 const { ProjectLogsManager } = require('../../lib/projects/ProjectLogsManager');
 
-const i18nKey = 'commands.project.subcommands.logs';
 
 const getPrivateAppsUrl = accountId => {
   const baseUrl = getHubSpotWebsiteOrigin(
@@ -27,7 +26,7 @@ const getPrivateAppsUrl = accountId => {
 };
 
 function logTable(tableHeader, logsInfo) {
-  logger.log(i18n(`${i18nKey}.logs.showingLogs`));
+  logger.log(i18n(`commands.project.subcommands.logs.logs.showingLogs`));
   logger.log(
     getTableContents([tableHeader, logsInfo], { border: { bodyLeft: '  ' } })
   );
@@ -37,9 +36,9 @@ function logPreamble() {
   if (ProjectLogsManager.isPublicFunction) {
     logTable(
       getTableHeader([
-        i18n(`${i18nKey}.table.accountHeader`),
-        i18n(`${i18nKey}.table.functionHeader`),
-        i18n(`${i18nKey}.table.endpointHeader`),
+        i18n(`commands.project.subcommands.logs.table.accountHeader`),
+        i18n(`commands.project.subcommands.logs.table.functionHeader`),
+        i18n(`commands.project.subcommands.logs.table.endpointHeader`),
       ]),
       [
         ProjectLogsManager.accountId,
@@ -49,7 +48,7 @@ function logPreamble() {
     );
     logger.log(
       uiLink(
-        i18n(`${i18nKey}.logs.hubspotLogsDirectLink`),
+        i18n(`commands.project.subcommands.logs.logs.hubspotLogsDirectLink`),
         `${getPrivateAppsUrl(ProjectLogsManager.accountId)}/${
           ProjectLogsManager.appId
         }/logs/serverlessGatewayExecution?path=${
@@ -60,14 +59,14 @@ function logPreamble() {
   } else {
     logTable(
       getTableHeader([
-        i18n(`${i18nKey}.table.accountHeader`),
-        i18n(`${i18nKey}.table.functionHeader`),
+        i18n(`commands.project.subcommands.logs.table.accountHeader`),
+        i18n(`commands.project.subcommands.logs.table.functionHeader`),
       ]),
       [ProjectLogsManager.accountId, ProjectLogsManager.functionName]
     );
     logger.log(
       uiLink(
-        i18n(`${i18nKey}.logs.hubspotLogsDirectLink`),
+        i18n(`commands.project.subcommands.logs.logs.hubspotLogsDirectLink`),
         `${getPrivateAppsUrl(ProjectLogsManager.accountId)}/${
           ProjectLogsManager.appId
         }/logs/crm?serverlessFunction=${ProjectLogsManager.functionName}`
@@ -79,7 +78,7 @@ function logPreamble() {
 }
 
 exports.command = 'logs';
-exports.describe = uiBetaTag(i18n(`${i18nKey}.describe`), false);
+exports.describe = uiBetaTag(i18n(`commands.project.subcommands.logs.describe`), false);
 
 exports.handler = async options => {
   const { derivedAccountId } = options;
@@ -111,35 +110,35 @@ exports.builder = yargs => {
     .options({
       function: {
         alias: 'function',
-        describe: i18n(`${i18nKey}.options.function.describe`),
+        describe: i18n(`commands.project.subcommands.logs.options.function.describe`),
         requiresArg: true,
         type: 'string',
       },
       latest: {
         alias: 'l',
-        describe: i18n(`${i18nKey}.options.latest.describe`),
+        describe: i18n(`commands.project.subcommands.logs.options.latest.describe`),
         type: 'boolean',
       },
       compact: {
-        describe: i18n(`${i18nKey}.options.compact.describe`),
+        describe: i18n(`commands.project.subcommands.logs.options.compact.describe`),
         type: 'boolean',
       },
       tail: {
         alias: ['t', 'follow'],
-        describe: i18n(`${i18nKey}.options.tail.describe`),
+        describe: i18n(`commands.project.subcommands.logs.options.tail.describe`),
         type: 'boolean',
       },
       limit: {
-        describe: i18n(`${i18nKey}.options.limit.describe`),
+        describe: i18n(`commands.project.subcommands.logs.options.limit.describe`),
         type: 'number',
       },
     })
     .conflicts('tail', 'limit')
     .example([
-      ['$0 project logs', i18n(`${i18nKey}.examples.default`)],
+      ['$0 project logs', i18n(`commands.project.subcommands.logs.examples.default`)],
       [
         '$0 project logs --function=my-function',
-        i18n(`${i18nKey}.examples.withOptions`),
+        i18n(`commands.project.subcommands.logs.examples.withOptions`),
       ],
     ]);
 
