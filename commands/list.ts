@@ -32,10 +32,7 @@ function addColorToContents(fileOrFolder: string | FileMapperNode): string {
   return chalk.reset.blue(fileOrFolder);
 }
 
-function sortContents(
-  a: string | FileMapperNode,
-  b: string | FileMapperNode
-): number {
+function sortContents(a: string, b: string): number {
   // Pin @hubspot folder to top
   if (a === HUBSPOT_FOLDER) {
     return -1;
@@ -50,11 +47,11 @@ function sortContents(
     return 1;
   }
 
-  return String(a).localeCompare(String(b));
+  return a.localeCompare(b);
 }
 
 export const command = 'list [path]';
-export const describe = i18n('commands.list.describe');
+export const describe = i18n(`commands.list.describe`);
 
 type ListArgs = CommonArgs &
   ConfigArgs &
@@ -71,7 +68,7 @@ export async function handler(
   trackCommandUsage('list', undefined, derivedAccountId);
 
   logger.debug(
-    i18n('commands.list.gettingPathContents', {
+    i18n(`commands.list.gettingPathContents`, {
       path: directoryPath,
     })
   );
@@ -89,7 +86,7 @@ export async function handler(
 
   if (!contentsResp.folder) {
     logger.info(
-      i18n('commands.list.noFilesFoundAtPath', {
+      i18n(`commands.list.noFilesFoundAtPath`, {
         path: directoryPath,
       })
     );
@@ -103,16 +100,20 @@ export async function handler(
 
   if (contents.length === 0) {
     logger.info(
-      i18n('commands.list.noFilesFoundAtPath', {
+      i18n(`commands.list.noFilesFoundAtPath`, {
         path: directoryPath,
       })
     );
     return;
   }
 
-  const sortedContents = contents.sort(sortContents);
-  const coloredContents = sortedContents.map(addColorToContents);
-  logger.log(coloredContents.join('\n'));
+  const folderContentsOutput = contents
+    .map(addColorToContents)
+    .sort(sortContents)
+    .join('\n');
+
+  logger.log(folderContentsOutput);
+  process.exit(EXIT_CODES.SUCCESS);
 }
 
 export function builder(yargs: Argv): Argv<ListArgs> {
@@ -122,9 +123,10 @@ export function builder(yargs: Argv): Argv<ListArgs> {
   addGlobalOptions(yargs);
 
   yargs.positional('path', {
-    describe: i18n('commands.list.positionals.path.describe'),
+    describe: i18n(`commands.list.positionals.path.describe`),
     type: 'string',
   });
+  yargs.example([['$0 list'], ['$0 list /'], ['$0 list my-modules']]);
 
   return yargs as Argv<ListArgs>;
 }
