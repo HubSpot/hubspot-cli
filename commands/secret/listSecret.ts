@@ -18,10 +18,9 @@ import {
   EnvironmentArgs,
 } from '../../types/Yargs';
 
-const i18nKey = 'commands.secret.subcommands.list';
 
 export const command = 'list';
-export const describe = i18n(`${i18nKey}.describe`);
+export const describe = i18n(`commands.secret.subcommands.list.describe`);
 
 type CombinedArgs = ConfigArgs & AccountArgs & EnvironmentArgs;
 type ListSecretArgs = CommonArgs & CombinedArgs;
@@ -36,14 +35,14 @@ export async function handler(
     const {
       data: { results },
     } = await fetchSecrets(derivedAccountId);
-    const groupLabel = i18n(`${i18nKey}.groupLabel`, {
+    const groupLabel = i18n(`commands.secret.subcommands.list.groupLabel`, {
       accountIdentifier: uiAccountDescription(derivedAccountId),
     });
     logger.group(groupLabel);
     results.forEach(secret => logger.log(secret));
     logger.groupEnd();
   } catch (err) {
-    logger.error(i18n(`${i18nKey}.errors.list`));
+    logger.error(i18n(`commands.secret.subcommands.list.errors.list`));
     logError(
       err,
       new ApiErrorContext({

@@ -21,10 +21,9 @@ import {
   EnvironmentArgs,
 } from '../../types/Yargs';
 
-const i18nKey = 'commands.secret.subcommands.delete';
 
 export const command = 'delete [name]';
-export const describe = i18n(`${i18nKey}.describe`);
+export const describe = i18n(`commands.secret.subcommands.delete.describe`);
 
 type CombinedArgs = ConfigArgs & AccountArgs & EnvironmentArgs;
 type DeleteSecretArgs = CommonArgs &
@@ -44,32 +43,32 @@ export async function handler(
     } = await fetchSecrets(derivedAccountId);
 
     if (secretName && !secrets.includes(secretName)) {
-      logger.error(i18n(`${i18nKey}.errors.noSecret`, { secretName }));
+      logger.error(i18n(`commands.secret.subcommands.delete.errors.noSecret`, { secretName }));
       process.exit(EXIT_CODES.ERROR);
     }
 
     if (!secretName) {
       const { secretToModify } = await secretListPrompt(
         secrets,
-        i18n(`${i18nKey}.selectSecret`)
+        i18n(`commands.secret.subcommands.delete.selectSecret`)
       );
       secretName = secretToModify;
     }
 
     const confirmDelete =
       force ||
-      (await confirmPrompt(i18n(`${i18nKey}.confirmDelete`, { secretName }), {
+      (await confirmPrompt(i18n(`commands.secret.subcommands.delete.confirmDelete`, { secretName }), {
         defaultAnswer: false,
       }));
 
     if (!confirmDelete) {
-      logger.success(i18n(`${i18nKey}.deleteCanceled`));
+      logger.success(i18n(`commands.secret.subcommands.delete.deleteCanceled`));
       process.exit(EXIT_CODES.SUCCESS);
     }
 
     await deleteSecret(derivedAccountId, secretName);
     logger.success(
-      i18n(`${i18nKey}.success.delete`, {
+      i18n(`commands.secret.subcommands.delete.success.delete`, {
         accountIdentifier: uiAccountDescription(derivedAccountId),
         secretName,
       })
@@ -77,7 +76,7 @@ export async function handler(
   } catch (err) {
     if (secretName) {
       logger.error(
-        i18n(`${i18nKey}.errors.delete`, {
+        i18n(`commands.secret.subcommands.delete.errors.delete`, {
           secretName,
         })
       );
@@ -99,7 +98,7 @@ export function builder(yargs: Argv): Argv<DeleteSecretArgs> {
 
   yargs
     .positional('name', {
-      describe: i18n(`${i18nKey}.positionals.name.describe`),
+      describe: i18n(`commands.secret.subcommands.delete.positionals.name.describe`),
       type: 'string',
     })
     .options('force', {
