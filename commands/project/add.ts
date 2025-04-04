@@ -1,35 +1,40 @@
-// @ts-nocheck
-const path = require('path');
-const { logger } = require('@hubspot/local-dev-lib/logger');
-const {
+import path from 'path';
+import { Argv, ArgumentsCamelCase } from 'yargs';
+import { logger } from '@hubspot/local-dev-lib/logger';
+import {
   cloneGithubRepo,
   fetchReleaseData,
-} = require('@hubspot/local-dev-lib/github');
-const { debugError } = require('../../lib/errorHandlers');
-const { trackCommandUsage } = require('../../lib/usageTracking');
-const { i18n } = require('../../lib/lang');
-const { projectAddPrompt } = require('../../lib/prompts/projectAddPrompt');
-const { getProjectConfig } = require('../../lib/projects');
-const {
-  getProjectComponentListFromRepo,
-} = require('../../lib/projects/create');
-const { findProjectComponents } = require('../../lib/projects/structure');
-const { ComponentTypes } = require('../../types/Projects');
-const { uiBetaTag } = require('../../lib/ui');
-const {
-  HUBSPOT_PROJECT_COMPONENTS_GITHUB_PATH,
-} = require('../../lib/constants');
-const { EXIT_CODES } = require('../../lib/enums/exitCodes');
+} from '@hubspot/local-dev-lib/github';
+import { debugError } from '../../lib/errorHandlers';
+import { trackCommandUsage } from '../../lib/usageTracking';
+import { i18n } from '../../lib/lang';
+import { projectAddPrompt } from '../../lib/prompts/projectAddPrompt';
+import { getProjectConfig } from '../../lib/projects';
+import { getProjectComponentListFromRepo } from '../../lib/projects/create';
+import { findProjectComponents } from '../../lib/projects/structure';
+import { ComponentTypes } from '../../types/Projects';
+import { uiBetaTag } from '../../lib/ui';
+import { HUBSPOT_PROJECT_COMPONENTS_GITHUB_PATH } from '../../lib/constants';
+import { EXIT_CODES } from '../../lib/enums/exitCodes';
+import { CommonArgs } from '../../types/Yargs';
+import { makeYargsBuilder } from '../../lib/yargsUtils';
 
 const i18nKey = 'commands.project.subcommands.add';
 
-exports.command = 'add';
-exports.describe = uiBetaTag(i18n(`${i18nKey}.describe`), false);
+export const command = 'add';
+export const describe = uiBetaTag(i18n(`${i18nKey}.describe`), false);
 
-exports.handler = async options => {
-  const { derivedAccountId } = options;
+type ProjectAddArgs = CommonArgs & {
+  type: string;
+  name: string;
+};
 
-  trackCommandUsage('project-add', null, derivedAccountId);
+export async function handler(
+  args: ArgumentsCamelCase<ProjectAddArgs>
+): Promise<void> {
+  const { derivedAccountId } = args;
+
+  trackCommandUsage('project-add', undefined, derivedAccountId);
 
   const { projectConfig, projectDir } = await getProjectConfig();
 
@@ -88,7 +93,7 @@ exports.handler = async options => {
     process.exit(EXIT_CODES.ERROR);
   }
 
-  const projectAddPromptResponse = await projectAddPrompt(components, options);
+  const projectAddPromptResponse = await projectAddPrompt(components, args);
 
   try {
     const componentPath = path.join(
@@ -120,9 +125,9 @@ exports.handler = async options => {
     process.exit(EXIT_CODES.ERROR);
   }
   process.exit(EXIT_CODES.SUCCESS);
-};
+}
 
-exports.builder = yargs => {
+function projectAddBuilder(yargs: Argv): Argv<ProjectAddArgs> {
   yargs.options({
     type: {
       describe: i18n(`${i18nKey}.options.type.describe`),
@@ -142,5 +147,18 @@ exports.builder = yargs => {
     ],
   ]);
 
-  return yargs;
+  return yargs as Argv<ProjectAddArgs>;
+}
+
+export const builder = makeYargsBuilder<ProjectAddArgs>(
+  projectAddBuilder,
+  command,
+  describe!
+);
+
+module.exports = {
+  command,
+  describe,
+  builder,
+  handler,
 };
