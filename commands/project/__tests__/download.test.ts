@@ -29,13 +29,13 @@ describe('commands/project/download', () => {
       projectDownloadCommand.builder(yargsMock);
 
       expect(addAccountOptions).toHaveBeenCalledTimes(1);
-      expect(addAccountOptions).toHaveBeenCalledWith(yargs);
+      expect(addAccountOptions).toHaveBeenCalledWith(yargsMock);
 
       expect(addConfigOptions).toHaveBeenCalledTimes(1);
-      expect(addConfigOptions).toHaveBeenCalledWith(yargs);
+      expect(addConfigOptions).toHaveBeenCalledWith(yargsMock);
 
       expect(addUseEnvironmentOptions).toHaveBeenCalledTimes(1);
-      expect(addUseEnvironmentOptions).toHaveBeenCalledWith(yargs);
+      expect(addUseEnvironmentOptions).toHaveBeenCalledWith(yargsMock);
     });
 
     it('should define project, dest, and build options', () => {
