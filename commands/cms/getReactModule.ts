@@ -10,10 +10,9 @@ const { trackCommandUsage } = require('../../lib/usageTracking');
 const { listPrompt } = require('../../lib/prompts/promptUtils');
 const { EXIT_CODES } = require('../../lib/enums/exitCodes');
 
-const i18nKey = 'commands.cms.subcommands.getReactModule';
 
 exports.command = 'get-react-module [name] [dest]';
-exports.describe = i18n(`${i18nKey}.describe`);
+exports.describe = i18n(`commands.cms.subcommands.getReactModule.describe`);
 
 exports.handler = async options => {
   const { name, dest } = options;
@@ -31,7 +30,7 @@ exports.handler = async options => {
     }
 
     const moduleChoice = await listPrompt(
-      i18n(`${i18nKey}.selectModulePrompt`),
+      i18n(`commands.cms.subcommands.getReactModule.selectModulePrompt`),
       {
         choices: availableModules.map(module => module.name),
       }
@@ -45,7 +44,7 @@ exports.handler = async options => {
 
   if (fs.existsSync(destPath)) {
     logger.error(
-      i18n(`${i18nKey}.errors.pathExists`, {
+      i18n(`commands.cms.subcommands.getReactModule.errors.pathExists`, {
         path: destPath,
       })
     );
@@ -56,14 +55,14 @@ exports.handler = async options => {
     await retrieveDefaultModule(moduleToRetrieve, destPath);
 
     logger.success(
-      i18n(`${i18nKey}.success.moduleDownloaded`, {
+      i18n(`commands.cms.subcommands.getReactModule.success.moduleDownloaded`, {
         moduleName: moduleToRetrieve,
         path: destPath,
       })
     );
   } catch (e) {
     if (e.cause && e.cause.code === 'ERR_BAD_REQUEST') {
-      logger.error(i18n(`${i18nKey}.errors.invalidName`));
+      logger.error(i18n(`commands.cms.subcommands.getReactModule.errors.invalidName`));
     } else {
       logError(e);
     }
@@ -73,11 +72,11 @@ exports.handler = async options => {
 
 exports.builder = yargs => {
   yargs.positional('name', {
-    describe: i18n(`${i18nKey}.positionals.name.describe`),
+    describe: i18n(`commands.cms.subcommands.getReactModule.positionals.name.describe`),
     type: 'string',
   });
   yargs.positional('dest', {
-    describe: i18n(`${i18nKey}.positionals.dest.describe`),
+    describe: i18n(`commands.cms.subcommands.getReactModule.positionals.dest.describe`),
     type: 'string',
   });
   return yargs;
