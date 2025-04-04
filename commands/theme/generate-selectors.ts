@@ -25,10 +25,8 @@ const CSS_SELECTORS_REGEX = new RegExp(/([\s\w:.,\0-[\]]*){/, 'i');
 const CSS_EXPRESSION_REGEX = new RegExp(/(?!\s)([^}])*(?![.#\s,>])[^}]*}/, 'g');
 const THEME_PATH_REGEX = new RegExp(/=\s*.*(theme\.(\w|\.)*)/, 'i');
 
-const i18nKey = 'commands.theme.subcommands.generateSelectors';
-
 export const command = 'generate-selectors <path>';
-export const describe = i18n(`${i18nKey}.describe`);
+export const describe = i18n('commands.theme.subcommands.generateSelectors.describe');
 
 type ThemeSelectorArgs = CommonArgs & { path: string };
 
@@ -39,7 +37,7 @@ export async function handler(
 
   const fieldsJsonPath = findFieldsJsonPath(path);
   if (!fieldsJsonPath) {
-    logger.error(i18n(`${i18nKey}.errors.fieldsNotFound`));
+    logger.error(i18n('commands.theme.subcommands.generateSelectors.errors.fieldsNotFound'));
     process.exit(EXIT_CODES.ERROR);
   }
 
@@ -187,7 +185,7 @@ export async function handler(
   );
 
   if (!Object.keys(finalMap).length) {
-    logger.error(i18n(`${i18nKey}.errors.noSelectorsFound`));
+    logger.error(i18n('commands.theme.subcommands.generateSelectors.errors.noSelectorsFound'));
     process.exit(EXIT_CODES.ERROR);
   }
   Object.keys(finalMap).forEach(themeFieldKey => {
@@ -212,7 +210,7 @@ export async function handler(
   );
 
   logger.success(
-    i18n(`${i18nKey}.success`, {
+    i18n('commands.theme.subcommands.generateSelectors.success', {
       themePath: path,
       selectorsPath,
     })
@@ -221,7 +219,7 @@ export async function handler(
 
 export function builder(yargs: Argv): Argv<ThemeSelectorArgs> {
   yargs.positional('path', {
-    describe: i18n(`${i18nKey}.positionals.path.describe`),
+    describe: i18n('commands.theme.subcommands.generateSelectors.positionals.path.describe'),
     type: 'string',
     required: true,
   });
