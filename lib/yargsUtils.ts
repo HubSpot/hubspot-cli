@@ -30,7 +30,7 @@ export function makeYargsBuilder<T>(
     useConfigOptions?: boolean;
     useEnvironmentOptions?: boolean;
     useTestingOptions?: boolean;
-  }
+  } = {}
 ): (yargs: Argv) => Promise<Argv<T>> {
   return async function (yargs: Argv): Promise<Argv<T>> {
     if (options.useGlobalOptions) {
