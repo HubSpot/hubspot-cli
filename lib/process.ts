@@ -2,8 +2,6 @@ import readline from 'readline';
 import { logger, setLogLevel, LOG_LEVEL } from '@hubspot/local-dev-lib/logger';
 import { i18n } from './lang';
 
-const i18nKey = 'lib.process';
-
 interface KeyPress {
   ctrl?: boolean;
   shift?: boolean;
@@ -41,7 +39,7 @@ export function handleExit(
           setLogLevel(LOG_LEVEL.NONE);
         }
 
-        logger.debug(i18n(`${i18nKey}.exitDebug`, { signal }));
+        logger.debug(i18n(`lib.process.exitDebug`, { signal }));
         await callback({ isSIGHUP });
       }
     });

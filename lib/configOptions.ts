@@ -11,22 +11,26 @@ import { trackCommandUsage } from './usageTracking';
 import { promptUser } from './prompts/promptUtils';
 import { i18n } from '../lib/lang';
 
-const i18nKey = 'commands.config.subcommands.set.options';
-
 async function enableOrDisableUsageTracking(): Promise<boolean> {
   const { isEnabled } = await promptUser<{ isEnabled: boolean }>([
     {
       type: 'list',
       name: 'isEnabled',
       pageSize: 20,
-      message: i18n(`${i18nKey}.allowUsageTracking.promptMessage`),
+      message: i18n(
+        `commands.config.subcommands.set.options.allowUsageTracking.promptMessage`
+      ),
       choices: [
         {
-          name: i18n(`${i18nKey}.allowUsageTracking.labels.enabled`),
+          name: i18n(
+            `commands.config.subcommands.set.options.allowUsageTracking.labels.enabled`
+          ),
           value: true,
         },
         {
-          name: i18n(`${i18nKey}.allowUsageTracking.labels.disabled`),
+          name: i18n(
+            `commands.config.subcommands.set.options.allowUsageTracking.labels.disabled`
+          ),
           value: false,
         },
       ],
@@ -57,7 +61,7 @@ export async function setAllowUsageTracking({
   updateAllowUsageTracking(isEnabled);
 
   logger.success(
-    i18n(`${i18nKey}.allowUsageTracking.success`, {
+    i18n(`commands.config.subcommands.set.options.allowUsageTracking.success`, {
       isEnabled: isEnabled.toString(),
     })
   );
@@ -73,7 +77,9 @@ async function selectCmsPublishMode(): Promise<CmsPublishMode> {
       type: 'list',
       name: 'cmsPublishMode',
       pageSize: 20,
-      message: i18n(`${i18nKey}.defaultMode.promptMessage`),
+      message: i18n(
+        `commands.config.subcommands.set.options.defaultMode.promptMessage`
+      ),
       choices: ALL_CMS_PUBLISH_MODES,
       default: CMS_PUBLISH_MODE.publish,
     },
@@ -102,7 +108,7 @@ export async function setDefaultCmsPublishMode({
     newDefault = defaultCmsPublishMode;
   } else {
     logger.error(
-      i18n(`${i18nKey}.defaultMode.error`, {
+      i18n(`commands.config.subcommands.set.options.defaultMode.error`, {
         validModes: commaSeparatedValues(ALL_CMS_PUBLISH_MODES),
       })
     );
@@ -112,7 +118,7 @@ export async function setDefaultCmsPublishMode({
   updateDefaultCmsPublishMode(newDefault);
 
   logger.success(
-    i18n(`${i18nKey}.defaultMode.success`, {
+    i18n(`commands.config.subcommands.set.options.defaultMode.success`, {
       mode: newDefault,
     })
   );
@@ -122,7 +128,9 @@ async function enterTimeout(): Promise<string> {
   const { timeout } = await promptUser<{ timeout: string }>([
     {
       name: 'timeout',
-      message: i18n(`${i18nKey}.httpTimeout.promptMessage`),
+      message: i18n(
+        `commands.config.subcommands.set.options.httpTimeout.promptMessage`
+      ),
       type: 'input',
       default: 30000,
     },
@@ -151,6 +159,8 @@ export async function setHttpTimeout({
   updateHttpTimeout(newHttpTimeout);
 
   logger.success(
-    i18n(`${i18nKey}.httpTimeout.success`, { timeout: newHttpTimeout })
+    i18n(`commands.config.subcommands.set.options.httpTimeout.success`, {
+      timeout: newHttpTimeout,
+    })
   );
 }

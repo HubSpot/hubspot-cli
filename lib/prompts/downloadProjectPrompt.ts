@@ -7,7 +7,6 @@ import { EXIT_CODES } from '../enums/exitCodes';
 import { i18n } from '../lang';
 import { Project } from '@hubspot/local-dev-lib/types/Project';
 
-const i18nKey = 'lib.prompts.downloadProjectPrompt';
 
 type DownloadProjectPromptResponse = {
   project: string;
@@ -21,7 +20,7 @@ async function createProjectsList(
       const { data: projects } = await fetchProjects(accountId);
       return projects.results;
     }
-    logger.error(i18n(`${i18nKey}.errors.accountIdRequired`));
+    logger.error(i18n(`lib.prompts.downloadProjectPrompt.errors.accountIdRequired`));
     process.exit(EXIT_CODES.ERROR);
   } catch (e) {
     logError(e, accountId ? new ApiErrorContext({ accountId }) : undefined);
@@ -43,11 +42,11 @@ export async function downloadProjectPrompt(promptOptions: {
       message: () => {
         return promptOptions.project &&
           !projectsList.find(p => p.name === promptOptions.name)
-          ? i18n(`${i18nKey}.errors.projectNotFound`, {
+          ? i18n(`lib.prompts.downloadProjectPrompt.errors.projectNotFound`, {
               projectName: promptOptions.project,
               accountId: accountId || '',
             })
-          : i18n(`${i18nKey}.selectProject`);
+          : i18n(`lib.prompts.downloadProjectPrompt.selectProject`);
       },
       when:
         !promptOptions.project ||

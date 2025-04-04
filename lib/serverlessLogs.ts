@@ -60,8 +60,6 @@ async function verifyAccessKeyAndUserAccess(
     return;
   }
 
-  // TODO[JOE]: Update this i18n key
-  const i18nKey = 'lib.serverless';
   const { authType } = accountConfig;
   if (authType !== PERSONAL_ACCESS_KEY_AUTH_METHOD.value) {
     return;
@@ -73,7 +71,7 @@ async function verifyAccessKeyAndUserAccess(
     scopesData = resp.data;
   } catch (e) {
     logger.debug(
-      i18n(`${i18nKey}.verifyAccessKeyAndUserAccess.fetchScopeDataError`, {
+      i18n(`lib.serverless.verifyAccessKeyAndUserAccess.fetchScopeDataError`, {
         scopeGroup,
       })
     );
@@ -84,18 +82,18 @@ async function verifyAccessKeyAndUserAccess(
 
   if (!portalScopesInGroup.length) {
     logger.error(
-      i18n(`${i18nKey}.verifyAccessKeyAndUserAccess.portalMissingScope`)
+      i18n(`lib.serverless.verifyAccessKeyAndUserAccess.portalMissingScope`)
     );
     return;
   }
 
   if (!portalScopesInGroup.every(s => userScopesInGroup.includes(s))) {
     logger.error(
-      i18n(`${i18nKey}.verifyAccessKeyAndUserAccess.userMissingScope`)
+      i18n(`lib.serverless.verifyAccessKeyAndUserAccess.userMissingScope`)
     );
   } else {
     logger.error(
-      i18n(`${i18nKey}.verifyAccessKeyAndUserAccess.genericMissingScope`)
+      i18n(`lib.serverless.verifyAccessKeyAndUserAccess.genericMissingScope`)
     );
   }
 }

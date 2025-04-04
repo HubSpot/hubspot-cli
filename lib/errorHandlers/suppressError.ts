@@ -14,7 +14,6 @@ import {
 import { ApiErrorContext } from './index';
 import { HubSpotHttpError } from '@hubspot/local-dev-lib/models/HubSpotHttpError';
 
-const i18nKey = 'lib.errorHandlers.suppressErrors';
 
 function createPlatformVersionError(
   err: HubSpotHttpError,
@@ -42,17 +41,17 @@ function createPlatformVersionError(
   }
 
   uiLine();
-  logger.error(i18n(`${i18nKey}.platformVersionErrors.header`));
+  logger.error(i18n(`lib.errorHandlers.suppressErrors.platformVersionErrors.header`));
   logger.log(
-    i18n(`${i18nKey}.platformVersionErrors.${translationKey}`, {
+    i18n(`lib.errorHandlers.suppressErrors.platformVersionErrors.${translationKey}`, {
       platformVersion,
     })
   );
-  logger.log(i18n(`${i18nKey}.platformVersionErrors.updateProject`));
+  logger.log(i18n(`lib.errorHandlers.suppressErrors.platformVersionErrors.updateProject`));
   logger.log(
-    i18n(`${i18nKey}.platformVersionErrors.betaLink`, {
+    i18n(`lib.errorHandlers.suppressErrors.platformVersionErrors.betaLink`, {
       docsLink: uiLink(
-        i18n(`${i18nKey}.platformVersionErrors.docsLink`),
+        i18n(`lib.errorHandlers.suppressErrors.platformVersionErrors.docsLink`),
         'https://developers.hubspot.com/docs/platform/platform-versioning'
       ),
     })
@@ -66,7 +65,7 @@ export function shouldSuppressError(
 ): boolean {
   if (isMissingScopeError(err)) {
     logger.error(
-      i18n(`${i18nKey}.missingScopeError`, {
+      i18n(`lib.errorHandlers.suppressErrors.missingScopeError`, {
         accountName: context?.accountId
           ? uiAccountDescription(context.accountId)
           : '',

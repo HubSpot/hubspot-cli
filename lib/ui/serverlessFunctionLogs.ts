@@ -7,7 +7,6 @@ import {
   GetFunctionLogsResponse,
 } from '@hubspot/local-dev-lib/types/Functions';
 
-const i18nKey = 'lib.ui.serverlessFunctionLogs';
 
 const SEPARATOR = ' - ';
 const LOG_STATUS_COLORS: { [key: string]: (status: string) => string } = {
@@ -89,7 +88,7 @@ function processLog(log: FunctionLog, options: Options): string | void {
     return logHandler[log.status](log, options);
   } catch (e) {
     logger.error(
-      i18n(`${i18nKey}.unableToProcessLog`, {
+      i18n(`lib.ui.serverlessFunctionLogs.unableToProcessLog`, {
         log: JSON.stringify(log),
       })
     );
@@ -114,7 +113,7 @@ function processLogs(
   const isLogsResp = isLogsResponse(logsResp);
 
   if (!logsResp || (isLogsResp && logsResp.results!.length === 0)) {
-    return i18n(`${i18nKey}.noLogsFound`);
+    return i18n(`lib.ui.serverlessFunctionLogs.noLogsFound`);
   } else if (isLogsResp) {
     return logsResp
       .results!.map(log => {

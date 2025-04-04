@@ -14,7 +14,6 @@ import {
 } from '../../types/Projects';
 import { debugError } from '../errorHandlers/index';
 
-const i18nKey = 'lib.projects.create';
 
 export const EMPTY_PROJECT_TEMPLATE_NAME = 'no-template';
 const PROJECT_TEMPLATE_PROPERTIES = ['name', 'label', 'path', 'insertPath'];
@@ -56,12 +55,12 @@ export async function getProjectTemplateListFromRepo(
     config = data;
   } catch (e) {
     debugError(e);
-    logger.error(i18n(`${i18nKey}.errors.missingConfigFileTemplateSource`));
+    logger.error(i18n(`lib.projects.create.errors.missingConfigFileTemplateSource`));
     return process.exit(EXIT_CODES.ERROR);
   }
 
   if (!config || !config[PROJECT_COMPONENT_TYPES.PROJECTS]) {
-    logger.error(i18n(`${i18nKey}.errors.noProjectsInConfig`));
+    logger.error(i18n(`lib.projects.create.errors.noProjectsInConfig`));
     return process.exit(EXIT_CODES.ERROR);
   }
 
@@ -74,7 +73,7 @@ export async function getProjectTemplateListFromRepo(
   );
 
   if (!templatesContainAllProperties) {
-    logger.error(i18n(`${i18nKey}.errors.missingPropertiesInConfig`));
+    logger.error(i18n(`lib.projects.create.errors.missingPropertiesInConfig`));
     return process.exit(EXIT_CODES.ERROR);
   }
 

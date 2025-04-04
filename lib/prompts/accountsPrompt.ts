@@ -20,7 +20,6 @@ function mapAccountChoices(
   );
 }
 
-const i18nKey = 'commands.account.subcommands.use';
 
 export async function selectAccountFromConfig(prompt = ''): Promise<string> {
   const accountsList = getConfigAccounts();
@@ -31,7 +30,7 @@ export async function selectAccountFromConfig(prompt = ''): Promise<string> {
       type: 'list',
       name: 'default',
       pageSize: 20,
-      message: prompt || i18n(`${i18nKey}.promptMessage`),
+      message: prompt || i18n(`commands.account.subcommands.use.promptMessage`),
       choices: mapAccountChoices(accountsList),
       default: defaultAccount ?? undefined,
     },

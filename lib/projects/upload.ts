@@ -15,7 +15,6 @@ import { isTranslationError, translate } from '@hubspot/project-parsing-lib';
 import { logError } from '../errorHandlers';
 import util from 'node:util';
 
-const i18nKey = 'lib.projectUpload';
 
 async function uploadProjectFiles(
   accountId: number,
@@ -29,7 +28,7 @@ async function uploadProjectFiles(
   const accountIdentifier = uiAccountDescription(accountId);
 
   SpinniesManager.add('upload', {
-    text: i18n(`${i18nKey}.uploadProjectFiles.add`, {
+    text: i18n(`lib.projectUpload.uploadProjectFiles.add`, {
       accountIdentifier,
       projectName,
     }),
@@ -52,7 +51,7 @@ async function uploadProjectFiles(
     buildId = upload.buildId;
 
     SpinniesManager.succeed('upload', {
-      text: i18n(`${i18nKey}.uploadProjectFiles.succeed`, {
+      text: i18n(`lib.projectUpload.uploadProjectFiles.succeed`, {
         accountIdentifier,
         projectName,
       }),
@@ -60,7 +59,7 @@ async function uploadProjectFiles(
 
     if (buildId) {
       logger.debug(
-        i18n(`${i18nKey}.uploadProjectFiles.buildCreated`, {
+        i18n(`lib.projectUpload.uploadProjectFiles.buildCreated`, {
           buildId,
           projectName,
         })
@@ -68,7 +67,7 @@ async function uploadProjectFiles(
     }
   } catch (err) {
     SpinniesManager.fail('upload', {
-      text: i18n(`${i18nKey}.uploadProjectFiles.fail`, {
+      text: i18n(`lib.projectUpload.uploadProjectFiles.fail`, {
         accountIdentifier,
         projectName,
       }),
@@ -106,7 +105,7 @@ export async function handleProjectUpload<T>(
   const filenames = fs.readdirSync(srcDir);
   if (!filenames || filenames.length === 0) {
     logger.log(
-      i18n(`${i18nKey}.handleProjectUpload.emptySource`, {
+      i18n(`lib.projectUpload.handleProjectUpload.emptySource`, {
         srcDir: projectConfig.srcDir,
       })
     );
@@ -116,7 +115,7 @@ export async function handleProjectUpload<T>(
   const tempFile = tmp.fileSync({ postfix: '.zip' });
 
   logger.debug(
-    i18n(`${i18nKey}.handleProjectUpload.compressing`, {
+    i18n(`lib.projectUpload.handleProjectUpload.compressing`, {
       path: tempFile.name,
     })
   );
@@ -127,7 +126,7 @@ export async function handleProjectUpload<T>(
   const result = new Promise<ProjectUploadResult<T>>(resolve =>
     output.on('close', async function () {
       logger.debug(
-        i18n(`${i18nKey}.handleProjectUpload.compressed`, {
+        i18n(`lib.projectUpload.handleProjectUpload.compressed`, {
           byteCount: archive.pointer(),
         })
       );
@@ -192,7 +191,7 @@ export async function handleProjectUpload<T>(
 
       if (!isNodeModule || !loggedIgnoredNodeModule) {
         logger.debug(
-          i18n(`${i18nKey}.handleProjectUpload.fileFiltered`, {
+          i18n(`lib.projectUpload.handleProjectUpload.fileFiltered`, {
             filename: file.name,
           })
         );
