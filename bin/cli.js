@@ -13,6 +13,11 @@ const {
   getConfigPath,
   validateConfig,
 } = require('@hubspot/local-dev-lib/config');
+const {
+  DEFAULT_ACCOUNT_OVERRIDE_ERROR_INVALID_ID,
+  DEFAULT_ACCOUNT_OVERRIDE_ERROR_ACCOUNT_NOT_FOUND,
+  DEFAULT_ACCOUNT_OVERRIDE_FILE_NAME,
+} = require('@hubspot/local-dev-lib/constants/config');
 const { logError } = require('../lib/errorHandlers/index');
 const { setLogLevel, getCommandName } = require('../lib/commonOpts');
 const { validateAccount } = require('../lib/validation');
@@ -168,9 +173,18 @@ const isTargetedCommand = (options, commandMap) => {
   return checkCommand(options, commandMap);
 };
 
+const skipConfigAccountsSubCommands = {
+  target: false,
+  subCommands: {
+    auth: { target: true },
+  },
+};
+
 const SKIP_CONFIG_VALIDATION = {
   init: { target: true },
   auth: { target: true },
+  accounts: skipConfigAccountsSubCommands,
+  account: skipConfigAccountsSubCommands,
 };
 
 const handleDeprecatedEnvVariables = options => {
@@ -202,8 +216,44 @@ const injectAccountIdMiddleware = async options => {
   if (options.useEnv && process.env.HUBSPOT_ACCOUNT_ID) {
     options.derivedAccountId = parseInt(process.env.HUBSPOT_ACCOUNT_ID, 10);
   } else {
-    options.derivedAccountId = getAccountId(account);
+    try {
+      options.derivedAccountId = getAccountId(account);
+    } catch (error) {
+      logError(error);
+      if (error.cause === DEFAULT_ACCOUNT_OVERRIDE_ERROR_INVALID_ID) {
+        logger.log(
+          i18n(`${i18nKey}.injectAccountIdMiddleware.invalidAccountId`, {
+            overrideCommand: uiCommandReference('hs account create-override'),
+            hsAccountFileName: DEFAULT_ACCOUNT_OVERRIDE_FILE_NAME,
+          })
+        );
+      }
+      if (error.cause === DEFAULT_ACCOUNT_OVERRIDE_ERROR_ACCOUNT_NOT_FOUND) {
+        logger.log(
+          i18n(`${i18nKey}.injectAccountIdMiddleware.accountNotFound`, {
+            configPath: getConfigPath(),
+            authCommand: uiCommandReference('hs account auth'),
+            hsAccountFileName: DEFAULT_ACCOUNT_OVERRIDE_FILE_NAME,
+          })
+        );
+      }
+      process.exit(EXIT_CODES.ERROR);
+    }
   }
+};
+
+const skipLoadConfigAccountSubCommands = {
+  target: false,
+  subCommands: { auth: { target: true } },
+};
+
+const SKIP_LOAD_CONFIG = {
+  account: skipLoadConfigAccountSubCommands,
+  accounts: skipLoadConfigAccountSubCommands,
+};
+
+const SKIP_CONFIG_FLAG_VALIDATION = {
+  config: { target: false, subCommands: { migrate: { target: true } } },
 };
 
 const loadConfigMiddleware = async options => {
@@ -221,14 +271,28 @@ const loadConfigMiddleware = async options => {
     }
   };
 
-  if (configFileExists(true) && options.config) {
+  if (
+    configFileExists(true) &&
+    options.config &&
+    !isTargetedCommand(options, SKIP_CONFIG_FLAG_VALIDATION)
+  ) {
     logger.error(
       i18n(`${i18nKey}.loadConfigMiddleware.configFileExists`, {
         configPath: getConfigPath(),
       })
     );
     process.exit(EXIT_CODES.ERROR);
-  } else if (!isTargetedCommand(options, { init: { target: true } })) {
+  }
+
+  // There are two commands where we don't load config:
+  // 1. `hs init`
+  // 2. `hs account auth` only if the global config file does not exist
+  if (
+    !isTargetedCommand(options, {
+      init: { target: true },
+    }) &&
+    !(isTargetedCommand(options, SKIP_LOAD_CONFIG) && !configFileExists(true))
+  ) {
     const { config: configPath } = options;
     const config = loadConfig(configPath, options);
 
@@ -253,6 +317,7 @@ const checkAndWarnGitInclusionMiddleware = options => {
 const accountsSubCommands = {
   target: false,
   subCommands: {
+    auth: { target: true },
     clean: { target: true },
     list: { target: true },
     ls: { target: true },
@@ -270,6 +335,7 @@ const sandboxesSubCommands = {
 const SKIP_ACCOUNT_VALIDATION = {
   init: { target: true },
   auth: { target: true },
+  config: { target: false, subCommands: { migrate: { target: true } } },
   account: accountsSubCommands,
   accounts: accountsSubCommands,
   sandbox: sandboxesSubCommands,

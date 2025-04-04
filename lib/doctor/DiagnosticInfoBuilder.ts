@@ -12,6 +12,7 @@ import {
 import { Project } from '@hubspot/local-dev-lib/types/Project';
 import {
   getAccountId,
+  getDefaultAccountOverrideFilePath,
   isConfigFlagEnabled,
 } from '@hubspot/local-dev-lib/config';
 import { getAccountConfig, getConfigPath } from '@hubspot/local-dev-lib/config';
@@ -39,6 +40,7 @@ export interface DiagnosticInfo extends FilesInfo {
   path?: string;
   versions: { [hubspotCli]: string; node: string; npm: string | null };
   config: string | null;
+  defaultAccountOverrideFile: string | null | undefined;
   configSettings: { [key: string]: unknown };
   project: {
     details?: Project;
@@ -118,6 +120,7 @@ export class DiagnosticInfoBuilder {
       arch,
       path: mainModule?.path,
       config: getConfigPath(),
+      defaultAccountOverrideFile: getDefaultAccountOverrideFilePath(),
       configSettings: this.configSettings,
       versions: {
         [hubspotCli]: pkg.version,

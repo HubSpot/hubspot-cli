@@ -2,11 +2,11 @@ import path from 'path';
 import { ArgumentsCamelCase, Argv } from 'yargs';
 import fs from 'fs-extra';
 import {
+  loadConfig,
   getConfigPath,
   createEmptyConfigFile,
   deleteEmptyConfigFile,
   updateDefaultAccount,
-  loadConfig,
   configFileExists,
 } from '@hubspot/local-dev-lib/config';
 import { Environment } from '@hubspot/local-dev-lib/types/Config';
@@ -144,6 +144,16 @@ export async function handler(
 
   const env = args.qa ? ENVIRONMENTS.QA : ENVIRONMENTS.PROD;
 
+  if (configFileExists(true)) {
+    const globalConfigPath = getConfigPath('', true);
+    logger.error(
+      i18n(`${i18nKey}.errors.globalConfigFileExists`, {
+        configPath: globalConfigPath!,
+      })
+    );
+    process.exit(EXIT_CODES.ERROR);
+  }
+
   if (fs.existsSync(configPath!)) {
     logger.error(
       i18n(`${i18nKey}.errors.configFileExists`, {
@@ -196,6 +206,7 @@ export async function handler(
       accountId = oauthResult.accountId!;
       name = oauthResult.name;
     }
+    const configPath = getConfigPath();
 
     try {
       checkAndAddConfigToGitignore(configPath!);
@@ -203,15 +214,10 @@ export async function handler(
       debugError(e);
     }
 
-    let newConfigPath = configPath;
-    if (!newConfigPath && !useHiddenConfig) {
-      newConfigPath = `${getCwd()}/${DEFAULT_HUBSPOT_CONFIG_YAML_FILE_NAME}`;
-    }
-
     logger.log('');
     logger.success(
       i18n(`${i18nKey}.success.configFileCreated`, {
-        configPath: newConfigPath!,
+        configPath: configPath!,
       })
     );
     logger.success(
@@ -265,11 +271,6 @@ function initBuilder(yargs: Argv): Argv<InitArgs> {
       type: 'boolean',
       hidden: true,
       default: false,
-    },
-    'use-hidden-config': {
-      describe: i18n(`${i18nKey}.options.useHiddenConfig.describe`),
-      hidden: true,
-      type: 'boolean',
     },
   });
 
