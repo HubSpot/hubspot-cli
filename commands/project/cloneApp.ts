@@ -80,7 +80,11 @@ export const handler = async (options: ArgumentsCamelCase<CloneAppArgs>) => {
     process.exit(EXIT_CODES.ERROR);
   }
 
-  await trackCommandMetadataUsage('clone-app', {}, derivedAccountId);
+  await trackCommandMetadataUsage(
+    'clone-app',
+    { step: 'STARTED' },
+    derivedAccountId
+  );
 
   try {
     SpinniesManager.init();

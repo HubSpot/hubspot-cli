@@ -496,7 +496,11 @@ export async function migrateApp2023_2(
     );
   }
 
-  await trackCommandMetadataUsage('migrate-app', undefined, derivedAccountId);
+  await trackCommandMetadataUsage(
+    'migrate-app',
+    { step: 'STARTED' },
+    derivedAccountId
+  );
 
   logger.log('');
   uiLine();
