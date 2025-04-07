@@ -4,8 +4,8 @@ import { getAccountConfig } from '@hubspot/local-dev-lib/config';
 import { migrateApp2023_2, migrateApp2025_2 } from '../../../lib/app/migrate';
 import { logger } from '@hubspot/local-dev-lib/logger';
 import { EXIT_CODES } from '../../../lib/enums/exitCodes';
-import { PLATFORM_VERSIONS } from '@hubspot/local-dev-lib/constants/platformVersion';
 import { MigrateAppOptions } from '../../../types/Yargs';
+import { PLATFORM_VERSIONS } from '@hubspot/local-dev-lib/constants/projects';
 
 jest.mock('@hubspot/local-dev-lib/config');
 jest.mock('@hubspot/local-dev-lib/logger');

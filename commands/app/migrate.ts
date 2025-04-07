@@ -14,7 +14,7 @@ import { getAccountConfig } from '@hubspot/local-dev-lib/config';
 import { ArgumentsCamelCase, Argv, CommandModule } from 'yargs';
 import { MigrateAppOptions } from '../../types/Yargs';
 import { migrateApp2023_2, migrateApp2025_2 } from '../../lib/app/migrate';
-import { PLATFORM_VERSIONS } from '@hubspot/local-dev-lib/constants/platformVersion';
+import { PLATFORM_VERSIONS } from '@hubspot/local-dev-lib/constants/projects';
 import { logger } from '@hubspot/local-dev-lib/logger';
 import { uiBetaTag, uiLink } from '../../lib/ui';
 
