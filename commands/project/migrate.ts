@@ -6,33 +6,42 @@ import { ProjectMigrateOptions } from '../../types/Yargs';
 import { addAccountOptions, addConfigOptions } from '../../lib/commonOpts';
 import { migrateApp2025_2 } from '../../lib/app/migrate';
 import { getProjectConfig } from '../../lib/projects';
-import { PLATFORM_VERSIONS } from '@hubspot/local-dev-lib/constants/platformVersion';
+import { PLATFORM_VERSIONS } from '@hubspot/local-dev-lib/constants/projects';
+import { logError } from '../../lib/errorHandlers';
+import { EXIT_CODES } from '../../lib/enums/exitCodes';
 
 export const command = 'migrate';
 
-export const describe = undefined;
+export const describe = undefined; // i18n('commands.project.subcommands.migrate.noProjectConfig')
 
-// TODO: Add i18n keys
 export async function handler(
   options: ArgumentsCamelCase<ProjectMigrateOptions>
 ) {
-  const { projectConfig } = await getProjectConfig();
+  const projectConfig = await getProjectConfig();
 
   if (!projectConfig) {
-    logger.error(i18n('commands.project.subcommands.migrate.noProjectConfig'));
+    logger.error(
+      i18n('commands.project.subcommands.migrate.errors.noProjectConfig')
+    );
     return;
   }
 
   const { derivedAccountId } = options;
-  await migrateApp2025_2(
-    derivedAccountId,
-    {
-      ...options,
-      name: projectConfig.name,
-      platformVersion: PLATFORM_VERSIONS.unstable,
-    },
-    true
-  );
+  try {
+    await migrateApp2025_2(
+      derivedAccountId,
+      {
+        ...options,
+        name: projectConfig?.projectConfig?.name,
+        platformVersion: PLATFORM_VERSIONS.unstable,
+      },
+      projectConfig
+    );
+  } catch (error) {
+    logError(error);
+    return process.exit(EXIT_CODES.ERROR);
+  }
+  return process.exit(EXIT_CODES.SUCCESS);
 }
 
 export function builder(yargs: Argv) {

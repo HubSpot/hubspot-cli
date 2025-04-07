@@ -19,7 +19,7 @@ import { isAppDeveloperAccount } from '../accountTypes';
 import { selectPublicAppPrompt } from '../prompts/selectPublicAppPrompt';
 import { fetchPublicAppMetadata } from '@hubspot/local-dev-lib/api/appsDev';
 import { createProjectPrompt } from '../prompts/createProjectPrompt';
-import { ensureProjectExists } from '../projects';
+import { ensureProjectExists, getProjectConfig } from '../projects';
 import { trackCommandMetadataUsage } from '../usageTracking';
 import SpinniesManager from '../ui/SpinniesManager';
 import { handleKeypress } from '../process';
@@ -43,6 +43,8 @@ import { validateUid } from '@hubspot/project-parsing-lib';
 import { MigrationApp } from '@hubspot/local-dev-lib/types/Project';
 import { UNMIGRATABLE_REASONS } from '@hubspot/local-dev-lib/constants/projects';
 import { mapToUserFacingType } from '@hubspot/project-parsing-lib/src/lib/transform';
+import fs from 'fs';
+import util from 'util';
 
 function getUnmigratableReason(reasonCode: string): string {
   switch (reasonCode) {
@@ -70,24 +72,17 @@ function getUnmigratableReason(reasonCode: string): string {
 
 async function promptForAppToMigrate(
   appId: number | undefined,
-  allApps: MigrationApp[],
-  isProjectMigration: boolean
+  allApps: MigrationApp[]
 ): Promise<MigrationApp | undefined> {
-  const appChoices = allApps
-    .filter(() => {
-      if (!isProjectMigration) {
-        return true;
-      }
-    })
-    .map(app => ({
-      name: app.isMigratable
-        ? app.appName
-        : `[${chalk.yellow('DISABLED')}] ${app.appName} `,
-      value: app,
-      disabled: app.isMigratable
-        ? false
-        : getUnmigratableReason(app.unmigratableReason),
-    }));
+  const appChoices = allApps.map(app => ({
+    name: app.isMigratable
+      ? app.appName
+      : `[${chalk.yellow('DISABLED')}] ${app.appName} `,
+    value: app,
+    disabled: app.isMigratable
+      ? false
+      : getUnmigratableReason(app.unmigratableReason),
+  }));
 
   let appIdToMigrate = appId;
   if (!appIdToMigrate) {
@@ -140,33 +135,44 @@ async function promptForConfirmation(selectedApp: MigrationApp) {
   );
 }
 
-async function handleMigrationSetup(
+async function getRelevantApps(
   derivedAccountId: number,
-  options: {
-    name?: string;
-    dest?: string;
-    appId?: number;
-  },
-  isProjectMigration = false
-): Promise<
-  | undefined
-  | {
-      appIdToMigrate: number;
-      projectName: string;
-      projectDest: string;
-    }
-> {
-  const { name, dest, appId } = options;
+  existingProjectName?: string
+): Promise<MigrationApp[]> {
   const { data } = await listAppsForMigration(derivedAccountId);
 
+  console.log(util.inspect(data, { depth: null }));
+
   const { migratableApps, unmigratableApps } = data;
-  const allApps: MigrationApp[] = [...migratableApps, ...unmigratableApps];
+
+  const allApps: MigrationApp[] = [
+    ...migratableApps,
+    ...unmigratableApps,
+  ].filter(app => {
+    // If we are migrating an existing project, we only want to show apps
+    // associated with that project
+    if (existingProjectName) {
+      // @ts-expect-error Not the real deal
+      return app.projectName === existingProjectName;
+    }
+    // Otherwise we are migrating a standalone app to projects, and
+    // we only want apps without a project associated to the app
+    // @ts-expect-error Not the real deal
+    return !app.projectName;
+  });
 
   if (allApps.length === 0) {
     throw new Error(
-      i18n(`commands.project.subcommands.migrateApp.errors.noApps`, {
-        accountId: derivedAccountId,
-      })
+      existingProjectName
+        ? i18n(
+            `commands.project.subcommands.migrateApp.errors.noAppsForProject`,
+            {
+              projectName: existingProjectName,
+            }
+          )
+        : i18n(`commands.project.subcommands.migrateApp.errors.noApps`, {
+            accountId: derivedAccountId,
+          })
     );
   }
 
@@ -182,6 +188,31 @@ async function handleMigrationSetup(
       })} \n  - ${reasons.join('\n  - ')}`
     );
   }
+
+  return allApps;
+}
+
+async function handleMigrationSetup(
+  derivedAccountId: number,
+  options: {
+    name?: string;
+    dest?: string;
+    appId?: number;
+  },
+  projectConfig: Awaited<ReturnType<typeof getProjectConfig>> | undefined
+): Promise<
+  | undefined
+  | {
+      appIdToMigrate: number;
+      projectName: string;
+      projectDest: string;
+    }
+> {
+  const { name, dest, appId } = options;
+  const allApps = await getRelevantApps(
+    derivedAccountId,
+    projectConfig?.projectConfig?.name
+  );
 
   if (
     appId &&
@@ -199,11 +230,7 @@ async function handleMigrationSetup(
     );
   }
 
-  const selectedApp = await promptForAppToMigrate(
-    appId,
-    allApps,
-    isProjectMigration
-  );
+  const selectedApp = await promptForAppToMigrate(appId, allApps);
 
   if (!selectedApp) {
     throw new Error(
@@ -240,14 +267,21 @@ async function handleMigrationSetup(
     );
   }
 
-  const projectDest =
-    dest ||
-    (await inputPrompt(
-      i18n('commands.project.subcommands.migrateApp.prompt.inputDest'),
-      {
-        defaultAnswer: path.resolve(getCwd(), sanitizeFileName(projectName)),
-      }
-    ));
+  let projectDest =
+    projectConfig?.projectDir && projectConfig?.projectConfig?.srcDir
+      ? path.join(projectConfig.projectDir, projectConfig.projectConfig.srcDir)
+      : undefined;
+
+  if (!projectDest) {
+    projectDest =
+      dest ||
+      (await inputPrompt(
+        i18n('commands.project.subcommands.migrateApp.prompt.inputDest'),
+        {
+          defaultAnswer: path.resolve(getCwd(), sanitizeFileName(projectName)),
+        }
+      ));
+  }
 
   return { appIdToMigrate: selectedApp.appId, projectName, projectDest };
 }
@@ -433,14 +467,14 @@ export async function migrateApp2025_2(
     appId?: number;
     platformVersion: string;
   },
-  isProjectMigration = false
+  projectConfig?: Awaited<ReturnType<typeof getProjectConfig>>
 ): Promise<void> {
   SpinniesManager.init();
 
   const setupResults = await handleMigrationSetup(
     derivedAccountId,
     options,
-    isProjectMigration
+    projectConfig
   );
 
   if (!setupResults) {
@@ -467,17 +501,25 @@ export async function migrateApp2025_2(
     throw new Error('Migration Failed');
   }
 
+  let downloadLocation = projectDest;
+
+  if (projectConfig?.projectConfig?.name && projectConfig?.projectDir) {
+    downloadLocation = path.join(
+      projectConfig.projectDir,
+      projectConfig.projectConfig.srcDir
+    );
+    fs.renameSync(
+      downloadLocation,
+      path.join(projectConfig?.projectDir, 'archive')
+    );
+  }
+
   await downloadProjectFiles(
     derivedAccountId,
     projectName,
     buildId,
-    projectDest
+    downloadLocation
   );
-
-  if (isProjectMigration) {
-    // Copy all the source code to the existing project
-    // yada yada yada
-  }
 }
 
 export function logInvalidAccountError(i18nKey: string): void {
