@@ -42,6 +42,7 @@ import chalk from 'chalk';
 import { validateUid } from '@hubspot/project-parsing-lib';
 import { MigrationApp } from '@hubspot/local-dev-lib/types/Project';
 import { UNMIGRATABLE_REASONS } from '@hubspot/local-dev-lib/constants/projects';
+import { mapToUserFacingType } from '@hubspot/project-parsing-lib/src/lib/transform';
 
 function getUnmigratableReason(reasonCode: string) {
   switch (reasonCode) {
@@ -134,14 +135,14 @@ async function handleMigrationSetup(
 
   const selectedApp = allApps.find(app => app.appId === appIdToMigrate);
 
-  const migratableComponents: string[] = ['Application'];
+  const migratableComponents: string[] = [];
   const unmigratableComponents: string[] = [];
 
   selectedApp?.migrationComponents.forEach(component => {
     if (component.isSupported) {
-      migratableComponents.push(component.componentType);
+      migratableComponents.push(mapToUserFacingType(component.componentType));
     } else {
-      unmigratableComponents.push(component.componentType);
+      unmigratableComponents.push(mapToUserFacingType(component.componentType));
     }
   });
 
@@ -199,7 +200,10 @@ async function handleMigrationSetup(
   const projectDest =
     dest ||
     (await inputPrompt(
-      i18n('commands.project.subcommands.migrateApp.prompt.inputDest')
+      i18n('commands.project.subcommands.migrateApp.prompt.inputDest'),
+      {
+        defaultAnswer: path.resolve(getCwd(), projectName),
+      }
     ));
 
   return { appIdToMigrate, projectName, projectDest };
@@ -230,7 +234,6 @@ async function handleMigrationProcess(derivedAccountId: number, appId: number) {
       for (const [componentId, component] of Object.entries(
         componentsRequiringUids
       )) {
-        // TODO: We need to validate the UID here
         uidMap[componentId] = await inputPrompt(
           i18n(
             'commands.project.subcommands.migrateApp.prompt.uidForComponent',
