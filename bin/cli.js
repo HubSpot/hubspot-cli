@@ -155,48 +155,41 @@ const updateCLIVersion = async () => {
     notifier &&
     notifier.update
   ) {
-    let updateInfo;
-    try {
-      updateInfo = await notifier.fetchInfo();
-    } catch (e) {
-      logger.debug('Error fetching update info', e);
-      return;
-    }
-    // Update if the current version is not the latest version.
-    // Don't auto-update if the current version is a pre-release
-    // or if this would be a major version update
-    if (
-      !updateInfo.current.includes('-') &&
-      !['major', 'latest'].includes(updateInfo.type)
-    ) {
-      SpinniesManager.init({
-        succeedColor: 'white',
-      });
-      SpinniesManager.add('cliAutoUpdate', {
-        text: `New HubSpot CLI version available. Updating to version ${updateInfo.latest}`,
-      });
-
+    // Ignore all update notifications if the current version is a pre-release
+    if (!notifier.update.current.includes('-')) {
+      // This lets us back to default update-notifier behavior
       let showManualInstallHelp = false;
 
-      try {
-        if (await isGloballyInstalled()) {
-          await executeInstall(['@hubspot/cli@latest'], '-g');
+      // Attempt auto-update if the current version is not the latest version
+      // Never auto-update for major version updates b/c they are breaking
+      if (!['major', 'latest'].includes(updateInfo.type)) {
+        SpinniesManager.init({
+          succeedColor: 'white',
+        });
+        SpinniesManager.add('cliAutoUpdate', {
+          text: `New HubSpot CLI version available. Updating to version ${notifier.update.latest}`,
+        });
 
-          SpinniesManager.succeed('cliAutoUpdate', {
-            text: `Successfully updated HubSpot CLI to version ${updateInfo.latest}`,
-          });
-        } else {
+        try {
+          if (await isGloballyInstalled()) {
+            await executeInstall(['@hubspot/cli@latest'], '-g');
+
+            SpinniesManager.succeed('cliAutoUpdate', {
+              text: `Successfully updated HubSpot CLI to version ${notifier.update.latest}`,
+            });
+          } else {
+            SpinniesManager.fail('cliAutoUpdate', {
+              text: `Cannot auto-update the HubSpot CLI if NPM is not installed globally`,
+            });
+            showManualInstallHelp = true;
+          }
+        } catch (e) {
+          logger.debug('Error updating CLI', e);
           SpinniesManager.fail('cliAutoUpdate', {
-            text: `Cannot auto-update the HubSpot CLI if it is not globall installed with NPM`,
+            text: `Failed to update HubSpot CLI to version ${notifier.update.latest}`,
           });
           showManualInstallHelp = true;
         }
-      } catch (e) {
-        logger.debug('Error updating CLI', e);
-        SpinniesManager.fail('cliAutoUpdate', {
-          text: `Failed to update HubSpot CLI to version ${updateInfo.latest}`,
-        });
-        showManualInstallHelp = true;
       }
 
       if (showManualInstallHelp) {
