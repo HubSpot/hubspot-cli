@@ -14,12 +14,12 @@ import { getAccountConfig } from '@hubspot/local-dev-lib/config';
 import { ArgumentsCamelCase, Argv, CommandModule } from 'yargs';
 import { MigrateAppOptions } from '../../types/Yargs';
 import { migrateApp2023_2, migrateApp2025_2 } from '../../lib/app/migrate';
-import { PLATFORM_VERSIONS } from '@hubspot/local-dev-lib/constants/platformVersion';
+import { PLATFORM_VERSIONS } from '@hubspot/local-dev-lib/constants/projects';
 import { logger } from '@hubspot/local-dev-lib/logger';
 import { uiBetaTag, uiLink } from '../../lib/ui';
 
 const { v2023_2, v2025_2, unstable } = PLATFORM_VERSIONS;
-const validMigrationTargets = [v2023_2, v2025_2, unstable];
+export const validMigrationTargets = [v2023_2, v2025_2, unstable];
 
 const command = 'migrate';
 const describe = undefined; // uiBetaTag(i18n(`commands.project.subcommands.migrateApp.header.text.describe`), false);
@@ -70,7 +70,7 @@ export async function handler(options: ArgumentsCamelCase<MigrateAppOptions>) {
     }
     await trackCommandMetadataUsage(
       'migrate-app',
-      { status: 'FAILURE' },
+      { successful: false },
       derivedAccountId
     );
     process.exit(EXIT_CODES.ERROR);
@@ -78,13 +78,13 @@ export async function handler(options: ArgumentsCamelCase<MigrateAppOptions>) {
 
   await trackCommandMetadataUsage(
     'migrate-app',
-    { status: 'SUCCESS' },
+    { successful: true },
     derivedAccountId
   );
   return process.exit(EXIT_CODES.SUCCESS);
 }
 
-export async function builder(yargs: Argv): Promise<Argv<MigrateAppOptions>> {
+export function builder(yargs: Argv): Argv<MigrateAppOptions> {
   addConfigOptions(yargs);
   addAccountOptions(yargs);
   addUseEnvironmentOptions(yargs);
@@ -116,12 +116,9 @@ export async function builder(yargs: Argv): Promise<Argv<MigrateAppOptions>> {
     },
   });
 
-  // This is a hack so we can use the same function for both the app migrate and project migrate-app commands
-  // and have the examples be correct.  If we don't can about that we can remove this.
-  const { _ } = await yargs.argv;
   yargs.example([
     [
-      `$0 ${_.join(' ')}`,
+      `$0 app migrate`,
       i18n(`commands.project.subcommands.migrateApp.examples.default`),
     ],
   ]);

@@ -616,7 +616,7 @@ en:
             copyingProjectFiles: "Copying migrated project files"
             copyingProjectFilesComplete: "Migrated project files copied"
             copyingProjectFilesFailed: "Unable to copy migrated project files"
-          migrationNotAllowedReasons:
+          unmigratableReasons:
             upToDate: 'App is already up to date'
             isPrivateApp: 'Private apps are not currently migratable'
             listedInMarketplace: 'Listed apps are not currently migratable'
@@ -639,6 +639,7 @@ en:
             invalidAccountTypeTitle: "{{#bold}}Developer account not targeted{{/bold}}"
             invalidAccountTypeDescription: "Only public apps created in a developer account can be converted to a project component. Select a connected developer account with {{useCommand}} or {{authCommand}} and try again."
             couldNotWriteConfigPath: "Failed to write project config at {{ configPath }}"
+            noAccountConfig: "There is no account associated with {{ accountId }} in the config file. Please choose another account and try again, or authenticate {{ accountId }} using {{ authCommand }}."
         add:
           describe: "Create a new component within a project."
           options:
@@ -662,7 +663,7 @@ en:
           debug:
             deploying: "Deploying project at path: {{ path }}"
           errors:
-            deploy: "Deploy error: {{ details }}"
+            deploy: "Deploy error: an unknown error occurred."
             noBuilds: "Deploy error: no builds for this project were found."
             noBuildId: "You must specify a build to deploy"
             projectNotFound: "The project {{ projectName }} does not exist in account {{ accountIdentifier }}. Run {{ command }} to upload your project files to HubSpot."
@@ -781,7 +782,7 @@ en:
             downloadSucceeded: "Downloaded build \"{{ buildId }}\" from project \"{{ projectName }}\""
           errors:
             downloadFailed: "Something went wrong downloading the project"
-            projectNotFound: "Your project {{ projectName }} could not be found in {{ accountId }}"
+            noBuildIdToDownload: "This project is empty. There is no build content to download"
           warnings:
             cannotDownloadWithinProject: "Cancelling project download. Please run the command again outside the context of an existing project."
           options:

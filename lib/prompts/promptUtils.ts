@@ -70,15 +70,18 @@ export async function inputPrompt(
   {
     when,
     validate,
+    defaultAnswer,
   }: {
     when?: boolean | (() => boolean);
     validate?: (input: string) => boolean | string;
+    defaultAnswer?: string;
   } = {}
 ): Promise<string> {
   const { input } = await promptUser([
     {
       name: 'input',
       type: 'input',
+      default: defaultAnswer,
       message,
       when,
       validate,

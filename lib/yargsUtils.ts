@@ -28,9 +28,9 @@ export function makeYargsBuilder<T>(
     useGlobalOptions?: boolean;
     useAccountOptions?: boolean;
     useConfigOptions?: boolean;
-    useUseEnvironmentOptions?: boolean;
+    useEnvironmentOptions?: boolean;
     useTestingOptions?: boolean;
-  }
+  } = {}
 ): (yargs: Argv) => Promise<Argv<T>> {
   return async function (yargs: Argv): Promise<Argv<T>> {
     if (options.useGlobalOptions) {
@@ -42,7 +42,7 @@ export function makeYargsBuilder<T>(
     if (options.useConfigOptions) {
       addConfigOptions(yargs);
     }
-    if (options.useUseEnvironmentOptions) {
+    if (options.useEnvironmentOptions) {
       addUseEnvironmentOptions(yargs);
     }
     if (options.useTestingOptions) {

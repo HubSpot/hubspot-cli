@@ -1,10 +1,18 @@
 import { i18n } from '../../lib/lang';
 import { uiCommandReference, uiDeprecatedTag } from '../../lib/ui';
-import { handler as migrateHandler, builder } from '../app/migrate';
+import {
+  handler as migrateHandler,
+  validMigrationTargets,
+} from '../app/migrate';
 
-import { ArgumentsCamelCase, CommandModule } from 'yargs';
+import { ArgumentsCamelCase, Argv, CommandModule } from 'yargs';
 import { logger } from '@hubspot/local-dev-lib/logger';
 import { MigrateAppOptions } from '../../types/Yargs';
+import {
+  addAccountOptions,
+  addConfigOptions,
+  addUseEnvironmentOptions,
+} from '../../lib/commonOpts';
 
 export const command = 'migrate-app';
 
@@ -23,6 +31,48 @@ export async function handler(yargs: ArgumentsCamelCase<MigrateAppOptions>) {
     })
   );
   await migrateHandler(yargs);
+}
+
+export function builder(yargs: Argv): Argv<MigrateAppOptions> {
+  addConfigOptions(yargs);
+  addAccountOptions(yargs);
+  addUseEnvironmentOptions(yargs);
+
+  yargs.options({
+    name: {
+      describe: i18n(
+        `commands.project.subcommands.migrateApp.options.name.describe`
+      ),
+      type: 'string',
+    },
+    dest: {
+      describe: i18n(
+        `commands.project.subcommands.migrateApp.options.dest.describe`
+      ),
+      type: 'string',
+    },
+    'app-id': {
+      describe: i18n(
+        `commands.project.subcommands.migrateApp.options.appId.describe`
+      ),
+      type: 'number',
+    },
+    'platform-version': {
+      type: 'string',
+      choices: validMigrationTargets,
+      hidden: true,
+      default: '2023.2',
+    },
+  });
+
+  yargs.example([
+    [
+      `$0 project migrate-app`,
+      i18n(`commands.project.subcommands.migrateApp.examples.default`),
+    ],
+  ]);
+
+  return yargs as Argv<MigrateAppOptions>;
 }
 
 const migrateAppCommand: CommandModule<unknown, MigrateAppOptions> = {

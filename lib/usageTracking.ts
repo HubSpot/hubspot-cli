@@ -22,7 +22,6 @@ type Meta = {
   type?: string | number; // "The upload type"
   file?: boolean; // "Whether or not the 'file' flag was used"
   successful?: boolean; // "Whether or not the CLI interaction was successful"
-  status?: string; // Is the action started, successful, or failed
 };
 
 const EventClass = {

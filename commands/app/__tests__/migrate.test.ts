@@ -4,8 +4,8 @@ import { getAccountConfig } from '@hubspot/local-dev-lib/config';
 import { migrateApp2023_2, migrateApp2025_2 } from '../../../lib/app/migrate';
 import { logger } from '@hubspot/local-dev-lib/logger';
 import { EXIT_CODES } from '../../../lib/enums/exitCodes';
-import { PLATFORM_VERSIONS } from '@hubspot/local-dev-lib/constants/platformVersion';
 import { MigrateAppOptions } from '../../../types/Yargs';
+import { PLATFORM_VERSIONS } from '@hubspot/local-dev-lib/constants/projects';
 
 jest.mock('@hubspot/local-dev-lib/config');
 jest.mock('@hubspot/local-dev-lib/logger');
@@ -104,10 +104,23 @@ describe('commands/app/migrate', () => {
 
       expect(mockYargs.options).toHaveBeenCalledWith(
         expect.objectContaining({
-          name: expect.any(Object),
-          dest: expect.any(Object),
-          'app-id': expect.any(Object),
-          'platform-version': expect.any(Object),
+          name: expect.objectContaining({
+            type: 'string',
+            describe: expect.any(String),
+          }),
+          dest: expect.objectContaining({
+            type: 'string',
+            describe: expect.any(String),
+          }),
+          'app-id': expect.objectContaining({
+            type: 'number',
+            describe: expect.any(String),
+          }),
+          'platform-version': expect.objectContaining({
+            type: 'string',
+            default: '2023.2',
+            hidden: true,
+          }),
         })
       );
     });

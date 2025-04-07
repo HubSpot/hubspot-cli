@@ -21,10 +21,9 @@ import {
   OverwriteArgs,
 } from '../../types/Yargs';
 
-const i18nKey = 'commands.filemanager.subcommands.fetch';
 
 export const command = 'fetch <src> [dest]';
-export const describe = i18n(`${i18nKey}.describe`);
+export const describe = i18n(`commands.filemanager.subcommands.fetch.describe`);
 
 type CombinedArgs = CommonArgs &
   ConfigArgs &
@@ -43,7 +42,7 @@ export async function handler(
   const { src, includeArchived, derivedAccountId, overwrite } = args;
 
   if (typeof src !== 'string') {
-    logger.error(i18n(`${i18nKey}.errors.sourceRequired`));
+    logger.error(i18n(`commands.filemanager.subcommands.fetch.errors.sourceRequired`));
     process.exit(EXIT_CODES.ERROR);
   }
 
@@ -74,16 +73,16 @@ export function builder(yargs: Argv): Argv<FileManagerFetchArgs> {
   addUseEnvironmentOptions(yargs);
 
   yargs.positional('src', {
-    describe: i18n(`${i18nKey}.positionals.src.describe`),
+    describe: i18n(`commands.filemanager.subcommands.fetch.positionals.src.describe`),
     type: 'string',
   });
   yargs.positional('dest', {
-    describe: i18n(`${i18nKey}.positionals.dest.describe`),
+    describe: i18n(`commands.filemanager.subcommands.fetch.positionals.dest.describe`),
     type: 'string',
   });
   yargs.option('include-archived', {
     alias: ['i'],
-    describe: i18n(`${i18nKey}.options.includeArchived.describe`),
+    describe: i18n(`commands.filemanager.subcommands.fetch.options.includeArchived.describe`),
     type: 'boolean',
   });
 

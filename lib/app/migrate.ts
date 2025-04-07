@@ -30,7 +30,6 @@ import {
   beginMigration,
   finishMigration,
   listAppsForMigration,
-  UNMIGRATABLE_REASONS,
 } from '@hubspot/local-dev-lib/api/projects';
 import { poll } from '../polling';
 import path from 'path';
@@ -42,24 +41,26 @@ import { MigrateAppOptions } from '../../types/Yargs';
 import chalk from 'chalk';
 import { validateUid } from '@hubspot/project-parsing-lib';
 import { MigrationApp } from '@hubspot/local-dev-lib/types/Project';
+import { UNMIGRATABLE_REASONS } from '@hubspot/local-dev-lib/constants/projects';
+import { mapToUserFacingType } from '@hubspot/project-parsing-lib/src/lib/transform';
 
-function getUnmigratableReason(reasonCode: string) {
+function getUnmigratableReason(reasonCode: string): string {
   switch (reasonCode) {
     case UNMIGRATABLE_REASONS.UP_TO_DATE:
       return i18n(
-        'commands.project.subcommands.migrateApp.migrationNotAllowedReasons.upToDate'
+        'commands.project.subcommands.migrateApp.unmigratableReasons.upToDate'
       );
     case UNMIGRATABLE_REASONS.IS_A_PRIVATE_APP:
       return i18n(
-        'commands.project.subcommands.migrateApp.migrationNotAllowedReasons.isPrivateApp'
+        'commands.project.subcommands.migrateApp.unmigratableReasons.isPrivateApp'
       );
     case UNMIGRATABLE_REASONS.LISTED_IN_MARKETPLACE:
       return i18n(
-        'commands.project.subcommands.migrateApp.migrationNotAllowedReasons.listedInMarketplace'
+        'commands.project.subcommands.migrateApp.unmigratableReasons.listedInMarketplace'
       );
     default:
       return i18n(
-        'commands.project.subcommands.migrateApp.migrationNotAllowedReasons.generic',
+        'commands.project.subcommands.migrateApp.unmigratableReasons.generic',
         {
           reasonCode,
         }
@@ -103,14 +104,14 @@ async function promptForAppToMigrate(
 }
 
 async function promptForConfirmation(selectedApp: MigrationApp) {
-  const migratableComponents: string[] = ['Application'];
+  const migratableComponents: string[] = [];
   const unmigratableComponents: string[] = [];
 
   selectedApp.migrationComponents.forEach(component => {
     if (component.isSupported) {
-      migratableComponents.push(component.componentType);
+      migratableComponents.push(mapToUserFacingType(component.componentType));
     } else {
-      unmigratableComponents.push(component.componentType);
+      unmigratableComponents.push(mapToUserFacingType(component.componentType));
     }
   });
 
@@ -242,13 +243,22 @@ async function handleMigrationSetup(
   const projectDest =
     dest ||
     (await inputPrompt(
-      i18n('commands.project.subcommands.migrateApp.prompt.inputDest')
+      i18n('commands.project.subcommands.migrateApp.prompt.inputDest'),
+      {
+        defaultAnswer: path.resolve(getCwd(), sanitizeFileName(projectName)),
+      }
     ));
 
   return { appIdToMigrate: selectedApp.appId, projectName, projectDest };
 }
 
-async function handleMigrationProcess(derivedAccountId: number, appId: number) {
+async function handleMigrationProcess(
+  derivedAccountId: number,
+  appId: number
+): Promise<{
+  migrationId: number;
+  uidMap: Record<string, string>;
+}> {
   SpinniesManager.add('beginningMigration', {
     text: i18n(
       'commands.project.subcommands.migrateApp.spinners.beginningMigration'
@@ -273,7 +283,6 @@ async function handleMigrationProcess(derivedAccountId: number, appId: number) {
       for (const [componentId, component] of Object.entries(
         componentsRequiringUids
       )) {
-        // TODO: We need to validate the UID here
         uidMap[componentId] = await inputPrompt(
           i18n(
             'commands.project.subcommands.migrateApp.prompt.uidForComponent',
@@ -374,7 +383,7 @@ export async function downloadProjectFiles(
   projectName: string,
   buildId: number,
   projectDest: string
-) {
+): Promise<void> {
   try {
     SpinniesManager.add('fetchingMigratedProject', {
       text: i18n(
@@ -425,7 +434,7 @@ export async function migrateApp2025_2(
     platformVersion: string;
   },
   isProjectMigration = false
-) {
+): Promise<void> {
   SpinniesManager.init();
 
   const setupResults = await handleMigrationSetup(
@@ -471,7 +480,7 @@ export async function migrateApp2025_2(
   }
 }
 
-export function logInvalidAccountError(i18nKey: string) {
+export function logInvalidAccountError(i18nKey: string): void {
   uiLine();
   logger.error(i18n(`${i18nKey}.errors.invalidAccountTypeTitle`));
   logger.log(
@@ -487,7 +496,7 @@ export async function migrateApp2023_2(
   derivedAccountId: number,
   options: ArgumentsCamelCase<MigrateAppOptions>,
   accountConfig: CLIAccount
-) {
+): Promise<void> {
   const i18nKey = 'commands.project.subcommands.migrateApp';
   const accountName = uiAccountDescription(derivedAccountId);
 
@@ -545,7 +554,7 @@ export async function migrateApp2023_2(
 
   await trackCommandMetadataUsage(
     'migrate-app',
-    { status: 'STARTED' },
+    { step: 'STARTED' },
     derivedAccountId
   );
 
