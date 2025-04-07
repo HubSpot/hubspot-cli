@@ -104,7 +104,7 @@ export const handler = async (args: ArgumentsCamelCase<ProjectLogsArgs>) => {
       projectName: ProjectLogsManager.projectName,
     });
 
-    ProjectLogsManager.setFunction(functionName!);
+    ProjectLogsManager.setFunction(functionName);
 
     logPreamble();
   } catch (e) {
