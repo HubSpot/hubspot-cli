@@ -9,11 +9,10 @@ jest.mock('fs', () => ({
 
 import util from 'util';
 import {
-  isGloballyInstalled,
   installPackages,
   getProjectPackageJsonLocations,
-  getLatestCliVersion,
 } from '../dependencyManagement';
+import { isGloballyInstalled, getLatestCliVersion } from '../npm';
 import { walk } from '@hubspot/local-dev-lib/fs';
 import path from 'path';
 import { getProjectConfig } from '../projects';

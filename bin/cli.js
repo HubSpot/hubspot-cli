@@ -3,7 +3,6 @@
 const yargs = require('yargs');
 const updateNotifier = require('update-notifier');
 const chalk = require('chalk');
-
 const { logger } = require('@hubspot/local-dev-lib/logger');
 const { addUserAgentHeader } = require('@hubspot/local-dev-lib/http');
 const {
@@ -26,6 +25,8 @@ const { i18n } = require('../lib/lang');
 const { EXIT_CODES } = require('../lib/enums/exitCodes');
 const { UI_COLORS, uiCommandReference, uiDeprecatedTag } = require('../lib/ui');
 const { checkAndWarnGitInclusion } = require('../lib/ui/git');
+const SpinniesManager = require('../lib/ui/SpinniesManager');
+const { isGloballyInstalled, executeInstall } = require('../lib/npm');
 
 const removeCommand = require('../commands/remove');
 const initCommand = require('../commands/init');
@@ -65,29 +66,31 @@ const i18nKey = 'commands.generalErrors';
 
 const CMS_CLI_PACKAGE_NAME = '@hubspot/cms-cli';
 
-notifier.notify({
-  message:
-    pkg.name === CMS_CLI_PACKAGE_NAME
-      ? i18n(`${i18nKey}.updateNotify.cmsUpdateNotification`, {
-          packageName: CMS_CLI_PACKAGE_NAME,
-          updateCommand: uiCommandReference('{updateCommand}'),
-        })
-      : i18n(`${i18nKey}.updateNotify.cliUpdateNotification`, {
-          updateCommand: uiCommandReference('{updateCommand}'),
-        }),
-  defer: false,
-  boxenOptions: {
-    borderColor: UI_COLORS.MARIGOLD_DARK,
-    margin: 1,
-    padding: 1,
-    textAlignment: 'center',
-    borderStyle: 'round',
-    title:
+const showUpdateNotification = () => {
+  notifier.notify({
+    message:
       pkg.name === CMS_CLI_PACKAGE_NAME
-        ? null
-        : chalk.bold(i18n(`${i18nKey}.updateNotify.notifyTitle`)),
-  },
-});
+        ? i18n(`${i18nKey}.updateNotify.cmsUpdateNotification`, {
+            packageName: CMS_CLI_PACKAGE_NAME,
+            updateCommand: uiCommandReference('{updateCommand}'),
+          })
+        : i18n(`${i18nKey}.updateNotify.cliUpdateNotification`, {
+            updateCommand: uiCommandReference('{updateCommand}'),
+          }),
+    defer: false,
+    boxenOptions: {
+      borderColor: UI_COLORS.MARIGOLD_DARK,
+      margin: 1,
+      padding: 1,
+      textAlignment: 'center',
+      borderStyle: 'round',
+      title:
+        pkg.name === CMS_CLI_PACKAGE_NAME
+          ? null
+          : chalk.bold(i18n(`${i18nKey}.updateNotify.notifyTitle`)),
+    },
+  });
+};
 
 const getTerminalWidth = () => {
   const width = yargs.terminalWidth();
@@ -143,6 +146,64 @@ const performChecks = argv => {
 
 const setRequestHeaders = () => {
   addUserAgentHeader('HubSpot CLI', pkg.version);
+};
+
+const updateCLIVersion = async () => {
+  logger.debug('Checking for CLI updates', notifier);
+  if (
+    !process.env.SKIP_HUBSPOT_CLI_AUTO_UPDATES &&
+    notifier &&
+    notifier.update
+  ) {
+    let updateInfo;
+    try {
+      updateInfo = await notifier.fetchInfo();
+    } catch (e) {
+      logger.debug('Error fetching update info', e);
+      return;
+    }
+    // Update if the current version is not the latest version.
+    // Don't auto-update if the current version is a pre-release
+    // or if this would be a major version update
+    if (
+      !updateInfo.current.includes('-') &&
+      !['major', 'latest'].includes(updateInfo.type)
+    ) {
+      SpinniesManager.init({
+        succeedColor: 'white',
+      });
+      SpinniesManager.add('cliAutoUpdate', {
+        text: `New HubSpot CLI version available. Updating to version ${updateInfo.latest}`,
+      });
+
+      let showManualInstallHelp = false;
+
+      try {
+        if (await isGloballyInstalled()) {
+          await executeInstall(['@hubspot/cli@latest'], '-g');
+
+          SpinniesManager.succeed('cliAutoUpdate', {
+            text: `Successfully updated HubSpot CLI to version ${updateInfo.latest}`,
+          });
+        } else {
+          SpinniesManager.fail('cliAutoUpdate', {
+            text: `Cannot auto-update the HubSpot CLI if it is not globall installed with NPM`,
+          });
+          showManualInstallHelp = true;
+        }
+      } catch (e) {
+        logger.debug('Error updating CLI', e);
+        SpinniesManager.fail('cliAutoUpdate', {
+          text: `Failed to update HubSpot CLI to version ${updateInfo.latest}`,
+        });
+        showManualInstallHelp = true;
+      }
+
+      if (showManualInstallHelp) {
+        showUpdateNotification();
+      }
+    }
+  }
 };
 
 const isTargetedCommand = (options, commandMap) => {
@@ -297,6 +358,7 @@ const argv = yargs
   // loadConfigMiddleware loads the new hidden config for all commands
   .middleware([
     setLogLevel,
+    updateCLIVersion,
     setRequestHeaders,
     handleDeprecatedEnvVariables,
     loadConfigMiddleware,
