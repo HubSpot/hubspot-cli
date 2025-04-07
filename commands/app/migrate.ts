@@ -84,7 +84,7 @@ export async function handler(options: ArgumentsCamelCase<MigrateAppOptions>) {
   return process.exit(EXIT_CODES.SUCCESS);
 }
 
-export async function builder(yargs: Argv): Promise<Argv<MigrateAppOptions>> {
+export function builder(yargs: Argv): Argv<MigrateAppOptions> {
   addConfigOptions(yargs);
   addAccountOptions(yargs);
   addUseEnvironmentOptions(yargs);

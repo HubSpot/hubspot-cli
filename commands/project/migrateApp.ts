@@ -33,7 +33,7 @@ export async function handler(yargs: ArgumentsCamelCase<MigrateAppOptions>) {
   await migrateHandler(yargs);
 }
 
-export function builder(yargs: Argv): Promise<Argv<MigrateAppOptions>> {
+export function builder(yargs: Argv): Argv<MigrateAppOptions> {
   addConfigOptions(yargs);
   addAccountOptions(yargs);
   addUseEnvironmentOptions(yargs);
