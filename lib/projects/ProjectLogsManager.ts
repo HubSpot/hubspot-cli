@@ -1,9 +1,4 @@
-import {
-  getProjectConfig,
-  validateProjectConfig,
-  validateProjectDir,
-  ensureProjectExists,
-} from './index';
+import { getProjectConfig, ensureProjectExists } from './index';
 import { fetchProjectComponentsMetadata } from '@hubspot/local-dev-lib/api/projects';
 import { AppFunctionComponentMetadata } from '@hubspot/local-dev-lib/types/ComponentStructure';
 import { logger } from '@hubspot/local-dev-lib/logger';
@@ -40,10 +35,11 @@ class _ProjectLogsManager {
   }
 
   async init(accountId: number): Promise<void> {
-    const { projectConfig, projectDir } = await getProjectConfig();
+    const { projectConfig } = await getProjectConfig();
 
-    validateProjectConfig(projectConfig, projectDir);
-    validateProjectDir(projectDir);
+    if (!projectConfig || !projectConfig.name) {
+      throw new Error(i18n(`${i18nKey}.errors.noProjectConfig`));
+    }
 
     const { name: projectName } = projectConfig;
 

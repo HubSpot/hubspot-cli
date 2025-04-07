@@ -89,12 +89,12 @@ export function validateProjectConfig(
         createCommand: uiCommandReference('hs project create'),
       })
     );
-    process.exit(EXIT_CODES.ERROR);
+    return process.exit(EXIT_CODES.ERROR);
   }
 
   if (!projectConfig.name || !projectConfig.srcDir) {
     logger.error(i18n(`${i18nKey}.validateProjectConfig.configMissingFields`));
-    process.exit(EXIT_CODES.ERROR);
+    return process.exit(EXIT_CODES.ERROR);
   }
 
   const resolvedPath = path.resolve(projectDir, projectConfig.srcDir);
@@ -109,7 +109,7 @@ export function validateProjectConfig(
         projectConfig: projectConfigFile,
       })
     );
-    process.exit(EXIT_CODES.ERROR);
+    return process.exit(EXIT_CODES.ERROR);
   }
 
   if (!fs.existsSync(resolvedPath)) {
@@ -120,7 +120,7 @@ export function validateProjectConfig(
       })
     );
 
-    process.exit(EXIT_CODES.ERROR);
+    return process.exit(EXIT_CODES.ERROR);
   }
 }
 

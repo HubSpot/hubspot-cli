@@ -15,7 +15,6 @@ const {
   ensureProjectExists,
   getProjectConfig,
   validateProjectConfig,
-  validateProjectDir,
   logFeedbackMessage,
 } = require('../../lib/projects');
 const { handleProjectUpload } = require('../../lib/projects/upload');
@@ -93,7 +92,6 @@ exports.handler = async options => {
   const { projectConfig, projectDir } = await getProjectConfig();
 
   validateProjectConfig(projectConfig, projectDir);
-  validateProjectDir(projectDir);
 
   await ensureProjectExists(derivedAccountId, projectConfig.name);
 
