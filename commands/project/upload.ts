@@ -49,7 +49,7 @@ export async function handler(
 
   validateProjectConfig(projectConfig, projectDir);
 
-  await ensureProjectExists(derivedAccountId, projectConfig!.name, {
+  await ensureProjectExists(derivedAccountId, projectConfig.name, {
     forceCreate,
     uploadCommand: true,
   });
@@ -58,11 +58,11 @@ export async function handler(
     const { result, uploadError } =
       await handleProjectUpload<ProjectPollResult>(
         derivedAccountId,
-        projectConfig!,
+        projectConfig,
         projectDir!,
         pollProjectBuildAndDeploy,
         message,
-        useV3Api(projectConfig?.platformVersion),
+        useV3Api(projectConfig.platformVersion),
         skipValidation
       );
 
@@ -105,7 +105,7 @@ export async function handler(
 
       await displayWarnLogs(
         derivedAccountId,
-        projectConfig!.name,
+        projectConfig.name,
         result.buildId
       );
       process.exit(EXIT_CODES.SUCCESS);

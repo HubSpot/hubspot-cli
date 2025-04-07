@@ -82,19 +82,19 @@ export async function getProjectConfig(dir?: string): Promise<{
 export function validateProjectConfig(
   projectConfig: ProjectConfig | null,
   projectDir: string | null
-): void {
+): asserts projectConfig is ProjectConfig {
   if (!projectConfig || !projectDir) {
     logger.error(
       i18n(`${i18nKey}.validateProjectConfig.configNotFound`, {
         createCommand: uiCommandReference('hs project create'),
       })
     );
-    return process.exit(EXIT_CODES.ERROR);
+    process.exit(EXIT_CODES.ERROR);
   }
 
   if (!projectConfig.name || !projectConfig.srcDir) {
     logger.error(i18n(`${i18nKey}.validateProjectConfig.configMissingFields`));
-    return process.exit(EXIT_CODES.ERROR);
+    process.exit(EXIT_CODES.ERROR);
   }
 
   const resolvedPath = path.resolve(projectDir, projectConfig.srcDir);
@@ -109,7 +109,7 @@ export function validateProjectConfig(
         projectConfig: projectConfigFile,
       })
     );
-    return process.exit(EXIT_CODES.ERROR);
+    process.exit(EXIT_CODES.ERROR);
   }
 
   if (!fs.existsSync(resolvedPath)) {
@@ -120,7 +120,7 @@ export function validateProjectConfig(
       })
     );
 
-    return process.exit(EXIT_CODES.ERROR);
+    process.exit(EXIT_CODES.ERROR);
   }
 }
 
