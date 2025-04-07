@@ -616,7 +616,7 @@ en:
             copyingProjectFiles: "Copying migrated project files"
             copyingProjectFilesComplete: "Migrated project files copied"
             copyingProjectFilesFailed: "Unable to copy migrated project files"
-          migrationNotAllowedReasons:
+          unmigratableReasons:
             upToDate: 'App is already up to date'
             isPrivateApp: 'Private apps are not currently migratable'
             listedInMarketplace: 'Listed apps are not currently migratable'

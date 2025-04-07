@@ -44,23 +44,23 @@ import { MigrationApp } from '@hubspot/local-dev-lib/types/Project';
 import { UNMIGRATABLE_REASONS } from '@hubspot/local-dev-lib/constants/projects';
 import { mapToUserFacingType } from '@hubspot/project-parsing-lib/src/lib/transform';
 
-function getUnmigratableReason(reasonCode: string) {
+function getUnmigratableReason(reasonCode: string): string {
   switch (reasonCode) {
     case UNMIGRATABLE_REASONS.UP_TO_DATE:
       return i18n(
-        'commands.project.subcommands.migrateApp.migrationNotAllowedReasons.upToDate'
+        'commands.project.subcommands.migrateApp.unmigratableReasons.upToDate'
       );
     case UNMIGRATABLE_REASONS.IS_A_PRIVATE_APP:
       return i18n(
-        'commands.project.subcommands.migrateApp.migrationNotAllowedReasons.isPrivateApp'
+        'commands.project.subcommands.migrateApp.unmigratableReasons.isPrivateApp'
       );
     case UNMIGRATABLE_REASONS.LISTED_IN_MARKETPLACE:
       return i18n(
-        'commands.project.subcommands.migrateApp.migrationNotAllowedReasons.listedInMarketplace'
+        'commands.project.subcommands.migrateApp.unmigratableReasons.listedInMarketplace'
       );
     default:
       return i18n(
-        'commands.project.subcommands.migrateApp.migrationNotAllowedReasons.generic',
+        'commands.project.subcommands.migrateApp.unmigratableReasons.generic',
         {
           reasonCode,
         }
@@ -71,7 +71,11 @@ function getUnmigratableReason(reasonCode: string) {
 async function handleMigrationSetup(
   derivedAccountId: number,
   options: ArgumentsCamelCase<MigrateAppOptions>
-) {
+): Promise<{
+  appIdToMigrate?: number | undefined;
+  projectName?: string;
+  projectDest?: string;
+}> {
   const { name, dest, appId } = options;
   const { data } = await listAppsForMigration(derivedAccountId);
 
@@ -202,14 +206,20 @@ async function handleMigrationSetup(
     (await inputPrompt(
       i18n('commands.project.subcommands.migrateApp.prompt.inputDest'),
       {
-        defaultAnswer: path.resolve(getCwd(), projectName),
+        defaultAnswer: path.resolve(getCwd(), sanitizeFileName(projectName)),
       }
     ));
 
   return { appIdToMigrate, projectName, projectDest };
 }
 
-async function handleMigrationProcess(derivedAccountId: number, appId: number) {
+async function handleMigrationProcess(
+  derivedAccountId: number,
+  appId: number
+): Promise<{
+  migrationId: number;
+  uidMap: Record<string, string>;
+}> {
   SpinniesManager.add('beginningMigration', {
     text: i18n(
       'commands.project.subcommands.migrateApp.spinners.beginningMigration'
@@ -334,7 +344,7 @@ export async function downloadProjectFiles(
   projectName: string,
   buildId: number,
   projectDest: string
-) {
+): Promise<void> {
   try {
     SpinniesManager.add('fetchingMigratedProject', {
       text: i18n(
@@ -379,13 +389,13 @@ export async function downloadProjectFiles(
 export async function migrateApp2025_2(
   derivedAccountId: number,
   options: ArgumentsCamelCase<MigrateAppOptions>
-) {
+): Promise<void> {
   SpinniesManager.init();
 
   const { appIdToMigrate, projectName, projectDest } =
     await handleMigrationSetup(derivedAccountId, options);
 
-  if (!appIdToMigrate) {
+  if (!appIdToMigrate || !projectName || !projectDest) {
     return;
   }
 
@@ -414,7 +424,7 @@ export async function migrateApp2025_2(
   );
 }
 
-export function logInvalidAccountError(i18nKey: string) {
+export function logInvalidAccountError(i18nKey: string): void {
   uiLine();
   logger.error(i18n(`${i18nKey}.errors.invalidAccountTypeTitle`));
   logger.log(
@@ -430,7 +440,7 @@ export async function migrateApp2023_2(
   derivedAccountId: number,
   options: ArgumentsCamelCase<MigrateAppOptions>,
   accountConfig: CLIAccount
-) {
+): Promise<void> {
   const i18nKey = 'commands.project.subcommands.migrateApp';
   const accountName = uiAccountDescription(derivedAccountId);
 
@@ -486,11 +496,7 @@ export async function migrateApp2023_2(
     );
   }
 
-  await trackCommandMetadataUsage(
-    'migrate-app',
-    { status: 'STARTED' },
-    derivedAccountId
-  );
+  await trackCommandMetadataUsage('migrate-app', undefined, derivedAccountId);
 
   logger.log('');
   uiLine();

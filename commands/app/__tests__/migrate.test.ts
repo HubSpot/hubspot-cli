@@ -104,10 +104,23 @@ describe('commands/app/migrate', () => {
 
       expect(mockYargs.options).toHaveBeenCalledWith(
         expect.objectContaining({
-          name: expect.any(Object),
-          dest: expect.any(Object),
-          'app-id': expect.any(Object),
-          'platform-version': expect.any(Object),
+          name: expect.objectContaining({
+            type: 'string',
+            describe: expect.any(String),
+          }),
+          dest: expect.objectContaining({
+            type: 'string',
+            describe: expect.any(String),
+          }),
+          'app-id': expect.objectContaining({
+            type: 'number',
+            describe: expect.any(String),
+          }),
+          'platform-version': expect.objectContaining({
+            type: 'string',
+            default: '2023.2',
+            hidden: true,
+          }),
         })
       );
     });

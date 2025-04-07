@@ -80,11 +80,7 @@ export const handler = async (options: ArgumentsCamelCase<CloneAppArgs>) => {
     process.exit(EXIT_CODES.ERROR);
   }
 
-  await trackCommandMetadataUsage(
-    'clone-app',
-    { status: 'STARTED' },
-    derivedAccountId
-  );
+  await trackCommandMetadataUsage('clone-app', {}, derivedAccountId);
 
   try {
     SpinniesManager.init();
@@ -150,7 +146,7 @@ export const handler = async (options: ArgumentsCamelCase<CloneAppArgs>) => {
   } catch (error) {
     await trackCommandMetadataUsage(
       'clone-app',
-      { status: 'FAILURE' },
+      { successful: false },
       derivedAccountId
     );
 
@@ -176,7 +172,7 @@ export const handler = async (options: ArgumentsCamelCase<CloneAppArgs>) => {
 
   await trackCommandMetadataUsage(
     'clone-app',
-    { status: 'SUCCESS' },
+    { successful: true },
     derivedAccountId
   );
   process.exit(EXIT_CODES.SUCCESS);

@@ -70,7 +70,7 @@ export async function handler(options: ArgumentsCamelCase<MigrateAppOptions>) {
     }
     await trackCommandMetadataUsage(
       'migrate-app',
-      { status: 'FAILURE' },
+      { successful: false },
       derivedAccountId
     );
     process.exit(EXIT_CODES.ERROR);
@@ -78,7 +78,7 @@ export async function handler(options: ArgumentsCamelCase<MigrateAppOptions>) {
 
   await trackCommandMetadataUsage(
     'migrate-app',
-    { status: 'SUCCESS' },
+    { successful: true },
     derivedAccountId
   );
   return process.exit(EXIT_CODES.SUCCESS);
