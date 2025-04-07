@@ -38,6 +38,7 @@ const i18nKey = 'commands.project.subcommands.cloneApp';
 
 export const command = 'clone-app';
 export const describe = uiDeprecatedTag(i18n(`${i18nKey}.describe`), false);
+export const deprecated = true;
 
 export const handler = async (options: ArgumentsCamelCase<CloneAppArgs>) => {
   const { derivedAccountId } = options;
@@ -47,7 +48,9 @@ export const handler = async (options: ArgumentsCamelCase<CloneAppArgs>) => {
   const accountName = uiAccountDescription(derivedAccountId);
 
   if (!accountConfig) {
-    throw new Error('Account is not configured');
+    throw new Error(
+      i18n(`commands.projects.subcommands.cloneApp.errors.noAccountConfig`)
+    );
   }
 
   if (!isAppDeveloperAccount(accountConfig)) {
@@ -207,6 +210,7 @@ const cloneAppCommand: CommandModule<unknown, CloneAppArgs> = {
   describe,
   handler,
   builder,
+  deprecated,
 };
 
 export default cloneAppCommand;
