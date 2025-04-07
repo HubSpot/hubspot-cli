@@ -15,14 +15,13 @@ const {
 const { trackConvertFieldsUsage } = require('../../lib/usageTracking');
 const { logError } = require('../../lib/errorHandlers/index');
 const { EXIT_CODES } = require('../../lib/enums/exitCodes');
-const i18nKey = 'commands.convertFields';
 
 exports.command = 'convert-fields';
-exports.describe = i18n(`${i18nKey}.describe`);
+exports.describe = i18n(`commands.convertFields.describe`);
 
 const invalidPath = src => {
   logger.error(
-    i18n(`${i18nKey}.errors.invalidPath`, {
+    i18n(`commands.convertFields.errors.invalidPath`, {
       path: src,
     })
   );
@@ -92,12 +91,12 @@ exports.handler = async options => {
 
 exports.builder = yargs => {
   yargs.option('src', {
-    describe: i18n(`${i18nKey}.positionals.src.describe`),
+    describe: i18n(`commands.convertFields.positionals.src.describe`),
     type: 'string',
-    demandOption: i18n(`${i18nKey}.errors.missingSrc`),
+    demandOption: i18n(`commands.convertFields.errors.missingSrc`),
   });
   yargs.option('fieldOptions', {
-    describe: i18n(`${i18nKey}.options.options.describe`),
+    describe: i18n(`commands.convertFields.options.options.describe`),
     type: 'array',
     default: [''],
   });

@@ -1,29 +1,42 @@
-// @ts-nocheck
-const open = require('open');
-const {
+import { Argv, ArgumentsCamelCase } from 'yargs';
+import open from 'open';
+import {
   addAccountOptions,
   addConfigOptions,
   addUseEnvironmentOptions,
   addTestingOptions,
-} = require('../../lib/commonOpts');
-const { trackCommandUsage } = require('../../lib/usageTracking');
-const { i18n } = require('../../lib/lang');
-const { logger } = require('@hubspot/local-dev-lib/logger');
-const { getProjectConfig, ensureProjectExists } = require('../../lib/projects');
-const { getProjectDetailUrl } = require('../../lib/projects/urls');
-const { projectNamePrompt } = require('../../lib/prompts/projectNamePrompt');
-const { uiBetaTag } = require('../../lib/ui');
-const { EXIT_CODES } = require('../../lib/enums/exitCodes');
+} from '../../lib/commonOpts';
+import { trackCommandUsage } from '../../lib/usageTracking';
+import { i18n } from '../../lib/lang';
+import { logger } from '@hubspot/local-dev-lib/logger';
+import { getProjectConfig, ensureProjectExists } from '../../lib/projects';
+import { getProjectDetailUrl } from '../../lib/projects/urls';
+import { projectNamePrompt } from '../../lib/prompts/projectNamePrompt';
+import { uiBetaTag } from '../../lib/ui';
+import { EXIT_CODES } from '../../lib/enums/exitCodes';
+import {
+  AccountArgs,
+  CommonArgs,
+  ConfigArgs,
+  EnvironmentArgs,
+  TestingArgs,
+} from '../../types/Yargs';
 
 const i18nKey = 'commands.project.subcommands.open';
 
-exports.command = 'open';
-exports.describe = uiBetaTag(i18n(`${i18nKey}.describe`), false);
+export const command = 'open';
+export const describe = uiBetaTag(i18n(`${i18nKey}.describe`), false);
 
-exports.handler = async options => {
-  const { project, derivedAccountId } = options;
+type ProjectOpenArgs = CommonArgs &
+  ConfigArgs &
+  AccountArgs &
+  EnvironmentArgs &
+  TestingArgs & { project?: string };
 
-  trackCommandUsage('project-open', null, derivedAccountId);
+export async function handler(args: ArgumentsCamelCase<ProjectOpenArgs>) {
+  const { project, derivedAccountId } = args;
+
+  trackCommandUsage('project-open', undefined, derivedAccountId);
 
   const { projectConfig } = await getProjectConfig();
 
@@ -44,21 +57,17 @@ exports.handler = async options => {
   } else if (!projectName && projectConfig) {
     projectName = projectConfig.name;
   } else if (!projectName && !projectConfig) {
-    const namePrompt = await projectNamePrompt(derivedAccountId);
-
-    if (!namePrompt.projectName) {
-      process.exit(EXIT_CODES.ERROR);
-    }
-    projectName = namePrompt.projectName;
+    const namePromptResponse = await projectNamePrompt(derivedAccountId);
+    projectName = namePromptResponse.projectName;
   }
 
-  const url = getProjectDetailUrl(projectName, derivedAccountId);
+  const url = getProjectDetailUrl(projectName!, derivedAccountId)!;
   open(url, { url: true });
-  logger.success(i18n(`${i18nKey}.success`, { projectName }));
+  logger.success(i18n(`${i18nKey}.success`, { projectName: projectName! }));
   process.exit(EXIT_CODES.SUCCESS);
-};
+}
 
-exports.builder = yargs => {
+export function builder(yargs: Argv): Argv<ProjectOpenArgs> {
   addConfigOptions(yargs);
   addAccountOptions(yargs);
   addUseEnvironmentOptions(yargs);
@@ -73,5 +82,12 @@ exports.builder = yargs => {
 
   yargs.example([['$0 project open', i18n(`${i18nKey}.examples.default`)]]);
 
-  return yargs;
+  return yargs as Argv<ProjectOpenArgs>;
+}
+
+module.exports = {
+  command,
+  describe,
+  handler,
+  builder,
 };
