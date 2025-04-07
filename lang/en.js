@@ -2898,7 +2898,7 @@ export const lib = {
         projectInstallDepsCommand: {
           command: 'hs project install-deps',
           message: command =>
-            `Run ${command} to install dependencies for your project`,
+            `Run ${command} to install dependencies for your project components`,
         },
         sampleProjects: {
           linkText: "HubSpot's sample projects",
