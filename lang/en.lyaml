@@ -1212,6 +1212,9 @@ en:
           projectDevCommand:
             command: "hs project dev"
             message: "Run {{ command }} to set up your test environment and start local development"
+          projectInstallDepsCommand:
+            command: "hs project install-deps"
+            message: "Run {{ command }} to install dependencies for your project components"
           projectCommandTip:
             message: "Tip: All project commands must be run from within a project directory"
           sampleProjects:

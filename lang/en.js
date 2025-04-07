@@ -2841,7 +2841,7 @@ export const lib = {
     disabledUrlText: 'See all HubSpot CLI commands here.',
     featureHighlight: {
       defaultTitle: "What's next?",
-      commandKeys: {
+      featureKeys: {
         accountOption: {
           command: '--account',
           message: command =>
@@ -2894,6 +2894,11 @@ export const lib = {
           command: 'hs project dev',
           message: command =>
             `Run ${command} to set up your test environment and start local development`,
+        },
+        projectInstallDepsCommand: {
+          command: 'hs project install-deps',
+          message: command =>
+            `Run ${command} to install dependencies for your project`,
         },
         sampleProjects: {
           linkText: "HubSpot's sample projects",
