@@ -352,8 +352,10 @@ class LocalDevManagerV2 {
         this.publicAppActiveInstalls && this.publicAppActiveInstalls > 0
           ? i18n(`${i18nKey}.uploadWarning.defaultMarketplaceAppWarning`, {
               installCount: this.publicAppActiveInstalls,
-              installText:
-                this.publicAppActiveInstalls === 1 ? 'account' : 'accounts',
+              accountText:
+                this.publicAppActiveInstalls === 1
+                  ? 'account that has'
+                  : 'accounts that have',
             })
           : i18n(`${i18nKey}.uploadWarning.defaultWarning`);
     }
