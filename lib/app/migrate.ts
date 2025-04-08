@@ -258,7 +258,6 @@ async function beginMigration(
     return;
   }
 
-  console.log(pollResponse);
   const { componentsRequiringUids } = pollResponse;
 
   SpinniesManager.succeed('beginningMigration', {
@@ -271,7 +270,6 @@ async function beginMigration(
     for (const [componentId, component] of Object.entries(
       componentsRequiringUids
     )) {
-      console.log(component);
       uidMap[componentId] = await inputPrompt(
         i18n('commands.project.subcommands.migrateApp.prompt.uidForComponent', {
           componentName: component.componentHint || component.componentType,
