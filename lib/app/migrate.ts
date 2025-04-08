@@ -25,13 +25,14 @@ import SpinniesManager from '../ui/SpinniesManager';
 import { handleKeypress } from '../process';
 import {
   checkMigrationStatus,
+  checkMigrationStatusV2,
   downloadProject,
   migrateApp as migrateNonProjectApp_v2023_2,
-  beginMigration,
-  finishMigration,
+  initializeMigration,
+  continueMigration,
   listAppsForMigration,
 } from '@hubspot/local-dev-lib/api/projects';
-import { poll } from '../polling';
+import { DEFAULT_POLLING_STATUS_LOOKUP, poll } from '../polling';
 import path from 'path';
 import { getCwd, sanitizeFileName } from '@hubspot/local-dev-lib/path';
 import { getHubSpotWebsiteOrigin } from '@hubspot/local-dev-lib/urls';
@@ -43,6 +44,7 @@ import { validateUid } from '@hubspot/project-parsing-lib';
 import { MigrationApp } from '@hubspot/local-dev-lib/types/Project';
 import { UNMIGRATABLE_REASONS } from '@hubspot/local-dev-lib/constants/projects';
 import { mapToUserFacingType } from '@hubspot/project-parsing-lib/src/lib/transform';
+import { MigrationStatus } from '@hubspot/local-dev-lib/types/Migration';
 
 function getUnmigratableReason(reasonCode: string): string {
   switch (reasonCode) {
@@ -80,7 +82,9 @@ async function handleMigrationSetup(
   const { data } = await listAppsForMigration(derivedAccountId);
 
   const { migratableApps, unmigratableApps } = data;
-  const allApps = [...migratableApps, ...unmigratableApps];
+  const allApps = [...migratableApps, ...unmigratableApps].filter(
+    app => !app.projectName
+  );
 
   if (allApps.length === 0) {
     throw new Error(
@@ -213,13 +217,17 @@ async function handleMigrationSetup(
   return { appIdToMigrate, projectName, projectDest };
 }
 
-async function handleMigrationProcess(
+async function beginMigration(
   derivedAccountId: number,
-  appId: number
-): Promise<{
-  migrationId: number;
-  uidMap: Record<string, string>;
-}> {
+  appId: number,
+  platformVersion: string
+): Promise<
+  | {
+      migrationId: number;
+      uidMap: Record<string, string>;
+    }
+  | undefined
+> {
   SpinniesManager.add('beginningMigration', {
     text: i18n(
       'commands.project.subcommands.migrateApp.spinners.beginningMigration'
@@ -227,46 +235,55 @@ async function handleMigrationProcess(
   });
 
   const uidMap: Record<string, string> = {};
-  let migrationId: number;
 
-  try {
-    const { data } = await beginMigration(derivedAccountId, appId);
-    const { migrationId: mid, componentsRequiringUids } = data;
+  const { data } = await initializeMigration(
+    derivedAccountId,
+    appId,
+    platformVersion
+  );
+  const { migrationId } = data;
 
-    migrationId = mid;
-    SpinniesManager.succeed('beginningMigration', {
-      text: i18n(
-        'commands.project.subcommands.migrateApp.spinners.migrationStarted'
-      ),
-    });
+  const pollResponse = await pollMigrationStatus(
+    derivedAccountId,
+    migrationId,
+    ['INPUT_REQUIRED']
+  );
 
-    if (Object.values(componentsRequiringUids).length !== 0) {
-      for (const [componentId, component] of Object.entries(
-        componentsRequiringUids
-      )) {
-        uidMap[componentId] = await inputPrompt(
-          i18n(
-            'commands.project.subcommands.migrateApp.prompt.uidForComponent',
-            {
-              componentName: component.componentHint || component.componentType,
-            }
-          ),
-          {
-            validate: (uid: string) => {
-              const result = validateUid(uid);
-              return result === undefined ? true : result;
-            },
-          }
-        );
-      }
-    }
-  } catch (e) {
+  if (pollResponse.status !== 'INPUT_REQUIRED') {
     SpinniesManager.fail('beginningMigration', {
       text: i18n(
         'commands.project.subcommands.migrateApp.spinners.unableToStartMigration'
       ),
     });
-    throw e;
+    return;
+  }
+
+  console.log(pollResponse);
+  const { componentsRequiringUids } = pollResponse;
+
+  SpinniesManager.succeed('beginningMigration', {
+    text: i18n(
+      'commands.project.subcommands.migrateApp.spinners.migrationStarted'
+    ),
+  });
+
+  if (Object.values(componentsRequiringUids).length !== 0) {
+    for (const [componentId, component] of Object.entries(
+      componentsRequiringUids
+    )) {
+      console.log(component);
+      uidMap[componentId] = await inputPrompt(
+        i18n('commands.project.subcommands.migrateApp.prompt.uidForComponent', {
+          componentName: component.componentHint || component.componentType,
+        }),
+        {
+          validate: (uid: string) => {
+            const result = validateUid(uid);
+            return result === undefined ? true : result;
+          },
+        }
+      );
+    }
   }
 
   return { migrationId, uidMap };
@@ -275,47 +292,37 @@ async function handleMigrationProcess(
 async function pollMigrationStatus(
   derivedAccountId: number,
   migrationId: number,
-  platformVersion: string
-) {
-  const pollResponse = await poll(() =>
-    checkMigrationStatus(derivedAccountId, migrationId, platformVersion)
-  );
-
-  const { status } = pollResponse;
-  return status === 'SUCCESS';
+  successStates: string[] = []
+): Promise<MigrationStatus> {
+  return poll(() => checkMigrationStatusV2(derivedAccountId, migrationId), {
+    successStates: [...successStates],
+    errorStates: [...DEFAULT_POLLING_STATUS_LOOKUP.errorStates],
+  });
 }
 
 async function finalizeMigration(
   derivedAccountId: number,
   migrationId: number,
   uidMap: Record<string, string>,
-  projectName: string,
-  platformVersion: string
+  projectName: string
 ): Promise<number | undefined> {
-  let buildId: number;
+  let buildId: number | undefined;
   try {
     SpinniesManager.add('finishingMigration', {
       text: i18n(
         `commands.project.subcommands.migrateApp.spinners.finishingMigration`
       ),
     });
-    const { data } = await finishMigration(
+    await continueMigration(derivedAccountId, migrationId, uidMap, projectName);
+
+    const pollResponse = await pollMigrationStatus(
       derivedAccountId,
       migrationId,
-      uidMap,
-      projectName,
-      platformVersion
+      ['SUCCESS']
     );
 
-    buildId = data.buildId;
-
-    const success = await pollMigrationStatus(
-      derivedAccountId,
-      migrationId,
-      platformVersion
-    );
-
-    if (success) {
+    if (pollResponse.status === 'SUCCESS') {
+      buildId = pollResponse.buildId;
       SpinniesManager.succeed('finishingMigration', {
         text: i18n(
           `commands.project.subcommands.migrateApp.spinners.migrationComplete`
@@ -328,6 +335,7 @@ async function finalizeMigration(
         ),
       });
     }
+
     return buildId;
   } catch (error) {
     SpinniesManager.fail('finishingMigration', {
@@ -365,8 +373,11 @@ export async function downloadProjectFiles(
     await extractZipArchive(
       zippedProject,
       sanitizeFileName(projectName),
-      path.resolve(absoluteDestPath),
-      { includesRootDir: false, hideLogs: false }
+      absoluteDestPath,
+      {
+        includesRootDir: true,
+        hideLogs: false,
+      }
     );
 
     SpinniesManager.succeed('fetchingMigratedProject', {
@@ -399,17 +410,22 @@ export async function migrateApp2025_2(
     return;
   }
 
-  const { migrationId, uidMap } = await handleMigrationProcess(
+  const migrationInProgress = await beginMigration(
     derivedAccountId,
-    appIdToMigrate
+    appIdToMigrate,
+    options.platformVersion
   );
 
+  if (!migrationInProgress) {
+    return;
+  }
+
+  const { migrationId, uidMap } = migrationInProgress;
   const buildId = await finalizeMigration(
     derivedAccountId,
     migrationId,
     uidMap,
-    projectName,
-    options.platformVersion
+    projectName
   );
 
   if (!buildId) {
