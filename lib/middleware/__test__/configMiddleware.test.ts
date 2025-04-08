@@ -1,6 +1,6 @@
 import { Arguments } from 'yargs';
 import { logger } from '@hubspot/local-dev-lib/logger';
-import { CLIConfig } from '@hubspot/local-dev-lib/types/config';
+import { CLIConfig } from '@hubspot/local-dev-lib/types/Config';
 import * as cliConfig from '@hubspot/local-dev-lib/config';
 import * as validation from '../../validation';
 import { EXIT_CODES } from '../../enums/exitCodes';
