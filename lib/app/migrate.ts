@@ -27,11 +27,11 @@ import {
   checkMigrationStatus,
   downloadProject,
   migrateApp as migrateNonProjectApp_v2023_2,
-  beginMigration,
+  initializeMigration,
   finishMigration,
   listAppsForMigration,
 } from '@hubspot/local-dev-lib/api/projects';
-import { poll } from '../polling';
+import { DEFAULT_POLLING_STATUS_LOOKUP, poll } from '../polling';
 import path from 'path';
 import { getCwd, sanitizeFileName } from '@hubspot/local-dev-lib/path';
 import { getHubSpotWebsiteOrigin } from '@hubspot/local-dev-lib/urls';
@@ -44,7 +44,7 @@ import { MigrationApp } from '@hubspot/local-dev-lib/types/Project';
 import { UNMIGRATABLE_REASONS } from '@hubspot/local-dev-lib/constants/projects';
 import { mapToUserFacingType } from '@hubspot/project-parsing-lib/src/lib/transform';
 import fs from 'fs';
-import util from 'util';
+// import { MIGRATION_STATUS } from '@hubspot/local-dev-lib/types/Migration';
 
 function getUnmigratableReason(reasonCode: string): string {
   switch (reasonCode) {
@@ -141,8 +141,6 @@ async function getRelevantApps(
 ): Promise<MigrationApp[]> {
   const { data } = await listAppsForMigration(derivedAccountId);
 
-  console.log(util.inspect(data, { depth: null }));
-
   const { migratableApps, unmigratableApps } = data;
 
   const allApps: MigrationApp[] = [
@@ -152,12 +150,10 @@ async function getRelevantApps(
     // If we are migrating an existing project, we only want to show apps
     // associated with that project
     if (existingProjectName) {
-      // @ts-expect-error Not the real deal
       return app.projectName === existingProjectName;
     }
     // Otherwise we are migrating a standalone app to projects, and
     // we only want apps without a project associated to the app
-    // @ts-expect-error Not the real deal
     return !app.projectName;
   });
 
@@ -250,21 +246,23 @@ async function handleMigrationSetup(
       i18n('commands.project.subcommands.migrateApp.prompt.inputName')
     ));
 
-  const { projectExists } = await ensureProjectExists(
-    derivedAccountId,
-    projectName,
-    { forceCreate: false, allowCreate: false, noLogs: true }
-  );
-
-  if (projectExists) {
-    throw new Error(
-      i18n(
-        'commands.project.subcommands.migrateApp.errors.projectAlreadyExists',
-        {
-          projectName,
-        }
-      )
+  if (!projectConfig) {
+    const { projectExists } = await ensureProjectExists(
+      derivedAccountId,
+      projectName,
+      { forceCreate: false, allowCreate: false, noLogs: true }
     );
+
+    if (projectExists) {
+      throw new Error(
+        i18n(
+          'commands.project.subcommands.migrateApp.errors.projectAlreadyExists',
+          {
+            projectName,
+          }
+        )
+      );
+    }
   }
 
   let projectDest =
@@ -286,9 +284,56 @@ async function handleMigrationSetup(
   return { appIdToMigrate: selectedApp.appId, projectName, projectDest };
 }
 
+async function checkInitializationStatus(
+  derivedAccountId: number,
+  migrationId: number,
+  platformVersion: string
+): Promise<Record<string, string>> {
+  const pollResponse = await poll(
+    () => checkMigrationStatus(derivedAccountId, migrationId, platformVersion),
+    {
+      successStates: [
+        ...DEFAULT_POLLING_STATUS_LOOKUP.successStates,
+        'IN_PROGRESS',
+      ],
+      errorStates: [...DEFAULT_POLLING_STATUS_LOOKUP.errorStates],
+    }
+  );
+
+  console.log(pollResponse);
+
+  const { status, componentsRequiringUids } = pollResponse;
+
+  const uidMap: Record<string, string> = {};
+
+  if (status === 'INPUT_REQUIRED') {
+    for (const [componentId, component] of Object.entries(
+      componentsRequiringUids || {}
+    )) {
+      uidMap[componentId] = await inputPrompt(
+        i18n('commands.project.subcommands.migrateApp.prompt.uidForComponent', {
+          componentName: component.componentHint || component.componentType,
+        }),
+        {
+          validate: (uid: string) => {
+            const result = validateUid(uid);
+            return result === undefined ? true : result;
+          },
+        }
+      );
+    }
+  } else if (status !== 'IN_PROGRESS') {
+    // TODO: Use real error message
+    throw new Error('Migration failed to start');
+  }
+
+  return uidMap;
+}
+
 async function handleMigrationProcess(
   derivedAccountId: number,
-  appId: number
+  appId: number,
+  platformVersion: string
 ): Promise<{
   migrationId: number;
   uidMap: Record<string, string>;
@@ -299,40 +344,24 @@ async function handleMigrationProcess(
     ),
   });
 
-  const uidMap: Record<string, string> = {};
-  let migrationId: number;
-
   try {
-    const { data } = await beginMigration(derivedAccountId, appId);
-    const { migrationId: mid, componentsRequiringUids } = data;
+    const { data } = await initializeMigration(derivedAccountId, appId);
 
-    migrationId = mid;
+    const { migrationId } = data;
+
+    const uidMap = await checkInitializationStatus(
+      derivedAccountId,
+      migrationId,
+      platformVersion
+    );
+
     SpinniesManager.succeed('beginningMigration', {
       text: i18n(
         'commands.project.subcommands.migrateApp.spinners.migrationStarted'
       ),
     });
 
-    if (Object.values(componentsRequiringUids).length !== 0) {
-      for (const [componentId, component] of Object.entries(
-        componentsRequiringUids
-      )) {
-        uidMap[componentId] = await inputPrompt(
-          i18n(
-            'commands.project.subcommands.migrateApp.prompt.uidForComponent',
-            {
-              componentName: component.componentHint || component.componentType,
-            }
-          ),
-          {
-            validate: (uid: string) => {
-              const result = validateUid(uid);
-              return result === undefined ? true : result;
-            },
-          }
-        );
-      }
-    }
+    return { migrationId, uidMap };
   } catch (e) {
     SpinniesManager.fail('beginningMigration', {
       text: i18n(
@@ -341,8 +370,6 @@ async function handleMigrationProcess(
     });
     throw e;
   }
-
-  return { migrationId, uidMap };
 }
 
 async function pollMigrationStatus(
@@ -486,7 +513,8 @@ export async function migrateApp2025_2(
 
   const { migrationId, uidMap } = await handleMigrationProcess(
     derivedAccountId,
-    appIdToMigrate
+    appIdToMigrate,
+    options.platformVersion
   );
 
   const buildId = await finalizeMigration(
