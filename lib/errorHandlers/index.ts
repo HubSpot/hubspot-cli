@@ -1,8 +1,5 @@
 import { logger } from '@hubspot/local-dev-lib/logger';
-import {
-  isHubSpotHttpError,
-  isValidationError,
-} from '@hubspot/local-dev-lib/errors/index';
+import { isHubSpotHttpError } from '@hubspot/local-dev-lib/errors/index';
 import { getConfig } from '@hubspot/local-dev-lib/config';
 
 import { shouldSuppressError } from './suppressError';
@@ -28,7 +25,7 @@ export function logError(error: unknown, context?: ApiErrorContext): void {
     error.updateContext(context);
   }
 
-  if (isHubSpotHttpError(error) && isValidationError(error)) {
+  if (isHubSpotHttpError(error)) {
     logger.error(error.formattedValidationErrors());
   } else if (isErrorWithMessageOrReason(error)) {
     const message: string[] = [];

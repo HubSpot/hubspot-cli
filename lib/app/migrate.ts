@@ -191,7 +191,7 @@ async function handleMigrationSetup(
   const { projectExists } = await ensureProjectExists(
     derivedAccountId,
     projectName,
-    { forceCreate: false, allowCreate: false, noLogs: true }
+    { allowCreate: false, noLogs: true }
   );
 
   if (projectExists) {
