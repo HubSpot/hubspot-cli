@@ -11,8 +11,6 @@ export const commands = {
     },
     srcIsProject: (src, command) =>
       `"${src}" is in a project folder. Did you mean "hs project ${command}"?`,
-    setDefaultAccountMoved:
-      'This command has moved. Try `hs accounts use` instead',
     handleDeprecatedEnvVariables: {
       portalEnvVarDeprecated:
         'The HUBSPOT_PORTAL_ID environment variable is deprecated. Please use HUBSPOT_ACCOUNT_ID instead.',
