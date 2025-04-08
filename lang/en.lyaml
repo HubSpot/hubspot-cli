@@ -1109,6 +1109,7 @@ en:
         missingComponents: "Couldn't find the following components in the deployed build for this project: {{#bold}}'{{ missingComponents }}'{{/bold}}. This may cause issues in local development."
         defaultWarning: "{{#bold}}Changing project configuration requires a new project build.{{/bold}}"
         defaultPublicAppWarning: "{{#bold}}Changing project configuration requires a new project build.{{/bold}}\n\nThis will affect your public app's {{#bold}}{{ installCount }} existing {{ installText }}{{/bold}}. If your app has users in production, we strongly recommend creating a copy of this app to test your changes before proceding."
+        defaultMarketplaceAppWarning: "{{#bold}}Changing project configuration requires creating a new project build.{{/bold}}\n\nYour marketplace app is currently installed in {{#bold}}{{ installCount }} {{ accountText }}{{/bold}}. Any uploaded changes will impact your app's users. We strongly recommend creating a copy of this app to test your changes before proceding."
         header: "{{ warning }} To reflect these changes and continue testing:"
         stopDev: "  * Stop {{ command }}"
         runUpload: "  * Run {{ command }}"
@@ -1244,6 +1245,9 @@ en:
           projectDevCommand:
             command: "hs project dev"
             message: "Run {{ command }} to set up your test environment and start local development"
+          projectInstallDepsCommand:
+            command: "hs project install-deps"
+            message: "Run {{ command }} to install dependencies for your project components"
           projectCommandTip:
             message: "Tip: All project commands must be run from within a project directory"
           sampleProjects:

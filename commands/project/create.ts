@@ -139,6 +139,7 @@ exports.handler = async options => {
     'projectCommandTip',
     'projectUploadCommand',
     'projectDevCommand',
+    'projectInstallDepsCommand',
     'projectHelpCommand',
     'feedbackCommand',
     'sampleProjects',
