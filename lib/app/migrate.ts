@@ -455,11 +455,10 @@ export async function migrateApp2023_2(
   options: ArgumentsCamelCase<MigrateAppOptions>,
   accountConfig: CLIAccount
 ): Promise<void> {
-  const i18nKey = 'commands.project.subcommands.migrateApp';
   const accountName = uiAccountDescription(derivedAccountId);
 
   if (!isAppDeveloperAccount(accountConfig)) {
-    logInvalidAccountError(i18nKey);
+    logInvalidAccountError('commands.project.subcommands.migrateApp');
     process.exit(EXIT_CODES.SUCCESS);
   }
 
@@ -482,7 +481,7 @@ export async function migrateApp2023_2(
     const preventProjectMigrations = selectedApp.preventProjectMigrations;
     const listingInfo = selectedApp.listingInfo;
     if (preventProjectMigrations && listingInfo) {
-      logger.error(i18n(`${i18nKey}.errors.invalidApp`, { appId }));
+      logger.error(i18n(`commands.project.subcommands.migrateApp.errors.invalidApp`, { appId }));
       process.exit(EXIT_CODES.ERROR);
     }
   } catch (error) {
@@ -504,7 +503,7 @@ export async function migrateApp2023_2(
 
   if (projectExists) {
     throw new Error(
-      i18n(`${i18nKey}.errors.projectAlreadyExists`, {
+      i18n(`commands.project.subcommands.migrateApp.errors.projectAlreadyExists`, {
         projectName,
       })
     );
@@ -518,18 +517,18 @@ export async function migrateApp2023_2(
 
   logger.log('');
   uiLine();
-  logger.warn(`${i18n(`${i18nKey}.warning.title`)}\n`);
-  logger.log(i18n(`${i18nKey}.warning.projectConversion`));
-  logger.log(`${i18n(`${i18nKey}.warning.appConfig`)}\n`);
-  logger.log(`${i18n(`${i18nKey}.warning.buildAndDeploy`)}\n`);
-  logger.log(`${i18n(`${i18nKey}.warning.existingApps`)}\n`);
-  logger.log(i18n(`${i18nKey}.warning.copyApp`));
+  logger.warn(`${i18n(`commands.project.subcommands.migrateApp.warning.title`)}\n`);
+  logger.log(i18n(`commands.project.subcommands.migrateApp.warning.projectConversion`));
+  logger.log(`${i18n(`commands.project.subcommands.migrateApp.warning.appConfig`)}\n`);
+  logger.log(`${i18n(`commands.project.subcommands.migrateApp.warning.buildAndDeploy`)}\n`);
+  logger.log(`${i18n(`commands.project.subcommands.migrateApp.warning.existingApps`)}\n`);
+  logger.log(i18n(`commands.project.subcommands.migrateApp.warning.copyApp`));
   uiLine();
 
   const { shouldCreateApp } = await promptUser({
     name: 'shouldCreateApp',
     type: 'confirm',
-    message: i18n(`${i18nKey}.createAppPrompt`),
+    message: i18n(`commands.project.subcommands.migrateApp.createAppPrompt`),
   });
   process.stdin.resume();
 
@@ -541,13 +540,13 @@ export async function migrateApp2023_2(
     SpinniesManager.init();
 
     SpinniesManager.add('migrateApp', {
-      text: i18n(`${i18nKey}.migrationStatus.inProgress`),
+      text: i18n(`commands.project.subcommands.migrateApp.migrationStatus.inProgress`),
     });
 
     handleKeypress(async key => {
       if ((key.ctrl && key.name === 'c') || key.name === 'q') {
         SpinniesManager.remove('migrateApp');
-        logger.log(i18n(`${i18nKey}.migrationInterrupted`));
+        logger.log(i18n(`commands.project.subcommands.migrateApp.migrationInterrupted`));
         process.exit(EXIT_CODES.SUCCESS);
       }
     });
@@ -581,16 +580,16 @@ export async function migrateApp2023_2(
       );
 
       SpinniesManager.succeed('migrateApp', {
-        text: i18n(`${i18nKey}.migrationStatus.done`),
+        text: i18n(`commands.project.subcommands.migrateApp.migrationStatus.done`),
         succeedColor: 'white',
       });
       logger.log('');
       uiLine();
-      logger.success(i18n(`${i18nKey}.migrationStatus.success`));
+      logger.success(i18n(`commands.project.subcommands.migrateApp.migrationStatus.success`));
       logger.log('');
       logger.log(
         uiLink(
-          i18n(`${i18nKey}.projectDetailsLink`),
+          i18n(`commands.project.subcommands.migrateApp.projectDetailsLink`),
           `${baseUrl}/developer-projects/${derivedAccountId}/project/${encodeURIComponent(
             project!.name
           )}`
@@ -600,7 +599,7 @@ export async function migrateApp2023_2(
     }
   } catch (error) {
     SpinniesManager.fail('migrateApp', {
-      text: i18n(`${i18nKey}.migrationStatus.failure`),
+      text: i18n(`commands.project.subcommands.migrateApp.migrationStatus.failure`),
       failColor: 'white',
     });
     throw error;
