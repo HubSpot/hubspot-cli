@@ -62,19 +62,12 @@ async function handleMigrationSetup(
   const { data } = await listAppsForMigration(derivedAccountId);
 
   const { migratableApps, unmigratableApps } = data;
+
   const allApps = [...migratableApps, ...unmigratableApps].filter(
     app => !app.projectName
   );
 
   if (allApps.length === 0) {
-    throw new Error(
-      i18n(`commands.project.subcommands.migrateApp.errors.noApps`, {
-        accountId: derivedAccountId,
-      })
-    );
-  }
-
-  if (migratableApps.length === 0) {
     const reasons = unmigratableApps.map(
       app =>
         `${chalk.bold(app.appName)}: ${getUnmigratableReason(app.unmigratableReason)}`
@@ -246,15 +239,21 @@ async function beginMigration(
     for (const [componentId, component] of Object.entries(
       componentsRequiringUids
     )) {
+      const { componentHint, componentType } = component;
       uidMap[componentId] = await inputPrompt(
         i18n('commands.project.subcommands.migrateApp.prompt.uidForComponent', {
-          componentName: component.componentHint || component.componentType,
+          componentName: componentHint
+            ? `${componentHint} [${componentType}]`
+            : componentType,
         }),
         {
           validate: (uid: string) => {
             const result = validateUid(uid);
             return result === undefined ? true : result;
           },
+          defaultAnswer: (componentHint || '')
+            .toLowerCase()
+            .replace(/[^a-z0-9_]/g, ''),
         }
       );
     }
