@@ -11,7 +11,7 @@ import { MIGRATION_STATUS } from '@hubspot/local-dev-lib/types/Migration';
 import { downloadProject } from '@hubspot/local-dev-lib/api/projects';
 
 import { confirmPrompt, inputPrompt, listPrompt } from '../prompts/promptUtils';
-import { uiCommandReference, uiLine } from '../ui';
+import { uiAccountDescription, uiCommandReference, uiLine } from '../ui';
 import { i18n } from '../lang';
 import { ensureProjectExists } from '../projects';
 import SpinniesManager from '../ui/SpinniesManager';
@@ -59,30 +59,39 @@ async function handleMigrationSetup(
   projectDest?: string;
 }> {
   const { name, dest, appId } = options;
-  const { data } = await listAppsForMigration(derivedAccountId);
+  const {
+    data: { migratableApps, unmigratableApps },
+  } = await listAppsForMigration(derivedAccountId);
 
-  const { migratableApps, unmigratableApps } = data;
-
-  const allApps = [...migratableApps, ...unmigratableApps].filter(
-    app => !app.projectName
+  const migratableAppsWithoutProject = migratableApps.filter(
+    (app: MigrationApp) => !app.projectName
   );
 
-  if (allApps.length === 0) {
-    const reasons = unmigratableApps.map(
+  const unmigratableAppsWithoutProject = unmigratableApps.filter(
+    (app: MigrationApp) => !app.projectName
+  );
+
+  const allAppsWithoutProject = [
+    ...migratableAppsWithoutProject,
+    ...unmigratableAppsWithoutProject,
+  ];
+
+  if (allAppsWithoutProject.length === 0) {
+    const reasons = unmigratableAppsWithoutProject.map(
       app =>
         `${chalk.bold(app.appName)}: ${getUnmigratableReason(app.unmigratableReason)}`
     );
 
     throw new Error(
       `${i18n(`commands.project.subcommands.migrateApp.errors.noAppsEligible`, {
-        accountId: derivedAccountId,
-      })} \n  - ${reasons.join('\n  - ')}`
+        accountId: uiAccountDescription(derivedAccountId),
+      })}${reasons.length ? `\n  - ${reasons.join('\n  - ')}` : ''}`
     );
   }
 
   if (
     appId &&
-    !allApps.some(app => {
+    !allAppsWithoutProject.some(app => {
       return app.appId === appId;
     })
   ) {
@@ -93,7 +102,7 @@ async function handleMigrationSetup(
     );
   }
 
-  const appChoices = allApps.map(app => ({
+  const appChoices = allAppsWithoutProject.map(app => ({
     name: app.isMigratable
       ? app.appName
       : `[${chalk.yellow('DISABLED')}] ${app.appName} `,
@@ -114,7 +123,9 @@ async function handleMigrationSetup(
     appIdToMigrate = selectedAppId;
   }
 
-  const selectedApp = allApps.find(app => app.appId === appIdToMigrate);
+  const selectedApp = allAppsWithoutProject.find(
+    app => app.appId === appIdToMigrate
+  );
 
   const migratableComponents: string[] = [];
   const unmigratableComponents: string[] = [];
@@ -243,8 +254,8 @@ async function beginMigration(
       uidMap[componentId] = await inputPrompt(
         i18n('commands.project.subcommands.migrateApp.prompt.uidForComponent', {
           componentName: componentHint
-            ? `${componentHint} [${componentType}]`
-            : componentType,
+            ? `${componentHint} [${mapToUserFacingType(componentType)}]`
+            : mapToUserFacingType(componentType),
         }),
         {
           validate: (uid: string) => {
