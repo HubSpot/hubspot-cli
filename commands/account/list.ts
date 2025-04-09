@@ -18,10 +18,8 @@ import {
 } from '@hubspot/local-dev-lib/constants/config';
 import { CommonArgs, ConfigArgs } from '../../types/Yargs';
 
-const i18nKey = 'commands.account.subcommands.list';
-
 export const command = ['list', 'ls'];
-export const describe = i18n(`${i18nKey}.describe`);
+export const describe = i18n('commands.account.subcommands.list.describe');
 
 type AccountListArgs = CommonArgs & ConfigArgs;
 
@@ -103,22 +101,28 @@ export async function handler(
   const configPath = getConfigPath();
   const accountsList = getConfigAccounts() || [];
   const mappedAccountData = sortAndMapAccounts(accountsList);
+
   const accountData = getAccountData(mappedAccountData);
+
   accountData.unshift(
     getTableHeader([
-      i18n(`${i18nKey}.labels.name`),
-      i18n(`${i18nKey}.labels.accountId`),
-      i18n(`${i18nKey}.labels.authType`),
+      i18n('commands.account.subcommands.list.labels.name'),
+      i18n('commands.account.subcommands.list.labels.accountId'),
+      i18n('commands.account.subcommands.list.labels.authType'),
     ])
   );
 
-  logger.log(i18n(`${i18nKey}.configPath`, { configPath: configPath! }));
   logger.log(
-    i18n(`${i18nKey}.defaultAccount`, {
+    i18n('commands.account.subcommands.list.configPath', {
+      configPath: configPath!,
+    })
+  );
+  logger.log(
+    i18n('commands.account.subcommands.list.defaultAccount', {
       account: getConfigDefaultAccount()!,
     })
   );
-  logger.log(i18n(`${i18nKey}.accounts`));
+  logger.log(i18n('commands.account.subcommands.list.accounts'));
   logger.log(getTableContents(accountData, { border: { bodyLeft: '  ' } }));
 }
 

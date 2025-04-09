@@ -6,7 +6,6 @@ en:
         cmsUpdateNotification: "{{#bold}}The CMS CLI is now the HubSpot CLI{{/bold}}\n\nTo upgrade, uninstall {{#bold}}{{ packageName }}{{/bold}}\nand then run {{ updateCommand }}"
         cliUpdateNotification: "HubSpot CLI version {{#cyan}}{{#bold}}{currentVersion}{{/bold}}{{/cyan}} is outdated.\nRun {{ updateCommand }} to upgrade to version {{#cyan}}{{#bold}}{latestVersion}{{/bold}}{{/cyan}}"
       srcIsProject: "\"{{ src }}\" is in a project folder. Did you mean \"hs project {{command}}\"?"
-      setDefaultAccountMoved: "This command has moved. Try `hs accounts use` instead"
       handleDeprecatedEnvVariables:
         portalEnvVarDeprecated: "The HUBSPOT_PORTAL_ID environment variable is deprecated. Please use HUBSPOT_ACCOUNT_ID instead."
       loadConfigMiddleware:
@@ -631,7 +630,7 @@ en:
           debug:
             deploying: "Deploying project at path: {{ path }}"
           errors:
-            deploy: "Deploy error: {{ details }}"
+            deploy: "Deploy error: an unknown error occurred."
             noBuilds: "Deploy error: no builds for this project were found."
             noBuildId: "You must specify a build to deploy"
             projectNotFound: "The project {{ projectName }} does not exist in account {{ accountIdentifier }}. Run {{ command }} to upload your project files to HubSpot."
@@ -1077,6 +1076,7 @@ en:
         missingComponents: "Couldn't find the following components in the deployed build for this project: {{#bold}}'{{ missingComponents }}'{{/bold}}. This may cause issues in local development."
         defaultWarning: "{{#bold}}Changing project configuration requires a new project build.{{/bold}}"
         defaultPublicAppWarning: "{{#bold}}Changing project configuration requires a new project build.{{/bold}}\n\nThis will affect your public app's {{#bold}}{{ installCount }} existing {{ installText }}{{/bold}}. If your app has users in production, we strongly recommend creating a copy of this app to test your changes before proceding."
+        defaultMarketplaceAppWarning: "{{#bold}}Changing project configuration requires creating a new project build.{{/bold}}\n\nYour marketplace app is currently installed in {{#bold}}{{ installCount }} {{ accountText }}{{/bold}}. Any uploaded changes will impact your app's users. We strongly recommend creating a copy of this app to test your changes before proceding."
         header: "{{ warning }} To reflect these changes and continue testing:"
         stopDev: "  * Stop {{ command }}"
         runUpload: "  * Run {{ command }}"
@@ -1212,6 +1212,9 @@ en:
           projectDevCommand:
             command: "hs project dev"
             message: "Run {{ command }} to set up your test environment and start local development"
+          projectInstallDepsCommand:
+            command: "hs project install-deps"
+            message: "Run {{ command }} to install dependencies for your project components"
           projectCommandTip:
             message: "Tip: All project commands must be run from within a project directory"
           sampleProjects:

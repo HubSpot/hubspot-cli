@@ -7,9 +7,7 @@ import { i18n } from '../../lib/lang';
 import { getTableContents } from '../../lib/ui/table';
 import { CommonArgs, ConfigArgs } from '../../types/Yargs';
 
-const i18nKey = 'commands.account.subcommands.info';
-
-export const describe = i18n(`${i18nKey}.describe`);
+export const describe = i18n(`commands.account.subcommands.info.describe`);
 export const command = 'info [account]';
 
 type AccountInfoArgs = CommonArgs & ConfigArgs;
@@ -32,25 +30,42 @@ export async function handler(
 
     scopeGroups = response.scopeGroups.map(s => [s]);
 
-    logger.log(i18n(`${i18nKey}.name`, { name: name! }));
-    logger.log(i18n(`${i18nKey}.accountId`, { accountId: derivedAccountId }));
-    logger.log(i18n(`${i18nKey}.scopeGroups`));
+    logger.log(i18n(`commands.account.subcommands.info.name`, { name: name! }));
+    logger.log(
+      i18n(`commands.account.subcommands.info.accountId`, {
+        accountId: derivedAccountId,
+      })
+    );
+    logger.log(i18n(`commands.account.subcommands.info.scopeGroups`));
     logger.log(getTableContents(scopeGroups, { border: { bodyLeft: '  ' } }));
   } else {
-    logger.log(i18n(`${i18nKey}.errors.notUsingPersonalAccessKey`));
+    logger.log(
+      i18n(`commands.account.subcommands.info.errors.notUsingPersonalAccessKey`)
+    );
   }
 }
 
 function accountInfoBuilder(yargs: Argv): Argv<AccountInfoArgs> {
   yargs.positional('account', {
-    describe: i18n(`${i18nKey}.options.account.describe`),
+    describe: i18n(
+      `commands.account.subcommands.info.options.account.describe`
+    ),
     type: 'string',
   });
 
   yargs.example([
-    ['$0 accounts info', i18n(`${i18nKey}.examples.default`)],
-    ['$0 accounts info MyAccount', i18n(`${i18nKey}.examples.nameBased`)],
-    ['$0 accounts info 1234567', i18n(`${i18nKey}.examples.idBased`)],
+    [
+      '$0 accounts info',
+      i18n(`commands.account.subcommands.info.examples.default`),
+    ],
+    [
+      '$0 accounts info MyAccount',
+      i18n(`commands.account.subcommands.info.examples.nameBased`),
+    ],
+    [
+      '$0 accounts info 1234567',
+      i18n(`commands.account.subcommands.info.examples.idBased`),
+    ],
   ]);
 
   return yargs as Argv<AccountInfoArgs>;

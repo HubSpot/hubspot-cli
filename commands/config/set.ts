@@ -9,10 +9,8 @@ const {
   setAllowUsageTracking,
 } = require('../../lib/configOptions');
 
-const i18nKey = 'commands.config.subcommands.set';
-
 exports.command = 'set';
-exports.describe = i18n(`${i18nKey}.describe`);
+exports.describe = i18n(`commands.config.subcommands.set.describe`);
 
 const selectOptions = async () => {
   const { cmsPublishMode } = await promptUser([
@@ -21,7 +19,7 @@ const selectOptions = async () => {
       look: false,
       name: 'cmsPublishMode',
       pageSize: 20,
-      message: i18n(`${i18nKey}.promptMessage`),
+      message: i18n(`commands.config.subcommands.set.promptMessage`),
       choices: [
         {
           name: 'Default CMS publish mode',
@@ -73,22 +71,33 @@ exports.builder = yargs => {
   yargs
     .options({
       'default-cms-publish-mode': {
-        describe: i18n(`${i18nKey}.options.defaultMode.describe`),
+        describe: i18n(
+          `commands.config.subcommands.set.options.defaultMode.describe`
+        ),
         type: 'string',
       },
       'allow-usage-tracking': {
-        describe: i18n(`${i18nKey}.options.allowUsageTracking.describe`),
+        describe: i18n(
+          `commands.config.subcommands.set.options.allowUsageTracking.describe`
+        ),
         type: 'boolean',
       },
       'http-timeout': {
-        describe: i18n(`${i18nKey}.options.httpTimeout.describe`),
+        describe: i18n(
+          `commands.config.subcommands.set.options.httpTimeout.describe`
+        ),
         type: 'string',
       },
     })
     .conflicts('defaultCmsPublishMode', 'allowUsageTracking')
     .conflicts('defaultCmsPublishMode', 'httpTimeout')
     .conflicts('allowUsageTracking', 'httpTimeout')
-    .example([['$0 config set', i18n(`${i18nKey}.examples.default`)]]);
+    .example([
+      [
+        '$0 config set',
+        i18n(`commands.config.subcommands.set.examples.default`),
+      ],
+    ]);
 
   return yargs;
 };

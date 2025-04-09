@@ -1,0 +1,33 @@
+{
+  "latestBuild": {
+    "activitySource": {
+      "userId": 123,
+      "type": "HUBSPOT"
+    },
+    "buildId": 8,
+    "createdAt": "123456",
+    "deployableState": "DEPLOYABLE",
+    "deployStatusTaskLocator": {
+      "id": "123",
+      "links": []
+    },
+    "enqueuedAt": "123456",
+    "finishedAt": "123456",
+    "isAutoDeployEnabled": true,
+    "portalId": 123,
+    "projectName": "project name",
+    "startedAt": "123456",
+    "status": "SUCCESS",
+    "subbuildStatuses": [],
+    "uploadMessage": "Upload message",
+    "autoDeployId": 123
+  },
+  "deployedBuildId": 1,
+  "createdAt": 123456,
+  "deletedAt": 123456,
+  "updatedAt": 123456,
+  "id": 123,
+  "isLocked": false,
+  "name": "project name",
+  "portalId": 123
+}

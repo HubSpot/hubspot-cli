@@ -11,8 +11,6 @@ export const commands = {
     },
     srcIsProject: (src, command) =>
       `"${src}" is in a project folder. Did you mean "hs project ${command}"?`,
-    setDefaultAccountMoved:
-      'This command has moved. Try `hs accounts use` instead',
     handleDeprecatedEnvVariables: {
       portalEnvVarDeprecated:
         'The HUBSPOT_PORTAL_ID environment variable is deprecated. Please use HUBSPOT_ACCOUNT_ID instead.',
@@ -2841,7 +2839,7 @@ export const lib = {
     disabledUrlText: 'See all HubSpot CLI commands here.',
     featureHighlight: {
       defaultTitle: "What's next?",
-      commandKeys: {
+      featureKeys: {
         accountOption: {
           command: '--account',
           message: command =>
@@ -2894,6 +2892,11 @@ export const lib = {
           command: 'hs project dev',
           message: command =>
             `Run ${command} to set up your test environment and start local development`,
+        },
+        projectInstallDepsCommand: {
+          command: 'hs project install-deps',
+          message: command =>
+            `Run ${command} to install dependencies for your project components`,
         },
         sampleProjects: {
           linkText: "HubSpot's sample projects",
