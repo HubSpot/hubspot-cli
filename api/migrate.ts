@@ -1,10 +1,11 @@
-import { HubSpotPromise } from '../../hubspot-local-dev-lib/dist/types/Http';
+import { HubSpotPromise } from '@hubspot/local-dev-lib/types/Http';
 import {
   PLATFORM_VERSIONS,
   UNMIGRATABLE_REASONS,
 } from '@hubspot/local-dev-lib/constants/projects';
 import { http } from '@hubspot/local-dev-lib/http';
 import { MIGRATION_STATUS } from '@hubspot/local-dev-lib/types/Migration';
+
 const MIGRATIONS_API_PATH_V2 = 'dfs/migrations/v2';
 
 interface BaseMigrationApp {
