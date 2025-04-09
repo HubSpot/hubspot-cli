@@ -35,6 +35,11 @@ export const SANDBOX_API_TYPE_MAP = {
   [HUBSPOT_ACCOUNT_TYPES.DEVELOPMENT_SANDBOX]: 2,
 } as const;
 
+export const SANDBOX_TYPE_MAP_V2 = {
+  [HUBSPOT_ACCOUNT_TYPES.STANDARD_SANDBOX]: 'STANDARD',
+  [HUBSPOT_ACCOUNT_TYPES.DEVELOPMENT_SANDBOX]: 'DEVELOPMENT',
+} as const;
+
 export function getSandboxTypeAsString(accountType?: AccountType): string {
   if (accountType === HUBSPOT_ACCOUNT_TYPES.DEVELOPMENT_SANDBOX) {
     return 'development'; // Only place we're using this specific name

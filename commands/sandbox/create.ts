@@ -33,7 +33,7 @@ import { sandboxTypePrompt } from '../../lib/prompts/sandboxesPrompt';
 import { promptUser } from '../../lib/prompts/promptUtils';
 import { syncSandbox } from '../../lib/sandboxSync';
 import { logError } from '../../lib/errorHandlers/index';
-import { buildSandbox } from '../../lib/buildAccount';
+import { buildSandbox, buildV2Sandbox } from '../../lib/buildAccount';
 import { hubspotAccountNamePrompt } from '../../lib/prompts/accountNamePrompt';
 import {
   CommonArgs,
@@ -42,7 +42,7 @@ import {
   EnvironmentArgs,
   TestingArgs,
 } from '../../types/Yargs';
-import { SandboxSyncTask } from '../../types/Sandboxes';
+import { hasFeature } from '../../lib/hasFeature';
 
 const i18nKey = 'commands.sandbox.subcommands.create';
 
@@ -161,15 +161,42 @@ export async function handler(
       contactRecordsSyncPromptResult = contactRecordsSyncPrompt;
     }
   }
+  // Check if parent portal is ungated for v2 sandboxes
+  const isUngatedForV2Cli = await hasFeature(
+    derivedAccountId,
+    'sandboxes:v2:cliEnabled'
+  );
+  const isUngatedForV2Sandboxes = await hasFeature(
+    derivedAccountId,
+    'sandboxes:v2:enabled'
+  );
+  // console.log(
+  //   'is this ungated for v2 sandboxes??: ',
+  //   derivedAccountId,
+  //   isUngatedForV2Sandboxes,
+  //   isUngatedForV2Cli
+  // );
 
   try {
-    const result = await buildSandbox(
-      sandboxName,
-      accountConfig,
-      sandboxType,
-      env,
-      force
-    );
+    let result;
+    if (isUngatedForV2Sandboxes && isUngatedForV2Cli) {
+      result = await buildV2Sandbox(
+        sandboxName,
+        accountConfig,
+        sandboxType,
+        contactRecordsSyncPromptResult,
+        env,
+        force
+      );
+    } else {
+      result = await buildSandbox(
+        sandboxName,
+        accountConfig,
+        sandboxType,
+        env,
+        force
+      );
+    }
 
     const sandboxAccountConfig = getAccountConfig(result.sandbox.sandboxHubId);
     // Check if sandbox account config exists
@@ -183,27 +210,29 @@ export async function handler(
       process.exit(EXIT_CODES.ERROR);
     }
 
-    // For v1 sandboxes, keep sync here. Once we migrate to v2, this will be handled by BE automatically
-    async function handleSyncSandbox(
-      syncTasks: SandboxSyncTask[]
-    ): Promise<void> {
-      await syncSandbox(sandboxAccountConfig!, accountConfig!, env, syncTasks);
-    }
-    try {
-      let availableSyncTasks = await getAvailableSyncTypes(
-        accountConfig,
-        sandboxAccountConfig
-      );
-
-      if (!contactRecordsSyncPromptResult) {
-        availableSyncTasks = availableSyncTasks.filter(
-          t => t.type !== SYNC_TYPES.OBJECT_RECORDS
+    if (result && !isUngatedForV2Sandboxes) {
+      // For v1 sandboxes, keep sync here. Once we migrate to v2, this will be handled by BE automatically
+      try {
+        let availableSyncTasks = await getAvailableSyncTypes(
+          accountConfig,
+          sandboxAccountConfig
         );
+
+        if (!contactRecordsSyncPromptResult) {
+          availableSyncTasks = availableSyncTasks.filter(
+            t => t.type !== SYNC_TYPES.OBJECT_RECORDS
+          );
+        }
+        await syncSandbox(
+          sandboxAccountConfig!,
+          accountConfig!,
+          env,
+          availableSyncTasks
+        );
+      } catch (err) {
+        logError(err);
+        throw err;
       }
-      await handleSyncSandbox(availableSyncTasks);
-    } catch (err) {
-      logError(err);
-      throw err;
     }
 
     const highlightItems = ['accountsUseCommand', 'projectCreateCommand'];

@@ -12,7 +12,11 @@ import { getAccountIdentifier } from '@hubspot/local-dev-lib/config/getAccountId
 import { logger } from '@hubspot/local-dev-lib/logger';
 import { createDeveloperTestAccount } from '@hubspot/local-dev-lib/api/developerTestAccounts';
 import { HUBSPOT_ACCOUNT_TYPES } from '@hubspot/local-dev-lib/constants/config';
-import { createSandbox } from '@hubspot/local-dev-lib/api/sandboxHubs';
+import {
+  createSandbox,
+  createV2Sandbox,
+  getPersonalAccessKey,
+} from '@hubspot/local-dev-lib/api/sandboxHubs';
 import { Environment } from '@hubspot/local-dev-lib/types/Config';
 
 import { personalAccessKeyPrompt } from './prompts/personalAccessKeyPrompt';
@@ -21,11 +25,18 @@ import { cliAccountNamePrompt } from './prompts/accountNamePrompt';
 import SpinniesManager from './ui/SpinniesManager';
 import { debugError, logError } from './errorHandlers/index';
 
-import { SANDBOX_API_TYPE_MAP, handleSandboxCreateError } from './sandboxes';
+import {
+  SANDBOX_API_TYPE_MAP,
+  SANDBOX_TYPE_MAP_V2,
+  handleSandboxCreateError,
+} from './sandboxes';
 import { handleDeveloperTestAccountCreateError } from './developerTestAccounts';
 import { CLIAccount } from '@hubspot/local-dev-lib/types/Accounts';
 import { DeveloperTestAccount } from '@hubspot/local-dev-lib/types/developerTestAccounts';
-import { SandboxResponse } from '@hubspot/local-dev-lib/types/Sandbox';
+import {
+  SandboxResponse,
+  V2Sandbox,
+} from '@hubspot/local-dev-lib/types/Sandbox';
 import { SandboxAccountType } from '../types/Sandboxes';
 
 export async function saveAccountToConfig(
@@ -230,4 +241,88 @@ export async function buildSandbox(
   }
 
   return sandbox;
+}
+
+export async function buildV2Sandbox(
+  sandboxName: string,
+  parentAccountConfig: CLIAccount,
+  sandboxType: SandboxAccountType,
+  syncObjectRecords: boolean,
+  env: Environment,
+  force = false
+) {
+  let i18nKey: string;
+  if (sandboxType === HUBSPOT_ACCOUNT_TYPES.STANDARD_SANDBOX) {
+    i18nKey = 'lib.sandbox.create.loading.standard';
+  } else {
+    i18nKey = 'lib.sandbox.create.loading.developer';
+  }
+  const id = getAccountIdentifier(parentAccountConfig);
+  const parentAccountId = getAccountId(id);
+
+  if (!parentAccountId) {
+    throw new Error(i18n(`${i18nKey}.fail`));
+  }
+
+  SpinniesManager.init({
+    succeedColor: 'white',
+  });
+
+  logger.log('');
+  SpinniesManager.add('buildV2Sandbox', {
+    text: i18n(`${i18nKey}.add`, {
+      accountName: sandboxName,
+    }),
+  });
+
+  let sandbox: V2Sandbox;
+  let pak: string | undefined;
+
+  try {
+    const sandboxTypeV2 = SANDBOX_TYPE_MAP_V2[sandboxType];
+    const { data } = await createV2Sandbox(
+      parentAccountId,
+      sandboxName,
+      sandboxTypeV2,
+      syncObjectRecords
+    );
+    sandbox = { ...data };
+
+    // TODO: Either set up temporary poll, or wait for BE to remove sandbox readiness check when fetching PAK
+    const {
+      data: { personalAccessKey },
+    } = await getPersonalAccessKey(parentAccountId, sandbox.sandboxHubId);
+    pak = personalAccessKey?.oauthAccessToken;
+
+    SpinniesManager.succeed('buildSandbox', {
+      text: i18n(`${i18nKey}.succeed`, {
+        accountName: sandboxName,
+        accountId: sandbox.sandboxHubId,
+      }),
+    });
+  } catch (e) {
+    debugError(e);
+    SpinniesManager.fail('buildV2Sandbox', {
+      text: i18n(`${i18nKey}.fail`, {
+        accountName: sandboxName,
+      }),
+    });
+
+    handleSandboxCreateError(e, env, sandboxName, parentAccountId);
+  }
+
+  try {
+    await saveAccountToConfig(
+      sandbox.sandboxHubId,
+      sandboxName,
+      env,
+      pak,
+      force
+    );
+  } catch (err) {
+    logError(err);
+    throw err;
+  }
+
+  return { sandbox };
 }
