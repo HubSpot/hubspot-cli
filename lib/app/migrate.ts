@@ -240,11 +240,7 @@ async function beginMigration(
 
   const { componentsRequiringUids } = pollResponse;
 
-  SpinniesManager.succeed('beginningMigration', {
-    text: i18n(
-      'commands.project.subcommands.migrateApp.spinners.migrationStarted'
-    ),
-  });
+  SpinniesManager.remove('beginningMigration');
 
   if (Object.values(componentsRequiringUids).length !== 0) {
     for (const [componentId, component] of Object.entries(

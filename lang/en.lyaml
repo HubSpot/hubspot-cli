@@ -606,7 +606,6 @@ en:
             proceed: 'Would you like to proceed?'
           spinners:
             beginningMigration: "Beginning migration"
-            migrationStarted: "Migration started"
             unableToStartMigration: "Unable to begin migration"
             finishingMigration: "Wrapping up migration"
             migrationComplete: "Migration completed"
