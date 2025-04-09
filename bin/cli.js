@@ -1,28 +1,31 @@
 #!/usr/bin/env node
 
 const yargs = require('yargs');
+const updateNotifier = require('update-notifier');
+const chalk = require('chalk');
+
 const { logger } = require('@hubspot/local-dev-lib/logger');
+const { addUserAgentHeader } = require('@hubspot/local-dev-lib/http');
+const {
+  loadConfig,
+  getAccountId,
+  configFileExists,
+  getConfigPath,
+  validateConfig,
+} = require('@hubspot/local-dev-lib/config');
 const { logError } = require('../lib/errorHandlers/index');
 const { setLogLevel, getCommandName } = require('../lib/commonOpts');
+const { validateAccount } = require('../lib/validation');
 const {
   trackHelpUsage,
   trackConvertFieldsUsage,
 } = require('../lib/usageTracking');
+const { getIsInProject } = require('../lib/projects');
+const pkg = require('../package.json');
+const { i18n } = require('../lib/lang');
 const { EXIT_CODES } = require('../lib/enums/exitCodes');
-const {
-  loadConfigMiddleware,
-  injectAccountIdMiddleware,
-  validateAccountOptions,
-  handleDeprecatedEnvVariables,
-} = require('../lib/middleware/configMiddleware');
-const {
-  notifyAboutUpdates,
-} = require('../lib/middleware/notificationsMiddleware');
-const {
-  checkAndWarnGitInclusionMiddleware,
-} = require('../lib/middleware/gitMiddleware');
-const { performChecks } = require('../lib/middleware/yargsChecksMiddleware');
-const { setRequestHeaders } = require('../lib/middleware/requestMiddleware');
+const { UI_COLORS, uiCommandReference, uiDeprecatedTag } = require('../lib/ui');
+const { checkAndWarnGitInclusion } = require('../lib/ui/git');
 
 const removeCommand = require('../commands/remove');
 const initCommand = require('../commands/init');
@@ -52,7 +55,37 @@ const feedbackCommand = require('../commands/feedback');
 const doctorCommand = require('../commands/doctor');
 const completionCommand = require('../commands/completion');
 
-notifyAboutUpdates();
+const notifier = updateNotifier({
+  pkg: { ...pkg, name: '@hubspot/cli' },
+  distTag: 'latest',
+  shouldNotifyInNpmScript: true,
+});
+
+const CMS_CLI_PACKAGE_NAME = '@hubspot/cms-cli';
+
+notifier.notify({
+  message:
+    pkg.name === CMS_CLI_PACKAGE_NAME
+      ? i18n(`commands.generalErrors.updateNotify.cmsUpdateNotification`, {
+          packageName: CMS_CLI_PACKAGE_NAME,
+          updateCommand: uiCommandReference('{updateCommand}'),
+        })
+      : i18n(`commands.generalErrors.updateNotify.cliUpdateNotification`, {
+          updateCommand: uiCommandReference('{updateCommand}'),
+        }),
+  defer: false,
+  boxenOptions: {
+    borderColor: UI_COLORS.MARIGOLD_DARK,
+    margin: 1,
+    padding: 1,
+    textAlignment: 'center',
+    borderStyle: 'round',
+    title:
+      pkg.name === CMS_CLI_PACKAGE_NAME
+        ? null
+        : chalk.bold(i18n(`commands.generalErrors.updateNotify.notifyTitle`)),
+  },
+});
 
 const getTerminalWidth = () => {
   const width = yargs.terminalWidth();
@@ -73,6 +106,189 @@ const handleFailure = (msg, err, yargs) => {
     yargs.showHelp('log');
     process.exit(EXIT_CODES.SUCCESS);
   } else {
+    process.exit(EXIT_CODES.ERROR);
+  }
+};
+
+const performChecks = argv => {
+  // "hs config set default-account" has moved to "hs accounts use"
+  if (
+    argv._[0] === 'config' &&
+    argv._[1] === 'set' &&
+    argv._[2] === 'default-account'
+  ) {
+    logger.error(i18n(`commands.generalErrors.setDefaultAccountMoved`));
+    process.exit(EXIT_CODES.ERROR);
+  }
+
+  // Require "project" command when running upload/watch inside of a project
+  if (argv._.length === 1 && ['upload', 'watch'].includes(argv._[0])) {
+    if (getIsInProject(argv.src)) {
+      logger.error(
+        i18n(`commands.generalErrors.srcIsProject`, {
+          src: argv.src || './',
+          command: argv._.join(' '),
+        })
+      );
+      process.exit(EXIT_CODES.ERROR);
+    } else {
+      return true;
+    }
+  } else {
+    return true;
+  }
+};
+
+const setRequestHeaders = () => {
+  addUserAgentHeader('HubSpot CLI', pkg.version);
+};
+
+const isTargetedCommand = (options, commandMap) => {
+  const checkCommand = (options, commandMap) => {
+    const currentCommand = options._[0];
+
+    if (!commandMap[currentCommand]) {
+      return false;
+    }
+
+    if (commandMap[currentCommand].target) {
+      return true;
+    }
+
+    const subCommands = commandMap[currentCommand].subCommands || {};
+    if (options._.length > 1) {
+      return checkCommand({ _: options._.slice(1) }, subCommands);
+    }
+
+    return false;
+  };
+
+  return checkCommand(options, commandMap);
+};
+
+const SKIP_CONFIG_VALIDATION = {
+  init: { target: true },
+  auth: { target: true },
+};
+
+const handleDeprecatedEnvVariables = options => {
+  // HUBSPOT_PORTAL_ID is deprecated, but we'll still support it for now
+  // The HubSpot GH Deploy Action still uses HUBSPOT_PORTAL_ID
+  if (
+    options.useEnv &&
+    process.env.HUBSPOT_PORTAL_ID &&
+    !process.env.HUBSPOT_ACCOUNT_ID
+  ) {
+    uiDeprecatedTag(
+      i18n(
+        `commands.generalErrors.handleDeprecatedEnvVariables.portalEnvVarDeprecated`,
+        {
+          configPath: getConfigPath(),
+        }
+      )
+    );
+    process.env.HUBSPOT_ACCOUNT_ID = process.env.HUBSPOT_PORTAL_ID;
+  }
+};
+
+/**
+ * Auto-injects the derivedAccountId flag into all commands
+ */
+const injectAccountIdMiddleware = async options => {
+  const { account } = options;
+
+  // Preserves the original --account flag for certain commands.
+  options.providedAccountId = account;
+
+  if (options.useEnv && process.env.HUBSPOT_ACCOUNT_ID) {
+    options.derivedAccountId = parseInt(process.env.HUBSPOT_ACCOUNT_ID, 10);
+  } else {
+    options.derivedAccountId = getAccountId(account);
+  }
+};
+
+const loadConfigMiddleware = async options => {
+  // Skip this when no command is provided
+  if (!options._.length) {
+    return;
+  }
+
+  const maybeValidateConfig = () => {
+    if (
+      !isTargetedCommand(options, SKIP_CONFIG_VALIDATION) &&
+      !validateConfig()
+    ) {
+      process.exit(EXIT_CODES.ERROR);
+    }
+  };
+
+  if (configFileExists(true) && options.config) {
+    logger.error(
+      i18n(`commands.generalErrors.loadConfigMiddleware.configFileExists`, {
+        configPath: getConfigPath(),
+      })
+    );
+    process.exit(EXIT_CODES.ERROR);
+  } else if (!isTargetedCommand(options, { init: { target: true } })) {
+    const { config: configPath } = options;
+    const config = loadConfig(configPath, options);
+
+    // We don't run validateConfig() for auth because users should be able to run it when
+    // no accounts are configured, but we still want to exit if the config file is not found
+    if (isTargetedCommand(options, { auth: { target: true } }) && !config) {
+      process.exit(EXIT_CODES.ERROR);
+    }
+  }
+
+  maybeValidateConfig();
+};
+
+const checkAndWarnGitInclusionMiddleware = options => {
+  // Skip this when no command is provided
+  if (!options._.length) {
+    return;
+  }
+  checkAndWarnGitInclusion(getConfigPath());
+};
+
+const accountsSubCommands = {
+  target: false,
+  subCommands: {
+    clean: { target: true },
+    list: { target: true },
+    ls: { target: true },
+    remove: { target: true },
+  },
+};
+
+const sandboxesSubCommands = {
+  target: false,
+  subCommands: {
+    delete: { target: true },
+  },
+};
+
+const SKIP_ACCOUNT_VALIDATION = {
+  init: { target: true },
+  auth: { target: true },
+  account: accountsSubCommands,
+  accounts: accountsSubCommands,
+  sandbox: sandboxesSubCommands,
+  sandboxes: sandboxesSubCommands,
+};
+
+const validateAccountOptions = async options => {
+  // Skip this when no command is provided
+  if (!options._.length) {
+    return;
+  }
+
+  let validAccount = true;
+  if (!isTargetedCommand(options, SKIP_ACCOUNT_VALIDATION)) {
+    validAccount = await validateAccount(options);
+  }
+
+  if (!validAccount) {
     process.exit(EXIT_CODES.ERROR);
   }
 };
