@@ -29,7 +29,6 @@ import {
 import { uiCommandReference } from '../../../lib/ui';
 import { i18n } from '../../../lib/lang';
 
-const i18nKey = 'commands.project.subcommands.dev';
 
 export async function unifiedProjectDevFlow(
   args: ArgumentsCamelCase<ProjectDevArgs>,
@@ -67,7 +66,7 @@ export async function unifiedProjectDevFlow(
   // @TODO Do we need to do more than this or leave it to the dev servers?
   if (!Object.keys(projectNodes).length) {
     logger.error(
-      i18n(`${i18nKey}.errors.noRunnableComponents`, {
+      i18n(`commands.project.subcommands.dev.errors.noRunnableComponents`, {
         projectDir,
         command: uiCommandReference('hs project add'),
       })
@@ -85,7 +84,7 @@ export async function unifiedProjectDevFlow(
     isAppDeveloperAccount(accountConfig) || isStandardAccount(accountConfig);
 
   if (!derivedAccountIsRecommendedType) {
-    logger.error(i18n(`${i18nKey}.errors.invalidUnifiedAppsAccount`), {
+    logger.error(i18n(`commands.project.subcommands.dev.errors.invalidUnifiedAppsAccount`), {
       authCommand: uiCommandReference('hs auth'),
     });
     process.exit(EXIT_CODES.SUCCESS);

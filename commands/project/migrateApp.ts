@@ -45,10 +45,9 @@ const {
   fetchPublicAppMetadata,
 } = require('@hubspot/local-dev-lib/api/appsDev');
 
-const i18nKey = 'commands.project.subcommands.migrateApp';
 
 exports.command = 'migrate-app';
-exports.describe = uiBetaTag(i18n(`${i18nKey}.describe`), false);
+exports.describe = uiBetaTag(i18n(`commands.project.subcommands.migrateApp.describe`), false);
 
 exports.handler = async options => {
   const { derivedAccountId } = options;
@@ -58,10 +57,10 @@ exports.handler = async options => {
   trackCommandUsage('migrate-app', {}, derivedAccountId);
 
   logger.log('');
-  logger.log(uiBetaTag(i18n(`${i18nKey}.header.text`), false));
+  logger.log(uiBetaTag(i18n(`commands.project.subcommands.migrateApp.header.text`), false));
   logger.log(
     uiLink(
-      i18n(`${i18nKey}.header.link`),
+      i18n(`commands.project.subcommands.migrateApp.header.link`),
       'https://developers.hubspot.com/docs/platform/migrate-a-public-app-to-projects'
     )
   );
@@ -69,9 +68,9 @@ exports.handler = async options => {
 
   if (!isAppDeveloperAccount(accountConfig)) {
     uiLine();
-    logger.error(i18n(`${i18nKey}.errors.invalidAccountTypeTitle`));
+    logger.error(i18n(`commands.project.subcommands.migrateApp.errors.invalidAccountTypeTitle`));
     logger.log(
-      i18n(`${i18nKey}.errors.invalidAccountTypeDescription`, {
+      i18n(`commands.project.subcommands.migrateApp.errors.invalidAccountTypeDescription`, {
         useCommand: uiCommandReference('hs accounts use'),
         authCommand: uiCommandReference('hs auth'),
       })
@@ -99,7 +98,7 @@ exports.handler = async options => {
     const preventProjectMigrations = selectedApp.preventProjectMigrations;
     const listingInfo = selectedApp.listingInfo;
     if (preventProjectMigrations && listingInfo) {
-      logger.error(i18n(`${i18nKey}.errors.invalidApp`, { appId }));
+      logger.error(i18n(`commands.project.subcommands.migrateApp.errors.invalidApp`, { appId }));
       process.exit(EXIT_CODES.ERROR);
     }
   } catch (error) {
@@ -126,7 +125,7 @@ exports.handler = async options => {
 
     if (projectExists) {
       logger.error(
-        i18n(`${i18nKey}.errors.projectAlreadyExists`, {
+        i18n(`commands.project.subcommands.migrateApp.errors.projectAlreadyExists`, {
           projectName,
         })
       );
@@ -145,22 +144,22 @@ exports.handler = async options => {
 
   logger.log('');
   uiLine();
-  logger.warn(i18n(`${i18nKey}.warning.title`));
+  logger.warn(i18n(`commands.project.subcommands.migrateApp.warning.title`));
   logger.log('');
-  logger.log(i18n(`${i18nKey}.warning.projectConversion`));
-  logger.log(i18n(`${i18nKey}.warning.appConfig`));
+  logger.log(i18n(`commands.project.subcommands.migrateApp.warning.projectConversion`));
+  logger.log(i18n(`commands.project.subcommands.migrateApp.warning.appConfig`));
   logger.log('');
-  logger.log(i18n(`${i18nKey}.warning.buildAndDeploy`));
+  logger.log(i18n(`commands.project.subcommands.migrateApp.warning.buildAndDeploy`));
   logger.log('');
-  logger.log(i18n(`${i18nKey}.warning.existingApps`));
+  logger.log(i18n(`commands.project.subcommands.migrateApp.warning.existingApps`));
   logger.log('');
-  logger.log(i18n(`${i18nKey}.warning.copyApp`));
+  logger.log(i18n(`commands.project.subcommands.migrateApp.warning.copyApp`));
   uiLine();
 
   const { shouldCreateApp } = await promptUser({
     name: 'shouldCreateApp',
     type: 'confirm',
-    message: i18n(`${i18nKey}.createAppPrompt`),
+    message: i18n(`commands.project.subcommands.migrateApp.createAppPrompt`),
   });
   process.stdin.resume();
 
@@ -172,13 +171,13 @@ exports.handler = async options => {
     SpinniesManager.init();
 
     SpinniesManager.add('migrateApp', {
-      text: i18n(`${i18nKey}.migrationStatus.inProgress`),
+      text: i18n(`commands.project.subcommands.migrateApp.migrationStatus.inProgress`),
     });
 
     handleKeypress(async key => {
       if ((key.ctrl && key.name === 'c') || key.name === 'q') {
         SpinniesManager.remove('migrateApp');
-        logger.log(i18n(`${i18nKey}.migrationInterrupted`));
+        logger.log(i18n(`commands.project.subcommands.migrateApp.migrationInterrupted`));
         process.exit(EXIT_CODES.SUCCESS);
       }
     });
@@ -212,16 +211,16 @@ exports.handler = async options => {
       );
 
       SpinniesManager.succeed('migrateApp', {
-        text: i18n(`${i18nKey}.migrationStatus.done`),
+        text: i18n(`commands.project.subcommands.migrateApp.migrationStatus.done`),
         succeedColor: 'white',
       });
       logger.log('');
       uiLine();
-      logger.success(i18n(`${i18nKey}.migrationStatus.success`));
+      logger.success(i18n(`commands.project.subcommands.migrateApp.migrationStatus.success`));
       logger.log('');
       logger.log(
         uiLink(
-          i18n(`${i18nKey}.projectDetailsLink`),
+          i18n(`commands.project.subcommands.migrateApp.projectDetailsLink`),
           `${baseUrl}/developer-projects/${derivedAccountId}/project/${encodeURIComponent(
             project.name
           )}`
@@ -236,7 +235,7 @@ exports.handler = async options => {
       derivedAccountId
     );
     SpinniesManager.fail('migrateApp', {
-      text: i18n(`${i18nKey}.migrationStatus.failure`),
+      text: i18n(`commands.project.subcommands.migrateApp.migrationStatus.failure`),
       failColor: 'white',
     });
     if (error.errors) {
@@ -258,21 +257,21 @@ exports.handler = async options => {
 exports.builder = yargs => {
   yargs.options({
     name: {
-      describe: i18n(`${i18nKey}.options.name.describe`),
+      describe: i18n(`commands.project.subcommands.migrateApp.options.name.describe`),
       type: 'string',
     },
     dest: {
-      describe: i18n(`${i18nKey}.options.dest.describe`),
+      describe: i18n(`commands.project.subcommands.migrateApp.options.dest.describe`),
       type: 'string',
     },
     'app-id': {
-      describe: i18n(`${i18nKey}.options.appId.describe`),
+      describe: i18n(`commands.project.subcommands.migrateApp.options.appId.describe`),
       type: 'number',
     },
   });
 
   yargs.example([
-    ['$0 project migrate-app', i18n(`${i18nKey}.examples.default`)],
+    ['$0 project migrate-app', i18n(`commands.project.subcommands.migrateApp.examples.default`)],
   ]);
 
   addConfigOptions(yargs);

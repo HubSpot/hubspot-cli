@@ -18,10 +18,8 @@ import {
   EnvironmentArgs,
 } from '../../types/Yargs';
 
-const i18nKey = 'commands.hubdb.subcommands.clear';
-
 export const command = 'clear [table-id]';
-export const describe = i18n(`${i18nKey}.describe`);
+export const describe = i18n('commands.hubdb.subcommands.clear.describe');
 
 type CombinedArgs = ConfigArgs & AccountArgs & EnvironmentArgs;
 type HubdbClearArgs = CommonArgs &
@@ -48,7 +46,7 @@ export async function handler(
     );
     if (deletedRowCount > 0) {
       logger.log(
-        i18n(`${i18nKey}.logs.removedRows`, {
+        i18n('commands.hubdb.subcommands.clear.logs.removedRows', {
           deletedRowCount,
           tableId,
         })
@@ -57,14 +55,14 @@ export async function handler(
         data: { rowCount },
       } = await publishTable(derivedAccountId, tableId);
       logger.log(
-        i18n(`${i18nKey}.logs.rowCount`, {
+        i18n('commands.hubdb.subcommands.clear.logs.rowCount', {
           rowCount,
           tableId,
         })
       );
     } else {
       logger.log(
-        i18n(`${i18nKey}.logs.emptyTable`, {
+        i18n('commands.hubdb.subcommands.clear.logs.emptyTable', {
           tableId,
         })
       );
@@ -80,7 +78,7 @@ export function builder(yargs: Argv): Argv<HubdbClearArgs> {
   addUseEnvironmentOptions(yargs);
 
   yargs.positional('table-id', {
-    describe: i18n(`${i18nKey}.positionals.tableId.describe`),
+    describe: i18n('commands.hubdb.subcommands.clear.positionals.tableId.describe'),
     type: 'string',
   });
 

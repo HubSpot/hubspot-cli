@@ -17,10 +17,8 @@ import {
   EnvironmentArgs,
 } from '../../types/Yargs';
 
-const i18nKey = 'commands.hubdb.subcommands.fetch';
-
 export const command = 'fetch [table-id] [dest]';
-export const describe = i18n(`${i18nKey}.describe`);
+export const describe = i18n('commands.hubdb.subcommands.fetch.describe');
 
 type CombinedArgs = ConfigArgs & AccountArgs & EnvironmentArgs;
 type HubdbFetchArgs = CommonArgs &
@@ -49,7 +47,7 @@ export async function handler(
     );
 
     logger.success(
-      i18n(`${i18nKey}.success.fetch`, {
+      i18n('commands.hubdb.subcommands.fetch.success.fetch', {
         path: filePath,
         tableId,
       })
@@ -65,12 +63,12 @@ export function builder(yargs: Argv): Argv<HubdbFetchArgs> {
   addUseEnvironmentOptions(yargs);
 
   yargs.positional('table-id', {
-    describe: i18n(`${i18nKey}.positionals.tableId.describe`),
+    describe: i18n('commands.hubdb.subcommands.fetch.positionals.tableId.describe'),
     type: 'string',
   });
 
   yargs.positional('dest', {
-    describe: i18n(`${i18nKey}.positionals.dest.describe`),
+    describe: i18n('commands.hubdb.subcommands.fetch.positionals.dest.describe'),
     type: 'string',
   });
 
