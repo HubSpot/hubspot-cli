@@ -1,7 +1,8 @@
 import { ArgumentsCamelCase, Argv } from 'yargs';
 import { handler, builder } from '../migrate';
 import { getAccountConfig } from '@hubspot/local-dev-lib/config';
-import { migrateApp2023_2, migrateApp2025_2 } from '../../../lib/app/migrate';
+import { migrateApp2025_2 } from '../../../lib/app/migrate';
+import { migrateApp2023_2 } from '../../../lib/app/migrate_legacy';
 import { logger } from '@hubspot/local-dev-lib/logger';
 import { EXIT_CODES } from '../../../lib/enums/exitCodes';
 import { MigrateAppOptions } from '../../../types/Yargs';
@@ -10,6 +11,7 @@ import { PLATFORM_VERSIONS } from '@hubspot/local-dev-lib/constants/projects';
 jest.mock('@hubspot/local-dev-lib/config');
 jest.mock('@hubspot/local-dev-lib/logger');
 jest.mock('../../../lib/app/migrate');
+jest.mock('../../../lib/app/migrate_legacy');
 jest.mock('yargs');
 
 const mockedGetAccountConfig = getAccountConfig as jest.Mock;
