@@ -44,7 +44,10 @@ import { validateUid } from '@hubspot/project-parsing-lib';
 import { MigrationApp } from '@hubspot/local-dev-lib/types/Project';
 import { UNMIGRATABLE_REASONS } from '@hubspot/local-dev-lib/constants/projects';
 import { mapToUserFacingType } from '@hubspot/project-parsing-lib/src/lib/transform';
-import { MigrationStatus } from '@hubspot/local-dev-lib/types/Migration';
+import {
+  MIGRATION_STATUS,
+  MigrationStatus,
+} from '@hubspot/local-dev-lib/types/Migration';
 
 function getUnmigratableReason(reasonCode: string): string {
   switch (reasonCode) {
@@ -246,10 +249,10 @@ async function beginMigration(
   const pollResponse = await pollMigrationStatus(
     derivedAccountId,
     migrationId,
-    ['INPUT_REQUIRED']
+    [MIGRATION_STATUS.INPUT_REQUIRED]
   );
 
-  if (pollResponse.status !== 'INPUT_REQUIRED') {
+  if (pollResponse.status !== MIGRATION_STATUS.INPUT_REQUIRED) {
     SpinniesManager.fail('beginningMigration', {
       text: i18n(
         'commands.project.subcommands.migrateApp.spinners.unableToStartMigration'
@@ -303,8 +306,8 @@ async function finalizeMigration(
   migrationId: number,
   uidMap: Record<string, string>,
   projectName: string
-): Promise<number | undefined> {
-  let buildId: number | undefined;
+): Promise<number> {
+  let pollResponse: MigrationStatus;
   try {
     SpinniesManager.add('finishingMigration', {
       text: i18n(
@@ -313,28 +316,9 @@ async function finalizeMigration(
     });
     await continueMigration(derivedAccountId, migrationId, uidMap, projectName);
 
-    const pollResponse = await pollMigrationStatus(
-      derivedAccountId,
-      migrationId,
-      ['SUCCESS']
-    );
-
-    if (pollResponse.status === 'SUCCESS') {
-      buildId = pollResponse.buildId;
-      SpinniesManager.succeed('finishingMigration', {
-        text: i18n(
-          `commands.project.subcommands.migrateApp.spinners.migrationComplete`
-        ),
-      });
-    } else {
-      SpinniesManager.fail('finishingMigration', {
-        text: i18n(
-          `commands.project.subcommands.migrateApp.spinners.migrationFailed`
-        ),
-      });
-    }
-
-    return buildId;
+    pollResponse = await pollMigrationStatus(derivedAccountId, migrationId, [
+      MIGRATION_STATUS.SUCCESS,
+    ]);
   } catch (error) {
     SpinniesManager.fail('finishingMigration', {
       text: i18n(
@@ -342,6 +326,30 @@ async function finalizeMigration(
       ),
     });
     throw error;
+  }
+
+  if (pollResponse.status === MIGRATION_STATUS.SUCCESS) {
+    SpinniesManager.succeed('finishingMigration', {
+      text: i18n(
+        `commands.project.subcommands.migrateApp.spinners.migrationComplete`
+      ),
+    });
+
+    return pollResponse.buildId;
+  } else {
+    SpinniesManager.fail('finishingMigration', {
+      text: i18n(
+        `commands.project.subcommands.migrateApp.spinners.migrationFailed`
+      ),
+    });
+    if (pollResponse.status === MIGRATION_STATUS.FAILURE) {
+      logger.error(pollResponse.componentErrorDetails);
+      throw new Error(pollResponse.projectErrorsDetail);
+    }
+
+    throw new Error(
+      i18n('commands.project.subcommands.migrateApp.errors.migrationFailed')
+    );
   }
 }
 
@@ -426,10 +434,6 @@ export async function migrateApp2025_2(
     projectName
   );
 
-  if (!buildId) {
-    throw new Error('Migration Failed');
-  }
-
   await downloadProjectFiles(
     derivedAccountId,
     projectName,
@@ -481,7 +485,11 @@ export async function migrateApp2023_2(
     const preventProjectMigrations = selectedApp.preventProjectMigrations;
     const listingInfo = selectedApp.listingInfo;
     if (preventProjectMigrations && listingInfo) {
-      logger.error(i18n(`commands.project.subcommands.migrateApp.errors.invalidApp`, { appId }));
+      logger.error(
+        i18n(`commands.project.subcommands.migrateApp.errors.invalidApp`, {
+          appId,
+        })
+      );
       process.exit(EXIT_CODES.ERROR);
     }
   } catch (error) {
@@ -503,9 +511,12 @@ export async function migrateApp2023_2(
 
   if (projectExists) {
     throw new Error(
-      i18n(`commands.project.subcommands.migrateApp.errors.projectAlreadyExists`, {
-        projectName,
-      })
+      i18n(
+        `commands.project.subcommands.migrateApp.errors.projectAlreadyExists`,
+        {
+          projectName,
+        }
+      )
     );
   }
 
@@ -517,11 +528,21 @@ export async function migrateApp2023_2(
 
   logger.log('');
   uiLine();
-  logger.warn(`${i18n(`commands.project.subcommands.migrateApp.warning.title`)}\n`);
-  logger.log(i18n(`commands.project.subcommands.migrateApp.warning.projectConversion`));
-  logger.log(`${i18n(`commands.project.subcommands.migrateApp.warning.appConfig`)}\n`);
-  logger.log(`${i18n(`commands.project.subcommands.migrateApp.warning.buildAndDeploy`)}\n`);
-  logger.log(`${i18n(`commands.project.subcommands.migrateApp.warning.existingApps`)}\n`);
+  logger.warn(
+    `${i18n(`commands.project.subcommands.migrateApp.warning.title`)}\n`
+  );
+  logger.log(
+    i18n(`commands.project.subcommands.migrateApp.warning.projectConversion`)
+  );
+  logger.log(
+    `${i18n(`commands.project.subcommands.migrateApp.warning.appConfig`)}\n`
+  );
+  logger.log(
+    `${i18n(`commands.project.subcommands.migrateApp.warning.buildAndDeploy`)}\n`
+  );
+  logger.log(
+    `${i18n(`commands.project.subcommands.migrateApp.warning.existingApps`)}\n`
+  );
   logger.log(i18n(`commands.project.subcommands.migrateApp.warning.copyApp`));
   uiLine();
 
@@ -540,13 +561,17 @@ export async function migrateApp2023_2(
     SpinniesManager.init();
 
     SpinniesManager.add('migrateApp', {
-      text: i18n(`commands.project.subcommands.migrateApp.migrationStatus.inProgress`),
+      text: i18n(
+        `commands.project.subcommands.migrateApp.migrationStatus.inProgress`
+      ),
     });
 
     handleKeypress(async key => {
       if ((key.ctrl && key.name === 'c') || key.name === 'q') {
         SpinniesManager.remove('migrateApp');
-        logger.log(i18n(`commands.project.subcommands.migrateApp.migrationInterrupted`));
+        logger.log(
+          i18n(`commands.project.subcommands.migrateApp.migrationInterrupted`)
+        );
         process.exit(EXIT_CODES.SUCCESS);
       }
     });
@@ -580,12 +605,16 @@ export async function migrateApp2023_2(
       );
 
       SpinniesManager.succeed('migrateApp', {
-        text: i18n(`commands.project.subcommands.migrateApp.migrationStatus.done`),
+        text: i18n(
+          `commands.project.subcommands.migrateApp.migrationStatus.done`
+        ),
         succeedColor: 'white',
       });
       logger.log('');
       uiLine();
-      logger.success(i18n(`commands.project.subcommands.migrateApp.migrationStatus.success`));
+      logger.success(
+        i18n(`commands.project.subcommands.migrateApp.migrationStatus.success`)
+      );
       logger.log('');
       logger.log(
         uiLink(
@@ -599,7 +628,9 @@ export async function migrateApp2023_2(
     }
   } catch (error) {
     SpinniesManager.fail('migrateApp', {
-      text: i18n(`commands.project.subcommands.migrateApp.migrationStatus.failure`),
+      text: i18n(
+        `commands.project.subcommands.migrateApp.migrationStatus.failure`
+      ),
       failColor: 'white',
     });
     throw error;
