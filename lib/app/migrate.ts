@@ -357,11 +357,13 @@ async function finalizeMigration(
     );
   }
 
-  SpinniesManager.succeed('finishingMigration', {
-    text: i18n(
-      `commands.project.subcommands.migrateApp.spinners.migrationComplete`
-    ),
-  });
+  if (pollResponse.status === MIGRATION_STATUS.SUCCESS) {
+    SpinniesManager.succeed('finishingMigration', {
+      text: i18n(
+        `commands.project.subcommands.migrateApp.spinners.migrationComplete`
+      ),
+    });
+  }
 
   return pollResponse.buildId;
 }
