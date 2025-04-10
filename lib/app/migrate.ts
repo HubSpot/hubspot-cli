@@ -284,7 +284,7 @@ async function beginMigration(
       uidMap[componentId] = await inputPrompt(
         i18n('commands.project.subcommands.migrateApp.prompt.uidForComponent', {
           componentName: componentHint
-            ? `${componentHint} [${mapToUserFacingType(componentType)}]`
+            ? `${mapToUserFacingType(componentType)} '${componentHint}'`
             : mapToUserFacingType(componentType),
         }),
         {
