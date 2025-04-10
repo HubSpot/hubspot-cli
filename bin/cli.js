@@ -51,6 +51,7 @@ const cmsCommand = require('../commands/cms');
 const feedbackCommand = require('../commands/feedback');
 const doctorCommand = require('../commands/doctor');
 const completionCommand = require('../commands/completion');
+const appCommand = require('../commands/app');
 
 notifyAboutUpdates();
 
@@ -134,6 +135,7 @@ const argv = yargs
   .command(feedbackCommand)
   .command(doctorCommand)
   .command(completionCommand)
+  .command(appCommand)
   .help()
   .alias('h', 'help')
   .recommendCommands()
