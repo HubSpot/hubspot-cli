@@ -408,7 +408,7 @@ async function downloadProjectFiles(
       absoluteDestPath,
       {
         includesRootDir: true,
-        hideLogs: false,
+        hideLogs: true,
       }
     );
 
