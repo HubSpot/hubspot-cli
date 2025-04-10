@@ -39,14 +39,16 @@ export async function migrateApp2023_2(
     process.exit(EXIT_CODES.SUCCESS);
   }
 
-  const { appId } =
-    'appId' in options
-      ? options
-      : await selectPublicAppPrompt({
-          accountId: derivedAccountId,
-          accountName,
-          isMigratingApp: true,
-        });
+  let appId = options.appId;
+
+  if (!appId) {
+    const { appId: selectAppId } = await selectPublicAppPrompt({
+      accountId: derivedAccountId,
+      accountName,
+      isMigratingApp: true,
+    });
+    appId = selectAppId;
+  }
 
   try {
     const { data: selectedApp } = await fetchPublicAppMetadata(

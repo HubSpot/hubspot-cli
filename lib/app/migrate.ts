@@ -25,6 +25,7 @@ import {
   MigrationApp,
   MigrationStatus,
 } from '../../api/migrate';
+import fs from 'fs';
 
 function getUnmigratableReason(reasonCode: string): string {
   switch (reasonCode) {
@@ -50,6 +51,15 @@ function getUnmigratableReason(reasonCode: string): string {
   }
 }
 
+function filterAppsByProjectName(projectConfig?: LoadedProjectConfig) {
+  return (app: MigrationApp) => {
+    if (projectConfig) {
+      return app.projectName === projectConfig?.projectConfig?.name;
+    }
+    return !app.projectName;
+  };
+}
+
 async function handleMigrationSetup(
   derivedAccountId: number,
   options: ArgumentsCamelCase<MigrateAppOptions>,
@@ -64,20 +74,12 @@ async function handleMigrationSetup(
     data: { migratableApps, unmigratableApps },
   } = await listAppsForMigration(derivedAccountId);
 
-  const filteredMigratableApps = migratableApps.filter((app: MigrationApp) => {
-    if (projectConfig) {
-      return projectConfig.projectConfig?.name === app.projectName;
-    }
-    return !app.projectName;
-  });
+  const filteredMigratableApps = migratableApps.filter(
+    filterAppsByProjectName(projectConfig)
+  );
 
   const filteredUnmigratableApps = unmigratableApps.filter(
-    (app: MigrationApp) => {
-      if (projectConfig) {
-        return projectConfig.projectConfig?.name === app.projectName;
-      }
-      return !app.projectName;
-    }
+    filterAppsByProjectName(projectConfig)
   );
 
   const allApps = [...filteredMigratableApps, ...filteredUnmigratableApps];
@@ -167,6 +169,19 @@ async function handleMigrationSetup(
 
   if (!proceed) {
     return {};
+  }
+
+  // If it's a project we don't want to prompt for dest and name, so just return early
+  if (
+    projectConfig &&
+    projectConfig?.projectConfig &&
+    projectConfig?.projectDir
+  ) {
+    return {
+      appIdToMigrate,
+      projectName: projectConfig.projectConfig.name,
+      projectDest: projectConfig.projectDir,
+    };
   }
 
   const projectName =
@@ -339,12 +354,12 @@ async function finalizeMigration(
   }
 }
 
-export async function downloadProjectFiles(
+async function downloadProjectFiles(
   derivedAccountId: number,
   projectName: string,
   buildId: number,
   projectDest: string,
-  isExistingProject: boolean
+  projectConfig?: LoadedProjectConfig
 ): Promise<void> {
   try {
     SpinniesManager.add('fetchingMigratedProject', {
@@ -359,13 +374,21 @@ export async function downloadProjectFiles(
       buildId
     );
 
-    if (isExistingProject) {
-      // do some stuff with the current project
-    }
+    let absoluteDestPath;
 
-    const absoluteDestPath = projectDest
-      ? path.resolve(getCwd(), projectDest)
-      : getCwd();
+    if (projectConfig?.projectConfig && projectConfig?.projectDir) {
+      const { projectDir } = projectConfig;
+      const { srcDir } = projectConfig.projectConfig;
+      absoluteDestPath = path.join(projectDir, srcDir);
+
+      const archiveDest = path.join(projectDir, 'archive');
+      // Move the existing source directory to archive
+      fs.renameSync(absoluteDestPath, archiveDest);
+    } else {
+      absoluteDestPath = projectDest
+        ? path.resolve(getCwd(), projectDest)
+        : getCwd();
+    }
 
     await extractZipArchive(
       zippedProject,
@@ -439,7 +462,7 @@ export async function migrateApp2025_2(
     projectName,
     buildId,
     projectDest,
-    Boolean(projectConfig)
+    projectConfig
   );
 }
 
