@@ -171,7 +171,7 @@ describe('api/migrate', () => {
       const mockResponse: MigrationStatus = {
         id: mockMigrationId,
         status: MIGRATION_STATUS.FAILURE,
-        projectErrorsDetail: 'Error details',
+        projectErrorDetail: 'Error details',
         componentErrorDetails: {
           'component-1': 'Component error',
         },
