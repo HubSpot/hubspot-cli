@@ -1,5 +1,4 @@
 import { Arguments, terminalWidth } from 'yargs';
-import boxen from 'boxen';
 import chalk from 'chalk';
 import { fetchFireAlarms } from '@hubspot/local-dev-lib/api/fireAlarm';
 import { FireAlarm } from '@hubspot/local-dev-lib/types/FireAlarm';
@@ -7,6 +6,7 @@ import { logger } from '@hubspot/local-dev-lib/logger';
 import { debugError } from '../errorHandlers';
 import pkg from '../../package.json';
 import { UI_COLORS } from '../ui';
+import { i18n } from '../lang';
 
 /*
  * Versions can be formatted like this:
@@ -145,28 +145,39 @@ async function logFireAlarms(
 ): Promise<void> {
   const alarms = await getFireAlarms(accountId, command, version);
 
-  const notifications = alarms.reduce((acc, alarm) => {
-    if (alarm.title && alarm.message) {
-      return (
-        acc +
-        `${acc.length > 0 ? '\n\n' : ''}${chalk.bold(alarm.title)}\n${alarm.message}`
-      );
-    }
-    return acc;
-  }, '');
+  if (alarms.length > 0) {
+    const notifications = alarms.reduce((acc, alarm) => {
+      if (alarm.title && alarm.message) {
+        return (
+          acc +
+          `${acc.length > 0 ? '\n\n' : ''}${chalk.bold(alarm.title)}\n${alarm.message}`
+        );
+      }
+      return acc;
+    }, '');
 
-  logger.log(
-    boxen(notifications, {
-      title: 'Notifications',
-      titleAlignment: 'left',
-      borderColor: UI_COLORS.MARIGOLD,
-      width: terminalWidth() * 0.75,
-      margin: 1,
-      padding: 1,
-      textAlignment: 'left',
-      borderStyle: 'round',
-    })
-  );
+    let boxen;
+
+    try {
+      boxen = (await import('boxen')).default;
+    } catch (error) {
+      logger.debug(`${i18n('lib.middleware.fireAlarm.failedToLoadBoxen')}`);
+      return;
+    }
+
+    logger.log(
+      boxen(notifications, {
+        title: 'Notifications',
+        titleAlignment: 'left',
+        borderColor: UI_COLORS.MARIGOLD,
+        width: terminalWidth() * 0.75,
+        margin: 1,
+        padding: 1,
+        textAlignment: 'left',
+        borderStyle: 'round',
+      })
+    );
+  }
 }
 
 export async function checkFireAlarms(
