@@ -82,7 +82,7 @@ export async function getProjectConfig(dir?: string): Promise<{
 export function validateProjectConfig(
   projectConfig: ProjectConfig | null,
   projectDir: string | null
-): void {
+): asserts projectConfig is ProjectConfig {
   if (!projectConfig || !projectDir) {
     logger.error(
       i18n(`${i18nKey}.validateProjectConfig.configNotFound`, {

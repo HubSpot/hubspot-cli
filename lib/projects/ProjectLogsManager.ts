@@ -113,8 +113,8 @@ class _ProjectLogsManager {
     );
   }
 
-  setFunction(functionName: string) {
-    if (!(this.functions.length > 0)) {
+  setFunction(functionName?: string) {
+    if (!functionName || this.functions.length === 0) {
       throw new Error(
         i18n(`${i18nKey}.errors.noFunctionsInProject`, {
           link: uiLink(

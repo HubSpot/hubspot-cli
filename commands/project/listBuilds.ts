@@ -124,7 +124,7 @@ export async function handler(args: ArgumentsCamelCase<ProjectListBuildsArgs>) {
   if (!projectName) {
     const { projectConfig, projectDir } = await getProjectConfig();
     validateProjectConfig(projectConfig, projectDir);
-    projectName = projectConfig!.name;
+    projectName = projectConfig.name;
   }
 
   try {

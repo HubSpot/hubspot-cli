@@ -56,7 +56,7 @@ export async function handler(args: ArgumentsCamelCase<ProjectDevArgs>) {
 
   validateProjectConfig(projectConfig, projectDir);
 
-  if (useV3Api(projectConfig?.platformVersion)) {
+  if (useV3Api(projectConfig.platformVersion)) {
     await unifiedProjectDevFlow(args, accountConfig, projectConfig, projectDir);
   } else {
     await deprecatedProjectDevFlow(
