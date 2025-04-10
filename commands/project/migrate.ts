@@ -3,7 +3,11 @@ import { i18n } from '../../lib/lang';
 import { ArgumentsCamelCase, Argv, CommandModule } from 'yargs';
 import { logger } from '@hubspot/local-dev-lib/logger';
 import { ProjectMigrateOptions } from '../../types/Yargs';
-import { addAccountOptions, addConfigOptions } from '../../lib/commonOpts';
+import {
+  addAccountOptions,
+  addConfigOptions,
+  addGlobalOptions,
+} from '../../lib/commonOpts';
 import { migrateApp2025_2 } from '../../lib/app/migrate';
 import { getProjectConfig } from '../../lib/projects';
 import { PLATFORM_VERSIONS } from '@hubspot/local-dev-lib/constants/projects';
@@ -47,6 +51,7 @@ export async function handler(
 export function builder(yargs: Argv) {
   addConfigOptions(yargs);
   addAccountOptions(yargs);
+  addGlobalOptions(yargs);
 
   return yargs as Argv<ProjectMigrateOptions>;
 }

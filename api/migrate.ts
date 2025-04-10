@@ -72,7 +72,7 @@ export interface MigrationSuccess extends MigrationBaseStatus {
 
 export interface MigrationFailed extends MigrationBaseStatus {
   status: typeof MIGRATION_STATUS.FAILURE;
-  projectErrorsDetail?: string;
+  projectErrorDetail: string;
   componentErrorDetails: Record<string, string>;
 }
 
@@ -81,6 +81,15 @@ export type MigrationStatus =
   | MigrationInputRequired
   | MigrationSuccess
   | MigrationFailed;
+
+export function isMigrationStatus(error: unknown): error is MigrationStatus {
+  return (
+    typeof error === 'object' &&
+    error !== null &&
+    'id' in error &&
+    'status' in error
+  );
+}
 
 export async function listAppsForMigration(
   accountId: number

@@ -21,6 +21,7 @@ import {
   checkMigrationStatusV2,
   continueMigration,
   initializeMigration,
+  isMigrationStatus,
   listAppsForMigration,
   MigrationApp,
   MigrationStatus,
@@ -84,11 +85,22 @@ async function handleMigrationSetup(
 
   const allApps = [...filteredMigratableApps, ...filteredUnmigratableApps];
 
+  if (allApps.length > 1 && projectConfig) {
+    throw new Error(
+      'Multiple apps found in project, this is not allowed in the new system'
+    );
+  }
+
   if (allApps.length === 0) {
     const reasons = filteredUnmigratableApps.map(
       app =>
         `${chalk.bold(app.appName)}: ${getUnmigratableReason(app.unmigratableReason)}`
     );
+    if (projectConfig) {
+      // TODO: i18n, get copy from UX
+      throw new Error('No migratable apps in project');
+    }
+
     throw new Error(
       `${i18n(`commands.project.subcommands.migrateApp.errors.noAppsEligible`, {
         accountId: uiAccountDescription(derivedAccountId),
@@ -326,32 +338,32 @@ async function finalizeMigration(
         `commands.project.subcommands.migrateApp.spinners.migrationFailed`
       ),
     });
-    throw error;
-  }
 
-  if (pollResponse.status === MIGRATION_STATUS.SUCCESS) {
-    SpinniesManager.succeed('finishingMigration', {
-      text: i18n(
-        `commands.project.subcommands.migrateApp.spinners.migrationComplete`
-      ),
-    });
-
-    return pollResponse.buildId;
-  } else {
-    SpinniesManager.fail('finishingMigration', {
-      text: i18n(
-        `commands.project.subcommands.migrateApp.spinners.migrationFailed`
-      ),
-    });
-    if (pollResponse.status === MIGRATION_STATUS.FAILURE) {
-      logger.error(pollResponse.componentErrorDetails);
-      throw new Error(pollResponse.projectErrorsDetail);
+    if (isMigrationStatus(error) && error.status === MIGRATION_STATUS.FAILURE) {
+      throw new Error(error.projectErrorDetail);
     }
 
+    throw new Error(
+      i18n('commands.project.subcommands.migrateApp.errors.migrationFailed'),
+      {
+        cause: error,
+      }
+    );
+  }
+
+  if (pollResponse.status !== MIGRATION_STATUS.SUCCESS) {
     throw new Error(
       i18n('commands.project.subcommands.migrateApp.errors.migrationFailed')
     );
   }
+
+  SpinniesManager.succeed('finishingMigration', {
+    text: i18n(
+      `commands.project.subcommands.migrateApp.spinners.migrationComplete`
+    ),
+  });
+
+  return pollResponse.buildId;
 }
 
 async function downloadProjectFiles(
