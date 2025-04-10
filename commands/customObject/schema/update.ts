@@ -70,7 +70,7 @@ export async function handler(
     name =
       providedName && typeof providedName === 'string'
         ? providedName
-        : await listPrompt(
+        : await listPrompt<string>(
             i18n(
               `commands.customObject.subcommands.schema.subcommands.update.selectSchema`
             ),
