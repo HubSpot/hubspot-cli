@@ -40,9 +40,9 @@ export type MigrateAppOptions = CommonArgs &
   AccountArgs &
   EnvironmentArgs &
   ConfigArgs & {
-    name: string;
-    dest: string;
-    appId: number;
+    name?: string;
+    dest?: string;
+    appId?: number;
     platformVersion: string;
   };
 

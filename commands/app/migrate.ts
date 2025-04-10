@@ -1,3 +1,8 @@
+import { logger } from '@hubspot/local-dev-lib/logger';
+import { getAccountConfig } from '@hubspot/local-dev-lib/config';
+import { PLATFORM_VERSIONS } from '@hubspot/local-dev-lib/constants/projects';
+import { ArgumentsCamelCase, Argv, CommandModule } from 'yargs';
+
 import {
   addAccountOptions,
   addConfigOptions,
@@ -10,13 +15,10 @@ import {
 import { i18n } from '../../lib/lang';
 import { ApiErrorContext, logError } from '../../lib/errorHandlers';
 import { EXIT_CODES } from '../../lib/enums/exitCodes';
-import { getAccountConfig } from '@hubspot/local-dev-lib/config';
-import { ArgumentsCamelCase, Argv, CommandModule } from 'yargs';
 import { MigrateAppOptions } from '../../types/Yargs';
-import { migrateApp2023_2, migrateApp2025_2 } from '../../lib/app/migrate';
-import { PLATFORM_VERSIONS } from '@hubspot/local-dev-lib/constants/projects';
-import { logger } from '@hubspot/local-dev-lib/logger';
+import { migrateApp2025_2 } from '../../lib/app/migrate';
 import { uiBetaTag, uiLink } from '../../lib/ui';
+import { migrateApp2023_2 } from '../../lib/app/migrate_legacy';
 
 const { v2023_2, v2025_2, unstable } = PLATFORM_VERSIONS;
 export const validMigrationTargets = [v2023_2, v2025_2, unstable];

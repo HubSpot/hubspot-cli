@@ -589,7 +589,6 @@ en:
           componentsToBeMigrated: "The following component types will be migrated: {{ components }}"
           componentsThatWillNotBeMigrated: "[NOTE] These component types are not yet supported for migration but will be available later: {{ components }}"
           errors:
-            noApps: "No apps found in account {{ accountId }}"
             noAppsForProject: "No apps associated with project {{ projectName }}"
             noAppsEligible: "No apps in account {{ accountId }} are currently migratable"
             noAccountConfig: "There is no account associated with {{ accountId }} in the config file. Please choose another account and try again, or authenticate {{ accountId }} using {{ authCommand }}."
@@ -598,6 +597,7 @@ en:
             projectAlreadyExists: "A project with name {{ projectName }} already exists. Please choose another name."
             invalidApp: "Could not migrate appId {{ appId }}. This app cannot be migrated at this time. Please choose another public app."
             appWithAppIdNotFound: "Could not find an app with the id {{ appId }} "
+            migrationFailed: 'Migration Failed'
           prompt:
             chooseApp: 'Which app would you like to migrate?'
             inputName: '[--name] What would you like to name the project?'
@@ -606,7 +606,6 @@ en:
             proceed: 'Would you like to proceed?'
           spinners:
             beginningMigration: "Beginning migration"
-            migrationStarted: "Migration started"
             unableToStartMigration: "Unable to begin migration"
             finishingMigration: "Wrapping up migration"
             migrationComplete: "Migration completed"
