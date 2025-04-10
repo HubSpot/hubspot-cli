@@ -23,7 +23,7 @@ const {
 } = require('../lib/middleware/gitMiddleware');
 const { performChecks } = require('../lib/middleware/yargsChecksMiddleware');
 const { setRequestHeaders } = require('../lib/middleware/requestMiddleware');
-const { logFireAlarms } = require('../lib/fireAlarm');
+const { checkFireAlarms } = require('../lib/middleware/fireAlarmMiddleware');
 
 const removeCommand = require('../commands/remove');
 const initCommand = require('../commands/init');
@@ -78,11 +78,6 @@ const handleFailure = (msg, err, yargs) => {
   }
 };
 
-const checkForFireAlarm = async options => {
-  const { derivedAccountId } = options;
-  await logFireAlarms(derivedAccountId, options._.join(' '), pkg.version);
-};
-
 const argv = yargs
   .usage('The command line interface to interact with HubSpot.')
   // loadConfigMiddleware loads the new hidden config for all commands
@@ -94,7 +89,7 @@ const argv = yargs
     injectAccountIdMiddleware,
     checkAndWarnGitInclusionMiddleware,
     validateAccountOptions,
-    checkForFireAlarm,
+    checkFireAlarms,
   ])
   .exitProcess(false)
   .fail(handleFailure)

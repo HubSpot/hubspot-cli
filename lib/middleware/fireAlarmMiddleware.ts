@@ -1,7 +1,12 @@
+import { Arguments, terminalWidth } from 'yargs';
+import boxen from 'boxen';
+import chalk from 'chalk';
 import { fetchFireAlarms } from '@hubspot/local-dev-lib/api/fireAlarm';
 import { FireAlarm } from '@hubspot/local-dev-lib/types/FireAlarm';
 import { logger } from '@hubspot/local-dev-lib/logger';
-import { debugError } from './errorHandlers';
+import { debugError } from '../errorHandlers';
+import pkg from '../../package.json';
+import { UI_COLORS } from '../ui';
 
 /*
  * Versions can be formatted like this:
@@ -12,7 +17,7 @@ import { debugError } from './errorHandlers';
  * <=7.2.2 -> targets all versions equal to or less than 7.2.2
  * <=7.2.* -> targets all versions equal to or less than 7.2
  */
-const VERSION_WILDCARD = '*';
+const WILDCARD = '*';
 
 function isVersionTargeted(
   version: string,
@@ -32,7 +37,7 @@ function isVersionTargeted(
 
   // Only support version targeting for the <= or = operator
   if (
-    !targetVersionString.startsWith('<=') ||
+    !targetVersionString.startsWith('<=') &&
     !targetVersionString.startsWith('=')
   ) {
     return false;
@@ -51,7 +56,7 @@ function isVersionTargeted(
     const versionPart = versionParts[i];
 
     // Support generic version targeting (like 1.2.*)
-    if (targetPart === VERSION_WILDCARD || targetAnyVersion) {
+    if (targetPart === WILDCARD || targetAnyVersion) {
       targetAnyVersion = true;
       return true;
     }
@@ -67,17 +72,30 @@ function isVersionTargeted(
   });
 }
 
+function isCommandTargeted(
+  command: string,
+  targetCommandsString: string | null
+): boolean {
+  // Require the wildcard to be explicitly set to target all commands
+  if (!targetCommandsString) {
+    return false;
+  }
+
+  if (targetCommandsString === WILDCARD) {
+    return true;
+  }
+
+  const targetCommands = targetCommandsString.split(',');
+
+  return targetCommands.some(cmd => command.startsWith(cmd));
+}
+
 function filterFireAlarm(
   fireAlarm: FireAlarm,
   command: string,
   version: string
 ): boolean {
-  const targetCommands = fireAlarm.querySelector
-    ? fireAlarm.querySelector.split(',')
-    : null;
-
-  const commandIsTargeted =
-    !targetCommands || targetCommands.some(cmd => command.startsWith(cmd));
+  const commandIsTargeted = isCommandTargeted(command, fireAlarm.querySelector);
   const versionIsTargeted = isVersionTargeted(
     version,
     fireAlarm.urlRegexPattern
@@ -96,7 +114,6 @@ async function getFireAlarms(
   try {
     const { data: fireAlarms } = await fetchFireAlarms(accountId);
 
-    console.log('fireAlarms', fireAlarms);
     relevantAlarms = fireAlarms.filter(fireAlarm =>
       filterFireAlarm(fireAlarm, command, version)
     );
@@ -107,22 +124,44 @@ async function getFireAlarms(
   return relevantAlarms;
 }
 
-function logFireAlarm(alarm: FireAlarm): void {
-  if (alarm.title && alarm.message) {
-    logger.warn(alarm.title);
-    logger.log(alarm.message.trim());
-    logger.log();
-  }
-}
-
-export async function logFireAlarms(
+async function logFireAlarms(
   accountId: number,
   command: string,
   version: string
 ): Promise<void> {
   const alarms = await getFireAlarms(accountId, command, version);
 
-  logger.log('--------------------------------');
-  alarms.forEach(logFireAlarm);
-  logger.log('--------------------------------');
+  const notifications = alarms.reduce((acc, alarm) => {
+    if (alarm.title && alarm.message) {
+      return (
+        acc +
+        `${acc.length > 0 ? '\n\n' : ''}${chalk.bold(alarm.title)}\n${alarm.message}`
+      );
+    }
+    return acc;
+  }, '');
+
+  logger.log(
+    boxen(notifications, {
+      title: 'Notifications',
+      titleAlignment: 'left',
+      borderColor: UI_COLORS.MARIGOLD,
+      width: terminalWidth() * 0.75,
+      margin: 1,
+      padding: 1,
+      textAlignment: 'left',
+      borderStyle: 'round',
+    })
+  );
+}
+
+export async function checkFireAlarms(
+  args: Arguments<{ derivedAccountId: number }>
+): Promise<void> {
+  const { derivedAccountId } = args;
+  try {
+    await logFireAlarms(derivedAccountId, args._.join(' '), pkg.version);
+  } catch (error) {
+    debugError(error);
+  }
 }
