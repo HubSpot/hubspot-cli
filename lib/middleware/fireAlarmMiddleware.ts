@@ -50,6 +50,20 @@ function isVersionTargeted(
   const targetVersionParts = targetVersion.split('.');
   const versionParts = version.split('.');
 
+  // Require the wildcard to be explicitly set to target all versions
+  if (
+    versionParts.length < 3 &&
+    versionParts[versionParts.length - 1] !== WILDCARD
+  ) {
+    return false;
+  }
+
+  // Don't allow the less than or equal to operator to be used with the wildcard
+  // in the major version part (e.g. <=*)
+  if (targetVersionString.startsWith('<=') && versionParts[0] === WILDCARD) {
+    return false;
+  }
+
   let targetAnyVersion = false;
 
   return targetVersionParts.every((targetPart, i) => {
