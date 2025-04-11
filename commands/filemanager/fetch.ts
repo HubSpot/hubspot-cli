@@ -21,7 +21,6 @@ import {
   OverwriteArgs,
 } from '../../types/Yargs';
 
-
 export const command = 'fetch <src> [dest]';
 export const describe = i18n(`commands.filemanager.subcommands.fetch.describe`);
 
@@ -42,7 +41,9 @@ export async function handler(
   const { src, includeArchived, derivedAccountId, overwrite } = args;
 
   if (typeof src !== 'string') {
-    logger.error(i18n(`commands.filemanager.subcommands.fetch.errors.sourceRequired`));
+    logger.error(
+      i18n(`commands.filemanager.subcommands.fetch.errors.sourceRequired`)
+    );
     process.exit(EXIT_CODES.ERROR);
   }
 
@@ -73,16 +74,22 @@ export function builder(yargs: Argv): Argv<FileManagerFetchArgs> {
   addUseEnvironmentOptions(yargs);
 
   yargs.positional('src', {
-    describe: i18n(`commands.filemanager.subcommands.fetch.positionals.src.describe`),
+    describe: i18n(
+      `commands.filemanager.subcommands.fetch.positionals.src.describe`
+    ),
     type: 'string',
   });
   yargs.positional('dest', {
-    describe: i18n(`commands.filemanager.subcommands.fetch.positionals.dest.describe`),
+    describe: i18n(
+      `commands.filemanager.subcommands.fetch.positionals.dest.describe`
+    ),
     type: 'string',
   });
   yargs.option('include-archived', {
     alias: ['i'],
-    describe: i18n(`commands.filemanager.subcommands.fetch.options.includeArchived.describe`),
+    describe: i18n(
+      `commands.filemanager.subcommands.fetch.options.includeArchived.describe`
+    ),
     type: 'boolean',
   });
 

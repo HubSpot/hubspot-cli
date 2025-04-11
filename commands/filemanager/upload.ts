@@ -26,9 +26,10 @@ import {
   EnvironmentArgs,
 } from '../../types/Yargs';
 
-
 export const command = 'upload <src> <dest>';
-export const describe = i18n(`commands.filemanager.subcommands.upload.describe`);
+export const describe = i18n(
+  `commands.filemanager.subcommands.upload.describe`
+);
 
 type CombinedArgs = CommonArgs & ConfigArgs & AccountArgs & EnvironmentArgs;
 type FileManagerUploadArgs = CombinedArgs & {
@@ -64,7 +65,9 @@ export async function handler(
   }
 
   if (!dest) {
-    logger.error(i18n(`commands.filemanager.subcommands.upload.errors.destinationRequired`));
+    logger.error(
+      i18n(`commands.filemanager.subcommands.upload.errors.destinationRequired`)
+    );
     return;
   }
   const normalizedDest = convertToUnixPath(dest);
@@ -130,13 +133,18 @@ export async function handler(
     uploadFolder(derivedAccountId, absoluteSrcPath, dest)
       .then(() => {
         logger.success(
-          i18n(`commands.filemanager.subcommands.upload.success.uploadComplete`, {
-            dest,
-          })
+          i18n(
+            `commands.filemanager.subcommands.upload.success.uploadComplete`,
+            {
+              dest,
+            }
+          )
         );
       })
       .catch(error => {
-        logger.error(i18n(`commands.filemanager.subcommands.upload.errors.uploadingFailed`));
+        logger.error(
+          i18n(`commands.filemanager.subcommands.upload.errors.uploadingFailed`)
+        );
         logError(error, {
           accountId: derivedAccountId,
         });
@@ -151,11 +159,15 @@ export function builder(yargs: Argv): Argv<FileManagerUploadArgs> {
   addUseEnvironmentOptions(yargs);
 
   yargs.positional('src', {
-    describe: i18n(`commands.filemanager.subcommands.upload.positionals.src.describe`),
+    describe: i18n(
+      `commands.filemanager.subcommands.upload.positionals.src.describe`
+    ),
     type: 'string',
   });
   yargs.positional('dest', {
-    describe: i18n(`commands.filemanager.subcommands.upload.positionals.dest.describe`),
+    describe: i18n(
+      `commands.filemanager.subcommands.upload.positionals.dest.describe`
+    ),
     type: 'string',
   });
 

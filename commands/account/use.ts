@@ -56,9 +56,18 @@ export function builder(yargs: Argv): Argv<AccountUseArgs> {
   });
 
   yargs.example([
-    ['$0 accounts use', i18n('commands.account.subcommands.use.examples.default')],
-    ['$0 accounts use MyAccount', i18n('commands.account.subcommands.use.examples.nameBased')],
-    ['$0 accounts use 1234567', i18n('commands.account.subcommands.use.examples.idBased')],
+    [
+      '$0 accounts use',
+      i18n('commands.account.subcommands.use.examples.default'),
+    ],
+    [
+      '$0 accounts use MyAccount',
+      i18n('commands.account.subcommands.use.examples.nameBased'),
+    ],
+    [
+      '$0 accounts use 1234567',
+      i18n('commands.account.subcommands.use.examples.idBased'),
+    ],
   ]);
 
   return yargs as Argv<AccountUseArgs>;
