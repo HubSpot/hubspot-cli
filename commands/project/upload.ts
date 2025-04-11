@@ -50,6 +50,7 @@ exports.handler = async options => {
   });
 
   try {
+    console.log('options.env', options.env);
     const { result, uploadError } = await handleProjectUpload(
       derivedAccountId,
       projectConfig,
@@ -57,7 +58,8 @@ exports.handler = async options => {
       pollProjectBuildAndDeploy,
       message,
       useV3Api(projectConfig?.platformVersion),
-      skipValidation
+      skipValidation,
+      options.env
     );
 
     if (uploadError) {
@@ -133,6 +135,11 @@ exports.builder = yargs => {
       type: 'boolean',
       hidden: true,
       default: false,
+    },
+    env: {
+      type: 'string',
+      describe: i18n(`${i18nKey}.options.env.describe`),
+      hidden: true,
     },
   });
 

@@ -99,7 +99,8 @@ export async function handleProjectUpload<T>(
   callbackFunc: ProjectUploadCallbackFunction<T>,
   uploadMessage: string,
   sendIR: boolean = false,
-  skipValidation: boolean = false
+  skipValidation: boolean = false,
+  projectEnv?: string
 ): Promise<ProjectUploadResult<T>> {
   const srcDir = path.resolve(projectDir, projectConfig.srcDir);
 
@@ -142,7 +143,7 @@ export async function handleProjectUpload<T>(
               platformVersion: projectConfig.platformVersion,
               accountId,
             },
-            { skipValidation }
+            { skipValidation, projectEnv }
           );
 
           logger.debug(
