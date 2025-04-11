@@ -29,12 +29,6 @@ function isVersionTargeted(
     return false;
   }
 
-  // Ignore alerts on any version tags (like -beta)
-  // No need for us to send alerts for these beta CLI versions
-  if (version.includes('-') || targetVersionString.includes('-')) {
-    return false;
-  }
-
   // Only support version targeting for the <= or = operator
   if (
     !targetVersionString.startsWith('<=') &&
@@ -46,6 +40,14 @@ function isVersionTargeted(
   const targetVersion = targetVersionString.substring(
     targetVersionString.indexOf('=') + 1
   );
+
+  // Only allow exact version matching for tagged CLI releases (like -beta)
+  if (version.includes('-') || targetVersionString.includes('-')) {
+    if (!targetVersionString.startsWith('=')) {
+      return false;
+    }
+    return version === targetVersion;
+  }
 
   const targetVersionParts = targetVersion.split('.');
   const versionParts = version.split('.');
