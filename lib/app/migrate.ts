@@ -392,12 +392,13 @@ async function downloadProjectFiles(
 
     if (projectConfig?.projectConfig && projectConfig?.projectDir) {
       const { projectDir } = projectConfig;
+      absoluteDestPath = projectDir;
       const { srcDir } = projectConfig.projectConfig;
-      absoluteDestPath = path.join(projectDir, srcDir);
 
       const archiveDest = path.join(projectDir, 'archive');
+
       // Move the existing source directory to archive
-      fs.renameSync(absoluteDestPath, archiveDest);
+      fs.renameSync(path.join(projectDir, srcDir), archiveDest);
     } else {
       absoluteDestPath = projectDest
         ? path.resolve(getCwd(), projectDest)
