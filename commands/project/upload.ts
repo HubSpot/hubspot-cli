@@ -44,11 +44,6 @@ exports.handler = async options => {
 
   validateProjectConfig(projectConfig, projectDir);
 
-  await ensureProjectExists(derivedAccountId, projectConfig.name, {
-    forceCreate,
-    uploadCommand: true,
-  });
-
   try {
     const { result, uploadError } = await handleProjectUpload(
       derivedAccountId,
@@ -56,8 +51,10 @@ exports.handler = async options => {
       projectDir,
       pollProjectBuildAndDeploy,
       message,
-      useV3Api(projectConfig?.platformVersion),
-      skipValidation
+      forceCreate,
+      true,
+      skipValidation,
+      useV3Api(projectConfig?.platformVersion)
     );
 
     if (uploadError) {

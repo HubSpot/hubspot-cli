@@ -14,6 +14,7 @@ import { ProjectConfig } from '../../types/Projects';
 import { isTranslationError, translate } from '@hubspot/project-parsing-lib';
 import { logError } from '../errorHandlers';
 import util from 'node:util';
+import { ensureProjectExists } from './index';
 
 const i18nKey = 'lib.projectUpload';
 
@@ -98,6 +99,8 @@ export async function handleProjectUpload<T>(
   projectDir: string,
   callbackFunc: ProjectUploadCallbackFunction<T>,
   uploadMessage: string,
+  forceCreate: boolean,
+  isUploadCommand: boolean,
   sendIR: boolean = false,
   skipValidation: boolean = false
 ): Promise<ProjectUploadResult<T>> {
@@ -157,6 +160,15 @@ export async function handleProjectUpload<T>(
           return process.exit(EXIT_CODES.ERROR);
         }
       }
+
+      // Watch
+      await ensureProjectExists(accountId, projectConfig.name);
+
+      // Project upload
+      await ensureProjectExists(accountId, projectConfig.name, {
+        forceCreate,
+        uploadCommand: isUploadCommand,
+      });
 
       const { buildId, error } = await uploadProjectFiles(
         accountId,

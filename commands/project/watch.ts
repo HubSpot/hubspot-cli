@@ -12,7 +12,6 @@ const {
 const { trackCommandUsage } = require('../../lib/usageTracking');
 const { uiBetaTag } = require('../../lib/ui');
 const {
-  ensureProjectExists,
   getProjectConfig,
   validateProjectConfig,
   logFeedbackMessage,
@@ -93,8 +92,6 @@ exports.handler = async options => {
 
   validateProjectConfig(projectConfig, projectDir);
 
-  await ensureProjectExists(derivedAccountId, projectConfig.name);
-
   try {
     const {
       data: { results: builds },
@@ -117,7 +114,9 @@ exports.handler = async options => {
         derivedAccountId,
         projectConfig,
         projectDir,
-        startWatching
+        startWatching,
+        false,
+        false
       );
 
       if (uploadError) {
