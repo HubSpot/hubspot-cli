@@ -161,9 +161,6 @@ export async function handleProjectUpload<T>(
         }
       }
 
-      // Watch
-      await ensureProjectExists(accountId, projectConfig.name);
-
       // Project upload
       await ensureProjectExists(accountId, projectConfig.name, {
         forceCreate,

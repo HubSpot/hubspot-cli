@@ -11,7 +11,6 @@ const { logger } = require('@hubspot/local-dev-lib/logger');
 const { uiBetaTag, uiCommandReference } = require('../../lib/ui');
 const { trackCommandUsage } = require('../../lib/usageTracking');
 const {
-  ensureProjectExists,
   getProjectConfig,
   logFeedbackMessage,
   validateProjectConfig,
