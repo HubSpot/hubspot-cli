@@ -112,7 +112,11 @@ export async function handler(
     ])
   );
 
-  logger.log(i18n('commands.account.subcommands.list.configPath', { configPath: configPath! }));
+  logger.log(
+    i18n('commands.account.subcommands.list.configPath', {
+      configPath: configPath!,
+    })
+  );
   logger.log(
     i18n('commands.account.subcommands.list.defaultAccount', {
       account: getConfigDefaultAccount()!,
