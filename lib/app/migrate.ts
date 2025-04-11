@@ -197,6 +197,7 @@ async function handleMigrationSetup(
   }
 
   const projectName =
+    projectConfig?.projectConfig?.name ||
     name ||
     (await inputPrompt(
       i18n('commands.project.subcommands.migrateApp.prompt.inputName')
@@ -439,12 +440,20 @@ export async function migrateApp2025_2(
 ): Promise<void> {
   SpinniesManager.init();
 
-  if (
-    projectConfig &&
-    (!projectConfig?.projectConfig || !projectConfig?.projectDir)
-  ) {
-    // TODO: i18n
-    throw new Error('Invalid project config');
+  // TODO: i18n
+  if (projectConfig) {
+    if (!projectConfig?.projectConfig || !projectConfig?.projectDir) {
+      throw new Error('Invalid project config');
+    }
+    const { projectExists } = await ensureProjectExists(
+      derivedAccountId,
+      projectConfig.projectConfig.name,
+      { allowCreate: false, noLogs: true }
+    );
+
+    if (!projectExists) {
+      throw new Error('Project does not exist, unable to migrate');
+    }
   }
 
   const { appIdToMigrate, projectName, projectDest } =
