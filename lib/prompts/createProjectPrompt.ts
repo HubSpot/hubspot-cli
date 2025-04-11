@@ -9,8 +9,23 @@ import {
 import { promptUser } from './promptUtils';
 import { i18n } from '../lang';
 import { ProjectTemplate } from '../../types/Projects';
-
+import { PROJECT_CONFIG_FILE } from '../constants';
 const i18nKey = 'lib.prompts.createProjectPrompt';
+
+function validateProjectDirectory(input?: string): string | boolean {
+  if (!input) {
+    return i18n(`${i18nKey}.errors.destRequired`);
+  }
+  if (
+    fs.existsSync(path.resolve(getCwd(), path.join(input, PROJECT_CONFIG_FILE)))
+  ) {
+    return i18n(`${i18nKey}.errors.invalidDest`);
+  }
+  if (!isValidPath(input)) {
+    return i18n(`${i18nKey}.errors.invalidCharacters`);
+  }
+  return true;
+}
 
 type CreateProjectPromptResponse = {
   name: string;
@@ -65,18 +80,7 @@ export async function createProjectPrompt(
         );
         return path.resolve(getCwd(), projectName);
       },
-      validate: (input?: string) => {
-        if (!input) {
-          return i18n(`${i18nKey}.errors.destRequired`);
-        }
-        if (fs.existsSync(input)) {
-          return i18n(`${i18nKey}.errors.invalidDest`);
-        }
-        if (!isValidPath(input)) {
-          return i18n(`${i18nKey}.errors.invalidCharacters`);
-        }
-        return true;
-      },
+      validate: validateProjectDirectory,
       filter: input => {
         return untildify(input);
       },

@@ -43,7 +43,7 @@ export async function downloadProjectPrompt(promptOptions: {
     getConfigDefaultAccount();
   const projectsList = await createProjectsList(account.accountId);
 
-  return promptUser<DownloadProjectPromptResponse>([
+  const response = await promptUser<DownloadProjectPromptResponse>([
     {
       name: 'project',
       message: () => {
@@ -67,4 +67,10 @@ export async function downloadProjectPrompt(promptOptions: {
       }),
     },
   ]);
+
+  if (!response.project) {
+    response.project = promptOptions.project!;
+  }
+
+  return response;
 }

@@ -43,14 +43,14 @@ export type Spinner = {
 
 export type SpinnerOptions = {
   text?: string;
-  status?: typeof VALID_STATUSES[number];
+  status?: (typeof VALID_STATUSES)[number];
   indent?: number;
   spinner?: Partial<Spinner>;
   disableSpins?: boolean;
-  color?: typeof VALID_COLORS[number];
-  spinnerColor?: typeof VALID_COLORS[number];
-  succeedColor?: typeof VALID_COLORS[number];
-  failColor?: typeof VALID_COLORS[number];
+  color?: (typeof VALID_COLORS)[number];
+  spinnerColor?: (typeof VALID_COLORS)[number];
+  succeedColor?: (typeof VALID_COLORS)[number];
+  failColor?: (typeof VALID_COLORS)[number];
   succeedPrefix?: string;
   failPrefix?: string;
 };
@@ -129,7 +129,7 @@ export function colorOptions({
     spinnerColor,
   };
   (Object.keys(colors) as Array<keyof SpinnerOptions>).forEach(key => {
-    if (!VALID_COLORS.includes(colors[key] as typeof VALID_COLORS[number])) {
+    if (!VALID_COLORS.includes(colors[key] as (typeof VALID_COLORS)[number])) {
       delete colors[key as keyof SpinnerOptions];
     }
   });

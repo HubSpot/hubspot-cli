@@ -10,10 +10,8 @@ import { i18n } from '../../lib/lang';
 import { selectAccountFromConfig } from '../../lib/prompts/accountsPrompt';
 import { CommonArgs } from '../../types/Yargs';
 
-const i18nKey = 'commands.account.subcommands.use';
-
 export const command = 'use [account]';
-export const describe = i18n(`${i18nKey}.describe`);
+export const describe = i18n('commands.account.subcommands.use.describe');
 
 interface AccountUseArgs extends CommonArgs {
   account?: string;
@@ -28,7 +26,7 @@ export async function handler(
     newDefaultAccountIdentifier = await selectAccountFromConfig();
   } else if (!getConfigAccountIfExists(newDefaultAccountIdentifier)) {
     logger.error(
-      i18n(`${i18nKey}.errors.accountNotFound`, {
+      i18n('commands.account.subcommands.use.errors.accountNotFound', {
         specifiedAccount: newDefaultAccountIdentifier,
         configPath: getConfigFilePath(),
       })
@@ -45,7 +43,7 @@ export async function handler(
   setConfigAccountAsDefault(newDefaultAccountIdentifier);
 
   return logger.success(
-    i18n(`${i18nKey}.success.defaultAccountUpdated`, {
+    i18n('commands.account.subcommands.use.success.defaultAccountUpdated', {
       accountName: newDefaultAccount.name,
     })
   );
@@ -53,14 +51,23 @@ export async function handler(
 
 export function builder(yargs: Argv): Argv<AccountUseArgs> {
   yargs.positional('account', {
-    describe: i18n(`${i18nKey}.options.account.describe`),
+    describe: i18n('commands.account.subcommands.use.options.account.describe'),
     type: 'string',
   });
 
   yargs.example([
-    ['$0 accounts use', i18n(`${i18nKey}.examples.default`)],
-    ['$0 accounts use MyAccount', i18n(`${i18nKey}.examples.nameBased`)],
-    ['$0 accounts use 1234567', i18n(`${i18nKey}.examples.idBased`)],
+    [
+      '$0 accounts use',
+      i18n('commands.account.subcommands.use.examples.default'),
+    ],
+    [
+      '$0 accounts use MyAccount',
+      i18n('commands.account.subcommands.use.examples.nameBased'),
+    ],
+    [
+      '$0 accounts use 1234567',
+      i18n('commands.account.subcommands.use.examples.idBased'),
+    ],
   ]);
 
   return yargs as Argv<AccountUseArgs>;

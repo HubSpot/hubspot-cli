@@ -6,7 +6,6 @@ en:
         cmsUpdateNotification: "{{#bold}}The CMS CLI is now the HubSpot CLI{{/bold}}\n\nTo upgrade, uninstall {{#bold}}{{ packageName }}{{/bold}}\nand then run {{ updateCommand }}"
         cliUpdateNotification: "HubSpot CLI version {{#cyan}}{{#bold}}{currentVersion}{{/bold}}{{/cyan}} is outdated.\nRun {{ updateCommand }} to upgrade to version {{#cyan}}{{#bold}}{latestVersion}{{/bold}}{{/cyan}}"
       srcIsProject: "\"{{ src }}\" is in a project folder. Did you mean \"hs project {{command}}\"?"
-      setDefaultAccountMoved: "This command has moved. Try `hs accounts use` instead"
       handleDeprecatedEnvVariables:
         portalEnvVarDeprecated: "The HUBSPOT_PORTAL_ID environment variable is deprecated. Please use HUBSPOT_ACCOUNT_ID instead."
       loadConfigMiddleware:
@@ -74,6 +73,9 @@ en:
           describe: "Print information about the default account, or about the account specified with the \"account\" option."
           errors:
             notUsingPersonalAccessKey: "This command currently only supports fetching scopes for the personal access key auth type."
+          options:
+            account:
+              describe: "Account name or id to show info for"
           examples:
             default: "Print information for the default account"
             idBased: "Print information for the account with accountId equal to \"1234567\""
@@ -93,14 +95,14 @@ en:
             other: "Remove {{ count }} inactive accounts from the CLI config?"
           removeSuccess: "Removed {{ accountName }} from the CLI config."
     auth:
-      describe: "Configure authentication for your HubSpot account. This will update the {{ configName }} file that stores your account information."
+      describe: "Configure authentication for your HubSpot account."
+      verboseDescribe: "Configure authentication for a HubSpot account. This will update the {{ configName }} file that stores your account information.\n\nThe recommended authentication method is {{#bold}}{{ authMethod }}{{/bold}}, which uses an access token tied to a specific user account."
       errors:
         noConfigFileFound: "No config file was found. To create a new config file, use the \"hs init\" command."
         unsupportedAuthType: "Unsupported auth type: {{ type }}. The only supported authentication protocols are {{ supportedProtocols }}."
       options:
         authType:
-          describe: "Authentication mechanism"
-          defaultDescription: "\"{{ authMethod }}\": An access token tied to a specific user account. This is the recommended way of authenticating with local development tools."
+          describe: "Authentication method"
         account:
           describe: "HubSpot account to authenticate"
       success:
@@ -448,11 +450,11 @@ en:
           success:
             fetch: "Downloaded HubDB table {{ tableId }} to {{ path }}"
     init:
-      describe: "Configure authentication for your HubSpot account. This will create a {{ configName }} file to store your account information."
+      describe: "Create a CLI config file and configure authentication for your HubSpot account."
+      verboseDescribe: "Configure authentication for a HubSpot account. This will create a {{ configName }} file to store your account information. To configure authentication for additional accounts, run {{ command }}.\n\nThe recommended authentication method is {{#bold}}{{ authMethod }}{{/bold}}, which uses an access token tied to a specific user account."
       options:
         authType:
-          describe: "Authentication mechanism"
-          defaultDescription: "\"{{ authMethod }}\":  An access token tied to a specific user account. This is the recommended way of authenticating with local development tools."
+          describe: "Authentication method"
         account:
           describe: "HubSpot account to authenticate"
         useHiddenConfig:
@@ -569,6 +571,7 @@ en:
           header:
             text: "Migrate an app to the projects framework"
             link: "Learn more about migrating apps to the projects framework"
+          deprecationWarning: "The {{ oldCommand }} command is deprecated and will be removed. Use {{ newCommand }} going forward."
           migrationStatus:
             inProgress: "Converting app configuration to {{#bold}}public-app.json{{/bold}} component definition ..."
             success: "{{#bold}}Your app was converted and build #1 is deployed{{/bold}}"
@@ -584,11 +587,40 @@ en:
           migrationInterrupted: "\nThe command is terminated, but app migration is still in progress. Please check your account to ensure that the project and associated app have been created successfully."
           createAppPrompt: "Proceed with migrating this app to a project component (this process can't be aborted)?"
           projectDetailsLink: "View project details in your developer account"
+          componentsToBeMigrated: "The following component types will be migrated: {{ components }}"
+          componentsThatWillNotBeMigrated: "[NOTE] These component types are not yet supported for migration but will be available later: {{ components }}"
           errors:
+            noAppsEligible: "No apps in account {{ accountId }} are currently migratable"
+            noAccountConfig: "There is no account associated with {{ accountId }} in the config file. Please choose another account and try again, or authenticate {{ accountId }} using {{ authCommand }}."
             invalidAccountTypeTitle: "{{#bold}}Developer account not targeted{{/bold}}"
             invalidAccountTypeDescription: "Only public apps created in a developer account can be converted to a project component. Select a connected developer account with {{useCommand}} or {{authCommand}} and try again."
             projectAlreadyExists: "A project with name {{ projectName }} already exists. Please choose another name."
             invalidApp: "Could not migrate appId {{ appId }}. This app cannot be migrated at this time. Please choose another public app."
+            appWithAppIdNotFound: "Could not find an app with the id {{ appId }} "
+            migrationFailed: 'Migration Failed'
+          prompt:
+            chooseApp: 'Which app would you like to migrate?'
+            inputName: '[--name] What would you like to name the project?'
+            inputDest: '[--dest] Where would you like to save the project?'
+            uidForComponent: 'What UID would you like to use for {{ componentName }}?'
+            proceed: 'Would you like to proceed?'
+          spinners:
+            beginningMigration: "Beginning migration"
+            unableToStartMigration: "Unable to begin migration"
+            finishingMigration: "Wrapping up migration"
+            migrationComplete: "Migration completed"
+            migrationFailed: "Migration failed"
+            downloadingProjectContents: "Downloading migrated project files"
+            downloadingProjectContentsComplete: "Migrated project files downloaded"
+            downloadingProjectContentsFailed: "Unable to download migrated project files"
+            copyingProjectFiles: "Copying migrated project files"
+            copyingProjectFilesComplete: "Migrated project files copied"
+            copyingProjectFilesFailed: "Unable to copy migrated project files"
+          unmigratableReasons:
+            upToDate: 'App is already up to date'
+            isPrivateApp: 'Private apps are not currently migratable'
+            listedInMarketplace: 'Listed apps are not currently migratable'
+            generic: "Unable to migrate app: {{ reasonCode }}"
         cloneApp:
           describe: "Clone a public app using the projects framework."
           examples:
@@ -607,6 +639,7 @@ en:
             invalidAccountTypeTitle: "{{#bold}}Developer account not targeted{{/bold}}"
             invalidAccountTypeDescription: "Only public apps created in a developer account can be converted to a project component. Select a connected developer account with {{useCommand}} or {{authCommand}} and try again."
             couldNotWriteConfigPath: "Failed to write project config at {{ configPath }}"
+            noAccountConfig: "There is no account associated with {{ accountId }} in the config file. Please choose another account and try again, or authenticate {{ accountId }} using {{ authCommand }}."
         add:
           describe: "Create a new component within a project."
           options:
@@ -630,7 +663,7 @@ en:
           debug:
             deploying: "Deploying project at path: {{ path }}"
           errors:
-            deploy: "Deploy error: {{ details }}"
+            deploy: "Deploy error: an unknown error occurred."
             noBuilds: "Deploy error: no builds for this project were found."
             noBuildId: "You must specify a build to deploy"
             projectNotFound: "The project {{ projectName }} does not exist in account {{ accountIdentifier }}. Run {{ command }} to upload your project files to HubSpot."
@@ -749,7 +782,7 @@ en:
             downloadSucceeded: "Downloaded build \"{{ buildId }}\" from project \"{{ projectName }}\""
           errors:
             downloadFailed: "Something went wrong downloading the project"
-            projectNotFound: "Your project {{ projectName }} could not be found in {{ accountId }}"
+            noBuildIdToDownload: "This project is empty. There is no build content to download"
           warnings:
             cannotDownloadWithinProject: "Cancelling project download. Please run the command again outside the context of an existing project."
           options:
@@ -1076,16 +1109,17 @@ en:
         missingComponents: "Couldn't find the following components in the deployed build for this project: {{#bold}}'{{ missingComponents }}'{{/bold}}. This may cause issues in local development."
         defaultWarning: "{{#bold}}Changing project configuration requires a new project build.{{/bold}}"
         defaultPublicAppWarning: "{{#bold}}Changing project configuration requires a new project build.{{/bold}}\n\nThis will affect your public app's {{#bold}}{{ installCount }} existing {{ installText }}{{/bold}}. If your app has users in production, we strongly recommend creating a copy of this app to test your changes before proceding."
+        defaultMarketplaceAppWarning: "{{#bold}}Changing project configuration requires creating a new project build.{{/bold}}\n\nYour marketplace app is currently installed in {{#bold}}{{ installCount }} {{ accountText }}{{/bold}}. Any uploaded changes will impact your app's users. We strongly recommend creating a copy of this app to test your changes before proceding."
         header: "{{ warning }} To reflect these changes and continue testing:"
         stopDev: "  * Stop {{ command }}"
         runUpload: "  * Run {{ command }}"
         restartDev: "  * Re-run {{ command }}"
         pushToGithub: "  * Commit and push your changes to GitHub"
       activeInstallWarning:
-        installCount: "{{#bold}}The app {{ appName }} has {{ installCount }} production {{ installText }}{{/bold}}"
+        installCount: "{{#bold}}The app {{ appName }} is installed in {{ installCount }} {{ accountText }}{{/bold}}"
         explanation: "Some changes made during local development may need to be synced to HubSpot, which will impact those existing installs. We strongly recommend creating a copy of this app to use instead."
         confirmation: "You will always be asked to confirm any permanent changes to your app’s configuration before uploading them."
-        confirmationPrompt: "Proceed with local development of this {{#bold}}production{{/bold}} app?"
+        confirmationPrompt: "Proceed with local development of this app with existing installs?"
       devServer:
         cleanupError: "Failed to cleanup local dev server: {{ message }}"
         setupError: "Failed to setup local dev server: {{ message }}"
@@ -1144,7 +1178,7 @@ en:
         componentCount: "Found {{ numComponents }} components in this project"
         successStatusText: "DONE"
         failedStatusText: "FAILED"
-        errorFetchingTaskStatus: "Error fetching {{ taskType }} status"
+        errorFetchingTaskStatus: "An error occurred while fetching the status of the current {{ taskType }}. For more information, view this project in HubSpot by running {{ openCommand }}."
       pollBuildAutodeployStatusError: "Error fetching autodeploy status for build #{{ buildId }}"
       pollProjectBuildAndDeploy:
         buildSucceededAutomaticallyDeploying: "Build #{{ buildId }} succeeded. {{#bold}}Automatically deploying{{/bold}} to {{ accountIdentifier }}\n"
@@ -1177,7 +1211,7 @@ en:
       disabledUrlText: "See all HubSpot CLI commands here."
       featureHighlight:
         defaultTitle: "What's next?"
-        commandKeys:
+        featureKeys:
           accountOption:
             command: "--account"
             message: "Use the {{ command }} option with any command to override the default account"
@@ -1207,10 +1241,15 @@ en:
             message: "Run {{ command }} to learn more about available project commands"
           projectUploadCommand:
             command: "hs project upload"
-            message: "Run {{ command }} to upload your project to HubSpot and trigger builds"
+            message: "Run {{ command }} to upload your project to your HubSpot account"
           projectDevCommand:
             command: "hs project dev"
             message: "Run {{ command }} to set up your test environment and start local development"
+          projectInstallDepsCommand:
+            command: "hs project install-deps"
+            message: "Run {{ command }} to install dependencies for your project components"
+          projectCommandTip:
+            message: "Tip: All project commands must be run from within a project directory"
           sampleProjects:
             linkText: "HubSpot's sample projects"
             url: "https://developers.hubspot.com/docs/platform/sample-projects?utm_source=cli&utm_content=project_create_whats_next"
@@ -1511,6 +1550,8 @@ en:
         errorContext: "Context: {{ context }}"
         errorCause: "Cause: {{ cause }}"
         unknownErrorOccurred: "An unknown error has occurred."
+        configTimeoutErrorOccurred: "This error occurred because a request exceeded the default HTTP timeout of {{ timeout }}ms. To increase the default HTTP timeout, run {{ configSetCommand }}."
+        genericTimeoutErrorOccurred: "This error occurred because an HTTP request timed out. Re-running the command may resolve this issue."
       suppressErrors:
         platformVersionErrors:
           header: "Platform version update required"

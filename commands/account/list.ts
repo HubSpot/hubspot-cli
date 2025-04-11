@@ -2,8 +2,8 @@ import { Argv, ArgumentsCamelCase } from 'yargs';
 import { logger } from '@hubspot/local-dev-lib/logger';
 import {
   getConfigFilePath,
-  getConfigDefaultAccount,
   getAllConfigAccounts,
+  getConfigDefaultAccountIfExists,
 } from '@hubspot/local-dev-lib/config';
 import { HubSpotConfigAccount } from '@hubspot/local-dev-lib/types/Accounts';
 import { addConfigOptions } from '../../lib/commonOpts';
@@ -17,10 +17,8 @@ import {
 } from '@hubspot/local-dev-lib/constants/config';
 import { CommonArgs, ConfigArgs } from '../../types/Yargs';
 
-const i18nKey = 'commands.account.subcommands.list';
-
 export const command = ['list', 'ls'];
-export const describe = i18n(`${i18nKey}.describe`);
+export const describe = i18n('commands.account.subcommands.list.describe');
 
 type AccountListArgs = CommonArgs & ConfigArgs;
 
@@ -100,32 +98,33 @@ export async function handler(
   const configPath = getConfigFilePath();
   const accountsList = getAllConfigAccounts();
   const mappedAccountData = sortAndMapAccounts(accountsList);
+
   const accountData = getAccountData(mappedAccountData);
+
   accountData.unshift(
     getTableHeader([
-      i18n(`${i18nKey}.labels.name`),
-      i18n(`${i18nKey}.labels.accountId`),
-      i18n(`${i18nKey}.labels.authType`),
+      i18n('commands.account.subcommands.list.labels.name'),
+      i18n('commands.account.subcommands.list.labels.accountId'),
+      i18n('commands.account.subcommands.list.labels.authType'),
     ])
   );
 
-  let defaultAccount;
+  logger.log(
+    i18n('commands.account.subcommands.list.configPath', {
+      configPath: configPath!,
+    })
+  );
 
-  try {
-    defaultAccount = getConfigDefaultAccount();
-  } catch (e) {}
-
-  logger.log(i18n(`${i18nKey}.configPath`, { configPath: configPath! }));
+  const defaultAccount = getConfigDefaultAccountIfExists();
 
   if (defaultAccount) {
     logger.log(
-      i18n(`${i18nKey}.defaultAccount`, {
+      i18n('commands.account.subcommands.list.defaultAccount', {
         account: defaultAccount.name,
       })
     );
   }
-
-  logger.log(i18n(`${i18nKey}.accounts`));
+  logger.log(i18n('commands.account.subcommands.list.accounts'));
   logger.log(getTableContents(accountData, { border: { bodyLeft: '  ' } }));
 }
 

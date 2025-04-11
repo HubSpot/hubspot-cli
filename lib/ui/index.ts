@@ -81,10 +81,10 @@ export function uiInfoSection(title: string, logContent: () => void): void {
   uiLine();
 }
 
-export function uiCommandReference(command: string): string {
+export function uiCommandReference(command: string, withQuotes = true): string {
   const terminalUISupport = getTerminalUISupport();
 
-  const commandReference = `\`${command}\``;
+  const commandReference = withQuotes ? `\`${command}\`` : command;
 
   return chalk.bold(
     terminalUISupport.color
@@ -93,15 +93,15 @@ export function uiCommandReference(command: string): string {
   );
 }
 
-export function uiFeatureHighlight(commands: string[], title?: string): void {
+export function uiFeatureHighlight(features: string[], title?: string): void {
   const i18nKey = 'lib.ui.featureHighlight';
 
   uiInfoSection(title ? title : i18n(`${i18nKey}.defaultTitle`), () => {
-    commands.forEach((c, i) => {
-      const commandKey = `${i18nKey}.commandKeys.${c}`;
-      const message = i18n(`${commandKey}.message`, {
-        command: uiCommandReference(i18n(`${commandKey}.command`)),
-        link: uiLink(i18n(`${commandKey}.linkText`), i18n(`${commandKey}.url`)),
+    features.forEach((c, i) => {
+      const featureKey = `${i18nKey}.featureKeys.${c}`;
+      const message = i18n(`${featureKey}.message`, {
+        command: uiCommandReference(i18n(`${featureKey}.command`)),
+        link: uiLink(i18n(`${featureKey}.linkText`), i18n(`${featureKey}.url`)),
       });
       if (i !== 0) {
         logger.log('');
@@ -111,6 +111,8 @@ export function uiFeatureHighlight(commands: string[], title?: string): void {
   });
 }
 
+export function uiBetaTag(message: string, log?: true): undefined;
+export function uiBetaTag(message: string, log: false): string;
 export function uiBetaTag(message: string, log = true): string | undefined {
   const i18nKey = 'lib.ui';
 
@@ -124,12 +126,14 @@ export function uiBetaTag(message: string, log = true): string | undefined {
   if (log) {
     logger.log(result);
     return;
-  } else {
-    return result;
   }
+  return result;
 }
 
-export function uiDeprecatedTag(message: string): void {
+export function uiDeprecatedTag(
+  message: string,
+  log = true
+): string | undefined {
   const i18nKey = 'lib.ui';
 
   const terminalUISupport = getTerminalUISupport();
@@ -139,7 +143,10 @@ export function uiDeprecatedTag(message: string): void {
     terminalUISupport.color ? chalk.yellow(tag) : tag
   } ${message}`;
 
-  logger.log(result);
+  if (log) {
+    logger.log(result);
+  }
+  return result;
 }
 
 export function uiCommandDisabledBanner(

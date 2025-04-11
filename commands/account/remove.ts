@@ -14,10 +14,8 @@ import { addConfigOptions } from '../../lib/commonOpts';
 import { CommonArgs, ConfigArgs } from '../../types/Yargs';
 import { EXIT_CODES } from '../../lib/enums/exitCodes';
 
-const i18nKey = 'commands.account.subcommands.remove';
-
 export const command = 'remove [account]';
-export const describe = i18n(`${i18nKey}.describe`);
+export const describe = i18n(`commands.account.subcommands.remove.describe`);
 
 type AccountRemoveArgs = CommonArgs &
   ConfigArgs & {
@@ -32,7 +30,7 @@ export async function handler(
 
   if (!accountToRemoveIdentifier) {
     accountToRemoveIdentifier = await selectAccountFromConfig(
-      i18n(`${i18nKey}.prompts.selectAccountToRemove`)
+      i18n(`commands.account.subcommands.remove.prompts.selectAccountToRemove`)
     );
   }
 
@@ -40,7 +38,7 @@ export async function handler(
 
   if (!account) {
     logger.error(
-      i18n(`${i18nKey}.errors.accountNotFound`, {
+      i18n(`commands.account.subcommands.remove.errors.accountNotFound`, {
         specifiedAccount: accountToRemoveIdentifier,
         configPath: getConfigFilePath(),
       })
@@ -58,7 +56,7 @@ export async function handler(
 
   await removeAccountFromConfig(account.accountId);
   logger.success(
-    i18n(`${i18nKey}.success.accountRemoved`, {
+    i18n(`commands.account.subcommands.remove.success.accountRemoved`, {
       accountName: accountToRemoveIdentifier,
     })
   );
@@ -68,7 +66,9 @@ export async function handler(
     account.accountId === currentDefaultAccount.accountId
   ) {
     logger.log();
-    logger.log(i18n(`${i18nKey}.logs.replaceDefaultAccount`));
+    logger.log(
+      i18n(`commands.account.subcommands.remove.logs.replaceDefaultAccount`)
+    );
     const newDefaultAccount = await selectAccountFromConfig();
     setConfigAccountAsDefault(newDefaultAccount);
   }
@@ -78,13 +78,21 @@ export function builder(yargs: Argv): Argv<AccountRemoveArgs> {
   addConfigOptions(yargs);
 
   yargs.positional('account', {
-    describe: i18n(`${i18nKey}.options.account.describe`),
+    describe: i18n(
+      `commands.account.subcommands.remove.options.account.describe`
+    ),
     type: 'string',
   });
 
   yargs.example([
-    ['$0 accounts remove', i18n(`${i18nKey}.examples.default`)],
-    ['$0 accounts remove MyAccount', i18n(`${i18nKey}.examples.byName`)],
+    [
+      '$0 accounts remove',
+      i18n(`commands.account.subcommands.remove.examples.default`),
+    ],
+    [
+      '$0 accounts remove MyAccount',
+      i18n(`commands.account.subcommands.remove.examples.byName`),
+    ],
   ]);
 
   return yargs as Argv<AccountRemoveArgs>;

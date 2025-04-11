@@ -9,8 +9,6 @@ const { logger } = require('@hubspot/local-dev-lib/logger');
 const { start: startTestServer } = require('@hubspot/serverless-dev-runtime');
 const { i18n } = require('../../lib/lang');
 
-const i18nKey = 'commands.function.subcommands.server';
-
 exports.command = 'server <path>';
 exports.describe = false;
 
@@ -20,7 +18,7 @@ exports.handler = async options => {
   trackCommandUsage('functions-server', null, derivedAccountId);
 
   logger.debug(
-    i18n(`${i18nKey}.debug.startingServer`, {
+    i18n('commands.function.subcommands.server.debug.startingServer', {
       functionPath,
     })
   );
@@ -33,26 +31,36 @@ exports.handler = async options => {
 
 exports.builder = yargs => {
   yargs.positional('path', {
-    describe: i18n(`${i18nKey}.positionals.path.describe`),
+    describe: i18n(
+      'commands.function.subcommands.server.positionals.path.describe'
+    ),
     type: 'string',
   });
   yargs.option('port', {
-    describe: i18n(`${i18nKey}.options.port.describe`),
+    describe: i18n(
+      'commands.function.subcommands.server.options.port.describe'
+    ),
     type: 'string',
     default: 5432,
   });
   yargs.option('contact', {
-    describe: i18n(`${i18nKey}.options.contact.describe`),
+    describe: i18n(
+      'commands.function.subcommands.server.options.contact.describe'
+    ),
     type: 'boolean',
     default: true,
   });
   yargs.option('watch', {
-    describe: i18n(`${i18nKey}.options.watch.describe`),
+    describe: i18n(
+      'commands.function.subcommands.server.options.watch.describe'
+    ),
     type: 'boolean',
     default: true,
   });
   yargs.option('log-output', {
-    describe: i18n(`${i18nKey}.options.logOutput.describe`),
+    describe: i18n(
+      'commands.function.subcommands.server.options.logOutput.describe'
+    ),
     type: 'boolean',
     default: false,
   });
@@ -60,7 +68,7 @@ exports.builder = yargs => {
   yargs.example([
     [
       '$0 functions server ./tmp/myFunctionFolder.functions',
-      i18n(`${i18nKey}.examples.default`),
+      i18n('commands.function.subcommands.server.examples.default'),
     ],
   ]);
 

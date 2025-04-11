@@ -1,19 +1,18 @@
-// @ts-nocheck
-import yargs from 'yargs';
+import yargs, { Argv } from 'yargs';
 import { addConfigOptions, addTestingOptions } from '../../lib/commonOpts';
+import * as initCommand from '../init';
 
 jest.mock('yargs');
 jest.mock('../../lib/commonOpts');
 
-// Import this last so mocks apply
-import initCommand from '../init';
+const optionsSpy = jest
+  .spyOn(yargs as Argv, 'options')
+  .mockReturnValue(yargs as Argv);
+const conflictsSpy = jest
+  .spyOn(yargs as Argv, 'conflicts')
+  .mockReturnValue(yargs as Argv);
 
 describe('commands/init', () => {
-  beforeEach(() => {
-    yargs.options = jest.fn().mockReturnThis();
-    yargs.conflicts = jest.fn().mockReturnThis();
-  });
-
   describe('command', () => {
     it('should have the correct command structure', () => {
       expect(initCommand.command).toEqual('init');
@@ -28,10 +27,10 @@ describe('commands/init', () => {
 
   describe('builder', () => {
     it('should support the correct options', () => {
-      initCommand.builder(yargs);
+      initCommand.builder(yargs as Argv);
 
-      expect(yargs.options).toHaveBeenCalledTimes(1);
-      expect(yargs.options).toHaveBeenCalledWith({
+      expect(optionsSpy).toHaveBeenCalledTimes(1);
+      expect(optionsSpy).toHaveBeenCalledWith({
         'auth-type': expect.objectContaining({
           type: 'string',
           choices: ['personalaccesskey', 'oauth2'],
@@ -46,11 +45,8 @@ describe('commands/init', () => {
         }),
       });
 
-      expect(yargs.conflicts).toHaveBeenCalledTimes(1);
-      expect(yargs.conflicts).toHaveBeenCalledWith(
-        'use-hidden-config',
-        'config'
-      );
+      expect(conflictsSpy).toHaveBeenCalledTimes(1);
+      expect(conflictsSpy).toHaveBeenCalledWith('use-hidden-config', 'config');
 
       expect(addConfigOptions).toHaveBeenCalledTimes(1);
       expect(addConfigOptions).toHaveBeenCalledWith(yargs);
