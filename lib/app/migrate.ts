@@ -13,7 +13,7 @@ import { downloadProject } from '@hubspot/local-dev-lib/api/projects';
 import { confirmPrompt, inputPrompt, listPrompt } from '../prompts/promptUtils';
 import { uiAccountDescription, uiCommandReference, uiLine } from '../ui';
 import { i18n } from '../lang';
-import { ensureProjectExists } from '../projects';
+import { ensureProjectExists, LoadedProjectConfig } from '../projects';
 import SpinniesManager from '../ui/SpinniesManager';
 import { DEFAULT_POLLING_STATUS_LOOKUP, poll } from '../polling';
 import { MigrateAppOptions } from '../../types/Yargs';
@@ -21,10 +21,12 @@ import {
   checkMigrationStatusV2,
   continueMigration,
   initializeMigration,
+  isMigrationStatus,
   listAppsForMigration,
   MigrationApp,
   MigrationStatus,
 } from '../../api/migrate';
+import fs from 'fs';
 
 function getUnmigratableReason(reasonCode: string): string {
   switch (reasonCode) {
@@ -50,9 +52,19 @@ function getUnmigratableReason(reasonCode: string): string {
   }
 }
 
+function filterAppsByProjectName(projectConfig?: LoadedProjectConfig) {
+  return (app: MigrationApp) => {
+    if (projectConfig) {
+      return app.projectName === projectConfig?.projectConfig?.name;
+    }
+    return !app.projectName;
+  };
+}
+
 async function handleMigrationSetup(
   derivedAccountId: number,
-  options: ArgumentsCamelCase<MigrateAppOptions>
+  options: ArgumentsCamelCase<MigrateAppOptions>,
+  projectConfig?: LoadedProjectConfig
 ): Promise<{
   appIdToMigrate?: number | undefined;
   projectName?: string;
@@ -63,24 +75,31 @@ async function handleMigrationSetup(
     data: { migratableApps, unmigratableApps },
   } = await listAppsForMigration(derivedAccountId);
 
-  const migratableAppsWithoutProject = migratableApps.filter(
-    (app: MigrationApp) => !app.projectName
+  const filteredMigratableApps = migratableApps.filter(
+    filterAppsByProjectName(projectConfig)
   );
 
-  const unmigratableAppsWithoutProject = unmigratableApps.filter(
-    (app: MigrationApp) => !app.projectName
+  const filteredUnmigratableApps = unmigratableApps.filter(
+    filterAppsByProjectName(projectConfig)
   );
 
-  const allAppsWithoutProject = [
-    ...migratableAppsWithoutProject,
-    ...unmigratableAppsWithoutProject,
-  ];
+  const allApps = [...filteredMigratableApps, ...filteredUnmigratableApps];
 
-  if (allAppsWithoutProject.length === 0) {
-    const reasons = unmigratableAppsWithoutProject.map(
+  if (allApps.length > 1 && projectConfig) {
+    throw new Error(
+      'Multiple apps found in project, this is not allowed in the new system'
+    );
+  }
+
+  if (allApps.length === 0) {
+    const reasons = filteredUnmigratableApps.map(
       app =>
         `${chalk.bold(app.appName)}: ${getUnmigratableReason(app.unmigratableReason)}`
     );
+    if (projectConfig) {
+      // TODO: i18n, get copy from UX
+      throw new Error('No migratable apps in project');
+    }
 
     throw new Error(
       `${i18n(`commands.project.subcommands.migrateApp.errors.noAppsEligible`, {
@@ -91,7 +110,7 @@ async function handleMigrationSetup(
 
   if (
     appId &&
-    !allAppsWithoutProject.some(app => {
+    !allApps.some(app => {
       return app.appId === appId;
     })
   ) {
@@ -102,7 +121,7 @@ async function handleMigrationSetup(
     );
   }
 
-  const appChoices = allAppsWithoutProject.map(app => ({
+  const appChoices = allApps.map(app => ({
     name: app.isMigratable
       ? app.appName
       : `[${chalk.yellow('DISABLED')}] ${app.appName} `,
@@ -123,9 +142,7 @@ async function handleMigrationSetup(
     appIdToMigrate = selectedAppId;
   }
 
-  const selectedApp = allAppsWithoutProject.find(
-    app => app.appId === appIdToMigrate
-  );
+  const selectedApp = allApps.find(app => app.appId === appIdToMigrate);
 
   const migratableComponents: string[] = [];
   const unmigratableComponents: string[] = [];
@@ -164,6 +181,19 @@ async function handleMigrationSetup(
 
   if (!proceed) {
     return {};
+  }
+
+  // If it's a project we don't want to prompt for dest and name, so just return early
+  if (
+    projectConfig &&
+    projectConfig?.projectConfig &&
+    projectConfig?.projectDir
+  ) {
+    return {
+      appIdToMigrate,
+      projectName: projectConfig.projectConfig.name,
+      projectDest: projectConfig.projectDir,
+    };
   }
 
   const projectName =
@@ -254,7 +284,7 @@ async function beginMigration(
       uidMap[componentId] = await inputPrompt(
         i18n('commands.project.subcommands.migrateApp.prompt.uidForComponent', {
           componentName: componentHint
-            ? `${componentHint} [${mapToUserFacingType(componentType)}]`
+            ? `${mapToUserFacingType(componentType)} '${componentHint}'`
             : mapToUserFacingType(componentType),
         }),
         {
@@ -308,7 +338,23 @@ async function finalizeMigration(
         `commands.project.subcommands.migrateApp.spinners.migrationFailed`
       ),
     });
-    throw error;
+
+    if (isMigrationStatus(error) && error.status === MIGRATION_STATUS.FAILURE) {
+      throw new Error(error.projectErrorDetail);
+    }
+
+    throw new Error(
+      i18n('commands.project.subcommands.migrateApp.errors.migrationFailed'),
+      {
+        cause: error,
+      }
+    );
+  }
+
+  if (pollResponse.status !== MIGRATION_STATUS.SUCCESS) {
+    throw new Error(
+      i18n('commands.project.subcommands.migrateApp.errors.migrationFailed')
+    );
   }
 
   if (pollResponse.status === MIGRATION_STATUS.SUCCESS) {
@@ -317,30 +363,17 @@ async function finalizeMigration(
         `commands.project.subcommands.migrateApp.spinners.migrationComplete`
       ),
     });
-
-    return pollResponse.buildId;
-  } else {
-    SpinniesManager.fail('finishingMigration', {
-      text: i18n(
-        `commands.project.subcommands.migrateApp.spinners.migrationFailed`
-      ),
-    });
-    if (pollResponse.status === MIGRATION_STATUS.FAILURE) {
-      logger.error(pollResponse.componentErrorDetails);
-      throw new Error(pollResponse.projectErrorsDetail);
-    }
-
-    throw new Error(
-      i18n('commands.project.subcommands.migrateApp.errors.migrationFailed')
-    );
   }
+
+  return pollResponse.buildId;
 }
 
-export async function downloadProjectFiles(
+async function downloadProjectFiles(
   derivedAccountId: number,
   projectName: string,
   buildId: number,
-  projectDest: string
+  projectDest: string,
+  projectConfig?: LoadedProjectConfig
 ): Promise<void> {
   try {
     SpinniesManager.add('fetchingMigratedProject', {
@@ -355,9 +388,21 @@ export async function downloadProjectFiles(
       buildId
     );
 
-    const absoluteDestPath = projectDest
-      ? path.resolve(getCwd(), projectDest)
-      : getCwd();
+    let absoluteDestPath;
+
+    if (projectConfig?.projectConfig && projectConfig?.projectDir) {
+      const { projectDir } = projectConfig;
+      const { srcDir } = projectConfig.projectConfig;
+      absoluteDestPath = path.join(projectDir, srcDir);
+
+      const archiveDest = path.join(projectDir, 'archive');
+      // Move the existing source directory to archive
+      fs.renameSync(absoluteDestPath, archiveDest);
+    } else {
+      absoluteDestPath = projectDest
+        ? path.resolve(getCwd(), projectDest)
+        : getCwd();
+    }
 
     await extractZipArchive(
       zippedProject,
@@ -388,12 +433,21 @@ export async function downloadProjectFiles(
 
 export async function migrateApp2025_2(
   derivedAccountId: number,
-  options: ArgumentsCamelCase<MigrateAppOptions>
+  options: ArgumentsCamelCase<MigrateAppOptions>,
+  projectConfig?: LoadedProjectConfig
 ): Promise<void> {
   SpinniesManager.init();
 
+  if (
+    projectConfig &&
+    (!projectConfig?.projectConfig || !projectConfig?.projectDir)
+  ) {
+    // TODO: i18n
+    throw new Error('Invalid project config');
+  }
+
   const { appIdToMigrate, projectName, projectDest } =
-    await handleMigrationSetup(derivedAccountId, options);
+    await handleMigrationSetup(derivedAccountId, options, projectConfig);
 
   if (!appIdToMigrate || !projectName || !projectDest) {
     return;
@@ -414,14 +468,15 @@ export async function migrateApp2025_2(
     derivedAccountId,
     migrationId,
     uidMap,
-    projectName
+    projectConfig?.projectConfig?.name || projectName
   );
 
   await downloadProjectFiles(
     derivedAccountId,
     projectName,
     buildId,
-    projectDest
+    projectDest,
+    projectConfig
   );
 }
 
