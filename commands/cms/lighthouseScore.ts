@@ -19,7 +19,6 @@ const { HUBSPOT_FOLDER, MARKETPLACE_FOLDER } = require('../../lib/constants');
 const { uiLink } = require('../../lib/ui');
 const { EXIT_CODES } = require('../../lib/enums/exitCodes');
 
-
 const DEFAULT_TABLE_HEADER = [
   'Accessibility',
   'Best practices',
@@ -37,7 +36,9 @@ const selectTheme = async accountId => {
       type: 'list',
       look: false,
       name: 'theme',
-      message: i18n(`commands.cms.subcommands.lighthouseScore.info.promptMessage`),
+      message: i18n(
+        `commands.cms.subcommands.lighthouseScore.info.promptMessage`
+      ),
       choices: async () => {
         try {
           const { data: result } = await fetchThemes(accountId, {
@@ -54,7 +55,11 @@ const selectTheme = async accountId => {
               );
           }
         } catch (err) {
-          logger.error(i18n(`commands.cms.subcommands.lighthouseScore.errors.failedToFetchThemes`));
+          logger.error(
+            i18n(
+              `commands.cms.subcommands.lighthouseScore.errors.failedToFetchThemes`
+            )
+          );
           process.exit(EXIT_CODES.ERROR);
         }
       },
@@ -83,7 +88,9 @@ exports.handler = async options => {
     }
     if (!isValidTheme) {
       logger.error(
-        i18n(`commands.cms.subcommands.lighthouseScore.errors.themeNotFound`, { theme: themeToCheck })
+        i18n(`commands.cms.subcommands.lighthouseScore.errors.themeNotFound`, {
+          theme: themeToCheck,
+        })
       );
       process.exit(EXIT_CODES.ERROR);
     }
@@ -104,7 +111,11 @@ exports.handler = async options => {
   }
 
   if (!requestResult || !requestResult.mobileId || !requestResult.desktopId) {
-    logger.error(i18n(`commands.cms.subcommands.lighthouseScore.errors.failedToGetLighthouseScore`));
+    logger.error(
+      i18n(
+        `commands.cms.subcommands.lighthouseScore.errors.failedToGetLighthouseScore`
+      )
+    );
     process.exit(EXIT_CODES.ERROR);
   }
 
@@ -113,7 +124,10 @@ exports.handler = async options => {
     SpinniesManager.init();
 
     SpinniesManager.add('lighthouseScore', {
-      text: i18n(`commands.cms.subcommands.lighthouseScore.info.generatingScore`, { theme: themeToCheck }),
+      text: i18n(
+        `commands.cms.subcommands.lighthouseScore.info.generatingScore`,
+        { theme: themeToCheck }
+      ),
     });
 
     const checkScoreStatus = async () => {
@@ -183,7 +197,11 @@ exports.handler = async options => {
       verboseViewAverageScoreResult = data;
     }
   } catch (err) {
-    logger.error(i18n(`commands.cms.subcommands.lighthouseScore.errors.failedToGetLighthouseScore`));
+    logger.error(
+      i18n(
+        `commands.cms.subcommands.lighthouseScore.errors.failedToGetLighthouseScore`
+      )
+    );
     process.exit(EXIT_CODES.ERROR);
   }
 
@@ -209,7 +227,11 @@ exports.handler = async options => {
         border: { bodyLeft: '  ' },
       })
     );
-    logger.log(i18n(`commands.cms.subcommands.lighthouseScore.info.pageTemplateScoreTitle`));
+    logger.log(
+      i18n(
+        `commands.cms.subcommands.lighthouseScore.info.pageTemplateScoreTitle`
+      )
+    );
 
     const table2Header = getTableHeader([
       'Template path',
@@ -236,7 +258,9 @@ exports.handler = async options => {
       })
     );
 
-    logger.log(i18n(`commands.cms.subcommands.lighthouseScore.info.lighthouseLinksTitle`));
+    logger.log(
+      i18n(`commands.cms.subcommands.lighthouseScore.info.lighthouseLinksTitle`)
+    );
 
     scoreResult.scores.forEach(score => {
       logger.log(' ', uiLink(score.templatePath, score.link));
@@ -244,14 +268,22 @@ exports.handler = async options => {
 
     if (scoreResult.failedTemplatePaths.length) {
       logger.log();
-      logger.error(i18n(`commands.cms.subcommands.lighthouseScore.info.failedTemplatePathsTitle`));
+      logger.error(
+        i18n(
+          `commands.cms.subcommands.lighthouseScore.info.failedTemplatePathsTitle`
+        )
+      );
       scoreResult.failedTemplatePaths.forEach(failedTemplatePath => {
         logger.log(' ', failedTemplatePath);
       });
     }
 
     logger.log();
-    logger.info(i18n(`commands.cms.subcommands.lighthouseScore.info.targetDeviceNote`, { target }));
+    logger.info(
+      i18n(`commands.cms.subcommands.lighthouseScore.info.targetDeviceNote`, {
+        target,
+      })
+    );
   } else {
     logger.log(`Theme: ${themeToCheck}`);
     const tableHeader = getTableHeader(['Target', ...DEFAULT_TABLE_HEADER]);
@@ -279,7 +311,9 @@ exports.handler = async options => {
       })
     );
 
-    logger.info(i18n(`commands.cms.subcommands.lighthouseScore.info.verboseOptionNote`));
+    logger.info(
+      i18n(`commands.cms.subcommands.lighthouseScore.info.verboseOptionNote`)
+    );
   }
 
   logger.log();
@@ -295,17 +329,23 @@ exports.handler = async options => {
 
 exports.builder = yargs => {
   yargs.option('theme', {
-    describe: i18n(`commands.cms.subcommands.lighthouseScore.options.theme.describe`),
+    describe: i18n(
+      `commands.cms.subcommands.lighthouseScore.options.theme.describe`
+    ),
     type: 'string',
   });
   yargs.option('target', {
-    describe: i18n(`commands.cms.subcommands.lighthouseScore.options.target.describe`),
+    describe: i18n(
+      `commands.cms.subcommands.lighthouseScore.options.target.describe`
+    ),
     type: 'string',
     choices: ['desktop', 'mobile'],
     default: 'desktop',
   });
   yargs.option('verbose', {
-    describe: i18n(`commands.cms.subcommands.lighthouseScore.options.verbose.describe`),
+    describe: i18n(
+      `commands.cms.subcommands.lighthouseScore.options.verbose.describe`
+    ),
     boolean: true,
     default: false,
   });

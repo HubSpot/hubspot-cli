@@ -10,7 +10,6 @@ const { trackCommandUsage } = require('../../lib/usageTracking');
 const { listPrompt } = require('../../lib/prompts/promptUtils');
 const { EXIT_CODES } = require('../../lib/enums/exitCodes');
 
-
 exports.command = 'get-react-module [name] [dest]';
 exports.describe = i18n(`commands.cms.subcommands.getReactModule.describe`);
 
@@ -62,7 +61,9 @@ exports.handler = async options => {
     );
   } catch (e) {
     if (e.cause && e.cause.code === 'ERR_BAD_REQUEST') {
-      logger.error(i18n(`commands.cms.subcommands.getReactModule.errors.invalidName`));
+      logger.error(
+        i18n(`commands.cms.subcommands.getReactModule.errors.invalidName`)
+      );
     } else {
       logError(e);
     }
@@ -72,11 +73,15 @@ exports.handler = async options => {
 
 exports.builder = yargs => {
   yargs.positional('name', {
-    describe: i18n(`commands.cms.subcommands.getReactModule.positionals.name.describe`),
+    describe: i18n(
+      `commands.cms.subcommands.getReactModule.positionals.name.describe`
+    ),
     type: 'string',
   });
   yargs.positional('dest', {
-    describe: i18n(`commands.cms.subcommands.getReactModule.positionals.dest.describe`),
+    describe: i18n(
+      `commands.cms.subcommands.getReactModule.positionals.dest.describe`
+    ),
     type: 'string',
   });
   return yargs;

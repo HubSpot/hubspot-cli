@@ -22,7 +22,9 @@ exports.handler = async options => {
 
   trackCommandUsage('functions-list', null, derivedAccountId);
 
-  logger.debug(i18n('commands.function.subcommands.list.debug.gettingFunctions'));
+  logger.debug(
+    i18n('commands.function.subcommands.list.debug.gettingFunctions')
+  );
 
   const { data: routesResp } = await getRoutes(derivedAccountId).catch(
     async e => {
@@ -32,7 +34,9 @@ exports.handler = async options => {
   );
 
   if (!routesResp.objects.length) {
-    return logger.info(i18n('commands.function.subcommands.list.info.noFunctions'));
+    return logger.info(
+      i18n('commands.function.subcommands.list.info.noFunctions')
+    );
   }
 
   if (options.json) {
@@ -63,7 +67,9 @@ exports.builder = yargs => {
 
   yargs.options({
     json: {
-      describe: i18n('commands.function.subcommands.list.options.json.describe'),
+      describe: i18n(
+        'commands.function.subcommands.list.options.json.describe'
+      ),
       type: 'boolean',
     },
   });

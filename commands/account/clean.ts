@@ -17,7 +17,6 @@ import SpinniesManager from '../../lib/ui/SpinniesManager';
 import { uiAccountDescription } from '../../lib/ui';
 import { CommonArgs, ConfigArgs } from '../../types/Yargs';
 
-
 export const command = 'clean';
 export const describe = i18n(`commands.account.subcommands.clean.describe`);
 

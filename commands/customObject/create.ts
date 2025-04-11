@@ -22,9 +22,10 @@ import {
   EnvironmentArgs,
 } from '../../types/Yargs';
 
-
 export const command = 'create [name]';
-export const describe = i18n(`commands.customObject.subcommands.create.describe`);
+export const describe = i18n(
+  `commands.customObject.subcommands.create.describe`
+);
 
 type CombinedArgs = CommonArgs & ConfigArgs & AccountArgs & EnvironmentArgs;
 type CustomObjectCreateArgs = CombinedArgs & { name?: string; path?: string };
@@ -39,24 +40,34 @@ export async function handler(
   trackCommandUsage('custom-object-batch-create', {}, derivedAccountId);
 
   if (!name) {
-    name = await inputPrompt(i18n(`commands.customObject.subcommands.create.inputName`));
+    name = await inputPrompt(
+      i18n(`commands.customObject.subcommands.create.inputName`)
+    );
   }
 
   if (!definitionPath) {
-    definitionPath = await inputPrompt(i18n(`commands.customObject.subcommands.create.inputPath`));
+    definitionPath = await inputPrompt(
+      i18n(`commands.customObject.subcommands.create.inputPath`)
+    );
   }
 
   const filePath = getAbsoluteFilePath(definitionPath);
   const objectJson = checkAndConvertToJson(filePath);
 
   if (!isObjectDefinition(objectJson)) {
-    logger.error(i18n(`commands.customObject.subcommands.create.errors.invalidObjectDefinition`));
+    logger.error(
+      i18n(
+        `commands.customObject.subcommands.create.errors.invalidObjectDefinition`
+      )
+    );
     process.exit(EXIT_CODES.ERROR);
   }
 
   try {
     await batchCreateObjects(derivedAccountId, name, objectJson);
-    logger.success(i18n(`commands.customObject.subcommands.create.success.objectsCreated`));
+    logger.success(
+      i18n(`commands.customObject.subcommands.create.success.objectsCreated`)
+    );
   } catch (e) {
     logError(e, { accountId: derivedAccountId });
     logger.error(
@@ -74,11 +85,15 @@ export function builder(yargs: Argv): Argv<CustomObjectCreateArgs> {
 
   yargs
     .positional('name', {
-      describe: i18n(`commands.customObject.subcommands.create.positionals.name.describe`),
+      describe: i18n(
+        `commands.customObject.subcommands.create.positionals.name.describe`
+      ),
       type: 'string',
     })
     .option('path', {
-      describe: i18n(`commands.customObject.subcommands.create.options.path.describe`),
+      describe: i18n(
+        `commands.customObject.subcommands.create.options.path.describe`
+      ),
       type: 'string',
     });
 

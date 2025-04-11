@@ -9,7 +9,6 @@ const {
   setAllowUsageTracking,
 } = require('../../lib/configOptions');
 
-
 exports.command = 'set';
 exports.describe = i18n(`commands.config.subcommands.set.describe`);
 
@@ -72,22 +71,33 @@ exports.builder = yargs => {
   yargs
     .options({
       'default-cms-publish-mode': {
-        describe: i18n(`commands.config.subcommands.set.options.defaultMode.describe`),
+        describe: i18n(
+          `commands.config.subcommands.set.options.defaultMode.describe`
+        ),
         type: 'string',
       },
       'allow-usage-tracking': {
-        describe: i18n(`commands.config.subcommands.set.options.allowUsageTracking.describe`),
+        describe: i18n(
+          `commands.config.subcommands.set.options.allowUsageTracking.describe`
+        ),
         type: 'boolean',
       },
       'http-timeout': {
-        describe: i18n(`commands.config.subcommands.set.options.httpTimeout.describe`),
+        describe: i18n(
+          `commands.config.subcommands.set.options.httpTimeout.describe`
+        ),
         type: 'string',
       },
     })
     .conflicts('defaultCmsPublishMode', 'allowUsageTracking')
     .conflicts('defaultCmsPublishMode', 'httpTimeout')
     .conflicts('allowUsageTracking', 'httpTimeout')
-    .example([['$0 config set', i18n(`commands.config.subcommands.set.examples.default`)]]);
+    .example([
+      [
+        '$0 config set',
+        i18n(`commands.config.subcommands.set.examples.default`),
+      ],
+    ]);
 
   return yargs;
 };
