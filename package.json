@@ -62,9 +62,9 @@
   },
   "scripts": {
     "build": "ts-node ./scripts/build.ts",
-    "lint": "eslint . && prettier --list-different ./**/*.{js,json}",
+    "lint": "eslint . && prettier --list-different './**/*.{ts,js,json}'",
     "list-all-commands": "yarn ts-node ./scripts/get-all-commands.ts",
-    "prettier:write": "prettier --write ./**/*.{ts,js,json}",
+    "prettier:write": "prettier --write './**/*.{ts,js,json}'",
     "test": "yarn node --experimental-vm-modules $(yarn bin jest)",
     "test-cli": "yarn build && yarn --cwd 'acceptance-tests' test-ci",
     "test-cli-debug": "yarn build && yarn --cwd 'acceptance-tests' test-debug",
