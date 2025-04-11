@@ -159,6 +159,7 @@ async function logFireAlarms(
     let boxen;
 
     try {
+      // The boxen package is exported as a module, so we have to use a dynamic import
       boxen = (await import('boxen')).default;
     } catch (error) {
       logger.debug(`${i18n('lib.middleware.fireAlarm.failedToLoadBoxen')}`);
