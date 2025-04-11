@@ -75,10 +75,10 @@ describe('doctor', () => {
     beforeEach(() => {
       diagnosis = 'Yooooooooooooooo';
       DoctorMock.mockImplementation(() => {
-        return ({
+        return {
           diagnose: jest.fn().mockResolvedValue({ diagnosis }),
           accountId,
-        } as unknown) as Doctor;
+        } as unknown as Doctor;
       });
     });
 
@@ -103,10 +103,10 @@ describe('doctor', () => {
 
     it('should log an error if the diagnosis is undefined', async () => {
       DoctorMock.mockImplementationOnce(() => {
-        return ({
+        return {
           diagnose: jest.fn().mockResolvedValue(undefined),
           accountId,
-        } as unknown) as Doctor;
+        } as unknown as Doctor;
       });
       await handler({} as ArgumentsCamelCase<DoctorOptions>);
 
@@ -150,9 +150,9 @@ describe('doctor', () => {
       getCwd.mockImplementationOnce(() => cwd);
 
       const expectedOutputFile = `${cwd}/foo/hubspot-doctor-${date.toISOString()}.json`;
-      await handler({ outputDir: './foo' } as ArgumentsCamelCase<
-        DoctorOptions
-      >);
+      await handler({
+        outputDir: './foo',
+      } as ArgumentsCamelCase<DoctorOptions>);
 
       expect(logger.log).not.toHaveBeenCalled();
       expect(logger.error).not.toHaveBeenCalled();
