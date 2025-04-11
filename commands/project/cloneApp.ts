@@ -54,7 +54,7 @@ export const handler = async (options: ArgumentsCamelCase<CloneAppArgs>) => {
   }
 
   if (!isAppDeveloperAccount(accountConfig)) {
-    logInvalidAccountError(i18nKey);
+    logInvalidAccountError();
     process.exit(EXIT_CODES.SUCCESS);
   }
 

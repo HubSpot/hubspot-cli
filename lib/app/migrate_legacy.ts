@@ -35,7 +35,7 @@ export async function migrateApp2023_2(
   const accountName = uiAccountDescription(derivedAccountId);
 
   if (!isAppDeveloperAccount(accountConfig)) {
-    logInvalidAccountError('commands.project.subcommands.migrateApp');
+    logInvalidAccountError();
     process.exit(EXIT_CODES.SUCCESS);
   }
 

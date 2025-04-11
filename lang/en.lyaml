@@ -615,11 +615,7 @@ en:
             copyingProjectFiles: "Copying migrated project files"
             copyingProjectFilesComplete: "Migrated project files copied"
             copyingProjectFilesFailed: "Unable to copy migrated project files"
-          unmigratableReasons:
-            upToDate: 'App is already up to date'
-            isPrivateApp: 'Private apps are not currently migratable'
-            listedInMarketplace: 'Listed apps are not currently migratable'
-            generic: "Unable to migrate app: {{ reasonCode }}"
+
         cloneApp:
           describe: "Clone a public app using the projects framework."
           examples:

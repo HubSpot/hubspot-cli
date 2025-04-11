@@ -12,7 +12,6 @@ import { downloadProject } from '@hubspot/local-dev-lib/api/projects';
 
 import { confirmPrompt, inputPrompt, listPrompt } from '../prompts/promptUtils';
 import { uiAccountDescription, uiCommandReference, uiLine } from '../ui';
-import { i18n } from '../lang';
 import { ensureProjectExists, LoadedProjectConfig } from '../projects';
 import SpinniesManager from '../ui/SpinniesManager';
 import { DEFAULT_POLLING_STATUS_LOOKUP, poll } from '../polling';
@@ -27,28 +26,18 @@ import {
   MigrationStatus,
 } from '../../api/migrate';
 import fs from 'fs';
+import { lib } from '../../lang/en';
 
 function getUnmigratableReason(reasonCode: string): string {
   switch (reasonCode) {
     case UNMIGRATABLE_REASONS.UP_TO_DATE:
-      return i18n(
-        'commands.project.subcommands.migrateApp.unmigratableReasons.upToDate'
-      );
+      return lib.migrate.errors.unmigratableReasons.upToDate;
     case UNMIGRATABLE_REASONS.IS_A_PRIVATE_APP:
-      return i18n(
-        'commands.project.subcommands.migrateApp.unmigratableReasons.isPrivateApp'
-      );
+      return lib.migrate.errors.unmigratableReasons.isPrivateApp;
     case UNMIGRATABLE_REASONS.LISTED_IN_MARKETPLACE:
-      return i18n(
-        'commands.project.subcommands.migrateApp.unmigratableReasons.listedInMarketplace'
-      );
+      return lib.migrate.errors.unmigratableReasons.listedInMarketplace;
     default:
-      return i18n(
-        'commands.project.subcommands.migrateApp.unmigratableReasons.generic',
-        {
-          reasonCode,
-        }
-      );
+      return lib.migrate.errors.unmigratableReasons.generic(reasonCode);
   }
 }
 
@@ -86,9 +75,7 @@ async function handleMigrationSetup(
   const allApps = [...filteredMigratableApps, ...filteredUnmigratableApps];
 
   if (allApps.length > 1 && projectConfig) {
-    throw new Error(
-      'Multiple apps found in project, this is not allowed in the new system'
-    );
+    throw new Error(lib.migrate.errors.project.multipleApps);
   }
 
   if (allApps.length === 0) {
@@ -97,14 +84,14 @@ async function handleMigrationSetup(
         `${chalk.bold(app.appName)}: ${getUnmigratableReason(app.unmigratableReason)}`
     );
     if (projectConfig) {
-      // TODO: i18n, get copy from UX
-      throw new Error('No migratable apps in project');
+      throw new Error(lib.migrate.errors.project.multipleApps);
     }
 
     throw new Error(
-      `${i18n(`commands.project.subcommands.migrateApp.errors.noAppsEligible`, {
-        accountId: uiAccountDescription(derivedAccountId),
-      })}${reasons.length ? `\n  - ${reasons.join('\n  - ')}` : ''}`
+      lib.migrate.errors.noAppsEligible(
+        uiAccountDescription(derivedAccountId),
+        reasons
+      )
     );
   }
 
@@ -114,11 +101,7 @@ async function handleMigrationSetup(
       return app.appId === appId;
     })
   ) {
-    throw new Error(
-      i18n('commands.project.subcommands.migrateApp.prompt.chooseApp', {
-        appId,
-      })
-    );
+    throw new Error(lib.migrate.errors.appWithAppIdNotFound(appId));
   }
 
   const appChoices = allApps.map(app => ({
@@ -134,7 +117,7 @@ async function handleMigrationSetup(
   let appIdToMigrate = appId;
   if (!appIdToMigrate) {
     const { appId: selectedAppId } = await listPrompt<MigrationApp>(
-      i18n('commands.project.subcommands.migrateApp.prompt.chooseApp'),
+      lib.migrate.prompt.chooseApp,
       {
         choices: appChoices,
       }
@@ -157,27 +140,22 @@ async function handleMigrationSetup(
 
   if (migratableComponents.length !== 0) {
     logger.log(
-      i18n('commands.project.subcommands.migrateApp.componentsToBeMigrated', {
-        components: `\n - ${migratableComponents.join('\n - ')}`,
-      })
+      lib.migrate.componentsToBeMigrated(
+        `\n - ${migratableComponents.join('\n - ')}`
+      )
     );
   }
 
   if (unmigratableComponents.length !== 0) {
     logger.log(
-      i18n(
-        'commands.project.subcommands.migrateApp.componentsThatWillNotBeMigrated',
-        {
-          components: `\n - ${unmigratableComponents.join('\n - ')}`,
-        }
+      lib.migrate.componentsThatWillNotBeMigrated(
+        `\n - ${unmigratableComponents.join('\n - ')}`
       )
     );
   }
 
   logger.log();
-  const proceed = await confirmPrompt(
-    i18n('commands.project.subcommands.migrateApp.prompt.proceed')
-  );
+  const proceed = await confirmPrompt(lib.migrate.prompt.proceed);
 
   if (!proceed) {
     return {};
@@ -199,9 +177,7 @@ async function handleMigrationSetup(
   const projectName =
     projectConfig?.projectConfig?.name ||
     name ||
-    (await inputPrompt(
-      i18n('commands.project.subcommands.migrateApp.prompt.inputName')
-    ));
+    (await inputPrompt(lib.migrate.prompt.inputName));
 
   const { projectExists } = await ensureProjectExists(
     derivedAccountId,
@@ -210,24 +186,14 @@ async function handleMigrationSetup(
   );
 
   if (projectExists) {
-    throw new Error(
-      i18n(
-        'commands.project.subcommands.migrateApp.errors.projectAlreadyExists',
-        {
-          projectName,
-        }
-      )
-    );
+    throw new Error(lib.migrate.errors.project.alreadyExists(projectName));
   }
 
   const projectDest =
     dest ||
-    (await inputPrompt(
-      i18n('commands.project.subcommands.migrateApp.prompt.inputDest'),
-      {
-        defaultAnswer: path.resolve(getCwd(), sanitizeFileName(projectName)),
-      }
-    ));
+    (await inputPrompt(lib.migrate.prompt.inputDest, {
+      defaultAnswer: path.resolve(getCwd(), sanitizeFileName(projectName)),
+    }));
 
   return { appIdToMigrate, projectName, projectDest };
 }
@@ -244,9 +210,7 @@ async function beginMigration(
   | undefined
 > {
   SpinniesManager.add('beginningMigration', {
-    text: i18n(
-      'commands.project.subcommands.migrateApp.spinners.beginningMigration'
-    ),
+    text: lib.migrate.spinners.beginningMigration,
   });
 
   const uidMap: Record<string, string> = {};
@@ -266,9 +230,7 @@ async function beginMigration(
 
   if (pollResponse.status !== MIGRATION_STATUS.INPUT_REQUIRED) {
     SpinniesManager.fail('beginningMigration', {
-      text: i18n(
-        'commands.project.subcommands.migrateApp.spinners.unableToStartMigration'
-      ),
+      text: lib.migrate.spinners.unableToStartMigration,
     });
     return;
   }
@@ -283,11 +245,11 @@ async function beginMigration(
     )) {
       const { componentHint, componentType } = component;
       uidMap[componentId] = await inputPrompt(
-        i18n('commands.project.subcommands.migrateApp.prompt.uidForComponent', {
-          componentName: componentHint
+        lib.migrate.prompt.uidForComponent(
+          componentHint
             ? `${mapToUserFacingType(componentType)} '${componentHint}'`
-            : mapToUserFacingType(componentType),
-        }),
+            : mapToUserFacingType(componentType)
+        ),
         {
           validate: (uid: string) => {
             const result = validateUid(uid);
@@ -324,9 +286,7 @@ async function finalizeMigration(
   let pollResponse: MigrationStatus;
   try {
     SpinniesManager.add('finishingMigration', {
-      text: i18n(
-        `commands.project.subcommands.migrateApp.spinners.finishingMigration`
-      ),
+      text: lib.migrate.spinners.finishingMigration,
     });
     await continueMigration(derivedAccountId, migrationId, uidMap, projectName);
 
@@ -335,34 +295,25 @@ async function finalizeMigration(
     ]);
   } catch (error) {
     SpinniesManager.fail('finishingMigration', {
-      text: i18n(
-        `commands.project.subcommands.migrateApp.spinners.migrationFailed`
-      ),
+      text: lib.migrate.spinners.migrationFailed,
     });
 
     if (isMigrationStatus(error) && error.status === MIGRATION_STATUS.FAILURE) {
       throw new Error(error.projectErrorDetail);
     }
 
-    throw new Error(
-      i18n('commands.project.subcommands.migrateApp.errors.migrationFailed'),
-      {
-        cause: error,
-      }
-    );
+    throw new Error(lib.migrate.errors.migrationFailed, {
+      cause: error,
+    });
   }
 
   if (pollResponse.status !== MIGRATION_STATUS.SUCCESS) {
-    throw new Error(
-      i18n('commands.project.subcommands.migrateApp.errors.migrationFailed')
-    );
+    throw new Error(lib.migrate.errors.migrationFailed);
   }
 
   if (pollResponse.status === MIGRATION_STATUS.SUCCESS) {
     SpinniesManager.succeed('finishingMigration', {
-      text: i18n(
-        `commands.project.subcommands.migrateApp.spinners.migrationComplete`
-      ),
+      text: lib.migrate.spinners.migrationComplete,
     });
   }
 
@@ -378,9 +329,7 @@ async function downloadProjectFiles(
 ): Promise<void> {
   try {
     SpinniesManager.add('fetchingMigratedProject', {
-      text: i18n(
-        `commands.project.subcommands.migrateApp.spinners.downloadingProjectContents`
-      ),
+      text: lib.migrate.spinners.downloadingProjectContents,
     });
 
     const { data: zippedProject } = await downloadProject(
@@ -417,17 +366,13 @@ async function downloadProjectFiles(
     );
 
     SpinniesManager.succeed('fetchingMigratedProject', {
-      text: i18n(
-        `commands.project.subcommands.migrateApp.spinners.downloadingProjectContentsComplete`
-      ),
+      text: lib.migrate.spinners.downloadingProjectContentsComplete,
     });
 
     logger.success(`Saved ${projectName} to ${projectDest}`);
   } catch (error) {
     SpinniesManager.fail('fetchingMigratedProject', {
-      text: i18n(
-        `commands.project.subcommands.migrateApp.spinners.downloadingProjectContentsFailed`
-      ),
+      text: lib.migrate.spinners.downloadingProjectContentsFailed,
     });
     throw error;
   }
@@ -440,10 +385,9 @@ export async function migrateApp2025_2(
 ): Promise<void> {
   SpinniesManager.init();
 
-  // TODO: i18n
   if (projectConfig) {
     if (!projectConfig?.projectConfig || !projectConfig?.projectDir) {
-      throw new Error('Invalid project config');
+      throw new Error(lib.migrate.errors.project.invalidConfig);
     }
     const { projectExists } = await ensureProjectExists(
       derivedAccountId,
@@ -452,7 +396,7 @@ export async function migrateApp2025_2(
     );
 
     if (!projectExists) {
-      throw new Error('Project does not exist, unable to migrate');
+      throw new Error(lib.migrate.errors.project.doesNotExist);
     }
   }
 
@@ -490,14 +434,14 @@ export async function migrateApp2025_2(
   );
 }
 
-export function logInvalidAccountError(i18nKey: string): void {
+export function logInvalidAccountError(): void {
   uiLine();
-  logger.error(i18n(`${i18nKey}.errors.invalidAccountTypeTitle`));
+  logger.error(lib.migrate.errors.invalidAccountTypeTitle);
   logger.log(
-    i18n(`${i18nKey}.errors.invalidAccountTypeDescription`, {
-      useCommand: uiCommandReference('hs accounts use'),
-      authCommand: uiCommandReference('hs auth'),
-    })
+    lib.migrate.errors.invalidAccountTypeDescription(
+      uiCommandReference('hs accounts use'),
+      uiCommandReference('hs auth')
+    )
   );
   uiLine();
 }
