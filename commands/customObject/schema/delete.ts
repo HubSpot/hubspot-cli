@@ -22,9 +22,10 @@ import {
   EnvironmentArgs,
 } from '../../../types/Yargs';
 
-
 export const command = 'delete [name]';
-export const describe = i18n(`commands.customObject.subcommands.schema.subcommands.delete.describe`);
+export const describe = i18n(
+  `commands.customObject.subcommands.schema.subcommands.delete.describe`
+);
 
 type CombinedArgs = CommonArgs & ConfigArgs & AccountArgs & EnvironmentArgs;
 type SchemaDeleteArgs = CombinedArgs & { name?: string; force?: boolean };
@@ -45,31 +46,52 @@ export async function handler(
     name =
       providedName && typeof providedName === 'string'
         ? providedName
-        : await listPrompt(i18n(`commands.customObject.subcommands.schema.subcommands.delete.selectSchema`), {
-            choices: schemaNames,
-          });
+        : await listPrompt(
+            i18n(
+              `commands.customObject.subcommands.schema.subcommands.delete.selectSchema`
+            ),
+            {
+              choices: schemaNames,
+            }
+          );
 
     const shouldDelete =
       force ||
-      (await confirmPrompt(i18n(`commands.customObject.subcommands.schema.subcommands.delete.confirmDelete`, { name })));
+      (await confirmPrompt(
+        i18n(
+          `commands.customObject.subcommands.schema.subcommands.delete.confirmDelete`,
+          { name }
+        )
+      ));
 
     if (!shouldDelete) {
-      logger.info(i18n(`commands.customObject.subcommands.schema.subcommands.delete.deleteCancelled`, { name }));
+      logger.info(
+        i18n(
+          `commands.customObject.subcommands.schema.subcommands.delete.deleteCancelled`,
+          { name }
+        )
+      );
       return process.exit(EXIT_CODES.SUCCESS);
     }
 
     await deleteObjectSchema(derivedAccountId, name);
     logger.success(
-      i18n(`commands.customObject.subcommands.schema.subcommands.delete.success.delete`, {
-        name,
-      })
+      i18n(
+        `commands.customObject.subcommands.schema.subcommands.delete.success.delete`,
+        {
+          name,
+        }
+      )
     );
   } catch (e) {
     logError(e);
     logger.error(
-      i18n(`commands.customObject.subcommands.schema.subcommands.delete.errors.delete`, {
-        name: name || '',
-      })
+      i18n(
+        `commands.customObject.subcommands.schema.subcommands.delete.errors.delete`,
+        {
+          name: name || '',
+        }
+      )
     );
   }
 }
@@ -81,14 +103,23 @@ export function builder(yargs: Argv): Argv<SchemaDeleteArgs> {
 
   yargs
     .example([
-      ['$0 schema delete schemaName', i18n(`commands.customObject.subcommands.schema.subcommands.delete.examples.default`)],
+      [
+        '$0 schema delete schemaName',
+        i18n(
+          `commands.customObject.subcommands.schema.subcommands.delete.examples.default`
+        ),
+      ],
     ])
     .positional('name', {
-      describe: i18n(`commands.customObject.subcommands.schema.subcommands.delete.positionals.name.describe`),
+      describe: i18n(
+        `commands.customObject.subcommands.schema.subcommands.delete.positionals.name.describe`
+      ),
       type: 'string',
     })
     .option('force', {
-      describe: i18n(`commands.customObject.subcommands.schema.subcommands.delete.options.force.describe`),
+      describe: i18n(
+        `commands.customObject.subcommands.schema.subcommands.delete.options.force.describe`
+      ),
       type: 'boolean',
     });
 
