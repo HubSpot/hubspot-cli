@@ -475,14 +475,21 @@ export async function createInitialBuildForNewProject(
   sendIr?: boolean
 ): Promise<Build> {
   const { result: initialUploadResult, uploadError } =
-    await handleProjectUpload<ProjectPollResult>(
-      targetAccountId,
+    await handleProjectUpload<ProjectPollResult>({
+      accountId: targetAccountId,
       projectConfig,
       projectDir,
-      projectUploadCallback,
-      i18n(`${i18nKey}.createInitialBuildForNewProject.initialUploadMessage`),
-      sendIr
-    );
+      callbackFunc: projectUploadCallback,
+      uploadMessage: i18n(
+        `${i18nKey}.createInitialBuildForNewProject.initialUploadMessage`,
+        {
+          uploadCommand: uiCommandReference('hs project upload'),
+        }
+      ),
+      forceCreate: true,
+      skipValidation: true,
+      sendIR: sendIr,
+    });
 
   if (uploadError) {
     if (

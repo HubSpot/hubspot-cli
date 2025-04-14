@@ -11,7 +11,6 @@ const { logger } = require('@hubspot/local-dev-lib/logger');
 const { uiBetaTag, uiCommandReference } = require('../../lib/ui');
 const { trackCommandUsage } = require('../../lib/usageTracking');
 const {
-  ensureProjectExists,
   getProjectConfig,
   logFeedbackMessage,
   validateProjectConfig,
@@ -44,21 +43,18 @@ exports.handler = async options => {
 
   validateProjectConfig(projectConfig, projectDir);
 
-  await ensureProjectExists(derivedAccountId, projectConfig.name, {
-    forceCreate,
-    uploadCommand: true,
-  });
-
   try {
-    const { result, uploadError } = await handleProjectUpload(
-      derivedAccountId,
+    const { result, uploadError } = await handleProjectUpload({
+      accountId: derivedAccountId,
       projectConfig,
       projectDir,
-      pollProjectBuildAndDeploy,
-      message,
-      useV3Api(projectConfig?.platformVersion),
-      skipValidation
-    );
+      callbackFunc: pollProjectBuildAndDeploy,
+      uploadMessage: message,
+      forceCreate,
+      isUploadCommand: true,
+      sendIR: useV3Api(projectConfig?.platformVersion),
+      skipValidation,
+    });
 
     if (uploadError) {
       if (

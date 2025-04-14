@@ -14,6 +14,7 @@ import { ProjectConfig } from '../../types/Projects';
 import { isTranslationError, translate } from '@hubspot/project-parsing-lib';
 import { logError } from '../errorHandlers';
 import util from 'node:util';
+import { ensureProjectExists } from './index';
 
 const i18nKey = 'lib.projectUpload';
 
@@ -92,15 +93,29 @@ type ProjectUploadResult<T> = {
   uploadError?: unknown;
 };
 
-export async function handleProjectUpload<T>(
-  accountId: number,
-  projectConfig: ProjectConfig,
-  projectDir: string,
-  callbackFunc: ProjectUploadCallbackFunction<T>,
-  uploadMessage: string,
-  sendIR: boolean = false,
-  skipValidation: boolean = false
-): Promise<ProjectUploadResult<T>> {
+type HandleProjectUploadArg<T> = {
+  accountId: number;
+  projectConfig: ProjectConfig;
+  projectDir: string;
+  callbackFunc: ProjectUploadCallbackFunction<T>;
+  uploadMessage?: string;
+  forceCreate?: boolean;
+  isUploadCommand?: boolean;
+  sendIR?: boolean;
+  skipValidation?: boolean;
+};
+
+export async function handleProjectUpload<T>({
+  accountId,
+  projectConfig,
+  projectDir,
+  callbackFunc,
+  uploadMessage,
+  forceCreate = false,
+  isUploadCommand = false,
+  sendIR = false,
+  skipValidation = false,
+}: HandleProjectUploadArg<T>): Promise<ProjectUploadResult<T>> {
   const srcDir = path.resolve(projectDir, projectConfig.srcDir);
 
   const filenames = fs.readdirSync(srcDir);
@@ -158,11 +173,16 @@ export async function handleProjectUpload<T>(
         }
       }
 
+      await ensureProjectExists(accountId, projectConfig.name, {
+        forceCreate,
+        uploadCommand: isUploadCommand,
+      });
+
       const { buildId, error } = await uploadProjectFiles(
         accountId,
         projectConfig.name,
         tempFile.name,
-        uploadMessage,
+        uploadMessage || '',
         projectConfig.platformVersion,
         intermediateRepresentation
       );
