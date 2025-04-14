@@ -591,7 +591,6 @@ en:
           componentsThatWillNotBeMigrated: "[NOTE] These component types are not yet supported for migration but will be available later: {{ components }}"
           errors:
             noAppsEligible: "No apps in account {{ accountId }} are currently migratable"
-            noAccountConfig: "There is no account associated with {{ accountId }} in the config file. Please choose another account and try again, or authenticate {{ accountId }} using {{ authCommand }}."
             invalidAccountTypeTitle: "{{#bold}}Developer account not targeted{{/bold}}"
             invalidAccountTypeDescription: "Only public apps created in a developer account can be converted to a project component. Select a connected developer account with {{useCommand}} or {{authCommand}} and try again."
             projectAlreadyExists: "A project with name {{ projectName }} already exists. Please choose another name."

@@ -1,5 +1,5 @@
 import { logger } from '@hubspot/local-dev-lib/logger';
-import { getAccountConfig } from '@hubspot/local-dev-lib/config';
+import { getConfigAccountById } from '@hubspot/local-dev-lib/config';
 import { PLATFORM_VERSIONS } from '@hubspot/local-dev-lib/constants/projects';
 import { ArgumentsCamelCase, Argv, CommandModule } from 'yargs';
 
@@ -29,14 +29,7 @@ const describe = undefined; // uiBetaTag(i18n(`commands.project.subcommands.migr
 export async function handler(options: ArgumentsCamelCase<MigrateAppOptions>) {
   const { derivedAccountId, platformVersion } = options;
   await trackCommandUsage('migrate-app', {}, derivedAccountId);
-  const accountConfig = getAccountConfig(derivedAccountId);
-
-  if (!accountConfig) {
-    logger.error(
-      i18n(`commands.project.subcommands.migrateApp.errors.noAccountConfig`)
-    );
-    return process.exit(EXIT_CODES.ERROR);
-  }
+  const account = getConfigAccountById(derivedAccountId);
 
   logger.log('');
   logger.log(
@@ -57,7 +50,7 @@ export async function handler(options: ArgumentsCamelCase<MigrateAppOptions>) {
     if (platformVersion === v2025_2 || platformVersion === unstable) {
       await migrateApp2025_2(derivedAccountId, options);
     } else {
-      await migrateApp2023_2(derivedAccountId, options, accountConfig);
+      await migrateApp2023_2(derivedAccountId, options, account);
     }
   } catch (error) {
     if (
