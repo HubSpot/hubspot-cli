@@ -1,4 +1,9 @@
 // @ts-nocheck
+const { uiLink } = require('../../lib/ui');
+
+const { useV3Api } = require('../../lib/projects/buildAndDeploy');
+const { uiCommandReference } = require('../../lib/ui');
+
 const { i18n } = require('../../lib/lang');
 const { createWatcher } = require('../../lib/projects/watch');
 const { logError, ApiErrorContext } = require('../../lib/errorHandlers/index');
@@ -90,6 +95,21 @@ exports.handler = async options => {
   trackCommandUsage('project-watch', null, derivedAccountId);
 
   const { projectConfig, projectDir } = await getProjectConfig();
+
+  if (useV3Api(projectConfig?.platformVersion)) {
+    logger.error(
+      i18n(`commands.project.subcommands.watch.errors.v3ApiError`, {
+        command: uiCommandReference('hs project watch'),
+        newCommand: uiCommandReference('hs project dev'),
+        platformVersion: projectConfig.platformVersion,
+        linkToDocs: uiLink(
+          'How to develop locally.',
+          'https://developers.hubspot.com/docs/guides/crm/ui-extensions/local-development'
+        ),
+      })
+    );
+    return process.exit(EXIT_CODES.ERROR);
+  }
 
   validateProjectConfig(projectConfig, projectDir);
 
