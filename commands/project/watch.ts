@@ -1,4 +1,7 @@
 // @ts-nocheck
+import { useV3Api } from '../../lib/projects/buildAndDeploy';
+import { uiCommandReference } from '../../lib/ui';
+
 const { i18n } = require('../../lib/lang');
 const { createWatcher } = require('../../lib/projects/watch');
 const { logError, ApiErrorContext } = require('../../lib/errorHandlers/index');
@@ -90,6 +93,17 @@ exports.handler = async options => {
   trackCommandUsage('project-watch', null, derivedAccountId);
 
   const { projectConfig, projectDir } = await getProjectConfig();
+
+  if (useV3Api(projectConfig?.platformVersion)) {
+    logger.error(
+      i18n(`commands.project.subcommands.watch.errors.v3ApiError`, {
+        command: uiCommandReference('hs project watch'),
+        newCommand: uiCommandReference('hs project dev'),
+        platformVersion: projectConfig.platformVersion,
+      })
+    );
+    return process.exit(EXIT_CODES.ERROR);
+  }
 
   validateProjectConfig(projectConfig, projectDir);
 
