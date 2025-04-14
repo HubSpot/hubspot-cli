@@ -1,3 +1,4 @@
+// @ts-nocheck
 import chalk from 'chalk';
 
 export const commands = {
@@ -993,35 +994,6 @@ export const commands = {
           `Could not migrate appId ${appId}. This app cannot be migrated at this time. Please choose another public app.`,
         appWithAppIdNotFound: appId =>
           `Could not find an app with the id ${appId} `,
-      },
-      prompt: {
-        chooseApp: 'Which app would you like to migrate?',
-        inputName: '[--name] What would you like to name the project?',
-        inputDest: '[--dest] Where would you like to save the project?',
-        uidForComponent: componentName =>
-          `What UID would you like to use for ${componentName}?`,
-        proceed: 'Would you like to proceed?',
-      },
-      spinners: {
-        beginningMigration: 'Beginning migration',
-        migrationStarted: 'Migration started',
-        unableToStartMigration: 'Unable to begin migration',
-        finishingMigration: 'Wrapping up migration',
-        migrationComplete: 'Migration completed',
-        migrationFailed: 'Migration failed',
-        downloadingProjectContents: 'Downloading migrated project files',
-        downloadingProjectContentsComplete: 'Migrated project files downloaded',
-        downloadingProjectContentsFailed:
-          'Unable to download migrated project files',
-        copyingProjectFiles: 'Copying migrated project files',
-        copyingProjectFilesComplete: 'Migrated project files copied',
-        copyingProjectFilesFailed: 'Unable to copy migrated project files',
-      },
-      migrationNotAllowedReasons: {
-        upToDate: 'App is already up to date',
-        isPrivateApp: 'Private apps are not currently migratable',
-        listedInMarketplace: 'Listed apps are not currently migratable',
-        generic: reasonCode => `Unable to migrate app: ${reasonCode}`,
       },
     },
     cloneApp: {

@@ -23,11 +23,11 @@ export async function handler(
 ) {
   const projectConfig = await getProjectConfig();
 
-  if (!projectConfig) {
+  if (!projectConfig.projectConfig) {
     logger.error(
       i18n('commands.project.subcommands.migrate.errors.noProjectConfig')
     );
-    return;
+    return process.exit(EXIT_CODES.ERROR);
   }
 
   const { derivedAccountId } = options;
