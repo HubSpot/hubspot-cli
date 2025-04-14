@@ -4,10 +4,8 @@ import { i18n } from '../lib/lang';
 import * as set from './config/set';
 import * as migrate from './config/migrate';
 
-const i18nKey = 'commands.config';
-
 export const command = 'config';
-export const describe = i18n(`${i18nKey}.describe`);
+export const describe = i18n('commands.config.describe');
 
 export function builder(yargs: Argv): Argv {
   addConfigOptions(yargs);

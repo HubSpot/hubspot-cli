@@ -11,10 +11,8 @@ import * as clean from './account/clean';
 import * as createOverride from './account/createOverride';
 import * as removeOverride from './account/removeOverride';
 
-const i18nKey = 'commands.account';
-
 export const command = ['account', 'accounts'];
-export const describe = i18n(`${i18nKey}.describe`);
+export const describe = i18n('commands.account.describe');
 
 export function builder(yargs: Argv): Argv {
   addGlobalOptions(yargs);

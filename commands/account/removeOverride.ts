@@ -15,11 +15,12 @@ import { EXIT_CODES } from '../../lib/enums/exitCodes';
 import { logError } from '../../lib/errorHandlers/index';
 import { CommonArgs } from '../../types/Yargs';
 
-const i18nKey = 'commands.account.subcommands.removeOverride';
-
-export const describe = i18n(`${i18nKey}.describe`, {
-  overrideFile: DEFAULT_ACCOUNT_OVERRIDE_FILE_NAME,
-});
+export const describe = i18n(
+  'commands.account.subcommands.removeOverride.describe',
+  {
+    overrideFile: DEFAULT_ACCOUNT_OVERRIDE_FILE_NAME,
+  }
+);
 
 export const command = 'remove-override';
 
@@ -37,7 +38,7 @@ export async function handler(
 
     if (!force) {
       logger.log(
-        i18n(`${i18nKey}.accountOverride`, {
+        i18n('commands.account.subcommands.removeOverride.accountOverride', {
           accountOverride,
           overrideFilePath,
         })
@@ -46,10 +47,13 @@ export async function handler(
       const { deleteOverrideFile } = await promptUser({
         type: 'confirm',
         name: 'deleteOverrideFile',
-        message: i18n(`${i18nKey}.prompts.deleteOverrideFile`, {
-          accountOverride,
-          overrideFilePath,
-        }),
+        message: i18n(
+          'commands.account.subcommands.removeOverride.prompts.deleteOverrideFile',
+          {
+            accountOverride,
+            overrideFilePath,
+          }
+        ),
       });
       logger.log('');
 
@@ -68,7 +72,9 @@ export async function handler(
 
     try {
       fs.unlinkSync(overrideFilePath);
-      logger.success(i18n(`${i18nKey}.success`));
+      logger.success(
+        i18n('commands.account.subcommands.removeOverride.success')
+      );
       trackCommandMetadataUsage(
         'account-removeOverride',
         {
@@ -84,14 +90,18 @@ export async function handler(
       process.exit(EXIT_CODES.ERROR);
     }
   } else {
-    logger.log(i18n(`${i18nKey}.noOverrideFile`));
+    logger.log(
+      i18n('commands.account.subcommands.removeOverride.noOverrideFile')
+    );
     process.exit(EXIT_CODES.SUCCESS);
   }
 }
 
 export function builder(yargs: Argv): Argv<RemoveOverrideArgs> {
   yargs.options('force', {
-    describe: i18n(`${i18nKey}.options.force.describe`),
+    describe: i18n(
+      'commands.account.subcommands.removeOverride.options.force.describe'
+    ),
     type: 'boolean',
   });
 

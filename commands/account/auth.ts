@@ -36,8 +36,6 @@ import { EXIT_CODES } from '../../lib/enums/exitCodes';
 import { uiFeatureHighlight } from '../../lib/ui';
 import { CommonArgs, ConfigArgs } from '../../types/Yargs';
 
-const i18nKey = 'commands.account.subcommands.auth';
-
 const TRACKING_STATUS = {
   STARTED: 'started',
   ERROR: 'error',
@@ -91,7 +89,7 @@ async function updateConfig(
   }
 }
 
-export const describe = i18n(`${i18nKey}.describe`);
+export const describe = i18n('commands.account.subcommands.auth.describe');
 export const command = 'auth';
 
 type AccountAuthArgs = CommonArgs &
@@ -167,7 +165,9 @@ export async function handler(
   );
 
   if (!updatedConfig) {
-    logger.error(i18n(`${i18nKey}.errors.failedToUpdateConfig`));
+    logger.error(
+      i18n('commands.account.subcommands.auth.errors.failedToUpdateConfig')
+    );
     process.exit(EXIT_CODES.ERROR);
   }
 
@@ -178,12 +178,12 @@ export async function handler(
   if (!configAlreadyExists) {
     logger.log('');
     logger.success(
-      i18n(`${i18nKey}.success.configFileCreated`, {
+      i18n('commands.account.subcommands.auth.success.configFileCreated', {
         configPath: getConfigPath('', true)!,
       })
     );
     logger.success(
-      i18n(`${i18nKey}.success.configFileUpdated`, {
+      i18n('commands.account.subcommands.auth.success.configFileUpdated', {
         account: name || accountId || '',
       })
     );
@@ -225,7 +225,9 @@ export async function handler(
 export function builder(yargs: Argv): Argv<AccountAuthArgs> {
   yargs.options({
     account: {
-      describe: i18n(`${i18nKey}.options.account.describe`),
+      describe: i18n(
+        'commands.account.subcommands.auth.options.account.describe'
+      ),
       type: 'string',
       alias: 'a',
     },

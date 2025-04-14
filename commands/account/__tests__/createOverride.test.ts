@@ -1,9 +1,7 @@
 import yargs, { Argv } from 'yargs';
+import * as accountCreateOverrideCommand from '../createOverride';
 
 jest.mock('yargs');
-
-// Import this last so mocks apply
-import * as accountCreateOverrideCommand from '../createOverride';
 
 describe('commands/account/createOverride', () => {
   const yargsMock = yargs as Argv;

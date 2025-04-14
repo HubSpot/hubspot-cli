@@ -1,6 +1,7 @@
 import yargs, { Argv } from 'yargs';
 import * as set from '../config/set';
 import * as migrate from '../config/migrate';
+import * as configCommands from '../config';
 
 jest.mock('yargs');
 jest.mock('../config/set');
@@ -12,9 +13,6 @@ const commandSpy = jest
 const demandCommandSpy = jest
   .spyOn(yargs as Argv, 'demandCommand')
   .mockReturnValue(yargs as Argv);
-
-// Import this last so mocks apply
-import * as configCommands from '../config';
 
 describe('commands/config', () => {
   describe('command', () => {

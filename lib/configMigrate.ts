@@ -21,8 +21,6 @@ import { promptUser } from './prompts/promptUtils';
 import { i18n } from './lang';
 import { trackCommandMetadataUsage } from './usageTracking';
 
-const i18nKey = 'lib.configMigrate';
-
 export async function handleMigration(
   accountId: number | undefined,
   configPath?: string
@@ -30,7 +28,7 @@ export async function handleMigration(
   const { shouldMigrateConfig } = await promptUser({
     name: 'shouldMigrateConfig',
     type: 'confirm',
-    message: i18n(`${i18nKey}.migrateConfigPrompt`, {
+    message: i18n('lib.configMigrate.migrateConfigPrompt', {
       deprecatedConfigPath:
         getConfigPath(configPath, false) ||
         DEFAULT_HUBSPOT_CONFIG_YAML_FILE_NAME,
@@ -64,7 +62,7 @@ export async function handleMigration(
     accountId
   );
   logger.success(
-    i18n(`${i18nKey}.migrationSuccess`, {
+    i18n('lib.configMigrate.migrationSuccess', {
       globalConfigPath: GLOBAL_CONFIG_PATH,
     })
   );
@@ -88,7 +86,7 @@ async function mergeConfigProperties(
       const { shouldOverwrite } = await promptUser({
         name: 'shouldOverwrite',
         type: 'confirm',
-        message: i18n(`${i18nKey}.mergeConfigConflictPrompt`, {
+        message: i18n('lib.configMigrate.mergeConfigConflictPrompt', {
           property,
           oldValue: `${oldValue}`,
           newValue: `${newValue}`,
@@ -112,7 +110,7 @@ export async function handleMerge(
   const { shouldMergeConfigs } = await promptUser({
     name: 'shouldMergeConfigs',
     type: 'confirm',
-    message: i18n(`${i18nKey}.mergeConfigsPrompt`, {
+    message: i18n('lib.configMigrate.mergeConfigsPrompt', {
       deprecatedConfigPath:
         getConfigPath(configPath, false) ||
         DEFAULT_HUBSPOT_CONFIG_YAML_FILE_NAME,
@@ -153,14 +151,14 @@ export async function handleMerge(
 
   if (skippedAccountIds.length > 0) {
     logger.log(
-      i18n(`${i18nKey}.skippedExistingAccounts`, {
+      i18n('lib.configMigrate.skippedExistingAccounts', {
         skippedAccountIds: skippedAccountIds.join(', '),
       })
     );
   }
 
   logger.success(
-    i18n(`${i18nKey}.mergeSuccess`, {
+    i18n('lib.configMigrate.mergeSuccess', {
       globalConfigPath: GLOBAL_CONFIG_PATH,
     })
   );
