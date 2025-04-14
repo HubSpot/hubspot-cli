@@ -1,4 +1,6 @@
 // @ts-nocheck
+const { uiLink } = require('../../lib/ui');
+
 const { useV3Api } = require('../../lib/projects/buildAndDeploy');
 const { uiCommandReference } = require('../../lib/ui');
 
@@ -100,6 +102,10 @@ exports.handler = async options => {
         command: uiCommandReference('hs project watch'),
         newCommand: uiCommandReference('hs project dev'),
         platformVersion: projectConfig.platformVersion,
+        linkToDocs: uiLink(
+          'How to develop locally.',
+          'https://developers.hubspot.com/docs/guides/crm/ui-extensions/local-development'
+        ),
       })
     );
     return process.exit(EXIT_CODES.ERROR);
