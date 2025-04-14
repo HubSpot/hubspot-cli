@@ -44,17 +44,17 @@ exports.handler = async options => {
   validateProjectConfig(projectConfig, projectDir);
 
   try {
-    const { result, uploadError } = await handleProjectUpload(
-      derivedAccountId,
+    const { result, uploadError } = await handleProjectUpload({
+      accountId: derivedAccountId,
       projectConfig,
       projectDir,
-      pollProjectBuildAndDeploy,
-      message,
+      callbackFunc: pollProjectBuildAndDeploy,
+      uploadMessage: message,
       forceCreate,
-      true,
+      isUploadCommand: true,
+      sendIR: useV3Api(projectConfig?.platformVersion),
       skipValidation,
-      useV3Api(projectConfig?.platformVersion)
-    );
+    });
 
     if (uploadError) {
       if (

@@ -1,4 +1,6 @@
 // @ts-nocheck
+import { useV3Api } from '../../lib/projects/buildAndDeploy';
+
 const { i18n } = require('../../lib/lang');
 const { createWatcher } = require('../../lib/projects/watch');
 const { logError, ApiErrorContext } = require('../../lib/errorHandlers/index');
@@ -90,6 +92,12 @@ exports.handler = async options => {
 
   const { projectConfig, projectDir } = await getProjectConfig();
 
+  if (useV3Api(projectConfig?.platformVersion)) {
+    // TODO: i18n
+    logger.error('This command is not supported in V3 API');
+    process.exit(EXIT_CODES.ERROR);
+  }
+
   validateProjectConfig(projectConfig, projectDir);
 
   try {
@@ -110,14 +118,13 @@ exports.handler = async options => {
 
     // Upload all files if no build exists for this project yet
     if (initialUpload || hasNoBuilds) {
-      const { uploadError } = await handleProjectUpload(
-        derivedAccountId,
+      const { uploadError } = await handleProjectUpload({
+        accountId: derivedAccountId,
         projectConfig,
         projectDir,
-        startWatching,
-        false,
-        false
-      );
+        callbackFunc: startWatching,
+        isUploadCommand: false,
+      });
 
       if (uploadError) {
         if (
