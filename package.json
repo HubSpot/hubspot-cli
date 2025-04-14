@@ -11,6 +11,7 @@
     "@hubspot/theme-preview-dev-server": "0.0.10",
     "@hubspot/ui-extensions-dev-server": "0.8.52",
     "archiver": "7.0.1",
+    "boxen": "8.0.1",
     "chalk": "4.1.2",
     "chokidar": "3.6.0",
     "cli-cursor": "3.1.0",

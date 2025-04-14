@@ -2788,6 +2788,11 @@ export const lib = {
       fileFiltered: filename => `Ignore rule triggered for "${filename}"`,
     },
   },
+  middleware: {
+    fireAlarm: {
+      failedToLoadBoxen: 'Failed to load boxen util.',
+    },
+  },
   ui: {
     betaTag: chalk.bold('[BETA]'),
     betaWarning: {
