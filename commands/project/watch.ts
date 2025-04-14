@@ -1,6 +1,6 @@
 // @ts-nocheck
-import { useV3Api } from '../../lib/projects/buildAndDeploy';
-import { uiCommandReference } from '../../lib/ui';
+const { useV3Api } = require('../../lib/projects/buildAndDeploy');
+const { uiCommandReference } = require('../../lib/ui');
 
 const { i18n } = require('../../lib/lang');
 const { createWatcher } = require('../../lib/projects/watch');
