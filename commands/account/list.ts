@@ -21,10 +21,8 @@ import {
 } from '@hubspot/local-dev-lib/constants/config';
 import { CommonArgs, ConfigArgs } from '../../types/Yargs';
 
-const i18nKey = 'commands.account.subcommands.list';
-
 export const command = ['list', 'ls'];
-export const describe = i18n(`${i18nKey}.describe`);
+export const describe = i18n('commands.account.subcommands.list.describe');
 
 type AccountListArgs = CommonArgs & ConfigArgs;
 
@@ -106,25 +104,27 @@ export async function handler(
   const configPath = getConfigPath();
   const accountsList = getConfigAccounts() || [];
   const mappedAccountData = sortAndMapAccounts(accountsList);
+
   const accountData = getAccountData(mappedAccountData);
+
   accountData.unshift(
     getTableHeader([
-      i18n(`${i18nKey}.labels.name`),
-      i18n(`${i18nKey}.labels.accountId`),
-      i18n(`${i18nKey}.labels.authType`),
+      i18n('commands.account.subcommands.list.labels.name'),
+      i18n('commands.account.subcommands.list.labels.accountId'),
+      i18n('commands.account.subcommands.list.labels.authType'),
     ])
   );
 
   // If a default account is present in the config, display it
   if (configPath) {
-    logger.log(i18n(`${i18nKey}.defaultAccountTitle`));
+    logger.log(i18n(`commands.account.subcommands.list.defaultAccountTitle`));
     logger.log(
-      `${indent(1)}${i18n(`${i18nKey}.configPath`, {
+      `${indent(1)}${i18n(`commands.account.subcommands.list.configPath`, {
         configPath,
       })}`
     );
     logger.log(
-      `${indent(1)}${i18n(`${i18nKey}.defaultAccount`, {
+      `${indent(1)}${i18n(`commands.account.subcommands.list.defaultAccount`, {
         account: getDisplayDefaultAccount()!,
       })}`
     );
@@ -134,18 +134,18 @@ export async function handler(
   // If a default account override is present, display it
   const overrideFilePath = getDefaultAccountOverrideFilePath();
   if (overrideFilePath) {
-    logger.log(i18n(`${i18nKey}.overrideFilePathTitle`));
+    logger.log(i18n(`commands.account.subcommands.list.overrideFilePathTitle`));
     logger.log(
-      `${indent(1)}${i18n(`${i18nKey}.overrideFilePath`, { overrideFilePath })}`
+      `${indent(1)}${i18n(`commands.account.subcommands.list.overrideFilePath`, { overrideFilePath })}`
     );
     logger.log(
-      `${indent(1)}${i18n(`${i18nKey}.overrideAccount`, {
+      `${indent(1)}${i18n(`commands.account.subcommands.list.overrideAccount`, {
         account: getConfigDefaultAccount()!,
       })}`
     );
     logger.log('');
   }
-  logger.log(i18n(`${i18nKey}.accounts`));
+  logger.log(i18n(`commands.account.subcommands.list.accounts`));
   logger.log(getTableContents(accountData, { border: { bodyLeft: '  ' } }));
 }
 

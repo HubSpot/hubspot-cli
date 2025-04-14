@@ -29,10 +29,8 @@ import { uiAccountDescription } from '../../lib/ui';
 import { CommonArgs, ConfigArgs } from '../../types/Yargs';
 import { logError } from '../../lib/errorHandlers';
 
-const i18nKey = 'commands.account.subcommands.clean';
-
 export const command = 'clean';
-export const describe = i18n(`${i18nKey}.describe`);
+export const describe = i18n(`commands.account.subcommands.clean.describe`);
 
 type AccountCleanArgs = CommonArgs &
   ConfigArgs & {
@@ -52,7 +50,7 @@ export async function handler(
   );
 
   if (filteredTestAccounts && filteredTestAccounts.length === 0) {
-    logger.log(i18n(`${i18nKey}.noResults`));
+    logger.log(i18n(`commands.account.subcommands.clean.noResults`));
     process.exit(EXIT_CODES.SUCCESS);
   }
 
@@ -61,7 +59,7 @@ export async function handler(
     succeedColor: 'white',
   });
   SpinniesManager.add('accountsClean', {
-    text: i18n(`${i18nKey}.loading.add`),
+    text: i18n(`commands.account.subcommands.clean.loading.add`),
   });
 
   for (const account of filteredTestAccounts) {
@@ -91,8 +89,8 @@ export async function handler(
     SpinniesManager.succeed('accountsClean', {
       text: i18n(
         oneAccountFound
-          ? `${i18nKey}.inactiveAccountsFound.one`
-          : `${i18nKey}.inactiveAccountsFound.other`,
+          ? `commands.account.subcommands.clean.inactiveAccountsFound.one`
+          : `commands.account.subcommands.clean.inactiveAccountsFound.other`,
         {
           count: accountsToRemove.length,
         }
@@ -108,7 +106,9 @@ export async function handler(
     );
 
     let promptMessage = i18n(
-      oneAccountFound ? `${i18nKey}.confirm.one` : `${i18nKey}.confirm.other`,
+      oneAccountFound
+        ? `commands.account.subcommands.clean.confirm.one`
+        : `commands.account.subcommands.clean.confirm.other`,
       {
         count: accountsToRemove.length,
       }
@@ -124,7 +124,7 @@ export async function handler(
     );
     if (overrideFilePath && accountOverride && accountOverrideMatches) {
       promptMessage = `${promptMessage}${i18n(
-        `${i18nKey}.defaultAccountOverride`,
+        `commands.account.subcommands.clean.defaultAccountOverride`,
         {
           overrideFilePath,
         }
@@ -151,7 +151,7 @@ export async function handler(
       for (const accountToRemove of accountsToRemove) {
         await deleteAccount(accountToRemove.name!);
         logger.log(
-          i18n(`${i18nKey}.removeSuccess`, {
+          i18n(`commands.account.subcommands.clean.removeSuccess`, {
             accountName: accountToRemove.name!,
           })
         );
@@ -166,14 +166,16 @@ export async function handler(
         accountsToRemove.some(p => p.name === defaultAccount)
       ) {
         logger.log();
-        logger.log(i18n(`${i18nKey}.replaceDefaultAccount`));
+        logger.log(
+          i18n(`commands.account.subcommands.clean.replaceDefaultAccount`)
+        );
         const newDefaultAccount = await selectAccountFromConfig();
         updateDefaultAccount(newDefaultAccount);
       }
     }
   } else {
     SpinniesManager.succeed('accountsClean', {
-      text: i18n(`${i18nKey}.noResults`),
+      text: i18n(`commands.account.subcommands.clean.noResults`),
     });
   }
 

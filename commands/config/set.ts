@@ -12,10 +12,8 @@ import {
 import { CommonArgs } from '../../types/Yargs';
 import { CmsPublishMode } from '@hubspot/local-dev-lib/types/Files';
 
-const i18nKey = 'commands.config.subcommands.set';
-
-export const command = 'set';
-export const describe = i18n(`${i18nKey}.describe`);
+exports.command = 'set';
+exports.describe = i18n(`commands.config.subcommands.set.describe`);
 
 async function selectOptions(): Promise<ConfigSetArgs> {
   const { cmsPublishMode } = await promptUser([
@@ -23,7 +21,7 @@ async function selectOptions(): Promise<ConfigSetArgs> {
       type: 'list',
       name: 'cmsPublishMode',
       pageSize: 20,
-      message: i18n(`${i18nKey}.promptMessage`),
+      message: i18n(`commands.config.subcommands.set.promptMessage`),
       choices: [
         {
           name: 'Default CMS publish mode',
@@ -86,22 +84,33 @@ export function builder(yargs: Argv): Argv<ConfigSetArgs> {
   yargs
     .options({
       'default-cms-publish-mode': {
-        describe: i18n(`${i18nKey}.options.defaultMode.describe`),
+        describe: i18n(
+          `commands.config.subcommands.set.options.defaultMode.describe`
+        ),
         type: 'string',
       },
       'allow-usage-tracking': {
-        describe: i18n(`${i18nKey}.options.allowUsageTracking.describe`),
+        describe: i18n(
+          `commands.config.subcommands.set.options.allowUsageTracking.describe`
+        ),
         type: 'boolean',
       },
       'http-timeout': {
-        describe: i18n(`${i18nKey}.options.httpTimeout.describe`),
+        describe: i18n(
+          `commands.config.subcommands.set.options.httpTimeout.describe`
+        ),
         type: 'string',
       },
     })
     .conflicts('defaultCmsPublishMode', 'allowUsageTracking')
     .conflicts('defaultCmsPublishMode', 'httpTimeout')
     .conflicts('allowUsageTracking', 'httpTimeout')
-    .example([['$0 config set', i18n(`${i18nKey}.examples.default`)]]);
+    .example([
+      [
+        '$0 config set',
+        i18n(`commands.config.subcommands.set.examples.default`),
+      ],
+    ]);
 
   return yargs as Argv<ConfigSetArgs>;
 }

@@ -12,7 +12,7 @@ import {
   AppCardComponentConfig,
 } from '../../types/Projects';
 import { IntermediateRepresentationNodeLocalDev } from '@hubspot/project-parsing-lib/src/lib/types';
-import { AppIRNode, CardIRNode } from '../../types/ProjectComponents';
+import { AppIRNode } from '../../types/ProjectComponents';
 import { IR_COMPONENT_TYPES } from '../constants';
 
 export const CONFIG_FILES: {
@@ -186,10 +186,4 @@ export function isAppIRNode(
   component: IntermediateRepresentationNodeLocalDev
 ): component is AppIRNode {
   return component.componentType === IR_COMPONENT_TYPES.APPLICATION;
-}
-
-export function isCardIRNode(
-  component: IntermediateRepresentationNodeLocalDev
-): component is CardIRNode {
-  return component.componentType === IR_COMPONENT_TYPES.CARD;
 }

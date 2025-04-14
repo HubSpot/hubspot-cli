@@ -17,10 +17,10 @@ import {
   EnvironmentArgs,
 } from '../../../types/Yargs';
 
-const i18nKey = 'commands.customObject.subcommands.schema.subcommands.list';
-
 export const command = 'list';
-export const describe = i18n(`${i18nKey}.describe`);
+export const describe = i18n(
+  `commands.customObject.subcommands.schema.subcommands.list.describe`
+);
 
 type CombinedArgs = CommonArgs & ConfigArgs & AccountArgs & EnvironmentArgs;
 
@@ -35,7 +35,11 @@ export async function handler(
     await listSchemas(derivedAccountId);
   } catch (e) {
     logError(e);
-    logger.error(i18n(`${i18nKey}.errors.list`));
+    logger.error(
+      i18n(
+        `commands.customObject.subcommands.schema.subcommands.list.errors.list`
+      )
+    );
   }
 }
 

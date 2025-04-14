@@ -26,10 +26,10 @@ import {
   TestingArgs,
 } from '../../../types/Yargs';
 
-const i18nKey = 'commands.customObject.subcommands.schema.subcommands.create';
-
 export const command = 'create';
-export const describe = i18n(`${i18nKey}.describe`);
+export const describe = i18n(
+  `commands.customObject.subcommands.schema.subcommands.create.describe`
+);
 
 type CombinedArgs = CommonArgs &
   ConfigArgs &
@@ -49,25 +49,35 @@ export async function handler(
   const schemaJson = checkAndConvertToJson(filePath);
 
   if (!isSchemaDefinition(schemaJson)) {
-    logger.error(i18n(`${i18nKey}.errors.invalidSchema`));
+    logger.error(
+      i18n(
+        `commands.customObject.subcommands.schema.subcommands.create.errors.invalidSchema`
+      )
+    );
     process.exit(EXIT_CODES.ERROR);
   }
 
   try {
     const { data } = await createObjectSchema(derivedAccountId, schemaJson);
     logger.success(
-      i18n(`${i18nKey}.success.schemaViewable`, {
-        url: `${getHubSpotWebsiteOrigin(
-          getEnv() === 'qa' ? ENVIRONMENTS.QA : ENVIRONMENTS.PROD
-        )}/contacts/${derivedAccountId}/objects/${data.objectTypeId}`,
-      })
+      i18n(
+        `commands.customObject.subcommands.schema.subcommands.create.success.schemaViewable`,
+        {
+          url: `${getHubSpotWebsiteOrigin(
+            getEnv() === 'qa' ? ENVIRONMENTS.QA : ENVIRONMENTS.PROD
+          )}/contacts/${derivedAccountId}/objects/${data.objectTypeId}`,
+        }
+      )
     );
   } catch (e) {
     logError(e, { accountId: derivedAccountId });
     logger.error(
-      i18n(`${i18nKey}.errors.creationFailed`, {
-        definition: path,
-      })
+      i18n(
+        `commands.customObject.subcommands.schema.subcommands.create.errors.creationFailed`,
+        {
+          definition: path,
+        }
+      )
     );
   }
 }
@@ -79,7 +89,9 @@ export function builder(yargs: Argv): Argv<SchemaCreateArgs> {
   addTestingOptions(yargs);
 
   yargs.option('path', {
-    describe: i18n(`${i18nKey}.options.definition.describe`),
+    describe: i18n(
+      `commands.customObject.subcommands.schema.subcommands.create.options.definition.describe`
+    ),
     type: 'string',
     required: true,
   });

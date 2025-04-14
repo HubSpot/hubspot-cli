@@ -6,13 +6,13 @@ const { createModulePrompt } = require('../../lib/prompts/createModulePrompt');
 const { logError } = require('../../lib/errorHandlers/index');
 const { EXIT_CODES } = require('../../lib/enums/exitCodes');
 
-const i18nKey = 'commands.create.subcommands.module';
-
 module.exports = {
   dest: ({ dest }) => dest,
   validate: ({ name }) => {
     if (!name) {
-      logger.error(i18n(`${i18nKey}.errors.nameRequired`));
+      logger.error(
+        i18n(`commands.create.subcommands.module.errors.nameRequired`)
+      );
       return false;
     }
     return true;

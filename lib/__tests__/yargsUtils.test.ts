@@ -31,7 +31,7 @@ describe('lib/yargsUtils', () => {
       const builder = makeYargsBuilder(yargs => yargs, 'command', 'describe', {
         useAccountOptions: true,
         useConfigOptions: true,
-        useUseEnvironmentOptions: true,
+        useEnvironmentOptions: true,
         useTestingOptions: true,
         useGlobalOptions: true,
       });
