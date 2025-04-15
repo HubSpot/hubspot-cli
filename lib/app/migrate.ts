@@ -89,6 +89,14 @@ async function fetchMigrationApps(
     throw new Error(lib.migrate.errors.project.multipleApps);
   }
 
+  if (allApps.length === 0 && projectConfig) {
+    throw new Error(
+      lib.migrate.errors.noAppsForProject(
+        projectConfig?.projectConfig?.name || ''
+      )
+    );
+  }
+
   if (
     allApps.length === 0 ||
     filteredUnmigratableApps.length === allApps.length

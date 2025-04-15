@@ -3455,7 +3455,8 @@ export const lib = {
         `Only public apps created in a developer account can be converted to a project component. Select a connected developer account with ${useCommand} or ${authCommand} and try again.`,
       appWithAppIdNotFound: appId =>
         `Could not find an app with the id ${appId} `,
-      noAppsForProject: 'No apps associated with project {{ projectName }}',
+      noAppsForProject: (projectName: string) =>
+        `No apps associated with project ${projectName}`,
       migrationFailed: 'Migration Failed',
     },
     prompt: {
