@@ -10,6 +10,9 @@ en:
         portalEnvVarDeprecated: "The HUBSPOT_PORTAL_ID environment variable is deprecated. Please use HUBSPOT_ACCOUNT_ID instead."
       loadConfigMiddleware:
         configFileExists: "A configuration file already exists at {{ configPath }}. To specify a new configuration file, delete the existing one and try again."
+      injectAccountIdMiddleware:
+        invalidAccountId: "In the default override file ({{ hsAccountFileName }}), the account ID must be a number. Please delete the current file and generate a new one using {{ overrideCommand }}."
+        accountNotFound: "The account in the default override file ({{ hsAccountFileName }}) wasn't found in your configured accounts. You can authorize this account using {{ authCommand }}."
     completion:
       describe: "Enable bash completion shortcuts for commands. Concat the generated script to your .bashrc, .bash_profile, or .zshrc file."
       examples:
@@ -17,11 +20,51 @@ en:
     account:
       describe: "Commands for managing configured accounts."
       subcommands:
+        auth:
+          describe: "Configure authentication for your HubSpot account."
+          options:
+            account:
+              describe: "HubSpot account to authenticate"
+          errors:
+            failedToUpdateConfig: "Failed to update the configuration file. Please try again."
+            bothConfigFilesNotAllowed: "Unable to create config file, because there is an existing \"{{ deprecatedConfig }}\" file. To create a new config file, delete the existing one and try again."
+          success:
+            configFileCreated: "Created config file \"{{ configPath }}\""
+            configFileUpdated: "Connected account \"{{ account }}\" and set it as the default account"
+        createOverride:
+          describe: "Create a new default account override file ({{ hsAccountFileName }}) in the current working directory."
+          success: "Default account override file created at {{ overrideFilePath }}"
+          accountOverride: "An account override file already exists at {{ overrideFilePath }} associated with account \"{{ accountOverride }}\"."
+          prompts:
+            replaceOverrideFile: "Replace existing account override file?"
+          errors:
+            accountNotFound: "The specified account could not be found in the config file {{ configPath }}"
+          options:
+            account:
+              describe: "Name or ID of the account to create an override file for."
+          examples:
+            default: "Create a new default account override file ({{ hsAccountFileName }}) in the current working directory"
+            idBased: "Create a new default account override file ({{ hsAccountFileName }}) in the current working directory, using the account with accountId \"1234567\""
+            nameBased: "Create a new default account override file ({{ hsAccountFileName }}) in the current working directory, using the account with name \"MyAccount\""
+        removeOverride:
+          describe: "Remove the default account override file ({{ overrideFile }}) from the current working directory."
+          accountOverride: "There is an account override file at {{ overrideFilePath }} associated with account \"{{ accountOverride }}\"."
+          prompts:
+            deleteOverrideFile: "Delete account override file?"
+          success: "Removed the default account override file."
+          noOverrideFile: "No default account override file found in the current working directory. No action required."
+          options:
+            force:
+              describe: "Skip confirmation prompt when removing the override file"
         list:
-          accounts: "{{#bold}}Accounts{{/bold}}:"
-          defaultAccount: "{{#bold}}Default account{{/bold}}: {{ account }}"
           describe: "List names of accounts defined in config."
-          configPath: "{{#bold}}Config path{{/bold}}: {{ configPath }}"
+          accounts: "{{#bold}}Accounts{{/bold}}:"
+          defaultAccountTitle: "{{#bold}}Default Account{{/bold}}"
+          defaultAccount: "Account: {{ account }}"
+          configPath: "Source: {{ configPath }}"
+          overrideFilePathTitle: "{{#bold}}Default Account Override{{/bold}}"
+          overrideFilePath: "Source: {{ overrideFilePath }}"
+          overrideAccount: "Account: {{ account }}"
           labels:
             accountId: "Account ID"
             authType: "Auth Type"
@@ -39,6 +82,8 @@ en:
           describe: "Set the Hubspot account to use as the default account. The default account can be overridden with the \"--account\" option."
           errors:
             accountNotFound: "The account \"{{ specifiedAccount }}\" could not be found in {{ configPath }}"
+          accountOverride: "This project currently has an account override set: \"{{ accountOverride }}\". Account \"{{accountOverride}}\" will continue to act as the default account for this project."
+          accountOverrideCommands: "Use {{ createOverrideCommand }} to change override accounts, or {{ removeOverrideCommand }} to remove the override and use your default account."
           examples:
             default: "Select a HubSpot account to use as the default account"
             idBased: "Set the default account to the account in the config with accountId equal to \"1234567\""
@@ -54,6 +99,7 @@ en:
           logs:
             replaceDefaultAccount: "The removed account was the default account."
           prompts:
+            deleteOverrideFile: "Delete the override file ({{ overrideFilePath }}) associated with {{ accountName }}?"
             selectAccountToRemove: "Select an account to remove from the config"
           errors:
             accountNotFound: "The account \"{{ specifiedAccount }}\" could not be found in {{ configPath }}"
@@ -69,6 +115,12 @@ en:
         info:
           accountId: "{{#bold}}Account ID{{/bold}}: {{ accountId }}"
           describe: "Print information about the default account, or about the account specified with the \"account\" option."
+          defaultAccountTitle: "{{#bold}}Default Account{{/bold}}"
+          defaultAccount: "Account: {{ account }}"
+          configPath: "Source: {{ configPath }}"
+          overrideFilePathTitle: "{{#bold}}Default Account Override{{/bold}}"
+          overrideFilePath: "Source: {{ overrideFilePath }}"
+          overrideAccount: "Account: {{ account }}"
           errors:
             notUsingPersonalAccessKey: "This command currently only supports fetching scopes for the personal access key auth type."
           options:
@@ -91,13 +143,15 @@ en:
           confirm:
             one: "Remove 1 inactive account from the CLI config?"
             other: "Remove {{ count }} inactive accounts from the CLI config?"
+          defaultAccountOverride: "\n(This will also delete the default account override file at {{ overrideFilePath }})"
+          replaceDefaultAccount: "The default account was removed."
           removeSuccess: "Removed {{ accountName }} from the CLI config."
     auth:
       describe: "Configure authentication for your HubSpot account."
       verboseDescribe: "Configure authentication for a HubSpot account. This will update the {{ configName }} file that stores your account information.\n\nThe recommended authentication method is {{#bold}}{{ authMethod }}{{/bold}}, which uses an access token tied to a specific user account."
       errors:
-        noConfigFileFound: "No config file was found. To create a new config file, use the \"hs init\" command."
         unsupportedAuthType: "Unsupported auth type: {{ type }}. The only supported authentication protocols are {{ supportedProtocols }}."
+        globalConfigFileExists: "A global config file exists at {{ configPath }}. To authorize an account, please use {{ authCommand }}."
       options:
         authType:
           describe: "Authentication method"
@@ -108,6 +162,16 @@ en:
     config:
       describe: "Commands for managing the CLI config file."
       subcommands:
+        migrate:
+          describe: "Migrate from the deprecated {{ deprecatedConfigPath }} file to the new global config file at {{ globalConfigPath }}."
+          migrationAlreadyCompleted: "No {{ deprecatedConfigPath }} deprecated configuration file found. No migration necessary."
+          errors:
+            configNotFound: "A configuration file at {{ configPath }} could not be found. Please try again with a valid file path."
+          options:
+            force: "When merging a deprecated configuration file with an existing global configuration file, overwrite any conflicting values in the global config with the deprecated config values."
+          examples:
+            default: "Migrate from the deprecated {{ deprecatedConfigPath }} file to the new global config file at {{ globalConfigPath }}"
+            configFlag: "Migrate a specific config file (specified with the config flag) to the new global config file at {{ globalConfigPath }}"
         set:
           describe: "Set various configuration options within the hubspot.config.yml file."
           promptMessage: "Select a config option to update"
@@ -455,8 +519,6 @@ en:
           describe: "Authentication method"
         account:
           describe: "HubSpot account to authenticate"
-        useHiddenConfig:
-          describe: "Use the new HubSpot configuration file located in a hidden file in the user's home directory"
       success:
         configFileCreated: "Created config file \"{{ configPath }}\""
         configFileUpdated: "Connected account \"{{ account }}\" using \"{{ authType }}\" and set it as the default account"
@@ -464,7 +526,7 @@ en:
         updateConfig: "To update an existing config file, use the \"hs auth\" command."
       errors:
         configFileExists: "The config file {{ configPath }} already exists."
-        bothConfigFilesNotAllowed: "Unable to create config file, because there is an existing one at \"{{ path }}\". To create a new config file, delete the existing one and try again."
+        globalConfigFileExists: "A global config file already exists at {{ configPath }}. To specify a new local config file, delete the existing one and try again."
     lint:
       issuesFound: "{{ count }} issues found."
       groupName: "Linting {{ path }}"
@@ -1218,11 +1280,14 @@ en:
             command: "--account"
             message: "Use the {{ command }} option with any command to override the default account"
           accountsListCommand:
-            command: hs accounts list
+            command: "hs account list"
             message: "Run {{ command }} to see a list of configured HubSpot accounts"
           accountsUseCommand:
-            command: "hs accounts use"
+            command: "hs account use"
             message: "Run {{ command }} to set the Hubspot account that the CLI will target by default"
+          accountAuthCommand:
+            command: "hs account auth"
+            message: "Run {{ command }} to connect the CLI to additional HubSpot accounts"
           authCommand:
             command: "hs auth"
             message: "Run {{ command }} to connect the CLI to additional HubSpot accounts"
@@ -1287,6 +1352,13 @@ en:
           describe: "Use environment variable config"
         debug:
           describe: "Set log level to debug"
+    configMigrate:
+      migrateConfigPrompt: "Migrate config?\n From deprecated config file: {{ deprecatedConfigPath }}\n To new global config file: {{ globalConfigPath }}\n (This action will delete the deprecated config file).\n"
+      mergeConfigConflictPrompt: "Change the {{ property }} property in the global config from {{ newValue }} to {{ oldValue }}?"
+      mergeConfigsPrompt: "Two config files detected. Merge them?\n Deprecated config file: {{ deprecatedConfigPath }}\n Global config: {{ globalConfigPath }}\n (This action will delete the deprecated config file).\n"
+      migrationSuccess: "The deprecated config file has been migrated to the new global config file at {{ globalConfigPath }}."
+      mergeSuccess: "The deprecated config file has been merged with the global config file at {{ globalConfigPath }}."
+      skippedExistingAccounts: "\nThe following accounts were not merged, because they already exist in the global config: {{ skippedAccountIds }}.\n"
     prompts:
       projectDevTargetAccountPrompt:
         createNewSandboxOption: "<Test on a new development sandbox>"
@@ -1573,6 +1645,9 @@ en:
     doctor:
       runningDiagnostics: "Running diagnostics..."
       diagnosticsComplete: "Diagnostics complete"
+      defaultAccountOverrideFileChecks:
+        overrideActive: "Default account override file active: {{ defaultAccountOverrideFile }}"
+        overrideAccountId: "Active account ID: {{ overrideAccountId }}"
       accountChecks:
         active: "Default account active"
         inactive: "Default account isn't active"
@@ -1624,6 +1699,8 @@ en:
           settings:
             httpUseLocalhost: "The setting {{#bold}}httpUseLocalhost{{/bold}} is enabled"
             httpUseLocalhostSecondary: "This setting causes all CLI requests to route to localhost"
+        defaultAccountOverrideFile:
+          header: "Default account override file path:"
         projectConfig:
           header: "Project configuration"
           projectDirSubHeader: "Project dir: {{#bold}}{{ projectDir }}{{/bold}}"
