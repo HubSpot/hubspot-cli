@@ -51,10 +51,16 @@ describe('api/migrate', () => {
       // @ts-expect-error Mock
       httpMock.get.mockResolvedValue(mockResponse);
 
-      const result = await listAppsForMigration(mockAccountId);
+      const result = await listAppsForMigration(
+        mockAccountId,
+        mockPlatformVersion
+      );
 
       expect(http.get).toHaveBeenCalledWith(mockAccountId, {
         url: 'dfs/migrations/v2/list-apps',
+        params: {
+          platformVersion: mockPlatformVersion,
+        },
       });
       expect(result).toEqual(mockResponse);
     });
