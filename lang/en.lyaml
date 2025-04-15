@@ -774,6 +774,7 @@ en:
             uploadFailed: "Failed to upload file \"{{ filePath }}\" to \"{{ remotePath }}\""
             deleteFileFailed: "Failed to delete file \"{{ remotePath }}\""
             deleteFolderFailed: "Failed to delete folder \"{{ remotePath }}\""
+            v3ApiError: "{{ command }} is not supported for platform version '{{ platformVersion}}', use {{ newCommand }} instead to develop locally. {{ linkToDocs }}"
         download:
           describe: "Download your project files from HubSpot."
           examples:
