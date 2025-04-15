@@ -7,19 +7,20 @@ import {
 } from '@hubspot/local-dev-lib/constants/auth';
 import { ENVIRONMENTS } from '@hubspot/local-dev-lib/constants/environments';
 import { DEFAULT_HUBSPOT_CONFIG_YAML_FILE_NAME } from '@hubspot/local-dev-lib/constants/config';
-import { AccessToken, CLIAccount } from '@hubspot/local-dev-lib/types/Accounts';
+import {
+  AccessToken,
+  HubSpotConfigAccount,
+} from '@hubspot/local-dev-lib/types/Accounts';
 import { i18n } from '../lib/lang';
 import {
   getAccessToken,
   updateConfigWithAccessToken,
 } from '@hubspot/local-dev-lib/personalAccessKey';
 import {
-  updateAccountConfig,
-  writeConfig,
-  getConfigPath,
-  loadConfig,
-  getConfigDefaultAccount,
-  getAccountId,
+  updateConfigAccount,
+  getConfigFilePath,
+  getConfigDefaultAccountIfExists,
+  getConfigAccountByName,
 } from '@hubspot/local-dev-lib/config';
 import { commaSeparatedValues, toKebabCase } from '@hubspot/local-dev-lib/text';
 import { promptUser } from '../lib/prompts/promptUtils';
@@ -73,89 +74,63 @@ type AuthArgs = CommonArgs &
 export async function handler(
   args: ArgumentsCamelCase<AuthArgs>
 ): Promise<void> {
-  const {
-    authType: authTypeFlagValue,
-    config: configFlagValue,
-    qa,
-    providedAccountId,
-  } = args;
+  const { authType: authTypeFlagValue, qa, providedAccountId } = args;
   const authType =
     (authTypeFlagValue && authTypeFlagValue.toLowerCase()) ||
     PERSONAL_ACCESS_KEY_AUTH_METHOD.value;
   setLogLevel(args);
 
   const env = qa ? ENVIRONMENTS.QA : ENVIRONMENTS.PROD;
-  // Needed to load deprecated config
-  loadConfig(configFlagValue!);
-  const configPath = getConfigPath();
-  if (configPath) {
-    checkAndWarnGitInclusion(configPath);
-  }
 
-  if (!getConfigPath(configFlagValue)) {
-    logger.error(i18n(`${i18nKey}.errors.noConfigFileFound`));
-    process.exit(EXIT_CODES.ERROR);
-  }
+  const configPath = getConfigFilePath();
+  checkAndWarnGitInclusion(configPath);
 
   trackCommandUsage('auth');
   trackAuthAction('auth', authType, TRACKING_STATUS.STARTED, providedAccountId);
 
-  let configData:
-    | OauthPromptResponse
-    | PersonalAccessKeyPromptResponse
-    | undefined;
-  let updatedConfig: CLIAccount | null | undefined;
-  let validName: string | undefined;
+  let accountPromptData: OauthPromptResponse | PersonalAccessKeyPromptResponse;
+  let updatedAccount: HubSpotConfigAccount | undefined;
   let successAuthMethod: string | undefined;
   let token: AccessToken | undefined;
   let defaultName: string | undefined;
 
   switch (authType) {
     case OAUTH_AUTH_METHOD.value:
-      configData = await promptUser<OauthPromptResponse>(OAUTH_FLOW);
-      await authenticateWithOauth({
-        ...configData,
-        env,
-      });
+      accountPromptData = await promptUser<OauthPromptResponse>(OAUTH_FLOW);
+      await authenticateWithOauth(accountPromptData, env);
       successAuthMethod = OAUTH_AUTH_METHOD.name;
       break;
     case PERSONAL_ACCESS_KEY_AUTH_METHOD.value:
-      configData = await personalAccessKeyPrompt({
+      accountPromptData = await personalAccessKeyPrompt({
         env,
         account: providedAccountId,
       });
 
       try {
-        token = await getAccessToken(configData.personalAccessKey, env);
+        token = await getAccessToken(accountPromptData.personalAccessKey, env);
         defaultName = toKebabCase(token.hubName);
 
-        updatedConfig = await updateConfigWithAccessToken(
+        updatedAccount = await updateConfigWithAccessToken(
           token,
-          configData.personalAccessKey,
+          accountPromptData.personalAccessKey,
           env
         );
       } catch (e) {
         logError(e);
       }
 
-      if (!updatedConfig) {
+      if (!updatedAccount) {
         break;
       }
 
-      validName = updatedConfig.name;
-
-      if (!validName) {
+      if (!updatedAccount.name) {
         const { name: namePrompt } = await cliAccountNamePrompt(defaultName);
-        validName = namePrompt;
+        updatedAccount.name = namePrompt;
       }
 
-      updateAccountConfig({
-        ...updatedConfig,
-        env: updatedConfig.env,
-        tokenInfo: updatedConfig.auth!.tokenInfo,
-        name: validName,
+      updateConfigAccount({
+        ...updatedAccount,
       });
-      writeConfig();
 
       successAuthMethod = PERSONAL_ACCESS_KEY_AUTH_METHOD.name;
       break;
@@ -166,7 +141,7 @@ export async function handler(
           type: authType,
         })
       );
-      break;
+      process.exit(EXIT_CODES.ERROR);
   }
 
   if (!successAuthMethod) {
@@ -179,11 +154,11 @@ export async function handler(
     process.exit(EXIT_CODES.ERROR);
   }
 
-  const nameFromConfigData =
-    'name' in configData! ? configData!.name : undefined;
+  const nameFromPromptData =
+    'name' in accountPromptData ? accountPromptData.name : undefined;
 
-  const accountName =
-    (updatedConfig && updatedConfig.name) || validName || nameFromConfigData!;
+  // Name will always exist on either the updatedAccount or prompt response
+  const accountName = (updatedAccount?.name || nameFromPromptData)!;
 
   const setAsDefault = await setAsDefaultAccountPrompt(accountName);
 
@@ -197,7 +172,7 @@ export async function handler(
   } else {
     logger.info(
       i18n(`lib.prompts.setAsDefaultAccountPrompt.keepingCurrentDefault`, {
-        accountName: getConfigDefaultAccount()!,
+        accountName: getConfigDefaultAccountIfExists()?.name || '',
       })
     );
   }
@@ -214,8 +189,13 @@ export async function handler(
     'accountsListCommand',
   ]);
 
-  const accountId = getAccountId(accountName) || undefined;
-  await trackAuthAction('auth', authType, TRACKING_STATUS.COMPLETE, accountId);
+  const account = getConfigAccountByName(accountName);
+  await trackAuthAction(
+    'auth',
+    authType,
+    TRACKING_STATUS.COMPLETE,
+    account.accountId
+  );
 
   process.exit(EXIT_CODES.SUCCESS);
 }

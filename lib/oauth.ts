@@ -6,12 +6,15 @@ import { getHubSpotWebsiteOrigin } from '@hubspot/local-dev-lib/urls';
 import { logger } from '@hubspot/local-dev-lib/logger';
 import { ENVIRONMENTS } from '@hubspot/local-dev-lib/constants/environments';
 import { DEFAULT_OAUTH_SCOPES } from '@hubspot/local-dev-lib/constants/auth';
-import { OAuthConfigAccount } from '@hubspot/local-dev-lib/types/Accounts';
 import { Server } from 'http';
 
 import { handleExit } from './process';
 import { i18n } from './lang';
 import { EXIT_CODES } from './enums/exitCodes';
+import { OauthPromptResponse } from './prompts/personalAccessKeyPrompt';
+import { Environment } from '@hubspot/local-dev-lib/types/Config';
+import { OAUTH_AUTH_METHOD } from '@hubspot/local-dev-lib/constants/auth';
+import { OAuthConfigAccount } from '@hubspot/local-dev-lib/types/Accounts';
 
 const PORT = 3000;
 const redirectUri = `http://localhost:${PORT}/oauth-callback`;
@@ -102,10 +105,23 @@ async function authorize(oauthManager: OAuth2Manager): Promise<void> {
 }
 
 export async function authenticateWithOauth(
-  account: OAuthConfigAccount
-): Promise<void> {
+  promptData: OauthPromptResponse,
+  env: Environment
+): Promise<OAuthConfigAccount> {
+  const account: OAuthConfigAccount = {
+    ...promptData,
+    env,
+    authType: OAUTH_AUTH_METHOD.value,
+    auth: {
+      scopes: promptData.scopes,
+      clientId: promptData.clientId,
+      clientSecret: promptData.clientSecret,
+      tokenInfo: {},
+    },
+  };
   const oauthManager = new OAuth2Manager(account);
   logger.log('Authorizing');
   await authorize(oauthManager);
   addOauthToAccountConfig(oauthManager);
+  return account;
 }
