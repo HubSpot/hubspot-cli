@@ -31,6 +31,7 @@ import {
   ConfigArgs,
   EnvironmentArgs,
 } from '../../types/Yargs';
+import util from 'util';
 
 export type MigrateAppArgs = CommonArgs &
   AccountArgs &
@@ -371,6 +372,8 @@ async function finalizeMigration(
   if (pollResponse.status !== MIGRATION_STATUS.SUCCESS) {
     throw new Error(lib.migrate.errors.migrationFailed);
   }
+
+  logger.debug(util.inspect(pollResponse, { depth: null }));
 
   if (pollResponse.status === MIGRATION_STATUS.SUCCESS) {
     SpinniesManager.succeed('finishingMigration', {

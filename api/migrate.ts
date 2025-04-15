@@ -5,6 +5,8 @@ import {
 } from '@hubspot/local-dev-lib/constants/projects';
 import { http } from '@hubspot/local-dev-lib/http';
 import { MIGRATION_STATUS } from '@hubspot/local-dev-lib/types/Migration';
+import { logger } from '@hubspot/local-dev-lib/logger';
+import util from 'util';
 
 const MIGRATIONS_API_PATH_V2 = 'dfs/migrations/v2';
 
@@ -141,11 +143,15 @@ export async function continueMigration(
   });
 }
 
-export function checkMigrationStatusV2(
+export async function checkMigrationStatusV2(
   accountId: number,
   id: number
 ): HubSpotPromise<MigrationStatus> {
-  return http.get<MigrationStatus>(accountId, {
+  const response = await http.get<MigrationStatus>(accountId, {
     url: `${MIGRATIONS_API_PATH_V2}/migrations/${id}/status`,
   });
+
+  logger.debug(util.inspect(response.data, { depth: null }));
+
+  return response;
 }
