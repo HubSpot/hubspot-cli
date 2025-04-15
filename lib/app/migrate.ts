@@ -92,14 +92,14 @@ async function handleMigrationSetup(
     throw new Error(lib.migrate.errors.project.multipleApps);
   }
 
-  if (allApps.length === 0) {
+  if (
+    allApps.length === 0 ||
+    filteredUnmigratableApps.length === allApps.length
+  ) {
     const reasons = filteredUnmigratableApps.map(
       app =>
         `${chalk.bold(app.appName)}: ${getUnmigratableReason(app.unmigratableReason)}`
     );
-    if (projectConfig) {
-      throw new Error(lib.migrate.errors.project.multipleApps);
-    }
 
     throw new Error(
       lib.migrate.errors.noAppsEligible(

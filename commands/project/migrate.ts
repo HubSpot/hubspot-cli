@@ -24,6 +24,7 @@ export type ProjectMigrateArgs = CommonArgs &
   EnvironmentArgs &
   ConfigArgs & {
     dest?: string;
+    platformVersion: string;
   };
 
 export const command = 'migrate';
@@ -47,7 +48,7 @@ export async function handler(options: ArgumentsCamelCase<ProjectMigrateArgs>) {
       {
         ...options,
         name: projectConfig?.projectConfig?.name,
-        platformVersion: PLATFORM_VERSIONS.unstable,
+        platformVersion: options.platformVersion,
       },
       projectConfig
     );
