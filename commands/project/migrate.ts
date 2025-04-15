@@ -63,6 +63,13 @@ export function builder(yargs: Argv) {
   addAccountOptions(yargs);
   addGlobalOptions(yargs);
 
+  yargs.option('platform-version', {
+    type: 'string',
+    choices: Object.values(PLATFORM_VERSIONS),
+    default: PLATFORM_VERSIONS.v2025_2,
+    hidden: true,
+  });
+
   return yargs as Argv<ProjectMigrateArgs>;
 }
 const migrateAppCommand: CommandModule<unknown, ProjectMigrateArgs> = {
