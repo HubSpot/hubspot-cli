@@ -2,7 +2,12 @@ import { i18n } from '../../lib/lang';
 
 import { ArgumentsCamelCase, Argv, CommandModule } from 'yargs';
 import { logger } from '@hubspot/local-dev-lib/logger';
-import { ProjectMigrateOptions } from '../../types/Yargs';
+import {
+  AccountArgs,
+  CommonArgs,
+  ConfigArgs,
+  EnvironmentArgs,
+} from '../../types/Yargs';
 import {
   addAccountOptions,
   addConfigOptions,
@@ -14,13 +19,18 @@ import { PLATFORM_VERSIONS } from '@hubspot/local-dev-lib/constants/projects';
 import { logError } from '../../lib/errorHandlers';
 import { EXIT_CODES } from '../../lib/enums/exitCodes';
 
+export type ProjectMigrateArgs = CommonArgs &
+  AccountArgs &
+  EnvironmentArgs &
+  ConfigArgs & {
+    dest?: string;
+  };
+
 export const command = 'migrate';
 
 export const describe = undefined; // i18n('commands.project.subcommands.migrate.noProjectConfig')
 
-export async function handler(
-  options: ArgumentsCamelCase<ProjectMigrateOptions>
-) {
+export async function handler(options: ArgumentsCamelCase<ProjectMigrateArgs>) {
   const projectConfig = await getProjectConfig();
 
   if (!projectConfig.projectConfig) {
@@ -53,9 +63,9 @@ export function builder(yargs: Argv) {
   addAccountOptions(yargs);
   addGlobalOptions(yargs);
 
-  return yargs as Argv<ProjectMigrateOptions>;
+  return yargs as Argv<ProjectMigrateArgs>;
 }
-const migrateAppCommand: CommandModule<unknown, ProjectMigrateOptions> = {
+const migrateAppCommand: CommandModule<unknown, ProjectMigrateArgs> = {
   command,
   describe,
   handler,

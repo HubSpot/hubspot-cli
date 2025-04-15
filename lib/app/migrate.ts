@@ -9,13 +9,11 @@ import { UNMIGRATABLE_REASONS } from '@hubspot/local-dev-lib/constants/projects'
 import { mapToUserFacingType } from '@hubspot/project-parsing-lib/src/lib/transform';
 import { MIGRATION_STATUS } from '@hubspot/local-dev-lib/types/Migration';
 import { downloadProject } from '@hubspot/local-dev-lib/api/projects';
-
 import { confirmPrompt, inputPrompt, listPrompt } from '../prompts/promptUtils';
 import { uiAccountDescription, uiCommandReference, uiLine } from '../ui';
 import { ensureProjectExists, LoadedProjectConfig } from '../projects';
 import SpinniesManager from '../ui/SpinniesManager';
 import { DEFAULT_POLLING_STATUS_LOOKUP, poll } from '../polling';
-import { MigrateAppOptions } from '../../types/Yargs';
 import {
   checkMigrationStatusV2,
   continueMigration,
@@ -27,6 +25,22 @@ import {
 } from '../../api/migrate';
 import fs from 'fs';
 import { lib } from '../../lang/en';
+import {
+  AccountArgs,
+  CommonArgs,
+  ConfigArgs,
+  EnvironmentArgs,
+} from '../../types/Yargs';
+
+export type MigrateAppArgs = CommonArgs &
+  AccountArgs &
+  EnvironmentArgs &
+  ConfigArgs & {
+    name?: string;
+    dest?: string;
+    appId?: number;
+    platformVersion: string;
+  };
 
 function getUnmigratableReason(reasonCode: string): string {
   switch (reasonCode) {
@@ -52,7 +66,7 @@ function filterAppsByProjectName(projectConfig?: LoadedProjectConfig) {
 
 async function handleMigrationSetup(
   derivedAccountId: number,
-  options: ArgumentsCamelCase<MigrateAppOptions>,
+  options: ArgumentsCamelCase<MigrateAppArgs>,
   projectConfig?: LoadedProjectConfig
 ): Promise<{
   appIdToMigrate?: number | undefined;
@@ -380,7 +394,7 @@ async function downloadProjectFiles(
 
 export async function migrateApp2025_2(
   derivedAccountId: number,
-  options: ArgumentsCamelCase<MigrateAppOptions>,
+  options: ArgumentsCamelCase<MigrateAppArgs>,
   projectConfig?: LoadedProjectConfig
 ): Promise<void> {
   SpinniesManager.init();
