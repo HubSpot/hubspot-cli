@@ -30,14 +30,15 @@ import {
   CommonArgs,
   ConfigArgs,
   EnvironmentArgs,
+  YargsCommandModule,
 } from '../../types/Yargs';
 import { makeYargsBuilder } from '../../lib/yargsUtils';
 import { ProjectConfig } from '../../types/Projects';
 
 const i18nKey = 'commands.project.subcommands.create';
 
-export const command = 'create';
-export const describe = uiBetaTag(i18n(`${i18nKey}.describe`), false);
+const command = 'create';
+const describe = uiBetaTag(i18n(`${i18nKey}.describe`), false);
 
 type ProjectCreateArgs = CommonArgs &
   ConfigArgs &
@@ -49,7 +50,7 @@ type ProjectCreateArgs = CommonArgs &
     template?: string;
   };
 
-export async function handler(args: ArgumentsCamelCase<ProjectCreateArgs>) {
+async function handler(args: ArgumentsCamelCase<ProjectCreateArgs>) {
   const { derivedAccountId } = args;
 
   let latestRepoReleaseTag: string | null = null;
@@ -200,7 +201,7 @@ function projectCreateBuilder(yargs: Argv): Argv<ProjectCreateArgs> {
   return yargs as Argv<ProjectCreateArgs>;
 }
 
-export const builder = makeYargsBuilder<ProjectCreateArgs>(
+const builder = makeYargsBuilder<ProjectCreateArgs>(
   projectCreateBuilder,
   command,
   describe,
@@ -212,9 +213,11 @@ export const builder = makeYargsBuilder<ProjectCreateArgs>(
   }
 );
 
-module.exports = {
+const projectCreateCommand: YargsCommandModule<unknown, ProjectCreateArgs> = {
   command,
   describe,
-  builder,
   handler,
+  builder,
 };
+
+export default projectCreateCommand;

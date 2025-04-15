@@ -24,13 +24,14 @@ import {
   ConfigArgs,
   AccountArgs,
   EnvironmentArgs,
+  YargsCommandModule,
 } from '../../types/Yargs';
 import { makeYargsBuilder } from '../../lib/yargsUtils';
 
 const i18nKey = 'commands.project.subcommands.deploy';
 
-export const command = 'deploy';
-export const describe = uiBetaTag(i18n(`${i18nKey}.describe`), false);
+const command = 'deploy';
+const describe = uiBetaTag(i18n(`${i18nKey}.describe`), false);
 
 export type ProjectDeployArgs = CommonArgs &
   ConfigArgs &
@@ -70,7 +71,7 @@ function validateBuildId(
   return true;
 }
 
-export async function handler(
+async function handler(
   args: ArgumentsCamelCase<ProjectDeployArgs>
 ): Promise<void> {
   const { derivedAccountId } = args;
@@ -212,20 +213,23 @@ function projectDeployBuilder(yargs: Argv): Argv<ProjectDeployArgs> {
   return yargs as Argv<ProjectDeployArgs>;
 }
 
-export const builder = makeYargsBuilder<ProjectDeployArgs>(
+const builder = makeYargsBuilder<ProjectDeployArgs>(
   projectDeployBuilder,
   command,
   describe,
   {
+    useGlobalOptions: true,
     useConfigOptions: true,
     useAccountOptions: true,
     useEnvironmentOptions: true,
   }
 );
 
-module.exports = {
+const projectDeployCommand: YargsCommandModule<unknown, ProjectDeployArgs> = {
   command,
   describe,
   builder,
   handler,
 };
+
+export default projectDeployCommand;

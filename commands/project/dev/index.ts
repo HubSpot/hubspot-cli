@@ -1,8 +1,4 @@
-import {
-  addAccountOptions,
-  addConfigOptions,
-  addUseEnvironmentOptions,
-} from '../../../lib/commonOpts';
+import { ArgumentsCamelCase, Argv, CommandModule } from 'yargs';
 import { trackCommandUsage } from '../../../lib/usageTracking';
 import { i18n } from '../../../lib/lang';
 import { logger } from '@hubspot/local-dev-lib/logger';
@@ -10,12 +6,11 @@ import { getAccountConfig } from '@hubspot/local-dev-lib/config';
 import { getProjectConfig, validateProjectConfig } from '../../../lib/projects';
 import { EXIT_CODES } from '../../../lib/enums/exitCodes';
 import { uiBetaTag, uiCommandReference, uiLink } from '../../../lib/ui';
-
-import { ArgumentsCamelCase, Argv } from 'yargs';
 import { ProjectDevArgs } from '../../../types/Yargs';
 import { deprecatedProjectDevFlow } from './deprecatedFlow';
 import { unifiedProjectDevFlow } from './unifiedFlow';
 import { useV3Api } from '../../../lib/projects/buildAndDeploy';
+import { makeYargsBuilder } from '../../../lib/yargsUtils';
 
 const i18nKey = 'commands.project.subcommands.dev';
 
@@ -68,12 +63,29 @@ export async function handler(args: ArgumentsCamelCase<ProjectDevArgs>) {
   }
 }
 
-export function builder(yargs: Argv): Argv<ProjectDevArgs> {
-  addConfigOptions(yargs);
-  addAccountOptions(yargs);
-  addUseEnvironmentOptions(yargs);
-
+function projectDevBuilder(yargs: Argv): Argv<ProjectDevArgs> {
   yargs.example([['$0 project dev', i18n(`${i18nKey}.examples.default`)]]);
 
   return yargs as Argv<ProjectDevArgs>;
 }
+
+export const builder = makeYargsBuilder<ProjectDevArgs>(
+  projectDevBuilder,
+  command,
+  describe,
+  {
+    useGlobalOptions: true,
+    useAccountOptions: true,
+    useConfigOptions: true,
+    useEnvironmentOptions: true,
+  }
+);
+
+const projectDevCommand: CommandModule<unknown, ProjectDevArgs> = {
+  command,
+  describe,
+  handler,
+  builder,
+};
+
+export default projectDevCommand;

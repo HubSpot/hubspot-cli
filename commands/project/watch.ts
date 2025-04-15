@@ -30,13 +30,14 @@ import {
   AccountArgs,
   ConfigArgs,
   EnvironmentArgs,
+  YargsCommandModule,
 } from '../../types/Yargs';
 import { makeYargsBuilder } from '../../lib/yargsUtils';
 
 const i18nKey = 'commands.project.subcommands.watch';
 
-export const command = 'watch';
-export const describe = uiBetaTag(i18n(`${i18nKey}.describe`), false);
+const command = 'watch';
+const describe = uiBetaTag(i18n(`${i18nKey}.describe`), false);
 
 type ProjectWatchArgs = CommonArgs &
   ConfigArgs &
@@ -102,7 +103,7 @@ function handleUserInput(
   });
 }
 
-export async function handler(
+async function handler(
   args: ArgumentsCamelCase<ProjectWatchArgs>
 ): Promise<void> {
   const { initialUpload, derivedAccountId } = args;
@@ -200,7 +201,7 @@ function projectWatchBuilder(yargs: Argv): Argv<ProjectWatchArgs> {
   return yargs as Argv<ProjectWatchArgs>;
 }
 
-export const builder = makeYargsBuilder<ProjectWatchArgs>(
+const builder = makeYargsBuilder<ProjectWatchArgs>(
   projectWatchBuilder,
   command,
   describe,
@@ -212,9 +213,11 @@ export const builder = makeYargsBuilder<ProjectWatchArgs>(
   }
 );
 
-module.exports = {
+const projectWatchCommand: YargsCommandModule<unknown, ProjectWatchArgs> = {
   command,
   describe,
-  builder,
   handler,
+  builder,
 };
+
+export default projectWatchCommand;

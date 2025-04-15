@@ -4,7 +4,7 @@ import {
   addConfigOptions,
   addUseEnvironmentOptions,
 } from '../../../lib/commonOpts';
-import * as projectWatchCommand from '../watch';
+import projectWatchCommand from '../watch';
 
 jest.mock('yargs');
 jest.mock('../../../lib/commonOpts');

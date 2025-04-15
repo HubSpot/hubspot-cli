@@ -1,29 +1,24 @@
+import { ArgumentsCamelCase, Argv } from 'yargs';
 import { i18n } from '../../lib/lang';
 import { uiCommandReference, uiDeprecatedTag } from '../../lib/ui';
 import {
   handler as migrateHandler,
   validMigrationTargets,
 } from '../app/migrate';
-
-import { ArgumentsCamelCase, Argv, CommandModule } from 'yargs';
 import { logger } from '@hubspot/local-dev-lib/logger';
-import { MigrateAppOptions } from '../../types/Yargs';
-import {
-  addAccountOptions,
-  addConfigOptions,
-  addUseEnvironmentOptions,
-} from '../../lib/commonOpts';
+import { MigrateAppOptions, YargsCommandModule } from '../../types/Yargs';
+import { makeYargsBuilder } from '../../lib/yargsUtils';
 
-export const command = 'migrate-app';
+const command = 'migrate-app';
 
 // TODO: Leave this as deprecated and remove in the next major release
-export const describe = uiDeprecatedTag(
+const describe = uiDeprecatedTag(
   i18n(`commands.project.subcommands.migrateApp.describe`),
   false
 );
 export const deprecated = true;
 
-export async function handler(yargs: ArgumentsCamelCase<MigrateAppOptions>) {
+async function handler(yargs: ArgumentsCamelCase<MigrateAppOptions>) {
   logger.warn(
     i18n(`commands.project.subcommands.migrateApp.deprecationWarning`, {
       oldCommand: uiCommandReference('hs project migrate-app'),
@@ -33,11 +28,7 @@ export async function handler(yargs: ArgumentsCamelCase<MigrateAppOptions>) {
   await migrateHandler(yargs);
 }
 
-export function builder(yargs: Argv): Argv<MigrateAppOptions> {
-  addConfigOptions(yargs);
-  addAccountOptions(yargs);
-  addUseEnvironmentOptions(yargs);
-
+function projectMigrateAppBuilder(yargs: Argv): Argv<MigrateAppOptions> {
   yargs.options({
     name: {
       describe: i18n(
@@ -75,7 +66,19 @@ export function builder(yargs: Argv): Argv<MigrateAppOptions> {
   return yargs as Argv<MigrateAppOptions>;
 }
 
-const migrateAppCommand: CommandModule<unknown, MigrateAppOptions> = {
+const builder = makeYargsBuilder<MigrateAppOptions>(
+  projectMigrateAppBuilder,
+  command,
+  describe,
+  {
+    useGlobalOptions: true,
+    useConfigOptions: true,
+    useAccountOptions: true,
+    useEnvironmentOptions: true,
+  }
+);
+
+const migrateAppCommand: YargsCommandModule<unknown, MigrateAppOptions> = {
   command,
   describe,
   deprecated,

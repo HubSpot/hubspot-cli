@@ -19,20 +19,21 @@ import {
   ConfigArgs,
   AccountArgs,
   EnvironmentArgs,
+  YargsCommandModule,
 } from '../../types/Yargs';
 import { makeYargsBuilder } from '../../lib/yargsUtils';
 
 const i18nKey = 'commands.project.subcommands.download';
 
-export const command = 'download';
-export const describe = uiBetaTag(i18n(`${i18nKey}.describe`), false);
+const command = 'download';
+const describe = uiBetaTag(i18n(`${i18nKey}.describe`), false);
 
 type ProjectDownloadArgs = CommonArgs &
   ConfigArgs &
   AccountArgs &
   EnvironmentArgs & { project?: string; dest?: string; build?: number };
 
-export async function handler(args: ArgumentsCamelCase<ProjectDownloadArgs>) {
+async function handler(args: ArgumentsCamelCase<ProjectDownloadArgs>) {
   const { projectConfig } = await getProjectConfig();
 
   if (projectConfig) {
@@ -127,20 +128,24 @@ function projectDownloadBuilder(yargs: Argv): Argv<ProjectDownloadArgs> {
   return yargs as Argv<ProjectDownloadArgs>;
 }
 
-export const builder = makeYargsBuilder<ProjectDownloadArgs>(
+const builder = makeYargsBuilder<ProjectDownloadArgs>(
   projectDownloadBuilder,
   command,
   describe,
   {
+    useGlobalOptions: true,
     useConfigOptions: true,
     useAccountOptions: true,
     useEnvironmentOptions: true,
   }
 );
 
-module.exports = {
-  command,
-  describe,
-  builder,
-  handler,
-};
+const projectDownloadCommand: YargsCommandModule<unknown, ProjectDownloadArgs> =
+  {
+    command,
+    describe,
+    handler,
+    builder,
+  };
+
+export default projectDownloadCommand;

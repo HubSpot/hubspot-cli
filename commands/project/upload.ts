@@ -21,13 +21,13 @@ import { i18n } from '../../lib/lang';
 import { PROJECT_ERROR_TYPES } from '../../lib/constants';
 import { logError, ApiErrorContext } from '../../lib/errorHandlers/index';
 import { EXIT_CODES } from '../../lib/enums/exitCodes';
-import { CommonArgs } from '../../types/Yargs';
+import { CommonArgs, YargsCommandModule } from '../../types/Yargs';
 import { ProjectPollResult } from '../../types/Projects';
 import { makeYargsBuilder } from '../../lib/yargsUtils';
 const i18nKey = 'commands.project.subcommands.upload';
 
-export const command = 'upload';
-export const describe = uiBetaTag(i18n(`${i18nKey}.describe`), false);
+const command = 'upload';
+const describe = uiBetaTag(i18n(`${i18nKey}.describe`), false);
 
 type ProjectUploadArgs = CommonArgs & {
   forceCreate: boolean;
@@ -36,7 +36,7 @@ type ProjectUploadArgs = CommonArgs & {
   skipValidation: boolean;
 };
 
-export async function handler(
+async function handler(
   args: ArgumentsCamelCase<ProjectUploadArgs>
 ): Promise<void> {
   const { forceCreate, message, derivedAccountId, skipValidation } = args;
@@ -148,20 +148,23 @@ function projectUploadBuilder(yargs: Argv): Argv<ProjectUploadArgs> {
   return yargs as Argv<ProjectUploadArgs>;
 }
 
-export const builder = makeYargsBuilder<ProjectUploadArgs>(
+const builder = makeYargsBuilder<ProjectUploadArgs>(
   projectUploadBuilder,
   command,
   describe,
   {
+    useGlobalOptions: true,
     useConfigOptions: true,
     useAccountOptions: true,
     useEnvironmentOptions: true,
   }
 );
 
-module.exports = {
+const projectUploadCommand: YargsCommandModule<unknown, ProjectUploadArgs> = {
   command,
   describe,
-  builder,
   handler,
+  builder,
 };
+
+export default projectUploadCommand;
