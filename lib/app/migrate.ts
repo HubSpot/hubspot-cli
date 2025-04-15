@@ -69,11 +69,12 @@ function filterAppsByProjectName(
 async function fetchMigrationApps(
   appId: MigrateAppArgs['appId'],
   derivedAccountId: number,
+  platformVersion: string,
   projectConfig?: LoadedProjectConfig
 ): Promise<MigrationApp[]> {
   const {
     data: { migratableApps, unmigratableApps },
-  } = await listAppsForMigration(derivedAccountId);
+  } = await listAppsForMigration(derivedAccountId, platformVersion);
 
   const filteredMigratableApps = migratableApps.filter(
     filterAppsByProjectName(projectConfig)
@@ -211,6 +212,7 @@ async function handleMigrationSetup(
   const allApps = await fetchMigrationApps(
     appId,
     derivedAccountId,
+    options.platformVersion,
     projectConfig
   );
 
