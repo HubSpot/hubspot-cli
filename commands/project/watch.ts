@@ -1,62 +1,75 @@
-// @ts-nocheck
-const { uiLink } = require('../../lib/ui');
-
-const { useV3Api } = require('../../lib/projects/buildAndDeploy');
-const { uiCommandReference } = require('../../lib/ui');
-
-const { i18n } = require('../../lib/lang');
-const { createWatcher } = require('../../lib/projects/watch');
-const { logError, ApiErrorContext } = require('../../lib/errorHandlers/index');
-const { logger } = require('@hubspot/local-dev-lib/logger');
-const { PROJECT_ERROR_TYPES } = require('../../lib/constants');
-const {
-  addAccountOptions,
-  addConfigOptions,
-  addUseEnvironmentOptions,
-} = require('../../lib/commonOpts');
-const { trackCommandUsage } = require('../../lib/usageTracking');
-const { uiBetaTag } = require('../../lib/ui');
-const {
+import { ArgumentsCamelCase, Argv } from 'yargs';
+import {
+  cancelStagedBuild,
+  fetchProjectBuilds,
+} from '@hubspot/local-dev-lib/api/projects';
+import { isSpecifiedError } from '@hubspot/local-dev-lib/errors/index';
+import { useV3Api } from '../../lib/projects/buildAndDeploy';
+import { uiCommandReference, uiLink, uiBetaTag } from '../../lib/ui';
+import { i18n } from '../../lib/lang';
+import { createWatcher } from '../../lib/projects/watch';
+import { logError, ApiErrorContext } from '../../lib/errorHandlers/index';
+import { logger } from '@hubspot/local-dev-lib/logger';
+import { PROJECT_ERROR_TYPES } from '../../lib/constants';
+import { trackCommandUsage } from '../../lib/usageTracking';
+import {
   ensureProjectExists,
   getProjectConfig,
   validateProjectConfig,
   logFeedbackMessage,
-} = require('../../lib/projects');
-const { handleProjectUpload } = require('../../lib/projects/upload');
-const {
+} from '../../lib/projects';
+import { handleProjectUpload } from '../../lib/projects/upload';
+import {
   pollBuildStatus,
   pollDeployStatus,
-} = require('../../lib/projects/buildAndDeploy');
-const {
-  cancelStagedBuild,
-  fetchProjectBuilds,
-} = require('@hubspot/local-dev-lib/api/projects');
-const { isSpecifiedError } = require('@hubspot/local-dev-lib/errors/index');
-const { EXIT_CODES } = require('../../lib/enums/exitCodes');
-const { handleKeypress, handleExit } = require('../../lib/process');
+} from '../../lib/projects/buildAndDeploy';
+import { EXIT_CODES } from '../../lib/enums/exitCodes';
+import { handleKeypress, handleExit } from '../../lib/process';
+import {
+  CommonArgs,
+  AccountArgs,
+  ConfigArgs,
+  EnvironmentArgs,
+} from '../../types/Yargs';
+import { makeYargsBuilder } from '../../lib/yargsUtils';
 
 const i18nKey = 'commands.project.subcommands.watch';
 
-exports.command = 'watch';
-exports.describe = uiBetaTag(i18n(`${i18nKey}.describe`), false);
+export const command = 'watch';
+export const describe = uiBetaTag(i18n(`${i18nKey}.describe`), false);
 
-const handleBuildStatus = async (accountId, projectName, buildId) => {
+type ProjectWatchArgs = CommonArgs &
+  ConfigArgs &
+  AccountArgs &
+  EnvironmentArgs & {
+    initialUpload?: boolean;
+  };
+
+async function handleBuildStatus(
+  accountId: number,
+  projectName: string,
+  buildId: number
+): Promise<void> {
   const { isAutoDeployEnabled, deployStatusTaskLocator } =
-    await pollBuildStatus(accountId, projectName, buildId);
+    await pollBuildStatus(accountId, projectName, buildId, null);
 
   if (isAutoDeployEnabled && deployStatusTaskLocator) {
     await pollDeployStatus(
       accountId,
       projectName,
-      deployStatusTaskLocator.id,
+      Number(deployStatusTaskLocator.id),
       buildId
     );
   }
 
   logFeedbackMessage(buildId);
-};
+}
 
-const handleUserInput = (accountId, projectName, currentBuildId) => {
+function handleUserInput(
+  accountId: number,
+  projectName: string,
+  currentBuildId: number
+): void {
   const onTerminate = async () => {
     logger.log(i18n(`${i18nKey}.logs.processExited`));
 
@@ -87,16 +100,25 @@ const handleUserInput = (accountId, projectName, currentBuildId) => {
       onTerminate();
     }
   });
-};
+}
 
-exports.handler = async options => {
-  const { initialUpload, derivedAccountId } = options;
+export async function handler(
+  args: ArgumentsCamelCase<ProjectWatchArgs>
+): Promise<void> {
+  const { initialUpload, derivedAccountId } = args;
 
-  trackCommandUsage('project-watch', null, derivedAccountId);
+  trackCommandUsage('project-watch', undefined, derivedAccountId);
 
   const { projectConfig, projectDir } = await getProjectConfig();
 
-  if (useV3Api(projectConfig?.platformVersion)) {
+  validateProjectConfig(projectConfig, projectDir);
+
+  if (!projectConfig || !projectDir) {
+    logger.error(i18n(`${i18nKey}.errors.projectConfigNotFound`));
+    return process.exit(EXIT_CODES.ERROR);
+  }
+
+  if (useV3Api(projectConfig.platformVersion)) {
     logger.error(
       i18n(`commands.project.subcommands.watch.errors.v3ApiError`, {
         command: uiCommandReference('hs project watch'),
@@ -111,14 +133,12 @@ exports.handler = async options => {
     return process.exit(EXIT_CODES.ERROR);
   }
 
-  validateProjectConfig(projectConfig, projectDir);
-
   await ensureProjectExists(derivedAccountId, projectConfig.name);
 
   try {
     const {
       data: { results: builds },
-    } = await fetchProjectBuilds(derivedAccountId, projectConfig.name, options);
+    } = await fetchProjectBuilds(derivedAccountId, projectConfig.name);
     const hasNoBuilds = !builds || !builds.length;
 
     const startWatching = async () => {
@@ -166,9 +186,9 @@ exports.handler = async options => {
   } catch (e) {
     logError(e, new ApiErrorContext({ accountId: derivedAccountId }));
   }
-};
+}
 
-exports.builder = yargs => {
+function projectWatchBuilder(yargs: Argv): Argv<ProjectWatchArgs> {
   yargs.option('initial-upload', {
     alias: 'i',
     describe: i18n(`${i18nKey}.options.initialUpload.describe`),
@@ -177,9 +197,24 @@ exports.builder = yargs => {
 
   yargs.example([['$0 project watch', i18n(`${i18nKey}.examples.default`)]]);
 
-  addConfigOptions(yargs);
-  addAccountOptions(yargs);
-  addUseEnvironmentOptions(yargs);
+  return yargs as Argv<ProjectWatchArgs>;
+}
 
-  return yargs;
+export const builder = makeYargsBuilder<ProjectWatchArgs>(
+  projectWatchBuilder,
+  command,
+  describe,
+  {
+    useGlobalOptions: true,
+    useAccountOptions: true,
+    useConfigOptions: true,
+    useEnvironmentOptions: true,
+  }
+);
+
+module.exports = {
+  command,
+  describe,
+  builder,
+  handler,
 };

@@ -1260,6 +1260,9 @@ export const commands = {
           `File "${filePath}" is already queued for upload`,
       },
       errors: {
+        projectConfigNotFound:
+          'No project config found. Please ensure that you are in a project directory.',
+        projectLockedError: `Your project is locked. This may mean that another user is running the ${chalk.bold(`hs project dev`)} command for this project. If this is you, unlock the project in Projects UI.`,
         uploadFailed: ({ filePath, remotePath }) =>
           `Failed to upload file "${filePath}" to "${remotePath}"`,
         deleteFileFailed: ({ remotePath }) =>
