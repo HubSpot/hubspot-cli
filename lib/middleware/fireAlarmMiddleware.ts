@@ -1,4 +1,4 @@
-import { Arguments, terminalWidth } from 'yargs';
+import { Arguments } from 'yargs';
 import chalk from 'chalk';
 import { fetchFireAlarms } from '@hubspot/local-dev-lib/api/fireAlarm';
 import { FireAlarm } from '@hubspot/local-dev-lib/types/FireAlarm';
@@ -173,7 +173,6 @@ async function logFireAlarms(
         title: 'Notifications',
         titleAlignment: 'left',
         borderColor: UI_COLORS.MARIGOLD,
-        width: terminalWidth() * 0.75,
         margin: 1,
         padding: 1,
         textAlignment: 'left',
