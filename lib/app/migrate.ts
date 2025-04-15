@@ -55,7 +55,9 @@ function getUnmigratableReason(reasonCode: string): string {
   }
 }
 
-function filterAppsByProjectName(projectConfig?: LoadedProjectConfig) {
+function filterAppsByProjectName(
+  projectConfig?: LoadedProjectConfig
+): (app: MigrationApp) => boolean {
   return (app: MigrationApp) => {
     if (projectConfig) {
       return app.projectName === projectConfig?.projectConfig?.name;
@@ -64,16 +66,11 @@ function filterAppsByProjectName(projectConfig?: LoadedProjectConfig) {
   };
 }
 
-async function handleMigrationSetup(
+async function fetchMigrationApps(
+  appId: MigrateAppArgs['appId'],
   derivedAccountId: number,
-  options: ArgumentsCamelCase<MigrateAppArgs>,
   projectConfig?: LoadedProjectConfig
-): Promise<{
-  appIdToMigrate?: number | undefined;
-  projectName?: string;
-  projectDest?: string;
-}> {
-  const { name, dest, appId } = options;
+): Promise<MigrationApp[]> {
   const {
     data: { migratableApps, unmigratableApps },
   } = await listAppsForMigration(derivedAccountId);
@@ -109,6 +106,22 @@ async function handleMigrationSetup(
     );
   }
 
+  if (
+    appId &&
+    !allApps.some(app => {
+      return app.appId === appId;
+    })
+  ) {
+    throw new Error(lib.migrate.errors.appWithAppIdNotFound(appId));
+  }
+
+  return allApps;
+}
+
+async function selectAppToMigrate(
+  allApps: MigrationApp[],
+  appId?: number
+): Promise<{ proceed: boolean; appIdToMigrate?: number }> {
   if (
     appId &&
     !allApps.some(app => {
@@ -170,6 +183,30 @@ async function handleMigrationSetup(
 
   logger.log();
   const proceed = await confirmPrompt(lib.migrate.prompt.proceed);
+  return {
+    proceed,
+    appIdToMigrate,
+  };
+}
+
+async function handleMigrationSetup(
+  derivedAccountId: number,
+  options: ArgumentsCamelCase<MigrateAppArgs>,
+  projectConfig?: LoadedProjectConfig
+): Promise<{
+  appIdToMigrate?: number | undefined;
+  projectName?: string;
+  projectDest?: string;
+}> {
+  const { name, dest, appId } = options;
+
+  const allApps = await fetchMigrationApps(
+    appId,
+    derivedAccountId,
+    projectConfig
+  );
+
+  const { proceed, appIdToMigrate } = await selectAppToMigrate(allApps, appId);
 
   if (!proceed) {
     return {};
@@ -453,7 +490,7 @@ export function logInvalidAccountError(): void {
   logger.error(lib.migrate.errors.invalidAccountTypeTitle);
   logger.log(
     lib.migrate.errors.invalidAccountTypeDescription(
-      uiCommandReference('hs accounts use'),
+      uiCommandReference('hs account use'),
       uiCommandReference('hs auth')
     )
   );

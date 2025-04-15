@@ -715,11 +715,11 @@ en:
             default: "Create a component within your project"
             withFlags: "Use --name and --type flags to bypass the prompt."
         migrate:
-            describe: "Migrate a project to the projects framework."
+            describe: "Migrate an existing project to the new version of the projects framework."
             errors:
                 noProjectConfig: "No project detected. Please run this command again from a project directory."
             examples:
-                default: "Migrate a project to the projects framework"
+                default: "Migrate an existing project to the new version of the projects framework."
         deploy:
           describe: "Deploy a project build."
           deployBuildIdPrompt: "[--build] Deploy which build?"

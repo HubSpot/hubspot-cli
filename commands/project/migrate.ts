@@ -23,7 +23,6 @@ export type ProjectMigrateArgs = CommonArgs &
   AccountArgs &
   EnvironmentArgs &
   ConfigArgs & {
-    dest?: string;
     platformVersion: string;
   };
 
@@ -31,7 +30,9 @@ export const command = 'migrate';
 
 export const describe = undefined; // i18n('commands.project.subcommands.migrate.noProjectConfig')
 
-export async function handler(options: ArgumentsCamelCase<ProjectMigrateArgs>) {
+export async function handler(
+  options: ArgumentsCamelCase<ProjectMigrateArgs>
+): Promise<void> {
   const projectConfig = await getProjectConfig();
 
   if (!projectConfig.projectConfig) {
@@ -59,7 +60,7 @@ export async function handler(options: ArgumentsCamelCase<ProjectMigrateArgs>) {
   return process.exit(EXIT_CODES.SUCCESS);
 }
 
-export function builder(yargs: Argv) {
+export function builder(yargs: Argv): Argv<ProjectMigrateArgs> {
   addConfigOptions(yargs);
   addAccountOptions(yargs);
   addGlobalOptions(yargs);
