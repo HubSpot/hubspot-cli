@@ -2,12 +2,10 @@ import path from 'path';
 import { ArgumentsCamelCase, Argv } from 'yargs';
 import fs from 'fs-extra';
 import {
-  getConfigPath,
+  getConfigFilePath,
   createEmptyConfigFile,
-  deleteEmptyConfigFile,
-  updateDefaultAccount,
-  loadConfig,
-  configFileExists,
+  deleteConfigFile,
+  setConfigAccountAsDefault,
 } from '@hubspot/local-dev-lib/config';
 import { Environment } from '@hubspot/local-dev-lib/types/Config';
 import {
@@ -23,13 +21,11 @@ import {
 import { getCwd } from '@hubspot/local-dev-lib/path';
 import { toKebabCase } from '@hubspot/local-dev-lib/text';
 import {
-  CLIAccount,
-  OAuth2ManagerAccountConfig,
+  OAuthConfigAccount,
+  PersonalAccessKeyConfigAccount,
 } from '@hubspot/local-dev-lib/types/Accounts';
 import { ENVIRONMENTS } from '@hubspot/local-dev-lib/constants/environments';
 import { logger } from '@hubspot/local-dev-lib/logger';
-import { getAccountIdentifier } from '@hubspot/local-dev-lib/config/getAccountIdentifier';
-import { CLIOptions } from '@hubspot/local-dev-lib/types/CLIOptions';
 import { setLogLevel } from '../lib/commonOpts';
 import { makeYargsBuilder } from '../lib/yargsUtils';
 import { handleExit } from '../lib/process';
@@ -64,9 +60,9 @@ const TRACKING_STATUS = {
 async function personalAccessKeyConfigCreationFlow(
   env: Environment,
   account?: number
-): Promise<CLIAccount | null> {
+): Promise<PersonalAccessKeyConfigAccount | undefined> {
   const { personalAccessKey } = await personalAccessKeyPrompt({ env, account });
-  let updatedConfig: CLIAccount | null;
+  let updatedConfig: PersonalAccessKeyConfigAccount | undefined;
 
   try {
     const token = await getAccessToken(personalAccessKey, env);
@@ -84,20 +80,16 @@ async function personalAccessKeyConfigCreationFlow(
     logError(e);
   }
 
-  return updatedConfig!;
+  return updatedConfig;
 }
 
 async function oauthConfigCreationFlow(
   env: Environment
-): Promise<OAuth2ManagerAccountConfig> {
-  const configData = await promptUser<OauthPromptResponse>(OAUTH_FLOW);
-  const accountConfig: OAuth2ManagerAccountConfig = {
-    ...configData,
-    env,
-  };
-  await authenticateWithOauth(accountConfig);
-  updateDefaultAccount(accountConfig.name!);
-  return accountConfig;
+): Promise<OAuthConfigAccount> {
+  const promptData = await promptUser<OauthPromptResponse>(OAUTH_FLOW);
+  const account = await authenticateWithOauth(promptData, env);
+  setConfigAccountAsDefault(account.name);
+  return account;
 }
 
 const AUTH_TYPE_NAMES = {
@@ -131,9 +123,14 @@ export async function handler(
     (authTypeFlagValue && authTypeFlagValue.toLowerCase()) ||
     PERSONAL_ACCESS_KEY_AUTH_METHOD.value;
 
-  const configPath =
-    (configFlagValue && path.join(getCwd(), configFlagValue)) ||
-    getConfigPath('', useHiddenConfig);
+  let configPath = configFlagValue && path.join(getCwd(), configFlagValue);
+
+  if (!configPath) {
+    try {
+      configPath = getConfigFilePath();
+    } catch (e) {}
+  }
+
   setLogLevel(args);
 
   if (!disableTracking) {
@@ -144,7 +141,7 @@ export async function handler(
 
   const env = args.qa ? ENVIRONMENTS.QA : ENVIRONMENTS.PROD;
 
-  if (fs.existsSync(configPath!)) {
+  if (fs.existsSync(configPath || '')) {
     logger.error(
       i18n(`${i18nKey}.errors.configFileExists`, {
         configPath: configPath!,
@@ -163,21 +160,10 @@ export async function handler(
     );
   }
 
-  const doesOtherConfigFileExist = configFileExists(!useHiddenConfig);
-  if (doesOtherConfigFileExist) {
-    const path = getConfigPath('', !useHiddenConfig);
-    logger.error(
-      i18n(`${i18nKey}.errors.bothConfigFilesNotAllowed`, { path: path! })
-    );
-    process.exit(EXIT_CODES.ERROR);
-  }
-
   trackAuthAction('init', authType, TRACKING_STATUS.STARTED, providedAccountId);
-  createEmptyConfigFile({ path: configPath! }, useHiddenConfig);
-  //Needed to load deprecated config
-  loadConfig(configPath!, args as CLIOptions);
+  createEmptyConfigFile(useHiddenConfig);
 
-  handleExit(deleteEmptyConfigFile);
+  handleExit(deleteConfigFile);
 
   try {
     let accountId: number;
@@ -188,12 +174,12 @@ export async function handler(
         providedAccountId
       );
       if (personalAccessKeyResult) {
-        accountId = getAccountIdentifier(personalAccessKeyResult)!;
+        accountId = personalAccessKeyResult.accountId;
         name = personalAccessKeyResult.name;
       }
     } else {
       const oauthResult = await oauthConfigCreationFlow(env);
-      accountId = oauthResult.accountId!;
+      accountId = oauthResult.accountId;
       name = oauthResult.name;
     }
 

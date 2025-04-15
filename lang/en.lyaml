@@ -465,8 +465,7 @@ en:
       logs:
         updateConfig: "To update an existing config file, use the \"hs auth\" command."
       errors:
-        configFileExists: "The config file {{ configPath }} already exists."
-        bothConfigFilesNotAllowed: "Unable to create config file, because there is an existing one at \"{{ path }}\". To create a new config file, delete the existing one and try again."
+        configFileExists: "Unable to create config file. A config file already exists at {{ configPath }}."
     lint:
       issuesFound: "{{ count }} issues found."
       groupName: "Linting {{ path }}"

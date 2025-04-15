@@ -14,6 +14,7 @@ import { EXIT_CODES } from './enums/exitCodes';
 import { OauthPromptResponse } from './prompts/personalAccessKeyPrompt';
 import { Environment } from '@hubspot/local-dev-lib/types/Config';
 import { OAUTH_AUTH_METHOD } from '@hubspot/local-dev-lib/constants/auth';
+import { OAuthConfigAccount } from '@hubspot/local-dev-lib/types/Accounts';
 
 const PORT = 3000;
 const redirectUri = `http://localhost:${PORT}/oauth-callback`;
@@ -106,8 +107,8 @@ async function authorize(oauthManager: OAuth2Manager): Promise<void> {
 export async function authenticateWithOauth(
   promptData: OauthPromptResponse,
   env: Environment
-): Promise<void> {
-  const oauthManager = new OAuth2Manager({
+): Promise<OAuthConfigAccount> {
+  const account: OAuthConfigAccount = {
     ...promptData,
     env,
     authType: OAUTH_AUTH_METHOD.value,
@@ -117,8 +118,10 @@ export async function authenticateWithOauth(
       clientSecret: promptData.clientSecret,
       tokenInfo: {},
     },
-  });
+  };
+  const oauthManager = new OAuth2Manager(account);
   logger.log('Authorizing');
   await authorize(oauthManager);
   addOauthToAccountConfig(oauthManager);
+  return account;
 }
