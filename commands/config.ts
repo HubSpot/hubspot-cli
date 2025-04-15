@@ -1,18 +1,17 @@
-// @ts-nocheck
-const { addConfigOptions, addGlobalOptions } = require('../lib/commonOpts');
-const { i18n } = require('../lib/lang');
-const set = require('./config/set');
+import { Argv } from 'yargs';
+import { addConfigOptions, addGlobalOptions } from '../lib/commonOpts';
+import { i18n } from '../lib/lang';
+import * as set from './config/set';
+import * as migrate from './config/migrate';
 
-const i18nKey = 'commands.config';
+export const command = 'config';
+export const describe = i18n('commands.config.describe');
 
-exports.command = 'config';
-exports.describe = i18n(`${i18nKey}.describe`);
-
-exports.builder = yargs => {
+export function builder(yargs: Argv): Argv {
   addConfigOptions(yargs);
   addGlobalOptions(yargs);
 
-  yargs.command(set).demandCommand(1, '');
+  yargs.command(set).command(migrate).demandCommand(1, '');
 
   return yargs;
-};
+}

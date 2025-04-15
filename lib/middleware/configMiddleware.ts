@@ -76,7 +76,13 @@ export async function loadConfigMiddleware(
     }
   };
 
-  if (configFileExists(true) && argv.config) {
+  if (
+    configFileExists(true) &&
+    argv.config &&
+    !isTargetedCommand(argv._, {
+      config: { target: false, subCommands: { migrate: { target: true } } },
+    })
+  ) {
     logger.error(
       i18n(`commands.generalErrors.loadConfigMiddleware.configFileExists`, {
         configPath: getConfigPath()!,
