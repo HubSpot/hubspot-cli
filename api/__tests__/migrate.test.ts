@@ -19,6 +19,7 @@ describe('api/migrate', () => {
   const mockAppId = 67890;
   const mockMigrationId = 54321;
   const mockPlatformVersion = '2025.2';
+  const convertedPlatformVersion = 'V2025_2';
   const mockProjectName = 'Test Project';
   const mockComponentUids = { 'component-1': 'uid-1', 'component-2': 'uid-2' };
 
@@ -51,10 +52,16 @@ describe('api/migrate', () => {
       // @ts-expect-error Mock
       httpMock.get.mockResolvedValue(mockResponse);
 
-      const result = await listAppsForMigration(mockAccountId);
+      const result = await listAppsForMigration(
+        mockAccountId,
+        mockPlatformVersion
+      );
 
       expect(http.get).toHaveBeenCalledWith(mockAccountId, {
         url: 'dfs/migrations/v2/list-apps',
+        params: {
+          platformVersion: convertedPlatformVersion,
+        },
       });
       expect(result).toEqual(mockResponse);
     });
@@ -76,7 +83,7 @@ describe('api/migrate', () => {
         url: 'dfs/migrations/v2/migrations',
         data: {
           applicationId: mockAppId,
-          platformVersion: 'V2025_2',
+          platformVersion: convertedPlatformVersion,
         },
       });
       expect(result).toEqual(mockResponse);
@@ -171,7 +178,7 @@ describe('api/migrate', () => {
       const mockResponse: MigrationStatus = {
         id: mockMigrationId,
         status: MIGRATION_STATUS.FAILURE,
-        projectErrorsDetail: 'Error details',
+        projectErrorDetail: 'Error details',
         componentErrorDetails: {
           'component-1': 'Component error',
         },

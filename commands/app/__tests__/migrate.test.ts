@@ -1,11 +1,10 @@
 import { ArgumentsCamelCase, Argv } from 'yargs';
 import { handler, builder } from '../migrate';
 import { getAccountConfig } from '@hubspot/local-dev-lib/config';
-import { migrateApp2025_2 } from '../../../lib/app/migrate';
+import { migrateApp2025_2, MigrateAppArgs } from '../../../lib/app/migrate';
 import { migrateApp2023_2 } from '../../../lib/app/migrate_legacy';
 import { logger } from '@hubspot/local-dev-lib/logger';
 import { EXIT_CODES } from '../../../lib/enums/exitCodes';
-import { MigrateAppOptions } from '../../../types/Yargs';
 import { PLATFORM_VERSIONS } from '@hubspot/local-dev-lib/constants/projects';
 
 jest.mock('@hubspot/local-dev-lib/config');
@@ -38,7 +37,7 @@ describe('commands/app/migrate', () => {
 
       await handler({
         derivedAccountId: mockAccountId,
-      } as ArgumentsCamelCase<MigrateAppOptions>);
+      } as ArgumentsCamelCase<MigrateAppArgs>);
 
       expect(mockedLogger.error).toHaveBeenCalled();
       expect(exitSpy).toHaveBeenCalledWith(EXIT_CODES.ERROR);
@@ -49,7 +48,7 @@ describe('commands/app/migrate', () => {
       await handler({
         derivedAccountId: mockAccountId,
         platformVersion: PLATFORM_VERSIONS.v2025_2,
-      } as ArgumentsCamelCase<MigrateAppOptions>);
+      } as ArgumentsCamelCase<MigrateAppArgs>);
 
       expect(mockedMigrateApp2025_2).toHaveBeenCalledWith(
         mockAccountId,
@@ -62,7 +61,7 @@ describe('commands/app/migrate', () => {
       await handler({
         derivedAccountId: mockAccountId,
         platformVersion: PLATFORM_VERSIONS.v2023_2,
-      } as ArgumentsCamelCase<MigrateAppOptions>);
+      } as ArgumentsCamelCase<MigrateAppArgs>);
 
       expect(mockedMigrateApp2023_2).toHaveBeenCalledWith(
         mockAccountId,
@@ -80,7 +79,7 @@ describe('commands/app/migrate', () => {
       await handler({
         derivedAccountId: mockAccountId,
         platformVersion: PLATFORM_VERSIONS.v2023_2,
-      } as ArgumentsCamelCase<MigrateAppOptions>);
+      } as ArgumentsCamelCase<MigrateAppArgs>);
 
       expect(mockedLogger.error).toHaveBeenCalled();
       expect(exitSpy).toHaveBeenCalledWith(EXIT_CODES.ERROR);

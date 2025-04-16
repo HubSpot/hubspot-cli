@@ -24,29 +24,30 @@ import { trackCommandMetadataUsage } from '../usageTracking';
 import SpinniesManager from '../ui/SpinniesManager';
 import { handleKeypress } from '../process';
 import { poll } from '../polling';
-import { MigrateAppOptions } from '../../types/Yargs';
-import { logInvalidAccountError } from './migrate';
+import { logInvalidAccountError, MigrateAppArgs } from './migrate';
 
 export async function migrateApp2023_2(
   derivedAccountId: number,
-  options: ArgumentsCamelCase<MigrateAppOptions>,
+  options: ArgumentsCamelCase<MigrateAppArgs>,
   accountConfig: CLIAccount
 ): Promise<void> {
   const accountName = uiAccountDescription(derivedAccountId);
 
   if (!isAppDeveloperAccount(accountConfig)) {
-    logInvalidAccountError('commands.project.subcommands.migrateApp');
+    logInvalidAccountError();
     process.exit(EXIT_CODES.SUCCESS);
   }
 
-  const { appId } =
-    'appId' in options
-      ? options
-      : await selectPublicAppPrompt({
-          accountId: derivedAccountId,
-          accountName,
-          isMigratingApp: true,
-        });
+  let appId = options.appId;
+
+  if (!appId) {
+    const { appId: selectAppId } = await selectPublicAppPrompt({
+      accountId: derivedAccountId,
+      accountName,
+      isMigratingApp: true,
+    });
+    appId = selectAppId;
+  }
 
   try {
     const { data: selectedApp } = await fetchPublicAppMetadata(

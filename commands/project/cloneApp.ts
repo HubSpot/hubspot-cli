@@ -31,7 +31,12 @@ import { extractZipArchive } from '@hubspot/local-dev-lib/archive';
 import { getAccountConfig } from '@hubspot/local-dev-lib/config';
 import SpinniesManager from '../../lib/ui/SpinniesManager';
 import { ArgumentsCamelCase, Argv, CommandModule } from 'yargs';
-import { CloneAppArgs } from '../../types/Yargs';
+import {
+  AccountArgs,
+  CommonArgs,
+  ConfigArgs,
+  EnvironmentArgs,
+} from '../../types/Yargs';
 import { logInvalidAccountError } from '../../lib/app/migrate';
 
 const i18nKey = 'commands.project.subcommands.cloneApp';
@@ -39,6 +44,14 @@ const i18nKey = 'commands.project.subcommands.cloneApp';
 export const command = 'clone-app';
 export const describe = uiDeprecatedTag(i18n(`${i18nKey}.describe`), false);
 export const deprecated = true;
+
+export type CloneAppArgs = ConfigArgs &
+  EnvironmentArgs &
+  AccountArgs &
+  CommonArgs & {
+    dest: string;
+    appId: number;
+  };
 
 export const handler = async (options: ArgumentsCamelCase<CloneAppArgs>) => {
   const { derivedAccountId } = options;
@@ -54,7 +67,7 @@ export const handler = async (options: ArgumentsCamelCase<CloneAppArgs>) => {
   }
 
   if (!isAppDeveloperAccount(accountConfig)) {
-    logInvalidAccountError(i18nKey);
+    logInvalidAccountError();
     process.exit(EXIT_CODES.SUCCESS);
   }
 
