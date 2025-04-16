@@ -1200,7 +1200,7 @@ en:
           missingPropertiesInConfig: "Found misconfigured projects in the target repository's config.json file. Please ensure that each project in the target repository's config.json file contains the following properties: [\"name\", \"label\", \"path\", \"insertPath\"]."
       validateProjectConfig:
         configNotFound: "Unable to locate a project configuration file. Try running again from a project directory, or run {{ createCommand }} to create a new project."
-        configMissingFields: "The project configuruation file is missing required fields."
+        configMissingFields: "The project configuration file is missing required fields."
         srcDirNotFound: "Project source directory {{#bold}}{{ srcDir }}{{/bold}} could not be found in {{#bold}}{{ projectDir }}{{/bold}}."
         srcOutsideProjectDir: "Invalid value for 'srcDir' in {{ projectConfig }}: {{#bold}}srcDir: \"{{ srcDir }}\"{{/bold}}\n\t'srcDir' must be a relative path to a folder under the project root, such as \".\" or \"./src\""
       ensureProjectExists:
