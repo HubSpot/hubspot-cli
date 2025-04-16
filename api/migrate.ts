@@ -100,7 +100,7 @@ export async function listAppsForMigration(
   return http.get<ListAppsResponse>(accountId, {
     url: `${MIGRATIONS_API_PATH_V2}/list-apps`,
     params: {
-      platformVersion,
+      platformVersion: mapPlatformVersionToEnum(platformVersion),
     },
   });
 }

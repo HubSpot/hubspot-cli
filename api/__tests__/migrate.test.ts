@@ -19,6 +19,7 @@ describe('api/migrate', () => {
   const mockAppId = 67890;
   const mockMigrationId = 54321;
   const mockPlatformVersion = '2025.2';
+  const convertedPlatformVersion = 'V2025_2';
   const mockProjectName = 'Test Project';
   const mockComponentUids = { 'component-1': 'uid-1', 'component-2': 'uid-2' };
 
@@ -59,7 +60,7 @@ describe('api/migrate', () => {
       expect(http.get).toHaveBeenCalledWith(mockAccountId, {
         url: 'dfs/migrations/v2/list-apps',
         params: {
-          platformVersion: mockPlatformVersion,
+          platformVersion: convertedPlatformVersion,
         },
       });
       expect(result).toEqual(mockResponse);
@@ -82,7 +83,7 @@ describe('api/migrate', () => {
         url: 'dfs/migrations/v2/migrations',
         data: {
           applicationId: mockAppId,
-          platformVersion: 'V2025_2',
+          platformVersion: convertedPlatformVersion,
         },
       });
       expect(result).toEqual(mockResponse);
