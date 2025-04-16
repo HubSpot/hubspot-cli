@@ -995,7 +995,7 @@ export const commands = {
         appWithAppIdNotFound: appId =>
           `Could not find an app with the id ${appId} `,
         notAllowedWithinProject: command =>
-          `This command cannot be ran from within a project directory. Run the command again from outside a project directory. If you are trying to migrate a project, run ${command}`,
+          `This command cannot be run from within a project directory. Run the command again from outside a project directory. If you are trying to migrate a project, run ${command}`,
       },
     },
     cloneApp: {
