@@ -32,6 +32,7 @@ import {
   EnvironmentArgs,
 } from '../../types/Yargs';
 import util from 'util';
+import { hasFeature } from '../hasFeature';
 
 export type MigrateAppArgs = CommonArgs &
   AccountArgs &
@@ -448,6 +449,19 @@ export async function migrateApp2025_2(
   projectConfig?: LoadedProjectConfig
 ): Promise<void> {
   SpinniesManager.init();
+
+  const ungatedForUnifiedApps = await hasFeature(
+    derivedAccountId,
+    'Developers:UnifiedApps:PrivateBeta'
+  );
+
+  if (!ungatedForUnifiedApps) {
+    throw new Error(
+      lib.migrate.errors.notUngatedForUnifiedApps(
+        uiAccountDescription(derivedAccountId)
+      )
+    );
+  }
 
   if (projectConfig) {
     if (!projectConfig?.projectConfig || !projectConfig?.projectDir) {
