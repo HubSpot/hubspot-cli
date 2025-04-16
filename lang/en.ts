@@ -3459,7 +3459,7 @@ export const lib = {
         `No apps associated with project ${projectName}`,
       migrationFailed: 'Migration Failed',
       notUngatedForUnifiedApps: account =>
-        `The account ${account} is not enrolled in the Unified Apps Beta`,
+        `Your account ${account} isn't enrolled in the required product beta to access this command.`,
     },
     prompt: {
       chooseApp: 'Which app would you like to migrate?',
