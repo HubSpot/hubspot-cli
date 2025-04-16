@@ -18,7 +18,7 @@ import { EXIT_CODES } from '../../lib/enums/exitCodes';
 import { migrateApp2025_2, MigrateAppArgs } from '../../lib/app/migrate';
 import { uiBetaTag, uiCommandReference, uiLink } from '../../lib/ui';
 import { migrateApp2023_2 } from '../../lib/app/migrate_legacy';
-import { getProjectConfig } from '../../lib/projects';
+import { getIsInProject } from '../../lib/projects';
 
 const { v2023_2, v2025_2, unstable } = PLATFORM_VERSIONS;
 export const validMigrationTargets = [v2023_2, v2025_2, unstable];
@@ -55,9 +55,7 @@ export async function handler(options: ArgumentsCamelCase<MigrateAppArgs>) {
 
   try {
     if (platformVersion === v2025_2 || platformVersion === unstable) {
-      const projectConfig = await getProjectConfig();
-
-      if (projectConfig.projectConfig) {
+      if (getIsInProject()) {
         logger.error(
           i18n(
             `commands.project.subcommands.migrateApp.errors.notAllowedWithinProject`,
