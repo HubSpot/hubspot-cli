@@ -77,6 +77,15 @@ export async function loadConfigMiddleware(
   };
 
   if (
+    !configFileExists(true) &&
+    isTargetedCommand(argv._, {
+      account: { target: false, subCommands: { auth: { target: true } } },
+    })
+  ) {
+    return;
+  }
+
+  if (
     configFileExists(true) &&
     argv.config &&
     !isTargetedCommand(argv._, {
@@ -105,6 +114,7 @@ export async function loadConfigMiddleware(
 const accountsSubCommands = {
   target: false,
   subCommands: {
+    auth: { target: true },
     clean: { target: true },
     list: { target: true },
     ls: { target: true },
