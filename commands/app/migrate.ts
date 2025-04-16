@@ -16,8 +16,9 @@ import { i18n } from '../../lib/lang';
 import { ApiErrorContext, logError } from '../../lib/errorHandlers';
 import { EXIT_CODES } from '../../lib/enums/exitCodes';
 import { migrateApp2025_2, MigrateAppArgs } from '../../lib/app/migrate';
-import { uiBetaTag, uiLink } from '../../lib/ui';
+import { uiBetaTag, uiCommandReference, uiLink } from '../../lib/ui';
 import { migrateApp2023_2 } from '../../lib/app/migrate_legacy';
+import { getIsInProject } from '../../lib/projects';
 
 const { v2023_2, v2025_2, unstable } = PLATFORM_VERSIONS;
 export const validMigrationTargets = [v2023_2, v2025_2, unstable];
@@ -54,6 +55,16 @@ export async function handler(options: ArgumentsCamelCase<MigrateAppArgs>) {
 
   try {
     if (platformVersion === v2025_2 || platformVersion === unstable) {
+      if (getIsInProject()) {
+        logger.error(
+          i18n(
+            `commands.project.subcommands.migrateApp.errors.notAllowedWithinProject`,
+            { command: uiCommandReference('hs project migrate') }
+          )
+        );
+        process.exit(EXIT_CODES.ERROR);
+      }
+
       await migrateApp2025_2(derivedAccountId, options);
     } else {
       await migrateApp2023_2(derivedAccountId, options, accountConfig);
