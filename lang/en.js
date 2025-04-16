@@ -2751,7 +2751,7 @@ export const lib = {
       configNotFound: createCommand =>
         `Unable to locate a project configuration file. Try running again from a project directory, or run ${createCommand} to create a new project.`,
       configMissingFields:
-        'The project configuruation file is missing required fields.',
+        'The project configuration file is missing required fields.',
       srcDirNotFound: (srcDir, projectDir) =>
         `Project source directory ${chalk.bold(srcDir)} could not be found in ${chalk.bold(projectDir)}.`,
       srcOutsideProjectDir: (projectConfig, srcDir) =>
