@@ -13,6 +13,7 @@ const open = require('./project/open');
 const dev = require('./project/dev');
 const add = require('./project/add');
 const migrateApp = require('./project/migrateApp');
+const migrate = require('./project/migrate');
 const cloneApp = require('./project/cloneApp');
 const installDeps = require('./project/installDeps');
 
@@ -36,6 +37,7 @@ exports.builder = yargs => {
     .command(download)
     .command(open)
     .command(migrateApp)
+    .command(migrate)
     .command(cloneApp)
     .command(installDeps)
     .demandCommand(1, '');

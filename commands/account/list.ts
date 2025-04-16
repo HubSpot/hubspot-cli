@@ -2,12 +2,15 @@ import { Argv, ArgumentsCamelCase } from 'yargs';
 import { logger } from '@hubspot/local-dev-lib/logger';
 import {
   getConfigPath,
-  getConfigDefaultAccount,
   getConfigAccounts,
+  getDefaultAccountOverrideFilePath,
+  getDisplayDefaultAccount,
+  getConfigDefaultAccount,
 } from '@hubspot/local-dev-lib/config';
 import { getAccountIdentifier } from '@hubspot/local-dev-lib/config/getAccountIdentifier';
 import { CLIAccount } from '@hubspot/local-dev-lib/types/Accounts';
 import { addConfigOptions } from '../../lib/commonOpts';
+import { indent } from '../../lib/ui/index';
 import { getTableContents, getTableHeader } from '../../lib/ui/table';
 import { trackCommandUsage } from '../../lib/usageTracking';
 import { isSandbox, isDeveloperTestAccount } from '../../lib/accountTypes';
@@ -18,10 +21,8 @@ import {
 } from '@hubspot/local-dev-lib/constants/config';
 import { CommonArgs, ConfigArgs } from '../../types/Yargs';
 
-const i18nKey = 'commands.account.subcommands.list';
-
 export const command = ['list', 'ls'];
-export const describe = i18n(`${i18nKey}.describe`);
+export const describe = i18n('commands.account.subcommands.list.describe');
 
 type AccountListArgs = CommonArgs & ConfigArgs;
 
@@ -103,22 +104,48 @@ export async function handler(
   const configPath = getConfigPath();
   const accountsList = getConfigAccounts() || [];
   const mappedAccountData = sortAndMapAccounts(accountsList);
+
   const accountData = getAccountData(mappedAccountData);
+
   accountData.unshift(
     getTableHeader([
-      i18n(`${i18nKey}.labels.name`),
-      i18n(`${i18nKey}.labels.accountId`),
-      i18n(`${i18nKey}.labels.authType`),
+      i18n('commands.account.subcommands.list.labels.name'),
+      i18n('commands.account.subcommands.list.labels.accountId'),
+      i18n('commands.account.subcommands.list.labels.authType'),
     ])
   );
 
-  logger.log(i18n(`${i18nKey}.configPath`, { configPath: configPath! }));
-  logger.log(
-    i18n(`${i18nKey}.defaultAccount`, {
-      account: getConfigDefaultAccount()!,
-    })
-  );
-  logger.log(i18n(`${i18nKey}.accounts`));
+  // If a default account is present in the config, display it
+  if (configPath) {
+    logger.log(i18n(`commands.account.subcommands.list.defaultAccountTitle`));
+    logger.log(
+      `${indent(1)}${i18n(`commands.account.subcommands.list.configPath`, {
+        configPath,
+      })}`
+    );
+    logger.log(
+      `${indent(1)}${i18n(`commands.account.subcommands.list.defaultAccount`, {
+        account: getDisplayDefaultAccount()!,
+      })}`
+    );
+    logger.log('');
+  }
+
+  // If a default account override is present, display it
+  const overrideFilePath = getDefaultAccountOverrideFilePath();
+  if (overrideFilePath) {
+    logger.log(i18n(`commands.account.subcommands.list.overrideFilePathTitle`));
+    logger.log(
+      `${indent(1)}${i18n(`commands.account.subcommands.list.overrideFilePath`, { overrideFilePath })}`
+    );
+    logger.log(
+      `${indent(1)}${i18n(`commands.account.subcommands.list.overrideAccount`, {
+        account: getConfigDefaultAccount()!,
+      })}`
+    );
+    logger.log('');
+  }
+  logger.log(i18n(`commands.account.subcommands.list.accounts`));
   logger.log(getTableContents(accountData, { border: { bodyLeft: '  ' } }));
 }
 

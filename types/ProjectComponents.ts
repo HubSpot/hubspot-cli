@@ -25,24 +25,7 @@ type AppConfig = {
   };
 };
 
-type CardConfig = {
-  name: string;
-  description: string;
-  previewImage: {
-    file: string;
-    altText: string;
-  };
-  entrypoint: string;
-  location: string;
-  objectTypes: string[];
-};
-
 export interface AppIRNode extends IntermediateRepresentationNodeLocalDev {
   componentType: typeof IR_COMPONENT_TYPES.APPLICATION;
   config: AppConfig;
-}
-
-export interface CardIRNode extends IntermediateRepresentationNodeLocalDev {
-  componentType: typeof IR_COMPONENT_TYPES.CARD;
-  config: CardConfig;
 }

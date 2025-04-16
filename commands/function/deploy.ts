@@ -18,8 +18,6 @@ const { outputBuildLog } = require('../../lib/serverlessLogs');
 const { i18n } = require('../../lib/lang');
 const { isHubSpotHttpError } = require('@hubspot/local-dev-lib/errors/index');
 
-const i18nKey = 'commands.function.subcommands.deploy';
-
 exports.command = 'deploy <path>';
 exports.describe = false;
 
@@ -34,7 +32,7 @@ exports.handler = async options => {
     splitFunctionPath[splitFunctionPath.length - 1] !== 'functions'
   ) {
     logger.error(
-      i18n(`${i18nKey}.errors.notFunctionsFolder`, {
+      i18n('commands.function.subcommands.deploy.errors.notFunctionsFolder', {
         functionPath,
       })
     );
@@ -42,7 +40,7 @@ exports.handler = async options => {
   }
 
   logger.debug(
-    i18n(`${i18nKey}.debug.startingBuildAndDeploy`, {
+    i18n('commands.function.subcommands.deploy.debug.startingBuildAndDeploy', {
       functionPath,
     })
   );
@@ -50,7 +48,7 @@ exports.handler = async options => {
   SpinniesManager.init();
 
   SpinniesManager.add('loading', {
-    text: i18n(`${i18nKey}.loading`, {
+    text: i18n('commands.function.subcommands.deploy.loading', {
       account: uiAccountDescription(derivedAccountId),
       functionPath,
     }),
@@ -70,7 +68,7 @@ exports.handler = async options => {
 
     await outputBuildLog(successResp.cdnUrl);
     logger.success(
-      i18n(`${i18nKey}.success.deployed`, {
+      i18n('commands.function.subcommands.deploy.success.deployed', {
         accountId: derivedAccountId,
         buildTimeSeconds,
         functionPath,
@@ -78,7 +76,7 @@ exports.handler = async options => {
     );
   } catch (e) {
     SpinniesManager.fail('loading', {
-      text: i18n(`${i18nKey}.loadingFailed`, {
+      text: i18n('commands.function.subcommands.deploy.loadingFailed', {
         account: uiAccountDescription(derivedAccountId),
         functionPath,
       }),
@@ -86,14 +84,14 @@ exports.handler = async options => {
 
     if (isHubSpotHttpError(e) && e.status === 404) {
       logger.error(
-        i18n(`${i18nKey}.errors.noPackageJson`, {
+        i18n('commands.function.subcommands.deploy.errors.noPackageJson', {
           functionPath,
         })
       );
     } else if (e.status === 'ERROR') {
       await outputBuildLog(e.cdnUrl);
       logger.error(
-        i18n(`${i18nKey}.errors.buildError`, {
+        i18n('commands.function.subcommands.deploy.errors.buildError', {
           details: e.errorReason,
         })
       );
@@ -111,14 +109,16 @@ exports.handler = async options => {
 
 exports.builder = yargs => {
   yargs.positional('path', {
-    describe: i18n(`${i18nKey}.positionals.path.describe`),
+    describe: i18n(
+      'commands.function.subcommands.deploy.positionals.path.describe'
+    ),
     type: 'string',
   });
 
   yargs.example([
     [
       '$0 functions deploy myFunctionFolder.functions',
-      i18n(`${i18nKey}.examples.default`),
+      i18n('commands.function.subcommands.deploy.examples.default'),
     ],
   ]);
 
