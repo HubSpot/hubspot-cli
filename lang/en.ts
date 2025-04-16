@@ -994,6 +994,8 @@ export const commands = {
           `Could not migrate appId ${appId}. This app cannot be migrated at this time. Please choose another public app.`,
         appWithAppIdNotFound: appId =>
           `Could not find an app with the id ${appId} `,
+        notAllowedWithinProject:
+          'This command cannot be ran from within a project directory. Run the command again from outside a project directory',
       },
     },
     cloneApp: {
