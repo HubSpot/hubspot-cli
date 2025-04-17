@@ -194,10 +194,6 @@ async function selectAppToMigrate(
 
   logger.log();
 
-  if (projectConfig?.projectConfig) {
-    logger.log(lib.migrate.projectMigrationWarning);
-  }
-
   const promptMessage = projectConfig?.projectConfig
     ? `${lib.migrate.projectMigrationWarning} ${lib.migrate.prompt.proceed}`
     : lib.migrate.prompt.proceed;
