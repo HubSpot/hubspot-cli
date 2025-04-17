@@ -3432,6 +3432,9 @@ export const lib = {
       `The following component types will be migrated: ${components}`,
     componentsThatWillNotBeMigrated: components =>
       `[NOTE] These component types are not yet supported for migration but will be available later: ${components}`,
+    sourceContentsMoved: (newLocation: string) =>
+      `The contents of your old source directory have been moved to ${newLocation}, move any required files to the new source directory.`,
+    projectMigrationWarning: `Migrating a project is irreversible and cannot be undone.`,
     errors: {
       project: {
         invalidConfig:
