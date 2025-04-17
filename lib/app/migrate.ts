@@ -31,7 +31,6 @@ import {
   ConfigArgs,
   EnvironmentArgs,
 } from '../../types/Yargs';
-import util from 'util';
 import { hasFeature } from '../hasFeature';
 
 export type MigrateAppArgs = CommonArgs &
@@ -131,7 +130,8 @@ async function fetchMigrationApps(
 
 async function selectAppToMigrate(
   allApps: MigrationApp[],
-  appId?: number
+  appId?: number,
+  projectConfig?: LoadedProjectConfig
 ): Promise<{ proceed: boolean; appIdToMigrate?: number }> {
   if (
     appId &&
@@ -165,35 +165,40 @@ async function selectAppToMigrate(
 
   const selectedApp = allApps.find(app => app.appId === appIdToMigrate);
 
-  const migratableComponents: string[] = [];
-  const unmigratableComponents: string[] = [];
+  const migratableComponents: Set<string> = new Set();
+  const unmigratableComponents: Set<string> = new Set();
 
   selectedApp?.migrationComponents.forEach(component => {
     if (component.isSupported) {
-      migratableComponents.push(mapToUserFacingType(component.componentType));
+      migratableComponents.add(mapToUserFacingType(component.componentType));
     } else {
-      unmigratableComponents.push(mapToUserFacingType(component.componentType));
+      unmigratableComponents.add(mapToUserFacingType(component.componentType));
     }
   });
 
-  if (migratableComponents.length !== 0) {
+  if (migratableComponents.size !== 0) {
     logger.log(
       lib.migrate.componentsToBeMigrated(
-        `\n - ${migratableComponents.join('\n - ')}`
+        `\n - ${[...migratableComponents].join('\n - ')}`
       )
     );
   }
 
-  if (unmigratableComponents.length !== 0) {
+  if (unmigratableComponents.size !== 0) {
     logger.log(
       lib.migrate.componentsThatWillNotBeMigrated(
-        `\n - ${unmigratableComponents.join('\n - ')}`
+        `\n - ${[...unmigratableComponents].join('\n - ')}`
       )
     );
   }
 
   logger.log();
-  const proceed = await confirmPrompt(lib.migrate.prompt.proceed);
+
+  const promptMessage = projectConfig?.projectConfig
+    ? `${lib.migrate.projectMigrationWarning} ${lib.migrate.prompt.proceed}`
+    : lib.migrate.prompt.proceed;
+
+  const proceed = await confirmPrompt(promptMessage);
   return {
     proceed,
     appIdToMigrate,
@@ -218,7 +223,11 @@ async function handleMigrationSetup(
     projectConfig
   );
 
-  const { proceed, appIdToMigrate } = await selectAppToMigrate(allApps, appId);
+  const { proceed, appIdToMigrate } = await selectAppToMigrate(
+    allApps,
+    appId,
+    projectConfig
+  );
 
   if (!proceed) {
     return {};
@@ -238,9 +247,22 @@ async function handleMigrationSetup(
   }
 
   const projectName =
-    projectConfig?.projectConfig?.name ||
     name ||
-    (await inputPrompt(lib.migrate.prompt.inputName));
+    (await inputPrompt(lib.migrate.prompt.inputName, {
+      validate: async (input: string) => {
+        const { projectExists } = await ensureProjectExists(
+          derivedAccountId,
+          input,
+          { allowCreate: false, noLogs: true }
+        );
+
+        if (projectExists) {
+          return lib.migrate.errors.project.alreadyExists(input);
+        }
+
+        return true;
+      },
+    }));
 
   const { projectExists } = await ensureProjectExists(
     derivedAccountId,
@@ -374,8 +396,6 @@ async function finalizeMigration(
     throw new Error(lib.migrate.errors.migrationFailed);
   }
 
-  logger.debug(util.inspect(pollResponse, { depth: null }));
-
   if (pollResponse.status === MIGRATION_STATUS.SUCCESS) {
     SpinniesManager.succeed('finishingMigration', {
       text: lib.migrate.spinners.migrationComplete,
@@ -414,6 +434,8 @@ async function downloadProjectFiles(
 
       // Move the existing source directory to archive
       fs.renameSync(path.join(projectDir, srcDir), archiveDest);
+
+      logger.info(lib.migrate.sourceContentsMoved(archiveDest));
     } else {
       absoluteDestPath = projectDest
         ? path.resolve(getCwd(), projectDest)
