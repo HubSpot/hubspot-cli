@@ -165,29 +165,29 @@ async function selectAppToMigrate(
 
   const selectedApp = allApps.find(app => app.appId === appIdToMigrate);
 
-  const migratableComponents: string[] = [];
-  const unmigratableComponents: string[] = [];
+  const migratableComponents: Set<string> = new Set();
+  const unmigratableComponents: Set<string> = new Set();
 
   selectedApp?.migrationComponents.forEach(component => {
     if (component.isSupported) {
-      migratableComponents.push(mapToUserFacingType(component.componentType));
+      migratableComponents.add(mapToUserFacingType(component.componentType));
     } else {
-      unmigratableComponents.push(mapToUserFacingType(component.componentType));
+      unmigratableComponents.add(mapToUserFacingType(component.componentType));
     }
   });
 
-  if (migratableComponents.length !== 0) {
+  if (migratableComponents.size !== 0) {
     logger.log(
       lib.migrate.componentsToBeMigrated(
-        `\n - ${[...new Set(migratableComponents)].join('\n - ')}`
+        `\n - ${[...migratableComponents].join('\n - ')}`
       )
     );
   }
 
-  if (unmigratableComponents.length !== 0) {
+  if (unmigratableComponents.size !== 0) {
     logger.log(
       lib.migrate.componentsThatWillNotBeMigrated(
-        `\n - ${[...new Set(unmigratableComponents)].join('\n - ')}`
+        `\n - ${[...unmigratableComponents].join('\n - ')}`
       )
     );
   }
