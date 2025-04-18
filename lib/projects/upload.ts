@@ -97,7 +97,7 @@ export async function handleProjectUpload<T>(
   projectConfig: ProjectConfig,
   projectDir: string,
   callbackFunc: ProjectUploadCallbackFunction<T>,
-  uploadMessage: string,
+  uploadMessage: string = '',
   sendIR: boolean = false,
   skipValidation: boolean = false
 ): Promise<ProjectUploadResult<T>> {

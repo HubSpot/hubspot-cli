@@ -11,20 +11,20 @@ import path from 'path';
 import { i18n } from '../../lib/lang';
 import { trackCommandUsage } from '../../lib/usageTracking';
 import { uiBetaTag } from '../../lib/ui';
-import { CommonArgs } from '../../types/Yargs';
+import { CommonArgs, YargsCommandModule } from '../../types/Yargs';
 import { logError } from '../../lib/errorHandlers';
 import { makeYargsBuilder } from '../../lib/yargsUtils';
 
 const i18nKey = `commands.project.subcommands.installDeps`;
 
-export const command = 'install-deps [packages..]';
-export const describe = uiBetaTag(i18n(`${i18nKey}.help.describe`), false);
+const command = 'install-deps [packages..]';
+const describe = uiBetaTag(i18n(`${i18nKey}.help.describe`), false);
 
 export type ProjectInstallDepsArgs = CommonArgs & {
   packages?: string[];
 };
 
-export async function handler(
+async function handler(
   args: ArgumentsCamelCase<ProjectInstallDepsArgs>
 ): Promise<void> {
   const { derivedAccountId, packages } = args;
@@ -86,15 +86,23 @@ function projectInstallDepsBuilder(yargs: Argv): Argv<ProjectInstallDepsArgs> {
   return yargs as Argv<ProjectInstallDepsArgs>;
 }
 
-export const builder = makeYargsBuilder<ProjectInstallDepsArgs>(
+const builder = makeYargsBuilder<ProjectInstallDepsArgs>(
   projectInstallDepsBuilder,
   command,
-  describe
+  describe,
+  {
+    useGlobalOptions: true,
+  }
 );
 
-module.exports = {
+const projectInstallDepsCommand: YargsCommandModule<
+  unknown,
+  ProjectInstallDepsArgs
+> = {
   command,
   describe,
-  builder,
   handler,
+  builder,
 };
+
+export default projectInstallDepsCommand;

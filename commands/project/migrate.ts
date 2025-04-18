@@ -1,23 +1,20 @@
 import { i18n } from '../../lib/lang';
 
-import { ArgumentsCamelCase, Argv, CommandModule } from 'yargs';
+import { ArgumentsCamelCase, Argv } from 'yargs';
 import { logger } from '@hubspot/local-dev-lib/logger';
 import {
   AccountArgs,
   CommonArgs,
   ConfigArgs,
   EnvironmentArgs,
+  YargsCommandModule,
 } from '../../types/Yargs';
-import {
-  addAccountOptions,
-  addConfigOptions,
-  addGlobalOptions,
-} from '../../lib/commonOpts';
 import { migrateApp2025_2 } from '../../lib/app/migrate';
 import { getProjectConfig } from '../../lib/projects';
 import { PLATFORM_VERSIONS } from '@hubspot/local-dev-lib/constants/projects';
 import { logError } from '../../lib/errorHandlers';
 import { EXIT_CODES } from '../../lib/enums/exitCodes';
+import { makeYargsBuilder } from '../../lib/yargsUtils';
 
 export type ProjectMigrateArgs = CommonArgs &
   AccountArgs &
@@ -26,11 +23,10 @@ export type ProjectMigrateArgs = CommonArgs &
     platformVersion: string;
   };
 
-export const command = 'migrate';
+const command = 'migrate';
+const describe = undefined; // i18n('commands.project.subcommands.migrate.describe')
 
-export const describe = undefined; // i18n('commands.project.subcommands.migrate.noProjectConfig')
-
-export async function handler(
+async function handler(
   options: ArgumentsCamelCase<ProjectMigrateArgs>
 ): Promise<void> {
   const projectConfig = await getProjectConfig();
@@ -60,11 +56,7 @@ export async function handler(
   return process.exit(EXIT_CODES.SUCCESS);
 }
 
-export function builder(yargs: Argv): Argv<ProjectMigrateArgs> {
-  addConfigOptions(yargs);
-  addAccountOptions(yargs);
-  addGlobalOptions(yargs);
-
+function projectMigrateBuilder(yargs: Argv): Argv<ProjectMigrateArgs> {
   yargs.option('platform-version', {
     type: 'string',
     choices: Object.values(PLATFORM_VERSIONS),
@@ -74,11 +66,23 @@ export function builder(yargs: Argv): Argv<ProjectMigrateArgs> {
 
   return yargs as Argv<ProjectMigrateArgs>;
 }
-const migrateAppCommand: CommandModule<unknown, ProjectMigrateArgs> = {
+
+const builder = makeYargsBuilder<ProjectMigrateArgs>(
+  projectMigrateBuilder,
+  command,
+  i18n('commands.project.subcommands.migrate.describe'),
+  {
+    useGlobalOptions: true,
+    useConfigOptions: true,
+    useAccountOptions: true,
+  }
+);
+
+const migrateCommand: YargsCommandModule<unknown, ProjectMigrateArgs> = {
   command,
   describe,
   handler,
   builder,
 };
 
-export default migrateAppCommand;
+export default migrateCommand;

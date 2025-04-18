@@ -126,6 +126,8 @@ export function uiBetaTag(message: string, log = true): string | undefined {
   return result;
 }
 
+export function uiDeprecatedTag(message: string, log?: true): undefined;
+export function uiDeprecatedTag(message: string, log: false): string;
 export function uiDeprecatedTag(
   message: string,
   log = true
@@ -141,6 +143,7 @@ export function uiDeprecatedTag(
 
   if (log) {
     logger.log(result);
+    return;
   }
   return result;
 }

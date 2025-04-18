@@ -63,7 +63,7 @@ export async function loadConfigMiddleware(
   argv: Arguments<CLIOptions>
 ): Promise<void> {
   // Skip this when no command is provided
-  if (!argv._.length) {
+  if (!argv._.length || argv.help) {
     return;
   }
 
@@ -140,7 +140,7 @@ const SKIP_ACCOUNT_VALIDATION = {
 
 export async function validateAccountOptions(argv: Arguments): Promise<void> {
   // Skip this when no command is provided
-  if (argv._.length) {
+  if (argv._.length && !argv.help) {
     let validAccount = true;
     if (!isTargetedCommand(argv._, SKIP_ACCOUNT_VALIDATION)) {
       validAccount = await validateAccount(argv);

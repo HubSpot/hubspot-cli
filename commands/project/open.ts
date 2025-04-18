@@ -1,11 +1,5 @@
 import { Argv, ArgumentsCamelCase } from 'yargs';
 import open from 'open';
-import {
-  addAccountOptions,
-  addConfigOptions,
-  addUseEnvironmentOptions,
-  addTestingOptions,
-} from '../../lib/commonOpts';
 import { trackCommandUsage } from '../../lib/usageTracking';
 import { i18n } from '../../lib/lang';
 import { logger } from '@hubspot/local-dev-lib/logger';
@@ -20,12 +14,14 @@ import {
   ConfigArgs,
   EnvironmentArgs,
   TestingArgs,
+  YargsCommandModule,
 } from '../../types/Yargs';
+import { makeYargsBuilder } from '../../lib/yargsUtils';
 
 const i18nKey = 'commands.project.subcommands.open';
 
-export const command = 'open';
-export const describe = uiBetaTag(i18n(`${i18nKey}.describe`), false);
+const command = 'open';
+const describe = uiBetaTag(i18n(`${i18nKey}.describe`), false);
 
 type ProjectOpenArgs = CommonArgs &
   ConfigArgs &
@@ -33,7 +29,7 @@ type ProjectOpenArgs = CommonArgs &
   EnvironmentArgs &
   TestingArgs & { project?: string };
 
-export async function handler(args: ArgumentsCamelCase<ProjectOpenArgs>) {
+async function handler(args: ArgumentsCamelCase<ProjectOpenArgs>) {
   const { project, derivedAccountId } = args;
 
   trackCommandUsage('project-open', undefined, derivedAccountId);
@@ -67,12 +63,7 @@ export async function handler(args: ArgumentsCamelCase<ProjectOpenArgs>) {
   process.exit(EXIT_CODES.SUCCESS);
 }
 
-export function builder(yargs: Argv): Argv<ProjectOpenArgs> {
-  addConfigOptions(yargs);
-  addAccountOptions(yargs);
-  addUseEnvironmentOptions(yargs);
-  addTestingOptions(yargs);
-
+function projectOpenBuilder(yargs: Argv): Argv<ProjectOpenArgs> {
   yargs.options({
     project: {
       describe: i18n(`${i18nKey}.options.project.describe`),
@@ -85,9 +76,24 @@ export function builder(yargs: Argv): Argv<ProjectOpenArgs> {
   return yargs as Argv<ProjectOpenArgs>;
 }
 
-module.exports = {
+const builder = makeYargsBuilder<ProjectOpenArgs>(
+  projectOpenBuilder,
+  command,
+  describe,
+  {
+    useGlobalOptions: true,
+    useConfigOptions: true,
+    useAccountOptions: true,
+    useEnvironmentOptions: true,
+    useTestingOptions: true,
+  }
+);
+
+const projectOpenCommand: YargsCommandModule<unknown, ProjectOpenArgs> = {
   command,
   describe,
   handler,
   builder,
 };
+
+export default projectOpenCommand;

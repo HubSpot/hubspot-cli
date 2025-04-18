@@ -1,4 +1,4 @@
-import { Options } from 'yargs';
+import { Options, CommandModule, Argv, ArgumentsCamelCase } from 'yargs';
 
 export type CommonArgs = {
   derivedAccountId: number;
@@ -34,4 +34,17 @@ export type ProjectDevArgs = CommonArgs & ConfigArgs & EnvironmentArgs;
 
 export type TestingArgs = {
   qa?: boolean;
+};
+
+// This is a workaround to make the builder method required for the CommandModule
+export type YargsCommandModule<T, U> = Omit<CommandModule<T, U>, 'builder'> & {
+  builder: (yargs: Argv) => Promise<Argv<U>>;
+};
+
+export type YargsCommandModuleBucket<T, U> = Omit<
+  CommandModule<T, U>,
+  'builder' | 'handler'
+> & {
+  builder: (yargs: Argv) => Promise<Argv>;
+  handler?: (args: ArgumentsCamelCase<U>) => void | Promise<void>;
 };

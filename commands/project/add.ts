@@ -16,20 +16,20 @@ import { ComponentTypes } from '../../types/Projects';
 import { uiBetaTag } from '../../lib/ui';
 import { HUBSPOT_PROJECT_COMPONENTS_GITHUB_PATH } from '../../lib/constants';
 import { EXIT_CODES } from '../../lib/enums/exitCodes';
-import { CommonArgs } from '../../types/Yargs';
+import { YargsCommandModule, CommonArgs } from '../../types/Yargs';
 import { makeYargsBuilder } from '../../lib/yargsUtils';
 
 const i18nKey = 'commands.project.subcommands.add';
 
-export const command = 'add';
-export const describe = uiBetaTag(i18n(`${i18nKey}.describe`), false);
+const command = 'add';
+const describe = uiBetaTag(i18n(`${i18nKey}.describe`), false);
 
 type ProjectAddArgs = CommonArgs & {
   type: string;
   name: string;
 };
 
-export async function handler(
+async function handler(
   args: ArgumentsCamelCase<ProjectAddArgs>
 ): Promise<void> {
   const { derivedAccountId } = args;
@@ -150,15 +150,20 @@ function projectAddBuilder(yargs: Argv): Argv<ProjectAddArgs> {
   return yargs as Argv<ProjectAddArgs>;
 }
 
-export const builder = makeYargsBuilder<ProjectAddArgs>(
+const builder = makeYargsBuilder<ProjectAddArgs>(
   projectAddBuilder,
   command,
-  describe!
+  describe,
+  {
+    useGlobalOptions: true,
+  }
 );
 
-module.exports = {
+const projectAddCommand: YargsCommandModule<unknown, ProjectAddArgs> = {
   command,
   describe,
-  builder,
   handler,
+  builder,
 };
+
+export default projectAddCommand;

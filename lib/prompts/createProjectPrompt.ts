@@ -33,6 +33,29 @@ type CreateProjectPromptResponse = {
   projectTemplate?: ProjectTemplate;
 };
 
+type CreateProjectPromptResponseWithTemplate = {
+  name: string;
+  dest: string;
+  projectTemplate: ProjectTemplate;
+};
+
+type CreateProjectPromptResponseWithoutTemplate = {
+  name: string;
+  dest: string;
+  projectTemplate?: undefined;
+};
+
+type CreateProjectPromptOverload = {
+  (
+    promptOptions: { name?: string; dest?: string; template?: string },
+    projectTemplates: ProjectTemplate[]
+  ): Promise<CreateProjectPromptResponseWithTemplate>;
+  (
+    promptOptions: { name?: string; dest?: string; template?: string },
+    projectTemplates?: undefined
+  ): Promise<CreateProjectPromptResponseWithoutTemplate>;
+};
+
 function findTemplateByNameOrLabel(
   projectTemplates: ProjectTemplate[],
   templateNameOrLabel: string
@@ -42,14 +65,14 @@ function findTemplateByNameOrLabel(
   );
 }
 
-export async function createProjectPrompt(
+export const createProjectPrompt = async function createProjectPrompt(
   promptOptions: {
     name?: string;
     dest?: string;
     template?: string;
   },
   projectTemplates?: ProjectTemplate[]
-): Promise<CreateProjectPromptResponse> {
+) {
   const createProjectFromTemplate =
     !!projectTemplates && projectTemplates.length > 0;
 
@@ -117,10 +140,19 @@ export async function createProjectPrompt(
 
   if (providedTemplateIsValid) {
     result.projectTemplate = findTemplateByNameOrLabel(
-      projectTemplates,
+      projectTemplates!,
       promptOptions.template!
     );
   }
 
-  return result;
-}
+  if (projectTemplates && projectTemplates.length > 0) {
+    if (!result.projectTemplate) {
+      throw new Error(
+        'Project template is required when projectTemplates is provided'
+      );
+    }
+    return result as CreateProjectPromptResponseWithTemplate;
+  }
+
+  return result as CreateProjectPromptResponseWithoutTemplate;
+} as CreateProjectPromptOverload;
