@@ -39,7 +39,7 @@ const i18nKey = 'commands.project.subcommands.cloneApp';
 
 const command = 'clone-app';
 const describe = uiDeprecatedTag(i18n(`${i18nKey}.describe`), false);
-export const deprecated = true;
+const deprecated = true;
 
 export type CloneAppArgs = ConfigArgs &
   EnvironmentArgs &
@@ -49,7 +49,7 @@ export type CloneAppArgs = ConfigArgs &
     appId: number;
   };
 
-export async function handler(args: ArgumentsCamelCase<CloneAppArgs>) {
+async function handler(args: ArgumentsCamelCase<CloneAppArgs>) {
   const { derivedAccountId } = args;
   await trackCommandUsage('clone-app', {}, derivedAccountId);
 

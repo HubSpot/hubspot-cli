@@ -23,10 +23,10 @@ export type ProjectMigrateArgs = CommonArgs &
     platformVersion: string;
   };
 
-export const command = 'migrate';
-export const describe = undefined; // i18n('commands.project.subcommands.migrate.describe')
+const command = 'migrate';
+const describe = undefined; // i18n('commands.project.subcommands.migrate.describe')
 
-export async function handler(
+async function handler(
   options: ArgumentsCamelCase<ProjectMigrateArgs>
 ): Promise<void> {
   const projectConfig = await getProjectConfig();
