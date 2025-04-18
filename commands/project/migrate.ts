@@ -78,11 +78,11 @@ const builder = makeYargsBuilder<ProjectMigrateArgs>(
   }
 );
 
-const migrateAppCommand: YargsCommandModule<unknown, ProjectMigrateArgs> = {
+const migrateCommand: YargsCommandModule<unknown, ProjectMigrateArgs> = {
   command,
   describe,
   handler,
   builder,
 };
 
-export default migrateAppCommand;
+export default migrateCommand;
