@@ -50,7 +50,6 @@ exports.handler = async options => {
   });
 
   try {
-    console.log('options.env', options.env);
     const { result, uploadError } = await handleProjectUpload(
       derivedAccountId,
       projectConfig,
