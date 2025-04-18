@@ -36,24 +36,6 @@ export type TestingArgs = {
   qa?: boolean;
 };
 
-export type MigrateAppOptions = CommonArgs &
-  AccountArgs &
-  EnvironmentArgs &
-  ConfigArgs & {
-    name: string;
-    dest: string;
-    appId: number;
-    platformVersion: string;
-  };
-
-export type CloneAppArgs = ConfigArgs &
-  EnvironmentArgs &
-  AccountArgs &
-  CommonArgs & {
-    dest: string;
-    appId: number;
-  };
-
 // This is a workaround to make the builder method required for the CommandModule
 export type YargsCommandModule<T, U> = Omit<CommandModule<T, U>, 'builder'> & {
   builder: (yargs: Argv) => Promise<Argv<U>>;

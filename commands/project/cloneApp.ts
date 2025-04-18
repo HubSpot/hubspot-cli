@@ -24,7 +24,13 @@ import { logger } from '@hubspot/local-dev-lib/logger';
 import { extractZipArchive } from '@hubspot/local-dev-lib/archive';
 import { getAccountConfig } from '@hubspot/local-dev-lib/config';
 import SpinniesManager from '../../lib/ui/SpinniesManager';
-import { CloneAppArgs, YargsCommandModule } from '../../types/Yargs';
+import {
+  AccountArgs,
+  CommonArgs,
+  ConfigArgs,
+  EnvironmentArgs,
+  YargsCommandModule,
+} from '../../types/Yargs';
 import { logInvalidAccountError } from '../../lib/app/migrate';
 import { makeYargsBuilder } from '../../lib/yargsUtils';
 import { uiDeprecatedTag, uiLine, uiAccountDescription } from '../../lib/ui';
@@ -35,8 +41,16 @@ const command = 'clone-app';
 const describe = uiDeprecatedTag(i18n(`${i18nKey}.describe`), false);
 export const deprecated = true;
 
-const handler = async (options: ArgumentsCamelCase<CloneAppArgs>) => {
-  const { derivedAccountId } = options;
+export type CloneAppArgs = ConfigArgs &
+  EnvironmentArgs &
+  AccountArgs &
+  CommonArgs & {
+    dest: string;
+    appId: number;
+  };
+
+export async function handler(args: ArgumentsCamelCase<CloneAppArgs>) {
+  const { derivedAccountId } = args;
   await trackCommandUsage('clone-app', {}, derivedAccountId);
 
   const accountConfig = getAccountConfig(derivedAccountId);
@@ -49,7 +63,7 @@ const handler = async (options: ArgumentsCamelCase<CloneAppArgs>) => {
   }
 
   if (!isAppDeveloperAccount(accountConfig)) {
-    logInvalidAccountError(i18nKey);
+    logInvalidAccountError();
     process.exit(EXIT_CODES.SUCCESS);
   }
 
@@ -57,7 +71,7 @@ const handler = async (options: ArgumentsCamelCase<CloneAppArgs>) => {
   let projectName;
   let projectDest;
   try {
-    appId = options.appId;
+    appId = args.appId;
     if (!appId) {
       const appIdResponse = await selectPublicAppPrompt({
         accountId: derivedAccountId,
@@ -66,7 +80,7 @@ const handler = async (options: ArgumentsCamelCase<CloneAppArgs>) => {
       });
       appId = appIdResponse.appId;
     }
-    const createProjectPromptResponse = await createProjectPrompt(options);
+    const createProjectPromptResponse = await createProjectPrompt(args);
 
     projectName = createProjectPromptResponse.name;
     projectDest = createProjectPromptResponse.dest;
@@ -175,7 +189,7 @@ const handler = async (options: ArgumentsCamelCase<CloneAppArgs>) => {
     derivedAccountId
   );
   process.exit(EXIT_CODES.SUCCESS);
-};
+}
 
 function cloneAppBuilder(yargs: Argv): Argv<CloneAppArgs> {
   yargs.options({

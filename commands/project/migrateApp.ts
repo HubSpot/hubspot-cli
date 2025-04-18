@@ -1,13 +1,14 @@
 import { ArgumentsCamelCase, Argv } from 'yargs';
+import { logger } from '@hubspot/local-dev-lib/logger';
 import { i18n } from '../../lib/lang';
 import { uiCommandReference, uiDeprecatedTag } from '../../lib/ui';
 import {
   handler as migrateHandler,
   validMigrationTargets,
 } from '../app/migrate';
-import { logger } from '@hubspot/local-dev-lib/logger';
-import { MigrateAppOptions, YargsCommandModule } from '../../types/Yargs';
+import { YargsCommandModule } from '../../types/Yargs';
 import { makeYargsBuilder } from '../../lib/yargsUtils';
+import { MigrateAppArgs } from '../../lib/app/migrate';
 
 const command = 'migrate-app';
 
@@ -18,7 +19,7 @@ const describe = uiDeprecatedTag(
 );
 export const deprecated = true;
 
-async function handler(yargs: ArgumentsCamelCase<MigrateAppOptions>) {
+async function handler(yargs: ArgumentsCamelCase<MigrateAppArgs>) {
   logger.warn(
     i18n(`commands.project.subcommands.migrateApp.deprecationWarning`, {
       oldCommand: uiCommandReference('hs project migrate-app'),
@@ -28,7 +29,7 @@ async function handler(yargs: ArgumentsCamelCase<MigrateAppOptions>) {
   await migrateHandler(yargs);
 }
 
-function projectMigrateAppBuilder(yargs: Argv): Argv<MigrateAppOptions> {
+function projectMigrateAppBuilder(yargs: Argv): Argv<MigrateAppArgs> {
   yargs.options({
     name: {
       describe: i18n(
@@ -63,10 +64,10 @@ function projectMigrateAppBuilder(yargs: Argv): Argv<MigrateAppOptions> {
     ],
   ]);
 
-  return yargs as Argv<MigrateAppOptions>;
+  return yargs as Argv<MigrateAppArgs>;
 }
 
-const builder = makeYargsBuilder<MigrateAppOptions>(
+const builder = makeYargsBuilder<MigrateAppArgs>(
   projectMigrateAppBuilder,
   command,
   describe,
@@ -78,7 +79,7 @@ const builder = makeYargsBuilder<MigrateAppOptions>(
   }
 );
 
-const migrateAppCommand: YargsCommandModule<unknown, MigrateAppOptions> = {
+const migrateAppCommand: YargsCommandModule<unknown, MigrateAppArgs> = {
   command,
   describe,
   deprecated,

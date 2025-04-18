@@ -11,6 +11,7 @@ import download from './project/download';
 import open from './project/open';
 import dev from './project/dev';
 import add from './project/add';
+import migrate from './project/migrate';
 import migrateApp from './project/migrateApp';
 import cloneApp from './project/cloneApp';
 import installDeps from './project/installDeps';
@@ -35,6 +36,7 @@ function projectBuilder(yargs: Argv): Argv {
     .command(download)
     .command(open)
     .command(migrateApp)
+    .command(migrate)
     .command(cloneApp)
     .command(installDeps)
     .demandCommand(1, '');

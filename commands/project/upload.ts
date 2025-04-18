@@ -120,7 +120,7 @@ async function handler(
     );
     process.exit(EXIT_CODES.ERROR);
   }
-  process.exit(EXIT_CODES.ERROR);
+  process.exit(EXIT_CODES.SUCCESS);
 }
 
 function projectUploadBuilder(yargs: Argv): Argv<ProjectUploadArgs> {

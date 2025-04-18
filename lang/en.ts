@@ -1,3 +1,4 @@
+// @ts-nocheck
 import chalk from 'chalk';
 
 export const commands = {
@@ -993,35 +994,8 @@ export const commands = {
           `Could not migrate appId ${appId}. This app cannot be migrated at this time. Please choose another public app.`,
         appWithAppIdNotFound: appId =>
           `Could not find an app with the id ${appId} `,
-      },
-      prompt: {
-        chooseApp: 'Which app would you like to migrate?',
-        inputName: '[--name] What would you like to name the project?',
-        inputDest: '[--dest] Where would you like to save the project?',
-        uidForComponent: componentName =>
-          `What UID would you like to use for ${componentName}?`,
-        proceed: 'Would you like to proceed?',
-      },
-      spinners: {
-        beginningMigration: 'Beginning migration',
-        migrationStarted: 'Migration started',
-        unableToStartMigration: 'Unable to begin migration',
-        finishingMigration: 'Wrapping up migration',
-        migrationComplete: 'Migration completed',
-        migrationFailed: 'Migration failed',
-        downloadingProjectContents: 'Downloading migrated project files',
-        downloadingProjectContentsComplete: 'Migrated project files downloaded',
-        downloadingProjectContentsFailed:
-          'Unable to download migrated project files',
-        copyingProjectFiles: 'Copying migrated project files',
-        copyingProjectFilesComplete: 'Migrated project files copied',
-        copyingProjectFilesFailed: 'Unable to copy migrated project files',
-      },
-      migrationNotAllowedReasons: {
-        upToDate: 'App is already up to date',
-        isPrivateApp: 'Private apps are not currently migratable',
-        listedInMarketplace: 'Listed apps are not currently migratable',
-        generic: reasonCode => `Unable to migrate app: ${reasonCode}`,
+        notAllowedWithinProject: command =>
+          `This command cannot be run from within a project directory. Run the command again from outside a project directory. If you are trying to migrate a project, run ${command}`,
       },
     },
     cloneApp: {
@@ -2754,7 +2728,7 @@ export const lib = {
       configNotFound: createCommand =>
         `Unable to locate a project configuration file. Try running again from a project directory, or run ${createCommand} to create a new project.`,
       configMissingFields:
-        'The project configuruation file is missing required fields.',
+        'The project configuration file is missing required fields.',
       srcDirNotFound: (srcDir, projectDir) =>
         `Project source directory ${chalk.bold(srcDir)} could not be found in ${chalk.bold(projectDir)}.`,
       srcOutsideProjectDir: (projectConfig, srcDir) =>
@@ -3455,5 +3429,67 @@ export const lib = {
   },
   oauth: {
     missingClientId: 'Error building oauth URL: missing client ID.',
+  },
+  migrate: {
+    componentsToBeMigrated: components =>
+      `The following component types will be migrated: ${components}`,
+    componentsThatWillNotBeMigrated: components =>
+      `[NOTE] These component types are not yet supported for migration but will be available later: ${components}`,
+    sourceContentsMoved: (newLocation: string) =>
+      `The contents of your old source directory have been moved to ${newLocation}, move any required files to the new source directory.`,
+    projectMigrationWarning: `Migrating a project is irreversible and cannot be undone.`,
+    errors: {
+      project: {
+        invalidConfig:
+          'The project configuration file is invalid. Please check the config file and try again.',
+        doesNotExist: 'Project does not exist, unable to migrate',
+        multipleApps:
+          'Multiple apps found in project, this is not allowed in 2025.2',
+        alreadyExists: projectName =>
+          `A project with name ${projectName} already exists. Please choose another name.`,
+      },
+      unmigratableReasons: {
+        upToDate: 'App is already up to date',
+        isPrivateApp: 'Private apps are not currently migratable',
+        listedInMarketplace: 'Listed apps are not currently migratable',
+        generic: reasonCode => `Unable to migrate app: ${reasonCode}`,
+      },
+      noAppsEligible: (accountId, reasons) =>
+        `No apps in account ${accountId} are currently migratable${reasons.length ? `\n  - ${reasons.join('\n  - ')}` : ''}`,
+
+      invalidAccountTypeTitle: () =>
+        `${chalk.bold('Developer account not targeted')}`,
+      invalidAccountTypeDescription: (useCommand, authCommand) =>
+        `Only public apps created in a developer account can be converted to a project component. Select a connected developer account with ${useCommand} or ${authCommand} and try again.`,
+      appWithAppIdNotFound: appId =>
+        `Could not find an app with the id ${appId} `,
+      noAppsForProject: (projectName: string) =>
+        `No apps associated with project ${projectName}`,
+      migrationFailed: 'Migration Failed',
+      notUngatedForUnifiedApps: account =>
+        `Your account ${account} isn't enrolled in the required product beta to access this command.`,
+    },
+    prompt: {
+      chooseApp: 'Which app would you like to migrate?',
+      inputName: '[--name] What would you like to name the project?',
+      inputDest: '[--dest] Where would you like to save the project?',
+      uidForComponent: componentName =>
+        `What UID would you like to use for ${componentName}?`,
+      proceed: 'Would you like to proceed?',
+    },
+    spinners: {
+      beginningMigration: 'Beginning migration',
+      unableToStartMigration: 'Unable to begin migration',
+      finishingMigration: 'Wrapping up migration',
+      migrationComplete: 'Migration completed',
+      migrationFailed: 'Migration failed',
+      downloadingProjectContents: 'Downloading migrated project files',
+      downloadingProjectContentsComplete: 'Migrated project files downloaded',
+      downloadingProjectContentsFailed:
+        'Unable to download migrated project files',
+      copyingProjectFiles: 'Copying migrated project files',
+      copyingProjectFilesComplete: 'Migrated project files copied',
+      copyingProjectFilesFailed: 'Unable to copy migrated project files',
+    },
   },
 };

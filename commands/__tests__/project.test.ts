@@ -10,6 +10,7 @@ import open from '../project/open';
 import dev from '../project/dev';
 import add from '../project/add';
 import migrateApp from '../project/migrateApp';
+import migrate from '../project/migrate';
 import cloneApp from '../project/cloneApp';
 import installDeps from '../project/installDeps';
 import projectCommand from '../project';
@@ -27,6 +28,7 @@ jest.mock('../project/dev');
 jest.mock('../project/add');
 jest.mock('../project/migrateApp', () => ({}));
 jest.mock('../project/cloneApp', () => ({}));
+jest.mock('../project/migrate', () => ({}));
 jest.mock('../project/installDeps');
 jest.mock('../../lib/commonOpts');
 
@@ -67,6 +69,7 @@ describe('commands/project', () => {
       download,
       open,
       migrateApp,
+      migrate,
       cloneApp,
       installDeps,
     ];

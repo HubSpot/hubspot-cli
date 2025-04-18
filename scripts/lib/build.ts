@@ -26,7 +26,7 @@ export async function build(): Promise<void> {
   });
 
   // Copy remaining files
-  fs.cpSync('lang', 'dist/lang', { recursive: true });
+  fs.cpSync('lang/en.lyaml', 'dist/lang/en.lyaml');
   fs.cpSync('bin/hs', 'dist/bin/hs');
   fs.cpSync('bin/hscms', 'dist/bin/hscms');
   fs.cpSync('README.md', 'dist/README.md');

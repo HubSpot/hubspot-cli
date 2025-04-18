@@ -72,7 +72,7 @@ export interface MigrationSuccess extends MigrationBaseStatus {
 
 export interface MigrationFailed extends MigrationBaseStatus {
   status: typeof MIGRATION_STATUS.FAILURE;
-  projectErrorsDetail?: string;
+  projectErrorDetail: string;
   componentErrorDetails: Record<string, string>;
 }
 
@@ -82,11 +82,24 @@ export type MigrationStatus =
   | MigrationSuccess
   | MigrationFailed;
 
+export function isMigrationStatus(error: unknown): error is MigrationStatus {
+  return (
+    typeof error === 'object' &&
+    error !== null &&
+    'id' in error &&
+    'status' in error
+  );
+}
+
 export async function listAppsForMigration(
-  accountId: number
+  accountId: number,
+  platformVersion: string
 ): HubSpotPromise<ListAppsResponse> {
   return http.get<ListAppsResponse>(accountId, {
     url: `${MIGRATIONS_API_PATH_V2}/list-apps`,
+    params: {
+      platformVersion: mapPlatformVersionToEnum(platformVersion),
+    },
   });
 }
 
@@ -128,7 +141,7 @@ export async function continueMigration(
   });
 }
 
-export function checkMigrationStatusV2(
+export async function checkMigrationStatusV2(
   accountId: number,
   id: number
 ): HubSpotPromise<MigrationStatus> {
