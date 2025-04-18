@@ -98,7 +98,7 @@ export function addUseEnvironmentOptions(yargs: Argv): Argv {
 export async function addCustomHelpOutput(
   yargs: Argv,
   command: string | string[],
-  describe: string
+  describe?: string
 ): Promise<void> {
   try {
     const parsedArgv = yargsParser(process.argv.slice(2));
@@ -131,11 +131,18 @@ export async function addCustomHelpOutput(
         commandHelp = commandHelp.replace(header, chalk.bold(header));
       });
 
-      // Remove the "hs <command>" from the help output
+      // Remove "hs <command>" from the help output (this shows up for command buckets)
       commandHelp = commandHelp.replace('hs <command>\n', '');
 
+      // Remove the first line of the help output if it's empty
+      if (commandHelp.startsWith('\n')) {
+        commandHelp = commandHelp.slice(1);
+      }
+
       logger.log(
-        `${uiCommandReference(fullCommand, false)}\n\n${describe}\n\n${commandHelp}`
+        `${uiCommandReference(fullCommand, false)}\n\n${
+          describe ? `${describe}\n\n` : ''
+        }${commandHelp}`
       );
       process.exit(EXIT_CODES.SUCCESS);
     }
