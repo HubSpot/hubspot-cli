@@ -87,12 +87,12 @@ export function addTestingOptions(yargs: Argv): Argv {
 }
 
 export function addUseEnvironmentOptions(yargs: Argv): Argv {
-  return yargs
-    .option('use-env', {
-      describe: i18n(`${i18nKey}.options.useEnv.describe`),
-      type: 'boolean',
-    })
-    .conflicts('use-env', 'account');
+  yargs.option('use-env', {
+    describe: i18n(`${i18nKey}.options.useEnv.describe`),
+    type: 'boolean',
+  });
+  yargs.conflicts('use-env', 'account');
+  return yargs;
 }
 
 export async function addCustomHelpOutput(
