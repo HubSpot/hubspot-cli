@@ -1,4 +1,4 @@
-import { Options, CommandModule, Argv, ArgumentsCamelCase } from 'yargs';
+import { CommandModule, ArgumentsCamelCase, Argv, Options } from 'yargs';
 
 export type CommonArgs = {
   derivedAccountId: number;

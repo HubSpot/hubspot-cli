@@ -1483,6 +1483,35 @@ export const commands = {
       },
     },
   },
+  app: {
+    describe: 'Commands for managing apps.',
+    subcommands: {
+      secret: {
+        describe: 'Commands for managing secrets.',
+        subcommands: {
+          add: {
+            describe: 'Create a new app secret.',
+            appIdPrompt: 'Enter the app id',
+            positionals: {
+              name: {
+                describe: 'Name of the secret',
+              },
+            },
+            options: {
+              appId: {
+                describe: 'The app id to set the secret for',
+              },
+            },
+            success: (secretName, accountIdentifier) =>
+              `The secret "${secretName}" was added to the HubSpot account: ${accountIdentifier}`,
+          },
+          delete: {
+            describe: 'Delete a secret.',
+          },
+        },
+      },
+    },
+  },
   secret: {
     describe: 'Commands for managing secrets.',
     subcommands: {
