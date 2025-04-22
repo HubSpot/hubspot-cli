@@ -33,7 +33,7 @@ import { setAsDefaultAccountPrompt } from '../../lib/prompts/setAsDefaultAccount
 import { logError } from '../../lib/errorHandlers/index';
 import { trackCommandMetadataUsage } from '../../lib/usageTracking';
 import { EXIT_CODES } from '../../lib/enums/exitCodes';
-import { uiFeatureHighlight } from '../../lib/ui';
+import { uiCommandReference, uiFeatureHighlight } from '../../lib/ui';
 import { CommonArgs, ConfigArgs } from '../../types/Yargs';
 
 const TRACKING_STATUS = {
@@ -105,10 +105,20 @@ export async function handler(
 
   const deprecatedConfigExists = configFileExists(false);
   const globalConfigExists = configFileExists(true);
+  let migrationConfirmed;
+  let mergeConfirmed;
   if (deprecatedConfigExists) {
     if (globalConfigExists) {
       try {
-        await handleMerge(providedAccountId);
+        mergeConfirmed = await handleMerge(providedAccountId);
+        if (!mergeConfirmed) {
+          logger.log(
+            i18n('commands.account.subcommands.auth.errors.mergeNotConfirmed', {
+              deprecatedConfigPath: getConfigPath('', false)!,
+              globalConfigPath: getConfigPath('', true)!,
+            })
+          );
+        }
       } catch (error) {
         logError(error);
         trackCommandMetadataUsage(
@@ -124,7 +134,19 @@ export async function handler(
       }
     } else {
       try {
-        await handleMigration(providedAccountId);
+        migrationConfirmed = await handleMigration(providedAccountId);
+        if (!migrationConfirmed) {
+          logger.log(
+            i18n(
+              'commands.account.subcommands.auth.errors.migrationNotConfirmed',
+              {
+                authCommand: uiCommandReference('hs auth'),
+                deprecatedConfigPath: getConfigPath('', false)!,
+              }
+            )
+          );
+          process.exit(EXIT_CODES.SUCCESS);
+        }
       } catch (error) {
         logError(error);
         trackCommandMetadataUsage(
