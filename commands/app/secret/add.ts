@@ -8,7 +8,7 @@ import {
   secretValuePrompt,
   secretNamePrompt,
 } from '../../../lib/prompts/secretPrompt';
-import { i18n } from '../../../lib/lang';
+import { commands } from '../../../lang/en';
 import { EXIT_CODES } from '../../../lib/enums/exitCodes';
 import {
   CommonArgs,
@@ -21,9 +21,8 @@ import { makeYargsBuilder } from '../../../lib/yargsUtils';
 import { promptUser } from '../../../lib/prompts/promptUtils';
 
 export const command = 'add [name]';
-export const describe = i18n(
-  `commands.app.subcommands.secret.subcommands.add.describe`
-);
+export const describe =
+  commands.app.subcommands.secret.subcommands.add.describe;
 
 type AddAppSecretArgs = CommonArgs &
   ConfigArgs &
@@ -42,9 +41,7 @@ export async function handler(
   try {
     const { appId: appIdPromptValue } = await promptUser({
       name: 'appId',
-      message: i18n(
-        `commands.app.subcommands.secret.subcommands.add.appIdPrompt`
-      ),
+      message: commands.app.subcommands.secret.subcommands.add.appIdPrompt,
       type: 'number',
       when: !appSecretAppId,
     });
@@ -68,12 +65,13 @@ export async function handler(
     );
 
     logger.success(
-      i18n(`commands.app.subcommands.secret.subcommands.add.success`, {
-        accountIdentifier: uiAccountDescription(derivedAccountId),
+      commands.app.subcommands.secret.subcommands.add.success(
         appSecretName,
-      })
+        uiAccountDescription(derivedAccountId)
+      )
     );
   } catch (err) {
+    console.log(err);
     logError(err);
   }
   process.exit(EXIT_CODES.SUCCESS);
@@ -81,18 +79,15 @@ export async function handler(
 
 function addAppSecretBuilder(yargs: Argv): Argv<AddAppSecretArgs> {
   yargs.positional('name', {
-    describe: i18n(
-      `commands.app.subcommands.secret.subcommands.add.positionals.name.describe`
-    ),
+    describe:
+      commands.app.subcommands.secret.subcommands.add.positionals.name.describe,
     type: 'string',
   });
 
   yargs.option('app-id', {
-    describe: i18n(
-      `commands.app.subcommands.secret.subcommands.add.options.appId.describe`
-    ),
+    describe:
+      commands.app.subcommands.secret.subcommands.add.options.appId.describe,
     type: 'number',
-    required: true,
   });
 
   return yargs as Argv<AddAppSecretArgs>;

@@ -1506,7 +1506,20 @@ export const commands = {
               `The secret "${secretName}" was added to the HubSpot account: ${accountIdentifier}`,
           },
           delete: {
-            describe: 'Delete a secret.',
+            describe: 'Delete an app secret.',
+            appIdPrompt: 'Enter the app id',
+            positionals: {
+              name: {
+                describe: 'Name of the secret',
+              },
+            },
+            options: {
+              appId: {
+                describe: 'The app id to delete the secret for',
+              },
+            },
+            success: (secretName, accountIdentifier) =>
+              `The secret "${secretName}" was removed from the HubSpot account: ${accountIdentifier}`,
           },
         },
       },

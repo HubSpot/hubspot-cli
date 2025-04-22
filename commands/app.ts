@@ -1,23 +1,21 @@
-import { Argv, CommandModule } from 'yargs';
-import { addGlobalOptions } from '../lib/commonOpts';
+import { Argv } from 'yargs';
 import migrateCommand from './app/migrate';
 import appSecretCommand from './app/secret';
+import { makeYargsBuilder } from '../lib/yargsUtils';
+import { YargsCommandModuleBucket } from '../types/Yargs';
 
-export const command = ['app', 'apps'];
-
+const command = ['app', 'apps'];
 // Keep the command hidden for now
-export const describe = undefined;
+const describe = undefined;
 
-export function builder(yargs: Argv) {
-  addGlobalOptions(yargs);
-
-  return yargs
-    .command(migrateCommand)
-    .command(appSecretCommand)
-    .demandCommand(1, '');
+function appBuilder(yargs: Argv) {
+  yargs.command(migrateCommand).command(appSecretCommand).demandCommand(1, '');
+  return yargs;
 }
 
-const appCommand: CommandModule = {
+const builder = makeYargsBuilder(appBuilder, command, describe);
+
+const appCommand: YargsCommandModuleBucket = {
   command,
   describe,
   builder,
@@ -25,3 +23,6 @@ const appCommand: CommandModule = {
 };
 
 export default appCommand;
+
+// TODO Remove this legacy export once we've migrated all commands to TS
+module.exports = appCommand;

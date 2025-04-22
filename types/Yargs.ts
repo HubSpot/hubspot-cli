@@ -1,4 +1,4 @@
-import { CommandModule, ArgumentsCamelCase, Argv, Options } from 'yargs';
+import { CommandModule, Argv, Options } from 'yargs';
 
 export type CommonArgs = {
   derivedAccountId: number;
@@ -41,10 +41,4 @@ export type YargsCommandModule<T, U> = Omit<CommandModule<T, U>, 'builder'> & {
   builder: (yargs: Argv) => Promise<Argv<U>>;
 };
 
-export type YargsCommandModuleBucket<T, U> = Omit<
-  CommandModule<T, U>,
-  'builder' | 'handler'
-> & {
-  builder: (yargs: Argv) => Promise<Argv>;
-  handler?: (args: ArgumentsCamelCase<U>) => void | Promise<void>;
-};
+export type YargsCommandModuleBucket = YargsCommandModule<unknown, object>;

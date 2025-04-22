@@ -5,7 +5,7 @@ import { logError } from '../../../lib/errorHandlers/index';
 import { trackCommandUsage } from '../../../lib/usageTracking';
 import { uiAccountDescription } from '../../../lib/ui';
 import { secretNamePrompt } from '../../../lib/prompts/secretPrompt';
-import { i18n } from '../../../lib/lang';
+import { commands } from '../../../lang/en';
 import { EXIT_CODES } from '../../../lib/enums/exitCodes';
 import {
   CommonArgs,
@@ -17,10 +17,9 @@ import {
 import { makeYargsBuilder } from '../../../lib/yargsUtils';
 import { promptUser } from '../../../lib/prompts/promptUtils';
 
-const i18nKey = 'commands.app.subcommands.secret.subcommands.delete';
-
 export const command = 'delete [name]';
-export const describe = i18n(`${i18nKey}.describe`);
+export const describe =
+  commands.app.subcommands.secret.subcommands.delete.describe;
 
 type DeleteAppSecretArgs = CommonArgs &
   ConfigArgs &
@@ -39,7 +38,7 @@ export async function handler(
   try {
     const { appId: appIdPromptValue } = await promptUser({
       name: 'appId',
-      message: i18n(`${i18nKey}.appIdPrompt`),
+      message: commands.app.subcommands.secret.subcommands.delete.appIdPrompt,
       type: 'number',
       when: !appSecretAppId,
     });
@@ -56,10 +55,10 @@ export async function handler(
     await deleteAppSecret(derivedAccountId, appSecretAppId, appSecretName);
 
     logger.success(
-      i18n(`${i18nKey}.success.add`, {
-        accountIdentifier: uiAccountDescription(derivedAccountId),
+      commands.app.subcommands.secret.subcommands.delete.success(
         appSecretName,
-      })
+        uiAccountDescription(derivedAccountId)
+      )
     );
   } catch (err) {
     logError(err);
@@ -69,12 +68,15 @@ export async function handler(
 
 function deleteAppSecretBuilder(yargs: Argv): Argv<DeleteAppSecretArgs> {
   yargs.positional('name', {
-    describe: i18n(`${i18nKey}.positionals.name.describe`),
+    describe:
+      commands.app.subcommands.secret.subcommands.delete.positionals.name
+        .describe,
     type: 'string',
   });
 
   yargs.option('app-id', {
-    describe: i18n(`${i18nKey}.options.appId.describe`),
+    describe:
+      commands.app.subcommands.secret.subcommands.delete.options.appId.describe,
     type: 'number',
     required: true,
   });

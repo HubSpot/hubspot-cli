@@ -1,16 +1,14 @@
 import { Argv } from 'yargs';
-import { i18n } from '../../lib/lang';
+import { commands } from '../../lang/en';
 import { YargsCommandModuleBucket } from '../../types/Yargs';
 import { makeYargsBuilder } from '../../lib/yargsUtils';
 import addAppSecretCommand from './secret/add';
 import deleteAppSecretCommand from './secret/delete';
 
-const i18nKey = 'commands.app.subcommands.secret';
+const command = ['secret', 'secrets'];
+const describe = commands.app.subcommands.secret.describe;
 
-export const command = ['secret', 'secrets'];
-export const describe = i18n(`${i18nKey}.describe`);
-
-export function appSecretBuilder(yargs: Argv): Argv {
+function appSecretBuilder(yargs: Argv): Argv {
   yargs
     .command(addAppSecretCommand)
     .command(deleteAppSecretCommand)
@@ -21,10 +19,11 @@ export function appSecretBuilder(yargs: Argv): Argv {
 
 const builder = makeYargsBuilder(appSecretBuilder, command, describe);
 
-const appSecretCommand: YargsCommandModuleBucket<unknown, Argv> = {
+const appSecretCommand: YargsCommandModuleBucket = {
   command,
   describe,
   builder,
+  handler: () => {},
 };
 
 export default appSecretCommand;
