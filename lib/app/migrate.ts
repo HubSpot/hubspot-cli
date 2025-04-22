@@ -351,7 +351,7 @@ async function beginMigration(
             return result === undefined ? true : result;
           },
           defaultAnswer: componentHint
-            ? componentHint.toLowerCase().replace(/[^a-z0-9_]/g, '')
+            ? componentHint.replace(/[^A-Za-z0-9_\-.]/g, '')
             : undefined,
         }
       );
