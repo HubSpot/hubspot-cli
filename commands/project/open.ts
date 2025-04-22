@@ -29,7 +29,9 @@ type ProjectOpenArgs = CommonArgs &
   EnvironmentArgs &
   TestingArgs & { project?: string };
 
-async function handler(args: ArgumentsCamelCase<ProjectOpenArgs>) {
+async function handler(
+  args: ArgumentsCamelCase<ProjectOpenArgs>
+): Promise<void> {
   const { project, derivedAccountId } = args;
 
   trackCommandUsage('project-open', undefined, derivedAccountId);

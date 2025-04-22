@@ -50,10 +50,12 @@ type ProjectCreateArgs = CommonArgs &
     template?: string;
   };
 
-async function handler(args: ArgumentsCamelCase<ProjectCreateArgs>) {
+async function handler(
+  args: ArgumentsCamelCase<ProjectCreateArgs>
+): Promise<void> {
   const { derivedAccountId } = args;
 
-  let latestRepoReleaseTag: string | null = null;
+  let latestRepoReleaseTag: string | undefined;
   let templateSource = args.templateSource;
 
   if (!templateSource) {
@@ -120,7 +122,7 @@ async function handler(args: ArgumentsCamelCase<ProjectCreateArgs>) {
   try {
     await cloneGithubRepo(templateSource, projectDest, {
       sourceDir: createProjectPromptResponse.projectTemplate.path,
-      tag: latestRepoReleaseTag || undefined,
+      tag: latestRepoReleaseTag,
       hideLogs: true,
     });
   } catch (err) {

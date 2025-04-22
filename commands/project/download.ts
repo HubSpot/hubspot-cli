@@ -33,7 +33,9 @@ type ProjectDownloadArgs = CommonArgs &
   AccountArgs &
   EnvironmentArgs & { project?: string; dest?: string; build?: number };
 
-async function handler(args: ArgumentsCamelCase<ProjectDownloadArgs>) {
+async function handler(
+  args: ArgumentsCamelCase<ProjectDownloadArgs>
+): Promise<void> {
   const { projectConfig } = await getProjectConfig();
 
   if (projectConfig) {

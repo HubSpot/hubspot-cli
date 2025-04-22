@@ -49,7 +49,7 @@ export type CloneAppArgs = ConfigArgs &
     appId: number;
   };
 
-async function handler(args: ArgumentsCamelCase<CloneAppArgs>) {
+async function handler(args: ArgumentsCamelCase<CloneAppArgs>): Promise<void> {
   const { derivedAccountId } = args;
   await trackCommandUsage('clone-app', {}, derivedAccountId);
 

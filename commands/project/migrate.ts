@@ -27,7 +27,7 @@ const command = 'migrate';
 const describe = undefined; // i18n('commands.project.subcommands.migrate.describe')
 
 async function handler(
-  options: ArgumentsCamelCase<ProjectMigrateArgs>
+  args: ArgumentsCamelCase<ProjectMigrateArgs>
 ): Promise<void> {
   const projectConfig = await getProjectConfig();
 
@@ -38,14 +38,14 @@ async function handler(
     return process.exit(EXIT_CODES.ERROR);
   }
 
-  const { derivedAccountId } = options;
+  const { derivedAccountId } = args;
   try {
     await migrateApp2025_2(
       derivedAccountId,
       {
-        ...options,
+        ...args,
         name: projectConfig?.projectConfig?.name,
-        platformVersion: options.platformVersion,
+        platformVersion: args.platformVersion,
       },
       projectConfig
     );

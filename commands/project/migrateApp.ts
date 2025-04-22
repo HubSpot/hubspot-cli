@@ -19,14 +19,16 @@ const describe = uiDeprecatedTag(
 );
 export const deprecated = true;
 
-async function handler(yargs: ArgumentsCamelCase<MigrateAppArgs>) {
+async function handler(
+  args: ArgumentsCamelCase<MigrateAppArgs>
+): Promise<void> {
   logger.warn(
     i18n(`commands.project.subcommands.migrateApp.deprecationWarning`, {
       oldCommand: uiCommandReference('hs project migrate-app'),
       newCommand: uiCommandReference('hs app migrate'),
     })
   );
-  await migrateHandler(yargs);
+  await migrateHandler(args);
 }
 
 function projectMigrateAppBuilder(yargs: Argv): Argv<MigrateAppArgs> {

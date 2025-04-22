@@ -110,7 +110,9 @@ async function fetchAndDisplayBuilds(
   }
 }
 
-async function handler(args: ArgumentsCamelCase<ProjectListBuildsArgs>) {
+async function handler(
+  args: ArgumentsCamelCase<ProjectListBuildsArgs>
+): Promise<void> {
   const { project: projectFlagValue, limit, derivedAccountId } = args;
 
   trackCommandUsage('project-list-builds', undefined, derivedAccountId);

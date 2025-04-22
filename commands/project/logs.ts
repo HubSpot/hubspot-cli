@@ -90,7 +90,9 @@ export type ProjectLogsArgs = CommonArgs & {
   limit?: number;
 };
 
-const handler = async (args: ArgumentsCamelCase<ProjectLogsArgs>) => {
+async function handler(
+  args: ArgumentsCamelCase<ProjectLogsArgs>
+): Promise<void> {
   const { derivedAccountId } = args;
 
   trackCommandUsage('project-logs', undefined, derivedAccountId);
@@ -115,7 +117,7 @@ const handler = async (args: ArgumentsCamelCase<ProjectLogsArgs>) => {
     return process.exit(EXIT_CODES.ERROR);
   }
   process.exit(EXIT_CODES.SUCCESS);
-};
+}
 
 function projectLogsBuilder(yargs: Argv): Argv<ProjectLogsArgs> {
   yargs.options({

@@ -17,7 +17,9 @@ const i18nKey = 'commands.project.subcommands.dev';
 export const command = 'dev';
 export const describe = uiBetaTag(i18n(`${i18nKey}.describe`), false);
 
-export async function handler(args: ArgumentsCamelCase<ProjectDevArgs>) {
+export async function handler(
+  args: ArgumentsCamelCase<ProjectDevArgs>
+): Promise<void> {
   const { derivedAccountId } = args;
   const accountConfig = getAccountConfig(derivedAccountId);
 
