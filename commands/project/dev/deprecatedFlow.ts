@@ -25,6 +25,7 @@ import {
   createInitialBuildForNewProject,
   useExistingDevTestAccount,
   checkIfParentAccountIsAuthed,
+  hasSandboxes,
 } from '../../../lib/localDev';
 import { handleExit } from '../../../lib/process';
 import {
@@ -77,9 +78,18 @@ export async function deprecatedProjectDevFlow(
     process.exit(EXIT_CODES.ERROR);
   }
 
-  const defaultAccountIsRecommendedType =
-    isDeveloperTestAccount(accountConfig) ||
-    (!hasPublicApps && isSandbox(accountConfig));
+  let bypassRecommendedAccountPrompt = false;
+
+  if (isDeveloperTestAccount(accountConfig)) {
+    bypassRecommendedAccountPrompt = true;
+  } else if (!hasPublicApps) {
+    if (isSandbox(accountConfig)) {
+      bypassRecommendedAccountPrompt = true;
+    } else {
+      const defaultAccountHasSandboxes = await hasSandboxes(accountConfig);
+      bypassRecommendedAccountPrompt = !defaultAccountHasSandboxes;
+    }
+  }
 
   // targetProjectAccountId and targetTestingAccountId are set to null if --account flag is not provided.
   // By setting them to null, we can later check if they need to be assigned based on the default account configuration and the type of app.
@@ -99,7 +109,7 @@ export async function deprecatedProjectDevFlow(
   }
 
   // The user is targeting an account type that we recommend developing on
-  if (!targetProjectAccountId && defaultAccountIsRecommendedType) {
+  if (!targetProjectAccountId && bypassRecommendedAccountPrompt) {
     targetTestingAccountId = derivedAccountId;
 
     await confirmDefaultAccountIsTarget(accountConfig);
