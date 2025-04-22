@@ -695,7 +695,7 @@ en:
         migrate:
             describe: "Migrate an existing project to the new version of the projects framework."
             errors:
-                noProjectConfig: "No project detected. Please run this command again from a project directory."
+                noProjectConfig: "No project detected. Please run this command again from a project directory.  If you are trying to migrate an application, run {{ command }}"
             examples:
                 default: "Migrate an existing project to the new version of the projects framework."
         deploy:

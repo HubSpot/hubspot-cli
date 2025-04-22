@@ -16,6 +16,7 @@ import SpinniesManager from '../ui/SpinniesManager';
 import { DEFAULT_POLLING_STATUS_LOOKUP, poll } from '../polling';
 import {
   checkMigrationStatusV2,
+  CLI_UNMIGRATABLE_REASONS,
   continueMigration,
   initializeMigration,
   isMigrationStatus,
@@ -51,6 +52,8 @@ function getUnmigratableReason(reasonCode: string): string {
       return lib.migrate.errors.unmigratableReasons.isPrivateApp;
     case UNMIGRATABLE_REASONS.LISTED_IN_MARKETPLACE:
       return lib.migrate.errors.unmigratableReasons.listedInMarketplace;
+    case CLI_UNMIGRATABLE_REASONS.PART_OF_PROJECT_ALREADY:
+      return lib.migrate.errors.unmigratableReasons.partOfProjectAlready;
     default:
       return lib.migrate.errors.unmigratableReasons.generic(reasonCode);
   }
@@ -63,7 +66,7 @@ function filterAppsByProjectName(
     if (projectConfig) {
       return app.projectName === projectConfig?.projectConfig?.name;
     }
-    return !app.projectName;
+    return true;
   };
 }
 
@@ -91,6 +94,16 @@ async function fetchMigrationApps(
     throw new Error(lib.migrate.errors.project.multipleApps);
   }
 
+  if (!projectConfig?.projectConfig) {
+    allApps.forEach(app => {
+      if (app.projectName) {
+        app.isMigratable = false;
+        app.unmigratableReason =
+          CLI_UNMIGRATABLE_REASONS.PART_OF_PROJECT_ALREADY;
+      }
+    });
+  }
+
   if (allApps.length === 0 && projectConfig) {
     throw new Error(
       lib.migrate.errors.noAppsForProject(
@@ -99,10 +112,7 @@ async function fetchMigrationApps(
     );
   }
 
-  if (
-    allApps.length === 0 ||
-    filteredUnmigratableApps.length === allApps.length
-  ) {
+  if (allApps.length === 0 || !allApps.some(app => app.isMigratable)) {
     const reasons = filteredUnmigratableApps.map(
       app =>
         `${chalk.bold(app.appName)}: ${getUnmigratableReason(app.unmigratableReason)}`
@@ -331,7 +341,7 @@ async function beginMigration(
       const { componentHint, componentType } = component;
       uidMap[componentId] = await inputPrompt(
         lib.migrate.prompt.uidForComponent(
-          componentHint
+          componentHint && componentHint
             ? `${mapToUserFacingType(componentType)} '${componentHint}'`
             : mapToUserFacingType(componentType)
         ),
@@ -340,9 +350,9 @@ async function beginMigration(
             const result = validateUid(uid);
             return result === undefined ? true : result;
           },
-          defaultAnswer: (componentHint || '')
-            .toLowerCase()
-            .replace(/[^a-z0-9_]/g, ''),
+          defaultAnswer: componentHint
+            ? componentHint.toLowerCase().replace(/[^a-z0-9_]/g, '')
+            : undefined,
         }
       );
     }
@@ -496,7 +506,9 @@ export async function migrateApp2025_2(
     );
 
     if (!projectExists) {
-      throw new Error(lib.migrate.errors.project.doesNotExist);
+      throw new Error(
+        lib.migrate.errors.project.doesNotExist(derivedAccountId)
+      );
     }
   }
 

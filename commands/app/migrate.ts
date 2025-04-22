@@ -124,7 +124,7 @@ export function builder(yargs: Argv): Argv<MigrateAppArgs> {
       type: 'string',
       choices: validMigrationTargets,
       hidden: true,
-      default: '2023.2',
+      default: '2025.2',
     },
   });
 

@@ -1,5 +1,6 @@
 // @ts-nocheck
 import chalk from 'chalk';
+import { uiAccountDescription, uiCommandReference } from '../lib/ui';
 
 export const commands = {
   generalErrors: {
@@ -3439,7 +3440,8 @@ export const lib = {
       project: {
         invalidConfig:
           'The project configuration file is invalid. Please check the config file and try again.',
-        doesNotExist: 'Project does not exist, unable to migrate',
+        doesNotExist: (account: number) =>
+          `Project does not exist in ${uiAccountDescription(account)}. Migrations are only supported for existing projects.`,
         multipleApps:
           'Multiple apps found in project, this is not allowed in 2025.2',
         alreadyExists: projectName =>
@@ -3449,6 +3451,7 @@ export const lib = {
         upToDate: 'App is already up to date',
         isPrivateApp: 'Private apps are not currently migratable',
         listedInMarketplace: 'Listed apps are not currently migratable',
+        partOfProjectAlready: `This app is part of a project, run ${uiCommandReference('hs project migrate')} from the project directory to migrate it`,
         generic: reasonCode => `Unable to migrate app: ${reasonCode}`,
       },
       noAppsEligible: (accountId, reasons) =>

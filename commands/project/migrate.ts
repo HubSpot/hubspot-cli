@@ -18,6 +18,7 @@ import { getProjectConfig } from '../../lib/projects';
 import { PLATFORM_VERSIONS } from '@hubspot/local-dev-lib/constants/projects';
 import { logError } from '../../lib/errorHandlers';
 import { EXIT_CODES } from '../../lib/enums/exitCodes';
+import { uiCommandReference } from '../../lib/ui';
 
 export type ProjectMigrateArgs = CommonArgs &
   AccountArgs &
@@ -37,7 +38,9 @@ export async function handler(
 
   if (!projectConfig.projectConfig) {
     logger.error(
-      i18n('commands.project.subcommands.migrate.errors.noProjectConfig')
+      i18n('commands.project.subcommands.migrate.errors.noProjectConfig', {
+        command: uiCommandReference('hs app migrate'),
+      })
     );
     return process.exit(EXIT_CODES.ERROR);
   }
