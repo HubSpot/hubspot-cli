@@ -208,7 +208,7 @@ async function selectAppToMigrate(
     ? `${lib.migrate.projectMigrationWarning} ${lib.migrate.prompt.proceed}`
     : lib.migrate.prompt.proceed;
 
-  const proceed = await confirmPrompt(promptMessage);
+  const proceed = await confirmPrompt(promptMessage, { defaultAnswer: false });
   return {
     proceed,
     appIdToMigrate,
@@ -394,7 +394,16 @@ async function finalizeMigration(
     });
 
     if (isMigrationStatus(error) && error.status === MIGRATION_STATUS.FAILURE) {
-      throw new Error(error.projectErrorDetail);
+      const errorMessage = error.componentErrorDetails
+        ? `${error.projectErrorDetail} \n\t - ${Object.entries(
+            error.componentErrorDetails
+          )
+            .map(([key, value]) => {
+              return `${mapToUserFacingType(key)}: ${value}`;
+            })
+            .join('\n\t - ')}`
+        : error.projectErrorDetail;
+      throw new Error(errorMessage);
     }
 
     throw new Error(lib.migrate.errors.migrationFailed, {

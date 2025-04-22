@@ -647,7 +647,7 @@ en:
           migrationInterrupted: "\nThe command is terminated, but app migration is still in progress. Please check your account to ensure that the project and associated app have been created successfully."
           createAppPrompt: "Proceed with migrating this app to a project component (this process can't be aborted)?"
           projectDetailsLink: "View project details in your developer account"
-          componentsToBeMigrated: "The following component types will be migrated: {{ components }}"
+          componentsToBeMigrated: "The following features will be migrated: {{ components }}"
           componentsThatWillNotBeMigrated: "[NOTE] These component types are not yet supported for migration but will be available later: {{ components }}"
           errors:
             noAppsForProject: "No apps associated with project {{ projectName }}"

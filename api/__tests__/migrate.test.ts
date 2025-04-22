@@ -179,9 +179,7 @@ describe('api/migrate', () => {
         id: mockMigrationId,
         status: MIGRATION_STATUS.FAILURE,
         projectErrorDetail: 'Error details',
-        componentErrorDetails: {
-          'component-1': 'Component error',
-        },
+        componentErrorDetails: {},
       };
       // @ts-expect-error Mock
       httpMock.get.mockResolvedValue(mockResponse);

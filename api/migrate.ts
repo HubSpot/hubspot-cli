@@ -18,7 +18,7 @@ interface BaseMigrationApp {
 
 export interface MigratableApp extends BaseMigrationApp {
   isMigratable: true;
-  unmigratableReason: undefined;
+  unmigratableReason?: undefined;
 }
 
 export const CLI_UNMIGRATABLE_REASONS = {

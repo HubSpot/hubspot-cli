@@ -101,8 +101,7 @@ describe('commands/app/migrate', () => {
     });
 
     it('should add required options', async () => {
-      await builder(mockYargs);
-
+      builder(mockYargs);
       expect(mockYargs.options).toHaveBeenCalledWith(
         expect.objectContaining({
           name: expect.objectContaining({
@@ -119,27 +118,27 @@ describe('commands/app/migrate', () => {
           }),
           'platform-version': expect.objectContaining({
             type: 'string',
-            default: '2023.2',
+            default: '2025.2',
             hidden: true,
           }),
         })
       );
     });
 
-    it('should set default platform version to 2023.2', async () => {
-      await builder(mockYargs);
+    it('should set default platform version to 2025.2', async () => {
+      builder(mockYargs);
 
       expect(mockYargs.options).toHaveBeenCalledWith(
         expect.objectContaining({
           'platform-version': expect.objectContaining({
-            default: '2023.2',
+            default: '2025.2',
           }),
         })
       );
     });
 
     it('should add example command', async () => {
-      await builder(mockYargs);
+      builder(mockYargs);
 
       expect(mockYargs.example).toHaveBeenCalledWith([
         ['$0 app migrate', expect.any(String)],
