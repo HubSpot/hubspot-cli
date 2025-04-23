@@ -82,13 +82,11 @@ export async function deprecatedProjectDevFlow(
 
   if (isDeveloperTestAccount(accountConfig)) {
     bypassRecommendedAccountPrompt = true;
+  } else if (!hasPublicApps && isSandbox(accountConfig)) {
+    bypassRecommendedAccountPrompt = true;
   } else if (!hasPublicApps) {
-    if (isSandbox(accountConfig)) {
-      bypassRecommendedAccountPrompt = true;
-    } else {
-      const defaultAccountHasSandboxes = await hasSandboxes(accountConfig);
-      bypassRecommendedAccountPrompt = !defaultAccountHasSandboxes;
-    }
+    const defaultAccountHasSandboxes = await hasSandboxes(accountConfig);
+    bypassRecommendedAccountPrompt = !defaultAccountHasSandboxes;
   }
 
   // targetProjectAccountId and targetTestingAccountId are set to null if --account flag is not provided.
