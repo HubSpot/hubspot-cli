@@ -39,9 +39,11 @@ import {
   TestingArgs,
 } from '../../types/Yargs';
 
-
 export const command = 'delete';
-export const describe = uiBetaTag(i18n(`commands.sandbox.subcommands.delete.describe`), false);
+export const describe = uiBetaTag(
+  i18n(`commands.sandbox.subcommands.delete.describe`),
+  false
+);
 
 type CombinedArgs = ConfigArgs & AccountArgs & EnvironmentArgs & TestingArgs;
 type SandboxDeleteArgs = CommonArgs &
@@ -61,7 +63,9 @@ export async function handler(
     } else {
       // Account is required, throw error if force flag is present and no account is specified
       logger.log('');
-      logger.error(i18n(`commands.sandbox.subcommands.delete.failure.noAccount`));
+      logger.error(
+        i18n(`commands.sandbox.subcommands.delete.failure.noAccount`)
+      );
       process.exit(EXIT_CODES.ERROR);
     }
     if (!accountPrompt) {
@@ -80,7 +84,9 @@ export async function handler(
   );
 
   if (!sandboxAccountId) {
-    logger.error(i18n(`commands.sandbox.subcommands.delete.failure.noSandboxAccountId`));
+    logger.error(
+      i18n(`commands.sandbox.subcommands.delete.failure.noSandboxAccountId`)
+    );
     process.exit(EXIT_CODES.ERROR);
   }
 
@@ -101,9 +107,12 @@ export async function handler(
         const parentAccountPrompt = await deleteSandboxPrompt(true);
         if (!parentAccountPrompt) {
           logger.error(
-            i18n(`commands.sandbox.subcommands.delete.failure.noParentAccount`, {
-              authCommand: uiCommandReference('hs auth'),
-            })
+            i18n(
+              `commands.sandbox.subcommands.delete.failure.noParentAccount`,
+              {
+                authCommand: uiCommandReference('hs auth'),
+              }
+            )
           );
           process.exit(EXIT_CODES.ERROR);
         }
@@ -127,11 +136,14 @@ export async function handler(
   if (parentAccountId && !getAccountId(parentAccountId)) {
     logger.log('');
     logger.error(
-      i18n(`commands.sandbox.subcommands.delete.failure.noParentPortalAvailable`, {
-        parentAccountId,
-        url,
-        command,
-      })
+      i18n(
+        `commands.sandbox.subcommands.delete.failure.noParentPortalAvailable`,
+        {
+          parentAccountId,
+          url,
+          command,
+        }
+      )
     );
     logger.log('');
     process.exit(EXIT_CODES.ERROR);
@@ -254,13 +266,17 @@ export async function handler(
 
 export function builder(yargs: Argv): Argv<SandboxDeleteArgs> {
   yargs.option('account', {
-    describe: i18n(`commands.sandbox.subcommands.delete.options.account.describe`),
+    describe: i18n(
+      `commands.sandbox.subcommands.delete.options.account.describe`
+    ),
     type: 'string',
   });
   yargs.option('force', {
     type: 'boolean',
     alias: 'f',
-    describe: i18n(`commands.sandbox.subcommands.delete.options.force.describe`),
+    describe: i18n(
+      `commands.sandbox.subcommands.delete.options.force.describe`
+    ),
   });
 
   yargs.example([

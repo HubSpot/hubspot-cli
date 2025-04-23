@@ -19,9 +19,11 @@ import { EXIT_CODES } from '../../lib/enums/exitCodes';
 import { CommonArgs } from '../../types/Yargs';
 import { makeYargsBuilder } from '../../lib/yargsUtils';
 
-
 export const command = 'add';
-export const describe = uiBetaTag(i18n(`commands.project.subcommands.add.describe`), false);
+export const describe = uiBetaTag(
+  i18n(`commands.project.subcommands.add.describe`),
+  false
+);
 
 type ProjectAddArgs = CommonArgs & {
   type: string;
@@ -38,7 +40,9 @@ export async function handler(
   const { projectConfig, projectDir } = await getProjectConfig();
 
   if (!projectDir || !projectConfig) {
-    logger.error(i18n(`commands.project.subcommands.add.error.locationInProject`));
+    logger.error(
+      i18n(`commands.project.subcommands.add.error.locationInProject`)
+    );
     process.exit(EXIT_CODES.ERROR);
   }
 
@@ -54,7 +58,9 @@ export async function handler(
   }
 
   if (projectContainsPublicApp) {
-    logger.error(i18n(`commands.project.subcommands.add.error.projectContainsPublicApp`));
+    logger.error(
+      i18n(`commands.project.subcommands.add.error.projectContainsPublicApp`)
+    );
     process.exit(EXIT_CODES.ERROR);
   }
 
@@ -80,7 +86,9 @@ export async function handler(
   }
 
   if (!latestRepoReleaseTag) {
-    logger.error(i18n(`commands.project.subcommands.add.error.failedToFetchComponentList`));
+    logger.error(
+      i18n(`commands.project.subcommands.add.error.failedToFetchComponentList`)
+    );
     process.exit(EXIT_CODES.ERROR);
   }
 
@@ -88,7 +96,9 @@ export async function handler(
     await getProjectComponentListFromRepo(latestRepoReleaseTag);
 
   if (!components.length) {
-    logger.error(i18n(`commands.project.subcommands.add.error.failedToFetchComponentList`));
+    logger.error(
+      i18n(`commands.project.subcommands.add.error.failedToFetchComponentList`)
+    );
     process.exit(EXIT_CODES.ERROR);
   }
 
@@ -120,7 +130,9 @@ export async function handler(
     );
   } catch (error) {
     debugError(error);
-    logger.error(i18n(`commands.project.subcommands.add.error.failedToDownloadComponent`));
+    logger.error(
+      i18n(`commands.project.subcommands.add.error.failedToDownloadComponent`)
+    );
     process.exit(EXIT_CODES.ERROR);
   }
   process.exit(EXIT_CODES.SUCCESS);
@@ -138,7 +150,12 @@ function projectAddBuilder(yargs: Argv): Argv<ProjectAddArgs> {
     },
   });
 
-  yargs.example([['$0 project add', i18n(`commands.project.subcommands.add.examples.default`)]]);
+  yargs.example([
+    [
+      '$0 project add',
+      i18n(`commands.project.subcommands.add.examples.default`),
+    ],
+  ]);
   yargs.example([
     [
       '$0 project add --name="my-component" --type="components/example-app"',

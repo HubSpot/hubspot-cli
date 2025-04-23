@@ -2,7 +2,6 @@ import { promptUser } from './promptUtils';
 import { i18n } from '../lang';
 import { PromptConfig } from '../../types/Prompts';
 
-
 type CreateFunctionPromptResponse = {
   functionsFolder: string;
   filename: string;

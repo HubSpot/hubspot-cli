@@ -20,7 +20,6 @@ function mapAccountChoices(
   );
 }
 
-
 export async function selectAccountFromConfig(prompt = ''): Promise<string> {
   const accountsList = getConfigAccounts();
   const defaultAccount = getConfigDefaultAccount();

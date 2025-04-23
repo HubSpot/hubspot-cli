@@ -15,7 +15,6 @@ import { isTranslationError, translate } from '@hubspot/project-parsing-lib';
 import { logError } from '../errorHandlers';
 import util from 'node:util';
 
-
 async function uploadProjectFiles(
   accountId: number,
   projectName: string,
@@ -83,7 +82,7 @@ type ProjectUploadCallbackFunction<T> = (
   accountId: number,
   projectConfig: ProjectConfig,
   tempFile: FileResult,
-  buildId?: number
+  buildId: number
 ) => Promise<T>;
 
 type ProjectUploadResult<T> = {
@@ -173,7 +172,7 @@ export async function handleProjectUpload<T>(
           accountId,
           projectConfig,
           tempFile,
-          buildId
+          buildId!
         );
         resolve({ result: uploadResult });
       }

@@ -18,7 +18,6 @@ import {
   EnvironmentArgs,
 } from '../../types/Yargs';
 
-
 export const command = 'list';
 export const describe = i18n(`commands.secret.subcommands.list.describe`);
 

@@ -27,7 +27,9 @@ export async function projectLogsPrompt({
     {
       name: 'functionName',
       type: 'list',
-      message: i18n('lib.prompts.projectLogsPrompt.functionName', { projectName }),
+      message: i18n('lib.prompts.projectLogsPrompt.functionName', {
+        projectName,
+      }),
       when: () =>
         (!promptOptions || !promptOptions.function) &&
         functionChoices.length > 0,

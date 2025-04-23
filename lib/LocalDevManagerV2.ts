@@ -14,13 +14,14 @@ import {
 import { Build } from '@hubspot/local-dev-lib/types/Build';
 import { PublicApp } from '@hubspot/local-dev-lib/types/Apps';
 import { Environment } from '@hubspot/local-dev-lib/types/Config';
+import { mapToUserFriendlyName } from '@hubspot/project-parsing-lib';
 
 import { APP_DISTRIBUTION_TYPES, PROJECT_CONFIG_FILE } from './constants';
 import SpinniesManager from './ui/SpinniesManager';
 import DevServerManagerV2 from './DevServerManagerV2';
 import { EXIT_CODES } from './enums/exitCodes';
 import { getProjectDetailUrl } from './projects/urls';
-import { isAppIRNode, isCardIRNode } from './projects/structure';
+import { isAppIRNode } from './projects/structure';
 import { ProjectConfig } from '../types/Projects';
 import {
   UI_COLORS,
@@ -342,18 +343,19 @@ class LocalDevManagerV2 {
   }
 
   logUploadWarning(reason?: string): void {
-    let warning: string;
+    let warning = reason;
 
-    if (reason) {
-      warning = reason;
-    } else {
+    if (!warning) {
       warning =
         this.publicAppActiveInstalls && this.publicAppActiveInstalls > 0
-          ? i18n(`lib.LocalDevManager.uploadWarning.defaultPublicAppWarning`, {
-              installCount: this.publicAppActiveInstalls,
-              installText:
-                this.publicAppActiveInstalls === 1 ? 'install' : 'installs',
-            })
+          ? i18n(
+              `lib.LocalDevManager.uploadWarning.defaultMarketplaceAppWarning`,
+              {
+                installCount: this.publicAppActiveInstalls,
+                accountText:
+                  this.publicAppActiveInstalls === 1 ? 'account' : 'accounts',
+              }
+            )
           : i18n(`lib.LocalDevManager.uploadWarning.defaultWarning`);
     }
 
@@ -439,12 +441,10 @@ class LocalDevManagerV2 {
     const missingProjectNodes: string[] = [];
 
     Object.values(this.projectNodes).forEach(node => {
-      if (isAppIRNode(node) || isCardIRNode(node)) {
-        if (!deployedComponentNames.includes(node.uid)) {
-          missingProjectNodes.push(
-            `${i18n(`lib.LocalDevManager.uploadWarning.appLabel`)} ${node.uid}`
-          );
-        }
+      if (!deployedComponentNames.includes(node.uid)) {
+        const userFriendlyName = mapToUserFriendlyName(node.componentType);
+        const label = userFriendlyName ? `[${userFriendlyName}] ` : '';
+        missingProjectNodes.push(`${label}${node.uid}`);
       }
     });
 
@@ -462,9 +462,9 @@ class LocalDevManagerV2 {
       ignoreInitial: true,
     });
 
-    const configPaths = Object.values(this.projectNodes)
-      .filter(isAppIRNode)
-      .map(component => component.localDev.componentConfigPath);
+    const configPaths = Object.values(this.projectNodes).map(
+      component => component.localDev.componentConfigPath
+    );
 
     const projectConfigPath = path.join(this.projectDir, PROJECT_CONFIG_FILE);
     configPaths.push(projectConfigPath);
@@ -503,7 +503,6 @@ class LocalDevManagerV2 {
     try {
       await DevServerManagerV2.setup({
         projectNodes: this.projectNodes,
-        onUploadRequired: this.logUploadWarning.bind(this),
         accountId: this.targetTestingAccountId,
         setActiveApp: this.setActiveApp.bind(this),
       });

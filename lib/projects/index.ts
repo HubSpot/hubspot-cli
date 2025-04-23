@@ -24,7 +24,6 @@ import SpinniesManager from '../ui/SpinniesManager';
 import { ProjectConfig } from '../../types/Projects';
 import { logError, ApiErrorContext } from '../errorHandlers/index';
 
-
 export function writeProjectConfig(
   configPath: string,
   config: ProjectConfig
@@ -56,10 +55,14 @@ function getProjectConfigPath(dir?: string): string | null {
   return configPath;
 }
 
-export async function getProjectConfig(dir?: string): Promise<{
+export interface LoadedProjectConfig {
   projectDir: string | null;
   projectConfig: ProjectConfig | null;
-}> {
+}
+
+export async function getProjectConfig(
+  dir?: string
+): Promise<LoadedProjectConfig> {
   const configPath = getProjectConfigPath(dir);
   if (!configPath) {
     return { projectConfig: null, projectDir: null };
@@ -81,7 +84,7 @@ export async function getProjectConfig(dir?: string): Promise<{
 export function validateProjectConfig(
   projectConfig: ProjectConfig | null,
   projectDir: string | null
-): void {
+): asserts projectConfig is ProjectConfig {
   if (!projectConfig || !projectDir) {
     logger.error(
       i18n(`lib.projects.validateProjectConfig.configNotFound`, {
@@ -92,7 +95,9 @@ export function validateProjectConfig(
   }
 
   if (!projectConfig.name || !projectConfig.srcDir) {
-    logger.error(i18n(`lib.projects.validateProjectConfig.configMissingFields`));
+    logger.error(
+      i18n(`lib.projects.validateProjectConfig.configMissingFields`)
+    );
     return process.exit(EXIT_CODES.ERROR);
   }
 

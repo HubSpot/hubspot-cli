@@ -5,7 +5,6 @@ import { PromptConfig } from '../../types/Prompts';
 import { HUBSPOT_ACCOUNT_TYPES } from '@hubspot/local-dev-lib/constants/config';
 import { AccountType } from '@hubspot/local-dev-lib/types/Accounts';
 
-
 export type AccountNamePromptResponse = {
   name: string;
 };
@@ -26,7 +25,9 @@ export function getCliAccountNamePromptConfig(
         return i18n(`lib.prompts.accountNamePrompt.errors.spacesInName`);
       }
       return accountNameExistsInConfig(val)
-        ? i18n(`lib.prompts.accountNamePrompt.errors.accountNameExists`, { name: val })
+        ? i18n(`lib.prompts.accountNamePrompt.errors.accountNameExists`, {
+            name: val,
+          })
         : true;
     },
   };
@@ -62,10 +63,15 @@ export function hubspotAccountNamePrompt({
       ? i18n(`lib.prompts.accountNamePrompt.enterDevelopmentSandboxName`)
       : i18n(`lib.prompts.accountNamePrompt.enterStandardSandboxName`);
   } else if (isDeveloperTestAccount) {
-    promptMessageString = i18n(`lib.prompts.accountNamePrompt.enterDeveloperTestAccountName`);
-    defaultName = i18n(`lib.prompts.accountNamePrompt.developerTestAccountDefaultName`, {
-      count: currentPortalCount + 1,
-    });
+    promptMessageString = i18n(
+      `lib.prompts.accountNamePrompt.enterDeveloperTestAccountName`
+    );
+    defaultName = i18n(
+      `lib.prompts.accountNamePrompt.developerTestAccountDefaultName`,
+      {
+        count: currentPortalCount + 1,
+      }
+    );
   }
 
   return promptUser<AccountNamePromptResponse>([
@@ -79,7 +85,9 @@ export function hubspotAccountNamePrompt({
           return i18n(`lib.prompts.accountNamePrompt.errors.nameRequired`);
         }
         return accountNameExistsInConfig(val)
-          ? i18n(`lib.prompts.accountNamePrompt.errors.accountNameExists`, { name: val })
+          ? i18n(`lib.prompts.accountNamePrompt.errors.accountNameExists`, {
+              name: val,
+            })
           : true;
       },
       default: defaultName,

@@ -3,7 +3,6 @@ import { i18n } from '../lang';
 import { ensureProjectExists } from '../projects';
 import { uiAccountDescription } from '../ui';
 
-
 export type ProjectNamePromptResponse = {
   projectName: string;
 };
@@ -25,10 +24,13 @@ export async function projectNamePrompt(
         noLogs: true,
       });
       if (!projectExists) {
-        return i18n(`lib.prompts.projectNamePrompt.errors.projectDoesNotExist`, {
-          projectName: val,
-          accountIdentifier: uiAccountDescription(accountId),
-        });
+        return i18n(
+          `lib.prompts.projectNamePrompt.errors.projectDoesNotExist`,
+          {
+            projectName: val,
+            accountIdentifier: uiAccountDescription(accountId),
+          }
+        );
       }
       return true;
     },

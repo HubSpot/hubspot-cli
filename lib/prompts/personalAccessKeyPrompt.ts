@@ -16,7 +16,6 @@ import { uiInfoSection } from '../ui';
 import { EXIT_CODES } from '../enums/exitCodes';
 import { PromptConfig } from '../../types/Prompts';
 
-
 export type PersonalAccessKeyPromptResponse = {
   personalAccessKey: string;
   env: string;
@@ -62,9 +61,16 @@ export async function personalAccessKeyPrompt({
   const websiteOrigin = getHubSpotWebsiteOrigin(env);
   let url = `${websiteOrigin}/l/personal-access-key`;
   if (process.env.BROWSER !== 'none') {
-    uiInfoSection(i18n(`lib.prompts.personalAccessKeyPrompt.personalAccessKeySetupTitle`), () => {
-      logger.log(i18n(`lib.prompts.personalAccessKeyPrompt.personalAccessKeyBrowserOpenPrep`));
-    });
+    uiInfoSection(
+      i18n(`lib.prompts.personalAccessKeyPrompt.personalAccessKeySetupTitle`),
+      () => {
+        logger.log(
+          i18n(
+            `lib.prompts.personalAccessKeyPrompt.personalAccessKeyBrowserOpenPrep`
+          )
+        );
+      }
+    );
     if (account) {
       url = `${websiteOrigin}/personal-access-key/${account}`;
     }
@@ -80,7 +86,9 @@ export async function personalAccessKeyPrompt({
     }
   }
 
-  logger.log(i18n(`lib.prompts.personalAccessKeyPrompt.logs.openingWebBrowser`, { url }));
+  logger.log(
+    i18n(`lib.prompts.personalAccessKeyPrompt.logs.openingWebBrowser`, { url })
+  );
   const { personalAccessKey } =
     await promptUser<PersonalAccessKeyPromptResponse>(PERSONAL_ACCESS_KEY);
 
@@ -107,9 +115,13 @@ const CLIENT_ID: PromptConfig<ClientIdPromptResponse> = {
   message: i18n(`lib.prompts.personalAccessKeyPrompt.enterClientId`),
   validate(val?: string) {
     if (typeof val !== 'string') {
-      return i18n(`lib.prompts.personalAccessKeyPrompt.errors.invalidOauthClientId`);
+      return i18n(
+        `lib.prompts.personalAccessKeyPrompt.errors.invalidOauthClientId`
+      );
     } else if (val.length !== 36) {
-      return i18n(`lib.prompts.personalAccessKeyPrompt.errors.invalidOauthClientIdLength`);
+      return i18n(
+        `lib.prompts.personalAccessKeyPrompt.errors.invalidOauthClientIdLength`
+      );
     }
     return true;
   },
@@ -120,11 +132,17 @@ const CLIENT_SECRET: PromptConfig<ClientSecretPromptResponse> = {
   message: i18n(`lib.prompts.personalAccessKeyPrompt.enterClientSecret`),
   validate(val?: string) {
     if (typeof val !== 'string') {
-      return i18n(`lib.prompts.personalAccessKeyPrompt.errors.invalidOauthClientSecret`);
+      return i18n(
+        `lib.prompts.personalAccessKeyPrompt.errors.invalidOauthClientSecret`
+      );
     } else if (val.length !== 36) {
-      return i18n(`lib.prompts.personalAccessKeyPrompt.errors.invalidOauthClientSecretLength`);
+      return i18n(
+        `lib.prompts.personalAccessKeyPrompt.errors.invalidOauthClientSecretLength`
+      );
     } else if (val[0] === '*') {
-      return i18n(`lib.prompts.personalAccessKeyPrompt.errors.invalidOauthClientSecretCopy`);
+      return i18n(
+        `lib.prompts.personalAccessKeyPrompt.errors.invalidOauthClientSecretCopy`
+      );
     }
     return true;
   },
@@ -134,7 +152,9 @@ const PERSONAL_ACCESS_KEY_BROWSER_OPEN_PREP: PromptConfig<PersonalAccessKeyBrows
   {
     name: 'personalAcessKeyBrowserOpenPrep',
     type: 'confirm',
-    message: i18n(`lib.prompts.personalAccessKeyPrompt.personalAccessKeyBrowserOpenPrompt`),
+    message: i18n(
+      `lib.prompts.personalAccessKeyPrompt.personalAccessKeyBrowserOpenPrompt`
+    ),
   };
 
 const PERSONAL_ACCESS_KEY: PromptConfig<PersonalAccessKeyPromptResponse> = {
@@ -150,9 +170,13 @@ const PERSONAL_ACCESS_KEY: PromptConfig<PersonalAccessKeyPromptResponse> = {
   },
   validate(val?: string) {
     if (!val || typeof val !== 'string') {
-      return i18n(`lib.prompts.personalAccessKeyPrompt.errors.invalidPersonalAccessKey`);
+      return i18n(
+        `lib.prompts.personalAccessKeyPrompt.errors.invalidPersonalAccessKey`
+      );
     } else if (val[0] === '•') {
-      return i18n(`lib.prompts.personalAccessKeyPrompt.errors.invalidPersonalAccessKeyCopy`);
+      return i18n(
+        `lib.prompts.personalAccessKeyPrompt.errors.invalidPersonalAccessKeyCopy`
+      );
     }
     return true;
   },

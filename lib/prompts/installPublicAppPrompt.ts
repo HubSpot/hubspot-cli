@@ -5,7 +5,6 @@ import { promptUser } from './promptUtils';
 import { i18n } from '../lang';
 import { EXIT_CODES } from '../enums/exitCodes';
 
-
 export async function installPublicAppPrompt(
   env: string,
   targetAccountId: number,
@@ -27,7 +26,9 @@ export async function installPublicAppPrompt(
     name: 'shouldOpenBrowser',
     type: 'confirm',
     message: i18n(
-      isReinstall ? `lib.prompts.installPublicAppPrompt.reinstallPrompt` : `lib.prompts.installPublicAppPrompt.prompt`
+      isReinstall
+        ? `lib.prompts.installPublicAppPrompt.reinstallPrompt`
+        : `lib.prompts.installPublicAppPrompt.prompt`
     ),
   });
 

@@ -45,7 +45,9 @@ export async function handler(
       const { shouldDeleteTable } = await promptUser({
         name: 'shouldDeleteTable',
         type: 'confirm',
-        message: i18n('commands.hubdb.subcommands.delete.shouldDeleteTable', { tableId }),
+        message: i18n('commands.hubdb.subcommands.delete.shouldDeleteTable', {
+          tableId,
+        }),
       });
 
       if (!shouldDeleteTable) {
@@ -77,7 +79,9 @@ export function builder(yargs: Argv): Argv<HubdbDeleteArgs> {
   addUseEnvironmentOptions(yargs);
 
   yargs.positional('table-id', {
-    describe: i18n('commands.hubdb.subcommands.delete.positionals.tableId.describe'),
+    describe: i18n(
+      'commands.hubdb.subcommands.delete.positionals.tableId.describe'
+    ),
     type: 'string',
   });
 

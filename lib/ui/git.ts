@@ -3,7 +3,6 @@ import { checkGitInclusion } from '@hubspot/local-dev-lib/gitignore';
 import { logger } from '@hubspot/local-dev-lib/logger';
 import { i18n } from '../lang';
 
-
 export function checkAndWarnGitInclusion(configPath: string): void {
   try {
     const { inGit, configIgnored } = checkGitInclusion(configPath);

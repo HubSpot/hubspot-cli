@@ -14,7 +14,6 @@ import {
 } from '../../types/Projects';
 import { debugError } from '../errorHandlers/index';
 
-
 export const EMPTY_PROJECT_TEMPLATE_NAME = 'no-template';
 const PROJECT_TEMPLATE_PROPERTIES = ['name', 'label', 'path', 'insertPath'];
 
@@ -55,7 +54,9 @@ export async function getProjectTemplateListFromRepo(
     config = data;
   } catch (e) {
     debugError(e);
-    logger.error(i18n(`lib.projects.create.errors.missingConfigFileTemplateSource`));
+    logger.error(
+      i18n(`lib.projects.create.errors.missingConfigFileTemplateSource`)
+    );
     return process.exit(EXIT_CODES.ERROR);
   }
 

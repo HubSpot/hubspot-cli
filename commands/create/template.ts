@@ -8,12 +8,13 @@ const {
 const { i18n } = require('../../lib/lang');
 const { EXIT_CODES } = require('../../lib/enums/exitCodes');
 
-
 module.exports = {
   dest: ({ dest }) => dest,
   validate: ({ name }) => {
     if (!name) {
-      logger.error(i18n(`commands.create.subcommands.template.errors.nameRequired`));
+      logger.error(
+        i18n(`commands.create.subcommands.template.errors.nameRequired`)
+      );
       return false;
     }
 

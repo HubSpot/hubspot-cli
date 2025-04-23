@@ -40,7 +40,11 @@ function getSampleTypesPrompt(
         if (input && input.length > 0) {
           resolve(true);
         } else {
-          reject(i18n('lib.prompts.createApiSamplePrompt.errors.apiSampleAppRequired'));
+          reject(
+            i18n(
+              'lib.prompts.createApiSamplePrompt.errors.apiSampleAppRequired'
+            )
+          );
         }
       });
     },
@@ -63,7 +67,9 @@ function getLanguagesPrompt(
         if (input && input.length > 0) {
           resolve(true);
         }
-        reject(i18n('lib.prompts.createApiSamplePrompt.errors.languageRequired'));
+        reject(
+          i18n('lib.prompts.createApiSamplePrompt.errors.languageRequired')
+        );
       });
     },
   };

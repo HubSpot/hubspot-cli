@@ -1,7 +1,6 @@
 import { promptUser } from './promptUtils';
 import { i18n } from '../lang';
 
-
 type SecretValuePromptResponse = {
   secretValue: string;
 };

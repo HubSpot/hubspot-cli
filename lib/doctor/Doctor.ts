@@ -1,5 +1,8 @@
 import { logger } from '@hubspot/local-dev-lib/logger';
-import { getAccountId } from '@hubspot/local-dev-lib/config';
+import {
+  getAccountId,
+  getCWDAccountOverride,
+} from '@hubspot/local-dev-lib/config';
 
 import SpinniesManager from '../ui/SpinniesManager';
 import {
@@ -31,7 +34,6 @@ import pkg from '../../package.json';
 const { i18n } = require('../lang');
 const { uiLink } = require('../ui');
 const minMajorNodeVersion = 18;
-
 
 export class Doctor {
   accountId: number | null;
@@ -71,6 +73,7 @@ export class Doctor {
       ...(this.projectConfig?.projectConfig ? this.performProjectChecks() : []),
     ]);
 
+    this.performDefaultAccountOverrideFileChecks();
     this.performCliConfigSettingsChecks();
 
     SpinniesManager.succeed('runningDiagnostics', {
@@ -117,6 +120,25 @@ export class Doctor {
     }
 
     return [this.checkIfAccessTokenValid()];
+  }
+
+  private performDefaultAccountOverrideFileChecks(): void {
+    const localI18nKey = `${i18nKey}.defaultAccountOverrideFileChecks`;
+    if (this.diagnosticInfo?.defaultAccountOverrideFile) {
+      this.diagnosis?.addDefaultAccountOverrideFileSection({
+        type: 'warning',
+        message: i18n(`${localI18nKey}.overrideActive`, {
+          defaultAccountOverrideFile:
+            this.diagnosticInfo.defaultAccountOverrideFile,
+        }),
+      });
+      this.diagnosis?.addDefaultAccountOverrideFileSection({
+        type: 'warning',
+        message: i18n(`${localI18nKey}.overrideAccountId`, {
+          overrideAccountId: getCWDAccountOverride(),
+        }),
+      });
+    }
   }
 
   private performCliConfigSettingsChecks(): void {

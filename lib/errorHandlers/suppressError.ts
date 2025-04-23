@@ -14,7 +14,6 @@ import {
 import { ApiErrorContext } from './index';
 import { HubSpotHttpError } from '@hubspot/local-dev-lib/models/HubSpotHttpError';
 
-
 function createPlatformVersionError(
   err: HubSpotHttpError,
   subCategory: string
@@ -41,13 +40,20 @@ function createPlatformVersionError(
   }
 
   uiLine();
-  logger.error(i18n(`lib.errorHandlers.suppressErrors.platformVersionErrors.header`));
-  logger.log(
-    i18n(`lib.errorHandlers.suppressErrors.platformVersionErrors.${translationKey}`, {
-      platformVersion,
-    })
+  logger.error(
+    i18n(`lib.errorHandlers.suppressErrors.platformVersionErrors.header`)
   );
-  logger.log(i18n(`lib.errorHandlers.suppressErrors.platformVersionErrors.updateProject`));
+  logger.log(
+    i18n(
+      `lib.errorHandlers.suppressErrors.platformVersionErrors.${translationKey}`,
+      {
+        platformVersion,
+      }
+    )
+  );
+  logger.log(
+    i18n(`lib.errorHandlers.suppressErrors.platformVersionErrors.updateProject`)
+  );
   logger.log(
     i18n(`lib.errorHandlers.suppressErrors.platformVersionErrors.betaLink`, {
       docsLink: uiLink(

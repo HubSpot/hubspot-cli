@@ -5,7 +5,6 @@ import { logger } from '@hubspot/local-dev-lib/logger';
 import { i18n } from '../lang';
 import { uiLink } from '../ui';
 
-
 class _ProjectLogsManager {
   projectName: string | undefined;
   projectId: number | undefined;
@@ -37,7 +36,9 @@ class _ProjectLogsManager {
     const { projectConfig } = await getProjectConfig();
 
     if (!projectConfig || !projectConfig.name) {
-      throw new Error(i18n(`commands.project.subcommands.logs.errors.noProjectConfig`));
+      throw new Error(
+        i18n(`commands.project.subcommands.logs.errors.noProjectConfig`)
+      );
     }
 
     const { name: projectName } = projectConfig;
@@ -59,7 +60,11 @@ class _ProjectLogsManager {
       !project.deployedBuild ||
       !project.deployedBuild.subbuildStatuses
     ) {
-      throw new Error(i18n(`commands.project.subcommands.logs.errors.failedToFetchProjectDetails`));
+      throw new Error(
+        i18n(
+          `commands.project.subcommands.logs.errors.failedToFetchProjectDetails`
+        )
+      );
     }
 
     this.projectId = project.id;
@@ -68,11 +73,17 @@ class _ProjectLogsManager {
 
   async fetchFunctionDetails(): Promise<void> {
     if (!this.projectId) {
-      throw new Error(i18n(`commands.project.subcommands.logs.errors.noProjectConfig`));
+      throw new Error(
+        i18n(`commands.project.subcommands.logs.errors.noProjectConfig`)
+      );
     }
 
     if (!this.accountId) {
-      logger.debug(i18n(`commands.project.subcommands.logs.errors.projectLogsManagerNotInitialized`));
+      logger.debug(
+        i18n(
+          `commands.project.subcommands.logs.errors.projectLogsManagerNotInitialized`
+        )
+      );
       throw new Error(i18n(`commands.project.subcommands.logs.errors.generic`));
     }
 
@@ -98,7 +109,9 @@ class _ProjectLogsManager {
       throw new Error(
         i18n(`commands.project.subcommands.logs.errors.noFunctionsInProject`, {
           link: uiLink(
-            i18n(`commands.project.subcommands.logs.errors.noFunctionsLinkText`),
+            i18n(
+              `commands.project.subcommands.logs.errors.noFunctionsLinkText`
+            ),
             'https://developers.hubspot.com/docs/platform/serverless-functions'
           ),
         })
@@ -112,12 +125,14 @@ class _ProjectLogsManager {
     );
   }
 
-  setFunction(functionName: string) {
-    if (!(this.functions.length > 0)) {
+  setFunction(functionName?: string) {
+    if (!functionName || this.functions.length === 0) {
       throw new Error(
         i18n(`commands.project.subcommands.logs.errors.noFunctionsInProject`, {
           link: uiLink(
-            i18n(`commands.project.subcommands.logs.errors.noFunctionsLinkText`),
+            i18n(
+              `commands.project.subcommands.logs.errors.noFunctionsLinkText`
+            ),
             'https://developers.hubspot.com/docs/platform/serverless-functions'
           ),
         })
@@ -130,7 +145,9 @@ class _ProjectLogsManager {
 
     if (!this.selectedFunction) {
       throw new Error(
-        i18n(`commands.project.subcommands.logs.errors.noFunctionWithName`, { name: functionName })
+        i18n(`commands.project.subcommands.logs.errors.noFunctionWithName`, {
+          name: functionName,
+        })
       );
     }
 
@@ -138,7 +155,9 @@ class _ProjectLogsManager {
 
     if (!this.selectedFunction.deployOutput) {
       throw new Error(
-        i18n(`commands.project.subcommands.logs.errors.functionNotDeployed`, { name: functionName })
+        i18n(`commands.project.subcommands.logs.errors.functionNotDeployed`, {
+          name: functionName,
+        })
       );
     }
     this.appId = this.selectedFunction.deployOutput.appId;

@@ -3,7 +3,6 @@ import { PromptConfig } from '../../types/Prompts';
 import { promptUser } from './promptUtils';
 import { i18n } from '../lang';
 
-
 type CreateModulePromptResponse = {
   moduleLabel: string;
   reactType: boolean;

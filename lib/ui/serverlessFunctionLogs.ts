@@ -7,7 +7,6 @@ import {
   GetFunctionLogsResponse,
 } from '@hubspot/local-dev-lib/types/Functions';
 
-
 const SEPARATOR = ' - ';
 const LOG_STATUS_COLORS: { [key: string]: (status: string) => string } = {
   SUCCESS: Styles.success,

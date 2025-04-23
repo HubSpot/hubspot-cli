@@ -3,7 +3,6 @@ import { getCwd } from '@hubspot/local-dev-lib/path';
 import { promptUser } from './promptUtils';
 import { i18n } from '../lang';
 
-
 type PreviewPromptResponse = {
   src: string;
   dest: string;

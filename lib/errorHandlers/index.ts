@@ -67,7 +67,9 @@ export function debugError(error: unknown, context?: ApiErrorContext): void {
   if (isHubSpotHttpError(error)) {
     logger.debug(error.toString());
   } else {
-    logger.debug(i18n(`lib.errorHandlers.index.errorOccurred`, { error: String(error) }));
+    logger.debug(
+      i18n(`lib.errorHandlers.index.errorOccurred`, { error: String(error) })
+    );
   }
 
   if (error instanceof Error && error.cause && !isHubSpotHttpError(error)) {

@@ -109,7 +109,9 @@ exports.handler = async options => {
 
 exports.builder = yargs => {
   yargs.positional('path', {
-    describe: i18n('commands.function.subcommands.deploy.positionals.path.describe'),
+    describe: i18n(
+      'commands.function.subcommands.deploy.positionals.path.describe'
+    ),
     type: 'string',
   });
 

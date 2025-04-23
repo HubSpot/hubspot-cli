@@ -78,7 +78,9 @@ export function builder(yargs: Argv): Argv<HubdbClearArgs> {
   addUseEnvironmentOptions(yargs);
 
   yargs.positional('table-id', {
-    describe: i18n('commands.hubdb.subcommands.clear.positionals.tableId.describe'),
+    describe: i18n(
+      'commands.hubdb.subcommands.clear.positionals.tableId.describe'
+    ),
     type: 'string',
   });
 

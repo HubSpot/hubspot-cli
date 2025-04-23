@@ -3,6 +3,7 @@ import { bold, green, red } from 'chalk';
 import { helpers } from '../interpolation';
 import { DiagnosticInfo } from './DiagnosticInfoBuilder';
 import { uiAccountDescription } from '../ui';
+import { indent } from '../ui/index';
 const { i18n } = require('../lang');
 
 interface DiagnosisOptions {
@@ -30,13 +31,12 @@ interface DiagnosisCategories {
   cli: DiagnosisCategory;
   project: DiagnosisCategory;
   cliConfig: DiagnosisCategory;
+  defaultAccountOverrideFile: DiagnosisCategory;
 }
-
 
 export class Diagnosis {
   private readonly prefixes: prefixes;
   private readonly diagnosis: DiagnosisCategories;
-  private readonly indentation = '  ';
   private errorCount = 0;
   private warningCount = 0;
 
@@ -56,6 +56,10 @@ export class Diagnosis {
       },
       cliConfig: {
         header: i18n(`lib.doctor.diagnosis.cliConfig.header`),
+        sections: [],
+      },
+      defaultAccountOverrideFile: {
+        header: i18n(`${i18nKey}.defaultAccountOverrideFile.header`),
         sections: [],
       },
       project: {
@@ -84,10 +88,6 @@ export class Diagnosis {
     }
   }
 
-  private indent(level: number): string {
-    return this.indentation.repeat(level);
-  }
-
   getErrorCount(): number {
     return this.errorCount;
   }
@@ -106,6 +106,10 @@ export class Diagnosis {
 
   addCLIConfigSection(section: Section): void {
     this.diagnosis.cliConfig.sections.push(section);
+  }
+
+  addDefaultAccountOverrideFileSection(section: Section): void {
+    this.diagnosis.defaultAccountOverrideFile.sections.push(section);
   }
 
   toString(): string {
@@ -158,10 +162,10 @@ export class Diagnosis {
       }
 
       output.push(
-        `${this.indent(1)}${this.prefixes[section.type]} ${section.message}`
+        `${indent(1)}${this.prefixes[section.type]} ${section.message}`
       );
       if (section.secondaryMessaging) {
-        output.push(`${this.indent(2)}- ${section.secondaryMessaging}`);
+        output.push(`${indent(2)}- ${section.secondaryMessaging}`);
       }
     });
 

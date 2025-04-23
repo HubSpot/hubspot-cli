@@ -8,20 +8,27 @@ import { EXIT_CODES } from '../enums/exitCodes';
 import { Table } from '@hubspot/local-dev-lib/types/Hubdb';
 import { isValidPath, untildify } from '@hubspot/local-dev-lib/path';
 
-
 async function fetchHubDBOptions(accountId: number) {
   try {
     const {
       data: { results: tables },
     } = await fetchTables(accountId);
     if (tables.length === 0) {
-      logger.log(i18n(`lib.prompts.selectHubDBTablePrompt.errors.noTables`, { accountId }));
+      logger.log(
+        i18n(`lib.prompts.selectHubDBTablePrompt.errors.noTables`, {
+          accountId,
+        })
+      );
       process.exit(EXIT_CODES.SUCCESS);
     }
     return tables;
   } catch (error) {
     debugError(error, { accountId });
-    logger.error(i18n(`lib.prompts.selectHubDBTablePrompt.errors.errorFetchingTables`, { accountId }));
+    logger.error(
+      i18n(`lib.prompts.selectHubDBTablePrompt.errors.errorFetchingTables`, {
+        accountId,
+      })
+    );
     process.exit(EXIT_CODES.ERROR);
   }
 }
@@ -68,7 +75,9 @@ export async function selectHubDBTablePrompt({
           return i18n(`lib.prompts.selectHubDBTablePrompt.errors.invalidDest`);
         }
         if (!isValidPath(input)) {
-          return i18n(`lib.prompts.selectHubDBTablePrompt.errors.invalidCharacters`);
+          return i18n(
+            `lib.prompts.selectHubDBTablePrompt.errors.invalidCharacters`
+          );
         }
         return true;
       },

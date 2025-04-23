@@ -44,9 +44,11 @@ import {
 } from '../../types/Yargs';
 import { SandboxSyncTask } from '../../types/Sandboxes';
 
-
 export const command = 'create';
-export const describe = uiBetaTag(i18n(`commands.sandbox.subcommands.create.describe`), false);
+export const describe = uiBetaTag(
+  i18n(`commands.sandbox.subcommands.create.describe`),
+  false
+);
 
 type CombinedArgs = ConfigArgs & AccountArgs & EnvironmentArgs & TestingArgs;
 type SandboxCreateArgs = CommonArgs &
@@ -100,7 +102,9 @@ export async function handler(
     if (!force) {
       typePrompt = await sandboxTypePrompt();
     } else {
-      logger.error(i18n(`commands.sandbox.subcommands.create.failure.optionMissing.type`));
+      logger.error(
+        i18n(`commands.sandbox.subcommands.create.failure.optionMissing.type`)
+      );
       process.exit(EXIT_CODES.ERROR);
     }
   }
@@ -137,7 +141,9 @@ export async function handler(
     if (!force) {
       namePrompt = await hubspotAccountNamePrompt({ accountType: sandboxType });
     } else {
-      logger.error(i18n(`commands.sandbox.subcommands.create.failure.optionMissing.name`));
+      logger.error(
+        i18n(`commands.sandbox.subcommands.create.failure.optionMissing.name`)
+      );
       process.exit(EXIT_CODES.ERROR);
     }
   }
@@ -174,10 +180,13 @@ export async function handler(
     // Check if sandbox account config exists
     if (!sandboxAccountConfig) {
       logger.error(
-        i18n(`commands.sandbox.subcommands.create.failure.noSandboxAccountConfig`, {
-          accountId: result.sandbox.sandboxHubId,
-          authCommand: uiCommandReference('hs auth'),
-        })
+        i18n(
+          `commands.sandbox.subcommands.create.failure.noSandboxAccountConfig`,
+          {
+            accountId: result.sandbox.sandboxHubId,
+            authCommand: uiCommandReference('hs auth'),
+          }
+        )
       );
       process.exit(EXIT_CODES.ERROR);
     }
@@ -224,7 +233,9 @@ export function builder(yargs: Argv): Argv<SandboxCreateArgs> {
   yargs.option('force', {
     type: 'boolean',
     alias: 'f',
-    describe: i18n(`commands.sandbox.subcommands.create.options.force.describe`),
+    describe: i18n(
+      `commands.sandbox.subcommands.create.options.force.describe`
+    ),
   });
   yargs.option('name', {
     describe: i18n(`commands.sandbox.subcommands.create.options.name.describe`),

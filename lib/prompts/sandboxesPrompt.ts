@@ -12,7 +12,6 @@ import { CLIAccount } from '@hubspot/local-dev-lib/types/Accounts';
 import { PromptChoices } from '../../types/Prompts';
 import { SandboxAccountType } from '../../types/Sandboxes';
 
-
 type SandboxTypePromptResponse = {
   type: SandboxAccountType;
 };

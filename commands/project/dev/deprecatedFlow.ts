@@ -36,7 +36,6 @@ import {
 import { ensureProjectExists } from '../../../lib/projects';
 import { ProjectDevArgs } from '../../../types/Yargs';
 
-
 export async function deprecatedProjectDevFlow(
   args: ArgumentsCamelCase<ProjectDevArgs>,
   accountConfig: CLIAccount,
@@ -61,7 +60,9 @@ export async function deprecatedProjectDevFlow(
     );
     process.exit(EXIT_CODES.SUCCESS);
   } else if (hasPrivateApps && hasPublicApps) {
-    logger.error(i18n(`commands.project.subcommands.dev.errors.invalidProjectComponents`));
+    logger.error(
+      i18n(`commands.project.subcommands.dev.errors.invalidProjectComponents`)
+    );
     process.exit(EXIT_CODES.SUCCESS);
   }
 

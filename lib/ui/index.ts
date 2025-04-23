@@ -90,26 +90,30 @@ export function uiCommandReference(command: string, withQuotes = true): string {
 }
 
 export function uiFeatureHighlight(features: string[], title?: string): void {
-
-  uiInfoSection(title ? title : i18n(`lib.ui.featureHighlight.defaultTitle`), () => {
-    features.forEach((c, i) => {
-      const featureKey = `lib.ui.featureHighlight.featureKeys.${c}`;
-      const message = i18n(`${featureKey}.message`, {
-        command: uiCommandReference(i18n(`${featureKey}.command`)),
-        link: uiLink(i18n(`${featureKey}.linkText`), i18n(`${featureKey}.url`)),
+  uiInfoSection(
+    title ? title : i18n(`lib.ui.featureHighlight.defaultTitle`),
+    () => {
+      features.forEach((c, i) => {
+        const featureKey = `lib.ui.featureHighlight.featureKeys.${c}`;
+        const message = i18n(`${featureKey}.message`, {
+          command: uiCommandReference(i18n(`${featureKey}.command`)),
+          link: uiLink(
+            i18n(`${featureKey}.linkText`),
+            i18n(`${featureKey}.url`)
+          ),
+        });
+        if (i !== 0) {
+          logger.log('');
+        }
+        logger.log(message);
       });
-      if (i !== 0) {
-        logger.log('');
-      }
-      logger.log(message);
-    });
-  });
+    }
+  );
 }
 
 export function uiBetaTag(message: string, log?: true): undefined;
 export function uiBetaTag(message: string, log: false): string;
 export function uiBetaTag(message: string, log = true): string | undefined {
-
   const terminalUISupport = getTerminalUISupport();
   const tag = i18n(`lib.ui.betaTag`);
 
@@ -120,13 +124,14 @@ export function uiBetaTag(message: string, log = true): string | undefined {
   if (log) {
     logger.log(result);
     return;
-  } else {
-    return result;
   }
+  return result;
 }
 
-export function uiDeprecatedTag(message: string): void {
-
+export function uiDeprecatedTag(
+  message: string,
+  log = true
+): string | undefined {
   const terminalUISupport = getTerminalUISupport();
   const tag = i18n(`lib.ui.deprecatedTag`);
 
@@ -134,7 +139,10 @@ export function uiDeprecatedTag(message: string): void {
     terminalUISupport.color ? chalk.yellow(tag) : tag
   } ${message}`;
 
-  logger.log(result);
+  if (log) {
+    logger.log(result);
+  }
+  return result;
 }
 
 export function uiCommandDisabledBanner(
@@ -142,7 +150,6 @@ export function uiCommandDisabledBanner(
   url?: string,
   message?: string
 ): void {
-
   const tag =
     message ||
     i18n(`lib.ui.disabledMessage`, {
@@ -163,7 +170,6 @@ export function uiDeprecatedDescription(
   command: string,
   url?: string
 ) {
-
   const tag = i18n(`lib.ui.deprecatedDescription`, {
     message,
     command: uiCommandReference(command),
@@ -177,7 +183,6 @@ export function uiDeprecatedMessage(
   url?: string,
   message?: string
 ): void {
-
   const tag =
     message ||
     i18n(`lib.ui.deprecatedMessage`, {
@@ -188,4 +193,9 @@ export function uiDeprecatedMessage(
   logger.log();
   uiDeprecatedTag(tag);
   logger.log();
+}
+
+export function indent(level: number): string {
+  const indentation = '  ';
+  return indentation.repeat(level);
 }

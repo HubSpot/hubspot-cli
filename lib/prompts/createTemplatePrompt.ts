@@ -2,7 +2,6 @@ import { promptUser } from './promptUtils';
 import { i18n } from '../lang';
 import { PromptChoices, PromptConfig } from '../../types/Prompts';
 
-
 const templateTypeChoices = [
   { name: 'page', value: 'page-template' },
   { name: 'email', value: 'email-template' },

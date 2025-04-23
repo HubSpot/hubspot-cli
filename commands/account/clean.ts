@@ -1,22 +1,33 @@
+import fs from 'fs';
 import { Argv, ArgumentsCamelCase } from 'yargs';
 import { logger } from '@hubspot/local-dev-lib/logger';
 import { accessTokenForPersonalAccessKey } from '@hubspot/local-dev-lib/personalAccessKey';
 import {
+  loadConfig,
+  getConfigPath,
   deleteAccount,
   getConfigAccounts,
+  getConfigDefaultAccount,
+  updateDefaultAccount,
 } from '@hubspot/local-dev-lib/config';
 import { getAccountIdentifier } from '@hubspot/local-dev-lib/config/getAccountIdentifier';
 import { isSpecifiedError } from '@hubspot/local-dev-lib/errors/index';
+import {
+  getCWDAccountOverride,
+  getDefaultAccountOverrideFilePath,
+} from '@hubspot/local-dev-lib/config';
+
 import { trackCommandUsage } from '../../lib/usageTracking';
 import { i18n } from '../../lib/lang';
 import { EXIT_CODES } from '../../lib/enums/exitCodes';
 import { addTestingOptions, addConfigOptions } from '../../lib/commonOpts';
 import { promptUser } from '../../lib/prompts/promptUtils';
+import { selectAccountFromConfig } from '../../lib/prompts/accountsPrompt';
 import { getTableContents } from '../../lib/ui/table';
 import SpinniesManager from '../../lib/ui/SpinniesManager';
 import { uiAccountDescription } from '../../lib/ui';
 import { CommonArgs, ConfigArgs } from '../../types/Yargs';
-
+import { logError } from '../../lib/errorHandlers';
 
 export const command = 'clean';
 export const describe = i18n(`commands.account.subcommands.clean.describe`);
@@ -93,22 +104,50 @@ export async function handler(
         { border: { bodyLeft: '  ' } }
       )
     );
+
+    let promptMessage = i18n(
+      oneAccountFound
+        ? `commands.account.subcommands.clean.confirm.one`
+        : `commands.account.subcommands.clean.confirm.other`,
+      {
+        count: accountsToRemove.length,
+      }
+    );
+
+    const accountOverride = getCWDAccountOverride();
+    const overrideFilePath = getDefaultAccountOverrideFilePath();
+    const accountOverrideMatches = accountsToRemove.some(
+      account =>
+        account.name === accountOverride ||
+        // @ts-expect-error: Default account override files can only exist with global config
+        account.accountId === accountOverride
+    );
+    if (overrideFilePath && accountOverride && accountOverrideMatches) {
+      promptMessage = `${promptMessage}${i18n(
+        `commands.account.subcommands.clean.defaultAccountOverride`,
+        {
+          overrideFilePath,
+        }
+      )}`;
+    }
+
     const { accountsCleanPrompt } = await promptUser([
       {
         name: 'accountsCleanPrompt',
         type: 'confirm',
-        message: i18n(
-          oneAccountFound
-            ? `commands.account.subcommands.clean.confirm.one`
-            : `commands.account.subcommands.clean.confirm.other`,
-          {
-            count: accountsToRemove.length,
-          }
-        ),
+        message: promptMessage,
       },
     ]);
     if (accountsCleanPrompt) {
       logger.log('');
+      try {
+        if (overrideFilePath) {
+          fs.unlinkSync(overrideFilePath);
+        }
+      } catch (error) {
+        logError(error);
+      }
+
       for (const accountToRemove of accountsToRemove) {
         await deleteAccount(accountToRemove.name!);
         logger.log(
@@ -116,6 +155,22 @@ export async function handler(
             accountName: accountToRemove.name!,
           })
         );
+      }
+
+      // Get updated version of the config
+      loadConfig(getConfigPath()!);
+      const defaultAccount = getConfigDefaultAccount();
+
+      if (
+        defaultAccount &&
+        accountsToRemove.some(p => p.name === defaultAccount)
+      ) {
+        logger.log();
+        logger.log(
+          i18n(`commands.account.subcommands.clean.replaceDefaultAccount`)
+        );
+        const newDefaultAccount = await selectAccountFromConfig();
+        updateDefaultAccount(newDefaultAccount);
       }
     }
   } else {

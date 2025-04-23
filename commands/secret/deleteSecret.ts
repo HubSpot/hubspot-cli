@@ -21,7 +21,6 @@ import {
   EnvironmentArgs,
 } from '../../types/Yargs';
 
-
 export const command = 'delete [name]';
 export const describe = i18n(`commands.secret.subcommands.delete.describe`);
 
@@ -43,7 +42,11 @@ export async function handler(
     } = await fetchSecrets(derivedAccountId);
 
     if (secretName && !secrets.includes(secretName)) {
-      logger.error(i18n(`commands.secret.subcommands.delete.errors.noSecret`, { secretName }));
+      logger.error(
+        i18n(`commands.secret.subcommands.delete.errors.noSecret`, {
+          secretName,
+        })
+      );
       process.exit(EXIT_CODES.ERROR);
     }
 
@@ -57,9 +60,14 @@ export async function handler(
 
     const confirmDelete =
       force ||
-      (await confirmPrompt(i18n(`commands.secret.subcommands.delete.confirmDelete`, { secretName }), {
-        defaultAnswer: false,
-      }));
+      (await confirmPrompt(
+        i18n(`commands.secret.subcommands.delete.confirmDelete`, {
+          secretName,
+        }),
+        {
+          defaultAnswer: false,
+        }
+      ));
 
     if (!confirmDelete) {
       logger.success(i18n(`commands.secret.subcommands.delete.deleteCanceled`));
@@ -98,7 +106,9 @@ export function builder(yargs: Argv): Argv<DeleteSecretArgs> {
 
   yargs
     .positional('name', {
-      describe: i18n(`commands.secret.subcommands.delete.positionals.name.describe`),
+      describe: i18n(
+        `commands.secret.subcommands.delete.positionals.name.describe`
+      ),
       type: 'string',
     })
     .options('force', {

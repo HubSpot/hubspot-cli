@@ -45,7 +45,6 @@ import {
 } from '../../types/Projects';
 import { EXIT_CODES } from '../enums/exitCodes';
 
-
 const SPINNER_STATUS = {
   SPINNING: 'spinning',
 };
@@ -291,8 +290,12 @@ function makePollTaskStatusFunc<T extends ProjectTask>({
             ) {
               const taskStatusText =
                 subtask.status === statusText.STATES.SUCCESS
-                  ? i18n(`lib.projectBuildAndDeploy.makePollTaskStatusFunc.successStatusText`)
-                  : i18n(`lib.projectBuildAndDeploy.makePollTaskStatusFunc.failedStatusText`);
+                  ? i18n(
+                      `lib.projectBuildAndDeploy.makePollTaskStatusFunc.successStatusText`
+                    )
+                  : i18n(
+                      `lib.projectBuildAndDeploy.makePollTaskStatusFunc.failedStatusText`
+                    );
               const hasNewline =
                 spinner?.text?.includes('\n') || Boolean(topLevelTask);
               const updatedText = `${spinner?.text?.replace(
@@ -396,7 +399,9 @@ function pollBuildAutodeployStatus(
         logger.debug(e);
         return reject(
           new Error(
-            i18n(`lib.projectBuildAndDeploy.pollBuildAutodeployStatusError`, { buildId })
+            i18n(`lib.projectBuildAndDeploy.pollBuildAutodeployStatusError`, {
+              buildId,
+            })
           )
         );
       }
@@ -404,7 +409,9 @@ function pollBuildAutodeployStatus(
       if (!build || !build.status) {
         return reject(
           new Error(
-            i18n(`lib.projectBuildAndDeploy.pollBuildAutodeployStatusError`, { buildId })
+            i18n(`lib.projectBuildAndDeploy.pollBuildAutodeployStatusError`, {
+              buildId,
+            })
           )
         );
       }
@@ -578,7 +585,9 @@ export async function pollProjectBuildAndDeploy(
           {
             buildId,
             viewDeploysLink: uiLink(
-              i18n(`lib.projectBuildAndDeploy.pollProjectBuildAndDeploy.viewDeploys`),
+              i18n(
+                `lib.projectBuildAndDeploy.pollProjectBuildAndDeploy.viewDeploys`
+              ),
               getProjectActivityUrl(projectConfig.name, accountId)
             ),
           }
@@ -591,9 +600,12 @@ export async function pollProjectBuildAndDeploy(
     if (tempFile) {
       tempFile.removeCallback();
       logger.debug(
-        i18n(`lib.projectBuildAndDeploy.pollProjectBuildAndDeploy.cleanedUpTempFile`, {
-          path: tempFile.name,
-        })
+        i18n(
+          `lib.projectBuildAndDeploy.pollProjectBuildAndDeploy.cleanedUpTempFile`,
+          {
+            path: tempFile.name,
+          }
+        )
       );
     }
   } catch (e) {

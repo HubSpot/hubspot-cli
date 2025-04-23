@@ -27,9 +27,11 @@ import {
 } from '../../types/Yargs';
 import { makeYargsBuilder } from '../../lib/yargsUtils';
 
-
 export const command = 'deploy';
-export const describe = uiBetaTag(i18n(`commands.project.subcommands.deploy.describe`), false);
+export const describe = uiBetaTag(
+  i18n(`commands.project.subcommands.deploy.describe`),
+  false
+);
 
 export type ProjectDeployArgs = CommonArgs &
   ConfigArgs &
@@ -48,23 +50,29 @@ function validateBuildId(
   accountId: number
 ): boolean | string {
   if (Number(buildId) > latestBuildId) {
-    return i18n(`commands.project.subcommands.deploy.errors.buildIdDoesNotExist`, {
-      buildId: buildId,
-      projectName: projectName!,
-      linkToProject: uiLink(
-        i18n(`commands.project.subcommands.deploy.errors.viewProjectsBuilds`),
-        getProjectDetailUrl(projectName!, accountId)!
-      ),
-    });
+    return i18n(
+      `commands.project.subcommands.deploy.errors.buildIdDoesNotExist`,
+      {
+        buildId: buildId,
+        projectName: projectName!,
+        linkToProject: uiLink(
+          i18n(`commands.project.subcommands.deploy.errors.viewProjectsBuilds`),
+          getProjectDetailUrl(projectName!, accountId)!
+        ),
+      }
+    );
   }
   if (Number(buildId) === deployedBuildId) {
-    return i18n(`commands.project.subcommands.deploy.errors.buildAlreadyDeployed`, {
-      buildId: buildId,
-      linkToProject: uiLink(
-        i18n(`commands.project.subcommands.deploy.errors.viewProjectsBuilds`),
-        getProjectDetailUrl(projectName!, accountId)!
-      ),
-    });
+    return i18n(
+      `commands.project.subcommands.deploy.errors.buildAlreadyDeployed`,
+      {
+        buildId: buildId,
+        linkToProject: uiLink(
+          i18n(`commands.project.subcommands.deploy.errors.viewProjectsBuilds`),
+          getProjectDetailUrl(projectName!, accountId)!
+        ),
+      }
+    );
   }
   return true;
 }
@@ -123,7 +131,9 @@ export async function handler(
     } else {
       const deployBuildIdPromptResponse = await promptUser({
         name: 'buildId',
-        message: i18n(`commands.project.subcommands.deploy.deployBuildIdPrompt`),
+        message: i18n(
+          `commands.project.subcommands.deploy.deployBuildIdPrompt`
+        ),
         default:
           latestBuild.buildId === deployedBuildId
             ? undefined
@@ -141,7 +151,9 @@ export async function handler(
     }
 
     if (!buildIdToDeploy) {
-      logger.error(i18n(`commands.project.subcommands.deploy.errors.noBuildId`));
+      logger.error(
+        i18n(`commands.project.subcommands.deploy.errors.noBuildId`)
+      );
       return process.exit(EXIT_CODES.ERROR);
     }
 
@@ -190,18 +202,25 @@ export async function handler(
 function projectDeployBuilder(yargs: Argv): Argv<ProjectDeployArgs> {
   yargs.options({
     project: {
-      describe: i18n(`commands.project.subcommands.deploy.options.project.describe`),
+      describe: i18n(
+        `commands.project.subcommands.deploy.options.project.describe`
+      ),
       type: 'string',
     },
     build: {
       alias: ['build-id'],
-      describe: i18n(`commands.project.subcommands.deploy.options.build.describe`),
+      describe: i18n(
+        `commands.project.subcommands.deploy.options.build.describe`
+      ),
       type: 'number',
     },
   });
 
   yargs.example([
-    ['$0 project deploy', i18n(`commands.project.subcommands.deploy.examples.default`)],
+    [
+      '$0 project deploy',
+      i18n(`commands.project.subcommands.deploy.examples.default`),
+    ],
     [
       '$0 project deploy --project="my-project" --build=5',
       i18n(`commands.project.subcommands.deploy.examples.withOptions`),
