@@ -122,13 +122,16 @@ function handleTaskStatusError(
   statusText: ProjectPollStatusFunctionText
 ): never {
   logger.error(
-    i18n(`${i18nKey}.makePollTaskStatusFunc.errorFetchingTaskStatus`, {
-      taskType:
-        statusText.TYPE_KEY === PROJECT_BUILD_TEXT.TYPE_KEY
-          ? 'build'
-          : 'deploy',
-      openCommand: uiCommandReference('hs project open'),
-    })
+    i18n(
+      `lib.projectBuildAndDeploy.makePollTaskStatusFunc.errorFetchingTaskStatus`,
+      {
+        taskType:
+          statusText.TYPE_KEY === PROJECT_BUILD_TEXT.TYPE_KEY
+            ? 'build'
+            : 'deploy',
+        openCommand: uiCommandReference('hs project open'),
+      }
+    )
   );
   process.exit(EXIT_CODES.ERROR);
 }

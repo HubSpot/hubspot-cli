@@ -59,7 +59,7 @@ export class Diagnosis {
         sections: [],
       },
       defaultAccountOverrideFile: {
-        header: i18n(`${i18nKey}.defaultAccountOverrideFile.header`),
+        header: i18n(`lib.doctor.defaultAccountOverrideFile.header`),
         sections: [],
       },
       project: {
