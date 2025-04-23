@@ -21,7 +21,6 @@ import { migrateApp2023_2 } from '../../lib/app/migrate_legacy';
 import { getIsInProject } from '../../lib/projects';
 
 const { v2023_2, v2025_2 } = PLATFORM_VERSIONS;
-export const validMigrationTargets = [v2023_2, v2025_2];
 
 const command = 'migrate';
 const describe = undefined; // uiBetaTag(i18n(`commands.project.subcommands.migrateApp.header.text.describe`), false);
@@ -126,7 +125,7 @@ export function builder(yargs: Argv): Argv<MigrateAppArgs> {
     },
     'platform-version': {
       type: 'string',
-      choices: validMigrationTargets,
+      choices: [v2023_2, v2025_2],
       hidden: true,
       default: v2025_2,
     },
