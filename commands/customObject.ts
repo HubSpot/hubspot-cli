@@ -6,16 +6,17 @@ import { i18n } from '../lib/lang';
 import { logger } from '@hubspot/local-dev-lib/logger';
 import { uiBetaTag, uiLink } from '../lib/ui';
 
-const i18nKey = 'commands.customObject';
-
 export const command = ['custom-object', 'custom-objects', 'co'];
-export const describe = uiBetaTag(i18n(`${i18nKey}.describe`), false);
+export const describe = uiBetaTag(
+  i18n(`commands.customObject.describe`),
+  false
+);
 
 function logBetaMessage() {
-  uiBetaTag(i18n(`${i18nKey}.betaMessage`));
+  uiBetaTag(i18n(`commands.customObject.betaMessage`));
   logger.log(
     uiLink(
-      i18n(`${i18nKey}.seeMoreLink`),
+      i18n(`commands.customObject.seeMoreLink`),
       'https://developers.hubspot.com/docs/api/crm/crm-custom-objects'
     )
   );

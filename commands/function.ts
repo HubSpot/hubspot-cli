@@ -5,10 +5,8 @@ const deploy = require('./function/deploy');
 const server = require('./function/server');
 const { i18n } = require('../lib/lang');
 
-const i18nKey = 'commands.function';
-
 exports.command = ['function', 'functions'];
-exports.describe = i18n(`${i18nKey}.describe`);
+exports.describe = i18n(`commands.function.describe`);
 
 exports.builder = yargs => {
   addGlobalOptions(yargs);

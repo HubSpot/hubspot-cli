@@ -53,8 +53,6 @@ import {
   AccountArgs,
 } from '../types/Yargs';
 
-const i18nKey = 'commands.init';
-
 const TRACKING_STATUS = {
   STARTED: 'started',
   ERROR: 'error',
@@ -106,7 +104,7 @@ const AUTH_TYPE_NAMES = {
 };
 
 export const command = 'init';
-export const describe = i18n(`${i18nKey}.describe`);
+export const describe = i18n(`commands.init.describe`);
 
 type InitArgs = CommonArgs &
   ConfigArgs &
@@ -147,7 +145,7 @@ export async function handler(
   if (configFileExists(true)) {
     const globalConfigPath = getConfigPath('', true);
     logger.error(
-      i18n(`${i18nKey}.errors.globalConfigFileExists`, {
+      i18n(`commands.init.errors.globalConfigFileExists`, {
         configPath: globalConfigPath!,
       })
     );
@@ -156,11 +154,11 @@ export async function handler(
 
   if (fs.existsSync(configPath!)) {
     logger.error(
-      i18n(`${i18nKey}.errors.configFileExists`, {
+      i18n(`commands.init.errors.configFileExists`, {
         configPath: configPath!,
       })
     );
-    logger.info(i18n(`${i18nKey}.logs.updateConfig`));
+    logger.info(i18n(`commands.init.logs.updateConfig`));
     process.exit(EXIT_CODES.ERROR);
   }
 
@@ -177,7 +175,7 @@ export async function handler(
   if (doesOtherConfigFileExist) {
     const path = getConfigPath('', !useHiddenConfig);
     logger.error(
-      i18n(`${i18nKey}.errors.bothConfigFilesNotAllowed`, { path: path! })
+      i18n(`commands.init.errors.bothConfigFilesNotAllowed`, { path: path! })
     );
     process.exit(EXIT_CODES.ERROR);
   }
@@ -216,12 +214,12 @@ export async function handler(
 
     logger.log('');
     logger.success(
-      i18n(`${i18nKey}.success.configFileCreated`, {
+      i18n(`commands.init.success.configFileCreated`, {
         configPath: configPath!,
       })
     );
     logger.success(
-      i18n(`${i18nKey}.success.configFileUpdated`, {
+      i18n(`commands.init.success.configFileUpdated`, {
         authType: AUTH_TYPE_NAMES[authType as keyof typeof AUTH_TYPE_NAMES],
         account: name || accountId!,
       })
@@ -254,7 +252,7 @@ export async function handler(
 function initBuilder(yargs: Argv): Argv<InitArgs> {
   yargs.options({
     'auth-type': {
-      describe: i18n(`${i18nKey}.options.authType.describe`),
+      describe: i18n(`commands.init.options.authType.describe`),
       type: 'string',
       choices: [
         `${PERSONAL_ACCESS_KEY_AUTH_METHOD.value}`,
@@ -263,7 +261,7 @@ function initBuilder(yargs: Argv): Argv<InitArgs> {
       default: PERSONAL_ACCESS_KEY_AUTH_METHOD.value,
     },
     account: {
-      describe: i18n(`${i18nKey}.options.account.describe`),
+      describe: i18n(`commands.init.options.account.describe`),
       type: 'string',
       alias: 'a',
     },
@@ -282,7 +280,7 @@ function initBuilder(yargs: Argv): Argv<InitArgs> {
 export const builder = makeYargsBuilder<InitArgs>(
   initBuilder,
   command,
-  i18n(`${i18nKey}.verboseDescribe`, {
+  i18n(`commands.init.verboseDescribe`, {
     command: uiCommandReference('hs auth'),
     configName: DEFAULT_HUBSPOT_CONFIG_YAML_FILE_NAME,
     authMethod: PERSONAL_ACCESS_KEY_AUTH_METHOD.value,
