@@ -12,13 +12,14 @@ const { i18n } = require('../../lib/lang');
 const { debugError } = require('../../lib/errorHandlers');
 const { EXIT_CODES } = require('../../lib/enums/exitCodes');
 
-
 module.exports = {
   hidden: true,
   dest: ({ dest }) => dest,
   validate: ({ name }) => {
     if (!name) {
-      logger.error(i18n(`commands.create.subcommands.apiSample.errors.nameRequired`));
+      logger.error(
+        i18n(`commands.create.subcommands.apiSample.errors.nameRequired`)
+      );
       return false;
     }
 
@@ -28,7 +29,9 @@ module.exports = {
     const filePath = path.join(dest, name);
     if (fs.existsSync(filePath)) {
       const overwrite = await confirmPrompt(
-        i18n(`commands.create.subcommands.apiSample.folderOverwritePrompt`, { folderName: filePath }),
+        i18n(`commands.create.subcommands.apiSample.folderOverwritePrompt`, {
+          folderName: filePath,
+        }),
         { defaultAnswer: false }
       );
       if (overwrite) {
@@ -51,7 +54,9 @@ module.exports = {
     }
 
     if (!samplesConfig) {
-      logger.error(i18n(`commands.create.subcommands.apiSample.errors.noSamples`));
+      logger.error(
+        i18n(`commands.create.subcommands.apiSample.errors.noSamples`)
+      );
       process.exit(EXIT_CODES.ERROR);
     }
 
@@ -59,7 +64,9 @@ module.exports = {
       await createApiSamplePrompt(samplesConfig);
 
     if (!sampleType || !sampleLanguage) {
-      logger.error(i18n(`commands.create.subcommands.apiSample.errors.noSamples`));
+      logger.error(
+        i18n(`commands.create.subcommands.apiSample.errors.noSamples`)
+      );
       process.exit(EXIT_CODES.ERROR);
     }
 

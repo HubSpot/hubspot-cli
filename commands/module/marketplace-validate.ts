@@ -15,9 +15,10 @@ const {
 } = require('../../lib/marketplaceValidate');
 const { i18n } = require('../../lib/lang');
 
-
 exports.command = 'marketplace-validate <src>';
-exports.describe = i18n(`commands.module.subcommands.marketplaceValidate.describe`);
+exports.describe = i18n(
+  `commands.module.subcommands.marketplaceValidate.describe`
+);
 
 exports.handler = async options => {
   const { src, derivedAccountId } = options;
@@ -27,9 +28,12 @@ exports.handler = async options => {
   SpinniesManager.init();
 
   SpinniesManager.add('marketplaceValidation', {
-    text: i18n(`commands.module.subcommands.marketplaceValidate.logs.validatingModule`, {
-      path: src,
-    }),
+    text: i18n(
+      `commands.module.subcommands.marketplaceValidate.logs.validatingModule`,
+      {
+        path: src,
+      }
+    ),
   });
 
   const assetType = 'MODULE';
@@ -46,8 +50,14 @@ exports.handler = async options => {
     derivedAccountId,
     validationId
   );
-  processValidationErrors('commands.module.subcommands.marketplaceValidate', validationResults);
-  displayValidationResults('commands.module.subcommands.marketplaceValidate', validationResults);
+  processValidationErrors(
+    'commands.module.subcommands.marketplaceValidate',
+    validationResults
+  );
+  displayValidationResults(
+    'commands.module.subcommands.marketplaceValidate',
+    validationResults
+  );
 
   process.exit();
 };
@@ -58,7 +68,9 @@ exports.builder = yargs => {
   addUseEnvironmentOptions(yargs);
 
   yargs.positional('src', {
-    describe: i18n(`commands.module.subcommands.marketplaceValidate.positionals.src.describe`),
+    describe: i18n(
+      `commands.module.subcommands.marketplaceValidate.positionals.src.describe`
+    ),
     type: 'string',
   });
   return yargs;

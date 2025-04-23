@@ -22,9 +22,11 @@ import {
 } from '../../types/Yargs';
 import { makeYargsBuilder } from '../../lib/yargsUtils';
 
-
 export const command = 'download';
-export const describe = uiBetaTag(i18n(`commands.project.subcommands.download.describe`), false);
+export const describe = uiBetaTag(
+  i18n(`commands.project.subcommands.download.describe`),
+  false
+);
 
 type ProjectDownloadArgs = CommonArgs &
   ConfigArgs &
@@ -35,7 +37,11 @@ export async function handler(args: ArgumentsCamelCase<ProjectDownloadArgs>) {
   const { projectConfig } = await getProjectConfig();
 
   if (projectConfig) {
-    logger.error(i18n(`commands.project.subcommands.download.warnings.cannotDownloadWithinProject`));
+    logger.error(
+      i18n(
+        `commands.project.subcommands.download.warnings.cannotDownloadWithinProject`
+      )
+    );
     process.exit(EXIT_CODES.ERROR);
   }
 
@@ -61,7 +67,9 @@ export async function handler(args: ArgumentsCamelCase<ProjectDownloadArgs>) {
     }
 
     if (!buildNumberToDownload) {
-      logger.error(i18n(`commands.project.subcommands.download.errors.noBuildIdToDownload`));
+      logger.error(
+        i18n(`commands.project.subcommands.download.errors.noBuildIdToDownload`)
+      );
       process.exit(EXIT_CODES.ERROR);
     }
 
@@ -102,15 +110,21 @@ export async function handler(args: ArgumentsCamelCase<ProjectDownloadArgs>) {
 function projectDownloadBuilder(yargs: Argv): Argv<ProjectDownloadArgs> {
   yargs.options({
     project: {
-      describe: i18n(`commands.project.subcommands.download.options.project.describe`),
+      describe: i18n(
+        `commands.project.subcommands.download.options.project.describe`
+      ),
       type: 'string',
     },
     dest: {
-      describe: i18n(`commands.project.subcommands.download.options.dest.describe`),
+      describe: i18n(
+        `commands.project.subcommands.download.options.dest.describe`
+      ),
       type: 'string',
     },
     build: {
-      describe: i18n(`commands.project.subcommands.download.options.build.describe`),
+      describe: i18n(
+        `commands.project.subcommands.download.options.build.describe`
+      ),
       alias: ['build-id'],
       type: 'number',
     },

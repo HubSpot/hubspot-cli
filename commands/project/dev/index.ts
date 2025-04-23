@@ -17,9 +17,11 @@ import { deprecatedProjectDevFlow } from './deprecatedFlow';
 import { unifiedProjectDevFlow } from './unifiedFlow';
 import { useV3Api } from '../../../lib/projects/buildAndDeploy';
 
-
 export const command = 'dev';
-export const describe = uiBetaTag(i18n(`commands.project.subcommands.dev.describe`), false);
+export const describe = uiBetaTag(
+  i18n(`commands.project.subcommands.dev.describe`),
+  false
+);
 
 export async function handler(args: ArgumentsCamelCase<ProjectDevArgs>) {
   const { derivedAccountId } = args;
@@ -55,7 +57,7 @@ export async function handler(args: ArgumentsCamelCase<ProjectDevArgs>) {
 
   validateProjectConfig(projectConfig, projectDir);
 
-  if (useV3Api(projectConfig?.platformVersion)) {
+  if (useV3Api(projectConfig.platformVersion)) {
     await unifiedProjectDevFlow(args, accountConfig, projectConfig, projectDir);
   } else {
     await deprecatedProjectDevFlow(
@@ -72,7 +74,12 @@ export function builder(yargs: Argv): Argv<ProjectDevArgs> {
   addAccountOptions(yargs);
   addUseEnvironmentOptions(yargs);
 
-  yargs.example([['$0 project dev', i18n(`commands.project.subcommands.dev.examples.default`)]]);
+  yargs.example([
+    [
+      '$0 project dev',
+      i18n(`commands.project.subcommands.dev.examples.default`),
+    ],
+  ]);
 
   return yargs as Argv<ProjectDevArgs>;
 }

@@ -21,7 +21,6 @@ import {
   EnvironmentArgs,
 } from '../../types/Yargs';
 
-
 export const command = 'create';
 export const describe = i18n(`commands.hubdb.subcommands.create.describe`);
 
@@ -39,7 +38,9 @@ function selectPathPrompt(options: HubdbCreateArgs): Promise<{ path: string }> {
           return i18n(`commands.hubdb.subcommands.create.errors.pathRequired`);
         }
         if (!isValidPath(input)) {
-          return i18n(`commands.hubdb.subcommands.create.errors.invalidCharacters`);
+          return i18n(
+            `commands.hubdb.subcommands.create.errors.invalidCharacters`
+          );
         }
         return true;
       },

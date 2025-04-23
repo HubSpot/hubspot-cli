@@ -29,9 +29,11 @@ import {
 } from '../../types/Yargs';
 import { EXIT_CODES } from '../../lib/enums/exitCodes';
 
-
 export const command = 'list-builds';
-export const describe = uiBetaTag(i18n(`commands.project.subcommands.listBuilds.describe`), false);
+export const describe = uiBetaTag(
+  i18n(`commands.project.subcommands.listBuilds.describe`),
+  false
+);
 
 type ProjectListBuildsArgs = CommonArgs &
   ConfigArgs &
@@ -60,7 +62,9 @@ async function fetchAndDisplayBuilds(
         count: results.length,
         projectName: project.name,
         viewBuildsLink: uiLink(
-          i18n(`commands.project.subcommands.listBuilds.logs.viewAllBuildsLink`),
+          i18n(
+            `commands.project.subcommands.listBuilds.logs.viewAllBuildsLink`
+          ),
           getProjectDetailUrl(project.name, accountId)!
         ),
       })
@@ -104,7 +108,9 @@ async function fetchAndDisplayBuilds(
   if (paging && paging.next) {
     await promptUser({
       name: 'more',
-      message: i18n(`commands.project.subcommands.listBuilds.continueOrExitPrompt`),
+      message: i18n(
+        `commands.project.subcommands.listBuilds.continueOrExitPrompt`
+      ),
     });
     await fetchAndDisplayBuilds(accountId, project, {
       limit: options.limit,
@@ -123,7 +129,7 @@ export async function handler(args: ArgumentsCamelCase<ProjectListBuildsArgs>) {
   if (!projectName) {
     const { projectConfig, projectDir } = await getProjectConfig();
     validateProjectConfig(projectConfig, projectDir);
-    projectName = projectConfig!.name;
+    projectName = projectConfig.name;
   }
 
   try {
@@ -131,7 +137,11 @@ export async function handler(args: ArgumentsCamelCase<ProjectListBuildsArgs>) {
     await fetchAndDisplayBuilds(derivedAccountId, project, { limit });
   } catch (e) {
     if (isHubSpotHttpError(e) && e.status === 404) {
-      logger.error(i18n(`commands.project.subcommands.listBuilds.errors.projectNotFound`, { projectName }));
+      logger.error(
+        i18n(`commands.project.subcommands.listBuilds.errors.projectNotFound`, {
+          projectName,
+        })
+      );
     } else {
       logError(
         e,
@@ -152,17 +162,24 @@ export function builder(yargs: Argv): Argv<ProjectListBuildsArgs> {
 
   yargs.options({
     project: {
-      describe: i18n(`commands.project.subcommands.listBuilds.options.project.describe`),
+      describe: i18n(
+        `commands.project.subcommands.listBuilds.options.project.describe`
+      ),
       type: 'string',
     },
     limit: {
-      describe: i18n(`commands.project.subcommands.listBuilds.options.limit.describe`),
+      describe: i18n(
+        `commands.project.subcommands.listBuilds.options.limit.describe`
+      ),
       type: 'string',
     },
   });
 
   yargs.example([
-    ['$0 project list-builds', i18n(`commands.project.subcommands.listBuilds.examples.default`)],
+    [
+      '$0 project list-builds',
+      i18n(`commands.project.subcommands.listBuilds.examples.default`),
+    ],
   ]);
 
   return yargs as Argv<ProjectListBuildsArgs>;
