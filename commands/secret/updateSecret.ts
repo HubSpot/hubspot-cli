@@ -23,10 +23,8 @@ import {
   EnvironmentArgs,
 } from '../../types/Yargs';
 
-const i18nKey = 'commands.secret.subcommands.update';
-
 export const command = 'update [name]';
-export const describe = i18n(`${i18nKey}.describe`);
+export const describe = i18n(`commands.secret.subcommands.update.describe`);
 
 type CombinedArgs = ConfigArgs & AccountArgs & EnvironmentArgs;
 type UpdateSecretArgs = CommonArgs & CombinedArgs & { name?: string };
@@ -45,14 +43,18 @@ export async function handler(
     } = await fetchSecrets(derivedAccountId);
 
     if (secretName && !secrets.includes(secretName)) {
-      logger.error(i18n(`${i18nKey}.errors.noSecret`, { secretName }));
+      logger.error(
+        i18n(`commands.secret.subcommands.update.errors.noSecret`, {
+          secretName,
+        })
+      );
       process.exit(EXIT_CODES.ERROR);
     }
 
     if (!secretName) {
       const { secretToModify } = await secretListPrompt(
         secrets,
-        i18n(`${i18nKey}.selectSecret`)
+        i18n(`commands.secret.subcommands.update.selectSecret`)
       );
       secretName = secretToModify;
     }
@@ -61,15 +63,17 @@ export async function handler(
 
     await updateSecret(derivedAccountId, secretName, secretValue);
     logger.success(
-      i18n(`${i18nKey}.success.update`, {
+      i18n(`commands.secret.subcommands.update.success.update`, {
         accountIdentifier: uiAccountDescription(derivedAccountId),
         secretName,
       })
     );
-    logger.log(i18n(`${i18nKey}.success.updateExplanation`));
+    logger.log(
+      i18n(`commands.secret.subcommands.update.success.updateExplanation`)
+    );
   } catch (err) {
     logger.error(
-      i18n(`${i18nKey}.errors.update`, {
+      i18n(`commands.secret.subcommands.update.errors.update`, {
         secretName: secretName || '',
       })
     );
@@ -89,7 +93,9 @@ export function builder(yargs: Argv): Argv<UpdateSecretArgs> {
   addUseEnvironmentOptions(yargs);
 
   yargs.positional('name', {
-    describe: i18n(`${i18nKey}.positionals.name.describe`),
+    describe: i18n(
+      `commands.secret.subcommands.update.positionals.name.describe`
+    ),
     type: 'string',
   });
 

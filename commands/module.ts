@@ -5,12 +5,9 @@ const {
   addAccountOptions,
   addGlobalOptions,
 } = require('../lib/commonOpts');
-// const { i18n } = require('../lib/lang');
-
-// const i18nKey = 'commands.module';
 
 exports.command = 'module';
-exports.describe = false; //i18n(`${i18nKey}.describe`);
+exports.describe = false;
 
 exports.builder = yargs => {
   addConfigOptions(yargs);
