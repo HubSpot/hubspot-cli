@@ -27,6 +27,9 @@ export type ProjectMigrateArgs = CommonArgs &
     platformVersion: string;
   };
 
+const { v2025_2 } = PLATFORM_VERSIONS;
+export const validMigrationTargets = [v2025_2];
+
 export const command = 'migrate';
 
 export const describe = undefined; // i18n('commands.project.subcommands.migrate.noProjectConfig')
@@ -34,6 +37,7 @@ export const describe = undefined; // i18n('commands.project.subcommands.migrate
 export async function handler(
   options: ArgumentsCamelCase<ProjectMigrateArgs>
 ): Promise<void> {
+  const { platformVersion, unstable } = options;
   const projectConfig = await getProjectConfig();
 
   if (!projectConfig.projectConfig) {
@@ -52,7 +56,9 @@ export async function handler(
       {
         ...options,
         name: projectConfig?.projectConfig?.name,
-        platformVersion: options.platformVersion,
+        platformVersion: unstable
+          ? PLATFORM_VERSIONS.unstable
+          : platformVersion,
       },
       projectConfig
     );
@@ -68,12 +74,18 @@ export function builder(yargs: Argv): Argv<ProjectMigrateArgs> {
   addAccountOptions(yargs);
   addGlobalOptions(yargs);
 
-  yargs.option('platform-version', {
-    type: 'string',
-    choices: Object.values(PLATFORM_VERSIONS),
-    default: PLATFORM_VERSIONS.v2025_2,
-    hidden: true,
-  });
+  yargs
+    .option('platform-version', {
+      type: 'string',
+      choices: validMigrationTargets,
+      default: PLATFORM_VERSIONS.v2025_2,
+      hidden: true,
+    })
+    .option('unstable', {
+      type: 'boolean',
+      default: false,
+      hidden: true,
+    });
 
   return yargs as Argv<ProjectMigrateArgs>;
 }

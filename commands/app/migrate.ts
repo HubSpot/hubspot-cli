@@ -20,14 +20,14 @@ import { uiBetaTag, uiCommandReference, uiLink } from '../../lib/ui';
 import { migrateApp2023_2 } from '../../lib/app/migrate_legacy';
 import { getIsInProject } from '../../lib/projects';
 
-const { v2023_2, v2025_2, unstable } = PLATFORM_VERSIONS;
-export const validMigrationTargets = [v2023_2, v2025_2, unstable];
+const { v2023_2, v2025_2 } = PLATFORM_VERSIONS;
+export const validMigrationTargets = [v2023_2, v2025_2];
 
 const command = 'migrate';
 const describe = undefined; // uiBetaTag(i18n(`commands.project.subcommands.migrateApp.header.text.describe`), false);
 
 export async function handler(options: ArgumentsCamelCase<MigrateAppArgs>) {
-  const { derivedAccountId, platformVersion } = options;
+  const { derivedAccountId, platformVersion, unstable } = options;
   await trackCommandUsage('migrate-app', {}, derivedAccountId);
   const accountConfig = getAccountConfig(derivedAccountId);
 
@@ -54,7 +54,7 @@ export async function handler(options: ArgumentsCamelCase<MigrateAppArgs>) {
   logger.log('');
 
   try {
-    if (platformVersion === v2025_2 || platformVersion === unstable) {
+    if (platformVersion === v2025_2 || unstable) {
       if (getIsInProject()) {
         logger.error(
           i18n(
@@ -62,8 +62,12 @@ export async function handler(options: ArgumentsCamelCase<MigrateAppArgs>) {
             { command: uiCommandReference('hs project migrate') }
           )
         );
-        process.exit(EXIT_CODES.ERROR);
+        return process.exit(EXIT_CODES.ERROR);
       }
+
+      options.platformVersion = unstable
+        ? PLATFORM_VERSIONS.unstable
+        : platformVersion;
 
       await migrateApp2025_2(derivedAccountId, options);
     } else {
@@ -85,7 +89,7 @@ export async function handler(options: ArgumentsCamelCase<MigrateAppArgs>) {
       { successful: false },
       derivedAccountId
     );
-    process.exit(EXIT_CODES.ERROR);
+    return process.exit(EXIT_CODES.ERROR);
   }
 
   await trackCommandMetadataUsage(
@@ -124,7 +128,12 @@ export function builder(yargs: Argv): Argv<MigrateAppArgs> {
       type: 'string',
       choices: validMigrationTargets,
       hidden: true,
-      default: '2025.2',
+      default: v2025_2,
+    },
+    unstable: {
+      type: 'boolean',
+      default: false,
+      hidden: true,
     },
   });
 
