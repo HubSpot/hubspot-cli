@@ -122,12 +122,14 @@ export function uiBetaTag(message: string, log = true): string | undefined {
   if (log) {
     logger.log(result);
     return;
-  } else {
-    return result;
   }
+  return result;
 }
 
-export function uiDeprecatedTag(message: string): void {
+export function uiDeprecatedTag(
+  message: string,
+  log = true
+): string | undefined {
   const i18nKey = 'lib.ui';
 
   const terminalUISupport = getTerminalUISupport();
@@ -137,7 +139,10 @@ export function uiDeprecatedTag(message: string): void {
     terminalUISupport.color ? chalk.yellow(tag) : tag
   } ${message}`;
 
-  logger.log(result);
+  if (log) {
+    logger.log(result);
+  }
+  return result;
 }
 
 export function uiCommandDisabledBanner(
@@ -194,4 +199,9 @@ export function uiDeprecatedMessage(
   logger.log();
   uiDeprecatedTag(tag);
   logger.log();
+}
+
+export function indent(level: number): string {
+  const indentation = '  ';
+  return indentation.repeat(level);
 }

@@ -21,6 +21,7 @@ exports[`lib/doctor/DiagnosticInfo generateDiagnosticInfo should gather the requ
   "configSettings": {
     "httpUseLocalhost": false,
   },
+  "defaultAccountOverrideFile": "path/to/default/account/override/.hsaccount",
   "envFiles": [
     "src/app/app.functions/.env",
   ],

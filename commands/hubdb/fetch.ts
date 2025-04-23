@@ -63,12 +63,16 @@ export function builder(yargs: Argv): Argv<HubdbFetchArgs> {
   addUseEnvironmentOptions(yargs);
 
   yargs.positional('table-id', {
-    describe: i18n('commands.hubdb.subcommands.fetch.positionals.tableId.describe'),
+    describe: i18n(
+      'commands.hubdb.subcommands.fetch.positionals.tableId.describe'
+    ),
     type: 'string',
   });
 
   yargs.positional('dest', {
-    describe: i18n('commands.hubdb.subcommands.fetch.positionals.dest.describe'),
+    describe: i18n(
+      'commands.hubdb.subcommands.fetch.positionals.dest.describe'
+    ),
     type: 'string',
   });
 

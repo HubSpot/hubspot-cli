@@ -32,9 +32,11 @@ const {
   DEFAULT_PROJECT_TEMPLATE_BRANCH,
 } = require('../../lib/constants');
 
-
 exports.command = 'create';
-exports.describe = uiBetaTag(i18n(`commands.project.subcommands.create.describe`), false);
+exports.describe = uiBetaTag(
+  i18n(`commands.project.subcommands.create.describe`),
+  false
+);
 
 exports.handler = async options => {
   const { derivedAccountId } = options;
@@ -51,7 +53,11 @@ exports.handler = async options => {
         latestRepoReleaseTag = releaseData.tag_name;
       }
     } catch (err) {
-      logger.error(i18n(`commands.project.subcommands.create.error.failedToFetchProjectList`));
+      logger.error(
+        i18n(
+          `commands.project.subcommands.create.error.failedToFetchProjectList`
+        )
+      );
       process.exit(EXIT_CODES.ERROR);
     }
   }
@@ -62,7 +68,9 @@ exports.handler = async options => {
   );
 
   if (!projectTemplates.length) {
-    logger.error(i18n(`commands.project.subcommands.create.error.failedToFetchProjectList`));
+    logger.error(
+      i18n(`commands.project.subcommands.create.error.failedToFetchProjectList`)
+    );
     process.exit(EXIT_CODES.ERROR);
   }
 
@@ -101,7 +109,9 @@ exports.handler = async options => {
     });
   } catch (err) {
     debugError(err);
-    logger.error(i18n(`commands.project.subcommands.create.errors.failedToDownloadProject`));
+    logger.error(
+      i18n(`commands.project.subcommands.create.errors.failedToDownloadProject`)
+    );
     process.exit(EXIT_CODES.ERROR);
   }
 
@@ -133,11 +143,14 @@ exports.handler = async options => {
   );
 
   logger.log('');
-  logger.log(chalk.bold(i18n(`commands.project.subcommands.create.logs.welcomeMessage`)));
+  logger.log(
+    chalk.bold(i18n(`commands.project.subcommands.create.logs.welcomeMessage`))
+  );
   uiFeatureHighlight([
     'projectCommandTip',
     'projectUploadCommand',
     'projectDevCommand',
+    'projectInstallDepsCommand',
     'projectHelpCommand',
     'feedbackCommand',
     'sampleProjects',
@@ -148,24 +161,37 @@ exports.handler = async options => {
 exports.builder = yargs => {
   yargs.options({
     name: {
-      describe: i18n(`commands.project.subcommands.create.options.name.describe`),
+      describe: i18n(
+        `commands.project.subcommands.create.options.name.describe`
+      ),
       type: 'string',
     },
     dest: {
-      describe: i18n(`commands.project.subcommands.create.options.dest.describe`),
+      describe: i18n(
+        `commands.project.subcommands.create.options.dest.describe`
+      ),
       type: 'string',
     },
     template: {
-      describe: i18n(`commands.project.subcommands.create.options.template.describe`),
+      describe: i18n(
+        `commands.project.subcommands.create.options.template.describe`
+      ),
       type: 'string',
     },
     'template-source': {
-      describe: i18n(`commands.project.subcommands.create.options.templateSource.describe`),
+      describe: i18n(
+        `commands.project.subcommands.create.options.templateSource.describe`
+      ),
       type: 'string',
     },
   });
 
-  yargs.example([['$0 project create', i18n(`commands.project.subcommands.create.examples.default`)]]);
+  yargs.example([
+    [
+      '$0 project create',
+      i18n(`commands.project.subcommands.create.examples.default`),
+    ],
+  ]);
   yargs.example([
     [
       '$0 project create --template-source HubSpot/ui-extensions-examples',

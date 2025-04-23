@@ -9,7 +9,7 @@ export const DEFAULT_POLLING_STATES = {
   FAILURE: 'FAILURE',
 } as const;
 
-const DEFAULT_POLLING_STATUS_LOOKUP = {
+export const DEFAULT_POLLING_STATUS_LOOKUP = {
   successStates: [DEFAULT_POLLING_STATES.SUCCESS],
   errorStates: [
     DEFAULT_POLLING_STATES.ERROR,

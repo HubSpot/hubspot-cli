@@ -57,10 +57,14 @@ function getProjectConfigPath(dir?: string): string | null {
   return configPath;
 }
 
-export async function getProjectConfig(dir?: string): Promise<{
+export interface LoadedProjectConfig {
   projectDir: string | null;
   projectConfig: ProjectConfig | null;
-}> {
+}
+
+export async function getProjectConfig(
+  dir?: string
+): Promise<LoadedProjectConfig> {
   const configPath = getProjectConfigPath(dir);
   if (!configPath) {
     return { projectConfig: null, projectDir: null };
@@ -82,7 +86,7 @@ export async function getProjectConfig(dir?: string): Promise<{
 export function validateProjectConfig(
   projectConfig: ProjectConfig | null,
   projectDir: string | null
-): void {
+): asserts projectConfig is ProjectConfig {
   if (!projectConfig || !projectDir) {
     logger.error(
       i18n(`${i18nKey}.validateProjectConfig.configNotFound`, {

@@ -84,7 +84,7 @@ type ProjectUploadCallbackFunction<T> = (
   accountId: number,
   projectConfig: ProjectConfig,
   tempFile: FileResult,
-  buildId?: number
+  buildId: number
 ) => Promise<T>;
 
 type ProjectUploadResult<T> = {
@@ -174,7 +174,7 @@ export async function handleProjectUpload<T>(
           accountId,
           projectConfig,
           tempFile,
-          buildId
+          buildId!
         );
         resolve({ result: uploadResult });
       }

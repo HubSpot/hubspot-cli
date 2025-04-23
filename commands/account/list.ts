@@ -2,12 +2,15 @@ import { Argv, ArgumentsCamelCase } from 'yargs';
 import { logger } from '@hubspot/local-dev-lib/logger';
 import {
   getConfigPath,
-  getConfigDefaultAccount,
   getConfigAccounts,
+  getDefaultAccountOverrideFilePath,
+  getDisplayDefaultAccount,
+  getConfigDefaultAccount,
 } from '@hubspot/local-dev-lib/config';
 import { getAccountIdentifier } from '@hubspot/local-dev-lib/config/getAccountIdentifier';
 import { CLIAccount } from '@hubspot/local-dev-lib/types/Accounts';
 import { addConfigOptions } from '../../lib/commonOpts';
+import { indent } from '../../lib/ui/index';
 import { getTableContents, getTableHeader } from '../../lib/ui/table';
 import { trackCommandUsage } from '../../lib/usageTracking';
 import { isSandbox, isDeveloperTestAccount } from '../../lib/accountTypes';
@@ -112,13 +115,37 @@ export async function handler(
     ])
   );
 
-  logger.log(i18n('commands.account.subcommands.list.configPath', { configPath: configPath! }));
-  logger.log(
-    i18n('commands.account.subcommands.list.defaultAccount', {
-      account: getConfigDefaultAccount()!,
-    })
-  );
-  logger.log(i18n('commands.account.subcommands.list.accounts'));
+  // If a default account is present in the config, display it
+  if (configPath) {
+    logger.log(i18n(`commands.account.subcommands.list.defaultAccountTitle`));
+    logger.log(
+      `${indent(1)}${i18n(`commands.account.subcommands.list.configPath`, {
+        configPath,
+      })}`
+    );
+    logger.log(
+      `${indent(1)}${i18n(`commands.account.subcommands.list.defaultAccount`, {
+        account: getDisplayDefaultAccount()!,
+      })}`
+    );
+    logger.log('');
+  }
+
+  // If a default account override is present, display it
+  const overrideFilePath = getDefaultAccountOverrideFilePath();
+  if (overrideFilePath) {
+    logger.log(i18n(`commands.account.subcommands.list.overrideFilePathTitle`));
+    logger.log(
+      `${indent(1)}${i18n(`commands.account.subcommands.list.overrideFilePath`, { overrideFilePath })}`
+    );
+    logger.log(
+      `${indent(1)}${i18n(`commands.account.subcommands.list.overrideAccount`, {
+        account: getConfigDefaultAccount()!,
+      })}`
+    );
+    logger.log('');
+  }
+  logger.log(i18n(`commands.account.subcommands.list.accounts`));
   logger.log(getTableContents(accountData, { border: { bodyLeft: '  ' } }));
 }
 

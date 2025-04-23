@@ -20,6 +20,7 @@ import {
   loadConfig,
   getConfigDefaultAccount,
   getAccountId,
+  configFileExists,
 } from '@hubspot/local-dev-lib/config';
 import { commaSeparatedValues, toKebabCase } from '@hubspot/local-dev-lib/text';
 import { promptUser } from '../lib/prompts/promptUtils';
@@ -36,7 +37,7 @@ import { makeYargsBuilder } from '../lib/yargsUtils';
 import { trackAuthAction, trackCommandUsage } from '../lib/usageTracking';
 import { authenticateWithOauth } from '../lib/oauth';
 import { EXIT_CODES } from '../lib/enums/exitCodes';
-import { uiFeatureHighlight } from '../lib/ui';
+import { uiFeatureHighlight, uiCommandReference } from '../lib/ui';
 import { logError } from '../lib/errorHandlers/index';
 import {
   AccountArgs,
@@ -90,8 +91,14 @@ export async function handler(
     checkAndWarnGitInclusion(configPath);
   }
 
-  if (!getConfigPath(configFlagValue)) {
-    logger.error(i18n('commands.auth.errors.noConfigFileFound'));
+  if (configFileExists(true)) {
+    const globalConfigPath = getConfigPath('', true);
+    logger.error(
+      i18n(`commands.auth.errors.globalConfigFileExists`, {
+        configPath: globalConfigPath!,
+        authCommand: uiCommandReference('hs account auth'),
+      })
+    );
     process.exit(EXIT_CODES.ERROR);
   }
 

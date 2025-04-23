@@ -23,7 +23,6 @@ import {
   EnvironmentArgs,
 } from '../../types/Yargs';
 
-
 export const command = 'update [name]';
 export const describe = i18n(`commands.secret.subcommands.update.describe`);
 
@@ -44,7 +43,11 @@ export async function handler(
     } = await fetchSecrets(derivedAccountId);
 
     if (secretName && !secrets.includes(secretName)) {
-      logger.error(i18n(`commands.secret.subcommands.update.errors.noSecret`, { secretName }));
+      logger.error(
+        i18n(`commands.secret.subcommands.update.errors.noSecret`, {
+          secretName,
+        })
+      );
       process.exit(EXIT_CODES.ERROR);
     }
 
@@ -65,7 +68,9 @@ export async function handler(
         secretName,
       })
     );
-    logger.log(i18n(`commands.secret.subcommands.update.success.updateExplanation`));
+    logger.log(
+      i18n(`commands.secret.subcommands.update.success.updateExplanation`)
+    );
   } catch (err) {
     logger.error(
       i18n(`commands.secret.subcommands.update.errors.update`, {
@@ -88,7 +93,9 @@ export function builder(yargs: Argv): Argv<UpdateSecretArgs> {
   addUseEnvironmentOptions(yargs);
 
   yargs.positional('name', {
-    describe: i18n(`commands.secret.subcommands.update.positionals.name.describe`),
+    describe: i18n(
+      `commands.secret.subcommands.update.positionals.name.describe`
+    ),
     type: 'string',
   });
 
