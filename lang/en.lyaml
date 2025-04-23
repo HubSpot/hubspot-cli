@@ -1349,7 +1349,7 @@ en:
         sandboxLimit: "Your account reached the limit of {{ limit }} development sandboxes"
         sandboxLimitWithSuggestion: "Your account reached the limit of {{ limit }} development sandboxes. Run {{ authCommand }} to add an existing one to the config."
         developerTestAccountLimit: "Your account reached the limit of {{ limit }} developer test accounts."
-        confirmDefaultAccount: "Continue testing on {{#bold}}{{ accountName }} ({{ accountType }}){{/bold}}? (Y/n)"
+        confirmDefaultAccount: "Proceed with local development on {{#bold}}{{ accountName }} [{{ accountType }}]{{/bold}}? (Y/n)"
         confirmUseExistingDeveloperTestAccount: "Continue with {{ accountName }}? This account isn't currently connected to the HubSpot CLI. By continuing, you'll be prompted to generate a personal access key and connect it."
         noAccountId: "No account ID found for the selected account. Please try again."
       projectLogsPrompt:

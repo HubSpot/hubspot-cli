@@ -41,7 +41,7 @@ import {
   PROJECT_BUILD_TEXT,
   PROJECT_DEPLOY_TEXT,
 } from './constants';
-import { logError, ApiErrorContext } from './errorHandlers/index';
+import { logError, ApiErrorContext, debugError } from './errorHandlers/index';
 import {
   buildSandbox,
   buildDeveloperTestAccount,
@@ -56,6 +56,7 @@ import {
 import { ProjectDevTargetAccountPromptResponse } from '../types/Prompts';
 import { FileResult } from 'tmp';
 import { Build } from '@hubspot/local-dev-lib/types/Build';
+import { getSandboxUsageLimits } from '@hubspot/local-dev-lib/api/sandboxHubs';
 
 const i18nKey = 'lib.localDev';
 
@@ -537,4 +538,22 @@ export function getAccountHomeUrl(accountId: number): string {
     getEnv(accountId) === 'qa' ? ENVIRONMENTS.QA : ENVIRONMENTS.PROD
   );
   return `${baseUrl}/home?portalId=${accountId}`;
+}
+
+export async function hasSandboxes(account: CLIAccount): Promise<boolean> {
+  const accountId = getAccountIdentifier(account);
+  if (!accountId) {
+    return false;
+  }
+
+  try {
+    const {
+      data: { usage },
+    } = await getSandboxUsageLimits(accountId);
+
+    return usage.STANDARD.limit > 0 || usage.DEVELOPER.limit > 0;
+  } catch (e) {
+    debugError(e);
+    return false;
+  }
 }
