@@ -39,10 +39,11 @@ import {
 } from '../../types/Yargs';
 import { logInvalidAccountError } from '../../lib/app/migrate';
 
-const i18nKey = 'commands.project.subcommands.cloneApp';
-
 export const command = 'clone-app';
-export const describe = uiDeprecatedTag(i18n(`${i18nKey}.describe`), false);
+export const describe = uiDeprecatedTag(
+  i18n(`commands.project.subcommands.cloneApp.describe`),
+  false
+);
 export const deprecated = true;
 
 export type CloneAppArgs = ConfigArgs &
@@ -103,7 +104,9 @@ export const handler = async (options: ArgumentsCamelCase<CloneAppArgs>) => {
     SpinniesManager.init();
 
     SpinniesManager.add('cloneApp', {
-      text: i18n(`${i18nKey}.cloneStatus.inProgress`),
+      text: i18n(
+        `commands.project.subcommands.cloneApp.cloneStatus.inProgress`
+      ),
     });
 
     const {
@@ -143,19 +146,23 @@ export const handler = async (options: ArgumentsCamelCase<CloneAppArgs>) => {
       const success = writeProjectConfig(configPath, configContent);
 
       SpinniesManager.succeed('cloneApp', {
-        text: i18n(`${i18nKey}.cloneStatus.done`),
+        text: i18n(`commands.project.subcommands.cloneApp.cloneStatus.done`),
         succeedColor: 'white',
       });
       if (!success) {
         logger.error(
-          i18n(`${i18nKey}.errors.couldNotWriteConfigPath`),
+          i18n(
+            `commands.project.subcommands.cloneApp.errors.couldNotWriteConfigPath`
+          ),
           configPath
         );
       }
       logger.log('');
       uiLine();
       logger.success(
-        i18n(`${i18nKey}.cloneStatus.success`, { dest: projectDest })
+        i18n(`commands.project.subcommands.cloneApp.cloneStatus.success`, {
+          dest: projectDest,
+        })
       );
       logger.log('');
       process.exit(EXIT_CODES.SUCCESS);
@@ -168,7 +175,7 @@ export const handler = async (options: ArgumentsCamelCase<CloneAppArgs>) => {
     );
 
     SpinniesManager.fail('cloneApp', {
-      text: i18n(`${i18nKey}.cloneStatus.failure`),
+      text: i18n(`commands.project.subcommands.cloneApp.cloneStatus.failure`),
       failColor: 'white',
     });
 
@@ -198,17 +205,24 @@ export const handler = async (options: ArgumentsCamelCase<CloneAppArgs>) => {
 export const builder = (yargs: Argv) => {
   yargs.options({
     dest: {
-      describe: i18n(`${i18nKey}.options.dest.describe`),
+      describe: i18n(
+        `commands.project.subcommands.cloneApp.options.dest.describe`
+      ),
       type: 'string',
     },
     'app-id': {
-      describe: i18n(`${i18nKey}.options.appId.describe`),
+      describe: i18n(
+        `commands.project.subcommands.cloneApp.options.appId.describe`
+      ),
       type: 'number',
     },
   });
 
   yargs.example([
-    ['$0 project clone-app', i18n(`${i18nKey}.examples.default`)],
+    [
+      '$0 project clone-app',
+      i18n(`commands.project.subcommands.cloneApp.examples.default`),
+    ],
   ]);
 
   addConfigOptions(yargs);

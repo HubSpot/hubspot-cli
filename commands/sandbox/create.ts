@@ -44,10 +44,11 @@ import {
 } from '../../types/Yargs';
 import { SandboxSyncTask } from '../../types/Sandboxes';
 
-const i18nKey = 'commands.sandbox.subcommands.create';
-
 export const command = 'create';
-export const describe = uiBetaTag(i18n(`${i18nKey}.describe`), false);
+export const describe = uiBetaTag(
+  i18n(`commands.sandbox.subcommands.create.describe`),
+  false
+);
 
 type CombinedArgs = ConfigArgs & AccountArgs & EnvironmentArgs & TestingArgs;
 type SandboxCreateArgs = CommonArgs &
@@ -69,7 +70,7 @@ export async function handler(
   // Check if account config exists
   if (!accountConfig) {
     logger.error(
-      i18n(`${i18nKey}.failure.noAccountConfig`, {
+      i18n(`commands.sandbox.subcommands.create.failure.noAccountConfig`, {
         accountId: derivedAccountId,
         authCommand: uiCommandReference('hs auth'),
       })
@@ -83,7 +84,7 @@ export async function handler(
     accountConfig.accountType !== HUBSPOT_ACCOUNT_TYPES.STANDARD
   ) {
     logger.error(
-      i18n(`${i18nKey}.failure.invalidAccountType`, {
+      i18n(`commands.sandbox.subcommands.create.failure.invalidAccountType`, {
         accountType:
           HUBSPOT_ACCOUNT_TYPE_STRINGS[
             HUBSPOT_ACCOUNT_TYPES[accountConfig.accountType]
@@ -101,7 +102,9 @@ export async function handler(
     if (!force) {
       typePrompt = await sandboxTypePrompt();
     } else {
-      logger.error(i18n(`${i18nKey}.failure.optionMissing.type`));
+      logger.error(
+        i18n(`commands.sandbox.subcommands.create.failure.optionMissing.type`)
+      );
       process.exit(EXIT_CODES.ERROR);
     }
   }
@@ -138,7 +141,9 @@ export async function handler(
     if (!force) {
       namePrompt = await hubspotAccountNamePrompt({ accountType: sandboxType });
     } else {
-      logger.error(i18n(`${i18nKey}.failure.optionMissing.name`));
+      logger.error(
+        i18n(`commands.sandbox.subcommands.create.failure.optionMissing.name`)
+      );
       process.exit(EXIT_CODES.ERROR);
     }
   }
@@ -175,10 +180,13 @@ export async function handler(
     // Check if sandbox account config exists
     if (!sandboxAccountConfig) {
       logger.error(
-        i18n(`${i18nKey}.failure.noSandboxAccountConfig`, {
-          accountId: result.sandbox.sandboxHubId,
-          authCommand: uiCommandReference('hs auth'),
-        })
+        i18n(
+          `commands.sandbox.subcommands.create.failure.noSandboxAccountConfig`,
+          {
+            accountId: result.sandbox.sandboxHubId,
+            authCommand: uiCommandReference('hs auth'),
+          }
+        )
       );
       process.exit(EXIT_CODES.ERROR);
     }
@@ -225,21 +233,23 @@ export function builder(yargs: Argv): Argv<SandboxCreateArgs> {
   yargs.option('force', {
     type: 'boolean',
     alias: 'f',
-    describe: i18n(`${i18nKey}.options.force.describe`),
+    describe: i18n(
+      `commands.sandbox.subcommands.create.options.force.describe`
+    ),
   });
   yargs.option('name', {
-    describe: i18n(`${i18nKey}.options.name.describe`),
+    describe: i18n(`commands.sandbox.subcommands.create.options.name.describe`),
     type: 'string',
   });
   yargs.option('type', {
-    describe: i18n(`${i18nKey}.options.type.describe`),
+    describe: i18n(`commands.sandbox.subcommands.create.options.type.describe`),
     choices: Object.keys(SANDBOX_TYPE_MAP),
   });
 
   yargs.example([
     [
       '$0 sandbox create --name=MySandboxAccount --type=STANDARD',
-      i18n(`${i18nKey}.examples.default`),
+      i18n(`commands.sandbox.subcommands.create.examples.default`),
     ],
   ]);
 
