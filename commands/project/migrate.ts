@@ -28,7 +28,6 @@ export type ProjectMigrateArgs = CommonArgs &
   };
 
 const { v2025_2 } = PLATFORM_VERSIONS;
-export const validMigrationTargets = [v2025_2];
 
 export const command = 'migrate';
 
@@ -77,8 +76,8 @@ export function builder(yargs: Argv): Argv<ProjectMigrateArgs> {
   yargs
     .option('platform-version', {
       type: 'string',
-      choices: validMigrationTargets,
-      default: PLATFORM_VERSIONS.v2025_2,
+      choices: [v2025_2],
+      default: v2025_2,
       hidden: true,
     })
     .option('unstable', {
