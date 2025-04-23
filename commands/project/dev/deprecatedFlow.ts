@@ -27,12 +27,7 @@ import {
   checkIfParentAccountIsAuthed,
 } from '../../../lib/localDev';
 import { handleExit } from '../../../lib/process';
-import {
-  isSandbox,
-  isDeveloperTestAccount,
-  isStandardAccount,
-  isAppDeveloperAccount,
-} from '../../../lib/accountTypes';
+import { isSandbox, isDeveloperTestAccount } from '../../../lib/accountTypes';
 import { ensureProjectExists } from '../../../lib/projects';
 import { ProjectDevArgs } from '../../../types/Yargs';
 
@@ -95,7 +90,7 @@ export async function deprecatedProjectDevFlow(
       targetProjectAccountId = accountConfig.parentAccountId || null;
     }
   } else {
-    checkIfDefaultAccountIsSupported(accountConfig, hasPublicApps);
+    await checkIfDefaultAccountIsSupported(accountConfig, hasPublicApps);
   }
 
   // The user is targeting an account type that we recommend developing on
@@ -137,9 +132,8 @@ export async function deprecatedProjectDevFlow(
       await useExistingDevTestAccount(env, notInConfigAccount);
     }
 
-    createNewSandbox = isStandardAccount(accountConfig) && createNestedAccount;
-    createNewDeveloperTestAccount =
-      isAppDeveloperAccount(accountConfig) && createNestedAccount;
+    createNewSandbox = hasPrivateApps && createNestedAccount;
+    createNewDeveloperTestAccount = hasPublicApps && createNestedAccount;
   }
 
   if (createNewSandbox) {
