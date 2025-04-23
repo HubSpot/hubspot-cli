@@ -33,7 +33,11 @@ import SpinniesManager from './ui/SpinniesManager';
 import { i18n } from './lang';
 import { EXIT_CODES } from './enums/exitCodes';
 import { trackCommandMetadataUsage } from './usageTracking';
-import { isAppDeveloperAccount, isDeveloperTestAccount } from './accountTypes';
+import {
+  isAppDeveloperAccount,
+  isDeveloperTestAccount,
+  isUnifiedAccount,
+} from './accountTypes';
 import { handleProjectUpload } from './projects/upload';
 import { pollProjectBuildAndDeploy } from './projects/buildAndDeploy';
 import {
@@ -95,15 +99,18 @@ export async function confirmDefaultAccountIsTarget(
 }
 
 // Confirm the default account is supported for the type of apps being developed
-export function checkIfDefaultAccountIsSupported(
+export async function checkIfDefaultAccountIsSupported(
   accountConfig: CLIAccount,
   hasPublicApps: boolean
-): void {
+): Promise<void> {
+  const defaultAccountIsUnified = await isUnifiedAccount(accountConfig);
+
   if (
     hasPublicApps &&
     !(
       isAppDeveloperAccount(accountConfig) ||
-      isDeveloperTestAccount(accountConfig)
+      isDeveloperTestAccount(accountConfig) ||
+      defaultAccountIsUnified
     )
   ) {
     logger.error(
@@ -190,7 +197,7 @@ export async function suggestRecommendedNestedAccount(
   uiLine();
   logger.log();
 
-  const targetAccountPrompt = isAppDeveloperAccount(accountConfig)
+  const targetAccountPrompt = hasPublicApps
     ? selectDeveloperTestTargetAccountPrompt
     : selectSandboxTargetAccountPrompt;
 

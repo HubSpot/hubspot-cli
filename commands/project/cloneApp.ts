@@ -17,7 +17,10 @@ import { poll } from '../../lib/polling';
 import { uiLine, uiAccountDescription } from '../../lib/ui';
 import { logError, ApiErrorContext } from '../../lib/errorHandlers';
 import { EXIT_CODES } from '../../lib/enums/exitCodes';
-import { isAppDeveloperAccount } from '../../lib/accountTypes';
+import {
+  isAppDeveloperAccount,
+  isUnifiedAccount,
+} from '../../lib/accountTypes';
 import { writeProjectConfig } from '../../lib/projects';
 import { PROJECT_CONFIG_FILE } from '../../lib/constants';
 import {
@@ -67,7 +70,9 @@ export const handler = async (options: ArgumentsCamelCase<CloneAppArgs>) => {
     );
   }
 
-  if (!isAppDeveloperAccount(accountConfig)) {
+  const defaultAccountIsUnified = await isUnifiedAccount(accountConfig);
+
+  if (!isAppDeveloperAccount(accountConfig) && !defaultAccountIsUnified) {
     logInvalidAccountError();
     process.exit(EXIT_CODES.SUCCESS);
   }

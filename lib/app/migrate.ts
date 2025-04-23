@@ -32,6 +32,7 @@ import {
   EnvironmentArgs,
 } from '../../types/Yargs';
 import { hasFeature } from '../hasFeature';
+import { FEATURES } from '../constants';
 
 export type MigrateAppArgs = CommonArgs &
   AccountArgs &
@@ -474,7 +475,7 @@ export async function migrateApp2025_2(
 
   const ungatedForUnifiedApps = await hasFeature(
     derivedAccountId,
-    'Developers:UnifiedApps:PrivateBeta'
+    FEATURES.UNIFIED_APPS
   );
 
   if (!ungatedForUnifiedApps) {

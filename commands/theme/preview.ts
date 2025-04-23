@@ -25,6 +25,7 @@ import { findProjectComponents } from '../../lib/projects/structure';
 import { ComponentTypes } from '../../types/Projects';
 import { hasFeature } from '../../lib/hasFeature';
 import { CommonArgs, ConfigArgs, AccountArgs } from '../../types/Yargs';
+import { FEATURES } from '../../lib/constants';
 
 export const command = 'preview [--src] [--dest]';
 export const describe = i18n('commands.theme.subcommands.preview.describe');
@@ -222,7 +223,7 @@ export async function handler(
 
   const isUngatedForUnified = await hasFeature(
     derivedAccountId,
-    'cms:react:unifiedThemePreview'
+    FEATURES.UNIFIED_THEME_PREVIEW
   );
   if (isUngatedForUnified && createUnifiedDevServer) {
     if (port) {

@@ -1,5 +1,8 @@
 import { HUBSPOT_ACCOUNT_TYPES } from '@hubspot/local-dev-lib/constants/config';
 import { CLIAccount, AccountType } from '@hubspot/local-dev-lib/types/Accounts';
+import { hasFeature } from './hasFeature';
+import { FEATURES } from './constants';
+import { getAccountIdentifier } from '@hubspot/local-dev-lib/config/getAccountIdentifier';
 
 function isAccountType(
   accountConfig: CLIAccount,
@@ -39,4 +42,18 @@ export function isDeveloperTestAccount(accountConfig: CLIAccount): boolean {
 
 export function isAppDeveloperAccount(accountConfig: CLIAccount): boolean {
   return isAccountType(accountConfig, HUBSPOT_ACCOUNT_TYPES.APP_DEVELOPER);
+}
+
+export async function isUnifiedAccount(account: CLIAccount): Promise<boolean> {
+  const accountId = getAccountIdentifier(account);
+  if (!accountId) {
+    return false;
+  }
+
+  const isUngatedForUnifiedApps = await hasFeature(
+    accountId,
+    FEATURES.UNIFIED_APPS
+  );
+
+  return isStandardAccount(account) && isUngatedForUnifiedApps;
 }
