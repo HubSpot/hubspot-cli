@@ -100,7 +100,9 @@ async function determineSrcAndDest(args: ThemePreviewArgs): Promise<{
         c => c.type === ComponentTypes.HublTheme
       );
       if (themeComponents.length === 0) {
-        logger.error(i18n('commands.theme.subcommands.preview.errors.noThemeComponents'));
+        logger.error(
+          i18n('commands.theme.subcommands.preview.errors.noThemeComponents')
+        );
         process.exit(EXIT_CODES.ERROR);
       }
       const answer = await previewProjectPrompt(themeComponents);
@@ -147,7 +149,9 @@ export async function handler(
       cliProgress.Presets.rect
     );
     initialUploadProgressBar.start(numFiles, 0, {
-      label: i18n('commands.theme.subcommands.preview.initialUploadProgressBar.start'),
+      label: i18n(
+        'commands.theme.subcommands.preview.initialUploadProgressBar.start'
+      ),
     });
     let uploadsHaveStarted = false;
     const uploadOptions = {
@@ -159,7 +163,9 @@ export async function handler(
         if (!uploadsHaveStarted) {
           uploadsHaveStarted = true;
           initialUploadProgressBar.update(0, {
-            label: i18n('commands.theme.subcommands.preview.initialUploadProgressBar.uploading'),
+            label: i18n(
+              'commands.theme.subcommands.preview.initialUploadProgressBar.uploading'
+            ),
           });
         }
       },
@@ -172,7 +178,9 @@ export async function handler(
       onFinalErrorCallback: () => initialUploadProgressBar.increment(),
       onFinishCallback: (results: UploadFolderResults[]) => {
         initialUploadProgressBar.update(numFiles, {
-          label: i18n('commands.theme.subcommands.preview.initialUploadProgressBar.finish'),
+          label: i18n(
+            'commands.theme.subcommands.preview.initialUploadProgressBar.finish'
+          ),
         });
         initialUploadProgressBar.stop();
         results.forEach(result => {
@@ -258,22 +266,30 @@ export function builder(yargs: Argv): Argv<ThemePreviewArgs> {
       requiresArg: true,
     })
     .option('dest', {
-      describe: i18n('commands.theme.subcommands.preview.options.dest.describe'),
+      describe: i18n(
+        'commands.theme.subcommands.preview.options.dest.describe'
+      ),
       type: 'string',
       requiresArg: true,
     })
     .option('notify', {
       alias: 'n',
-      describe: i18n('commands.theme.subcommands.preview.options.notify.describe'),
+      describe: i18n(
+        'commands.theme.subcommands.preview.options.notify.describe'
+      ),
       type: 'string',
       requiresArg: true,
     })
     .option('no-ssl', {
-      describe: i18n('commands.theme.subcommands.preview.options.noSsl.describe'),
+      describe: i18n(
+        'commands.theme.subcommands.preview.options.noSsl.describe'
+      ),
       type: 'boolean',
     })
     .option('port', {
-      describe: i18n('commands.theme.subcommands.preview.options.port.describe'),
+      describe: i18n(
+        'commands.theme.subcommands.preview.options.port.describe'
+      ),
       type: 'number',
     })
     .option('resetSession', {
