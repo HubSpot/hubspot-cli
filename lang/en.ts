@@ -1128,8 +1128,8 @@ export const commands = {
         failedToFetchProjectDetails:
           'There was an error fetching project details',
         noFunctionsLinkText: 'Visit developer docs',
-        noFunctionsInProject: link =>
-          `There aren't any functions in this project\n\t- Run ${chalk.orange('hs project logs --help')} to learn more about logs\n\t- ${link} to learn more about serverless functions`,
+        noFunctionsInProject: (helpCommand, link) =>
+          `There aren't any functions in this project\n\t- Run ${helpCommand} to learn more about logs\n\t- ${link} to learn more about serverless functions`,
         noFunctionWithName: name => `No function with name "${name}"`,
         functionNotDeployed: name =>
           `The function with name "${name}" is not deployed`,
@@ -1211,12 +1211,11 @@ export const commands = {
         watchCancelledFromUi: () =>
           `The watch process has been cancelled from the UI. Any changes made since cancelling have not been uploaded. To resume watching, rerun ${chalk.yellow('`hs project watch`')}.`,
         resuming: 'Resuming watcher...',
-        uploadSucceeded: ({ filePath, remotePath }) =>
+        uploadSucceeded: (remotePath, filePath) =>
           `Uploaded file "${filePath}" to "${remotePath}"`,
-        deleteFileSucceeded: ({ remotePath }) => `Deleted file "${remotePath}"`,
-        deleteFolderSucceeded: ({ remotePath }) =>
-          `Deleted folder "${remotePath}"`,
-        watching: ({ projectDir }) =>
+        deleteFileSucceeded: remotePath => `Deleted file "${remotePath}"`,
+        deleteFolderSucceeded: remotePath => `Deleted folder "${remotePath}"`,
+        watching: projectDir =>
           `Watcher is ready and watching "${projectDir}". Any changes detected will be automatically uploaded.`,
         previousStagingBuildCancelled:
           'Killed the previous watch process. Please try running `hs project watch` again',
@@ -1229,22 +1228,20 @@ export const commands = {
       debug: {
         pause: 'Pausing watcher, attempting to queue build',
         buildStarted: 'Build queued.',
-        extensionNotAllowed: ({ filePath }) =>
+        extensionNotAllowed: filePath =>
           `Skipping "${filePath}" due to unsupported extension`,
-        ignored: ({ filePath }) =>
-          `Skipping "${filePath}" due to an ignore rule`,
-        uploading: ({ filePath, remotePath }) =>
+        ignored: filePath => `Skipping "${filePath}" due to an ignore rule`,
+        uploading: (filePath, remotePath) =>
           `Attempting to upload file "${filePath}" to "${remotePath}"`,
         attemptNewBuild: 'Attempting to create a new build',
-        fileAlreadyQueued: ({ filePath }) =>
+        fileAlreadyQueued: filePath =>
           `File "${filePath}" is already queued for upload`,
       },
       errors: {
-        uploadFailed: ({ filePath, remotePath }) =>
+        uploadFailed: (remotePath, filePath) =>
           `Failed to upload file "${filePath}" to "${remotePath}"`,
-        deleteFileFailed: ({ remotePath }) =>
-          `Failed to delete file "${remotePath}"`,
-        deleteFolderFailed: ({ remotePath }) =>
+        deleteFileFailed: remotePath => `Failed to delete file "${remotePath}"`,
+        deleteFolderFailed: remotePath =>
           `Failed to delete folder "${remotePath}"`,
       },
     },
@@ -1255,12 +1252,12 @@ export const commands = {
       },
       logs: {
         downloadCancelled: 'Cancelling project download',
-        downloadSucceeded: ({ buildId, projectName }) =>
+        downloadSucceeded: (buildId, projectName) =>
           `Downloaded build "${buildId}" from project "${projectName}"`,
       },
       errors: {
         downloadFailed: 'Something went wrong downloading the project',
-        projectNotFound: ({ projectName, accountId }) =>
+        projectNotFound: (projectName, accountId) =>
           `Your project ${chalk.bold(projectName)} could not be found in ${accountId}`,
       },
       warnings: {
@@ -1725,18 +1722,18 @@ export const commands = {
       },
     },
     success: {
-      fileUploaded: ({ src, dest, accountId }) =>
+      fileUploaded: (src, dest, accountId) =>
         `Uploaded file from "${src}" to "${dest}" in the Design Manager of account ${accountId}`,
-      uploadComplete: ({ dest }) =>
+      uploadComplete: dest =>
         `Uploading files to "${dest}" in the Design Manager is complete`,
     },
-    uploading: ({ src, dest, accountId }) =>
+    uploading: (src, dest, accountId) =>
       `Uploading files from "${src}" to "${dest}" in the Design Manager of account ${accountId}`,
-    notUploaded: ({ src }) =>
+    notUploaded: src =>
       `There was an error processing "${src}". The file has not been uploaded.`,
-    cleaning: ({ filePath, accountId }) =>
+    cleaning: (filePath, accountId) =>
       `Removing "${filePath}" from account ${accountId} and uploading local...`,
-    confirmCleanUpload: ({ filePath, accountId }) =>
+    confirmCleanUpload: (filePath, accountId) =>
       `You are about to delete the directory "${filePath}" and its contents on HubSpot account ${accountId} before uploading. This will also clear the global content associated with any global partial templates and modules. Are you sure you want to do this?`,
   },
   watch: {
