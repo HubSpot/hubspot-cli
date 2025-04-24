@@ -43,6 +43,8 @@ import {
   getProjectDetailUrl,
 } from '../projects/urls';
 
+const inquirer = require('inquirer');
+
 export type MigrateAppArgs = CommonArgs &
   AccountArgs &
   EnvironmentArgs &
@@ -147,6 +149,40 @@ async function fetchMigrationApps(
   return allApps;
 }
 
+async function promptForAppToMigrate(allApps: MigrationApp[]) {
+  const appChoices = allApps
+    .map(app => ({
+      name: app.isMigratable
+        ? app.appName
+        : `[${chalk.yellow('DISABLED')}] ${app.appName} `,
+      value: app,
+      disabled: app.isMigratable
+        ? false
+        : getUnmigratableReason(app.unmigratableReason),
+    }))
+    .sort((a, b) => {
+      if (a.disabled === b.disabled) {
+        return 0;
+      }
+      return a.disabled ? 1 : -1;
+    });
+
+  const enabledChoices = appChoices.filter(app => !app.disabled);
+  const disabledChoices = appChoices.filter(app => app.disabled);
+
+  const { appId: selectedAppId } = await listPrompt<MigrationApp>(
+    lib.migrate.prompt.chooseApp,
+    {
+      choices: [
+        ...enabledChoices,
+        new inquirer.Separator(),
+        ...disabledChoices,
+      ],
+    }
+  );
+
+  return selectedAppId;
+}
 async function selectAppToMigrate(
   allApps: MigrationApp[],
   appId?: number,
@@ -161,25 +197,9 @@ async function selectAppToMigrate(
     throw new Error(lib.migrate.errors.appWithAppIdNotFound(appId));
   }
 
-  const appChoices = allApps.map(app => ({
-    name: app.isMigratable
-      ? app.appName
-      : `[${chalk.yellow('DISABLED')}] ${app.appName} `,
-    value: app,
-    disabled: app.isMigratable
-      ? false
-      : getUnmigratableReason(app.unmigratableReason),
-  }));
-
   let appIdToMigrate = appId;
   if (!appIdToMigrate) {
-    const { appId: selectedAppId } = await listPrompt<MigrationApp>(
-      lib.migrate.prompt.chooseApp,
-      {
-        choices: appChoices,
-      }
-    );
-    appIdToMigrate = selectedAppId;
+    appIdToMigrate = await promptForAppToMigrate(allApps);
   }
 
   const selectedApp = allApps.find(app => app.appId === appIdToMigrate);
