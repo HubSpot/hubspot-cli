@@ -17,7 +17,10 @@ const { trackCommandUsage } = require('../../lib/usageTracking');
 const {
   createProjectPrompt,
 } = require('../../lib/prompts/createProjectPrompt');
-const { writeProjectConfig, getProjectConfig } = require('../../lib/projects');
+const {
+  writeProjectConfig,
+  getProjectConfig,
+} = require('../../lib/projects/config');
 const {
   getProjectTemplateListFromRepo,
   EMPTY_PROJECT_TEMPLATE_NAME,

@@ -18,7 +18,8 @@ import {
   uiLine,
   uiLink,
 } from '../ui';
-import { ensureProjectExists, LoadedProjectConfig } from '../projects';
+import { LoadedProjectConfig } from '../projects/config';
+import { ensureProjectExists } from '../projects/ensureProjectExists';
 import SpinniesManager from '../ui/SpinniesManager';
 import { DEFAULT_POLLING_STATUS_LOOKUP, poll } from '../polling';
 import {

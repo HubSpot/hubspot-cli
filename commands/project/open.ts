@@ -9,7 +9,8 @@ import {
 import { trackCommandUsage } from '../../lib/usageTracking';
 import { i18n } from '../../lib/lang';
 import { logger } from '@hubspot/local-dev-lib/logger';
-import { getProjectConfig, ensureProjectExists } from '../../lib/projects';
+import { getProjectConfig } from '../../lib/projects/config';
+import { ensureProjectExists } from '../../lib/projects/ensureProjectExists';
 import { getProjectDetailUrl } from '../../lib/projects/urls';
 import { projectNamePrompt } from '../../lib/prompts/projectNamePrompt';
 import { uiBetaTag } from '../../lib/ui';

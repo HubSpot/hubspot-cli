@@ -8,7 +8,10 @@ import {
 } from '@hubspot/local-dev-lib/api/projects';
 import { getTableContents, getTableHeader } from '../../lib/ui/table';
 import { uiBetaTag, uiLink } from '../../lib/ui';
-import { getProjectConfig, validateProjectConfig } from '../../lib/projects';
+import {
+  getProjectConfig,
+  validateProjectConfig,
+} from '../../lib/projects/config';
 import { getProjectDetailUrl } from '../../lib/projects/urls';
 import moment from 'moment';
 import { promptUser } from '../../lib/prompts/promptUtils';

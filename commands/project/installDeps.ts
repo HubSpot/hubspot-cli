@@ -5,7 +5,7 @@ import {
   getProjectPackageJsonLocations,
 } from '../../lib/dependencyManagement';
 import { EXIT_CODES } from '../../lib/enums/exitCodes';
-import { getProjectConfig } from '../../lib/projects';
+import { getProjectConfig } from '../../lib/projects/config';
 import { promptUser } from '../../lib/prompts/promptUtils';
 import path from 'path';
 import { i18n } from '../../lib/lang';

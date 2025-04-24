@@ -7,11 +7,11 @@ import { useV3Api } from '../../lib/projects/buildAndDeploy';
 import { uiBetaTag, uiCommandReference } from '../../lib/ui';
 import { trackCommandUsage } from '../../lib/usageTracking';
 import {
-  ensureProjectExists,
   getProjectConfig,
-  logFeedbackMessage,
   validateProjectConfig,
-} from '../../lib/projects';
+} from '../../lib/projects/config';
+import { ensureProjectExists } from '../../lib/projects/ensureProjectExists';
+import { logFeedbackMessage } from '../../lib/projects/ui';
 import { handleProjectUpload } from '../../lib/projects/upload';
 import {
   displayWarnLogs,

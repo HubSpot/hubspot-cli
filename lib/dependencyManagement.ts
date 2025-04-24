@@ -1,5 +1,5 @@
 import { logger } from '@hubspot/local-dev-lib/logger';
-import { getProjectConfig } from './projects';
+import { getProjectConfig } from './projects/config';
 import { exec as execAsync } from 'child_process';
 import { walk } from '@hubspot/local-dev-lib/fs';
 import path from 'path';

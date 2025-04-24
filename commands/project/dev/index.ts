@@ -7,7 +7,10 @@ import { trackCommandUsage } from '../../../lib/usageTracking';
 import { i18n } from '../../../lib/lang';
 import { logger } from '@hubspot/local-dev-lib/logger';
 import { getAccountConfig } from '@hubspot/local-dev-lib/config';
-import { getProjectConfig, validateProjectConfig } from '../../../lib/projects';
+import {
+  getProjectConfig,
+  validateProjectConfig,
+} from '../../../lib/projects/config';
 import { EXIT_CODES } from '../../../lib/enums/exitCodes';
 import { uiBetaTag, uiCommandReference, uiLink } from '../../../lib/ui';
 

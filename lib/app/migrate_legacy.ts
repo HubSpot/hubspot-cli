@@ -19,7 +19,7 @@ import { i18n } from '../lang';
 import { isAppDeveloperAccount, isUnifiedAccount } from '../accountTypes';
 import { selectPublicAppPrompt } from '../prompts/selectPublicAppPrompt';
 import { createProjectPrompt } from '../prompts/createProjectPrompt';
-import { ensureProjectExists } from '../projects';
+import { ensureProjectExists } from '../projects/ensureProjectExists';
 import { trackCommandMetadataUsage } from '../usageTracking';
 import SpinniesManager from '../ui/SpinniesManager';
 import { handleKeypress } from '../process';
