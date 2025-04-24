@@ -2,6 +2,12 @@
 import chalk from 'chalk';
 import { uiAccountDescription, uiCommandReference } from '../lib/ui';
 
+type LangFunction = (...args: (string | number)[]) => string;
+
+type LangObject = {
+  [key: string]: string | LangFunction | LangObject;
+};
+
 export const commands = {
   generalErrors: {
     updateNotify: {
@@ -2591,7 +2597,8 @@ export const commands = {
       },
     },
   },
-};
+} as const satisfies LangObject;
+
 export const lib = {
   process: {
     exitDebug: signal =>
@@ -3447,9 +3454,10 @@ export const lib = {
         projectConnectedToGitHub:
           'The app is linked to a GitHub repository.  You will need to unlink it before migrating.',
         partOfProjectAlready: `This app is part of a project, run ${uiCommandReference('hs project migrate')} from the project directory to migrate it`,
+        partOfProjectAlready: `This app is part of a project, run ${uiCommandReference('hs project migrate')} from the project directory to migrate it`,
         generic: reasonCode => `Unable to migrate app: ${reasonCode}`,
       },
-      noAppsEligible: (accountId, reasons) =>
+      noAppsEligible: (accountId, reasons: string[]) =>
         `No apps in account ${accountId} are currently migratable${reasons.length ? `\n  - ${reasons.join('\n  - ')}` : ''}`,
 
       invalidAccountTypeTitle: () =>
@@ -3487,4 +3495,4 @@ export const lib = {
       copyingProjectFilesFailed: 'Unable to copy migrated project files',
     },
   },
-};
+} as const satisfies LangObject;
