@@ -12,7 +12,7 @@ import {
   addGlobalOptions,
 } from '../../lib/commonOpts';
 import { migrateApp2025_2 } from '../../lib/app/migrate';
-import { getProjectConfig } from '../../lib/projects';
+import { getProjectConfig } from '../../lib/projects/config';
 import { PLATFORM_VERSIONS } from '@hubspot/local-dev-lib/constants/projects';
 import { logError } from '../../lib/errorHandlers';
 import { EXIT_CODES } from '../../lib/enums/exitCodes';

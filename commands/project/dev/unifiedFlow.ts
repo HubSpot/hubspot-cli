@@ -11,16 +11,16 @@ import { ProjectDevArgs } from '../../../types/Yargs';
 import { ProjectConfig } from '../../../types/Projects';
 import { logError } from '../../../lib/errorHandlers';
 import { EXIT_CODES } from '../../../lib/enums/exitCodes';
-import { ensureProjectExists } from '../../../lib/projects';
+import { ensureProjectExists } from '../../../lib/projects/ensureProjectExists';
 import {
   createInitialBuildForNewProject,
   createNewProjectForLocalDev,
   useExistingDevTestAccount,
   createDeveloperTestAccountForLocalDev,
-} from '../../../lib/localDev';
+} from '../../../lib/projects/localDev/helpers';
 import { selectDeveloperTestTargetAccountPrompt } from '../../../lib/prompts/projectDevTargetAccountPrompt';
 import SpinniesManager from '../../../lib/ui/SpinniesManager';
-import LocalDevManagerV2 from '../../../lib/LocalDevManagerV2';
+import LocalDevManagerV2 from '../../../lib/projects/localDev/LocalDevManagerV2';
 import { handleExit } from '../../../lib/process';
 import {
   isAppDeveloperAccount,

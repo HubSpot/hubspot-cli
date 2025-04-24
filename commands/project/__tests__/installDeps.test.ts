@@ -1,7 +1,7 @@
 import yargs, { Argv, ArgumentsCamelCase } from 'yargs';
 import path from 'path';
 import { logger } from '@hubspot/local-dev-lib/logger';
-import * as projectUtils from '../../../lib/projects';
+import * as projectUtils from '../../../lib/projects/config';
 import { EXIT_CODES } from '../../../lib/enums/exitCodes';
 import { trackCommandUsage } from '../../../lib/usageTracking';
 import * as dependencyManagement from '../../../lib/dependencyManagement';
@@ -10,7 +10,7 @@ import * as projectInstallDepsCommand from '../installDeps';
 
 jest.mock('yargs');
 jest.mock('@hubspot/local-dev-lib/logger');
-jest.mock('../../../lib/projects');
+jest.mock('../../../lib/projects/config');
 jest.mock('../../../lib/dependencyManagement');
 jest.mock('../../../lib/prompts/promptUtils');
 jest.mock('../../../lib/usageTracking');

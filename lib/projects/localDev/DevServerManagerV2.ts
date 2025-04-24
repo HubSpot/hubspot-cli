@@ -1,7 +1,6 @@
 import { logger } from '@hubspot/local-dev-lib/logger';
 import { Environment } from '@hubspot/local-dev-lib/types/Config';
-import { i18n } from './lang';
-import { promptUser } from './prompts/promptUtils';
+import { promptUser } from '../../prompts/promptUtils';
 import { DevModeUnifiedInterface as UIEDevModeInterface } from '@hubspot/ui-extensions-dev-server';
 import {
   startPortManagerServer,
@@ -13,10 +12,9 @@ import {
   getHubSpotWebsiteOrigin,
 } from '@hubspot/local-dev-lib/urls';
 import { getAccountConfig } from '@hubspot/local-dev-lib/config';
-import { ProjectConfig } from '../types/Projects';
+import { ProjectConfig } from '../../../types/Projects';
 import { IntermediateRepresentationNodeLocalDev } from '@hubspot/project-parsing-lib/src/lib/types';
-
-const i18nKey = 'lib.DevServerManager';
+import { lib } from '../../../lang/en';
 
 type DevServerInterface = {
   // eslint-disable-next-line @typescript-eslint/no-unsafe-function-type
@@ -94,7 +92,7 @@ class DevServerManagerV2 {
         }
       });
     } else {
-      throw new Error(i18n(`${i18nKey}.notInitialized`));
+      throw new Error(lib.DevServerManager.notInitialized);
     }
 
     this.started = true;

@@ -20,7 +20,7 @@ import {
 import { EXIT_CODES } from '../../lib/enums/exitCodes';
 import { ApiErrorContext, logError } from '../../lib/errorHandlers/index';
 import { handleExit, handleKeypress } from '../../lib/process';
-import { getProjectConfig } from '../../lib/projects';
+import { getProjectConfig } from '../../lib/projects/config';
 import { findProjectComponents } from '../../lib/projects/structure';
 import { ComponentTypes } from '../../types/Projects';
 import { hasFeature } from '../../lib/hasFeature';

@@ -10,7 +10,7 @@ import { isHubSpotHttpError } from '@hubspot/local-dev-lib/errors/index';
 import { useV3Api } from '../../lib/projects/buildAndDeploy';
 import { trackCommandUsage } from '../../lib/usageTracking';
 import { logError, ApiErrorContext } from '../../lib/errorHandlers/index';
-import { getProjectConfig } from '../../lib/projects';
+import { getProjectConfig } from '../../lib/projects/config';
 import { pollDeployStatus } from '../../lib/projects/buildAndDeploy';
 import { getProjectDetailUrl } from '../../lib/projects/urls';
 import { projectNamePrompt } from '../../lib/prompts/projectNamePrompt';

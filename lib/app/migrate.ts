@@ -18,7 +18,8 @@ import {
   uiLine,
   uiLink,
 } from '../ui';
-import { ensureProjectExists, LoadedProjectConfig } from '../projects';
+import { LoadedProjectConfig } from '../projects/config';
+import { ensureProjectExists } from '../projects/ensureProjectExists';
 import SpinniesManager from '../ui/SpinniesManager';
 import { DEFAULT_POLLING_STATUS_LOOKUP, poll } from '../polling';
 import {
@@ -435,7 +436,20 @@ async function finalizeMigration(
     });
 
     if (isMigrationStatus(error) && error.status === MIGRATION_STATUS.FAILURE) {
-      throw new Error(error.projectErrorDetail);
+      const errorMessage = error.componentErrors
+        ? `${error.projectErrorDetail}: \n\t- ${error.componentErrors
+            .map(componentError => {
+              const {
+                componentType,
+                errorMessage,
+                developerSymbol: uid,
+              } = componentError;
+
+              return `${componentType}${uid ? ` (${uid})` : ''}: ${errorMessage}`;
+            })
+            .join('\n\t- ')}`
+        : error.projectErrorDetail;
+      throw new Error(errorMessage);
     }
 
     throw new Error(lib.migrate.errors.migrationFailed, {

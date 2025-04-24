@@ -8,7 +8,7 @@ import {
   fetchProjectBuilds,
 } from '@hubspot/local-dev-lib/api/projects';
 import { logError, ApiErrorContext } from '../../lib/errorHandlers/index';
-import { getProjectConfig } from '../../lib/projects';
+import { getProjectConfig } from '../../lib/projects/config';
 import { downloadProjectPrompt } from '../../lib/prompts/downloadProjectPrompt';
 import { i18n } from '../../lib/lang';
 import { uiBetaTag } from '../../lib/ui';
