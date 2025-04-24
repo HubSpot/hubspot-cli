@@ -2762,9 +2762,9 @@ export const lib = {
   },
   projectBuildAndDeploy: {
     makePollTaskStatusFunc: {
-      componentCountSingular: 'Found 1 component in this project',
+      componentCountSingular: 'Found 1 component in this project\n',
       componentCount: numComponents =>
-        `Found ${numComponents} components in this project`,
+        `Found ${numComponents} components in this project\n`,
       successStatusText: 'DONE',
       failedStatusText: 'FAILED',
       errorFetchingTaskStatus: taskType => `Error fetching ${taskType} status`,
