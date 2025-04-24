@@ -338,7 +338,7 @@ export async function createDeveloperTestAccountForLocalDev(
       maxTestPortals
     );
 
-    return result.id;
+    return result;
   } catch (err) {
     logError(err);
     process.exit(EXIT_CODES.ERROR);
