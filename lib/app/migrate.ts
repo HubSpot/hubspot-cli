@@ -419,10 +419,15 @@ async function finalizeMigration(
     if (isMigrationStatus(error) && error.status === MIGRATION_STATUS.FAILURE) {
       const errorMessage = error.componentErrors
         ? `${error.projectErrorDetail}: \n\t- ${error.componentErrors
-            .map(
-              componentError =>
-                `${componentError.componentType}: ${componentError.errorMessage}`
-            )
+            .map(componentError => {
+              const {
+                componentType,
+                errorMessage,
+                developerSymbol: uid,
+              } = componentError;
+
+              return `${componentType}${uid ? ` (${uid})` : ''}: ${errorMessage}`;
+            })
             .join('\n\t- ')}`
         : error.projectErrorDetail;
       throw new Error(errorMessage);
