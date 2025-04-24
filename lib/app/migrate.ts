@@ -417,7 +417,15 @@ async function finalizeMigration(
     });
 
     if (isMigrationStatus(error) && error.status === MIGRATION_STATUS.FAILURE) {
-      throw new Error(error.projectErrorDetail);
+      const errorMessage = error.componentErrors
+        ? `${error.projectErrorDetail}: \n\t- ${error.componentErrors
+            .map(
+              componentError =>
+                `${componentError.componentType}: ${componentError.errorMessage}`
+            )
+            .join('\n\t- ')}`
+        : error.projectErrorDetail;
+      throw new Error(errorMessage);
     }
 
     throw new Error(lib.migrate.errors.migrationFailed, {
