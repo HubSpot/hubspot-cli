@@ -9,6 +9,8 @@ import { UNMIGRATABLE_REASONS } from '@hubspot/local-dev-lib/constants/projects'
 import { mapToUserFacingType } from '@hubspot/project-parsing-lib/src/lib/transform';
 import { MIGRATION_STATUS } from '@hubspot/local-dev-lib/types/Migration';
 import { downloadProject } from '@hubspot/local-dev-lib/api/projects';
+const inquirer = require('inquirer');
+
 import { confirmPrompt, inputPrompt, listPrompt } from '../prompts/promptUtils';
 import {
   uiAccountDescription,
@@ -38,12 +40,11 @@ import {
   EnvironmentArgs,
 } from '../../types/Yargs';
 import { hasFeature } from '../hasFeature';
+import { FEATURES } from '../constants';
 import {
   getProjectBuildDetailUrl,
   getProjectDetailUrl,
 } from '../projects/urls';
-
-const inquirer = require('inquirer');
 
 export type MigrateAppArgs = CommonArgs &
   AccountArgs &
@@ -522,7 +523,7 @@ export async function migrateApp2025_2(
 
   const ungatedForUnifiedApps = await hasFeature(
     derivedAccountId,
-    'Developers:UnifiedApps:PrivateBeta'
+    FEATURES.UNIFIED_APPS
   );
 
   if (!ungatedForUnifiedApps) {

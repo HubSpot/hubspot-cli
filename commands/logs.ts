@@ -18,12 +18,10 @@ const { promptUser } = require('../lib/prompts/promptUtils');
 const { EXIT_CODES } = require('../lib/enums/exitCodes');
 const { isHubSpotHttpError } = require('@hubspot/local-dev-lib/errors/index');
 
-const i18nKey = 'commands.logs';
-
 const handleLogsError = (e, accountId, functionPath) => {
   if (isHubSpotHttpError(e) && (e.status === 404 || e.status == 400)) {
     logger.error(
-      i18n(`${i18nKey}.errors.noLogsFound`, {
+      i18n(`commands.logs.errors.noLogsFound`, {
         accountId,
         functionPath,
       })
@@ -42,7 +40,7 @@ const endpointLog = async (accountId, functionPath, options) => {
   };
 
   logger.debug(
-    i18n(`${i18nKey}.gettingLogs`, {
+    i18n(`commands.logs.gettingLogs`, {
       latest,
       functionPath,
     })
@@ -90,7 +88,7 @@ const endpointLog = async (accountId, functionPath, options) => {
 };
 
 exports.command = 'logs [endpoint]';
-exports.describe = i18n(`${i18nKey}.describe`);
+exports.describe = i18n(`commands.logs.describe`);
 
 exports.handler = async options => {
   const { endpoint: endpointArgValue, latest, derivedAccountId } = options;
@@ -99,7 +97,7 @@ exports.handler = async options => {
 
   const { endpointPromptValue } = await promptUser({
     name: 'endpointPromptValue',
-    message: i18n(`${i18nKey}.endpointPrompt`),
+    message: i18n(`commands.logs.endpointPrompt`),
     when: !endpointArgValue,
   });
 
@@ -112,36 +110,36 @@ exports.handler = async options => {
 
 exports.builder = yargs => {
   yargs.positional('endpoint', {
-    describe: i18n(`${i18nKey}.positionals.endpoint.describe`),
+    describe: i18n(`commands.logs.positionals.endpoint.describe`),
     type: 'string',
   });
   yargs
     .options({
       latest: {
         alias: 'l',
-        describe: i18n(`${i18nKey}.options.latest.describe`),
+        describe: i18n(`commands.logs.options.latest.describe`),
         type: 'boolean',
       },
       compact: {
-        describe: i18n(`${i18nKey}.options.compact.describe`),
+        describe: i18n(`commands.logs.options.compact.describe`),
         type: 'boolean',
       },
       follow: {
         alias: ['f'],
-        describe: i18n(`${i18nKey}.options.follow.describe`),
+        describe: i18n(`commands.logs.options.follow.describe`),
         type: 'boolean',
       },
       limit: {
-        describe: i18n(`${i18nKey}.options.limit.describe`),
+        describe: i18n(`commands.logs.options.limit.describe`),
         type: 'number',
       },
     })
     .conflicts('follow', 'limit');
 
   yargs.example([
-    ['$0 logs my-endpoint', i18n(`${i18nKey}.examples.default`)],
-    ['$0 logs my-endpoint --limit=10', i18n(`${i18nKey}.examples.limit`)],
-    ['$0 logs my-endpoint --follow', i18n(`${i18nKey}.examples.follow`)],
+    ['$0 logs my-endpoint', i18n(`commands.logs.examples.default`)],
+    ['$0 logs my-endpoint --limit=10', i18n(`commands.logs.examples.limit`)],
+    ['$0 logs my-endpoint --follow', i18n(`commands.logs.examples.follow`)],
   ]);
 
   addConfigOptions(yargs);

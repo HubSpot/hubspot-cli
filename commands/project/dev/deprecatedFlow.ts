@@ -25,18 +25,12 @@ import {
   createInitialBuildForNewProject,
   useExistingDevTestAccount,
   checkIfParentAccountIsAuthed,
+  hasSandboxes,
 } from '../../../lib/localDev';
 import { handleExit } from '../../../lib/process';
-import {
-  isSandbox,
-  isDeveloperTestAccount,
-  isStandardAccount,
-  isAppDeveloperAccount,
-} from '../../../lib/accountTypes';
+import { isSandbox, isDeveloperTestAccount } from '../../../lib/accountTypes';
 import { ensureProjectExists } from '../../../lib/projects';
 import { ProjectDevArgs } from '../../../types/Yargs';
-
-const i18nKey = 'commands.project.subcommands.dev';
 
 export async function deprecatedProjectDevFlow(
   args: ArgumentsCamelCase<ProjectDevArgs>,
@@ -55,14 +49,16 @@ export async function deprecatedProjectDevFlow(
 
   if (runnableComponents.length === 0) {
     logger.error(
-      i18n(`${i18nKey}.errors.noRunnableComponents`, {
+      i18n(`commands.project.subcommands.dev.errors.noRunnableComponents`, {
         projectDir,
         command: uiCommandReference('hs project add'),
       })
     );
     process.exit(EXIT_CODES.SUCCESS);
   } else if (hasPrivateApps && hasPublicApps) {
-    logger.error(i18n(`${i18nKey}.errors.invalidProjectComponents`));
+    logger.error(
+      i18n(`commands.project.subcommands.dev.errors.invalidProjectComponents`)
+    );
     process.exit(EXIT_CODES.SUCCESS);
   }
 
@@ -70,16 +66,23 @@ export async function deprecatedProjectDevFlow(
 
   if (!accounts) {
     logger.error(
-      i18n(`${i18nKey}.errors.noAccountsInConfig`, {
+      i18n(`commands.project.subcommands.dev.errors.noAccountsInConfig`, {
         authCommand: uiCommandReference('hs auth'),
       })
     );
     process.exit(EXIT_CODES.ERROR);
   }
 
-  const defaultAccountIsRecommendedType =
-    isDeveloperTestAccount(accountConfig) ||
-    (!hasPublicApps && isSandbox(accountConfig));
+  let bypassRecommendedAccountPrompt = false;
+
+  if (isDeveloperTestAccount(accountConfig)) {
+    bypassRecommendedAccountPrompt = true;
+  } else if (!hasPublicApps && isSandbox(accountConfig)) {
+    bypassRecommendedAccountPrompt = true;
+  } else if (!hasPublicApps) {
+    const defaultAccountHasSandboxes = await hasSandboxes(accountConfig);
+    bypassRecommendedAccountPrompt = !defaultAccountHasSandboxes;
+  }
 
   // targetProjectAccountId and targetTestingAccountId are set to null if --account flag is not provided.
   // By setting them to null, we can later check if they need to be assigned based on the default account configuration and the type of app.
@@ -95,11 +98,11 @@ export async function deprecatedProjectDevFlow(
       targetProjectAccountId = accountConfig.parentAccountId || null;
     }
   } else {
-    checkIfDefaultAccountIsSupported(accountConfig, hasPublicApps);
+    await checkIfDefaultAccountIsSupported(accountConfig, hasPublicApps);
   }
 
   // The user is targeting an account type that we recommend developing on
-  if (!targetProjectAccountId && defaultAccountIsRecommendedType) {
+  if (!targetProjectAccountId && bypassRecommendedAccountPrompt) {
     targetTestingAccountId = derivedAccountId;
 
     await confirmDefaultAccountIsTarget(accountConfig);
@@ -137,9 +140,8 @@ export async function deprecatedProjectDevFlow(
       await useExistingDevTestAccount(env, notInConfigAccount);
     }
 
-    createNewSandbox = isStandardAccount(accountConfig) && createNestedAccount;
-    createNewDeveloperTestAccount =
-      isAppDeveloperAccount(accountConfig) && createNestedAccount;
+    createNewSandbox = hasPrivateApps && createNestedAccount;
+    createNewDeveloperTestAccount = hasPublicApps && createNestedAccount;
   }
 
   if (createNewSandbox) {
@@ -161,7 +163,7 @@ export async function deprecatedProjectDevFlow(
   }
 
   if (!targetProjectAccountId || !targetTestingAccountId) {
-    logger.error(i18n(`${i18nKey}.errors.noAccount`));
+    logger.error(i18n(`commands.project.subcommands.dev.errors.noAccount`));
     process.exit(EXIT_CODES.ERROR);
   }
 

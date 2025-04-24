@@ -33,7 +33,11 @@ import SpinniesManager from './ui/SpinniesManager';
 import { i18n } from './lang';
 import { EXIT_CODES } from './enums/exitCodes';
 import { trackCommandMetadataUsage } from './usageTracking';
-import { isAppDeveloperAccount, isDeveloperTestAccount } from './accountTypes';
+import {
+  isAppDeveloperAccount,
+  isDeveloperTestAccount,
+  isUnifiedAccount,
+} from './accountTypes';
 import { handleProjectUpload } from './projects/upload';
 import { pollProjectBuildAndDeploy } from './projects/buildAndDeploy';
 import {
@@ -41,7 +45,7 @@ import {
   PROJECT_BUILD_TEXT,
   PROJECT_DEPLOY_TEXT,
 } from './constants';
-import { logError, ApiErrorContext } from './errorHandlers/index';
+import { logError, ApiErrorContext, debugError } from './errorHandlers/index';
 import {
   buildSandbox,
   buildDeveloperTestAccount,
@@ -56,6 +60,7 @@ import {
 import { ProjectDevTargetAccountPromptResponse } from '../types/Prompts';
 import { FileResult } from 'tmp';
 import { Build } from '@hubspot/local-dev-lib/types/Build';
+import { getSandboxUsageLimits } from '@hubspot/local-dev-lib/api/sandboxHubs';
 
 const i18nKey = 'lib.localDev';
 
@@ -94,15 +99,18 @@ export async function confirmDefaultAccountIsTarget(
 }
 
 // Confirm the default account is supported for the type of apps being developed
-export function checkIfDefaultAccountIsSupported(
+export async function checkIfDefaultAccountIsSupported(
   accountConfig: CLIAccount,
   hasPublicApps: boolean
-): void {
+): Promise<void> {
+  const defaultAccountIsUnified = await isUnifiedAccount(accountConfig);
+
   if (
     hasPublicApps &&
     !(
       isAppDeveloperAccount(accountConfig) ||
-      isDeveloperTestAccount(accountConfig)
+      isDeveloperTestAccount(accountConfig) ||
+      defaultAccountIsUnified
     )
   ) {
     logger.error(
@@ -189,7 +197,7 @@ export async function suggestRecommendedNestedAccount(
   uiLine();
   logger.log();
 
-  const targetAccountPrompt = isAppDeveloperAccount(accountConfig)
+  const targetAccountPrompt = hasPublicApps
     ? selectDeveloperTestTargetAccountPrompt
     : selectSandboxTargetAccountPrompt;
 
@@ -537,4 +545,22 @@ export function getAccountHomeUrl(accountId: number): string {
     getEnv(accountId) === 'qa' ? ENVIRONMENTS.QA : ENVIRONMENTS.PROD
   );
   return `${baseUrl}/home?portalId=${accountId}`;
+}
+
+export async function hasSandboxes(account: CLIAccount): Promise<boolean> {
+  const accountId = getAccountIdentifier(account);
+  if (!accountId) {
+    return false;
+  }
+
+  try {
+    const {
+      data: { usage },
+    } = await getSandboxUsageLimits(accountId);
+
+    return usage.STANDARD.limit > 0 || usage.DEVELOPER.limit > 0;
+  } catch (e) {
+    debugError(e);
+    return false;
+  }
 }

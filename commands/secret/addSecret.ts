@@ -24,10 +24,8 @@ import {
   EnvironmentArgs,
 } from '../../types/Yargs';
 
-const i18nKey = 'commands.secret.subcommands.add';
-
 export const command = 'add [name]';
-export const describe = i18n(`${i18nKey}.describe`);
+export const describe = i18n(`commands.secret.subcommands.add.describe`);
 
 type CombinedArgs = ConfigArgs & AccountArgs & EnvironmentArgs;
 type AddSecretArgs = CommonArgs & CombinedArgs & { name?: string };
@@ -52,7 +50,7 @@ export async function handler(
 
     if (secrets.includes(secretName)) {
       logger.error(
-        i18n(`${i18nKey}.errors.alreadyExists`, {
+        i18n(`commands.secret.subcommands.add.errors.alreadyExists`, {
           secretName,
           command: uiCommandReference('hs secret update'),
         })
@@ -64,14 +62,14 @@ export async function handler(
 
     await addSecret(derivedAccountId, secretName, secretValue);
     logger.success(
-      i18n(`${i18nKey}.success.add`, {
+      i18n(`commands.secret.subcommands.add.success.add`, {
         accountIdentifier: uiAccountDescription(derivedAccountId),
         secretName,
       })
     );
   } catch (err) {
     logger.error(
-      i18n(`${i18nKey}.errors.add`, {
+      i18n(`commands.secret.subcommands.add.errors.add`, {
         secretName: secretName || '',
       })
     );
@@ -91,7 +89,7 @@ export function builder(yargs: Argv): Argv<AddSecretArgs> {
   addUseEnvironmentOptions(yargs);
 
   yargs.positional('name', {
-    describe: i18n(`${i18nKey}.positionals.name.describe`),
+    describe: i18n(`commands.secret.subcommands.add.positionals.name.describe`),
     type: 'string',
   });
 
