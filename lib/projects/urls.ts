@@ -18,6 +18,14 @@ export function getProjectDetailUrl(
   return `${getProjectHomeUrl(accountId)}/project/${projectName}`;
 }
 
+export function getProjectSettingsUrl(
+  projectName: string,
+  accountId: number
+): string | undefined {
+  if (!projectName) return;
+  return `${getProjectDetailUrl(projectName, accountId)}/settings`;
+}
+
 export function getProjectActivityUrl(
   projectName: string,
   accountId: number
