@@ -9,13 +9,21 @@ import { UNMIGRATABLE_REASONS } from '@hubspot/local-dev-lib/constants/projects'
 import { mapToUserFacingType } from '@hubspot/project-parsing-lib/src/lib/transform';
 import { MIGRATION_STATUS } from '@hubspot/local-dev-lib/types/Migration';
 import { downloadProject } from '@hubspot/local-dev-lib/api/projects';
+const inquirer = require('inquirer');
+
 import { confirmPrompt, inputPrompt, listPrompt } from '../prompts/promptUtils';
-import { uiAccountDescription, uiCommandReference, uiLine } from '../ui';
+import {
+  uiAccountDescription,
+  uiCommandReference,
+  uiLine,
+  uiLink,
+} from '../ui';
 import { ensureProjectExists, LoadedProjectConfig } from '../projects';
 import SpinniesManager from '../ui/SpinniesManager';
 import { DEFAULT_POLLING_STATUS_LOOKUP, poll } from '../polling';
 import {
   checkMigrationStatusV2,
+  CLI_UNMIGRATABLE_REASONS,
   continueMigration,
   initializeMigration,
   isMigrationStatus,
@@ -33,6 +41,10 @@ import {
 } from '../../types/Yargs';
 import { hasFeature } from '../hasFeature';
 import { FEATURES } from '../constants';
+import {
+  getProjectBuildDetailUrl,
+  getProjectDetailUrl,
+} from '../projects/urls';
 
 export type MigrateAppArgs = CommonArgs &
   AccountArgs &
@@ -52,6 +64,8 @@ function getUnmigratableReason(reasonCode: string): string {
       return lib.migrate.errors.unmigratableReasons.isPrivateApp;
     case UNMIGRATABLE_REASONS.LISTED_IN_MARKETPLACE:
       return lib.migrate.errors.unmigratableReasons.listedInMarketplace;
+    case CLI_UNMIGRATABLE_REASONS.PART_OF_PROJECT_ALREADY:
+      return lib.migrate.errors.unmigratableReasons.partOfProjectAlready;
     default:
       return lib.migrate.errors.unmigratableReasons.generic(reasonCode);
   }
@@ -64,7 +78,7 @@ function filterAppsByProjectName(
     if (projectConfig) {
       return app.projectName === projectConfig?.projectConfig?.name;
     }
-    return !app.projectName;
+    return true;
   };
 }
 
@@ -92,6 +106,16 @@ async function fetchMigrationApps(
     throw new Error(lib.migrate.errors.project.multipleApps);
   }
 
+  if (!projectConfig?.projectConfig) {
+    allApps.forEach(app => {
+      if (app.projectName) {
+        app.isMigratable = false;
+        app.unmigratableReason =
+          CLI_UNMIGRATABLE_REASONS.PART_OF_PROJECT_ALREADY;
+      }
+    });
+  }
+
   if (allApps.length === 0 && projectConfig) {
     throw new Error(
       lib.migrate.errors.noAppsForProject(
@@ -100,10 +124,7 @@ async function fetchMigrationApps(
     );
   }
 
-  if (
-    allApps.length === 0 ||
-    filteredUnmigratableApps.length === allApps.length
-  ) {
+  if (allApps.length === 0 || !allApps.some(app => app.isMigratable)) {
     const reasons = filteredUnmigratableApps.map(
       app =>
         `${chalk.bold(app.appName)}: ${getUnmigratableReason(app.unmigratableReason)}`
@@ -129,6 +150,33 @@ async function fetchMigrationApps(
   return allApps;
 }
 
+async function promptForAppToMigrate(allApps: MigrationApp[]) {
+  const appChoices = allApps.map(app => ({
+    name: app.isMigratable
+      ? app.appName
+      : `[${chalk.yellow('DISABLED')}] ${app.appName} `,
+    value: app,
+    disabled: app.isMigratable
+      ? false
+      : getUnmigratableReason(app.unmigratableReason),
+  }));
+
+  const enabledChoices = appChoices.filter(app => !app.disabled);
+  const disabledChoices = appChoices.filter(app => app.disabled);
+
+  const { appId: selectedAppId } = await listPrompt<MigrationApp>(
+    lib.migrate.prompt.chooseApp,
+    {
+      choices: [
+        ...enabledChoices,
+        new inquirer.Separator(),
+        ...disabledChoices,
+      ],
+    }
+  );
+
+  return selectedAppId;
+}
 async function selectAppToMigrate(
   allApps: MigrationApp[],
   appId?: number,
@@ -143,25 +191,9 @@ async function selectAppToMigrate(
     throw new Error(lib.migrate.errors.appWithAppIdNotFound(appId));
   }
 
-  const appChoices = allApps.map(app => ({
-    name: app.isMigratable
-      ? app.appName
-      : `[${chalk.yellow('DISABLED')}] ${app.appName} `,
-    value: app,
-    disabled: app.isMigratable
-      ? false
-      : getUnmigratableReason(app.unmigratableReason),
-  }));
-
   let appIdToMigrate = appId;
   if (!appIdToMigrate) {
-    const { appId: selectedAppId } = await listPrompt<MigrationApp>(
-      lib.migrate.prompt.chooseApp,
-      {
-        choices: appChoices,
-      }
-    );
-    appIdToMigrate = selectedAppId;
+    appIdToMigrate = await promptForAppToMigrate(allApps);
   }
 
   const selectedApp = allApps.find(app => app.appId === appIdToMigrate);
@@ -199,7 +231,7 @@ async function selectAppToMigrate(
     ? `${lib.migrate.projectMigrationWarning} ${lib.migrate.prompt.proceed}`
     : lib.migrate.prompt.proceed;
 
-  const proceed = await confirmPrompt(promptMessage);
+  const proceed = await confirmPrompt(promptMessage, { defaultAnswer: false });
   return {
     proceed,
     appIdToMigrate,
@@ -341,9 +373,9 @@ async function beginMigration(
             const result = validateUid(uid);
             return result === undefined ? true : result;
           },
-          defaultAnswer: (componentHint || '')
-            .toLowerCase()
-            .replace(/[^a-z0-9_]/g, ''),
+          defaultAnswer: componentHint
+            ? componentHint.replace(/[^A-Za-z0-9_\-.]/g, '')
+            : undefined,
         }
       );
     }
@@ -497,7 +529,9 @@ export async function migrateApp2025_2(
     );
 
     if (!projectExists) {
-      throw new Error(lib.migrate.errors.project.doesNotExist);
+      throw new Error(
+        lib.migrate.errors.project.doesNotExist(derivedAccountId)
+      );
     }
   }
 
@@ -532,6 +566,20 @@ export async function migrateApp2025_2(
     buildId,
     projectDest,
     projectConfig
+  );
+
+  logger.log(
+    uiLink(
+      'Project Details',
+      getProjectDetailUrl(projectName, derivedAccountId)!
+    )
+  );
+
+  logger.log(
+    uiLink(
+      'Build Details',
+      getProjectBuildDetailUrl(projectName, buildId, derivedAccountId)!
+    )
   );
 }
 
