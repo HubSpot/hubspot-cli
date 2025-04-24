@@ -22,16 +22,16 @@ export const describe = uiDeprecatedTag(
 );
 export const deprecated = true;
 
-export async function handler(yargs: ArgumentsCamelCase<MigrateAppArgs>) {
+export async function handler(options: ArgumentsCamelCase<MigrateAppArgs>) {
   logger.warn(
     i18n(`commands.project.subcommands.migrateApp.deprecationWarning`, {
       oldCommand: uiCommandReference('hs project migrate-app'),
       newCommand: uiCommandReference(
-        'hs app migrate --platform-version=2023.2'
+        `hs app migrate --platform-version=${options.platformVersion}`
       ),
     })
   );
-  await migrateHandler(yargs);
+  await migrateHandler(options);
 }
 
 export function builder(yargs: Argv): Argv<MigrateAppArgs> {
