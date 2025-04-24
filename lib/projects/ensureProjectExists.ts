@@ -11,11 +11,9 @@ import { DEFAULT_POLLING_DELAY } from '../constants';
 import { promptUser } from '../prompts/promptUtils';
 import { EXIT_CODES } from '../enums/exitCodes';
 import { uiAccountDescription } from '../ui';
-import { i18n } from '../lang';
 import SpinniesManager from '../ui/SpinniesManager';
 import { logError, ApiErrorContext } from '../errorHandlers/index';
-
-const i18nKey = 'lib.projects';
+import { lib } from '../../lang/en';
 
 async function pollFetchProject(
   accountId: number,
@@ -26,9 +24,9 @@ async function pollFetchProject(
     let pollCount = 0;
     SpinniesManager.init();
     SpinniesManager.add('pollFetchProject', {
-      text: i18n(`${i18nKey}.pollFetchProject.checkingProject`, {
-        accountIdentifier: uiAccountDescription(accountId),
-      }),
+      text: lib.projects.pollFetchProject.checkingProject(
+        uiAccountDescription(accountId)
+      ),
     });
     const pollInterval = setInterval(async () => {
       try {
@@ -82,15 +80,14 @@ export async function ensureProjectExists(
     if (isSpecifiedError(err, { statusCode: 404 })) {
       let shouldCreateProject = forceCreate;
       if (allowCreate && !shouldCreateProject) {
-        const promptKey = uploadCommand ? 'createPromptUpload' : 'createPrompt';
+        const promptLangFunction = uploadCommand
+          ? lib.projects.ensureProjectExists.createPromptUpload
+          : lib.projects.ensureProjectExists.createPrompt;
         const promptResult = await promptUser<{ shouldCreateProject: boolean }>(
           [
             {
               name: 'shouldCreateProject',
-              message: i18n(`${i18nKey}.ensureProjectExists.${promptKey}`, {
-                projectName,
-                accountIdentifier,
-              }),
+              message: promptLangFunction(projectName, accountIdentifier),
               type: 'confirm',
             },
           ]
@@ -102,10 +99,10 @@ export async function ensureProjectExists(
         try {
           const { data: project } = await createProject(accountId, projectName);
           logger.success(
-            i18n(`${i18nKey}.ensureProjectExists.createSuccess`, {
+            lib.projects.ensureProjectExists.createSuccess(
               projectName,
-              accountIdentifier,
-            })
+              accountIdentifier
+            )
           );
           return { projectExists: true, project };
         } catch (err) {
@@ -115,10 +112,10 @@ export async function ensureProjectExists(
       } else {
         if (!noLogs) {
           logger.log(
-            i18n(`${i18nKey}.ensureProjectExists.notFound`, {
+            lib.projects.ensureProjectExists.notFound(
               projectName,
-              accountIdentifier,
-            })
+              accountIdentifier
+            )
           );
         }
         return { projectExists: false };
