@@ -7,7 +7,6 @@ import { getAbsoluteFilePath, getCwd } from '@hubspot/local-dev-lib/path';
 import { ProjectConfig } from '../../types/Projects';
 import { PROJECT_CONFIG_FILE } from '../constants';
 import { lib } from '../../lang/en';
-import { uiCommandReference } from '../ui';
 import { EXIT_CODES } from '../enums/exitCodes';
 
 export function writeProjectConfig(
@@ -72,11 +71,7 @@ export function validateProjectConfig(
   projectDir: string | null
 ): asserts projectConfig is ProjectConfig {
   if (!projectConfig || !projectDir) {
-    logger.error(
-      lib.projects.validateProjectConfig.configNotFound(
-        uiCommandReference('hs project create')
-      )
-    );
+    logger.error(lib.projects.validateProjectConfig.configNotFound);
     return process.exit(EXIT_CODES.ERROR);
   }
 

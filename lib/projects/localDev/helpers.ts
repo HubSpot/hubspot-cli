@@ -40,7 +40,7 @@ import {
 } from '../../sandboxes';
 import { syncSandbox } from '../../sandboxSync';
 import { validateDevTestAccountUsageLimits } from '../../developerTestAccounts';
-import { uiCommandReference, uiLine, uiAccountDescription } from '../../ui';
+import { uiLine, uiAccountDescription } from '../../ui';
 import SpinniesManager from '../../ui/SpinniesManager';
 import { EXIT_CODES } from '../../enums/exitCodes';
 import { trackCommandMetadataUsage } from '../../usageTracking';
@@ -76,11 +76,7 @@ export async function confirmDefaultAccountIsTarget(
   accountConfig: CLIAccount
 ): Promise<void> {
   if (!accountConfig.name || !accountConfig.accountType) {
-    logger.error(
-      lib.localDevHelpers.confirmDefaultAccountIsTarget.configError(
-        uiCommandReference('hs auth')
-      )
-    );
+    logger.error(lib.localDevHelpers.confirmDefaultAccountIsTarget.configError);
     process.exit(EXIT_CODES.ERROR);
   }
 
@@ -92,10 +88,8 @@ export async function confirmDefaultAccountIsTarget(
 
   if (!useDefaultAccount) {
     logger.log(
-      lib.localDevHelpers.confirmDefaultAccountIsTarget.declineDefaultAccountExplanation(
-        uiCommandReference('hs accounts use'),
-        uiCommandReference('hs project dev')
-      )
+      lib.localDevHelpers.confirmDefaultAccountIsTarget
+        .declineDefaultAccountExplanation
     );
     process.exit(EXIT_CODES.SUCCESS);
   }
@@ -117,18 +111,12 @@ export async function checkIfDefaultAccountIsSupported(
     )
   ) {
     logger.error(
-      lib.localDevHelpers.checkIfDefaultAccountIsSupported.publicApp(
-        uiCommandReference('hs accounts use'),
-        uiCommandReference('hs auth')
-      )
+      lib.localDevHelpers.checkIfDefaultAccountIsSupported.publicApp
     );
     process.exit(EXIT_CODES.SUCCESS);
   } else if (!hasPublicApps && isAppDeveloperAccount(accountConfig)) {
     logger.error(
-      lib.localDevHelpers.checkIfDefaultAccountIsSupported.privateApp(
-        uiCommandReference('hs accounts use'),
-        uiCommandReference('hs auth')
-      )
+      lib.localDevHelpers.checkIfDefaultAccountIsSupported.privateApp
     );
     process.exit(EXIT_CODES.SUCCESS);
   }
@@ -141,9 +129,6 @@ export function checkIfParentAccountIsAuthed(accountConfig: CLIAccount): void {
   ) {
     logger.error(
       lib.localDevHelpers.checkIfParentAccountIsAuthed.notAuthedError(
-        uiCommandReference(
-          `hs auth --account=${accountConfig.parentAccountId}`
-        ),
         accountConfig.parentAccountId || '',
         uiAccountDescription(getAccountIdentifier(accountConfig))
       )
@@ -160,19 +145,14 @@ export function checkIfAccountFlagIsSupported(
   if (hasPublicApps) {
     if (!isDeveloperTestAccount(accountConfig)) {
       logger.error(
-        lib.localDevHelpers.validateAccountOption.invalidPublicAppAccount(
-          uiCommandReference('hs accounts use'),
-          uiCommandReference('hs project dev')
-        )
+        lib.localDevHelpers.validateAccountOption.invalidPublicAppAccount
       );
       process.exit(EXIT_CODES.SUCCESS);
     }
     checkIfParentAccountIsAuthed(accountConfig);
   } else if (isAppDeveloperAccount(accountConfig)) {
     logger.error(
-      lib.localDevHelpers.validateAccountOption.invalidPrivateAppAccount(
-        uiCommandReference('hs accounts use')
-      )
+      lib.localDevHelpers.validateAccountOption.invalidPrivateAppAccount
     );
     process.exit(EXIT_CODES.SUCCESS);
   }
@@ -347,10 +327,8 @@ export async function useExistingDevTestAccount(
   if (!useExistingDevTestAcct) {
     logger.log('');
     logger.log(
-      lib.localDevHelpers.confirmDefaultAccountIsTarget.declineDefaultAccountExplanation(
-        uiCommandReference('hs accounts use'),
-        uiCommandReference('hs project dev')
-      )
+      lib.localDevHelpers.confirmDefaultAccountIsTarget
+        .declineDefaultAccountExplanation
     );
     logger.log('');
     process.exit(EXIT_CODES.SUCCESS);
@@ -449,9 +427,7 @@ function projectUploadCallback(
 ): Promise<ProjectPollResult> {
   if (!buildId) {
     logger.error(
-      lib.localDevHelpers.createInitialBuildForNewProject.genericError(
-        uiCommandReference('hs project upload')
-      )
+      lib.localDevHelpers.createInitialBuildForNewProject.genericError
     );
     process.exit(EXIT_CODES.ERROR);
   }

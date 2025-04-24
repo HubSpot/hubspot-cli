@@ -1128,8 +1128,10 @@ export const commands = {
         failedToFetchProjectDetails:
           'There was an error fetching project details',
         noFunctionsLinkText: 'Visit developer docs',
-        noFunctionsInProject: (helpCommand, link) =>
-          `There aren't any functions in this project\n\t- Run ${helpCommand} to learn more about logs\n\t- ${link} to learn more about serverless functions`,
+        noFunctionsInProject: `There aren't any functions in this project\n\t- Run ${uiCommandReference('hs project logs --help')} to learn more about logs\n\t- ${uiLink(
+          'Visit developer docs',
+          'https://developers.hubspot.com/docs/platform/serverless-functions'
+        )} to learn more about serverless functions`,
         noFunctionWithName: name => `No function with name "${name}"`,
         functionNotDeployed: name =>
           `The function with name "${name}" is not deployed`,
@@ -2629,8 +2631,7 @@ export const lib = {
     exitingStart: 'Stopping local dev server ...',
     exitingSucceed: 'Successfully exited',
     exitingFail: 'Failed to cleanup before exiting',
-    missingUid: devCommand =>
-      `Could not find a uid for the selected app. Confirm that the app config file contains the uid field and re-run ${devCommand}.`,
+    missingUid: `Could not find a uid for the selected app. Confirm that the app config file contains the uid field and re-run ${uiCommandReference('hs project dev')}.`,
     uploadWarning: {
       appLabel: '[App]',
       uiExtensionLabel: '[UI Extension]',
@@ -2643,9 +2644,9 @@ export const lib = {
         `${chalk.bold('Changing project configuration requires a new project build.')}\n\nThis will affect your public app's ${chalk.bold(`${installCount} existing ${installText}`)}. If your app has users in production, we strongly recommend creating a copy of this app to test your changes before proceding.`,
       header: warning =>
         `${warning} To reflect these changes and continue testing:`,
-      stopDev: command => `  * Stop ${command}`,
+      stopDev: `  * Stop ${uiCommandReference('hs project dev')}`,
       runUpload: command => `  * Run ${command}`,
-      restartDev: command => `  * Re-run ${command}`,
+      restartDev: `  * Re-run ${uiCommandReference('hs project dev')}`,
       pushToGithub: '  * Commit and push your changes to GitHub',
       defaultMarketplaceAppWarning: (installCount, accountText) =>
         `${chalk.bold('Changing project configuration requires creating a new project build.')}\n\nYour marketplace app is currently installed in ${chalk.bold(`${installCount} ${accountText}`)}. Any uploaded changes will impact your app's users. We strongly recommend creating a copy of this app to test your changes before proceding.`,
@@ -2668,22 +2669,16 @@ export const lib = {
   },
   localDevHelpers: {
     confirmDefaultAccountIsTarget: {
-      configError: authCommand =>
-        `An error occurred while reading the default account from your config. Run ${authCommand} to re-auth this account`,
-      declineDefaultAccountExplanation: (useCommand, devCommand) =>
-        `To develop on a different account, run ${useCommand} to change your default account, then re-run ${devCommand}.`,
+      configError: `An error occurred while reading the default account from your config. Run ${uiCommandReference('hs auth')} to re-auth this account`,
+      declineDefaultAccountExplanation: `To develop on a different account, run ${uiCommandReference('hs accounts use')} to change your default account, then re-run ${uiCommandReference('hs project dev')}.`,
     },
     checkIfDefaultAccountIsSupported: {
-      publicApp: (useCommand, authCommand) =>
-        `This project contains a public app. Local development of public apps is only supported on developer accounts and developer test accounts. Change your default account using ${useCommand}, or link a new account with ${authCommand}.`,
-      privateApp: (useCommand, authCommand) =>
-        `This project contains a private app. Local development of private apps is not supported in developer accounts. Change your default account using ${useCommand}, or link a new account with ${authCommand}.`,
+      publicApp: `This project contains a public app. Local development of public apps is only supported on developer accounts and developer test accounts. Change your default account using ${uiCommandReference('hs accounts use')}, or link a new account with ${uiCommandReference('hs auth')}.`,
+      privateApp: `This project contains a private app. Local development of private apps is not supported in developer accounts. Change your default account using ${uiCommandReference('hs accounts use')}, or link a new account with ${uiCommandReference('hs auth')}.`,
     },
     validateAccountOption: {
-      invalidPublicAppAccount: (useCommand, devCommand) =>
-        `This project contains a public app. The "--account" flag must point to a developer test account to develop this project locally. Alternatively, change your default account to an App Developer Account using ${useCommand} and run ${devCommand} to set up a new Developer Test Account.`,
-      invalidPrivateAppAccount: useCommand =>
-        `This project contains a private app. The account specified with the "--account" flag points to a developer account, which do not support the local development of private apps. Update the "--account" flag to point to a standard, sandbox, or developer test account, or change your default account by running ${useCommand}.`,
+      invalidPublicAppAccount: `This project contains a public app. The "--account" flag must point to a developer test account to develop this project locally. Alternatively, change your default account to an App Developer Account using ${uiCommandReference('hs accounts use')} and run ${uiCommandReference('hs project dev')} to set up a new Developer Test Account.`,
+      invalidPrivateAppAccount: `This project contains a private app. The account specified with the "--account" flag points to a developer account, which do not support the local development of private apps. Update the "--account" flag to point to a standard, sandbox, or developer test account, or change your default account by running ${uiCommandReference('hs accounts use')}.`,
       nonSandboxWarning: command =>
         `Testing in a sandbox is strongly recommended. To switch the target account, select an option below or run ${chalk.bold(command)} before running the command again.`,
       publicAppNonDeveloperTestAccountWarning: () =>
@@ -2708,12 +2703,13 @@ export const lib = {
       initialUploadMessage: 'HubSpot Local Dev Server Startup',
       projectLockedError:
         'Your project is locked. This may mean that another user is running the `hs project watch` command for this project. If this is you, unlock the project in Projects UI.',
-      genericError: uploadCommand =>
-        `An error occurred while creating the initial build for this project. Run ${uploadCommand} to try again.`,
+      genericError: `An error occurred while creating the initial build for this project. Run ${uiCommandReference('hs project upload')} to try again.`,
     },
     checkIfParentAccountIsAuthed: {
-      notAuthedError: (authCommand, accountId, accountIdentifier) =>
-        `To develop this project locally, run ${authCommand} to authenticate the App Developer Account ${accountId} associated with ${accountIdentifier}.`,
+      notAuthedError: (parentAccountId, accountIdentifier) =>
+        `To develop this project locally, run ${uiCommandReference(
+          `hs auth --account=${parentAccountId}`
+        )} to authenticate the App Developer Account ${parentAccountId} associated with ${accountIdentifier}.`,
     },
   },
   projects: {
@@ -2728,8 +2724,7 @@ export const lib = {
       },
     },
     validateProjectConfig: {
-      configNotFound: createCommand =>
-        `Unable to locate a project configuration file. Try running again from a project directory, or run ${createCommand} to create a new project.`,
+      configNotFound: `Unable to locate a project configuration file. Try running again from a project directory, or run ${uiCommandReference('hs project create')} to create a new project.`,
       configMissingFields:
         'The project configuration file is missing required fields.',
       srcDirNotFound: (srcDir, projectDir) =>
@@ -2789,8 +2784,8 @@ export const lib = {
         `Project "${projectName}" uploaded and build #${buildId} created`,
     },
     handleProjectUpload: {
-      emptySource: (srcDir, command) =>
-        `Source directory "${srcDir}" is empty. Add files to your project and rerun ${chalk.yellow(command)} to upload them to HubSpot.`,
+      emptySource: srcDir =>
+        `Source directory "${srcDir}" is empty. Add files to your project and rerun ${uiCommandReference('hs project upload')} to upload them to HubSpot.`,
       compressed: byteCount => `Project files compressed: ${byteCount} bytes`,
       compressing: path => `Compressing build files to "${path}"`,
       fileFiltered: filename => `Ignore rule triggered for "${filename}"`,

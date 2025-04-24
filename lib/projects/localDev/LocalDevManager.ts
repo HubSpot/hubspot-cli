@@ -119,9 +119,7 @@ class LocalDevManager {
 
   async setActiveApp(appUid?: string): Promise<void> {
     if (!appUid) {
-      logger.error(
-        lib.LocalDevManager.missingUid(uiCommandReference('hs project dev'))
-      );
+      logger.error(lib.LocalDevManager.missingUid);
       process.exit(EXIT_CODES.ERROR);
     }
     this.activeApp =
@@ -374,11 +372,7 @@ class LocalDevManager {
     if (!this.uploadWarnings[warning]) {
       logger.log();
       logger.warn(lib.LocalDevManager.uploadWarning.header(warning));
-      logger.log(
-        lib.LocalDevManager.uploadWarning.stopDev(
-          uiCommandReference('hs project dev')
-        )
-      );
+      logger.log(lib.LocalDevManager.uploadWarning.stopDev);
       if (this.isGithubLinked) {
         logger.log(lib.LocalDevManager.uploadWarning.pushToGithub);
       } else {
@@ -386,11 +380,7 @@ class LocalDevManager {
           lib.LocalDevManager.uploadWarning.runUpload(this.getUploadCommand())
         );
       }
-      logger.log(
-        lib.LocalDevManager.uploadWarning.restartDev(
-          uiCommandReference('hs project dev')
-        )
-      );
+      logger.log(lib.LocalDevManager.uploadWarning.restartDev);
 
       this.mostRecentUploadWarning = warning;
       this.uploadWarnings[warning] = true;

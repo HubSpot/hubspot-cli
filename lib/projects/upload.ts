@@ -7,7 +7,7 @@ import { shouldIgnoreFile } from '@hubspot/local-dev-lib/ignoreRules';
 import { logger } from '@hubspot/local-dev-lib/logger';
 
 import SpinniesManager from '../ui/SpinniesManager';
-import { uiAccountDescription, uiCommandReference } from '../ui';
+import { uiAccountDescription } from '../ui';
 import { EXIT_CODES } from '../enums/exitCodes';
 import { ProjectConfig } from '../../types/Projects';
 import { isTranslationError, translate } from '@hubspot/project-parsing-lib';
@@ -101,10 +101,7 @@ export async function handleProjectUpload<T>(
   const filenames = fs.readdirSync(srcDir);
   if (!filenames || filenames.length === 0) {
     logger.log(
-      lib.projectUpload.handleProjectUpload.emptySource(
-        projectConfig.srcDir,
-        uiCommandReference('hs project upload')
-      )
+      lib.projectUpload.handleProjectUpload.emptySource(projectConfig.srcDir)
     );
     process.exit(EXIT_CODES.SUCCESS);
   }

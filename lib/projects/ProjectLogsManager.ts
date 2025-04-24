@@ -3,7 +3,6 @@ import { ensureProjectExists } from './ensureProjectExists';
 import { fetchProjectComponentsMetadata } from '@hubspot/local-dev-lib/api/projects';
 import { AppFunctionComponentMetadata } from '@hubspot/local-dev-lib/types/ComponentStructure';
 import { logger } from '@hubspot/local-dev-lib/logger';
-import { uiCommandReference, uiLink } from '../ui';
 import { commands } from '../../lang/en';
 
 class _ProjectLogsManager {
@@ -97,15 +96,7 @@ class _ProjectLogsManager {
     });
 
     if (this.functions.length === 0) {
-      throw new Error(
-        commands.project.logs.errors.noFunctionsInProject(
-          uiCommandReference('hs project logs --help'),
-          uiLink(
-            commands.project.logs.errors.noFunctionsLinkText,
-            'https://developers.hubspot.com/docs/platform/serverless-functions'
-          )
-        )
-      );
+      throw new Error(commands.project.logs.errors.noFunctionsInProject);
     }
   }
 
@@ -117,15 +108,7 @@ class _ProjectLogsManager {
 
   setFunction(functionName?: string) {
     if (!functionName || this.functions.length === 0) {
-      throw new Error(
-        commands.project.logs.errors.noFunctionsInProject(
-          uiCommandReference('hs project logs --help'),
-          uiLink(
-            commands.project.logs.errors.noFunctionsLinkText,
-            'https://developers.hubspot.com/docs/platform/serverless-functions'
-          )
-        )
-      );
+      throw new Error(commands.project.logs.errors.noFunctionsInProject);
     }
 
     this.selectedFunction = this.functions.find(
