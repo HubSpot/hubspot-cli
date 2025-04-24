@@ -1,6 +1,6 @@
 // @ts-nocheck
 import chalk from 'chalk';
-import { uiAccountDescription, uiCommandReference } from '../lib/ui';
+import { uiAccountDescription, uiCommandReference, uiLink } from '../lib/ui';
 
 type LangFunction = (...args: (string | number)[]) => string;
 
