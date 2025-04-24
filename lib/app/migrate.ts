@@ -56,7 +56,11 @@ export type MigrateAppArgs = CommonArgs &
     platformVersion: string;
   };
 
-function getUnmigratableReason(reasonCode: string): string {
+function getUnmigratableReason(
+  reasonCode: string,
+  projectName: string | undefined,
+  accountId: number
+): string {
   switch (reasonCode) {
     case UNMIGRATABLE_REASONS.UP_TO_DATE:
       return lib.migrate.errors.unmigratableReasons.upToDate;
@@ -65,7 +69,10 @@ function getUnmigratableReason(reasonCode: string): string {
     case UNMIGRATABLE_REASONS.LISTED_IN_MARKETPLACE:
       return lib.migrate.errors.unmigratableReasons.listedInMarketplace;
     case UNMIGRATABLE_REASONS.PROJECT_CONNECTED_TO_GITHUB:
-      return lib.migrate.errors.unmigratableReasons.projectConnectedToGitHub;
+      return lib.migrate.errors.unmigratableReasons.projectConnectedToGitHub(
+        projectName,
+        accountId
+      );
     case CLI_UNMIGRATABLE_REASONS.PART_OF_PROJECT_ALREADY:
       return lib.migrate.errors.unmigratableReasons.partOfProjectAlready;
     default:
@@ -129,7 +136,7 @@ async function fetchMigrationApps(
   if (allApps.length === 0 || !allApps.some(app => app.isMigratable)) {
     const reasons = filteredUnmigratableApps.map(
       app =>
-        `${chalk.bold(app.appName)}: ${getUnmigratableReason(app.unmigratableReason)}`
+        `${chalk.bold(app.appName)}: ${getUnmigratableReason(app.unmigratableReason, app.projectName, derivedAccountId)}`
     );
 
     throw new Error(
@@ -152,7 +159,10 @@ async function fetchMigrationApps(
   return allApps;
 }
 
-async function promptForAppToMigrate(allApps: MigrationApp[]) {
+async function promptForAppToMigrate(
+  allApps: MigrationApp[],
+  derivedAccountId: number
+) {
   const appChoices = allApps.map(app => ({
     name: app.isMigratable
       ? app.appName
@@ -160,7 +170,11 @@ async function promptForAppToMigrate(allApps: MigrationApp[]) {
     value: app,
     disabled: app.isMigratable
       ? false
-      : getUnmigratableReason(app.unmigratableReason),
+      : getUnmigratableReason(
+          app.unmigratableReason,
+          app.projectName,
+          derivedAccountId
+        ),
   }));
 
   const enabledChoices = appChoices.filter(app => !app.disabled);
@@ -181,6 +195,7 @@ async function promptForAppToMigrate(allApps: MigrationApp[]) {
 }
 async function selectAppToMigrate(
   allApps: MigrationApp[],
+  derivedAccountId: number,
   appId?: number,
   projectConfig?: LoadedProjectConfig
 ): Promise<{ proceed: boolean; appIdToMigrate?: number }> {
@@ -195,7 +210,7 @@ async function selectAppToMigrate(
 
   let appIdToMigrate = appId;
   if (!appIdToMigrate) {
-    appIdToMigrate = await promptForAppToMigrate(allApps);
+    appIdToMigrate = await promptForAppToMigrate(allApps, derivedAccountId);
   }
 
   const selectedApp = allApps.find(app => app.appId === appIdToMigrate);
@@ -260,6 +275,7 @@ async function handleMigrationSetup(
 
   const { proceed, appIdToMigrate } = await selectAppToMigrate(
     allApps,
+    derivedAccountId,
     appId,
     projectConfig
   );

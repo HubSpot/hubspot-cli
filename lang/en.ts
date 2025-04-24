@@ -1,6 +1,7 @@
 // @ts-nocheck
 import chalk from 'chalk';
-import { uiAccountDescription, uiCommandReference } from '../lib/ui';
+import { uiAccountDescription, uiCommandReference, uiLink } from '../lib/ui';
+import { getProjectSettingsUrl } from '../lib/projects/urls';
 
 type LangFunction = (...args: (string | number)[]) => string;
 
@@ -3451,9 +3452,11 @@ export const lib = {
         upToDate: 'App is already up to date',
         isPrivateApp: 'Private apps are not currently migratable',
         listedInMarketplace: 'Listed apps are not currently migratable',
-        projectConnectedToGitHub:
-          'The app is linked to a GitHub repository.  You will need to unlink it before migrating.',
-        partOfProjectAlready: `This app is part of a project, run ${uiCommandReference('hs project migrate')} from the project directory to migrate it`,
+        projectConnectedToGitHub: (
+          projectName: string | undefined,
+          accountId: number
+        ) =>
+          `The project is linked to a GitHub repository.  ${uiLink('Visit the project settings page to unlink it', getProjectSettingsUrl(projectName, accountId))}`,
         partOfProjectAlready: `This app is part of a project, run ${uiCommandReference('hs project migrate')} from the project directory to migrate it`,
         generic: reasonCode => `Unable to migrate app: ${reasonCode}`,
       },
