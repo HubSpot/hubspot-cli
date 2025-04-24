@@ -77,10 +77,16 @@ export interface MigrationSuccess extends MigrationBaseStatus {
   buildId: number;
 }
 
+interface ComponentError {
+  componentType: string;
+  developerSymbol?: string;
+  errorMessage: string;
+}
+
 export interface MigrationFailed extends MigrationBaseStatus {
   status: typeof MIGRATION_STATUS.FAILURE;
   projectErrorDetail: string;
-  componentErrorDetails: Record<string, string>;
+  componentErrors: ComponentError[];
 }
 
 export type MigrationStatus =
