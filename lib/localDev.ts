@@ -323,14 +323,14 @@ export async function createDeveloperTestAccountForLocalDev(
       accountId
     );
 
-    const devTestAccountId = await buildDeveloperTestAccount(
+    const result = await buildDeveloperTestAccount(
       name,
       accountConfig,
       env,
       maxTestPortals
     );
 
-    return devTestAccountId;
+    return result;
   } catch (err) {
     logError(err);
     process.exit(EXIT_CODES.ERROR);
