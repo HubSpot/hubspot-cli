@@ -424,16 +424,7 @@ async function finalizeMigration(
     });
 
     if (isMigrationStatus(error) && error.status === MIGRATION_STATUS.FAILURE) {
-      const errorMessage = error.componentErrorDetails
-        ? `${error.projectErrorDetail} \n\t - ${Object.entries(
-            error.componentErrorDetails
-          )
-            .map(([key, value]) => {
-              return `${mapToUserFacingType(key)}: ${value}`;
-            })
-            .join('\n\t - ')}`
-        : error.projectErrorDetail;
-      throw new Error(errorMessage);
+      throw new Error(error.projectErrorDetail);
     }
 
     throw new Error(lib.migrate.errors.migrationFailed, {
