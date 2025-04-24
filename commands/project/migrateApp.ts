@@ -1,6 +1,6 @@
 import { i18n } from '../../lib/lang';
 import { uiCommandReference, uiDeprecatedTag } from '../../lib/ui';
-import { handler as migrateHandler } from '../app/migrate';
+import { handlerGenerator } from '../app/migrate';
 
 import { ArgumentsCamelCase, Argv, CommandModule } from 'yargs';
 import { logger } from '@hubspot/local-dev-lib/logger';
@@ -31,7 +31,8 @@ export async function handler(options: ArgumentsCamelCase<MigrateAppArgs>) {
       ),
     })
   );
-  await migrateHandler(options);
+  const localHandler = handlerGenerator('migrate-app');
+  await localHandler(options);
 }
 
 export function builder(yargs: Argv): Argv<MigrateAppArgs> {
