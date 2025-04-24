@@ -1,7 +1,7 @@
 // @ts-nocheck
 import chalk from 'chalk';
 
-type LangFunction = (...args: string[] | number[]) => string;
+type LangFunction = (...args: (string | number)[]) => string;
 
 type LangObject = {
   [key: string]: string | LangFunction | LangObject;
