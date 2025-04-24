@@ -151,22 +151,15 @@ async function fetchMigrationApps(
 }
 
 async function promptForAppToMigrate(allApps: MigrationApp[]) {
-  const appChoices = allApps
-    .map(app => ({
-      name: app.isMigratable
-        ? app.appName
-        : `[${chalk.yellow('DISABLED')}] ${app.appName} `,
-      value: app,
-      disabled: app.isMigratable
-        ? false
-        : getUnmigratableReason(app.unmigratableReason),
-    }))
-    .sort((a, b) => {
-      if (a.disabled === b.disabled) {
-        return 0;
-      }
-      return a.disabled ? 1 : -1;
-    });
+  const appChoices = allApps.map(app => ({
+    name: app.isMigratable
+      ? app.appName
+      : `[${chalk.yellow('DISABLED')}] ${app.appName} `,
+    value: app,
+    disabled: app.isMigratable
+      ? false
+      : getUnmigratableReason(app.unmigratableReason),
+  }));
 
   const enabledChoices = appChoices.filter(app => !app.disabled);
   const disabledChoices = appChoices.filter(app => app.disabled);
