@@ -7,7 +7,10 @@ import { trackCommandUsage } from '../../../lib/usageTracking';
 import { i18n } from '../../../lib/lang';
 import { logger } from '@hubspot/local-dev-lib/logger';
 import { getAccountConfig } from '@hubspot/local-dev-lib/config';
-import { getProjectConfig, validateProjectConfig } from '../../../lib/projects';
+import {
+  getProjectConfig,
+  validateProjectConfig,
+} from '../../../lib/projects/config';
 import { EXIT_CODES } from '../../../lib/enums/exitCodes';
 import { uiBetaTag, uiCommandReference, uiLink } from '../../../lib/ui';
 
@@ -17,10 +20,11 @@ import { deprecatedProjectDevFlow } from './deprecatedFlow';
 import { unifiedProjectDevFlow } from './unifiedFlow';
 import { useV3Api } from '../../../lib/projects/buildAndDeploy';
 
-const i18nKey = 'commands.project.subcommands.dev';
-
 export const command = 'dev';
-export const describe = uiBetaTag(i18n(`${i18nKey}.describe`), false);
+export const describe = uiBetaTag(
+  i18n(`commands.project.subcommands.dev.describe`),
+  false
+);
 
 export async function handler(args: ArgumentsCamelCase<ProjectDevArgs>) {
   const { derivedAccountId } = args;
@@ -30,18 +34,18 @@ export async function handler(args: ArgumentsCamelCase<ProjectDevArgs>) {
 
   const { projectConfig, projectDir } = await getProjectConfig();
 
-  uiBetaTag(i18n(`${i18nKey}.logs.betaMessage`));
+  uiBetaTag(i18n(`commands.project.subcommands.dev.logs.betaMessage`));
 
   logger.log(
     uiLink(
-      i18n(`${i18nKey}.logs.learnMoreLocalDevServer`),
+      i18n(`commands.project.subcommands.dev.logs.learnMoreLocalDevServer`),
       'https://developers.hubspot.com/docs/platform/project-cli-commands#start-a-local-development-server'
     )
   );
 
   if (!projectConfig || !projectDir) {
     logger.error(
-      i18n(`${i18nKey}.errors.noProjectConfig`, {
+      i18n(`commands.project.subcommands.dev.errors.noProjectConfig`, {
         accountId: derivedAccountId,
         authCommand: uiCommandReference('hs auth'),
       })
@@ -50,13 +54,13 @@ export async function handler(args: ArgumentsCamelCase<ProjectDevArgs>) {
   }
 
   if (!accountConfig) {
-    logger.error(i18n(`${i18nKey}.errors.noAccount`));
+    logger.error(i18n(`commands.project.subcommands.dev.errors.noAccount`));
     process.exit(EXIT_CODES.ERROR);
   }
 
   validateProjectConfig(projectConfig, projectDir);
 
-  if (useV3Api(projectConfig?.platformVersion)) {
+  if (useV3Api(projectConfig.platformVersion)) {
     await unifiedProjectDevFlow(args, accountConfig, projectConfig, projectDir);
   } else {
     await deprecatedProjectDevFlow(
@@ -73,7 +77,12 @@ export function builder(yargs: Argv): Argv<ProjectDevArgs> {
   addAccountOptions(yargs);
   addUseEnvironmentOptions(yargs);
 
-  yargs.example([['$0 project dev', i18n(`${i18nKey}.examples.default`)]]);
+  yargs.example([
+    [
+      '$0 project dev',
+      i18n(`commands.project.subcommands.dev.examples.default`),
+    ],
+  ]);
 
   return yargs as Argv<ProjectDevArgs>;
 }

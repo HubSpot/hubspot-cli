@@ -13,13 +13,12 @@ const open = require('./project/open');
 const dev = require('./project/dev');
 const add = require('./project/add');
 const migrateApp = require('./project/migrateApp');
+const migrate = require('./project/migrate');
 const cloneApp = require('./project/cloneApp');
 const installDeps = require('./project/installDeps');
 
-const i18nKey = 'commands.project';
-
 exports.command = ['project', 'projects'];
-exports.describe = uiBetaTag(i18n(`${i18nKey}.describe`), false);
+exports.describe = uiBetaTag(i18n(`commands.project.describe`), false);
 
 exports.builder = yargs => {
   addGlobalOptions(yargs);
@@ -36,6 +35,7 @@ exports.builder = yargs => {
     .command(download)
     .command(open)
     .command(migrateApp)
+    .command(migrate)
     .command(cloneApp)
     .command(installDeps)
     .demandCommand(1, '');

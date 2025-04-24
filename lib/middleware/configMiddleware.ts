@@ -76,7 +76,22 @@ export async function loadConfigMiddleware(
     }
   };
 
-  if (configFileExists(true) && argv.config) {
+  if (
+    !configFileExists(true) &&
+    isTargetedCommand(argv._, {
+      account: { target: false, subCommands: { auth: { target: true } } },
+    })
+  ) {
+    return;
+  }
+
+  if (
+    configFileExists(true) &&
+    argv.config &&
+    !isTargetedCommand(argv._, {
+      config: { target: false, subCommands: { migrate: { target: true } } },
+    })
+  ) {
     logger.error(
       i18n(`commands.generalErrors.loadConfigMiddleware.configFileExists`, {
         configPath: getConfigPath()!,
@@ -99,6 +114,7 @@ export async function loadConfigMiddleware(
 const accountsSubCommands = {
   target: false,
   subCommands: {
+    auth: { target: true },
     clean: { target: true },
     list: { target: true },
     ls: { target: true },

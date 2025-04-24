@@ -1,30 +1,42 @@
-// @ts-nocheck
-const {
+import { Argv, ArgumentsCamelCase } from 'yargs';
+import { logger } from '@hubspot/local-dev-lib/logger';
+import {
   installPackages,
   getProjectPackageJsonLocations,
-} = require('../../lib/dependencyManagement');
-const { logger } = require('@hubspot/local-dev-lib/logger');
-const { EXIT_CODES } = require('../../lib/enums/exitCodes');
-const { getProjectConfig } = require('../../lib/projects');
-const { promptUser } = require('../../lib/prompts/promptUtils');
-const path = require('path');
-const { i18n } = require('../../lib/lang');
-const { trackCommandUsage } = require('../../lib/usageTracking');
-const { uiBetaTag } = require('../../lib/ui');
+} from '../../lib/dependencyManagement';
+import { EXIT_CODES } from '../../lib/enums/exitCodes';
+import { getProjectConfig } from '../../lib/projects/config';
+import { promptUser } from '../../lib/prompts/promptUtils';
+import path from 'path';
+import { i18n } from '../../lib/lang';
+import { trackCommandUsage } from '../../lib/usageTracking';
+import { uiBetaTag } from '../../lib/ui';
+import { CommonArgs } from '../../types/Yargs';
+import { logError } from '../../lib/errorHandlers';
+import { makeYargsBuilder } from '../../lib/yargsUtils';
 
-const i18nKey = `commands.project.subcommands.installDeps`;
+export const command = 'install-deps [packages..]';
+export const describe = uiBetaTag(
+  i18n(`commands.project.subcommands.installDeps.help.describe`),
+  false
+);
 
-exports.command = 'install-deps [packages..]';
-exports.describe = uiBetaTag(i18n(`${i18nKey}.help.describe`), false);
+export type ProjectInstallDepsArgs = CommonArgs & {
+  packages?: string[];
+};
 
-exports.handler = async options => {
-  const { derivedAccountId, packages } = options || {};
+export async function handler(
+  args: ArgumentsCamelCase<ProjectInstallDepsArgs>
+): Promise<void> {
+  const { derivedAccountId, packages } = args;
   try {
-    trackCommandUsage('project-install-deps', null, derivedAccountId);
+    trackCommandUsage('project-install-deps', undefined, derivedAccountId);
 
     const projectConfig = await getProjectConfig();
     if (!projectConfig || !projectConfig.projectDir) {
-      logger.error(i18n(`${i18nKey}.noProjectConfig`));
+      logger.error(
+        i18n(`commands.project.subcommands.installDeps.noProjectConfig`)
+      );
       return process.exit(EXIT_CODES.ERROR);
     }
 
@@ -37,14 +49,18 @@ exports.handler = async options => {
           name: 'selectedInstallLocations',
           type: 'checkbox',
           when: () => packages && packages.length > 0,
-          message: i18n(`${i18nKey}.installLocationPrompt`),
+          message: i18n(
+            `commands.project.subcommands.installDeps.installLocationPrompt`
+          ),
           choices: installLocations.map(dir => ({
             name: path.relative(projectDir, dir),
             value: dir,
           })),
           validate: choices => {
             if (choices === undefined || choices.length === 0) {
-              return i18n(`${i18nKey}.installLocationPromptRequired`);
+              return i18n(
+                `commands.project.subcommands.installDeps.installLocationPromptRequired`
+              );
             }
             return true;
           },
@@ -60,18 +76,39 @@ exports.handler = async options => {
       installLocations,
     });
   } catch (e) {
-    logger.debug(e);
-    logger.error(e.message);
+    logError(e);
     return process.exit(EXIT_CODES.ERROR);
   }
-};
+}
 
-exports.builder = yargs => {
+function projectInstallDepsBuilder(yargs: Argv): Argv<ProjectInstallDepsArgs> {
   yargs.example([
-    ['$0 project install-deps', i18n(`${i18nKey}.help.installAppDepsExample`)],
+    [
+      '$0 project install-deps',
+      i18n(
+        `commands.project.subcommands.installDeps.help.installAppDepsExample`
+      ),
+    ],
     [
       '$0 project install-deps dependency1 dependency2',
-      i18n(`${i18nKey}.help.addDepToSubComponentExample`),
+      i18n(
+        `commands.project.subcommands.installDeps.help.addDepToSubComponentExample`
+      ),
     ],
   ]);
+
+  return yargs as Argv<ProjectInstallDepsArgs>;
+}
+
+export const builder = makeYargsBuilder<ProjectInstallDepsArgs>(
+  projectInstallDepsBuilder,
+  command,
+  describe
+);
+
+module.exports = {
+  command,
+  describe,
+  builder,
+  handler,
 };

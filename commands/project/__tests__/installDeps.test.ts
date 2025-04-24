@@ -1,37 +1,43 @@
-// @ts-nocheck
-const yargs = require('yargs');
-const path = require('path');
-const { logger } = require('@hubspot/local-dev-lib/logger');
-const { getProjectConfig } = require('../../../lib/projects');
-const { EXIT_CODES } = require('../../../lib/enums/exitCodes');
-const { trackCommandUsage } = require('../../../lib/usageTracking');
-const {
-  installPackages,
-  getProjectPackageJsonLocations,
-} = require('../../../lib/dependencyManagement');
-const { promptUser } = require('../../../lib/prompts/promptUtils');
+import yargs, { Argv, ArgumentsCamelCase } from 'yargs';
+import path from 'path';
+import { logger } from '@hubspot/local-dev-lib/logger';
+import * as projectUtils from '../../../lib/projects/config';
+import { EXIT_CODES } from '../../../lib/enums/exitCodes';
+import { trackCommandUsage } from '../../../lib/usageTracking';
+import * as dependencyManagement from '../../../lib/dependencyManagement';
+import * as promptUtils from '../../../lib/prompts/promptUtils';
+import * as projectInstallDepsCommand from '../installDeps';
 
 jest.mock('yargs');
 jest.mock('@hubspot/local-dev-lib/logger');
-jest.mock('../../../lib/projects');
+jest.mock('../../../lib/projects/config');
 jest.mock('../../../lib/dependencyManagement');
 jest.mock('../../../lib/prompts/promptUtils');
 jest.mock('../../../lib/usageTracking');
 jest.mock('../../../lib/commonOpts');
 
-// Import this last so mocks apply
-const installDepsCommand = require('../installDeps');
+const exampleSpy = jest.spyOn(yargs as Argv, 'example');
+const processExitSpy = jest.spyOn(process, 'exit');
+const getProjectConfigSpy = jest.spyOn(projectUtils, 'getProjectConfig');
+const promptUserSpy = jest.spyOn(promptUtils, 'promptUser');
+const getProjectPackageJsonLocationsSpy = jest.spyOn(
+  dependencyManagement,
+  'getProjectPackageJsonLocations'
+);
+const installPackagesSpy = jest.spyOn(dependencyManagement, 'installPackages');
 
 describe('commands/project/installDeps', () => {
   describe('command', () => {
     it('should have the correct command structure', () => {
-      expect(installDepsCommand.command).toEqual('install-deps [packages..]');
+      expect(projectInstallDepsCommand.command).toEqual(
+        'install-deps [packages..]'
+      );
     });
   });
 
   describe('describe', () => {
     it('should not provide a description', () => {
-      expect(installDepsCommand.describe).toEqual(
+      expect(projectInstallDepsCommand.describe).toEqual(
         expect.stringMatching(
           /Install the dependencies for your project, or add a dependency to a subcomponent of a project/
         )
@@ -41,41 +47,40 @@ describe('commands/project/installDeps', () => {
 
   describe('builder', () => {
     it('should provide examples', () => {
-      installDepsCommand.builder(yargs);
-      expect(yargs.example).toHaveBeenCalledTimes(1);
+      projectInstallDepsCommand.builder(yargs as Argv);
+      expect(exampleSpy).toHaveBeenCalledTimes(1);
     });
   });
 
   describe('handler', () => {
-    let processExitSpy;
+    let args: ArgumentsCamelCase<projectInstallDepsCommand.ProjectInstallDepsArgs>;
 
     beforeEach(() => {
-      processExitSpy = jest.spyOn(process, 'exit').mockImplementation(() => {});
+      args = {
+        derivedAccountId: 999999,
+      } as ArgumentsCamelCase<projectInstallDepsCommand.ProjectInstallDepsArgs>;
+      // @ts-expect-error Doesn't match the actual signature because then the linter complains about unused variables
+      processExitSpy.mockImplementation(() => {});
     });
 
     it('should track the command usage', async () => {
-      const accountId = 999999;
-      await installDepsCommand.handler({ derivedAccountId: accountId });
+      await projectInstallDepsCommand.handler(args);
 
       expect(trackCommandUsage).toHaveBeenCalledTimes(1);
       expect(trackCommandUsage).toHaveBeenCalledWith(
         'project-install-deps',
-        null,
-        accountId
+        undefined,
+        args.derivedAccountId
       );
     });
 
     it('should handle exceptions', async () => {
       const error = new Error('Something went super wrong');
-
-      getProjectConfig.mockImplementationOnce(() => {
+      getProjectConfigSpy.mockImplementationOnce(() => {
         throw error;
       });
 
-      await installDepsCommand.handler({});
-
-      expect(logger.debug).toHaveBeenCalledTimes(1);
-      expect(logger.debug).toHaveBeenCalledWith(error);
+      await projectInstallDepsCommand.handler(args);
 
       expect(logger.error).toHaveBeenCalledTimes(1);
       expect(logger.error).toHaveBeenCalledWith(error.message);
@@ -85,8 +90,11 @@ describe('commands/project/installDeps', () => {
     });
 
     it('should log an error and exit when the project config is not defined', async () => {
-      getProjectConfig.mockResolvedValueOnce(null);
-      await installDepsCommand.handler({});
+      getProjectConfigSpy.mockResolvedValueOnce({
+        projectDir: null,
+        projectConfig: null,
+      });
+      await projectInstallDepsCommand.handler(args);
 
       expect(logger.error).toHaveBeenCalledTimes(1);
       expect(logger.error).toHaveBeenCalledWith(
@@ -97,8 +105,11 @@ describe('commands/project/installDeps', () => {
     });
 
     it('should log an error and exit when the project config has no projectDir', async () => {
-      getProjectConfig.mockResolvedValueOnce({ projectDir: null });
-      await installDepsCommand.handler({});
+      getProjectConfigSpy.mockResolvedValueOnce({
+        projectDir: null,
+        projectConfig: null,
+      });
+      await projectInstallDepsCommand.handler(args);
 
       expect(logger.error).toHaveBeenCalledTimes(1);
       expect(logger.error).toHaveBeenCalledWith(
@@ -110,16 +121,25 @@ describe('commands/project/installDeps', () => {
 
     it('should prompt for input when packages is defined', async () => {
       const projectDir = 'src';
-      getProjectConfig.mockResolvedValue({ projectDir });
+      getProjectConfigSpy.mockResolvedValue({
+        projectDir,
+        projectConfig: null,
+      });
       const packageJsonLocation = path.join(projectDir, 'directory1');
-      promptUser.mockResolvedValueOnce(packageJsonLocation);
-      getProjectPackageJsonLocations.mockResolvedValue([packageJsonLocation]);
-      await installDepsCommand.handler({
+      promptUserSpy.mockResolvedValueOnce({
+        selectedInstallLocations: packageJsonLocation,
+      });
+      getProjectPackageJsonLocationsSpy.mockResolvedValue([
+        packageJsonLocation,
+      ]);
+
+      await projectInstallDepsCommand.handler({
+        ...args,
         packages: ['@hubspot/local-dev-lib'],
       });
-      expect(getProjectPackageJsonLocations).toHaveBeenCalledTimes(1);
-      expect(promptUser).toHaveBeenCalledTimes(1);
-      expect(promptUser).toHaveBeenCalledWith([
+      expect(getProjectPackageJsonLocationsSpy).toHaveBeenCalledTimes(1);
+      expect(promptUserSpy).toHaveBeenCalledTimes(1);
+      expect(promptUserSpy).toHaveBeenCalledWith([
         {
           name: 'selectedInstallLocations',
           type: 'checkbox',
@@ -142,15 +162,21 @@ describe('commands/project/installDeps', () => {
       const installLocations = [packageJsonLocation];
       const packages = ['@hubspot/local-dev-lib'];
 
-      getProjectConfig.mockResolvedValue({ projectDir });
-      promptUser.mockResolvedValueOnce(packageJsonLocation);
-      getProjectPackageJsonLocations.mockResolvedValue(installLocations);
-      await installDepsCommand.handler({ packages });
+      getProjectConfigSpy.mockResolvedValue({
+        projectDir,
+        projectConfig: null,
+      });
+      promptUserSpy.mockResolvedValueOnce({
+        selectedInstallLocations: packageJsonLocation,
+      });
+      getProjectPackageJsonLocationsSpy.mockResolvedValue(installLocations);
 
-      expect(installPackages).toHaveBeenCalledTimes(1);
-      expect(installPackages).toHaveBeenCalledWith({
+      await projectInstallDepsCommand.handler({ ...args, packages });
+
+      expect(installPackagesSpy).toHaveBeenCalledTimes(1);
+      expect(installPackagesSpy).toHaveBeenCalledWith({
         packages,
-        installLocations,
+        installLocations: packageJsonLocation,
       });
     });
   });

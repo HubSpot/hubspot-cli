@@ -15,19 +15,18 @@ import {
 import { i18n } from '../../lib/lang';
 import { ApiErrorContext, logError } from '../../lib/errorHandlers';
 import { EXIT_CODES } from '../../lib/enums/exitCodes';
-import { MigrateAppOptions } from '../../types/Yargs';
-import { migrateApp2025_2 } from '../../lib/app/migrate';
-import { uiBetaTag, uiLink } from '../../lib/ui';
+import { migrateApp2025_2, MigrateAppArgs } from '../../lib/app/migrate';
+import { uiBetaTag, uiCommandReference, uiLink } from '../../lib/ui';
 import { migrateApp2023_2 } from '../../lib/app/migrate_legacy';
+import { getIsInProject } from '../../lib/projects/config';
 
-const { v2023_2, v2025_2, unstable } = PLATFORM_VERSIONS;
-export const validMigrationTargets = [v2023_2, v2025_2, unstable];
+const { v2023_2, v2025_2 } = PLATFORM_VERSIONS;
 
 const command = 'migrate';
 const describe = undefined; // uiBetaTag(i18n(`commands.project.subcommands.migrateApp.header.text.describe`), false);
 
-export async function handler(options: ArgumentsCamelCase<MigrateAppOptions>) {
-  const { derivedAccountId, platformVersion } = options;
+export async function handler(options: ArgumentsCamelCase<MigrateAppArgs>) {
+  const { derivedAccountId, platformVersion, unstable } = options;
   await trackCommandUsage('migrate-app', {}, derivedAccountId);
   const accountConfig = getAccountConfig(derivedAccountId);
 
@@ -54,7 +53,21 @@ export async function handler(options: ArgumentsCamelCase<MigrateAppOptions>) {
   logger.log('');
 
   try {
-    if (platformVersion === v2025_2 || platformVersion === unstable) {
+    if (platformVersion === v2025_2 || unstable) {
+      if (getIsInProject()) {
+        logger.error(
+          i18n(
+            `commands.project.subcommands.migrateApp.errors.notAllowedWithinProject`,
+            { command: uiCommandReference('hs project migrate') }
+          )
+        );
+        return process.exit(EXIT_CODES.ERROR);
+      }
+
+      options.platformVersion = unstable
+        ? PLATFORM_VERSIONS.unstable
+        : platformVersion;
+
       await migrateApp2025_2(derivedAccountId, options);
     } else {
       await migrateApp2023_2(derivedAccountId, options, accountConfig);
@@ -75,7 +88,7 @@ export async function handler(options: ArgumentsCamelCase<MigrateAppOptions>) {
       { successful: false },
       derivedAccountId
     );
-    process.exit(EXIT_CODES.ERROR);
+    return process.exit(EXIT_CODES.ERROR);
   }
 
   await trackCommandMetadataUsage(
@@ -86,7 +99,7 @@ export async function handler(options: ArgumentsCamelCase<MigrateAppOptions>) {
   return process.exit(EXIT_CODES.SUCCESS);
 }
 
-export function builder(yargs: Argv): Argv<MigrateAppOptions> {
+export function builder(yargs: Argv): Argv<MigrateAppArgs> {
   addConfigOptions(yargs);
   addAccountOptions(yargs);
   addUseEnvironmentOptions(yargs);
@@ -112,9 +125,14 @@ export function builder(yargs: Argv): Argv<MigrateAppOptions> {
     },
     'platform-version': {
       type: 'string',
-      choices: validMigrationTargets,
+      choices: [v2023_2, v2025_2],
       hidden: true,
-      default: '2023.2',
+      default: v2025_2,
+    },
+    unstable: {
+      type: 'boolean',
+      default: false,
+      hidden: true,
     },
   });
 
@@ -125,10 +143,10 @@ export function builder(yargs: Argv): Argv<MigrateAppOptions> {
     ],
   ]);
 
-  return yargs as Argv<MigrateAppOptions>;
+  return yargs as Argv<MigrateAppArgs>;
 }
 
-const migrateCommand: CommandModule<unknown, MigrateAppOptions> = {
+const migrateCommand: CommandModule<unknown, MigrateAppArgs> = {
   command,
   describe,
   handler,

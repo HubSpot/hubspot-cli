@@ -1,6 +1,6 @@
 import { promptUser } from './promptUtils';
 import { i18n } from '../lang';
-import { ensureProjectExists } from '../projects';
+import { ensureProjectExists } from '../projects/ensureProjectExists';
 import { uiAccountDescription } from '../ui';
 
 const i18nKey = 'lib.prompts.projectNamePrompt';

@@ -1,5 +1,8 @@
 // @ts-nocheck
-import { useV3Api } from '../../lib/projects/buildAndDeploy';
+const { uiLink } = require('../../lib/ui');
+
+const { useV3Api } = require('../../lib/projects/buildAndDeploy');
+const { uiCommandReference } = require('../../lib/ui');
 
 const { i18n } = require('../../lib/lang');
 const { createWatcher } = require('../../lib/projects/watch');
@@ -16,8 +19,8 @@ const { uiBetaTag } = require('../../lib/ui');
 const {
   getProjectConfig,
   validateProjectConfig,
-  logFeedbackMessage,
-} = require('../../lib/projects');
+} = require('../../lib/projects/config');
+const { logFeedbackMessage } = require('../../lib/projects/ui');
 const { handleProjectUpload } = require('../../lib/projects/upload');
 const {
   pollBuildStatus,
@@ -31,10 +34,11 @@ const { isSpecifiedError } = require('@hubspot/local-dev-lib/errors/index');
 const { EXIT_CODES } = require('../../lib/enums/exitCodes');
 const { handleKeypress, handleExit } = require('../../lib/process');
 
-const i18nKey = 'commands.project.subcommands.watch';
-
 exports.command = 'watch';
-exports.describe = uiBetaTag(i18n(`${i18nKey}.describe`), false);
+exports.describe = uiBetaTag(
+  i18n(`commands.project.subcommands.watch.describe`),
+  false
+);
 
 const handleBuildStatus = async (accountId, projectName, buildId) => {
   const { isAutoDeployEnabled, deployStatusTaskLocator } =
@@ -54,7 +58,7 @@ const handleBuildStatus = async (accountId, projectName, buildId) => {
 
 const handleUserInput = (accountId, projectName, currentBuildId) => {
   const onTerminate = async () => {
-    logger.log(i18n(`${i18nKey}.logs.processExited`));
+    logger.log(i18n(`commands.project.subcommands.watch.logs.processExited`));
 
     if (currentBuildId) {
       try {
@@ -93,9 +97,18 @@ exports.handler = async options => {
   const { projectConfig, projectDir } = await getProjectConfig();
 
   if (useV3Api(projectConfig?.platformVersion)) {
-    // TODO: i18n
-    logger.error('This command is not supported in V3 API');
-    process.exit(EXIT_CODES.ERROR);
+    logger.error(
+      i18n(`commands.project.subcommands.watch.errors.v3ApiError`, {
+        command: uiCommandReference('hs project watch'),
+        newCommand: uiCommandReference('hs project dev'),
+        platformVersion: projectConfig.platformVersion,
+        linkToDocs: uiLink(
+          'How to develop locally.',
+          'https://developers.hubspot.com/docs/guides/crm/ui-extensions/local-development'
+        ),
+      })
+    );
+    return process.exit(EXIT_CODES.ERROR);
   }
 
   validateProjectConfig(projectConfig, projectDir);
@@ -133,7 +146,9 @@ exports.handler = async options => {
           })
         ) {
           logger.log();
-          logger.error(i18n(`${i18nKey}.errors.projectLockedError`));
+          logger.error(
+            i18n(`commands.project.subcommands.watch.errors.projectLockedError`)
+          );
           logger.log();
         } else {
           logError(
@@ -157,11 +172,18 @@ exports.handler = async options => {
 exports.builder = yargs => {
   yargs.option('initial-upload', {
     alias: 'i',
-    describe: i18n(`${i18nKey}.options.initialUpload.describe`),
+    describe: i18n(
+      `commands.project.subcommands.watch.options.initialUpload.describe`
+    ),
     type: 'boolean',
   });
 
-  yargs.example([['$0 project watch', i18n(`${i18nKey}.examples.default`)]]);
+  yargs.example([
+    [
+      '$0 project watch',
+      i18n(`commands.project.subcommands.watch.examples.default`),
+    ],
+  ]);
 
   addConfigOptions(yargs);
   addAccountOptions(yargs);

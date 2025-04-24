@@ -200,3 +200,8 @@ export function uiDeprecatedMessage(
   uiDeprecatedTag(tag);
   logger.log();
 }
+
+export function indent(level: number): string {
+  const indentation = '  ';
+  return indentation.repeat(level);
+}

@@ -2,7 +2,7 @@ import { Arguments } from 'yargs';
 import { logger } from '@hubspot/local-dev-lib/logger';
 import { EXIT_CODES } from '../enums/exitCodes';
 import { i18n } from '../lang';
-import { getIsInProject } from '../projects';
+import { getIsInProject } from '../projects/config';
 import { isTargetedCommand } from './utils';
 
 const UPLOAD_AND_WATCH_COMMANDS = {

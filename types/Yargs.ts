@@ -35,21 +35,3 @@ export type ProjectDevArgs = CommonArgs & ConfigArgs & EnvironmentArgs;
 export type TestingArgs = {
   qa?: boolean;
 };
-
-export type MigrateAppOptions = CommonArgs &
-  AccountArgs &
-  EnvironmentArgs &
-  ConfigArgs & {
-    name: string;
-    dest: string;
-    appId: number;
-    platformVersion: string;
-  };
-
-export type CloneAppArgs = ConfigArgs &
-  EnvironmentArgs &
-  AccountArgs &
-  CommonArgs & {
-    dest: string;
-    appId: number;
-  };
