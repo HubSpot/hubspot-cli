@@ -107,10 +107,11 @@ async function handleConfigMigration(
       if (!mergeConfirmed) {
         logger.log(
           i18n('commands.account.subcommands.auth.errors.mergeNotConfirmed', {
-            deprecatedConfigPath: getConfigPath('', false)!,
-            globalConfigPath: getConfigPath('', true)!,
+            authCommand: uiCommandReference('hs account auth'),
+            migrateCommand: uiCommandReference('hs config migrate'),
           })
         );
+        process.exit(EXIT_CODES.SUCCESS);
       }
       return mergeConfirmed;
     } catch (error) {
