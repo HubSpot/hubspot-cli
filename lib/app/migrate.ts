@@ -64,6 +64,8 @@ function getUnmigratableReason(reasonCode: string): string {
       return lib.migrate.errors.unmigratableReasons.isPrivateApp;
     case UNMIGRATABLE_REASONS.LISTED_IN_MARKETPLACE:
       return lib.migrate.errors.unmigratableReasons.listedInMarketplace;
+    case UNMIGRATABLE_REASONS.PROJECT_CONNECTED_TO_GITHUB:
+      return lib.migrate.errors.unmigratableReasons.projectConnectedToGitHub;
     case CLI_UNMIGRATABLE_REASONS.PART_OF_PROJECT_ALREADY:
       return lib.migrate.errors.unmigratableReasons.partOfProjectAlready;
     default:

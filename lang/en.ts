@@ -3444,6 +3444,8 @@ export const lib = {
         upToDate: 'App is already up to date',
         isPrivateApp: 'Private apps are not currently migratable',
         listedInMarketplace: 'Listed apps are not currently migratable',
+        projectConnectedToGitHub:
+          'The app is linked to a GitHub repository.  You will need to unlink it before migrating.',
         partOfProjectAlready: `This app is part of a project, run ${uiCommandReference('hs project migrate')} from the project directory to migrate it`,
         generic: reasonCode => `Unable to migrate app: ${reasonCode}`,
       },
