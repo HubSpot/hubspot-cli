@@ -27,7 +27,8 @@ en:
               describe: "HubSpot account to authenticate"
           errors:
             failedToUpdateConfig: "Failed to update the configuration file. Please try again."
-            bothConfigFilesNotAllowed: "Unable to create config file, because there is an existing \"{{ deprecatedConfig }}\" file. To create a new config file, delete the existing one and try again."
+            migrationNotConfirmed: "Did not migrate. Use the {{ authCommand }} command to update the deprecated config at {{ deprecatedConfigPath }}."
+            mergeNotConfirmed: "Did not merge. When you are ready to merge the deprecated config file with the global config file, run the {{ authCommand }} or {{ migrateCommand }} command."
           success:
             configFileCreated: "Created config file \"{{ configPath }}\""
             configFileUpdated: "Connected account \"{{ account }}\" and set it as the default account"

@@ -24,7 +24,7 @@ import { trackCommandMetadataUsage } from './usageTracking';
 export async function handleMigration(
   accountId: number | undefined,
   configPath?: string
-): Promise<void> {
+): Promise<boolean> {
   const { shouldMigrateConfig } = await promptUser({
     name: 'shouldMigrateConfig',
     type: 'confirm',
@@ -46,7 +46,7 @@ export async function handleMigration(
       },
       accountId
     );
-    return;
+    return false;
   }
 
   const deprecatedConfig = getDeprecatedConfig(configPath);
@@ -66,7 +66,7 @@ export async function handleMigration(
       globalConfigPath: GLOBAL_CONFIG_PATH,
     })
   );
-  return;
+  return true;
 }
 
 async function mergeConfigProperties(
@@ -106,7 +106,7 @@ export async function handleMerge(
   accountId: number | undefined,
   configPath?: string,
   force?: boolean
-): Promise<void> {
+): Promise<boolean> {
   const { shouldMergeConfigs } = await promptUser({
     name: 'shouldMergeConfigs',
     type: 'confirm',
@@ -128,14 +128,14 @@ export async function handleMerge(
       },
       accountId
     );
-    return;
+    return false;
   }
 
   const deprecatedConfig = getDeprecatedConfig(configPath);
   const globalConfig = getGlobalConfig();
 
   if (!deprecatedConfig || !globalConfig) {
-    return;
+    return true;
   }
 
   const mergedConfig = await mergeConfigProperties(
@@ -172,5 +172,5 @@ export async function handleMerge(
     },
     accountId
   );
-  return;
+  return true;
 }
