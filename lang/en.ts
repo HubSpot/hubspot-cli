@@ -943,7 +943,7 @@ export const commands = {
         },
       },
       header: {
-        text: 'This command will migrate an application to the projects framework. It will walk you through the fields required to complete the migration and download the project source code into a directory of your choosing.',
+        text: 'This command will migrate an app to the projects framework. It will walk you through the fields required to complete the migration and download the project source code into a directory of your choosing.',
         link: 'Learn more about migrating apps to the projects framework',
       },
       deprecationWarning: (oldCommand, newCommand) =>
@@ -985,7 +985,7 @@ export const commands = {
         'Migrate an existing project to the new version of the projects framework.',
       errors: {
         noProjectConfig: command =>
-          `No project detected. Please run this command again from a project directory.  If you are trying to migrate an application, run ${command}`,
+          `No project detected. Please run this command again from a project directory.  If you are trying to migrate an app, run ${command}`,
       },
       examples: {
         default:
