@@ -943,7 +943,7 @@ export const commands = {
         },
       },
       header: {
-        text: 'Migrate an app to the projects framework',
+        text: 'This command will migrate an application to the projects framework. It will walk you through the fields required to complete the migration and download the project source code into a directory of your choosing.',
         link: 'Learn more about migrating apps to the projects framework',
       },
       deprecationWarning: (oldCommand, newCommand) =>
@@ -977,26 +977,19 @@ export const commands = {
       createAppPrompt:
         "Proceed with migrating this app to a project component (this process can't be aborted)?",
       projectDetailsLink: 'View project details in your developer account',
-      componentsToBeMigrated: components =>
-        `The following component types will be migrated: ${components}`,
-      componentsThatWillNotBeMigrated: components =>
-        `[NOTE] These component types are not yet supported for migration but will be available later: ${components}`,
+    },
+    migrate: {
+      preamble: (platformVersion: string) =>
+        `This command will migrate an existing project to platformVersion ${platformVersion}.  It will walk you through the fields required to complete the migration and download the new project source code into the project source directory.  It will also copy all of your existing files to a new directory (archive) in case you need access to your old files later.`,
+      describe:
+        'Migrate an existing project to the new version of the projects framework.',
       errors: {
-        noApps: accountId => `No apps found in account ${accountId}`,
-        noAppsEligible: accountId =>
-          `No apps in account ${accountId} are currently migratable`,
-        invalidAccountTypeTitle: () =>
-          `${chalk.bold('Developer account not targeted')}`,
-        invalidAccountTypeDescription: (useCommand, authCommand) =>
-          `Only public apps created in a developer account can be converted to a project component. Select a connected developer account with ${useCommand} or ${authCommand} and try again.`,
-        projectAlreadyExists: projectName =>
-          `A project with name ${projectName} already exists. Please choose another name.`,
-        invalidApp: appId =>
-          `Could not migrate appId ${appId}. This app cannot be migrated at this time. Please choose another public app.`,
-        appWithAppIdNotFound: appId =>
-          `Could not find an app with the id ${appId} `,
-        notAllowedWithinProject: command =>
-          `This command cannot be run from within a project directory. Run the command again from outside a project directory. If you are trying to migrate a project, run ${command}`,
+        noProjectConfig: command =>
+          `No project detected. Please run this command again from a project directory.  If you are trying to migrate an application, run ${command}`,
+      },
+      examples: {
+        default:
+          'Migrate an existing project to the new version of the projects framework.',
       },
     },
     cloneApp: {
@@ -3430,9 +3423,9 @@ export const lib = {
   },
   migrate: {
     componentsToBeMigrated: components =>
-      `The following component types will be migrated: ${components}`,
+      `The following features will be migrated: ${components}`,
     componentsThatWillNotBeMigrated: components =>
-      `[NOTE] These component types are not yet supported for migration but will be available later: ${components}`,
+      `[NOTE] These features are not yet supported for migration but will be available later: ${components}`,
     sourceContentsMoved: (newLocation: string) =>
       `The contents of your old source directory have been moved to ${newLocation}, move any required files to the new source directory.`,
     projectMigrationWarning: `Migrating a project is irreversible and cannot be undone.`,

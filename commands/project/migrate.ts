@@ -1,5 +1,3 @@
-import { i18n } from '../../lib/lang';
-
 import { ArgumentsCamelCase, Argv, CommandModule } from 'yargs';
 import { logger } from '@hubspot/local-dev-lib/logger';
 import {
@@ -18,7 +16,8 @@ import { getProjectConfig } from '../../lib/projects';
 import { PLATFORM_VERSIONS } from '@hubspot/local-dev-lib/constants/projects';
 import { logError } from '../../lib/errorHandlers';
 import { EXIT_CODES } from '../../lib/enums/exitCodes';
-import { uiCommandReference } from '../../lib/ui';
+import { uiBetaTag, uiCommandReference } from '../../lib/ui';
+import { commands } from '../../lang/en';
 
 export type ProjectMigrateArgs = CommonArgs &
   AccountArgs &
@@ -31,7 +30,7 @@ const { v2025_2 } = PLATFORM_VERSIONS;
 
 export const command = 'migrate';
 
-export const describe = undefined; // i18n('commands.project.subcommands.migrate.noProjectConfig')
+export const describe = undefined;
 
 export async function handler(
   options: ArgumentsCamelCase<ProjectMigrateArgs>
@@ -41,12 +40,17 @@ export async function handler(
 
   if (!projectConfig.projectConfig) {
     logger.error(
-      i18n('commands.project.subcommands.migrate.errors.noProjectConfig', {
-        command: uiCommandReference('hs app migrate'),
-      })
+      commands.project.migrate.errors.noProjectConfig(
+        uiCommandReference('hs app migrate')
+      )
     );
     return process.exit(EXIT_CODES.ERROR);
   }
+
+  logger.log();
+  logger.log(
+    uiBetaTag(commands.project.migrate.preamble(platformVersion), false)
+  );
 
   const { derivedAccountId } = options;
   try {

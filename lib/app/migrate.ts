@@ -10,7 +10,12 @@ import { mapToUserFacingType } from '@hubspot/project-parsing-lib/src/lib/transf
 import { MIGRATION_STATUS } from '@hubspot/local-dev-lib/types/Migration';
 import { downloadProject } from '@hubspot/local-dev-lib/api/projects';
 import { confirmPrompt, inputPrompt, listPrompt } from '../prompts/promptUtils';
-import { uiAccountDescription, uiCommandReference, uiLine } from '../ui';
+import {
+  uiAccountDescription,
+  uiCommandReference,
+  uiLine,
+  uiLink,
+} from '../ui';
 import { ensureProjectExists, LoadedProjectConfig } from '../projects';
 import SpinniesManager from '../ui/SpinniesManager';
 import { DEFAULT_POLLING_STATUS_LOOKUP, poll } from '../polling';
@@ -33,6 +38,10 @@ import {
   EnvironmentArgs,
 } from '../../types/Yargs';
 import { hasFeature } from '../hasFeature';
+import {
+  getProjectBuildDetailUrl,
+  getProjectDetailUrl,
+} from '../projects/urls';
 
 export type MigrateAppArgs = CommonArgs &
   AccountArgs &
@@ -341,7 +350,7 @@ async function beginMigration(
       const { componentHint, componentType } = component;
       uidMap[componentId] = await inputPrompt(
         lib.migrate.prompt.uidForComponent(
-          componentHint && componentHint
+          componentHint
             ? `${mapToUserFacingType(componentType)} '${componentHint}'`
             : mapToUserFacingType(componentType)
         ),
@@ -552,6 +561,20 @@ export async function migrateApp2025_2(
     buildId,
     projectDest,
     projectConfig
+  );
+
+  logger.log(
+    uiLink(
+      'Project Details',
+      getProjectDetailUrl(projectName, derivedAccountId)!
+    )
+  );
+
+  logger.log(
+    uiLink(
+      'Build Details',
+      getProjectBuildDetailUrl(projectName, buildId, derivedAccountId)!
+    )
   );
 }
 
