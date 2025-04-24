@@ -1,9 +1,6 @@
 import { i18n } from '../../lib/lang';
 import { uiCommandReference, uiDeprecatedTag } from '../../lib/ui';
-import {
-  handler as migrateHandler,
-  validMigrationTargets,
-} from '../app/migrate';
+import { handler as migrateHandler } from '../app/migrate';
 
 import { ArgumentsCamelCase, Argv, CommandModule } from 'yargs';
 import { logger } from '@hubspot/local-dev-lib/logger';
@@ -13,7 +10,9 @@ import {
   addUseEnvironmentOptions,
 } from '../../lib/commonOpts';
 import { MigrateAppArgs } from '../../lib/app/migrate';
+import { PLATFORM_VERSIONS } from '@hubspot/local-dev-lib/constants/projects';
 
+const { v2023_2, v2025_2 } = PLATFORM_VERSIONS;
 export const command = 'migrate-app';
 
 // TODO: Leave this as deprecated and remove in the next major release
@@ -23,14 +22,16 @@ export const describe = uiDeprecatedTag(
 );
 export const deprecated = true;
 
-export async function handler(yargs: ArgumentsCamelCase<MigrateAppArgs>) {
+export async function handler(options: ArgumentsCamelCase<MigrateAppArgs>) {
   logger.warn(
     i18n(`commands.project.subcommands.migrateApp.deprecationWarning`, {
       oldCommand: uiCommandReference('hs project migrate-app'),
-      newCommand: uiCommandReference('hs app migrate'),
+      newCommand: uiCommandReference(
+        `hs app migrate --platform-version=${options.platformVersion}`
+      ),
     })
   );
-  await migrateHandler(yargs);
+  await migrateHandler(options);
 }
 
 export function builder(yargs: Argv): Argv<MigrateAppArgs> {
@@ -59,9 +60,9 @@ export function builder(yargs: Argv): Argv<MigrateAppArgs> {
     },
     'platform-version': {
       type: 'string',
-      choices: validMigrationTargets,
+      choices: [v2023_2, v2025_2],
       hidden: true,
-      default: '2023.2',
+      default: v2023_2,
     },
   });
 
