@@ -1,4 +1,4 @@
-import { getProjectConfig } from '../projects';
+import { getProjectConfig } from '../projects/config';
 import { fetchProject } from '@hubspot/local-dev-lib/api/projects';
 import path from 'path';
 import pkg from '../../package.json';

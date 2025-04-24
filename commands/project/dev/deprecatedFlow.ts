@@ -13,7 +13,7 @@ import { i18n } from '../../../lib/lang';
 import { EXIT_CODES } from '../../../lib/enums/exitCodes';
 import { uiCommandReference } from '../../../lib/ui';
 import SpinniesManager from '../../../lib/ui/SpinniesManager';
-import LocalDevManager from '../../../lib/LocalDevManager';
+import LocalDevManager from '../../../lib/projects/localDev/LocalDevManager';
 import {
   confirmDefaultAccountIsTarget,
   suggestRecommendedNestedAccount,
@@ -26,10 +26,10 @@ import {
   useExistingDevTestAccount,
   checkIfParentAccountIsAuthed,
   hasSandboxes,
-} from '../../../lib/localDev';
+} from '../../../lib/projects/localDev/helpers';
 import { handleExit } from '../../../lib/process';
 import { isSandbox, isDeveloperTestAccount } from '../../../lib/accountTypes';
-import { ensureProjectExists } from '../../../lib/projects';
+import { ensureProjectExists } from '../../../lib/projects/ensureProjectExists';
 import { ProjectDevArgs } from '../../../types/Yargs';
 
 export async function deprecatedProjectDevFlow(

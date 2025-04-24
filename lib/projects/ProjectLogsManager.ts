@@ -1,4 +1,5 @@
-import { getProjectConfig, ensureProjectExists } from './index';
+import { getProjectConfig } from './config';
+import { ensureProjectExists } from './ensureProjectExists';
 import { fetchProjectComponentsMetadata } from '@hubspot/local-dev-lib/api/projects';
 import { AppFunctionComponentMetadata } from '@hubspot/local-dev-lib/types/ComponentStructure';
 import { logger } from '@hubspot/local-dev-lib/logger';

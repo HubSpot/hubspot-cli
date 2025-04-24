@@ -11,7 +11,8 @@ import { MIGRATION_STATUS } from '@hubspot/local-dev-lib/types/Migration';
 import { downloadProject } from '@hubspot/local-dev-lib/api/projects';
 import { confirmPrompt, inputPrompt, listPrompt } from '../prompts/promptUtils';
 import { uiAccountDescription, uiCommandReference, uiLine } from '../ui';
-import { ensureProjectExists, LoadedProjectConfig } from '../projects';
+import { LoadedProjectConfig } from '../projects/config';
+import { ensureProjectExists } from '../projects/ensureProjectExists';
 import SpinniesManager from '../ui/SpinniesManager';
 import { DEFAULT_POLLING_STATUS_LOOKUP, poll } from '../polling';
 import {

@@ -17,11 +17,13 @@ const {
 const { trackCommandUsage } = require('../../lib/usageTracking');
 const { uiBetaTag } = require('../../lib/ui');
 const {
-  ensureProjectExists,
   getProjectConfig,
   validateProjectConfig,
-  logFeedbackMessage,
-} = require('../../lib/projects');
+} = require('../../lib/projects/config');
+const {
+  ensureProjectExists,
+} = require('../../lib/projects/ensureProjectExists');
+const { logFeedbackMessage } = require('../../lib/projects/ui');
 const { handleProjectUpload } = require('../../lib/projects/upload');
 const {
   pollBuildStatus,

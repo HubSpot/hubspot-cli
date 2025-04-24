@@ -21,7 +21,7 @@ import {
   isAppDeveloperAccount,
   isUnifiedAccount,
 } from '../../lib/accountTypes';
-import { writeProjectConfig } from '../../lib/projects';
+import { writeProjectConfig } from '../../lib/projects/config';
 import { PROJECT_CONFIG_FILE } from '../../lib/constants';
 import {
   cloneApp,

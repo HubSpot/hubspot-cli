@@ -2650,6 +2650,8 @@ export const lib = {
       runUpload: command => `  * Run ${command}`,
       restartDev: command => `  * Re-run ${command}`,
       pushToGithub: '  * Commit and push your changes to GitHub',
+      defaultMarketplaceAppWarning: (installCount, accountText) =>
+        `${chalk.bold('Changing project configuration requires creating a new project build.')}\n\nYour marketplace app is currently installed in ${chalk.bold(`${installCount} ${accountText}`)}. Any uploaded changes will impact your app's users. We strongly recommend creating a copy of this app to test your changes before proceding.`,
     },
     activeInstallWarning: {
       installCount: (appName, installCount, installText) =>
@@ -2667,7 +2669,7 @@ export const lib = {
         `Failed to notify local dev server of file change: ${message}`,
     },
   },
-  localDev: {
+  localDevHelpers: {
     confirmDefaultAccountIsTarget: {
       configError: authCommand =>
         `An error occurred while reading the default account from your config. Run ${authCommand} to re-auth this account`,
@@ -3252,6 +3254,7 @@ export const lib = {
             instructions: (accountName, url) =>
               `To update CLI permissions for "${accountName}": \n- Go to ${url}, deactivate the existing personal access key, and create a new one that includes developer sandbox permissions. \n- Update the CLI config for this account by running ${chalk.bold('hs auth')} and entering the new key.\n`,
           },
+          generic: 'An error occured while creating a developer sandbox',
         },
       },
       standard: {

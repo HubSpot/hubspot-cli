@@ -9,7 +9,7 @@ import { debugError } from '../../lib/errorHandlers';
 import { trackCommandUsage } from '../../lib/usageTracking';
 import { i18n } from '../../lib/lang';
 import { projectAddPrompt } from '../../lib/prompts/projectAddPrompt';
-import { getProjectConfig } from '../../lib/projects';
+import { getProjectConfig } from '../../lib/projects/config';
 import { getProjectComponentListFromRepo } from '../../lib/projects/create';
 import { findProjectComponents } from '../../lib/projects/structure';
 import { ComponentTypes } from '../../types/Projects';
