@@ -8,7 +8,10 @@ import {
 } from '@hubspot/local-dev-lib/api/projects';
 import { getTableContents, getTableHeader } from '../../lib/ui/table';
 import { uiBetaTag, uiLink } from '../../lib/ui';
-import { getProjectConfig, validateProjectConfig } from '../../lib/projects';
+import {
+  getProjectConfig,
+  validateProjectConfig,
+} from '../../lib/projects/config';
 import { getProjectDetailUrl } from '../../lib/projects/urls';
 import moment from 'moment';
 import { promptUser } from '../../lib/prompts/promptUtils';
@@ -25,10 +28,11 @@ import {
 import { EXIT_CODES } from '../../lib/enums/exitCodes';
 import { makeYargsBuilder } from '../../lib/yargsUtils';
 
-const i18nKey = 'commands.project.subcommands.listBuilds';
-
 const command = 'list-builds';
-const describe = uiBetaTag(i18n(`${i18nKey}.describe`), false);
+const describe = uiBetaTag(
+  i18n(`commands.project.subcommands.listBuilds.describe`),
+  false
+);
 
 type ProjectListBuildsArgs = CommonArgs &
   ConfigArgs &
@@ -46,18 +50,20 @@ async function fetchAndDisplayBuilds(
   const currentDeploy = project.deployedBuildId;
   if (options && options.after) {
     logger.log(
-      i18n(`${i18nKey}.logs.showingNextBuilds`, {
+      i18n(`commands.project.subcommands.listBuilds.logs.showingNextBuilds`, {
         count: results.length,
         projectName: project.name,
       })
     );
   } else {
     logger.log(
-      i18n(`${i18nKey}.logs.showingRecentBuilds`, {
+      i18n(`commands.project.subcommands.listBuilds.logs.showingRecentBuilds`, {
         count: results.length,
         projectName: project.name,
         viewBuildsLink: uiLink(
-          i18n(`${i18nKey}.logs.viewAllBuildsLink`),
+          i18n(
+            `commands.project.subcommands.listBuilds.logs.viewAllBuildsLink`
+          ),
           getProjectDetailUrl(project.name, accountId)!
         ),
       })
@@ -65,7 +71,7 @@ async function fetchAndDisplayBuilds(
   }
 
   if (results.length === 0) {
-    logger.log(i18n(`${i18nKey}.errors.noBuilds`));
+    logger.log(i18n(`commands.project.subcommands.listBuilds.errors.noBuilds`));
   } else {
     const builds = results.map(build => {
       const isCurrentlyDeployed = build.buildId === currentDeploy;
@@ -101,7 +107,9 @@ async function fetchAndDisplayBuilds(
   if (paging && paging.next) {
     await promptUser({
       name: 'more',
-      message: i18n(`${i18nKey}.continueOrExitPrompt`),
+      message: i18n(
+        `commands.project.subcommands.listBuilds.continueOrExitPrompt`
+      ),
     });
     await fetchAndDisplayBuilds(accountId, project, {
       limit: options.limit,
@@ -110,7 +118,9 @@ async function fetchAndDisplayBuilds(
   }
 }
 
-async function handler(args: ArgumentsCamelCase<ProjectListBuildsArgs>) {
+async function handler(
+  args: ArgumentsCamelCase<ProjectListBuildsArgs>
+): Promise<void> {
   const { project: projectFlagValue, limit, derivedAccountId } = args;
 
   trackCommandUsage('project-list-builds', undefined, derivedAccountId);
@@ -128,7 +138,11 @@ async function handler(args: ArgumentsCamelCase<ProjectListBuildsArgs>) {
     await fetchAndDisplayBuilds(derivedAccountId, project, { limit });
   } catch (e) {
     if (isHubSpotHttpError(e) && e.status === 404) {
-      logger.error(i18n(`${i18nKey}.errors.projectNotFound`, { projectName }));
+      logger.error(
+        i18n(`commands.project.subcommands.listBuilds.errors.projectNotFound`, {
+          projectName,
+        })
+      );
     } else {
       logError(
         e,
@@ -145,17 +159,24 @@ async function handler(args: ArgumentsCamelCase<ProjectListBuildsArgs>) {
 function projectListBuildsBuilder(yargs: Argv): Argv<ProjectListBuildsArgs> {
   yargs.options({
     project: {
-      describe: i18n(`${i18nKey}.options.project.describe`),
+      describe: i18n(
+        `commands.project.subcommands.listBuilds.options.project.describe`
+      ),
       type: 'string',
     },
     limit: {
-      describe: i18n(`${i18nKey}.options.limit.describe`),
+      describe: i18n(
+        `commands.project.subcommands.listBuilds.options.limit.describe`
+      ),
       type: 'string',
     },
   });
 
   yargs.example([
-    ['$0 project list-builds', i18n(`${i18nKey}.examples.default`)],
+    [
+      '$0 project list-builds',
+      i18n(`commands.project.subcommands.listBuilds.examples.default`),
+    ],
   ]);
 
   return yargs as Argv<ProjectListBuildsArgs>;

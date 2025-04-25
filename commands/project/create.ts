@@ -11,7 +11,10 @@ import { RepoPath } from '@hubspot/local-dev-lib/types/Github';
 import { getCwd } from '@hubspot/local-dev-lib/path';
 import { trackCommandUsage } from '../../lib/usageTracking';
 import { createProjectPrompt } from '../../lib/prompts/createProjectPrompt';
-import { writeProjectConfig, getProjectConfig } from '../../lib/projects';
+import {
+  writeProjectConfig,
+  getProjectConfig,
+} from '../../lib/projects/config';
 import {
   getProjectTemplateListFromRepo,
   EMPTY_PROJECT_TEMPLATE_NAME,
@@ -35,10 +38,11 @@ import {
 import { makeYargsBuilder } from '../../lib/yargsUtils';
 import { ProjectConfig } from '../../types/Projects';
 
-const i18nKey = 'commands.project.subcommands.create';
-
 const command = 'create';
-const describe = uiBetaTag(i18n(`${i18nKey}.describe`), false);
+const describe = uiBetaTag(
+  i18n(`commands.project.subcommands.create.describe`),
+  false
+);
 
 type ProjectCreateArgs = CommonArgs &
   ConfigArgs &
@@ -50,10 +54,12 @@ type ProjectCreateArgs = CommonArgs &
     template?: string;
   };
 
-async function handler(args: ArgumentsCamelCase<ProjectCreateArgs>) {
+async function handler(
+  args: ArgumentsCamelCase<ProjectCreateArgs>
+): Promise<void> {
   const { derivedAccountId } = args;
 
-  let latestRepoReleaseTag: string | null = null;
+  let latestRepoReleaseTag: string | undefined;
   let templateSource = args.templateSource;
 
   if (!templateSource) {
@@ -66,13 +72,19 @@ async function handler(args: ArgumentsCamelCase<ProjectCreateArgs>) {
         latestRepoReleaseTag = releaseData.tag_name;
       }
     } catch (err) {
-      logger.error(i18n(`${i18nKey}.error.failedToFetchProjectList`));
+      logger.error(
+        i18n(
+          `commands.project.subcommands.create.error.failedToFetchProjectList`
+        )
+      );
       process.exit(EXIT_CODES.ERROR);
     }
   }
 
   if (!templateSource || !templateSource.includes('/')) {
-    logger.error(i18n(`${i18nKey}.error.invalidTemplateSource`));
+    logger.error(
+      i18n(`commands.project.subcommands.create.error.invalidTemplateSource`)
+    );
     process.exit(EXIT_CODES.ERROR);
   }
 
@@ -82,7 +94,9 @@ async function handler(args: ArgumentsCamelCase<ProjectCreateArgs>) {
   );
 
   if (!projectTemplates.length) {
-    logger.error(i18n(`${i18nKey}.error.failedToFetchProjectList`));
+    logger.error(
+      i18n(`commands.project.subcommands.create.error.failedToFetchProjectList`)
+    );
     process.exit(EXIT_CODES.ERROR);
   }
 
@@ -110,7 +124,7 @@ async function handler(args: ArgumentsCamelCase<ProjectCreateArgs>) {
     projectDest.startsWith(existingProjectDir)
   ) {
     logger.error(
-      i18n(`${i18nKey}.errors.cannotNestProjects`, {
+      i18n(`commands.project.subcommands.create.errors.cannotNestProjects`, {
         projectDir: existingProjectDir,
       })
     );
@@ -120,12 +134,14 @@ async function handler(args: ArgumentsCamelCase<ProjectCreateArgs>) {
   try {
     await cloneGithubRepo(templateSource, projectDest, {
       sourceDir: createProjectPromptResponse.projectTemplate.path,
-      tag: latestRepoReleaseTag || undefined,
+      tag: latestRepoReleaseTag,
       hideLogs: true,
     });
   } catch (err) {
     debugError(err);
-    logger.error(i18n(`${i18nKey}.errors.failedToDownloadProject`));
+    logger.error(
+      i18n(`commands.project.subcommands.create.errors.failedToDownloadProject`)
+    );
     process.exit(EXIT_CODES.ERROR);
   }
 
@@ -150,14 +166,16 @@ async function handler(args: ArgumentsCamelCase<ProjectCreateArgs>) {
 
   logger.log('');
   logger.success(
-    i18n(`${i18nKey}.logs.success`, {
+    i18n(`commands.project.subcommands.create.logs.success`, {
       projectName: createProjectPromptResponse.name,
       projectDest,
     })
   );
 
   logger.log('');
-  logger.log(chalk.bold(i18n(`${i18nKey}.logs.welcomeMessage`)));
+  logger.log(
+    chalk.bold(i18n(`commands.project.subcommands.create.logs.welcomeMessage`))
+  );
   uiFeatureHighlight([
     'projectCommandTip',
     'projectUploadCommand',
@@ -173,28 +191,41 @@ async function handler(args: ArgumentsCamelCase<ProjectCreateArgs>) {
 function projectCreateBuilder(yargs: Argv): Argv<ProjectCreateArgs> {
   yargs.options({
     name: {
-      describe: i18n(`${i18nKey}.options.name.describe`),
+      describe: i18n(
+        `commands.project.subcommands.create.options.name.describe`
+      ),
       type: 'string',
     },
     dest: {
-      describe: i18n(`${i18nKey}.options.dest.describe`),
+      describe: i18n(
+        `commands.project.subcommands.create.options.dest.describe`
+      ),
       type: 'string',
     },
     template: {
-      describe: i18n(`${i18nKey}.options.template.describe`),
+      describe: i18n(
+        `commands.project.subcommands.create.options.template.describe`
+      ),
       type: 'string',
     },
     'template-source': {
-      describe: i18n(`${i18nKey}.options.templateSource.describe`),
+      describe: i18n(
+        `commands.project.subcommands.create.options.templateSource.describe`
+      ),
       type: 'string',
     },
   });
 
-  yargs.example([['$0 project create', i18n(`${i18nKey}.examples.default`)]]);
+  yargs.example([
+    [
+      '$0 project create',
+      i18n(`commands.project.subcommands.create.examples.default`),
+    ],
+  ]);
   yargs.example([
     [
       '$0 project create --template-source HubSpot/ui-extensions-examples',
-      i18n(`${i18nKey}.examples.templateSource`),
+      i18n(`commands.project.subcommands.create.examples.templateSource`),
     ],
   ]);
 

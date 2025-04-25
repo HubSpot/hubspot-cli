@@ -13,11 +13,11 @@ import { logger } from '@hubspot/local-dev-lib/logger';
 import { PROJECT_ERROR_TYPES } from '../../lib/constants';
 import { trackCommandUsage } from '../../lib/usageTracking';
 import {
-  ensureProjectExists,
   getProjectConfig,
   validateProjectConfig,
-  logFeedbackMessage,
-} from '../../lib/projects';
+} from '../../lib/projects/config';
+import { logFeedbackMessage } from '../../lib/projects/ui';
+import { ensureProjectExists } from '../../lib/projects/ensureProjectExists';
 import { handleProjectUpload } from '../../lib/projects/upload';
 import {
   pollBuildStatus,
@@ -34,10 +34,11 @@ import {
 } from '../../types/Yargs';
 import { makeYargsBuilder } from '../../lib/yargsUtils';
 
-const i18nKey = 'commands.project.subcommands.watch';
-
 const command = 'watch';
-const describe = uiBetaTag(i18n(`${i18nKey}.describe`), false);
+const describe = uiBetaTag(
+  i18n(`commands.project.subcommands.watch.describe`),
+  false
+);
 
 type ProjectWatchArgs = CommonArgs &
   ConfigArgs &
@@ -72,7 +73,7 @@ function handleUserInput(
   currentBuildId: number
 ): void {
   const onTerminate = async () => {
-    logger.log(i18n(`${i18nKey}.logs.processExited`));
+    logger.log(i18n(`commands.project.subcommands.watch.logs.processExited`));
 
     if (currentBuildId) {
       try {
@@ -115,7 +116,9 @@ async function handler(
   validateProjectConfig(projectConfig, projectDir);
 
   if (!projectConfig || !projectDir) {
-    logger.error(i18n(`${i18nKey}.errors.projectConfigNotFound`));
+    logger.error(
+      i18n(`commands.project.subcommands.watch.errors.projectConfigNotFound`)
+    );
     return process.exit(EXIT_CODES.ERROR);
   }
 
@@ -168,7 +171,9 @@ async function handler(
           })
         ) {
           logger.log();
-          logger.error(i18n(`${i18nKey}.errors.projectLockedError`));
+          logger.error(
+            i18n(`commands.project.subcommands.watch.errors.projectLockedError`)
+          );
           logger.log();
         } else {
           logError(
@@ -192,11 +197,18 @@ async function handler(
 function projectWatchBuilder(yargs: Argv): Argv<ProjectWatchArgs> {
   yargs.option('initial-upload', {
     alias: 'i',
-    describe: i18n(`${i18nKey}.options.initialUpload.describe`),
+    describe: i18n(
+      `commands.project.subcommands.watch.options.initialUpload.describe`
+    ),
     type: 'boolean',
   });
 
-  yargs.example([['$0 project watch', i18n(`${i18nKey}.examples.default`)]]);
+  yargs.example([
+    [
+      '$0 project watch',
+      i18n(`commands.project.subcommands.watch.examples.default`),
+    ],
+  ]);
 
   return yargs as Argv<ProjectWatchArgs>;
 }

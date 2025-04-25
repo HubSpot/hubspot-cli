@@ -46,8 +46,6 @@ import {
   TestingArgs,
 } from '../types/Yargs';
 
-const i18nKey = 'commands.auth';
-
 const TRACKING_STATUS = {
   STARTED: 'started',
   ERROR: 'error',
@@ -62,7 +60,7 @@ const SUPPORTED_AUTHENTICATION_PROTOCOLS_TEXT =
   commaSeparatedValues(ALLOWED_AUTH_METHODS);
 
 export const command = 'auth';
-export const describe = i18n(`${i18nKey}.describe`);
+export const describe = i18n('commands.auth.describe');
 
 type AuthArgs = CommonArgs &
   ConfigArgs &
@@ -96,7 +94,7 @@ export async function handler(
   if (configFileExists(true)) {
     const globalConfigPath = getConfigPath('', true);
     logger.error(
-      i18n(`${i18nKey}.errors.globalConfigFileExists`, {
+      i18n(`commands.auth.errors.globalConfigFileExists`, {
         configPath: globalConfigPath!,
         authCommand: uiCommandReference('hs account auth'),
       })
@@ -168,7 +166,7 @@ export async function handler(
       break;
     default:
       logger.error(
-        i18n(`${i18nKey}.errors.unsupportedAuthType`, {
+        i18n('commands.auth.errors.unsupportedAuthType', {
           supportedProtocols: SUPPORTED_AUTHENTICATION_PROTOCOLS_TEXT,
           type: authType,
         })
@@ -197,19 +195,19 @@ export async function handler(
   logger.log('');
   if (setAsDefault) {
     logger.success(
-      i18n(`lib.prompts.setAsDefaultAccountPrompt.setAsDefaultAccount`, {
+      i18n('lib.prompts.setAsDefaultAccountPrompt.setAsDefaultAccount', {
         accountName,
       })
     );
   } else {
     logger.info(
-      i18n(`lib.prompts.setAsDefaultAccountPrompt.keepingCurrentDefault`, {
+      i18n('lib.prompts.setAsDefaultAccountPrompt.keepingCurrentDefault', {
         accountName: getConfigDefaultAccount()!,
       })
     );
   }
   logger.success(
-    i18n(`${i18nKey}.success.configFileUpdated`, {
+    i18n('commands.auth.success.configFileUpdated', {
       configFilename: DEFAULT_HUBSPOT_CONFIG_YAML_FILE_NAME,
       authType: successAuthMethod,
       accountName,
@@ -230,7 +228,7 @@ export async function handler(
 function authBuilder(yargs: Argv): Argv<AuthArgs> {
   yargs.options({
     'auth-type': {
-      describe: i18n(`${i18nKey}.options.authType.describe`),
+      describe: i18n('commands.auth.options.authType.describe'),
       type: 'string',
       choices: [
         `${PERSONAL_ACCESS_KEY_AUTH_METHOD.value}`,
@@ -239,7 +237,7 @@ function authBuilder(yargs: Argv): Argv<AuthArgs> {
       default: PERSONAL_ACCESS_KEY_AUTH_METHOD.value,
     },
     account: {
-      describe: i18n(`${i18nKey}.options.account.describe`),
+      describe: i18n('commands.auth.options.account.describe'),
       type: 'string',
       alias: 'a',
     },
@@ -251,7 +249,7 @@ function authBuilder(yargs: Argv): Argv<AuthArgs> {
 export const builder = makeYargsBuilder<AuthArgs>(
   authBuilder,
   command,
-  i18n(`${i18nKey}.verboseDescribe`, {
+  i18n('commands.auth.verboseDescribe', {
     authMethod: PERSONAL_ACCESS_KEY_AUTH_METHOD.value,
     configName: DEFAULT_HUBSPOT_CONFIG_YAML_FILE_NAME,
   }),

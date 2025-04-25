@@ -3,7 +3,7 @@ import util from 'util';
 jest.mock('@hubspot/local-dev-lib/fs');
 jest.mock('@hubspot/local-dev-lib/config');
 jest.mock('@hubspot/local-dev-lib/personalAccessKey');
-jest.mock('../../projects');
+jest.mock('../../projects/config');
 jest.mock('@hubspot/local-dev-lib/api/projects');
 jest.mock('util', () => ({
   ...jest.requireActual('util'),
@@ -25,7 +25,7 @@ import {
 import { getAccessToken as _getAccessToken } from '@hubspot/local-dev-lib/personalAccessKey';
 import { walk as _walk } from '@hubspot/local-dev-lib/fs';
 import { AccessToken, CLIAccount } from '@hubspot/local-dev-lib/types/Accounts';
-import { getProjectConfig as _getProjectConfig } from '../../projects';
+import { getProjectConfig as _getProjectConfig } from '../../projects/config';
 import { fetchProject as _fetchProject } from '@hubspot/local-dev-lib/api/projects';
 import { Project } from '@hubspot/local-dev-lib/types/Project';
 import { HubSpotPromise } from '@hubspot/local-dev-lib/types/Http';

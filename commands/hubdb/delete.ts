@@ -19,10 +19,8 @@ import {
   EnvironmentArgs,
 } from '../../types/Yargs';
 
-const i18nKey = 'commands.hubdb.subcommands.delete';
-
 export const command = 'delete [table-id]';
-export const describe = i18n(`${i18nKey}.describe`);
+export const describe = i18n('commands.hubdb.subcommands.delete.describe');
 
 type CombinedArgs = ConfigArgs & AccountArgs & EnvironmentArgs;
 type HubdbDeleteArgs = CommonArgs & CombinedArgs & { tableId?: number };
@@ -47,7 +45,9 @@ export async function handler(
       const { shouldDeleteTable } = await promptUser({
         name: 'shouldDeleteTable',
         type: 'confirm',
-        message: i18n(`${i18nKey}.shouldDeleteTable`, { tableId }),
+        message: i18n('commands.hubdb.subcommands.delete.shouldDeleteTable', {
+          tableId,
+        }),
       });
 
       if (!shouldDeleteTable) {
@@ -57,7 +57,7 @@ export async function handler(
 
     await deleteTable(derivedAccountId, tableId);
     logger.success(
-      i18n(`${i18nKey}.success.delete`, {
+      i18n('commands.hubdb.subcommands.delete.success.delete', {
         accountId: derivedAccountId,
         tableId,
       })
@@ -65,7 +65,7 @@ export async function handler(
     process.exit(EXIT_CODES.SUCCESS);
   } catch (e) {
     logger.error(
-      i18n(`${i18nKey}.errors.delete`, {
+      i18n('commands.hubdb.subcommands.delete.errors.delete', {
         tableId: args.tableId || '',
       })
     );
@@ -79,12 +79,14 @@ export function builder(yargs: Argv): Argv<HubdbDeleteArgs> {
   addUseEnvironmentOptions(yargs);
 
   yargs.positional('table-id', {
-    describe: i18n(`${i18nKey}.positionals.tableId.describe`),
+    describe: i18n(
+      'commands.hubdb.subcommands.delete.positionals.tableId.describe'
+    ),
     type: 'string',
   });
 
   yargs.option('force', {
-    describe: i18n(`${i18nKey}.options.force.describe`),
+    describe: i18n('commands.hubdb.subcommands.delete.options.force.describe'),
     type: 'boolean',
   });
 

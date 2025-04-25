@@ -8,7 +8,7 @@ import {
   fetchProjectBuilds,
 } from '@hubspot/local-dev-lib/api/projects';
 import { logError, ApiErrorContext } from '../../lib/errorHandlers/index';
-import { getProjectConfig } from '../../lib/projects';
+import { getProjectConfig } from '../../lib/projects/config';
 import { downloadProjectPrompt } from '../../lib/prompts/downloadProjectPrompt';
 import { i18n } from '../../lib/lang';
 import { uiBetaTag } from '../../lib/ui';
@@ -23,21 +23,28 @@ import {
 } from '../../types/Yargs';
 import { makeYargsBuilder } from '../../lib/yargsUtils';
 
-const i18nKey = 'commands.project.subcommands.download';
-
 const command = 'download';
-const describe = uiBetaTag(i18n(`${i18nKey}.describe`), false);
+const describe = uiBetaTag(
+  i18n(`commands.project.subcommands.download.describe`),
+  false
+);
 
 type ProjectDownloadArgs = CommonArgs &
   ConfigArgs &
   AccountArgs &
   EnvironmentArgs & { project?: string; dest?: string; build?: number };
 
-async function handler(args: ArgumentsCamelCase<ProjectDownloadArgs>) {
+async function handler(
+  args: ArgumentsCamelCase<ProjectDownloadArgs>
+): Promise<void> {
   const { projectConfig } = await getProjectConfig();
 
   if (projectConfig) {
-    logger.error(i18n(`${i18nKey}.warnings.cannotDownloadWithinProject`));
+    logger.error(
+      i18n(
+        `commands.project.subcommands.download.warnings.cannotDownloadWithinProject`
+      )
+    );
     process.exit(EXIT_CODES.ERROR);
   }
 
@@ -63,7 +70,9 @@ async function handler(args: ArgumentsCamelCase<ProjectDownloadArgs>) {
     }
 
     if (!buildNumberToDownload) {
-      logger.error(i18n(`${i18nKey}.errors.noBuildIdToDownload`));
+      logger.error(
+        i18n(`commands.project.subcommands.download.errors.noBuildIdToDownload`)
+      );
       process.exit(EXIT_CODES.ERROR);
     }
 
@@ -83,7 +92,7 @@ async function handler(args: ArgumentsCamelCase<ProjectDownloadArgs>) {
     );
 
     logger.log(
-      i18n(`${i18nKey}.logs.downloadSucceeded`, {
+      i18n(`commands.project.subcommands.download.logs.downloadSucceeded`, {
         buildId: buildNumberToDownload,
         projectName,
       })
@@ -104,15 +113,21 @@ async function handler(args: ArgumentsCamelCase<ProjectDownloadArgs>) {
 function projectDownloadBuilder(yargs: Argv): Argv<ProjectDownloadArgs> {
   yargs.options({
     project: {
-      describe: i18n(`${i18nKey}.options.project.describe`),
+      describe: i18n(
+        `commands.project.subcommands.download.options.project.describe`
+      ),
       type: 'string',
     },
     dest: {
-      describe: i18n(`${i18nKey}.options.dest.describe`),
+      describe: i18n(
+        `commands.project.subcommands.download.options.dest.describe`
+      ),
       type: 'string',
     },
     build: {
-      describe: i18n(`${i18nKey}.options.build.describe`),
+      describe: i18n(
+        `commands.project.subcommands.download.options.build.describe`
+      ),
       alias: ['build-id'],
       type: 'number',
     },
@@ -121,7 +136,7 @@ function projectDownloadBuilder(yargs: Argv): Argv<ProjectDownloadArgs> {
   yargs.example([
     [
       '$0 project download --project=myProject --dest=myProjectFolder',
-      i18n(`${i18nKey}.examples.default`),
+      i18n(`commands.project.subcommands.download.examples.default`),
     ],
   ]);
 

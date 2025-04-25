@@ -110,20 +110,20 @@ describe('commands/app/migrate', () => {
           }),
           'platform-version': expect.objectContaining({
             type: 'string',
-            default: '2023.2',
+            default: '2025.2',
             hidden: true,
           }),
         })
       );
     });
 
-    it('should set default platform version to 2023.2', async () => {
+    it('should set default platform version to 2025.2', async () => {
       await migrateCommand.builder(mockYargs);
 
       expect(optionsSpy).toHaveBeenCalledWith(
         expect.objectContaining({
           'platform-version': expect.objectContaining({
-            default: '2023.2',
+            default: '2025.2',
           }),
         })
       );

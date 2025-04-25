@@ -16,10 +16,10 @@ import { ApiErrorContext, logError } from '../errorHandlers';
 import { EXIT_CODES } from '../enums/exitCodes';
 import { uiAccountDescription, uiLine, uiLink } from '../ui';
 import { i18n } from '../lang';
-import { isAppDeveloperAccount } from '../accountTypes';
+import { isAppDeveloperAccount, isUnifiedAccount } from '../accountTypes';
 import { selectPublicAppPrompt } from '../prompts/selectPublicAppPrompt';
 import { createProjectPrompt } from '../prompts/createProjectPrompt';
-import { ensureProjectExists } from '../projects';
+import { ensureProjectExists } from '../projects/ensureProjectExists';
 import { trackCommandMetadataUsage } from '../usageTracking';
 import SpinniesManager from '../ui/SpinniesManager';
 import { handleKeypress } from '../process';
@@ -33,7 +33,9 @@ export async function migrateApp2023_2(
 ): Promise<void> {
   const accountName = uiAccountDescription(derivedAccountId);
 
-  if (!isAppDeveloperAccount(accountConfig)) {
+  const defaultAccountIsUnified = await isUnifiedAccount(accountConfig);
+
+  if (!isAppDeveloperAccount(accountConfig) && !defaultAccountIsUnified) {
     logInvalidAccountError();
     process.exit(EXIT_CODES.SUCCESS);
   }
