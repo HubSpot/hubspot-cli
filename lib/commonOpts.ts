@@ -25,19 +25,18 @@ const i18nKey = 'lib.commonOpts';
 
 export function addGlobalOptions(yargs: Argv) {
   yargs.version(false);
-
-  return yargs
-    .option('debug', {
-      alias: 'd',
-      default: false,
-      describe: i18n(`${i18nKey}.options.debug.describe`),
-      type: 'boolean',
-    })
-    .option('network-debug', {
-      default: false,
-      type: 'boolean',
-      hidden: true,
-    });
+  yargs.option('debug', {
+    alias: 'd',
+    default: false,
+    describe: i18n(`${i18nKey}.options.debug.describe`),
+    type: 'boolean',
+  });
+  yargs.option('network-debug', {
+    default: false,
+    type: 'boolean',
+    hidden: true,
+  });
+  return yargs;
 }
 
 export function addAccountOptions(yargs: Argv): Argv {
