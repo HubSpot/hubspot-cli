@@ -26,12 +26,18 @@ const i18nKey = 'lib.commonOpts';
 export function addGlobalOptions(yargs: Argv) {
   yargs.version(false);
 
-  return yargs.option('debug', {
-    alias: 'd',
-    default: false,
-    describe: i18n(`${i18nKey}.options.debug.describe`),
-    type: 'boolean',
-  });
+  return yargs
+    .option('debug', {
+      alias: 'd',
+      default: false,
+      describe: i18n(`${i18nKey}.options.debug.describe`),
+      type: 'boolean',
+    })
+    .option('network-debug', {
+      default: false,
+      type: 'boolean',
+      hidden: true,
+    });
 }
 
 export function addAccountOptions(yargs: Argv): Argv {
@@ -125,12 +131,19 @@ export async function addCustomHelpOutput(
   }
 }
 
-export function setLogLevel(options: Arguments<{ debug?: boolean }>): void {
-  const { debug } = options;
+export function setLogLevel(
+  options: Arguments<{ debug?: boolean; networkDebug?: boolean }>
+): void {
+  const { debug, networkDebug } = options;
   if (debug) {
     setLoggerLogLevel(LOG_LEVEL.DEBUG);
   } else {
     setLoggerLogLevel(LOG_LEVEL.LOG);
+  }
+
+  if (networkDebug) {
+    process.env.HUBSPOT_NETWORK_LOGGING = 'true';
+    setLoggerLogLevel(LOG_LEVEL.DEBUG);
   }
 }
 
