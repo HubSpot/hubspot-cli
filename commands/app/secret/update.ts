@@ -1,6 +1,6 @@
 import { Argv, ArgumentsCamelCase } from 'yargs';
 import { logger } from '@hubspot/local-dev-lib/logger';
-import { addAppSecret } from '@hubspot/local-dev-lib/api/devSecrets';
+import { updateAppSecret } from '@hubspot/local-dev-lib/api/devSecrets';
 import { logError } from '../../../lib/errorHandlers/index';
 import { trackCommandUsage } from '../../../lib/usageTracking';
 import { uiAccountDescription } from '../../../lib/ui';
@@ -20,27 +20,27 @@ import {
 import { makeYargsBuilder } from '../../../lib/yargsUtils';
 import { promptUser } from '../../../lib/prompts/promptUtils';
 
-const command = 'add [name]';
-const describe = commands.app.subcommands.secret.subcommands.add.describe;
+const command = 'update [name]';
+const describe = commands.app.subcommands.secret.subcommands.update.describe;
 
-type AddAppSecretArgs = CommonArgs &
+type UpdateAppSecretArgs = CommonArgs &
   ConfigArgs &
   AccountArgs &
   EnvironmentArgs & { name?: string; appId: number };
 
 async function handler(
-  args: ArgumentsCamelCase<AddAppSecretArgs>
+  args: ArgumentsCamelCase<UpdateAppSecretArgs>
 ): Promise<void> {
   const { appId, name, derivedAccountId } = args;
   let appSecretName = name;
   let appSecretAppId = appId;
 
-  trackCommandUsage('app-secret-add', {}, derivedAccountId);
+  trackCommandUsage('app-secret-update', {}, derivedAccountId);
 
   try {
     const { appId: appIdPromptValue } = await promptUser({
       name: 'appId',
-      message: commands.app.subcommands.secret.subcommands.add.appIdPrompt,
+      message: commands.app.subcommands.secret.subcommands.update.appIdPrompt,
       type: 'number',
       when: !appSecretAppId,
     });
@@ -56,7 +56,7 @@ async function handler(
 
     const { secretValue } = await secretValuePrompt();
 
-    await addAppSecret(
+    await updateAppSecret(
       derivedAccountId,
       appSecretAppId,
       appSecretName,
@@ -64,7 +64,7 @@ async function handler(
     );
 
     logger.success(
-      commands.app.subcommands.secret.subcommands.add.success(
+      commands.app.subcommands.secret.subcommands.update.success(
         appSecretName,
         uiAccountDescription(derivedAccountId)
       )
@@ -76,24 +76,25 @@ async function handler(
   process.exit(EXIT_CODES.SUCCESS);
 }
 
-function addAppSecretBuilder(yargs: Argv): Argv<AddAppSecretArgs> {
+function updateAppSecretBuilder(yargs: Argv): Argv<UpdateAppSecretArgs> {
   yargs.positional('name', {
     describe:
-      commands.app.subcommands.secret.subcommands.add.positionals.name.describe,
+      commands.app.subcommands.secret.subcommands.update.positionals.name
+        .describe,
     type: 'string',
   });
 
   yargs.option('app-id', {
     describe:
-      commands.app.subcommands.secret.subcommands.add.options.appId.describe,
+      commands.app.subcommands.secret.subcommands.update.options.appId.describe,
     type: 'number',
   });
 
-  return yargs as Argv<AddAppSecretArgs>;
+  return yargs as Argv<UpdateAppSecretArgs>;
 }
 
-const builder = makeYargsBuilder<AddAppSecretArgs>(
-  addAppSecretBuilder,
+const builder = makeYargsBuilder<UpdateAppSecretArgs>(
+  updateAppSecretBuilder,
   command,
   describe,
   {
@@ -104,11 +105,12 @@ const builder = makeYargsBuilder<AddAppSecretArgs>(
   }
 );
 
-const addAppSecretCommand: YargsCommandModule<unknown, AddAppSecretArgs> = {
-  command,
-  describe,
-  handler,
-  builder,
-};
+const updateAppSecretCommand: YargsCommandModule<unknown, UpdateAppSecretArgs> =
+  {
+    command,
+    describe,
+    handler,
+    builder,
+  };
 
-export default addAppSecretCommand;
+export default updateAppSecretCommand;

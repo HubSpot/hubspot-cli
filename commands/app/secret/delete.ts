@@ -17,16 +17,15 @@ import {
 import { makeYargsBuilder } from '../../../lib/yargsUtils';
 import { promptUser } from '../../../lib/prompts/promptUtils';
 
-export const command = 'delete [name]';
-export const describe =
-  commands.app.subcommands.secret.subcommands.delete.describe;
+const command = 'delete [name]';
+const describe = commands.app.subcommands.secret.subcommands.delete.describe;
 
 type DeleteAppSecretArgs = CommonArgs &
   ConfigArgs &
   AccountArgs &
   EnvironmentArgs & { name?: string; appId: number };
 
-export async function handler(
+async function handler(
   args: ArgumentsCamelCase<DeleteAppSecretArgs>
 ): Promise<void> {
   const { appId, name, derivedAccountId } = args;
@@ -73,7 +72,6 @@ function deleteAppSecretBuilder(yargs: Argv): Argv<DeleteAppSecretArgs> {
         .describe,
     type: 'string',
   });
-
   yargs.option('app-id', {
     describe:
       commands.app.subcommands.secret.subcommands.delete.options.appId.describe,
