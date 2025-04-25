@@ -436,19 +436,21 @@ async function finalizeMigration(
     });
 
     if (isMigrationStatus(error) && error.status === MIGRATION_STATUS.FAILURE) {
-      const errorMessage = error.componentErrors
-        ? `${error.projectErrorDetail}: \n\t- ${error.componentErrors
-            .map(componentError => {
-              const {
-                componentType,
-                errorMessage,
-                developerSymbol: uid,
-              } = componentError;
+      const { componentErrors, projectErrorDetail } = error;
+      if (!componentErrors || !componentErrors.length) {
+        throw new Error(projectErrorDetail);
+      }
+      const errorMessage = `${projectErrorDetail}: \n\t- ${componentErrors
+        .map(componentError => {
+          const {
+            componentType,
+            errorMessage,
+            developerSymbol: uid,
+          } = componentError;
 
-              return `${componentType}${uid ? ` (${uid})` : ''}: ${errorMessage}`;
-            })
-            .join('\n\t- ')}`
-        : error.projectErrorDetail;
+          return `${componentType}${uid ? ` (${uid})` : ''}: ${errorMessage}`;
+        })
+        .join('\n\t- ')}`;
       throw new Error(errorMessage);
     }
 
