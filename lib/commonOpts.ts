@@ -92,35 +92,62 @@ export function addTestingOptions(yargs: Argv): Argv {
 }
 
 export function addUseEnvironmentOptions(yargs: Argv): Argv {
-  return yargs
-    .option('use-env', {
-      describe: i18n(`${i18nKey}.options.useEnv.describe`),
-      type: 'boolean',
-    })
-    .conflicts('use-env', 'account');
+  yargs.option('use-env', {
+    describe: i18n(`${i18nKey}.options.useEnv.describe`),
+    type: 'boolean',
+  });
+  yargs.conflicts('use-env', 'account');
+  return yargs;
 }
 
 export async function addCustomHelpOutput(
   yargs: Argv,
-  command: string,
-  describe: string
+  command: string | string[],
+  describe?: string
 ): Promise<void> {
   try {
     const parsedArgv = yargsParser(process.argv.slice(2));
 
     if (parsedArgv && parsedArgv.help) {
-      // Construct the full command, including positional arguments
       const commandBase = `hs ${parsedArgv._.slice(0, -1).join(' ')}`;
-      const fullCommand = `${commandBase.trim()} ${command}`;
+
+      // Make sure we are targeting the correct command by confirming that
+      // "command" matches the last part of the user's input command
+      const checkIsTargetCommand = (command: string) => {
+        const targetBaseCommand = command.split(' ')[0];
+        return targetBaseCommand === parsedArgv._[parsedArgv._.length - 1];
+      };
+
+      const isTargetedCommand = Array.isArray(command)
+        ? command.some(checkIsTargetCommand)
+        : checkIsTargetCommand(command);
+
+      if (!isTargetedCommand) {
+        return;
+      }
+
+      // Construct the full command, including positional arguments
+      const commandString = Array.isArray(command) ? command[0] : command;
+      const fullCommand = `${commandBase.trim()} ${commandString}`;
 
       // Format the original help output to be more readable
       let commandHelp = await yargs.getHelp();
-      ['Options:', 'Examples:', 'Positionals:'].forEach(header => {
+      ['Options:', 'Commands:', 'Examples:', 'Positionals:'].forEach(header => {
         commandHelp = commandHelp.replace(header, chalk.bold(header));
       });
 
+      // Remove "hs <command>" from the help output (this shows up for command buckets)
+      commandHelp = commandHelp.replace('hs <command>\n', '');
+
+      // Remove the first line of the help output if it's empty
+      if (commandHelp.startsWith('\n')) {
+        commandHelp = commandHelp.slice(1);
+      }
+
       logger.log(
-        `${uiCommandReference(fullCommand, false)}\n\n${describe}\n\n${commandHelp}`
+        `${uiCommandReference(fullCommand, false)}\n\n${
+          describe ? `${describe}\n\n` : ''
+        }${commandHelp}`
       );
       process.exit(EXIT_CODES.SUCCESS);
     }

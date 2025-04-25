@@ -1,4 +1,4 @@
-import { Options } from 'yargs';
+import { Options, CommandModule, Argv } from 'yargs';
 
 export type CommonArgs = {
   derivedAccountId: number;
@@ -35,3 +35,9 @@ export type ProjectDevArgs = CommonArgs & ConfigArgs & EnvironmentArgs;
 export type TestingArgs = {
   qa?: boolean;
 };
+
+export interface YargsCommandModule<T, U> extends CommandModule<T, U> {
+  builder: (yargs: Argv) => Promise<Argv<U>>;
+}
+
+export type YargsCommandModuleBucket = YargsCommandModule<unknown, object>;

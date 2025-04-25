@@ -15,12 +15,6 @@ import {
 import { getProjectDetailUrl } from '../../lib/projects/urls';
 import moment from 'moment';
 import { promptUser } from '../../lib/prompts/promptUtils';
-
-import {
-  addAccountOptions,
-  addConfigOptions,
-  addUseEnvironmentOptions,
-} from '../../lib/commonOpts';
 import { trackCommandUsage } from '../../lib/usageTracking';
 import { i18n } from '../../lib/lang';
 import { logError, ApiErrorContext } from '../../lib/errorHandlers/index';
@@ -29,11 +23,13 @@ import {
   ConfigArgs,
   AccountArgs,
   EnvironmentArgs,
+  YargsCommandModule,
 } from '../../types/Yargs';
 import { EXIT_CODES } from '../../lib/enums/exitCodes';
+import { makeYargsBuilder } from '../../lib/yargsUtils';
 
-export const command = 'list-builds';
-export const describe = uiBetaTag(
+const command = 'list-builds';
+const describe = uiBetaTag(
   i18n(`commands.project.subcommands.listBuilds.describe`),
   false
 );
@@ -122,7 +118,9 @@ async function fetchAndDisplayBuilds(
   }
 }
 
-export async function handler(args: ArgumentsCamelCase<ProjectListBuildsArgs>) {
+async function handler(
+  args: ArgumentsCamelCase<ProjectListBuildsArgs>
+): Promise<void> {
   const { project: projectFlagValue, limit, derivedAccountId } = args;
 
   trackCommandUsage('project-list-builds', undefined, derivedAccountId);
@@ -158,11 +156,7 @@ export async function handler(args: ArgumentsCamelCase<ProjectListBuildsArgs>) {
   process.exit(EXIT_CODES.SUCCESS);
 }
 
-export function builder(yargs: Argv): Argv<ProjectListBuildsArgs> {
-  addConfigOptions(yargs);
-  addAccountOptions(yargs);
-  addUseEnvironmentOptions(yargs);
-
+function projectListBuildsBuilder(yargs: Argv): Argv<ProjectListBuildsArgs> {
   yargs.options({
     project: {
       describe: i18n(
@@ -188,9 +182,26 @@ export function builder(yargs: Argv): Argv<ProjectListBuildsArgs> {
   return yargs as Argv<ProjectListBuildsArgs>;
 }
 
-module.exports = {
+const builder = makeYargsBuilder<ProjectListBuildsArgs>(
+  projectListBuildsBuilder,
   command,
   describe,
-  builder,
+  {
+    useGlobalOptions: true,
+    useConfigOptions: true,
+    useAccountOptions: true,
+    useEnvironmentOptions: true,
+  }
+);
+
+const projectListBuildsCommand: YargsCommandModule<
+  unknown,
+  ProjectListBuildsArgs
+> = {
+  command,
+  describe,
   handler,
+  builder,
 };
+
+export default projectListBuildsCommand;
