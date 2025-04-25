@@ -3066,6 +3066,8 @@ export const lib = {
           'The selected destination contains invalid characters. Please provide a new path and try again.',
         invalidTemplate: template =>
           `[--template] Could not find template "${template}". Please choose an available template:`,
+        projectTemplateRequired:
+          'Project template is required when projectTemplates is provided',
       },
     },
     selectPublicAppPrompt: {

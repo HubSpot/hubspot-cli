@@ -44,10 +44,11 @@ function projectBuilder(yargs: Argv): Argv {
 
 const builder = makeYargsBuilder(projectBuilder, command, describe);
 
-const projectCommand: YargsCommandModuleBucket<unknown, Argv> = {
+const projectCommand: YargsCommandModuleBucket = {
   command,
   describe,
   builder,
+  handler: () => {},
 };
 
 export default projectCommand;
