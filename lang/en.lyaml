@@ -1425,6 +1425,7 @@ en:
           invalidDest: "There is an existing project at this destination. Please provide a new path for this project."
           invalidCharacters: "The selected destination contains invalid characters. Please provide a new path and try again."
           invalidTemplate: "[--template] Could not find template \"{{ template }}\". Please choose an available template:"
+          projectTemplateRequired: "Project template is required when projectTemplates is provided"
       selectPublicAppPrompt:
         selectAppIdMigrate: "[--appId] Choose an app under {{ accountName }} to migrate:"
         selectAppIdClone: "[--appId] Choose an app under {{ accountName }} to clone:"

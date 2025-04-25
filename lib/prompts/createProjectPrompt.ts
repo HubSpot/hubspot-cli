@@ -10,6 +10,7 @@ import { promptUser } from './promptUtils';
 import { i18n } from '../lang';
 import { ProjectTemplate } from '../../types/Projects';
 import { PROJECT_CONFIG_FILE } from '../constants';
+
 const i18nKey = 'lib.prompts.createProjectPrompt';
 
 function validateProjectDirectory(input?: string): string | boolean {
@@ -25,6 +26,15 @@ function validateProjectDirectory(input?: string): string | boolean {
     return i18n(`${i18nKey}.errors.invalidCharacters`);
   }
   return true;
+}
+
+function findTemplateByNameOrLabel(
+  projectTemplates: ProjectTemplate[],
+  templateNameOrLabel: string
+): ProjectTemplate | undefined {
+  return projectTemplates.find(
+    t => t.name === templateNameOrLabel || t.label === templateNameOrLabel
+  );
 }
 
 type CreateProjectPromptResponse = {
@@ -45,30 +55,23 @@ type CreateProjectPromptResponseWithoutTemplate = {
   projectTemplate?: undefined;
 };
 
-function findTemplateByNameOrLabel(
-  projectTemplates: ProjectTemplate[],
-  templateNameOrLabel: string
-): ProjectTemplate | undefined {
-  return projectTemplates.find(
-    t => t.name === templateNameOrLabel || t.label === templateNameOrLabel
-  );
-}
+type PromptOptionsArg = {
+  name?: string;
+  dest?: string;
+  template?: string;
+};
 
 // Includes `projectTemplate` in the return value if `projectTemplates` is provided
 export async function createProjectPrompt(
-  promptOptions: { name?: string; dest?: string; template?: string },
+  promptOptions: PromptOptionsArg,
   projectTemplates: ProjectTemplate[]
 ): Promise<CreateProjectPromptResponseWithTemplate>;
 export async function createProjectPrompt(
-  promptOptions: { name?: string; dest?: string; template?: string },
+  promptOptions: PromptOptionsArg,
   projectTemplates?: undefined
 ): Promise<CreateProjectPromptResponseWithoutTemplate>;
 export async function createProjectPrompt(
-  promptOptions: {
-    name?: string;
-    dest?: string;
-    template?: string;
-  },
+  promptOptions: PromptOptionsArg,
   projectTemplates?: ProjectTemplate[]
 ) {
   const createProjectFromTemplate =
@@ -145,9 +148,7 @@ export async function createProjectPrompt(
 
   if (projectTemplates && projectTemplates.length > 0) {
     if (!result.projectTemplate) {
-      throw new Error(
-        'Project template is required when projectTemplates is provided'
-      );
+      throw new Error(i18n(`${i18nKey}.errors.projectTemplateRequired`));
     }
     return result;
   }
