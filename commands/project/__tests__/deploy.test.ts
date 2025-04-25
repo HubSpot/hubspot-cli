@@ -10,7 +10,7 @@ import {
   addConfigOptions,
   addUseEnvironmentOptions,
 } from '../../../lib/commonOpts';
-import * as projectUtils from '../../../lib/projects';
+import * as projectUtils from '../../../lib/projects/config';
 import * as projectUrlUtils from '../../../lib/projects/urls';
 import { pollDeployStatus } from '../../../lib/projects/buildAndDeploy';
 import * as projectNamePrompt from '../../../lib/prompts/projectNamePrompt';
@@ -31,7 +31,7 @@ jest.mock('@hubspot/local-dev-lib/api/projects');
 jest.mock('@hubspot/local-dev-lib/config');
 jest.mock('../../../lib/commonOpts');
 jest.mock('../../../lib/validation');
-jest.mock('../../../lib/projects');
+jest.mock('../../../lib/projects/config');
 jest.mock('../../../lib/projects/urls');
 jest.mock('../../../lib/projects/buildAndDeploy');
 jest.mock('../../../lib/prompts/projectNamePrompt');

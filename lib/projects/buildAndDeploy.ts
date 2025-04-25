@@ -23,14 +23,8 @@ import {
   PROJECT_ERROR_TYPES,
 } from '../constants';
 import SpinniesManager from '../ui/SpinniesManager';
-import { i18n } from '../lang';
 import { logError, ApiErrorContext } from '../errorHandlers';
-import {
-  uiLine,
-  uiLink,
-  uiAccountDescription,
-  uiCommandReference,
-} from '../ui';
+import { uiLine, uiLink, uiAccountDescription } from '../ui';
 import {
   getProjectBuildDetailUrl,
   getProjectDeployDetailUrl,
@@ -44,8 +38,7 @@ import {
   ProjectPollResult,
 } from '../../types/Projects';
 import { EXIT_CODES } from '../enums/exitCodes';
-
-const i18nKey = 'lib.projectBuildAndDeploy';
+import { lib } from '../../lang/en';
 
 const SPINNER_STATUS = {
   SPINNING: 'spinning',
@@ -124,13 +117,9 @@ function handleTaskStatusError(
   statusText: ProjectPollStatusFunctionText
 ): never {
   logger.error(
-    i18n(`${i18nKey}.makePollTaskStatusFunc.errorFetchingTaskStatus`, {
-      taskType:
-        statusText.TYPE_KEY === PROJECT_BUILD_TEXT.TYPE_KEY
-          ? 'build'
-          : 'deploy',
-      openCommand: uiCommandReference('hs project open'),
-    })
+    lib.projectBuildAndDeploy.makePollTaskStatusFunc.errorFetchingTaskStatus(
+      statusText.TYPE_KEY === PROJECT_BUILD_TEXT.TYPE_KEY ? 'build' : 'deploy'
+    )
   );
   process.exit(EXIT_CODES.ERROR);
 }
@@ -203,12 +192,12 @@ function makePollTaskStatusFunc<T extends ProjectTask>({
     const numComponents = structuredTasks.length;
     const componentCountText = silenceLogs
       ? ''
-      : i18n(
-          numComponents === 1
-            ? `${i18nKey}.makePollTaskStatusFunc.componentCountSingular`
-            : `${i18nKey}.makePollTaskStatusFunc.componentCount`,
-          { numComponents }
-        ) + '\n';
+      : numComponents === 1
+        ? lib.projectBuildAndDeploy.makePollTaskStatusFunc
+            .componentCountSingular
+        : lib.projectBuildAndDeploy.makePollTaskStatusFunc.componentCount(
+            numComponents
+          );
 
     SpinniesManager.update(overallTaskSpinniesKey, {
       text: `${statusStrings.INITIALIZE(
@@ -292,8 +281,10 @@ function makePollTaskStatusFunc<T extends ProjectTask>({
             ) {
               const taskStatusText =
                 subtask.status === statusText.STATES.SUCCESS
-                  ? i18n(`${i18nKey}.makePollTaskStatusFunc.successStatusText`)
-                  : i18n(`${i18nKey}.makePollTaskStatusFunc.failedStatusText`);
+                  ? lib.projectBuildAndDeploy.makePollTaskStatusFunc
+                      .successStatusText
+                  : lib.projectBuildAndDeploy.makePollTaskStatusFunc
+                      .failedStatusText;
               const hasNewline =
                 spinner?.text?.includes('\n') || Boolean(topLevelTask);
               const updatedText = `${spinner?.text?.replace(
@@ -397,7 +388,7 @@ function pollBuildAutodeployStatus(
         logger.debug(e);
         return reject(
           new Error(
-            i18n(`${i18nKey}.pollBuildAutodeployStatusError`, { buildId })
+            lib.projectBuildAndDeploy.pollBuildAutodeployStatusError(buildId)
           )
         );
       }
@@ -405,7 +396,7 @@ function pollBuildAutodeployStatus(
       if (!build || !build.status) {
         return reject(
           new Error(
-            i18n(`${i18nKey}.pollBuildAutodeployStatusError`, { buildId })
+            lib.projectBuildAndDeploy.pollBuildAutodeployStatusError(buildId)
           )
         );
       }
@@ -534,12 +525,9 @@ export async function pollProjectBuildAndDeploy(
   } else if (buildStatus.isAutoDeployEnabled) {
     if (!silenceLogs) {
       logger.log(
-        i18n(
-          `${i18nKey}.pollProjectBuildAndDeploy.buildSucceededAutomaticallyDeploying`,
-          {
-            accountIdentifier: uiAccountDescription(accountId),
-            buildId,
-          }
+        lib.projectBuildAndDeploy.pollProjectBuildAndDeploy.buildSucceededAutomaticallyDeploying(
+          buildId,
+          uiAccountDescription(accountId)
         )
       );
 
@@ -574,15 +562,12 @@ export async function pollProjectBuildAndDeploy(
       }
     } else if (!silenceLogs) {
       logger.log(
-        i18n(
-          `${i18nKey}.pollProjectBuildAndDeploy.unableToFindAutodeployStatus`,
-          {
-            buildId,
-            viewDeploysLink: uiLink(
-              i18n(`${i18nKey}.pollProjectBuildAndDeploy.viewDeploys`),
-              getProjectActivityUrl(projectConfig.name, accountId)
-            ),
-          }
+        lib.projectBuildAndDeploy.pollProjectBuildAndDeploy.unableToFindAutodeployStatus(
+          buildId,
+          uiLink(
+            lib.projectBuildAndDeploy.pollProjectBuildAndDeploy.viewDeploys,
+            getProjectActivityUrl(projectConfig.name, accountId)
+          )
         )
       );
     }
@@ -592,9 +577,9 @@ export async function pollProjectBuildAndDeploy(
     if (tempFile) {
       tempFile.removeCallback();
       logger.debug(
-        i18n(`${i18nKey}.pollProjectBuildAndDeploy.cleanedUpTempFile`, {
-          path: tempFile.name,
-        })
+        lib.projectBuildAndDeploy.pollProjectBuildAndDeploy.cleanedUpTempFile(
+          tempFile.name
+        )
       );
     }
   } catch (e) {

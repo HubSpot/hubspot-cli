@@ -1,6 +1,6 @@
 // @ts-nocheck
 const { cloneGithubRepo } = require('@hubspot/local-dev-lib/github');
-const { getIsInProject } = require('../../lib/projects');
+const { getIsInProject } = require('../../lib/projects/config');
 
 const PROJECT_BOILERPLATE_BRANCH = 'cms-boilerplate-developer-projects';
 

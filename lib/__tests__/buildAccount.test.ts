@@ -177,7 +177,7 @@ describe('lib/buildAccount', () => {
         mockParentAccountConfig.env,
         10
       );
-      expect(result).toEqual(mockDeveloperTestAccount);
+      expect(result).toEqual(mockDeveloperTestAccount.id);
     });
 
     it('should throw error if account ID is not found', async () => {

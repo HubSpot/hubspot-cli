@@ -20,16 +20,15 @@ import {
 import { EXIT_CODES } from '../../lib/enums/exitCodes';
 import { ApiErrorContext, logError } from '../../lib/errorHandlers/index';
 import { handleExit, handleKeypress } from '../../lib/process';
-import { getProjectConfig } from '../../lib/projects';
+import { getProjectConfig } from '../../lib/projects/config';
 import { findProjectComponents } from '../../lib/projects/structure';
 import { ComponentTypes } from '../../types/Projects';
 import { hasFeature } from '../../lib/hasFeature';
 import { CommonArgs, ConfigArgs, AccountArgs } from '../../types/Yargs';
-
-const i18nKey = 'commands.theme.subcommands.preview';
+import { FEATURES } from '../../lib/constants';
 
 export const command = 'preview [--src] [--dest]';
-export const describe = i18n(`${i18nKey}.describe`);
+export const describe = i18n('commands.theme.subcommands.preview.describe');
 
 type CombinedArgs = CommonArgs & ConfigArgs & AccountArgs;
 type ThemePreviewArgs = CombinedArgs & {
@@ -45,7 +44,7 @@ type ThemePreviewArgs = CombinedArgs & {
 function validateSrcPath(src: string): boolean {
   const logInvalidPath = () => {
     logger.error(
-      i18n(`${i18nKey}.errors.invalidPath`, {
+      i18n('commands.theme.subcommands.preview.errors.invalidPath', {
         path: src,
       })
     );
@@ -65,7 +64,7 @@ function validateSrcPath(src: string): boolean {
 
 function handleUserInput(): void {
   const onTerminate = () => {
-    logger.log(i18n(`${i18nKey}.logs.processExited`));
+    logger.log(i18n('commands.theme.subcommands.preview.logs.processExited'));
     process.exit(EXIT_CODES.SUCCESS);
   };
 
@@ -76,6 +75,7 @@ function handleUserInput(): void {
     }
   });
 }
+
 async function determineSrcAndDest(args: ThemePreviewArgs): Promise<{
   absoluteSrc: string;
   dest: string;
@@ -101,7 +101,9 @@ async function determineSrcAndDest(args: ThemePreviewArgs): Promise<{
         c => c.type === ComponentTypes.HublTheme
       );
       if (themeComponents.length === 0) {
-        logger.error(i18n(`${i18nKey}.errors.noThemeComponents`));
+        logger.error(
+          i18n('commands.theme.subcommands.preview.errors.noThemeComponents')
+        );
         process.exit(EXIT_CODES.ERROR);
       }
       const answer = await previewProjectPrompt(themeComponents);
@@ -148,7 +150,9 @@ export async function handler(
       cliProgress.Presets.rect
     );
     initialUploadProgressBar.start(numFiles, 0, {
-      label: i18n(`${i18nKey}.initialUploadProgressBar.start`),
+      label: i18n(
+        'commands.theme.subcommands.preview.initialUploadProgressBar.start'
+      ),
     });
     let uploadsHaveStarted = false;
     const uploadOptions = {
@@ -160,7 +164,9 @@ export async function handler(
         if (!uploadsHaveStarted) {
           uploadsHaveStarted = true;
           initialUploadProgressBar.update(0, {
-            label: i18n(`${i18nKey}.initialUploadProgressBar.uploading`),
+            label: i18n(
+              'commands.theme.subcommands.preview.initialUploadProgressBar.uploading'
+            ),
           });
         }
       },
@@ -173,7 +179,9 @@ export async function handler(
       onFinalErrorCallback: () => initialUploadProgressBar.increment(),
       onFinishCallback: (results: UploadFolderResults[]) => {
         initialUploadProgressBar.update(numFiles, {
-          label: i18n(`${i18nKey}.initialUploadProgressBar.finish`),
+          label: i18n(
+            'commands.theme.subcommands.preview.initialUploadProgressBar.finish'
+          ),
         });
         initialUploadProgressBar.stop();
         results.forEach(result => {
@@ -215,7 +223,7 @@ export async function handler(
 
   const isUngatedForUnified = await hasFeature(
     derivedAccountId,
-    'cms:react:unifiedThemePreview'
+    FEATURES.UNIFIED_THEME_PREVIEW
   );
   if (isUngatedForUnified && createUnifiedDevServer) {
     if (port) {
@@ -254,27 +262,35 @@ export function builder(yargs: Argv): Argv<ThemePreviewArgs> {
 
   yargs
     .option('src', {
-      describe: i18n(`${i18nKey}.options.src.describe`),
+      describe: i18n('commands.theme.subcommands.preview.options.src.describe'),
       type: 'string',
       requiresArg: true,
     })
     .option('dest', {
-      describe: i18n(`${i18nKey}.options.dest.describe`),
+      describe: i18n(
+        'commands.theme.subcommands.preview.options.dest.describe'
+      ),
       type: 'string',
       requiresArg: true,
     })
     .option('notify', {
       alias: 'n',
-      describe: i18n(`${i18nKey}.options.notify.describe`),
+      describe: i18n(
+        'commands.theme.subcommands.preview.options.notify.describe'
+      ),
       type: 'string',
       requiresArg: true,
     })
     .option('no-ssl', {
-      describe: i18n(`${i18nKey}.options.noSsl.describe`),
+      describe: i18n(
+        'commands.theme.subcommands.preview.options.noSsl.describe'
+      ),
       type: 'boolean',
     })
     .option('port', {
-      describe: i18n(`${i18nKey}.options.port.describe`),
+      describe: i18n(
+        'commands.theme.subcommands.preview.options.port.describe'
+      ),
       type: 'number',
     })
     .option('resetSession', {

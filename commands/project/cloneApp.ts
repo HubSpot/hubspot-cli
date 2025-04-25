@@ -11,8 +11,11 @@ import { createProjectPrompt } from '../../lib/prompts/createProjectPrompt';
 import { poll } from '../../lib/polling';
 import { logError, ApiErrorContext } from '../../lib/errorHandlers';
 import { EXIT_CODES } from '../../lib/enums/exitCodes';
-import { isAppDeveloperAccount } from '../../lib/accountTypes';
-import { writeProjectConfig } from '../../lib/projects';
+import {
+  isAppDeveloperAccount,
+  isUnifiedAccount,
+} from '../../lib/accountTypes';
+import { writeProjectConfig } from '../../lib/projects/config';
 import { PROJECT_CONFIG_FILE } from '../../lib/constants';
 import {
   cloneApp,
@@ -35,10 +38,11 @@ import { logInvalidAccountError } from '../../lib/app/migrate';
 import { makeYargsBuilder } from '../../lib/yargsUtils';
 import { uiDeprecatedTag, uiLine, uiAccountDescription } from '../../lib/ui';
 
-const i18nKey = 'commands.project.subcommands.cloneApp';
-
 const command = 'clone-app';
-const describe = uiDeprecatedTag(i18n(`${i18nKey}.describe`), false);
+const describe = uiDeprecatedTag(
+  i18n(`commands.project.subcommands.cloneApp.describe`),
+  false
+);
 const deprecated = true;
 
 export type CloneAppArgs = ConfigArgs &
@@ -62,7 +66,9 @@ async function handler(args: ArgumentsCamelCase<CloneAppArgs>): Promise<void> {
     );
   }
 
-  if (!isAppDeveloperAccount(accountConfig)) {
+  const defaultAccountIsUnified = await isUnifiedAccount(accountConfig);
+
+  if (!isAppDeveloperAccount(accountConfig) && !defaultAccountIsUnified) {
     logInvalidAccountError();
     process.exit(EXIT_CODES.SUCCESS);
   }
@@ -99,7 +105,9 @@ async function handler(args: ArgumentsCamelCase<CloneAppArgs>): Promise<void> {
     SpinniesManager.init();
 
     SpinniesManager.add('cloneApp', {
-      text: i18n(`${i18nKey}.cloneStatus.inProgress`),
+      text: i18n(
+        `commands.project.subcommands.cloneApp.cloneStatus.inProgress`
+      ),
     });
 
     const {
@@ -139,19 +147,23 @@ async function handler(args: ArgumentsCamelCase<CloneAppArgs>): Promise<void> {
       const success = writeProjectConfig(configPath, configContent);
 
       SpinniesManager.succeed('cloneApp', {
-        text: i18n(`${i18nKey}.cloneStatus.done`),
+        text: i18n(`commands.project.subcommands.cloneApp.cloneStatus.done`),
         succeedColor: 'white',
       });
       if (!success) {
         logger.error(
-          i18n(`${i18nKey}.errors.couldNotWriteConfigPath`),
+          i18n(
+            `commands.project.subcommands.cloneApp.errors.couldNotWriteConfigPath`
+          ),
           configPath
         );
       }
       logger.log('');
       uiLine();
       logger.success(
-        i18n(`${i18nKey}.cloneStatus.success`, { dest: projectDest })
+        i18n(`commands.project.subcommands.cloneApp.cloneStatus.success`, {
+          dest: projectDest,
+        })
       );
       logger.log('');
       process.exit(EXIT_CODES.SUCCESS);
@@ -164,7 +176,7 @@ async function handler(args: ArgumentsCamelCase<CloneAppArgs>): Promise<void> {
     );
 
     SpinniesManager.fail('cloneApp', {
-      text: i18n(`${i18nKey}.cloneStatus.failure`),
+      text: i18n(`commands.project.subcommands.cloneApp.cloneStatus.failure`),
       failColor: 'white',
     });
 
@@ -194,17 +206,24 @@ async function handler(args: ArgumentsCamelCase<CloneAppArgs>): Promise<void> {
 function cloneAppBuilder(yargs: Argv): Argv<CloneAppArgs> {
   yargs.options({
     dest: {
-      describe: i18n(`${i18nKey}.options.dest.describe`),
+      describe: i18n(
+        `commands.project.subcommands.cloneApp.options.dest.describe`
+      ),
       type: 'string',
     },
     'app-id': {
-      describe: i18n(`${i18nKey}.options.appId.describe`),
+      describe: i18n(
+        `commands.project.subcommands.cloneApp.options.appId.describe`
+      ),
       type: 'number',
     },
   });
 
   yargs.example([
-    ['$0 project clone-app', i18n(`${i18nKey}.examples.default`)],
+    [
+      '$0 project clone-app',
+      i18n(`commands.project.subcommands.cloneApp.examples.default`),
+    ],
   ]);
 
   return yargs as Argv<CloneAppArgs>;

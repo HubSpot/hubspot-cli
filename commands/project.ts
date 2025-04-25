@@ -18,10 +18,8 @@ import installDeps from './project/installDeps';
 import { makeYargsBuilder } from '../lib/yargsUtils';
 import { YargsCommandModuleBucket } from '../types/Yargs';
 
-const i18nKey = 'commands.project';
-
 const command = ['project', 'projects'];
-const describe = uiBetaTag(i18n(`${i18nKey}.describe`), false);
+const describe = uiBetaTag(i18n(`commands.project.describe`), false);
 
 function projectBuilder(yargs: Argv): Argv {
   yargs

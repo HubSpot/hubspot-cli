@@ -16,11 +16,9 @@ import {
 import { isSpecifiedError } from '@hubspot/local-dev-lib/errors/index';
 
 import { logError, ApiErrorContext } from '../errorHandlers';
-import { i18n } from '../lang';
 import { PROJECT_ERROR_TYPES } from '../constants';
 import { ProjectConfig } from '../../types/Projects';
-
-const i18nKey = 'commands.project.subcommands.watch';
+import { commands } from '../../lang/en';
 
 type ProjectWatchHandlerFunction = (
   accountId: number,
@@ -89,20 +87,20 @@ function debounceQueueBuild(
   }
 
   timer = setTimeout(async () => {
-    logger.debug(i18n(`${i18nKey}.debug.pause`, { projectName }));
+    logger.debug(commands.project.watch.debug.pause);
     queue.pause();
     await queue.onIdle();
 
     try {
       await queueBuild(accountId, projectName, platformVersion);
-      logger.debug(i18n(`${i18nKey}.debug.buildStarted`, { projectName }));
+      logger.debug(commands.project.watch.debug.buildStarted);
     } catch (err) {
       if (
         isSpecifiedError(err, {
           subCategory: PROJECT_ERROR_TYPES.MISSING_PROJECT_PROVISION,
         })
       ) {
-        logger.log(i18n(`${i18nKey}.logs.watchCancelledFromUi`));
+        logger.log(commands.project.watch.logs.watchCancelledFromUi);
         process.exit(0);
       } else {
         logError(err, new ApiErrorContext({ accountId }));
@@ -120,7 +118,7 @@ function debounceQueueBuild(
     }
 
     queue.start();
-    logger.log(i18n(`${i18nKey}.logs.resuming`));
+    logger.log(commands.project.watch.logs.resuming);
     logger.log(`\n> Press ${chalk.bold('q')} to quit watching\n`);
   }, 2000);
 }
@@ -137,18 +135,18 @@ async function queueFileOrFolder(
     action === 'upload' &&
     !isAllowedExtension(filePath, Array.from(JSR_ALLOWED_EXTENSIONS))
   ) {
-    logger.debug(i18n(`${i18nKey}.debug.extensionNotAllowed`, { filePath }));
+    logger.debug(commands.project.watch.debug.extensionNotAllowed(filePath));
     return;
   }
   if (shouldIgnoreFile(filePath, true)) {
-    logger.debug(i18n(`${i18nKey}.debug.ignored`, { filePath }));
+    logger.debug(commands.project.watch.debug.ignored(filePath));
     return;
   }
   if (!queue.isPaused) {
     debounceQueueBuild(accountId, projectName, platformVersion);
   }
 
-  logger.debug(i18n(`${i18nKey}.debug.uploading`, { filePath, remotePath }));
+  logger.debug(commands.project.watch.debug.uploading(filePath, remotePath));
 
   return queue.add(async () => {
     try {
@@ -158,11 +156,13 @@ async function queueFileOrFolder(
         await deleteFileFromBuild(accountId, projectName, remotePath);
       }
       logger.log(
-        i18n(`${i18nKey}.logs.${action}Succeeded`, { filePath, remotePath })
+        // @ts-expect-error
+        commands.project.watch.logs[`${action}Succeeded`](remotePath, filePath)
       );
     } catch (err) {
       logger.debug(
-        i18n(`${i18nKey}.errors.${action}Failed`, { filePath, remotePath })
+        // @ts-expect-error
+        commands.project.watch.errors[`${action}Failed`](remotePath, filePath)
       );
     }
   });
@@ -174,7 +174,7 @@ async function createNewBuild(
   platformVersion: string
 ) {
   try {
-    logger.debug(i18n(`${i18nKey}.debug.attemptNewBuild`));
+    logger.debug(commands.project.watch.debug.attemptNewBuild);
     const {
       data: { buildId },
     } = await provisionBuild(accountId, projectName, platformVersion);
@@ -185,7 +185,7 @@ async function createNewBuild(
       isSpecifiedError(err, { subCategory: PROJECT_ERROR_TYPES.PROJECT_LOCKED })
     ) {
       await cancelStagedBuild(accountId, projectName);
-      logger.log(i18n(`${i18nKey}.logs.previousStagingBuildCancelled`));
+      logger.log(commands.project.watch.logs.previousStagingBuildCancelled);
     }
     process.exit(1);
   }
@@ -202,7 +202,7 @@ async function handleWatchEvent(
   const remotePath = path.relative(projectSourceDir, filePath);
   if (queue.isPaused) {
     if (standbyQueue.find(file => file.filePath === filePath)) {
-      logger.debug(i18n(`${i18nKey}.debug.fileAlreadyQueued`, { filePath }));
+      logger.debug(commands.project.watch.debug.fileAlreadyQueued(filePath));
     } else {
       standbyQueue.push({
         filePath,
@@ -245,7 +245,7 @@ export async function createWatcher(
     ignored: file => shouldIgnoreFile(file),
   });
   watcher.on('ready', async () => {
-    logger.log(i18n(`${i18nKey}.logs.watching`, { projectDir }));
+    logger.log(commands.project.watch.logs.watching(projectDir));
     logger.log(`\n> Press ${chalk.bold('q')} to quit watching\n`);
   });
   watcher.on('add', async path => {

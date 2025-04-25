@@ -2,13 +2,13 @@ import { ArgumentsCamelCase, Argv } from 'yargs';
 import { logger } from '@hubspot/local-dev-lib/logger';
 import { i18n } from '../../lib/lang';
 import { uiCommandReference, uiDeprecatedTag } from '../../lib/ui';
-import {
-  handler as migrateHandler,
-  validMigrationTargets,
-} from '../app/migrate';
+import { handler as migrateHandler } from '../app/migrate';
 import { YargsCommandModule } from '../../types/Yargs';
 import { makeYargsBuilder } from '../../lib/yargsUtils';
 import { MigrateAppArgs } from '../../lib/app/migrate';
+import { PLATFORM_VERSIONS } from '@hubspot/local-dev-lib/constants/projects';
+
+const { v2023_2, v2025_2 } = PLATFORM_VERSIONS;
 
 const command = 'migrate-app';
 
@@ -17,7 +17,7 @@ const describe = uiDeprecatedTag(
   i18n(`commands.project.subcommands.migrateApp.describe`),
   false
 );
-export const deprecated = true;
+const deprecated = true;
 
 async function handler(
   args: ArgumentsCamelCase<MigrateAppArgs>
@@ -25,7 +25,9 @@ async function handler(
   logger.warn(
     i18n(`commands.project.subcommands.migrateApp.deprecationWarning`, {
       oldCommand: uiCommandReference('hs project migrate-app'),
-      newCommand: uiCommandReference('hs app migrate'),
+      newCommand: uiCommandReference(
+        `hs app migrate --platform-version=${args.platformVersion}`
+      ),
     })
   );
   await migrateHandler(args);
@@ -53,9 +55,9 @@ function projectMigrateAppBuilder(yargs: Argv): Argv<MigrateAppArgs> {
     },
     'platform-version': {
       type: 'string',
-      choices: validMigrationTargets,
+      choices: [v2023_2, v2025_2],
       hidden: true,
-      default: '2023.2',
+      default: v2023_2,
     },
   });
 

@@ -1,14 +1,16 @@
 import { Argv, ArgumentsCamelCase } from 'yargs';
 import {
   loadConfig,
-  getConfigPath,
   updateAccountConfig,
   writeConfig,
   createEmptyConfigFile,
   deleteEmptyConfigFile,
   getConfigDefaultAccount,
 } from '@hubspot/local-dev-lib/config';
-import { configFileExists } from '@hubspot/local-dev-lib/config/migrate';
+import {
+  configFileExists,
+  getConfigPath,
+} from '@hubspot/local-dev-lib/config/migrate';
 import { getAccountIdentifier } from '@hubspot/local-dev-lib/config/getAccountIdentifier';
 import { logger } from '@hubspot/local-dev-lib/logger';
 import {
@@ -33,7 +35,7 @@ import { setAsDefaultAccountPrompt } from '../../lib/prompts/setAsDefaultAccount
 import { logError } from '../../lib/errorHandlers/index';
 import { trackCommandMetadataUsage } from '../../lib/usageTracking';
 import { EXIT_CODES } from '../../lib/enums/exitCodes';
-import { uiFeatureHighlight } from '../../lib/ui';
+import { uiCommandReference, uiFeatureHighlight } from '../../lib/ui';
 import { CommonArgs, ConfigArgs } from '../../types/Yargs';
 
 const TRACKING_STATUS = {
@@ -89,66 +91,78 @@ async function updateConfig(
   }
 }
 
-export const describe = i18n('commands.account.subcommands.auth.describe');
-export const command = 'auth';
-
-type AccountAuthArgs = CommonArgs &
-  ConfigArgs & {
-    disableTracking?: boolean;
-  };
-
-export async function handler(
-  args: ArgumentsCamelCase<AccountAuthArgs>
-): Promise<void> {
-  const { providedAccountId, disableTracking } = args;
-  const authType = PERSONAL_ACCESS_KEY_AUTH_METHOD.value;
-
+async function handleConfigMigration(
+  providedAccountId: number | undefined
+): Promise<boolean> {
   const deprecatedConfigExists = configFileExists(false);
   const globalConfigExists = configFileExists(true);
-  if (deprecatedConfigExists) {
-    if (globalConfigExists) {
-      try {
-        await handleMerge(providedAccountId);
-      } catch (error) {
-        logError(error);
-        trackCommandMetadataUsage(
-          'account-auth',
-          {
-            command: 'hs account auth',
-            type: 'Merge configs',
-            successful: false,
-          },
-          providedAccountId
+
+  if (!deprecatedConfigExists) {
+    return true;
+  }
+
+  if (globalConfigExists) {
+    try {
+      const mergeConfirmed = await handleMerge(providedAccountId);
+      if (!mergeConfirmed) {
+        logger.log(
+          i18n('commands.account.subcommands.auth.errors.mergeNotConfirmed', {
+            authCommand: uiCommandReference('hs account auth'),
+            migrateCommand: uiCommandReference('hs config migrate'),
+          })
         );
-        process.exit(EXIT_CODES.ERROR);
+        process.exit(EXIT_CODES.SUCCESS);
       }
-    } else {
-      try {
-        await handleMigration(providedAccountId);
-      } catch (error) {
-        logError(error);
-        trackCommandMetadataUsage(
-          'account-auth',
-          {
-            command: 'hs account auth',
-            type: 'Migrate a single config',
-            successful: false,
-          },
-          providedAccountId
-        );
-        process.exit(EXIT_CODES.ERROR);
-      }
+      return mergeConfirmed;
+    } catch (error) {
+      logError(error);
+      trackCommandMetadataUsage(
+        'account-auth',
+        {
+          command: 'hs account auth',
+          type: 'Merge configs',
+          successful: false,
+        },
+        providedAccountId
+      );
+      process.exit(EXIT_CODES.ERROR);
     }
   }
 
-  if (!disableTracking) {
-    trackCommandUsage('account-auth', {}, providedAccountId);
-    await trackAuthAction('account-auth', authType, TRACKING_STATUS.STARTED);
+  try {
+    const migrationConfirmed = await handleMigration(providedAccountId);
+    if (!migrationConfirmed) {
+      logger.log(
+        i18n('commands.account.subcommands.auth.errors.migrationNotConfirmed', {
+          authCommand: uiCommandReference('hs auth'),
+          deprecatedConfigPath: getConfigPath('', false)!,
+        })
+      );
+      process.exit(EXIT_CODES.SUCCESS);
+    }
+    return migrationConfirmed;
+  } catch (error) {
+    logError(error);
+    trackCommandMetadataUsage(
+      'account-auth',
+      {
+        command: 'hs account auth',
+        type: 'Migrate a single config',
+        successful: false,
+      },
+      providedAccountId
+    );
+    process.exit(EXIT_CODES.ERROR);
   }
+}
 
-  const env = args.qa ? ENVIRONMENTS.QA : ENVIRONMENTS.PROD;
-  const configAlreadyExists = configFileExists(true);
-
+async function handleConfigUpdate(
+  env: Environment,
+  configAlreadyExists: boolean,
+  disableTracking: boolean | undefined,
+  authType: string,
+  providedAccountId: number | undefined
+): Promise<void> {
   if (!configAlreadyExists) {
     createEmptyConfigFile({}, true);
   }
@@ -174,7 +188,6 @@ export async function handler(
   const { name } = updatedConfig;
   const accountId = getAccountIdentifier(updatedConfig);
 
-  // If the config file was just created, we don't need to prompt the user to set as default
   if (!configAlreadyExists) {
     logger.log('');
     logger.success(
@@ -184,7 +197,7 @@ export async function handler(
     );
     logger.success(
       i18n('commands.account.subcommands.auth.success.configFileUpdated', {
-        account: name || accountId || '',
+        account: name || accountId?.toString() || '',
       })
     );
   } else {
@@ -205,6 +218,7 @@ export async function handler(
       );
     }
   }
+
   uiFeatureHighlight([
     'helpCommand',
     'accountAuthCommand',
@@ -220,6 +234,39 @@ export async function handler(
     );
   }
   process.exit(EXIT_CODES.SUCCESS);
+}
+
+export const describe = i18n('commands.account.subcommands.auth.describe');
+export const command = 'auth';
+
+type AccountAuthArgs = CommonArgs &
+  ConfigArgs & {
+    disableTracking?: boolean;
+  };
+
+export async function handler(
+  args: ArgumentsCamelCase<AccountAuthArgs>
+): Promise<void> {
+  const { providedAccountId, disableTracking } = args;
+  const authType = PERSONAL_ACCESS_KEY_AUTH_METHOD.value;
+
+  await handleConfigMigration(providedAccountId);
+
+  if (!disableTracking) {
+    trackCommandUsage('account-auth', {}, providedAccountId);
+    await trackAuthAction('account-auth', authType, TRACKING_STATUS.STARTED);
+  }
+
+  const env = args.qa ? ENVIRONMENTS.QA : ENVIRONMENTS.PROD;
+  const configAlreadyExists = configFileExists(true);
+
+  await handleConfigUpdate(
+    env,
+    configAlreadyExists,
+    disableTracking,
+    authType,
+    providedAccountId
+  );
 }
 
 export function builder(yargs: Argv): Argv<AccountAuthArgs> {

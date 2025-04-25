@@ -1,5 +1,3 @@
-import { i18n } from '../../lib/lang';
-
 import { ArgumentsCamelCase, Argv } from 'yargs';
 import { logger } from '@hubspot/local-dev-lib/logger';
 import {
@@ -10,11 +8,13 @@ import {
   YargsCommandModule,
 } from '../../types/Yargs';
 import { migrateApp2025_2 } from '../../lib/app/migrate';
-import { getProjectConfig } from '../../lib/projects';
+import { getProjectConfig } from '../../lib/projects/config';
 import { PLATFORM_VERSIONS } from '@hubspot/local-dev-lib/constants/projects';
 import { logError } from '../../lib/errorHandlers';
 import { EXIT_CODES } from '../../lib/enums/exitCodes';
 import { makeYargsBuilder } from '../../lib/yargsUtils';
+import { uiBetaTag, uiCommandReference } from '../../lib/ui';
+import { commands } from '../../lang/en';
 
 export type ProjectMigrateArgs = CommonArgs &
   AccountArgs &
@@ -23,21 +23,30 @@ export type ProjectMigrateArgs = CommonArgs &
     platformVersion: string;
   };
 
+const { v2025_2 } = PLATFORM_VERSIONS;
+
 const command = 'migrate';
-const describe = undefined; // i18n('commands.project.subcommands.migrate.describe')
+const describe = undefined; // commands.project.migrate.describe
 
 async function handler(
   args: ArgumentsCamelCase<ProjectMigrateArgs>
 ): Promise<void> {
+  const { platformVersion, unstable } = args;
   const projectConfig = await getProjectConfig();
 
   if (!projectConfig.projectConfig) {
     logger.error(
-      i18n('commands.project.subcommands.migrate.errors.noProjectConfig')
+      commands.project.migrate.errors.noProjectConfig(
+        uiCommandReference('hs app migrate')
+      )
     );
     return process.exit(EXIT_CODES.ERROR);
   }
 
+  logger.log();
+  logger.log(
+    uiBetaTag(commands.project.migrate.preamble(platformVersion), false)
+  );
   const { derivedAccountId } = args;
   try {
     await migrateApp2025_2(
@@ -45,7 +54,9 @@ async function handler(
       {
         ...args,
         name: projectConfig?.projectConfig?.name,
-        platformVersion: args.platformVersion,
+        platformVersion: unstable
+          ? PLATFORM_VERSIONS.unstable
+          : platformVersion,
       },
       projectConfig
     );
@@ -57,12 +68,18 @@ async function handler(
 }
 
 function projectMigrateBuilder(yargs: Argv): Argv<ProjectMigrateArgs> {
-  yargs.option('platform-version', {
-    type: 'string',
-    choices: Object.values(PLATFORM_VERSIONS),
-    default: PLATFORM_VERSIONS.v2025_2,
-    hidden: true,
-  });
+  yargs
+    .option('platform-version', {
+      type: 'string',
+      choices: [v2025_2],
+      default: v2025_2,
+      hidden: true,
+    })
+    .option('unstable', {
+      type: 'boolean',
+      default: false,
+      hidden: true,
+    });
 
   return yargs as Argv<ProjectMigrateArgs>;
 }
@@ -70,7 +87,7 @@ function projectMigrateBuilder(yargs: Argv): Argv<ProjectMigrateArgs> {
 const builder = makeYargsBuilder<ProjectMigrateArgs>(
   projectMigrateBuilder,
   command,
-  i18n('commands.project.subcommands.migrate.describe'),
+  commands.project.migrate.describe,
   {
     useGlobalOptions: true,
     useConfigOptions: true,

@@ -1,4 +1,4 @@
-jest.mock('../projects');
+jest.mock('../projects/config');
 jest.mock('@hubspot/local-dev-lib/logger');
 jest.mock('@hubspot/local-dev-lib/fs');
 jest.mock('../ui/SpinniesManager');
@@ -16,7 +16,7 @@ import {
 } from '../dependencyManagement';
 import { walk } from '@hubspot/local-dev-lib/fs';
 import path from 'path';
-import { getProjectConfig } from '../projects';
+import { getProjectConfig } from '../projects/config';
 import SpinniesManager from '../ui/SpinniesManager';
 import { existsSync } from 'fs';
 

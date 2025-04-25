@@ -7,11 +7,11 @@ import { useV3Api } from '../../lib/projects/buildAndDeploy';
 import { uiBetaTag, uiCommandReference } from '../../lib/ui';
 import { trackCommandUsage } from '../../lib/usageTracking';
 import {
-  ensureProjectExists,
   getProjectConfig,
-  logFeedbackMessage,
   validateProjectConfig,
-} from '../../lib/projects';
+} from '../../lib/projects/config';
+import { ensureProjectExists } from '../../lib/projects/ensureProjectExists';
+import { logFeedbackMessage } from '../../lib/projects/ui';
 import { handleProjectUpload } from '../../lib/projects/upload';
 import {
   displayWarnLogs,
@@ -24,10 +24,12 @@ import { EXIT_CODES } from '../../lib/enums/exitCodes';
 import { CommonArgs, YargsCommandModule } from '../../types/Yargs';
 import { ProjectPollResult } from '../../types/Projects';
 import { makeYargsBuilder } from '../../lib/yargsUtils';
-const i18nKey = 'commands.project.subcommands.upload';
 
 const command = 'upload';
-const describe = uiBetaTag(i18n(`${i18nKey}.describe`), false);
+const describe = uiBetaTag(
+  i18n(`commands.project.subcommands.upload.describe`),
+  false
+);
 
 type ProjectUploadArgs = CommonArgs & {
   forceCreate: boolean;
@@ -73,7 +75,9 @@ async function handler(
         })
       ) {
         logger.log();
-        logger.error(i18n(`${i18nKey}.errors.projectLockedError`));
+        logger.error(
+          i18n(`commands.project.subcommands.upload.errors.projectLockedError`)
+        );
         logger.log();
       } else {
         logError(
@@ -89,13 +93,13 @@ async function handler(
     if (result && result.succeeded && !result.buildResult.isAutoDeployEnabled) {
       logger.log(
         chalk.bold(
-          i18n(`${i18nKey}.logs.buildSucceeded`, {
+          i18n(`commands.project.subcommands.upload.logs.buildSucceeded`, {
             buildId: result.buildId,
           })
         )
       );
       logger.log(
-        i18n(`${i18nKey}.logs.autoDeployDisabled`, {
+        i18n(`commands.project.subcommands.upload.logs.autoDeployDisabled`, {
           deployCommand: uiCommandReference(
             `hs project deploy --build=${result.buildId}`
           ),
@@ -126,13 +130,17 @@ async function handler(
 function projectUploadBuilder(yargs: Argv): Argv<ProjectUploadArgs> {
   yargs.options({
     'force-create': {
-      describe: i18n(`${i18nKey}.options.forceCreate.describe`),
+      describe: i18n(
+        `commands.project.subcommands.upload.options.forceCreate.describe`
+      ),
       type: 'boolean',
       default: false,
     },
     message: {
       alias: 'm',
-      describe: i18n(`${i18nKey}.options.message.describe`),
+      describe: i18n(
+        `commands.project.subcommands.upload.options.message.describe`
+      ),
       type: 'string',
       default: '',
     },
@@ -143,7 +151,12 @@ function projectUploadBuilder(yargs: Argv): Argv<ProjectUploadArgs> {
     },
   });
 
-  yargs.example([['$0 project upload', i18n(`${i18nKey}.examples.default`)]]);
+  yargs.example([
+    [
+      '$0 project upload',
+      i18n(`commands.project.subcommands.upload.examples.default`),
+    ],
+  ]);
 
   return yargs as Argv<ProjectUploadArgs>;
 }

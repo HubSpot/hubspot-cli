@@ -27,7 +27,8 @@ en:
               describe: "HubSpot account to authenticate"
           errors:
             failedToUpdateConfig: "Failed to update the configuration file. Please try again."
-            bothConfigFilesNotAllowed: "Unable to create config file, because there is an existing \"{{ deprecatedConfig }}\" file. To create a new config file, delete the existing one and try again."
+            migrationNotConfirmed: "Did not migrate. Use the {{ authCommand }} command to update the deprecated config at {{ deprecatedConfigPath }}."
+            mergeNotConfirmed: "Did not merge. When you are ready to merge the deprecated config file with the global config file, run the {{ authCommand }} or {{ migrateCommand }} command."
           success:
             configFileCreated: "Created config file \"{{ configPath }}\""
             configFileUpdated: "Connected account \"{{ account }}\" and set it as the default account"
@@ -630,7 +631,7 @@ en:
             name:
               describe: "Project name (cannot be changed)"
           header:
-            text: "Migrate an app to the projects framework"
+            text: "This command will migrate an app to the projects framework. It will walk you through the fields required to complete the migration and download the project source code into a directory of your choosing."
             link: "Learn more about migrating apps to the projects framework"
           deprecationWarning: "The {{ oldCommand }} command is deprecated and will be removed. Use {{ newCommand }} going forward."
           migrationStatus:
@@ -648,7 +649,7 @@ en:
           migrationInterrupted: "\nThe command is terminated, but app migration is still in progress. Please check your account to ensure that the project and associated app have been created successfully."
           createAppPrompt: "Proceed with migrating this app to a project component (this process can't be aborted)?"
           projectDetailsLink: "View project details in your developer account"
-          componentsToBeMigrated: "The following component types will be migrated: {{ components }}"
+          componentsToBeMigrated: "The following features will be migrated: {{ components }}"
           componentsThatWillNotBeMigrated: "[NOTE] These component types are not yet supported for migration but will be available later: {{ components }}"
           errors:
             noAppsForProject: "No apps associated with project {{ projectName }}"
@@ -693,12 +694,6 @@ en:
           examples:
             default: "Create a component within your project"
             withFlags: "Use --name and --type flags to bypass the prompt."
-        migrate:
-            describe: "Migrate an existing project to the new version of the projects framework."
-            errors:
-                noProjectConfig: "No project detected. Please run this command again from a project directory."
-            examples:
-                default: "Migrate an existing project to the new version of the projects framework."
         deploy:
           describe: "Deploy a project build."
           deployBuildIdPrompt: "[--build] Deploy which build?"
@@ -1352,7 +1347,7 @@ en:
         sandboxLimit: "Your account reached the limit of {{ limit }} development sandboxes"
         sandboxLimitWithSuggestion: "Your account reached the limit of {{ limit }} development sandboxes. Run {{ authCommand }} to add an existing one to the config."
         developerTestAccountLimit: "Your account reached the limit of {{ limit }} developer test accounts."
-        confirmDefaultAccount: "Continue testing on {{#bold}}{{ accountName }} ({{ accountType }}){{/bold}}? (Y/n)"
+        confirmDefaultAccount: "Proceed with local development on {{#bold}}{{ accountName }} [{{ accountType }}]{{/bold}}? (Y/n)"
         confirmUseExistingDeveloperTestAccount: "Continue with {{ accountName }}? This account isn't currently connected to the HubSpot CLI. By continuing, you'll be prompted to generate a personal access key and connect it."
         noAccountId: "No account ID found for the selected account. Please try again."
       projectLogsPrompt:
