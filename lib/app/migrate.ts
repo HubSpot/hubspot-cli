@@ -390,7 +390,9 @@ async function beginMigration(
     if (isMigrationStatus(error) && error.status === MIGRATION_STATUS.FAILURE) {
       throw new Error(buildErrorMessageFromMigrationStatus(error));
     }
-    throw error;
+    throw new Error(lib.migrate.errors.migrationFailed, {
+      cause: error,
+    });
   }
 
   if (pollResponse.status !== MIGRATION_STATUS.INPUT_REQUIRED) {
