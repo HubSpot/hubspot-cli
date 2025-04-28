@@ -178,7 +178,7 @@ export class Doctor {
       });
 
       const linkToPakUI = uiLink(
-        i18n(`${`lib.doctor.accountChecks`}.pak.viewScopes`),
+        i18n(`lib.doctor.accountChecks.pak.viewScopes`),
         `${getHubSpotWebsiteOrigin(
           this.diagnosticInfoBuilder?.env || 'PROD'
         )}/personal-access-key/${this.diagnosticInfo?.account.accountId}`
@@ -219,9 +219,9 @@ export class Doctor {
       if (portalNotActive) {
         this.diagnosis?.addCLIConfigSection({
           type: 'error',
-          message: i18n(`${`lib.doctor.accountChecks`}.inactive`),
+          message: i18n(`lib.doctor.accountChecks.inactive`),
           secondaryMessaging: i18n(
-            `${`lib.doctor.accountChecks`}.inactiveSecondary`,
+            `lib.doctor.accountChecks.inactiveSecondary`,
             {
               command: uiCommandReference(`hs accounts clean`),
             }
@@ -237,13 +237,13 @@ export class Doctor {
       ) {
         this.diagnosis?.addCLIConfigSection({
           type: 'success',
-          message: i18n(`${`lib.doctor.accountChecks`}.active`),
+          message: i18n(`lib.doctor.accountChecks.active`),
         });
         this.diagnosis?.addCLIConfigSection({
           type: 'error',
-          message: i18n(`${`lib.doctor.accountChecks`}.pak.invalid`),
+          message: i18n(`lib.doctor.accountChecks.pak.invalid`),
           secondaryMessaging: i18n(
-            `${`lib.doctor.accountChecks`}.pak.invalidSecondary`,
+            `lib.doctor.accountChecks.pak.invalidSecondary`,
             {
               command: uiCommandReference(`hs auth`),
             }
