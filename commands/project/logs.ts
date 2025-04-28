@@ -11,7 +11,7 @@ import { projectLogsPrompt } from '../../lib/prompts/projectsLogsPrompt';
 import { i18n } from '../../lib/lang';
 import { EXIT_CODES } from '../../lib/enums/exitCodes';
 import { ProjectLogsManager } from '../../lib/projects/ProjectLogsManager';
-import { CommonArgs } from '../../types/Yargs';
+import { CommonArgs, YargsCommandModule } from '../../types/Yargs';
 import { makeYargsBuilder } from '../../lib/yargsUtils';
 
 function getPrivateAppsUrl(accountId: number): string {
@@ -77,8 +77,8 @@ function logPreamble(): void {
   uiLine();
 }
 
-export const command = 'logs';
-export const describe = uiBetaTag(
+const command = 'logs';
+const describe = uiBetaTag(
   i18n(`commands.project.subcommands.logs.describe`),
   false
 );
@@ -91,7 +91,9 @@ export type ProjectLogsArgs = CommonArgs & {
   limit?: number;
 };
 
-export const handler = async (args: ArgumentsCamelCase<ProjectLogsArgs>) => {
+async function handler(
+  args: ArgumentsCamelCase<ProjectLogsArgs>
+): Promise<void> {
   const { derivedAccountId } = args;
 
   trackCommandUsage('project-logs', undefined, derivedAccountId);
@@ -116,7 +118,7 @@ export const handler = async (args: ArgumentsCamelCase<ProjectLogsArgs>) => {
     return process.exit(EXIT_CODES.ERROR);
   }
   process.exit(EXIT_CODES.SUCCESS);
-};
+}
 
 function projectLogsBuilder(yargs: Argv): Argv<ProjectLogsArgs> {
   yargs.options({
@@ -170,16 +172,18 @@ function projectLogsBuilder(yargs: Argv): Argv<ProjectLogsArgs> {
   return yargs as Argv<ProjectLogsArgs>;
 }
 
-export const builder = makeYargsBuilder<ProjectLogsArgs>(
+const builder = makeYargsBuilder<ProjectLogsArgs>(
   projectLogsBuilder,
   command,
   describe,
-  { useEnvironmentOptions: true }
+  { useGlobalOptions: true, useEnvironmentOptions: true }
 );
 
-module.exports = {
+const projectLogsCommand: YargsCommandModule<unknown, ProjectLogsArgs> = {
   command,
   describe,
-  builder,
   handler,
+  builder,
 };
+
+export default projectLogsCommand;

@@ -1,13 +1,8 @@
 import { logger } from '@hubspot/local-dev-lib/logger';
 import { getAccountConfig } from '@hubspot/local-dev-lib/config';
 import { PLATFORM_VERSIONS } from '@hubspot/local-dev-lib/constants/projects';
-import { ArgumentsCamelCase, Argv, CommandModule } from 'yargs';
-
-import {
-  addAccountOptions,
-  addConfigOptions,
-  addUseEnvironmentOptions,
-} from '../../lib/commonOpts';
+import { ArgumentsCamelCase, Argv } from 'yargs';
+import { YargsCommandModule } from '../../types/Yargs';
 import {
   trackCommandMetadataUsage,
   trackCommandUsage,
@@ -19,6 +14,7 @@ import { migrateApp2025_2, MigrateAppArgs } from '../../lib/app/migrate';
 import { uiBetaTag, uiCommandReference, uiLink } from '../../lib/ui';
 import { migrateApp2023_2 } from '../../lib/app/migrate_legacy';
 import { getIsInProject } from '../../lib/projects/config';
+import { makeYargsBuilder } from '../../lib/yargsUtils';
 
 const { v2023_2, v2025_2 } = PLATFORM_VERSIONS;
 
@@ -105,11 +101,7 @@ export function handlerGenerator(
 
 export const handler = handlerGenerator('app-migrate');
 
-export function builder(yargs: Argv): Argv<MigrateAppArgs> {
-  addConfigOptions(yargs);
-  addAccountOptions(yargs);
-  addUseEnvironmentOptions(yargs);
-
+function appMigrateBuilder(yargs: Argv): Argv<MigrateAppArgs> {
   yargs.options({
     name: {
       describe: i18n(
@@ -152,7 +144,19 @@ export function builder(yargs: Argv): Argv<MigrateAppArgs> {
   return yargs as Argv<MigrateAppArgs>;
 }
 
-const migrateCommand: CommandModule<unknown, MigrateAppArgs> = {
+const builder = makeYargsBuilder<MigrateAppArgs>(
+  appMigrateBuilder,
+  command,
+  uiBetaTag(i18n(`commands.project.subcommands.migrateApp.describe`), false),
+  {
+    useGlobalOptions: true,
+    useConfigOptions: true,
+    useAccountOptions: true,
+    useEnvironmentOptions: true,
+  }
+);
+
+const migrateCommand: YargsCommandModule<unknown, MigrateAppArgs> = {
   command,
   describe,
   handler,

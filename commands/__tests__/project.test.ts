@@ -1,5 +1,4 @@
-// @ts-nocheck
-import yargs from 'yargs';
+import yargs, { Argv } from 'yargs';
 import deploy from '../project/deploy';
 import create from '../project/create';
 import upload from '../project/upload';
@@ -8,12 +7,13 @@ import logs from '../project/logs';
 import watch from '../project/watch';
 import download from '../project/download';
 import open from '../project/open';
-import * as dev from '../project/dev';
+import dev from '../project/dev';
 import add from '../project/add';
 import migrateApp from '../project/migrateApp';
 import migrate from '../project/migrate';
 import cloneApp from '../project/cloneApp';
 import installDeps from '../project/installDeps';
+import projectCommand from '../project';
 
 jest.mock('yargs');
 jest.mock('../project/deploy');
@@ -32,11 +32,12 @@ jest.mock('../project/migrate', () => ({}));
 jest.mock('../project/installDeps');
 jest.mock('../../lib/commonOpts');
 
-yargs.command.mockReturnValue(yargs);
-yargs.demandCommand.mockReturnValue(yargs);
-
-// Import this last so mocks apply
-import projectCommand from '../project';
+const commandSpy = jest
+  .spyOn(yargs as Argv, 'command')
+  .mockReturnValue(yargs as Argv);
+const demandCommandSpy = jest
+  .spyOn(yargs as Argv, 'demandCommand')
+  .mockReturnValue(yargs as Argv);
 
 describe('commands/project', () => {
   describe('command', () => {
@@ -57,38 +58,38 @@ describe('commands/project', () => {
 
   describe('builder', () => {
     const subcommands = [
-      ['create', create],
-      ['add', add],
-      ['watch', watch],
-      ['dev', dev],
-      ['upload', upload],
-      ['deploy', deploy],
-      ['logs', logs],
-      ['listBuilds', listBuilds],
-      ['download', download],
-      ['open', open],
-      ['migrateApp', migrateApp],
-      ['cloneApp', cloneApp],
-      ['installDeps', installDeps],
-      ['migrate', migrate],
+      create,
+      add,
+      watch,
+      dev,
+      upload,
+      deploy,
+      logs,
+      listBuilds,
+      download,
+      open,
+      migrateApp,
+      migrate,
+      cloneApp,
+      installDeps,
     ];
 
     it('should demand the command takes one positional argument', () => {
-      projectCommand.builder(yargs);
+      projectCommand.builder(yargs as Argv);
 
-      expect(yargs.demandCommand).toHaveBeenCalledTimes(1);
-      expect(yargs.demandCommand).toHaveBeenCalledWith(1, '');
+      expect(demandCommandSpy).toHaveBeenCalledTimes(1);
+      expect(demandCommandSpy).toHaveBeenCalledWith(1, '');
     });
 
     it('should add the correct number of sub commands', () => {
-      projectCommand.builder(yargs);
-      expect(yargs.command).toHaveBeenCalledTimes(subcommands.length);
+      projectCommand.builder(yargs as Argv);
+      expect(commandSpy).toHaveBeenCalledTimes(subcommands.length);
     });
 
-    it.each(subcommands)('should attach the %s subcommand', (name, module) => {
-      projectCommand.builder(yargs);
+    it.each(subcommands)('should attach the %s subcommand', module => {
+      projectCommand.builder(yargs as Argv);
       expect(module).toBeDefined();
-      expect(yargs.command).toHaveBeenCalledWith(module);
+      expect(commandSpy).toHaveBeenCalledWith(module);
     });
   });
 });

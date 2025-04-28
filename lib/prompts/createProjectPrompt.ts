@@ -10,6 +10,7 @@ import { promptUser } from './promptUtils';
 import { i18n } from '../lang';
 import { ProjectTemplate } from '../../types/Projects';
 import { PROJECT_CONFIG_FILE } from '../constants';
+
 const i18nKey = 'lib.prompts.createProjectPrompt';
 
 function validateProjectDirectory(input?: string): string | boolean {
@@ -27,12 +28,6 @@ function validateProjectDirectory(input?: string): string | boolean {
   return true;
 }
 
-type CreateProjectPromptResponse = {
-  name: string;
-  dest: string;
-  projectTemplate?: ProjectTemplate;
-};
-
 function findTemplateByNameOrLabel(
   projectTemplates: ProjectTemplate[],
   templateNameOrLabel: string
@@ -42,14 +37,43 @@ function findTemplateByNameOrLabel(
   );
 }
 
+type CreateProjectPromptResponse = {
+  name: string;
+  dest: string;
+  projectTemplate?: ProjectTemplate;
+};
+
+type CreateProjectPromptResponseWithTemplate = {
+  name: string;
+  dest: string;
+  projectTemplate: ProjectTemplate;
+};
+
+type CreateProjectPromptResponseWithoutTemplate = {
+  name: string;
+  dest: string;
+  projectTemplate?: undefined;
+};
+
+type PromptOptionsArg = {
+  name?: string;
+  dest?: string;
+  template?: string;
+};
+
+// Includes `projectTemplate` in the return value if `projectTemplates` is provided
 export async function createProjectPrompt(
-  promptOptions: {
-    name?: string;
-    dest?: string;
-    template?: string;
-  },
+  promptOptions: PromptOptionsArg,
+  projectTemplates: ProjectTemplate[]
+): Promise<CreateProjectPromptResponseWithTemplate>;
+export async function createProjectPrompt(
+  promptOptions: PromptOptionsArg,
+  projectTemplates?: undefined
+): Promise<CreateProjectPromptResponseWithoutTemplate>;
+export async function createProjectPrompt(
+  promptOptions: PromptOptionsArg,
   projectTemplates?: ProjectTemplate[]
-): Promise<CreateProjectPromptResponse> {
+) {
   const createProjectFromTemplate =
     !!projectTemplates && projectTemplates.length > 0;
 
@@ -117,9 +141,16 @@ export async function createProjectPrompt(
 
   if (providedTemplateIsValid) {
     result.projectTemplate = findTemplateByNameOrLabel(
-      projectTemplates,
+      projectTemplates!,
       promptOptions.template!
     );
+  }
+
+  if (projectTemplates && projectTemplates.length > 0) {
+    if (!result.projectTemplate) {
+      throw new Error(i18n(`${i18nKey}.errors.projectTemplateRequired`));
+    }
+    return result;
   }
 
   return result;

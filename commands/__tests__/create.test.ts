@@ -41,7 +41,6 @@ describe('commands/create', () => {
     it('should support the correct options', () => {
       createCommand.builder(yargs);
 
-      expect(yargs.option).toHaveBeenCalledTimes(3);
       expect(yargs.option).toHaveBeenCalledWith(
         'internal',
         expect.objectContaining({ type: 'boolean', hidden: true })

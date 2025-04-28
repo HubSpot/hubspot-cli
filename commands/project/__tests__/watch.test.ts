@@ -4,29 +4,29 @@ import {
   addConfigOptions,
   addUseEnvironmentOptions,
 } from '../../../lib/commonOpts';
-import projectDownloadCommand from '../download';
+import projectWatchCommand from '../watch';
 
 jest.mock('yargs');
 jest.mock('../../../lib/commonOpts');
 
-describe('commands/project/download', () => {
+describe('commands/project/watch', () => {
   const yargsMock = yargs as Argv;
 
   describe('command', () => {
     it('should have the correct command structure', () => {
-      expect(projectDownloadCommand.command).toEqual('download');
+      expect(projectWatchCommand.command).toEqual('watch');
     });
   });
 
   describe('describe', () => {
     it('should provide a description', () => {
-      expect(projectDownloadCommand.describe).toBeDefined();
+      expect(projectWatchCommand.describe).toBeDefined();
     });
   });
 
   describe('builder', () => {
     it('should support the correct options', () => {
-      projectDownloadCommand.builder(yargsMock);
+      projectWatchCommand.builder(yargsMock);
 
       expect(addAccountOptions).toHaveBeenCalledTimes(1);
       expect(addAccountOptions).toHaveBeenCalledWith(yargsMock);
@@ -38,18 +38,15 @@ describe('commands/project/download', () => {
       expect(addUseEnvironmentOptions).toHaveBeenCalledWith(yargsMock);
     });
 
-    it('should define project, dest, and build options', () => {
-      const optionsSpy = jest.spyOn(yargsMock, 'options');
+    it('should define options', () => {
+      const optionSpy = jest.spyOn(yargsMock, 'option');
       const exampleSpy = jest.spyOn(yargsMock, 'example');
 
-      projectDownloadCommand.builder(yargsMock);
+      projectWatchCommand.builder(yargsMock);
 
-      expect(optionsSpy).toHaveBeenCalledWith(
-        expect.objectContaining({
-          project: expect.any(Object),
-          dest: expect.any(Object),
-          build: expect.any(Object),
-        })
+      expect(optionSpy).toHaveBeenCalledWith(
+        'initial-upload',
+        expect.any(Object)
       );
 
       expect(exampleSpy).toHaveBeenCalled();
