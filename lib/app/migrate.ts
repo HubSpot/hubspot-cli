@@ -30,6 +30,7 @@ import {
   isMigrationStatus,
   listAppsForMigration,
   MigrationApp,
+  MigrationFailed,
   MigrationStatus,
 } from '../../api/migrate';
 import fs from 'fs';
@@ -90,6 +91,24 @@ function filterAppsByProjectName(
     }
     return true;
   };
+}
+
+function buildErrorMessageFromMigrationStatus(error: MigrationFailed): string {
+  const { componentErrors, projectErrorDetail } = error;
+  if (!componentErrors || !componentErrors.length) {
+    return projectErrorDetail;
+  }
+  return `${projectErrorDetail}: \n\t- ${componentErrors
+    .map(componentError => {
+      const {
+        componentType,
+        errorMessage,
+        developerSymbol: uid,
+      } = componentError;
+
+      return `${componentType}${uid ? ` (${uid})` : ''}: ${errorMessage}`;
+    })
+    .join('\n\t- ')}`;
 }
 
 async function fetchMigrationApps(
@@ -359,11 +378,22 @@ async function beginMigration(
   );
   const { migrationId } = data;
 
-  const pollResponse = await pollMigrationStatus(
-    derivedAccountId,
-    migrationId,
-    [MIGRATION_STATUS.INPUT_REQUIRED]
-  );
+  let pollResponse: MigrationStatus;
+  try {
+    pollResponse = await pollMigrationStatus(derivedAccountId, migrationId, [
+      MIGRATION_STATUS.INPUT_REQUIRED,
+    ]);
+  } catch (error) {
+    SpinniesManager.fail('beginningMigration', {
+      text: lib.migrate.spinners.unableToStartMigration,
+    });
+    if (isMigrationStatus(error) && error.status === MIGRATION_STATUS.FAILURE) {
+      throw new Error(buildErrorMessageFromMigrationStatus(error));
+    }
+    throw new Error(lib.migrate.errors.migrationFailed, {
+      cause: error,
+    });
+  }
 
   if (pollResponse.status !== MIGRATION_STATUS.INPUT_REQUIRED) {
     SpinniesManager.fail('beginningMigration', {
@@ -436,22 +466,7 @@ async function finalizeMigration(
     });
 
     if (isMigrationStatus(error) && error.status === MIGRATION_STATUS.FAILURE) {
-      const { componentErrors, projectErrorDetail } = error;
-      if (!componentErrors || !componentErrors.length) {
-        throw new Error(projectErrorDetail);
-      }
-      const errorMessage = `${projectErrorDetail}: \n\t- ${componentErrors
-        .map(componentError => {
-          const {
-            componentType,
-            errorMessage,
-            developerSymbol: uid,
-          } = componentError;
-
-          return `${componentType}${uid ? ` (${uid})` : ''}: ${errorMessage}`;
-        })
-        .join('\n\t- ')}`;
-      throw new Error(errorMessage);
+      throw new Error(buildErrorMessageFromMigrationStatus(error));
     }
 
     throw new Error(lib.migrate.errors.migrationFailed, {
