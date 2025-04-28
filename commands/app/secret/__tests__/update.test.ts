@@ -2,14 +2,14 @@ import yargs, { Argv } from 'yargs';
 import updateAppSecretCommand from '../update';
 
 jest.mock('yargs');
-jest.mock('../../../lib/commonOpts');
+jest.mock('../../../../lib/commonOpts');
 
 describe('commands/app/secret/update', () => {
   const yargsMock = yargs as Argv;
 
   describe('command', () => {
     it('should have the correct command structure', () => {
-      expect(updateAppSecretCommand.command).toEqual('update');
+      expect(updateAppSecretCommand.command).toEqual('update [name]');
     });
   });
 
@@ -23,13 +23,19 @@ describe('commands/app/secret/update', () => {
     it('should support the correct options', () => {
       updateAppSecretCommand.builder(yargsMock);
 
-      expect(yargsMock.example).toHaveBeenCalledTimes(2);
-      expect(yargsMock.option).toHaveBeenCalledWith('app-id', {
-        type: 'string',
-        name: expect.objectContaining({
+      expect(yargsMock.example).toHaveBeenCalledTimes(1);
+      expect(yargsMock.positional).toHaveBeenCalledWith(
+        'name',
+        expect.objectContaining({
           type: 'string',
-        }),
-      });
+        })
+      );
+      expect(yargsMock.option).toHaveBeenCalledWith(
+        'app-id',
+        expect.objectContaining({
+          type: 'number',
+        })
+      );
     });
   });
 });

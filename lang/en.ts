@@ -1495,15 +1495,13 @@ export const commands = {
             describe: 'Create a new app secret.',
             appIdPrompt: 'Enter the app id',
             positionals: {
-              name: {
-                describe: 'Name of the secret',
-              },
+              name: 'Name of the secret',
             },
             options: {
-              appId: {
-                describe: 'The app id to set the secret for',
-              },
+              appId: 'The app id to set the secret for',
             },
+            example:
+              'Add a secret named "my-secret" to the app with ID 1234567890',
             success: (secretName, accountIdentifier) =>
               `The secret "${secretName}" was added to the HubSpot account: ${accountIdentifier}`,
           },
@@ -1511,17 +1509,40 @@ export const commands = {
             describe: 'Delete an app secret.',
             appIdPrompt: 'Enter the app id',
             positionals: {
-              name: {
-                describe: 'Name of the secret',
-              },
+              name: 'Name of the secret',
             },
             options: {
-              appId: {
-                describe: 'The app id to delete the secret for',
-              },
+              appId: 'The app id to delete the secret for',
             },
+            example:
+              'Delete a secret named "my-secret" from the app with ID 1234567890',
             success: (secretName, accountIdentifier) =>
               `The secret "${secretName}" was removed from the HubSpot account: ${accountIdentifier}`,
+          },
+          list: {
+            describe: 'List all app secrets.',
+            appIdPrompt: 'Enter the app id',
+            error: 'App ID is required',
+            example: 'List all secrets for the app with ID 1234567890',
+            success: (secretName, accountIdentifier) =>
+              `The secret "${secretName}" was removed from the HubSpot account: ${accountIdentifier}`,
+            options: {
+              appId: 'The app id to list the secrets for',
+            },
+          },
+          update: {
+            describe: 'Update an app secret.',
+            appIdPrompt: 'Enter the app id',
+            positionals: {
+              name: 'Name of the secret',
+            },
+            options: {
+              appId: 'The app id to update the secret for',
+            },
+            example:
+              'Update a secret named "my-secret" for the app with ID 1234567890',
+            success: (secretName, accountIdentifier) =>
+              `The secret "${secretName}" was updated in the HubSpot account: ${accountIdentifier}`,
           },
         },
       },

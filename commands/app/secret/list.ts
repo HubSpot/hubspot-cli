@@ -1,6 +1,6 @@
 import { Argv, ArgumentsCamelCase } from 'yargs';
 import { logger } from '@hubspot/local-dev-lib/logger';
-//import { listAppSecrets } from '@hubspot/local-dev-lib/api/devSecrets';
+import { fetchAppSecrets } from '@hubspot/local-dev-lib/api/devSecrets';
 import { logError } from '../../../lib/errorHandlers/index';
 import { trackCommandUsage } from '../../../lib/usageTracking';
 //import { uiAccountDescription } from '../../../lib/ui';
@@ -44,23 +44,31 @@ async function handler(
       appSecretAppId = appIdPromptValue;
     }
 
-    // TODO leverage the list secrets API
-    // const secrets = await listAppSecrets(derivedAccountId, appSecretAppId);
+    if (!appSecretAppId) {
+      logger.error(commands.app.subcommands.secret.subcommands.list.error);
+      process.exit(EXIT_CODES.ERROR);
+    }
 
-    logger.success('yay');
+    const secrets = await fetchAppSecrets(derivedAccountId, appSecretAppId);
+
+    logger.success('yay: ', secrets);
   } catch (err) {
-    console.log(err);
     logError(err);
+    process.exit(EXIT_CODES.ERROR);
   }
   process.exit(EXIT_CODES.SUCCESS);
 }
 
 function listAppSecretBuilder(yargs: Argv): Argv<ListAppSecretArgs> {
   yargs.option('app-id', {
-    describe:
-      commands.app.subcommands.secret.subcommands.list.options.appId.describe,
+    describe: commands.app.subcommands.secret.subcommands.list.options.appId,
     type: 'number',
   });
+
+  yargs.example(
+    'list --app-id=1234567890',
+    commands.app.subcommands.secret.subcommands.list.example
+  );
 
   return yargs as Argv<ListAppSecretArgs>;
 }

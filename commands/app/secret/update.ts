@@ -70,8 +70,8 @@ async function handler(
       )
     );
   } catch (err) {
-    console.log(err);
     logError(err);
+    process.exit(EXIT_CODES.ERROR);
   }
   process.exit(EXIT_CODES.SUCCESS);
 }
@@ -79,16 +79,19 @@ async function handler(
 function updateAppSecretBuilder(yargs: Argv): Argv<UpdateAppSecretArgs> {
   yargs.positional('name', {
     describe:
-      commands.app.subcommands.secret.subcommands.update.positionals.name
-        .describe,
+      commands.app.subcommands.secret.subcommands.update.positionals.name,
     type: 'string',
   });
 
   yargs.option('app-id', {
-    describe:
-      commands.app.subcommands.secret.subcommands.update.options.appId.describe,
+    describe: commands.app.subcommands.secret.subcommands.update.options.appId,
     type: 'number',
   });
+
+  yargs.example(
+    'update my-secret --app-id=1234567890',
+    commands.app.subcommands.secret.subcommands.update.example
+  );
 
   return yargs as Argv<UpdateAppSecretArgs>;
 }

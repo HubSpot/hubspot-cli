@@ -2,7 +2,7 @@ import yargs, { Argv } from 'yargs';
 import listAppSecretsCommand from '../list';
 
 jest.mock('yargs');
-jest.mock('../../../lib/commonOpts');
+jest.mock('../../../../lib/commonOpts');
 
 describe('commands/app/secret/list', () => {
   const yargsMock = yargs as Argv;
@@ -23,13 +23,13 @@ describe('commands/app/secret/list', () => {
     it('should support the correct options', () => {
       listAppSecretsCommand.builder(yargsMock);
 
-      expect(yargsMock.example).toHaveBeenCalledTimes(2);
-      expect(yargsMock.option).toHaveBeenCalledWith('app-id', {
-        type: 'string',
-        name: expect.objectContaining({
-          type: 'string',
-        }),
-      });
+      expect(yargsMock.example).toHaveBeenCalledTimes(1);
+      expect(yargsMock.option).toHaveBeenCalledWith(
+        'app-id',
+        expect.objectContaining({
+          type: 'number',
+        })
+      );
     });
   });
 });
