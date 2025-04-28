@@ -17,7 +17,6 @@ import {
   validateProjectConfig,
 } from '../../lib/projects/config';
 import { logFeedbackMessage } from '../../lib/projects/ui';
-import { ensureProjectExists } from '../../lib/projects/ensureProjectExists';
 import { handleProjectUpload } from '../../lib/projects/upload';
 import {
   pollBuildStatus,
@@ -137,7 +136,7 @@ async function handler(
     return process.exit(EXIT_CODES.ERROR);
   }
 
-  await ensureProjectExists(derivedAccountId, projectConfig.name);
+  validateProjectConfig(projectConfig, projectDir);
 
   try {
     const {
@@ -157,12 +156,13 @@ async function handler(
 
     // Upload all files if no build exists for this project yet
     if (initialUpload || hasNoBuilds) {
-      const { uploadError } = await handleProjectUpload(
-        derivedAccountId,
+      const { uploadError } = await handleProjectUpload({
+        accountId: derivedAccountId,
         projectConfig,
         projectDir,
-        startWatching
-      );
+        callbackFunc: startWatching,
+        isUploadCommand: false,
+      });
 
       if (uploadError) {
         if (

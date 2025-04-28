@@ -10,7 +10,6 @@ import {
   getProjectConfig,
   validateProjectConfig,
 } from '../../lib/projects/config';
-import { ensureProjectExists } from '../../lib/projects/ensureProjectExists';
 import { logFeedbackMessage } from '../../lib/projects/ui';
 import { handleProjectUpload } from '../../lib/projects/upload';
 import {
@@ -51,22 +50,19 @@ async function handler(
 
   validateProjectConfig(projectConfig, projectDir);
 
-  await ensureProjectExists(derivedAccountId, projectConfig.name, {
-    forceCreate,
-    uploadCommand: true,
-  });
-
   try {
     const { result, uploadError } =
-      await handleProjectUpload<ProjectPollResult>(
-        derivedAccountId,
+      await handleProjectUpload<ProjectPollResult>({
+        accountId: derivedAccountId,
         projectConfig,
-        projectDir!,
-        pollProjectBuildAndDeploy,
-        message,
-        useV3Api(projectConfig.platformVersion),
-        skipValidation
-      );
+        projectDir: projectDir!,
+        callbackFunc: pollProjectBuildAndDeploy,
+        uploadMessage: message,
+        forceCreate,
+        isUploadCommand: true,
+        sendIR: useV3Api(projectConfig.platformVersion),
+        skipValidation,
+      });
 
     if (uploadError) {
       if (

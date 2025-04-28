@@ -447,17 +447,21 @@ export async function createInitialBuildForNewProject(
   projectConfig: ProjectConfig,
   projectDir: string,
   targetAccountId: number,
-  sendIr?: boolean
+  sendIR?: boolean
 ): Promise<Build> {
   const { result: initialUploadResult, uploadError } =
-    await handleProjectUpload<ProjectPollResult>(
-      targetAccountId,
+    await handleProjectUpload<ProjectPollResult>({
+      accountId: targetAccountId,
       projectConfig,
       projectDir,
-      projectUploadCallback,
-      lib.localDevHelpers.createInitialBuildForNewProject.initialUploadMessage,
-      sendIr
-    );
+      callbackFunc: projectUploadCallback,
+      uploadMessage:
+        lib.localDevHelpers.createInitialBuildForNewProject
+          .initialUploadMessage,
+      forceCreate: true,
+      skipValidation: true,
+      sendIR,
+    });
 
   if (uploadError) {
     if (
