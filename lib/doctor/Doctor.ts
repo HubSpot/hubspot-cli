@@ -392,7 +392,7 @@ export class Doctor {
           this.diagnosis?.addProjectSection({
             type: 'error',
             message: i18n(
-              `${`lib.doctor.projectDependenciesChecks`}.unableToDetermine`,
+              `lib.doctor.projectDependenciesChecks.unableToDetermine`,
               {
                 dir: packageDirName,
               }
@@ -407,7 +407,7 @@ export class Doctor {
     if (!foundError) {
       this.diagnosis?.addProjectSection({
         type: 'success',
-        message: i18n(`${`lib.doctor.projectDependenciesChecks`}.success`),
+        message: i18n(`lib.doctor.projectDependenciesChecks.success`),
       });
     }
   }
