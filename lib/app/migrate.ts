@@ -56,6 +56,7 @@ export type MigrateAppArgs = CommonArgs &
     dest?: string;
     appId?: number;
     platformVersion: string;
+    unstable: boolean;
   };
 
 function getUnmigratableReason(
