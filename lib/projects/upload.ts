@@ -171,7 +171,7 @@ export async function handleProjectUpload<T>({
         accountId,
         projectConfig.name,
         tempFile.name,
-        uploadMessage || '',
+        uploadMessage,
         projectConfig.platformVersion,
         intermediateRepresentation
       );
