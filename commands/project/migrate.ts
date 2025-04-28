@@ -21,6 +21,7 @@ export type ProjectMigrateArgs = CommonArgs &
   EnvironmentArgs &
   ConfigArgs & {
     platformVersion: string;
+    unstable: boolean;
   };
 
 const { v2025_2 } = PLATFORM_VERSIONS;
