@@ -21,14 +21,12 @@ import { debugError } from './errorHandlers';
 import { EXIT_CODES } from './enums/exitCodes';
 import { uiCommandReference } from './ui';
 
-const i18nKey = 'lib.commonOpts';
-
 export function addGlobalOptions(yargs: Argv) {
   yargs.version(false);
   yargs.option('debug', {
     alias: 'd',
     default: false,
-    describe: i18n(`${i18nKey}.options.debug.describe`),
+    describe: i18n(`lib.commonOpts.options.debug.describe`),
     type: 'boolean',
   });
   yargs.option('network-debug', {
@@ -42,7 +40,7 @@ export function addGlobalOptions(yargs: Argv) {
 export function addAccountOptions(yargs: Argv): Argv {
   return yargs.option('account', {
     alias: 'a',
-    describe: i18n(`${i18nKey}.options.account.describe`),
+    describe: i18n(`lib.commonOpts.options.account.describe`),
     type: 'string',
   });
 }
@@ -50,7 +48,7 @@ export function addAccountOptions(yargs: Argv): Argv {
 export function addConfigOptions(yargs: Argv): Argv<ConfigArgs> {
   return yargs.option<keyof ConfigArgs, StringArgType>('config', {
     alias: 'c',
-    describe: i18n(`${i18nKey}.options.config.describe`),
+    describe: i18n(`lib.commonOpts.options.config.describe`),
     type: 'string',
   });
 }
@@ -58,7 +56,7 @@ export function addConfigOptions(yargs: Argv): Argv<ConfigArgs> {
 export function addOverwriteOptions(yargs: Argv): Argv {
   return yargs.option('overwrite', {
     alias: 'o',
-    describe: i18n(`${i18nKey}.options.overwrite.describe`),
+    describe: i18n(`lib.commonOpts.options.overwrite.describe`),
     type: 'boolean',
     default: false,
   });
@@ -73,7 +71,7 @@ export function addCmsPublishModeOptions(
   return yargs.option('cms-publish-mode', {
     alias: 'm',
     describe: i18n(
-      `${i18nKey}.options.modes.describe.${
+      `lib.commonOpts.options.modes.describe.${
         read ? 'read' : write ? 'write' : 'default'
       }`,
       { modes: cmsPublishModes }
@@ -84,7 +82,7 @@ export function addCmsPublishModeOptions(
 
 export function addTestingOptions(yargs: Argv): Argv {
   return yargs.option('qa', {
-    describe: i18n(`${i18nKey}.options.qa.describe`),
+    describe: i18n(`lib.commonOpts.options.qa.describe`),
     type: 'boolean',
     default: false,
     hidden: true,
@@ -93,7 +91,7 @@ export function addTestingOptions(yargs: Argv): Argv {
 
 export function addUseEnvironmentOptions(yargs: Argv): Argv {
   yargs.option('use-env', {
-    describe: i18n(`${i18nKey}.options.useEnv.describe`),
+    describe: i18n(`lib.commonOpts.options.useEnv.describe`),
     type: 'boolean',
   });
   yargs.conflicts('use-env', 'account');

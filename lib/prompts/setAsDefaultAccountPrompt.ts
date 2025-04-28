@@ -5,8 +5,6 @@ import {
 import { promptUser } from './promptUtils';
 import { i18n } from '../lang';
 
-const i18nKey = 'lib.prompts.setAsDefaultAccountPrompt';
-
 export async function setAsDefaultAccountPrompt(
   accountName: string
 ): Promise<boolean> {
@@ -18,7 +16,9 @@ export async function setAsDefaultAccountPrompt(
       name: 'setAsDefault',
       type: 'confirm',
       when: defaultAccount !== accountName,
-      message: i18n(`${i18nKey}.setAsDefaultAccountMessage`),
+      message: i18n(
+        `lib.prompts.setAsDefaultAccountPrompt.setAsDefaultAccountMessage`
+      ),
     },
   ]);
 

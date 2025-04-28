@@ -5,8 +5,6 @@ import { promptUser } from './promptUtils';
 import { i18n } from '../lang';
 import { EXIT_CODES } from '../enums/exitCodes';
 
-const i18nKey = 'lib.prompts.installPublicAppPrompt';
-
 export async function installPublicAppPrompt(
   env: string,
   targetAccountId: number,
@@ -17,9 +15,9 @@ export async function installPublicAppPrompt(
 ): Promise<void> {
   logger.log('');
   if (isReinstall) {
-    logger.log(i18n(`${i18nKey}.reinstallExplanation`));
+    logger.log(i18n(`lib.prompts.installPublicAppPrompt.reinstallExplanation`));
   } else {
-    logger.log(i18n(`${i18nKey}.explanation`));
+    logger.log(i18n(`lib.prompts.installPublicAppPrompt.explanation`));
   }
 
   const { shouldOpenBrowser } = await promptUser<{
@@ -28,12 +26,14 @@ export async function installPublicAppPrompt(
     name: 'shouldOpenBrowser',
     type: 'confirm',
     message: i18n(
-      isReinstall ? `${i18nKey}.reinstallPrompt` : `${i18nKey}.prompt`
+      isReinstall
+        ? `lib.prompts.installPublicAppPrompt.reinstallPrompt`
+        : `lib.prompts.installPublicAppPrompt.prompt`
     ),
   });
 
   if (!isReinstall && !shouldOpenBrowser) {
-    logger.log(i18n(`${i18nKey}.decline`));
+    logger.log(i18n(`lib.prompts.installPublicAppPrompt.decline`));
     process.exit(EXIT_CODES.SUCCESS);
   } else if (!shouldOpenBrowser) {
     return;

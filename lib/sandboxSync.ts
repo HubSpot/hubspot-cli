@@ -21,8 +21,6 @@ import {
 import { isDevelopmentSandbox } from './accountTypes';
 import { SandboxSyncTask } from '../types/Sandboxes';
 
-const i18nKey = 'lib.sandbox.sync';
-
 export async function syncSandbox(
   accountConfig: CLIAccount,
   parentAccountConfig: CLIAccount,
@@ -38,7 +36,7 @@ export async function syncSandbox(
 
   if (!accountId || !parentAccountId) {
     throw new Error(
-      i18n(`${i18nKey}.failure.invalidUser`, {
+      i18n(`lib.sandbox.sync.failure.invalidUser`, {
         accountName: accountId
           ? uiAccountDescription(accountId)
           : id!.toString(),
@@ -73,7 +71,7 @@ export async function syncSandbox(
     }
 
     SpinniesManager.add('sandboxSync', {
-      text: i18n(`${i18nKey}.loading.startSync`),
+      text: i18n(`lib.sandbox.sync.loading.startSync`),
     });
 
     await initiateSync(
@@ -83,15 +81,17 @@ export async function syncSandbox(
       accountId
     );
     const spinniesText = isDevSandbox
-      ? `${i18nKey}.loading.succeedDevSb`
-      : `${i18nKey}.loading.succeed`;
+      ? `lib.sandbox.sync.loading.succeedDevSb`
+      : `lib.sandbox.sync.loading.succeed`;
     SpinniesManager.succeed('sandboxSync', {
       text: i18n(
-        slimInfoMessage ? `${i18nKey}.loading.successDevSbInfo` : spinniesText,
+        slimInfoMessage
+          ? `lib.sandbox.sync.loading.successDevSbInfo`
+          : spinniesText,
         {
           accountName: uiAccountDescription(accountId),
           url: uiLink(
-            i18n(`${i18nKey}.info.syncStatusDetailsLinkText`),
+            i18n(`lib.sandbox.sync.info.syncStatusDetailsLinkText`),
             syncStatusUrl
           ),
         }
@@ -101,7 +101,7 @@ export async function syncSandbox(
     debugError(err);
 
     SpinniesManager.fail('sandboxSync', {
-      text: i18n(`${i18nKey}.loading.fail`),
+      text: i18n(`lib.sandbox.sync.loading.fail`),
     });
 
     logger.log('');
@@ -113,7 +113,7 @@ export async function syncSandbox(
       })
     ) {
       logger.error(
-        i18n(`${i18nKey}.failure.invalidUser`, {
+        i18n(`lib.sandbox.sync.failure.invalidUser`, {
           accountName: uiAccountDescription(accountId),
           parentAccountName: uiAccountDescription(parentAccountId),
         })
@@ -126,7 +126,7 @@ export async function syncSandbox(
       })
     ) {
       logger.error(
-        i18n(`${i18nKey}.failure.syncInProgress`, {
+        i18n(`lib.sandbox.sync.failure.syncInProgress`, {
           url: `${baseUrl}/sandboxes-developer/${parentAccountId}/syncactivitylog`,
         })
       );
@@ -139,7 +139,7 @@ export async function syncSandbox(
     ) {
       // This will only trigger if a user is not a super admin of the target account.
       logger.error(
-        i18n(`${i18nKey}.failure.notSuperAdmin`, {
+        i18n(`lib.sandbox.sync.failure.notSuperAdmin`, {
           account: uiAccountDescription(accountId),
         })
       );
@@ -151,7 +151,7 @@ export async function syncSandbox(
       })
     ) {
       logger.error(
-        i18n(`${i18nKey}.failure.objectNotFound`, {
+        i18n(`lib.sandbox.sync.failure.objectNotFound`, {
           account: uiAccountDescription(accountId),
         })
       );
@@ -182,10 +182,10 @@ export async function syncSandbox(
     uiLine();
     logger.info(
       i18n(
-        `${i18nKey}.info.${isDevSandbox ? 'syncMessageDevSb' : 'syncMessage'}`,
+        `lib.sandbox.sync.info.${isDevSandbox ? 'syncMessageDevSb' : 'syncMessage'}`,
         {
           url: uiLink(
-            i18n(`${i18nKey}.info.syncStatusDetailsLinkText`),
+            i18n(`lib.sandbox.sync.info.syncStatusDetailsLinkText`),
             syncStatusUrl
           ),
         }

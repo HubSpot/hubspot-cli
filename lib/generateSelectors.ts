@@ -9,7 +9,6 @@ const CSS_PSEUDO_CLASS_REGEX = new RegExp(
   /:active|:checked|:disabled|:empty|:enabled|:first-of-type|:focus|:hover|:in-range|:invalid|:link|:optional|:out-of-range|:read-only|:read-write|:required|:target|:valid|:visited/,
   'g'
 );
-const i18nKey = 'commands.theme.subcommands.generateSelectors';
 
 let maxFieldsDepth = 0;
 
@@ -21,7 +20,7 @@ export function findFieldsJsonPath(basePath: string): string | null {
   const _path = basePath.endsWith('/') ? basePath.slice(0, -1) : basePath;
   if (!fs.existsSync(_path)) {
     logger.error(
-      i18n(`${i18nKey}.errors.invalidPath`, {
+      i18n(`commands.theme.subcommands.generateSelectors.errors.invalidPath`, {
         themePath: basePath,
       })
     );

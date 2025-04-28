@@ -18,8 +18,6 @@ import { EXIT_CODES } from './enums/exitCodes';
 const PORT = 3000;
 const redirectUri = `http://localhost:${PORT}/oauth-callback`;
 
-const i18nKey = 'lib.oauth';
-
 function buildAuthUrl(oauthManager: OAuth2Manager): string {
   const {
     env: accountEnv,
@@ -31,7 +29,7 @@ function buildAuthUrl(oauthManager: OAuth2Manager): string {
   const scopes = accountScopes || DEFAULT_OAUTH_SCOPES;
 
   if (!clientId) {
-    logger.error(i18n(`${i18nKey}.missingClientId`));
+    logger.error(i18n(`lib.oauth.missingClientId`));
     process.exit(EXIT_CODES.ERROR);
   }
 
