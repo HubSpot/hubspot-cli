@@ -1,5 +1,5 @@
 import yargs, { Argv } from 'yargs';
-import * as projectAddCommand from '../add';
+import projectAddCommand from '../add';
 
 jest.mock('yargs');
 jest.mock('../../../lib/commonOpts');

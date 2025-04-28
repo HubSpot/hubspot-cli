@@ -6,7 +6,9 @@ import { EXIT_CODES } from '../../../lib/enums/exitCodes';
 import { trackCommandUsage } from '../../../lib/usageTracking';
 import * as dependencyManagement from '../../../lib/dependencyManagement';
 import * as promptUtils from '../../../lib/prompts/promptUtils';
-import * as projectInstallDepsCommand from '../installDeps';
+import projectInstallDepsCommand, {
+  ProjectInstallDepsArgs,
+} from '../installDeps';
 
 jest.mock('yargs');
 jest.mock('@hubspot/local-dev-lib/logger');
@@ -53,12 +55,12 @@ describe('commands/project/installDeps', () => {
   });
 
   describe('handler', () => {
-    let args: ArgumentsCamelCase<projectInstallDepsCommand.ProjectInstallDepsArgs>;
+    let args: ArgumentsCamelCase<ProjectInstallDepsArgs>;
 
     beforeEach(() => {
       args = {
         derivedAccountId: 999999,
-      } as ArgumentsCamelCase<projectInstallDepsCommand.ProjectInstallDepsArgs>;
+      } as ArgumentsCamelCase<ProjectInstallDepsArgs>;
       // @ts-expect-error Doesn't match the actual signature because then the linter complains about unused variables
       processExitSpy.mockImplementation(() => {});
     });

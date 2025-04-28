@@ -105,7 +105,7 @@ export async function handleProjectUpload<T>({
   projectConfig,
   projectDir,
   callbackFunc,
-  uploadMessage,
+  uploadMessage = '',
   forceCreate = false,
   isUploadCommand = false,
   sendIR = false,

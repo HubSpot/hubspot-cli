@@ -24,7 +24,7 @@ type ProjectWatchHandlerFunction = (
   accountId: number,
   projectName: string,
   currentBuildId: number
-) => Promise<void>;
+) => Promise<void> | void;
 
 type WatchEvent = {
   filePath: string;

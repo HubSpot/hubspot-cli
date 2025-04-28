@@ -901,6 +901,8 @@ export const commands = {
       errors: {
         failedToDownloadProject:
           'Failed to download project. Please try again later.',
+        invalidTemplateSource:
+          'Invalid template source provided. Use the format <Owner>/<Repo> and try again.',
         failedToFetchProjectList:
           'Failed to fetch the list of available project templates. Please try again later.',
         cannotNestProjects: projectDir =>
@@ -1235,6 +1237,9 @@ export const commands = {
           `File "${filePath}" is already queued for upload`,
       },
       errors: {
+        projectConfigNotFound:
+          'No project config found. Please ensure that you are in a project directory.',
+        projectLockedError: `Your project is locked. This may mean that another user is running the ${chalk.bold(`hs project dev`)} command for this project. If this is you, unlock the project in Projects UI.`,
         uploadFailed: (remotePath, filePath) =>
           `Failed to upload file "${filePath}" to "${remotePath}"`,
         deleteFileFailed: remotePath => `Failed to delete file "${remotePath}"`,
@@ -3061,6 +3066,8 @@ export const lib = {
           'The selected destination contains invalid characters. Please provide a new path and try again.',
         invalidTemplate: template =>
           `[--template] Could not find template "${template}". Please choose an available template:`,
+        projectTemplateRequired:
+          'Project template is required when projectTemplates is provided',
       },
     },
     selectPublicAppPrompt: {

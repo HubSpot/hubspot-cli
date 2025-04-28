@@ -4,29 +4,29 @@ import {
   addConfigOptions,
   addUseEnvironmentOptions,
 } from '../../../lib/commonOpts';
-import projectDownloadCommand from '../download';
+import projectCreateCommand from '../create';
 
 jest.mock('yargs');
 jest.mock('../../../lib/commonOpts');
 
-describe('commands/project/download', () => {
+describe('commands/project/create', () => {
   const yargsMock = yargs as Argv;
 
   describe('command', () => {
     it('should have the correct command structure', () => {
-      expect(projectDownloadCommand.command).toEqual('download');
+      expect(projectCreateCommand.command).toEqual('create');
     });
   });
 
   describe('describe', () => {
     it('should provide a description', () => {
-      expect(projectDownloadCommand.describe).toBeDefined();
+      expect(projectCreateCommand.describe).toBeDefined();
     });
   });
 
   describe('builder', () => {
     it('should support the correct options', () => {
-      projectDownloadCommand.builder(yargsMock);
+      projectCreateCommand.builder(yargsMock);
 
       expect(addAccountOptions).toHaveBeenCalledTimes(1);
       expect(addAccountOptions).toHaveBeenCalledWith(yargsMock);
@@ -38,17 +38,18 @@ describe('commands/project/download', () => {
       expect(addUseEnvironmentOptions).toHaveBeenCalledWith(yargsMock);
     });
 
-    it('should define project, dest, and build options', () => {
+    it('should define project creation options', () => {
       const optionsSpy = jest.spyOn(yargsMock, 'options');
       const exampleSpy = jest.spyOn(yargsMock, 'example');
 
-      projectDownloadCommand.builder(yargsMock);
+      projectCreateCommand.builder(yargsMock);
 
       expect(optionsSpy).toHaveBeenCalledWith(
         expect.objectContaining({
-          project: expect.any(Object),
+          name: expect.any(Object),
           dest: expect.any(Object),
-          build: expect.any(Object),
+          template: expect.any(Object),
+          'template-source': expect.any(Object),
         })
       );
 

@@ -1,21 +1,18 @@
-import { ArgumentsCamelCase, Argv, CommandModule } from 'yargs';
+import { ArgumentsCamelCase, Argv } from 'yargs';
 import { logger } from '@hubspot/local-dev-lib/logger';
 import {
   AccountArgs,
   CommonArgs,
   ConfigArgs,
   EnvironmentArgs,
+  YargsCommandModule,
 } from '../../types/Yargs';
-import {
-  addAccountOptions,
-  addConfigOptions,
-  addGlobalOptions,
-} from '../../lib/commonOpts';
 import { migrateApp2025_2 } from '../../lib/app/migrate';
 import { getProjectConfig } from '../../lib/projects/config';
 import { PLATFORM_VERSIONS } from '@hubspot/local-dev-lib/constants/projects';
 import { logError } from '../../lib/errorHandlers';
 import { EXIT_CODES } from '../../lib/enums/exitCodes';
+import { makeYargsBuilder } from '../../lib/yargsUtils';
 import { uiBetaTag, uiCommandReference } from '../../lib/ui';
 import { commands } from '../../lang/en';
 
@@ -28,14 +25,13 @@ export type ProjectMigrateArgs = CommonArgs &
 
 const { v2025_2 } = PLATFORM_VERSIONS;
 
-export const command = 'migrate';
+const command = 'migrate';
+const describe = undefined; // commands.project.migrate.describe
 
-export const describe = undefined;
-
-export async function handler(
-  options: ArgumentsCamelCase<ProjectMigrateArgs>
+async function handler(
+  args: ArgumentsCamelCase<ProjectMigrateArgs>
 ): Promise<void> {
-  const { platformVersion, unstable } = options;
+  const { platformVersion, unstable } = args;
   const projectConfig = await getProjectConfig();
 
   if (!projectConfig.projectConfig) {
@@ -51,13 +47,12 @@ export async function handler(
   logger.log(
     uiBetaTag(commands.project.migrate.preamble(platformVersion), false)
   );
-
-  const { derivedAccountId } = options;
+  const { derivedAccountId } = args;
   try {
     await migrateApp2025_2(
       derivedAccountId,
       {
-        ...options,
+        ...args,
         name: projectConfig?.projectConfig?.name,
         platformVersion: unstable
           ? PLATFORM_VERSIONS.unstable
@@ -72,11 +67,7 @@ export async function handler(
   return process.exit(EXIT_CODES.SUCCESS);
 }
 
-export function builder(yargs: Argv): Argv<ProjectMigrateArgs> {
-  addConfigOptions(yargs);
-  addAccountOptions(yargs);
-  addGlobalOptions(yargs);
-
+function projectMigrateBuilder(yargs: Argv): Argv<ProjectMigrateArgs> {
   yargs
     .option('platform-version', {
       type: 'string',
@@ -92,11 +83,23 @@ export function builder(yargs: Argv): Argv<ProjectMigrateArgs> {
 
   return yargs as Argv<ProjectMigrateArgs>;
 }
-const migrateAppCommand: CommandModule<unknown, ProjectMigrateArgs> = {
+
+const builder = makeYargsBuilder<ProjectMigrateArgs>(
+  projectMigrateBuilder,
+  command,
+  commands.project.migrate.describe,
+  {
+    useGlobalOptions: true,
+    useConfigOptions: true,
+    useAccountOptions: true,
+  }
+);
+
+const migrateCommand: YargsCommandModule<unknown, ProjectMigrateArgs> = {
   command,
   describe,
   handler,
   builder,
 };
 
-export default migrateAppCommand;
+export default migrateCommand;

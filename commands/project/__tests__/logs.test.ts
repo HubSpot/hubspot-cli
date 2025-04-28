@@ -7,7 +7,7 @@ import { trackCommandUsage } from '../../../lib/usageTracking';
 import * as ui from '../../../lib/ui';
 import { EXIT_CODES } from '../../../lib/enums/exitCodes';
 import { logError } from '../../../lib/errorHandlers';
-import * as projectLogsCommand from '../logs';
+import projectLogsCommand, { ProjectLogsArgs } from '../logs';
 
 jest.mock('yargs');
 jest.mock('@hubspot/local-dev-lib/logger');
@@ -116,12 +116,12 @@ describe('commands/project/logs', () => {
   });
 
   describe('handler', () => {
-    let options: ArgumentsCamelCase<projectLogsCommand.ProjectLogsArgs>;
+    let options: ArgumentsCamelCase<ProjectLogsArgs>;
 
     beforeEach(() => {
       options = {
         derivedAccountId: 12345678,
-      } as ArgumentsCamelCase<projectLogsCommand.ProjectLogsArgs>;
+      } as ArgumentsCamelCase<ProjectLogsArgs>;
 
       projectLogsPromptSpy.mockResolvedValue({ functionName: 'foo' });
     });

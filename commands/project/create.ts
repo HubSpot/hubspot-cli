@@ -1,51 +1,67 @@
-// @ts-nocheck
-const path = require('path');
-const fs = require('fs-extra');
-const chalk = require('chalk');
-const { logger } = require('@hubspot/local-dev-lib/logger');
-const {
+import { ArgumentsCamelCase, Argv } from 'yargs';
+import path from 'path';
+import fs from 'fs-extra';
+import chalk from 'chalk';
+import { logger } from '@hubspot/local-dev-lib/logger';
+import {
   fetchReleaseData,
   cloneGithubRepo,
-} = require('@hubspot/local-dev-lib/github');
-const { getCwd } = require('@hubspot/local-dev-lib/path');
-const {
-  addAccountOptions,
-  addConfigOptions,
-  addUseEnvironmentOptions,
-} = require('../../lib/commonOpts');
-const { trackCommandUsage } = require('../../lib/usageTracking');
-const {
-  createProjectPrompt,
-} = require('../../lib/prompts/createProjectPrompt');
-const {
+} from '@hubspot/local-dev-lib/github';
+import { RepoPath } from '@hubspot/local-dev-lib/types/Github';
+import { getCwd } from '@hubspot/local-dev-lib/path';
+import { trackCommandUsage } from '../../lib/usageTracking';
+import { createProjectPrompt } from '../../lib/prompts/createProjectPrompt';
+import {
   writeProjectConfig,
   getProjectConfig,
-} = require('../../lib/projects/config');
-const {
+} from '../../lib/projects/config';
+import {
   getProjectTemplateListFromRepo,
   EMPTY_PROJECT_TEMPLATE_NAME,
-} = require('../../lib/projects/create');
-const { i18n } = require('../../lib/lang');
-const { uiBetaTag, uiFeatureHighlight } = require('../../lib/ui');
-const { debugError } = require('../../lib/errorHandlers');
-const { EXIT_CODES } = require('../../lib/enums/exitCodes');
-const {
+} from '../../lib/projects/create';
+import { i18n } from '../../lib/lang';
+import { uiBetaTag, uiFeatureHighlight } from '../../lib/ui';
+import { debugError } from '../../lib/errorHandlers';
+import { EXIT_CODES } from '../../lib/enums/exitCodes';
+import {
   PROJECT_CONFIG_FILE,
   HUBSPOT_PROJECT_COMPONENTS_GITHUB_PATH,
   DEFAULT_PROJECT_TEMPLATE_BRANCH,
-} = require('../../lib/constants');
+} from '../../lib/constants';
+import {
+  AccountArgs,
+  CommonArgs,
+  ConfigArgs,
+  EnvironmentArgs,
+  YargsCommandModule,
+} from '../../types/Yargs';
+import { makeYargsBuilder } from '../../lib/yargsUtils';
+import { ProjectConfig } from '../../types/Projects';
 
-exports.command = 'create';
-exports.describe = uiBetaTag(
+const command = 'create';
+const describe = uiBetaTag(
   i18n(`commands.project.subcommands.create.describe`),
   false
 );
 
-exports.handler = async options => {
-  const { derivedAccountId } = options;
+type ProjectCreateArgs = CommonArgs &
+  ConfigArgs &
+  AccountArgs &
+  EnvironmentArgs & {
+    name?: string;
+    dest?: string;
+    templateSource?: RepoPath;
+    template?: string;
+  };
 
-  let latestRepoReleaseTag;
-  let templateSource = options.templateSource;
+async function handler(
+  args: ArgumentsCamelCase<ProjectCreateArgs>
+): Promise<void> {
+  const { derivedAccountId } = args;
+
+  let latestRepoReleaseTag: string | undefined;
+  let templateSource = args.templateSource;
+
   if (!templateSource) {
     templateSource = HUBSPOT_PROJECT_COMPONENTS_GITHUB_PATH;
     try {
@@ -65,6 +81,13 @@ exports.handler = async options => {
     }
   }
 
+  if (!templateSource || !templateSource.includes('/')) {
+    logger.error(
+      i18n(`commands.project.subcommands.create.error.invalidTemplateSource`)
+    );
+    process.exit(EXIT_CODES.ERROR);
+  }
+
   const projectTemplates = await getProjectTemplateListFromRepo(
     templateSource,
     latestRepoReleaseTag || DEFAULT_PROJECT_TEMPLATE_BRANCH
@@ -78,7 +101,7 @@ exports.handler = async options => {
   }
 
   const createProjectPromptResponse = await createProjectPrompt(
-    options,
+    args,
     projectTemplates
   );
   const projectDest = path.resolve(getCwd(), createProjectPromptResponse.dest);
@@ -95,7 +118,11 @@ exports.handler = async options => {
   } = await getProjectConfig(projectDest);
 
   // Exit if the target destination is within an existing project
-  if (existingProjectConfig && projectDest.startsWith(existingProjectDir)) {
+  if (
+    existingProjectConfig &&
+    existingProjectDir &&
+    projectDest.startsWith(existingProjectDir)
+  ) {
     logger.error(
       i18n(`commands.project.subcommands.create.errors.cannotNestProjects`, {
         projectDir: existingProjectDir,
@@ -159,9 +186,9 @@ exports.handler = async options => {
     'sampleProjects',
   ]);
   process.exit(EXIT_CODES.SUCCESS);
-};
+}
 
-exports.builder = yargs => {
+function projectCreateBuilder(yargs: Argv): Argv<ProjectCreateArgs> {
   yargs.options({
     name: {
       describe: i18n(
@@ -202,9 +229,26 @@ exports.builder = yargs => {
     ],
   ]);
 
-  addConfigOptions(yargs);
-  addAccountOptions(yargs);
-  addUseEnvironmentOptions(yargs);
+  return yargs as Argv<ProjectCreateArgs>;
+}
 
-  return yargs;
+const builder = makeYargsBuilder<ProjectCreateArgs>(
+  projectCreateBuilder,
+  command,
+  describe,
+  {
+    useGlobalOptions: true,
+    useAccountOptions: true,
+    useConfigOptions: true,
+    useEnvironmentOptions: true,
+  }
+);
+
+const projectCreateCommand: YargsCommandModule<unknown, ProjectCreateArgs> = {
+  command,
+  describe,
+  handler,
+  builder,
 };
+
+export default projectCreateCommand;
