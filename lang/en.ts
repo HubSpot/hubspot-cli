@@ -2679,8 +2679,7 @@ export const lib = {
     validateAccountOption: {
       invalidPublicAppAccount: `This project contains a public app. The "--account" flag must point to a developer test account to develop this project locally. Alternatively, change your default account to an App Developer Account using ${uiCommandReference('hs accounts use')} and run ${uiCommandReference('hs project dev')} to set up a new Developer Test Account.`,
       invalidPrivateAppAccount: `This project contains a private app. The account specified with the "--account" flag points to a developer account, which do not support the local development of private apps. Update the "--account" flag to point to a standard, sandbox, or developer test account, or change your default account by running ${uiCommandReference('hs accounts use')}.`,
-      nonSandboxWarning: command =>
-        `Testing in a sandbox is strongly recommended. To switch the target account, select an option below or run ${chalk.bold(command)} before running the command again.`,
+      nonSandboxWarning: `Testing in a sandbox is strongly recommended. To switch the target account, select an option below or run ${uiCommandReference('hs accounts use')} before running the command again.`,
       publicAppNonDeveloperTestAccountWarning: `Local development of public apps is only supported in ${chalk.bold('developer test accounts')}.`,
     },
     createNewProjectForLocalDev: {

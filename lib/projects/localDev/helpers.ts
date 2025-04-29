@@ -1,4 +1,3 @@
-import { logger } from '@hubspot/local-dev-lib/logger';
 import {
   HUBSPOT_ACCOUNT_TYPES,
   HUBSPOT_ACCOUNT_TYPE_STRINGS,
@@ -69,6 +68,7 @@ import {
 import { hubspotAccountNamePrompt } from '../../prompts/accountNamePrompt';
 import { lib } from '../../../lang/en';
 import { FileResult } from 'tmp';
+import { logger } from '../../ui/logger';
 
 // If the user passed in the --account flag, confirm they want to use that account as
 // their target account, otherwise exit
@@ -80,7 +80,7 @@ export async function confirmDefaultAccountIsTarget(
     process.exit(EXIT_CODES.ERROR);
   }
 
-  logger.log();
+  logger.log('');
   const useDefaultAccount = await confirmDefaultAccountPrompt(
     accountConfig.name,
     HUBSPOT_ACCOUNT_TYPE_STRINGS[accountConfig.accountType]
@@ -164,7 +164,7 @@ export async function suggestRecommendedNestedAccount(
   accountConfig: CLIAccount,
   hasPublicApps: boolean
 ): Promise<ProjectDevTargetAccountPromptResponse> {
-  logger.log();
+  logger.log('');
   uiLine();
   if (hasPublicApps) {
     logger.log(
@@ -175,7 +175,7 @@ export async function suggestRecommendedNestedAccount(
     logger.log(lib.localDevHelpers.validateAccountOption.nonSandboxWarning);
   }
   uiLine();
-  logger.log();
+  logger.log('');
 
   const targetAccountPrompt = hasPublicApps
     ? selectDeveloperTestTargetAccountPrompt
@@ -368,7 +368,7 @@ export async function createNewProjectForLocalDev(
       projectConfig.name
     );
 
-    logger.log();
+    logger.log('');
     uiLine();
     logger.log(explanationString);
     uiLine();
@@ -411,7 +411,7 @@ export async function createNewProjectForLocalDev(
     }
   } else {
     // We cannot continue if the project does not exist in the target account
-    logger.log();
+    logger.log('');
     logger.log(
       lib.localDevHelpers.createNewProjectForLocalDev.choseNotToCreateProject
     );
@@ -469,11 +469,11 @@ export async function createInitialBuildForNewProject(
         subCategory: PROJECT_ERROR_TYPES.PROJECT_LOCKED,
       })
     ) {
-      logger.log();
+      logger.log('');
       logger.error(
         lib.localDevHelpers.createInitialBuildForNewProject.projectLockedError
       );
-      logger.log();
+      logger.log('');
     } else {
       logError(
         uploadError,
@@ -499,11 +499,11 @@ export async function createInitialBuildForNewProject(
 
     const failedSubTasks = subTasks.filter(task => task.status === 'FAILURE');
 
-    logger.log();
+    logger.log('');
     failedSubTasks.forEach(failedSubTask => {
       logger.error(failedSubTask.errorMessage);
     });
-    logger.log();
+    logger.log('');
 
     process.exit(EXIT_CODES.ERROR);
   }
