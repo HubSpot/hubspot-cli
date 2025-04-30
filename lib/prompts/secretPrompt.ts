@@ -1,8 +1,6 @@
 import { promptUser } from './promptUtils';
 import { i18n } from '../lang';
 
-const i18nKey = 'lib.prompts.secretPrompt';
-
 type SecretValuePromptResponse = {
   secretValue: string;
 };
@@ -13,7 +11,7 @@ export function secretValuePrompt(): Promise<SecretValuePromptResponse> {
       name: 'secretValue',
       type: 'password',
       mask: '*',
-      message: i18n(`${i18nKey}.enterValue`),
+      message: i18n(`lib.prompts.secretPrompt.enterValue`),
     },
   ]);
 }
@@ -27,7 +25,7 @@ export function secretNamePrompt(): Promise<SecretNamePromptResponse> {
     {
       name: 'secretName',
       type: 'input',
-      message: i18n(`${i18nKey}.enterName`),
+      message: i18n(`lib.prompts.secretPrompt.enterName`),
     },
   ]);
 }

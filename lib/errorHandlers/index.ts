@@ -9,7 +9,6 @@ import { shouldSuppressError } from './suppressError';
 import { i18n } from '../lang';
 import util from 'util';
 import { uiCommandReference } from '../ui';
-const i18nKey = 'lib.errorHandlers.index';
 
 export function logError(error: unknown, context?: ApiErrorContext): void {
   debugError(error, context);
@@ -41,7 +40,7 @@ export function logError(error: unknown, context?: ApiErrorContext): void {
     logger.error(message.join(' '));
   } else {
     // Unknown errors
-    logger.error(i18n(`${i18nKey}.unknownErrorOccurred`));
+    logger.error(i18n(`lib.errorHandlers.index.unknownErrorOccurred`));
   }
 
   if (isHubSpotHttpError(error) && error.code === 'ETIMEDOUT') {
@@ -51,7 +50,7 @@ export function logError(error: unknown, context?: ApiErrorContext): void {
     // Timeout was caused by the default timeout
     if (error.timeout && defaultTimeout === error.timeout) {
       logger.error(
-        i18n(`${i18nKey}.configTimeoutErrorOccurred`, {
+        i18n(`lib.errorHandlers.index.configTimeoutErrorOccurred`, {
           timeout: error.timeout,
           configSetCommand: uiCommandReference('hs config set'),
         })
@@ -59,7 +58,7 @@ export function logError(error: unknown, context?: ApiErrorContext): void {
     }
     // Timeout was caused by a custom timeout set by the CLI or LDL
     else {
-      logger.error(i18n(`${i18nKey}.genericTimeoutErrorOccurred`));
+      logger.error(i18n(`lib.errorHandlers.index.genericTimeoutErrorOccurred`));
     }
   }
 }
@@ -68,19 +67,21 @@ export function debugError(error: unknown, context?: ApiErrorContext): void {
   if (isHubSpotHttpError(error)) {
     logger.debug(error.toString());
   } else {
-    logger.debug(i18n(`${i18nKey}.errorOccurred`, { error: String(error) }));
+    logger.debug(
+      i18n(`lib.errorHandlers.index.errorOccurred`, { error: String(error) })
+    );
   }
 
   if (error instanceof Error && error.cause && !isHubSpotHttpError(error)) {
     logger.debug(
-      i18n(`${i18nKey}.errorCause`, {
+      i18n(`lib.errorHandlers.index.errorCause`, {
         cause: util.inspect(error.cause, false, null, true),
       })
     );
   }
   if (context) {
     logger.debug(
-      i18n(`${i18nKey}.errorContext`, {
+      i18n(`lib.errorHandlers.index.errorContext`, {
         context: util.inspect(context, false, null, true),
       })
     );
