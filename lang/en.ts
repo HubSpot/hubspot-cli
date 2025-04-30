@@ -3248,7 +3248,7 @@ export const lib = {
             instructions: (accountName, url) =>
               `To update CLI permissions for "${accountName}": \n- Go to ${url}, deactivate the existing personal access key, and create a new one that includes developer sandbox permissions. \n- Update the CLI config for this account by running ${chalk.bold('hs auth')} and entering the new key.\n`,
           },
-          generic: 'An error occured while creating a developer sandbox',
+          generic: 'An error occurred while creating a developer sandbox',
         },
       },
       standard: {
