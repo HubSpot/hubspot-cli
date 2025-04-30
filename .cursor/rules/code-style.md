@@ -21,3 +21,4 @@ Follow these guidelines when working with code in this repository:
 - Prefer early returns for readability
 - Use ESM modules (Node.js 18+ support)
 - Keep type definitions in separate `/types` directory
+- Never commit or push to main branch without permission
