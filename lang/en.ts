@@ -274,7 +274,7 @@ export const commands = {
         },
         success: {
           moduleDownloaded: (moduleName, path) =>
-            `"${moduleName}" succesfully downloaded to "${path}"`,
+            `"${moduleName}" successfully downloaded to "${path}"`,
         },
         errors: {
           pathExists: path => `Folder already exists at "${path}"`,
@@ -3247,7 +3247,7 @@ export const lib = {
             instructions: (accountName, url) =>
               `To update CLI permissions for "${accountName}": \n- Go to ${url}, deactivate the existing personal access key, and create a new one that includes developer sandbox permissions. \n- Update the CLI config for this account by running ${chalk.bold('hs auth')} and entering the new key.\n`,
           },
-          generic: 'An error occured while creating a developer sandbox',
+          generic: 'An error occurred while creating a developer sandbox',
         },
       },
       standard: {
@@ -3398,7 +3398,7 @@ export const lib = {
     port: {
       inUse: port => `Port ${port} is in use`,
       inUseSecondary: command =>
-        `Make sure it is available if before running ${command}`,
+        `Make sure it is available before running ${command}`,
       available: port => `Port ${port} available for local development`,
     },
     diagnosis: {
