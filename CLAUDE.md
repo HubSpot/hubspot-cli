@@ -26,3 +26,4 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - Early returns preferred for readability
 - ESM modules (Node.js 18+ support)
 - Type definitions in separate `/types` directory
+- Never commit or push to main branch without permission
