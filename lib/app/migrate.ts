@@ -1,4 +1,3 @@
-import { logger } from '@hubspot/local-dev-lib/logger';
 import path from 'path';
 import { getCwd, sanitizeFileName } from '@hubspot/local-dev-lib/path';
 import { extractZipArchive } from '@hubspot/local-dev-lib/archive';
@@ -47,6 +46,7 @@ import {
   getProjectBuildDetailUrl,
   getProjectDetailUrl,
 } from '../projects/urls';
+import { uiLogger } from '../ui/logger';
 
 export type MigrateAppArgs = CommonArgs &
   AccountArgs &
@@ -247,7 +247,7 @@ async function selectAppToMigrate(
   });
 
   if (migratableComponents.size !== 0) {
-    logger.log(
+    uiLogger.log(
       lib.migrate.componentsToBeMigrated(
         `\n - ${[...migratableComponents].join('\n - ')}`
       )
@@ -255,14 +255,14 @@ async function selectAppToMigrate(
   }
 
   if (unmigratableComponents.size !== 0) {
-    logger.log(
+    uiLogger.log(
       lib.migrate.componentsThatWillNotBeMigrated(
         `\n - ${[...unmigratableComponents].join('\n - ')}`
       )
     );
   }
 
-  logger.log();
+  uiLogger.log('');
 
   const promptMessage = projectConfig?.projectConfig
     ? `${lib.migrate.projectMigrationWarning} ${lib.migrate.prompt.proceed}`
@@ -517,7 +517,7 @@ async function downloadProjectFiles(
       // Move the existing source directory to archive
       fs.renameSync(path.join(projectDir, srcDir), archiveDest);
 
-      logger.info(lib.migrate.sourceContentsMoved(archiveDest));
+      uiLogger.info(lib.migrate.sourceContentsMoved(archiveDest));
     } else {
       absoluteDestPath = projectDest
         ? path.resolve(getCwd(), projectDest)
@@ -538,7 +538,7 @@ async function downloadProjectFiles(
       text: lib.migrate.spinners.downloadingProjectContentsComplete,
     });
 
-    logger.success(`Saved ${projectName} to ${projectDest}`);
+    uiLogger.success(`Saved ${projectName} to ${projectDest}`);
   } catch (error) {
     SpinniesManager.fail('fetchingMigratedProject', {
       text: lib.migrate.spinners.downloadingProjectContentsFailed,
@@ -617,14 +617,14 @@ export async function migrateApp2025_2(
     projectConfig
   );
 
-  logger.log(
+  uiLogger.log(
     uiLink(
       'Project Details',
       getProjectDetailUrl(projectName, derivedAccountId)!
     )
   );
 
-  logger.log(
+  uiLogger.log(
     uiLink(
       'Build Details',
       getProjectBuildDetailUrl(projectName, buildId, derivedAccountId)!
@@ -634,8 +634,8 @@ export async function migrateApp2025_2(
 
 export function logInvalidAccountError(): void {
   uiLine();
-  logger.error(lib.migrate.errors.invalidAccountTypeTitle);
-  logger.log(
+  uiLogger.error(lib.migrate.errors.invalidAccountTypeTitle);
+  uiLogger.log(
     lib.migrate.errors.invalidAccountTypeDescription(
       uiCommandReference('hs account use'),
       uiCommandReference('hs auth')

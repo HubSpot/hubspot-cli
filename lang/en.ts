@@ -1207,8 +1207,7 @@ export const commands = {
       },
       logs: {
         processExited: 'Stopping watcher...',
-        watchCancelledFromUi: () =>
-          `The watch process has been cancelled from the UI. Any changes made since cancelling have not been uploaded. To resume watching, rerun ${chalk.yellow('`hs project watch`')}.`,
+        watchCancelledFromUi: `The watch process has been cancelled from the UI. Any changes made since cancelling have not been uploaded. To resume watching, rerun ${uiCommandReference('hs project watch')}.`,
         resuming: 'Resuming watcher...',
         uploadSucceeded: (remotePath, filePath) =>
           `Uploaded file "${filePath}" to "${remotePath}"`,
@@ -2746,8 +2745,7 @@ export const lib = {
     },
     logFeedbackMessage: {
       feedbackHeader: "We'd love to hear your feedback!",
-      feedbackMessage: command =>
-        `How are you liking the new projects and developer tools? \n > Run \`${chalk.yellow(command)}\` to let us know what you think!\n`,
+      feedbackMessage: `How are you liking the new projects and developer tools? \n > Run ${uiCommandReference('hs feedback')} to let us know what you think!\n`,
     },
   },
   projectBuildAndDeploy: {
@@ -3463,8 +3461,7 @@ export const lib = {
       noAppsEligible: (accountId, reasons: string[]) =>
         `No apps in account ${accountId} are currently migratable${reasons.length ? `\n  - ${reasons.join('\n  - ')}` : ''}`,
 
-      invalidAccountTypeTitle: () =>
-        `${chalk.bold('Developer account not targeted')}`,
+      invalidAccountTypeTitle: `${chalk.bold('Developer account not targeted')}`,
       invalidAccountTypeDescription: (useCommand, authCommand) =>
         `Only public apps created in a developer account can be converted to a project component. Select a connected developer account with ${useCommand} or ${authCommand} and try again.`,
       appWithAppIdNotFound: appId =>

@@ -1,13 +1,13 @@
 import fs from 'fs-extra';
 import path from 'path';
 import findup from 'findup-sync';
-import { logger } from '@hubspot/local-dev-lib/logger';
 import { getAbsoluteFilePath, getCwd } from '@hubspot/local-dev-lib/path';
 
 import { ProjectConfig } from '../../types/Projects';
 import { PROJECT_CONFIG_FILE } from '../constants';
 import { lib } from '../../lang/en';
 import { EXIT_CODES } from '../enums/exitCodes';
+import { uiLogger } from '../ui/logger';
 
 export function writeProjectConfig(
   configPath: string,
@@ -16,9 +16,9 @@ export function writeProjectConfig(
   try {
     fs.ensureFileSync(configPath);
     fs.writeFileSync(configPath, JSON.stringify(config, null, 2));
-    logger.debug(`Wrote project config at ${configPath}`);
+    uiLogger.debug(`Wrote project config at ${configPath}`);
   } catch (e) {
-    logger.debug(e);
+    uiLogger.debug(e);
     return false;
   }
   return true;
@@ -61,7 +61,7 @@ export async function getProjectConfig(
       projectConfig,
     };
   } catch (e) {
-    logger.error('Could not read from project config');
+    uiLogger.error('Could not read from project config');
     return { projectConfig: null, projectDir: null };
   }
 }
@@ -71,12 +71,12 @@ export function validateProjectConfig(
   projectDir: string | null
 ): asserts projectConfig is ProjectConfig {
   if (!projectConfig || !projectDir) {
-    logger.error(lib.projects.validateProjectConfig.configNotFound);
+    uiLogger.error(lib.projects.validateProjectConfig.configNotFound);
     return process.exit(EXIT_CODES.ERROR);
   }
 
   if (!projectConfig.name || !projectConfig.srcDir) {
-    logger.error(lib.projects.validateProjectConfig.configMissingFields);
+    uiLogger.error(lib.projects.validateProjectConfig.configMissingFields);
     return process.exit(EXIT_CODES.ERROR);
   }
 
@@ -86,7 +86,7 @@ export function validateProjectConfig(
       '.',
       path.join(projectDir, PROJECT_CONFIG_FILE)
     );
-    logger.error(
+    uiLogger.error(
       lib.projects.validateProjectConfig.srcOutsideProjectDir(
         projectConfigFile,
         projectConfig.srcDir
@@ -96,7 +96,7 @@ export function validateProjectConfig(
   }
 
   if (!fs.existsSync(resolvedPath)) {
-    logger.error(
+    uiLogger.error(
       lib.projects.validateProjectConfig.srcDirNotFound(
         projectConfig.srcDir,
         projectDir
