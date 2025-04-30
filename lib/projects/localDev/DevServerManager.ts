@@ -1,4 +1,3 @@
-import { logger } from '@hubspot/local-dev-lib/logger';
 import { Environment } from '@hubspot/local-dev-lib/types/Config';
 import { promptUser } from '../../prompts/promptUtils';
 import { DevModeInterface as UIEDevModeInterface } from '@hubspot/ui-extensions-dev-server';
@@ -18,6 +17,7 @@ import {
   Component,
 } from '../../../types/Projects';
 import { lib } from '../../../lang/en';
+import { uiLogger } from '../../ui/logger';
 
 const SERVER_KEYS = {
   privateApp: 'privateApp',
@@ -85,7 +85,7 @@ class DevServerManager {
       if (Object.keys(compatibleComponents).length) {
         await callback(devServer.serverInterface, compatibleComponents);
       } else {
-        logger.debug(lib.DevServerManager.noCompatibleComponents(serverKey));
+        uiLogger.debug(lib.DevServerManager.noCompatibleComponents(serverKey));
       }
     }
   }
@@ -129,7 +129,7 @@ class DevServerManager {
             components: compatibleComponents,
             onUploadRequired,
             promptUser,
-            logger,
+            uiLogger,
             urls: {
               api: getHubSpotApiOrigin(env),
               web: getHubSpotWebsiteOrigin(env),

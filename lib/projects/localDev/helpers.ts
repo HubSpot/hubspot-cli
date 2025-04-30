@@ -1,4 +1,3 @@
-import { logger } from '@hubspot/local-dev-lib/logger';
 import {
   HUBSPOT_ACCOUNT_TYPES,
   HUBSPOT_ACCOUNT_TYPE_STRINGS,
@@ -69,6 +68,7 @@ import {
 import { hubspotAccountNamePrompt } from '../../prompts/accountNamePrompt';
 import { lib } from '../../../lang/en';
 import { FileResult } from 'tmp';
+import { uiLogger } from '../../ui/logger';
 
 // If the user passed in the --account flag, confirm they want to use that account as
 // their target account, otherwise exit
@@ -76,18 +76,20 @@ export async function confirmDefaultAccountIsTarget(
   accountConfig: CLIAccount
 ): Promise<void> {
   if (!accountConfig.name || !accountConfig.accountType) {
-    logger.error(lib.localDevHelpers.confirmDefaultAccountIsTarget.configError);
+    uiLogger.error(
+      lib.localDevHelpers.confirmDefaultAccountIsTarget.configError
+    );
     process.exit(EXIT_CODES.ERROR);
   }
 
-  logger.log();
+  uiLogger.log('');
   const useDefaultAccount = await confirmDefaultAccountPrompt(
     accountConfig.name,
     HUBSPOT_ACCOUNT_TYPE_STRINGS[accountConfig.accountType]
   );
 
   if (!useDefaultAccount) {
-    logger.log(
+    uiLogger.log(
       lib.localDevHelpers.confirmDefaultAccountIsTarget
         .declineDefaultAccountExplanation
     );
@@ -110,12 +112,12 @@ export async function checkIfDefaultAccountIsSupported(
       defaultAccountIsUnified
     )
   ) {
-    logger.error(
+    uiLogger.error(
       lib.localDevHelpers.checkIfDefaultAccountIsSupported.publicApp
     );
     process.exit(EXIT_CODES.SUCCESS);
   } else if (!hasPublicApps && isAppDeveloperAccount(accountConfig)) {
-    logger.error(
+    uiLogger.error(
       lib.localDevHelpers.checkIfDefaultAccountIsSupported.privateApp
     );
     process.exit(EXIT_CODES.SUCCESS);
@@ -127,7 +129,7 @@ export function checkIfParentAccountIsAuthed(accountConfig: CLIAccount): void {
     !accountConfig.parentAccountId ||
     !getAccountConfig(accountConfig.parentAccountId)
   ) {
-    logger.error(
+    uiLogger.error(
       lib.localDevHelpers.checkIfParentAccountIsAuthed.notAuthedError(
         accountConfig.parentAccountId || '',
         uiAccountDescription(getAccountIdentifier(accountConfig))
@@ -144,14 +146,14 @@ export function checkIfAccountFlagIsSupported(
 ): void {
   if (hasPublicApps) {
     if (!isDeveloperTestAccount(accountConfig)) {
-      logger.error(
+      uiLogger.error(
         lib.localDevHelpers.validateAccountOption.invalidPublicAppAccount
       );
       process.exit(EXIT_CODES.SUCCESS);
     }
     checkIfParentAccountIsAuthed(accountConfig);
   } else if (isAppDeveloperAccount(accountConfig)) {
-    logger.error(
+    uiLogger.error(
       lib.localDevHelpers.validateAccountOption.invalidPrivateAppAccount
     );
     process.exit(EXIT_CODES.SUCCESS);
@@ -164,18 +166,18 @@ export async function suggestRecommendedNestedAccount(
   accountConfig: CLIAccount,
   hasPublicApps: boolean
 ): Promise<ProjectDevTargetAccountPromptResponse> {
-  logger.log();
+  uiLogger.log('');
   uiLine();
   if (hasPublicApps) {
-    logger.log(
+    uiLogger.log(
       lib.localDevHelpers.validateAccountOption
         .publicAppNonDeveloperTestAccountWarning
     );
   } else {
-    logger.log(lib.localDevHelpers.validateAccountOption.nonSandboxWarning);
+    uiLogger.log(lib.localDevHelpers.validateAccountOption.nonSandboxWarning);
   }
   uiLine();
-  logger.log();
+  uiLogger.log('');
 
   const targetAccountPrompt = hasPublicApps
     ? selectDeveloperTestTargetAccountPrompt
@@ -198,10 +200,10 @@ export async function createSandboxForLocalDev(
     );
   } catch (err) {
     if (isMissingScopeError(err)) {
-      logger.error(lib.sandbox.create.developer.failure.scopes.message);
+      uiLogger.error(lib.sandbox.create.developer.failure.scopes.message);
       const websiteOrigin = getHubSpotWebsiteOrigin(env);
       const url = `${websiteOrigin}/personal-access-key/${accountId}`;
-      logger.info(
+      uiLogger.info(
         lib.sandbox.create.developer.failure.scopes.instructions(
           accountConfig.name || accountId,
           url
@@ -235,7 +237,7 @@ export async function createSandboxForLocalDev(
     const sandboxAccountConfig = getAccountConfig(result.sandbox.sandboxHubId);
 
     if (!sandboxAccountConfig) {
-      logger.error(lib.sandbox.create.developer.failure.generic);
+      uiLogger.error(lib.sandbox.create.developer.failure.generic);
       process.exit(EXIT_CODES.ERROR);
     }
 
@@ -277,10 +279,10 @@ export async function createDeveloperTestAccountForLocalDev(
     }
   } catch (err) {
     if (isMissingScopeError(err)) {
-      logger.error(lib.developerTestAccount.create.failure.scopes.message);
+      uiLogger.error(lib.developerTestAccount.create.failure.scopes.message);
       const websiteOrigin = getHubSpotWebsiteOrigin(env);
       const url = `${websiteOrigin}/personal-access-key/${accountId}`;
-      logger.info(
+      uiLogger.info(
         lib.developerTestAccount.create.failure.scopes.instructions(
           accountConfig.name || accountId,
           url
@@ -325,12 +327,12 @@ export async function useExistingDevTestAccount(
   const useExistingDevTestAcct =
     await confirmUseExistingDeveloperTestAccountPrompt(account);
   if (!useExistingDevTestAcct) {
-    logger.log('');
-    logger.log(
+    uiLogger.log('');
+    uiLogger.log(
       lib.localDevHelpers.confirmDefaultAccountIsTarget
         .declineDefaultAccountExplanation
     );
-    logger.log('');
+    uiLogger.log('');
     process.exit(EXIT_CODES.SUCCESS);
   }
   const devTestAcctConfigName = await saveAccountToConfig(
@@ -338,7 +340,7 @@ export async function useExistingDevTestAccount(
     account.accountName,
     env
   );
-  logger.success(
+  uiLogger.success(
     lib.developerTestAccount.create.success.configFileUpdated(
       devTestAcctConfigName,
       PERSONAL_ACCESS_KEY_AUTH_METHOD.name
@@ -368,9 +370,9 @@ export async function createNewProjectForLocalDev(
       projectConfig.name
     );
 
-    logger.log();
+    uiLogger.log('');
     uiLine();
-    logger.log(explanationString);
+    uiLogger.log(explanationString);
     uiLine();
 
     shouldCreateProject = await confirmPrompt(
@@ -404,15 +406,15 @@ export async function createNewProjectForLocalDev(
       return project;
     } catch (err) {
       SpinniesManager.fail('createProject');
-      logger.log(
+      uiLogger.log(
         lib.localDevHelpers.createNewProjectForLocalDev.failedToCreateProject
       );
       process.exit(EXIT_CODES.ERROR);
     }
   } else {
     // We cannot continue if the project does not exist in the target account
-    logger.log();
-    logger.log(
+    uiLogger.log('');
+    uiLogger.log(
       lib.localDevHelpers.createNewProjectForLocalDev.choseNotToCreateProject
     );
     process.exit(EXIT_CODES.SUCCESS);
@@ -426,7 +428,7 @@ function projectUploadCallback(
   buildId?: number
 ): Promise<ProjectPollResult> {
   if (!buildId) {
-    logger.error(
+    uiLogger.error(
       lib.localDevHelpers.createInitialBuildForNewProject.genericError
     );
     process.exit(EXIT_CODES.ERROR);
@@ -447,17 +449,21 @@ export async function createInitialBuildForNewProject(
   projectConfig: ProjectConfig,
   projectDir: string,
   targetAccountId: number,
-  sendIr?: boolean
+  sendIR?: boolean
 ): Promise<Build> {
   const { result: initialUploadResult, uploadError } =
-    await handleProjectUpload<ProjectPollResult>(
-      targetAccountId,
+    await handleProjectUpload<ProjectPollResult>({
+      accountId: targetAccountId,
       projectConfig,
       projectDir,
-      projectUploadCallback,
-      lib.localDevHelpers.createInitialBuildForNewProject.initialUploadMessage,
-      sendIr
-    );
+      callbackFunc: projectUploadCallback,
+      uploadMessage:
+        lib.localDevHelpers.createInitialBuildForNewProject
+          .initialUploadMessage,
+      forceCreate: true,
+      skipValidation: true,
+      sendIR,
+    });
 
   if (uploadError) {
     if (
@@ -465,11 +471,11 @@ export async function createInitialBuildForNewProject(
         subCategory: PROJECT_ERROR_TYPES.PROJECT_LOCKED,
       })
     ) {
-      logger.log();
-      logger.error(
+      uiLogger.log('');
+      uiLogger.error(
         lib.localDevHelpers.createInitialBuildForNewProject.projectLockedError
       );
-      logger.log();
+      uiLogger.log('');
     } else {
       logError(
         uploadError,
@@ -495,11 +501,11 @@ export async function createInitialBuildForNewProject(
 
     const failedSubTasks = subTasks.filter(task => task.status === 'FAILURE');
 
-    logger.log();
+    uiLogger.log('');
     failedSubTasks.forEach(failedSubTask => {
-      logger.error(failedSubTask.errorMessage);
+      uiLogger.error(failedSubTask.errorMessage);
     });
-    logger.log();
+    uiLogger.log('');
 
     process.exit(EXIT_CODES.ERROR);
   }

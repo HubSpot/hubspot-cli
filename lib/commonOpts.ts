@@ -21,23 +21,26 @@ import { debugError } from './errorHandlers';
 import { EXIT_CODES } from './enums/exitCodes';
 import { uiCommandReference } from './ui';
 
-const i18nKey = 'lib.commonOpts';
-
 export function addGlobalOptions(yargs: Argv) {
   yargs.version(false);
-
-  return yargs.option('debug', {
+  yargs.option('debug', {
     alias: 'd',
     default: false,
-    describe: i18n(`${i18nKey}.options.debug.describe`),
+    describe: i18n(`lib.commonOpts.options.debug.describe`),
     type: 'boolean',
   });
+  yargs.option('network-debug', {
+    default: false,
+    type: 'boolean',
+    hidden: true,
+  });
+  return yargs;
 }
 
 export function addAccountOptions(yargs: Argv): Argv {
   return yargs.option('account', {
     alias: 'a',
-    describe: i18n(`${i18nKey}.options.account.describe`),
+    describe: i18n(`lib.commonOpts.options.account.describe`),
     type: 'string',
   });
 }
@@ -45,7 +48,7 @@ export function addAccountOptions(yargs: Argv): Argv {
 export function addConfigOptions(yargs: Argv): Argv<ConfigArgs> {
   return yargs.option<keyof ConfigArgs, StringArgType>('config', {
     alias: 'c',
-    describe: i18n(`${i18nKey}.options.config.describe`),
+    describe: i18n(`lib.commonOpts.options.config.describe`),
     type: 'string',
   });
 }
@@ -53,7 +56,7 @@ export function addConfigOptions(yargs: Argv): Argv<ConfigArgs> {
 export function addOverwriteOptions(yargs: Argv): Argv {
   return yargs.option('overwrite', {
     alias: 'o',
-    describe: i18n(`${i18nKey}.options.overwrite.describe`),
+    describe: i18n(`lib.commonOpts.options.overwrite.describe`),
     type: 'boolean',
     default: false,
   });
@@ -68,7 +71,7 @@ export function addCmsPublishModeOptions(
   return yargs.option('cms-publish-mode', {
     alias: 'm',
     describe: i18n(
-      `${i18nKey}.options.modes.describe.${
+      `lib.commonOpts.options.modes.describe.${
         read ? 'read' : write ? 'write' : 'default'
       }`,
       { modes: cmsPublishModes }
@@ -79,7 +82,7 @@ export function addCmsPublishModeOptions(
 
 export function addTestingOptions(yargs: Argv): Argv {
   return yargs.option('qa', {
-    describe: i18n(`${i18nKey}.options.qa.describe`),
+    describe: i18n(`lib.commonOpts.options.qa.describe`),
     type: 'boolean',
     default: false,
     hidden: true,
@@ -87,35 +90,62 @@ export function addTestingOptions(yargs: Argv): Argv {
 }
 
 export function addUseEnvironmentOptions(yargs: Argv): Argv {
-  return yargs
-    .option('use-env', {
-      describe: i18n(`${i18nKey}.options.useEnv.describe`),
-      type: 'boolean',
-    })
-    .conflicts('use-env', 'account');
+  yargs.option('use-env', {
+    describe: i18n(`lib.commonOpts.options.useEnv.describe`),
+    type: 'boolean',
+  });
+  yargs.conflicts('use-env', 'account');
+  return yargs;
 }
 
 export async function addCustomHelpOutput(
   yargs: Argv,
-  command: string,
-  describe: string
+  command: string | string[],
+  describe?: string
 ): Promise<void> {
   try {
     const parsedArgv = yargsParser(process.argv.slice(2));
 
     if (parsedArgv && parsedArgv.help) {
-      // Construct the full command, including positional arguments
       const commandBase = `hs ${parsedArgv._.slice(0, -1).join(' ')}`;
-      const fullCommand = `${commandBase.trim()} ${command}`;
+
+      // Make sure we are targeting the correct command by confirming that
+      // "command" matches the last part of the user's input command
+      const checkIsTargetCommand = (command: string) => {
+        const targetBaseCommand = command.split(' ')[0];
+        return targetBaseCommand === parsedArgv._[parsedArgv._.length - 1];
+      };
+
+      const isTargetedCommand = Array.isArray(command)
+        ? command.some(checkIsTargetCommand)
+        : checkIsTargetCommand(command);
+
+      if (!isTargetedCommand) {
+        return;
+      }
+
+      // Construct the full command, including positional arguments
+      const commandString = Array.isArray(command) ? command[0] : command;
+      const fullCommand = `${commandBase.trim()} ${commandString}`;
 
       // Format the original help output to be more readable
       let commandHelp = await yargs.getHelp();
-      ['Options:', 'Examples:', 'Positionals:'].forEach(header => {
+      ['Options:', 'Commands:', 'Examples:', 'Positionals:'].forEach(header => {
         commandHelp = commandHelp.replace(header, chalk.bold(header));
       });
 
+      // Remove "hs <command>" from the help output (this shows up for command buckets)
+      commandHelp = commandHelp.replace('hs <command>\n', '');
+
+      // Remove the first line of the help output if it's empty
+      if (commandHelp.startsWith('\n')) {
+        commandHelp = commandHelp.slice(1);
+      }
+
       logger.log(
-        `${uiCommandReference(fullCommand, false)}\n\n${describe}\n\n${commandHelp}`
+        `${uiCommandReference(fullCommand, false)}\n\n${
+          describe ? `${describe}\n\n` : ''
+        }${commandHelp}`
       );
       process.exit(EXIT_CODES.SUCCESS);
     }
@@ -125,12 +155,19 @@ export async function addCustomHelpOutput(
   }
 }
 
-export function setLogLevel(options: Arguments<{ debug?: boolean }>): void {
-  const { debug } = options;
+export function setLogLevel(
+  options: Arguments<{ debug?: boolean; networkDebug?: boolean }>
+): void {
+  const { debug, networkDebug } = options;
   if (debug) {
     setLoggerLogLevel(LOG_LEVEL.DEBUG);
   } else {
     setLoggerLogLevel(LOG_LEVEL.LOG);
+  }
+
+  if (networkDebug) {
+    process.env.HUBSPOT_NETWORK_LOGGING = 'true';
+    setLoggerLogLevel(LOG_LEVEL.DEBUG);
   }
 }
 

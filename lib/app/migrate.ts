@@ -1,4 +1,3 @@
-import { logger } from '@hubspot/local-dev-lib/logger';
 import path from 'path';
 import { getCwd, sanitizeFileName } from '@hubspot/local-dev-lib/path';
 import { extractZipArchive } from '@hubspot/local-dev-lib/archive';
@@ -30,6 +29,7 @@ import {
   isMigrationStatus,
   listAppsForMigration,
   MigrationApp,
+  MigrationFailed,
   MigrationStatus,
 } from '../../api/migrate';
 import fs from 'fs';
@@ -46,6 +46,7 @@ import {
   getProjectBuildDetailUrl,
   getProjectDetailUrl,
 } from '../projects/urls';
+import { uiLogger } from '../ui/logger';
 
 export type MigrateAppArgs = CommonArgs &
   AccountArgs &
@@ -90,6 +91,24 @@ function filterAppsByProjectName(
     }
     return true;
   };
+}
+
+function buildErrorMessageFromMigrationStatus(error: MigrationFailed): string {
+  const { componentErrors, projectErrorDetail } = error;
+  if (!componentErrors || !componentErrors.length) {
+    return projectErrorDetail;
+  }
+  return `${projectErrorDetail}: \n\t- ${componentErrors
+    .map(componentError => {
+      const {
+        componentType,
+        errorMessage,
+        developerSymbol: uid,
+      } = componentError;
+
+      return `${componentType}${uid ? ` (${uid})` : ''}: ${errorMessage}`;
+    })
+    .join('\n\t- ')}`;
 }
 
 async function fetchMigrationApps(
@@ -228,7 +247,7 @@ async function selectAppToMigrate(
   });
 
   if (migratableComponents.size !== 0) {
-    logger.log(
+    uiLogger.log(
       lib.migrate.componentsToBeMigrated(
         `\n - ${[...migratableComponents].join('\n - ')}`
       )
@@ -236,14 +255,14 @@ async function selectAppToMigrate(
   }
 
   if (unmigratableComponents.size !== 0) {
-    logger.log(
+    uiLogger.log(
       lib.migrate.componentsThatWillNotBeMigrated(
         `\n - ${[...unmigratableComponents].join('\n - ')}`
       )
     );
   }
 
-  logger.log();
+  uiLogger.log('');
 
   const promptMessage = projectConfig?.projectConfig
     ? `${lib.migrate.projectMigrationWarning} ${lib.migrate.prompt.proceed}`
@@ -359,11 +378,22 @@ async function beginMigration(
   );
   const { migrationId } = data;
 
-  const pollResponse = await pollMigrationStatus(
-    derivedAccountId,
-    migrationId,
-    [MIGRATION_STATUS.INPUT_REQUIRED]
-  );
+  let pollResponse: MigrationStatus;
+  try {
+    pollResponse = await pollMigrationStatus(derivedAccountId, migrationId, [
+      MIGRATION_STATUS.INPUT_REQUIRED,
+    ]);
+  } catch (error) {
+    SpinniesManager.fail('beginningMigration', {
+      text: lib.migrate.spinners.unableToStartMigration,
+    });
+    if (isMigrationStatus(error) && error.status === MIGRATION_STATUS.FAILURE) {
+      throw new Error(buildErrorMessageFromMigrationStatus(error));
+    }
+    throw new Error(lib.migrate.errors.migrationFailed, {
+      cause: error,
+    });
+  }
 
   if (pollResponse.status !== MIGRATION_STATUS.INPUT_REQUIRED) {
     SpinniesManager.fail('beginningMigration', {
@@ -436,22 +466,7 @@ async function finalizeMigration(
     });
 
     if (isMigrationStatus(error) && error.status === MIGRATION_STATUS.FAILURE) {
-      const { componentErrors, projectErrorDetail } = error;
-      if (!componentErrors || !componentErrors.length) {
-        throw new Error(projectErrorDetail);
-      }
-      const errorMessage = `${projectErrorDetail}: \n\t- ${componentErrors
-        .map(componentError => {
-          const {
-            componentType,
-            errorMessage,
-            developerSymbol: uid,
-          } = componentError;
-
-          return `${componentType}${uid ? ` (${uid})` : ''}: ${errorMessage}`;
-        })
-        .join('\n\t- ')}`;
-      throw new Error(errorMessage);
+      throw new Error(buildErrorMessageFromMigrationStatus(error));
     }
 
     throw new Error(lib.migrate.errors.migrationFailed, {
@@ -502,7 +517,7 @@ async function downloadProjectFiles(
       // Move the existing source directory to archive
       fs.renameSync(path.join(projectDir, srcDir), archiveDest);
 
-      logger.info(lib.migrate.sourceContentsMoved(archiveDest));
+      uiLogger.info(lib.migrate.sourceContentsMoved(archiveDest));
     } else {
       absoluteDestPath = projectDest
         ? path.resolve(getCwd(), projectDest)
@@ -523,7 +538,7 @@ async function downloadProjectFiles(
       text: lib.migrate.spinners.downloadingProjectContentsComplete,
     });
 
-    logger.success(`Saved ${projectName} to ${projectDest}`);
+    uiLogger.success(`Saved ${projectName} to ${projectDest}`);
   } catch (error) {
     SpinniesManager.fail('fetchingMigratedProject', {
       text: lib.migrate.spinners.downloadingProjectContentsFailed,
@@ -602,14 +617,14 @@ export async function migrateApp2025_2(
     projectConfig
   );
 
-  logger.log(
+  uiLogger.log(
     uiLink(
       'Project Details',
       getProjectDetailUrl(projectName, derivedAccountId)!
     )
   );
 
-  logger.log(
+  uiLogger.log(
     uiLink(
       'Build Details',
       getProjectBuildDetailUrl(projectName, buildId, derivedAccountId)!
@@ -619,8 +634,8 @@ export async function migrateApp2025_2(
 
 export function logInvalidAccountError(): void {
   uiLine();
-  logger.error(lib.migrate.errors.invalidAccountTypeTitle);
-  logger.log(
+  uiLogger.error(lib.migrate.errors.invalidAccountTypeTitle);
+  uiLogger.log(
     lib.migrate.errors.invalidAccountTypeDescription(
       uiCommandReference('hs account use'),
       uiCommandReference('hs auth')

@@ -1,5 +1,4 @@
 import migrateCommand from './app/migrate';
-import { addGlobalOptions } from '../lib/commonOpts';
 import { Argv, CommandModule } from 'yargs';
 
 export const command = ['app', 'apps'];
@@ -8,8 +7,6 @@ export const command = ['app', 'apps'];
 export const describe = undefined;
 
 export function builder(yargs: Argv) {
-  addGlobalOptions(yargs);
-
   return yargs.command(migrateCommand).demandCommand(1, '');
 }
 
