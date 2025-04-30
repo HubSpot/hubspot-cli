@@ -2729,6 +2729,9 @@ export const lib = {
       srcOutsideProjectDir: (projectConfig, srcDir) =>
         `Invalid value for 'srcDir' in ${projectConfig}: ${chalk.bold(`srcDir: "${srcDir}"`)}\n\t'srcDir' must be a relative path to a folder under the project root, such as "." or "./src"`,
     },
+    getProjectConfig: {
+      error: 'Could not read from project config',
+    },
     ensureProjectExists: {
       createPrompt: (projectName, accountIdentifier) =>
         `The project ${projectName} does not exist in ${accountIdentifier}. Would you like to create it?`,
@@ -2750,6 +2753,7 @@ export const lib = {
   },
   projectBuildAndDeploy: {
     makePollTaskStatusFunc: {
+      errorSummary: 'See below for a summary of errors.',
       componentCountSingular: 'Found 1 component in this project\n',
       componentCount: numComponents =>
         `Found ${numComponents} components in this project\n`,

@@ -61,7 +61,7 @@ export async function getProjectConfig(
       projectConfig,
     };
   } catch (e) {
-    uiLogger.error('Could not read from project config');
+    uiLogger.error(lib.projects.getProjectConfig.error);
     return { projectConfig: null, projectDir: null };
   }
 }

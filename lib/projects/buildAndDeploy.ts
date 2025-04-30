@@ -331,7 +331,9 @@ function makePollTaskStatusFunc<T extends ProjectTask>({
                   displayId
                 )}\n`
               );
-              uiLogger.log('See below for a summary of errors.');
+              uiLogger.log(
+                lib.projectBuildAndDeploy.makePollTaskStatusFunc.errorSummary
+              );
               uiLine();
 
               const displayErrors = failedSubtasks.filter(
