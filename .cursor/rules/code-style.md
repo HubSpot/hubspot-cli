@@ -9,6 +9,7 @@ alwaysApply: true
 Follow these guidelines when working with code in this repository:
 
 - Use TypeScript with strict type checking
+- All new log statements should use the uiLogger
 - Follow Unix philosophy: small, focused modules that do one thing well
 - Always check similar files for patterns and conventions before modifying
 - Use functional patterns, avoid classes where possible

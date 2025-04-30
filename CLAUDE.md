@@ -19,6 +19,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - Use functional patterns, avoid classes where possible
 - Always use descriptive variable names that clearly indicate purpose
 - When writing logger statements, always put strings in the en.ts file
+- All new log statements should use the uiLogger
 - Tests in `__tests__` directories using Jest
 - Single quotes, 2-space indentation, trailing commas
 - 80 character line limit, except in special files like lyaml
