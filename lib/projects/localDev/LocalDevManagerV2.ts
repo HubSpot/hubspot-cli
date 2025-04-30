@@ -38,6 +38,7 @@ import { handleKeypress } from '../../process';
 import { IntermediateRepresentationNodeLocalDev } from '@hubspot/project-parsing-lib/src/lib/types';
 import { AppIRNode } from '../../../types/ProjectComponents';
 import { lib } from '../../../lang/en';
+import { uiLogger } from '../../ui/logger';
 
 const WATCH_EVENTS = {
   add: 'add',
@@ -106,14 +107,14 @@ class LocalDevManagerV2 {
       !this.projectConfig ||
       !this.projectDir
     ) {
-      logger.log(lib.LocalDevManager.failedToInitialize);
+      uiLogger.log(lib.LocalDevManager.failedToInitialize);
       process.exit(EXIT_CODES.ERROR);
     }
   }
 
   async setActiveApp(appUid?: string): Promise<void> {
     if (!appUid) {
-      logger.error(lib.LocalDevManager.missingUid);
+      uiLogger.error(lib.LocalDevManager.missingUid);
       process.exit(EXIT_CODES.ERROR);
     }
     const app =
@@ -172,7 +173,7 @@ class LocalDevManagerV2 {
     }
     uiLine();
 
-    logger.warn(
+    uiLogger.warn(
       lib.LocalDevManager.activeInstallWarning.installCount(
         this.activePublicAppData.name,
         this.publicAppActiveInstalls,
@@ -180,7 +181,7 @@ class LocalDevManagerV2 {
         this.publicAppActiveInstalls === 1 ? 'account' : 'accounts'
       )
     );
-    logger.log(lib.LocalDevManager.activeInstallWarning.explanation);
+    uiLogger.log(lib.LocalDevManager.activeInstallWarning.explanation);
     uiLine();
 
     const proceed = await confirmPrompt(
@@ -199,14 +200,14 @@ class LocalDevManagerV2 {
 
     // Local dev currently relies on the existence of a deployed build in the target account
     if (!this.deployedBuild) {
-      logger.error(
+      uiLogger.error(
         lib.LocalDevManager.noDeployedBuild(
           this.projectConfig.name,
           uiAccountDescription(this.targetProjectAccountId),
           this.getUploadCommand()
         )
       );
-      logger.log();
+      uiLogger.log('');
       process.exit(EXIT_CODES.SUCCESS);
     }
 
@@ -220,15 +221,15 @@ class LocalDevManagerV2 {
 
     uiBetaTag(lib.LocalDevManager.betaMessage);
 
-    logger.log(
+    uiLogger.log(
       uiLink(
         lib.LocalDevManager.learnMoreLocalDevServer,
         'https://developers.hubspot.com/docs/platform/project-cli-commands#start-a-local-development-server'
       )
     );
 
-    logger.log();
-    logger.log(
+    uiLogger.log('');
+    uiLogger.log(
       chalk.hex(UI_COLORS.SORBET)(
         lib.LocalDevManager.running(
           this.projectConfig.name,
@@ -236,7 +237,7 @@ class LocalDevManagerV2 {
         )
       )
     );
-    logger.log(
+    uiLogger.log(
       uiLink(
         lib.LocalDevManager.viewProjectLink,
         getProjectDetailUrl(
@@ -246,10 +247,10 @@ class LocalDevManagerV2 {
       )
     );
 
-    logger.log();
-    logger.log(lib.LocalDevManager.quitHelper);
+    uiLogger.log('');
+    uiLogger.log(lib.LocalDevManager.quitHelper);
     uiLine();
-    logger.log();
+    uiLogger.log('');
 
     await this.devServerStart();
 
@@ -354,17 +355,17 @@ class LocalDevManagerV2 {
     // Avoid logging the warning to the console if it is currently the most
     // recently logged warning. We do not want to spam the console with the same message.
     if (!this.uploadWarnings[warning]) {
-      logger.log();
-      logger.warn(lib.LocalDevManager.uploadWarning.header(warning));
-      logger.log(lib.LocalDevManager.uploadWarning.stopDev);
+      uiLogger.log('');
+      uiLogger.warn(lib.LocalDevManager.uploadWarning.header(warning));
+      uiLogger.log(lib.LocalDevManager.uploadWarning.stopDev);
       if (this.isGithubLinked) {
-        logger.log(lib.LocalDevManager.uploadWarning.pushToGithub);
+        uiLogger.log(lib.LocalDevManager.uploadWarning.pushToGithub);
       } else {
-        logger.log(
+        uiLogger.log(
           lib.LocalDevManager.uploadWarning.runUpload(this.getUploadCommand())
         );
       }
-      logger.log(lib.LocalDevManager.uploadWarning.restartDev);
+      uiLogger.log(lib.LocalDevManager.uploadWarning.restartDev);
 
       this.mostRecentUploadWarning = warning;
       this.uploadWarnings[warning] = true;
@@ -492,7 +493,7 @@ class LocalDevManagerV2 {
         logger.error(e);
       }
 
-      logger.error(
+      uiLogger.error(
         lib.LocalDevManager.devServer.setupError(
           e instanceof Error ? e.message : ''
         )
@@ -511,7 +512,7 @@ class LocalDevManagerV2 {
       if (this.debug) {
         logger.error(e);
       }
-      logger.error(
+      uiLogger.error(
         lib.LocalDevManager.devServer.startError(
           e instanceof Error ? e.message : ''
         )
@@ -527,7 +528,7 @@ class LocalDevManagerV2 {
       if (this.debug) {
         logger.error(e);
       }
-      logger.error(
+      uiLogger.error(
         lib.LocalDevManager.devServer.fileChangeError(
           e instanceof Error ? e.message : ''
         )
@@ -543,7 +544,7 @@ class LocalDevManagerV2 {
       if (this.debug) {
         logger.error(e);
       }
-      logger.error(
+      uiLogger.error(
         lib.LocalDevManager.devServer.cleanupError(
           e instanceof Error ? e.message : ''
         )

@@ -3,8 +3,6 @@ import { PromptConfig } from '../../types/Prompts';
 import { promptUser } from './promptUtils';
 import { i18n } from '../lang';
 
-const i18nKey = 'lib.prompts.createModulePrompt';
-
 type CreateModulePromptResponse = {
   moduleLabel: string;
   reactType: boolean;
@@ -15,12 +13,12 @@ type CreateModulePromptResponse = {
 
 const MODULE_LABEL_PROMPT: PromptConfig<CreateModulePromptResponse> = {
   name: 'moduleLabel',
-  message: i18n(`${i18nKey}.enterLabel`),
+  message: i18n(`lib.prompts.createModulePrompt.enterLabel`),
   validate(val?: string): boolean | string {
     if (typeof val !== 'string') {
-      return i18n(`${i18nKey}.errors.invalidLabel`);
+      return i18n(`lib.prompts.createModulePrompt.errors.invalidLabel`);
     } else if (!val.length) {
-      return i18n(`${i18nKey}.errors.labelRequired`);
+      return i18n(`lib.prompts.createModulePrompt.errors.labelRequired`);
     }
     return true;
   },
@@ -29,14 +27,14 @@ const MODULE_LABEL_PROMPT: PromptConfig<CreateModulePromptResponse> = {
 const REACT_TYPE_PROMPT: PromptConfig<CreateModulePromptResponse> = {
   type: 'confirm',
   name: 'reactType',
-  message: i18n(`${i18nKey}.selectReactType`),
+  message: i18n(`lib.prompts.createModulePrompt.selectReactType`),
   default: false,
 };
 
 const CONTENT_TYPES_PROMPT: PromptConfig<CreateModulePromptResponse> = {
   type: 'checkbox',
   name: 'contentTypes',
-  message: i18n(`${i18nKey}.selectContentType`),
+  message: i18n(`lib.prompts.createModulePrompt.selectContentType`),
   default: ['ANY'],
   choices: [
     { name: 'Any', value: 'ANY' },
@@ -57,7 +55,7 @@ const CONTENT_TYPES_PROMPT: PromptConfig<CreateModulePromptResponse> = {
       if (input.length > 0) {
         resolve(true);
       }
-      reject(i18n(`${i18nKey}.errors.contentTypeRequired`));
+      reject(i18n(`lib.prompts.createModulePrompt.errors.contentTypeRequired`));
     });
   },
 };
@@ -65,14 +63,14 @@ const CONTENT_TYPES_PROMPT: PromptConfig<CreateModulePromptResponse> = {
 const GLOBAL_PROMPT: PromptConfig<CreateModulePromptResponse> = {
   type: 'confirm',
   name: 'global',
-  message: i18n(`${i18nKey}.confirmGlobal`),
+  message: i18n(`lib.prompts.createModulePrompt.confirmGlobal`),
   default: false,
 };
 
 const AVAILABLE_FOR_NEW_CONTENT: PromptConfig<CreateModulePromptResponse> = {
   type: 'confirm',
   name: 'availableForNewContent',
-  message: i18n(`${i18nKey}.availableForNewContent`),
+  message: i18n(`lib.prompts.createModulePrompt.availableForNewContent`),
   default: true,
 };
 

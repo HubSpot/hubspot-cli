@@ -4,7 +4,6 @@ import fs from 'fs-extra';
 import path from 'path';
 import { uploadProject } from '@hubspot/local-dev-lib/api/projects';
 import { shouldIgnoreFile } from '@hubspot/local-dev-lib/ignoreRules';
-import { logger } from '@hubspot/local-dev-lib/logger';
 
 import SpinniesManager from '../ui/SpinniesManager';
 import { uiAccountDescription } from '../ui';
@@ -15,6 +14,7 @@ import { logError } from '../errorHandlers';
 import util from 'node:util';
 import { lib } from '../../lang/en';
 import { ensureProjectExists } from './ensureProjectExists';
+import { uiLogger } from '../ui/logger';
 
 async function uploadProjectFiles(
   accountId: number,
@@ -58,7 +58,7 @@ async function uploadProjectFiles(
     });
 
     if (buildId) {
-      logger.debug(
+      uiLogger.debug(
         lib.projectUpload.uploadProjectFiles.buildCreated(projectName, buildId)
       );
     }
@@ -115,7 +115,7 @@ export async function handleProjectUpload<T>({
 
   const filenames = fs.readdirSync(srcDir);
   if (!filenames || filenames.length === 0) {
-    logger.log(
+    uiLogger.log(
       lib.projectUpload.handleProjectUpload.emptySource(projectConfig.srcDir)
     );
     process.exit(EXIT_CODES.SUCCESS);
@@ -123,7 +123,7 @@ export async function handleProjectUpload<T>({
 
   const tempFile = tmp.fileSync({ postfix: '.zip' });
 
-  logger.debug(
+  uiLogger.debug(
     lib.projectUpload.handleProjectUpload.compressing(tempFile.name)
   );
 
@@ -132,7 +132,7 @@ export async function handleProjectUpload<T>({
 
   const result = new Promise<ProjectUploadResult<T>>(resolve =>
     output.on('close', async function () {
-      logger.debug(
+      uiLogger.debug(
         lib.projectUpload.handleProjectUpload.compressed(archive.pointer())
       );
 
@@ -149,12 +149,12 @@ export async function handleProjectUpload<T>({
             { skipValidation }
           );
 
-          logger.debug(
+          uiLogger.debug(
             util.inspect(intermediateRepresentation, false, null, true)
           );
         } catch (e) {
           if (isTranslationError(e)) {
-            logger.error(e.toString());
+            uiLogger.error(e.toString());
           } else {
             logError(e);
           }
@@ -200,7 +200,7 @@ export async function handleProjectUpload<T>({
       const isNodeModule = file.name.includes('node_modules');
 
       if (!isNodeModule || !loggedIgnoredNodeModule) {
-        logger.debug(
+        uiLogger.debug(
           lib.projectUpload.handleProjectUpload.fileFiltered(file.name)
         );
       }

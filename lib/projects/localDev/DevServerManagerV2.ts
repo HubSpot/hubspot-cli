@@ -1,4 +1,3 @@
-import { logger } from '@hubspot/local-dev-lib/logger';
 import { Environment } from '@hubspot/local-dev-lib/types/Config';
 import { promptUser } from '../../prompts/promptUtils';
 import { DevModeUnifiedInterface as UIEDevModeInterface } from '@hubspot/ui-extensions-dev-server';
@@ -15,6 +14,7 @@ import { getAccountConfig } from '@hubspot/local-dev-lib/config';
 import { ProjectConfig } from '../../../types/Projects';
 import { IntermediateRepresentationNodeLocalDev } from '@hubspot/project-parsing-lib/src/lib/types';
 import { lib } from '../../../lang/en';
+import { uiLogger } from '../../ui/logger';
 
 type DevServerInterface = {
   // eslint-disable-next-line @typescript-eslint/no-unsafe-function-type
@@ -61,7 +61,7 @@ class DevServerManagerV2 {
         await serverInterface.setup({
           components: projectNodes,
           promptUser,
-          logger,
+          uiLogger,
           urls: {
             api: getHubSpotApiOrigin(env),
             web: getHubSpotWebsiteOrigin(env),

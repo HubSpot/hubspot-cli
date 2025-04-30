@@ -1,4 +1,3 @@
-import { logger } from '@hubspot/local-dev-lib/logger';
 import {
   createProject,
   fetchProject,
@@ -14,6 +13,7 @@ import { uiAccountDescription } from '../ui';
 import SpinniesManager from '../ui/SpinniesManager';
 import { logError, ApiErrorContext } from '../errorHandlers/index';
 import { lib } from '../../lang/en';
+import { uiLogger } from '../ui/logger';
 
 async function pollFetchProject(
   accountId: number,
@@ -98,7 +98,7 @@ export async function ensureProjectExists(
       if (shouldCreateProject) {
         try {
           const { data: project } = await createProject(accountId, projectName);
-          logger.success(
+          uiLogger.success(
             lib.projects.ensureProjectExists.createSuccess(
               projectName,
               accountIdentifier
@@ -111,7 +111,7 @@ export async function ensureProjectExists(
         }
       } else {
         if (!noLogs) {
-          logger.log(
+          uiLogger.log(
             lib.projects.ensureProjectExists.notFound(
               projectName,
               accountIdentifier

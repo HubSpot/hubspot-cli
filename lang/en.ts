@@ -274,7 +274,7 @@ export const commands = {
         },
         success: {
           moduleDownloaded: (moduleName, path) =>
-            `"${moduleName}" succesfully downloaded to "${path}"`,
+            `"${moduleName}" successfully downloaded to "${path}"`,
         },
         errors: {
           pathExists: path => `Folder already exists at "${path}"`,
@@ -1207,8 +1207,7 @@ export const commands = {
       },
       logs: {
         processExited: 'Stopping watcher...',
-        watchCancelledFromUi: () =>
-          `The watch process has been cancelled from the UI. Any changes made since cancelling have not been uploaded. To resume watching, rerun ${chalk.yellow('`hs project watch`')}.`,
+        watchCancelledFromUi: `The watch process has been cancelled from the UI. Any changes made since cancelling have not been uploaded. To resume watching, rerun ${uiCommandReference('hs project watch')}.`,
         resuming: 'Resuming watcher...',
         uploadSucceeded: (remotePath, filePath) =>
           `Uploaded file "${filePath}" to "${remotePath}"`,
@@ -2679,10 +2678,8 @@ export const lib = {
     validateAccountOption: {
       invalidPublicAppAccount: `This project contains a public app. The "--account" flag must point to a developer test account to develop this project locally. Alternatively, change your default account to an App Developer Account using ${uiCommandReference('hs accounts use')} and run ${uiCommandReference('hs project dev')} to set up a new Developer Test Account.`,
       invalidPrivateAppAccount: `This project contains a private app. The account specified with the "--account" flag points to a developer account, which do not support the local development of private apps. Update the "--account" flag to point to a standard, sandbox, or developer test account, or change your default account by running ${uiCommandReference('hs accounts use')}.`,
-      nonSandboxWarning: command =>
-        `Testing in a sandbox is strongly recommended. To switch the target account, select an option below or run ${chalk.bold(command)} before running the command again.`,
-      publicAppNonDeveloperTestAccountWarning: () =>
-        `Local development of public apps is only supported in ${chalk.bold('developer test accounts')}.`,
+      nonSandboxWarning: `Testing in a sandbox is strongly recommended. To switch the target account, select an option below or run ${uiCommandReference('hs accounts use')} before running the command again.`,
+      publicAppNonDeveloperTestAccountWarning: `Local development of public apps is only supported in ${chalk.bold('developer test accounts')}.`,
     },
     createNewProjectForLocalDev: {
       projectMustExistExplanation: (projectName, accountIdentifier) =>
@@ -2732,6 +2729,9 @@ export const lib = {
       srcOutsideProjectDir: (projectConfig, srcDir) =>
         `Invalid value for 'srcDir' in ${projectConfig}: ${chalk.bold(`srcDir: "${srcDir}"`)}\n\t'srcDir' must be a relative path to a folder under the project root, such as "." or "./src"`,
     },
+    getProjectConfig: {
+      error: 'Could not read from project config',
+    },
     ensureProjectExists: {
       createPrompt: (projectName, accountIdentifier) =>
         `The project ${projectName} does not exist in ${accountIdentifier}. Would you like to create it?`,
@@ -2748,12 +2748,12 @@ export const lib = {
     },
     logFeedbackMessage: {
       feedbackHeader: "We'd love to hear your feedback!",
-      feedbackMessage: command =>
-        `How are you liking the new projects and developer tools? \n > Run \`${chalk.yellow(command)}\` to let us know what you think!\n`,
+      feedbackMessage: `How are you liking the new projects and developer tools? \n > Run ${uiCommandReference('hs feedback')} to let us know what you think!\n`,
     },
   },
   projectBuildAndDeploy: {
     makePollTaskStatusFunc: {
+      errorSummary: 'See below for a summary of errors.',
       componentCountSingular: 'Found 1 component in this project\n',
       componentCount: numComponents =>
         `Found ${numComponents} components in this project\n`,
@@ -3248,7 +3248,7 @@ export const lib = {
             instructions: (accountName, url) =>
               `To update CLI permissions for "${accountName}": \n- Go to ${url}, deactivate the existing personal access key, and create a new one that includes developer sandbox permissions. \n- Update the CLI config for this account by running ${chalk.bold('hs auth')} and entering the new key.\n`,
           },
-          generic: 'An error occured while creating a developer sandbox',
+          generic: 'An error occurred while creating a developer sandbox',
         },
       },
       standard: {
@@ -3399,7 +3399,7 @@ export const lib = {
     port: {
       inUse: port => `Port ${port} is in use`,
       inUseSecondary: command =>
-        `Make sure it is available if before running ${command}`,
+        `Make sure it is available before running ${command}`,
       available: port => `Port ${port} available for local development`,
     },
     diagnosis: {
@@ -3465,8 +3465,7 @@ export const lib = {
       noAppsEligible: (accountId, reasons: string[]) =>
         `No apps in account ${accountId} are currently migratable${reasons.length ? `\n  - ${reasons.join('\n  - ')}` : ''}`,
 
-      invalidAccountTypeTitle: () =>
-        `${chalk.bold('Developer account not targeted')}`,
+      invalidAccountTypeTitle: `${chalk.bold('Developer account not targeted')}`,
       invalidAccountTypeDescription: (useCommand, authCommand) =>
         `Only public apps created in a developer account can be converted to a project component. Select a connected developer account with ${useCommand} or ${authCommand} and try again.`,
       appWithAppIdNotFound: appId =>

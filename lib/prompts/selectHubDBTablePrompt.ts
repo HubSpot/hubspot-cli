@@ -8,21 +8,27 @@ import { EXIT_CODES } from '../enums/exitCodes';
 import { Table } from '@hubspot/local-dev-lib/types/Hubdb';
 import { isValidPath, untildify } from '@hubspot/local-dev-lib/path';
 
-const i18nKey = 'lib.prompts.selectHubDBTablePrompt';
-
 async function fetchHubDBOptions(accountId: number) {
   try {
     const {
       data: { results: tables },
     } = await fetchTables(accountId);
     if (tables.length === 0) {
-      logger.log(i18n(`${i18nKey}.errors.noTables`, { accountId }));
+      logger.log(
+        i18n(`lib.prompts.selectHubDBTablePrompt.errors.noTables`, {
+          accountId,
+        })
+      );
       process.exit(EXIT_CODES.SUCCESS);
     }
     return tables;
   } catch (error) {
     debugError(error, { accountId });
-    logger.error(i18n(`${i18nKey}.errors.errorFetchingTables`, { accountId }));
+    logger.error(
+      i18n(`lib.prompts.selectHubDBTablePrompt.errors.errorFetchingTables`, {
+        accountId,
+      })
+    );
     process.exit(EXIT_CODES.ERROR);
   }
 }
@@ -47,7 +53,7 @@ export async function selectHubDBTablePrompt({
   return promptUser([
     {
       name: 'tableId',
-      message: i18n(`${i18nKey}.selectTable`),
+      message: i18n(`lib.prompts.selectHubDBTablePrompt.selectTable`),
       when: !id && !isValidTable,
       type: 'list',
       choices: hubdbTables.map(table => {
@@ -59,17 +65,19 @@ export async function selectHubDBTablePrompt({
     },
     {
       name: 'dest',
-      message: i18n(`${i18nKey}.enterDest`),
+      message: i18n(`lib.prompts.selectHubDBTablePrompt.enterDest`),
       when: !options.dest && !skipDestPrompt,
       validate: (input?: string) => {
         if (!input) {
-          return i18n(`${i18nKey}.errors.destRequired`);
+          return i18n(`lib.prompts.selectHubDBTablePrompt.errors.destRequired`);
         }
         if (fs.existsSync(input)) {
-          return i18n(`${i18nKey}.errors.invalidDest`);
+          return i18n(`lib.prompts.selectHubDBTablePrompt.errors.invalidDest`);
         }
         if (!isValidPath(input)) {
-          return i18n(`${i18nKey}.errors.invalidCharacters`);
+          return i18n(
+            `lib.prompts.selectHubDBTablePrompt.errors.invalidCharacters`
+          );
         }
         return true;
       },
