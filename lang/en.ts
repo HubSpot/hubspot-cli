@@ -274,7 +274,7 @@ export const commands = {
         },
         success: {
           moduleDownloaded: (moduleName, path) =>
-            `"${moduleName}" succesfully downloaded to "${path}"`,
+            `"${moduleName}" successfully downloaded to "${path}"`,
         },
         errors: {
           pathExists: path => `Folder already exists at "${path}"`,
@@ -3398,7 +3398,7 @@ export const lib = {
     port: {
       inUse: port => `Port ${port} is in use`,
       inUseSecondary: command =>
-        `Make sure it is available if before running ${command}`,
+        `Make sure it is available before running ${command}`,
       available: port => `Port ${port} available for local development`,
     },
     diagnosis: {
