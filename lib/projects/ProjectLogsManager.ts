@@ -2,7 +2,7 @@ import { getProjectConfig } from './config';
 import { ensureProjectExists } from './ensureProjectExists';
 import { fetchProjectComponentsMetadata } from '@hubspot/local-dev-lib/api/projects';
 import { AppFunctionComponentMetadata } from '@hubspot/local-dev-lib/types/ComponentStructure';
-import { logger } from '@hubspot/local-dev-lib/logger';
+import { uiLogger } from '../ui/logger';
 import { commands } from '../../lang/en';
 
 class _ProjectLogsManager {
@@ -71,7 +71,7 @@ class _ProjectLogsManager {
     }
 
     if (!this.accountId) {
-      logger.debug(
+      uiLogger.debug(
         commands.project.logs.errors.projectLogsManagerNotInitialized
       );
       throw new Error(commands.project.logs.errors.generic);
