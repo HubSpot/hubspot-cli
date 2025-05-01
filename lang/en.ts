@@ -1,4 +1,13 @@
+// @ts-nocheck
 import chalk from 'chalk';
+import { uiAccountDescription, uiCommandReference, uiLink } from '../lib/ui';
+import { getProjectSettingsUrl } from '../lib/projects/urls';
+
+type LangFunction = (...args: (string | number)[]) => string;
+
+type LangObject = {
+  [key: string]: string | LangFunction | LangObject;
+};
 
 export const commands = {
   generalErrors: {
@@ -265,7 +274,7 @@ export const commands = {
         },
         success: {
           moduleDownloaded: (moduleName, path) =>
-            `"${moduleName}" succesfully downloaded to "${path}"`,
+            `"${moduleName}" successfully downloaded to "${path}"`,
         },
         errors: {
           pathExists: path => `Folder already exists at "${path}"`,
@@ -892,6 +901,8 @@ export const commands = {
       errors: {
         failedToDownloadProject:
           'Failed to download project. Please try again later.',
+        invalidTemplateSource:
+          'Invalid template source provided. Use the format <Owner>/<Repo> and try again.',
         failedToFetchProjectList:
           'Failed to fetch the list of available project templates. Please try again later.',
         cannotNestProjects: projectDir =>
@@ -941,7 +952,7 @@ export const commands = {
         },
       },
       header: {
-        text: 'Migrate an app to the projects framework',
+        text: 'This command will migrate an app to the projects framework. It will walk you through the fields required to complete the migration and download the project source code into a directory of your choosing.',
         link: 'Learn more about migrating apps to the projects framework',
       },
       deprecationWarning: (oldCommand, newCommand) =>
@@ -975,53 +986,19 @@ export const commands = {
       createAppPrompt:
         "Proceed with migrating this app to a project component (this process can't be aborted)?",
       projectDetailsLink: 'View project details in your developer account',
-      componentsToBeMigrated: components =>
-        `The following component types will be migrated: ${components}`,
-      componentsThatWillNotBeMigrated: components =>
-        `[NOTE] These component types are not yet supported for migration but will be available later: ${components}`,
+    },
+    migrate: {
+      preamble: (platformVersion: string) =>
+        `This command will migrate an existing project to platformVersion ${platformVersion}.  It will walk you through the fields required to complete the migration and download the new project source code into the project source directory.  It will also copy all of your existing files to a new directory (archive) in case you need access to your old files later.`,
+      describe:
+        'Migrate an existing project to the new version of the projects framework.',
       errors: {
-        noApps: accountId => `No apps found in account ${accountId}`,
-        noAppsEligible: accountId =>
-          `No apps in account ${accountId} are currently migratable`,
-        invalidAccountTypeTitle: () =>
-          `${chalk.bold('Developer account not targeted')}`,
-        invalidAccountTypeDescription: (useCommand, authCommand) =>
-          `Only public apps created in a developer account can be converted to a project component. Select a connected developer account with ${useCommand} or ${authCommand} and try again.`,
-        projectAlreadyExists: projectName =>
-          `A project with name ${projectName} already exists. Please choose another name.`,
-        invalidApp: appId =>
-          `Could not migrate appId ${appId}. This app cannot be migrated at this time. Please choose another public app.`,
-        appWithAppIdNotFound: appId =>
-          `Could not find an app with the id ${appId} `,
+        noProjectConfig: command =>
+          `No project detected. Please run this command again from a project directory.  If you are trying to migrate an app, run ${command}`,
       },
-      prompt: {
-        chooseApp: 'Which app would you like to migrate?',
-        inputName: '[--name] What would you like to name the project?',
-        inputDest: '[--dest] Where would you like to save the project?',
-        uidForComponent: componentName =>
-          `What UID would you like to use for ${componentName}?`,
-        proceed: 'Would you like to proceed?',
-      },
-      spinners: {
-        beginningMigration: 'Beginning migration',
-        migrationStarted: 'Migration started',
-        unableToStartMigration: 'Unable to begin migration',
-        finishingMigration: 'Wrapping up migration',
-        migrationComplete: 'Migration completed',
-        migrationFailed: 'Migration failed',
-        downloadingProjectContents: 'Downloading migrated project files',
-        downloadingProjectContentsComplete: 'Migrated project files downloaded',
-        downloadingProjectContentsFailed:
-          'Unable to download migrated project files',
-        copyingProjectFiles: 'Copying migrated project files',
-        copyingProjectFilesComplete: 'Migrated project files copied',
-        copyingProjectFilesFailed: 'Unable to copy migrated project files',
-      },
-      migrationNotAllowedReasons: {
-        upToDate: 'App is already up to date',
-        isPrivateApp: 'Private apps are not currently migratable',
-        listedInMarketplace: 'Listed apps are not currently migratable',
-        generic: reasonCode => `Unable to migrate app: ${reasonCode}`,
+      examples: {
+        default:
+          'Migrate an existing project to the new version of the projects framework.',
       },
     },
     cloneApp: {
@@ -1148,8 +1125,10 @@ export const commands = {
         failedToFetchProjectDetails:
           'There was an error fetching project details',
         noFunctionsLinkText: 'Visit developer docs',
-        noFunctionsInProject: link =>
-          `There aren't any functions in this project\n\t- Run ${chalk.orange('hs project logs --help')} to learn more about logs\n\t- ${link} to learn more about serverless functions`,
+        noFunctionsInProject: `There aren't any functions in this project\n\t- Run ${uiCommandReference('hs project logs --help')} to learn more about logs\n\t- ${uiLink(
+          'Visit developer docs',
+          'https://developers.hubspot.com/docs/platform/serverless-functions'
+        )} to learn more about serverless functions`,
         noFunctionWithName: name => `No function with name "${name}"`,
         functionNotDeployed: name =>
           `The function with name "${name}" is not deployed`,
@@ -1228,15 +1207,13 @@ export const commands = {
       },
       logs: {
         processExited: 'Stopping watcher...',
-        watchCancelledFromUi: () =>
-          `The watch process has been cancelled from the UI. Any changes made since cancelling have not been uploaded. To resume watching, rerun ${chalk.yellow('`hs project watch`')}.`,
+        watchCancelledFromUi: `The watch process has been cancelled from the UI. Any changes made since cancelling have not been uploaded. To resume watching, rerun ${uiCommandReference('hs project watch')}.`,
         resuming: 'Resuming watcher...',
-        uploadSucceeded: ({ filePath, remotePath }) =>
+        uploadSucceeded: (remotePath, filePath) =>
           `Uploaded file "${filePath}" to "${remotePath}"`,
-        deleteFileSucceeded: ({ remotePath }) => `Deleted file "${remotePath}"`,
-        deleteFolderSucceeded: ({ remotePath }) =>
-          `Deleted folder "${remotePath}"`,
-        watching: ({ projectDir }) =>
+        deleteFileSucceeded: remotePath => `Deleted file "${remotePath}"`,
+        deleteFolderSucceeded: remotePath => `Deleted folder "${remotePath}"`,
+        watching: projectDir =>
           `Watcher is ready and watching "${projectDir}". Any changes detected will be automatically uploaded.`,
         previousStagingBuildCancelled:
           'Killed the previous watch process. Please try running `hs project watch` again',
@@ -1249,22 +1226,23 @@ export const commands = {
       debug: {
         pause: 'Pausing watcher, attempting to queue build',
         buildStarted: 'Build queued.',
-        extensionNotAllowed: ({ filePath }) =>
+        extensionNotAllowed: filePath =>
           `Skipping "${filePath}" due to unsupported extension`,
-        ignored: ({ filePath }) =>
-          `Skipping "${filePath}" due to an ignore rule`,
-        uploading: ({ filePath, remotePath }) =>
+        ignored: filePath => `Skipping "${filePath}" due to an ignore rule`,
+        uploading: (filePath, remotePath) =>
           `Attempting to upload file "${filePath}" to "${remotePath}"`,
         attemptNewBuild: 'Attempting to create a new build',
-        fileAlreadyQueued: ({ filePath }) =>
+        fileAlreadyQueued: filePath =>
           `File "${filePath}" is already queued for upload`,
       },
       errors: {
-        uploadFailed: ({ filePath, remotePath }) =>
+        projectConfigNotFound:
+          'No project config found. Please ensure that you are in a project directory.',
+        projectLockedError: `Your project is locked. This may mean that another user is running the ${chalk.bold(`hs project dev`)} command for this project. If this is you, unlock the project in Projects UI.`,
+        uploadFailed: (remotePath, filePath) =>
           `Failed to upload file "${filePath}" to "${remotePath}"`,
-        deleteFileFailed: ({ remotePath }) =>
-          `Failed to delete file "${remotePath}"`,
-        deleteFolderFailed: ({ remotePath }) =>
+        deleteFileFailed: remotePath => `Failed to delete file "${remotePath}"`,
+        deleteFolderFailed: remotePath =>
           `Failed to delete folder "${remotePath}"`,
       },
     },
@@ -1275,12 +1253,12 @@ export const commands = {
       },
       logs: {
         downloadCancelled: 'Cancelling project download',
-        downloadSucceeded: ({ buildId, projectName }) =>
+        downloadSucceeded: (buildId, projectName) =>
           `Downloaded build "${buildId}" from project "${projectName}"`,
       },
       errors: {
         downloadFailed: 'Something went wrong downloading the project',
-        projectNotFound: ({ projectName, accountId }) =>
+        projectNotFound: (projectName, accountId) =>
           `Your project ${chalk.bold(projectName)} could not be found in ${accountId}`,
       },
       warnings: {
@@ -1745,18 +1723,18 @@ export const commands = {
       },
     },
     success: {
-      fileUploaded: ({ src, dest, accountId }) =>
+      fileUploaded: (src, dest, accountId) =>
         `Uploaded file from "${src}" to "${dest}" in the Design Manager of account ${accountId}`,
-      uploadComplete: ({ dest }) =>
+      uploadComplete: dest =>
         `Uploading files to "${dest}" in the Design Manager is complete`,
     },
-    uploading: ({ src, dest, accountId }) =>
+    uploading: (src, dest, accountId) =>
       `Uploading files from "${src}" to "${dest}" in the Design Manager of account ${accountId}`,
-    notUploaded: ({ src }) =>
+    notUploaded: src =>
       `There was an error processing "${src}". The file has not been uploaded.`,
-    cleaning: ({ filePath, accountId }) =>
+    cleaning: (filePath, accountId) =>
       `Removing "${filePath}" from account ${accountId} and uploading local...`,
-    confirmCleanUpload: ({ filePath, accountId }) =>
+    confirmCleanUpload: (filePath, accountId) =>
       `You are about to delete the directory "${filePath}" and its contents on HubSpot account ${accountId} before uploading. This will also clear the global content associated with any global partial templates and modules. Are you sure you want to do this?`,
   },
   watch: {
@@ -2623,7 +2601,8 @@ export const commands = {
       },
     },
   },
-};
+} as const satisfies LangObject;
+
 export const lib = {
   process: {
     exitDebug: signal =>
@@ -2651,8 +2630,7 @@ export const lib = {
     exitingStart: 'Stopping local dev server ...',
     exitingSucceed: 'Successfully exited',
     exitingFail: 'Failed to cleanup before exiting',
-    missingUid: devCommand =>
-      `Could not find a uid for the selected app. Confirm that the app config file contains the uid field and re-run ${devCommand}.`,
+    missingUid: `Could not find a uid for the selected app. Confirm that the app config file contains the uid field and re-run ${uiCommandReference('hs project dev')}.`,
     uploadWarning: {
       appLabel: '[App]',
       uiExtensionLabel: '[UI Extension]',
@@ -2665,10 +2643,12 @@ export const lib = {
         `${chalk.bold('Changing project configuration requires a new project build.')}\n\nThis will affect your public app's ${chalk.bold(`${installCount} existing ${installText}`)}. If your app has users in production, we strongly recommend creating a copy of this app to test your changes before proceding.`,
       header: warning =>
         `${warning} To reflect these changes and continue testing:`,
-      stopDev: command => `  * Stop ${command}`,
+      stopDev: `  * Stop ${uiCommandReference('hs project dev')}`,
       runUpload: command => `  * Run ${command}`,
-      restartDev: command => `  * Re-run ${command}`,
+      restartDev: `  * Re-run ${uiCommandReference('hs project dev')}`,
       pushToGithub: '  * Commit and push your changes to GitHub',
+      defaultMarketplaceAppWarning: (installCount, accountText) =>
+        `${chalk.bold('Changing project configuration requires creating a new project build.')}\n\nYour marketplace app is currently installed in ${chalk.bold(`${installCount} ${accountText}`)}. Any uploaded changes will impact your app's users. We strongly recommend creating a copy of this app to test your changes before proceding.`,
     },
     activeInstallWarning: {
       installCount: (appName, installCount, installText) =>
@@ -2686,28 +2666,20 @@ export const lib = {
         `Failed to notify local dev server of file change: ${message}`,
     },
   },
-  localDev: {
+  localDevHelpers: {
     confirmDefaultAccountIsTarget: {
-      configError: authCommand =>
-        `An error occurred while reading the default account from your config. Run ${authCommand} to re-auth this account`,
-      declineDefaultAccountExplanation: (useCommand, devCommand) =>
-        `To develop on a different account, run ${useCommand} to change your default account, then re-run ${devCommand}.`,
+      configError: `An error occurred while reading the default account from your config. Run ${uiCommandReference('hs auth')} to re-auth this account`,
+      declineDefaultAccountExplanation: `To develop on a different account, run ${uiCommandReference('hs accounts use')} to change your default account, then re-run ${uiCommandReference('hs project dev')}.`,
     },
     checkIfDefaultAccountIsSupported: {
-      publicApp: (useCommand, authCommand) =>
-        `This project contains a public app. Local development of public apps is only supported on developer accounts and developer test accounts. Change your default account using ${useCommand}, or link a new account with ${authCommand}.`,
-      privateApp: (useCommand, authCommand) =>
-        `This project contains a private app. Local development of private apps is not supported in developer accounts. Change your default account using ${useCommand}, or link a new account with ${authCommand}.`,
+      publicApp: `This project contains a public app. Local development of public apps is only supported on developer accounts and developer test accounts. Change your default account using ${uiCommandReference('hs accounts use')}, or link a new account with ${uiCommandReference('hs auth')}.`,
+      privateApp: `This project contains a private app. Local development of private apps is not supported in developer accounts. Change your default account using ${uiCommandReference('hs accounts use')}, or link a new account with ${uiCommandReference('hs auth')}.`,
     },
     validateAccountOption: {
-      invalidPublicAppAccount: (useCommand, devCommand) =>
-        `This project contains a public app. The "--account" flag must point to a developer test account to develop this project locally. Alternatively, change your default account to an App Developer Account using ${useCommand} and run ${devCommand} to set up a new Developer Test Account.`,
-      invalidPrivateAppAccount: useCommand =>
-        `This project contains a private app. The account specified with the "--account" flag points to a developer account, which do not support the local development of private apps. Update the "--account" flag to point to a standard, sandbox, or developer test account, or change your default account by running ${useCommand}.`,
-      nonSandboxWarning: command =>
-        `Testing in a sandbox is strongly recommended. To switch the target account, select an option below or run ${chalk.bold(command)} before running the command again.`,
-      publicAppNonDeveloperTestAccountWarning: () =>
-        `Local development of public apps is only supported in ${chalk.bold('developer test accounts')}.`,
+      invalidPublicAppAccount: `This project contains a public app. The "--account" flag must point to a developer test account to develop this project locally. Alternatively, change your default account to an App Developer Account using ${uiCommandReference('hs accounts use')} and run ${uiCommandReference('hs project dev')} to set up a new Developer Test Account.`,
+      invalidPrivateAppAccount: `This project contains a private app. The account specified with the "--account" flag points to a developer account, which do not support the local development of private apps. Update the "--account" flag to point to a standard, sandbox, or developer test account, or change your default account by running ${uiCommandReference('hs accounts use')}.`,
+      nonSandboxWarning: `Testing in a sandbox is strongly recommended. To switch the target account, select an option below or run ${uiCommandReference('hs accounts use')} before running the command again.`,
+      publicAppNonDeveloperTestAccountWarning: `Local development of public apps is only supported in ${chalk.bold('developer test accounts')}.`,
     },
     createNewProjectForLocalDev: {
       projectMustExistExplanation: (projectName, accountIdentifier) =>
@@ -2728,12 +2700,13 @@ export const lib = {
       initialUploadMessage: 'HubSpot Local Dev Server Startup',
       projectLockedError:
         'Your project is locked. This may mean that another user is running the `hs project watch` command for this project. If this is you, unlock the project in Projects UI.',
-      genericError: uploadCommand =>
-        `An error occurred while creating the initial build for this project. Run ${uploadCommand} to try again.`,
+      genericError: `An error occurred while creating the initial build for this project. Run ${uiCommandReference('hs project upload')} to try again.`,
     },
     checkIfParentAccountIsAuthed: {
-      notAuthedError: (authCommand, accountId, accountIdentifier) =>
-        `To develop this project locally, run ${authCommand} to authenticate the App Developer Account ${accountId} associated with ${accountIdentifier}.`,
+      notAuthedError: (parentAccountId, accountIdentifier) =>
+        `To develop this project locally, run ${uiCommandReference(
+          `hs auth --account=${parentAccountId}`
+        )} to authenticate the App Developer Account ${parentAccountId} associated with ${accountIdentifier}.`,
     },
   },
   projects: {
@@ -2748,14 +2721,16 @@ export const lib = {
       },
     },
     validateProjectConfig: {
-      configNotFound: createCommand =>
-        `Unable to locate a project configuration file. Try running again from a project directory, or run ${createCommand} to create a new project.`,
+      configNotFound: `Unable to locate a project configuration file. Try running again from a project directory, or run ${uiCommandReference('hs project create')} to create a new project.`,
       configMissingFields:
-        'The project configuruation file is missing required fields.',
+        'The project configuration file is missing required fields.',
       srcDirNotFound: (srcDir, projectDir) =>
         `Project source directory ${chalk.bold(srcDir)} could not be found in ${chalk.bold(projectDir)}.`,
       srcOutsideProjectDir: (projectConfig, srcDir) =>
         `Invalid value for 'srcDir' in ${projectConfig}: ${chalk.bold(`srcDir: "${srcDir}"`)}\n\t'srcDir' must be a relative path to a folder under the project root, such as "." or "./src"`,
+    },
+    getProjectConfig: {
+      error: 'Could not read from project config',
     },
     ensureProjectExists: {
       createPrompt: (projectName, accountIdentifier) =>
@@ -2773,15 +2748,15 @@ export const lib = {
     },
     logFeedbackMessage: {
       feedbackHeader: "We'd love to hear your feedback!",
-      feedbackMessage: command =>
-        `How are you liking the new projects and developer tools? \n > Run \`${chalk.yellow(command)}\` to let us know what you think!\n`,
+      feedbackMessage: `How are you liking the new projects and developer tools? \n > Run ${uiCommandReference('hs feedback')} to let us know what you think!\n`,
     },
   },
   projectBuildAndDeploy: {
     makePollTaskStatusFunc: {
-      componentCountSingular: 'Found 1 component in this project',
+      errorSummary: 'See below for a summary of errors.',
+      componentCountSingular: 'Found 1 component in this project\n',
       componentCount: numComponents =>
-        `Found ${numComponents} components in this project`,
+        `Found ${numComponents} components in this project\n`,
       successStatusText: 'DONE',
       failedStatusText: 'FAILED',
       errorFetchingTaskStatus: taskType => `Error fetching ${taskType} status`,
@@ -2809,11 +2784,16 @@ export const lib = {
         `Project "${projectName}" uploaded and build #${buildId} created`,
     },
     handleProjectUpload: {
-      emptySource: (srcDir, command) =>
-        `Source directory "${srcDir}" is empty. Add files to your project and rerun ${chalk.yellow(command)} to upload them to HubSpot.`,
+      emptySource: srcDir =>
+        `Source directory "${srcDir}" is empty. Add files to your project and rerun ${uiCommandReference('hs project upload')} to upload them to HubSpot.`,
       compressed: byteCount => `Project files compressed: ${byteCount} bytes`,
       compressing: path => `Compressing build files to "${path}"`,
       fileFiltered: filename => `Ignore rule triggered for "${filename}"`,
+    },
+  },
+  middleware: {
+    fireAlarm: {
+      failedToLoadBoxen: 'Failed to load boxen util.',
     },
   },
   ui: {
@@ -3086,6 +3066,8 @@ export const lib = {
           'The selected destination contains invalid characters. Please provide a new path and try again.',
         invalidTemplate: template =>
           `[--template] Could not find template "${template}". Please choose an available template:`,
+        projectTemplateRequired:
+          'Project template is required when projectTemplates is provided',
       },
     },
     selectPublicAppPrompt: {
@@ -3266,6 +3248,7 @@ export const lib = {
             instructions: (accountName, url) =>
               `To update CLI permissions for "${accountName}": \n- Go to ${url}, deactivate the existing personal access key, and create a new one that includes developer sandbox permissions. \n- Update the CLI config for this account by running ${chalk.bold('hs auth')} and entering the new key.\n`,
           },
+          generic: 'An error occurred while creating a developer sandbox',
         },
       },
       standard: {
@@ -3416,7 +3399,7 @@ export const lib = {
     port: {
       inUse: port => `Port ${port} is in use`,
       inUseSecondary: command =>
-        `Make sure it is available if before running ${command}`,
+        `Make sure it is available before running ${command}`,
       available: port => `Port ${port} available for local development`,
     },
     diagnosis: {
@@ -3448,4 +3431,72 @@ export const lib = {
   oauth: {
     missingClientId: 'Error building oauth URL: missing client ID.',
   },
-};
+  migrate: {
+    componentsToBeMigrated: components =>
+      `The following features will be migrated: ${components}`,
+    componentsThatWillNotBeMigrated: components =>
+      `[NOTE] These features are not yet supported for migration but will be available later: ${components}`,
+    sourceContentsMoved: (newLocation: string) =>
+      `The contents of your old source directory have been moved to ${newLocation}, move any required files to the new source directory.`,
+    projectMigrationWarning: `Migrating a project is irreversible and cannot be undone.`,
+    errors: {
+      project: {
+        invalidConfig:
+          'The project configuration file is invalid. Please check the config file and try again.',
+        doesNotExist: (account: number) =>
+          `Project does not exist in ${uiAccountDescription(account)}. Migrations are only supported for existing projects.`,
+        multipleApps:
+          'Multiple apps found in project, this is not allowed in 2025.2',
+        alreadyExists: projectName =>
+          `A project with name ${projectName} already exists. Please choose another name.`,
+      },
+      unmigratableReasons: {
+        upToDate: 'App is already up to date',
+        isPrivateApp: 'Private apps are not currently migratable',
+        listedInMarketplace: 'Listed apps are not currently migratable',
+        projectConnectedToGitHub: (
+          projectName: string | undefined,
+          accountId: number
+        ) =>
+          `The project is linked to a GitHub repository.  ${uiLink('Visit the project settings page to unlink it', getProjectSettingsUrl(projectName, accountId))}`,
+        partOfProjectAlready: `This app is part of a project, run ${uiCommandReference('hs project migrate')} from the project directory to migrate it`,
+        generic: reasonCode => `Unable to migrate app: ${reasonCode}`,
+      },
+      noAppsEligible: (accountId, reasons: string[]) =>
+        `No apps in account ${accountId} are currently migratable${reasons.length ? `\n  - ${reasons.join('\n  - ')}` : ''}`,
+
+      invalidAccountTypeTitle: `${chalk.bold('Developer account not targeted')}`,
+      invalidAccountTypeDescription: (useCommand, authCommand) =>
+        `Only public apps created in a developer account can be converted to a project component. Select a connected developer account with ${useCommand} or ${authCommand} and try again.`,
+      appWithAppIdNotFound: appId =>
+        `Could not find an app with the id ${appId} `,
+      noAppsForProject: (projectName: string) =>
+        `No apps associated with project ${projectName}`,
+      migrationFailed: 'Migration Failed',
+      notUngatedForUnifiedApps: account =>
+        `Your account ${account} isn't enrolled in the required product beta to access this command.`,
+    },
+    prompt: {
+      chooseApp: 'Which app would you like to migrate?',
+      inputName: '[--name] What would you like to name the project?',
+      inputDest: '[--dest] Where would you like to save the project?',
+      uidForComponent: componentName =>
+        `What UID would you like to use for ${componentName}?`,
+      proceed: 'Would you like to proceed?',
+    },
+    spinners: {
+      beginningMigration: 'Beginning migration',
+      unableToStartMigration: 'Unable to begin migration',
+      finishingMigration: 'Wrapping up migration',
+      migrationComplete: 'Migration completed',
+      migrationFailed: 'Migration failed',
+      downloadingProjectContents: 'Downloading migrated project files',
+      downloadingProjectContentsComplete: 'Migrated project files downloaded',
+      downloadingProjectContentsFailed:
+        'Unable to download migrated project files',
+      copyingProjectFiles: 'Copying migrated project files',
+      copyingProjectFilesComplete: 'Migrated project files copied',
+      copyingProjectFilesFailed: 'Unable to copy migrated project files',
+    },
+  },
+} as const satisfies LangObject;

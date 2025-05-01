@@ -1,3 +1,4 @@
+import fs from 'fs';
 import { Argv, ArgumentsCamelCase } from 'yargs';
 import { logger } from '@hubspot/local-dev-lib/logger';
 import {
@@ -7,9 +8,14 @@ import {
   getConfigDefaultAccount,
   getAccountId,
   updateDefaultAccount,
+  getCWDAccountOverride,
+  getDefaultAccountOverrideFilePath,
 } from '@hubspot/local-dev-lib/config';
+
 import { trackCommandUsage } from '../../lib/usageTracking';
 import { i18n } from '../../lib/lang';
+import { promptUser } from '../../lib/prompts/promptUtils';
+import { logError } from '../../lib/errorHandlers';
 import { selectAccountFromConfig } from '../../lib/prompts/accountsPrompt';
 import { addConfigOptions } from '../../lib/commonOpts';
 import { CommonArgs, ConfigArgs } from '../../types/Yargs';
@@ -50,6 +56,33 @@ export async function handler(
   );
 
   const currentDefaultAccount = getConfigDefaultAccount();
+
+  const accountOverride = getCWDAccountOverride();
+  const overrideFilePath = getDefaultAccountOverrideFilePath();
+  if (
+    overrideFilePath &&
+    accountOverride &&
+    accountOverride === accountToRemove
+  ) {
+    const { deleteOverrideFile } = await promptUser({
+      type: 'confirm',
+      name: 'deleteOverrideFile',
+      message: i18n(
+        `commands.account.subcommands.remove.prompts.deleteOverrideFile`,
+        {
+          overrideFilePath,
+          accountName: accountToRemove,
+        }
+      ),
+    });
+    try {
+      if (deleteOverrideFile) {
+        fs.unlinkSync(overrideFilePath);
+      }
+    } catch (error) {
+      logError(error);
+    }
+  }
 
   await deleteAccount(accountToRemove);
   logger.success(

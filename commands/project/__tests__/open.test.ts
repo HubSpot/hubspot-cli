@@ -5,7 +5,7 @@ import {
   addUseEnvironmentOptions,
   addTestingOptions,
 } from '../../../lib/commonOpts';
-import * as projectOpenCommand from '../open';
+import projectOpenCommand from '../open';
 
 jest.mock('yargs');
 jest.mock('../../../lib/commonOpts');

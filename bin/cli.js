@@ -23,6 +23,7 @@ const {
 } = require('../lib/middleware/gitMiddleware');
 const { performChecks } = require('../lib/middleware/yargsChecksMiddleware');
 const { setRequestHeaders } = require('../lib/middleware/requestMiddleware');
+const { checkFireAlarms } = require('../lib/middleware/fireAlarmMiddleware');
 
 const removeCommand = require('../commands/remove');
 const initCommand = require('../commands/init');
@@ -89,6 +90,7 @@ const argv = yargs
     injectAccountIdMiddleware,
     checkAndWarnGitInclusionMiddleware,
     validateAccountOptions,
+    checkFireAlarms,
   ])
   .exitProcess(false)
   .fail(handleFailure)

@@ -73,7 +73,9 @@ export async function inputPrompt(
     defaultAnswer,
   }: {
     when?: boolean | (() => boolean);
-    validate?: (input: string) => boolean | string;
+    validate?: (
+      input: string
+    ) => (boolean | string) | Promise<boolean | string>;
     defaultAnswer?: string;
   } = {}
 ): Promise<string> {

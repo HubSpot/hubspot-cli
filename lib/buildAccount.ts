@@ -24,7 +24,6 @@ import { debugError, logError } from './errorHandlers/index';
 import { SANDBOX_API_TYPE_MAP, handleSandboxCreateError } from './sandboxes';
 import { handleDeveloperTestAccountCreateError } from './developerTestAccounts';
 import { CLIAccount } from '@hubspot/local-dev-lib/types/Accounts';
-import { DeveloperTestAccount } from '@hubspot/local-dev-lib/types/developerTestAccounts';
 import { SandboxResponse } from '@hubspot/local-dev-lib/types/Sandbox';
 import { SandboxAccountType } from '../types/Sandboxes';
 
@@ -91,14 +90,12 @@ export async function buildDeveloperTestAccount(
   parentAccountConfig: CLIAccount,
   env: Environment,
   portalLimit: number
-): Promise<DeveloperTestAccount> {
-  const i18nKey = 'lib.developerTestAccount.create.loading';
-
+): Promise<number> {
   const id = getAccountIdentifier(parentAccountConfig);
   const parentAccountId = getAccountId(id);
 
   if (!parentAccountId) {
-    throw new Error(i18n(`${i18nKey}.fail`));
+    throw new Error(i18n(`lib.developerTestAccount.create.loading.fail`));
   }
 
   SpinniesManager.init({
@@ -107,12 +104,13 @@ export async function buildDeveloperTestAccount(
 
   logger.log('');
   SpinniesManager.add('buildDeveloperTestAccount', {
-    text: i18n(`${i18nKey}.add`, {
+    text: i18n(`lib.developerTestAccount.create.loading.add`, {
       accountName: testAccountName,
     }),
   });
 
-  let developerTestAccount: DeveloperTestAccount;
+  let developerTestAccountId: number;
+  let developerTestAccountPersonalAccessKey: string;
 
   try {
     const { data } = await createDeveloperTestAccount(
@@ -120,19 +118,20 @@ export async function buildDeveloperTestAccount(
       testAccountName
     );
 
-    developerTestAccount = data;
+    developerTestAccountId = data.id;
+    developerTestAccountPersonalAccessKey = data.personalAccessKey;
 
     SpinniesManager.succeed('buildDeveloperTestAccount', {
-      text: i18n(`${i18nKey}.succeed`, {
+      text: i18n(`lib.developerTestAccount.create.loading.succeed`, {
         accountName: testAccountName,
-        accountId: developerTestAccount.id,
+        accountId: developerTestAccountId,
       }),
     });
   } catch (e) {
     debugError(e);
 
     SpinniesManager.fail('buildDeveloperTestAccount', {
-      text: i18n(`${i18nKey}.fail`, {
+      text: i18n(`lib.developerTestAccount.create.loading.fail`, {
         accountName: testAccountName,
       }),
     });
@@ -141,13 +140,18 @@ export async function buildDeveloperTestAccount(
   }
 
   try {
-    await saveAccountToConfig(developerTestAccount.id, testAccountName, env);
+    await saveAccountToConfig(
+      developerTestAccountId,
+      testAccountName,
+      env,
+      developerTestAccountPersonalAccessKey
+    );
   } catch (err) {
     logError(err);
     throw err;
   }
 
-  return developerTestAccount;
+  return developerTestAccountId;
 }
 
 type SandboxAccount = SandboxResponse & {

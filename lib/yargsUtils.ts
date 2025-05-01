@@ -22,8 +22,8 @@ export function hasFlag(flag: string, argv = process.argv): boolean {
 
 export function makeYargsBuilder<T>(
   callback: (yargs: Argv) => Argv<T>,
-  command: string,
-  describe: string,
+  command: string | string[],
+  describe?: string,
   options: {
     useGlobalOptions?: boolean;
     useAccountOptions?: boolean;

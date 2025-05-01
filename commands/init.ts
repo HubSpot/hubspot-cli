@@ -2,11 +2,11 @@ import path from 'path';
 import { ArgumentsCamelCase, Argv } from 'yargs';
 import fs from 'fs-extra';
 import {
+  loadConfig,
   getConfigPath,
   createEmptyConfigFile,
   deleteEmptyConfigFile,
   updateDefaultAccount,
-  loadConfig,
   configFileExists,
 } from '@hubspot/local-dev-lib/config';
 import { Environment } from '@hubspot/local-dev-lib/types/Config';
@@ -52,8 +52,6 @@ import {
   TestingArgs,
   AccountArgs,
 } from '../types/Yargs';
-
-const i18nKey = 'commands.init';
 
 const TRACKING_STATUS = {
   STARTED: 'started',
@@ -106,7 +104,7 @@ const AUTH_TYPE_NAMES = {
 };
 
 export const command = 'init';
-export const describe = i18n(`${i18nKey}.describe`);
+export const describe = i18n(`commands.init.describe`);
 
 type InitArgs = CommonArgs &
   ConfigArgs &
@@ -144,13 +142,23 @@ export async function handler(
 
   const env = args.qa ? ENVIRONMENTS.QA : ENVIRONMENTS.PROD;
 
+  if (configFileExists(true)) {
+    const globalConfigPath = getConfigPath('', true);
+    logger.error(
+      i18n(`commands.init.errors.globalConfigFileExists`, {
+        configPath: globalConfigPath!,
+      })
+    );
+    process.exit(EXIT_CODES.ERROR);
+  }
+
   if (fs.existsSync(configPath!)) {
     logger.error(
-      i18n(`${i18nKey}.errors.configFileExists`, {
+      i18n(`commands.init.errors.configFileExists`, {
         configPath: configPath!,
       })
     );
-    logger.info(i18n(`${i18nKey}.logs.updateConfig`));
+    logger.info(i18n(`commands.init.logs.updateConfig`));
     process.exit(EXIT_CODES.ERROR);
   }
 
@@ -167,7 +175,7 @@ export async function handler(
   if (doesOtherConfigFileExist) {
     const path = getConfigPath('', !useHiddenConfig);
     logger.error(
-      i18n(`${i18nKey}.errors.bothConfigFilesNotAllowed`, { path: path! })
+      i18n(`commands.init.errors.bothConfigFilesNotAllowed`, { path: path! })
     );
     process.exit(EXIT_CODES.ERROR);
   }
@@ -196,6 +204,7 @@ export async function handler(
       accountId = oauthResult.accountId!;
       name = oauthResult.name;
     }
+    const configPath = getConfigPath();
 
     try {
       checkAndAddConfigToGitignore(configPath!);
@@ -203,19 +212,14 @@ export async function handler(
       debugError(e);
     }
 
-    let newConfigPath = configPath;
-    if (!newConfigPath && !useHiddenConfig) {
-      newConfigPath = `${getCwd()}/${DEFAULT_HUBSPOT_CONFIG_YAML_FILE_NAME}`;
-    }
-
     logger.log('');
     logger.success(
-      i18n(`${i18nKey}.success.configFileCreated`, {
-        configPath: newConfigPath!,
+      i18n(`commands.init.success.configFileCreated`, {
+        configPath: configPath!,
       })
     );
     logger.success(
-      i18n(`${i18nKey}.success.configFileUpdated`, {
+      i18n(`commands.init.success.configFileUpdated`, {
         authType: AUTH_TYPE_NAMES[authType as keyof typeof AUTH_TYPE_NAMES],
         account: name || accountId!,
       })
@@ -248,7 +252,7 @@ export async function handler(
 function initBuilder(yargs: Argv): Argv<InitArgs> {
   yargs.options({
     'auth-type': {
-      describe: i18n(`${i18nKey}.options.authType.describe`),
+      describe: i18n(`commands.init.options.authType.describe`),
       type: 'string',
       choices: [
         `${PERSONAL_ACCESS_KEY_AUTH_METHOD.value}`,
@@ -257,7 +261,7 @@ function initBuilder(yargs: Argv): Argv<InitArgs> {
       default: PERSONAL_ACCESS_KEY_AUTH_METHOD.value,
     },
     account: {
-      describe: i18n(`${i18nKey}.options.account.describe`),
+      describe: i18n(`commands.init.options.account.describe`),
       type: 'string',
       alias: 'a',
     },
@@ -265,11 +269,6 @@ function initBuilder(yargs: Argv): Argv<InitArgs> {
       type: 'boolean',
       hidden: true,
       default: false,
-    },
-    'use-hidden-config': {
-      describe: i18n(`${i18nKey}.options.useHiddenConfig.describe`),
-      hidden: true,
-      type: 'boolean',
     },
   });
 
@@ -281,7 +280,7 @@ function initBuilder(yargs: Argv): Argv<InitArgs> {
 export const builder = makeYargsBuilder<InitArgs>(
   initBuilder,
   command,
-  i18n(`${i18nKey}.verboseDescribe`, {
+  i18n(`commands.init.verboseDescribe`, {
     command: uiCommandReference('hs auth'),
     configName: DEFAULT_HUBSPOT_CONFIG_YAML_FILE_NAME,
     authMethod: PERSONAL_ACCESS_KEY_AUTH_METHOD.value,

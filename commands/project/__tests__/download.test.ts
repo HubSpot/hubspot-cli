@@ -4,7 +4,7 @@ import {
   addConfigOptions,
   addUseEnvironmentOptions,
 } from '../../../lib/commonOpts';
-import * as projectDownloadCommand from '../download';
+import projectDownloadCommand from '../download';
 
 jest.mock('yargs');
 jest.mock('../../../lib/commonOpts');

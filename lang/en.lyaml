@@ -10,6 +10,9 @@ en:
         portalEnvVarDeprecated: "The HUBSPOT_PORTAL_ID environment variable is deprecated. Please use HUBSPOT_ACCOUNT_ID instead."
       loadConfigMiddleware:
         configFileExists: "A configuration file already exists at {{ configPath }}. To specify a new configuration file, delete the existing one and try again."
+      injectAccountIdMiddleware:
+        invalidAccountId: "In the default override file ({{ hsAccountFileName }}), the account ID must be a number. Please delete the current file and generate a new one using {{ overrideCommand }}."
+        accountNotFound: "The account in the default override file ({{ hsAccountFileName }}) wasn't found in your configured accounts. You can authorize this account using {{ authCommand }}."
     completion:
       describe: "Enable bash completion shortcuts for commands. Concat the generated script to your .bashrc, .bash_profile, or .zshrc file."
       examples:
@@ -17,11 +20,52 @@ en:
     account:
       describe: "Commands for managing configured accounts."
       subcommands:
+        auth:
+          describe: "Configure authentication for your HubSpot account."
+          options:
+            account:
+              describe: "HubSpot account to authenticate"
+          errors:
+            failedToUpdateConfig: "Failed to update the configuration file. Please try again."
+            migrationNotConfirmed: "Did not migrate. Use the {{ authCommand }} command to update the deprecated config at {{ deprecatedConfigPath }}."
+            mergeNotConfirmed: "Did not merge. When you are ready to merge the deprecated config file with the global config file, run the {{ authCommand }} or {{ migrateCommand }} command."
+          success:
+            configFileCreated: "Created config file \"{{ configPath }}\""
+            configFileUpdated: "Connected account \"{{ account }}\" and set it as the default account"
+        createOverride:
+          describe: "Create a new default account override file ({{ hsAccountFileName }}) in the current working directory."
+          success: "Default account override file created at {{ overrideFilePath }}"
+          accountOverride: "An account override file already exists at {{ overrideFilePath }} associated with account \"{{ accountOverride }}\"."
+          prompts:
+            replaceOverrideFile: "Replace existing account override file?"
+          errors:
+            accountNotFound: "The specified account could not be found in the config file {{ configPath }}"
+          options:
+            account:
+              describe: "Name or ID of the account to create an override file for."
+          examples:
+            default: "Create a new default account override file ({{ hsAccountFileName }}) in the current working directory"
+            idBased: "Create a new default account override file ({{ hsAccountFileName }}) in the current working directory, using the account with accountId \"1234567\""
+            nameBased: "Create a new default account override file ({{ hsAccountFileName }}) in the current working directory, using the account with name \"MyAccount\""
+        removeOverride:
+          describe: "Remove the default account override file ({{ overrideFile }}) from the current working directory."
+          accountOverride: "There is an account override file at {{ overrideFilePath }} associated with account \"{{ accountOverride }}\"."
+          prompts:
+            deleteOverrideFile: "Delete account override file?"
+          success: "Removed the default account override file."
+          noOverrideFile: "No default account override file found in the current working directory. No action required."
+          options:
+            force:
+              describe: "Skip confirmation prompt when removing the override file"
         list:
-          accounts: "{{#bold}}Accounts{{/bold}}:"
-          defaultAccount: "{{#bold}}Default account{{/bold}}: {{ account }}"
           describe: "List names of accounts defined in config."
-          configPath: "{{#bold}}Config path{{/bold}}: {{ configPath }}"
+          accounts: "{{#bold}}Accounts{{/bold}}:"
+          defaultAccountTitle: "{{#bold}}Default Account{{/bold}}"
+          defaultAccount: "Account: {{ account }}"
+          configPath: "Source: {{ configPath }}"
+          overrideFilePathTitle: "{{#bold}}Default Account Override{{/bold}}"
+          overrideFilePath: "Source: {{ overrideFilePath }}"
+          overrideAccount: "Account: {{ account }}"
           labels:
             accountId: "Account ID"
             authType: "Auth Type"
@@ -39,6 +83,8 @@ en:
           describe: "Set the Hubspot account to use as the default account. The default account can be overridden with the \"--account\" option."
           errors:
             accountNotFound: "The account \"{{ specifiedAccount }}\" could not be found in {{ configPath }}"
+          accountOverride: "This project currently has an account override set: \"{{ accountOverride }}\". Account \"{{accountOverride}}\" will continue to act as the default account for this project."
+          accountOverrideCommands: "Use {{ createOverrideCommand }} to change override accounts, or {{ removeOverrideCommand }} to remove the override and use your default account."
           examples:
             default: "Select a HubSpot account to use as the default account"
             idBased: "Set the default account to the account in the config with accountId equal to \"1234567\""
@@ -54,6 +100,7 @@ en:
           logs:
             replaceDefaultAccount: "The removed account was the default account."
           prompts:
+            deleteOverrideFile: "Delete the override file ({{ overrideFilePath }}) associated with {{ accountName }}?"
             selectAccountToRemove: "Select an account to remove from the config"
           errors:
             accountNotFound: "The account \"{{ specifiedAccount }}\" could not be found in {{ configPath }}"
@@ -69,6 +116,12 @@ en:
         info:
           accountId: "{{#bold}}Account ID{{/bold}}: {{ accountId }}"
           describe: "Print information about the default account, or about the account specified with the \"account\" option."
+          defaultAccountTitle: "{{#bold}}Default Account{{/bold}}"
+          defaultAccount: "Account: {{ account }}"
+          configPath: "Source: {{ configPath }}"
+          overrideFilePathTitle: "{{#bold}}Default Account Override{{/bold}}"
+          overrideFilePath: "Source: {{ overrideFilePath }}"
+          overrideAccount: "Account: {{ account }}"
           errors:
             notUsingPersonalAccessKey: "This command currently only supports fetching scopes for the personal access key auth type."
           options:
@@ -91,13 +144,15 @@ en:
           confirm:
             one: "Remove 1 inactive account from the CLI config?"
             other: "Remove {{ count }} inactive accounts from the CLI config?"
+          defaultAccountOverride: "\n(This will also delete the default account override file at {{ overrideFilePath }})"
+          replaceDefaultAccount: "The default account was removed."
           removeSuccess: "Removed {{ accountName }} from the CLI config."
     auth:
       describe: "Configure authentication for your HubSpot account."
       verboseDescribe: "Configure authentication for a HubSpot account. This will update the {{ configName }} file that stores your account information.\n\nThe recommended authentication method is {{#bold}}{{ authMethod }}{{/bold}}, which uses an access token tied to a specific user account."
       errors:
-        noConfigFileFound: "No config file was found. To create a new config file, use the \"hs init\" command."
         unsupportedAuthType: "Unsupported auth type: {{ type }}. The only supported authentication protocols are {{ supportedProtocols }}."
+        globalConfigFileExists: "A global config file exists at {{ configPath }}. To authorize an account, please use {{ authCommand }}."
       options:
         authType:
           describe: "Authentication method"
@@ -108,6 +163,16 @@ en:
     config:
       describe: "Commands for managing the CLI config file."
       subcommands:
+        migrate:
+          describe: "Migrate from the deprecated {{ deprecatedConfigPath }} file to the new global config file at {{ globalConfigPath }}."
+          migrationAlreadyCompleted: "No {{ deprecatedConfigPath }} deprecated configuration file found. No migration necessary."
+          errors:
+            configNotFound: "A configuration file at {{ configPath }} could not be found. Please try again with a valid file path."
+          options:
+            force: "When merging a deprecated configuration file with an existing global configuration file, overwrite any conflicting values in the global config with the deprecated config values."
+          examples:
+            default: "Migrate from the deprecated {{ deprecatedConfigPath }} file to the new global config file at {{ globalConfigPath }}"
+            configFlag: "Migrate a specific config file (specified with the config flag) to the new global config file at {{ globalConfigPath }}"
         set:
           describe: "Set various configuration options within the hubspot.config.yml file."
           promptMessage: "Select a config option to update"
@@ -455,8 +520,6 @@ en:
           describe: "Authentication method"
         account:
           describe: "HubSpot account to authenticate"
-        useHiddenConfig:
-          describe: "Use the new HubSpot configuration file located in a hidden file in the user's home directory"
       success:
         configFileCreated: "Created config file \"{{ configPath }}\""
         configFileUpdated: "Connected account \"{{ account }}\" using \"{{ authType }}\" and set it as the default account"
@@ -464,7 +527,7 @@ en:
         updateConfig: "To update an existing config file, use the \"hs auth\" command."
       errors:
         configFileExists: "The config file {{ configPath }} already exists."
-        bothConfigFilesNotAllowed: "Unable to create config file, because there is an existing one at \"{{ path }}\". To create a new config file, delete the existing one and try again."
+        globalConfigFileExists: "A global config file already exists at {{ configPath }}. To specify a new local config file, delete the existing one and try again."
     lint:
       issuesFound: "{{ count }} issues found."
       groupName: "Linting {{ path }}"
@@ -538,6 +601,7 @@ en:
           describe: "Create a new project."
           errors:
             failedToDownloadProject: "Failed to download project. Please try again later."
+            invalidTemplateSource: "Invalid template source provided. Use the format <Owner>/<Repo> and try again."
             failedToFetchProjectList: "Failed to fetch the list of available project templates. Please try again later."
             cannotNestProjects: "A project already exists at {{ projectDir }}. Projects cannot be nested within other projects. Please choose a different destination and try again."
           logs:
@@ -567,7 +631,7 @@ en:
             name:
               describe: "Project name (cannot be changed)"
           header:
-            text: "Migrate an app to the projects framework"
+            text: "This command will migrate an app to the projects framework. It will walk you through the fields required to complete the migration and download the project source code into a directory of your choosing."
             link: "Learn more about migrating apps to the projects framework"
           deprecationWarning: "The {{ oldCommand }} command is deprecated and will be removed. Use {{ newCommand }} going forward."
           migrationStatus:
@@ -585,40 +649,15 @@ en:
           migrationInterrupted: "\nThe command is terminated, but app migration is still in progress. Please check your account to ensure that the project and associated app have been created successfully."
           createAppPrompt: "Proceed with migrating this app to a project component (this process can't be aborted)?"
           projectDetailsLink: "View project details in your developer account"
-          componentsToBeMigrated: "The following component types will be migrated: {{ components }}"
+          componentsToBeMigrated: "The following features will be migrated: {{ components }}"
           componentsThatWillNotBeMigrated: "[NOTE] These component types are not yet supported for migration but will be available later: {{ components }}"
           errors:
-            noAppsEligible: "No apps in account {{ accountId }} are currently migratable"
+            noAppsForProject: "No apps associated with project {{ projectName }}"
             noAccountConfig: "There is no account associated with {{ accountId }} in the config file. Please choose another account and try again, or authenticate {{ accountId }} using {{ authCommand }}."
-            invalidAccountTypeTitle: "{{#bold}}Developer account not targeted{{/bold}}"
-            invalidAccountTypeDescription: "Only public apps created in a developer account can be converted to a project component. Select a connected developer account with {{useCommand}} or {{authCommand}} and try again."
             projectAlreadyExists: "A project with name {{ projectName }} already exists. Please choose another name."
             invalidApp: "Could not migrate appId {{ appId }}. This app cannot be migrated at this time. Please choose another public app."
-            appWithAppIdNotFound: "Could not find an app with the id {{ appId }} "
             migrationFailed: 'Migration Failed'
-          prompt:
-            chooseApp: 'Which app would you like to migrate?'
-            inputName: '[--name] What would you like to name the project?'
-            inputDest: '[--dest] Where would you like to save the project?'
-            uidForComponent: 'What UID would you like to use for {{ componentName }}?'
-            proceed: 'Would you like to proceed?'
-          spinners:
-            beginningMigration: "Beginning migration"
-            unableToStartMigration: "Unable to begin migration"
-            finishingMigration: "Wrapping up migration"
-            migrationComplete: "Migration completed"
-            migrationFailed: "Migration failed"
-            downloadingProjectContents: "Downloading migrated project files"
-            downloadingProjectContentsComplete: "Migrated project files downloaded"
-            downloadingProjectContentsFailed: "Unable to download migrated project files"
-            copyingProjectFiles: "Copying migrated project files"
-            copyingProjectFilesComplete: "Migrated project files copied"
-            copyingProjectFilesFailed: "Unable to copy migrated project files"
-          unmigratableReasons:
-            upToDate: 'App is already up to date'
-            isPrivateApp: 'Private apps are not currently migratable'
-            listedInMarketplace: 'Listed apps are not currently migratable'
-            generic: "Unable to migrate app: {{ reasonCode }}"
+            notAllowedWithinProject: 'This command cannot be run from within a project directory. Run the command again from outside a project directory. If you are trying to migrate a project, run {{ command }}'
         cloneApp:
           describe: "Clone a public app using the projects framework."
           examples:
@@ -768,9 +807,12 @@ en:
             attemptNewBuild: "Attempting to create a new build"
             fileAlreadyQueued: "File \"{{ filePath }}\" is already queued for upload"
           errors:
+            projectConfigNotFound: "No project config found. Please ensure that you are in a project directory."
+            projectLockedError: "Your project is locked. This may mean that another user is running the {{#bold}}`hs project dev`{{/bold}} command for this project. If this is you, unlock the project in Projects UI."
             uploadFailed: "Failed to upload file \"{{ filePath }}\" to \"{{ remotePath }}\""
             deleteFileFailed: "Failed to delete file \"{{ remotePath }}\""
             deleteFolderFailed: "Failed to delete folder \"{{ remotePath }}\""
+            v3ApiError: "{{ command }} is not supported for platform version '{{ platformVersion}}', use {{ newCommand }} instead to develop locally. {{ linkToDocs }}"
         download:
           describe: "Download your project files from HubSpot."
           examples:
@@ -1157,7 +1199,7 @@ en:
           missingPropertiesInConfig: "Found misconfigured projects in the target repository's config.json file. Please ensure that each project in the target repository's config.json file contains the following properties: [\"name\", \"label\", \"path\", \"insertPath\"]."
       validateProjectConfig:
         configNotFound: "Unable to locate a project configuration file. Try running again from a project directory, or run {{ createCommand }} to create a new project."
-        configMissingFields: "The project configuruation file is missing required fields."
+        configMissingFields: "The project configuration file is missing required fields."
         srcDirNotFound: "Project source directory {{#bold}}{{ srcDir }}{{/bold}} could not be found in {{#bold}}{{ projectDir }}{{/bold}}."
         srcOutsideProjectDir: "Invalid value for 'srcDir' in {{ projectConfig }}: {{#bold}}srcDir: \"{{ srcDir }}\"{{/bold}}\n\t'srcDir' must be a relative path to a folder under the project root, such as \".\" or \"./src\""
       ensureProjectExists:
@@ -1194,6 +1236,9 @@ en:
         compressed: "Project files compressed: {{ byteCount }} bytes"
         compressing: "Compressing build files to \"{{ path }}\""
         fileFiltered: "Ignore rule triggered for \"{{ filename }}\""
+    middleware:
+      fireAlarm:
+        failedToLoadBoxen: "Failed to load boxen util."
     ui:
       betaTag: "{{#bold}}[BETA]{{/bold}}"
       betaWarning:
@@ -1214,11 +1259,14 @@ en:
             command: "--account"
             message: "Use the {{ command }} option with any command to override the default account"
           accountsListCommand:
-            command: hs accounts list
+            command: "hs account list"
             message: "Run {{ command }} to see a list of configured HubSpot accounts"
           accountsUseCommand:
-            command: "hs accounts use"
+            command: "hs account use"
             message: "Run {{ command }} to set the Hubspot account that the CLI will target by default"
+          accountAuthCommand:
+            command: "hs account auth"
+            message: "Run {{ command }} to connect the CLI to additional HubSpot accounts"
           authCommand:
             command: "hs auth"
             message: "Run {{ command }} to connect the CLI to additional HubSpot accounts"
@@ -1283,6 +1331,13 @@ en:
           describe: "Use environment variable config"
         debug:
           describe: "Set log level to debug"
+    configMigrate:
+      migrateConfigPrompt: "Migrate config?\n From deprecated config file: {{ deprecatedConfigPath }}\n To new global config file: {{ globalConfigPath }}\n (This action will delete the deprecated config file).\n"
+      mergeConfigConflictPrompt: "Change the {{ property }} property in the global config from {{ newValue }} to {{ oldValue }}?"
+      mergeConfigsPrompt: "Two config files detected. Merge them?\n Deprecated config file: {{ deprecatedConfigPath }}\n Global config: {{ globalConfigPath }}\n (This action will delete the deprecated config file).\n"
+      migrationSuccess: "The deprecated config file has been migrated to the new global config file at {{ globalConfigPath }}."
+      mergeSuccess: "The deprecated config file has been merged with the global config file at {{ globalConfigPath }}."
+      skippedExistingAccounts: "\nThe following accounts were not merged, because they already exist in the global config: {{ skippedAccountIds }}.\n"
     prompts:
       projectDevTargetAccountPrompt:
         createNewSandboxOption: "<Test on a new development sandbox>"
@@ -1292,7 +1347,7 @@ en:
         sandboxLimit: "Your account reached the limit of {{ limit }} development sandboxes"
         sandboxLimitWithSuggestion: "Your account reached the limit of {{ limit }} development sandboxes. Run {{ authCommand }} to add an existing one to the config."
         developerTestAccountLimit: "Your account reached the limit of {{ limit }} developer test accounts."
-        confirmDefaultAccount: "Continue testing on {{#bold}}{{ accountName }} ({{ accountType }}){{/bold}}? (Y/n)"
+        confirmDefaultAccount: "Proceed with local development on {{#bold}}{{ accountName }} [{{ accountType }}]{{/bold}}? (Y/n)"
         confirmUseExistingDeveloperTestAccount: "Continue with {{ accountName }}? This account isn't currently connected to the HubSpot CLI. By continuing, you'll be prompted to generate a personal access key and connect it."
         noAccountId: "No account ID found for the selected account. Please try again."
       projectLogsPrompt:
@@ -1370,6 +1425,7 @@ en:
           invalidDest: "There is an existing project at this destination. Please provide a new path for this project."
           invalidCharacters: "The selected destination contains invalid characters. Please provide a new path and try again."
           invalidTemplate: "[--template] Could not find template \"{{ template }}\". Please choose an available template:"
+          projectTemplateRequired: "Project template is required when projectTemplates is provided"
       selectPublicAppPrompt:
         selectAppIdMigrate: "[--appId] Choose an app under {{ accountName }} to migrate:"
         selectAppIdClone: "[--appId] Choose an app under {{ accountName }} to clone:"
@@ -1569,6 +1625,9 @@ en:
     doctor:
       runningDiagnostics: "Running diagnostics..."
       diagnosticsComplete: "Diagnostics complete"
+      defaultAccountOverrideFileChecks:
+        overrideActive: "Default account override file active: {{ defaultAccountOverrideFile }}"
+        overrideAccountId: "Active account ID: {{ overrideAccountId }}"
       accountChecks:
         active: "Default account active"
         inactive: "Default account isn't active"
@@ -1620,6 +1679,8 @@ en:
           settings:
             httpUseLocalhost: "The setting {{#bold}}httpUseLocalhost{{/bold}} is enabled"
             httpUseLocalhostSecondary: "This setting causes all CLI requests to route to localhost"
+        defaultAccountOverrideFile:
+          header: "Default account override file path:"
         projectConfig:
           header: "Project configuration"
           projectDirSubHeader: "Project dir: {{#bold}}{{ projectDir }}{{/bold}}"

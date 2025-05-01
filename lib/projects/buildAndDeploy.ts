@@ -4,7 +4,6 @@ import { HubSpotPromise } from '@hubspot/local-dev-lib/types/Http';
 import { ComponentStructureResponse } from '@hubspot/local-dev-lib/types/ComponentStructure';
 import { Build } from '@hubspot/local-dev-lib/types/Build';
 import { Deploy } from '@hubspot/local-dev-lib/types/Deploy';
-import { logger } from '@hubspot/local-dev-lib/logger';
 import {
   getBuildStatus,
   getBuildStructure,
@@ -23,14 +22,8 @@ import {
   PROJECT_ERROR_TYPES,
 } from '../constants';
 import SpinniesManager from '../ui/SpinniesManager';
-import { i18n } from '../lang';
 import { logError, ApiErrorContext } from '../errorHandlers';
-import {
-  uiLine,
-  uiLink,
-  uiAccountDescription,
-  uiCommandReference,
-} from '../ui';
+import { uiLine, uiLink, uiAccountDescription } from '../ui';
 import {
   getProjectBuildDetailUrl,
   getProjectDeployDetailUrl,
@@ -44,8 +37,8 @@ import {
   ProjectPollResult,
 } from '../../types/Projects';
 import { EXIT_CODES } from '../enums/exitCodes';
-
-const i18nKey = 'lib.projectBuildAndDeploy';
+import { lib } from '../../lang/en';
+import { uiLogger } from '../ui/logger';
 
 const SPINNER_STATUS = {
   SPINNING: 'spinning',
@@ -123,14 +116,10 @@ type PollTaskStatusFunction<T extends ProjectTask> = (
 function handleTaskStatusError(
   statusText: ProjectPollStatusFunctionText
 ): never {
-  logger.error(
-    i18n(`${i18nKey}.makePollTaskStatusFunc.errorFetchingTaskStatus`, {
-      taskType:
-        statusText.TYPE_KEY === PROJECT_BUILD_TEXT.TYPE_KEY
-          ? 'build'
-          : 'deploy',
-      openCommand: uiCommandReference('hs project open'),
-    })
+  uiLogger.error(
+    lib.projectBuildAndDeploy.makePollTaskStatusFunc.errorFetchingTaskStatus(
+      statusText.TYPE_KEY === PROJECT_BUILD_TEXT.TYPE_KEY ? 'build' : 'deploy'
+    )
   );
   process.exit(EXIT_CODES.ERROR);
 }
@@ -152,7 +141,7 @@ function makePollTaskStatusFunc<T extends ProjectTask>({
     const displayId = deployedBuildId || taskId;
 
     if (linkToHubSpot && !silenceLogs) {
-      logger.log(
+      uiLogger.log(
         `\n${linkToHubSpot(accountId, taskName, taskId, deployedBuildId)}\n`
       );
     }
@@ -203,12 +192,12 @@ function makePollTaskStatusFunc<T extends ProjectTask>({
     const numComponents = structuredTasks.length;
     const componentCountText = silenceLogs
       ? ''
-      : i18n(
-          numComponents === 1
-            ? `${i18nKey}.makePollTaskStatusFunc.componentCountSingular`
-            : `${i18nKey}.makePollTaskStatusFunc.componentCount`,
-          { numComponents }
-        ) + '\n';
+      : numComponents === 1
+        ? lib.projectBuildAndDeploy.makePollTaskStatusFunc
+            .componentCountSingular
+        : lib.projectBuildAndDeploy.makePollTaskStatusFunc.componentCount(
+            numComponents
+          );
 
     SpinniesManager.update(overallTaskSpinniesKey, {
       text: `${statusStrings.INITIALIZE(
@@ -255,7 +244,7 @@ function makePollTaskStatusFunc<T extends ProjectTask>({
           const { data } = await statusFn(accountId, taskName, taskId);
           taskStatus = data;
         } catch (e) {
-          logger.debug(e);
+          uiLogger.debug(e);
           logError(
             e,
             new ApiErrorContext({
@@ -292,8 +281,10 @@ function makePollTaskStatusFunc<T extends ProjectTask>({
             ) {
               const taskStatusText =
                 subtask.status === statusText.STATES.SUCCESS
-                  ? i18n(`${i18nKey}.makePollTaskStatusFunc.successStatusText`)
-                  : i18n(`${i18nKey}.makePollTaskStatusFunc.failedStatusText`);
+                  ? lib.projectBuildAndDeploy.makePollTaskStatusFunc
+                      .successStatusText
+                  : lib.projectBuildAndDeploy.makePollTaskStatusFunc
+                      .failedStatusText;
               const hasNewline =
                 spinner?.text?.includes('\n') || Boolean(topLevelTask);
               const updatedText = `${spinner?.text?.replace(
@@ -332,7 +323,7 @@ function makePollTaskStatusFunc<T extends ProjectTask>({
               );
 
               uiLine();
-              logger.log(
+              uiLogger.log(
                 `${statusStrings.SUBTASK_FAIL(
                   failedSubtasks.length === 1
                     ? getSubtaskName(failedSubtasks[0])
@@ -340,7 +331,9 @@ function makePollTaskStatusFunc<T extends ProjectTask>({
                   displayId
                 )}\n`
               );
-              logger.log('See below for a summary of errors.');
+              uiLogger.log(
+                lib.projectBuildAndDeploy.makePollTaskStatusFunc.errorSummary
+              );
               uiLine();
 
               const displayErrors = failedSubtasks.filter(
@@ -352,18 +345,18 @@ function makePollTaskStatusFunc<T extends ProjectTask>({
               );
 
               displayErrors.forEach(subTask => {
-                logger.log(
+                uiLogger.log(
                   `\n--- ${chalk.bold(
                     getSubtaskName(subTask)
                   )} failed with the following error ---`
                 );
-                logger.error(subTask.errorMessage);
+                uiLogger.error(subTask.errorMessage);
 
                 // Log nested errors
                 if (subTask.standardError && subTask.standardError.errors) {
-                  logger.log();
+                  uiLogger.log('');
                   subTask.standardError.errors.forEach(error => {
-                    logger.log(error.message);
+                    uiLogger.log(error.message);
                   });
                 }
               });
@@ -394,10 +387,10 @@ function pollBuildAutodeployStatus(
         const response = await getBuildStatus(accountId, taskName, buildId);
         build = response.data;
       } catch (e) {
-        logger.debug(e);
+        uiLogger.debug(e);
         return reject(
           new Error(
-            i18n(`${i18nKey}.pollBuildAutodeployStatusError`, { buildId })
+            lib.projectBuildAndDeploy.pollBuildAutodeployStatusError(buildId)
           )
         );
       }
@@ -405,7 +398,7 @@ function pollBuildAutodeployStatus(
       if (!build || !build.status) {
         return reject(
           new Error(
-            i18n(`${i18nKey}.pollBuildAutodeployStatusError`, { buildId })
+            lib.projectBuildAndDeploy.pollBuildAutodeployStatusError(buildId)
           )
         );
       }
@@ -494,9 +487,9 @@ export async function displayWarnLogs(
   if (result && result.logs) {
     const logLength = result.logs.length;
     result.logs.forEach((log, i) => {
-      logger.warn(log.message);
+      uiLogger.warn(log.message);
       if (i < logLength - 1) {
-        logger.log('');
+        uiLogger.log('');
       }
     });
   }
@@ -533,13 +526,10 @@ export async function pollProjectBuildAndDeploy(
     return result;
   } else if (buildStatus.isAutoDeployEnabled) {
     if (!silenceLogs) {
-      logger.log(
-        i18n(
-          `${i18nKey}.pollProjectBuildAndDeploy.buildSucceededAutomaticallyDeploying`,
-          {
-            accountIdentifier: uiAccountDescription(accountId),
-            buildId,
-          }
+      uiLogger.log(
+        lib.projectBuildAndDeploy.pollProjectBuildAndDeploy.buildSucceededAutomaticallyDeploying(
+          buildId,
+          uiAccountDescription(accountId)
         )
       );
 
@@ -573,16 +563,13 @@ export async function pollProjectBuildAndDeploy(
         result.succeeded = false;
       }
     } else if (!silenceLogs) {
-      logger.log(
-        i18n(
-          `${i18nKey}.pollProjectBuildAndDeploy.unableToFindAutodeployStatus`,
-          {
-            buildId,
-            viewDeploysLink: uiLink(
-              i18n(`${i18nKey}.pollProjectBuildAndDeploy.viewDeploys`),
-              getProjectActivityUrl(projectConfig.name, accountId)
-            ),
-          }
+      uiLogger.log(
+        lib.projectBuildAndDeploy.pollProjectBuildAndDeploy.unableToFindAutodeployStatus(
+          buildId,
+          uiLink(
+            lib.projectBuildAndDeploy.pollProjectBuildAndDeploy.viewDeploys,
+            getProjectActivityUrl(projectConfig.name, accountId)
+          )
         )
       );
     }
@@ -591,14 +578,14 @@ export async function pollProjectBuildAndDeploy(
   try {
     if (tempFile) {
       tempFile.removeCallback();
-      logger.debug(
-        i18n(`${i18nKey}.pollProjectBuildAndDeploy.cleanedUpTempFile`, {
-          path: tempFile.name,
-        })
+      uiLogger.debug(
+        lib.projectBuildAndDeploy.pollProjectBuildAndDeploy.cleanedUpTempFile(
+          tempFile.name
+        )
       );
     }
   } catch (e) {
-    logger.error(e);
+    logError(e);
   }
 
   if (result && result.deployResult) {

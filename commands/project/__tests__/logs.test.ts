@@ -1,17 +1,13 @@
-// @ts-nocheck
-const yargs = require('yargs');
-const { addUseEnvironmentOptions } = require('../../../lib/commonOpts');
-const {
-  ProjectLogsManager,
-} = require('../../../lib/projects/ProjectLogsManager');
-const {
-  projectLogsPrompt,
-} = require('../../../lib/prompts/projectsLogsPrompt');
-const { getTableContents, getTableHeader } = require('../../../lib/ui/table');
-const { trackCommandUsage } = require('../../../lib/usageTracking');
-const ui = require('../../../lib/ui');
-const { EXIT_CODES } = require('../../../lib/enums/exitCodes');
-const { logError } = require('../../../lib/errorHandlers');
+import yargs, { Argv, ArgumentsCamelCase } from 'yargs';
+import { addUseEnvironmentOptions } from '../../../lib/commonOpts';
+import { ProjectLogsManager } from '../../../lib/projects/ProjectLogsManager';
+import * as projectLogsPrompt from '../../../lib/prompts/projectsLogsPrompt';
+import * as table from '../../../lib/ui/table';
+import { trackCommandUsage } from '../../../lib/usageTracking';
+import * as ui from '../../../lib/ui';
+import { EXIT_CODES } from '../../../lib/enums/exitCodes';
+import { logError } from '../../../lib/errorHandlers';
+import projectLogsCommand, { ProjectLogsArgs } from '../logs';
 
 jest.mock('yargs');
 jest.mock('@hubspot/local-dev-lib/logger');
@@ -22,42 +18,64 @@ jest.mock('../../../lib/projects/ProjectLogsManager');
 jest.mock('../../../lib/prompts/projectsLogsPrompt');
 jest.mock('../../../lib/ui/table');
 jest.mock('../../../lib/errorHandlers');
-yargs.options.mockReturnValue(yargs);
-yargs.conflicts.mockReturnValue(yargs);
+
 const uiLinkSpy = jest.spyOn(ui, 'uiLink');
 const uiLineSpy = jest.spyOn(ui, 'uiLine');
+const processExitSpy = jest.spyOn(process, 'exit');
+const projectLogsPromptSpy = jest.spyOn(projectLogsPrompt, 'projectLogsPrompt');
+const projectLogsManagerSetFunctionSpy = jest.spyOn(
+  ProjectLogsManager,
+  'setFunction'
+);
+const projectLogsManagerGetFunctionNamesSpy = jest.spyOn(
+  ProjectLogsManager,
+  'getFunctionNames'
+);
+const projectLogsManagerInitSpy = jest.spyOn(ProjectLogsManager, 'init');
 
-// Import this last so mocks apply
-const logsCommand = require('../logs');
+const getTableHeaderSpy = jest.spyOn(table, 'getTableHeader');
+const getTableContentsSpy = jest.spyOn(table, 'getTableContents');
+
+const optionsSpy = jest
+  .spyOn(yargs as Argv, 'options')
+  .mockReturnValue(yargs as Argv);
+
+const conflictsSpy = jest
+  .spyOn(yargs as Argv, 'conflicts')
+  .mockReturnValue(yargs as Argv);
+
+const exampleSpy = jest
+  .spyOn(yargs as Argv, 'example')
+  .mockReturnValue(yargs as Argv);
 
 describe('commands/project/logs', () => {
-  let processExitSpy;
-
   beforeEach(() => {
-    processExitSpy = jest.spyOn(process, 'exit').mockImplementation(() => {});
+    // @ts-expect-error Doesn't match the actual signature because then the linter complains about unused variables
+    processExitSpy.mockImplementation(() => {});
   });
 
   describe('command', () => {
     it('should have the correct command structure', async () => {
-      expect(logsCommand.command).toEqual('logs');
+      expect(projectLogsCommand.command).toEqual('logs');
     });
   });
 
   describe('describe', () => {
     it('should contain the beta tag', () => {
-      expect(logsCommand.describe).toContain('[BETA]');
+      expect(projectLogsCommand.describe).toContain('[BETA]');
     });
 
     it('should provide a description', () => {
-      expect(logsCommand.describe).toBeDefined();
+      expect(projectLogsCommand.describe).toBeDefined();
     });
   });
 
   describe('builder', () => {
     it('should support the correct options', () => {
-      logsCommand.builder(yargs);
-      expect(yargs.options).toHaveBeenCalledTimes(1);
-      expect(yargs.options).toHaveBeenCalledWith({
+      projectLogsCommand.builder(yargs as Argv);
+
+      expect(optionsSpy).toHaveBeenCalledTimes(1);
+      expect(optionsSpy).toHaveBeenCalledWith({
         function: expect.objectContaining({
           alias: 'function',
           requiresArg: true,
@@ -84,57 +102,57 @@ describe('commands/project/logs', () => {
     });
 
     it('should set the correct conflicts', () => {
-      logsCommand.builder(yargs);
-      expect(yargs.conflicts).toHaveBeenCalledTimes(1);
-      expect(yargs.conflicts).toHaveBeenCalledWith('tail', 'limit');
+      projectLogsCommand.builder(yargs as Argv);
+
+      expect(conflictsSpy).toHaveBeenCalledTimes(1);
+      expect(conflictsSpy).toHaveBeenCalledWith('tail', 'limit');
     });
 
     it('should provide examples', () => {
-      logsCommand.builder(yargs);
-      expect(yargs.example).toHaveBeenCalledTimes(1);
+      projectLogsCommand.builder(yargs as Argv);
+
+      expect(exampleSpy).toHaveBeenCalledTimes(1);
     });
   });
 
   describe('handler', () => {
+    let options: ArgumentsCamelCase<ProjectLogsArgs>;
+
     beforeEach(() => {
-      projectLogsPrompt.mockResolvedValue({ functionName: 'foo' });
+      options = {
+        derivedAccountId: 12345678,
+      } as ArgumentsCamelCase<ProjectLogsArgs>;
+
+      projectLogsPromptSpy.mockResolvedValue({ functionName: 'foo' });
     });
 
     it('should track the command usage', async () => {
-      const options = {
-        foo: 'bar',
-        derivedAccountId: 12345678,
-      };
-      await logsCommand.handler(options);
+      await projectLogsCommand.handler(options);
+
       expect(trackCommandUsage).toHaveBeenCalledTimes(1);
       expect(trackCommandUsage).toHaveBeenCalledWith(
         'project-logs',
-        null,
+        undefined,
         options.derivedAccountId
       );
     });
 
     it('should initialize the ProjectLogsManager', async () => {
-      const options = {
-        foo: 'bar',
-        derivedAccountId: 12345678,
-      };
-      await logsCommand.handler(options);
-      expect(ProjectLogsManager.init).toHaveBeenCalledTimes(1);
-      expect(ProjectLogsManager.init).toHaveBeenCalledWith(
+      await projectLogsCommand.handler(options);
+
+      expect(projectLogsManagerInitSpy).toHaveBeenCalledTimes(1);
+      expect(projectLogsManagerInitSpy).toHaveBeenCalledWith(
         options.derivedAccountId
       );
     });
 
     it('should prompt the user for input', async () => {
       const functionNames = ['function1', 'function2'];
-      ProjectLogsManager.getFunctionNames.mockReturnValue(functionNames);
-      const options = {
-        foo: 'bar',
-      };
-      await logsCommand.handler(options);
-      expect(projectLogsPrompt).toHaveBeenCalledTimes(1);
-      expect(projectLogsPrompt).toHaveBeenCalledWith({
+      projectLogsManagerGetFunctionNamesSpy.mockReturnValue(functionNames);
+      await projectLogsCommand.handler(options);
+
+      expect(projectLogsPromptSpy).toHaveBeenCalledTimes(1);
+      expect(projectLogsPromptSpy).toHaveBeenCalledWith({
         functionChoices: functionNames,
         promptOptions: options,
       });
@@ -142,34 +160,31 @@ describe('commands/project/logs', () => {
 
     it('should set the function', async () => {
       const selectedFunction = 'function1';
-      ProjectLogsManager.getFunctionNames.mockReturnValue([
+      projectLogsManagerGetFunctionNamesSpy.mockReturnValue([
         selectedFunction,
         'function2',
       ]);
-      projectLogsPrompt.mockReturnValue({
+      projectLogsPromptSpy.mockResolvedValue({
         functionName: selectedFunction,
       });
 
-      await logsCommand.handler({});
-      expect(ProjectLogsManager.setFunction).toHaveBeenCalledTimes(1);
-      expect(ProjectLogsManager.setFunction).toHaveBeenCalledWith(
+      await projectLogsCommand.handler(options);
+      expect(projectLogsManagerSetFunctionSpy).toHaveBeenCalledTimes(1);
+      expect(projectLogsManagerSetFunctionSpy).toHaveBeenCalledWith(
         selectedFunction
       );
     });
 
     it('should log public functions correctly', async () => {
-      const options = {
-        derivedAccountId: 12345678,
-      };
       const functionNames = ['function1', 'function2'];
       const selectedFunction = 'function1';
-      ProjectLogsManager.getFunctionNames.mockReturnValue(functionNames);
-      projectLogsPrompt.mockReturnValue({
+      projectLogsManagerGetFunctionNamesSpy.mockReturnValue(functionNames);
+      projectLogsPromptSpy.mockResolvedValue({
         functionName: selectedFunction,
       });
 
       const tableHeaders = ['Header 1', 'Header 2'];
-      getTableHeader.mockReturnValue(tableHeaders);
+      getTableHeaderSpy.mockReturnValue(tableHeaders);
 
       ProjectLogsManager.isPublicFunction = true;
       ProjectLogsManager.accountId = options.derivedAccountId;
@@ -177,17 +192,17 @@ describe('commands/project/logs', () => {
       ProjectLogsManager.endpointName = 'my-endpoint';
       ProjectLogsManager.appId = 123456;
 
-      await logsCommand.handler(options);
+      await projectLogsCommand.handler(options);
 
-      expect(getTableHeader).toHaveBeenCalledTimes(1);
-      expect(getTableHeader).toHaveBeenCalledWith([
+      expect(getTableHeaderSpy).toHaveBeenCalledTimes(1);
+      expect(getTableHeaderSpy).toHaveBeenCalledWith([
         'Account',
         'Function',
         'Endpoint',
       ]);
 
-      expect(getTableContents).toHaveBeenCalledTimes(1);
-      expect(getTableContents).toHaveBeenCalledWith(
+      expect(getTableContentsSpy).toHaveBeenCalledTimes(1);
+      expect(getTableContentsSpy).toHaveBeenCalledWith(
         [
           tableHeaders,
           [
@@ -209,30 +224,27 @@ describe('commands/project/logs', () => {
     it('should log private functions correctly', async () => {
       const functionNames = ['function1', 'function2'];
       const selectedFunction = 'function1';
-      const options = {
-        derivedAccountId: 12345678,
-      };
 
-      ProjectLogsManager.getFunctionNames.mockReturnValue(functionNames);
-      projectLogsPrompt.mockReturnValue({
+      projectLogsManagerGetFunctionNamesSpy.mockReturnValue(functionNames);
+      projectLogsPromptSpy.mockResolvedValue({
         functionName: selectedFunction,
       });
 
       const tableHeaders = ['Header 1', 'Header 2'];
-      getTableHeader.mockReturnValue(tableHeaders);
+      getTableHeaderSpy.mockReturnValue(tableHeaders);
 
       ProjectLogsManager.isPublicFunction = false;
       ProjectLogsManager.accountId = options.derivedAccountId;
       ProjectLogsManager.functionName = selectedFunction;
       ProjectLogsManager.appId = 456789;
 
-      await logsCommand.handler(options);
+      await projectLogsCommand.handler(options);
 
-      expect(getTableHeader).toHaveBeenCalledTimes(1);
-      expect(getTableHeader).toHaveBeenCalledWith(['Account', 'Function']);
+      expect(getTableHeaderSpy).toHaveBeenCalledTimes(1);
+      expect(getTableHeaderSpy).toHaveBeenCalledWith(['Account', 'Function']);
 
-      expect(getTableContents).toHaveBeenCalledTimes(1);
-      expect(getTableContents).toHaveBeenCalledWith(
+      expect(getTableContentsSpy).toHaveBeenCalledTimes(1);
+      expect(getTableContentsSpy).toHaveBeenCalledWith(
         [
           tableHeaders,
           [ProjectLogsManager.accountId, ProjectLogsManager.functionName],
@@ -249,16 +261,13 @@ describe('commands/project/logs', () => {
     });
 
     it('should handle errors correctly', async () => {
-      const options = {
-        derivedAccountId: 12345678,
-      };
       const error = new Error('Something went wrong');
-      ProjectLogsManager.init.mockImplementation(() => {
+      projectLogsManagerInitSpy.mockImplementation(() => {
         throw error;
       });
 
       ProjectLogsManager.projectName = 'Super cool project';
-      await logsCommand.handler(options);
+      await projectLogsCommand.handler(options);
 
       expect(logError).toHaveBeenCalledTimes(1);
       expect(logError).toHaveBeenCalledWith(error, {

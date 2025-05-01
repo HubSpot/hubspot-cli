@@ -18,11 +18,18 @@ interface BaseMigrationApp {
 
 export interface MigratableApp extends BaseMigrationApp {
   isMigratable: true;
+  unmigratableReason?: undefined;
 }
+
+export const CLI_UNMIGRATABLE_REASONS = {
+  PART_OF_PROJECT_ALREADY: 'PART_OF_PROJECT_ALREADY',
+} as const;
 
 export interface UnmigratableApp extends BaseMigrationApp {
   isMigratable: false;
-  unmigratableReason: keyof typeof UNMIGRATABLE_REASONS;
+  unmigratableReason:
+    | keyof typeof UNMIGRATABLE_REASONS
+    | keyof typeof CLI_UNMIGRATABLE_REASONS;
 }
 
 export type MigrationApp = MigratableApp | UnmigratableApp;
@@ -70,10 +77,16 @@ export interface MigrationSuccess extends MigrationBaseStatus {
   buildId: number;
 }
 
+interface ComponentError {
+  componentType: string;
+  developerSymbol?: string;
+  errorMessage: string;
+}
+
 export interface MigrationFailed extends MigrationBaseStatus {
   status: typeof MIGRATION_STATUS.FAILURE;
-  projectErrorsDetail?: string;
-  componentErrorDetails: Record<string, string>;
+  projectErrorDetail: string;
+  componentErrors: ComponentError[];
 }
 
 export type MigrationStatus =
@@ -82,11 +95,24 @@ export type MigrationStatus =
   | MigrationSuccess
   | MigrationFailed;
 
+export function isMigrationStatus(error: unknown): error is MigrationStatus {
+  return (
+    typeof error === 'object' &&
+    error !== null &&
+    'id' in error &&
+    'status' in error
+  );
+}
+
 export async function listAppsForMigration(
-  accountId: number
+  accountId: number,
+  platformVersion: string
 ): HubSpotPromise<ListAppsResponse> {
   return http.get<ListAppsResponse>(accountId, {
     url: `${MIGRATIONS_API_PATH_V2}/list-apps`,
+    params: {
+      platformVersion: mapPlatformVersionToEnum(platformVersion),
+    },
   });
 }
 
@@ -128,7 +154,7 @@ export async function continueMigration(
   });
 }
 
-export function checkMigrationStatusV2(
+export async function checkMigrationStatusV2(
   accountId: number,
   id: number
 ): HubSpotPromise<MigrationStatus> {

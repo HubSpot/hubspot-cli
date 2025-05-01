@@ -7,8 +7,6 @@ import { fetchPublicAppsForPortal } from '@hubspot/local-dev-lib/api/appsDev';
 import { EXIT_CODES } from '../enums/exitCodes';
 import { PublicApp } from '@hubspot/local-dev-lib/types/Apps';
 
-const i18nKey = 'lib.prompts.selectPublicAppPrompt';
-
 type PublicAppPromptResponse = {
   appId: number;
 };
@@ -20,7 +18,9 @@ async function fetchPublicAppOptions(
 ): Promise<PublicApp[]> {
   try {
     if (!accountId) {
-      logger.error(i18n(`${i18nKey}.errors.noAccountId`));
+      logger.error(
+        i18n(`lib.prompts.selectPublicAppPrompt.errors.noAccountId`)
+      );
       process.exit(EXIT_CODES.ERROR);
     }
 
@@ -46,9 +46,14 @@ async function fetchPublicAppOptions(
         ? 'noAppsMigrationMessage'
         : 'noAppsCloneMessage';
       uiLine();
-      logger.error(i18n(`${i18nKey}.errors.${headerTranslationKey}`));
+      logger.error(
+        i18n(`lib.prompts.selectPublicAppPrompt.errors.${headerTranslationKey}`)
+      );
       logger.log(
-        i18n(`${i18nKey}.errors.${messageTranslationKey}`, { accountName })
+        i18n(
+          `lib.prompts.selectPublicAppPrompt.errors.${messageTranslationKey}`,
+          { accountName }
+        )
       );
       uiLine();
       process.exit(EXIT_CODES.SUCCESS);
@@ -56,7 +61,9 @@ async function fetchPublicAppOptions(
     return filteredPublicApps;
   } catch (error) {
     logError(error, accountId ? { accountId } : undefined);
-    logger.error(i18n(`${i18nKey}.errors.errorFetchingApps`));
+    logger.error(
+      i18n(`lib.prompts.selectPublicAppPrompt.errors.errorFetchingApps`)
+    );
     process.exit(EXIT_CODES.ERROR);
   }
 }
@@ -82,7 +89,7 @@ export async function selectPublicAppPrompt({
   return promptUser<PublicAppPromptResponse>([
     {
       name: 'appId',
-      message: i18n(`${i18nKey}.${translationKey}`, {
+      message: i18n(`lib.prompts.selectPublicAppPrompt.${translationKey}`, {
         accountName,
       }),
       type: 'list',
@@ -91,7 +98,9 @@ export async function selectPublicAppPrompt({
         if (isMigratingApp && preventProjectMigrations && listingInfo) {
           return {
             name: `${app.name} (${app.id})`,
-            disabled: i18n(`${i18nKey}.errors.cannotBeMigrated`),
+            disabled: i18n(
+              `lib.prompts.selectPublicAppPrompt.errors.cannotBeMigrated`
+            ),
           };
         }
         return {

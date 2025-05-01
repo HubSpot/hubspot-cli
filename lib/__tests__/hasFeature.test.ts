@@ -22,16 +22,19 @@ describe('lib/hasFeature', () => {
     });
 
     it('should return true if the feature is enabled', async () => {
+      // @ts-expect-error test data
       const result = await hasFeature(accountId, 'feature-1');
       expect(result).toBe(true);
     });
 
     it('should return false if the feature is not enabled', async () => {
+      // @ts-expect-error test data
       const result = await hasFeature(accountId, 'feature-2');
       expect(result).toBe(false);
     });
 
     it('should return false if the feature is not present', async () => {
+      // @ts-expect-error test data
       const result = await hasFeature(accountId, 'feature-4');
       expect(result).toBe(false);
     });

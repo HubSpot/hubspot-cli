@@ -13,6 +13,6 @@
     "outDir": "dist",
     "noErrorTruncation": true
   },
-  "include": ["bin", "commands", "lib", "api"],
+  "include": ["bin", "commands", "lib", "api", "lang"],
   "exclude": ["**/__tests__/*"]
 }

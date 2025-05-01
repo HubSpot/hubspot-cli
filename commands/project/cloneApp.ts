@@ -1,11 +1,6 @@
-import { uiDeprecatedTag } from '../../lib/ui';
+import { ArgumentsCamelCase, Argv } from 'yargs';
 import path from 'path';
 import fs from 'fs';
-import {
-  addAccountOptions,
-  addConfigOptions,
-  addUseEnvironmentOptions,
-} from '../../lib/commonOpts';
 import {
   trackCommandUsage,
   trackCommandMetadataUsage,
@@ -14,11 +9,13 @@ import { i18n } from '../../lib/lang';
 import { selectPublicAppPrompt } from '../../lib/prompts/selectPublicAppPrompt';
 import { createProjectPrompt } from '../../lib/prompts/createProjectPrompt';
 import { poll } from '../../lib/polling';
-import { uiLine, uiAccountDescription } from '../../lib/ui';
 import { logError, ApiErrorContext } from '../../lib/errorHandlers';
 import { EXIT_CODES } from '../../lib/enums/exitCodes';
-import { isAppDeveloperAccount } from '../../lib/accountTypes';
-import { writeProjectConfig } from '../../lib/projects';
+import {
+  isAppDeveloperAccount,
+  isUnifiedAccount,
+} from '../../lib/accountTypes';
+import { writeProjectConfig } from '../../lib/projects/config';
 import { PROJECT_CONFIG_FILE } from '../../lib/constants';
 import {
   cloneApp,
@@ -30,18 +27,34 @@ import { logger } from '@hubspot/local-dev-lib/logger';
 import { extractZipArchive } from '@hubspot/local-dev-lib/archive';
 import { getAccountConfig } from '@hubspot/local-dev-lib/config';
 import SpinniesManager from '../../lib/ui/SpinniesManager';
-import { ArgumentsCamelCase, Argv, CommandModule } from 'yargs';
-import { CloneAppArgs } from '../../types/Yargs';
+import {
+  AccountArgs,
+  CommonArgs,
+  ConfigArgs,
+  EnvironmentArgs,
+  YargsCommandModule,
+} from '../../types/Yargs';
 import { logInvalidAccountError } from '../../lib/app/migrate';
+import { makeYargsBuilder } from '../../lib/yargsUtils';
+import { uiDeprecatedTag, uiLine, uiAccountDescription } from '../../lib/ui';
 
-const i18nKey = 'commands.project.subcommands.cloneApp';
+const command = 'clone-app';
+const describe = uiDeprecatedTag(
+  i18n(`commands.project.subcommands.cloneApp.describe`),
+  false
+);
+const deprecated = true;
 
-export const command = 'clone-app';
-export const describe = uiDeprecatedTag(i18n(`${i18nKey}.describe`), false);
-export const deprecated = true;
+export type CloneAppArgs = ConfigArgs &
+  EnvironmentArgs &
+  AccountArgs &
+  CommonArgs & {
+    dest: string;
+    appId: number;
+  };
 
-export const handler = async (options: ArgumentsCamelCase<CloneAppArgs>) => {
-  const { derivedAccountId } = options;
+async function handler(args: ArgumentsCamelCase<CloneAppArgs>): Promise<void> {
+  const { derivedAccountId } = args;
   await trackCommandUsage('clone-app', {}, derivedAccountId);
 
   const accountConfig = getAccountConfig(derivedAccountId);
@@ -53,8 +66,10 @@ export const handler = async (options: ArgumentsCamelCase<CloneAppArgs>) => {
     );
   }
 
-  if (!isAppDeveloperAccount(accountConfig)) {
-    logInvalidAccountError(i18nKey);
+  const defaultAccountIsUnified = await isUnifiedAccount(accountConfig);
+
+  if (!isAppDeveloperAccount(accountConfig) && !defaultAccountIsUnified) {
+    logInvalidAccountError();
     process.exit(EXIT_CODES.SUCCESS);
   }
 
@@ -62,7 +77,7 @@ export const handler = async (options: ArgumentsCamelCase<CloneAppArgs>) => {
   let projectName;
   let projectDest;
   try {
-    appId = options.appId;
+    appId = args.appId;
     if (!appId) {
       const appIdResponse = await selectPublicAppPrompt({
         accountId: derivedAccountId,
@@ -71,7 +86,7 @@ export const handler = async (options: ArgumentsCamelCase<CloneAppArgs>) => {
       });
       appId = appIdResponse.appId;
     }
-    const createProjectPromptResponse = await createProjectPrompt(options);
+    const createProjectPromptResponse = await createProjectPrompt(args);
 
     projectName = createProjectPromptResponse.name;
     projectDest = createProjectPromptResponse.dest;
@@ -90,7 +105,9 @@ export const handler = async (options: ArgumentsCamelCase<CloneAppArgs>) => {
     SpinniesManager.init();
 
     SpinniesManager.add('cloneApp', {
-      text: i18n(`${i18nKey}.cloneStatus.inProgress`),
+      text: i18n(
+        `commands.project.subcommands.cloneApp.cloneStatus.inProgress`
+      ),
     });
 
     const {
@@ -130,19 +147,23 @@ export const handler = async (options: ArgumentsCamelCase<CloneAppArgs>) => {
       const success = writeProjectConfig(configPath, configContent);
 
       SpinniesManager.succeed('cloneApp', {
-        text: i18n(`${i18nKey}.cloneStatus.done`),
+        text: i18n(`commands.project.subcommands.cloneApp.cloneStatus.done`),
         succeedColor: 'white',
       });
       if (!success) {
         logger.error(
-          i18n(`${i18nKey}.errors.couldNotWriteConfigPath`),
+          i18n(
+            `commands.project.subcommands.cloneApp.errors.couldNotWriteConfigPath`
+          ),
           configPath
         );
       }
       logger.log('');
       uiLine();
       logger.success(
-        i18n(`${i18nKey}.cloneStatus.success`, { dest: projectDest })
+        i18n(`commands.project.subcommands.cloneApp.cloneStatus.success`, {
+          dest: projectDest,
+        })
       );
       logger.log('');
       process.exit(EXIT_CODES.SUCCESS);
@@ -155,7 +176,7 @@ export const handler = async (options: ArgumentsCamelCase<CloneAppArgs>) => {
     );
 
     SpinniesManager.fail('cloneApp', {
-      text: i18n(`${i18nKey}.cloneStatus.failure`),
+      text: i18n(`commands.project.subcommands.cloneApp.cloneStatus.failure`),
       failColor: 'white',
     });
 
@@ -180,32 +201,47 @@ export const handler = async (options: ArgumentsCamelCase<CloneAppArgs>) => {
     derivedAccountId
   );
   process.exit(EXIT_CODES.SUCCESS);
-};
+}
 
-export const builder = (yargs: Argv) => {
+function cloneAppBuilder(yargs: Argv): Argv<CloneAppArgs> {
   yargs.options({
     dest: {
-      describe: i18n(`${i18nKey}.options.dest.describe`),
+      describe: i18n(
+        `commands.project.subcommands.cloneApp.options.dest.describe`
+      ),
       type: 'string',
     },
     'app-id': {
-      describe: i18n(`${i18nKey}.options.appId.describe`),
+      describe: i18n(
+        `commands.project.subcommands.cloneApp.options.appId.describe`
+      ),
       type: 'number',
     },
   });
 
   yargs.example([
-    ['$0 project clone-app', i18n(`${i18nKey}.examples.default`)],
+    [
+      '$0 project clone-app',
+      i18n(`commands.project.subcommands.cloneApp.examples.default`),
+    ],
   ]);
 
-  addConfigOptions(yargs);
-  addAccountOptions(yargs);
-  addUseEnvironmentOptions(yargs);
-
   return yargs as Argv<CloneAppArgs>;
-};
+}
 
-const cloneAppCommand: CommandModule<unknown, CloneAppArgs> = {
+const builder = makeYargsBuilder<CloneAppArgs>(
+  cloneAppBuilder,
+  command,
+  describe,
+  {
+    useGlobalOptions: true,
+    useAccountOptions: true,
+    useConfigOptions: true,
+    useEnvironmentOptions: true,
+  }
+);
+
+const cloneAppCommand: YargsCommandModule<unknown, CloneAppArgs> = {
   command,
   describe,
   handler,

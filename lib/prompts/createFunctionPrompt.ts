@@ -2,8 +2,6 @@ import { promptUser } from './promptUtils';
 import { i18n } from '../lang';
 import { PromptConfig } from '../../types/Prompts';
 
-const i18nKey = 'lib.prompts.createFunctionPrompt';
-
 type CreateFunctionPromptResponse = {
   functionsFolder: string;
   filename: string;
@@ -13,14 +11,14 @@ type CreateFunctionPromptResponse = {
 
 const FUNCTIONS_FOLDER_PROMPT: PromptConfig<CreateFunctionPromptResponse> = {
   name: 'functionsFolder',
-  message: i18n(`${i18nKey}.enterFolder`),
+  message: i18n(`lib.prompts.createFunctionPrompt.enterFolder`),
   validate(val?: string) {
     if (typeof val !== 'string') {
-      return i18n(`${i18nKey}.errors.invalid`);
+      return i18n(`lib.prompts.createFunctionPrompt.errors.invalid`);
     } else if (!val.length) {
-      return i18n(`${i18nKey}.errors.blank`);
+      return i18n(`lib.prompts.createFunctionPrompt.errors.blank`);
     } else if (val.indexOf(' ') >= 0) {
-      return i18n(`${i18nKey}.errors.space`);
+      return i18n(`lib.prompts.createFunctionPrompt.errors.space`);
     }
     return true;
   },
@@ -28,14 +26,14 @@ const FUNCTIONS_FOLDER_PROMPT: PromptConfig<CreateFunctionPromptResponse> = {
 
 const FUNCTION_FILENAME_PROMPT: PromptConfig<CreateFunctionPromptResponse> = {
   name: 'filename',
-  message: i18n(`${i18nKey}.enterFilename`),
+  message: i18n(`lib.prompts.createFunctionPrompt.enterFilename`),
   validate(val?: string) {
     if (typeof val !== 'string') {
-      return i18n(`${i18nKey}.errors.invalid`);
+      return i18n(`lib.prompts.createFunctionPrompt.errors.invalid`);
     } else if (!val.length) {
-      return i18n(`${i18nKey}.errors.blank`);
+      return i18n(`lib.prompts.createFunctionPrompt.errors.blank`);
     } else if (val.indexOf(' ') >= 0) {
-      return i18n(`${i18nKey}.errors.space`);
+      return i18n(`lib.prompts.createFunctionPrompt.errors.space`);
     }
     return true;
   },
@@ -44,21 +42,21 @@ const FUNCTION_FILENAME_PROMPT: PromptConfig<CreateFunctionPromptResponse> = {
 const ENDPOINT_METHOD_PROMPT: PromptConfig<CreateFunctionPromptResponse> = {
   type: 'list',
   name: 'endpointMethod',
-  message: i18n(`${i18nKey}.selectEndpointMethod`),
+  message: i18n(`lib.prompts.createFunctionPrompt.selectEndpointMethod`),
   default: 'GET',
   choices: ['DELETE', 'GET', 'PATCH', 'POST', 'PUT'],
 };
 
 const ENDPOINT_PATH_PROMPT: PromptConfig<CreateFunctionPromptResponse> = {
   name: 'endpointPath',
-  message: i18n(`${i18nKey}.enterEndpointPath`),
+  message: i18n(`lib.prompts.createFunctionPrompt.enterEndpointPath`),
   validate(val?: string) {
     if (typeof val !== 'string') {
-      return i18n(`${i18nKey}.errors.invalid`);
+      return i18n(`lib.prompts.createFunctionPrompt.errors.invalid`);
     } else if (!val.length) {
-      return i18n(`${i18nKey}.errors.blank`);
+      return i18n(`lib.prompts.createFunctionPrompt.errors.blank`);
     } else if (val.indexOf(' ') >= 0) {
-      return i18n(`${i18nKey}.errors.space`);
+      return i18n(`lib.prompts.createFunctionPrompt.errors.space`);
     }
     return true;
   },

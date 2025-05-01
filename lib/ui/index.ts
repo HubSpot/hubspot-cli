@@ -90,30 +90,32 @@ export function uiCommandReference(command: string, withQuotes = true): string {
 }
 
 export function uiFeatureHighlight(features: string[], title?: string): void {
-  const i18nKey = 'lib.ui.featureHighlight';
-
-  uiInfoSection(title ? title : i18n(`${i18nKey}.defaultTitle`), () => {
-    features.forEach((c, i) => {
-      const featureKey = `${i18nKey}.featureKeys.${c}`;
-      const message = i18n(`${featureKey}.message`, {
-        command: uiCommandReference(i18n(`${featureKey}.command`)),
-        link: uiLink(i18n(`${featureKey}.linkText`), i18n(`${featureKey}.url`)),
+  uiInfoSection(
+    title ? title : i18n(`lib.ui.featureHighlight.defaultTitle`),
+    () => {
+      features.forEach((c, i) => {
+        const featureKey = `lib.ui.featureHighlight.featureKeys.${c}`;
+        const message = i18n(`${featureKey}.message`, {
+          command: uiCommandReference(i18n(`${featureKey}.command`)),
+          link: uiLink(
+            i18n(`${featureKey}.linkText`),
+            i18n(`${featureKey}.url`)
+          ),
+        });
+        if (i !== 0) {
+          logger.log('');
+        }
+        logger.log(message);
       });
-      if (i !== 0) {
-        logger.log('');
-      }
-      logger.log(message);
-    });
-  });
+    }
+  );
 }
 
 export function uiBetaTag(message: string, log?: true): undefined;
 export function uiBetaTag(message: string, log: false): string;
 export function uiBetaTag(message: string, log = true): string | undefined {
-  const i18nKey = 'lib.ui';
-
   const terminalUISupport = getTerminalUISupport();
-  const tag = i18n(`${i18nKey}.betaTag`);
+  const tag = i18n(`lib.ui.betaTag`);
 
   const result = `${
     terminalUISupport.color ? chalk.hex(UI_COLORS.SORBET)(tag) : tag
@@ -126,14 +128,14 @@ export function uiBetaTag(message: string, log = true): string | undefined {
   return result;
 }
 
+export function uiDeprecatedTag(message: string, log?: true): undefined;
+export function uiDeprecatedTag(message: string, log: false): string;
 export function uiDeprecatedTag(
   message: string,
   log = true
 ): string | undefined {
-  const i18nKey = 'lib.ui';
-
   const terminalUISupport = getTerminalUISupport();
-  const tag = i18n(`${i18nKey}.deprecatedTag`);
+  const tag = i18n(`lib.ui.deprecatedTag`);
 
   const result = `${
     terminalUISupport.color ? chalk.yellow(tag) : tag
@@ -141,6 +143,7 @@ export function uiDeprecatedTag(
 
   if (log) {
     logger.log(result);
+    return;
   }
   return result;
 }
@@ -150,13 +153,11 @@ export function uiCommandDisabledBanner(
   url?: string,
   message?: string
 ): void {
-  const i18nKey = 'lib.ui';
-
   const tag =
     message ||
-    i18n(`${i18nKey}.disabledMessage`, {
+    i18n(`lib.ui.disabledMessage`, {
       command: uiCommandReference(command),
-      url: url ? uiLink(i18n(`${i18nKey}.disabledUrlText`), url) : '',
+      url: url ? uiLink(i18n(`lib.ui.disabledUrlText`), url) : '',
       npmCommand: uiCommandReference('npm i -g @hubspot/cli@latest'),
     });
 
@@ -172,12 +173,10 @@ export function uiDeprecatedDescription(
   command: string,
   url?: string
 ) {
-  const i18nKey = 'lib.ui';
-
-  const tag = i18n(`${i18nKey}.deprecatedDescription`, {
+  const tag = i18n(`lib.ui.deprecatedDescription`, {
     message,
     command: uiCommandReference(command),
-    url: url ? uiLink(i18n(`${i18nKey}.deprecatedUrlText`), url) : '',
+    url: url ? uiLink(i18n(`lib.ui.deprecatedUrlText`), url) : '',
   });
   return uiDeprecatedTag(tag);
 }
@@ -187,16 +186,19 @@ export function uiDeprecatedMessage(
   url?: string,
   message?: string
 ): void {
-  const i18nKey = 'lib.ui';
-
   const tag =
     message ||
-    i18n(`${i18nKey}.deprecatedMessage`, {
+    i18n(`lib.ui.deprecatedMessage`, {
       command: uiCommandReference(command),
-      url: url ? uiLink(i18n(`${i18nKey}.deprecatedUrlText`), url) : '',
+      url: url ? uiLink(i18n(`lib.ui.deprecatedUrlText`), url) : '',
     });
 
   logger.log();
   uiDeprecatedTag(tag);
   logger.log();
+}
+
+export function indent(level: number): string {
+  const indentation = '  ';
+  return indentation.repeat(level);
 }

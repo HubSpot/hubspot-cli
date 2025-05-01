@@ -9,27 +9,28 @@ import { debugError } from '../../lib/errorHandlers';
 import { trackCommandUsage } from '../../lib/usageTracking';
 import { i18n } from '../../lib/lang';
 import { projectAddPrompt } from '../../lib/prompts/projectAddPrompt';
-import { getProjectConfig } from '../../lib/projects';
+import { getProjectConfig } from '../../lib/projects/config';
 import { getProjectComponentListFromRepo } from '../../lib/projects/create';
 import { findProjectComponents } from '../../lib/projects/structure';
 import { ComponentTypes } from '../../types/Projects';
 import { uiBetaTag } from '../../lib/ui';
 import { HUBSPOT_PROJECT_COMPONENTS_GITHUB_PATH } from '../../lib/constants';
 import { EXIT_CODES } from '../../lib/enums/exitCodes';
-import { CommonArgs } from '../../types/Yargs';
+import { YargsCommandModule, CommonArgs } from '../../types/Yargs';
 import { makeYargsBuilder } from '../../lib/yargsUtils';
 
-const i18nKey = 'commands.project.subcommands.add';
-
-export const command = 'add';
-export const describe = uiBetaTag(i18n(`${i18nKey}.describe`), false);
+const command = 'add';
+const describe = uiBetaTag(
+  i18n(`commands.project.subcommands.add.describe`),
+  false
+);
 
 type ProjectAddArgs = CommonArgs & {
   type: string;
   name: string;
 };
 
-export async function handler(
+async function handler(
   args: ArgumentsCamelCase<ProjectAddArgs>
 ): Promise<void> {
   const { derivedAccountId } = args;
@@ -39,7 +40,9 @@ export async function handler(
   const { projectConfig, projectDir } = await getProjectConfig();
 
   if (!projectDir || !projectConfig) {
-    logger.error(i18n(`${i18nKey}.error.locationInProject`));
+    logger.error(
+      i18n(`commands.project.subcommands.add.error.locationInProject`)
+    );
     process.exit(EXIT_CODES.ERROR);
   }
 
@@ -55,13 +58,15 @@ export async function handler(
   }
 
   if (projectContainsPublicApp) {
-    logger.error(i18n(`${i18nKey}.error.projectContainsPublicApp`));
+    logger.error(
+      i18n(`commands.project.subcommands.add.error.projectContainsPublicApp`)
+    );
     process.exit(EXIT_CODES.ERROR);
   }
 
   logger.log('');
   logger.log(
-    i18n(`${i18nKey}.creatingComponent`, {
+    i18n(`commands.project.subcommands.add.creatingComponent`, {
       projectName: projectConfig.name,
     })
   );
@@ -81,7 +86,9 @@ export async function handler(
   }
 
   if (!latestRepoReleaseTag) {
-    logger.error(i18n(`${i18nKey}.error.failedToFetchComponentList`));
+    logger.error(
+      i18n(`commands.project.subcommands.add.error.failedToFetchComponentList`)
+    );
     process.exit(EXIT_CODES.ERROR);
   }
 
@@ -89,7 +96,9 @@ export async function handler(
     await getProjectComponentListFromRepo(latestRepoReleaseTag);
 
   if (!components.length) {
-    logger.error(i18n(`${i18nKey}.error.failedToFetchComponentList`));
+    logger.error(
+      i18n(`commands.project.subcommands.add.error.failedToFetchComponentList`)
+    );
     process.exit(EXIT_CODES.ERROR);
   }
 
@@ -115,13 +124,15 @@ export async function handler(
 
     logger.log('');
     logger.success(
-      i18n(`${i18nKey}.success`, {
+      i18n(`commands.project.subcommands.add.success`, {
         componentName: projectAddPromptResponse.name,
       })
     );
   } catch (error) {
     debugError(error);
-    logger.error(i18n(`${i18nKey}.error.failedToDownloadComponent`));
+    logger.error(
+      i18n(`commands.project.subcommands.add.error.failedToDownloadComponent`)
+    );
     process.exit(EXIT_CODES.ERROR);
   }
   process.exit(EXIT_CODES.SUCCESS);
@@ -130,35 +141,45 @@ export async function handler(
 function projectAddBuilder(yargs: Argv): Argv<ProjectAddArgs> {
   yargs.options({
     type: {
-      describe: i18n(`${i18nKey}.options.type.describe`),
+      describe: i18n(`commands.project.subcommands.add.options.type.describe`),
       type: 'string',
     },
     name: {
-      describe: i18n(`${i18nKey}.options.name.describe`),
+      describe: i18n(`commands.project.subcommands.add.options.name.describe`),
       type: 'string',
     },
   });
 
-  yargs.example([['$0 project add', i18n(`${i18nKey}.examples.default`)]]);
+  yargs.example([
+    [
+      '$0 project add',
+      i18n(`commands.project.subcommands.add.examples.default`),
+    ],
+  ]);
   yargs.example([
     [
       '$0 project add --name="my-component" --type="components/example-app"',
-      i18n(`${i18nKey}.examples.withFlags`),
+      i18n(`commands.project.subcommands.add.examples.withFlags`),
     ],
   ]);
 
   return yargs as Argv<ProjectAddArgs>;
 }
 
-export const builder = makeYargsBuilder<ProjectAddArgs>(
+const builder = makeYargsBuilder<ProjectAddArgs>(
   projectAddBuilder,
   command,
-  describe!
+  describe,
+  {
+    useGlobalOptions: true,
+  }
 );
 
-module.exports = {
+const projectAddCommand: YargsCommandModule<unknown, ProjectAddArgs> = {
   command,
   describe,
-  builder,
   handler,
+  builder,
 };
+
+export default projectAddCommand;

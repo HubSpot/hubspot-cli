@@ -16,37 +16,40 @@ import { ApiErrorContext, logError } from '../errorHandlers';
 import { EXIT_CODES } from '../enums/exitCodes';
 import { uiAccountDescription, uiLine, uiLink } from '../ui';
 import { i18n } from '../lang';
-import { isAppDeveloperAccount } from '../accountTypes';
+import { isAppDeveloperAccount, isUnifiedAccount } from '../accountTypes';
 import { selectPublicAppPrompt } from '../prompts/selectPublicAppPrompt';
 import { createProjectPrompt } from '../prompts/createProjectPrompt';
-import { ensureProjectExists } from '../projects';
+import { ensureProjectExists } from '../projects/ensureProjectExists';
 import { trackCommandMetadataUsage } from '../usageTracking';
 import SpinniesManager from '../ui/SpinniesManager';
 import { handleKeypress } from '../process';
 import { poll } from '../polling';
-import { MigrateAppOptions } from '../../types/Yargs';
-import { logInvalidAccountError } from './migrate';
+import { logInvalidAccountError, MigrateAppArgs } from './migrate';
 
 export async function migrateApp2023_2(
   derivedAccountId: number,
-  options: ArgumentsCamelCase<MigrateAppOptions>,
+  options: ArgumentsCamelCase<MigrateAppArgs>,
   accountConfig: CLIAccount
 ): Promise<void> {
   const accountName = uiAccountDescription(derivedAccountId);
 
-  if (!isAppDeveloperAccount(accountConfig)) {
-    logInvalidAccountError('commands.project.subcommands.migrateApp');
+  const defaultAccountIsUnified = await isUnifiedAccount(accountConfig);
+
+  if (!isAppDeveloperAccount(accountConfig) && !defaultAccountIsUnified) {
+    logInvalidAccountError();
     process.exit(EXIT_CODES.SUCCESS);
   }
 
-  const { appId } =
-    'appId' in options
-      ? options
-      : await selectPublicAppPrompt({
-          accountId: derivedAccountId,
-          accountName,
-          isMigratingApp: true,
-        });
+  let appId = options.appId;
+
+  if (!appId) {
+    const { appId: selectAppId } = await selectPublicAppPrompt({
+      accountId: derivedAccountId,
+      accountName,
+      isMigratingApp: true,
+    });
+    appId = selectAppId;
+  }
 
   try {
     const { data: selectedApp } = await fetchPublicAppMetadata(

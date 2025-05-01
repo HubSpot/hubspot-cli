@@ -1,43 +1,40 @@
+import { ArgumentsCamelCase, Argv } from 'yargs';
+import { logger } from '@hubspot/local-dev-lib/logger';
 import { i18n } from '../../lib/lang';
 import { uiCommandReference, uiDeprecatedTag } from '../../lib/ui';
-import {
-  handler as migrateHandler,
-  validMigrationTargets,
-} from '../app/migrate';
+import { handlerGenerator } from '../app/migrate';
+import { YargsCommandModule } from '../../types/Yargs';
+import { makeYargsBuilder } from '../../lib/yargsUtils';
+import { MigrateAppArgs } from '../../lib/app/migrate';
+import { PLATFORM_VERSIONS } from '@hubspot/local-dev-lib/constants/projects';
 
-import { ArgumentsCamelCase, Argv, CommandModule } from 'yargs';
-import { logger } from '@hubspot/local-dev-lib/logger';
-import { MigrateAppOptions } from '../../types/Yargs';
-import {
-  addAccountOptions,
-  addConfigOptions,
-  addUseEnvironmentOptions,
-} from '../../lib/commonOpts';
+const { v2023_2, v2025_2 } = PLATFORM_VERSIONS;
 
-export const command = 'migrate-app';
+const command = 'migrate-app';
 
 // TODO: Leave this as deprecated and remove in the next major release
-export const describe = uiDeprecatedTag(
+const describe = uiDeprecatedTag(
   i18n(`commands.project.subcommands.migrateApp.describe`),
   false
 );
-export const deprecated = true;
+const deprecated = true;
 
-export async function handler(yargs: ArgumentsCamelCase<MigrateAppOptions>) {
+async function handler(
+  args: ArgumentsCamelCase<MigrateAppArgs>
+): Promise<void> {
   logger.warn(
     i18n(`commands.project.subcommands.migrateApp.deprecationWarning`, {
       oldCommand: uiCommandReference('hs project migrate-app'),
-      newCommand: uiCommandReference('hs app migrate'),
+      newCommand: uiCommandReference(
+        `hs app migrate --platform-version=${args.platformVersion}`
+      ),
     })
   );
-  await migrateHandler(yargs);
+  const localHandler = handlerGenerator('migrate-app');
+  await localHandler(args);
 }
 
-export function builder(yargs: Argv): Argv<MigrateAppOptions> {
-  addConfigOptions(yargs);
-  addAccountOptions(yargs);
-  addUseEnvironmentOptions(yargs);
-
+function projectMigrateAppBuilder(yargs: Argv): Argv<MigrateAppArgs> {
   yargs.options({
     name: {
       describe: i18n(
@@ -59,9 +56,9 @@ export function builder(yargs: Argv): Argv<MigrateAppOptions> {
     },
     'platform-version': {
       type: 'string',
-      choices: validMigrationTargets,
+      choices: [v2023_2, v2025_2],
       hidden: true,
-      default: '2023.2',
+      default: v2023_2,
     },
   });
 
@@ -72,10 +69,22 @@ export function builder(yargs: Argv): Argv<MigrateAppOptions> {
     ],
   ]);
 
-  return yargs as Argv<MigrateAppOptions>;
+  return yargs as Argv<MigrateAppArgs>;
 }
 
-const migrateAppCommand: CommandModule<unknown, MigrateAppOptions> = {
+const builder = makeYargsBuilder<MigrateAppArgs>(
+  projectMigrateAppBuilder,
+  command,
+  describe,
+  {
+    useGlobalOptions: true,
+    useConfigOptions: true,
+    useAccountOptions: true,
+    useEnvironmentOptions: true,
+  }
+);
+
+const migrateAppCommand: YargsCommandModule<unknown, MigrateAppArgs> = {
   command,
   describe,
   deprecated,
