@@ -32,6 +32,7 @@ export async function logInBox({
     }
     if (options?.title) {
       uiLogger.log(options.title);
+      uiLogger.log('');
     }
     uiLogger.log(contents);
   }
