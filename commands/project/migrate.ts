@@ -12,9 +12,10 @@ import { PLATFORM_VERSIONS } from '@hubspot/local-dev-lib/constants/projects';
 import { logError } from '../../lib/errorHandlers';
 import { EXIT_CODES } from '../../lib/enums/exitCodes';
 import { makeYargsBuilder } from '../../lib/yargsUtils';
-import { uiBetaTag, uiCommandReference } from '../../lib/ui';
-import { commands } from '../../lang/en';
+import { uiCommandReference } from '../../lib/ui';
+import { commands, lib } from '../../lang/en';
 import { uiLogger } from '../../lib/ui/logger';
+import { logInBox } from '../../lib/ui/boxen';
 
 export type ProjectMigrateArgs = CommonArgs &
   AccountArgs &
@@ -43,10 +44,14 @@ async function handler(
     return process.exit(EXIT_CODES.ERROR);
   }
 
-  uiLogger.log('');
-  uiLogger.log(
-    uiBetaTag(commands.project.migrate.preamble(platformVersion), false)
-  );
+  if (projectConfig?.projectConfig) {
+    await logInBox({
+      contents: lib.migrate.projectMigrationWarning,
+      options: { title: lib.migrate.projectMigrationWarningTitle },
+      fallBackToNoBox: true,
+    });
+  }
+
   const { derivedAccountId } = args;
   try {
     await migrateApp2025_2(
