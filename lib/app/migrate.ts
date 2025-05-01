@@ -12,6 +12,7 @@ const inquirer = require('inquirer');
 
 import { confirmPrompt, inputPrompt, listPrompt } from '../prompts/promptUtils';
 import {
+  UI_COLORS,
   uiAccountDescription,
   uiCommandReference,
   uiLine,
@@ -47,6 +48,7 @@ import {
   getProjectDetailUrl,
 } from '../projects/urls';
 import { uiLogger } from '../ui/logger';
+import { logger } from '@hubspot/local-dev-lib/logger';
 
 export type MigrateAppArgs = CommonArgs &
   AccountArgs &
@@ -264,11 +266,29 @@ async function selectAppToMigrate(
 
   uiLogger.log('');
 
-  const promptMessage = projectConfig?.projectConfig
-    ? `${lib.migrate.projectMigrationWarning} ${lib.migrate.prompt.proceed}`
-    : lib.migrate.prompt.proceed;
+  if (projectConfig?.projectConfig) {
+    try {
+      // The boxen package is exported as a module, so we have to use a dynamic import
+      const boxen = (await import('boxen')).default;
+      logger.log(
+        boxen(lib.migrate.projectMigrationWarning, {
+          title: 'Warning',
+          titleAlignment: 'left',
+          borderColor: UI_COLORS.MARIGOLD,
+          margin: 1,
+          padding: 1,
+          textAlignment: 'left',
+          borderStyle: 'round',
+        })
+      );
+    } catch (error) {
+      logger.log(lib.migrate.projectMigrationWarning);
+    }
+  }
 
-  const proceed = await confirmPrompt(promptMessage, { defaultAnswer: false });
+  const proceed = await confirmPrompt(lib.migrate.prompt.proceed, {
+    defaultAnswer: false,
+  });
   return {
     proceed,
     appIdToMigrate,
