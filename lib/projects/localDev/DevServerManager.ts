@@ -1,4 +1,5 @@
 import { Environment } from '@hubspot/local-dev-lib/types/Config';
+import { logger } from '@hubspot/local-dev-lib/logger';
 import { promptUser } from '../../prompts/promptUtils';
 import { DevModeInterface as UIEDevModeInterface } from '@hubspot/ui-extensions-dev-server';
 import {
@@ -129,7 +130,7 @@ class DevServerManager {
             components: compatibleComponents,
             onUploadRequired,
             promptUser,
-            uiLogger,
+            logger,
             urls: {
               api: getHubSpotApiOrigin(env),
               web: getHubSpotWebsiteOrigin(env),
