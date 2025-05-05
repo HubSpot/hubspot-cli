@@ -48,7 +48,6 @@ async function handler(
     await logInBox({
       contents: lib.migrate.projectMigrationWarning,
       options: { title: lib.migrate.projectMigrationWarningTitle },
-      fallBackToNoBox: true,
     });
   }
 

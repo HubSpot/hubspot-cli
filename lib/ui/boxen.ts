@@ -16,20 +16,17 @@ const defaultOptions: Options = {
 export async function logInBox({
   contents,
   options,
-  fallBackToNoBox = false,
 }: {
   contents: string;
   options?: Options;
-  fallBackToNoBox?: boolean;
 }) {
   try {
     const boxen = (await import('boxen')).default;
     uiLogger.log(boxen(contents, { ...defaultOptions, ...options }));
+    return;
   } catch (error) {
     logger.debug(lib.boxen.failedToLoad);
-    if (!fallBackToNoBox) {
-      return;
-    }
+
     if (options?.title) {
       uiLogger.log(options.title);
       uiLogger.log('');
