@@ -2,11 +2,9 @@ import { Arguments } from 'yargs';
 import chalk from 'chalk';
 import { fetchFireAlarms } from '@hubspot/local-dev-lib/api/fireAlarm';
 import { FireAlarm } from '@hubspot/local-dev-lib/types/FireAlarm';
-import { logger } from '@hubspot/local-dev-lib/logger';
 import { debugError } from '../errorHandlers';
 import pkg from '../../package.json';
-import { UI_COLORS } from '../ui';
-import { i18n } from '../lang';
+import { logInBox } from '../ui/boxen';
 
 /*
  * Versions can be formatted like this:
@@ -158,27 +156,12 @@ async function logFireAlarms(
       return acc;
     }, '');
 
-    let boxen;
-
-    try {
-      // The boxen package is exported as a module, so we have to use a dynamic import
-      boxen = (await import('boxen')).default;
-    } catch (error) {
-      logger.debug(`${i18n('lib.middleware.fireAlarm.failedToLoadBoxen')}`);
-      return;
-    }
-
-    logger.log(
-      boxen(notifications, {
+    await logInBox({
+      contents: notifications,
+      options: {
         title: 'Notifications',
-        titleAlignment: 'left',
-        borderColor: UI_COLORS.MARIGOLD,
-        margin: 1,
-        padding: 1,
-        textAlignment: 'left',
-        borderStyle: 'round',
-      })
-    );
+      },
+    });
   }
 }
 
