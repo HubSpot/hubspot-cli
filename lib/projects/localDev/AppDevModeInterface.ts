@@ -5,6 +5,7 @@ import {
 } from '@hubspot/local-dev-lib/api/appsDev';
 import { PublicApp } from '@hubspot/local-dev-lib/types/Apps';
 import { DevModeUnifiedInterface as UIEDevModeInterface } from '@hubspot/ui-extensions-dev-server';
+import { requestPorts } from '@hubspot/local-dev-lib/portManager';
 
 import { APP_DISTRIBUTION_TYPES } from '../../constants';
 import { EXIT_CODES } from '../../enums/exitCodes';
@@ -21,22 +22,19 @@ import LocalDevLogger from './LocalDevLogger';
 
 type AppDevModeInterfaceConstructorOptions = {
   localDevState: LocalDevState;
-  logger: LocalDevLogger;
+  localDevLogger: LocalDevLogger;
 };
 
 class AppDevModeInterface {
   localDevState: LocalDevState;
-  logger: LocalDevLogger;
-  activeApp: AppIRNode | null;
-  activePublicAppData: PublicApp | null;
-  publicAppActiveInstalls: number | null;
+  localDevLogger: LocalDevLogger;
+  _app?: AppIRNode | null;
+  marketplaceAppData?: PublicApp;
+  marketplaceAppInstalls?: number;
 
   constructor(options: AppDevModeInterfaceConstructorOptions) {
     this.localDevState = options.localDevState;
-    this.logger = options.logger;
-    this.activeApp = null;
-    this.activePublicAppData = null;
-    this.publicAppActiveInstalls = null;
+    this.localDevLogger = options.localDevLogger;
 
     if (
       !this.localDevState.targetProjectAccountId ||
@@ -48,75 +46,54 @@ class AppDevModeInterface {
     }
   }
 
-  async setActiveApp(appUid?: string): Promise<void> {
-    if (!appUid) {
-      uiLogger.error(lib.LocalDevManager.missingUid);
-      process.exit(EXIT_CODES.ERROR);
+  // Assumes only one app per project
+  get app(): AppIRNode | null {
+    if (this._app === undefined) {
+      this._app =
+        Object.values(this.localDevState.projectNodes).find(isAppIRNode) ||
+        null;
     }
-    const app =
-      Object.values(this.localDevState.projectNodes).find(
-        component => component.uid === appUid
-      ) || null;
-
-    if (app && isAppIRNode(app)) {
-      this.activeApp = app;
-
-      if (app.config.distribution === APP_DISTRIBUTION_TYPES.MARKETPLACE) {
-        try {
-          await this.setActivePublicAppData();
-          await this.checkActivePublicAppInstalls();
-          await this.checkPublicAppInstallation();
-        } catch (e) {
-          logError(e);
-        }
-      }
-    }
-
-    return;
+    return this._app;
   }
 
-  async setActivePublicAppData(): Promise<void> {
+  async fetchMarketplaceAppData(): Promise<void> {
     const {
-      data: { results: portalPublicApps },
+      data: { results: portalMarketplaceApps },
     } = await fetchPublicAppsForPortal(
       this.localDevState.targetProjectAccountId
     );
 
-    const activePublicAppData = portalPublicApps.find(
-      ({ sourceId }) => sourceId === this.activeApp?.uid
+    const marketplaceAppData = portalMarketplaceApps.find(
+      ({ sourceId }) => sourceId === this.app?.uid
     );
 
-    if (!activePublicAppData) {
+    if (!marketplaceAppData) {
       return;
     }
 
     const {
       data: { uniquePortalInstallCount },
     } = await fetchPublicAppProductionInstallCounts(
-      activePublicAppData.id,
+      marketplaceAppData.id,
       this.localDevState.targetProjectAccountId
     );
 
-    this.activePublicAppData = activePublicAppData;
-    this.publicAppActiveInstalls = uniquePortalInstallCount;
+    this.marketplaceAppData = marketplaceAppData;
+    this.marketplaceAppInstalls = uniquePortalInstallCount;
   }
 
-  async checkActivePublicAppInstalls(): Promise<void> {
-    if (
-      !this.activePublicAppData ||
-      !this.publicAppActiveInstalls ||
-      this.publicAppActiveInstalls < 1
-    ) {
+  async checkMarketplaceAppInstalls(): Promise<void> {
+    if (!this.marketplaceAppData || !this.marketplaceAppInstalls) {
       return;
     }
     uiLine();
 
     uiLogger.warn(
       lib.LocalDevManager.activeInstallWarning.installCount(
-        this.activePublicAppData.name,
-        this.publicAppActiveInstalls,
+        this.marketplaceAppData.name,
+        this.marketplaceAppInstalls,
 
-        this.publicAppActiveInstalls === 1 ? 'account' : 'accounts'
+        this.marketplaceAppInstalls === 1 ? 'account' : 'accounts'
       )
     );
     uiLogger.log(lib.LocalDevManager.activeInstallWarning.explanation);
@@ -130,10 +107,16 @@ class AppDevModeInterface {
     if (!proceed) {
       process.exit(EXIT_CODES.SUCCESS);
     }
+
+    this.localDevLogger.addUploadWarning(
+      lib.AppDevModeInterface.defaultMarketplaceAppWarning(
+        this.marketplaceAppInstalls
+      )
+    );
   }
 
-  async checkPublicAppInstallation(): Promise<void> {
-    if (!this.activeApp || !this.activePublicAppData) {
+  async checkMarketplaceAppInstallation(): Promise<void> {
+    if (!this.app || !this.marketplaceAppData) {
       return;
     }
 
@@ -142,9 +125,9 @@ class AppDevModeInterface {
     } = await fetchAppInstallationData(
       this.localDevState.targetTestingAccountId,
       this.localDevState.projectId,
-      this.activeApp.uid,
-      this.activeApp.config.auth.requiredScopes,
-      this.activeApp.config.auth.optionalScopes
+      this.app.uid,
+      this.app.config.auth.requiredScopes,
+      this.app.config.auth.optionalScopes
     );
     const isReinstall = previouslyAuthorizedScopeGroups.length > 0;
 
@@ -152,21 +135,58 @@ class AppDevModeInterface {
       await installPublicAppPrompt(
         this.localDevState.env,
         this.localDevState.targetTestingAccountId,
-        this.activePublicAppData.clientId,
-        this.activeApp.config.auth.requiredScopes,
-        this.activeApp.config.auth.redirectUrls,
+        this.marketplaceAppData.clientId,
+        this.app.config.auth.requiredScopes,
+        this.app.config.auth.redirectUrls,
         isReinstall
       );
     }
   }
 
-  setup({ promptUser, uiLogger, urls }): void {
-    return UIEDevModeInterface.setup();
+  // @ts-expect-error TODO: reconcile types between CLI and UIE Dev Server
+  // In the future, update UIE Dev Server to use LocalDevState
+  async setup(args): Promise<void> {
+    if (!this.app) {
+      return;
+    }
+    if (this.app?.config.distribution === APP_DISTRIBUTION_TYPES.MARKETPLACE) {
+      try {
+        await this.fetchMarketplaceAppData();
+        await this.checkMarketplaceAppInstalls();
+        await this.checkMarketplaceAppInstallation();
+      } catch (e) {
+        logError(e);
+      }
+    }
+    return UIEDevModeInterface.setup(args);
   }
 
-  async start() {}
-  async fileChange(filePath: string, event: string) {}
-  async cleanup() {}
+  async start() {
+    if (!this.app) {
+      return;
+    }
+
+    return UIEDevModeInterface.start({
+      accountId: this.localDevState.targetTestingAccountId,
+      // @ts-expect-error TODO: reconcile types between CLI and UIE Dev Server
+      projectConfig: this.localDevState.projectConfig,
+      requestPorts,
+    });
+  }
+  async fileChange(filePath: string, event: string) {
+    if (!this.app) {
+      return;
+    }
+
+    return UIEDevModeInterface.fileChange(filePath, event);
+  }
+  async cleanup() {
+    if (!this.app) {
+      return;
+    }
+
+    return UIEDevModeInterface.cleanup();
+  }
 }
 
 export default AppDevModeInterface;

@@ -1,6 +1,11 @@
 // @ts-nocheck
 import chalk from 'chalk';
-import { uiAccountDescription, uiCommandReference, uiLink } from '../lib/ui';
+import {
+  uiAccountDescription,
+  uiBetaTag,
+  uiCommandReference,
+  uiLink,
+} from '../lib/ui';
 import { getProjectSettingsUrl } from '../lib/projects/urls';
 
 type LangFunction = (...args: (string | number)[]) => string;
@@ -2666,8 +2671,8 @@ export const lib = {
     },
   },
   AppDevModeInterface: {
-    defaultMarketplaceAppWarning: (installCount, accountText) =>
-      `$\n\nYour marketplace app is currently installed in ${chalk.bold(`${installCount} ${accountText}`)}. Any uploaded changes will impact your app's users. We strongly recommend creating a copy of this app to test your changes before proceding.`,
+    defaultMarketplaceAppWarning: installCount =>
+      `$\n\nYour marketplace app is currently installed in ${chalk.bold(`${installCount} ${installCount === 1 ? 'account' : 'accounts'}`)}. Any uploaded changes will impact your app's users. We strongly recommend creating a copy of this app to test your changes before proceding.`,
   },
   localDevHelpers: {
     confirmDefaultAccountIsTarget: {
@@ -2794,10 +2799,8 @@ export const lib = {
       fileFiltered: filename => `Ignore rule triggered for "${filename}"`,
     },
   },
-  middleware: {
-    fireAlarm: {
-      failedToLoadBoxen: 'Failed to load boxen util.',
-    },
+  boxen: {
+    failedToLoad: 'Failed to load boxen util.',
   },
   ui: {
     betaTag: chalk.bold('[BETA]'),
@@ -3441,7 +3444,12 @@ export const lib = {
       `[NOTE] These features are not yet supported for migration but will be available later: ${components}`,
     sourceContentsMoved: (newLocation: string) =>
       `The contents of your old source directory have been moved to ${newLocation}, move any required files to the new source directory.`,
-    projectMigrationWarning: `Migrating a project is irreversible and cannot be undone.`,
+    projectMigrationWarningTitle:
+      '⚠️ Important: Migrating to platformVersion 2025.2 is irreversible ⚠️',
+    projectMigrationWarning: uiBetaTag(
+      `Running the ${uiCommandReference('hs project migrate')} command will permanently upgrade your project to platformVersion 2025.2. This action cannot be undone. To ensure you have access to your original files, they will be copied to a new directory (archive) for safekeeping.\n\nThis command will guide you through the process, prompting you to enter the required fields and will download the new project source code into your project source directory.`,
+      false
+    ),
     errors: {
       project: {
         invalidConfig:

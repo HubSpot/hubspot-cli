@@ -4,9 +4,9 @@ import {
   requestPorts,
 } from '@hubspot/local-dev-lib/portManager';
 import { logger } from '@hubspot/local-dev-lib/logger';
-import { handleWebsocketMessage } from './messageHandlers';
-import { LocalDevUIWebsocketMessage } from '../../../../types/LocalDev';
-import { ProjectConfig } from '../../../../types/Projects';
+import { LOCAL_DEV_UI_WEBSOCKET_MESSAGE_TYPES } from '../../constants';
+import { LocalDevUIWebsocketMessage } from '../../../types/LocalDev';
+import { ProjectConfig } from '../../../types/Projects';
 const SERVER_INSTANCE_ID = 'local-dev-ui-websocket-server';
 
 const LOG_PREFIX = '[LocalDevUIWebsocketServer] ';
@@ -60,7 +60,22 @@ class LocalDevUIWebsocketServer {
           return;
         }
 
-        handleWebsocketMessage(message);
+        switch (message.type) {
+          case LOCAL_DEV_UI_WEBSOCKET_MESSAGE_TYPES.UPLOAD:
+            console.log('run upload');
+            break;
+          case LOCAL_DEV_UI_WEBSOCKET_MESSAGE_TYPES.INSTALL_DEPS:
+            console.log('run install deps');
+            break;
+          case LOCAL_DEV_UI_WEBSOCKET_MESSAGE_TYPES.APP_INSTALLED:
+            console.log('app installed');
+            break;
+          default:
+            console.log(
+              '@TODO Unsupported message received. Unknown message type:',
+              message.type
+            );
+        }
       } catch (e) {
         this.logError(
           '@TODO Unsupported message received. Invalid JSON:',

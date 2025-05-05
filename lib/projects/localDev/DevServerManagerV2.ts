@@ -1,9 +1,9 @@
 import { Environment } from '@hubspot/local-dev-lib/types/Config';
+import { logger } from '@hubspot/local-dev-lib/logger';
 import { promptUser } from '../../prompts/promptUtils';
 import {
   startPortManagerServer,
   stopPortManagerServer,
-  requestPorts,
 } from '@hubspot/local-dev-lib/portManager';
 import {
   getHubSpotApiOrigin,
@@ -12,14 +12,13 @@ import {
 import { getAccountConfig } from '@hubspot/local-dev-lib/config';
 import AppDevModeInterface from './AppDevModeInterface';
 import { lib } from '../../../lang/en';
-import { uiLogger } from '../../ui/logger';
 import { LocalDevState } from '../../../types/LocalDev';
 import LocalDevLogger from './LocalDevLogger';
 
 type DevServerInterface = {
   // eslint-disable-next-line @typescript-eslint/no-unsafe-function-type
   setup?: Function;
-  start?: (options: object) => Promise<void>;
+  start?: () => Promise<void>;
   fileChange?: (filePath: string, event: string) => Promise<void>;
   cleanup?: () => Promise<void>;
 };
@@ -42,7 +41,7 @@ class DevServerManagerV2 {
 
     const AppsDevServer = new AppDevModeInterface({
       localDevState: options.localDevState,
-      logger: options.logger,
+      localDevLogger: options.logger,
     });
     this.devServers = [AppsDevServer];
   }
@@ -66,7 +65,7 @@ class DevServerManagerV2 {
       if (serverInterface.setup) {
         await serverInterface.setup({
           promptUser,
-          uiLogger,
+          logger,
           urls: {
             api: getHubSpotApiOrigin(env),
             web: getHubSpotWebsiteOrigin(env),
@@ -82,11 +81,7 @@ class DevServerManagerV2 {
     if (this.initialized) {
       await this.iterateDevServers(async serverInterface => {
         if (serverInterface.start) {
-          await serverInterface.start({
-            accountId: this.localDevState.targetTestingAccountId,
-            projectConfig: this.localDevState.projectConfig,
-            requestPorts,
-          });
+          await serverInterface.start();
         }
       });
     } else {
