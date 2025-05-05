@@ -2643,12 +2643,11 @@ export const lib = {
         `${chalk.bold('Changing project configuration requires a new project build.')}\n\nThis will affect your public app's ${chalk.bold(`${installCount} existing ${installText}`)}. If your app has users in production, we strongly recommend creating a copy of this app to test your changes before proceding.`,
       header: warning =>
         `${warning} To reflect these changes and continue testing:`,
+      instructionsHeader: '\nTo reflect these changes and continue testing:',
       stopDev: `  * Stop ${uiCommandReference('hs project dev')}`,
       runUpload: command => `  * Run ${command}`,
       restartDev: `  * Re-run ${uiCommandReference('hs project dev')}`,
       pushToGithub: '  * Commit and push your changes to GitHub',
-      defaultMarketplaceAppWarning: (installCount, accountText) =>
-        `${chalk.bold('Changing project configuration requires creating a new project build.')}\n\nYour marketplace app is currently installed in ${chalk.bold(`${installCount} ${accountText}`)}. Any uploaded changes will impact your app's users. We strongly recommend creating a copy of this app to test your changes before proceding.`,
     },
     activeInstallWarning: {
       installCount: (appName, installCount, installText) =>
@@ -2665,6 +2664,10 @@ export const lib = {
       fileChangeError: message =>
         `Failed to notify local dev server of file change: ${message}`,
     },
+  },
+  AppDevModeInterface: {
+    defaultMarketplaceAppWarning: (installCount, accountText) =>
+      `$\n\nYour marketplace app is currently installed in ${chalk.bold(`${installCount} ${accountText}`)}. Any uploaded changes will impact your app's users. We strongly recommend creating a copy of this app to test your changes before proceding.`,
   },
   localDevHelpers: {
     confirmDefaultAccountIsTarget: {

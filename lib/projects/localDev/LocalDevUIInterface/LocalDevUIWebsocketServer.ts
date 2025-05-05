@@ -5,7 +5,8 @@ import {
 } from '@hubspot/local-dev-lib/portManager';
 import { logger } from '@hubspot/local-dev-lib/logger';
 import { handleWebsocketMessage } from './messageHandlers';
-import { LocalDevUIWebsocketMessage } from '../../../../types/LocalDevUIInterface';
+import { LocalDevUIWebsocketMessage } from '../../../../types/LocalDev';
+import { ProjectConfig } from '../../../../types/Projects';
 const SERVER_INSTANCE_ID = 'local-dev-ui-websocket-server';
 
 const LOG_PREFIX = '[LocalDevUIWebsocketServer] ';
@@ -14,15 +15,18 @@ class LocalDevUIWebsocketServer {
   private _server?: WebSocketServer;
   private _websocket?: WebSocket;
   private debug?: boolean;
+  private accountId?: number;
+  private projectConfig?: ProjectConfig;
+  private projectDir?: string;
 
   constructor() {}
 
-  private server(): WebSocketServer {
-    if (!this._server) {
-      throw new Error('@TODO LocalDevUIWebsocketServer not initialized');
-    }
-    return this._server;
-  }
+  // private server(): WebSocketServer {
+  //   if (!this._server) {
+  //     throw new Error('@TODO LocalDevUIWebsocketServer not initialized');
+  //   }
+  //   return this._server;
+  // }
 
   private websocket(): WebSocket {
     if (!this._websocket) {
@@ -49,11 +53,19 @@ class LocalDevUIWebsocketServer {
         const message: LocalDevUIWebsocketMessage = JSON.parse(data.toString());
 
         if (!message.type) {
+          this.logError(
+            '@TODO Unsupported message received. Missing type field:',
+            data.toString()
+          );
+          return;
         }
 
         handleWebsocketMessage(message);
       } catch (e) {
-        this.logError('Unsupported message received:', data.toString());
+        this.logError(
+          '@TODO Unsupported message received. Invalid JSON:',
+          data.toString()
+        );
       }
     });
   }

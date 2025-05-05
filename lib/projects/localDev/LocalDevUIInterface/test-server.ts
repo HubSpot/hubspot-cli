@@ -1,6 +1,9 @@
 import { startPortManagerServer } from '@hubspot/local-dev-lib/portManager';
 import LocalDevUIWebsocketServer from './LocalDevUIWebsocketServer';
 
-startPortManagerServer().then(() => {
+async function main() {
+  await startPortManagerServer();
   LocalDevUIWebsocketServer.init();
-});
+}
+
+main();
