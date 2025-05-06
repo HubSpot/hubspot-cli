@@ -132,7 +132,7 @@ export async function handler(
 
       try {
         token = await getAccessToken(configData.personalAccessKey, env);
-        defaultName = toKebabCase(token.hubName);
+        defaultName = token.hubName ? toKebabCase(token.hubName) : undefined;
 
         updatedConfig = await updateConfigWithAccessToken(
           token,
