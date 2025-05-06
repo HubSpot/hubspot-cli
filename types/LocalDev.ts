@@ -17,8 +17,3 @@ export type LocalDevState = {
   };
   env: Environment;
 };
-
-export interface LocalDevUIWebsocketMessage {
-  type: string;
-  data: unknown;
-}

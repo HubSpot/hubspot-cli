@@ -89,9 +89,3 @@ export const FEATURES = {
   UNIFIED_THEME_PREVIEW: 'cms:react:unifiedThemePreview',
   UNIFIED_APPS: 'Developers:UnifiedApps:PrivateBeta',
 } as const;
-
-export const LOCAL_DEV_UI_WEBSOCKET_MESSAGE_TYPES = {
-  UPLOAD: 'upload',
-  INSTALL_DEPS: 'installDeps',
-  APP_INSTALLED: 'appInstalled',
-} as const;
