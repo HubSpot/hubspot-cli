@@ -1,10 +1,22 @@
 import { Argv, ArgumentsCamelCase } from 'yargs';
 import chalk from 'chalk';
+import path from 'path';
 import { logger } from '@hubspot/local-dev-lib/logger';
 import { getAccountConfig } from '@hubspot/local-dev-lib/config';
 import { isSpecifiedError } from '@hubspot/local-dev-lib/errors/index';
+import {
+  loadHsProfileFile,
+  getAllHsProfiles,
+} from '@hubspot/project-parsing-lib';
+import { profileFileName } from '@hubspot/project-parsing-lib/src/lib/constants';
+import { HsProfileFile } from '@hubspot/project-parsing-lib/src/lib/types';
 import { useV3Api } from '../../lib/projects/buildAndDeploy';
-import { uiBetaTag, uiCommandReference } from '../../lib/ui';
+import {
+  uiBetaTag,
+  uiCommandReference,
+  uiLine,
+  uiAccountDescription,
+} from '../../lib/ui';
 import { trackCommandUsage } from '../../lib/usageTracking';
 import {
   getProjectConfig,
@@ -35,26 +47,90 @@ type ProjectUploadArgs = CommonArgs & {
   message: string;
   m: string;
   skipValidation: boolean;
-  env?: string;
+  profile?: string;
 };
 
 async function handler(
   args: ArgumentsCamelCase<ProjectUploadArgs>
 ): Promise<void> {
   const { forceCreate, message, derivedAccountId, skipValidation } = args;
-  const accountConfig = getAccountConfig(derivedAccountId);
-  const accountType = accountConfig && accountConfig.accountType;
 
   const { projectConfig, projectDir } = await getProjectConfig();
-
-  trackCommandUsage('project-upload', { type: accountType! }, derivedAccountId);
-
   validateProjectConfig(projectConfig, projectDir);
+
+  if (!projectDir) {
+    logger.error('Project directory not found');
+    process.exit(EXIT_CODES.ERROR);
+  }
+
+  let targetAccountId;
+
+  if (args.profile) {
+    uiLine();
+    uiBetaTag(
+      `Using profile from ${chalk.bold(`${profileFileName}.${args.profile}.json`)}`
+    );
+    logger.log('');
+
+    let hsProfile: HsProfileFile | undefined;
+
+    try {
+      hsProfile = await loadHsProfileFile(
+        path.join(projectDir, projectConfig.srcDir),
+        { projectProfile: args.profile }
+      );
+    } catch (err) {
+      logError(err);
+      uiLine();
+      process.exit(EXIT_CODES.ERROR);
+    }
+
+    targetAccountId = hsProfile?.accountId;
+
+    if (!targetAccountId) {
+      logger.error(
+        `No accountId found in ${profileFileName}.${args.profile}.json config. Please add an accountId if you want to deploy to a specific profile.`
+      );
+      uiLine();
+      process.exit(EXIT_CODES.ERROR);
+    } else {
+      logger.log(`Targting ${uiAccountDescription(targetAccountId)}`);
+      if (hsProfile?.variables) {
+        logger.log('');
+        logger.log('Applying profile variables:');
+        Object.entries(hsProfile?.variables ?? {}).forEach(([key, value]) => {
+          logger.log(`  ${key}: ${value}`);
+        });
+      }
+    }
+    uiLine();
+    logger.log('');
+  } else {
+    // Check if the project has any project profiles configured
+    const existingProfiles = await getAllHsProfiles(
+      path.join(projectDir, projectConfig.srcDir)
+    );
+
+    if (existingProfiles.length > 0) {
+      logger.error(
+        'You are using project profiles, but did not specify a target profile. Specify a profile using the --profile flag.'
+      );
+      process.exit(EXIT_CODES.ERROR);
+    } else {
+      // The user is not using env overrides, so we can use the derived accountId
+      targetAccountId = derivedAccountId;
+    }
+  }
+
+  const accountConfig = getAccountConfig(targetAccountId!);
+  const accountType = accountConfig && accountConfig.accountType;
+
+  trackCommandUsage('project-upload', { type: accountType! }, targetAccountId);
 
   try {
     const { result, uploadError } =
       await handleProjectUpload<ProjectPollResult>({
-        accountId: derivedAccountId,
+        accountId: targetAccountId!,
         projectConfig,
         projectDir: projectDir!,
         callbackFunc: pollProjectBuildAndDeploy,
@@ -63,7 +139,7 @@ async function handler(
         isUploadCommand: true,
         sendIR: useV3Api(projectConfig.platformVersion),
         skipValidation,
-        env: args.env,
+        projectProfile: args.profile,
       });
 
     if (uploadError) {
@@ -81,7 +157,7 @@ async function handler(
         logError(
           uploadError,
           new ApiErrorContext({
-            accountId: derivedAccountId,
+            accountId: targetAccountId,
             request: 'project upload',
           })
         );
@@ -106,7 +182,7 @@ async function handler(
       logFeedbackMessage(result.buildId);
 
       await displayWarnLogs(
-        derivedAccountId,
+        targetAccountId!,
         projectConfig.name,
         result.buildId
       );
@@ -116,7 +192,7 @@ async function handler(
     logError(
       e,
       new ApiErrorContext({
-        accountId: derivedAccountId,
+        accountId: targetAccountId,
         request: 'project upload',
       })
     );
@@ -147,8 +223,9 @@ function projectUploadBuilder(yargs: Argv): Argv<ProjectUploadArgs> {
       hidden: true,
       default: false,
     },
-    env: {
+    profile: {
       type: 'string',
+      alias: 'p',
       describe: i18n(
         `commands.project.subcommands.upload.options.env.describe`
       ),

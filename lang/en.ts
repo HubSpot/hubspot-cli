@@ -871,6 +871,26 @@ export const commands = {
     selectLink: 'Select a link to open',
   },
   project: {
+    profile: {
+      describe: 'Commands for managing project profiles',
+      add: {
+        describe: 'Add a new project profile',
+        example: 'Add a new project profile named hsprofile.qa.json',
+        positionals: {
+          name: 'The name of the project profile',
+        },
+        options: {
+          targetAccount: 'The target account ID for this profile',
+        },
+      },
+      remove: {
+        describe: 'Remove an exisiting project profile',
+        example: 'Remove a project profile named hsprofile.qa.json',
+        positionals: {
+          name: 'The name of the project profile',
+        },
+      },
+    },
     dev: {
       describe: 'Start local dev for the current project.',
       logs: {

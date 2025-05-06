@@ -1,14 +1,26 @@
 import { ArgumentsCamelCase, Argv, CommandModule } from 'yargs';
+import chalk from 'chalk';
 import { trackCommandUsage } from '../../../lib/usageTracking';
 import { i18n } from '../../../lib/lang';
 import { logger } from '@hubspot/local-dev-lib/logger';
 import { getAccountConfig } from '@hubspot/local-dev-lib/config';
 import {
+  loadHsProfileFile,
+  getHsProfileFilename,
+} from '@hubspot/project-parsing-lib';
+import { HsProfileFile } from '@hubspot/project-parsing-lib/src/lib/types';
+import {
   getProjectConfig,
   validateProjectConfig,
 } from '../../../lib/projects/config';
 import { EXIT_CODES } from '../../../lib/enums/exitCodes';
-import { uiBetaTag, uiCommandReference, uiLink } from '../../../lib/ui';
+import {
+  uiBetaTag,
+  uiCommandReference,
+  uiLink,
+  uiLine,
+  uiAccountDescription,
+} from '../../../lib/ui';
 import { ProjectDevArgs } from '../../../types/Yargs';
 import { deprecatedProjectDevFlow } from './deprecatedFlow';
 import { unifiedProjectDevFlow } from './unifiedFlow';
@@ -25,20 +37,12 @@ export async function handler(
   args: ArgumentsCamelCase<ProjectDevArgs>
 ): Promise<void> {
   const { derivedAccountId } = args;
-  const accountConfig = getAccountConfig(derivedAccountId);
 
-  trackCommandUsage('project-dev', {}, derivedAccountId);
+  if (!args.profile) {
+    trackCommandUsage('project-dev', {}, derivedAccountId);
+  }
 
   const { projectConfig, projectDir } = await getProjectConfig();
-
-  uiBetaTag(i18n(`commands.project.subcommands.dev.logs.betaMessage`));
-
-  logger.log(
-    uiLink(
-      i18n(`commands.project.subcommands.dev.logs.learnMoreLocalDevServer`),
-      'https://developers.hubspot.com/docs/platform/project-cli-commands#start-a-local-development-server'
-    )
-  );
 
   if (!projectConfig || !projectDir) {
     logger.error(
@@ -50,6 +54,57 @@ export async function handler(
     process.exit(EXIT_CODES.ERROR);
   }
 
+  let profileConfig: HsProfileFile | undefined;
+
+  if (args.profile) {
+    uiLine();
+    uiBetaTag(
+      `Using profile from ${chalk.bold(
+        getHsProfileFilename({
+          projectProfile: args.profile,
+        })
+      )}
+      `
+    );
+
+    try {
+      const profile = await loadHsProfileFile(projectDir, {
+        projectProfile: args.profile,
+      });
+
+      if (profile && profile.accountId) {
+        profileConfig = profile;
+      }
+    } catch (e) {
+      logger.error(`Profile ${args.profile} not found`);
+      uiLine();
+      process.exit(EXIT_CODES.ERROR);
+    }
+
+    if (profileConfig) {
+      logger.log(`Targting ${uiAccountDescription(profileConfig.accountId)}`);
+    }
+    logger.log('');
+    uiLine();
+  }
+
+  if (args.profile) {
+    trackCommandUsage('project-dev', {}, profileConfig?.accountId);
+  }
+
+  const accountConfig = getAccountConfig(
+    profileConfig?.accountId || derivedAccountId
+  );
+
+  uiBetaTag(i18n(`commands.project.subcommands.dev.logs.betaMessage`));
+
+  logger.log(
+    uiLink(
+      i18n(`commands.project.subcommands.dev.logs.learnMoreLocalDevServer`),
+      'https://developers.hubspot.com/docs/platform/project-cli-commands#start-a-local-development-server'
+    )
+  );
+
   if (!accountConfig) {
     logger.error(i18n(`commands.project.subcommands.dev.errors.noAccount`));
     process.exit(EXIT_CODES.ERROR);
@@ -58,7 +113,13 @@ export async function handler(
   validateProjectConfig(projectConfig, projectDir);
 
   if (useV3Api(projectConfig.platformVersion)) {
-    await unifiedProjectDevFlow(args, accountConfig, projectConfig, projectDir);
+    await unifiedProjectDevFlow(
+      args,
+      accountConfig,
+      projectConfig,
+      projectDir,
+      profileConfig
+    );
   } else {
     await deprecatedProjectDevFlow(
       args,
@@ -70,12 +131,20 @@ export async function handler(
 }
 
 function projectDevBuilder(yargs: Argv): Argv<ProjectDevArgs> {
+  yargs.option('profile', {
+    type: 'string',
+    description: i18n(`commands.project.subcommands.dev.options.profile`),
+    hidden: true,
+  });
+
   yargs.example([
     [
       '$0 project dev',
       i18n(`commands.project.subcommands.dev.examples.default`),
     ],
   ]);
+
+  yargs.conflicts('profile', 'account');
 
   return yargs as Argv<ProjectDevArgs>;
 }

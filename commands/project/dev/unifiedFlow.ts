@@ -4,6 +4,7 @@ import { ArgumentsCamelCase } from 'yargs';
 import { logger } from '@hubspot/local-dev-lib/logger';
 import { isTranslationError } from '@hubspot/project-parsing-lib/src/lib/errors';
 import { translateForLocalDev } from '@hubspot/project-parsing-lib';
+import { HsProfileFile } from '@hubspot/project-parsing-lib/src/lib/types';
 import { CLIAccount } from '@hubspot/local-dev-lib/types/Accounts';
 import { getEnv, getConfigAccounts } from '@hubspot/local-dev-lib/config';
 import { getValidEnv } from '@hubspot/local-dev-lib/environment';
@@ -33,22 +34,27 @@ export async function unifiedProjectDevFlow(
   args: ArgumentsCamelCase<ProjectDevArgs>,
   accountConfig: CLIAccount,
   projectConfig: ProjectConfig,
-  projectDir: string
+  projectDir: string,
+  profileConfig?: HsProfileFile
 ): Promise<void> {
   logger.log('Unified Apps Local Dev');
 
-  const targetProjectAccountId = args.derivedAccountId;
+  const targetProjectAccountId =
+    profileConfig?.accountId || args.derivedAccountId;
   const env = getValidEnv(getEnv(targetProjectAccountId));
 
   let projectNodes;
 
   // Get IR
   try {
-    const intermediateRepresentation = await translateForLocalDev({
-      projectSourceDir: path.join(projectDir, projectConfig.srcDir),
-      platformVersion: projectConfig.platformVersion,
-      accountId: targetProjectAccountId,
-    });
+    const intermediateRepresentation = await translateForLocalDev(
+      {
+        projectSourceDir: path.join(projectDir, projectConfig.srcDir),
+        platformVersion: projectConfig.platformVersion,
+        accountId: targetProjectAccountId,
+      },
+      { projectProfile: args.profile }
+    );
 
     projectNodes = intermediateRepresentation.intermediateNodesIndexedByUid;
 
@@ -94,27 +100,30 @@ export async function unifiedProjectDevFlow(
 
   let targetTestingAccountId = null;
 
-  const devAccountPromptResponse = await selectDeveloperTestTargetAccountPrompt(
-    accounts!,
-    accountConfig
-  );
+  if (profileConfig) {
+    // TODO for now, bypass the prompt for the testing account if the user has a profile configured
+    targetTestingAccountId = profileConfig.accountId;
+  } else {
+    const devAccountPromptResponse =
+      await selectDeveloperTestTargetAccountPrompt(accounts!, accountConfig);
 
-  targetTestingAccountId = devAccountPromptResponse.targetAccountId;
+    targetTestingAccountId = devAccountPromptResponse.targetAccountId;
 
-  if (!!devAccountPromptResponse.notInConfigAccount) {
-    // When the developer test account isn't configured in the CLI config yet
-    // Walk the user through adding the account's PAK to the config
-    await useExistingDevTestAccount(
-      env,
-      devAccountPromptResponse.notInConfigAccount
-    );
-  } else if (devAccountPromptResponse.createNestedAccount) {
-    // Create a new developer test account and automatically add it to the CLI config
-    targetTestingAccountId = await createDeveloperTestAccountForLocalDev(
-      targetProjectAccountId,
-      accountConfig,
-      env
-    );
+    if (!!devAccountPromptResponse.notInConfigAccount) {
+      // When the developer test account isn't configured in the CLI config yet
+      // Walk the user through adding the account's PAK to the config
+      await useExistingDevTestAccount(
+        env,
+        devAccountPromptResponse.notInConfigAccount
+      );
+    } else if (devAccountPromptResponse.createNestedAccount) {
+      // Create a new developer test account and automatically add it to the CLI config
+      targetTestingAccountId = await createDeveloperTestAccountForLocalDev(
+        targetProjectAccountId,
+        accountConfig,
+        env
+      );
+    }
   }
 
   // Check if project exists in HubSpot
