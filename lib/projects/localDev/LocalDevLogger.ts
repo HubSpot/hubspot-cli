@@ -43,6 +43,16 @@ class LocalDevLogger {
     uiLogger.log(lib.LocalDevManager.uploadWarning.restartDev);
   }
 
+  private handleError(
+    e: unknown,
+    langFunction: (message: string) => string
+  ): void {
+    if (this.state.debug) {
+      logger.error(e);
+    }
+    uiLogger.error(langFunction(e instanceof Error ? e.message : ''));
+  }
+
   getUploadCommand(): string {
     const currentDefaultAccount = getConfigDefaultAccount() || undefined;
 
@@ -89,48 +99,19 @@ class LocalDevLogger {
   }
 
   fileChangeError(e: unknown): void {
-    if (this.state.debug) {
-      logger.error(e);
-    }
-    uiLogger.error(
-      lib.LocalDevManager.devServer.fileChangeError(
-        e instanceof Error ? e.message : ''
-      )
-    );
+    this.handleError(e, lib.LocalDevManager.devServer.fileChangeError);
   }
 
   devServerSetupError(e: unknown): void {
-    if (this.state.debug) {
-      logger.error(e);
-    }
-
-    uiLogger.error(
-      lib.LocalDevManager.devServer.setupError(
-        e instanceof Error ? e.message : ''
-      )
-    );
+    this.handleError(e, lib.LocalDevManager.devServer.setupError);
   }
 
   devServerStartError(e: unknown): void {
-    if (this.state.debug) {
-      logger.error(e);
-    }
-    uiLogger.error(
-      lib.LocalDevManager.devServer.startError(
-        e instanceof Error ? e.message : ''
-      )
-    );
+    this.handleError(e, lib.LocalDevManager.devServer.startError);
   }
 
   devServerCleanupError(e: unknown): void {
-    if (this.state.debug) {
-      logger.error(e);
-    }
-    uiLogger.error(
-      lib.LocalDevManager.devServer.cleanupError(
-        e instanceof Error ? e.message : ''
-      )
-    );
+    this.handleError(e, lib.LocalDevManager.devServer.cleanupError);
   }
 
   noDeployedBuild(): void {
