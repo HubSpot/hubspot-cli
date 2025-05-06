@@ -1,6 +1,9 @@
 import { IntermediateRepresentationNodeLocalDev } from '@hubspot/project-parsing-lib/src/lib/types';
+import { translateForLocalDev } from '@hubspot/project-parsing-lib';
 import { Build } from '@hubspot/local-dev-lib/types/Build';
 import { Environment } from '@hubspot/local-dev-lib/types/Config';
+import path from 'path';
+
 import { ProjectConfig } from '../../../types/Projects';
 import { LocalDevState } from '../../../types/LocalDev';
 import LocalDevLogger from './LocalDevLogger';
@@ -17,7 +20,9 @@ type LocalDevProcessConstructorOptions = {
   debug?: boolean;
   deployedBuild?: Build;
   isGithubLinked: boolean;
-  projectNodes: { [key: string]: IntermediateRepresentationNodeLocalDev };
+  initialProjectNodes: {
+    [key: string]: IntermediateRepresentationNodeLocalDev;
+  };
   env: Environment;
 };
 
@@ -34,7 +39,7 @@ class LocalDevProcess {
     debug,
     deployedBuild,
     isGithubLinked,
-    projectNodes,
+    initialProjectNodes,
     env,
   }: LocalDevProcessConstructorOptions) {
     this.state = {
@@ -46,7 +51,7 @@ class LocalDevProcess {
       debug: debug || false,
       deployedBuild,
       isGithubLinked,
-      projectNodes,
+      projectNodes: initialProjectNodes,
       env,
     };
 
@@ -173,6 +178,20 @@ class LocalDevProcess {
       this.logger.cleanupSuccess();
     }
     process.exit(EXIT_CODES.SUCCESS);
+  }
+
+  async updateProjectNodes() {
+    const intermediateRepresentation = await translateForLocalDev({
+      projectSourceDir: path.join(
+        this.state.projectDir,
+        this.state.projectConfig.srcDir
+      ),
+      platformVersion: this.state.projectConfig.platformVersion,
+      accountId: this.state.targetProjectAccountId,
+    });
+
+    this.state.projectNodes =
+      intermediateRepresentation.intermediateNodesIndexedByUid;
   }
 }
 

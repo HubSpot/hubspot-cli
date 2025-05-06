@@ -157,7 +157,7 @@ export async function unifiedProjectDevFlow(
 
   // End setup, start local dev process
   const localDevProcess = new LocalDevProcess({
-    projectNodes,
+    initialProjectNodes: projectNodes,
     debug: args.debug,
     deployedBuild,
     isGithubLinked,

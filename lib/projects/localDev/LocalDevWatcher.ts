@@ -20,11 +20,12 @@ class LocalDevWatcher {
     this.watcher = null;
   }
 
-  private handleWatchEvent(
+  private async handleWatchEvent(
     filePath: string,
     event: string,
     configPaths: string[]
-  ): void {
+  ): Promise<void> {
+    await this.localDevProcess.updateProjectNodes();
     if (configPaths.includes(filePath)) {
       this.localDevProcess.logger.uploadWarning();
     } else {
