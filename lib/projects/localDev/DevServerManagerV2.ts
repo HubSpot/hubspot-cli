@@ -46,7 +46,7 @@ class DevServerManagerV2 {
     this.devServers = [AppsDevServer];
   }
 
-  async iterateDevServers(
+  private async iterateDevServers(
     callback: (serverInterface: DevServerInterface) => Promise<void>
   ): Promise<void> {
     await Promise.all(this.devServers.map(devServer => callback(devServer)));

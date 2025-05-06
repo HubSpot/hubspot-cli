@@ -47,7 +47,7 @@ class AppDevModeInterface {
   }
 
   // Assumes only one app per project
-  get app(): AppIRNode | null {
+  private get app(): AppIRNode | null {
     if (this._app === undefined) {
       this._app =
         Object.values(this.localDevState.projectNodes).find(isAppIRNode) ||
@@ -56,7 +56,7 @@ class AppDevModeInterface {
     return this._app;
   }
 
-  async fetchMarketplaceAppData(): Promise<void> {
+  private async fetchMarketplaceAppData(): Promise<void> {
     const {
       data: { results: portalMarketplaceApps },
     } = await fetchPublicAppsForPortal(
@@ -82,7 +82,7 @@ class AppDevModeInterface {
     this.marketplaceAppInstalls = uniquePortalInstallCount;
   }
 
-  async checkMarketplaceAppInstalls(): Promise<void> {
+  private async checkMarketplaceAppInstalls(): Promise<void> {
     if (!this.marketplaceAppData || !this.marketplaceAppInstalls) {
       return;
     }
@@ -115,7 +115,7 @@ class AppDevModeInterface {
     );
   }
 
-  async checkMarketplaceAppInstallation(): Promise<void> {
+  private async checkMarketplaceAppInstallation(): Promise<void> {
     if (!this.app || !this.marketplaceAppData) {
       return;
     }
