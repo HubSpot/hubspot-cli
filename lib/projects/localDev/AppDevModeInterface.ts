@@ -91,9 +91,7 @@ class AppDevModeInterface {
     uiLogger.warn(
       lib.LocalDevManager.activeInstallWarning.installCount(
         this.marketplaceAppData.name,
-        this.marketplaceAppInstalls,
-
-        this.marketplaceAppInstalls === 1 ? 'account' : 'accounts'
+        this.marketplaceAppInstalls
       )
     );
     uiLogger.log(lib.LocalDevManager.activeInstallWarning.explanation);

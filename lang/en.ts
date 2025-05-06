@@ -2648,15 +2648,15 @@ export const lib = {
         `${chalk.bold('Changing project configuration requires a new project build.')}\n\nThis will affect your public app's ${chalk.bold(`${installCount} existing ${installText}`)}. If your app has users in production, we strongly recommend creating a copy of this app to test your changes before proceding.`,
       header: warning =>
         `${warning} To reflect these changes and continue testing:`,
-      instructionsHeader: '\nTo reflect these changes and continue testing:',
+      instructionsHeader: 'To reflect these changes and continue testing:',
       stopDev: `  * Stop ${uiCommandReference('hs project dev')}`,
       runUpload: command => `  * Run ${command}`,
       restartDev: `  * Re-run ${uiCommandReference('hs project dev')}`,
       pushToGithub: '  * Commit and push your changes to GitHub',
     },
     activeInstallWarning: {
-      installCount: (appName, installCount, installText) =>
-        `${chalk.bold(`The app ${appName} has ${installCount} production ${installText}`)}`,
+      installCount: (appName, installCount) =>
+        `${chalk.bold(`The app ${appName} is installed in ${installCount} production ${installCount === 1 ? 'account' : 'accounts'}`)}`,
       explanation:
         'Some changes made during local development may need to be synced to HubSpot, which will impact those existing installs. We strongly recommend creating a copy of this app to use instead.',
       confirmation: `You will always be asked to confirm any permanent changes to your app's configuration before uploading them.`,
@@ -2672,7 +2672,7 @@ export const lib = {
   },
   AppDevModeInterface: {
     defaultMarketplaceAppWarning: installCount =>
-      `$\n\nYour marketplace app is currently installed in ${chalk.bold(`${installCount} ${installCount === 1 ? 'account' : 'accounts'}`)}. Any uploaded changes will impact your app's users. We strongly recommend creating a copy of this app to test your changes before proceding.`,
+      `\n\nYour marketplace app is currently installed in ${chalk.bold(`${installCount} ${installCount === 1 ? 'account' : 'accounts'}`)}. Any uploaded changes will impact your app's users. We strongly recommend creating a copy of this app to test your changes before proceding.`,
   },
   localDevHelpers: {
     confirmDefaultAccountIsTarget: {
