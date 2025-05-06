@@ -63,7 +63,9 @@ class DevServerManagerV2 {
     await startPortManagerServer();
     await this.iterateDevServers(async serverInterface => {
       if (serverInterface.setup) {
+        // @TODO: In the future, update UIE Dev Server to use LocalDevState
         await serverInterface.setup({
+          components: this.localDevState.projectNodes,
           promptUser,
           logger,
           urls: {

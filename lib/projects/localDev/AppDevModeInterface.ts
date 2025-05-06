@@ -149,6 +149,7 @@ class AppDevModeInterface {
     if (!this.app) {
       return;
     }
+
     if (this.app?.config.distribution === APP_DISTRIBUTION_TYPES.MARKETPLACE) {
       try {
         await this.fetchMarketplaceAppData();
