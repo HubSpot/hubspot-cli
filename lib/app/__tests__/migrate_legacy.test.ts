@@ -105,6 +105,10 @@ describe('migrateApp2023_2', () => {
     (downloadProject as jest.Mock).mockResolvedValue({
       data: 'zipped-project-data',
     });
+    // Mock promptUser correctly
+    (promptUser as jest.Mock).mockResolvedValue({
+      shouldCreateApp: true,
+    });
 
     await migrateApp2023_2(
       mockDerivedAccountId,
@@ -140,6 +144,9 @@ describe('migrateApp2023_2', () => {
     });
     (ensureProjectExists as jest.Mock).mockResolvedValue({
       projectExists: false,
+    });
+    (promptUser as jest.Mock).mockResolvedValue({
+      shouldCreateApp: true,
     });
     (migrateNonProjectApp_v2023_2 as jest.Mock).mockRejectedValue(
       new Error('Migration failed')
@@ -184,9 +191,12 @@ describe('migrateApp2023_2', () => {
     (ensureProjectExists as jest.Mock).mockResolvedValue({
       projectExists: true,
     });
+    (promptUser as jest.Mock).mockResolvedValue({
+      shouldCreateApp: true,
+    });
 
     await expect(
       migrateApp2023_2(mockDerivedAccountId, mockOptions, mockAccountConfig)
-    ).rejects.toThrow(/projectAlreadyExists/);
+    ).rejects.toThrow('A project with name test-project already exists');
   });
 });

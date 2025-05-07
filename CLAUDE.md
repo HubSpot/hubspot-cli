@@ -1,0 +1,1 @@
+- Skipping tests is never a valid solution to fixing them
