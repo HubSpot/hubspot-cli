@@ -1,12 +1,13 @@
 import fs from 'fs';
 import path from 'path';
-import chalk from 'chalk';
 import { Argv, ArgumentsCamelCase } from 'yargs';
 import { logger } from '@hubspot/local-dev-lib/logger';
 import {
   getAllHsProfiles,
   getHsProfileFilename,
+  loadHsProfileFile,
 } from '@hubspot/project-parsing-lib';
+import { deleteProject } from '@hubspot/local-dev-lib/api/projects';
 import { trackCommandUsage } from '../../../lib/usageTracking';
 import { getProjectConfig } from '../../../lib/projects/config';
 import { uiBetaTag } from '../../../lib/ui';
@@ -14,7 +15,9 @@ import { EXIT_CODES } from '../../../lib/enums/exitCodes';
 import { YargsCommandModule, CommonArgs } from '../../../types/Yargs';
 import { makeYargsBuilder } from '../../../lib/yargsUtils';
 import { commands } from '../../../lang/en';
-import { listPrompt } from '../../../lib/prompts/promptUtils';
+import { confirmPrompt, listPrompt } from '../../../lib/prompts/promptUtils';
+import { fileExists } from '../../../lib/validation';
+import { ensureProjectExists } from '../../../lib/projects/ensureProjectExists';
 
 const command = 'remove [name]';
 const describe = uiBetaTag(commands.project.profile.remove.describe, false);
@@ -33,72 +36,113 @@ async function handler(
   const { projectConfig, projectDir } = await getProjectConfig();
 
   if (!projectConfig || !projectDir) {
-    logger.error('No project config found');
+    logger.error(commands.project.profile.remove.errors.noProjectConfig);
     process.exit(EXIT_CODES.ERROR);
   }
 
   const projectSourceDir = path.join(projectDir, projectConfig.srcDir);
-  let profileFilename: string | undefined = undefined;
-
-  const profileExists = (profileName: string) => {
-    try {
-      const filename = getHsProfileFilename({
-        projectProfile: profileName,
-      });
-      return fs.existsSync(path.join(projectSourceDir, filename));
-    } catch (err) {
-      return false;
-    }
-  };
+  let profileName: string | undefined = undefined;
 
   if (args.name) {
-    if (profileExists(args.name)) {
-      profileFilename = getHsProfileFilename({
-        projectProfile: args.name,
-      });
-    } else {
+    profileName = args.name;
+    const profileFilename = getHsProfileFilename(profileName);
+
+    if (!fileExists(path.join(projectSourceDir, profileFilename))) {
       logger.error(
-        `No profile with filename ${chalk.bold(
-          getHsProfileFilename({
-            projectProfile: args.name,
-          })
-        )} found in your project source directory.`
+        commands.project.profile.remove.errors.noProfileFound(profileFilename)
       );
       process.exit(EXIT_CODES.ERROR);
     }
   } else {
     const existingProfiles = await getAllHsProfiles(projectSourceDir);
 
-    const promptResponse = await listPrompt('Select a profile to remove', {
-      choices: existingProfiles.map(profile =>
-        getHsProfileFilename({
-          projectProfile: profile,
-        })
-      ),
-    });
+    const promptResponse = await listPrompt(
+      commands.project.profile.remove.prompts.removeProfilePrompt,
+      {
+        choices: existingProfiles.map(profile => ({
+          name: getHsProfileFilename(profile),
+          value: profile,
+        })),
+      }
+    );
 
     if (promptResponse) {
-      profileFilename = promptResponse;
+      profileName = promptResponse;
     }
     logger.log('');
   }
 
-  if (!profileFilename) {
-    logger.error('No profile filename found');
+  // This should never happen
+  if (!profileName) {
     process.exit(EXIT_CODES.ERROR);
   }
+
+  let targetAccountId: number | undefined;
+
+  try {
+    const profileToRemove = await loadHsProfileFile(
+      projectSourceDir,
+      profileName
+    );
+
+    targetAccountId = profileToRemove?.accountId;
+  } catch (err) {
+    logger.debug(
+      commands.project.profile.remove.debug.failedToLoadProfile(profileName)
+    );
+  }
+
+  if (targetAccountId) {
+    const { projectExists } = await ensureProjectExists(
+      targetAccountId,
+      projectConfig.name,
+      {
+        allowCreate: false,
+      }
+    );
+
+    if (projectExists) {
+      const confirmResponse = await confirmPrompt(
+        commands.project.profile.remove.prompts.removeProjectPrompt(
+          targetAccountId
+        ),
+        {
+          defaultAnswer: false,
+        }
+      );
+
+      if (confirmResponse) {
+        await deleteProject(targetAccountId, projectConfig.name);
+        logger.log(
+          commands.project.profile.remove.logs.removedProject(targetAccountId)
+        );
+      } else {
+        logger.log(
+          commands.project.profile.remove.logs.didNotRemoveProject(
+            targetAccountId
+          )
+        );
+      }
+      logger.log('');
+    }
+  }
+
+  const profileFilename = getHsProfileFilename(profileName);
 
   try {
     fs.unlinkSync(path.join(projectSourceDir, profileFilename));
   } catch (err) {
-    logger.error('Failed to remove profile file', err);
+    logger.error(
+      commands.project.profile.remove.errors.failedToRemoveProfile(
+        profileFilename
+      )
+    );
     process.exit(EXIT_CODES.ERROR);
   }
 
   logger.log(
-    `Successfully removed the ${chalk.bold(profileFilename)} profile from your project source directory!`
+    commands.project.profile.remove.logs.profileRemoved(profileFilename)
   );
-
   process.exit(EXIT_CODES.SUCCESS);
 }
 

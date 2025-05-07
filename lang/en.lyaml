@@ -782,6 +782,8 @@ en:
               describe: "Automatically create project if it does not exist"
             message:
               describe: "Add a message when you upload your project and create a build"
+            profile:
+              describe: "The profile to target with this upload"
         watch:
           describe: "Watch your local project for changes and automatically upload changed files to a new build in HubSpot."
           examples:

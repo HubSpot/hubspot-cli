@@ -53,7 +53,7 @@ export async function unifiedProjectDevFlow(
         platformVersion: projectConfig.platformVersion,
         accountId: targetProjectAccountId,
       },
-      { projectProfile: args.profile }
+      { profile: args.profile }
     );
 
     projectNodes = intermediateRepresentation.intermediateNodesIndexedByUid;
@@ -88,7 +88,7 @@ export async function unifiedProjectDevFlow(
   const derivedAccountIsRecommendedType =
     isAppDeveloperAccount(accountConfig) || isStandardAccount(accountConfig);
 
-  if (!derivedAccountIsRecommendedType) {
+  if (!derivedAccountIsRecommendedType && !profileConfig) {
     logger.error(
       i18n(`commands.project.subcommands.dev.errors.invalidUnifiedAppsAccount`),
       {
@@ -159,7 +159,8 @@ export async function unifiedProjectDevFlow(
       projectConfig,
       projectDir,
       targetProjectAccountId,
-      true
+      true,
+      args.profile
     );
   }
 

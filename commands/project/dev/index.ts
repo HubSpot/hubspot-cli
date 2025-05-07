@@ -1,5 +1,6 @@
 import { ArgumentsCamelCase, Argv, CommandModule } from 'yargs';
 import chalk from 'chalk';
+import path from 'path';
 import { trackCommandUsage } from '../../../lib/usageTracking';
 import { i18n } from '../../../lib/lang';
 import { logger } from '@hubspot/local-dev-lib/logger';
@@ -59,18 +60,15 @@ export async function handler(
   if (args.profile) {
     uiLine();
     uiBetaTag(
-      `Using profile from ${chalk.bold(
-        getHsProfileFilename({
-          projectProfile: args.profile,
-        })
-      )}
+      `Using profile from ${chalk.bold(getHsProfileFilename(args.profile))}
       `
     );
 
     try {
-      const profile = await loadHsProfileFile(projectDir, {
-        projectProfile: args.profile,
-      });
+      const profile = await loadHsProfileFile(
+        path.join(projectDir, projectConfig.srcDir),
+        args.profile
+      );
 
       if (profile && profile.accountId) {
         profileConfig = profile;
@@ -82,7 +80,7 @@ export async function handler(
     }
 
     if (profileConfig) {
-      logger.log(`Targting ${uiAccountDescription(profileConfig.accountId)}`);
+      logger.log(`Targeting ${uiAccountDescription(profileConfig.accountId)}`);
     }
     logger.log('');
     uiLine();
@@ -133,6 +131,7 @@ export async function handler(
 function projectDevBuilder(yargs: Argv): Argv<ProjectDevArgs> {
   yargs.option('profile', {
     type: 'string',
+    alias: 'p',
     description: i18n(`commands.project.subcommands.dev.options.profile`),
     hidden: true,
   });

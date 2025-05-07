@@ -449,7 +449,8 @@ export async function createInitialBuildForNewProject(
   projectConfig: ProjectConfig,
   projectDir: string,
   targetAccountId: number,
-  sendIR?: boolean
+  sendIR?: boolean,
+  profile?: string
 ): Promise<Build> {
   const { result: initialUploadResult, uploadError } =
     await handleProjectUpload<ProjectPollResult>({
@@ -463,6 +464,7 @@ export async function createInitialBuildForNewProject(
       forceCreate: true,
       skipValidation: true,
       sendIR,
+      profile,
     });
 
   if (uploadError) {

@@ -77,7 +77,7 @@ async function handler(
     try {
       hsProfile = await loadHsProfileFile(
         path.join(projectDir, projectConfig.srcDir),
-        { projectProfile: args.profile }
+        args.profile
       );
     } catch (err) {
       logError(err);
@@ -94,7 +94,7 @@ async function handler(
       uiLine();
       process.exit(EXIT_CODES.ERROR);
     } else {
-      logger.log(`Targting ${uiAccountDescription(targetAccountId)}`);
+      logger.log(`Targeting ${uiAccountDescription(targetAccountId)}`);
       if (hsProfile?.variables) {
         logger.log('');
         logger.log('Applying profile variables:');
@@ -139,7 +139,7 @@ async function handler(
         isUploadCommand: true,
         sendIR: useV3Api(projectConfig.platformVersion),
         skipValidation,
-        projectProfile: args.profile,
+        profile: args.profile,
       });
 
     if (uploadError) {
@@ -227,7 +227,7 @@ function projectUploadBuilder(yargs: Argv): Argv<ProjectUploadArgs> {
       type: 'string',
       alias: 'p',
       describe: i18n(
-        `commands.project.subcommands.upload.options.env.describe`
+        `commands.project.subcommands.upload.options.profile.describe`
       ),
       hidden: true,
     },

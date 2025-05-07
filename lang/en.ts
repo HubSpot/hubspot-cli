@@ -876,6 +876,35 @@ export const commands = {
       add: {
         describe: 'Add a new project profile',
         example: 'Add a new project profile named hsprofile.qa.json',
+        logs: {
+          copyExistingProfile: profileName =>
+            `Found an existing profile. We can copy the variables from ${chalk.bold(
+              profileName
+            )} into your new profile.`,
+          copyExistingProfiles:
+            'Found existing project profiles. We can copy the variables from one of them into your new profile.',
+          profileAdded: profileName =>
+            `Project profile ${chalk.bold(profileName)} was successfully added`,
+        },
+        prompts: {
+          namePrompt: '[name] Enter a name for the new project profile: ',
+          emptyName: 'Profile name cannot be empty',
+          targetAccountPrompt:
+            '[target-account] Select a target account for this profile',
+          copyExistingProfilePrompt: 'Select a profile to copy variables from',
+          copyExistingProfilePromptEmpty: 'None (do not copy any variables)',
+        },
+        errors: {
+          noProjectConfig:
+            'No project config found. Please run this command from a project directory.',
+          profileExists: profileName =>
+            `Profile ${chalk.bold(profileName)} already exists. Please choose a different name.`,
+          invalidTargetAccount: 'Target account is not configured in the CLI',
+          noAccountsConfigured: 'No accounts configured in the CLI',
+          failedToLoadProfile: profileName =>
+            `Unable to copy variables. Failed to load profile ${chalk.bold(profileName)}`,
+          failedToCreateProfile: 'Failed to create profile',
+        },
         positionals: {
           name: 'The name of the project profile',
         },
@@ -886,6 +915,37 @@ export const commands = {
       remove: {
         describe: 'Remove an exisiting project profile',
         example: 'Remove a project profile named hsprofile.qa.json',
+        logs: {
+          profileRemoved: profileName =>
+            `Project profile ${chalk.bold(profileName)} was successfully removed`,
+          removedProject: accountId =>
+            `Successfully removed the project from ${uiAccountDescription(
+              accountId
+            )}`,
+          didNotRemoveProject: accountId =>
+            `Did not remove the project from ${uiAccountDescription(
+              accountId
+            )}`,
+        },
+        debug: {
+          failedToLoadProfile: profileName =>
+            `Failed to load profile ${chalk.bold(profileName)}`,
+        },
+        prompts: {
+          removeProfilePrompt: 'Select a profile to remove from your project',
+          removeProjectPrompt: accountId =>
+            `Would you like to remove this project from ${uiAccountDescription(
+              accountId
+            )}?`,
+        },
+        errors: {
+          noProjectConfig:
+            'No project config found. Please run this command from a project directory.',
+          noProfileFound: profileName =>
+            `No profile with filename ${chalk.bold(profileName)} found in your project.`,
+          failedToRemoveProfile: profileName =>
+            `Unable to remove profile ${chalk.bold(profileName)}. Please try again.`,
+        },
         positionals: {
           name: 'The name of the project profile',
         },

@@ -1,8 +1,9 @@
 import path from 'path';
 import fs from 'fs';
-import chalk from 'chalk';
 import { Argv, ArgumentsCamelCase } from 'yargs';
 import { logger } from '@hubspot/local-dev-lib/logger';
+import { getAccountId, getConfigAccounts } from '@hubspot/local-dev-lib/config';
+import { getAccountIdentifier } from '@hubspot/local-dev-lib/config/getAccountIdentifier';
 import {
   getAllHsProfiles,
   getHsProfileFilename,
@@ -10,7 +11,7 @@ import {
 } from '@hubspot/project-parsing-lib';
 import { trackCommandUsage } from '../../../lib/usageTracking';
 import { getProjectConfig } from '../../../lib/projects/config';
-import { uiBetaTag } from '../../../lib/ui';
+import { uiBetaTag, uiAccountDescription } from '../../../lib/ui';
 import { EXIT_CODES } from '../../../lib/enums/exitCodes';
 import { YargsCommandModule, CommonArgs } from '../../../types/Yargs';
 import { makeYargsBuilder } from '../../../lib/yargsUtils';
@@ -20,6 +21,7 @@ import {
   listPrompt,
   confirmPrompt,
 } from '../../../lib/prompts/promptUtils';
+import { fileExists } from '../../../lib/validation';
 
 const command = 'add [name]';
 const describe = uiBetaTag(commands.project.profile.add.describe, false);
@@ -39,31 +41,25 @@ async function handler(
   const { projectConfig, projectDir } = await getProjectConfig();
 
   if (!projectConfig || !projectDir) {
-    logger.error('No project config found');
+    logger.error(commands.project.profile.add.errors.noProjectConfig);
     process.exit(EXIT_CODES.ERROR);
   }
 
   const projectSourceDir = path.join(projectDir, projectConfig.srcDir);
   let profileName = args.name;
+  let targetAccount = args.targetAccount;
 
   const checkIfProfileExists = (profileName: string) => {
-    try {
-      const filename = getHsProfileFilename({
-        projectProfile: profileName,
-      });
-      return fs.existsSync(path.join(projectSourceDir, filename));
-    } catch (err) {
-      return false;
-    }
+    return fileExists(
+      path.join(projectSourceDir, getHsProfileFilename(profileName))
+    );
   };
 
   if (profileName && checkIfProfileExists(profileName)) {
     logger.error(
-      `Profile ${chalk.bold(
-        getHsProfileFilename({
-          projectProfile: profileName,
-        })
-      )} already exists. Please choose a different name.`
+      commands.project.profile.add.errors.profileExists(
+        getHsProfileFilename(profileName)
+      )
     );
     logger.log('');
     profileName = undefined;
@@ -73,13 +69,15 @@ async function handler(
     const promptResponse = await promptUser<{ name: string }>({
       type: 'input',
       name: 'name',
-      message: '[name] Enter a name for the new project profile: ',
+      message: commands.project.profile.add.prompts.namePrompt,
       validate: input => {
         if (input.trim() === '') {
-          return 'Profile name cannot be empty';
+          return commands.project.profile.add.prompts.emptyName;
         }
         if (checkIfProfileExists(input.trim())) {
-          return 'Profile already exists. Use a different name and try again.';
+          return commands.project.profile.add.errors.profileExists(
+            input.trim()
+          );
         }
         return true;
       },
@@ -88,26 +86,41 @@ async function handler(
     profileName = promptResponse.name;
   }
 
-  let targetAccount = args.targetAccount;
+  if (targetAccount) {
+    const accountId = getAccountId(targetAccount);
+    if (accountId) {
+      targetAccount = accountId;
+    } else {
+      logger.error(commands.project.profile.add.errors.invalidTargetAccount);
+      logger.log('');
+      targetAccount = undefined;
+    }
+  }
 
   if (!targetAccount) {
-    const promptResponse = await promptUser<{ targetAccount: number }>({
-      type: 'input',
-      name: 'targetAccount',
-      message:
-        '[--target-account] Enter the target account ID for this profile: ',
-      validate: input => {
-        if (input.trim() === '') {
-          return 'Target account ID cannot be empty';
-        }
-        if (isNaN(Number(input.trim()))) {
-          return 'Target account ID must be a number';
-        }
-        return true;
-      },
-    });
+    const configuredAccounts = getConfigAccounts();
 
-    targetAccount = promptResponse.targetAccount;
+    if (!configuredAccounts || !configuredAccounts.length) {
+      logger.error(commands.project.profile.add.errors.noAccountsConfigured);
+      process.exit(EXIT_CODES.ERROR);
+    }
+
+    const promptResponse = await listPrompt(
+      commands.project.profile.add.prompts.targetAccountPrompt,
+      {
+        choices: configuredAccounts.map(account => {
+          const accountId = getAccountIdentifier(account);
+          return {
+            name: uiAccountDescription(accountId),
+            value: accountId,
+          };
+        }),
+      }
+    );
+
+    if (promptResponse) {
+      targetAccount = promptResponse;
+    }
   }
 
   const profileFileContent = {
@@ -121,7 +134,9 @@ async function handler(
   if (existingProfiles.length == 1) {
     logger.log('');
     logger.log(
-      `Found an existing project profile. We can copy the configured variables into your new profile file.`
+      commands.project.profile.add.logs.copyExistingProfile(
+        getHsProfileFilename(existingProfiles[0])
+      )
     );
     const shouldCopyVariables = await confirmPrompt('Copy profile variables?', {
       defaultAnswer: true,
@@ -132,22 +147,18 @@ async function handler(
     }
   } else if (existingProfiles.length > 1) {
     logger.log('');
-    logger.log(
-      `Found existing project profiles. We can copy the configured variables from one of them into your new profile file.`
-    );
+    logger.log(commands.project.profile.add.logs.copyExistingProfiles);
     const emptyChoice = {
-      name: 'None (do not copy any variables)',
+      name: commands.project.profile.add.prompts.copyExistingProfilePromptEmpty,
       value: undefined,
     };
 
     const promptResponse = await listPrompt(
-      'Select a profile to copy variables from',
+      commands.project.profile.add.prompts.copyExistingProfilePrompt,
       {
         choices: [
           ...existingProfiles.map(profile => ({
-            name: getHsProfileFilename({
-              projectProfile: profile,
-            }),
+            name: getHsProfileFilename(profile),
             value: profile,
           })),
           emptyChoice,
@@ -164,43 +175,36 @@ async function handler(
     try {
       const profileToCopyFileContent = await loadHsProfileFile(
         projectSourceDir,
-        {
-          projectProfile: profileToCopyVariablesFrom,
-        }
+        profileToCopyVariablesFrom
       );
 
       if (profileToCopyFileContent?.variables) {
         profileFileContent.variables = profileToCopyFileContent.variables;
       }
     } catch (err) {
-      logger.error('Failed to load profile file to copy from', err);
-      process.exit(EXIT_CODES.ERROR);
+      logger.error(
+        commands.project.profile.add.errors.failedToLoadProfile(
+          profileToCopyVariablesFrom
+        )
+      );
     }
   }
 
-  const filename = getHsProfileFilename({
-    projectProfile: profileName,
-  });
+  const profileFilename = getHsProfileFilename(profileName);
 
   try {
     fs.writeFileSync(
-      path.join(projectSourceDir, filename),
+      path.join(projectSourceDir, profileFilename),
       JSON.stringify(profileFileContent, null, 2),
       'utf8'
     );
   } catch (err) {
-    logger.error('Failed to create profile file', err);
+    logger.error(commands.project.profile.add.errors.failedToCreateProfile);
     process.exit(EXIT_CODES.ERROR);
   }
 
   logger.log('');
-  logger.log(
-    `Successfully created ${chalk.bold(
-      getHsProfileFilename({
-        projectProfile: profileName,
-      })
-    )} profile in your project source directory!`
-  );
+  logger.log(commands.project.profile.add.logs.profileAdded(profileFilename));
   process.exit(EXIT_CODES.SUCCESS);
 }
 
