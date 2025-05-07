@@ -1,5 +1,4 @@
 import { ArgumentsCamelCase, Argv, CommandModule } from 'yargs';
-import chalk from 'chalk';
 import path from 'path';
 import { trackCommandUsage } from '../../../lib/usageTracking';
 import { i18n } from '../../../lib/lang';
@@ -44,8 +43,9 @@ export async function handler(
   }
 
   const { projectConfig, projectDir } = await getProjectConfig();
+  validateProjectConfig(projectConfig, projectDir);
 
-  if (!projectConfig || !projectDir) {
+  if (!projectDir) {
     logger.error(
       i18n(`commands.project.subcommands.dev.errors.noProjectConfig`, {
         accountId: derivedAccountId,
@@ -55,13 +55,16 @@ export async function handler(
     process.exit(EXIT_CODES.ERROR);
   }
 
+  const shouldUseV3Api = useV3Api(projectConfig.platformVersion);
+
   let profileConfig: HsProfileFile | undefined;
 
-  if (args.profile) {
+  if (args.profile && shouldUseV3Api) {
     uiLine();
     uiBetaTag(
-      `Using profile from ${chalk.bold(getHsProfileFilename(args.profile))}
-      `
+      i18n('commands.project.subcommands.dev.logs.usingProfile', {
+        profileFilename: getHsProfileFilename(args.profile),
+      })
     );
 
     try {
@@ -70,23 +73,46 @@ export async function handler(
         args.profile
       );
 
-      if (profile && profile.accountId) {
-        profileConfig = profile;
+      if (!profile) {
+        logger.error(
+          i18n('commands.project.subcommands.dev.errors.profileNotFound', {
+            profileFilename: getHsProfileFilename(args.profile),
+          })
+        );
+        uiLine();
+        process.exit(EXIT_CODES.ERROR);
       }
+      if (!profile.accountId) {
+        logger.error(
+          i18n('commands.project.subcommands.dev.errors.noAccountIdInProfile', {
+            profileFilename: getHsProfileFilename(args.profile),
+          })
+        );
+        uiLine();
+        process.exit(EXIT_CODES.ERROR);
+      }
+
+      profileConfig = profile;
     } catch (e) {
-      logger.error(`Profile ${args.profile} not found`);
+      logger.error(
+        i18n('commands.project.subcommands.dev.errors.profileNotFound', {
+          profileFilename: getHsProfileFilename(args.profile),
+        })
+      );
       uiLine();
       process.exit(EXIT_CODES.ERROR);
     }
 
     if (profileConfig) {
-      logger.log(`Targeting ${uiAccountDescription(profileConfig.accountId)}`);
+      logger.log(
+        i18n('commands.project.subcommands.dev.logs.profileTargetAccount', {
+          account: uiAccountDescription(profileConfig.accountId),
+        })
+      );
     }
     logger.log('');
     uiLine();
-  }
 
-  if (args.profile) {
     trackCommandUsage('project-dev', {}, profileConfig?.accountId);
   }
 
@@ -108,9 +134,7 @@ export async function handler(
     process.exit(EXIT_CODES.ERROR);
   }
 
-  validateProjectConfig(projectConfig, projectDir);
-
-  if (useV3Api(projectConfig.platformVersion)) {
+  if (shouldUseV3Api) {
     await unifiedProjectDevFlow(
       args,
       accountConfig,

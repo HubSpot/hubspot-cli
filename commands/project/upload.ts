@@ -7,8 +7,8 @@ import { isSpecifiedError } from '@hubspot/local-dev-lib/errors/index';
 import {
   loadHsProfileFile,
   getAllHsProfiles,
+  getHsProfileFilename,
 } from '@hubspot/project-parsing-lib';
-import { profileFileName } from '@hubspot/project-parsing-lib/src/lib/constants';
 import { HsProfileFile } from '@hubspot/project-parsing-lib/src/lib/types';
 import { useV3Api } from '../../lib/projects/buildAndDeploy';
 import {
@@ -58,68 +58,83 @@ async function handler(
   const { projectConfig, projectDir } = await getProjectConfig();
   validateProjectConfig(projectConfig, projectDir);
 
-  if (!projectDir) {
-    logger.error('Project directory not found');
-    process.exit(EXIT_CODES.ERROR);
-  }
-
   let targetAccountId;
 
-  if (args.profile) {
-    uiLine();
-    uiBetaTag(
-      `Using profile from ${chalk.bold(`${profileFileName}.${args.profile}.json`)}`
-    );
-    logger.log('');
-
-    let hsProfile: HsProfileFile | undefined;
-
-    try {
-      hsProfile = await loadHsProfileFile(
-        path.join(projectDir, projectConfig.srcDir),
-        args.profile
-      );
-    } catch (err) {
-      logError(err);
+  if (useV3Api(projectConfig.platformVersion)) {
+    if (args.profile) {
       uiLine();
-      process.exit(EXIT_CODES.ERROR);
-    }
-
-    targetAccountId = hsProfile?.accountId;
-
-    if (!targetAccountId) {
-      logger.error(
-        `No accountId found in ${profileFileName}.${args.profile}.json config. Please add an accountId if you want to deploy to a specific profile.`
+      uiBetaTag(
+        i18n('commands.project.subcommands.upload.logs.usingProfile', {
+          profileFilename: getHsProfileFilename(args.profile),
+        })
       );
+      logger.log('');
+
+      let hsProfile: HsProfileFile | undefined;
+
+      try {
+        hsProfile = await loadHsProfileFile(
+          path.join(projectDir!, projectConfig.srcDir),
+          args.profile
+        );
+      } catch (err) {
+        logError(err);
+        uiLine();
+        process.exit(EXIT_CODES.ERROR);
+      }
+
+      targetAccountId = hsProfile?.accountId;
+
+      if (!targetAccountId) {
+        logger.error(
+          i18n(
+            'commands.project.subcommands.upload.errors.noAccountIdInProfile',
+            {
+              profileFilename: getHsProfileFilename(args.profile),
+            }
+          )
+        );
+        uiLine();
+        process.exit(EXIT_CODES.ERROR);
+      } else {
+        logger.log(
+          i18n(
+            'commands.project.subcommands.upload.logs.profileTargetAccount',
+            {
+              account: uiAccountDescription(targetAccountId),
+            }
+          )
+        );
+        if (hsProfile?.variables) {
+          logger.log('');
+          logger.log(
+            i18n('commands.project.subcommands.upload.logs.profileVariables')
+          );
+          Object.entries(hsProfile?.variables ?? {}).forEach(([key, value]) => {
+            logger.log(`  ${key}: ${value}`);
+          });
+        }
+      }
       uiLine();
-      process.exit(EXIT_CODES.ERROR);
+      logger.log('');
     } else {
-      logger.log(`Targeting ${uiAccountDescription(targetAccountId)}`);
-      if (hsProfile?.variables) {
-        logger.log('');
-        logger.log('Applying profile variables:');
-        Object.entries(hsProfile?.variables ?? {}).forEach(([key, value]) => {
-          logger.log(`  ${key}: ${value}`);
-        });
+      // Check if the project has any project profiles configured
+      const existingProfiles = await getAllHsProfiles(
+        path.join(projectDir!, projectConfig.srcDir)
+      );
+
+      if (existingProfiles.length > 0) {
+        logger.error(
+          i18n('commands.project.subcommands.upload.errors.noProfileSpecified')
+        );
+        process.exit(EXIT_CODES.ERROR);
       }
     }
-    uiLine();
-    logger.log('');
-  } else {
-    // Check if the project has any project profiles configured
-    const existingProfiles = await getAllHsProfiles(
-      path.join(projectDir, projectConfig.srcDir)
-    );
+  }
 
-    if (existingProfiles.length > 0) {
-      logger.error(
-        'You are using project profiles, but did not specify a target profile. Specify a profile using the --profile flag.'
-      );
-      process.exit(EXIT_CODES.ERROR);
-    } else {
-      // The user is not using env overrides, so we can use the derived accountId
-      targetAccountId = derivedAccountId;
-    }
+  if (!targetAccountId) {
+    // The user is not using profiles, so we can use the derived accountId
+    targetAccountId = derivedAccountId;
   }
 
   const accountConfig = getAccountConfig(targetAccountId!);
