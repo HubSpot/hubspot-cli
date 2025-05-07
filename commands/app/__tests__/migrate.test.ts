@@ -48,27 +48,46 @@ describe('commands/app/migrate', () => {
     });
 
     it('should call migrateApp2025_2 for platform version 2025.2', async () => {
-      await migrateCommand.handler({
+      const options = {
         derivedAccountId: mockAccountId,
         platformVersion: PLATFORM_VERSIONS.v2025_2,
-      } as ArgumentsCamelCase<MigrateAppArgs>);
+      } as ArgumentsCamelCase<MigrateAppArgs>;
+
+      await migrateCommand.handler(options);
 
       expect(mockedMigrateApp2025_2).toHaveBeenCalledWith(
         mockAccountId,
-        expect.any(Object)
+        options
+      );
+      expect(mockedMigrateApp2023_2).not.toHaveBeenCalled();
+    });
+
+    it('should call migrateApp2025_2 when unstable is true', async () => {
+      const options = {
+        derivedAccountId: mockAccountId,
+        unstable: true,
+      } as ArgumentsCamelCase<MigrateAppArgs>;
+
+      await migrateCommand.handler(options);
+
+      expect(mockedMigrateApp2025_2).toHaveBeenCalledWith(
+        mockAccountId,
+        options
       );
       expect(mockedMigrateApp2023_2).not.toHaveBeenCalled();
     });
 
     it('should call migrateApp2023_2 for platform version 2023.2', async () => {
-      await migrateCommand.handler({
+      const options = {
         derivedAccountId: mockAccountId,
         platformVersion: PLATFORM_VERSIONS.v2023_2,
-      } as ArgumentsCamelCase<MigrateAppArgs>);
+      } as ArgumentsCamelCase<MigrateAppArgs>;
+
+      await migrateCommand.handler(options);
 
       expect(mockedMigrateApp2023_2).toHaveBeenCalledWith(
         mockAccountId,
-        expect.any(Object),
+        options,
         mockAccountConfig
       );
       expect(mockedMigrateApp2025_2).not.toHaveBeenCalled();

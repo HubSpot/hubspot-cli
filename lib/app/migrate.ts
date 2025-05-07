@@ -56,9 +56,10 @@ export type MigrateAppArgs = CommonArgs &
     dest?: string;
     appId?: number;
     platformVersion: string;
+    unstable: boolean;
   };
 
-function getUnmigratableReason(
+export function getUnmigratableReason(
   reasonCode: string,
   projectName: string | undefined,
   accountId: number
@@ -82,7 +83,7 @@ function getUnmigratableReason(
   }
 }
 
-function filterAppsByProjectName(
+export function generateFilterAppsByProjectNameFunction(
   projectConfig?: LoadedProjectConfig
 ): (app: MigrationApp) => boolean {
   return (app: MigrationApp) => {
@@ -93,7 +94,9 @@ function filterAppsByProjectName(
   };
 }
 
-function buildErrorMessageFromMigrationStatus(error: MigrationFailed): string {
+export function buildErrorMessageFromMigrationStatus(
+  error: MigrationFailed
+): string {
   const { componentErrors, projectErrorDetail } = error;
   if (!componentErrors || !componentErrors.length) {
     return projectErrorDetail;
@@ -111,7 +114,7 @@ function buildErrorMessageFromMigrationStatus(error: MigrationFailed): string {
     .join('\n\t- ')}`;
 }
 
-async function fetchMigrationApps(
+export async function fetchMigrationApps(
   appId: MigrateAppArgs['appId'],
   derivedAccountId: number,
   platformVersion: string,
@@ -122,11 +125,11 @@ async function fetchMigrationApps(
   } = await listAppsForMigration(derivedAccountId, platformVersion);
 
   const filteredMigratableApps = migratableApps.filter(
-    filterAppsByProjectName(projectConfig)
+    generateFilterAppsByProjectNameFunction(projectConfig)
   );
 
   const filteredUnmigratableApps = unmigratableApps.filter(
-    filterAppsByProjectName(projectConfig)
+    generateFilterAppsByProjectNameFunction(projectConfig)
   );
 
   const allApps = [...filteredMigratableApps, ...filteredUnmigratableApps];
@@ -179,7 +182,7 @@ async function fetchMigrationApps(
   return allApps;
 }
 
-async function promptForAppToMigrate(
+export async function promptForAppToMigrate(
   allApps: MigrationApp[],
   derivedAccountId: number
 ) {
@@ -213,7 +216,7 @@ async function promptForAppToMigrate(
 
   return selectedAppId;
 }
-async function selectAppToMigrate(
+export async function selectAppToMigrate(
   allApps: MigrationApp[],
   derivedAccountId: number,
   appId?: number
@@ -272,7 +275,7 @@ async function selectAppToMigrate(
   };
 }
 
-async function handleMigrationSetup(
+export async function handleMigrationSetup(
   derivedAccountId: number,
   options: ArgumentsCamelCase<MigrateAppArgs>,
   projectConfig?: LoadedProjectConfig
@@ -350,7 +353,7 @@ async function handleMigrationSetup(
   return { appIdToMigrate, projectName, projectDest };
 }
 
-async function beginMigration(
+export async function beginMigration(
   derivedAccountId: number,
   appId: number,
   platformVersion: string
@@ -429,7 +432,7 @@ async function beginMigration(
   return { migrationId, uidMap };
 }
 
-async function pollMigrationStatus(
+export async function pollMigrationStatus(
   derivedAccountId: number,
   migrationId: number,
   successStates: string[] = []
@@ -440,7 +443,7 @@ async function pollMigrationStatus(
   });
 }
 
-async function finalizeMigration(
+export async function finalizeMigration(
   derivedAccountId: number,
   migrationId: number,
   uidMap: Record<string, string>,
@@ -483,7 +486,7 @@ async function finalizeMigration(
   return pollResponse.buildId;
 }
 
-async function downloadProjectFiles(
+export async function downloadProjectFiles(
   derivedAccountId: number,
   projectName: string,
   buildId: number,
