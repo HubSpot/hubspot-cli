@@ -180,8 +180,7 @@ class LocalDevManager {
     uiLogger.warn(
       lib.LocalDevManager.activeInstallWarning.installCount(
         this.activePublicAppData.name,
-        this.publicAppActiveInstalls,
-        this.publicAppActiveInstalls === 1 ? 'account' : 'accounts'
+        this.publicAppActiveInstalls
       )
     );
     uiLogger.log(lib.LocalDevManager.activeInstallWarning.explanation);
