@@ -63,20 +63,20 @@ describe('migrateApp2023_2', () => {
   };
 
   beforeEach(() => {
-    jest.clearAllMocks();
-    // Mock process.exit to prevent actual exit
-    jest.spyOn(process, 'exit').mockImplementation(code => {
-      throw new Error(`Process.exit called with code ${code}`);
-    });
+    // @ts-expect-error function mismatch
+    jest.spyOn(process, 'exit').mockImplementation(() => {});
   });
 
   it('should exit if account is not an app developer account and not unified', async () => {
     (isAppDeveloperAccount as jest.Mock).mockReturnValue(false);
     (isUnifiedAccount as jest.Mock).mockResolvedValue(false);
 
-    await expect(
-      migrateApp2023_2(mockDerivedAccountId, mockOptions, mockAccountConfig)
-    ).rejects.toThrow('Process.exit called with code 0');
+    await migrateApp2023_2(
+      mockDerivedAccountId,
+      mockOptions,
+      mockAccountConfig
+    );
+    expect(process.exit).toHaveBeenCalledWith(EXIT_CODES.SUCCESS);
   });
 
   it('should proceed with migration for valid app developer account', async () => {
@@ -170,9 +170,12 @@ describe('migrateApp2023_2', () => {
       },
     });
 
-    await expect(
-      migrateApp2023_2(mockDerivedAccountId, mockOptions, mockAccountConfig)
-    ).rejects.toThrow('Process.exit called with code 1');
+    await migrateApp2023_2(
+      mockDerivedAccountId,
+      mockOptions,
+      mockAccountConfig
+    );
+    expect(process.exit).toHaveBeenCalledWith(EXIT_CODES.ERROR);
   });
 
   it('should handle existing project error', async () => {
