@@ -25,6 +25,10 @@ import { fileExists } from '../../../lib/validation';
 
 const command = 'add [name]';
 const describe = uiBetaTag(commands.project.profile.add.describe, false);
+const verboseDescribe = uiBetaTag(
+  commands.project.profile.add.verboseDescribe,
+  false
+);
 
 type ProjectProfileAddArgs = CommonArgs & {
   name?: string;
@@ -228,7 +232,7 @@ function projectProfileAddBuilder(yargs: Argv): Argv<ProjectProfileAddArgs> {
 const builder = makeYargsBuilder<ProjectProfileAddArgs>(
   projectProfileAddBuilder,
   command,
-  describe,
+  verboseDescribe,
   {
     useGlobalOptions: true,
   }

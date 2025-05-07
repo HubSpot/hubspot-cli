@@ -873,8 +873,10 @@ export const commands = {
   project: {
     profile: {
       describe: 'Commands for managing project profiles',
+      verboseDescribe: `Commands for managing project profiles\n\nProfiles are stored at the root of your project's source directory and they make configuration dynamic. Use them to couple specialized configurations of your project to specific HubSpot accounts.\n\nRun ${uiCommandReference('hs project profile add')} to get started!`,
       add: {
         describe: 'Add a new project profile',
+        verboseDescribe: `Add a new project profile\n\nProfiles enable you to reference variables in your component configuration files. Use the syntax ${chalk.bold('\${VARIABLE_NAME}')} to reference profile variables in your component configuration files. Then target the profile using the ${uiCommandReference('--profile')} flag when you upload your project.`,
         example: 'Add a new project profile named hsprofile.qa.json',
         logs: {
           copyExistingProfile: profileName =>

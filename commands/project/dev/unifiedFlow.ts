@@ -101,7 +101,7 @@ export async function unifiedProjectDevFlow(
   let targetTestingAccountId = null;
 
   if (profileConfig) {
-    // TODO for now, bypass the prompt for the testing account if the user has a profile configured
+    // Bypass the prompt for the testing account if the user has a profile configured
     targetTestingAccountId = profileConfig.accountId;
   } else {
     const devAccountPromptResponse =
