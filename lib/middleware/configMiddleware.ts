@@ -57,6 +57,7 @@ export async function injectAccountIdMiddleware(
 const SKIP_CONFIG_VALIDATION = {
   init: { target: true },
   auth: { target: true },
+  'get-started': { target: true },
 };
 
 export async function loadConfigMiddleware(
@@ -98,12 +99,21 @@ export async function loadConfigMiddleware(
       })
     );
     process.exit(EXIT_CODES.ERROR);
-  } else if (!isTargetedCommand(argv._, { init: { target: true } })) {
+  } else if (
+    !isTargetedCommand(argv._, {
+      init: { target: true },
+      'get-started': { target: true },
+    })
+  ) {
     const config = loadConfig(argv.config as string, argv);
 
-    // We don't run validateConfig() for auth because users should be able to run it when
-    // no accounts are configured, but we still want to exit if the config file is not found
-    if (isTargetedCommand(argv._, { auth: { target: true } }) && !config) {
+    // We don't run validateConfig() for auth or get-started because users should be able to run them when
+    // no accounts are configured, but we still want to exit if the config file is not found for auth
+    if (
+      isTargetedCommand(argv._, { auth: { target: true } }) &&
+      !config &&
+      !isTargetedCommand(argv._, { 'get-started': { target: true } })
+    ) {
       process.exit(EXIT_CODES.ERROR);
     }
   }
@@ -136,6 +146,7 @@ const SKIP_ACCOUNT_VALIDATION = {
   accounts: accountsSubCommands,
   sandbox: sandboxesSubCommands,
   sandboxes: sandboxesSubCommands,
+  'get-started': { target: true },
 };
 
 export async function validateAccountOptions(argv: Arguments): Promise<void> {
