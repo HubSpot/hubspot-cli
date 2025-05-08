@@ -1,20 +1,13 @@
-import { Argv, ArgumentsCamelCase } from 'yargs';
+import { Argv } from 'yargs';
 import { logger } from '@hubspot/local-dev-lib/logger';
-import { setLogLevel } from '../lib/commonOpts';
-import { makeYargsBuilder } from '../lib/yargsUtils';
+import { addGlobalOptions } from '../lib/commonOpts';
 import { trackCommandUsage } from '../lib/usageTracking';
 import { EXIT_CODES } from '../lib/enums/exitCodes';
-import { CommonArgs, ConfigArgs } from '../types/Yargs';
 
 export const command = 'get-started';
 export const describe = undefined;
 
-type GetStartedArgs = CommonArgs & ConfigArgs;
-
-export async function handler(
-  args: ArgumentsCamelCase<GetStartedArgs>
-): Promise<void> {
-  setLogLevel(args);
+export function handler(): void {
   trackCommandUsage('get-started');
 
   const now = new Date();
@@ -25,16 +18,8 @@ export async function handler(
   process.exit(EXIT_CODES.SUCCESS);
 }
 
-function getStartedBuilder(yargs: Argv): Argv<GetStartedArgs> {
-  return yargs as Argv<GetStartedArgs>;
-}
+export function builder(yargs: Argv): Argv {
+  addGlobalOptions(yargs);
 
-export const builder = makeYargsBuilder<GetStartedArgs>(
-  getStartedBuilder,
-  command,
-  'Shows the current time and basic information',
-  {
-    useGlobalOptions: true,
-    useConfigOptions: true,
-  }
-);
+  return yargs;
+}
