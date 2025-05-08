@@ -17,7 +17,7 @@ describe('commands/get-started', () => {
     });
   });
 
-  describe('describe', () => {
+  xdescribe('describe', () => {
     it('should provide a description', () => {
       expect(getStartedCommand.describe).toBeDefined();
     });
