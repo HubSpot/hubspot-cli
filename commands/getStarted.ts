@@ -7,7 +7,7 @@ import { EXIT_CODES } from '../lib/enums/exitCodes';
 import { CommonArgs, ConfigArgs } from '../types/Yargs';
 
 export const command = 'get-started';
-export const describe = 'Get started with HubSpot development';
+export const describe = undefined;
 
 type GetStartedArgs = CommonArgs & ConfigArgs;
 
