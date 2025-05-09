@@ -1,19 +1,20 @@
 import { Argv } from 'yargs';
-import { logger } from '@hubspot/local-dev-lib/logger';
 import { addGlobalOptions } from '../lib/commonOpts';
 import { trackCommandUsage } from '../lib/usageTracking';
 import { EXIT_CODES } from '../lib/enums/exitCodes';
+import { GetStarted } from '../lib/getStarted/GetStarted';
 
 export const command = 'get-started';
 export const describe = undefined;
 
-export function handler(): void {
+export async function handler(): Promise<void> {
   trackCommandUsage('get-started');
 
-  const now = new Date();
-  logger.log('Welcome to HubSpot CLI!');
-  logger.log(`The current time is: ${now.toLocaleString()}`);
-  logger.log('More features coming soon...');
+  const getStarted = new GetStarted();
+
+  getStarted.welcomePrompt();
+  await getStarted.checkConfig();
+  await getStarted.initializeApp();
 
   process.exit(EXIT_CODES.SUCCESS);
 }

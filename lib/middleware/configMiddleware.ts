@@ -111,8 +111,8 @@ export async function loadConfigMiddleware(
     // no accounts are configured, but we still want to exit if the config file is not found for auth
     if (
       isTargetedCommand(argv._, { auth: { target: true } }) &&
-      !config &&
-      !isTargetedCommand(argv._, { 'get-started': { target: true } })
+      !isTargetedCommand(argv._, { 'get-started': { target: true } }) &&
+      !config
     ) {
       process.exit(EXIT_CODES.ERROR);
     }
