@@ -6,8 +6,8 @@ const appAssetType: CreatableCmsAsset = {
   dest: ({ name, assetType }) => name || assetType,
   execute: async ({ commandArgs, dest, assetType }) => {
     cloneGithubRepo('HubSpot/crm-card-weather-app', dest, {
-      type: assetType,
       ...commandArgs,
+      type: assetType,
     });
   },
 };

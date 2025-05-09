@@ -68,9 +68,9 @@ const apiSampleAssetType: CreatableCmsAsset = {
       )
     );
     const created = await cloneGithubRepo(`HubSpot/${sampleType}`, filePath, {
+      ...commandArgs,
       type: assetType,
       sourceDir: sampleLanguage,
-      ...commandArgs,
     });
     if (created) {
       if (fs.existsSync(`${filePath}/.env.template`)) {
