@@ -1,10 +1,7 @@
 import { Argv, ArgumentsCamelCase } from 'yargs';
 import { trackCommandUsage } from '../lib/usageTracking';
 import { logger } from '@hubspot/local-dev-lib/logger';
-import {
-  outputLogs,
-  ServerlessLogsOptions,
-} from '../lib/ui/serverlessFunctionLogs';
+import { outputLogs } from '../lib/ui/serverlessFunctionLogs';
 import {
   getFunctionLogs,
   getLatestFunctionLog,
@@ -68,14 +65,6 @@ const endpointLog = async (
     endpoint: functionPath,
   };
 
-  // For UI output
-  const outputOptions: ServerlessLogsOptions = {
-    compact,
-    insertions: {
-      header: functionPath,
-    },
-  };
-
   logger.debug(
     i18n(`commands.logs.gettingLogs`, {
       latest: `${latest}`,
@@ -121,7 +110,7 @@ const endpointLog = async (
   }
 
   if (logsResp) {
-    return outputLogs(logsResp, outputOptions);
+    return outputLogs(logsResp, { compact });
   }
 };
 
@@ -133,7 +122,6 @@ const handler = async (
 ): Promise<void> => {
   const { endpoint: endpointArgValue, latest, derivedAccountId } = options;
 
-  // Use a type that matches what trackCommandUsage expects
   trackCommandUsage(
     'logs',
     latest ? { action: 'latest' } : {},
