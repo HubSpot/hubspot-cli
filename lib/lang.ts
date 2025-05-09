@@ -78,7 +78,7 @@ function getTextValue(lookupDotNotation: string): string {
 
 export function i18n(
   lookupDotNotation: string,
-  options: { [identifier: string]: string | number } = {}
+  options: { [identifier: string]: unknown } = {}
 ): string {
   if (!languageObj) {
     loadLanguageFromYaml();

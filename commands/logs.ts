@@ -67,7 +67,7 @@ const endpointLog = async (
 
   logger.debug(
     i18n(`commands.logs.gettingLogs`, {
-      latest: `${latest}`,
+      latest,
       functionPath,
     })
   );
