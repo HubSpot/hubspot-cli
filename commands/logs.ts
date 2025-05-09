@@ -1,24 +1,49 @@
-// @ts-nocheck
-const {
-  addAccountOptions,
-  addConfigOptions,
-  addUseEnvironmentOptions,
-  addGlobalOptions,
-} = require('../lib/commonOpts');
-const { trackCommandUsage } = require('../lib/usageTracking');
-const { logger } = require('@hubspot/local-dev-lib/logger');
-const { outputLogs } = require('../lib/ui/serverlessFunctionLogs');
-const {
+import { Argv, ArgumentsCamelCase } from 'yargs';
+import { trackCommandUsage } from '../lib/usageTracking';
+import { logger } from '@hubspot/local-dev-lib/logger';
+import {
+  outputLogs,
+  ServerlessLogsOptions,
+} from '../lib/ui/serverlessFunctionLogs';
+import {
   getFunctionLogs,
   getLatestFunctionLog,
-} = require('@hubspot/local-dev-lib/api/functions');
-const { tailLogs } = require('../lib/serverlessLogs');
-const { i18n } = require('../lib/lang');
-const { promptUser } = require('../lib/prompts/promptUtils');
-const { EXIT_CODES } = require('../lib/enums/exitCodes');
-const { isHubSpotHttpError } = require('@hubspot/local-dev-lib/errors/index');
+} from '@hubspot/local-dev-lib/api/functions';
+import { tailLogs } from '../lib/serverlessLogs';
+import { i18n } from '../lib/lang';
+import { promptUser } from '../lib/prompts/promptUtils';
+import { EXIT_CODES } from '../lib/enums/exitCodes';
+import { isHubSpotHttpError } from '@hubspot/local-dev-lib/errors/index';
+import {
+  CommonArgs,
+  ConfigArgs,
+  AccountArgs,
+  YargsCommandModule,
+  EnvironmentArgs,
+} from '../types/Yargs';
+import { makeYargsBuilder } from '../lib/yargsUtils';
+import {
+  GetFunctionLogsResponse,
+  FunctionLog,
+} from '@hubspot/local-dev-lib/types/Functions';
+import { QueryParams } from '@hubspot/local-dev-lib/types/Http';
 
-const handleLogsError = (e, accountId, functionPath) => {
+type LogsArgs = CommonArgs &
+  ConfigArgs &
+  AccountArgs &
+  EnvironmentArgs & {
+    endpoint?: string;
+    latest?: boolean;
+    compact?: boolean;
+    follow?: boolean;
+    limit?: number;
+  };
+
+const handleLogsError = (
+  e: unknown,
+  accountId: number,
+  functionPath: string
+): void => {
   if (isHubSpotHttpError(e) && (e.status === 404 || e.status == 400)) {
     logger.error(
       i18n(`commands.logs.errors.noLogsFound`, {
@@ -29,33 +54,46 @@ const handleLogsError = (e, accountId, functionPath) => {
   }
 };
 
-const endpointLog = async (accountId, functionPath, options) => {
+const endpointLog = async (
+  accountId: number,
+  functionPath: string,
+  options: LogsArgs
+): Promise<void> => {
   const { limit, latest, follow, compact } = options;
-  const requestOptions = {
+
+  const requestParams: QueryParams = {
     limit,
     latest,
     follow,
-    compact,
     endpoint: functionPath,
+  };
+
+  // For UI output
+  const outputOptions: ServerlessLogsOptions = {
+    compact,
+    insertions: {
+      header: functionPath,
+    },
   };
 
   logger.debug(
     i18n(`commands.logs.gettingLogs`, {
-      latest,
+      latest: `${latest}`,
       functionPath,
     })
   );
 
-  let logsResp;
+  let logsResp: GetFunctionLogsResponse | FunctionLog | undefined;
 
   if (follow) {
-    const tailCall = after =>
+    const tailCall = (after?: string) =>
       getFunctionLogs(accountId, functionPath, { after });
     const fetchLatest = () => {
       try {
         return getLatestFunctionLog(accountId, functionPath);
       } catch (e) {
         handleLogsError(e, accountId, functionPath);
+        return Promise.reject(e);
       }
     };
 
@@ -73,7 +111,7 @@ const endpointLog = async (accountId, functionPath, options) => {
       const { data } = await getFunctionLogs(
         accountId,
         functionPath,
-        requestOptions
+        requestParams
       );
       logsResp = data;
     } catch (e) {
@@ -83,32 +121,41 @@ const endpointLog = async (accountId, functionPath, options) => {
   }
 
   if (logsResp) {
-    return outputLogs(logsResp, requestOptions);
+    return outputLogs(logsResp, outputOptions);
   }
 };
 
-exports.command = 'logs [endpoint]';
-exports.describe = i18n(`commands.logs.describe`);
+const command = 'logs [endpoint]';
+const describe = i18n(`commands.logs.describe`);
 
-exports.handler = async options => {
+const handler = async (
+  options: ArgumentsCamelCase<LogsArgs>
+): Promise<void> => {
   const { endpoint: endpointArgValue, latest, derivedAccountId } = options;
 
-  trackCommandUsage('logs', { latest }, derivedAccountId);
+  // Use a type that matches what trackCommandUsage expects
+  trackCommandUsage(
+    'logs',
+    latest ? { action: 'latest' } : {},
+    derivedAccountId
+  );
 
-  const { endpointPromptValue } = await promptUser({
+  const { endpointPromptValue } = await promptUser<{
+    endpointPromptValue: string;
+  }>({
     name: 'endpointPromptValue',
     message: i18n(`commands.logs.endpointPrompt`),
     when: !endpointArgValue,
   });
 
-  endpointLog(
+  await endpointLog(
     derivedAccountId,
     endpointArgValue || endpointPromptValue,
     options
   );
 };
 
-exports.builder = yargs => {
+function logsBuilder(yargs: Argv): Argv<LogsArgs> {
   yargs.positional('endpoint', {
     describe: i18n(`commands.logs.positionals.endpoint.describe`),
     type: 'string',
@@ -142,10 +189,23 @@ exports.builder = yargs => {
     ['$0 logs my-endpoint --follow', i18n(`commands.logs.examples.follow`)],
   ]);
 
-  addConfigOptions(yargs);
-  addAccountOptions(yargs);
-  addUseEnvironmentOptions(yargs);
-  addGlobalOptions(yargs);
+  return yargs as Argv<LogsArgs>;
+}
 
-  return yargs;
+const builder = makeYargsBuilder<LogsArgs>(logsBuilder, command, describe, {
+  useGlobalOptions: true,
+  useConfigOptions: true,
+  useAccountOptions: true,
+  useEnvironmentOptions: true,
+});
+
+const logsCommand: YargsCommandModule<unknown, LogsArgs> = {
+  command,
+  describe,
+  builder,
+  handler,
 };
+
+export default logsCommand;
+
+module.exports = logsCommand;

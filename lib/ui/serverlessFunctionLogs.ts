@@ -17,29 +17,38 @@ const LOG_STATUS_COLORS: { [key: string]: (status: string) => string } = {
 
 type LogStatus = keyof typeof LOG_STATUS_COLORS;
 
-type Options = {
+export type ServerlessLogsOptions = {
   compact?: boolean;
   insertions?: {
     header?: string;
   };
 };
 
-function errorHandler(log: FunctionLog, options: Options): string {
+function errorHandler(
+  log: FunctionLog,
+  options: ServerlessLogsOptions
+): string {
   return `${formatLogHeader(log, options)}${formatError(log, options)}`;
 }
 
 const logHandler: {
-  [key in LogStatus]: (log: FunctionLog, options: Options) => string;
+  [key in LogStatus]: (
+    log: FunctionLog,
+    options: ServerlessLogsOptions
+  ) => string;
 } = {
   ERROR: errorHandler,
   UNHANDLED_ERROR: errorHandler,
   HANDLED_ERROR: errorHandler,
-  SUCCESS: (log: FunctionLog, options: Options): string => {
+  SUCCESS: (log: FunctionLog, options: ServerlessLogsOptions): string => {
     return `${formatLogHeader(log, options)}${formatSuccess(log, options)}`;
   },
 };
 
-function formatSuccess(log: FunctionLog, options: Options): string {
+function formatSuccess(
+  log: FunctionLog,
+  options: ServerlessLogsOptions
+): string {
   if (!log.log || options.compact) {
     return '';
   }
@@ -47,7 +56,7 @@ function formatSuccess(log: FunctionLog, options: Options): string {
   return `\n${log.log}`;
 }
 
-function formatError(log: FunctionLog, options: Options): string {
+function formatError(log: FunctionLog, options: ServerlessLogsOptions): string {
   if (!log.error || options.compact) {
     return '';
   }
@@ -55,7 +64,10 @@ function formatError(log: FunctionLog, options: Options): string {
   return `${log.error.type}: ${log.error.message}\n${formatStackTrace(log)}`;
 }
 
-function formatLogHeader(log: FunctionLog, options: Options): string {
+function formatLogHeader(
+  log: FunctionLog,
+  options: ServerlessLogsOptions
+): string {
   const color = LOG_STATUS_COLORS[log.status];
   const headerInsertion =
     options && options.insertions && options.insertions.header;
@@ -82,7 +94,10 @@ function formatExecutionTime(log: FunctionLog): string {
   return `${chalk.whiteBright('Execution Time:')} ${log.executionTime}ms`;
 }
 
-function processLog(log: FunctionLog, options: Options): string | void {
+function processLog(
+  log: FunctionLog,
+  options: ServerlessLogsOptions
+): string | void {
   try {
     return logHandler[log.status](log, options);
   } catch (e) {
@@ -107,7 +122,7 @@ function isLogsResponse(
 
 function processLogs(
   logsResp: GetFunctionLogsResponse | FunctionLog,
-  options: Options
+  options: ServerlessLogsOptions
 ): string | void {
   const isLogsResp = isLogsResponse(logsResp);
 
@@ -125,7 +140,7 @@ function processLogs(
 
 export function outputLogs(
   logsResp: GetFunctionLogsResponse | FunctionLog,
-  options: Options
+  options: ServerlessLogsOptions
 ): void {
   logger.log(processLogs(logsResp, options));
 }
