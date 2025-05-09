@@ -1,13 +1,9 @@
 import { ArgumentsCamelCase, Argv, CommandModule } from 'yargs';
-import path from 'path';
 import { trackCommandUsage } from '../../../lib/usageTracking';
 import { i18n } from '../../../lib/lang';
 import { logger } from '@hubspot/local-dev-lib/logger';
 import { getAccountConfig } from '@hubspot/local-dev-lib/config';
-import {
-  loadHsProfileFile,
-  getHsProfileFilename,
-} from '@hubspot/project-parsing-lib';
+import { getHsProfileFilename } from '@hubspot/project-parsing-lib';
 import { HsProfileFile } from '@hubspot/project-parsing-lib/src/lib/types';
 import {
   getProjectConfig,
@@ -26,6 +22,7 @@ import { deprecatedProjectDevFlow } from './deprecatedFlow';
 import { unifiedProjectDevFlow } from './unifiedFlow';
 import { useV3Api } from '../../../lib/projects/buildAndDeploy';
 import { makeYargsBuilder } from '../../../lib/yargsUtils';
+import { loadProfile } from '../../../lib/projectProfiles';
 
 export const command = 'dev';
 export const describe = uiBetaTag(
@@ -57,7 +54,7 @@ export async function handler(
 
   const shouldUseV3Api = useV3Api(projectConfig.platformVersion);
 
-  let profileConfig: HsProfileFile | undefined;
+  let profile: HsProfileFile | undefined;
 
   if (args.profile && shouldUseV3Api) {
     uiLine();
@@ -67,57 +64,28 @@ export async function handler(
       })
     );
 
-    try {
-      const profile = await loadHsProfileFile(
-        path.join(projectDir, projectConfig.srcDir),
-        args.profile
-      );
+    profile = await loadProfile(projectConfig, projectDir, args.profile);
 
-      if (!profile) {
-        logger.error(
-          i18n('commands.project.subcommands.dev.errors.profileNotFound', {
-            profileFilename: getHsProfileFilename(args.profile),
-          })
-        );
-        uiLine();
-        process.exit(EXIT_CODES.ERROR);
-      }
-      if (!profile.accountId) {
-        logger.error(
-          i18n('commands.project.subcommands.dev.errors.noAccountIdInProfile', {
-            profileFilename: getHsProfileFilename(args.profile),
-          })
-        );
-        uiLine();
-        process.exit(EXIT_CODES.ERROR);
-      }
-
-      profileConfig = profile;
-    } catch (e) {
-      logger.error(
-        i18n('commands.project.subcommands.dev.errors.profileNotFound', {
-          profileFilename: getHsProfileFilename(args.profile),
-        })
-      );
+    if (!profile) {
+      logger.log('');
       uiLine();
       process.exit(EXIT_CODES.ERROR);
     }
 
-    if (profileConfig) {
-      logger.log(
-        i18n('commands.project.subcommands.dev.logs.profileTargetAccount', {
-          account: uiAccountDescription(profileConfig.accountId),
-        })
-      );
-    }
+    logger.log(
+      i18n('commands.project.subcommands.dev.logs.profileTargetAccount', {
+        account: uiAccountDescription(profile.accountId),
+      })
+    );
+
     logger.log('');
     uiLine();
 
-    trackCommandUsage('project-dev', {}, profileConfig?.accountId);
+    trackCommandUsage('project-dev', {}, profile.accountId);
   }
 
   const accountConfig = getAccountConfig(
-    profileConfig?.accountId || derivedAccountId
+    profile?.accountId || derivedAccountId
   );
 
   uiBetaTag(i18n(`commands.project.subcommands.dev.logs.betaMessage`));
@@ -140,7 +108,7 @@ export async function handler(
       accountConfig,
       projectConfig,
       projectDir,
-      profileConfig
+      profile
     );
   } else {
     await deprecatedProjectDevFlow(

@@ -5,11 +5,9 @@ import { logger } from '@hubspot/local-dev-lib/logger';
 import { getAccountConfig } from '@hubspot/local-dev-lib/config';
 import { isSpecifiedError } from '@hubspot/local-dev-lib/errors/index';
 import {
-  loadHsProfileFile,
   getAllHsProfiles,
   getHsProfileFilename,
 } from '@hubspot/project-parsing-lib';
-import { HsProfileFile } from '@hubspot/project-parsing-lib/src/lib/types';
 import { useV3Api } from '../../lib/projects/buildAndDeploy';
 import {
   uiBetaTag,
@@ -35,6 +33,7 @@ import { EXIT_CODES } from '../../lib/enums/exitCodes';
 import { CommonArgs, YargsCommandModule } from '../../types/Yargs';
 import { ProjectPollResult } from '../../types/Projects';
 import { makeYargsBuilder } from '../../lib/yargsUtils';
+import { loadProfile } from '../../lib/projectProfiles';
 
 const command = 'upload';
 const describe = uiBetaTag(
@@ -70,65 +69,49 @@ async function handler(
       );
       logger.log('');
 
-      let hsProfile: HsProfileFile | undefined;
-
-      try {
-        hsProfile = await loadHsProfileFile(
-          path.join(projectDir!, projectConfig.srcDir),
-          args.profile
-        );
-      } catch (err) {
-        logError(err);
-        uiLine();
-        process.exit(EXIT_CODES.ERROR);
-      }
-
-      targetAccountId = hsProfile?.accountId;
-
-      if (!targetAccountId) {
-        logger.error(
-          i18n(
-            'commands.project.subcommands.upload.errors.noAccountIdInProfile',
-            {
-              profileFilename: getHsProfileFilename(args.profile),
-            }
-          )
-        );
-        uiLine();
-        process.exit(EXIT_CODES.ERROR);
-      } else {
-        logger.log(
-          i18n(
-            'commands.project.subcommands.upload.logs.profileTargetAccount',
-            {
-              account: uiAccountDescription(targetAccountId),
-            }
-          )
-        );
-        if (hsProfile?.variables) {
-          logger.log('');
-          logger.log(
-            i18n('commands.project.subcommands.upload.logs.profileVariables')
-          );
-          Object.entries(hsProfile?.variables ?? {}).forEach(([key, value]) => {
-            logger.log(`  ${key}: ${value}`);
-          });
-        }
-      }
-      uiLine();
-      logger.log('');
-    } else {
-      // Check if the project has any project profiles configured
-      const existingProfiles = await getAllHsProfiles(
-        path.join(projectDir!, projectConfig.srcDir)
+      const profile = await loadProfile(
+        projectConfig,
+        projectDir,
+        args.profile
       );
 
-      if (existingProfiles.length > 0) {
-        logger.error(
-          i18n('commands.project.subcommands.upload.errors.noProfileSpecified')
-        );
+      if (!profile) {
+        logger.log('');
+        uiLine();
         process.exit(EXIT_CODES.ERROR);
       }
+
+      targetAccountId = profile.accountId;
+
+      logger.log(
+        i18n('commands.project.subcommands.upload.logs.profileTargetAccount', {
+          account: uiAccountDescription(targetAccountId),
+        })
+      );
+
+      if (profile.variables) {
+        logger.log('');
+        logger.log(
+          i18n('commands.project.subcommands.upload.logs.profileVariables')
+        );
+        Object.entries(profile.variables ?? {}).forEach(([key, value]) => {
+          logger.log(`  ${key}: ${value}`);
+        });
+      }
+    }
+    uiLine();
+    logger.log('');
+  } else {
+    // Check if the project has any project profiles configured
+    const existingProfiles = await getAllHsProfiles(
+      path.join(projectDir!, projectConfig.srcDir)
+    );
+
+    if (existingProfiles.length > 0) {
+      logger.error(
+        i18n('commands.project.subcommands.upload.errors.noProfileSpecified')
+      );
+      process.exit(EXIT_CODES.ERROR);
     }
   }
 
@@ -247,6 +230,8 @@ function projectUploadBuilder(yargs: Argv): Argv<ProjectUploadArgs> {
       hidden: true,
     },
   });
+
+  yargs.conflicts('profile', 'account');
 
   yargs.example([
     [

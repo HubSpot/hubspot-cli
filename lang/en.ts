@@ -2791,6 +2791,20 @@ export const lib = {
         )} to authenticate the App Developer Account ${parentAccountId} associated with ${accountIdentifier}.`,
     },
   },
+  projectProfiles: {
+    loadProfile: {
+      errors: {
+        noProjectConfig:
+          'No project config found. Please run this command from a project directory.',
+        profileNotFound: profileName =>
+          `Profile ${chalk.bold(profileName)} not found.`,
+        missingAccountId: profileName =>
+          `Profile ${chalk.bold(profileName)} is missing an account id.`,
+        failedToLoadProfile: profileName =>
+          `Failed to load profile ${chalk.bold(profileName)}.`,
+      },
+    },
+  },
   projects: {
     create: {
       errors: {

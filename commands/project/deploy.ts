@@ -27,6 +27,7 @@ import {
   YargsCommandModule,
 } from '../../types/Yargs';
 import { makeYargsBuilder } from '../../lib/yargsUtils';
+import { loadProfile } from '../../lib/projectProfiles';
 
 const command = 'deploy';
 const describe = uiBetaTag(
@@ -41,6 +42,7 @@ export type ProjectDeployArgs = CommonArgs &
     project?: string;
     build?: number;
     buildId?: number;
+    profile?: string;
   };
 
 function validateBuildId(
@@ -86,13 +88,28 @@ async function handler(
   const { project: projectOption, buildId: buildIdOption } = args;
   const accountType = accountConfig && accountConfig.accountType;
 
-  trackCommandUsage(
-    'project-deploy',
-    accountType ? { type: accountType } : undefined,
-    derivedAccountId
-  );
+  const { projectConfig, projectDir } = await getProjectConfig(undefined, true);
 
-  const { projectConfig } = await getProjectConfig();
+  const shouldUseV3Api = useV3Api(projectConfig?.platformVersion);
+
+  let targetAccountId: number | undefined;
+
+  if (!(args.profile && shouldUseV3Api)) {
+    trackCommandUsage(
+      'project-deploy',
+      accountType ? { type: accountType } : undefined,
+      derivedAccountId
+    );
+    targetAccountId = derivedAccountId;
+  } else {
+    const profile = await loadProfile(projectConfig, projectDir, args.profile);
+
+    if (!profile) {
+      process.exit(EXIT_CODES.ERROR);
+    }
+
+    targetAccountId = profile.accountId;
+  }
 
   let projectName = projectOption;
 
@@ -100,7 +117,7 @@ async function handler(
     projectName = projectConfig.name;
   }
 
-  const namePromptResponse = await projectNamePrompt(derivedAccountId, {
+  const namePromptResponse = await projectNamePrompt(targetAccountId, {
     project: projectName,
   });
   projectName = namePromptResponse.projectName;
@@ -110,7 +127,7 @@ async function handler(
   try {
     const {
       data: { latestBuild, deployedBuildId },
-    } = await fetchProject(derivedAccountId, projectName);
+    } = await fetchProject(targetAccountId, projectName);
 
     if (!latestBuild || !latestBuild.buildId) {
       logger.error(i18n(`commands.project.subcommands.deploy.errors.noBuilds`));
@@ -123,7 +140,7 @@ async function handler(
         deployedBuildId,
         latestBuild.buildId,
         projectName,
-        derivedAccountId
+        targetAccountId
       );
       if (validationResult !== true) {
         logger.error(validationResult);
@@ -145,7 +162,7 @@ async function handler(
             deployedBuildId,
             latestBuild.buildId,
             projectName,
-            derivedAccountId
+            targetAccountId
           ),
       });
       buildIdToDeploy = deployBuildIdPromptResponse.buildId;
@@ -159,7 +176,7 @@ async function handler(
     }
 
     const { data: deployResp } = await deployProject(
-      derivedAccountId,
+      targetAccountId,
       projectName,
       buildIdToDeploy,
       useV3Api(projectConfig?.platformVersion)
@@ -171,7 +188,7 @@ async function handler(
     }
 
     await pollDeployStatus(
-      derivedAccountId,
+      targetAccountId,
       projectName,
       Number(deployResp.id),
       buildIdToDeploy
@@ -181,7 +198,7 @@ async function handler(
       logger.error(
         i18n(`commands.project.subcommands.deploy.errors.projectNotFound`, {
           projectName: chalk.bold(projectName),
-          accountIdentifier: uiAccountDescription(derivedAccountId),
+          accountIdentifier: uiAccountDescription(targetAccountId),
           command: uiCommandReference('hs project upload'),
         })
       );
@@ -191,7 +208,7 @@ async function handler(
       logError(
         e,
         new ApiErrorContext({
-          accountId: derivedAccountId,
+          accountId: targetAccountId,
           request: 'project deploy',
         })
       );
@@ -215,7 +232,18 @@ function projectDeployBuilder(yargs: Argv): Argv<ProjectDeployArgs> {
       ),
       type: 'number',
     },
+    profile: {
+      alias: ['p'],
+      describe: i18n(
+        `commands.project.subcommands.deploy.options.profile.describe`
+      ),
+      type: 'string',
+      hidden: true,
+    },
   });
+
+  yargs.conflicts('profile', 'project');
+  yargs.conflicts('profile', 'account');
 
   yargs.example([
     [

@@ -46,7 +46,8 @@ export interface LoadedProjectConfig {
 }
 
 export async function getProjectConfig(
-  dir?: string
+  dir?: string,
+  silent: boolean = false
 ): Promise<LoadedProjectConfig> {
   const configPath = getProjectConfigPath(dir);
   if (!configPath) {
@@ -61,7 +62,9 @@ export async function getProjectConfig(
       projectConfig,
     };
   } catch (e) {
-    uiLogger.error(lib.projects.getProjectConfig.error);
+    if (!silent) {
+      uiLogger.error(lib.projects.getProjectConfig.error);
+    }
     return { projectConfig: null, projectDir: null };
   }
 }

@@ -784,7 +784,6 @@ en:
             profileVariables: "Applying profile variables: "
           errors:
             projectLockedError: "Your project is locked. This may mean that another user is running the {{#bold}}`hs project dev`{{/bold}} command for this project. If this is you, unlock the project in Projects UI."
-            noAccountIdInProfile: "No accountId found in {{#bold}}{{ profileFilename }}{{/bold}}."
             noProfileSpecified: "You are using project profiles, but did not specify a target profile. Specify a profile using the --profile flag."
           options:
             forceCreate:
