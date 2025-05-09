@@ -22,7 +22,7 @@ import {
   CommonArgs,
   ConfigArgs,
   EnvironmentArgs,
-  YargsCommandModuleBucket,
+  YargsCommandModule,
 } from '../types/Yargs';
 import { WatchErrorHandler } from '@hubspot/local-dev-lib/types/Files';
 
@@ -46,21 +46,21 @@ const command = 'watch [src] [dest]';
 const describe = i18n(`commands.watch.describe`);
 
 const handler = async (
-  options: ArgumentsCamelCase<WatchCommandArgs>
+  args: ArgumentsCamelCase<WatchCommandArgs>
 ): Promise<void> => {
   const { remove, initialUpload, disableInitial, notify, derivedAccountId } =
-    options;
+    args;
 
-  if (!validateCmsPublishMode(options)) {
+  if (!validateCmsPublishMode(args)) {
     process.exit(EXIT_CODES.ERROR);
   }
 
-  const cmsPublishMode = getCmsPublishMode(options);
+  const cmsPublishMode = getCmsPublishMode(args);
 
-  const uploadPromptAnswers = await uploadPrompt(options);
+  const uploadPromptAnswers = await uploadPrompt(args);
 
-  const src = options.src || uploadPromptAnswers.src;
-  const dest = options.dest || uploadPromptAnswers.dest;
+  const src = args.src || uploadPromptAnswers.src;
+  const dest = args.dest || uploadPromptAnswers.dest;
 
   const absoluteSrcPath = path.resolve(getCwd(), src);
   try {
@@ -99,7 +99,7 @@ const handler = async (
   if (initialUpload) {
     filesToUpload = await getUploadableFileList(
       absoluteSrcPath,
-      options.convertFields
+      args.convertFields
     );
   }
 
@@ -149,7 +149,7 @@ const handler = async (
       remove,
       disableInitial: !initialUpload,
       notify,
-      commandOptions: options,
+      commandOptions: args,
       filePaths: filesToUpload,
     },
     null,
@@ -222,7 +222,7 @@ const builder = makeYargsBuilder<WatchCommandArgs>(
   }
 );
 
-const watchCommand: YargsCommandModuleBucket = {
+const watchCommand: YargsCommandModule<unknown, WatchCommandArgs> = {
   command,
   describe,
   handler: handler as unknown as (
