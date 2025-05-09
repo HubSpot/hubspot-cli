@@ -5,6 +5,7 @@ const deploy = require('./function/deploy');
 const server = require('./function/server');
 import { i18n } from '../lib/lang';
 import { makeYargsBuilder } from '../lib/yargsUtils';
+import { YargsCommandModuleBucket } from '../types/Yargs';
 
 export const command = ['function', 'functions'];
 export const describe = i18n(`commands.function.describe`);
@@ -17,7 +18,7 @@ function functionBuilder(yargs: Argv): Argv {
 
 const builder = makeYargsBuilder(functionBuilder, command, describe);
 
-const functionCommand = {
+const functionCommand: YargsCommandModuleBucket = {
   command,
   describe,
   builder,
