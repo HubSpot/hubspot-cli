@@ -2,25 +2,37 @@ import { Argv, ArgumentsCamelCase } from 'yargs';
 import { downloadFileOrFolder } from '@hubspot/local-dev-lib/fileMapper';
 import { logger } from '@hubspot/local-dev-lib/logger';
 import { CmsPublishMode } from '@hubspot/local-dev-lib/types/Files';
-import { addCmsPublishModeOptions, getCmsPublishMode } from '../lib/commonOpts';
+import {
+  addCmsPublishModeOptions,
+  addOverwriteOptions,
+  getCmsPublishMode,
+} from '../lib/commonOpts';
 import { resolveLocalPath } from '../lib/filesystem';
 import { validateCmsPublishMode } from '../lib/validation';
 import { trackCommandUsage } from '../lib/usageTracking';
 import { i18n } from '../lib/lang';
 import { makeYargsBuilder } from '../lib/yargsUtils';
-import { YargsCommandModule } from '../types/Yargs';
+import {
+  AccountArgs,
+  ConfigArgs,
+  EnvironmentArgs,
+  YargsCommandModule,
+} from '../types/Yargs';
 
 import { EXIT_CODES } from '../lib/enums/exitCodes';
 import { logError } from '../lib/errorHandlers/index';
 
-interface FetchCommandArgs {
+type FetchCommandArgs = {
   src: string;
   dest?: string;
   derivedAccountId?: number;
   cmsPublishMode?: CmsPublishMode;
   staging?: boolean;
   assetVersion?: number;
-}
+  overwrite?: boolean;
+} & ConfigArgs &
+  AccountArgs &
+  EnvironmentArgs;
 
 const command = 'fetch <src> [dest]';
 const describe = i18n('commands.fetch.describe');
@@ -44,7 +56,7 @@ const handler = async (
 
   trackCommandUsage('fetch', { mode: cmsPublishMode }, derivedAccountId);
 
-  const { assetVersion, staging } = options;
+  const { assetVersion, staging, overwrite } = options;
   try {
     // Fetch and write file/folder.
     await downloadFileOrFolder(
@@ -56,6 +68,7 @@ const handler = async (
         assetVersion:
           assetVersion !== undefined ? `${assetVersion}` : assetVersion,
         staging,
+        overwrite,
       }
     );
   } catch (err) {
@@ -92,6 +105,7 @@ const fetchBuilder = (yargs: Argv): Argv<FetchCommandArgs> => {
   });
 
   addCmsPublishModeOptions(yargs, { read: true });
+  addOverwriteOptions(yargs);
   return yargs as Argv<FetchCommandArgs>;
 };
 
