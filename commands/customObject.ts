@@ -36,3 +36,10 @@ export function builder(yargs: Argv): Argv {
 
   return yargs;
 }
+
+module.exports = {
+  command,
+  describe,
+  builder,
+  handler: () => {},
+};
