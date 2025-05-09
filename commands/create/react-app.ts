@@ -1,11 +1,17 @@
-// @ts-nocheck
-const { cloneGithubRepo } = require('@hubspot/local-dev-lib/github');
+import { cloneGithubRepo } from '@hubspot/local-dev-lib/github';
+import { CreatableCmsAsset } from '../../types/Cms';
 
-module.exports = {
+const ReactAppAssetType: CreatableCmsAsset = {
+  hidden: false,
   dest: ({ name, assetType }) => name || assetType,
-  execute: async ({ options, dest, assetType }) =>
+  execute: async ({ commandArgs, dest, assetType }) => {
     cloneGithubRepo('HubSpot/cms-react-boilerplate', dest, {
       type: assetType,
-      ...options,
-    }),
+      ...commandArgs,
+    });
+  },
 };
+
+export default ReactAppAssetType;
+// TODO: Remove
+module.exports = ReactAppAssetType;
