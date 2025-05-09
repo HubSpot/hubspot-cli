@@ -122,6 +122,3 @@ const cmsGetReactModuleCommand: YargsCommandModule<
 };
 
 export default cmsGetReactModuleCommand;
-
-// TODO remove this after cms.ts is ported to TypeScript
-module.exports = cmsGetReactModuleCommand;

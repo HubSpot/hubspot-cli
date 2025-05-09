@@ -1,22 +1,15 @@
-// @ts-nocheck
-const { i18n } = require('../lib/lang');
-const {
-  addConfigOptions,
-  addAccountOptions,
-  addGlobalOptions,
-} = require('../lib/commonOpts');
-const lighthouseScore = require('./cms/lighthouseScore');
-const convertFields = require('./cms/convertFields');
-const getReactModule = require('./cms/getReactModule');
+import { Argv } from 'yargs';
+import { i18n } from '../lib/lang';
+import { makeYargsBuilder } from '../lib/yargsUtils';
+import { YargsCommandModuleBucket } from '../types/Yargs';
+import lighthouseScore from './cms/lighthouseScore';
+import convertFields from './cms/convertFields';
+import getReactModule from './cms/getReactModule';
 
-exports.command = 'cms';
-exports.describe = i18n(`commands.cms.describe`);
+const command = 'cms';
+const describe = i18n(`commands.cms.describe`);
 
-exports.builder = yargs => {
-  addConfigOptions(yargs);
-  addAccountOptions(yargs);
-  addGlobalOptions(yargs);
-
+function cmsBuilder(yargs: Argv): Argv {
   yargs
     .command(lighthouseScore)
     .command(convertFields)
@@ -24,4 +17,18 @@ exports.builder = yargs => {
     .demandCommand(1, '');
 
   return yargs;
+}
+
+const builder = makeYargsBuilder(cmsBuilder, command, describe);
+
+const cmsCommand: YargsCommandModuleBucket = {
+  command,
+  describe,
+  builder,
+  handler: () => {},
 };
+
+export default cmsCommand;
+
+// TODO Remove this legacy export once we've migrated all commands to TS
+module.exports = cmsCommand;
