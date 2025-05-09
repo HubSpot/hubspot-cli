@@ -1,9 +1,9 @@
 import yargs, { Argv } from 'yargs';
-import * as clear from '../hubdb/clear';
-import * as create from '../hubdb/create';
-import * as deleteCommand from '../hubdb/delete';
-import * as fetch from '../hubdb/fetch';
-import * as hubdbCommands from '../hubdb';
+import clear from '../hubdb/clear';
+import create from '../hubdb/create';
+import deleteCommand from '../hubdb/delete';
+import fetch from '../hubdb/fetch';
+import hubdbCommands from '../hubdb';
 
 jest.mock('yargs');
 jest.mock('../hubdb/clear');
