@@ -1,4 +1,3 @@
-// @ts-nocheck
 import chalk from 'chalk';
 import {
   uiAccountDescription,
@@ -8,29 +7,27 @@ import {
 } from '../lib/ui';
 import { getProjectSettingsUrl } from '../lib/projects/urls';
 
-type LangFunction = (...args: (string | number)[]) => string;
-
-type LangObject = {
-  [key: string]: string | LangFunction | LangObject;
-};
-
 export const commands = {
   generalErrors: {
     updateNotify: {
       notifyTitle: 'Update available',
-      cmsUpdateNotification: (packageName, updateCommand) =>
+      cmsUpdateNotification: (packageName: string, updateCommand: string) =>
         `${chalk.bold('The CMS CLI is now the HubSpot CLI')}\n\nTo upgrade, uninstall ${chalk.bold(packageName)}\nand then run ${updateCommand}`,
-      cliUpdateNotification: (currentVersion, latestVersion, updateCommand) =>
+      cliUpdateNotification: (
+        currentVersion: string,
+        latestVersion: string,
+        updateCommand: string
+      ) =>
         `HubSpot CLI version ${chalk.cyan(chalk.bold(currentVersion))} is outdated.\nRun ${updateCommand} to upgrade to version ${chalk.cyan(chalk.bold(latestVersion))}`,
     },
-    srcIsProject: (src, command) =>
+    srcIsProject: (src: string, command: string) =>
       `"${src}" is in a project folder. Did you mean "hs project ${command}"?`,
     handleDeprecatedEnvVariables: {
       portalEnvVarDeprecated:
         'The HUBSPOT_PORTAL_ID environment variable is deprecated. Please use HUBSPOT_ACCOUNT_ID instead.',
     },
     loadConfigMiddleware: {
-      configFileExists: configPath =>
+      configFileExists: (configPath: string) =>
         `A configuration file already exists at ${configPath}. To specify a new configuration file, delete the existing one and try again.`,
     },
   },
@@ -46,10 +43,11 @@ export const commands = {
     subcommands: {
       list: {
         accounts: `${chalk.bold('Accounts')}:`,
-        defaultAccount: account =>
+        defaultAccount: (account: string) =>
           `${chalk.bold('Default account')}: ${account}`,
         describe: 'List names of accounts defined in config.',
-        configPath: configPath => `${chalk.bold('Config path')}: ${configPath}`,
+        configPath: (configPath: string) =>
+          `${chalk.bold('Config path')}: ${configPath}`,
         labels: {
           accountId: 'Account ID',
           authType: 'Auth Type',
@@ -67,7 +65,7 @@ export const commands = {
           },
         },
         success: {
-          renamed: (name, newName) =>
+          renamed: (name: string, newName: string) =>
             `Account "${name}" renamed to "${newName}"`,
         },
       },
@@ -75,7 +73,7 @@ export const commands = {
         describe:
           'Set the Hubspot account to use as the default account. The default account can be overridden with the "--account" option.',
         errors: {
-          accountNotFound: (specifiedAccount, configPath) =>
+          accountNotFound: (specifiedAccount: string, configPath: string) =>
             `The account "${specifiedAccount}" could not be found in ${configPath}`,
         },
         examples: {
@@ -92,7 +90,7 @@ export const commands = {
         },
         promptMessage: 'Select an account to use as the default',
         success: {
-          defaultAccountUpdated: accountName =>
+          defaultAccountUpdated: (accountName: string) =>
             `Default account updated to "${accountName}"`,
         },
       },
@@ -105,7 +103,7 @@ export const commands = {
           selectAccountToRemove: 'Select an account to remove from the config',
         },
         errors: {
-          accountNotFound: (specifiedAccount, configPath) =>
+          accountNotFound: (specifiedAccount: string, configPath: string) =>
             `The account "${specifiedAccount}" could not be found in ${configPath}`,
         },
         examples: {
@@ -119,12 +117,13 @@ export const commands = {
         },
         promptMessage: 'Select an account to remove',
         success: {
-          accountRemoved: accountName =>
+          accountRemoved: (accountName: string) =>
             `Account "${accountName}" removed from the config`,
         },
       },
       info: {
-        accountId: accountId => `${chalk.bold('Account ID')}: ${accountId}`,
+        accountId: (accountId: string) =>
+          `${chalk.bold('Account ID')}: ${accountId}`,
         describe:
           'Print information about the default account, or about the account specified with the "account" option.',
         errors: {
@@ -138,7 +137,7 @@ export const commands = {
           nameBased:
             'Print information for the account in the config with name equal to "MyAccount"',
         },
-        name: name => `${chalk.bold('Account name')}: ${name}`,
+        name: (name: string) => `${chalk.bold('Account name')}: ${name}`,
         scopeGroups: `${chalk.bold('Scopes available')}:`,
       },
       clean: {
@@ -2606,7 +2605,7 @@ export const commands = {
       },
     },
   },
-} as const satisfies LangObject;
+};
 
 export const lib = {
   process: {
@@ -3507,4 +3506,4 @@ export const lib = {
       copyingProjectFilesFailed: 'Unable to copy migrated project files',
     },
   },
-} as const satisfies LangObject;
+};
