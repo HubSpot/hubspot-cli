@@ -1,12 +1,13 @@
-// @ts-nocheck
-import yargs from 'yargs';
+import yargs, { Argv } from 'yargs';
 import { addConfigOptions, addAccountOptions } from '../../lib/commonOpts';
+import lintCommand from '../lint';
 
 jest.mock('yargs');
 jest.mock('../../lib/commonOpts');
 
-// Import this last so mocks apply
-import lintCommand from '../lint';
+const positionalSpy = jest
+  .spyOn(yargs as Argv, 'positional')
+  .mockReturnValue(yargs as Argv);
 
 describe('commands/lint', () => {
   describe('command', () => {
@@ -17,23 +18,23 @@ describe('commands/lint', () => {
 
   describe('describe', () => {
     it('should not provide a description', () => {
-      expect(lintCommand.describe).toEqual(null);
+      expect(lintCommand.describe).toEqual(undefined);
     });
   });
 
   describe('builder', () => {
     it('should support the correct positional arguments', () => {
-      lintCommand.builder(yargs);
+      lintCommand.builder(yargs as Argv);
 
-      expect(yargs.positional).toHaveBeenCalledTimes(1);
-      expect(yargs.positional).toHaveBeenCalledWith(
+      expect(positionalSpy).toHaveBeenCalledTimes(1);
+      expect(positionalSpy).toHaveBeenCalledWith(
         'path',
         expect.objectContaining({ type: 'string' })
       );
     });
 
     it('should support the correct options', () => {
-      lintCommand.builder(yargs);
+      lintCommand.builder(yargs as Argv);
 
       expect(addConfigOptions).toHaveBeenCalledTimes(1);
       expect(addConfigOptions).toHaveBeenCalledWith(yargs);
