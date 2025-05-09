@@ -7,7 +7,7 @@ import { watch } from '@hubspot/local-dev-lib/cms/watch';
 import { getCwd } from '@hubspot/local-dev-lib/path';
 import { logger } from '@hubspot/local-dev-lib/logger';
 
-import { addCmsPublishModeOptions, getCmsPublishMode } from '../lib/commonOpts';
+import { getCmsPublishMode } from '../lib/commonOpts';
 import { uploadPrompt } from '../lib/prompts/uploadPrompt';
 import { validateCmsPublishMode } from '../lib/validation';
 import { trackCommandUsage } from '../lib/usageTracking';
@@ -18,6 +18,7 @@ import { EXIT_CODES } from '../lib/enums/exitCodes';
 import { makeYargsBuilder } from '../lib/yargsUtils';
 import {
   AccountArgs,
+  CmsPublishModeArgs,
   CommonArgs,
   ConfigArgs,
   EnvironmentArgs,
@@ -25,21 +26,21 @@ import {
 } from '../types/Yargs';
 import { WatchErrorHandler } from '@hubspot/local-dev-lib/types/Files';
 
-interface WatchCommandArgs
-  extends ConfigArgs,
-    AccountArgs,
-    EnvironmentArgs,
-    CommonArgs {
-  src?: string;
-  dest?: string;
-  fieldOptions?: string[];
-  remove?: boolean;
-  initialUpload?: boolean;
-  disableInitial?: boolean;
-  notify?: string;
-  convertFields?: boolean;
-  saveOutput?: boolean;
-}
+type WatchCommandArgs = ConfigArgs &
+  AccountArgs &
+  EnvironmentArgs &
+  CommonArgs &
+  CmsPublishModeArgs & {
+    src?: string;
+    dest?: string;
+    fieldOptions?: string[];
+    remove?: boolean;
+    initialUpload?: boolean;
+    disableInitial?: boolean;
+    notify?: string;
+    convertFields?: boolean;
+    saveOutput?: boolean;
+  };
 
 const command = 'watch [src] [dest]';
 const describe = i18n(`commands.watch.describe`);
@@ -205,8 +206,6 @@ function watchBuilder(yargs: Argv): Argv<WatchCommandArgs> {
     default: false,
   });
 
-  addCmsPublishModeOptions(yargs, { write: true });
-
   return yargs as Argv<WatchCommandArgs>;
 }
 
@@ -219,6 +218,7 @@ const builder = makeYargsBuilder<WatchCommandArgs>(
     useAccountOptions: true,
     useGlobalOptions: true,
     useEnvironmentOptions: true,
+    useCmsPublishModeOptions: { write: true },
   }
 );
 
