@@ -4,33 +4,31 @@ import {
   downloadSchemas,
   getResolvedPath,
 } from '@hubspot/local-dev-lib/customObjects';
-
 import { inputPrompt } from '../../../lib/prompts/promptUtils';
 import { trackCommandUsage } from '../../../lib/usageTracking';
 import { i18n } from '../../../lib/lang';
 import { logSchemas } from '../../../lib/schema';
 import { logError } from '../../../lib/errorHandlers';
 import {
-  addAccountOptions,
-  addConfigOptions,
-  addUseEnvironmentOptions,
-} from '../../../lib/commonOpts';
-import {
   AccountArgs,
   CommonArgs,
   ConfigArgs,
   EnvironmentArgs,
+  YargsCommandModule,
 } from '../../../types/Yargs';
+import { makeYargsBuilder } from '../../../lib/yargsUtils';
 
-export const command = 'fetch-all [dest]';
-export const describe = i18n(
+const command = 'fetch-all [dest]';
+const describe = i18n(
   `commands.customObject.subcommands.schema.subcommands.fetchAll.describe`
 );
 
-type CombinedArgs = CommonArgs & ConfigArgs & AccountArgs & EnvironmentArgs;
-type SchemaFetchAllArgs = CombinedArgs & { dest?: string };
+type SchemaFetchAllArgs = CommonArgs &
+  ConfigArgs &
+  AccountArgs &
+  EnvironmentArgs & { dest?: string };
 
-export async function handler(
+async function handler(
   args: ArgumentsCamelCase<SchemaFetchAllArgs>
 ): Promise<void> {
   const { derivedAccountId, dest: providedDest } = args;
@@ -65,11 +63,7 @@ export async function handler(
   }
 }
 
-export function builder(yargs: Argv): Argv<SchemaFetchAllArgs> {
-  addConfigOptions(yargs);
-  addAccountOptions(yargs);
-  addUseEnvironmentOptions(yargs);
-
+function schemaFetchAllBuilder(yargs: Argv): Argv<SchemaFetchAllArgs> {
   yargs
     .example([
       [
@@ -94,3 +88,24 @@ export function builder(yargs: Argv): Argv<SchemaFetchAllArgs> {
 
   return yargs as Argv<SchemaFetchAllArgs>;
 }
+
+const builder = makeYargsBuilder<SchemaFetchAllArgs>(
+  schemaFetchAllBuilder,
+  command,
+  describe,
+  {
+    useGlobalOptions: true,
+    useConfigOptions: true,
+    useAccountOptions: true,
+    useEnvironmentOptions: true,
+  }
+);
+
+const schemaFetchAllCommand: YargsCommandModule<unknown, SchemaFetchAllArgs> = {
+  command,
+  describe,
+  handler,
+  builder,
+};
+
+export default schemaFetchAllCommand;
