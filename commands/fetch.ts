@@ -14,6 +14,7 @@ import { i18n } from '../lib/lang';
 import { makeYargsBuilder } from '../lib/yargsUtils';
 import {
   AccountArgs,
+  CommonArgs,
   ConfigArgs,
   EnvironmentArgs,
   YargsCommandModule,
@@ -32,7 +33,8 @@ type FetchCommandArgs = {
   overwrite?: boolean;
 } & ConfigArgs &
   AccountArgs &
-  EnvironmentArgs;
+  EnvironmentArgs &
+  CommonArgs;
 
 const command = 'fetch <src> [dest]';
 const describe = i18n('commands.fetch.describe');
@@ -60,7 +62,7 @@ const handler = async (
   try {
     // Fetch and write file/folder.
     await downloadFileOrFolder(
-      derivedAccountId!,
+      derivedAccountId,
       src,
       resolveLocalPath(dest),
       cmsPublishMode,
