@@ -1,7 +1,13 @@
-// TODO: Add real type
-export type CreateArgs = {
-  branch?: string;
-};
+import { CommonArgs, ConfigArgs } from './Yargs';
+
+export type CreateArgs = CommonArgs &
+  ConfigArgs & {
+    branch?: string;
+    type: string;
+    dest: string;
+    name: string;
+    internal?: boolean;
+  };
 
 export type CmsAssetOperationArgs = {
   assetType: string;

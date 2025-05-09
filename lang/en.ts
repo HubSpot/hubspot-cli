@@ -309,7 +309,7 @@ export const commands = {
         newCommand: string,
         type: string
       ) =>
-        `The CLI command for asset type ${assetType} has been deprecated in an effort to make it easier to know what asset types can be created. Run the "${newCommand}" command instead. Then when prompted select "${type}".`,
+        `The CLI command for asset type ${assetType} has been deprecated in an effort to make it easier to know what asset types can be created. Run the ${uiCommandReference(newCommand)}" command instead. Then when prompted select "${type}".`,
       unsupportedAssetType: (assetType: string, supportedAssetTypes: string) =>
         `The asset type ${assetType} is not supported. Supported asset types are ${supportedAssetTypes}.`,
       unusablePath: (path: string) =>

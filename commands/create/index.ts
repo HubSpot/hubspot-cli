@@ -8,7 +8,9 @@ import vueAppAssetType from './vue-app';
 import webpackServerlessAssetType from './webpack-serverless';
 import websiteThemeAssetType from './website-theme';
 
-module.exports = {
+import { CreatableCmsAsset } from '../../types/Cms';
+
+const assets: { [key: string]: CreatableCmsAsset } = {
   'api-sample': apiSampleAssetType,
   app: appAssetType,
   function: functionAssetType,
@@ -19,3 +21,5 @@ module.exports = {
   'webpack-serverless': webpackServerlessAssetType,
   'website-theme': websiteThemeAssetType,
 };
+
+export default assets;

@@ -13,9 +13,9 @@ const websiteThemeAssetType: CreatableCmsAsset = {
       commandArgs.branch = PROJECT_BOILERPLATE_BRANCH;
     }
     cloneGithubRepo('HubSpot/cms-theme-boilerplate', dest, {
+      ...commandArgs,
       type: assetType,
       sourceDir: 'src',
-      ...commandArgs,
     });
   },
 };
