@@ -1,5 +1,4 @@
 import { Argv } from 'yargs';
-import { addGlobalOptions } from '../lib/commonOpts';
 import list from './function/list';
 import deploy from './function/deploy';
 const server = require('./function/server');
@@ -11,12 +10,13 @@ export const command = ['function', 'functions'];
 export const describe = i18n(`commands.function.describe`);
 
 function functionBuilder(yargs: Argv): Argv {
-  addGlobalOptions(yargs);
   yargs.command(list).command(deploy).command(server).demandCommand(1, '');
   return yargs;
 }
 
-const builder = makeYargsBuilder(functionBuilder, command, describe);
+const builder = makeYargsBuilder(functionBuilder, command, describe, {
+  useGlobalOptions: true,
+});
 
 const functionCommand: YargsCommandModuleBucket = {
   command,
