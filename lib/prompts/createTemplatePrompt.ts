@@ -10,7 +10,7 @@ const templateTypeChoices = [
   { name: 'blog listing', value: 'blog-listing-template' },
   { name: 'blog post', value: 'blog-post-template' },
   { name: 'search results', value: 'search-template' },
-] satisfies PromptChoices;
+] as const satisfies PromptChoices;
 
 interface CreateTemplatePromptResponse {
   templateType: (typeof templateTypeChoices)[number]['value'];

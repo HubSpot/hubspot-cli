@@ -4,7 +4,7 @@ import { logError } from '../../lib/errorHandlers/index';
 import { EXIT_CODES } from '../../lib/enums/exitCodes';
 import { CreatableCmsAsset } from '../../types/Cms';
 
-const FunctionAssetType: CreatableCmsAsset = {
+const functionAssetType: CreatableCmsAsset = {
   hidden: false,
   dest: ({ name }) => name,
   execute: async ({ dest }) => {
@@ -18,6 +18,4 @@ const FunctionAssetType: CreatableCmsAsset = {
   },
 };
 
-export default FunctionAssetType;
-// TODO: Remove
-module.exports = FunctionAssetType;
+export default functionAssetType;
