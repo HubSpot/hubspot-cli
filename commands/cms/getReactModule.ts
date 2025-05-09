@@ -1,31 +1,43 @@
-// @ts-nocheck
-const fs = require('fs');
-const path = require('path');
-const { getCwd } = require('@hubspot/local-dev-lib/path');
-const { logger } = require('@hubspot/local-dev-lib/logger');
-const { retrieveDefaultModule } = require('@hubspot/local-dev-lib/cms/modules');
-const { i18n } = require('../../lib/lang');
-const { logError } = require('../../lib/errorHandlers/index');
-const { trackCommandUsage } = require('../../lib/usageTracking');
-const { listPrompt } = require('../../lib/prompts/promptUtils');
-const { EXIT_CODES } = require('../../lib/enums/exitCodes');
+import { Argv, ArgumentsCamelCase } from 'yargs';
+import fs from 'fs';
+import path from 'path';
+import { getCwd } from '@hubspot/local-dev-lib/path';
+import { logger } from '@hubspot/local-dev-lib/logger';
+import { retrieveDefaultModule } from '@hubspot/local-dev-lib/cms/modules';
+import { GithubRepoFile } from '@hubspot/local-dev-lib/types/Github';
+import { i18n } from '../../lib/lang';
+import { logError } from '../../lib/errorHandlers/index';
+import { trackCommandUsage } from '../../lib/usageTracking';
+import { listPrompt } from '../../lib/prompts/promptUtils';
+import { EXIT_CODES } from '../../lib/enums/exitCodes';
+import { CommonArgs, YargsCommandModule } from '../../types/Yargs';
+import { makeYargsBuilder } from '../../lib/yargsUtils';
 
-exports.command = 'get-react-module [name] [dest]';
-exports.describe = i18n(`commands.cms.subcommands.getReactModule.describe`);
+const command = 'get-react-module [name] [dest]';
+const describe = i18n(`commands.cms.subcommands.getReactModule.describe`);
 
-exports.handler = async options => {
-  const { name, dest } = options;
+type GetReactModuleArgs = CommonArgs & {
+  name?: string;
+  dest?: string;
+};
+
+async function handler(args: ArgumentsCamelCase<GetReactModuleArgs>) {
+  const { name, dest } = args;
 
   trackCommandUsage('get-react-modules');
 
   let moduleToRetrieve = name;
 
   if (!moduleToRetrieve) {
-    let availableModules;
+    let availableModules: GithubRepoFile[] | undefined;
     try {
-      availableModules = await retrieveDefaultModule(null, '');
+      availableModules = await retrieveDefaultModule();
     } catch (e) {
       logError(e);
+    }
+
+    if (!availableModules) {
+      process.exit(EXIT_CODES.ERROR);
     }
 
     const moduleChoice = await listPrompt(
@@ -47,7 +59,7 @@ exports.handler = async options => {
         path: destPath,
       })
     );
-    return;
+    process.exit(EXIT_CODES.ERROR);
   }
 
   try {
@@ -60,18 +72,21 @@ exports.handler = async options => {
       })
     );
   } catch (e) {
-    if (e.cause && e.cause.code === 'ERR_BAD_REQUEST') {
+    const isBadRequestError =
+      (e as { cause?: { code?: string } })?.cause?.code === 'ERR_BAD_REQUEST';
+    if (isBadRequestError) {
       logger.error(
         i18n(`commands.cms.subcommands.getReactModule.errors.invalidName`)
       );
     } else {
       logError(e);
     }
+    process.exit(EXIT_CODES.ERROR);
   }
   process.exit(EXIT_CODES.SUCCESS);
-};
+}
 
-exports.builder = yargs => {
+function cmsGetReactModuleBuilder(yargs: Argv): Argv<GetReactModuleArgs> {
   yargs.positional('name', {
     describe: i18n(
       `commands.cms.subcommands.getReactModule.positionals.name.describe`
@@ -84,5 +99,29 @@ exports.builder = yargs => {
     ),
     type: 'string',
   });
-  return yargs;
+  return yargs as Argv<GetReactModuleArgs>;
+}
+
+const builder = makeYargsBuilder<GetReactModuleArgs>(
+  cmsGetReactModuleBuilder,
+  command,
+  describe,
+  {
+    useGlobalOptions: true,
+  }
+);
+
+const cmsGetReactModuleCommand: YargsCommandModule<
+  unknown,
+  GetReactModuleArgs
+> = {
+  command,
+  describe,
+  handler,
+  builder,
 };
+
+export default cmsGetReactModuleCommand;
+
+// TODO remove this after cms.ts is ported to TypeScript
+module.exports = cmsGetReactModuleCommand;
