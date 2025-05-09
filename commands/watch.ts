@@ -225,9 +225,7 @@ const builder = makeYargsBuilder<WatchCommandArgs>(
 const watchCommand: YargsCommandModule<unknown, WatchCommandArgs> = {
   command,
   describe,
-  handler: handler as unknown as (
-    args: ArgumentsCamelCase<object>
-  ) => Promise<void>,
+  handler,
   builder,
 };
 
