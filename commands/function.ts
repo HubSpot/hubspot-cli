@@ -1,6 +1,6 @@
 import { Argv } from 'yargs';
 import list from './function/list';
-const deploy = require('./function/deploy');
+import deploy from './function/deploy';
 const server = require('./function/server');
 import { i18n } from '../lib/lang';
 import { makeYargsBuilder } from '../lib/yargsUtils';

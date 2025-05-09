@@ -1,31 +1,54 @@
-// @ts-nocheck
-const SpinniesManager = require('../../lib/ui/SpinniesManager');
-const {
-  addAccountOptions,
-  addConfigOptions,
-  addUseEnvironmentOptions,
-} = require('../../lib/commonOpts');
-const { trackCommandUsage } = require('../../lib/usageTracking');
-const { logError, ApiErrorContext } = require('../../lib/errorHandlers/index');
-const { uiAccountDescription } = require('../../lib/ui');
-const { poll } = require('../../lib/polling');
-const { logger } = require('@hubspot/local-dev-lib/logger');
-const {
+import { Argv, ArgumentsCamelCase } from 'yargs';
+import { logger } from '@hubspot/local-dev-lib/logger';
+import {
   buildPackage,
   getBuildStatus,
-} = require('@hubspot/local-dev-lib/api/functions');
-const { outputBuildLog } = require('../../lib/serverlessLogs');
-const { i18n } = require('../../lib/lang');
-const { isHubSpotHttpError } = require('@hubspot/local-dev-lib/errors/index');
+} from '@hubspot/local-dev-lib/api/functions';
+import { isHubSpotHttpError } from '@hubspot/local-dev-lib/errors/index';
 
-exports.command = 'deploy <path>';
-exports.describe = false;
+import SpinniesManager from '../../lib/ui/SpinniesManager';
+import { trackCommandUsage } from '../../lib/usageTracking';
+import { logError, ApiErrorContext } from '../../lib/errorHandlers/index';
+import { uiAccountDescription } from '../../lib/ui';
+import { poll } from '../../lib/polling';
+import { outputBuildLog } from '../../lib/serverlessLogs';
+import { i18n } from '../../lib/lang';
+import {
+  CommonArgs,
+  ConfigArgs,
+  AccountArgs,
+  EnvironmentArgs,
+  YargsCommandModule,
+} from '../../types/Yargs';
+import { makeYargsBuilder } from '../../lib/yargsUtils';
 
-exports.handler = async options => {
-  const { path: functionPath, derivedAccountId } = options;
+type FunctionBuildError = {
+  status: 'ERROR';
+  errorReason: string;
+  cdnUrl: string;
+};
+
+function isFunctionBuildError(e: unknown): e is FunctionBuildError {
+  return (
+    typeof e === 'object' && e !== null && 'status' in e && e.status === 'ERROR'
+  );
+}
+
+const command = 'deploy <path>';
+const describe = undefined;
+
+type FunctionDeployArgs = CommonArgs &
+  ConfigArgs &
+  AccountArgs &
+  EnvironmentArgs & { path: string };
+
+async function handler(
+  args: ArgumentsCamelCase<FunctionDeployArgs>
+): Promise<void> {
+  const { path: functionPath, derivedAccountId } = args;
   const splitFunctionPath = functionPath.split('.');
 
-  trackCommandUsage('functions-deploy', null, derivedAccountId);
+  trackCommandUsage('function-deploy', undefined, derivedAccountId);
 
   if (
     !splitFunctionPath.length ||
@@ -60,21 +83,27 @@ exports.handler = async options => {
       functionPath
     );
     const successResp = await poll(() =>
-      getBuildStatus(derivedAccountId, buildId)
+      getBuildStatus(derivedAccountId, Number(buildId))
     );
-    const buildTimeSeconds = (successResp.buildTime / 1000).toFixed(2);
+    if (successResp) {
+      const buildTimeSeconds = successResp.buildTime
+        ? (successResp.buildTime / 1000).toFixed(2)
+        : 0;
 
-    SpinniesManager.succeed('loading');
+      SpinniesManager.succeed('loading');
 
-    await outputBuildLog(successResp.cdnUrl);
-    logger.success(
-      i18n('commands.function.subcommands.deploy.success.deployed', {
-        accountId: derivedAccountId,
-        buildTimeSeconds,
-        functionPath,
-      })
-    );
-  } catch (e) {
+      if (successResp.cdnUrl) {
+        await outputBuildLog(successResp.cdnUrl);
+      }
+      logger.success(
+        i18n('commands.function.subcommands.deploy.success.deployed', {
+          accountId: derivedAccountId,
+          buildTimeSeconds,
+          functionPath,
+        })
+      );
+    }
+  } catch (e: unknown) {
     SpinniesManager.fail('loading', {
       text: i18n('commands.function.subcommands.deploy.loadingFailed', {
         account: uiAccountDescription(derivedAccountId),
@@ -88,11 +117,11 @@ exports.handler = async options => {
           functionPath,
         })
       );
-    } else if (e.status === 'ERROR') {
+    } else if (isFunctionBuildError(e)) {
       await outputBuildLog(e.cdnUrl);
       logger.error(
         i18n('commands.function.subcommands.deploy.errors.buildError', {
-          details: e.errorReason,
+          details: String(e.errorReason),
         })
       );
     } else {
@@ -105,9 +134,9 @@ exports.handler = async options => {
       );
     }
   }
-};
+}
 
-exports.builder = yargs => {
+function functionDeployBuilder(yargs: Argv): Argv<FunctionDeployArgs> {
   yargs.positional('path', {
     describe: i18n(
       'commands.function.subcommands.deploy.positionals.path.describe'
@@ -122,9 +151,25 @@ exports.builder = yargs => {
     ],
   ]);
 
-  addConfigOptions(yargs);
-  addAccountOptions(yargs);
-  addUseEnvironmentOptions(yargs);
+  return yargs as Argv<FunctionDeployArgs>;
+}
 
-  return yargs;
+const builder = makeYargsBuilder<FunctionDeployArgs>(
+  functionDeployBuilder,
+  command,
+  describe,
+  {
+    useConfigOptions: true,
+    useAccountOptions: true,
+    useEnvironmentOptions: true,
+  }
+);
+
+const functionDeployCommand: YargsCommandModule<unknown, FunctionDeployArgs> = {
+  command,
+  describe,
+  handler,
+  builder,
 };
+
+export default functionDeployCommand;
