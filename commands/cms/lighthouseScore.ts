@@ -420,6 +420,3 @@ const cmslighthouseScoreCommand: YargsCommandModule<
 };
 
 export default cmslighthouseScoreCommand;
-
-// TODO remove this after cms.ts is ported to TypeScript
-module.exports = cmslighthouseScoreCommand;

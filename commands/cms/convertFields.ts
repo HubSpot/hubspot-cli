@@ -131,6 +131,3 @@ const convertFieldsCommand: YargsCommandModule<unknown, ConvertFieldsArgs> = {
 };
 
 export default convertFieldsCommand;
-
-// TODO remove this when we port cms.ts to TypeScript
-module.exports = convertFieldsCommand;
