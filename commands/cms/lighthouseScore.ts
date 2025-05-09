@@ -154,11 +154,11 @@ async function handler(args: ArgumentsCamelCase<LighthouseScoreArgs>) {
       ),
     });
 
-    const checkScoreStatus = async () => {
+    async function checkScoreStatus(): Promise<void> {
       let desktopScoreStatus = 'COMPLETED';
       if (includeDesktopScore) {
         const { data } = await getLighthouseScoreStatus(derivedAccountId, {
-          themeId: requestResult.desktopId,
+          themeId: requestResult!.desktopId,
         });
         desktopScoreStatus = data;
       }
@@ -166,7 +166,7 @@ async function handler(args: ArgumentsCamelCase<LighthouseScoreArgs>) {
       let mobileScoreStatus = 'COMPLETED';
       if (includeDesktopScore) {
         const { data } = await getLighthouseScoreStatus(derivedAccountId, {
-          themeId: requestResult.mobileId,
+          themeId: requestResult!.mobileId,
         });
         mobileScoreStatus = data;
       }
@@ -178,7 +178,7 @@ async function handler(args: ArgumentsCamelCase<LighthouseScoreArgs>) {
         await new Promise(resolve => setTimeout(resolve, 2000));
         await checkScoreStatus();
       }
-    };
+    }
 
     await checkScoreStatus();
 
