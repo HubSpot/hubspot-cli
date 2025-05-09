@@ -9,6 +9,7 @@ import {
 } from '@hubspot/local-dev-lib/config/migrate';
 import {
   DEFAULT_HUBSPOT_CONFIG_YAML_FILE_NAME,
+  ARCHIVED_HUBSPOT_CONFIG_YAML_FILE_NAME,
   GLOBAL_CONFIG_PATH,
 } from '@hubspot/local-dev-lib/constants/config';
 import { logger } from '@hubspot/local-dev-lib/logger';
@@ -25,6 +26,14 @@ export async function handleMigration(
   accountId: number | undefined,
   configPath?: string
 ): Promise<boolean> {
+  logger.log(i18n('lib.configMigrate.migrationHeader'));
+  logger.log('');
+  logger.log(
+    i18n('lib.configMigrate.migrationDescription', {
+      archivedConfigPath: ARCHIVED_HUBSPOT_CONFIG_YAML_FILE_NAME,
+    })
+  );
+  logger.log('');
   const { shouldMigrateConfig } = await promptUser({
     name: 'shouldMigrateConfig',
     type: 'confirm',
@@ -107,6 +116,14 @@ export async function handleMerge(
   configPath?: string,
   force?: boolean
 ): Promise<boolean> {
+  logger.log(i18n('lib.configMigrate.mergeHeader'));
+  logger.log('');
+  logger.log(
+    i18n('lib.configMigrate.mergeDescription', {
+      archivedConfigPath: ARCHIVED_HUBSPOT_CONFIG_YAML_FILE_NAME,
+    })
+  );
+  logger.log('');
   const { shouldMergeConfigs } = await promptUser({
     name: 'shouldMergeConfigs',
     type: 'confirm',
