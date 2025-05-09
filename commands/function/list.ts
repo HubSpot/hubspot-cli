@@ -1,26 +1,36 @@
-// @ts-nocheck
-const moment = require('moment');
-const { getRoutes } = require('@hubspot/local-dev-lib/api/functions');
-const { logger } = require('@hubspot/local-dev-lib/logger');
-const { logError, ApiErrorContext } = require('../../lib/errorHandlers/index');
-const { getTableContents, getTableHeader } = require('../../lib/ui/table');
-const {
-  addConfigOptions,
-  addAccountOptions,
-  addUseEnvironmentOptions,
-} = require('../../lib/commonOpts');
-const { trackCommandUsage } = require('../../lib/usageTracking');
-const { i18n } = require('../../lib/lang');
+import { Argv, ArgumentsCamelCase } from 'yargs';
+import moment from 'moment';
+import { getRoutes } from '@hubspot/local-dev-lib/api/functions';
+import { logger } from '@hubspot/local-dev-lib/logger';
 
-const { EXIT_CODES } = require('../../lib/enums/exitCodes');
+import { logError, ApiErrorContext } from '../../lib/errorHandlers/index';
+import { getTableContents, getTableHeader } from '../../lib/ui/table';
+import { trackCommandUsage } from '../../lib/usageTracking';
+import { i18n } from '../../lib/lang';
+import { EXIT_CODES } from '../../lib/enums/exitCodes';
+import {
+  CommonArgs,
+  ConfigArgs,
+  AccountArgs,
+  EnvironmentArgs,
+  YargsCommandModule,
+} from '../../types/Yargs';
+import { makeYargsBuilder } from '../../lib/yargsUtils';
 
-exports.command = ['list', 'ls'];
-exports.describe = i18n('commands.function.subcommands.list.describe');
+const command = ['list', 'ls'];
+const describe = i18n('commands.function.subcommands.list.describe');
 
-exports.handler = async options => {
-  const { derivedAccountId } = options;
+type FunctionListArgs = CommonArgs &
+  ConfigArgs &
+  AccountArgs &
+  EnvironmentArgs & { json?: boolean };
 
-  trackCommandUsage('functions-list', null, derivedAccountId);
+async function handler(
+  args: ArgumentsCamelCase<FunctionListArgs>
+): Promise<void> {
+  const { derivedAccountId } = args;
+
+  trackCommandUsage('function-list', undefined, derivedAccountId);
 
   logger.debug(
     i18n('commands.function.subcommands.list.debug.gettingFunctions')
@@ -39,7 +49,7 @@ exports.handler = async options => {
     );
   }
 
-  if (options.json) {
+  if (args.json) {
     return logger.log(routesResp.objects);
   }
 
@@ -58,13 +68,9 @@ exports.handler = async options => {
     getTableHeader(['Route', 'Method', 'Secrets', 'Created', 'Updated'])
   );
   return logger.log(getTableContents(functionsAsArrays));
-};
+}
 
-exports.builder = yargs => {
-  addConfigOptions(yargs);
-  addAccountOptions(yargs);
-  addUseEnvironmentOptions(yargs);
-
+function functionListBuilder(yargs: Argv): Argv<FunctionListArgs> {
   yargs.options({
     json: {
       describe: i18n(
@@ -73,4 +79,26 @@ exports.builder = yargs => {
       type: 'boolean',
     },
   });
+
+  return yargs as Argv<FunctionListArgs>;
+}
+
+const builder = makeYargsBuilder<FunctionListArgs>(
+  functionListBuilder,
+  command,
+  describe,
+  {
+    useConfigOptions: true,
+    useAccountOptions: true,
+    useEnvironmentOptions: true,
+  }
+);
+
+const functionListCommand: YargsCommandModule<unknown, FunctionListArgs> = {
+  command,
+  describe,
+  handler,
+  builder,
 };
+
+export default functionListCommand;
