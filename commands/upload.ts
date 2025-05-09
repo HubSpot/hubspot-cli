@@ -344,6 +344,7 @@ const builder = makeYargsBuilder<UploadArgs>(uploadBuilder, command, describe, {
   useConfigOptions: true,
   useAccountOptions: true,
   useEnvironmentOptions: true,
+  useCmsPublishModeOptions: true,
 });
 
 const uploadCommand: YargsCommandModule<unknown, UploadArgs> = {
