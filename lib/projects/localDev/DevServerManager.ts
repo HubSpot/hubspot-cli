@@ -200,4 +200,3 @@ class DevServerManager {
 const Manager = new DevServerManager();
 
 export default Manager;
-module.exports = Manager;

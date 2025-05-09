@@ -39,6 +39,3 @@ const customObjectCommand: YargsCommandModuleBucket = {
 };
 
 export default customObjectCommand;
-
-// TODO Remove this legacy export once we've migrated all commands to TS
-module.exports = customObjectCommand;

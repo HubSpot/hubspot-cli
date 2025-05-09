@@ -31,6 +31,3 @@ const hubdbCommand: YargsCommandModuleBucket = {
 };
 
 export default hubdbCommand;
-
-// TODO Remove this legacy export once we've migrated all commands to TS
-module.exports = hubdbCommand;

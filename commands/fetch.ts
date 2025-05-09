@@ -131,5 +131,3 @@ const fetchCommand: YargsCommandModule<unknown, FetchCommandArgs> = {
 };
 
 export default fetchCommand;
-
-module.exports = fetchCommand;

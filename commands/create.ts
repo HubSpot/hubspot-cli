@@ -106,4 +106,3 @@ const createCommand: YargsCommandModule<unknown, CreateArgs> = {
 };
 
 export default createCommand;
-module.exports = createCommand;

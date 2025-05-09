@@ -36,6 +36,3 @@ const completionCommand: YargsCommandModule<unknown, CommonArgs> = {
 };
 
 export default completionCommand;
-
-// TODO Remove this legacy export once we've migrated all commands to TS
-module.exports = completionCommand;

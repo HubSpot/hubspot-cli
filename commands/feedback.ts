@@ -92,6 +92,3 @@ const feedbackCommand: YargsCommandModule<unknown, FeedbackArgs> = {
 };
 
 export default feedbackCommand;
-
-// TODO remove this after cli.ts is ported to TS
-module.exports = feedbackCommand;

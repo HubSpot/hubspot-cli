@@ -195,5 +195,3 @@ const logsCommand: YargsCommandModule<unknown, LogsArgs> = {
 };
 
 export default logsCommand;
-
-module.exports = logsCommand;

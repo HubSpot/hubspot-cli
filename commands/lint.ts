@@ -115,6 +115,3 @@ const lintCommand: YargsCommandModule<unknown, LintArgs> = {
 };
 
 export default lintCommand;
-
-// TODO Remove this after cli.ts is ported to TS
-module.exports = lintCommand;

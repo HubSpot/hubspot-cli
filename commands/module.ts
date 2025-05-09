@@ -25,5 +25,3 @@ const moduleCommand: YargsCommandModuleBucket = {
 };
 
 export default moduleCommand;
-
-module.exports = moduleCommand;

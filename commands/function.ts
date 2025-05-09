@@ -26,6 +26,3 @@ const functionCommand: YargsCommandModuleBucket = {
 };
 
 export default functionCommand;
-
-// TODO Remove this legacy export once we've migrated all commands to TS
-module.exports = functionCommand;
