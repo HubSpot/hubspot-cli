@@ -13,7 +13,7 @@ import { logError } from './errorHandlers/index';
  */
 export async function getUploadableFileList(
   src: string,
-  convertFields: boolean
+  convertFields?: boolean
 ): Promise<string[]> {
   let filePaths: string[] = [];
   try {
