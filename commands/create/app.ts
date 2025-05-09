@@ -1,7 +1,7 @@
 import { cloneGithubRepo } from '@hubspot/local-dev-lib/github';
 import { CreatableCmsAsset } from '../../types/Cms';
 
-const AppAssetType: CreatableCmsAsset = {
+const appAssetType: CreatableCmsAsset = {
   hidden: true,
   dest: ({ name, assetType }) => name || assetType,
   execute: async ({ commandArgs, dest, assetType }) => {
@@ -12,6 +12,4 @@ const AppAssetType: CreatableCmsAsset = {
   },
 };
 
-export default AppAssetType;
-// TODO: Remove
-module.exports = AppAssetType;
+export default appAssetType;
