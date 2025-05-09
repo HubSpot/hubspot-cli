@@ -1,5 +1,7 @@
 // TODO: Add real type
-export type CreateArgs = object;
+export type CreateArgs = {
+  branch?: string;
+};
 
 export type CmsAssetOperationArgs = {
   assetType: string;

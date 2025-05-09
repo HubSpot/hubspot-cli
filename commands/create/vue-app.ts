@@ -2,7 +2,7 @@ import { cloneGithubRepo } from '@hubspot/local-dev-lib/github';
 
 import { CreatableCmsAsset } from '../../types/Cms';
 
-const VueAppAssetType: CreatableCmsAsset = {
+const vueAppAssetType: CreatableCmsAsset = {
   hidden: false,
   dest: ({ name, assetType }) => name || assetType,
   execute: async ({ commandArgs, dest, assetType }) => {
@@ -13,4 +13,4 @@ const VueAppAssetType: CreatableCmsAsset = {
   },
 };
 
-export default VueAppAssetType;
+export default vueAppAssetType;

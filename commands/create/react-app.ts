@@ -1,7 +1,7 @@
 import { cloneGithubRepo } from '@hubspot/local-dev-lib/github';
 import { CreatableCmsAsset } from '../../types/Cms';
 
-const ReactAppAssetType: CreatableCmsAsset = {
+const reactAppAssetType: CreatableCmsAsset = {
   hidden: false,
   dest: ({ name, assetType }) => name || assetType,
   execute: async ({ commandArgs, dest, assetType }) => {
@@ -12,6 +12,4 @@ const ReactAppAssetType: CreatableCmsAsset = {
   },
 };
 
-export default ReactAppAssetType;
-// TODO: Remove
-module.exports = ReactAppAssetType;
+export default reactAppAssetType;

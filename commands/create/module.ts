@@ -6,7 +6,7 @@ import { CreatableCmsAsset } from '../../types/Cms';
 import { uiLogger } from '../../lib/ui/logger';
 import { commands } from '../../lang/en';
 
-const ModuleAssetType: CreatableCmsAsset = {
+const moduleAssetType: CreatableCmsAsset = {
   hidden: false,
   dest: ({ dest }) => dest,
   validate: ({ name }) => {
@@ -27,6 +27,4 @@ const ModuleAssetType: CreatableCmsAsset = {
   },
 };
 
-export default ModuleAssetType;
-// TODO: Remove
-module.exports = ModuleAssetType;
+export default moduleAssetType;

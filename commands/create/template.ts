@@ -6,7 +6,7 @@ import { CreatableCmsAsset } from '../../types/Cms';
 import { uiLogger } from '../../lib/ui/logger';
 import { commands } from '../../lang/en';
 
-const TemplateAssetType: CreatableCmsAsset = {
+const templateAssetType: CreatableCmsAsset = {
   dest: ({ dest }) => dest,
   hidden: false,
   validate: ({ name }) => {
@@ -28,4 +28,4 @@ const TemplateAssetType: CreatableCmsAsset = {
   },
 };
 
-export default TemplateAssetType;
+export default templateAssetType;

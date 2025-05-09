@@ -1,7 +1,7 @@
 import { cloneGithubRepo } from '@hubspot/local-dev-lib/github';
 import { CreatableCmsAsset } from '../../types/Cms';
 
-const WebpackServerlessAssetType: CreatableCmsAsset = {
+const webpackServerlessAssetType: CreatableCmsAsset = {
   hidden: false,
   dest: ({ name, assetType }) => name || assetType,
   execute: async ({ commandArgs, dest, assetType }) => {
@@ -12,4 +12,4 @@ const WebpackServerlessAssetType: CreatableCmsAsset = {
   },
 };
 
-export default WebpackServerlessAssetType;
+export default webpackServerlessAssetType;
