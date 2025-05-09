@@ -1,30 +1,25 @@
 import { Argv, ArgumentsCamelCase } from 'yargs';
 import { logger } from '@hubspot/local-dev-lib/logger';
 import { fetchSecrets } from '@hubspot/local-dev-lib/api/secrets';
-
 import { logError, ApiErrorContext } from '../../lib/errorHandlers/index';
 import { trackCommandUsage } from '../../lib/usageTracking';
 import { uiAccountDescription } from '../../lib/ui';
-import {
-  addConfigOptions,
-  addAccountOptions,
-  addUseEnvironmentOptions,
-} from '../../lib/commonOpts';
 import { i18n } from '../../lib/lang';
 import {
   CommonArgs,
   ConfigArgs,
   AccountArgs,
   EnvironmentArgs,
+  YargsCommandModule,
 } from '../../types/Yargs';
+import { makeYargsBuilder } from '../../lib/yargsUtils';
 
-export const command = 'list';
-export const describe = i18n(`commands.secret.subcommands.list.describe`);
+const command = 'list';
+const describe = i18n(`commands.secret.subcommands.list.describe`);
 
-type CombinedArgs = ConfigArgs & AccountArgs & EnvironmentArgs;
-type ListSecretArgs = CommonArgs & CombinedArgs;
+type ListSecretArgs = CommonArgs & ConfigArgs & AccountArgs & EnvironmentArgs;
 
-export async function handler(
+async function handler(
   args: ArgumentsCamelCase<ListSecretArgs>
 ): Promise<void> {
   const { derivedAccountId } = args;
@@ -52,10 +47,27 @@ export async function handler(
   }
 }
 
-export function builder(yargs: Argv): Argv<ListSecretArgs> {
-  addConfigOptions(yargs);
-  addAccountOptions(yargs);
-  addUseEnvironmentOptions(yargs);
-
+function listSecretBuilder(yargs: Argv): Argv<ListSecretArgs> {
   return yargs as Argv<ListSecretArgs>;
 }
+
+const builder = makeYargsBuilder<ListSecretArgs>(
+  listSecretBuilder,
+  command,
+  describe,
+  {
+    useGlobalOptions: true,
+    useConfigOptions: true,
+    useAccountOptions: true,
+    useEnvironmentOptions: true,
+  }
+);
+
+const listSecretCommand: YargsCommandModule<unknown, ListSecretArgs> = {
+  command,
+  describe,
+  handler,
+  builder,
+};
+
+export default listSecretCommand;
