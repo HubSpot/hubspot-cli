@@ -35,7 +35,7 @@ const delimiters: {
   },
 };
 
-type InterpolationData = {
+export type InterpolationData = {
   [identifier: string]: unknown;
 };
 

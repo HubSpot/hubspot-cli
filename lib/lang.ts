@@ -3,7 +3,7 @@ import path from 'path';
 import fs from 'fs-extra';
 import yaml from 'js-yaml';
 import { logger } from '@hubspot/local-dev-lib/logger';
-import { interpolate } from './interpolation';
+import { interpolate, InterpolationData } from './interpolation';
 
 export const MISSING_LANGUAGE_DATA_PREFIX = '[Missing language data]';
 
@@ -78,7 +78,7 @@ function getTextValue(lookupDotNotation: string): string {
 
 export function i18n(
   lookupDotNotation: string,
-  options: { [identifier: string]: unknown } = {}
+  options: InterpolationData = {}
 ): string {
   if (!languageObj) {
     loadLanguageFromYaml();
