@@ -26,7 +26,6 @@ import { logError } from '../lib/errorHandlers/index';
 type FetchCommandArgs = {
   src: string;
   dest?: string;
-  derivedAccountId?: number;
   cmsPublishMode?: CmsPublishMode;
   staging?: boolean;
   assetVersion?: number;
