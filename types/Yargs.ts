@@ -1,4 +1,5 @@
 import { Options, CommandModule, Argv } from 'yargs';
+import { CmsPublishMode } from '@hubspot/local-dev-lib/types/Files';
 
 export type CommonArgs = {
   derivedAccountId: number;
@@ -34,6 +35,11 @@ export type ProjectDevArgs = CommonArgs & ConfigArgs & EnvironmentArgs;
 
 export type TestingArgs = {
   qa?: boolean;
+};
+
+export type CmsPublishModeArgs = {
+  'cms-publish-mode'?: CmsPublishMode;
+  m?: CmsPublishMode;
 };
 
 export interface YargsCommandModule<T, U> extends CommandModule<T, U> {
