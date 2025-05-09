@@ -1,27 +1,33 @@
-// @ts-nocheck
-const { downloadFileOrFolder } = require('@hubspot/local-dev-lib/fileMapper');
-const { logger } = require('@hubspot/local-dev-lib/logger');
-const {
-  addConfigOptions,
-  addAccountOptions,
-  addOverwriteOptions,
-  addCmsPublishModeOptions,
-  addUseEnvironmentOptions,
-  getCmsPublishMode,
-  addGlobalOptions,
-} = require('../lib/commonOpts');
-const { resolveLocalPath } = require('../lib/filesystem');
-const { validateCmsPublishMode } = require('../lib/validation');
-const { trackCommandUsage } = require('../lib/usageTracking');
-const { i18n } = require('../lib/lang');
+import { Argv, ArgumentsCamelCase } from 'yargs';
+import { downloadFileOrFolder } from '@hubspot/local-dev-lib/fileMapper';
+import { logger } from '@hubspot/local-dev-lib/logger';
+import { CmsPublishMode } from '@hubspot/local-dev-lib/types/Files';
+import { addCmsPublishModeOptions, getCmsPublishMode } from '../lib/commonOpts';
+import { resolveLocalPath } from '../lib/filesystem';
+import { validateCmsPublishMode } from '../lib/validation';
+import { trackCommandUsage } from '../lib/usageTracking';
+import { i18n } from '../lib/lang';
+import { makeYargsBuilder } from '../lib/yargsUtils';
+import { YargsCommandModule } from '../types/Yargs';
 
-const { EXIT_CODES } = require('../lib/enums/exitCodes');
-const { logError } = require('../lib/errorHandlers/index');
+import { EXIT_CODES } from '../lib/enums/exitCodes';
+import { logError } from '../lib/errorHandlers/index';
 
-exports.command = 'fetch <src> [dest]';
-exports.describe = i18n('commands.fetch.describe');
+interface FetchCommandArgs {
+  src: string;
+  dest?: string;
+  derivedAccountId?: number;
+  cmsPublishMode?: CmsPublishMode;
+  staging?: boolean;
+  assetVersion?: number;
+}
 
-exports.handler = async options => {
+const command = 'fetch <src> [dest]';
+const describe = i18n('commands.fetch.describe');
+
+const handler = async (
+  options: ArgumentsCamelCase<FetchCommandArgs>
+): Promise<void> => {
   const { src, dest } = options;
 
   if (!validateCmsPublishMode(options)) {
@@ -38,14 +44,19 @@ exports.handler = async options => {
 
   trackCommandUsage('fetch', { mode: cmsPublishMode }, derivedAccountId);
 
+  const { assetVersion, staging } = options;
   try {
     // Fetch and write file/folder.
     await downloadFileOrFolder(
-      derivedAccountId,
+      derivedAccountId!,
       src,
       resolveLocalPath(dest),
       cmsPublishMode,
-      options
+      {
+        assetVersion:
+          assetVersion !== undefined ? `${assetVersion}` : assetVersion,
+        staging,
+      }
     );
   } catch (err) {
     logError(err);
@@ -53,7 +64,7 @@ exports.handler = async options => {
   }
 };
 
-exports.builder = yargs => {
+const fetchBuilder = (yargs: Argv): Argv<FetchCommandArgs> => {
   yargs.positional('src', {
     describe: i18n('commands.fetch.positionals.src.describe'),
     type: 'string',
@@ -80,12 +91,30 @@ exports.builder = yargs => {
     },
   });
 
-  addConfigOptions(yargs);
-  addAccountOptions(yargs);
-  addOverwriteOptions(yargs);
   addCmsPublishModeOptions(yargs, { read: true });
-  addUseEnvironmentOptions(yargs);
-  addGlobalOptions(yargs);
-
-  return yargs;
+  return yargs as Argv<FetchCommandArgs>;
 };
+
+const builder = makeYargsBuilder<FetchCommandArgs>(
+  fetchBuilder,
+  command,
+  describe,
+  {
+    useConfigOptions: true,
+    useAccountOptions: true,
+    useGlobalOptions: true,
+    useEnvironmentOptions: true,
+    useTestingOptions: false,
+  }
+);
+
+const fetchCommand: YargsCommandModule<unknown, FetchCommandArgs> = {
+  command,
+  describe,
+  handler,
+  builder,
+};
+
+export default fetchCommand;
+
+module.exports = fetchCommand;
