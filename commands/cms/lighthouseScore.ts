@@ -1,23 +1,29 @@
-// @ts-nocheck
-const SpinniesManager = require('../../lib/ui/SpinniesManager');
-const {
-  addAccountOptions,
-  addConfigOptions,
-  addUseEnvironmentOptions,
-} = require('../../lib/commonOpts');
-const { logger } = require('@hubspot/local-dev-lib/logger');
-const { getTableContents, getTableHeader } = require('../../lib/ui/table');
-const { promptUser } = require('../../lib/prompts/promptUtils');
-const { i18n } = require('../../lib/lang');
-const { fetchThemes } = require('@hubspot/local-dev-lib/api/designManager');
-const {
+import { Argv, ArgumentsCamelCase } from 'yargs';
+import SpinniesManager from '../../lib/ui/SpinniesManager';
+import { logger } from '@hubspot/local-dev-lib/logger';
+import { getTableContents, getTableHeader } from '../../lib/ui/table';
+import { promptUser } from '../../lib/prompts/promptUtils';
+import { i18n } from '../../lib/lang';
+import { fetchThemes } from '@hubspot/local-dev-lib/api/designManager';
+import {
   requestLighthouseScore,
   getLighthouseScoreStatus,
   getLighthouseScore,
-} = require('@hubspot/local-dev-lib/api/lighthouseScore');
-const { HUBSPOT_FOLDER, MARKETPLACE_FOLDER } = require('../../lib/constants');
-const { uiLink } = require('../../lib/ui');
-const { EXIT_CODES } = require('../../lib/enums/exitCodes');
+} from '@hubspot/local-dev-lib/api/lighthouseScore';
+import {
+  RequestLighthouseScoreResponse,
+  GetLighthouseScoreResponse,
+} from '@hubspot/local-dev-lib/types/Lighthouse';
+import { HUBSPOT_FOLDER, MARKETPLACE_FOLDER } from '../../lib/constants';
+import { uiLink } from '../../lib/ui';
+import { EXIT_CODES } from '../../lib/enums/exitCodes';
+import {
+  AccountArgs,
+  CommonArgs,
+  EnvironmentArgs,
+  YargsCommandModule,
+} from '../../types/Yargs';
+import { makeYargsBuilder } from '../../lib/yargsUtils';
 
 const DEFAULT_TABLE_HEADER = [
   'Accessibility',
@@ -27,50 +33,67 @@ const DEFAULT_TABLE_HEADER = [
   'SEO',
 ];
 
-exports.command = 'lighthouse-score [--theme]';
-exports.describe = false;
+const EMPTY_SCORE: GetLighthouseScoreResponse['scores'][0] = {
+  accessibilityScore: 0,
+  bestPracticesScore: 0,
+  performanceScore: 0,
+  pwaScore: 0,
+  seoScore: 0,
+  runWarnings: [],
+  auditDetails: null,
+  emulatedFormFactor: '',
+  templatePath: null,
+  link: null,
+};
 
-const selectTheme = async accountId => {
+const command = 'lighthouse-score [--theme]';
+const describe = undefined;
+
+type LighthouseScoreArgs = CommonArgs &
+  AccountArgs &
+  EnvironmentArgs & { theme?: string; target: string; verbose: boolean };
+
+async function selectTheme(accountId: number): Promise<string> {
+  let themes: string[] = [];
+  try {
+    const { data: result } = await fetchThemes(accountId, {
+      limit: 500,
+      sorting: 'MOST_USED',
+    });
+    if (result && result.objects) {
+      themes = result.objects
+        .map(({ theme }) => theme.path)
+        .filter(
+          themePath =>
+            !themePath.startsWith(HUBSPOT_FOLDER) &&
+            !themePath.startsWith(MARKETPLACE_FOLDER)
+        );
+    }
+  } catch (err) {
+    logger.error(
+      i18n(
+        `commands.cms.subcommands.lighthouseScore.errors.failedToFetchThemes`
+      )
+    );
+    process.exit(EXIT_CODES.ERROR);
+  }
+
   const { theme: selectedTheme } = await promptUser([
     {
       type: 'list',
-      look: false,
       name: 'theme',
       message: i18n(
         `commands.cms.subcommands.lighthouseScore.info.promptMessage`
       ),
-      choices: async () => {
-        try {
-          const { data: result } = await fetchThemes(accountId, {
-            limit: 500,
-            sorting: 'MOST_USED',
-          });
-          if (result && result.objects) {
-            return result.objects
-              .map(({ theme }) => theme.path)
-              .filter(
-                themePath =>
-                  !themePath.startsWith(HUBSPOT_FOLDER) &&
-                  !themePath.startsWith(MARKETPLACE_FOLDER)
-              );
-          }
-        } catch (err) {
-          logger.error(
-            i18n(
-              `commands.cms.subcommands.lighthouseScore.errors.failedToFetchThemes`
-            )
-          );
-          process.exit(EXIT_CODES.ERROR);
-        }
-      },
+      choices: themes,
     },
   ]);
 
   return selectedTheme;
-};
+}
 
-exports.handler = async options => {
-  const { target, verbose, theme, derivedAccountId } = options;
+async function handler(args: ArgumentsCamelCase<LighthouseScoreArgs>) {
+  const { target, verbose, theme, derivedAccountId } = args;
 
   const includeDesktopScore = target === 'desktop' || !verbose;
   const includeMobileScore = target === 'mobile' || !verbose;
@@ -82,7 +105,7 @@ exports.handler = async options => {
       const { data: result } = await fetchThemes(derivedAccountId, {
         name: encodeURIComponent(themeToCheck),
       });
-      isValidTheme = result && result.total;
+      isValidTheme = result && !!result.total;
     } catch (err) {
       isValidTheme = false;
     }
@@ -100,7 +123,8 @@ exports.handler = async options => {
   }
 
   // Kick off the scoring
-  let requestResult;
+  let requestResult: RequestLighthouseScoreResponse | undefined;
+
   try {
     const { data } = await requestLighthouseScore(derivedAccountId, {
       themePath: themeToCheck,
@@ -130,11 +154,11 @@ exports.handler = async options => {
       ),
     });
 
-    const checkScoreStatus = async () => {
+    async function checkScoreStatus(): Promise<void> {
       let desktopScoreStatus = 'COMPLETED';
       if (includeDesktopScore) {
         const { data } = await getLighthouseScoreStatus(derivedAccountId, {
-          themeId: requestResult.desktopId,
+          themeId: requestResult!.desktopId,
         });
         desktopScoreStatus = data;
       }
@@ -142,7 +166,7 @@ exports.handler = async options => {
       let mobileScoreStatus = 'COMPLETED';
       if (includeDesktopScore) {
         const { data } = await getLighthouseScoreStatus(derivedAccountId, {
-          themeId: requestResult.mobileId,
+          themeId: requestResult!.mobileId,
         });
         mobileScoreStatus = data;
       }
@@ -154,7 +178,7 @@ exports.handler = async options => {
         await new Promise(resolve => setTimeout(resolve, 2000));
         await checkScoreStatus();
       }
-    };
+    }
 
     await checkScoreStatus();
 
@@ -165,9 +189,9 @@ exports.handler = async options => {
   }
 
   // Fetch the scoring results
-  let desktopScoreResult = {};
-  let mobileScoreResult = {};
-  let verboseViewAverageScoreResult = {};
+  let desktopScoreResult: GetLighthouseScoreResponse | undefined;
+  let mobileScoreResult: GetLighthouseScoreResponse | undefined;
+  let verboseViewAverageScoreResult: GetLighthouseScoreResponse | undefined;
   try {
     const params = { isAverage: !verbose };
 
@@ -191,8 +215,8 @@ exports.handler = async options => {
       const { data } = await getLighthouseScore(derivedAccountId, {
         ...params,
         isAverage: true,
-        desktopId: includeDesktopScore ? requestResult.desktopId : null,
-        mobileId: includeMobileScore ? requestResult.mobileId : null,
+        desktopId: includeDesktopScore ? requestResult.desktopId : undefined,
+        mobileId: includeMobileScore ? requestResult.mobileId : undefined,
       });
       verboseViewAverageScoreResult = data;
     }
@@ -206,13 +230,25 @@ exports.handler = async options => {
   }
 
   if (verbose) {
+    const scoreResult =
+      target === 'desktop' ? desktopScoreResult : mobileScoreResult;
+
+    if (!verboseViewAverageScoreResult || !scoreResult) {
+      logger.error(
+        i18n(
+          `commands.cms.subcommands.lighthouseScore.errors.failedToGetLighthouseScore`
+        )
+      );
+      process.exit(EXIT_CODES.ERROR);
+    }
+
     logger.log(`${themeToCheck} ${target} scores`);
 
     const tableHeader = getTableHeader(DEFAULT_TABLE_HEADER);
 
     const scores = verboseViewAverageScoreResult.scores
       ? verboseViewAverageScoreResult.scores[0]
-      : {};
+      : EMPTY_SCORE;
 
     const averageTableData = [
       scores.accessibilityScore,
@@ -238,9 +274,6 @@ exports.handler = async options => {
       ...DEFAULT_TABLE_HEADER,
     ]);
 
-    const scoreResult =
-      target === 'desktop' ? desktopScoreResult : mobileScoreResult;
-
     const templateTableData = scoreResult.scores.map(score => {
       return [
         score.templatePath,
@@ -263,7 +296,9 @@ exports.handler = async options => {
     );
 
     scoreResult.scores.forEach(score => {
-      logger.log(' ', uiLink(score.templatePath, score.link));
+      if (score.templatePath && score.link) {
+        logger.log(' ', uiLink(score.templatePath, score.link));
+      }
     });
 
     if (scoreResult.failedTemplatePaths.length) {
@@ -288,8 +323,11 @@ exports.handler = async options => {
     logger.log(`Theme: ${themeToCheck}`);
     const tableHeader = getTableHeader(['Target', ...DEFAULT_TABLE_HEADER]);
 
-    const getTableData = (target, scoreResult) => {
-      const scores = scoreResult.scores ? scoreResult.scores[0] : {};
+    const getTableData = (
+      target: string,
+      scoreResult?: GetLighthouseScoreResponse
+    ): [string, number, number, number, number, number] => {
+      const scores = scoreResult?.scores ? scoreResult.scores[0] : EMPTY_SCORE;
       return [
         target,
         scores.accessibilityScore,
@@ -324,10 +362,10 @@ exports.handler = async options => {
     )}.`
   );
 
-  process.exit();
-};
+  process.exit(EXIT_CODES.SUCCESS);
+}
 
-exports.builder = yargs => {
+function cmslighthouseScoreBuilder(yargs: Argv): Argv<LighthouseScoreArgs> {
   yargs.option('theme', {
     describe: i18n(
       `commands.cms.subcommands.lighthouseScore.options.theme.describe`
@@ -356,9 +394,32 @@ exports.builder = yargs => {
     ],
   ]);
 
-  addConfigOptions(yargs);
-  addAccountOptions(yargs);
-  addUseEnvironmentOptions(yargs);
+  return yargs as Argv<LighthouseScoreArgs>;
+}
 
-  return yargs;
+const builder = makeYargsBuilder<LighthouseScoreArgs>(
+  cmslighthouseScoreBuilder,
+  command,
+  describe,
+  {
+    useGlobalOptions: true,
+    useConfigOptions: true,
+    useAccountOptions: true,
+    useEnvironmentOptions: true,
+  }
+);
+
+const cmslighthouseScoreCommand: YargsCommandModule<
+  unknown,
+  LighthouseScoreArgs
+> = {
+  command,
+  describe,
+  handler,
+  builder,
 };
+
+export default cmslighthouseScoreCommand;
+
+// TODO remove this after cms.ts is ported to TypeScript
+module.exports = cmslighthouseScoreCommand;
