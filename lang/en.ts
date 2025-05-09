@@ -7,6 +7,12 @@ import {
 } from '../lib/ui';
 import { getProjectSettingsUrl } from '../lib/projects/urls';
 
+type LangFunction = (...args: never[]) => string;
+
+type LangObject = {
+  [key: string]: string | LangFunction | LangObject;
+};
+
 export const commands = {
   generalErrors: {
     updateNotify: {
@@ -2659,7 +2665,7 @@ export const commands = {
       },
     },
   },
-};
+} as const satisfies LangObject;
 
 export const lib = {
   process: {
@@ -3608,4 +3614,4 @@ export const lib = {
       copyingProjectFilesFailed: 'Unable to copy migrated project files',
     },
   },
-};
+} as const satisfies LangObject;
