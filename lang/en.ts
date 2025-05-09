@@ -2701,7 +2701,7 @@ export const lib = {
       defaultWarning: chalk.bold(
         'Changing project configuration requires a new project build.'
       ),
-      defaultPublicAppWarning: (installCount: string, installText: string) =>
+      defaultPublicAppWarning: (installCount: number, installText: string) =>
         `${chalk.bold('Changing project configuration requires a new project build.')}\n\nThis will affect your public app's ${chalk.bold(`${installCount} existing ${installText}`)}. If your app has users in production, we strongly recommend creating a copy of this app to test your changes before proceding.`,
       header: (warning: string) =>
         `${warning} To reflect these changes and continue testing:`,
@@ -2710,7 +2710,7 @@ export const lib = {
       restartDev: `  * Re-run ${uiCommandReference('hs project dev')}`,
       pushToGithub: '  * Commit and push your changes to GitHub',
       defaultMarketplaceAppWarning: (
-        installCount: string,
+        installCount: number,
         accountText: string
       ) =>
         `${chalk.bold('Changing project configuration requires creating a new project build.')}\n\nYour marketplace app is currently installed in ${chalk.bold(`${installCount} ${accountText}`)}. Any uploaded changes will impact your app's users. We strongly recommend creating a copy of this app to test your changes before proceding.`,
@@ -2718,7 +2718,7 @@ export const lib = {
     activeInstallWarning: {
       installCount: (
         appName: string,
-        installCount: string,
+        installCount: number,
         installText: string
       ) =>
         `${chalk.bold(`The app ${appName} has ${installCount} production ${installText}`)}`,
@@ -2781,7 +2781,10 @@ export const lib = {
       genericError: `An error occurred while creating the initial build for this project. Run ${uiCommandReference('hs project upload')} to try again.`,
     },
     checkIfParentAccountIsAuthed: {
-      notAuthedError: (parentAccountId: string, accountIdentifier: string) =>
+      notAuthedError: (
+        parentAccountId: number | string,
+        accountIdentifier: string
+      ) =>
         `To develop this project locally, run ${uiCommandReference(
           `hs auth --account=${parentAccountId}`
         )} to authenticate the App Developer Account ${parentAccountId} associated with ${accountIdentifier}.`,
@@ -2833,25 +2836,25 @@ export const lib = {
     makePollTaskStatusFunc: {
       errorSummary: 'See below for a summary of errors.',
       componentCountSingular: 'Found 1 component in this project\n',
-      componentCount: (numComponents: string) =>
+      componentCount: (numComponents: number) =>
         `Found ${numComponents} components in this project\n`,
       successStatusText: 'DONE',
       failedStatusText: 'FAILED',
       errorFetchingTaskStatus: (taskType: string) =>
         `Error fetching ${taskType} status`,
     },
-    pollBuildAutodeployStatusError: (buildId: string) =>
+    pollBuildAutodeployStatusError: (buildId: number) =>
       `Error fetching autodeploy status for build #${buildId}`,
     pollProjectBuildAndDeploy: {
       buildSucceededAutomaticallyDeploying: (
-        buildId: string,
+        buildId: number,
         accountIdentifier: string
       ) =>
         `Build #${buildId} succeeded. ${chalk.bold('Automatically deploying')} to ${accountIdentifier}\n`,
       cleanedUpTempFile: (path: string) => `Cleaned up temporary file ${path}`,
       viewDeploys: 'View all deploys for this project in HubSpot',
       unableToFindAutodeployStatus: (
-        buildId: string,
+        buildId: number,
         viewDeploysLink: string
       ) =>
         `Unable to find the auto deploy for build #${buildId}. This deploy may have been skipped. ${viewDeploysLink}.`,
@@ -2865,13 +2868,13 @@ export const lib = {
         `Failed to upload ${chalk.bold(projectName)} project files to ${accountIdentifier}`,
       succeed: (projectName: string, accountIdentifier: string) =>
         `Uploaded ${chalk.bold(projectName)} project files to ${accountIdentifier}`,
-      buildCreated: (projectName: string, buildId: string) =>
+      buildCreated: (projectName: string, buildId: number) =>
         `Project "${projectName}" uploaded and build #${buildId} created`,
     },
     handleProjectUpload: {
       emptySource: (srcDir: string) =>
         `Source directory "${srcDir}" is empty. Add files to your project and rerun ${uiCommandReference('hs project upload')} to upload them to HubSpot.`,
-      compressed: (byteCount: string) =>
+      compressed: (byteCount: number) =>
         `Project files compressed: ${byteCount} bytes`,
       compressing: (path: string) => `Compressing build files to "${path}"`,
       fileFiltered: (filename: string) =>
@@ -3303,7 +3306,7 @@ export const lib = {
         scopes: {
           message:
             "The personal access key you provided doesn't include developer test account permissions.",
-          instructions: (accountName: string, url: string) =>
+          instructions: (accountName: string | number, url: string) =>
             `To update CLI permissions for "${accountName}": \n- Go to ${url}, deactivate the existing personal access key, and create a new one that includes developer test account permissions. \n- Update the CLI config for this account by running ${chalk.bold('hs auth')} and entering the new key.\n`,
         },
       },
@@ -3334,7 +3337,7 @@ export const lib = {
           scopes: {
             message:
               "The personal access key you provided doesn't include developer sandbox permissions.",
-            instructions: (accountName: string, url: string) =>
+            instructions: (accountName: string | number, url: string) =>
               `To update CLI permissions for "${accountName}": \n- Go to ${url}, deactivate the existing personal access key, and create a new one that includes developer sandbox permissions. \n- Update the CLI config for this account by running ${chalk.bold('hs auth')} and entering the new key.\n`,
           },
           generic: 'An error occurred while creating a developer sandbox',
@@ -3557,8 +3560,11 @@ export const lib = {
         upToDate: 'App is already up to date',
         isPrivateApp: 'Private apps are not currently migratable',
         listedInMarketplace: 'Listed apps are not currently migratable',
-        projectConnectedToGitHub: (projectName: string, accountId: number) =>
-          `The project is linked to a GitHub repository.  ${uiLink('Visit the project settings page to unlink it', getProjectSettingsUrl(projectName, accountId)!)}`,
+        projectConnectedToGitHub: (
+          projectName: string | undefined,
+          accountId: number
+        ) =>
+          `The project is linked to a GitHub repository.  ${uiLink('Visit the project settings page to unlink it', getProjectSettingsUrl(projectName!, accountId)!)}`,
         partOfProjectAlready: `This app is part of a project, run ${uiCommandReference('hs project migrate')} from the project directory to migrate it`,
         generic: (reasonCode: string) => `Unable to migrate app: ${reasonCode}`,
       },
@@ -3571,7 +3577,7 @@ export const lib = {
         authCommand: string
       ) =>
         `Only public apps created in a developer account can be converted to a project component. Select a connected developer account with ${useCommand} or ${authCommand} and try again.`,
-      appWithAppIdNotFound: (appId: string) =>
+      appWithAppIdNotFound: (appId: number) =>
         `Could not find an app with the id ${appId} `,
       noAppsForProject: (projectName: string) =>
         `No apps associated with project ${projectName}`,

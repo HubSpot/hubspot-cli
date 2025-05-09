@@ -177,7 +177,6 @@ class LocalDevManagerV2 {
       lib.LocalDevManager.activeInstallWarning.installCount(
         this.activePublicAppData.name,
         this.publicAppActiveInstalls,
-
         this.publicAppActiveInstalls === 1 ? 'account' : 'accounts'
       )
     );
