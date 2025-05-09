@@ -104,7 +104,6 @@ async function handler(args: ArgumentsCamelCase<UploadArgs>): Promise<void> {
       projectRoot,
       absoluteSrcPath,
       undefined,
-      // @ts-expect-error - fieldOptions is a string or string[]
       args.fieldOptions
     ).init();
     if (fieldsJs.rejected) return;
