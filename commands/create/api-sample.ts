@@ -11,7 +11,7 @@ import { CreatableCmsAsset, ApiSampleConfig } from '../../types/Cms';
 import { commands } from '../../lang/en';
 import { uiLogger } from '../../lib/ui/logger';
 
-const ApiSampleAssetType: CreatableCmsAsset = {
+const apiSampleAssetType: CreatableCmsAsset = {
   hidden: true,
   dest: ({ dest }) => dest,
   validate: ({ name }) => {
@@ -83,6 +83,4 @@ const ApiSampleAssetType: CreatableCmsAsset = {
   },
 };
 
-export default ApiSampleAssetType;
-// TODO: Remove
-module.exports = ApiSampleAssetType;
+export default apiSampleAssetType;
