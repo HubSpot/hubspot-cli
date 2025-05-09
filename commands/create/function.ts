@@ -1,12 +1,11 @@
-// @ts-nocheck
-const { createFunction } = require('@hubspot/local-dev-lib/cms/functions');
-const {
-  createFunctionPrompt,
-} = require('../../lib/prompts/createFunctionPrompt');
-const { logError } = require('../../lib/errorHandlers/index');
-const { EXIT_CODES } = require('../../lib/enums/exitCodes');
+import { createFunction } from '@hubspot/local-dev-lib/cms/functions';
+import { createFunctionPrompt } from '../../lib/prompts/createFunctionPrompt';
+import { logError } from '../../lib/errorHandlers/index';
+import { EXIT_CODES } from '../../lib/enums/exitCodes';
+import { CreatableCmsAsset } from '../../types/Cms';
 
-module.exports = {
+const FunctionAssetType: CreatableCmsAsset = {
+  hidden: false,
   dest: ({ name }) => name,
   execute: async ({ dest }) => {
     const functionDefinition = await createFunctionPrompt();
@@ -18,3 +17,7 @@ module.exports = {
     }
   },
 };
+
+export default FunctionAssetType;
+// TODO: Remove
+module.exports = FunctionAssetType;

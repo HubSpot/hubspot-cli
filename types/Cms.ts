@@ -12,7 +12,7 @@ export type CmsAssetOperationArgs = {
 export type CreatableCmsAsset = {
   hidden: boolean;
   dest: (args: CmsAssetOperationArgs) => string;
-  validate: (args: CmsAssetOperationArgs) => boolean;
+  validate?: (args: CmsAssetOperationArgs) => boolean;
   execute: (args: CmsAssetOperationArgs) => Promise<void>;
 };
 

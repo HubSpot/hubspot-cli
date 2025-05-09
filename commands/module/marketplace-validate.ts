@@ -1,29 +1,42 @@
-// @ts-nocheck
-const SpinniesManager = require('../../lib/ui/SpinniesManager');
-const {
-  addConfigOptions,
-  addAccountOptions,
-  addUseEnvironmentOptions,
-} = require('../../lib/commonOpts');
-const { trackCommandUsage } = require('../../lib/usageTracking');
-const {
+import { Argv, ArgumentsCamelCase } from 'yargs';
+import SpinniesManager from '../../lib/ui/SpinniesManager';
+import { trackCommandUsage } from '../../lib/usageTracking';
+import {
   kickOffValidation,
   pollForValidationFinish,
   fetchValidationResults,
   processValidationErrors,
   displayValidationResults,
-} = require('../../lib/marketplaceValidate');
-const { i18n } = require('../../lib/lang');
+} from '../../lib/marketplaceValidate';
+import { i18n } from '../../lib/lang';
+import {
+  CommonArgs,
+  ConfigArgs,
+  AccountArgs,
+  EnvironmentArgs,
+  YargsCommandModule,
+} from '../../types/Yargs';
+import { EXIT_CODES } from '../../lib/enums/exitCodes';
+import { makeYargsBuilder } from '../../lib/yargsUtils';
 
-exports.command = 'marketplace-validate <src>';
-exports.describe = i18n(
+const command = 'marketplace-validate <src>';
+const describe = i18n(
   `commands.module.subcommands.marketplaceValidate.describe`
 );
 
-exports.handler = async options => {
-  const { src, derivedAccountId } = options;
+type MarketplaceValidateArgs = CommonArgs &
+  ConfigArgs &
+  AccountArgs &
+  EnvironmentArgs & {
+    src: string;
+  };
 
-  trackCommandUsage('validate', null, derivedAccountId);
+async function handler(
+  args: ArgumentsCamelCase<MarketplaceValidateArgs>
+): Promise<void> {
+  const { src, derivedAccountId } = args;
+
+  trackCommandUsage('validate', undefined, derivedAccountId);
 
   SpinniesManager.init();
 
@@ -59,19 +72,41 @@ exports.handler = async options => {
     validationResults
   );
 
-  process.exit();
-};
+  process.exit(EXIT_CODES.SUCCESS);
+}
 
-exports.builder = yargs => {
-  addConfigOptions(yargs);
-  addAccountOptions(yargs);
-  addUseEnvironmentOptions(yargs);
-
+function marketplaceValidateBuilder(
+  yargs: Argv
+): Argv<MarketplaceValidateArgs> {
   yargs.positional('src', {
     describe: i18n(
       `commands.module.subcommands.marketplaceValidate.positionals.src.describe`
     ),
     type: 'string',
   });
-  return yargs;
+
+  return yargs as Argv<MarketplaceValidateArgs>;
+}
+
+const builder = makeYargsBuilder<MarketplaceValidateArgs>(
+  marketplaceValidateBuilder,
+  command,
+  describe,
+  {
+    useConfigOptions: true,
+    useAccountOptions: true,
+    useEnvironmentOptions: true,
+  }
+);
+
+const marketplaceValidateCommand: YargsCommandModule<
+  unknown,
+  MarketplaceValidateArgs
+> = {
+  command,
+  describe,
+  handler,
+  builder,
 };
+
+export default marketplaceValidateCommand;
