@@ -1,17 +1,16 @@
 import { Argv } from 'yargs';
-import { addGlobalOptions } from '../lib/commonOpts';
-import * as addSecretCommand from './secret/addSecret';
-import * as listSecretCommand from './secret/listSecret';
-import * as deleteSecretCommand from './secret/deleteSecret';
-import * as updateSecretCommand from './secret/updateSecret';
+import addSecretCommand from './secret/addSecret';
+import listSecretCommand from './secret/listSecret';
+import deleteSecretCommand from './secret/deleteSecret';
+import updateSecretCommand from './secret/updateSecret';
 import { i18n } from '../lib/lang';
+import { YargsCommandModuleBucket } from '../types/Yargs';
+import { makeYargsBuilder } from '../lib/yargsUtils';
 
-export const command = ['secret', 'secrets'];
-export const describe = i18n(`commands.secret.describe`);
+const command = ['secret', 'secrets'];
+const describe = i18n(`commands.secret.describe`);
 
-export function builder(yargs: Argv): Argv {
-  addGlobalOptions(yargs);
-
+function secretBuilder(yargs: Argv): Argv {
   yargs
     .command(listSecretCommand)
     .command(addSecretCommand)
@@ -20,3 +19,17 @@ export function builder(yargs: Argv): Argv {
     .demandCommand(1, '');
   return yargs;
 }
+
+const builder = makeYargsBuilder(secretBuilder, command, describe);
+
+const secretCommand: YargsCommandModuleBucket = {
+  command,
+  describe,
+  builder,
+  handler: () => {},
+};
+
+export default secretCommand;
+
+// TODO Remove this legacy export once we've migrated all commands to TS
+module.exports = secretCommand;
