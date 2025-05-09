@@ -1,14 +1,8 @@
 import { Argv, ArgumentsCamelCase } from 'yargs';
 import { logger } from '@hubspot/local-dev-lib/logger';
 import { addSecret, fetchSecrets } from '@hubspot/local-dev-lib/api/secrets';
-
 import { logError, ApiErrorContext } from '../../lib/errorHandlers/index';
 import { trackCommandUsage } from '../../lib/usageTracking';
-import {
-  addConfigOptions,
-  addAccountOptions,
-  addUseEnvironmentOptions,
-} from '../../lib/commonOpts';
 import { uiAccountDescription } from '../../lib/ui';
 import {
   secretValuePrompt,
@@ -22,17 +16,19 @@ import {
   ConfigArgs,
   AccountArgs,
   EnvironmentArgs,
+  YargsCommandModule,
 } from '../../types/Yargs';
+import { makeYargsBuilder } from '../../lib/yargsUtils';
 
-export const command = 'add [name]';
-export const describe = i18n(`commands.secret.subcommands.add.describe`);
+const command = 'add [name]';
+const describe = i18n(`commands.secret.subcommands.add.describe`);
 
-type CombinedArgs = ConfigArgs & AccountArgs & EnvironmentArgs;
-type AddSecretArgs = CommonArgs & CombinedArgs & { name?: string };
+type AddSecretArgs = CommonArgs &
+  ConfigArgs &
+  AccountArgs &
+  EnvironmentArgs & { name?: string };
 
-export async function handler(
-  args: ArgumentsCamelCase<AddSecretArgs>
-): Promise<void> {
+async function handler(args: ArgumentsCamelCase<AddSecretArgs>): Promise<void> {
   const { name, derivedAccountId } = args;
   let secretName = name;
 
@@ -83,11 +79,7 @@ export async function handler(
   }
 }
 
-export function builder(yargs: Argv): Argv<AddSecretArgs> {
-  addConfigOptions(yargs);
-  addAccountOptions(yargs);
-  addUseEnvironmentOptions(yargs);
-
+function addSecretBuilder(yargs: Argv): Argv<AddSecretArgs> {
   yargs.positional('name', {
     describe: i18n(`commands.secret.subcommands.add.positionals.name.describe`),
     type: 'string',
@@ -95,3 +87,24 @@ export function builder(yargs: Argv): Argv<AddSecretArgs> {
 
   return yargs as Argv<AddSecretArgs>;
 }
+
+const builder = makeYargsBuilder<AddSecretArgs>(
+  addSecretBuilder,
+  command,
+  describe,
+  {
+    useGlobalOptions: true,
+    useConfigOptions: true,
+    useAccountOptions: true,
+    useEnvironmentOptions: true,
+  }
+);
+
+const addSecretCommand: YargsCommandModule<unknown, AddSecretArgs> = {
+  command,
+  describe,
+  handler,
+  builder,
+};
+
+export default addSecretCommand;

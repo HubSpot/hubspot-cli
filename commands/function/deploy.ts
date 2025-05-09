@@ -22,6 +22,18 @@ import {
 } from '../../types/Yargs';
 import { makeYargsBuilder } from '../../lib/yargsUtils';
 
+type FunctionBuildError = {
+  status: 'ERROR';
+  errorReason: string;
+  cdnUrl: string;
+};
+
+function isFunctionBuildError(e: unknown): e is FunctionBuildError {
+  return (
+    typeof e === 'object' && e !== null && 'status' in e && e.status === 'ERROR'
+  );
+}
+
 const command = 'deploy <path>';
 const describe = undefined;
 
@@ -105,15 +117,8 @@ async function handler(
           functionPath,
         })
       );
-    } else if (
-      typeof e === 'object' &&
-      e !== null &&
-      'status' in e &&
-      e.status === 'ERROR' &&
-      'cdnUrl' in e &&
-      'errorReason' in e
-    ) {
-      await outputBuildLog(e.cdnUrl as string);
+    } else if (isFunctionBuildError(e)) {
+      await outputBuildLog(e.cdnUrl);
       logger.error(
         i18n('commands.function.subcommands.deploy.errors.buildError', {
           details: String(e.errorReason),
