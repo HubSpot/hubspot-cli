@@ -354,3 +354,6 @@ const uploadCommand: YargsCommandModule<unknown, UploadArgs> = {
 };
 
 export default uploadCommand;
+
+// TODO remove this after cli.ts is ported to TS
+module.exports = uploadCommand;
