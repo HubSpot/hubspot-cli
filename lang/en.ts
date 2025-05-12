@@ -5,7 +5,11 @@ import {
   uiCommandReference,
   uiLink,
 } from '../lib/ui';
-import { getProjectSettingsUrl } from '../lib/projects/urls';
+import {
+  getProjectDetailUrl,
+  getProjectSettingsUrl,
+} from '../lib/projects/urls';
+import { UI_COLORS } from '../lib/ui';
 
 type LangFunction = (...args: never[]) => string;
 
@@ -2689,11 +2693,20 @@ export const lib = {
       `Your project ${chalk.bold(projectName)} exists in ${accountIdentifier}, but has no deployed build. Projects must be successfully deployed to be developed locally. Address any build and deploy errors your project may have, then run ${uploadCommand} to upload and deploy your project.`,
     noComponents: 'There are no components in this project.',
     betaMessage: 'HubSpot projects local development',
-    learnMoreLocalDevServer: 'Learn more about the projects local dev server',
+    learnMoreLocalDevServer: uiLink(
+      'Learn more about the projects local dev server',
+      'https://developers.hubspot.com/docs/platform/project-cli-commands#start-a-local-development-server'
+    ),
     running: (projectName: string, accountIdentifier: string) =>
-      `Running ${chalk.bold(projectName)} locally on ${accountIdentifier}, waiting for changes ...`,
+      chalk.hex(UI_COLORS.SORBET)(
+        `Running ${chalk.bold(projectName)} locally on ${accountIdentifier}, waiting for changes ...`
+      ),
     quitHelper: `Press ${chalk.bold('q')} to stop the local dev server`,
-    viewProjectLink: 'View project in HubSpot',
+    viewProjectLink: (name: string, accountId: number) =>
+      uiLink(
+        'View project in HubSpot',
+        getProjectDetailUrl(name, accountId) || ''
+      ),
     viewTestAccountLink: 'View developer test account in HubSpot',
     exitingStart: 'Stopping local dev server ...',
     exitingSucceed: 'Successfully exited',

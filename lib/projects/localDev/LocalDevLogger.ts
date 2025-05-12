@@ -1,31 +1,27 @@
 import { getAccountId } from '@hubspot/local-dev-lib/config';
 import { getConfigDefaultAccount } from '@hubspot/local-dev-lib/config';
 import { logger } from '@hubspot/local-dev-lib/logger';
-import chalk from 'chalk';
 
 import { uiLogger } from '../../ui/logger';
 import {
-  uiLink,
   uiBetaTag,
   uiLine,
-  UI_COLORS,
   uiAccountDescription,
   uiCommandReference,
 } from '../../ui';
 import { lib } from '../../../lang/en';
 import { LocalDevState } from '../../../types/LocalDev';
-import { getProjectDetailUrl } from '../../projects/urls';
 import SpinniesManager from '../../ui/SpinniesManager';
 
 class LocalDevLogger {
   private state: LocalDevState;
   private mostRecentUploadWarning: string | null;
-  private uploadWarnings: string[];
+  private uploadWarnings: Set<string>;
 
   constructor(state: LocalDevState) {
     this.state = state;
     this.mostRecentUploadWarning = null;
-    this.uploadWarnings = [];
+    this.uploadWarnings = new Set();
   }
 
   private logUploadInstructions(): void {
@@ -67,7 +63,7 @@ class LocalDevLogger {
   uploadWarning(): void {
     // At the moment, there is only one additional warning. We may need to do this in a
     // more robust way in the future
-    const additionalWarnings = this.uploadWarnings.join('\n\n');
+    const additionalWarnings = Array.from(this.uploadWarnings).join('\n\n');
     const warning = `${lib.LocalDevManager.uploadWarning.defaultWarning} ${additionalWarnings}`;
 
     // Avoid logging the warning to the console if it is currently the most
@@ -82,7 +78,7 @@ class LocalDevLogger {
   }
 
   addUploadWarning(warning: string): void {
-    this.uploadWarnings.push(warning);
+    this.uploadWarnings.add(warning);
   }
 
   missingComponentsWarning(components: string[]): void {
@@ -137,29 +133,19 @@ class LocalDevLogger {
 
     uiBetaTag(lib.LocalDevManager.betaMessage);
 
-    uiLogger.log(
-      uiLink(
-        lib.LocalDevManager.learnMoreLocalDevServer,
-        'https://developers.hubspot.com/docs/platform/project-cli-commands#start-a-local-development-server'
-      )
-    );
+    uiLogger.log(lib.LocalDevManager.learnMoreLocalDevServer);
 
     uiLogger.log('');
     uiLogger.log(
-      chalk.hex(UI_COLORS.SORBET)(
-        lib.LocalDevManager.running(
-          this.state.projectConfig.name,
-          uiAccountDescription(this.state.targetProjectAccountId)
-        )
+      lib.LocalDevManager.running(
+        this.state.projectConfig.name,
+        uiAccountDescription(this.state.targetProjectAccountId)
       )
     );
     uiLogger.log(
-      uiLink(
-        lib.LocalDevManager.viewProjectLink,
-        getProjectDetailUrl(
-          this.state.projectConfig.name,
-          this.state.targetProjectAccountId
-        ) || ''
+      lib.LocalDevManager.viewProjectLink(
+        this.state.projectConfig.name,
+        this.state.targetProjectAccountId
       )
     );
 
