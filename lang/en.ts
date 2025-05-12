@@ -2736,7 +2736,7 @@ export const lib = {
         `${chalk.bold('Changing project configuration requires creating a new project build.')}\n\nYour marketplace app is currently installed in ${chalk.bold(`${installCount} ${accountText}`)}. Any uploaded changes will impact your app's users. We strongly recommend creating a copy of this app to test your changes before proceding.`,
     },
     activeInstallWarning: {
-      installCount: (appName, installCount) =>
+      installCount: (appName: string, installCount: number) =>
         `${chalk.bold(`The app ${appName} is installed in ${installCount} production ${installCount === 1 ? 'account' : 'accounts'}`)}`,
       explanation:
         'Some changes made during local development may need to be synced to HubSpot, which will impact those existing installs. We strongly recommend creating a copy of this app to use instead.',
@@ -2755,7 +2755,7 @@ export const lib = {
     },
   },
   AppDevModeInterface: {
-    defaultMarketplaceAppWarning: installCount =>
+    defaultMarketplaceAppWarning: (installCount: number) =>
       `\n\nYour marketplace app is currently installed in ${chalk.bold(`${installCount} ${installCount === 1 ? 'account' : 'accounts'}`)}. Any uploaded changes will impact your app's users. We strongly recommend creating a copy of this app to test your changes before proceding.`,
   },
   localDevHelpers: {
