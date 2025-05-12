@@ -1,5 +1,4 @@
-// @ts-nocheck
-import yargs from 'yargs';
+import yargs, { Argv } from 'yargs';
 import {
   addConfigOptions,
   addAccountOptions,
@@ -8,8 +7,14 @@ import {
 
 jest.mock('yargs');
 jest.mock('../../lib/commonOpts');
-yargs.options.mockReturnValue(yargs);
-yargs.conflicts.mockReturnValue(yargs);
+
+const optionsSpy = jest
+  .spyOn(yargs as Argv, 'options')
+  .mockReturnValue(yargs as Argv);
+
+const conflictsSpy = jest
+  .spyOn(yargs as Argv, 'conflicts')
+  .mockReturnValue(yargs as Argv);
 
 // Import this last so mocks apply
 import logsCommand from '../logs';
@@ -41,8 +46,8 @@ describe('commands/logs', () => {
     it('should support the correct options', () => {
       logsCommand.builder(yargs);
 
-      expect(yargs.options).toHaveBeenCalledTimes(1);
-      expect(yargs.options).toHaveBeenCalledWith({
+      expect(optionsSpy).toHaveBeenCalledTimes(1);
+      expect(optionsSpy).toHaveBeenCalledWith({
         latest: expect.objectContaining({
           alias: 'l',
           type: 'boolean',
@@ -71,8 +76,8 @@ describe('commands/logs', () => {
 
     it('should set the correct conflicts', () => {
       logsCommand.builder(yargs);
-      expect(yargs.conflicts).toHaveBeenCalledTimes(1);
-      expect(yargs.conflicts).toHaveBeenCalledWith('follow', 'limit');
+      expect(conflictsSpy).toHaveBeenCalledTimes(1);
+      expect(conflictsSpy).toHaveBeenCalledWith('follow', 'limit');
     });
 
     it('should provide examples', () => {

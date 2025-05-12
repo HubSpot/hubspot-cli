@@ -1,7 +1,6 @@
 import { Argv, ArgumentsCamelCase } from 'yargs';
 import { logger } from '@hubspot/local-dev-lib/logger';
 import { batchCreateObjects } from '@hubspot/local-dev-lib/api/customObjects';
-
 import { inputPrompt } from '../../lib/prompts/promptUtils';
 import { logError } from '../../lib/errorHandlers/index';
 import { getAbsoluteFilePath } from '@hubspot/local-dev-lib/path';
@@ -11,26 +10,23 @@ import { i18n } from '../../lib/lang';
 import { EXIT_CODES } from '../../lib/enums/exitCodes';
 import { isObjectDefinition } from '../../lib/customObject';
 import {
-  addConfigOptions,
-  addAccountOptions,
-  addUseEnvironmentOptions,
-} from '../../lib/commonOpts';
-import {
   CommonArgs,
   ConfigArgs,
   AccountArgs,
   EnvironmentArgs,
+  YargsCommandModule,
 } from '../../types/Yargs';
+import { makeYargsBuilder } from '../../lib/yargsUtils';
 
-export const command = 'create [name]';
-export const describe = i18n(
-  `commands.customObject.subcommands.create.describe`
-);
+const command = 'create [name]';
+const describe = i18n(`commands.customObject.subcommands.create.describe`);
 
-type CombinedArgs = CommonArgs & ConfigArgs & AccountArgs & EnvironmentArgs;
-type CustomObjectCreateArgs = CombinedArgs & { name?: string; path?: string };
+type CustomObjectCreateArgs = CommonArgs &
+  ConfigArgs &
+  AccountArgs &
+  EnvironmentArgs & { name?: string; path?: string };
 
-export async function handler(
+async function handler(
   args: ArgumentsCamelCase<CustomObjectCreateArgs>
 ): Promise<void> {
   const { path, name: providedName, derivedAccountId } = args;
@@ -78,11 +74,7 @@ export async function handler(
   }
 }
 
-export function builder(yargs: Argv): Argv<CustomObjectCreateArgs> {
-  addConfigOptions(yargs);
-  addAccountOptions(yargs);
-  addUseEnvironmentOptions(yargs);
-
+function customObjectCreateBuilder(yargs: Argv): Argv<CustomObjectCreateArgs> {
   yargs
     .positional('name', {
       describe: i18n(
@@ -99,3 +91,27 @@ export function builder(yargs: Argv): Argv<CustomObjectCreateArgs> {
 
   return yargs as Argv<CustomObjectCreateArgs>;
 }
+
+const builder = makeYargsBuilder<CustomObjectCreateArgs>(
+  customObjectCreateBuilder,
+  command,
+  describe,
+  {
+    useGlobalOptions: true,
+    useConfigOptions: true,
+    useAccountOptions: true,
+    useEnvironmentOptions: true,
+  }
+);
+
+const customObjectCreateCommand: YargsCommandModule<
+  unknown,
+  CustomObjectCreateArgs
+> = {
+  command,
+  describe,
+  handler,
+  builder,
+};
+
+export default customObjectCreateCommand;

@@ -1,17 +1,7 @@
 import { promptUser } from './promptUtils';
 import { i18n } from '../lang';
 import { PromptConfig } from '../../types/Prompts';
-
-type SampleChoice = {
-  name: string;
-  description: string;
-  id: string;
-  languages: string[];
-};
-
-type SampleConfig = {
-  samples: SampleChoice[];
-};
+import { ApiSampleChoice, ApiSampleConfig } from '../../types/Cms';
 
 type SampleTypePromptResponse = {
   sampleType?: string;
@@ -25,7 +15,7 @@ type CreateApiSamplePromptResponse = SampleTypePromptResponse &
   LanguagePromptResponse;
 
 function getSampleTypesPrompt(
-  choices: SampleChoice[]
+  choices: ApiSampleChoice[]
 ): PromptConfig<SampleTypePromptResponse> {
   return {
     type: 'rawlist',
@@ -76,7 +66,7 @@ function getLanguagesPrompt(
 }
 
 export async function createApiSamplePrompt(
-  samplesConfig: SampleConfig
+  samplesConfig: ApiSampleConfig
 ): Promise<CreateApiSamplePromptResponse> {
   try {
     const { samples } = samplesConfig;

@@ -1,4 +1,3 @@
-// @ts-nocheck
 import yargs from 'yargs';
 import {
   addAccountOptions,

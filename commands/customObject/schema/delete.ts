@@ -3,7 +3,6 @@ import {
   fetchObjectSchemas,
   deleteObjectSchema,
 } from '@hubspot/local-dev-lib/api/customObjects';
-
 import { EXIT_CODES } from '../../../lib/enums/exitCodes';
 import { confirmPrompt, listPrompt } from '../../../lib/prompts/promptUtils';
 import { logger } from '@hubspot/local-dev-lib/logger';
@@ -11,26 +10,25 @@ import { trackCommandUsage } from '../../../lib/usageTracking';
 import { i18n } from '../../../lib/lang';
 import { logError } from '../../../lib/errorHandlers';
 import {
-  addConfigOptions,
-  addAccountOptions,
-  addUseEnvironmentOptions,
-} from '../../../lib/commonOpts';
-import {
   CommonArgs,
   ConfigArgs,
   AccountArgs,
   EnvironmentArgs,
+  YargsCommandModule,
 } from '../../../types/Yargs';
+import { makeYargsBuilder } from '../../../lib/yargsUtils';
 
-export const command = 'delete [name]';
-export const describe = i18n(
+const command = 'delete [name]';
+const describe = i18n(
   `commands.customObject.subcommands.schema.subcommands.delete.describe`
 );
 
-type CombinedArgs = CommonArgs & ConfigArgs & AccountArgs & EnvironmentArgs;
-type SchemaDeleteArgs = CombinedArgs & { name?: string; force?: boolean };
+type SchemaDeleteArgs = CommonArgs &
+  ConfigArgs &
+  AccountArgs &
+  EnvironmentArgs & { name?: string; force?: boolean };
 
-export async function handler(
+async function handler(
   args: ArgumentsCamelCase<SchemaDeleteArgs>
 ): Promise<void> {
   const { name: providedName, force, derivedAccountId } = args;
@@ -96,11 +94,7 @@ export async function handler(
   }
 }
 
-export function builder(yargs: Argv): Argv<SchemaDeleteArgs> {
-  addConfigOptions(yargs);
-  addAccountOptions(yargs);
-  addUseEnvironmentOptions(yargs);
-
+function schemaDeleteBuilder(yargs: Argv): Argv<SchemaDeleteArgs> {
   yargs
     .example([
       [
@@ -125,3 +119,24 @@ export function builder(yargs: Argv): Argv<SchemaDeleteArgs> {
 
   return yargs as Argv<SchemaDeleteArgs>;
 }
+
+const builder = makeYargsBuilder<SchemaDeleteArgs>(
+  schemaDeleteBuilder,
+  command,
+  describe,
+  {
+    useGlobalOptions: true,
+    useConfigOptions: true,
+    useAccountOptions: true,
+    useEnvironmentOptions: true,
+  }
+);
+
+const schemaDeleteCommand: YargsCommandModule<unknown, SchemaDeleteArgs> = {
+  command,
+  describe,
+  handler,
+  builder,
+};
+
+export default schemaDeleteCommand;

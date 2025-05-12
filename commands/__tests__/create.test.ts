@@ -1,10 +1,14 @@
-// @ts-nocheck
-import yargs from 'yargs';
+import yargs, { Argv } from 'yargs';
+import createCommand from '../create';
 
 jest.mock('yargs');
 
-// Import this last so mocks apply
-import createCommand from '../create';
+const positionalSpy = jest
+  .spyOn(yargs as Argv, 'positional')
+  .mockReturnValue(yargs as Argv);
+const optionSpy = jest
+  .spyOn(yargs as Argv, 'option')
+  .mockReturnValue(yargs as Argv);
 
 describe('commands/create', () => {
   describe('command', () => {
@@ -21,27 +25,27 @@ describe('commands/create', () => {
 
   describe('builder', () => {
     it('should support the correct positional arguments', () => {
-      createCommand.builder(yargs);
+      createCommand.builder(yargs as Argv);
 
-      expect(yargs.positional).toHaveBeenCalledTimes(3);
-      expect(yargs.positional).toHaveBeenCalledWith(
+      expect(positionalSpy).toHaveBeenCalledTimes(3);
+      expect(positionalSpy).toHaveBeenCalledWith(
         'type',
         expect.objectContaining({ type: 'string' })
       );
-      expect(yargs.positional).toHaveBeenCalledWith(
+      expect(positionalSpy).toHaveBeenCalledWith(
         'name',
         expect.objectContaining({ type: 'string' })
       );
-      expect(yargs.positional).toHaveBeenCalledWith(
+      expect(positionalSpy).toHaveBeenCalledWith(
         'dest',
         expect.objectContaining({ type: 'string' })
       );
     });
 
     it('should support the correct options', () => {
-      createCommand.builder(yargs);
+      createCommand.builder(yargs as Argv);
 
-      expect(yargs.option).toHaveBeenCalledWith(
+      expect(optionSpy).toHaveBeenCalledWith(
         'internal',
         expect.objectContaining({ type: 'boolean', hidden: true })
       );
