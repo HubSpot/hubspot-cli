@@ -19,7 +19,6 @@ import { PROJECT_CONFIG_FILE } from '../../constants';
 import SpinniesManager from '../../ui/SpinniesManager';
 import DevServerManager from './DevServerManager';
 import { EXIT_CODES } from '../../enums/exitCodes';
-import { getProjectDetailUrl } from '../../projects/urls';
 import { getAccountHomeUrl } from './helpers';
 import {
   componentIsApp,
@@ -180,8 +179,7 @@ class LocalDevManager {
     uiLogger.warn(
       lib.LocalDevManager.activeInstallWarning.installCount(
         this.activePublicAppData.name,
-        this.publicAppActiveInstalls,
-        this.publicAppActiveInstalls === 1 ? 'account' : 'accounts'
+        this.publicAppActiveInstalls
       )
     );
     uiLogger.log(lib.LocalDevManager.activeInstallWarning.explanation);
@@ -241,12 +239,9 @@ class LocalDevManager {
       )
     );
     uiLogger.log(
-      uiLink(
-        lib.LocalDevManager.viewProjectLink,
-        getProjectDetailUrl(
-          this.projectConfig.name,
-          this.targetProjectAccountId
-        ) || ''
+      lib.LocalDevManager.viewProjectLink(
+        this.projectConfig.name,
+        this.targetProjectAccountId
       )
     );
 
