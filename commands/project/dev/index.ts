@@ -1,9 +1,13 @@
+import path from 'path';
 import { ArgumentsCamelCase, Argv, CommandModule } from 'yargs';
 import { trackCommandUsage } from '../../../lib/usageTracking';
 import { i18n } from '../../../lib/lang';
 import { logger } from '@hubspot/local-dev-lib/logger';
 import { getAccountConfig } from '@hubspot/local-dev-lib/config';
-import { getHsProfileFilename } from '@hubspot/project-parsing-lib';
+import {
+  getAllHsProfiles,
+  getHsProfileFilename,
+} from '@hubspot/project-parsing-lib';
 import { HsProfileFile } from '@hubspot/project-parsing-lib/src/lib/types';
 import {
   getProjectConfig,
@@ -33,11 +37,7 @@ export const describe = uiBetaTag(
 export async function handler(
   args: ArgumentsCamelCase<ProjectDevArgs>
 ): Promise<void> {
-  const { derivedAccountId } = args;
-
-  if (!args.profile) {
-    trackCommandUsage('project-dev', {}, derivedAccountId);
-  }
+  const { derivedAccountId, providedAccountId } = args;
 
   const { projectConfig, projectDir } = await getProjectConfig();
   validateProjectConfig(projectConfig, projectDir);
@@ -52,41 +52,64 @@ export async function handler(
     process.exit(EXIT_CODES.ERROR);
   }
 
-  const shouldUseV3Api = useV3Api(projectConfig.platformVersion);
+  const isUsingV3Api = useV3Api(projectConfig.platformVersion);
+  let targetAccountId = providedAccountId;
+
+  if (!args.profile && isUsingV3Api) {
+  }
 
   let profile: HsProfileFile | undefined;
 
-  if (args.profile && shouldUseV3Api) {
-    uiLine();
-    uiBetaTag(
-      i18n('commands.project.subcommands.dev.logs.usingProfile', {
-        profileFilename: getHsProfileFilename(args.profile),
-      })
-    );
-
-    profile = await loadProfile(projectConfig, projectDir, args.profile);
-
-    if (!profile) {
-      logger.log('');
+  if (!targetAccountId && isUsingV3Api) {
+    if (args.profile) {
       uiLine();
-      process.exit(EXIT_CODES.ERROR);
+      uiBetaTag(
+        i18n('commands.project.subcommands.dev.logs.usingProfile', {
+          profileFilename: getHsProfileFilename(args.profile),
+        })
+      );
+      logger.log('');
+
+      profile = await loadProfile(projectConfig, projectDir, args.profile);
+
+      if (!profile) {
+        uiLine();
+        process.exit(EXIT_CODES.ERROR);
+      }
+
+      targetAccountId = profile.accountId;
+
+      logger.log(
+        i18n('commands.project.subcommands.dev.logs.profileTargetAccount', {
+          account: uiAccountDescription(targetAccountId),
+        })
+      );
+
+      uiLine();
+      logger.log('');
+    } else {
+      // Check if the project has any profiles configured
+      const existingProfiles = await getAllHsProfiles(
+        path.join(projectDir!, projectConfig.srcDir)
+      );
+
+      if (existingProfiles.length > 0) {
+        logger.error(
+          i18n('commands.project.subcommands.upload.errors.noProfileSpecified')
+        );
+        process.exit(EXIT_CODES.ERROR);
+      }
     }
-
-    logger.log(
-      i18n('commands.project.subcommands.dev.logs.profileTargetAccount', {
-        account: uiAccountDescription(profile.accountId),
-      })
-    );
-
-    logger.log('');
-    uiLine();
-
-    trackCommandUsage('project-dev', {}, profile.accountId);
   }
 
-  const accountConfig = getAccountConfig(
-    profile?.accountId || derivedAccountId
-  );
+  if (!targetAccountId) {
+    // The user is not using profiles, so we can use the derived accountId
+    targetAccountId = derivedAccountId;
+  }
+
+  trackCommandUsage('project-dev', {}, targetAccountId);
+
+  const accountConfig = getAccountConfig(targetAccountId);
 
   uiBetaTag(i18n(`commands.project.subcommands.dev.logs.betaMessage`));
 
@@ -102,7 +125,7 @@ export async function handler(
     process.exit(EXIT_CODES.ERROR);
   }
 
-  if (shouldUseV3Api) {
+  if (isUsingV3Api) {
     await unifiedProjectDevFlow(
       args,
       accountConfig,

@@ -52,14 +52,20 @@ type ProjectUploadArgs = CommonArgs & {
 async function handler(
   args: ArgumentsCamelCase<ProjectUploadArgs>
 ): Promise<void> {
-  const { forceCreate, message, derivedAccountId, skipValidation } = args;
+  const {
+    forceCreate,
+    message,
+    derivedAccountId,
+    providedAccountId,
+    skipValidation,
+  } = args;
 
   const { projectConfig, projectDir } = await getProjectConfig();
   validateProjectConfig(projectConfig, projectDir);
 
-  let targetAccountId;
+  let targetAccountId = providedAccountId;
 
-  if (useV3Api(projectConfig.platformVersion)) {
+  if (!targetAccountId && useV3Api(projectConfig.platformVersion)) {
     if (args.profile) {
       uiLine();
       uiBetaTag(
@@ -76,7 +82,6 @@ async function handler(
       );
 
       if (!profile) {
-        logger.log('');
         uiLine();
         process.exit(EXIT_CODES.ERROR);
       }
@@ -88,30 +93,27 @@ async function handler(
           account: uiAccountDescription(targetAccountId),
         })
       );
-
-      if (profile.variables) {
-        logger.log('');
-        logger.log(
-          i18n('commands.project.subcommands.upload.logs.profileVariables')
-        );
-        Object.entries(profile.variables ?? {}).forEach(([key, value]) => {
-          logger.log(`  ${key}: ${value}`);
-        });
-      }
-    }
-    uiLine();
-    logger.log('');
-  } else {
-    // Check if the project has any project profiles configured
-    const existingProfiles = await getAllHsProfiles(
-      path.join(projectDir!, projectConfig.srcDir)
-    );
-
-    if (existingProfiles.length > 0) {
-      logger.error(
-        i18n('commands.project.subcommands.upload.errors.noProfileSpecified')
+      logger.log('');
+      logger.log(
+        i18n('commands.project.subcommands.upload.logs.profileVariables')
       );
-      process.exit(EXIT_CODES.ERROR);
+      Object.entries(profile.variables ?? {}).forEach(([key, value]) => {
+        logger.log(`  ${key}: ${value}`);
+      });
+      uiLine();
+      logger.log('');
+    } else {
+      // Check if the project has any profiles configured
+      const existingProfiles = await getAllHsProfiles(
+        path.join(projectDir!, projectConfig.srcDir)
+      );
+
+      if (existingProfiles.length > 0) {
+        logger.error(
+          i18n('commands.project.subcommands.upload.errors.noProfileSpecified')
+        );
+        process.exit(EXIT_CODES.ERROR);
+      }
     }
   }
 

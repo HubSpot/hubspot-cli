@@ -915,13 +915,13 @@ export const commands = {
         verboseDescribe: `Add a new project profile\n\nProfiles enable you to reference variables in your component configuration files. Use the syntax ${chalk.bold('\${VARIABLE_NAME}')} to reference profile variables in your component configuration files. Then target the profile using the ${uiCommandReference('--profile')} flag when you upload your project.`,
         example: 'Add a new project profile named hsprofile.qa.json',
         logs: {
-          copyExistingProfile: profileName =>
+          copyExistingProfile: (profileName: string) =>
             `Found an existing profile. We can copy the variables from ${chalk.bold(
               profileName
             )} into your new profile.`,
           copyExistingProfiles:
             'Found existing project profiles. We can copy the variables from one of them into your new profile.',
-          profileAdded: profileName =>
+          profileAdded: (profileName: string) =>
             `Project profile ${chalk.bold(profileName)} was successfully added`,
         },
         prompts: {
@@ -935,11 +935,11 @@ export const commands = {
         errors: {
           noProjectConfig:
             'No project config found. Please run this command from a project directory.',
-          profileExists: profileName =>
+          profileExists: (profileName: string) =>
             `Profile ${chalk.bold(profileName)} already exists. Please choose a different name.`,
           invalidTargetAccount: 'Target account is not configured in the CLI',
           noAccountsConfigured: 'No accounts configured in the CLI',
-          failedToLoadProfile: profileName =>
+          failedToLoadProfile: (profileName: string) =>
             `Unable to copy variables. Failed to load profile ${chalk.bold(profileName)}`,
           failedToCreateProfile: 'Failed to create profile',
         },
@@ -954,24 +954,24 @@ export const commands = {
         describe: 'Remove an exisiting project profile',
         example: 'Remove a project profile named hsprofile.qa.json',
         logs: {
-          profileRemoved: profileName =>
+          profileRemoved: (profileName: string) =>
             `Project profile ${chalk.bold(profileName)} was successfully removed`,
-          removedProject: accountId =>
+          removedProject: (accountId: number) =>
             `Successfully removed the project from ${uiAccountDescription(
               accountId
             )}`,
-          didNotRemoveProject: accountId =>
+          didNotRemoveProject: (accountId: number) =>
             `Did not remove the project from ${uiAccountDescription(
               accountId
             )}`,
         },
         debug: {
-          failedToLoadProfile: profileName =>
+          failedToLoadProfile: (profileName: string) =>
             `Failed to load profile ${chalk.bold(profileName)}`,
         },
         prompts: {
           removeProfilePrompt: 'Select a profile to remove from your project',
-          removeProjectPrompt: accountId =>
+          removeProjectPrompt: (accountId: number) =>
             `Would you like to remove this project from ${uiAccountDescription(
               accountId
             )}?`,
@@ -979,9 +979,9 @@ export const commands = {
         errors: {
           noProjectConfig:
             'No project config found. Please run this command from a project directory.',
-          noProfileFound: profileName =>
+          noProfileFound: (profileName: string) =>
             `No profile with filename ${chalk.bold(profileName)} found in your project.`,
-          failedToRemoveProfile: profileName =>
+          failedToRemoveProfile: (profileName: string) =>
             `Unable to remove profile ${chalk.bold(profileName)}. Please try again.`,
         },
         positionals: {
@@ -2897,11 +2897,11 @@ export const lib = {
       errors: {
         noProjectConfig:
           'No project config found. Please run this command from a project directory.',
-        profileNotFound: profileName =>
+        profileNotFound: (profileName: string) =>
           `Profile ${chalk.bold(profileName)} not found.`,
-        missingAccountId: profileName =>
+        missingAccountId: (profileName: string) =>
           `Profile ${chalk.bold(profileName)} is missing an account id.`,
-        failedToLoadProfile: profileName =>
+        failedToLoadProfile: (profileName: string) =>
           `Failed to load profile ${chalk.bold(profileName)}.`,
       },
     },

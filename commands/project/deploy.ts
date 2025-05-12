@@ -16,7 +16,7 @@ import { getProjectDetailUrl } from '../../lib/projects/urls';
 import { projectNamePrompt } from '../../lib/prompts/projectNamePrompt';
 import { promptUser } from '../../lib/prompts/promptUtils';
 import { i18n } from '../../lib/lang';
-import { uiBetaTag, uiLink } from '../../lib/ui';
+import { uiBetaTag, uiLine, uiLink } from '../../lib/ui';
 import { EXIT_CODES } from '../../lib/enums/exitCodes';
 import { uiCommandReference, uiAccountDescription } from '../../lib/ui';
 import {
@@ -28,6 +28,7 @@ import {
 } from '../../types/Yargs';
 import { makeYargsBuilder } from '../../lib/yargsUtils';
 import { loadProfile } from '../../lib/projectProfiles';
+import { getHsProfileFilename } from '@hubspot/project-parsing-lib';
 
 const command = 'deploy';
 const describe = uiBetaTag(
@@ -90,26 +91,41 @@ async function handler(
 
   const { projectConfig, projectDir } = await getProjectConfig(undefined, true);
 
-  const shouldUseV3Api = useV3Api(projectConfig?.platformVersion);
-
   let targetAccountId: number | undefined;
 
-  if (!(args.profile && shouldUseV3Api)) {
-    trackCommandUsage(
-      'project-deploy',
-      accountType ? { type: accountType } : undefined,
-      derivedAccountId
+  if (args.profile && useV3Api(projectConfig?.platformVersion)) {
+    uiLine();
+    uiBetaTag(
+      i18n('commands.project.subcommands.deploy.logs.usingProfile', {
+        profileFilename: getHsProfileFilename(args.profile),
+      })
     );
-    targetAccountId = derivedAccountId;
-  } else {
+    logger.log('');
+
     const profile = await loadProfile(projectConfig, projectDir, args.profile);
 
     if (!profile) {
+      uiLine();
       process.exit(EXIT_CODES.ERROR);
     }
-
     targetAccountId = profile.accountId;
+
+    logger.log(
+      i18n('commands.project.subcommands.deploy.logs.profileTargetAccount', {
+        account: uiAccountDescription(targetAccountId),
+      })
+    );
+    uiLine();
+    logger.log('');
+  } else {
+    targetAccountId = derivedAccountId;
   }
+
+  trackCommandUsage(
+    'project-deploy',
+    accountType ? { type: accountType } : undefined,
+    targetAccountId
+  );
 
   let projectName = projectOption;
 

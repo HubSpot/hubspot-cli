@@ -703,6 +703,9 @@ en:
           deployBuildIdPrompt: "[--build] Deploy which build?"
           debug:
             deploying: "Deploying project at path: {{ path }}"
+          logs:
+            usingProfile: "Using profile from {{#bold}}{{ profileFilename }}{{/bold}}"
+            profileTargetAccount: "Targeting {{#bold}}{{ account }}{{/bold}}"
           errors:
             deploy: "Deploy error: an unknown error occurred."
             noBuilds: "Deploy error: no builds for this project were found."

@@ -1,7 +1,6 @@
 import path from 'path';
 import fs from 'fs';
 import { Argv, ArgumentsCamelCase } from 'yargs';
-import { logger } from '@hubspot/local-dev-lib/logger';
 import { getAccountId, getConfigAccounts } from '@hubspot/local-dev-lib/config';
 import { getAccountIdentifier } from '@hubspot/local-dev-lib/config/getAccountIdentifier';
 import {
@@ -12,6 +11,7 @@ import {
 import { trackCommandUsage } from '../../../lib/usageTracking';
 import { getProjectConfig } from '../../../lib/projects/config';
 import { uiBetaTag, uiAccountDescription } from '../../../lib/ui';
+import { uiLogger } from '../../../lib/ui/logger';
 import { EXIT_CODES } from '../../../lib/enums/exitCodes';
 import { YargsCommandModule, CommonArgs } from '../../../types/Yargs';
 import { makeYargsBuilder } from '../../../lib/yargsUtils';
@@ -45,7 +45,7 @@ async function handler(
   const { projectConfig, projectDir } = await getProjectConfig();
 
   if (!projectConfig || !projectDir) {
-    logger.error(commands.project.profile.add.errors.noProjectConfig);
+    uiLogger.error(commands.project.profile.add.errors.noProjectConfig);
     process.exit(EXIT_CODES.ERROR);
   }
 
@@ -60,12 +60,12 @@ async function handler(
   };
 
   if (profileName && checkIfProfileExists(profileName)) {
-    logger.error(
+    uiLogger.error(
       commands.project.profile.add.errors.profileExists(
         getHsProfileFilename(profileName)
       )
     );
-    logger.log('');
+    uiLogger.log('');
     profileName = undefined;
   }
 
@@ -95,8 +95,8 @@ async function handler(
     if (accountId) {
       targetAccount = accountId;
     } else {
-      logger.error(commands.project.profile.add.errors.invalidTargetAccount);
-      logger.log('');
+      uiLogger.error(commands.project.profile.add.errors.invalidTargetAccount);
+      uiLogger.log('');
       targetAccount = undefined;
     }
   }
@@ -105,7 +105,7 @@ async function handler(
     const configuredAccounts = getConfigAccounts();
 
     if (!configuredAccounts || !configuredAccounts.length) {
-      logger.error(commands.project.profile.add.errors.noAccountsConfigured);
+      uiLogger.error(commands.project.profile.add.errors.noAccountsConfigured);
       process.exit(EXIT_CODES.ERROR);
     }
 
@@ -136,8 +136,8 @@ async function handler(
   let profileToCopyVariablesFrom: string | undefined;
 
   if (existingProfiles.length == 1) {
-    logger.log('');
-    logger.log(
+    uiLogger.log('');
+    uiLogger.log(
       commands.project.profile.add.logs.copyExistingProfile(
         getHsProfileFilename(existingProfiles[0])
       )
@@ -150,8 +150,8 @@ async function handler(
       profileToCopyVariablesFrom = existingProfiles[0];
     }
   } else if (existingProfiles.length > 1) {
-    logger.log('');
-    logger.log(commands.project.profile.add.logs.copyExistingProfiles);
+    uiLogger.log('');
+    uiLogger.log(commands.project.profile.add.logs.copyExistingProfiles);
     const emptyChoice = {
       name: commands.project.profile.add.prompts.copyExistingProfilePromptEmpty,
       value: undefined,
@@ -186,7 +186,7 @@ async function handler(
         profileFileContent.variables = profileToCopyFileContent.variables;
       }
     } catch (err) {
-      logger.error(
+      uiLogger.error(
         commands.project.profile.add.errors.failedToLoadProfile(
           profileToCopyVariablesFrom
         )
@@ -203,12 +203,12 @@ async function handler(
       'utf8'
     );
   } catch (err) {
-    logger.error(commands.project.profile.add.errors.failedToCreateProfile);
+    uiLogger.error(commands.project.profile.add.errors.failedToCreateProfile);
     process.exit(EXIT_CODES.ERROR);
   }
 
-  logger.log('');
-  logger.log(commands.project.profile.add.logs.profileAdded(profileFilename));
+  uiLogger.log('');
+  uiLogger.log(commands.project.profile.add.logs.profileAdded(profileFilename));
   process.exit(EXIT_CODES.SUCCESS);
 }
 

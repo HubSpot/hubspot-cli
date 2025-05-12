@@ -1,7 +1,6 @@
 import fs from 'fs';
 import path from 'path';
 import { Argv, ArgumentsCamelCase } from 'yargs';
-import { logger } from '@hubspot/local-dev-lib/logger';
 import {
   getAllHsProfiles,
   getHsProfileFilename,
@@ -11,6 +10,7 @@ import { deleteProject } from '@hubspot/local-dev-lib/api/projects';
 import { trackCommandUsage } from '../../../lib/usageTracking';
 import { getProjectConfig } from '../../../lib/projects/config';
 import { uiBetaTag } from '../../../lib/ui';
+import { uiLogger } from '../../../lib/ui/logger';
 import { EXIT_CODES } from '../../../lib/enums/exitCodes';
 import { YargsCommandModule, CommonArgs } from '../../../types/Yargs';
 import { makeYargsBuilder } from '../../../lib/yargsUtils';
@@ -36,7 +36,7 @@ async function handler(
   const { projectConfig, projectDir } = await getProjectConfig();
 
   if (!projectConfig || !projectDir) {
-    logger.error(commands.project.profile.remove.errors.noProjectConfig);
+    uiLogger.error(commands.project.profile.remove.errors.noProjectConfig);
     process.exit(EXIT_CODES.ERROR);
   }
 
@@ -48,7 +48,7 @@ async function handler(
     const profileFilename = getHsProfileFilename(profileName);
 
     if (!fileExists(path.join(projectSourceDir, profileFilename))) {
-      logger.error(
+      uiLogger.error(
         commands.project.profile.remove.errors.noProfileFound(profileFilename)
       );
       process.exit(EXIT_CODES.ERROR);
@@ -69,7 +69,7 @@ async function handler(
     if (promptResponse) {
       profileName = promptResponse;
     }
-    logger.log('');
+    uiLogger.log('');
   }
 
   // This should never happen
@@ -87,7 +87,7 @@ async function handler(
 
     targetAccountId = profileToRemove?.accountId;
   } catch (err) {
-    logger.debug(
+    uiLogger.debug(
       commands.project.profile.remove.debug.failedToLoadProfile(profileName)
     );
   }
@@ -113,17 +113,17 @@ async function handler(
 
       if (confirmResponse) {
         await deleteProject(targetAccountId, projectConfig.name);
-        logger.log(
+        uiLogger.log(
           commands.project.profile.remove.logs.removedProject(targetAccountId)
         );
       } else {
-        logger.log(
+        uiLogger.log(
           commands.project.profile.remove.logs.didNotRemoveProject(
             targetAccountId
           )
         );
       }
-      logger.log('');
+      uiLogger.log('');
     }
   }
 
@@ -132,7 +132,7 @@ async function handler(
   try {
     fs.unlinkSync(path.join(projectSourceDir, profileFilename));
   } catch (err) {
-    logger.error(
+    uiLogger.error(
       commands.project.profile.remove.errors.failedToRemoveProfile(
         profileFilename
       )
@@ -140,7 +140,7 @@ async function handler(
     process.exit(EXIT_CODES.ERROR);
   }
 
-  logger.log(
+  uiLogger.log(
     commands.project.profile.remove.logs.profileRemoved(profileFilename)
   );
   process.exit(EXIT_CODES.SUCCESS);

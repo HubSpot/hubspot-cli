@@ -2,6 +2,7 @@ import path from 'path';
 import util from 'util';
 import { ArgumentsCamelCase } from 'yargs';
 import { logger } from '@hubspot/local-dev-lib/logger';
+import { getAccountIdentifier } from '@hubspot/local-dev-lib/config/getAccountIdentifier';
 import { isTranslationError } from '@hubspot/project-parsing-lib/src/lib/errors';
 import { translateForLocalDev } from '@hubspot/project-parsing-lib';
 import { HsProfileFile } from '@hubspot/project-parsing-lib/src/lib/types';
@@ -38,11 +39,12 @@ export async function unifiedProjectDevFlow(
   projectDir: string,
   profileConfig?: HsProfileFile
 ): Promise<void> {
-  logger.log('Unified Apps Local Dev');
-
-  const targetProjectAccountId =
-    profileConfig?.accountId || args.derivedAccountId;
+  const targetProjectAccountId = getAccountIdentifier(accountConfig);
   const env = getValidEnv(getEnv(targetProjectAccountId));
+
+  if (!targetProjectAccountId) {
+    process.exit(EXIT_CODES.ERROR);
+  }
 
   let projectNodes;
 
