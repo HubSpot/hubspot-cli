@@ -1,21 +1,38 @@
-// @ts-nocheck
-const {
-  addAccountOptions,
-  addConfigOptions,
-  addUseEnvironmentOptions,
-} = require('../../lib/commonOpts');
-const { trackCommandUsage } = require('../../lib/usageTracking');
-const { logger } = require('@hubspot/local-dev-lib/logger');
+import { trackCommandUsage } from '../../lib/usageTracking';
+import { logger } from '@hubspot/local-dev-lib/logger';
+// This package is not typed, so we need to use require
 const { start: startTestServer } = require('@hubspot/serverless-dev-runtime');
-const { i18n } = require('../../lib/lang');
+import { i18n } from '../../lib/lang';
+import { Argv, ArgumentsCamelCase } from 'yargs';
+import {
+  CommonArgs,
+  ConfigArgs,
+  AccountArgs,
+  EnvironmentArgs,
+  YargsCommandModule,
+} from '../../types/Yargs';
+import { makeYargsBuilder } from '../../lib/yargsUtils';
 
-exports.command = 'server <path>';
-exports.describe = false;
+const command = 'server <path>';
+const describe = undefined;
 
-exports.handler = async options => {
-  const { path: functionPath, derivedAccountId } = options;
+type FunctionServerArgs = CommonArgs &
+  ConfigArgs &
+  AccountArgs &
+  EnvironmentArgs & {
+    path: string;
+    port?: string;
+    contact?: boolean;
+    watch?: boolean;
+    'log-output'?: boolean;
+  };
 
-  trackCommandUsage('functions-server', null, derivedAccountId);
+async function handler(
+  args: ArgumentsCamelCase<FunctionServerArgs>
+): Promise<void> {
+  const { path: functionPath, derivedAccountId } = args;
+
+  trackCommandUsage('functions-server', undefined, derivedAccountId);
 
   logger.debug(
     i18n('commands.function.subcommands.server.debug.startingServer', {
@@ -25,44 +42,47 @@ exports.handler = async options => {
 
   startTestServer({
     accountId: derivedAccountId,
-    ...options,
+    ...args,
   });
-};
+}
 
-exports.builder = yargs => {
+function functionServerBuilder(yargs: Argv): Argv<FunctionServerArgs> {
   yargs.positional('path', {
     describe: i18n(
       'commands.function.subcommands.server.positionals.path.describe'
     ),
     type: 'string',
   });
-  yargs.option('port', {
-    describe: i18n(
-      'commands.function.subcommands.server.options.port.describe'
-    ),
-    type: 'string',
-    default: 5432,
-  });
-  yargs.option('contact', {
-    describe: i18n(
-      'commands.function.subcommands.server.options.contact.describe'
-    ),
-    type: 'boolean',
-    default: true,
-  });
-  yargs.option('watch', {
-    describe: i18n(
-      'commands.function.subcommands.server.options.watch.describe'
-    ),
-    type: 'boolean',
-    default: true,
-  });
-  yargs.option('log-output', {
-    describe: i18n(
-      'commands.function.subcommands.server.options.logOutput.describe'
-    ),
-    type: 'boolean',
-    default: false,
+
+  yargs.options({
+    port: {
+      describe: i18n(
+        'commands.function.subcommands.server.options.port.describe'
+      ),
+      type: 'string',
+      default: 5432,
+    },
+    contact: {
+      describe: i18n(
+        'commands.function.subcommands.server.options.contact.describe'
+      ),
+      type: 'boolean',
+      default: true,
+    },
+    watch: {
+      describe: i18n(
+        'commands.function.subcommands.server.options.watch.describe'
+      ),
+      type: 'boolean',
+      default: true,
+    },
+    'log-output': {
+      describe: i18n(
+        'commands.function.subcommands.server.options.logOutput.describe'
+      ),
+      type: 'boolean',
+      default: false,
+    },
   });
 
   yargs.example([
@@ -72,9 +92,25 @@ exports.builder = yargs => {
     ],
   ]);
 
-  addConfigOptions(yargs);
-  addAccountOptions(yargs);
-  addUseEnvironmentOptions(yargs);
+  return yargs as Argv<FunctionServerArgs>;
+}
 
-  return yargs;
+const builder = makeYargsBuilder<FunctionServerArgs>(
+  functionServerBuilder,
+  command,
+  describe,
+  {
+    useConfigOptions: true,
+    useAccountOptions: true,
+    useEnvironmentOptions: true,
+  }
+);
+
+const functionServerCommand: YargsCommandModule<unknown, FunctionServerArgs> = {
+  command,
+  describe,
+  handler,
+  builder,
 };
+
+export default functionServerCommand;

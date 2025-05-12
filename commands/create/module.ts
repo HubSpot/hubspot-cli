@@ -1,18 +1,17 @@
-// @ts-nocheck
-const { logger } = require('@hubspot/local-dev-lib/logger');
-const { createModule } = require('@hubspot/local-dev-lib/cms/modules');
-const { i18n } = require('../../lib/lang');
-const { createModulePrompt } = require('../../lib/prompts/createModulePrompt');
-const { logError } = require('../../lib/errorHandlers/index');
-const { EXIT_CODES } = require('../../lib/enums/exitCodes');
+import { createModule } from '@hubspot/local-dev-lib/cms/modules';
+import { createModulePrompt } from '../../lib/prompts/createModulePrompt';
+import { logError } from '../../lib/errorHandlers/index';
+import { EXIT_CODES } from '../../lib/enums/exitCodes';
+import { CreatableCmsAsset } from '../../types/Cms';
+import { uiLogger } from '../../lib/ui/logger';
+import { commands } from '../../lang/en';
 
-module.exports = {
+const moduleAssetType: CreatableCmsAsset = {
+  hidden: false,
   dest: ({ dest }) => dest,
   validate: ({ name }) => {
     if (!name) {
-      logger.error(
-        i18n(`commands.create.subcommands.module.errors.nameRequired`)
-      );
+      uiLogger.error(commands.create.subcommands.module.errors.nameRequired);
       return false;
     }
     return true;
@@ -27,3 +26,5 @@ module.exports = {
     }
   },
 };
+
+export default moduleAssetType;

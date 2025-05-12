@@ -15,22 +15,21 @@ import {
   ConfigArgs,
   AccountArgs,
   EnvironmentArgs,
+  YargsCommandModule,
 } from '../../../types/Yargs';
-import {
-  addAccountOptions,
-  addConfigOptions,
-  addUseEnvironmentOptions,
-} from '../../../lib/commonOpts';
+import { makeYargsBuilder } from '../../../lib/yargsUtils';
 
-export const command = 'fetch [name] [dest]';
-export const describe = i18n(
+const command = 'fetch [name] [dest]';
+const describe = i18n(
   `commands.customObject.subcommands.schema.subcommands.fetch.describe`
 );
 
-type CombinedArgs = CommonArgs & ConfigArgs & AccountArgs & EnvironmentArgs;
-type SchemaFetchArgs = CombinedArgs & { name?: string; dest?: string };
+type SchemaFetchArgs = CommonArgs &
+  ConfigArgs &
+  AccountArgs &
+  EnvironmentArgs & { name?: string; dest?: string };
 
-export async function handler(
+async function handler(
   args: ArgumentsCamelCase<SchemaFetchArgs>
 ): Promise<void> {
   const { name: providedName, dest: providedDest, derivedAccountId } = args;
@@ -85,11 +84,7 @@ export async function handler(
   }
 }
 
-export function builder(yargs: Argv): Argv<SchemaFetchArgs> {
-  addConfigOptions(yargs);
-  addAccountOptions(yargs);
-  addUseEnvironmentOptions(yargs);
-
+function schemaFetchBuilder(yargs: Argv): Argv<SchemaFetchArgs> {
   yargs
     .example([
       [
@@ -120,3 +115,24 @@ export function builder(yargs: Argv): Argv<SchemaFetchArgs> {
 
   return yargs as Argv<SchemaFetchArgs>;
 }
+
+const builder = makeYargsBuilder<SchemaFetchArgs>(
+  schemaFetchBuilder,
+  command,
+  describe,
+  {
+    useGlobalOptions: true,
+    useConfigOptions: true,
+    useAccountOptions: true,
+    useEnvironmentOptions: true,
+  }
+);
+
+const schemaFetchCommand: YargsCommandModule<unknown, SchemaFetchArgs> = {
+  command,
+  describe,
+  handler,
+  builder,
+};
+
+export default schemaFetchCommand;

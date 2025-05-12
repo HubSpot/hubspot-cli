@@ -1,4 +1,3 @@
-// @ts-nocheck
 import chalk from 'chalk';
 import {
   uiAccountDescription,
@@ -8,7 +7,7 @@ import {
 } from '../lib/ui';
 import { getProjectSettingsUrl } from '../lib/projects/urls';
 
-type LangFunction = (...args: (string | number)[]) => string;
+type LangFunction = (...args: never[]) => string;
 
 type LangObject = {
   [key: string]: string | LangFunction | LangObject;
@@ -18,19 +17,23 @@ export const commands = {
   generalErrors: {
     updateNotify: {
       notifyTitle: 'Update available',
-      cmsUpdateNotification: (packageName, updateCommand) =>
+      cmsUpdateNotification: (packageName: string, updateCommand: string) =>
         `${chalk.bold('The CMS CLI is now the HubSpot CLI')}\n\nTo upgrade, uninstall ${chalk.bold(packageName)}\nand then run ${updateCommand}`,
-      cliUpdateNotification: (currentVersion, latestVersion, updateCommand) =>
+      cliUpdateNotification: (
+        currentVersion: string,
+        latestVersion: string,
+        updateCommand: string
+      ) =>
         `HubSpot CLI version ${chalk.cyan(chalk.bold(currentVersion))} is outdated.\nRun ${updateCommand} to upgrade to version ${chalk.cyan(chalk.bold(latestVersion))}`,
     },
-    srcIsProject: (src, command) =>
+    srcIsProject: (src: string, command: string) =>
       `"${src}" is in a project folder. Did you mean "hs project ${command}"?`,
     handleDeprecatedEnvVariables: {
       portalEnvVarDeprecated:
         'The HUBSPOT_PORTAL_ID environment variable is deprecated. Please use HUBSPOT_ACCOUNT_ID instead.',
     },
     loadConfigMiddleware: {
-      configFileExists: configPath =>
+      configFileExists: (configPath: string) =>
         `A configuration file already exists at ${configPath}. To specify a new configuration file, delete the existing one and try again.`,
     },
   },
@@ -46,10 +49,11 @@ export const commands = {
     subcommands: {
       list: {
         accounts: `${chalk.bold('Accounts')}:`,
-        defaultAccount: account =>
+        defaultAccount: (account: string) =>
           `${chalk.bold('Default account')}: ${account}`,
         describe: 'List names of accounts defined in config.',
-        configPath: configPath => `${chalk.bold('Config path')}: ${configPath}`,
+        configPath: (configPath: string) =>
+          `${chalk.bold('Config path')}: ${configPath}`,
         labels: {
           accountId: 'Account ID',
           authType: 'Auth Type',
@@ -67,7 +71,7 @@ export const commands = {
           },
         },
         success: {
-          renamed: (name, newName) =>
+          renamed: (name: string, newName: string) =>
             `Account "${name}" renamed to "${newName}"`,
         },
       },
@@ -75,7 +79,7 @@ export const commands = {
         describe:
           'Set the Hubspot account to use as the default account. The default account can be overridden with the "--account" option.',
         errors: {
-          accountNotFound: (specifiedAccount, configPath) =>
+          accountNotFound: (specifiedAccount: string, configPath: string) =>
             `The account "${specifiedAccount}" could not be found in ${configPath}`,
         },
         examples: {
@@ -92,7 +96,7 @@ export const commands = {
         },
         promptMessage: 'Select an account to use as the default',
         success: {
-          defaultAccountUpdated: accountName =>
+          defaultAccountUpdated: (accountName: string) =>
             `Default account updated to "${accountName}"`,
         },
       },
@@ -105,7 +109,7 @@ export const commands = {
           selectAccountToRemove: 'Select an account to remove from the config',
         },
         errors: {
-          accountNotFound: (specifiedAccount, configPath) =>
+          accountNotFound: (specifiedAccount: string, configPath: string) =>
             `The account "${specifiedAccount}" could not be found in ${configPath}`,
         },
         examples: {
@@ -119,12 +123,13 @@ export const commands = {
         },
         promptMessage: 'Select an account to remove',
         success: {
-          accountRemoved: accountName =>
+          accountRemoved: (accountName: string) =>
             `Account "${accountName}" removed from the config`,
         },
       },
       info: {
-        accountId: accountId => `${chalk.bold('Account ID')}: ${accountId}`,
+        accountId: (accountId: string) =>
+          `${chalk.bold('Account ID')}: ${accountId}`,
         describe:
           'Print information about the default account, or about the account specified with the "account" option.',
         errors: {
@@ -138,7 +143,7 @@ export const commands = {
           nameBased:
             'Print information for the account in the config with name equal to "MyAccount"',
         },
-        name: name => `${chalk.bold('Account name')}: ${name}`,
+        name: (name: string) => `${chalk.bold('Account name')}: ${name}`,
         scopeGroups: `${chalk.bold('Scopes available')}:`,
       },
       clean: {
@@ -150,31 +155,31 @@ export const commands = {
         },
         inactiveAccountsFound: {
           one: '1 inactive account found:',
-          other: count => `${count} inactive accounts found:`,
+          other: (count: string) => `${count} inactive accounts found:`,
         },
         confirm: {
           one: 'Remove 1 inactive account from the CLI config?',
-          other: count =>
+          other: (count: string) =>
             `Remove ${count} inactive accounts from the CLI config?`,
         },
-        removeSuccess: accountName =>
+        removeSuccess: (accountName: string) =>
           `Removed ${accountName} from the CLI config.`,
       },
     },
   },
   auth: {
-    describe: configName =>
+    describe: (configName: string) =>
       `Configure authentication for your HubSpot account. This will update the ${configName} file that stores your account information.`,
     errors: {
       noConfigFileFound:
         'No config file was found. To create a new config file, use the "hs init" command.',
-      unsupportedAuthType: (type, supportedProtocols) =>
+      unsupportedAuthType: (type: string, supportedProtocols: string) =>
         `Unsupported auth type: ${type}. The only supported authentication protocols are ${supportedProtocols}.`,
     },
     options: {
       authType: {
         describe: 'Authentication mechanism',
-        defaultDescription: authMethod =>
+        defaultDescription: (authMethod: string) =>
           `"${authMethod}": An access token tied to a specific user account. This is the recommended way of authenticating with local development tools.`,
       },
       account: {
@@ -182,7 +187,11 @@ export const commands = {
       },
     },
     success: {
-      configFileUpdated: (accountName, configFilename, authType) =>
+      configFileUpdated: (
+        accountName: string,
+        configFilename: string,
+        authType: string
+      ) =>
         `Account "${accountName}" updated in ${configFilename} using "${authType}"`,
     },
   },
@@ -200,14 +209,15 @@ export const commands = {
           defaultMode: {
             describe: 'Set the default CMS publish mode',
             promptMessage: 'Select CMS publish mode to be used as the default',
-            error: validModes =>
+            error: (validModes: string) =>
               `The provided CMS publish mode is invalid. Valid values are ${validModes}.`,
-            success: mode => `Default mode updated to: ${mode}`,
+            success: (mode: string) => `Default mode updated to: ${mode}`,
           },
           allowUsageTracking: {
             describe: 'Enable or disable usage tracking',
             promptMessage: 'Choose to enable or disable usage tracking',
-            success: isEnabled => `Allow usage tracking set to: "${isEnabled}"`,
+            success: (isEnabled: string) =>
+              `Allow usage tracking set to: "${isEnabled}"`,
             labels: {
               enabled: 'Enabled',
               disabled: 'Disabled',
@@ -216,7 +226,8 @@ export const commands = {
           httpTimeout: {
             describe: 'Set the http timeout duration',
             promptMessage: 'Enter http timeout duration',
-            success: timeout => `The http timeout has been set to: ${timeout}`,
+            success: (timeout: string) =>
+              `The http timeout has been set to: ${timeout}`,
           },
         },
       },
@@ -233,9 +244,9 @@ export const commands = {
         info: {
           promptMessage: 'Select a theme to score',
           fetchingThemes: 'Fetching available themes',
-          generatingScore: theme =>
+          generatingScore: (theme: string) =>
             `Generating Google Lighthouse score for ${theme}`,
-          targetDeviceNote: target =>
+          targetDeviceNote: (target: string) =>
             `Scores are being shown for ${target} only.`,
           verboseOptionNote:
             'Theme scores are averages of all theme templates. Use the [--verbose] option to include individual template scores.',
@@ -247,7 +258,7 @@ export const commands = {
         errors: {
           targetOptionRequired: '[--target] is required for detailed view',
           invalidTargetOption: '[--target] can only be used for detailed view',
-          themeNotFound: theme =>
+          themeNotFound: (theme: string) =>
             `Theme "${theme}" not found. Please rerun using a valid theme path.`,
           failedToFetchThemes:
             'Failed to fetch available themes. Try running again with the [--theme] option',
@@ -278,11 +289,11 @@ export const commands = {
           },
         },
         success: {
-          moduleDownloaded: (moduleName, path) =>
+          moduleDownloaded: (moduleName: string, path: string) =>
             `"${moduleName}" successfully downloaded to "${path}"`,
         },
         errors: {
-          pathExists: path => `Folder already exists at "${path}"`,
+          pathExists: (path: string) => `Folder already exists at "${path}"`,
           invalidName:
             'Module not found with that name, please check the spelling of the module you are trying to download.',
         },
@@ -290,14 +301,18 @@ export const commands = {
     },
   },
   create: {
-    describe: supportedAssetTypes =>
+    describe: (supportedAssetTypes: string) =>
       `Create HubSpot sample apps and CMS assets. Supported assets are ${supportedAssetTypes}.`,
     errors: {
-      deprecatedAssetType: (assetType, newCommand, type) =>
-        `The CLI command for asset type ${assetType} has been deprecated in an effort to make it easier to know what asset types can be created. Run the "${newCommand}" command instead. Then when prompted select "${type}".`,
-      unsupportedAssetType: (assetType, supportedAssetTypes) =>
+      deprecatedAssetType: (
+        assetType: string,
+        newCommand: string,
+        type: string
+      ) =>
+        `The CLI command for asset type ${assetType} has been deprecated in an effort to make it easier to know what asset types can be created. Run the ${uiCommandReference(newCommand)}" command instead. Then when prompted select "${type}".`,
+      unsupportedAssetType: (assetType: string, supportedAssetTypes: string) =>
         `The asset type ${assetType} is not supported. Supported asset types are ${supportedAssetTypes}.`,
-      unusablePath: path =>
+      unusablePath: (path: string) =>
         `The "${path}" is not a usable path to a directory.`,
     },
     positionals: {
@@ -314,7 +329,7 @@ export const commands = {
     },
     subcommands: {
       apiSample: {
-        folderOverwritePrompt: folderName =>
+        folderOverwritePrompt: (folderName: string) =>
           `The folder with name "${folderName}" already exists. Overwrite?`,
         errors: {
           nameRequired:
@@ -323,11 +338,11 @@ export const commands = {
             'Currently there are no samples available. Please try again later.',
         },
         info: {
-          sampleChosen: (sampleType, sampleLanguage) =>
+          sampleChosen: (sampleType: string, sampleLanguage: string) =>
             `You've chosen ${sampleType} sample written on ${sampleLanguage} language`,
         },
         success: {
-          sampleCreated: filePath =>
+          sampleCreated: (filePath: string) =>
             `Please follow ${filePath}/README.md to find out how to run the sample`,
         },
       },
@@ -355,7 +370,7 @@ export const commands = {
         errors: {
           invalidObjectDefinition:
             'The object definition is invalid. Please check the schema and try again.',
-          creationFailed: definition =>
+          creationFailed: (definition: string) =>
             `Object creation from ${definition} failed`,
         },
         options: {
@@ -385,7 +400,7 @@ export const commands = {
             errors: {
               invalidSchema:
                 'The schema definition is invalid. Please check the schema and try again.',
-              creationFailed: definition =>
+              creationFailed: (definition: string) =>
                 `Schema creation from ${definition} failed`,
             },
             options: {
@@ -395,15 +410,15 @@ export const commands = {
               },
             },
             success: {
-              schemaCreated: accountId =>
+              schemaCreated: (accountId: string) =>
                 `Your schema has been created in account "${accountId}"`,
-              schemaViewable: url => `Schema can be viewed at ${url}`,
+              schemaViewable: (url: string) => `Schema can be viewed at ${url}`,
             },
           },
           delete: {
             describe: 'Delete a custom object schema.',
             errors: {
-              delete: name => `Unable to delete ${name}`,
+              delete: (name: string) => `Unable to delete ${name}`,
             },
             examples: {
               default: 'Delete "schemaName" schema',
@@ -419,11 +434,13 @@ export const commands = {
               },
             },
             success: {
-              delete: name => `Successfully initiated deletion of ${name}`,
+              delete: (name: string) =>
+                `Successfully initiated deletion of ${name}`,
             },
-            confirmDelete: name =>
+            confirmDelete: (name: string) =>
               `Are you sure you want to delete the schema "${name}"?`,
-            deleteCancelled: name => `Deletion of schema "${name}" cancelled.`,
+            deleteCancelled: (name: string) =>
+              `Deletion of schema "${name}" cancelled.`,
             selectSchema: 'Which schema would you like to delete?',
           },
           fetchAll: {
@@ -443,14 +460,14 @@ export const commands = {
               },
             },
             success: {
-              fetch: path => `Saved schemas to ${path}`,
+              fetch: (path: string) => `Saved schemas to ${path}`,
             },
             inputDest: 'Where would you like to save the schemas?',
           },
           fetch: {
             describe: 'Fetch a custom object schema.',
             errors: {
-              fetch: name => `Unable to fetch ${name}`,
+              fetch: (name: string) => `Unable to fetch ${name}`,
             },
             examples: {
               default:
@@ -469,9 +486,9 @@ export const commands = {
             selectSchema: 'Which schema would you like to fetch?',
             inputDest: 'What would you like to name the destination file?',
             success: {
-              save: (name, path) =>
+              save: (name: string, path: string) =>
                 `The schema "${name}" has been saved to "${path}"`,
-              savedToPath: path => `Saved schema to ${path}`,
+              savedToPath: (path: string) => `Saved schema to ${path}`,
             },
           },
           list: {
@@ -485,7 +502,8 @@ export const commands = {
             errors: {
               invalidSchema:
                 'The schema definition is invalid. Please check the schema and try again.',
-              update: definition => `Schema update from ${definition} failed`,
+              update: (definition: string) =>
+                `Schema update from ${definition} failed`,
             },
             options: {
               path: {
@@ -499,9 +517,9 @@ export const commands = {
               },
             },
             success: {
-              update: accountId =>
+              update: (accountId: string) =>
                 `Your schema has been updated in account "${accountId}"`,
-              viewAtUrl: url => `Schema can be viewed at ${url}`,
+              viewAtUrl: (url: string) => `Schema can be viewed at ${url}`,
             },
             selectSchema: 'Which schema would you like to update?',
           },
@@ -517,10 +535,11 @@ export const commands = {
     },
     errors: {
       generatingDiagnosis: 'Error generating diagnosis',
-      unableToWriteOutputFile: (file, errorMessage) =>
+      unableToWriteOutputFile: (file: string, errorMessage: string) =>
         `Unable to write output to ${chalk.bold(file)}, ${errorMessage}`,
     },
-    outputWritten: filename => `Output written to ${chalk.bold(filename)}`,
+    outputWritten: (filename: string) =>
+      `Output written to ${chalk.bold(filename)}`,
   },
   fetch: {
     describe:
@@ -573,15 +592,16 @@ export const commands = {
         describe: 'Upload a folder or file to the File Manager.',
         errors: {
           destinationRequired: 'A destination path needs to be passed',
-          fileIgnored: path =>
+          fileIgnored: (path: string) =>
             `The file "${path}" is being ignored via an .hsignore rule`,
-          invalidPath: path =>
+          invalidPath: (path: string) =>
             `The path "${path}" is not a path to a file or folder`,
-          upload: (src, dest) => `Uploading file "${src}" to "${dest}" failed`,
+          upload: (src: string, dest: string) =>
+            `Uploading file "${src}" to "${dest}" failed`,
           uploadingFailed: 'Uploading failed',
         },
         logs: {
-          uploading: (src, dest, accountId) =>
+          uploading: (src: string, dest: string, accountId: string) =>
             `Uploading files from "${src}" to "${dest}" in the File Manager of account ${accountId}`,
         },
         positionals: {
@@ -594,9 +614,9 @@ export const commands = {
           },
         },
         success: {
-          upload: (src, dest, accountId) =>
+          upload: (src: string, dest: string, accountId: string) =>
             `Uploaded file from "${src}" to "${dest}" in the File Manager of account ${accountId}`,
-          uploadComplete: dest =>
+          uploadComplete: (dest: string) =>
             `Uploading files to "${dest}" in the File Manager is complete`,
         },
       },
@@ -607,23 +627,23 @@ export const commands = {
     subcommands: {
       deploy: {
         debug: {
-          startingBuildAndDeploy: functionPath =>
+          startingBuildAndDeploy: (functionPath: string) =>
             `Starting build and deploy for .functions folder with path: ${functionPath}`,
         },
         errors: {
-          buildError: details => `Build error: ${details}`,
-          noPackageJson: functionPath =>
+          buildError: (details: string) => `Build error: ${details}`,
+          noPackageJson: (functionPath: string) =>
             `Unable to find package.json for function ${functionPath}.`,
-          notFunctionsFolder: functionPath =>
+          notFunctionsFolder: (functionPath: string) =>
             `Specified path ${functionPath} is not a .functions folder.`,
         },
         examples: {
           default:
             'Build and deploy a new bundle for all functions within the myFunctionFolder.functions folder',
         },
-        loading: (functionPath, account) =>
+        loading: (functionPath: string, account: string) =>
           `Building and deploying bundle for "${functionPath}" on ${account}`,
-        loadingFailed: (functionPath, account) =>
+        loadingFailed: (functionPath: string, account: string) =>
           `Failed to build and deploy bundle for "${functionPath}" on ${account}`,
         positionals: {
           path: {
@@ -631,7 +651,11 @@ export const commands = {
           },
         },
         success: {
-          deployed: (functionPath, accountId, buildTimeSeconds) =>
+          deployed: (
+            functionPath: string,
+            accountId: string,
+            buildTimeSeconds: string
+          ) =>
             `Built and deployed bundle from package.json for ${functionPath} on account ${accountId} in ${buildTimeSeconds}s.`,
         },
       },
@@ -651,7 +675,7 @@ export const commands = {
       },
       server: {
         debug: {
-          startingServer: functionPath =>
+          startingServer: (functionPath: string) =>
             `Starting local test server for .functions folder with path: ${functionPath}`,
         },
         examples: {
@@ -687,11 +711,12 @@ export const commands = {
       clear: {
         describe: 'Clear all rows in a HubDB table.',
         logs: {
-          removedRows: (deletedRowCount, tableId) =>
+          removedRows: (deletedRowCount: string, tableId: string) =>
             `Removed ${deletedRowCount} rows from HubDB table ${tableId}`,
-          rowCount: (tableId, rowCount) =>
+          rowCount: (tableId: string, rowCount: string) =>
             `HubDB table ${tableId} now contains ${rowCount} rows`,
-          tableEmpty: tableId => `HubDB table ${tableId} is already empty`,
+          tableEmpty: (tableId: string) =>
+            `HubDB table ${tableId} is already empty`,
         },
         positionals: {
           tableId: {
@@ -703,7 +728,8 @@ export const commands = {
         describe: 'Create a HubDB table.',
         enterPath: '[--path] Enter the local path to the file used for import:',
         errors: {
-          create: filePath => `Creating the table at "${filePath}" failed`,
+          create: (filePath: string) =>
+            `Creating the table at "${filePath}" failed`,
           pathRequired:
             'A path to a local file with a HubDB schema is required to create a HubDB table',
           invalidCharacters:
@@ -715,16 +741,16 @@ export const commands = {
           },
         },
         success: {
-          create: (tableId, accountId, rowCount) =>
+          create: (tableId: string, accountId: string, rowCount: string) =>
             `The table ${tableId} was created in ${accountId} with ${rowCount} rows`,
         },
       },
       delete: {
         describe: 'Delete a HubDB table.',
-        shouldDeleteTable: tableId =>
+        shouldDeleteTable: (tableId: string) =>
           `Proceed with deleting HubDB table ${tableId}?`,
         errors: {
-          delete: tableId => `Deleting the table ${tableId} failed`,
+          delete: (tableId: string) => `Deleting the table ${tableId} failed`,
         },
         positionals: {
           tableId: {
@@ -737,7 +763,7 @@ export const commands = {
           },
         },
         success: {
-          delete: (tableId, accountId) =>
+          delete: (tableId: string, accountId: string) =>
             `The table ${tableId} was deleted from ${accountId}`,
         },
       },
@@ -752,19 +778,19 @@ export const commands = {
           },
         },
         success: {
-          fetch: (tableId, path) =>
+          fetch: (tableId: string, path: string) =>
             `Downloaded HubDB table ${tableId} to ${path}`,
         },
       },
     },
   },
   init: {
-    describe: configName =>
+    describe: (configName: string) =>
       `Configure authentication for your HubSpot account. This will create a ${configName} file to store your account information.`,
     options: {
       authType: {
         describe: 'Authentication mechanism',
-        defaultDescription: authMethod =>
+        defaultDescription: (authMethod: string) =>
           `"${authMethod}": An access token tied to a specific user account. This is the recommended way of authenticating with local development tools.`,
       },
       account: {
@@ -776,8 +802,9 @@ export const commands = {
       },
     },
     success: {
-      configFileCreated: configPath => `Created config file "${configPath}"`,
-      configFileUpdated: (account, authType) =>
+      configFileCreated: (configPath: string) =>
+        `Created config file "${configPath}"`,
+      configFileUpdated: (account: string, authType: string) =>
         `Connected account "${account}" using "${authType}" and set it as the default account`,
     },
     logs: {
@@ -785,15 +812,15 @@ export const commands = {
         'To update an existing config file, use the "hs auth" command.',
     },
     errors: {
-      configFileExists: configPath =>
+      configFileExists: (configPath: string) =>
         `The config file ${configPath} already exists.`,
-      bothConfigFilesNotAllowed: path =>
+      bothConfigFilesNotAllowed: (path: string) =>
         `Unable to create config file, because there is an existing one at "${path}". To create a new config file, delete the existing one and try again.`,
     },
   },
   lint: {
-    issuesFound: count => `${count} issues found.`,
-    groupName: path => `Linting ${path}`,
+    issuesFound: (count: string) => `${count} issues found.`,
+    groupName: (path: string) => `Linting ${path}`,
     positionals: {
       path: {
         describe: 'Local folder to lint',
@@ -802,8 +829,8 @@ export const commands = {
   },
   list: {
     describe: 'List remote contents of a directory.',
-    gettingPathContents: path => `Getting contents of ${path}.`,
-    noFilesFoundAtPath: path => `No files found in ${path}.`,
+    gettingPathContents: (path: string) => `Getting contents of ${path}.`,
+    noFilesFoundAtPath: (path: string) => `No files found in ${path}.`,
     positionals: {
       path: {
         describe: 'Remote directory to list contents',
@@ -813,7 +840,7 @@ export const commands = {
   logs: {
     describe: 'View logs for a CMS serverless function.',
     errors: {
-      noLogsFound: (functionPath, accountId) =>
+      noLogsFound: (functionPath: string, accountId: string) =>
         `No logs were found for the function path "${functionPath}" in account "${accountId}".`,
     },
     examples: {
@@ -825,7 +852,7 @@ export const commands = {
         'Get 10 most recent logs for function residing at /_hcms/api/my-endpoint',
     },
     endpointPrompt: 'Enter a serverless function endpoint:',
-    gettingLogs: (latest, functionPath) =>
+    gettingLogs: (latest: string, functionPath: string) =>
       `Getting ${latest ? 'latest ' : ''}logs for function with path: ${functionPath}.`,
     options: {
       compact: {
@@ -846,19 +873,19 @@ export const commands = {
         describe: 'Serverless function endpoint',
       },
     },
-    tailLogs: (functionPath, accountId) =>
+    tailLogs: (functionPath: string, accountId: string) =>
       `Waiting for log entries for "${functionPath}" on account "${accountId}".\n`,
   },
   mv: {
     describe:
       'Move a remote file or folder in HubSpot. This feature is currently in beta and the CLI contract is subject to change.',
     errors: {
-      sourcePathExists: (srcPath, destPath) =>
+      sourcePathExists: (srcPath: string, destPath: string) =>
         `The folder "${srcPath}" already exists in "${destPath}".`,
-      moveFailed: (srcPath, destPath, accountId) =>
+      moveFailed: (srcPath: string, destPath: string, accountId: string) =>
         `Moving "${srcPath}" to "${destPath}" in account ${accountId} failed`,
     },
-    move: (srcPath, destPath, accountId) =>
+    move: (srcPath: string, destPath: string, accountId: string) =>
       `Moved "${srcPath}" to "${destPath}" in account ${accountId}`,
   },
   open: {
@@ -888,13 +915,13 @@ export const commands = {
       errors: {
         noProjectConfig:
           'No project detected. Please run this command again from a project directory.',
-        noAccount: (accountId, authCommand) =>
+        noAccount: (accountId: string, authCommand: string) =>
           `An error occurred while reading account ${accountId} from your config. Run ${chalk.bold(authCommand)} to re-auth this account.`,
-        noAccountsInConfig: authCommand =>
+        noAccountsInConfig: (authCommand: string) =>
           `No accounts found in your config. Run ${chalk.bold(authCommand)} to configure a HubSpot account with the CLI.`,
         invalidProjectComponents:
           'Projects cannot contain both private and public apps. Move your apps to separate projects before attempting local development.',
-        noRunnableComponents: command =>
+        noRunnableComponents: (command: string) =>
           `No supported components were found in this project. Run ${chalk.bold(command)} to see a list of available components and add one to your project.`,
       },
       examples: {
@@ -910,11 +937,11 @@ export const commands = {
           'Invalid template source provided. Use the format <Owner>/<Repo> and try again.',
         failedToFetchProjectList:
           'Failed to fetch the list of available project templates. Please try again later.',
-        cannotNestProjects: projectDir =>
+        cannotNestProjects: (projectDir: string) =>
           `A project already exists at ${projectDir}. Projects cannot be nested within other projects. Please choose a different destination and try again.`,
       },
       logs: {
-        success: (projectName, projectDest) =>
+        success: (projectName: string, projectDest: string) =>
           `Project ${chalk.bold(projectName)} was successfully created in ${projectDest}`,
         welcomeMessage: 'Welcome to HubSpot Developer Projects!',
       },
@@ -960,7 +987,7 @@ export const commands = {
         text: 'This command will migrate an app to the projects framework. It will walk you through the fields required to complete the migration and download the project source code into a directory of your choosing.',
         link: 'Learn more about migrating apps to the projects framework',
       },
-      deprecationWarning: (oldCommand, newCommand) =>
+      deprecationWarning: (oldCommand: string, newCommand: string) =>
         `The ${oldCommand} command is deprecated and will be removed. Use ${newCommand} going forward.`,
       migrationStatus: {
         inProgress: () =>
@@ -998,7 +1025,7 @@ export const commands = {
       describe:
         'Migrate an existing project to the new version of the projects framework.',
       errors: {
-        noProjectConfig: command =>
+        noProjectConfig: (command: string) =>
           `No project detected. Please run this command again from a project directory.  If you are trying to migrate an app, run ${command}`,
       },
       examples: {
@@ -1023,16 +1050,19 @@ export const commands = {
         inProgress: () =>
           `Cloning app configuration to ${chalk.bold('public-app.json')} component definition ...`,
         done: 'Cloning app configuration to public-app.json component definition ... DONE',
-        success: dest => `Your cloned project was created in ${dest}`,
+        success: (dest: string) => `Your cloned project was created in ${dest}`,
         failure:
           'Cloning app configuration to public-app.json component definition ... FAILED',
       },
       errors: {
         invalidAccountTypeTitle: () =>
           `${chalk.bold('Developer account not targeted')}`,
-        invalidAccountTypeDescription: (useCommand, authCommand) =>
+        invalidAccountTypeDescription: (
+          useCommand: string,
+          authCommand: string
+        ) =>
           `Only public apps created in a developer account can be converted to a project component. Select a connected developer account with ${useCommand} or ${authCommand} and try again.`,
-        couldNotWriteConfigPath: configPath =>
+        couldNotWriteConfigPath: (configPath: string) =>
           `Failed to write project config at ${configPath}`,
       },
     },
@@ -1047,9 +1077,9 @@ export const commands = {
             "The path to the component type's location within the hubspot-project-components Github repo: https://github.com/HubSpot/hubspot-project-components",
         },
       },
-      creatingComponent: projectName =>
+      creatingComponent: (projectName: string) =>
         `Adding a new component to ${chalk.bold(projectName)}`,
-      success: componentName =>
+      success: (componentName: string) =>
         `${componentName} was successfully added to your project.`,
       error: {
         failedToDownloadComponent:
@@ -1070,17 +1100,25 @@ export const commands = {
       describe: 'Deploy a project build.',
       deployBuildIdPrompt: '[--build] Deploy which build?',
       debug: {
-        deploying: path => `Deploying project at path: ${path}`,
+        deploying: (path: string) => `Deploying project at path: ${path}`,
       },
       errors: {
-        deploy: details => `Deploy error: ${details}`,
+        deploy: (details: string) => `Deploy error: ${details}`,
         noBuilds: 'Deploy error: no builds for this project were found.',
         noBuildId: 'You must specify a build to deploy',
-        projectNotFound: (projectName, accountIdentifier, command) =>
+        projectNotFound: (
+          projectName: string,
+          accountIdentifier: string,
+          command: string
+        ) =>
           `The project ${chalk.bold(projectName)} does not exist in account ${accountIdentifier}. Run ${command} to upload your project files to HubSpot.`,
-        buildIdDoesNotExist: (buildId, projectName, linkToProject) =>
+        buildIdDoesNotExist: (
+          buildId: string,
+          projectName: string,
+          linkToProject: string
+        ) =>
           `Build ${buildId} does not exist for project ${chalk.bold(projectName)}. ${linkToProject}`,
-        buildAlreadyDeployed: (buildId, linkToProject) =>
+        buildAlreadyDeployed: (buildId: string, linkToProject: string) =>
           `Build ${buildId} is already deployed. ${linkToProject}`,
         viewProjectsBuilds: 'View project builds in HubSpot',
       },
@@ -1101,13 +1139,18 @@ export const commands = {
       describe: "List the project's builds.",
       continueOrExitPrompt: 'Press <enter> to load more, or ctrl+c to exit',
       viewAllBuildsLink: 'View all builds',
-      showingNextBuilds: (count, projectName) =>
+      showingNextBuilds: (count: string, projectName: string) =>
         `Showing the next ${count} builds for ${projectName}`,
-      showingRecentBuilds: (count, projectName, viewAllBuildsLink) =>
+      showingRecentBuilds: (
+        count: string,
+        projectName: string,
+        viewAllBuildsLink: string
+      ) =>
         `Showing the most ${count} recent builds for ${projectName}. ${viewAllBuildsLink}.`,
       errors: {
         noBuilds: 'No builds for this project were found.',
-        projectNotFound: projectName => `Project ${projectName} not found.`,
+        projectNotFound: (projectName: string) =>
+          `Project ${projectName} not found.`,
       },
       options: {
         project: {
@@ -1134,8 +1177,8 @@ export const commands = {
           'Visit developer docs',
           'https://developers.hubspot.com/docs/platform/serverless-functions'
         )} to learn more about serverless functions`,
-        noFunctionWithName: name => `No function with name "${name}"`,
-        functionNotDeployed: name =>
+        noFunctionWithName: (name: string) => `No function with name "${name}"`,
+        functionNotDeployed: (name: string) =>
           `The function with name "${name}" is not deployed`,
         projectLogsManagerNotInitialized:
           'Function called on ProjectLogsManager before initialization',
@@ -1144,7 +1187,7 @@ export const commands = {
       logs: {
         showingLogs: 'Showing logs for:',
         hubspotLogsDirectLink: 'View function logs in HubSpot',
-        noLogsFound: name => `No logs were found for "${name}"`,
+        noLogsFound: (name: string) => `No logs were found for "${name}"`,
       },
       table: {
         accountHeader: 'Account',
@@ -1184,10 +1227,10 @@ export const commands = {
         default: 'Upload a project into your HubSpot account',
       },
       logs: {
-        buildSucceeded: buildId => `Build #${buildId} succeeded\n`,
+        buildSucceeded: (buildId: string) => `Build #${buildId} succeeded\n`,
         readyToGoLive: '🚀 Ready to take your project live?',
-        runCommand: command => `Run \`${command}\``,
-        autoDeployDisabled: deployCommand =>
+        runCommand: (command: string) => `Run \`${command}\``,
+        autoDeployDisabled: (deployCommand: string) =>
           `Automatic deploys are disabled for this project. Run ${deployCommand} to deploy this build.`,
       },
       errors: {
@@ -1214,11 +1257,13 @@ export const commands = {
         processExited: 'Stopping watcher...',
         watchCancelledFromUi: `The watch process has been cancelled from the UI. Any changes made since cancelling have not been uploaded. To resume watching, rerun ${uiCommandReference('hs project watch')}.`,
         resuming: 'Resuming watcher...',
-        uploadSucceeded: (remotePath, filePath) =>
+        uploadSucceeded: (remotePath: string, filePath: string) =>
           `Uploaded file "${filePath}" to "${remotePath}"`,
-        deleteFileSucceeded: remotePath => `Deleted file "${remotePath}"`,
-        deleteFolderSucceeded: remotePath => `Deleted folder "${remotePath}"`,
-        watching: projectDir =>
+        deleteFileSucceeded: (remotePath: string) =>
+          `Deleted file "${remotePath}"`,
+        deleteFolderSucceeded: (remotePath: string) =>
+          `Deleted folder "${remotePath}"`,
+        watching: (projectDir: string) =>
           `Watcher is ready and watching "${projectDir}". Any changes detected will be automatically uploaded.`,
         previousStagingBuildCancelled:
           'Killed the previous watch process. Please try running `hs project watch` again',
@@ -1231,23 +1276,25 @@ export const commands = {
       debug: {
         pause: 'Pausing watcher, attempting to queue build',
         buildStarted: 'Build queued.',
-        extensionNotAllowed: filePath =>
+        extensionNotAllowed: (filePath: string) =>
           `Skipping "${filePath}" due to unsupported extension`,
-        ignored: filePath => `Skipping "${filePath}" due to an ignore rule`,
-        uploading: (filePath, remotePath) =>
+        ignored: (filePath: string) =>
+          `Skipping "${filePath}" due to an ignore rule`,
+        uploading: (filePath: string, remotePath: string) =>
           `Attempting to upload file "${filePath}" to "${remotePath}"`,
         attemptNewBuild: 'Attempting to create a new build',
-        fileAlreadyQueued: filePath =>
+        fileAlreadyQueued: (filePath: string) =>
           `File "${filePath}" is already queued for upload`,
       },
       errors: {
         projectConfigNotFound:
           'No project config found. Please ensure that you are in a project directory.',
         projectLockedError: `Your project is locked. This may mean that another user is running the ${chalk.bold(`hs project dev`)} command for this project. If this is you, unlock the project in Projects UI.`,
-        uploadFailed: (remotePath, filePath) =>
+        uploadFailed: (remotePath: string, filePath: string) =>
           `Failed to upload file "${filePath}" to "${remotePath}"`,
-        deleteFileFailed: remotePath => `Failed to delete file "${remotePath}"`,
-        deleteFolderFailed: remotePath =>
+        deleteFileFailed: (remotePath: string) =>
+          `Failed to delete file "${remotePath}"`,
+        deleteFolderFailed: (remotePath: string) =>
           `Failed to delete folder "${remotePath}"`,
       },
     },
@@ -1258,12 +1305,12 @@ export const commands = {
       },
       logs: {
         downloadCancelled: 'Cancelling project download',
-        downloadSucceeded: (buildId, projectName) =>
+        downloadSucceeded: (buildId: string, projectName: string) =>
           `Downloaded build "${buildId}" from project "${projectName}"`,
       },
       errors: {
         downloadFailed: 'Something went wrong downloading the project',
-        projectNotFound: (projectName, accountId) =>
+        projectNotFound: (projectName: string, accountId: string) =>
           `Your project ${chalk.bold(projectName)} could not be found in ${accountId}`,
       },
       warnings: {
@@ -1292,7 +1339,7 @@ export const commands = {
       examples: {
         default: 'Opens the projects page for the specified account',
       },
-      success: projectName => `Successfully opened "${projectName}"`,
+      success: (projectName: string) => `Successfully opened "${projectName}"`,
     },
     feedback: {
       describe: 'Leave feedback on HubSpot projects or file a bug report.',
@@ -1303,7 +1350,7 @@ export const commands = {
           "[--general] Tell us about your experience with HubSpot's developer tools",
       },
       openPrompt: 'Create a Github issue in your browser?',
-      success: url => `We opened ${url} in your browser.`,
+      success: (url: string) => `We opened ${url} in your browser.`,
       options: {
         bug: {
           describe: 'Open Github issues in your browser to report a bug.',
@@ -1325,27 +1372,28 @@ export const commands = {
         'Choose the project components to install the dependencies:',
       installLocationPromptRequired:
         'You must choose at least one subcomponent',
-      installingDependencies: directory =>
+      installingDependencies: (directory: string) =>
         `Installing dependencies in ${directory}`,
-      installationSuccessful: directory =>
+      installationSuccessful: (directory: string) =>
         `Installed dependencies in ${directory}`,
-      addingDependenciesToLocation: (dependencies, directory) =>
+      addingDependenciesToLocation: (dependencies: string, directory: string) =>
         `Installing ${dependencies} in ${directory}`,
-      installingDependenciesFailed: directory =>
+      installingDependenciesFailed: (directory: string) =>
         `Installing dependencies for ${directory} failed`,
       noProjectConfig:
         'No project detected. Run this command from a project directory.',
-      noPackageJsonInProject: (projectName, link) =>
+      noPackageJsonInProject: (projectName: string, link: string) =>
         `No dependencies to install. The project ${projectName} folder might be missing component or subcomponent files. ${link}`,
-      packageManagerNotInstalled: (packageManager, link) =>
+      packageManagerNotInstalled: (packageManager: string, link: string) =>
         `This command depends on ${packageManager}, install ${chalk.bold(link)}`,
     },
   },
   remove: {
     describe: 'Delete a file or folder from HubSpot.',
-    deleted: (path, accountId) => `Deleted "${path}" from account ${accountId}`,
+    deleted: (path: string, accountId: string) =>
+      `Deleted "${path}" from account ${accountId}`,
     errors: {
-      deleteFailed: (path, accountId) =>
+      deleteFailed: (path: string, accountId: string) =>
         `Deleting "${path}" from account ${accountId} failed`,
     },
     positionals: {
@@ -1360,56 +1408,56 @@ export const commands = {
       create: {
         developer: {
           loading: {
-            add: accountName =>
+            add: (accountName: string) =>
               `Creating developer sandbox ${chalk.bold(accountName)}`,
-            fail: accountName =>
+            fail: (accountName: string) =>
               `Failed to create a developer sandbox ${chalk.bold(accountName)}.`,
-            succeed: (accountName, accountId) =>
+            succeed: (accountName: string, accountId: string) =>
               `Successfully created a developer sandbox ${chalk.bold(accountName)} with portalId ${chalk.bold(accountId)}.`,
           },
           success: {
-            configFileUpdated: (accountName, authType) =>
+            configFileUpdated: (accountName: string, authType: string) =>
               `Account "${accountName}" updated using "${authType}"`,
           },
           failure: {
-            invalidUser: (accountName, parentAccountName) =>
+            invalidUser: (accountName: string, parentAccountName: string) =>
               `Couldn't create ${chalk.bold(accountName)} because your account has been removed from ${chalk.bold(parentAccountName)} or your permission set doesn't allow you to create the sandbox. To update your permissions, contact a super admin in ${chalk.bold(parentAccountName)}.`,
-            limit: (accountName, limit) =>
+            limit: (accountName: string, limit: string) =>
               `${chalk.bold(accountName)} reached the limit of ${limit} developer sandboxes. \n- To connect a developer sandbox to your HubSpot CLI, run ${chalk.bold('hs auth')} and follow the prompts.`,
-            alreadyInConfig: (accountName, limit) =>
+            alreadyInConfig: (accountName: string, limit: string) =>
               `${chalk.bold(accountName)} reached the limit of ${limit} developer sandboxes. \n- To use an existing developer sandbox, run ${chalk.bold('hs accounts use')}.`,
             scopes: {
               message:
                 "The personal access key you provided doesn't include developer sandbox permissions.",
-              instructions: (accountName, url) =>
+              instructions: (accountName: string, url: string) =>
                 `To update CLI permissions for "${accountName}": \n- Go to ${url}, deactivate the existing personal access key, and create a new one that includes developer sandbox permissions. \n- Update the CLI config for this account by running ${chalk.bold('hs auth')} and entering the new key.\n`,
             },
           },
         },
         standard: {
           loading: {
-            add: accountName =>
+            add: (accountName: string) =>
               `Creating standard sandbox ${chalk.bold(accountName)}`,
-            fail: accountName =>
+            fail: (accountName: string) =>
               `Failed to create a standard sandbox ${chalk.bold(accountName)}.`,
-            succeed: (accountName, accountId) =>
+            succeed: (accountName: string, accountId: string) =>
               `Successfully created a standard sandbox ${chalk.bold(accountName)} with portalId ${chalk.bold(accountId)}.`,
           },
           success: {
-            configFileUpdated: (accountName, authType) =>
+            configFileUpdated: (accountName: string, authType: string) =>
               `Account "${accountName}" updated using "${authType}"`,
           },
           failure: {
-            invalidUser: (accountName, parentAccountName) =>
+            invalidUser: (accountName: string, parentAccountName: string) =>
               `Couldn't create ${chalk.bold(accountName)} because your account has been removed from ${chalk.bold(parentAccountName)} or your permission set doesn't allow you to create the sandbox. To update your permissions, contact a super admin in ${chalk.bold(parentAccountName)}.`,
-            limit: (accountName, limit) =>
+            limit: (accountName: string, limit: string) =>
               `${chalk.bold(accountName)} reached the limit of ${limit} standard sandboxes. \n- To connect a standard sandbox to your HubSpot CLI, run ${chalk.bold('hs auth')} and follow the prompts.`,
-            alreadyInConfig: (accountName, limit) =>
+            alreadyInConfig: (accountName: string, limit: string) =>
               `${chalk.bold(accountName)} reached the limit of ${limit} standard sandboxes. \n- To use an existing standard sandbox, run ${chalk.bold('hs accounts use')}.`,
             scopes: {
               message:
                 "The personal access key you provided doesn't include standard sandbox permissions.",
-              instructions: (accountName, url) =>
+              instructions: (accountName: string, url: string) =>
                 `To update CLI permissions for "${accountName}": \n- Go to ${url}, deactivate the existing personal access key, and create a new one that includes standard sandbox permissions. \n- Update the CLI config for this account by running ${chalk.bold('hs auth')} and entering the new key.\n`,
             },
           },
@@ -1418,40 +1466,41 @@ export const commands = {
       delete: {
         describe: 'Delete a sandbox account.',
         debug: {
-          deleting: account => `Deleting sandbox account "${account}"`,
+          deleting: (account: string) =>
+            `Deleting sandbox account "${account}"`,
           error: 'Error deleting sandbox account:',
         },
         examples: {
           default: 'Deletes the sandbox account named MySandboxAccount.',
         },
-        confirm: account =>
+        confirm: (account: string) =>
           `Delete sandbox ${chalk.bold(account)}? All data for this sandbox will be permanently deleted.`,
-        defaultAccountWarning: account =>
+        defaultAccountWarning: (account: string) =>
           `The sandbox ${chalk.bold(account)} is currently set as the default account.`,
         success: {
-          delete: (account, sandboxHubId) =>
+          delete: (account: string, sandboxHubId: string) =>
             `Sandbox "${account}" with portalId "${sandboxHubId}" was deleted successfully.`,
-          deleteDefault: (account, sandboxHubId) =>
+          deleteDefault: (account: string, sandboxHubId: string) =>
             `Sandbox "${account}" with portalId "${sandboxHubId}" was deleted successfully and removed as the default account.`,
-          configFileUpdated: (account, configFilename) =>
+          configFileUpdated: (account: string, configFilename: string) =>
             `Removed account ${account} from ${configFilename}.`,
         },
         failure: {
-          invalidUser: (accountName, parentAccountName) =>
+          invalidUser: (accountName: string, parentAccountName: string) =>
             `Couldn't delete ${accountName} because your account has been removed from ${parentAccountName} or your permission set doesn't allow you to delete the sandbox. To update your permissions, contact a super admin in ${parentAccountName}.`,
           noAccount:
             'No account specified. Specify an account by using the --account flag.',
-          noSandboxAccounts: authCommand =>
+          noSandboxAccounts: (authCommand: string) =>
             `There are no sandboxes connected to the CLI. To add a sandbox, run ${authCommand}.`,
           noSandboxAccountId:
             "This sandbox can't be deleted from the CLI because we could not find the associated sandbox account.",
-          noParentAccount: authCommand =>
+          noParentAccount: (authCommand: string) =>
             `This sandbox can't be deleted from the CLI because you haven't given the CLI access to its parent account. To do this, run ${authCommand} and add the parent account.`,
-          objectNotFound: account =>
+          objectNotFound: (account: string) =>
             `Sandbox ${chalk.bold(account)} may have been deleted through the UI. The account has been removed from the config.`,
-          noParentPortalAvailable: (command, url) =>
+          noParentPortalAvailable: (command: string, url: string) =>
             `This sandbox can't be deleted from the CLI because you haven't given the CLI access to its parent account. To do this, run ${command}. You can also delete the sandbox from the HubSpot management tool: ${chalk.bold(url)}.`,
-          invalidKey: (account, authCommand) =>
+          invalidKey: (account: string, authCommand: string) =>
             `Your personal access key for account ${chalk.bold(account)} is inactive. To re-authenticate, please run ${authCommand}.`,
         },
         options: {
@@ -1467,23 +1516,24 @@ export const commands = {
     },
     sync: {
       loading: {
-        add: accountName => `Syncing sandbox ${chalk.bold(accountName)}`,
-        fail: accountName =>
+        add: (accountName: string) =>
+          `Syncing sandbox ${chalk.bold(accountName)}`,
+        fail: (accountName: string) =>
           `Failed to sync sandbox ${chalk.bold(accountName)}.`,
-        succeed: accountName =>
+        succeed: (accountName: string) =>
           `Successfully synced sandbox ${chalk.bold(accountName)}.`,
       },
       success: {
-        configFileUpdated: (accountName, authType) =>
+        configFileUpdated: (accountName: string, authType: string) =>
           `Account "${accountName}" updated using "${authType}"`,
       },
       failure: {
-        invalidUser: (accountName, parentAccountName) =>
+        invalidUser: (accountName: string, parentAccountName: string) =>
           `Couldn't sync ${chalk.bold(accountName)} because your account has been removed from ${chalk.bold(parentAccountName)} or your permission set doesn't allow you to sync the sandbox. To update your permissions, contact a super admin in ${chalk.bold(parentAccountName)}.`,
         scopes: {
           message:
             "The personal access key you provided doesn't include sandbox sync permissions.",
-          instructions: (accountName, url) =>
+          instructions: (accountName: string, url: string) =>
             `To update CLI permissions for "${accountName}": \n- Go to ${url}, deactivate the existing personal access key, and create a new one that includes sandbox sync permissions. \n- Update the CLI config for this account by running ${chalk.bold('hs auth')} and entering the new key.\n`,
         },
       },
@@ -1495,8 +1545,9 @@ export const commands = {
       add: {
         describe: 'Create a new secret.',
         errors: {
-          add: secretName => `The secret "${secretName}" was not added`,
-          alreadyExists: (secretName, command) =>
+          add: (secretName: string) =>
+            `The secret "${secretName}" was not added`,
+          alreadyExists: (secretName: string, command: string) =>
             `The secret "${secretName}" already exists, it's value can be modified with ${command}`,
         },
         positionals: {
@@ -1505,7 +1556,7 @@ export const commands = {
           },
         },
         success: {
-          add: (secretName, accountIdentifier) =>
+          add: (secretName: string, accountIdentifier: string) =>
             `The secret "${secretName}" was added to the HubSpot account: ${accountIdentifier}`,
         },
       },
@@ -1513,11 +1564,12 @@ export const commands = {
         describe: 'Delete a secret.',
         selectSecret: 'Select the secret you want to delete',
         deleteCanceled: 'Delete canceled',
-        confirmDelete: secretName =>
+        confirmDelete: (secretName: string) =>
           `Are you sure you want to delete the secret "${secretName}"?`,
         errors: {
-          delete: secretName => `The secret "${secretName}" was not deleted`,
-          noSecret: secretName =>
+          delete: (secretName: string) =>
+            `The secret "${secretName}" was not deleted`,
+          noSecret: (secretName: string) =>
             `Unable to delete secret with name "${secretName}", it does not exist`,
         },
         positionals: {
@@ -1526,7 +1578,7 @@ export const commands = {
           },
         },
         success: {
-          delete: (secretName, accountIdentifier) =>
+          delete: (secretName: string, accountIdentifier: string) =>
             `The secret "${secretName}" was deleted from the HubSpot account: ${accountIdentifier}`,
         },
       },
@@ -1535,15 +1587,16 @@ export const commands = {
         errors: {
           list: 'The secrets could not be listed',
         },
-        groupLabel: accountIdentifier =>
+        groupLabel: (accountIdentifier: string) =>
           `Secrets for account ${accountIdentifier}:`,
       },
       update: {
         describe: 'Update an existing secret.',
         selectSecret: 'Select the secret you want to update',
         errors: {
-          update: secretName => `The secret "${secretName}" was not updated`,
-          noSecret: secretName =>
+          update: (secretName: string) =>
+            `The secret "${secretName}" was not updated`,
+          noSecret: (secretName: string) =>
             `Unable to update secret with name "${secretName}", it does not exist`,
         },
         positionals: {
@@ -1552,7 +1605,7 @@ export const commands = {
           },
         },
         success: {
-          update: (secretName, accountIdentifier) =>
+          update: (secretName: string, accountIdentifier: string) =>
             `The secret "${secretName}" was updated in the HubSpot account: ${accountIdentifier}`,
           updateExplanation:
             'Existing serverless functions will start using this new value within 10 seconds.',
@@ -1567,11 +1620,12 @@ export const commands = {
         describe:
           'Automatically generates an editor-preview.json file for the given theme. The selectors this command generates are not perfect, so please edit editor-preview.json after running.',
         errors: {
-          invalidPath: themePath => `Could not find directory "${themePath}"`,
+          invalidPath: (themePath: string) =>
+            `Could not find directory "${themePath}"`,
           fieldsNotFound: "Unable to find theme's fields.json.",
           noSelectorsFound: 'No selectors found.',
         },
-        success: (themePath, selectorsPath) =>
+        success: (themePath: string, selectorsPath: string) =>
           `Selectors generated for ${themePath}, please double check the selectors generated at ${selectorsPath} before uploading the theme.`,
         positionals: {
           path: {
@@ -1583,18 +1637,18 @@ export const commands = {
       marketplaceValidate: {
         describe: 'Validate a theme for the marketplace.',
         errors: {
-          invalidPath: path =>
+          invalidPath: (path: string) =>
             `The path "${path}" is not a path to a folder in the Design Manager`,
         },
         logs: {
-          validatingTheme: path => `Validating theme "${path}" \n`,
+          validatingTheme: (path: string) => `Validating theme "${path}" \n`,
         },
         results: {
           required: 'Required validation results:',
           recommended: 'Recommended validation results:',
           warnings: {
-            file: file => `File: ${file}`,
-            lineNumber: line => `Line number: ${line}`,
+            file: (file: string) => `File: ${file}`,
+            lineNumber: (line: string) => `Line number: ${line}`,
           },
           noErrors: 'No errors',
         },
@@ -1608,7 +1662,7 @@ export const commands = {
         describe:
           'Upload and watch a theme directory on your computer for changes and start a local development server to preview theme changes on a site.',
         errors: {
-          invalidPath: path =>
+          invalidPath: (path: string) =>
             `The path "${path}" is not a path to a directory`,
           noThemeComponents:
             'Your project has no theme components available to preview.',
@@ -1654,11 +1708,11 @@ export const commands = {
         describe:
           'Validate a module for the marketplace. Make sure to include the suffix .module in the path to the module within the Design Manager.',
         errors: {
-          invalidPath: path =>
+          invalidPath: (path: string) =>
             `The path "${path}" is not a path to a module within the Design Manager.`,
         },
         logs: {
-          validatingModule: path => `Validating module "${path}" \n`,
+          validatingModule: (path: string) => `Validating module "${path}" \n`,
         },
         options: {
           json: {
@@ -1669,8 +1723,8 @@ export const commands = {
           required: 'Required validation results:',
           recommended: 'Recommended validation results:',
           warnings: {
-            file: file => `File: ${file}`,
-            lineNumber: line => `Line number: ${line}`,
+            file: (file: string) => `File: ${file}`,
+            lineNumber: (line: string) => `Line number: ${line}`,
           },
           noErrors: 'No errors',
         },
@@ -1686,15 +1740,15 @@ export const commands = {
     describe: 'Upload a folder or file from your computer to the HubSpot CMS.',
     errors: {
       destinationRequired: 'A destination path needs to be passed',
-      fileIgnored: path =>
+      fileIgnored: (path: string) =>
         `The file "${path}" is being ignored via an .hsignore rule`,
-      invalidPath: path =>
+      invalidPath: (path: string) =>
         `The path "${path}" is not a path to a file or folder`,
-      uploadFailed: (src, dest) =>
+      uploadFailed: (src: string, dest: string) =>
         `Uploading file "${src}" to "${dest}" failed`,
-      someFilesFailed: dest =>
+      someFilesFailed: (dest: string) =>
         `One or more files failed to upload to "${dest}" in the Design Manager`,
-      deleteFailed: (path, accountId) =>
+      deleteFailed: (path: string, accountId: string) =>
         `Deleting "${path}" from account ${accountId} failed`,
     },
     options: {
@@ -1717,7 +1771,8 @@ export const commands = {
         describe: 'Skips confirmation prompts when doing a clean upload.',
       },
     },
-    previewUrl: previewUrl => `To preview this theme, visit: ${previewUrl}`,
+    previewUrl: (previewUrl: string) =>
+      `To preview this theme, visit: ${previewUrl}`,
     positionals: {
       src: {
         describe:
@@ -1728,30 +1783,31 @@ export const commands = {
       },
     },
     success: {
-      fileUploaded: (src, dest, accountId) =>
+      fileUploaded: (src: string, dest: string, accountId: string) =>
         `Uploaded file from "${src}" to "${dest}" in the Design Manager of account ${accountId}`,
-      uploadComplete: dest =>
+      uploadComplete: (dest: string) =>
         `Uploading files to "${dest}" in the Design Manager is complete`,
     },
-    uploading: (src, dest, accountId) =>
+    uploading: (src: string, dest: string, accountId: string) =>
       `Uploading files from "${src}" to "${dest}" in the Design Manager of account ${accountId}`,
-    notUploaded: src =>
+    notUploaded: (src: string) =>
       `There was an error processing "${src}". The file has not been uploaded.`,
-    cleaning: (filePath, accountId) =>
+    cleaning: (filePath: string, accountId: string) =>
       `Removing "${filePath}" from account ${accountId} and uploading local...`,
-    confirmCleanUpload: (filePath, accountId) =>
+    confirmCleanUpload: (filePath: string, accountId: string) =>
       `You are about to delete the directory "${filePath}" and its contents on HubSpot account ${accountId} before uploading. This will also clear the global content associated with any global partial templates and modules. Are you sure you want to do this?`,
   },
   watch: {
     describe:
       'Watch a directory on your computer for changes and upload the changed files to the HubSpot CMS.',
     errors: {
-      folderFailed: (src, dest, accountId) =>
+      folderFailed: (src: string, dest: string, accountId: string) =>
         `Initial uploading of folder "${src}" to "${dest}" in account ${accountId} had failures`,
-      fileFailed: (file, dest, accountId) =>
+      fileFailed: (file: string, dest: string, accountId: string) =>
         `Upload of file "${file}" to "${dest}" in account ${accountId} failed`,
       destinationRequired: 'A destination directory needs to be passed',
-      invalidPath: path => `The "${path}" is not a path to a directory`,
+      invalidPath: (path: string) =>
+        `The "${path}" is not a path to a directory`,
     },
     options: {
       disableInitial: {
@@ -1795,7 +1851,7 @@ export const commands = {
         `Passing the "${chalk.bold('--disable-initial')}" option is no longer necessary. Running "${chalk.bold('hs watch')}" no longer uploads the watched directory by default.`,
       initialUpload: () =>
         `To upload the directory run "${chalk.bold('hs upload')}" beforehand or add the "${chalk.bold('--initial-upload')}" option when running "${chalk.bold('hs watch')}".`,
-      notUploaded: path =>
+      notUploaded: (path: string) =>
         `The "${chalk.bold('hs watch')}" command no longer uploads the watched directory when started. The directory "${path}" was not uploaded.`,
     },
   },
@@ -1814,7 +1870,7 @@ export const commands = {
       },
     },
     errors: {
-      invalidPath: path =>
+      invalidPath: (path: string) =>
         `The path "${path}" specified in the "--src" flag is not a path to a file or directory`,
       missingSrc:
         'Please specify the path to your javascript fields file or directory with the --src flag.',
@@ -1823,45 +1879,47 @@ export const commands = {
   secrets: {
     add: {
       loading: {
-        add: secretName => `Adding secret ${chalk.bold(secretName)}`,
-        fail: secretName => `Failed to add secret ${chalk.bold(secretName)}.`,
-        succeed: secretName =>
+        add: (secretName: string) => `Adding secret ${chalk.bold(secretName)}`,
+        fail: (secretName: string) =>
+          `Failed to add secret ${chalk.bold(secretName)}.`,
+        succeed: (secretName: string) =>
           `Successfully added secret ${chalk.bold(secretName)}.`,
       },
       success: {
-        configFileUpdated: (secretName, authType) =>
+        configFileUpdated: (secretName: string, authType: string) =>
           `Secret "${secretName}" updated using "${authType}"`,
       },
       failure: {
-        invalidUser: (secretName, parentAccountName) =>
+        invalidUser: (secretName: string, parentAccountName: string) =>
           `Couldn't add ${chalk.bold(secretName)} because your account has been removed from ${chalk.bold(parentAccountName)} or your permission set doesn't allow you to add secrets. To update your permissions, contact a super admin in ${chalk.bold(parentAccountName)}.`,
         scopes: {
           message:
             "The personal access key you provided doesn't include secrets permissions.",
-          instructions: (secretName, url) =>
+          instructions: (secretName: string, url: string) =>
             `To update CLI permissions for "${secretName}": \n- Go to ${url}, deactivate the existing personal access key, and create a new one that includes secrets permissions. \n- Update the CLI config for this account by running ${chalk.bold('hs auth')} and entering the new key.\n`,
         },
       },
     },
     delete: {
       loading: {
-        add: secretName => `Deleting secret ${chalk.bold(secretName)}`,
-        fail: secretName =>
+        add: (secretName: string) =>
+          `Deleting secret ${chalk.bold(secretName)}`,
+        fail: (secretName: string) =>
           `Failed to delete secret ${chalk.bold(secretName)}.`,
-        succeed: secretName =>
+        succeed: (secretName: string) =>
           `Successfully deleted secret ${chalk.bold(secretName)}.`,
       },
       success: {
-        configFileUpdated: (secretName, authType) =>
+        configFileUpdated: (secretName: string, authType: string) =>
           `Secret "${secretName}" updated using "${authType}"`,
       },
       failure: {
-        invalidUser: (secretName, parentAccountName) =>
+        invalidUser: (secretName: string, parentAccountName: string) =>
           `Couldn't delete ${chalk.bold(secretName)} because your account has been removed from ${chalk.bold(parentAccountName)} or your permission set doesn't allow you to delete secrets. To update your permissions, contact a super admin in ${chalk.bold(parentAccountName)}.`,
         scopes: {
           message:
             "The personal access key you provided doesn't include secrets permissions.",
-          instructions: (secretName, url) =>
+          instructions: (secretName: string, url: string) =>
             `To update CLI permissions for "${secretName}": \n- Go to ${url}, deactivate the existing personal access key, and create a new one that includes secrets permissions. \n- Update the CLI config for this account by running ${chalk.bold('hs auth')} and entering the new key.\n`,
         },
       },
@@ -1873,15 +1931,16 @@ export const commands = {
         succeed: () => `Successfully listed secrets.`,
       },
       success: {
-        configFileUpdated: authType => `Secrets updated using "${authType}"`,
+        configFileUpdated: (authType: string) =>
+          `Secrets updated using "${authType}"`,
       },
       failure: {
-        invalidUser: parentAccountName =>
+        invalidUser: (parentAccountName: string) =>
           `Couldn't list secrets because your account has been removed from ${chalk.bold(parentAccountName)} or your permission set doesn't allow you to list secrets. To update your permissions, contact a super admin in ${chalk.bold(parentAccountName)}.`,
         scopes: {
           message:
             "The personal access key you provided doesn't include secrets permissions.",
-          instructions: url =>
+          instructions: (url: string) =>
             `To update CLI permissions: \n- Go to ${url}, deactivate the existing personal access key, and create a new one that includes secrets permissions. \n- Update the CLI config for this account by running ${chalk.bold('hs auth')} and entering the new key.\n`,
         },
       },
@@ -1890,48 +1949,48 @@ export const commands = {
   serverless: {
     add: {
       loading: {
-        add: functionName =>
+        add: (functionName: string) =>
           `Adding serverless function ${chalk.bold(functionName)}`,
-        fail: functionName =>
+        fail: (functionName: string) =>
           `Failed to add serverless function ${chalk.bold(functionName)}.`,
-        succeed: functionName =>
+        succeed: (functionName: string) =>
           `Successfully added serverless function ${chalk.bold(functionName)}.`,
       },
       success: {
-        configFileUpdated: (functionName, authType) =>
+        configFileUpdated: (functionName: string, authType: string) =>
           `Serverless function "${functionName}" updated using "${authType}"`,
       },
       failure: {
-        invalidUser: (functionName, parentAccountName) =>
+        invalidUser: (functionName: string, parentAccountName: string) =>
           `Couldn't add ${chalk.bold(functionName)} because your account has been removed from ${chalk.bold(parentAccountName)} or your permission set doesn't allow you to add serverless functions. To update your permissions, contact a super admin in ${chalk.bold(parentAccountName)}.`,
         scopes: {
           message:
             "The personal access key you provided doesn't include serverless function permissions.",
-          instructions: (functionName, url) =>
+          instructions: (functionName: string, url: string) =>
             `To update CLI permissions for "${functionName}": \n- Go to ${url}, deactivate the existing personal access key, and create a new one that includes serverless function permissions. \n- Update the CLI config for this account by running ${chalk.bold('hs auth')} and entering the new key.\n`,
         },
       },
     },
     delete: {
       loading: {
-        add: functionName =>
+        add: (functionName: string) =>
           `Deleting serverless function ${chalk.bold(functionName)}`,
-        fail: functionName =>
+        fail: (functionName: string) =>
           `Failed to delete serverless function ${chalk.bold(functionName)}.`,
-        succeed: functionName =>
+        succeed: (functionName: string) =>
           `Successfully deleted serverless function ${chalk.bold(functionName)}.`,
       },
       success: {
-        configFileUpdated: (functionName, authType) =>
+        configFileUpdated: (functionName: string, authType: string) =>
           `Serverless function "${functionName}" updated using "${authType}"`,
       },
       failure: {
-        invalidUser: (functionName, parentAccountName) =>
+        invalidUser: (functionName: string, parentAccountName: string) =>
           `Couldn't delete ${chalk.bold(functionName)} because your account has been removed from ${chalk.bold(parentAccountName)} or your permission set doesn't allow you to delete serverless functions. To update your permissions, contact a super admin in ${chalk.bold(parentAccountName)}.`,
         scopes: {
           message:
             "The personal access key you provided doesn't include serverless function permissions.",
-          instructions: (functionName, url) =>
+          instructions: (functionName: string, url: string) =>
             `To update CLI permissions for "${functionName}": \n- Go to ${url}, deactivate the existing personal access key, and create a new one that includes serverless function permissions. \n- Update the CLI config for this account by running ${chalk.bold('hs auth')} and entering the new key.\n`,
         },
       },
@@ -1943,16 +2002,16 @@ export const commands = {
         succeed: () => `Successfully listed serverless functions.`,
       },
       success: {
-        configFileUpdated: authType =>
+        configFileUpdated: (authType: string) =>
           `Serverless functions updated using "${authType}"`,
       },
       failure: {
-        invalidUser: parentAccountName =>
+        invalidUser: (parentAccountName: string) =>
           `Couldn't list serverless functions because your account has been removed from ${chalk.bold(parentAccountName)} or your permission set doesn't allow you to list serverless functions. To update your permissions, contact a super admin in ${chalk.bold(parentAccountName)}.`,
         scopes: {
           message:
             "The personal access key you provided doesn't include serverless function permissions.",
-          instructions: url =>
+          instructions: (url: string) =>
             `To update CLI permissions: \n- Go to ${url}, deactivate the existing personal access key, and create a new one that includes serverless function permissions. \n- Update the CLI config for this account by running ${chalk.bold('hs auth')} and entering the new key.\n`,
         },
       },
@@ -1961,48 +2020,48 @@ export const commands = {
   serverlessFunctionLogs: {
     add: {
       loading: {
-        add: functionName =>
+        add: (functionName: string) =>
           `Adding serverless function logs ${chalk.bold(functionName)}`,
-        fail: functionName =>
+        fail: (functionName: string) =>
           `Failed to add serverless function logs ${chalk.bold(functionName)}.`,
-        succeed: functionName =>
+        succeed: (functionName: string) =>
           `Successfully added serverless function logs ${chalk.bold(functionName)}.`,
       },
       success: {
-        configFileUpdated: (functionName, authType) =>
+        configFileUpdated: (functionName: string, authType: string) =>
           `Serverless function logs "${functionName}" updated using "${authType}"`,
       },
       failure: {
-        invalidUser: (functionName, parentAccountName) =>
+        invalidUser: (functionName: string, parentAccountName: string) =>
           `Couldn't add ${chalk.bold(functionName)} because your account has been removed from ${chalk.bold(parentAccountName)} or your permission set doesn't allow you to add serverless function logs. To update your permissions, contact a super admin in ${chalk.bold(parentAccountName)}.`,
         scopes: {
           message:
             "The personal access key you provided doesn't include serverless function log permissions.",
-          instructions: (functionName, url) =>
+          instructions: (functionName: string, url: string) =>
             `To update CLI permissions for "${functionName}": \n- Go to ${url}, deactivate the existing personal access key, and create a new one that includes serverless function log permissions. \n- Update the CLI config for this account by running ${chalk.bold('hs auth')} and entering the new key.\n`,
         },
       },
     },
     delete: {
       loading: {
-        add: functionName =>
+        add: (functionName: string) =>
           `Deleting serverless function logs ${chalk.bold(functionName)}`,
-        fail: functionName =>
+        fail: (functionName: string) =>
           `Failed to delete serverless function logs ${chalk.bold(functionName)}.`,
-        succeed: functionName =>
+        succeed: (functionName: string) =>
           `Successfully deleted serverless function logs ${chalk.bold(functionName)}.`,
       },
       success: {
-        configFileUpdated: (functionName, authType) =>
+        configFileUpdated: (functionName: string, authType: string) =>
           `Serverless function logs "${functionName}" updated using "${authType}"`,
       },
       failure: {
-        invalidUser: (functionName, parentAccountName) =>
+        invalidUser: (functionName: string, parentAccountName: string) =>
           `Couldn't delete ${chalk.bold(functionName)} because your account has been removed from ${chalk.bold(parentAccountName)} or your permission set doesn't allow you to delete serverless function logs. To update your permissions, contact a super admin in ${chalk.bold(parentAccountName)}.`,
         scopes: {
           message:
             "The personal access key you provided doesn't include serverless function log permissions.",
-          instructions: (functionName, url) =>
+          instructions: (functionName: string, url: string) =>
             `To update CLI permissions for "${functionName}": \n- Go to ${url}, deactivate the existing personal access key, and create a new one that includes serverless function log permissions. \n- Update the CLI config for this account by running ${chalk.bold('hs auth')} and entering the new key.\n`,
         },
       },
@@ -2014,16 +2073,16 @@ export const commands = {
         succeed: () => `Successfully listed serverless function logs.`,
       },
       success: {
-        configFileUpdated: authType =>
+        configFileUpdated: (authType: string) =>
           `Serverless function logs updated using "${authType}"`,
       },
       failure: {
-        invalidUser: parentAccountName =>
+        invalidUser: (parentAccountName: string) =>
           `Couldn't list serverless function logs because your account has been removed from ${chalk.bold(parentAccountName)} or your permission set doesn't allow you to list serverless function logs. To update your permissions, contact a super admin in ${chalk.bold(parentAccountName)}.`,
         scopes: {
           message:
             "The personal access key you provided doesn't include serverless function log permissions.",
-          instructions: url =>
+          instructions: (url: string) =>
             `To update CLI permissions: \n- Go to ${url}, deactivate the existing personal access key, and create a new one that includes serverless function log permissions. \n- Update the CLI config for this account by running ${chalk.bold('hs auth')} and entering the new key.\n`,
         },
       },
@@ -2032,48 +2091,48 @@ export const commands = {
   serverlessFunctionMetrics: {
     add: {
       loading: {
-        add: functionName =>
+        add: (functionName: string) =>
           `Adding serverless function metrics ${chalk.bold(functionName)}`,
-        fail: functionName =>
+        fail: (functionName: string) =>
           `Failed to add serverless function metrics ${chalk.bold(functionName)}.`,
-        succeed: functionName =>
+        succeed: (functionName: string) =>
           `Successfully added serverless function metrics ${chalk.bold(functionName)}.`,
       },
       success: {
-        configFileUpdated: (functionName, authType) =>
+        configFileUpdated: (functionName: string, authType: string) =>
           `Serverless function metrics "${functionName}" updated using "${authType}"`,
       },
       failure: {
-        invalidUser: (functionName, parentAccountName) =>
+        invalidUser: (functionName: string, parentAccountName: string) =>
           `Couldn't add ${chalk.bold(functionName)} because your account has been removed from ${chalk.bold(parentAccountName)} or your permission set doesn't allow you to add serverless function metrics. To update your permissions, contact a super admin in ${chalk.bold(parentAccountName)}.`,
         scopes: {
           message:
             "The personal access key you provided doesn't include serverless function metric permissions.",
-          instructions: (functionName, url) =>
+          instructions: (functionName: string, url: string) =>
             `To update CLI permissions for "${functionName}": \n- Go to ${url}, deactivate the existing personal access key, and create a new one that includes serverless function metric permissions. \n- Update the CLI config for this account by running ${chalk.bold('hs auth')} and entering the new key.\n`,
         },
       },
     },
     delete: {
       loading: {
-        add: functionName =>
+        add: (functionName: string) =>
           `Deleting serverless function metrics ${chalk.bold(functionName)}`,
-        fail: functionName =>
+        fail: (functionName: string) =>
           `Failed to delete serverless function metrics ${chalk.bold(functionName)}.`,
-        succeed: functionName =>
+        succeed: (functionName: string) =>
           `Successfully deleted serverless function metrics ${chalk.bold(functionName)}.`,
       },
       success: {
-        configFileUpdated: (functionName, authType) =>
+        configFileUpdated: (functionName: string, authType: string) =>
           `Serverless function metrics "${functionName}" updated using "${authType}"`,
       },
       failure: {
-        invalidUser: (functionName, parentAccountName) =>
+        invalidUser: (functionName: string, parentAccountName: string) =>
           `Couldn't delete ${chalk.bold(functionName)} because your account has been removed from ${chalk.bold(parentAccountName)} or your permission set doesn't allow you to delete serverless function metrics. To update your permissions, contact a super admin in ${chalk.bold(parentAccountName)}.`,
         scopes: {
           message:
             "The personal access key you provided doesn't include serverless function metric permissions.",
-          instructions: (functionName, url) =>
+          instructions: (functionName: string, url: string) =>
             `To update CLI permissions for "${functionName}": \n- Go to ${url}, deactivate the existing personal access key, and create a new one that includes serverless function metric permissions. \n- Update the CLI config for this account by running ${chalk.bold('hs auth')} and entering the new key.\n`,
         },
       },
@@ -2085,16 +2144,16 @@ export const commands = {
         succeed: () => `Successfully listed serverless function metrics.`,
       },
       success: {
-        configFileUpdated: authType =>
+        configFileUpdated: (authType: string) =>
           `Serverless function metrics updated using "${authType}"`,
       },
       failure: {
-        invalidUser: parentAccountName =>
+        invalidUser: (parentAccountName: string) =>
           `Couldn't list serverless function metrics because your account has been removed from ${chalk.bold(parentAccountName)} or your permission set doesn't allow you to list serverless function metrics. To update your permissions, contact a super admin in ${chalk.bold(parentAccountName)}.`,
         scopes: {
           message:
             "The personal access key you provided doesn't include serverless function metric permissions.",
-          instructions: url =>
+          instructions: (url: string) =>
             `To update CLI permissions: \n- Go to ${url}, deactivate the existing personal access key, and create a new one that includes serverless function metric permissions. \n- Update the CLI config for this account by running ${chalk.bold('hs auth')} and entering the new key.\n`,
         },
       },
@@ -2103,48 +2162,48 @@ export const commands = {
   serverlessFunctionSettings: {
     add: {
       loading: {
-        add: functionName =>
+        add: (functionName: string) =>
           `Adding serverless function settings ${chalk.bold(functionName)}`,
-        fail: functionName =>
+        fail: (functionName: string) =>
           `Failed to add serverless function settings ${chalk.bold(functionName)}.`,
-        succeed: functionName =>
+        succeed: (functionName: string) =>
           `Successfully added serverless function settings ${chalk.bold(functionName)}.`,
       },
       success: {
-        configFileUpdated: (functionName, authType) =>
+        configFileUpdated: (functionName: string, authType: string) =>
           `Serverless function settings "${functionName}" updated using "${authType}"`,
       },
       failure: {
-        invalidUser: (functionName, parentAccountName) =>
+        invalidUser: (functionName: string, parentAccountName: string) =>
           `Couldn't add ${chalk.bold(functionName)} because your account has been removed from ${chalk.bold(parentAccountName)} or your permission set doesn't allow you to add serverless function settings. To update your permissions, contact a super admin in ${chalk.bold(parentAccountName)}.`,
         scopes: {
           message:
             "The personal access key you provided doesn't include serverless function setting permissions.",
-          instructions: (functionName, url) =>
+          instructions: (functionName: string, url: string) =>
             `To update CLI permissions for "${functionName}": \n- Go to ${url}, deactivate the existing personal access key, and create a new one that includes serverless function setting permissions. \n- Update the CLI config for this account by running ${chalk.bold('hs auth')} and entering the new key.\n`,
         },
       },
     },
     delete: {
       loading: {
-        add: functionName =>
+        add: (functionName: string) =>
           `Deleting serverless function settings ${chalk.bold(functionName)}`,
-        fail: functionName =>
+        fail: (functionName: string) =>
           `Failed to delete serverless function settings ${chalk.bold(functionName)}.`,
-        succeed: functionName =>
+        succeed: (functionName: string) =>
           `Successfully deleted serverless function settings ${chalk.bold(functionName)}.`,
       },
       success: {
-        configFileUpdated: (functionName, authType) =>
+        configFileUpdated: (functionName: string, authType: string) =>
           `Serverless function settings "${functionName}" updated using "${authType}"`,
       },
       failure: {
-        invalidUser: (functionName, parentAccountName) =>
+        invalidUser: (functionName: string, parentAccountName: string) =>
           `Couldn't delete ${chalk.bold(functionName)} because your account has been removed from ${chalk.bold(parentAccountName)} or your permission set doesn't allow you to delete serverless function settings. To update your permissions, contact a super admin in ${chalk.bold(parentAccountName)}.`,
         scopes: {
           message:
             "The personal access key you provided doesn't include serverless function setting permissions.",
-          instructions: (functionName, url) =>
+          instructions: (functionName: string, url: string) =>
             `To update CLI permissions for "${functionName}": \n- Go to ${url}, deactivate the existing personal access key, and create a new one that includes serverless function setting permissions. \n- Update the CLI config for this account by running ${chalk.bold('hs auth')} and entering the new key.\n`,
         },
       },
@@ -2156,16 +2215,16 @@ export const commands = {
         succeed: () => `Successfully listed serverless function settings.`,
       },
       success: {
-        configFileUpdated: authType =>
+        configFileUpdated: (authType: string) =>
           `Serverless function settings updated using "${authType}"`,
       },
       failure: {
-        invalidUser: parentAccountName =>
+        invalidUser: (parentAccountName: string) =>
           `Couldn't list serverless function settings because your account has been removed from ${chalk.bold(parentAccountName)} or your permission set doesn't allow you to list serverless function settings. To update your permissions, contact a super admin in ${chalk.bold(parentAccountName)}.`,
         scopes: {
           message:
             "The personal access key you provided doesn't include serverless function setting permissions.",
-          instructions: url =>
+          instructions: (url: string) =>
             `To update CLI permissions: \n- Go to ${url}, deactivate the existing personal access key, and create a new one that includes serverless function setting permissions. \n- Update the CLI config for this account by running ${chalk.bold('hs auth')} and entering the new key.\n`,
         },
       },
@@ -2174,48 +2233,48 @@ export const commands = {
   serverlessFunctionVersions: {
     add: {
       loading: {
-        add: functionName =>
+        add: (functionName: string) =>
           `Adding serverless function versions ${chalk.bold(functionName)}`,
-        fail: functionName =>
+        fail: (functionName: string) =>
           `Failed to add serverless function versions ${chalk.bold(functionName)}.`,
-        succeed: functionName =>
+        succeed: (functionName: string) =>
           `Successfully added serverless function versions ${chalk.bold(functionName)}.`,
       },
       success: {
-        configFileUpdated: (functionName, authType) =>
+        configFileUpdated: (functionName: string, authType: string) =>
           `Serverless function versions "${functionName}" updated using "${authType}"`,
       },
       failure: {
-        invalidUser: (functionName, parentAccountName) =>
+        invalidUser: (functionName: string, parentAccountName: string) =>
           `Couldn't add ${chalk.bold(functionName)} because your account has been removed from ${chalk.bold(parentAccountName)} or your permission set doesn't allow you to add serverless function versions. To update your permissions, contact a super admin in ${chalk.bold(parentAccountName)}.`,
         scopes: {
           message:
             "The personal access key you provided doesn't include serverless function version permissions.",
-          instructions: (functionName, url) =>
+          instructions: (functionName: string, url: string) =>
             `To update CLI permissions for "${functionName}": \n- Go to ${url}, deactivate the existing personal access key, and create a new one that includes serverless function version permissions. \n- Update the CLI config for this account by running ${chalk.bold('hs auth')} and entering the new key.\n`,
         },
       },
     },
     delete: {
       loading: {
-        add: functionName =>
+        add: (functionName: string) =>
           `Deleting serverless function versions ${chalk.bold(functionName)}`,
-        fail: functionName =>
+        fail: (functionName: string) =>
           `Failed to delete serverless function versions ${chalk.bold(functionName)}.`,
-        succeed: functionName =>
+        succeed: (functionName: string) =>
           `Successfully deleted serverless function versions ${chalk.bold(functionName)}.`,
       },
       success: {
-        configFileUpdated: (functionName, authType) =>
+        configFileUpdated: (functionName: string, authType: string) =>
           `Serverless function versions "${functionName}" updated using "${authType}"`,
       },
       failure: {
-        invalidUser: (functionName, parentAccountName) =>
+        invalidUser: (functionName: string, parentAccountName: string) =>
           `Couldn't delete ${chalk.bold(functionName)} because your account has been removed from ${chalk.bold(parentAccountName)} or your permission set doesn't allow you to delete serverless function versions. To update your permissions, contact a super admin in ${chalk.bold(parentAccountName)}.`,
         scopes: {
           message:
             "The personal access key you provided doesn't include serverless function version permissions.",
-          instructions: (functionName, url) =>
+          instructions: (functionName: string, url: string) =>
             `To update CLI permissions for "${functionName}": \n- Go to ${url}, deactivate the existing personal access key, and create a new one that includes serverless function version permissions. \n- Update the CLI config for this account by running ${chalk.bold('hs auth')} and entering the new key.\n`,
         },
       },
@@ -2227,16 +2286,16 @@ export const commands = {
         succeed: () => `Successfully listed serverless function versions.`,
       },
       success: {
-        configFileUpdated: authType =>
+        configFileUpdated: (authType: string) =>
           `Serverless function versions updated using "${authType}"`,
       },
       failure: {
-        invalidUser: parentAccountName =>
+        invalidUser: (parentAccountName: string) =>
           `Couldn't list serverless function versions because your account has been removed from ${chalk.bold(parentAccountName)} or your permission set doesn't allow you to list serverless function versions. To update your permissions, contact a super admin in ${chalk.bold(parentAccountName)}.`,
         scopes: {
           message:
             "The personal access key you provided doesn't include serverless function version permissions.",
-          instructions: url =>
+          instructions: (url: string) =>
             `To update CLI permissions: \n- Go to ${url}, deactivate the existing personal access key, and create a new one that includes serverless function version permissions. \n- Update the CLI config for this account by running ${chalk.bold('hs auth')} and entering the new key.\n`,
         },
       },
@@ -2245,48 +2304,48 @@ export const commands = {
   serverlessFunctionWebhooks: {
     add: {
       loading: {
-        add: functionName =>
+        add: (functionName: string) =>
           `Adding serverless function webhooks ${chalk.bold(functionName)}`,
-        fail: functionName =>
+        fail: (functionName: string) =>
           `Failed to add serverless function webhooks ${chalk.bold(functionName)}.`,
-        succeed: functionName =>
+        succeed: (functionName: string) =>
           `Successfully added serverless function webhooks ${chalk.bold(functionName)}.`,
       },
       success: {
-        configFileUpdated: (functionName, authType) =>
+        configFileUpdated: (functionName: string, authType: string) =>
           `Serverless function webhooks "${functionName}" updated using "${authType}"`,
       },
       failure: {
-        invalidUser: (functionName, parentAccountName) =>
+        invalidUser: (functionName: string, parentAccountName: string) =>
           `Couldn't add ${chalk.bold(functionName)} because your account has been removed from ${chalk.bold(parentAccountName)} or your permission set doesn't allow you to add serverless function webhooks. To update your permissions, contact a super admin in ${chalk.bold(parentAccountName)}.`,
         scopes: {
           message:
             "The personal access key you provided doesn't include serverless function webhook permissions.",
-          instructions: (functionName, url) =>
+          instructions: (functionName: string, url: string) =>
             `To update CLI permissions for "${functionName}": \n- Go to ${url}, deactivate the existing personal access key, and create a new one that includes serverless function webhook permissions. \n- Update the CLI config for this account by running ${chalk.bold('hs auth')} and entering the new key.\n`,
         },
       },
     },
     delete: {
       loading: {
-        add: functionName =>
+        add: (functionName: string) =>
           `Deleting serverless function webhooks ${chalk.bold(functionName)}`,
-        fail: functionName =>
+        fail: (functionName: string) =>
           `Failed to delete serverless function webhooks ${chalk.bold(functionName)}.`,
-        succeed: functionName =>
+        succeed: (functionName: string) =>
           `Successfully deleted serverless function webhooks ${chalk.bold(functionName)}.`,
       },
       success: {
-        configFileUpdated: (functionName, authType) =>
+        configFileUpdated: (functionName: string, authType: string) =>
           `Serverless function webhooks "${functionName}" updated using "${authType}"`,
       },
       failure: {
-        invalidUser: (functionName, parentAccountName) =>
+        invalidUser: (functionName: string, parentAccountName: string) =>
           `Couldn't delete ${chalk.bold(functionName)} because your account has been removed from ${chalk.bold(parentAccountName)} or your permission set doesn't allow you to delete serverless function webhooks. To update your permissions, contact a super admin in ${chalk.bold(parentAccountName)}.`,
         scopes: {
           message:
             "The personal access key you provided doesn't include serverless function webhook permissions.",
-          instructions: (functionName, url) =>
+          instructions: (functionName: string, url: string) =>
             `To update CLI permissions for "${functionName}": \n- Go to ${url}, deactivate the existing personal access key, and create a new one that includes serverless function webhook permissions. \n- Update the CLI config for this account by running ${chalk.bold('hs auth')} and entering the new key.\n`,
         },
       },
@@ -2298,16 +2357,16 @@ export const commands = {
         succeed: () => `Successfully listed serverless function webhooks.`,
       },
       success: {
-        configFileUpdated: authType =>
+        configFileUpdated: (authType: string) =>
           `Serverless function webhooks updated using "${authType}"`,
       },
       failure: {
-        invalidUser: parentAccountName =>
+        invalidUser: (parentAccountName: string) =>
           `Couldn't list serverless function webhooks because your account has been removed from ${chalk.bold(parentAccountName)} or your permission set doesn't allow you to list serverless function webhooks. To update your permissions, contact a super admin in ${chalk.bold(parentAccountName)}.`,
         scopes: {
           message:
             "The personal access key you provided doesn't include serverless function webhook permissions.",
-          instructions: url =>
+          instructions: (url: string) =>
             `To update CLI permissions: \n- Go to ${url}, deactivate the existing personal access key, and create a new one that includes serverless function webhook permissions. \n- Update the CLI config for this account by running ${chalk.bold('hs auth')} and entering the new key.\n`,
         },
       },
@@ -2316,48 +2375,48 @@ export const commands = {
   serverlessFunctionWebhookSubscriptions: {
     add: {
       loading: {
-        add: functionName =>
+        add: (functionName: string) =>
           `Adding serverless function webhook subscriptions ${chalk.bold(functionName)}`,
-        fail: functionName =>
+        fail: (functionName: string) =>
           `Failed to add serverless function webhook subscriptions ${chalk.bold(functionName)}.`,
-        succeed: functionName =>
+        succeed: (functionName: string) =>
           `Successfully added serverless function webhook subscriptions ${chalk.bold(functionName)}.`,
       },
       success: {
-        configFileUpdated: (functionName, authType) =>
+        configFileUpdated: (functionName: string, authType: string) =>
           `Serverless function webhook subscriptions "${functionName}" updated using "${authType}"`,
       },
       failure: {
-        invalidUser: (functionName, parentAccountName) =>
+        invalidUser: (functionName: string, parentAccountName: string) =>
           `Couldn't add ${chalk.bold(functionName)} because your account has been removed from ${chalk.bold(parentAccountName)} or your permission set doesn't allow you to add serverless function webhook subscriptions. To update your permissions, contact a super admin in ${chalk.bold(parentAccountName)}.`,
         scopes: {
           message:
             "The personal access key you provided doesn't include serverless function webhook subscription permissions.",
-          instructions: (functionName, url) =>
+          instructions: (functionName: string, url: string) =>
             `To update CLI permissions for "${functionName}": \n- Go to ${url}, deactivate the existing personal access key, and create a new one that includes serverless function webhook subscription permissions. \n- Update the CLI config for this account by running ${chalk.bold('hs auth')} and entering the new key.\n`,
         },
       },
     },
     delete: {
       loading: {
-        add: functionName =>
+        add: (functionName: string) =>
           `Deleting serverless function webhook subscriptions ${chalk.bold(functionName)}`,
-        fail: functionName =>
+        fail: (functionName: string) =>
           `Failed to delete serverless function webhook subscriptions ${chalk.bold(functionName)}.`,
-        succeed: functionName =>
+        succeed: (functionName: string) =>
           `Successfully deleted serverless function webhook subscriptions ${chalk.bold(functionName)}.`,
       },
       success: {
-        configFileUpdated: (functionName, authType) =>
+        configFileUpdated: (functionName: string, authType: string) =>
           `Serverless function webhook subscriptions "${functionName}" updated using "${authType}"`,
       },
       failure: {
-        invalidUser: (functionName, parentAccountName) =>
+        invalidUser: (functionName: string, parentAccountName: string) =>
           `Couldn't delete ${chalk.bold(functionName)} because your account has been removed from ${chalk.bold(parentAccountName)} or your permission set doesn't allow you to delete serverless function webhook subscriptions. To update your permissions, contact a super admin in ${chalk.bold(parentAccountName)}.`,
         scopes: {
           message:
             "The personal access key you provided doesn't include serverless function webhook subscription permissions.",
-          instructions: (functionName, url) =>
+          instructions: (functionName: string, url: string) =>
             `To update CLI permissions for "${functionName}": \n- Go to ${url}, deactivate the existing personal access key, and create a new one that includes serverless function webhook subscription permissions. \n- Update the CLI config for this account by running ${chalk.bold('hs auth')} and entering the new key.\n`,
         },
       },
@@ -2370,16 +2429,16 @@ export const commands = {
           `Successfully listed serverless function webhook subscriptions.`,
       },
       success: {
-        configFileUpdated: authType =>
+        configFileUpdated: (authType: string) =>
           `Serverless function webhook subscriptions updated using "${authType}"`,
       },
       failure: {
-        invalidUser: parentAccountName =>
+        invalidUser: (parentAccountName: string) =>
           `Couldn't list serverless function webhook subscriptions because your account has been removed from ${chalk.bold(parentAccountName)} or your permission set doesn't allow you to list serverless function webhook subscriptions. To update your permissions, contact a super admin in ${chalk.bold(parentAccountName)}.`,
         scopes: {
           message:
             "The personal access key you provided doesn't include serverless function webhook subscription permissions.",
-          instructions: url =>
+          instructions: (url: string) =>
             `To update CLI permissions: \n- Go to ${url}, deactivate the existing personal access key, and create a new one that includes serverless function webhook subscription permissions. \n- Update the CLI config for this account by running ${chalk.bold('hs auth')} and entering the new key.\n`,
         },
       },
@@ -2388,48 +2447,48 @@ export const commands = {
   serverlessFunctionWebhookSubscriptionEvents: {
     add: {
       loading: {
-        add: functionName =>
+        add: (functionName: string) =>
           `Adding serverless function webhook subscription events ${chalk.bold(functionName)}`,
-        fail: functionName =>
+        fail: (functionName: string) =>
           `Failed to add serverless function webhook subscription events ${chalk.bold(functionName)}.`,
-        succeed: functionName =>
+        succeed: (functionName: string) =>
           `Successfully added serverless function webhook subscription events ${chalk.bold(functionName)}.`,
       },
       success: {
-        configFileUpdated: (functionName, authType) =>
+        configFileUpdated: (functionName: string, authType: string) =>
           `Serverless function webhook subscription events "${functionName}" updated using "${authType}"`,
       },
       failure: {
-        invalidUser: (functionName, parentAccountName) =>
+        invalidUser: (functionName: string, parentAccountName: string) =>
           `Couldn't add ${chalk.bold(functionName)} because your account has been removed from ${chalk.bold(parentAccountName)} or your permission set doesn't allow you to add serverless function webhook subscription events. To update your permissions, contact a super admin in ${chalk.bold(parentAccountName)}.`,
         scopes: {
           message:
             "The personal access key you provided doesn't include serverless function webhook subscription event permissions.",
-          instructions: (functionName, url) =>
+          instructions: (functionName: string, url: string) =>
             `To update CLI permissions for "${functionName}": \n- Go to ${url}, deactivate the existing personal access key, and create a new one that includes serverless function webhook subscription event permissions. \n- Update the CLI config for this account by running ${chalk.bold('hs auth')} and entering the new key.\n`,
         },
       },
     },
     delete: {
       loading: {
-        add: functionName =>
+        add: (functionName: string) =>
           `Deleting serverless function webhook subscription events ${chalk.bold(functionName)}`,
-        fail: functionName =>
+        fail: (functionName: string) =>
           `Failed to delete serverless function webhook subscription events ${chalk.bold(functionName)}.`,
-        succeed: functionName =>
+        succeed: (functionName: string) =>
           `Successfully deleted serverless function webhook subscription events ${chalk.bold(functionName)}.`,
       },
       success: {
-        configFileUpdated: (functionName, authType) =>
+        configFileUpdated: (functionName: string, authType: string) =>
           `Serverless function webhook subscription events "${functionName}" updated using "${authType}"`,
       },
       failure: {
-        invalidUser: (functionName, parentAccountName) =>
+        invalidUser: (functionName: string, parentAccountName: string) =>
           `Couldn't delete ${chalk.bold(functionName)} because your account has been removed from ${chalk.bold(parentAccountName)} or your permission set doesn't allow you to delete serverless function webhook subscription events. To update your permissions, contact a super admin in ${chalk.bold(parentAccountName)}.`,
         scopes: {
           message:
             "The personal access key you provided doesn't include serverless function webhook subscription event permissions.",
-          instructions: (functionName, url) =>
+          instructions: (functionName: string, url: string) =>
             `To update CLI permissions for "${functionName}": \n- Go to ${url}, deactivate the existing personal access key, and create a new one that includes serverless function webhook subscription event permissions. \n- Update the CLI config for this account by running ${chalk.bold('hs auth')} and entering the new key.\n`,
         },
       },
@@ -2443,16 +2502,16 @@ export const commands = {
           `Successfully listed serverless function webhook subscription events.`,
       },
       success: {
-        configFileUpdated: authType =>
+        configFileUpdated: (authType: string) =>
           `Serverless function webhook subscription events updated using "${authType}"`,
       },
       failure: {
-        invalidUser: parentAccountName =>
+        invalidUser: (parentAccountName: string) =>
           `Couldn't list serverless function webhook subscription events because your account has been removed from ${chalk.bold(parentAccountName)} or your permission set doesn't allow you to list serverless function webhook subscription events. To update your permissions, contact a super admin in ${chalk.bold(parentAccountName)}.`,
         scopes: {
           message:
             "The personal access key you provided doesn't include serverless function webhook subscription event permissions.",
-          instructions: url =>
+          instructions: (url: string) =>
             `To update CLI permissions: \n- Go to ${url}, deactivate the existing personal access key, and create a new one that includes serverless function webhook subscription event permissions. \n- Update the CLI config for this account by running ${chalk.bold('hs auth')} and entering the new key.\n`,
         },
       },
@@ -2461,48 +2520,48 @@ export const commands = {
   serverlessFunctionWebhookSubscriptionEventTypes: {
     add: {
       loading: {
-        add: functionName =>
+        add: (functionName: string) =>
           `Adding serverless function webhook subscription event types ${chalk.bold(functionName)}`,
-        fail: functionName =>
+        fail: (functionName: string) =>
           `Failed to add serverless function webhook subscription event types ${chalk.bold(functionName)}.`,
-        succeed: functionName =>
+        succeed: (functionName: string) =>
           `Successfully added serverless function webhook subscription event types ${chalk.bold(functionName)}.`,
       },
       success: {
-        configFileUpdated: (functionName, authType) =>
+        configFileUpdated: (functionName: string, authType: string) =>
           `Serverless function webhook subscription event types "${functionName}" updated using "${authType}"`,
       },
       failure: {
-        invalidUser: (functionName, parentAccountName) =>
+        invalidUser: (functionName: string, parentAccountName: string) =>
           `Couldn't add ${chalk.bold(functionName)} because your account has been removed from ${chalk.bold(parentAccountName)} or your permission set doesn't allow you to add serverless function webhook subscription event types. To update your permissions, contact a super admin in ${chalk.bold(parentAccountName)}.`,
         scopes: {
           message:
             "The personal access key you provided doesn't include serverless function webhook subscription event type permissions.",
-          instructions: (functionName, url) =>
+          instructions: (functionName: string, url: string) =>
             `To update CLI permissions for "${functionName}": \n- Go to ${url}, deactivate the existing personal access key, and create a new one that includes serverless function webhook subscription event type permissions. \n- Update the CLI config for this account by running ${chalk.bold('hs auth')} and entering the new key.\n`,
         },
       },
     },
     delete: {
       loading: {
-        add: functionName =>
+        add: (functionName: string) =>
           `Deleting serverless function webhook subscription event types ${chalk.bold(functionName)}`,
-        fail: functionName =>
+        fail: (functionName: string) =>
           `Failed to delete serverless function webhook subscription event types ${chalk.bold(functionName)}.`,
-        succeed: functionName =>
+        succeed: (functionName: string) =>
           `Successfully deleted serverless function webhook subscription event types ${chalk.bold(functionName)}.`,
       },
       success: {
-        configFileUpdated: (functionName, authType) =>
+        configFileUpdated: (functionName: string, authType: string) =>
           `Serverless function webhook subscription event types "${functionName}" updated using "${authType}"`,
       },
       failure: {
-        invalidUser: (functionName, parentAccountName) =>
+        invalidUser: (functionName: string, parentAccountName: string) =>
           `Couldn't delete ${chalk.bold(functionName)} because your account has been removed from ${chalk.bold(parentAccountName)} or your permission set doesn't allow you to delete serverless function webhook subscription event types. To update your permissions, contact a super admin in ${chalk.bold(parentAccountName)}.`,
         scopes: {
           message:
             "The personal access key you provided doesn't include serverless function webhook subscription event type permissions.",
-          instructions: (functionName, url) =>
+          instructions: (functionName: string, url: string) =>
             `To update CLI permissions for "${functionName}": \n- Go to ${url}, deactivate the existing personal access key, and create a new one that includes serverless function webhook subscription event type permissions. \n- Update the CLI config for this account by running ${chalk.bold('hs auth')} and entering the new key.\n`,
         },
       },
@@ -2517,16 +2576,16 @@ export const commands = {
           `Successfully listed serverless function webhook subscription event types.`,
       },
       success: {
-        configFileUpdated: authType =>
+        configFileUpdated: (authType: string) =>
           `Serverless function webhook subscription event types updated using "${authType}"`,
       },
       failure: {
-        invalidUser: parentAccountName =>
+        invalidUser: (parentAccountName: string) =>
           `Couldn't list serverless function webhook subscription event types because your account has been removed from ${chalk.bold(parentAccountName)} or your permission set doesn't allow you to list serverless function webhook subscription event types. To update your permissions, contact a super admin in ${chalk.bold(parentAccountName)}.`,
         scopes: {
           message:
             "The personal access key you provided doesn't include serverless function webhook subscription event type permissions.",
-          instructions: url =>
+          instructions: (url: string) =>
             `To update CLI permissions: \n- Go to ${url}, deactivate the existing personal access key, and create a new one that includes serverless function webhook subscription event type permissions. \n- Update the CLI config for this account by running ${chalk.bold('hs auth')} and entering the new key.\n`,
         },
       },
@@ -2535,48 +2594,48 @@ export const commands = {
   serverlessFunctionWebhookSubscriptionEventTypeOptions: {
     add: {
       loading: {
-        add: functionName =>
+        add: (functionName: string) =>
           `Adding serverless function webhook subscription event type options ${chalk.bold(functionName)}`,
-        fail: functionName =>
+        fail: (functionName: string) =>
           `Failed to add serverless function webhook subscription event type options ${chalk.bold(functionName)}.`,
-        succeed: functionName =>
+        succeed: (functionName: string) =>
           `Successfully added serverless function webhook subscription event type options ${chalk.bold(functionName)}.`,
       },
       success: {
-        configFileUpdated: (functionName, authType) =>
+        configFileUpdated: (functionName: string, authType: string) =>
           `Serverless function webhook subscription event type options "${functionName}" updated using "${authType}"`,
       },
       failure: {
-        invalidUser: (functionName, parentAccountName) =>
+        invalidUser: (functionName: string, parentAccountName: string) =>
           `Couldn't add ${chalk.bold(functionName)} because your account has been removed from ${chalk.bold(parentAccountName)} or your permission set doesn't allow you to add serverless function webhook subscription event type options. To update your permissions, contact a super admin in ${chalk.bold(parentAccountName)}.`,
         scopes: {
           message:
             "The personal access key you provided doesn't include serverless function webhook subscription event type option permissions.",
-          instructions: (functionName, url) =>
+          instructions: (functionName: string, url: string) =>
             `To update CLI permissions for "${functionName}": \n- Go to ${url}, deactivate the existing personal access key, and create a new one that includes serverless function webhook subscription event type option permissions. \n- Update the CLI config for this account by running ${chalk.bold('hs auth')} and entering the new key.\n`,
         },
       },
     },
     delete: {
       loading: {
-        add: functionName =>
+        add: (functionName: string) =>
           `Deleting serverless function webhook subscription event type options ${chalk.bold(functionName)}`,
-        fail: functionName =>
+        fail: (functionName: string) =>
           `Failed to delete serverless function webhook subscription event type options ${chalk.bold(functionName)}.`,
-        succeed: functionName =>
+        succeed: (functionName: string) =>
           `Successfully deleted serverless function webhook subscription event type options ${chalk.bold(functionName)}.`,
       },
       success: {
-        configFileUpdated: (functionName, authType) =>
+        configFileUpdated: (functionName: string, authType: string) =>
           `Serverless function webhook subscription event type options "${functionName}" updated using "${authType}"`,
       },
       failure: {
-        invalidUser: (functionName, parentAccountName) =>
+        invalidUser: (functionName: string, parentAccountName: string) =>
           `Couldn't delete ${chalk.bold(functionName)} because your account has been removed from ${chalk.bold(parentAccountName)} or your permission set doesn't allow you to delete serverless function webhook subscription event type options. To update your permissions, contact a super admin in ${chalk.bold(parentAccountName)}.`,
         scopes: {
           message:
             "The personal access key you provided doesn't include serverless function webhook subscription event type option permissions.",
-          instructions: (functionName, url) =>
+          instructions: (functionName: string, url: string) =>
             `To update CLI permissions for "${functionName}": \n- Go to ${url}, deactivate the existing personal access key, and create a new one that includes serverless function webhook subscription event type option permissions. \n- Update the CLI config for this account by running ${chalk.bold('hs auth')} and entering the new key.\n`,
         },
       },
@@ -2591,16 +2650,16 @@ export const commands = {
           `Successfully listed serverless function webhook subscription event type options.`,
       },
       success: {
-        configFileUpdated: authType =>
+        configFileUpdated: (authType: string) =>
           `Serverless function webhook subscription event type options updated using "${authType}"`,
       },
       failure: {
-        invalidUser: parentAccountName =>
+        invalidUser: (parentAccountName: string) =>
           `Couldn't list serverless function webhook subscription event type options because your account has been removed from ${chalk.bold(parentAccountName)} or your permission set doesn't allow you to list serverless function webhook subscription event type options. To update your permissions, contact a super admin in ${chalk.bold(parentAccountName)}.`,
         scopes: {
           message:
             "The personal access key you provided doesn't include serverless function webhook subscription event type option permissions.",
-          instructions: url =>
+          instructions: (url: string) =>
             `To update CLI permissions: \n- Go to ${url}, deactivate the existing personal access key, and create a new one that includes serverless function webhook subscription event type option permissions. \n- Update the CLI config for this account by running ${chalk.bold('hs auth')} and entering the new key.\n`,
         },
       },
@@ -2610,24 +2669,28 @@ export const commands = {
 
 export const lib = {
   process: {
-    exitDebug: signal =>
+    exitDebug: (signal: string) =>
       `Attempting to gracefully exit. Triggered by ${signal}`,
   },
   DevServerManager: {
-    portConflict: port => `The port ${port} is already in use.`,
+    portConflict: (port: string) => `The port ${port} is already in use.`,
     notInitialized:
       'The Dev Server Manager must be initialized before it is started.',
-    noCompatibleComponents: serverKey =>
+    noCompatibleComponents: (serverKey: string) =>
       `Skipping call to ${serverKey} because there are no compatible components in the project.`,
   },
   LocalDevManager: {
     failedToInitialize: 'Missing required arguments to initialize Local Dev',
-    noDeployedBuild: (projectName, accountIdentifier, uploadCommand) =>
+    noDeployedBuild: (
+      projectName: string,
+      accountIdentifier: string,
+      uploadCommand: string
+    ) =>
       `Your project ${chalk.bold(projectName)} exists in ${accountIdentifier}, but has no deployed build. Projects must be successfully deployed to be developed locally. Address any build and deploy errors your project may have, then run ${uploadCommand} to upload and deploy your project.`,
     noComponents: 'There are no components in this project.',
     betaMessage: 'HubSpot projects local development',
     learnMoreLocalDevServer: 'Learn more about the projects local dev server',
-    running: (projectName, accountIdentifier) =>
+    running: (projectName: string, accountIdentifier: string) =>
       `Running ${chalk.bold(projectName)} locally on ${accountIdentifier}, waiting for changes ...`,
     quitHelper: `Press ${chalk.bold('q')} to stop the local dev server`,
     viewProjectLink: 'View project in HubSpot',
@@ -2639,20 +2702,25 @@ export const lib = {
     uploadWarning: {
       appLabel: '[App]',
       uiExtensionLabel: '[UI Extension]',
-      missingComponents: missingComponents =>
+      missingComponents: (missingComponents: string) =>
         `Couldn't find the following components in the deployed build for this project: ${chalk.bold(missingComponents)}. This may cause issues in local development.`,
       defaultWarning: chalk.bold(
         'Changing project configuration requires a new project build.'
       ),
-      defaultPublicAppWarning: (installCount, installText) =>
+      defaultPublicAppWarning: (installCount: number, installText: string) =>
         `${chalk.bold('Changing project configuration requires a new project build.')}\n\nThis will affect your public app's ${chalk.bold(`${installCount} existing ${installText}`)}. If your app has users in production, we strongly recommend creating a copy of this app to test your changes before proceding.`,
-      header: warning =>
+      header: (warning: string) =>
         `${warning} To reflect these changes and continue testing:`,
       instructionsHeader: 'To reflect these changes and continue testing:',
       stopDev: `  * Stop ${uiCommandReference('hs project dev')}`,
-      runUpload: command => `  * Run ${command}`,
+      runUpload: (command: string) => `  * Run ${command}`,
       restartDev: `  * Re-run ${uiCommandReference('hs project dev')}`,
       pushToGithub: '  * Commit and push your changes to GitHub',
+      defaultMarketplaceAppWarning: (
+        installCount: number,
+        accountText: string
+      ) =>
+        `${chalk.bold('Changing project configuration requires creating a new project build.')}\n\nYour marketplace app is currently installed in ${chalk.bold(`${installCount} ${accountText}`)}. Any uploaded changes will impact your app's users. We strongly recommend creating a copy of this app to test your changes before proceding.`,
     },
     activeInstallWarning: {
       installCount: (appName, installCount) =>
@@ -2663,10 +2731,13 @@ export const lib = {
       confirmationPrompt: `Proceed with local development of this ${chalk.bold('production')} app?`,
     },
     devServer: {
-      cleanupError: message => `Failed to cleanup local dev server: ${message}`,
-      setupError: message => `Failed to setup local dev server: ${message}`,
-      startError: message => `Failed to start local dev server: ${message}`,
-      fileChangeError: message =>
+      cleanupError: (message: string) =>
+        `Failed to cleanup local dev server: ${message}`,
+      setupError: (message: string) =>
+        `Failed to setup local dev server: ${message}`,
+      startError: (message: string) =>
+        `Failed to start local dev server: ${message}`,
+      fileChangeError: (message: string) =>
         `Failed to notify local dev server of file change: ${message}`,
     },
   },
@@ -2690,17 +2761,23 @@ export const lib = {
       publicAppNonDeveloperTestAccountWarning: `Local development of public apps is only supported in ${chalk.bold('developer test accounts')}.`,
     },
     createNewProjectForLocalDev: {
-      projectMustExistExplanation: (projectName, accountIdentifier) =>
+      projectMustExistExplanation: (
+        projectName: string,
+        accountIdentifier: string
+      ) =>
         `The project ${projectName} does not exist in the target account ${accountIdentifier}. This command requires the project to exist in the target account.`,
-      publicAppProjectMustExistExplanation: (projectName, accountIdentifier) =>
+      publicAppProjectMustExistExplanation: (
+        projectName: string,
+        accountIdentifier: string
+      ) =>
         `The project ${projectName} does not exist in ${accountIdentifier}, the app developer account associated with your target account. This command requires the project to exist in this app developer account.`,
-      createProject: (projectName, accountIdentifier) =>
+      createProject: (projectName: string, accountIdentifier: string) =>
         `Create new project ${projectName} in ${accountIdentifier}?`,
       choseNotToCreateProject:
         'Exiting because this command requires the project to exist in the target account.',
-      creatingProject: (projectName, accountIdentifier) =>
+      creatingProject: (projectName: string, accountIdentifier: string) =>
         `Creating project ${projectName} in ${accountIdentifier}`,
-      createdProject: (projectName, accountIdentifier) =>
+      createdProject: (projectName: string, accountIdentifier: string) =>
         `Created project ${projectName} in ${accountIdentifier}`,
       failedToCreateProject: 'Failed to create project in the target account.',
     },
@@ -2711,7 +2788,10 @@ export const lib = {
       genericError: `An error occurred while creating the initial build for this project. Run ${uiCommandReference('hs project upload')} to try again.`,
     },
     checkIfParentAccountIsAuthed: {
-      notAuthedError: (parentAccountId, accountIdentifier) =>
+      notAuthedError: (
+        parentAccountId: number | string,
+        accountIdentifier: string
+      ) =>
         `To develop this project locally, run ${uiCommandReference(
           `hs auth --account=${parentAccountId}`
         )} to authenticate the App Developer Account ${parentAccountId} associated with ${accountIdentifier}.`,
@@ -2732,26 +2812,26 @@ export const lib = {
       configNotFound: `Unable to locate a project configuration file. Try running again from a project directory, or run ${uiCommandReference('hs project create')} to create a new project.`,
       configMissingFields:
         'The project configuration file is missing required fields.',
-      srcDirNotFound: (srcDir, projectDir) =>
+      srcDirNotFound: (srcDir: string, projectDir: string) =>
         `Project source directory ${chalk.bold(srcDir)} could not be found in ${chalk.bold(projectDir)}.`,
-      srcOutsideProjectDir: (projectConfig, srcDir) =>
+      srcOutsideProjectDir: (projectConfig: string, srcDir: string) =>
         `Invalid value for 'srcDir' in ${projectConfig}: ${chalk.bold(`srcDir: "${srcDir}"`)}\n\t'srcDir' must be a relative path to a folder under the project root, such as "." or "./src"`,
     },
     getProjectConfig: {
       error: 'Could not read from project config',
     },
     ensureProjectExists: {
-      createPrompt: (projectName, accountIdentifier) =>
+      createPrompt: (projectName: string, accountIdentifier: string) =>
         `The project ${projectName} does not exist in ${accountIdentifier}. Would you like to create it?`,
-      createPromptUpload: (projectName, accountIdentifier) =>
+      createPromptUpload: (projectName: string, accountIdentifier: string) =>
         `[--forceCreate] The project ${projectName} does not exist in ${accountIdentifier}. Would you like to create it?`,
-      createSuccess: (projectName, accountIdentifier) =>
+      createSuccess: (projectName: string, accountIdentifier: string) =>
         `New project ${chalk.bold(projectName)} successfully created in ${chalk.bold(accountIdentifier)}.`,
-      notFound: (projectName, accountIdentifier) =>
+      notFound: (projectName: string, accountIdentifier: string) =>
         `Your project ${chalk.bold(projectName)} could not be found in ${chalk.bold(accountIdentifier)}.`,
     },
     pollFetchProject: {
-      checkingProject: accountIdentifier =>
+      checkingProject: (accountIdentifier: string) =>
         `Checking if project exists in ${accountIdentifier}`,
     },
     logFeedbackMessage: {
@@ -2763,40 +2843,49 @@ export const lib = {
     makePollTaskStatusFunc: {
       errorSummary: 'See below for a summary of errors.',
       componentCountSingular: 'Found 1 component in this project\n',
-      componentCount: numComponents =>
+      componentCount: (numComponents: number) =>
         `Found ${numComponents} components in this project\n`,
       successStatusText: 'DONE',
       failedStatusText: 'FAILED',
-      errorFetchingTaskStatus: taskType => `Error fetching ${taskType} status`,
+      errorFetchingTaskStatus: (taskType: string) =>
+        `Error fetching ${taskType} status`,
     },
-    pollBuildAutodeployStatusError: buildId =>
+    pollBuildAutodeployStatusError: (buildId: number) =>
       `Error fetching autodeploy status for build #${buildId}`,
     pollProjectBuildAndDeploy: {
-      buildSucceededAutomaticallyDeploying: (buildId, accountIdentifier) =>
+      buildSucceededAutomaticallyDeploying: (
+        buildId: number,
+        accountIdentifier: string
+      ) =>
         `Build #${buildId} succeeded. ${chalk.bold('Automatically deploying')} to ${accountIdentifier}\n`,
-      cleanedUpTempFile: path => `Cleaned up temporary file ${path}`,
+      cleanedUpTempFile: (path: string) => `Cleaned up temporary file ${path}`,
       viewDeploys: 'View all deploys for this project in HubSpot',
-      unableToFindAutodeployStatus: (buildId, viewDeploysLink) =>
+      unableToFindAutodeployStatus: (
+        buildId: number,
+        viewDeploysLink: string
+      ) =>
         `Unable to find the auto deploy for build #${buildId}. This deploy may have been skipped. ${viewDeploysLink}.`,
     },
   },
   projectUpload: {
     uploadProjectFiles: {
-      add: (projectName, accountIdentifier) =>
+      add: (projectName: string, accountIdentifier: string) =>
         `Uploading ${chalk.bold(projectName)} project files to ${accountIdentifier}`,
-      fail: (projectName, accountIdentifier) =>
+      fail: (projectName: string, accountIdentifier: string) =>
         `Failed to upload ${chalk.bold(projectName)} project files to ${accountIdentifier}`,
-      succeed: (projectName, accountIdentifier) =>
+      succeed: (projectName: string, accountIdentifier: string) =>
         `Uploaded ${chalk.bold(projectName)} project files to ${accountIdentifier}`,
-      buildCreated: (projectName, buildId) =>
+      buildCreated: (projectName: string, buildId: number) =>
         `Project "${projectName}" uploaded and build #${buildId} created`,
     },
     handleProjectUpload: {
-      emptySource: srcDir =>
+      emptySource: (srcDir: string) =>
         `Source directory "${srcDir}" is empty. Add files to your project and rerun ${uiCommandReference('hs project upload')} to upload them to HubSpot.`,
-      compressed: byteCount => `Project files compressed: ${byteCount} bytes`,
-      compressing: path => `Compressing build files to "${path}"`,
-      fileFiltered: filename => `Ignore rule triggered for "${filename}"`,
+      compressed: (byteCount: number) =>
+        `Project files compressed: ${byteCount} bytes`,
+      compressing: (path: string) => `Compressing build files to "${path}"`,
+      fileFiltered: (filename: string) =>
+        `Ignore rule triggered for "${filename}"`,
     },
   },
   boxen: {
@@ -2815,12 +2904,12 @@ export const lib = {
     infoTag: chalk.bold('[INFO]'),
     deprecatedTag: chalk.bold('[DEPRECATED]'),
     errorTag: chalk.bold('[ERROR]'),
-    deprecatedMessage: (command, url) =>
+    deprecatedMessage: (command: string, url: string) =>
       `The ${command} command is deprecated and will be disabled soon. ${url}`,
-    deprecatedDescription: (message, command, url) =>
+    deprecatedDescription: (message: string, command: string, url: string) =>
       `${message}. The ${command} command is deprecated and will be disabled soon. ${url}`,
     deprecatedUrlText: 'Learn more.',
-    disabledMessage: (command, npmCommand, url) =>
+    disabledMessage: (command: string, npmCommand: string, url: string) =>
       `The ${command} command is disabled. Run ${npmCommand} to update to the latest HubSpot CLI version. ${url}`,
     disabledUrlText: 'See all HubSpot CLI commands here.',
     featureHighlight: {
@@ -2828,77 +2917,79 @@ export const lib = {
       featureKeys: {
         accountOption: {
           command: '--account',
-          message: command =>
+          message: (command: string) =>
             `Use the ${command} option with any command to override the default account`,
         },
         accountsListCommand: {
           command: 'hs accounts list',
-          message: command =>
+          message: (command: string) =>
             `Run ${command} to see a list of configured HubSpot accounts`,
         },
         accountsUseCommand: {
           command: 'hs accounts use',
-          message: command =>
+          message: (command: string) =>
             `Run ${command} to set the Hubspot account that the CLI will target by default`,
         },
         authCommand: {
           command: 'hs auth',
-          message: command =>
+          message: (command: string) =>
             `Run ${command} to connect the CLI to additional HubSpot accounts`,
         },
         feedbackCommand: {
           command: 'hs feedback',
-          message: command =>
+          message: (command: string) =>
             `Run ${command} to report a bug or leave feedback`,
         },
         helpCommand: {
           command: 'hs help',
-          message: command =>
+          message: (command: string) =>
             `Run ${command} to see a list of available commands`,
         },
         projectCreateCommand: {
           command: 'hs project create',
-          message: command => `Run ${command} to create a new project`,
+          message: (command: string) =>
+            `Run ${command} to create a new project`,
         },
         projectDeployCommand: {
           command: 'hs project deploy',
-          message: command => `Ready to take your project live? Run ${command}`,
+          message: (command: string) =>
+            `Ready to take your project live? Run ${command}`,
         },
         projectHelpCommand: {
           command: 'hs project --help',
-          message: command =>
+          message: (command: string) =>
             `Run ${command} to learn more about available project commands`,
         },
         projectUploadCommand: {
           command: 'hs project upload',
-          message: command =>
+          message: (command: string) =>
             `Run ${command} to upload your project to HubSpot and trigger builds`,
         },
         projectDevCommand: {
           command: 'hs project dev',
-          message: command =>
+          message: (command: string) =>
             `Run ${command} to set up your test environment and start local development`,
         },
         projectInstallDepsCommand: {
           command: 'hs project install-deps',
-          message: command =>
+          message: (command: string) =>
             `Run ${command} to install dependencies for your project components`,
         },
         sampleProjects: {
           linkText: "HubSpot's sample projects",
           url: 'https://developers.hubspot.com/docs/platform/sample-projects?utm_source=cli&utm_content=project_create_whats_next',
-          message: link => `See ${link}`,
+          message: (link: string) => `See ${link}`,
         },
       },
     },
     git: {
       securityIssue: 'Security Issue Detected',
       configFileTracked: 'The HubSpot config file can be tracked by git.',
-      fileName: configPath => `File: "${configPath}"`,
+      fileName: (configPath: string) => `File: "${configPath}"`,
       remediate: 'To remediate:',
-      moveConfig: homeDir =>
+      moveConfig: (homeDir: string) =>
         `- Move the config file to your home directory: '${homeDir}'`,
-      addGitignore: configPath =>
+      addGitignore: (configPath: string) =>
         `- Add gitignore pattern '${configPath}' to a .gitignore file in root of your repository.`,
       noRemote:
         '- Ensure that the config file has not already been pushed to a remote repository.',
@@ -2906,7 +2997,7 @@ export const lib = {
         'Unable to determine if config file is properly ignored by git.',
     },
     serverlessFunctionLogs: {
-      unableToProcessLog: log => `Unable to process log ${log}`,
+      unableToProcessLog: (log: string) => `Unable to process log ${log}`,
       noLogsFound: 'No logs found.',
     },
   },
@@ -2923,9 +3014,9 @@ export const lib = {
       },
       modes: {
         describe: {
-          default: modes => `${modes}`,
-          read: modes => `Read from ${modes}`,
-          write: modes => `Write to ${modes}`,
+          default: (modes: string) => `${modes}`,
+          read: (modes: string) => `Read from ${modes}`,
+          write: (modes: string) => `Write to ${modes}`,
         },
       },
       qa: {
@@ -2946,30 +3037,30 @@ export const lib = {
         '<Test on a new developer test account>',
       chooseDefaultAccountOption: () =>
         `<${chalk.bold('❗')} Test on this production account ${chalk.bold('❗')}>`,
-      promptMessage: (accountType, accountIdentifier) =>
+      promptMessage: (accountType: string, accountIdentifier: string) =>
         `[--account] Choose a ${accountType} under ${accountIdentifier} to test with:`,
-      sandboxLimit: limit =>
+      sandboxLimit: (limit: string) =>
         `Your account reached the limit of ${limit} development sandboxes`,
-      sandboxLimitWithSuggestion: (limit, authCommand) =>
+      sandboxLimitWithSuggestion: (limit: string, authCommand: string) =>
         `Your account reached the limit of ${limit} development sandboxes. Run ${authCommand} to add an existing one to the config.`,
-      developerTestAccountLimit: limit =>
+      developerTestAccountLimit: (limit: string) =>
         `Your account reached the limit of ${limit} developer test accounts.`,
-      confirmDefaultAccount: (accountName, accountType) =>
+      confirmDefaultAccount: (accountName: string, accountType: string) =>
         `Continue testing on ${chalk.bold(`${accountName} (${accountType})`)}? (Y/n)`,
-      confirmUseExistingDeveloperTestAccount: accountName =>
+      confirmUseExistingDeveloperTestAccount: (accountName: string) =>
         `Continue with ${accountName}? This account isn't currently connected to the HubSpot CLI. By continuing, you'll be prompted to generate a personal access key and connect it.`,
       noAccountId:
         'No account ID found for the selected account. Please try again.',
     },
     projectLogsPrompt: {
-      functionName: projectName =>
+      functionName: (projectName: string) =>
         `[--function] Select function in ${chalk.bold(projectName)} project`,
     },
     setAsDefaultAccountPrompt: {
       setAsDefaultAccountMessage: 'Set this account as the default?',
-      setAsDefaultAccount: accountName =>
+      setAsDefaultAccount: (accountName: string) =>
         `Account "${accountName}" set as the default account`,
-      keepingCurrentDefault: accountName =>
+      keepingCurrentDefault: (accountName: string) =>
         `Account "${accountName}" will continue to be the default account`,
     },
     accountNamePrompt: {
@@ -2978,14 +3069,14 @@ export const lib = {
       enterDeveloperTestAccountName: 'Name your developer test account:',
       enterStandardSandboxName: 'Name your standard sandbox:',
       enterDevelopmentSandboxName: 'Name your development sandbox:',
-      sandboxDefaultName: sandboxType => `New ${sandboxType} sandbox`,
-      developerTestAccountDefaultName: count =>
+      sandboxDefaultName: (sandboxType: string) => `New ${sandboxType} sandbox`,
+      developerTestAccountDefaultName: (count: string) =>
         `Developer test account ${count}`,
       errors: {
         invalidName: 'You entered an invalid name. Please try again.',
         nameRequired: 'The name may not be blank. Please try again.',
         spacesInName: 'The name may not contain spaces. Please try again.',
-        accountNameExists: name =>
+        accountNameExists: (name: string) =>
           `Account with name "${name}" already exists in the CLI config, please enter a different name.`,
       },
     },
@@ -3003,7 +3094,8 @@ export const lib = {
       personalAccessKeyBrowserOpenPrompt:
         'Open HubSpot to copy your personal access key?',
       logs: {
-        openingWebBrowser: url => `Opening ${url} in your web browser`,
+        openingWebBrowser: (url: string) =>
+          `Opening ${url} in your web browser`,
       },
       errors: {
         invalidAccountId:
@@ -3070,24 +3162,24 @@ export const lib = {
           'There is an existing project at this destination. Please provide a new path for this project.',
         invalidCharacters:
           'The selected destination contains invalid characters. Please provide a new path and try again.',
-        invalidTemplate: template =>
+        invalidTemplate: (template: string) =>
           `[--template] Could not find template "${template}". Please choose an available template:`,
         projectTemplateRequired:
           'Project template is required when projectTemplates is provided',
       },
     },
     selectPublicAppPrompt: {
-      selectAppIdMigrate: accountName =>
+      selectAppIdMigrate: (accountName: string) =>
         `[--appId] Choose an app under ${accountName} to migrate:`,
-      selectAppIdClone: accountName =>
+      selectAppIdClone: (accountName: string) =>
         `[--appId] Choose an app under ${accountName} to clone:`,
       errors: {
         noAccountId: 'An account ID is required to select an app.',
         noAppsMigration: () => `${chalk.bold('No apps to migrate')}`,
         noAppsClone: () => `${chalk.bold('No apps to clone')}`,
-        noAppsMigrationMessage: accountName =>
+        noAppsMigrationMessage: (accountName: string) =>
           `The selected developer account ${chalk.bold(accountName)} doesn't have any apps that can be migrated to the projects framework.`,
-        noAppsCloneMessage: accountName =>
+        noAppsCloneMessage: (accountName: string) =>
           `The selected developer account ${chalk.bold(accountName)} doesn't have any apps that can be cloned to the projects framework.`,
         errorFetchingApps: 'There was an error fetching public apps.',
         cannotBeMigrated: 'Cannot be migrated',
@@ -3096,7 +3188,7 @@ export const lib = {
     downloadProjectPrompt: {
       selectProject: 'Select a project to download:',
       errors: {
-        projectNotFound: (projectName, accountId) =>
+        projectNotFound: (projectName: string, accountId: string) =>
           `Your project ${projectName} could not be found in ${accountId}. Please select a valid project:`,
         accountIdRequired: 'An account ID is required to download a project.',
       },
@@ -3106,7 +3198,7 @@ export const lib = {
       enterName: '[--name] Give your component a name: ',
       errors: {
         nameRequired: 'A component name is required',
-        invalidType: type =>
+        invalidType: (type: string) =>
           `[--type] Could not find type "${type}". Please choose an available type:`,
       },
     },
@@ -3137,14 +3229,14 @@ export const lib = {
         srcRequired: 'You must specify a source directory.',
         destRequired: 'You must specify a destination directory.',
       },
-      fieldsPrompt: dir =>
+      fieldsPrompt: (dir: string) =>
         `Multiple fields files located in "${dir}". Please choose which to upload: `,
     },
     projectNamePrompt: {
       enterName: '[--project] Enter project name:',
       errors: {
         invalidName: 'You entered an invalid name. Please try again.',
-        projectDoesNotExist: (projectName, accountIdentifier) =>
+        projectDoesNotExist: (projectName: string, accountIdentifier: string) =>
           `Project ${chalk.bold(projectName)} could not be found in "${accountIdentifier}"`,
       },
     },
@@ -3172,8 +3264,9 @@ export const lib = {
       selectTable: 'Select a HubDB table:',
       enterDest: 'Enter the destination path:',
       errors: {
-        noTables: accountId => `No HubDB tables found in account ${accountId}`,
-        errorFetchingTables: accountId =>
+        noTables: (accountId: string) =>
+          `No HubDB tables found in account ${accountId}`,
+        errorFetchingTables: (accountId: string) =>
           `Unable to fetch HubDB tables in account ${accountId}`,
         destRequired: 'A destination is required',
         invalidDest:
@@ -3199,28 +3292,28 @@ export const lib = {
   developerTestAccount: {
     create: {
       loading: {
-        add: accountName =>
+        add: (accountName: string) =>
           `Creating developer test account ${chalk.bold(accountName)}`,
-        fail: accountName =>
+        fail: (accountName: string) =>
           `Failed to create a developer test account ${chalk.bold(accountName)}.`,
-        succeed: (accountName, accountId) =>
+        succeed: (accountName: string, accountId: string) =>
           `Successfully created a developer test account ${chalk.bold(accountName)} with portalId ${chalk.bold(accountId)}.`,
       },
       success: {
-        configFileUpdated: (accountName, authType) =>
+        configFileUpdated: (accountName: string, authType: string) =>
           `Account "${accountName}" updated using "${authType}"`,
       },
       failure: {
-        invalidUser: (accountName, parentAccountName) =>
+        invalidUser: (accountName: string, parentAccountName: string) =>
           `Couldn't create ${chalk.bold(accountName)} because your account has been removed from ${chalk.bold(parentAccountName)} or your permission set doesn't allow you to create the sandbox. To update your permissions, contact a super admin in ${chalk.bold(parentAccountName)}.`,
-        limit: (accountName, limit) =>
+        limit: (accountName: string, limit: string) =>
           `${chalk.bold(accountName)} reached the limit of ${limit} developer test accounts. \n- To connect a developer test account to your HubSpot CLI, run ${chalk.bold('hs auth')} and follow the prompts.`,
-        alreadyInConfig: (accountName, limit) =>
+        alreadyInConfig: (accountName: string, limit: string) =>
           `${chalk.bold(accountName)} reached the limit of ${limit} developer test accounts. \n- To use an existing developer test account, run ${chalk.bold('hs accounts use')}.`,
         scopes: {
           message:
             "The personal access key you provided doesn't include developer test account permissions.",
-          instructions: (accountName, url) =>
+          instructions: (accountName: string | number, url: string) =>
             `To update CLI permissions for "${accountName}": \n- Go to ${url}, deactivate the existing personal access key, and create a new one that includes developer test account permissions. \n- Update the CLI config for this account by running ${chalk.bold('hs auth')} and entering the new key.\n`,
         },
       },
@@ -3230,28 +3323,28 @@ export const lib = {
     create: {
       developer: {
         loading: {
-          add: accountName =>
+          add: (accountName: string) =>
             `Creating developer sandbox ${chalk.bold(accountName)}`,
-          fail: accountName =>
+          fail: (accountName: string) =>
             `Failed to create a developer sandbox ${chalk.bold(accountName)}.`,
-          succeed: (accountName, accountId) =>
+          succeed: (accountName: string, accountId: string) =>
             `Successfully created a developer sandbox ${chalk.bold(accountName)} with portalId ${chalk.bold(accountId)}.`,
         },
         success: {
-          configFileUpdated: (accountName, authType) =>
+          configFileUpdated: (accountName: string, authType: string) =>
             `Account "${accountName}" updated using "${authType}"`,
         },
         failure: {
-          invalidUser: (accountName, parentAccountName) =>
+          invalidUser: (accountName: string, parentAccountName: string) =>
             `Couldn't create ${chalk.bold(accountName)} because your account has been removed from ${chalk.bold(parentAccountName)} or your permission set doesn't allow you to create the sandbox. To update your permissions, contact a super admin in ${chalk.bold(parentAccountName)}.`,
-          limit: (accountName, limit) =>
+          limit: (accountName: string, limit: string) =>
             `${chalk.bold(accountName)} reached the limit of ${limit} developer sandboxes. \n- To connect a developer sandbox to your HubSpot CLI, run ${chalk.bold('hs auth')} and follow the prompts.`,
-          alreadyInConfig: (accountName, limit) =>
+          alreadyInConfig: (accountName: string, limit: string) =>
             `${chalk.bold(accountName)} reached the limit of ${limit} developer sandboxes. \n- To use an existing developer sandbox, run ${chalk.bold('hs accounts use')}.`,
           scopes: {
             message:
               "The personal access key you provided doesn't include developer sandbox permissions.",
-            instructions: (accountName, url) =>
+            instructions: (accountName: string | number, url: string) =>
               `To update CLI permissions for "${accountName}": \n- Go to ${url}, deactivate the existing personal access key, and create a new one that includes developer sandbox permissions. \n- Update the CLI config for this account by running ${chalk.bold('hs auth')} and entering the new key.\n`,
           },
           generic: 'An error occurred while creating a developer sandbox',
@@ -3259,28 +3352,28 @@ export const lib = {
       },
       standard: {
         loading: {
-          add: accountName =>
+          add: (accountName: string) =>
             `Creating standard sandbox ${chalk.bold(accountName)}`,
-          fail: accountName =>
+          fail: (accountName: string) =>
             `Failed to create a standard sandbox ${chalk.bold(accountName)}.`,
-          succeed: (accountName, accountId) =>
+          succeed: (accountName: string, accountId: string) =>
             `Successfully created a standard sandbox ${chalk.bold(accountName)} with portalId ${chalk.bold(accountId)}.`,
         },
         success: {
-          configFileUpdated: (accountName, authType) =>
+          configFileUpdated: (accountName: string, authType: string) =>
             `Account "${accountName}" updated using "${authType}"`,
         },
         failure: {
-          invalidUser: (accountName, parentAccountName) =>
+          invalidUser: (accountName: string, parentAccountName: string) =>
             `Couldn't create ${chalk.bold(accountName)} because your account has been removed from ${chalk.bold(parentAccountName)} or your permission set doesn't allow you to create the sandbox. To update your permissions, contact a super admin in ${chalk.bold(parentAccountName)}.`,
-          limit: (accountName, limit) =>
+          limit: (accountName: string, limit: string) =>
             `${chalk.bold(accountName)} reached the limit of ${limit} standard sandboxes. \n- To connect a standard sandbox to your HubSpot CLI, run ${chalk.bold('hs auth')} and follow the prompts.`,
-          alreadyInConfig: (accountName, limit) =>
+          alreadyInConfig: (accountName: string, limit: string) =>
             `${chalk.bold(accountName)} reached the limit of ${limit} standard sandboxes. \n- To use an existing standard sandbox, run ${chalk.bold('hs accounts use')}.`,
           scopes: {
             message:
               "The personal access key you provided doesn't include standard sandbox permissions.",
-            instructions: (accountName, url) =>
+            instructions: (accountName: string, url: string) =>
               `To update CLI permissions for "${accountName}": \n- Go to ${url}, deactivate the existing personal access key, and create a new one that includes standard sandbox permissions. \n- Update the CLI config for this account by running ${chalk.bold('hs auth')} and entering the new key.\n`,
           },
         },
@@ -3288,23 +3381,24 @@ export const lib = {
     },
     sync: {
       loading: {
-        add: accountName => `Syncing sandbox ${chalk.bold(accountName)}`,
-        fail: accountName =>
+        add: (accountName: string) =>
+          `Syncing sandbox ${chalk.bold(accountName)}`,
+        fail: (accountName: string) =>
           `Failed to sync sandbox ${chalk.bold(accountName)}.`,
-        succeed: accountName =>
+        succeed: (accountName: string) =>
           `Successfully synced sandbox ${chalk.bold(accountName)}.`,
       },
       success: {
-        configFileUpdated: (accountName, authType) =>
+        configFileUpdated: (accountName: string, authType: string) =>
           `Account "${accountName}" updated using "${authType}"`,
       },
       failure: {
-        invalidUser: (accountName, parentAccountName) =>
+        invalidUser: (accountName: string, parentAccountName: string) =>
           `Couldn't sync ${chalk.bold(accountName)} because your account has been removed from ${chalk.bold(parentAccountName)} or your permission set doesn't allow you to sync the sandbox. To update your permissions, contact a super admin in ${chalk.bold(parentAccountName)}.`,
         scopes: {
           message:
             "The personal access key you provided doesn't include sandbox sync permissions.",
-          instructions: (accountName, url) =>
+          instructions: (accountName: string, url: string) =>
             `To update CLI permissions for "${accountName}": \n- Go to ${url}, deactivate the existing personal access key, and create a new one that includes sandbox sync permissions. \n- Update the CLI config for this account by running ${chalk.bold('hs auth')} and entering the new key.\n`,
         },
       },
@@ -3312,32 +3406,36 @@ export const lib = {
   },
   errorHandlers: {
     index: {
-      errorOccurred: error => `Error: ${error}`,
-      errorContext: context => `Context: ${context}`,
-      errorCause: cause => `Cause: ${cause}`,
+      errorOccurred: (error: string) => `Error: ${error}`,
+      errorContext: (context: string) => `Context: ${context}`,
+      errorCause: (cause: string) => `Cause: ${cause}`,
       unknownErrorOccurred: 'An unknown error has occurred.',
     },
     suppressErrors: {
       platformVersionErrors: {
         header: 'Platform version update required',
-        unspecifiedPlatformVersion: platformVersion =>
+        unspecifiedPlatformVersion: (platformVersion: string) =>
           `Projects with an ${chalk.bold(platformVersion)} are no longer supported.`,
-        platformVersionRetired: platformVersion =>
+        platformVersionRetired: (platformVersion: string) =>
           `Projects with ${chalk.bold(`platformVersion ${platformVersion}`)} are no longer supported.`,
-        nonExistentPlatformVersion: platformVersion =>
+        nonExistentPlatformVersion: (platformVersion: string) =>
           `Projects with ${chalk.bold(`platformVersion ${platformVersion}`)} are not supported.`,
         updateProject:
           'Please update your project to the latest version and try again.',
         docsLink: 'Projects platform versioning (BETA)',
-        betaLink: docsLink => `For more info, see ${docsLink}.`,
+        betaLink: (docsLink: string) => `For more info, see ${docsLink}.`,
       },
-      missingScopeError: (request, accountName, authCommand) =>
+      missingScopeError: (
+        request: string,
+        accountName: string,
+        authCommand: string
+      ) =>
         `Couldn't execute the ${request} because the access key for ${accountName} is missing required scopes. To update scopes, run ${authCommand}. Then deactivate the existing key and generate a new one that includes the missing scopes.`,
     },
   },
   serverless: {
     verifyAccessKeyAndUserAccess: {
-      fetchScopeDataError: scopeGroup =>
+      fetchScopeDataError: (scopeGroup: string) =>
         `Error verifying access of scopeGroup ${scopeGroup}:`,
       portalMissingScope:
         'Your account does not have access to this action. Talk to an account admin to request it.',
@@ -3353,60 +3451,63 @@ export const lib = {
     accountChecks: {
       active: 'Default account active',
       inactive: "Default account isn't active",
-      inactiveSecondary: command =>
+      inactiveSecondary: (command: string) =>
         `Run ${command} to remove inactive accounts from your CLI config`,
       unableToDetermine: 'Unable to determine if the portal is active',
       pak: {
         incomplete:
           'Personal access key is valid, but there are more scopes available to your user that are not included in your key.',
-        incompleteSecondary: (command, link) =>
+        incompleteSecondary: (command: string, link: string) =>
           `To add the available scopes, run ${command} and re-authenticate your account with a new key that has those scopes. Visit HubSpot to view selected and available scopes for your personal access key. ${link}`,
         invalid: 'Personal access key is invalid',
-        invalidSecondary: command =>
+        invalidSecondary: (command: string) =>
           `To get a new key, run ${command}, deactivate your access key, and generate a new one. Then use that new key to authenticate your account.`,
-        valid: link => `Personal Access Key is valid. ${link}`,
+        valid: (link: string) => `Personal Access Key is valid. ${link}`,
         viewScopes: 'View selected scopes',
       },
     },
     nodeChecks: {
       unableToDetermine:
         'Unable to determine what version of node is installed',
-      minimumNotMet: nodeVersion =>
+      minimumNotMet: (nodeVersion: string) =>
         `Minimum Node version is not met. Upgrade to ${nodeVersion} or higher`,
-      success: nodeVersion => `node v${nodeVersion} is installed`,
+      success: (nodeVersion: string) => `node v${nodeVersion} is installed`,
     },
     npmChecks: {
       notInstalled: 'npm is not installed',
-      installed: npmVersion => `npm v${npmVersion} is installed`,
+      installed: (npmVersion: string) => `npm v${npmVersion} is installed`,
       unableToDetermine: 'Unable to determine if npm is installed',
     },
     hsChecks: {
-      notLatest: hsVersion => `Version ${hsVersion} outdated`,
-      notLatestSecondary: (command, hsVersion) =>
+      notLatest: (hsVersion: string) => `Version ${hsVersion} outdated`,
+      notLatestSecondary: (command: string, hsVersion: string) =>
         `Run ${command} to upgrade to the latest version ${hsVersion}`,
-      latest: hsVersion => `HubSpot CLI v${hsVersion} up to date`,
+      latest: (hsVersion: string) => `HubSpot CLI v${hsVersion} up to date`,
       unableToDetermine: 'Unable to determine if HubSpot CLI is up to date.',
-      unableToDetermineSecondary: (command, link) =>
+      unableToDetermineSecondary: (command: string, link: string) =>
         `Run ${command} to check your installed version; then visit the ${link} to validate whether you have the latest version`,
       unableToDetermineSecondaryLink: 'npm HubSpot CLI version history',
     },
     projectDependenciesChecks: {
-      missingDependencies: dir => `missing dependencies in ${chalk.bold(dir)}`,
-      missingDependenciesSecondary: command =>
+      missingDependencies: (dir: string) =>
+        `missing dependencies in ${chalk.bold(dir)}`,
+      missingDependenciesSecondary: (command: string) =>
         `Run ${command} to install all project dependencies locally`,
-      unableToDetermine: dir =>
+      unableToDetermine: (dir: string) =>
         `Unable to determine if dependencies are installed ${dir}`,
       success: 'App dependencies are installed and up to date',
     },
     files: {
-      invalidJson: filename => `invalid JSON in ${chalk.bold(filename)}`,
+      invalidJson: (filename: string) =>
+        `invalid JSON in ${chalk.bold(filename)}`,
       validJson: 'JSON files valid',
     },
     port: {
-      inUse: port => `Port ${port} is in use`,
-      inUseSecondary: command =>
+      inUse: (port: string) => `Port ${port} is in use`,
+      inUseSecondary: (command: string) =>
         `Make sure it is available before running ${command}`,
-      available: port => `Port ${port} available for local development`,
+      available: (port: string) =>
+        `Port ${port} available for local development`,
     },
     diagnosis: {
       cli: {
@@ -3414,23 +3515,24 @@ export const lib = {
       },
       cliConfig: {
         header: 'CLI configuration',
-        configFileSubHeader: filename => `Config File: ${chalk.bold(filename)}`,
-        defaultAccountSubHeader: accountDetails =>
+        configFileSubHeader: (filename: string) =>
+          `Config File: ${chalk.bold(filename)}`,
+        defaultAccountSubHeader: (accountDetails: string) =>
           `Default Account: ${accountDetails}`,
         noConfigFile: 'CLI configuration not found',
-        noConfigFileSecondary: command =>
+        noConfigFileSecondary: (command: string) =>
           `Run ${command} and follow the prompts to create your CLI configuration file and connect it to your HubSpot account`,
       },
       projectConfig: {
         header: 'Project configuration',
-        projectDirSubHeader: projectDir =>
+        projectDirSubHeader: (projectDir: string) =>
           `Project dir: ${chalk.bold(projectDir)}`,
-        projectNameSubHeader: projectName =>
+        projectNameSubHeader: (projectName: string) =>
           `Project name: ${chalk.bold(projectName)}`,
       },
       counts: {
-        errors: count => `${chalk.bold('Errors:')} ${count}`,
-        warnings: count => `${chalk.bold('Warning:')} ${count}`,
+        errors: (count: string) => `${chalk.bold('Errors:')} ${count}`,
+        warnings: (count: string) => `${chalk.bold('Warning:')} ${count}`,
       },
     },
   },
@@ -3438,9 +3540,9 @@ export const lib = {
     missingClientId: 'Error building oauth URL: missing client ID.',
   },
   migrate: {
-    componentsToBeMigrated: components =>
+    componentsToBeMigrated: (components: string) =>
       `The following features will be migrated: ${components}`,
-    componentsThatWillNotBeMigrated: components =>
+    componentsThatWillNotBeMigrated: (components: string) =>
       `[NOTE] These features are not yet supported for migration but will be available later: ${components}`,
     sourceContentsMoved: (newLocation: string) =>
       `The contents of your old source directory have been moved to ${newLocation}, move any required files to the new source directory.`,
@@ -3458,7 +3560,7 @@ export const lib = {
           `Project does not exist in ${uiAccountDescription(account)}. Migrations are only supported for existing projects.`,
         multipleApps:
           'Multiple apps found in project, this is not allowed in 2025.2',
-        alreadyExists: projectName =>
+        alreadyExists: (projectName: string) =>
           `A project with name ${projectName} already exists. Please choose another name.`,
       },
       unmigratableReasons: {
@@ -3469,29 +3571,32 @@ export const lib = {
           projectName: string | undefined,
           accountId: number
         ) =>
-          `The project is linked to a GitHub repository.  ${uiLink('Visit the project settings page to unlink it', getProjectSettingsUrl(projectName, accountId))}`,
+          `The project is linked to a GitHub repository.  ${uiLink('Visit the project settings page to unlink it', getProjectSettingsUrl(projectName!, accountId)!)}`,
         partOfProjectAlready: `This app is part of a project, run ${uiCommandReference('hs project migrate')} from the project directory to migrate it`,
-        generic: reasonCode => `Unable to migrate app: ${reasonCode}`,
+        generic: (reasonCode: string) => `Unable to migrate app: ${reasonCode}`,
       },
-      noAppsEligible: (accountId, reasons: string[]) =>
+      noAppsEligible: (accountId: string, reasons: string[]) =>
         `No apps in account ${accountId} are currently migratable${reasons.length ? `\n  - ${reasons.join('\n  - ')}` : ''}`,
 
       invalidAccountTypeTitle: `${chalk.bold('Developer account not targeted')}`,
-      invalidAccountTypeDescription: (useCommand, authCommand) =>
+      invalidAccountTypeDescription: (
+        useCommand: string,
+        authCommand: string
+      ) =>
         `Only public apps created in a developer account can be converted to a project component. Select a connected developer account with ${useCommand} or ${authCommand} and try again.`,
-      appWithAppIdNotFound: appId =>
+      appWithAppIdNotFound: (appId: number) =>
         `Could not find an app with the id ${appId} `,
       noAppsForProject: (projectName: string) =>
         `No apps associated with project ${projectName}`,
       migrationFailed: 'Migration Failed',
-      notUngatedForUnifiedApps: account =>
+      notUngatedForUnifiedApps: (account: string) =>
         `Your account ${account} isn't enrolled in the required product beta to access this command.`,
     },
     prompt: {
       chooseApp: 'Which app would you like to migrate?',
       inputName: '[--name] What would you like to name the project?',
       inputDest: '[--dest] Where would you like to save the project?',
-      uidForComponent: componentName =>
+      uidForComponent: (componentName: string) =>
         `What UID would you like to use for ${componentName}?`,
       proceed: 'Would you like to proceed?',
     },

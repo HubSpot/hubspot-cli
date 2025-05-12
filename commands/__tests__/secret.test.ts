@@ -1,9 +1,9 @@
 import yargs, { Argv } from 'yargs';
-import * as addSecret from '../secret/addSecret';
-import * as deleteSecret from '../secret/deleteSecret';
-import * as listSecret from '../secret/listSecret';
-import * as updateSecret from '../secret/updateSecret';
-import * as secretCommands from '../secret';
+import addSecret from '../secret/addSecret';
+import deleteSecret from '../secret/deleteSecret';
+import listSecret from '../secret/listSecret';
+import updateSecret from '../secret/updateSecret';
+import secretCommands from '../secret';
 
 jest.mock('yargs');
 jest.mock('../secret/addSecret');

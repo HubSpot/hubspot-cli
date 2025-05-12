@@ -1,11 +1,11 @@
 import yargs, { Argv } from 'yargs';
-import * as create from '../schema/create';
-import * as deleteCommand from '../schema/delete';
-import * as fetchAll from '../schema/fetch-all';
-import * as fetch from '../schema/fetch';
-import * as list from '../schema/list';
-import * as update from '../schema/update';
-import * as schemaCommands from '../schema';
+import create from '../schema/create';
+import deleteCommand from '../schema/delete';
+import fetchAll from '../schema/fetch-all';
+import fetch from '../schema/fetch';
+import list from '../schema/list';
+import update from '../schema/update';
+import schemaCommands from '../schema';
 
 jest.mock('yargs');
 jest.mock('../schema/create');
