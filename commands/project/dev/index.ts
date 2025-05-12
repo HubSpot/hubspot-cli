@@ -46,15 +46,11 @@ export async function handler(
     process.exit(EXIT_CODES.ERROR);
   }
 
-  const isUsingV3Api = useV3Api(projectConfig.platformVersion);
   let targetAccountId = providedAccountId;
-
-  if (!args.profile && isUsingV3Api) {
-  }
 
   let profile: HsProfileFile | undefined;
 
-  if (!targetAccountId && isUsingV3Api) {
+  if (!targetAccountId && useV3Api(projectConfig.platformVersion)) {
     if (args.profile) {
       logProfileHeader(args.profile);
 
@@ -97,7 +93,7 @@ export async function handler(
     process.exit(EXIT_CODES.ERROR);
   }
 
-  if (isUsingV3Api) {
+  if (useV3Api(projectConfig.platformVersion)) {
     await unifiedProjectDevFlow(
       args,
       accountConfig,
