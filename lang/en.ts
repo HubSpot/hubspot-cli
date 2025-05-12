@@ -2893,6 +2893,18 @@ export const lib = {
     },
   },
   projectProfiles: {
+    logs: {
+      usingProfile: (profileName: string) =>
+        `Using profile from ${chalk.bold(profileName)}`,
+      profileTargetAccount: (accountId: number) =>
+        `Targeting ${uiAccountDescription(accountId)}`,
+      profileVariables: 'Profile variables',
+    },
+    exitIfUsingProfiles: {
+      errors: {
+        noProfileSpecified: `This project is configured to use profiles, but no profile was specified. Target a profile using the ${uiCommandReference('--profile')} flag.`,
+      },
+    },
     loadProfile: {
       errors: {
         noProjectConfig:

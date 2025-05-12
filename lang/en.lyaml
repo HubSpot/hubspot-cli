@@ -588,8 +588,6 @@ en:
             betaMessage: "HubSpot projects local development"
             placeholderAccountSelection: "Using default account as target account (for now)"
             learnMoreLocalDevServer: "Learn more about the projects local dev server"
-            usingProfile: "Using profile from {{#bold}}{{ profileFilename }}{{/bold}}"
-            profileTargetAccount: "Targeting {{#bold}}{{ account }}{{/bold}}"
           errors:
             noProjectConfig: "No project detected. Please run this command again from a project directory."
             noAccount: "An error occurred while reading account {{ accountId }} from your config. Run {{ authCommand }} to re-auth this account."
@@ -597,8 +595,6 @@ en:
             invalidProjectComponents: "Projects cannot contain both private and public apps. Move your apps to separate projects before attempting local development."
             noRunnableComponents: "No supported components were found in this project. Run {{ command }} to see a list of available components and add one to your project."
             invalidUnifiedAppsAccount: "Local development of Unified Apps is currently only supported in standard and developer accounts. Target a standard or developer account with {{ authCommand }} and try again."
-            profileNotFound: "Profile {{#bold}}{{ profileFilename }}{{/bold}} not found"
-            noAccountIdInProfile: "No accountId found in {{#bold}}{{ profileFilename }}{{/bold}}"
           examples:
             default: "Start local dev for the current project"
         create:
@@ -703,9 +699,6 @@ en:
           deployBuildIdPrompt: "[--build] Deploy which build?"
           debug:
             deploying: "Deploying project at path: {{ path }}"
-          logs:
-            usingProfile: "Using profile from {{#bold}}{{ profileFilename }}{{/bold}}"
-            profileTargetAccount: "Targeting {{#bold}}{{ account }}{{/bold}}"
           errors:
             deploy: "Deploy error: an unknown error occurred."
             noBuilds: "Deploy error: no builds for this project were found."
@@ -782,12 +775,8 @@ en:
             readyToGoLive: "🚀 Ready to take your project live?"
             runCommand: "Run `{{ command }}`"
             autoDeployDisabled: "Automatic deploys are disabled for this project. Run {{ deployCommand }} to deploy this build."
-            usingProfile: "Using profile from {{#bold}}{{ profileFilename }}{{/bold}}"
-            profileTargetAccount: "Targeting {{#bold}}{{ account }}{{/bold}}"
-            profileVariables: "Applying profile variables: "
           errors:
             projectLockedError: "Your project is locked. This may mean that another user is running the {{#bold}}`hs project dev`{{/bold}} command for this project. If this is you, unlock the project in Projects UI."
-            noProfileSpecified: "You are using project profiles, but did not specify a target profile. Specify a profile using the --profile flag."
           options:
             forceCreate:
               describe: "Automatically create project if it does not exist"

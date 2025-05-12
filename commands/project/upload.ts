@@ -1,20 +1,10 @@
 import { Argv, ArgumentsCamelCase } from 'yargs';
 import chalk from 'chalk';
-import path from 'path';
 import { logger } from '@hubspot/local-dev-lib/logger';
 import { getAccountConfig } from '@hubspot/local-dev-lib/config';
 import { isSpecifiedError } from '@hubspot/local-dev-lib/errors/index';
-import {
-  getAllHsProfiles,
-  getHsProfileFilename,
-} from '@hubspot/project-parsing-lib';
 import { useV3Api } from '../../lib/projects/buildAndDeploy';
-import {
-  uiBetaTag,
-  uiCommandReference,
-  uiLine,
-  uiAccountDescription,
-} from '../../lib/ui';
+import { uiBetaTag, uiCommandReference, uiLine } from '../../lib/ui';
 import { trackCommandUsage } from '../../lib/usageTracking';
 import {
   getProjectConfig,
@@ -33,7 +23,12 @@ import { EXIT_CODES } from '../../lib/enums/exitCodes';
 import { CommonArgs, YargsCommandModule } from '../../types/Yargs';
 import { ProjectPollResult } from '../../types/Projects';
 import { makeYargsBuilder } from '../../lib/yargsUtils';
-import { loadProfile } from '../../lib/projectProfiles';
+import {
+  loadProfile,
+  logProfileFooter,
+  logProfileHeader,
+  exitIfUsingProfiles,
+} from '../../lib/projectProfiles';
 
 const command = 'upload';
 const describe = uiBetaTag(
@@ -67,13 +62,7 @@ async function handler(
 
   if (!targetAccountId && useV3Api(projectConfig.platformVersion)) {
     if (args.profile) {
-      uiLine();
-      uiBetaTag(
-        i18n('commands.project.subcommands.upload.logs.usingProfile', {
-          profileFilename: getHsProfileFilename(args.profile),
-        })
-      );
-      logger.log('');
+      logProfileHeader(args.profile);
 
       const profile = await loadProfile(
         projectConfig,
@@ -88,32 +77,10 @@ async function handler(
 
       targetAccountId = profile.accountId;
 
-      logger.log(
-        i18n('commands.project.subcommands.upload.logs.profileTargetAccount', {
-          account: uiAccountDescription(targetAccountId),
-        })
-      );
-      logger.log('');
-      logger.log(
-        i18n('commands.project.subcommands.upload.logs.profileVariables')
-      );
-      Object.entries(profile.variables ?? {}).forEach(([key, value]) => {
-        logger.log(`  ${key}: ${value}`);
-      });
-      uiLine();
-      logger.log('');
+      logProfileFooter(profile, true);
     } else {
-      // Check if the project has any profiles configured
-      const existingProfiles = await getAllHsProfiles(
-        path.join(projectDir!, projectConfig.srcDir)
-      );
-
-      if (existingProfiles.length > 0) {
-        logger.error(
-          i18n('commands.project.subcommands.upload.errors.noProfileSpecified')
-        );
-        process.exit(EXIT_CODES.ERROR);
-      }
+      // A profile must be specified if this project has profiles configured
+      await exitIfUsingProfiles(projectConfig, projectDir);
     }
   }
 

@@ -1,32 +1,26 @@
-import path from 'path';
 import { ArgumentsCamelCase, Argv, CommandModule } from 'yargs';
 import { trackCommandUsage } from '../../../lib/usageTracking';
 import { i18n } from '../../../lib/lang';
 import { logger } from '@hubspot/local-dev-lib/logger';
 import { getAccountConfig } from '@hubspot/local-dev-lib/config';
-import {
-  getAllHsProfiles,
-  getHsProfileFilename,
-} from '@hubspot/project-parsing-lib';
 import { HsProfileFile } from '@hubspot/project-parsing-lib/src/lib/types';
 import {
   getProjectConfig,
   validateProjectConfig,
 } from '../../../lib/projects/config';
 import { EXIT_CODES } from '../../../lib/enums/exitCodes';
-import {
-  uiBetaTag,
-  uiCommandReference,
-  uiLink,
-  uiLine,
-  uiAccountDescription,
-} from '../../../lib/ui';
+import { uiBetaTag, uiCommandReference, uiLink, uiLine } from '../../../lib/ui';
 import { ProjectDevArgs } from '../../../types/Yargs';
 import { deprecatedProjectDevFlow } from './deprecatedFlow';
 import { unifiedProjectDevFlow } from './unifiedFlow';
 import { useV3Api } from '../../../lib/projects/buildAndDeploy';
 import { makeYargsBuilder } from '../../../lib/yargsUtils';
-import { loadProfile } from '../../../lib/projectProfiles';
+import {
+  loadProfile,
+  logProfileFooter,
+  logProfileHeader,
+  exitIfUsingProfiles,
+} from '../../../lib/projectProfiles';
 
 export const command = 'dev';
 export const describe = uiBetaTag(
@@ -62,13 +56,7 @@ export async function handler(
 
   if (!targetAccountId && isUsingV3Api) {
     if (args.profile) {
-      uiLine();
-      uiBetaTag(
-        i18n('commands.project.subcommands.dev.logs.usingProfile', {
-          profileFilename: getHsProfileFilename(args.profile),
-        })
-      );
-      logger.log('');
+      logProfileHeader(args.profile);
 
       profile = await loadProfile(projectConfig, projectDir, args.profile);
 
@@ -79,26 +67,10 @@ export async function handler(
 
       targetAccountId = profile.accountId;
 
-      logger.log(
-        i18n('commands.project.subcommands.dev.logs.profileTargetAccount', {
-          account: uiAccountDescription(targetAccountId),
-        })
-      );
-
-      uiLine();
-      logger.log('');
+      logProfileFooter(profile);
     } else {
-      // Check if the project has any profiles configured
-      const existingProfiles = await getAllHsProfiles(
-        path.join(projectDir!, projectConfig.srcDir)
-      );
-
-      if (existingProfiles.length > 0) {
-        logger.error(
-          i18n('commands.project.subcommands.upload.errors.noProfileSpecified')
-        );
-        process.exit(EXIT_CODES.ERROR);
-      }
+      // A profile must be specified if this project has profiles configured
+      await exitIfUsingProfiles(projectConfig, projectDir);
     }
   }
 

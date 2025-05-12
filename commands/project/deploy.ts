@@ -27,8 +27,12 @@ import {
   YargsCommandModule,
 } from '../../types/Yargs';
 import { makeYargsBuilder } from '../../lib/yargsUtils';
-import { loadProfile } from '../../lib/projectProfiles';
-import { getHsProfileFilename } from '@hubspot/project-parsing-lib';
+import {
+  loadProfile,
+  logProfileFooter,
+  logProfileHeader,
+  exitIfUsingProfiles,
+} from '../../lib/projectProfiles';
 
 const command = 'deploy';
 const describe = uiBetaTag(
@@ -93,31 +97,30 @@ async function handler(
 
   let targetAccountId: number | undefined;
 
-  if (args.profile && useV3Api(projectConfig?.platformVersion)) {
-    uiLine();
-    uiBetaTag(
-      i18n('commands.project.subcommands.deploy.logs.usingProfile', {
-        profileFilename: getHsProfileFilename(args.profile),
-      })
-    );
-    logger.log('');
+  if (useV3Api(projectConfig?.platformVersion)) {
+    if (args.profile) {
+      logProfileHeader(args.profile);
 
-    const profile = await loadProfile(projectConfig, projectDir, args.profile);
+      const profile = await loadProfile(
+        projectConfig,
+        projectDir,
+        args.profile
+      );
 
-    if (!profile) {
-      uiLine();
-      process.exit(EXIT_CODES.ERROR);
+      if (!profile) {
+        uiLine();
+        process.exit(EXIT_CODES.ERROR);
+      }
+      targetAccountId = profile.accountId;
+
+      logProfileFooter(profile);
+    } else {
+      // A profile must be specified if this project has profiles configured
+      await exitIfUsingProfiles(projectConfig, projectDir);
     }
-    targetAccountId = profile.accountId;
+  }
 
-    logger.log(
-      i18n('commands.project.subcommands.deploy.logs.profileTargetAccount', {
-        account: uiAccountDescription(targetAccountId),
-      })
-    );
-    uiLine();
-    logger.log('');
-  } else {
+  if (!targetAccountId) {
     targetAccountId = derivedAccountId;
   }
 
