@@ -1493,6 +1493,8 @@ en:
           destRequired: "A destination is required"
           invalidDest: "The selected destination already exists. Please provide a new path."
           invalidCharacters: "The selected destination contains invalid characters. Please provide a new path and try again."
+      getStarted:
+        appNamePrompt: "What is the name of your app?"
     convertFields:
       positionals:
         src:
@@ -1685,6 +1687,13 @@ en:
         counts:
           errors: '{{#bold}}Errors:{{/bold}} {{ count }}'
           warnings: "{{#bold}}Warning:{{/bold}} {{ count }}"
+    getStarted:
+      welcomeTitle: "Welcome to the HubSpot CLI"
+      welcomeDescription: "Let's get you started and ready to develop with HubSpot"
+      checkingConfig: "Checking configuration"
+      configValidated: "Configuration validated successfully"
+      initializingApp: "Initializing app"
+      appInitialized: "App initialized successfully as {{ appName }}"
     oauth:
       missingClientId: "Error building oauth URL: missing client ID."
 
