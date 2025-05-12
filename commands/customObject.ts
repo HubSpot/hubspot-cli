@@ -1,16 +1,14 @@
 import { Argv } from 'yargs';
-import { addGlobalOptions } from '../lib/commonOpts';
-import * as schemaCommand from './customObject/schema';
-import * as createCommand from './customObject/create';
+import schemaCommand from './customObject/schema';
+import createCommand from './customObject/create';
 import { i18n } from '../lib/lang';
 import { logger } from '@hubspot/local-dev-lib/logger';
 import { uiBetaTag, uiLink } from '../lib/ui';
+import { YargsCommandModuleBucket } from '../types/Yargs';
+import { makeYargsBuilder } from '../lib/yargsUtils';
 
-export const command = ['custom-object', 'custom-objects', 'co'];
-export const describe = uiBetaTag(
-  i18n(`commands.customObject.describe`),
-  false
-);
+const command = ['custom-object', 'custom-objects', 'co'];
+const describe = uiBetaTag(i18n(`commands.customObject.describe`), false);
 
 function logBetaMessage() {
   uiBetaTag(i18n(`commands.customObject.betaMessage`));
@@ -23,16 +21,24 @@ function logBetaMessage() {
   logger.log();
 }
 
-export function builder(yargs: Argv): Argv {
-  addGlobalOptions(yargs);
-
+function customObjectBuilder(yargs: Argv): Argv {
   yargs.middleware([logBetaMessage]);
 
-  yargs.command(schemaCommand);
-
-  yargs.command(createCommand);
-
-  yargs.demandCommand(1, '');
+  yargs.command(schemaCommand).command(createCommand).demandCommand(1, '');
 
   return yargs;
 }
+
+const builder = makeYargsBuilder(customObjectBuilder, command, describe);
+
+const customObjectCommand: YargsCommandModuleBucket = {
+  command,
+  describe,
+  builder,
+  handler: () => {},
+};
+
+export default customObjectCommand;
+
+// TODO Remove this legacy export once we've migrated all commands to TS
+module.exports = customObjectCommand;

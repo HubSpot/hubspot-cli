@@ -1,20 +1,29 @@
-// @ts-nocheck
-const marketplaceValidate = require('./module/marketplace-validate');
-const {
-  addConfigOptions,
-  addAccountOptions,
-  addGlobalOptions,
-} = require('../lib/commonOpts');
+import { Argv } from 'yargs';
+import marketplaceValidate from './module/marketplace-validate';
+import { YargsCommandModuleBucket } from '../types/Yargs';
+import { makeYargsBuilder } from '../lib/yargsUtils';
 
-exports.command = 'module';
-exports.describe = false;
+const command = 'module';
+const describe = undefined;
 
-exports.builder = yargs => {
-  addConfigOptions(yargs);
-  addAccountOptions(yargs);
-  addGlobalOptions(yargs);
-
+function moduleBuilder(yargs: Argv): Argv {
   yargs.command(marketplaceValidate).demandCommand(1, '');
-
   return yargs;
+}
+
+const builder = makeYargsBuilder(moduleBuilder, command, describe, {
+  useGlobalOptions: true,
+  useConfigOptions: true,
+  useAccountOptions: true,
+});
+
+const moduleCommand: YargsCommandModuleBucket = {
+  command,
+  describe,
+  builder,
+  handler: () => {},
 };
+
+export default moduleCommand;
+
+module.exports = moduleCommand;

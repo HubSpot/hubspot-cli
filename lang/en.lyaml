@@ -1246,9 +1246,6 @@ en:
         compressed: "Project files compressed: {{ byteCount }} bytes"
         compressing: "Compressing build files to \"{{ path }}\""
         fileFiltered: "Ignore rule triggered for \"{{ filename }}\""
-    middleware:
-      fireAlarm:
-        failedToLoadBoxen: "Failed to load boxen util."
     ui:
       betaTag: "{{#bold}}[BETA]{{/bold}}"
       betaWarning:

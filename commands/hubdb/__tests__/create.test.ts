@@ -4,7 +4,7 @@ import {
   addConfigOptions,
   addUseEnvironmentOptions,
 } from '../../../lib/commonOpts';
-import * as hubdbCreateCommand from '../create';
+import hubdbCreateCommand from '../create';
 
 jest.mock('yargs');
 jest.mock('../../../lib/commonOpts');

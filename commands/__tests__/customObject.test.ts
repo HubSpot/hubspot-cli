@@ -1,7 +1,7 @@
 import yargs, { Argv } from 'yargs';
-import * as create from '../customObject/create';
-import * as schema from '../customObject/schema';
-import * as customObjectCommands from '../customObject';
+import create from '../customObject/create';
+import schema from '../customObject/schema';
+import customObjectCommands from '../customObject';
 
 jest.mock('yargs');
 jest.mock('../customObject/create');

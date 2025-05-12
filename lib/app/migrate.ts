@@ -216,8 +216,7 @@ async function promptForAppToMigrate(
 async function selectAppToMigrate(
   allApps: MigrationApp[],
   derivedAccountId: number,
-  appId?: number,
-  projectConfig?: LoadedProjectConfig
+  appId?: number
 ): Promise<{ proceed: boolean; appIdToMigrate?: number }> {
   if (
     appId &&
@@ -264,11 +263,9 @@ async function selectAppToMigrate(
 
   uiLogger.log('');
 
-  const promptMessage = projectConfig?.projectConfig
-    ? `${lib.migrate.projectMigrationWarning} ${lib.migrate.prompt.proceed}`
-    : lib.migrate.prompt.proceed;
-
-  const proceed = await confirmPrompt(promptMessage, { defaultAnswer: false });
+  const proceed = await confirmPrompt(lib.migrate.prompt.proceed, {
+    defaultAnswer: false,
+  });
   return {
     proceed,
     appIdToMigrate,
@@ -296,8 +293,7 @@ async function handleMigrationSetup(
   const { proceed, appIdToMigrate } = await selectAppToMigrate(
     allApps,
     derivedAccountId,
-    appId,
-    projectConfig
+    appId
   );
 
   if (!proceed) {

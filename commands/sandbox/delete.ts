@@ -12,13 +12,6 @@ import {
 import { getAccountIdentifier } from '@hubspot/local-dev-lib/config/getAccountIdentifier';
 import { getHubSpotWebsiteOrigin } from '@hubspot/local-dev-lib/urls';
 import { getValidEnv } from '@hubspot/local-dev-lib/environment';
-
-import {
-  addAccountOptions,
-  addConfigOptions,
-  addUseEnvironmentOptions,
-  addTestingOptions,
-} from '../../lib/commonOpts';
 import { trackCommandUsage } from '../../lib/usageTracking';
 import { logError, debugError } from '../../lib/errorHandlers/index';
 import { i18n } from '../../lib/lang';
@@ -37,19 +30,23 @@ import {
   AccountArgs,
   EnvironmentArgs,
   TestingArgs,
+  YargsCommandModule,
 } from '../../types/Yargs';
+import { makeYargsBuilder } from '../../lib/yargsUtils';
 
-export const command = 'delete';
-export const describe = uiBetaTag(
+const command = 'delete';
+const describe = uiBetaTag(
   i18n(`commands.sandbox.subcommands.delete.describe`),
   false
 );
 
-type CombinedArgs = ConfigArgs & AccountArgs & EnvironmentArgs & TestingArgs;
 type SandboxDeleteArgs = CommonArgs &
-  CombinedArgs & { account?: string; force?: boolean };
+  ConfigArgs &
+  AccountArgs &
+  EnvironmentArgs &
+  TestingArgs & { account?: string; force?: boolean };
 
-export async function handler(
+async function handler(
   args: ArgumentsCamelCase<SandboxDeleteArgs>
 ): Promise<void> {
   const { providedAccountId, force } = args;
@@ -264,7 +261,7 @@ export async function handler(
   }
 }
 
-export function builder(yargs: Argv): Argv<SandboxDeleteArgs> {
+function sandboxDeleteBuilder(yargs: Argv): Argv<SandboxDeleteArgs> {
   yargs.option('account', {
     describe: i18n(
       `commands.sandbox.subcommands.delete.options.account.describe`
@@ -286,10 +283,27 @@ export function builder(yargs: Argv): Argv<SandboxDeleteArgs> {
     ],
   ]);
 
-  addConfigOptions(yargs);
-  addAccountOptions(yargs);
-  addUseEnvironmentOptions(yargs);
-  addTestingOptions(yargs);
-
   return yargs as Argv<SandboxDeleteArgs>;
 }
+
+const builder = makeYargsBuilder<SandboxDeleteArgs>(
+  sandboxDeleteBuilder,
+  command,
+  describe,
+  {
+    useGlobalOptions: true,
+    useConfigOptions: true,
+    useAccountOptions: true,
+    useEnvironmentOptions: true,
+    useTestingOptions: true,
+  }
+);
+
+const sandboxDeleteCommand: YargsCommandModule<unknown, SandboxDeleteArgs> = {
+  command,
+  describe,
+  handler,
+  builder,
+};
+
+export default sandboxDeleteCommand;

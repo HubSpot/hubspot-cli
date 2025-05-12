@@ -1,72 +1,77 @@
 import { Environment } from '@hubspot/local-dev-lib/types/Config';
+import { logger } from '@hubspot/local-dev-lib/logger';
 import { promptUser } from '../../prompts/promptUtils';
-import { DevModeUnifiedInterface as UIEDevModeInterface } from '@hubspot/ui-extensions-dev-server';
 import {
   startPortManagerServer,
   stopPortManagerServer,
-  requestPorts,
 } from '@hubspot/local-dev-lib/portManager';
 import {
   getHubSpotApiOrigin,
   getHubSpotWebsiteOrigin,
 } from '@hubspot/local-dev-lib/urls';
 import { getAccountConfig } from '@hubspot/local-dev-lib/config';
-import { ProjectConfig } from '../../../types/Projects';
-import { IntermediateRepresentationNodeLocalDev } from '@hubspot/project-parsing-lib/src/lib/types';
+import AppDevModeInterface from './AppDevModeInterface';
 import { lib } from '../../../lang/en';
-import { uiLogger } from '../../ui/logger';
+import { LocalDevState } from '../../../types/LocalDev';
+import LocalDevLogger from './LocalDevLogger';
 
 type DevServerInterface = {
   // eslint-disable-next-line @typescript-eslint/no-unsafe-function-type
   setup?: Function;
-  start?: (options: object) => Promise<void>;
+  start?: () => Promise<void>;
   fileChange?: (filePath: string, event: string) => Promise<void>;
   cleanup?: () => Promise<void>;
+};
+
+type DevServerManagerV2ConstructorOptions = {
+  localDevState: LocalDevState;
+  logger: LocalDevLogger;
 };
 
 class DevServerManagerV2 {
   private initialized: boolean;
   private started: boolean;
   private devServers: DevServerInterface[];
+  private localDevState: LocalDevState;
 
-  constructor() {
+  constructor(options: DevServerManagerV2ConstructorOptions) {
     this.initialized = false;
     this.started = false;
-    this.devServers = [UIEDevModeInterface];
+    this.localDevState = options.localDevState;
+
+    const AppsDevServer = new AppDevModeInterface({
+      localDevState: options.localDevState,
+      localDevLogger: options.logger,
+    });
+    this.devServers = [AppsDevServer];
   }
 
-  async iterateDevServers(
+  private async iterateDevServers(
     callback: (serverInterface: DevServerInterface) => Promise<void>
   ): Promise<void> {
     await Promise.all(this.devServers.map(devServer => callback(devServer)));
   }
 
-  async setup({
-    projectNodes,
-    accountId,
-    setActiveApp,
-  }: {
-    projectNodes: { [key: string]: IntermediateRepresentationNodeLocalDev };
-    accountId: number;
-    setActiveApp: (appUid: string | undefined) => Promise<void>;
-  }): Promise<void> {
+  async setup(): Promise<void> {
     let env: Environment;
-    const accountConfig = getAccountConfig(accountId);
+    const accountConfig = getAccountConfig(
+      this.localDevState.targetTestingAccountId
+    );
     if (accountConfig) {
       env = accountConfig.env;
     }
     await startPortManagerServer();
     await this.iterateDevServers(async serverInterface => {
       if (serverInterface.setup) {
+        // @TODO: In the future, update UIE Dev Server to use LocalDevState
         await serverInterface.setup({
-          components: projectNodes,
+          components: this.localDevState.projectNodes,
           promptUser,
-          uiLogger,
+          logger,
           urls: {
             api: getHubSpotApiOrigin(env),
             web: getHubSpotWebsiteOrigin(env),
           },
-          setActiveApp,
         });
       }
     });
@@ -74,21 +79,11 @@ class DevServerManagerV2 {
     this.initialized = true;
   }
 
-  async start({
-    accountId,
-    projectConfig,
-  }: {
-    accountId: number;
-    projectConfig: ProjectConfig;
-  }): Promise<void> {
+  async start(): Promise<void> {
     if (this.initialized) {
       await this.iterateDevServers(async serverInterface => {
         if (serverInterface.start) {
-          await serverInterface.start({
-            accountId,
-            projectConfig,
-            requestPorts,
-          });
+          await serverInterface.start();
         }
       });
     } else {
@@ -127,6 +122,4 @@ class DevServerManagerV2 {
   }
 }
 
-const Manager = new DevServerManagerV2();
-
-export default Manager;
+export default DevServerManagerV2;

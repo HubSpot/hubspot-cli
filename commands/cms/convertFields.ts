@@ -1,66 +1,79 @@
-// @ts-nocheck
-const path = require('path');
-const fs = require('fs');
-const { createIgnoreFilter } = require('@hubspot/local-dev-lib/ignoreRules');
-const { isAllowedExtension, getCwd } = require('@hubspot/local-dev-lib/path');
-const { logger } = require('@hubspot/local-dev-lib/logger');
-const { walk } = require('@hubspot/local-dev-lib/fs');
-const { getThemeJSONPath } = require('@hubspot/local-dev-lib/cms/themes');
-const { i18n } = require('../../lib/lang');
-const {
+import { Argv, ArgumentsCamelCase } from 'yargs';
+import path from 'path';
+import fs from 'fs';
+import { createIgnoreFilter } from '@hubspot/local-dev-lib/ignoreRules';
+import { isAllowedExtension, getCwd } from '@hubspot/local-dev-lib/path';
+import { logger } from '@hubspot/local-dev-lib/logger';
+import { walk } from '@hubspot/local-dev-lib/fs';
+import { getThemeJSONPath } from '@hubspot/local-dev-lib/cms/themes';
+import { i18n } from '../../lib/lang';
+import {
   FieldsJs,
   isConvertableFieldJs,
-} = require('@hubspot/local-dev-lib/cms/handleFieldsJS');
+} from '@hubspot/local-dev-lib/cms/handleFieldsJS';
+import { trackConvertFieldsUsage } from '../../lib/usageTracking';
+import { logError } from '../../lib/errorHandlers/index';
+import { EXIT_CODES } from '../../lib/enums/exitCodes';
+import { CommonArgs, YargsCommandModule } from '../../types/Yargs';
+import { makeYargsBuilder } from '../../lib/yargsUtils';
 
-const { trackConvertFieldsUsage } = require('../../lib/usageTracking');
-const { logError } = require('../../lib/errorHandlers/index');
-const { EXIT_CODES } = require('../../lib/enums/exitCodes');
+const command = 'convert-fields';
+const describe = i18n(`commands.convertFields.describe`);
 
-exports.command = 'convert-fields';
-exports.describe = i18n(`commands.convertFields.describe`);
+type ConvertFieldsArgs = CommonArgs & {
+  src: string;
+  fieldOptions: string[];
+};
 
-const invalidPath = src => {
+function invalidPath(src: string): void {
   logger.error(
     i18n(`commands.convertFields.errors.invalidPath`, {
       path: src,
     })
   );
   process.exit(EXIT_CODES.ERROR);
-};
+}
 
-exports.handler = async options => {
-  let stats;
-  let projectRoot;
-  let src;
+async function handler(
+  args: ArgumentsCamelCase<ConvertFieldsArgs>
+): Promise<void> {
+  let stats: fs.Stats | undefined;
+  let projectRoot: string | undefined;
+  let src: string | undefined;
 
   try {
-    src = path.resolve(getCwd(), options.src);
-    const themeJSONPath = getThemeJSONPath(options.src);
+    src = path.resolve(getCwd(), args.src);
+    const themeJSONPath = getThemeJSONPath(args.src);
     projectRoot = themeJSONPath
       ? path.dirname(themeJSONPath)
       : path.dirname(getCwd());
     stats = fs.statSync(src);
     if (!stats.isFile() && !stats.isDirectory()) {
-      invalidPath(options.src);
+      invalidPath(args.src);
       return;
     }
   } catch (e) {
-    invalidPath(options.src);
+    invalidPath(args.src);
   }
 
   trackConvertFieldsUsage('process');
+
+  if (!src || !stats || !projectRoot) {
+    invalidPath(args.src);
+    return;
+  }
 
   if (stats.isFile()) {
     const fieldsJs = await new FieldsJs(
       projectRoot,
       src,
       undefined,
-      options.fieldOptions
+      args.fieldOptions
     ).init();
     if (fieldsJs.rejected) return;
     fieldsJs.saveOutput();
-  } else if (stats.isDirectory()) {
-    let filePaths = [];
+  } else if (stats && stats.isDirectory()) {
+    let filePaths: string[] = [];
     try {
       filePaths = await walk(src);
     } catch (e) {
@@ -73,26 +86,27 @@ exports.handler = async options => {
         }
         return true;
       })
-      .filter(createIgnoreFilter());
+      .filter(createIgnoreFilter(false));
     for (const filePath of allowedFilePaths) {
       if (isConvertableFieldJs(projectRoot, filePath, true)) {
         const fieldsJs = await new FieldsJs(
           projectRoot,
           filePath,
           undefined,
-          options.fieldOptions
+          args.fieldOptions
         ).init();
         if (fieldsJs.rejected) return;
         fieldsJs.saveOutput();
       }
     }
   }
-};
+}
 
-exports.builder = yargs => {
+function convertFieldsBuilder(yargs: Argv): Argv<ConvertFieldsArgs> {
   yargs.option('src', {
     describe: i18n(`commands.convertFields.positionals.src.describe`),
     type: 'string',
+    required: true,
     demandOption: i18n(`commands.convertFields.errors.missingSrc`),
   });
   yargs.option('fieldOptions', {
@@ -100,5 +114,20 @@ exports.builder = yargs => {
     type: 'array',
     default: [''],
   });
-  return yargs;
+  return yargs as Argv<ConvertFieldsArgs>;
+}
+
+const builder = makeYargsBuilder<ConvertFieldsArgs>(
+  convertFieldsBuilder,
+  command,
+  describe
+);
+
+const convertFieldsCommand: YargsCommandModule<unknown, ConvertFieldsArgs> = {
+  command,
+  describe,
+  handler,
+  builder,
 };
+
+export default convertFieldsCommand;
