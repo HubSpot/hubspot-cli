@@ -88,14 +88,16 @@ function validateBuildId(
 async function handler(
   args: ArgumentsCamelCase<ProjectDeployArgs>
 ): Promise<void> {
-  const { derivedAccountId } = args;
+  const {
+    derivedAccountId,
+    project: projectOption,
+    buildId: buildIdOption,
+  } = args;
   const accountConfig = getAccountConfig(derivedAccountId);
-  const { project: projectOption, buildId: buildIdOption } = args;
   const accountType = accountConfig && accountConfig.accountType;
-
-  const { projectConfig, projectDir } = await getProjectConfig(undefined, true);
-
   let targetAccountId: number | undefined;
+
+  const { projectConfig, projectDir } = await getProjectConfig();
 
   if (useV3Api(projectConfig?.platformVersion)) {
     if (args.profile) {
