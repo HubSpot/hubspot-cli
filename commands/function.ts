@@ -1,16 +1,31 @@
-// @ts-nocheck
-const { addGlobalOptions } = require('../lib/commonOpts');
-const list = require('./function/list');
-const deploy = require('./function/deploy');
-const server = require('./function/server');
-const { i18n } = require('../lib/lang');
+import { Argv } from 'yargs';
+import list from './function/list';
+import deploy from './function/deploy';
+import server from './function/server';
+import { i18n } from '../lib/lang';
+import { makeYargsBuilder } from '../lib/yargsUtils';
+import { YargsCommandModuleBucket } from '../types/Yargs';
 
-exports.command = ['function', 'functions'];
-exports.describe = i18n(`commands.function.describe`);
+export const command = ['function', 'functions'];
+export const describe = i18n(`commands.function.describe`);
 
-exports.builder = yargs => {
-  addGlobalOptions(yargs);
+function functionBuilder(yargs: Argv): Argv {
   yargs.command(list).command(deploy).command(server).demandCommand(1, '');
-
   return yargs;
+}
+
+const builder = makeYargsBuilder(functionBuilder, command, describe, {
+  useGlobalOptions: true,
+});
+
+const functionCommand: YargsCommandModuleBucket = {
+  command,
+  describe,
+  builder,
+  handler: () => {},
 };
+
+export default functionCommand;
+
+// TODO Remove this legacy export once we've migrated all commands to TS
+module.exports = functionCommand;

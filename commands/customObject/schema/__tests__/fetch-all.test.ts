@@ -4,7 +4,7 @@ import {
   addConfigOptions,
   addUseEnvironmentOptions,
 } from '../../../../lib/commonOpts';
-import * as schemaFetchAllCommand from '../fetch-all';
+import schemaFetchAllCommand from '../fetch-all';
 
 jest.mock('yargs');
 jest.mock('../../../../lib/commonOpts');

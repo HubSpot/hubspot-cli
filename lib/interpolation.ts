@@ -35,8 +35,8 @@ const delimiters: {
   },
 };
 
-type InterpolationData = {
-  [identifier: string]: string | number;
+export type InterpolationData = {
+  [identifier: string]: string | undefined | null | number | boolean;
 };
 
 type HelperIdentifier = keyof typeof helpers;

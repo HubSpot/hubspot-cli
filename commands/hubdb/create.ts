@@ -7,11 +7,6 @@ import { createHubDbTable } from '@hubspot/local-dev-lib/hubdb';
 import { promptUser } from '../../lib/prompts/promptUtils';
 import { checkAndConvertToJson } from '../../lib/validation';
 import { trackCommandUsage } from '../../lib/usageTracking';
-import {
-  addConfigOptions,
-  addAccountOptions,
-  addUseEnvironmentOptions,
-} from '../../lib/commonOpts';
 import { i18n } from '../../lib/lang';
 import { EXIT_CODES } from '../../lib/enums/exitCodes';
 import {
@@ -19,13 +14,17 @@ import {
   ConfigArgs,
   AccountArgs,
   EnvironmentArgs,
+  YargsCommandModule,
 } from '../../types/Yargs';
+import { makeYargsBuilder } from '../../lib/yargsUtils';
 
-export const command = 'create';
-export const describe = i18n(`commands.hubdb.subcommands.create.describe`);
+const command = 'create';
+const describe = i18n(`commands.hubdb.subcommands.create.describe`);
 
-type CombinedArgs = ConfigArgs & AccountArgs & EnvironmentArgs;
-type HubdbCreateArgs = CommonArgs & CombinedArgs & { path?: string };
+type HubdbCreateArgs = CommonArgs &
+  ConfigArgs &
+  AccountArgs &
+  EnvironmentArgs & { path?: string };
 
 function selectPathPrompt(options: HubdbCreateArgs): Promise<{ path: string }> {
   return promptUser([
@@ -51,7 +50,7 @@ function selectPathPrompt(options: HubdbCreateArgs): Promise<{ path: string }> {
   ]);
 }
 
-export async function handler(
+async function handler(
   args: ArgumentsCamelCase<HubdbCreateArgs>
 ): Promise<void> {
   const { derivedAccountId } = args;
@@ -89,11 +88,7 @@ export async function handler(
   }
 }
 
-export function builder(yargs: Argv): Argv<HubdbCreateArgs> {
-  addAccountOptions(yargs);
-  addConfigOptions(yargs);
-  addUseEnvironmentOptions(yargs);
-
+function hubdbCreateBuilder(yargs: Argv): Argv<HubdbCreateArgs> {
   yargs.options('path', {
     describe: i18n(`commands.hubdb.subcommands.create.options.path.describe`),
     type: 'string',
@@ -101,3 +96,24 @@ export function builder(yargs: Argv): Argv<HubdbCreateArgs> {
 
   return yargs as Argv<HubdbCreateArgs>;
 }
+
+const builder = makeYargsBuilder<HubdbCreateArgs>(
+  hubdbCreateBuilder,
+  command,
+  describe,
+  {
+    useGlobalOptions: true,
+    useConfigOptions: true,
+    useAccountOptions: true,
+    useEnvironmentOptions: true,
+  }
+);
+
+const hubdbCreateCommand: YargsCommandModule<unknown, HubdbCreateArgs> = {
+  command,
+  describe,
+  handler,
+  builder,
+};
+
+export default hubdbCreateCommand;

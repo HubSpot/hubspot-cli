@@ -4,7 +4,7 @@ import {
   addConfigOptions,
   addUseEnvironmentOptions,
 } from '../../../../lib/commonOpts';
-import * as schemaUpdateCommand from '../update';
+import schemaUpdateCommand from '../update';
 
 jest.mock('yargs');
 jest.mock('../../../../lib/commonOpts');

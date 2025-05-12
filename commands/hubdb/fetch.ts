@@ -4,27 +4,25 @@ import { logError } from '../../lib/errorHandlers/index';
 import { downloadHubDbTable } from '@hubspot/local-dev-lib/hubdb';
 import { selectHubDBTablePrompt } from '../../lib/prompts/selectHubDBTablePrompt';
 import { trackCommandUsage } from '../../lib/usageTracking';
-import {
-  addConfigOptions,
-  addAccountOptions,
-  addUseEnvironmentOptions,
-} from '../../lib/commonOpts';
 import { i18n } from '../../lib/lang';
 import {
   CommonArgs,
   ConfigArgs,
   AccountArgs,
   EnvironmentArgs,
+  YargsCommandModule,
 } from '../../types/Yargs';
+import { makeYargsBuilder } from '../../lib/yargsUtils';
 
-export const command = 'fetch [table-id] [dest]';
-export const describe = i18n('commands.hubdb.subcommands.fetch.describe');
+const command = 'fetch [table-id] [dest]';
+const describe = i18n('commands.hubdb.subcommands.fetch.describe');
 
-type CombinedArgs = ConfigArgs & AccountArgs & EnvironmentArgs;
 type HubdbFetchArgs = CommonArgs &
-  CombinedArgs & { tableId?: number; dest?: string };
+  ConfigArgs &
+  AccountArgs &
+  EnvironmentArgs & { tableId?: number; dest?: string };
 
-export async function handler(
+async function handler(
   args: ArgumentsCamelCase<HubdbFetchArgs>
 ): Promise<void> {
   const { derivedAccountId } = args;
@@ -57,11 +55,7 @@ export async function handler(
   }
 }
 
-export function builder(yargs: Argv): Argv<HubdbFetchArgs> {
-  addAccountOptions(yargs);
-  addConfigOptions(yargs);
-  addUseEnvironmentOptions(yargs);
-
+function hubdbFetchBuilder(yargs: Argv): Argv<HubdbFetchArgs> {
   yargs.positional('table-id', {
     describe: i18n(
       'commands.hubdb.subcommands.fetch.positionals.tableId.describe'
@@ -78,3 +72,24 @@ export function builder(yargs: Argv): Argv<HubdbFetchArgs> {
 
   return yargs as Argv<HubdbFetchArgs>;
 }
+
+const builder = makeYargsBuilder<HubdbFetchArgs>(
+  hubdbFetchBuilder,
+  command,
+  describe,
+  {
+    useGlobalOptions: true,
+    useConfigOptions: true,
+    useAccountOptions: true,
+    useEnvironmentOptions: true,
+  }
+);
+
+const hubdbFetchCommand: YargsCommandModule<unknown, HubdbFetchArgs> = {
+  command,
+  describe,
+  handler,
+  builder,
+};
+
+export default hubdbFetchCommand;
