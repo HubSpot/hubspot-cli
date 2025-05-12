@@ -1,5 +1,3 @@
-import { getAccountId } from '@hubspot/local-dev-lib/config';
-
 import SpinniesManager from '../ui/SpinniesManager';
 import { appNamePrompt } from '../prompts/getStartedPrompt';
 import { uiInfoSection } from '../ui';
@@ -8,11 +6,8 @@ import { logger } from '@hubspot/local-dev-lib/logger';
 const { i18n } = require('../lang');
 
 export class GetStarted {
-  accountId: number | null;
-
   constructor() {
     SpinniesManager.init();
-    this.accountId = getAccountId();
   }
 
   welcomePrompt(): void {
