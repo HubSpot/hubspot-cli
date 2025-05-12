@@ -2,6 +2,7 @@ import path from 'path';
 import fs from 'fs';
 import { Argv, ArgumentsCamelCase } from 'yargs';
 import { getAccountId, getConfigAccounts } from '@hubspot/local-dev-lib/config';
+import { HsProfileFile } from '@hubspot/project-parsing-lib/src/lib/types';
 import { getAccountIdentifier } from '@hubspot/local-dev-lib/config/getAccountIdentifier';
 import {
   getAllHsProfiles,
@@ -127,7 +128,7 @@ async function handler(
     }
   }
 
-  const profileFileContent = {
+  const profileFileContent: HsProfileFile = {
     accountId: Number(targetAccount),
     variables: {},
   };
