@@ -96,7 +96,7 @@ export async function handler(
 
   const accountToRemoveId = getAccountId(accountToRemove);
   let defaultAccountId;
-  if (currentDefaultAccount !== null) {
+  if (currentDefaultAccount) {
     defaultAccountId = getAccountId(currentDefaultAccount);
   }
   if (accountToRemoveId === defaultAccountId) {
