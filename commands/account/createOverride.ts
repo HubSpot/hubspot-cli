@@ -3,13 +3,17 @@ import path from 'path';
 import { Argv, ArgumentsCamelCase } from 'yargs';
 import { getCwd } from '@hubspot/local-dev-lib/path';
 import { logger } from '@hubspot/local-dev-lib/logger';
-import { DEFAULT_ACCOUNT_OVERRIDE_FILE_NAME } from '@hubspot/local-dev-lib/constants/config';
+import {
+  DEFAULT_ACCOUNT_OVERRIDE_FILE_NAME,
+  GLOBAL_CONFIG_PATH,
+} from '@hubspot/local-dev-lib/constants/config';
 import {
   getCWDAccountOverride,
   getDefaultAccountOverrideFilePath,
   getConfigPath,
   getAccountId,
 } from '@hubspot/local-dev-lib/config';
+import { getGlobalConfig } from '@hubspot/local-dev-lib/config/migrate';
 
 import { i18n } from '../../lib/lang';
 import { promptUser } from '../../lib/prompts/promptUtils';
@@ -18,6 +22,7 @@ import { trackCommandMetadataUsage } from '../../lib/usageTracking';
 import { selectAccountFromConfig } from '../../lib/prompts/accountsPrompt';
 import { logError } from '../../lib/errorHandlers/index';
 import { CommonArgs } from '../../types/Yargs';
+import { uiCommandReference } from '../../lib/ui';
 
 export const describe = i18n(
   'commands.account.subcommands.createOverride.describe',
@@ -36,6 +41,20 @@ export async function handler(
   args: ArgumentsCamelCase<AccountCreateOverrideArgs>
 ): Promise<void> {
   let overrideDefaultAccount = args.account;
+
+  const globalConfig = getGlobalConfig();
+  if (!globalConfig) {
+    logger.error(
+      i18n(
+        'commands.account.subcommands.createOverride.errors.globalConfigNotFound',
+        {
+          globalConfigPath: GLOBAL_CONFIG_PATH,
+          authCommand: uiCommandReference('hs account auth'),
+        }
+      )
+    );
+    process.exit(EXIT_CODES.ERROR);
+  }
 
   const accountOverride = getCWDAccountOverride();
   const overrideFilePath = getDefaultAccountOverrideFilePath();

@@ -39,6 +39,7 @@ en:
           prompts:
             replaceOverrideFile: "Replace existing account override file?"
           errors:
+            globalConfigNotFound: "A global config file could not be found at {{ globalConfigPath }}, which is required for account overrides. Please run {{ authCommand }} to create one."
             accountNotFound: "The specified account could not be found in the config file {{ configPath }}"
           options:
             account:
@@ -54,6 +55,8 @@ en:
             deleteOverrideFile: "Delete account override file?"
           success: "Removed the default account override file."
           noOverrideFile: "No default account override file found in the current working directory. No action required."
+          errors:
+            globalConfigNotFound: "A global config file could not be found at {{ globalConfigPath }}, which is required for account overrides. Please run {{ authCommand }} to create one."
           options:
             force:
               describe: "Skip confirmation prompt when removing the override file"

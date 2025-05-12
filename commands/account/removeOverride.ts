@@ -6,7 +6,11 @@ import {
   getDefaultAccountOverrideFilePath,
   getAccountId,
 } from '@hubspot/local-dev-lib/config';
-import { DEFAULT_ACCOUNT_OVERRIDE_FILE_NAME } from '@hubspot/local-dev-lib/constants/config';
+import {
+  DEFAULT_ACCOUNT_OVERRIDE_FILE_NAME,
+  GLOBAL_CONFIG_PATH,
+} from '@hubspot/local-dev-lib/constants/config';
+import { getGlobalConfig } from '@hubspot/local-dev-lib/config/migrate';
 
 import { i18n } from '../../lib/lang';
 import { promptUser } from '../../lib/prompts/promptUtils';
@@ -14,6 +18,7 @@ import { trackCommandMetadataUsage } from '../../lib/usageTracking';
 import { EXIT_CODES } from '../../lib/enums/exitCodes';
 import { logError } from '../../lib/errorHandlers/index';
 import { CommonArgs } from '../../types/Yargs';
+import { uiCommandReference } from '../../lib/ui';
 
 export const describe = i18n(
   'commands.account.subcommands.removeOverride.describe',
@@ -30,6 +35,20 @@ export async function handler(
   args: ArgumentsCamelCase<RemoveOverrideArgs>
 ): Promise<void> {
   const { force } = args;
+
+  const globalConfig = getGlobalConfig();
+  if (!globalConfig) {
+    logger.error(
+      i18n(
+        'commands.account.subcommands.createOverride.errors.globalConfigNotFound',
+        {
+          globalConfigPath: GLOBAL_CONFIG_PATH,
+          authCommand: uiCommandReference('hs account auth'),
+        }
+      )
+    );
+    process.exit(EXIT_CODES.ERROR);
+  }
 
   const accountOverride = getCWDAccountOverride();
   const overrideFilePath = getDefaultAccountOverrideFilePath();
