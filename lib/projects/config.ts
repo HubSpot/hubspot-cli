@@ -6,7 +6,6 @@ import { getAbsoluteFilePath, getCwd } from '@hubspot/local-dev-lib/path';
 import { ProjectConfig } from '../../types/Projects';
 import { PROJECT_CONFIG_FILE } from '../constants';
 import { lib } from '../../lang/en';
-import { EXIT_CODES } from '../enums/exitCodes';
 import { uiLogger } from '../ui/logger';
 
 export function writeProjectConfig(
@@ -66,18 +65,18 @@ export async function getProjectConfig(
   }
 }
 
-export function validateProjectConfig(
+export function projectConfigIsValid(
   projectConfig: ProjectConfig | null,
   projectDir: string | null
-): asserts projectConfig is ProjectConfig {
+): projectConfig is ProjectConfig {
   if (!projectConfig || !projectDir) {
     uiLogger.error(lib.projects.validateProjectConfig.configNotFound);
-    return process.exit(EXIT_CODES.ERROR);
+    return false;
   }
 
   if (!projectConfig.name || !projectConfig.srcDir) {
     uiLogger.error(lib.projects.validateProjectConfig.configMissingFields);
-    return process.exit(EXIT_CODES.ERROR);
+    return false;
   }
 
   const resolvedPath = path.resolve(projectDir, projectConfig.srcDir);
@@ -92,7 +91,7 @@ export function validateProjectConfig(
         projectConfig.srcDir
       )
     );
-    return process.exit(EXIT_CODES.ERROR);
+    return false;
   }
 
   if (!fs.existsSync(resolvedPath)) {
@@ -103,6 +102,8 @@ export function validateProjectConfig(
       )
     );
 
-    return process.exit(EXIT_CODES.ERROR);
+    return false;
   }
+
+  return true;
 }

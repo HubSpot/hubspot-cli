@@ -14,7 +14,7 @@ import { PROJECT_ERROR_TYPES } from '../../lib/constants';
 import { trackCommandUsage } from '../../lib/usageTracking';
 import {
   getProjectConfig,
-  validateProjectConfig,
+  projectConfigIsValid,
 } from '../../lib/projects/config';
 import { logFeedbackMessage } from '../../lib/projects/ui';
 import { handleProjectUpload } from '../../lib/projects/upload';
@@ -112,8 +112,6 @@ async function handler(
 
   const { projectConfig, projectDir } = await getProjectConfig();
 
-  validateProjectConfig(projectConfig, projectDir);
-
   if (!projectConfig || !projectDir) {
     logger.error(
       i18n(`commands.project.subcommands.watch.errors.projectConfigNotFound`)
@@ -136,7 +134,9 @@ async function handler(
     return process.exit(EXIT_CODES.ERROR);
   }
 
-  validateProjectConfig(projectConfig, projectDir);
+  if (!projectConfigIsValid(projectConfig, projectDir)) {
+    process.exit(EXIT_CODES.ERROR);
+  }
 
   try {
     const {

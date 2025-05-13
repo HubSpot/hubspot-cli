@@ -1,8 +1,7 @@
 import fs from 'fs';
 import os from 'os';
 import path from 'path';
-import { EXIT_CODES } from '../../enums/exitCodes';
-import { validateProjectConfig } from '../../projects/config';
+import { projectConfigIsValid } from '../../projects/config';
 import { logger } from '@hubspot/local-dev-lib/logger';
 
 jest.mock('@hubspot/local-dev-lib/logger');
@@ -10,28 +9,17 @@ jest.mock('@hubspot/local-dev-lib/logger');
 describe('lib/projects', () => {
   describe('validateProjectConfig()', () => {
     let projectDir: string;
-    let exitMock: jest.SpyInstance;
 
     beforeAll(() => {
       projectDir = fs.mkdtempSync(path.join(os.tmpdir(), 'projects-'));
       fs.mkdirSync(path.join(projectDir, 'src'));
     });
 
-    beforeEach(() => {
-      exitMock = jest
-        .spyOn(process, 'exit')
-        .mockImplementation((): never => undefined as never);
-    });
-
-    afterEach(() => {
-      exitMock.mockRestore();
-    });
-
     it('rejects undefined configuration', () => {
       // @ts-ignore Testing invalid input
-      validateProjectConfig(null, projectDir);
+      const isValid = projectConfigIsValid(null, projectDir);
 
-      expect(exitMock).toHaveBeenCalledWith(EXIT_CODES.ERROR);
+      expect(isValid).toBe(false);
       expect(logger.error).toHaveBeenCalledWith(
         expect.stringMatching(
           /.*Unable to locate a project configuration file. Try running again from a project directory, or run*/
@@ -41,9 +29,9 @@ describe('lib/projects', () => {
 
     it('rejects configuration with missing name', () => {
       // @ts-ignore Testing invalid input
-      validateProjectConfig({ srcDir: '.' }, projectDir);
+      const isValid = projectConfigIsValid({ srcDir: '.' }, projectDir);
 
-      expect(exitMock).toHaveBeenCalledWith(EXIT_CODES.ERROR);
+      expect(isValid).toBe(false);
       expect(logger.error).toHaveBeenCalledWith(
         expect.stringMatching(/.*missing required fields*/)
       );
@@ -51,9 +39,9 @@ describe('lib/projects', () => {
 
     it('rejects configuration with missing srcDir', () => {
       // @ts-ignore Testing invalid input
-      validateProjectConfig({ name: 'hello' }, projectDir);
+      const isValid = projectConfigIsValid({ name: 'hello' }, projectDir);
 
-      expect(exitMock).toHaveBeenCalledWith(EXIT_CODES.ERROR);
+      expect(isValid).toBe(false);
       expect(logger.error).toHaveBeenCalledWith(
         expect.stringMatching(/.*missing required fields.*/)
       );
@@ -61,24 +49,24 @@ describe('lib/projects', () => {
 
     describe('rejects configuration with srcDir outside project directory', () => {
       it('for parent directory', () => {
-        validateProjectConfig(
+        const isValid = projectConfigIsValid(
           { name: 'hello', srcDir: '..', platformVersion: '' },
           projectDir
         );
 
-        expect(exitMock).toHaveBeenCalledWith(EXIT_CODES.ERROR);
+        expect(isValid).toBe(false);
         expect(logger.error).toHaveBeenCalledWith(
           expect.stringContaining('srcDir: ".."')
         );
       });
 
       it('for root directory', () => {
-        validateProjectConfig(
+        const isValid = projectConfigIsValid(
           { name: 'hello', srcDir: '/', platformVersion: '' },
           projectDir
         );
 
-        expect(exitMock).toHaveBeenCalledWith(EXIT_CODES.ERROR);
+        expect(isValid).toBe(false);
         expect(logger.error).toHaveBeenCalledWith(
           expect.stringContaining('srcDir: "/"')
         );
@@ -87,12 +75,12 @@ describe('lib/projects', () => {
       it('for complicated directory', () => {
         const srcDir = './src/././../src/../../src';
 
-        validateProjectConfig(
+        const isValid = projectConfigIsValid(
           { name: 'hello', srcDir, platformVersion: '' },
           projectDir
         );
 
-        expect(exitMock).toHaveBeenCalledWith(EXIT_CODES.ERROR);
+        expect(isValid).toBe(false);
         expect(logger.error).toHaveBeenCalledWith(
           expect.stringContaining(`srcDir: "${srcDir}"`)
         );
@@ -100,12 +88,12 @@ describe('lib/projects', () => {
     });
 
     it('rejects configuration with srcDir that does not exist', () => {
-      validateProjectConfig(
+      const isValid = projectConfigIsValid(
         { name: 'hello', srcDir: 'foo', platformVersion: '' },
         projectDir
       );
 
-      expect(exitMock).toHaveBeenCalledWith(EXIT_CODES.ERROR);
+      expect(isValid).toBe(false);
       expect(logger.error).toHaveBeenCalledWith(
         expect.stringMatching(/.*could not be found in.*/)
       );
@@ -113,32 +101,32 @@ describe('lib/projects', () => {
 
     describe('accepts configuration with valid srcDir', () => {
       it('for current directory', () => {
-        validateProjectConfig(
+        const isValid = projectConfigIsValid(
           { name: 'hello', srcDir: '.', platformVersion: '' },
           projectDir
         );
 
-        expect(exitMock).not.toHaveBeenCalled();
+        expect(isValid).toBe(true);
         expect(logger.error).not.toHaveBeenCalled();
       });
 
       it('for relative directory', () => {
-        validateProjectConfig(
+        const isValid = projectConfigIsValid(
           { name: 'hello', srcDir: './src', platformVersion: '' },
           projectDir
         );
 
-        expect(exitMock).not.toHaveBeenCalled();
+        expect(isValid).toBe(true);
         expect(logger.error).not.toHaveBeenCalled();
       });
 
       it('for implied relative directory', () => {
-        validateProjectConfig(
+        const isValid = projectConfigIsValid(
           { name: 'hello', srcDir: 'src', platformVersion: '' },
           projectDir
         );
 
-        expect(exitMock).not.toHaveBeenCalled();
+        expect(isValid).toBe(true);
         expect(logger.error).not.toHaveBeenCalled();
       });
     });

@@ -8,7 +8,7 @@ import { uiBetaTag, uiCommandReference } from '../../lib/ui';
 import { trackCommandUsage } from '../../lib/usageTracking';
 import {
   getProjectConfig,
-  validateProjectConfig,
+  projectConfigIsValid,
 } from '../../lib/projects/config';
 import { logFeedbackMessage } from '../../lib/projects/ui';
 import { handleProjectUpload } from '../../lib/projects/upload';
@@ -48,7 +48,9 @@ async function handler(
 
   trackCommandUsage('project-upload', { type: accountType! }, derivedAccountId);
 
-  validateProjectConfig(projectConfig, projectDir);
+  if (!projectConfigIsValid(projectConfig, projectDir)) {
+    process.exit(EXIT_CODES.ERROR);
+  }
 
   try {
     const { result, uploadError } =

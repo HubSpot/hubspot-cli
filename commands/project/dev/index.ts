@@ -5,7 +5,7 @@ import { logger } from '@hubspot/local-dev-lib/logger';
 import { getAccountConfig } from '@hubspot/local-dev-lib/config';
 import {
   getProjectConfig,
-  validateProjectConfig,
+  projectConfigIsValid,
 } from '../../../lib/projects/config';
 import { EXIT_CODES } from '../../../lib/enums/exitCodes';
 import { uiBetaTag, uiCommandReference, uiLink } from '../../../lib/ui';
@@ -55,7 +55,9 @@ export async function handler(
     process.exit(EXIT_CODES.ERROR);
   }
 
-  validateProjectConfig(projectConfig, projectDir);
+  if (!projectConfigIsValid(projectConfig, projectDir)) {
+    process.exit(EXIT_CODES.ERROR);
+  }
 
   if (useV3Api(projectConfig.platformVersion)) {
     await unifiedProjectDevFlow(args, accountConfig, projectConfig, projectDir);

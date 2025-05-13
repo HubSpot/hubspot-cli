@@ -10,7 +10,7 @@ import { getTableContents, getTableHeader } from '../../lib/ui/table';
 import { uiBetaTag, uiLink } from '../../lib/ui';
 import {
   getProjectConfig,
-  validateProjectConfig,
+  projectConfigIsValid,
 } from '../../lib/projects/config';
 import { getProjectDetailUrl } from '../../lib/projects/urls';
 import moment from 'moment';
@@ -129,7 +129,9 @@ async function handler(
 
   if (!projectName) {
     const { projectConfig, projectDir } = await getProjectConfig();
-    validateProjectConfig(projectConfig, projectDir);
+    if (!projectConfigIsValid(projectConfig, projectDir)) {
+      process.exit(EXIT_CODES.ERROR);
+    }
     projectName = projectConfig.name;
   }
 
