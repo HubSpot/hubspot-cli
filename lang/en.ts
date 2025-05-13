@@ -19,17 +19,6 @@ type LangObject = {
 
 export const commands = {
   generalErrors: {
-    updateNotify: {
-      notifyTitle: 'Update available',
-      cmsUpdateNotification: (packageName: string, updateCommand: string) =>
-        `${chalk.bold('The CMS CLI is now the HubSpot CLI')}\n\nTo upgrade, uninstall ${chalk.bold(packageName)}\nand then run ${updateCommand}`,
-      cliUpdateNotification: (
-        currentVersion: string,
-        latestVersion: string,
-        updateCommand: string
-      ) =>
-        `HubSpot CLI version ${chalk.cyan(chalk.bold(currentVersion))} is outdated.\nRun ${updateCommand} to upgrade to version ${chalk.cyan(chalk.bold(latestVersion))}`,
-    },
     srcIsProject: (src: string, command: string) =>
       `"${src}" is in a project folder. Did you mean "hs project ${command}"?`,
     handleDeprecatedEnvVariables: {
@@ -2808,6 +2797,24 @@ export const lib = {
         `To develop this project locally, run ${uiCommandReference(
           `hs auth --account=${parentAccountId}`
         )} to authenticate the App Developer Account ${parentAccountId} associated with ${accountIdentifier}.`,
+    },
+  },
+  middleware: {
+    updateNotification: {
+      notifyTitle: 'Update available',
+      cmsUpdateNotification: (packageName: string) =>
+        `${chalk.bold('The CMS CLI is now the HubSpot CLI')}\n\nTo upgrade, uninstall ${chalk.bold(packageName)}\nand then run ${uiCommandReference('{updateCommand}')}`,
+      cliUpdateNotification: `HubSpot CLI version ${chalk.cyan(chalk.bold('{currentVersion}'))} is outdated.\nRun ${uiCommandReference('{updateCommand}')} to upgrade to version ${chalk.cyan(chalk.bold('{latestVersion}'))}`,
+    },
+    autoUpdateCLI: {
+      updateAvailable: (latestVersion: string) =>
+        `New HubSpot CLI version available. Updating to version ${latestVersion}`,
+      updateSucceeded: (latestVersion: string) =>
+        `Successfully updated HubSpot CLI to version ${latestVersion}`,
+      notInstalledGlobally:
+        'Cannot auto-update the HubSpot CLI if NPM is not installed globally',
+      updateFailed: (latestVersion: string) =>
+        `Failed to update HubSpot CLI to version ${latestVersion}`,
     },
   },
   projects: {

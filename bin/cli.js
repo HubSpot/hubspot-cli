@@ -9,17 +9,13 @@ const {
   trackConvertFieldsUsage,
 } = require('../lib/usageTracking');
 const { EXIT_CODES } = require('../lib/enums/exitCodes');
-const SpinniesManager = require('../lib/ui/SpinniesManager');
-const { isGloballyInstalled, executeInstall } = require('../lib/npm');
 const {
   loadConfigMiddleware,
   injectAccountIdMiddleware,
   validateAccountOptions,
   handleDeprecatedEnvVariables,
 } = require('../lib/middleware/configMiddleware');
-const {
-  notifyAboutUpdates,
-} = require('../lib/middleware/notificationsMiddleware');
+const { autoUpdateCLI } = require('../lib/middleware/autoUpdateMiddleware');
 const {
   checkAndWarnGitInclusionMiddleware,
 } = require('../lib/middleware/gitMiddleware');
@@ -56,8 +52,6 @@ const doctorCommand = require('../commands/doctor');
 const completionCommand = require('../commands/completion');
 const appCommand = require('../commands/app');
 
-notifyAboutUpdates();
-
 const getTerminalWidth = () => {
   const width = yargs.terminalWidth();
 
@@ -81,67 +75,16 @@ const handleFailure = (msg, err, yargs) => {
   }
 };
 
-const updateCLIVersion = async () => {
-  logger.debug('Checking for CLI updates', notifier);
-  if (
-    !process.env.SKIP_HUBSPOT_CLI_AUTO_UPDATES &&
-    notifier &&
-    notifier.update
-  ) {
-    // Ignore all update notifications if the current version is a pre-release
-    if (!notifier.update.current.includes('-')) {
-      // This lets us back to default update-notifier behavior
-      let showManualInstallHelp = false;
-
-      // Attempt auto-update if the current version is not the latest version
-      // Never auto-update for major version updates b/c they are breaking
-      if (!['major', 'latest'].includes(updateInfo.type)) {
-        SpinniesManager.init({
-          succeedColor: 'white',
-        });
-        SpinniesManager.add('cliAutoUpdate', {
-          text: `New HubSpot CLI version available. Updating to version ${notifier.update.latest}`,
-        });
-
-        try {
-          if (await isGloballyInstalled()) {
-            await executeInstall(['@hubspot/cli@latest'], '-g');
-
-            SpinniesManager.succeed('cliAutoUpdate', {
-              text: `Successfully updated HubSpot CLI to version ${notifier.update.latest}`,
-            });
-          } else {
-            SpinniesManager.fail('cliAutoUpdate', {
-              text: `Cannot auto-update the HubSpot CLI if NPM is not installed globally`,
-            });
-            showManualInstallHelp = true;
-          }
-        } catch (e) {
-          logger.debug('Error updating CLI', e);
-          SpinniesManager.fail('cliAutoUpdate', {
-            text: `Failed to update HubSpot CLI to version ${notifier.update.latest}`,
-          });
-          showManualInstallHelp = true;
-        }
-      }
-
-      if (showManualInstallHelp) {
-        showUpdateNotification();
-      }
-    }
-  }
-};
-
 const argv = yargs
   .usage('The command line interface to interact with HubSpot.')
   // loadConfigMiddleware loads the new hidden config for all commands
   .middleware([
     setLogLevel,
-    updateCLIVersion,
     setRequestHeaders,
     handleDeprecatedEnvVariables,
     loadConfigMiddleware,
     injectAccountIdMiddleware,
+    autoUpdateCLI,
     checkAndWarnGitInclusionMiddleware,
     validateAccountOptions,
     checkFireAlarms,
