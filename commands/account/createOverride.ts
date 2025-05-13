@@ -3,10 +3,7 @@ import path from 'path';
 import { Argv, ArgumentsCamelCase } from 'yargs';
 import { getCwd } from '@hubspot/local-dev-lib/path';
 import { logger } from '@hubspot/local-dev-lib/logger';
-import {
-  DEFAULT_ACCOUNT_OVERRIDE_FILE_NAME,
-  GLOBAL_CONFIG_PATH,
-} from '@hubspot/local-dev-lib/constants/config';
+import { DEFAULT_ACCOUNT_OVERRIDE_FILE_NAME } from '@hubspot/local-dev-lib/constants/config';
 import {
   getCWDAccountOverride,
   getDefaultAccountOverrideFilePath,
@@ -48,7 +45,6 @@ export async function handler(
       i18n(
         'commands.account.subcommands.createOverride.errors.globalConfigNotFound',
         {
-          globalConfigPath: GLOBAL_CONFIG_PATH,
           authCommand: uiCommandReference('hs account auth'),
         }
       )
