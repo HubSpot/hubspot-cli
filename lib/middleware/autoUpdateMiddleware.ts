@@ -1,7 +1,6 @@
 // Update-notifier is CommonJS, so we need to use require
 const updateNotifier = require('update-notifier');
 
-import chalk from 'chalk';
 import { isConfigFlagEnabled } from '@hubspot/local-dev-lib/config';
 import pkg from '../../package.json';
 import { UI_COLORS } from '../ui';
@@ -38,7 +37,7 @@ function updateNotification(): void {
       title:
         pkg.name === CMS_CLI_PACKAGE_NAME
           ? null
-          : chalk.bold(lib.middleware.updateNotification.notifyTitle),
+          : lib.middleware.updateNotification.notifyTitle,
     },
   });
 }

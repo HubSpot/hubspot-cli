@@ -2790,7 +2790,7 @@ export const lib = {
   },
   middleware: {
     updateNotification: {
-      notifyTitle: 'Update available',
+      notifyTitle: chalk.bold('Update available'),
       cmsUpdateNotification: (packageName: string) =>
         `${chalk.bold('The CMS CLI is now the HubSpot CLI')}\n\nTo upgrade, uninstall ${chalk.bold(packageName)}\nand then run ${uiCommandReference('{updateCommand}')}`,
       cliUpdateNotification: `HubSpot CLI version ${chalk.cyan(chalk.bold('{currentVersion}'))} is outdated.\nRun ${uiCommandReference('{updateCommand}')} to upgrade to version ${chalk.cyan(chalk.bold('{latestVersion}'))}`,
