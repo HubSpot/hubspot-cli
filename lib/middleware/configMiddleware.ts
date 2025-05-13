@@ -80,6 +80,7 @@ export async function loadConfigMiddleware(
     !configFileExists(true) &&
     isTargetedCommand(argv._, {
       account: { target: false, subCommands: { auth: { target: true } } },
+      config: { target: false, subCommands: { migrate: { target: true } } },
     })
   ) {
     return;
