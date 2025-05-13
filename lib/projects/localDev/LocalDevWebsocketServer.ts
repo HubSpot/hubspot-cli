@@ -5,13 +5,13 @@ import {
 } from '@hubspot/local-dev-lib/portManager';
 import { logger } from '@hubspot/local-dev-lib/logger';
 import { LOCAL_DEV_UI_WEBSOCKET_MESSAGE_TYPES } from '../../constants';
-import { LocalDevUIWebsocketMessage } from '../../../types/LocalDev';
+import { LocalDevWebsocketMessage } from '../../../types/LocalDev';
 import LocalDevProcess from './LocalDevProcess';
 import { lib } from '../../../lang/en';
 
 const SERVER_INSTANCE_ID = 'local-dev-ui-websocket-server';
 
-const LOG_PREFIX = '[LocalDevWebsocketServer] ';
+const LOG_PREFIX = '[LocalDevWebsocketServer]';
 
 class LocalDevWebsocketServer {
   private server?: WebSocketServer;
@@ -33,22 +33,22 @@ class LocalDevWebsocketServer {
     return this._websocket;
   }
 
-  private log(...args: string[]) {
+  private log(message: string) {
     if (this.debug) {
-      logger.log(LOG_PREFIX, args);
+      logger.log(LOG_PREFIX, message);
     }
   }
 
-  private logError(...args: unknown[]) {
+  private logError(message: string) {
     if (this.debug) {
-      logger.error(LOG_PREFIX, ...args);
+      logger.error(LOG_PREFIX, message);
     }
   }
 
   private setupMessageHandlers() {
     this.websocket().on('message', data => {
       try {
-        const message: LocalDevUIWebsocketMessage = JSON.parse(data.toString());
+        const message: LocalDevWebsocketMessage = JSON.parse(data.toString());
 
         if (!message.type) {
           this.logError(
@@ -59,7 +59,7 @@ class LocalDevWebsocketServer {
 
         switch (message.type) {
           case LOCAL_DEV_UI_WEBSOCKET_MESSAGE_TYPES.UPLOAD:
-            console.log('run upload');
+            this.localDevProcess.uploadProject();
             break;
           case LOCAL_DEV_UI_WEBSOCKET_MESSAGE_TYPES.INSTALL_DEPS:
             break;

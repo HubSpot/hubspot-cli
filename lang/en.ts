@@ -2769,12 +2769,20 @@ export const lib = {
       invalidJSON: (data: string) =>
         `Unsupported message received. Invalid JSON: ${data}`,
       portManagerNotRunning: (prefix: string) =>
-        `${prefix}Error: PortManagerServing must be running before starting LocalDevUIWebsocketServer.`,
+        `${prefix}Error: PortManagerServing must be running before starting LocalDevWebsocketServer.`,
     },
     logs: {
       startup: (port: number) =>
-        `LocalDevUIWebsocketServer running on port ${port}`,
+        `LocalDevWebsocketServer running on port ${port}`,
     },
+  },
+  LocalDevProcess: {
+    projectConfigMismatch: `Unable to upload project. The project config has been modified since starting ${uiCommandReference('hs project dev')}.`,
+    uploadInitiated: 'Project upload initiated from Local Dev UI.',
+    uploadFailed:
+      'Project upload failed. To proceed with local development, fix any necessary errors, then re-upload your project.',
+    uploadSuccess:
+      'Project upload completed successfully. Resuming local dev...',
   },
   localDevHelpers: {
     confirmDefaultAccountIsTarget: {
