@@ -29,7 +29,7 @@ import {
 } from '../../../lib/accountTypes';
 import { uiCommandReference } from '../../../lib/ui';
 import { i18n } from '../../../lib/lang';
-import LocalDevWebsocketServer from '../../../lib/projects/localDev/LocalDevWebsocketServer';
+// import LocalDevWebsocketServer from '../../../lib/projects/localDev/LocalDevWebsocketServer';
 
 export async function unifiedProjectDevFlow(
   args: ArgumentsCamelCase<ProjectDevArgs>,
@@ -175,15 +175,18 @@ export async function unifiedProjectDevFlow(
   const watcher = new LocalDevWatcher(localDevProcess);
   watcher.start();
 
-  const websocketServer = new LocalDevWebsocketServer(localDevProcess, true);
-  await websocketServer.start();
+  // const websocketServer = new LocalDevWebsocketServer(
+  //   localDevProcess,
+  //   args.debug
+  // );
+  // await websocketServer.start();
 
   handleKeypress(async key => {
     if ((key.ctrl && key.name === 'c') || key.name === 'q') {
       await Promise.all([
         localDevProcess.stop(),
         watcher.stop(),
-        websocketServer.shutdown(),
+        // websocketServer.shutdown(),
       ]);
     }
   });
@@ -191,6 +194,6 @@ export async function unifiedProjectDevFlow(
   handleExit(({ isSIGHUP }) => {
     localDevProcess.stop(!isSIGHUP);
     watcher.stop();
-    websocketServer.shutdown();
+    // websocketServer.shutdown();
   });
 }
