@@ -10,6 +10,8 @@ import { lib } from '../../lang/en';
 import { isGloballyInstalled, executeInstall } from '../npm';
 import { debugError } from '../errorHandlers';
 
+// Default behavior is to check for notifications at most once per day
+// update-notifier stores the last checked date in the user's home directory
 const notifier = updateNotifier({
   pkg: { ...pkg, name: '@hubspot/cli' },
   distTag: 'latest',
