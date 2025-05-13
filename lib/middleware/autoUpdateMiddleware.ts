@@ -49,7 +49,7 @@ export async function autoUpdateCLI() {
     notifier &&
     notifier.update &&
     !process.env.SKIP_HUBSPOT_CLI_AUTO_UPDATES &&
-    isConfigFlagEnabled('autoUpdateEnabled')
+    isConfigFlagEnabled('allowAutoUpdates')
   ) {
     // Ignore all update notifications if the current version is a pre-release
     if (!notifier.update.current.includes('-')) {

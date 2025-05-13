@@ -1,7 +1,7 @@
 import yargs, { Argv } from 'yargs';
-import * as set from '../config/set';
-import * as migrate from '../config/migrate';
-import * as configCommands from '../config';
+import set from '../config/set';
+import migrate from '../config/migrate';
+import configCommands from '../config';
 
 jest.mock('yargs');
 jest.mock('../config/set');

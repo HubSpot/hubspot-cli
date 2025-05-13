@@ -193,7 +193,7 @@ export const commands = {
     subcommands: {
       set: {
         describe:
-          'Set various configuration options within the hubspot.config.yml file.',
+          'Set various configuration options within the hubspot CLI config file.',
         promptMessage: 'Select a config option to update',
         examples: {
           default: 'Opens a prompt to select a config item to modify',
@@ -201,26 +201,15 @@ export const commands = {
         options: {
           defaultMode: {
             describe: 'Set the default CMS publish mode',
-            promptMessage: 'Select CMS publish mode to be used as the default',
-            error: (validModes: string) =>
-              `The provided CMS publish mode is invalid. Valid values are ${validModes}.`,
-            success: (mode: string) => `Default mode updated to: ${mode}`,
           },
           allowUsageTracking: {
             describe: 'Enable or disable usage tracking',
-            promptMessage: 'Choose to enable or disable usage tracking',
-            success: (isEnabled: string) =>
-              `Allow usage tracking set to: "${isEnabled}"`,
-            labels: {
-              enabled: 'Enabled',
-              disabled: 'Disabled',
-            },
           },
           httpTimeout: {
             describe: 'Set the http timeout duration',
-            promptMessage: 'Enter http timeout duration',
-            success: (timeout: string) =>
-              `The http timeout has been set to: ${timeout}`,
+          },
+          allowAutoUpdates: {
+            describe: 'Enable or disable auto updates',
           },
         },
       },
@@ -3019,6 +3008,36 @@ export const lib = {
     serverlessFunctionLogs: {
       unableToProcessLog: (log: string) => `Unable to process log ${log}`,
       noLogsFound: 'No logs found.',
+    },
+  },
+  configOptions: {
+    enableOrDisableBooleanFieldPrompt: {
+      message: (fieldName: string) =>
+        `Choose to enable or disable ${fieldName}`,
+      labels: {
+        enabled: 'Enabled',
+        disabled: 'Disabled',
+      },
+    },
+    setAllowUsageTracking: {
+      fieldName: 'usage tracking',
+      success: (isEnabled: string) =>
+        `Allow usage tracking set to: "${isEnabled}"`,
+    },
+    setAllowAutoUpdates: {
+      fieldName: 'auto updates',
+      success: (isEnabled: string) =>
+        `Allow auto updates set to: "${isEnabled}"`,
+    },
+    setDefaultCmsPublishMode: {
+      promptMessage: 'Select CMS publish mode to be used as the default',
+      error: (validModes: string) =>
+        `The provided CMS publish mode is invalid. Valid values are ${validModes}.`,
+      success: (mode: string) => `Default mode updated to: ${mode}`,
+    },
+    setHttpTimeout: {
+      promptMessage: 'Enter http timeout duration',
+      success: (timeout: string) => `HTTP timeout set to: ${timeout}`,
     },
   },
   commonOpts: {

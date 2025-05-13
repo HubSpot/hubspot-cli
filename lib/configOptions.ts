@@ -1,6 +1,6 @@
-import { logger } from '@hubspot/local-dev-lib/logger';
 import {
   updateAllowUsageTracking,
+  updateAllowAutoUpdates,
   updateDefaultCmsPublishMode,
   updateHttpTimeout,
 } from '@hubspot/local-dev-lib/config';
@@ -9,28 +9,28 @@ import { CMS_PUBLISH_MODE } from '@hubspot/local-dev-lib/constants/files';
 import { commaSeparatedValues } from '@hubspot/local-dev-lib/text';
 import { trackCommandUsage } from './usageTracking';
 import { promptUser } from './prompts/promptUtils';
-import { i18n } from '../lib/lang';
+import { lib } from '../lang/en';
+import { uiLogger } from './ui/logger';
 
-async function enableOrDisableUsageTracking(): Promise<boolean> {
+async function enableOrDisableBooleanFieldPrompt(
+  fieldName: string
+): Promise<boolean> {
   const { isEnabled } = await promptUser<{ isEnabled: boolean }>([
     {
       type: 'list',
       name: 'isEnabled',
       pageSize: 20,
-      message: i18n(
-        `commands.config.subcommands.set.options.allowUsageTracking.promptMessage`
-      ),
+      message:
+        lib.configOptions.enableOrDisableBooleanFieldPrompt.message(fieldName),
       choices: [
         {
-          name: i18n(
-            `commands.config.subcommands.set.options.allowUsageTracking.labels.enabled`
-          ),
+          name: lib.configOptions.enableOrDisableBooleanFieldPrompt.labels
+            .enabled,
           value: true,
         },
         {
-          name: i18n(
-            `commands.config.subcommands.set.options.allowUsageTracking.labels.disabled`
-          ),
+          name: lib.configOptions.enableOrDisableBooleanFieldPrompt.labels
+            .disabled,
           value: false,
         },
       ],
@@ -55,15 +55,41 @@ export async function setAllowUsageTracking({
   if (typeof allowUsageTracking === 'boolean') {
     isEnabled = allowUsageTracking;
   } else {
-    isEnabled = await enableOrDisableUsageTracking();
+    isEnabled = await enableOrDisableBooleanFieldPrompt(
+      lib.configOptions.setAllowUsageTracking.fieldName
+    );
   }
 
   updateAllowUsageTracking(isEnabled);
 
-  logger.success(
-    i18n(`commands.config.subcommands.set.options.allowUsageTracking.success`, {
-      isEnabled: isEnabled.toString(),
-    })
+  uiLogger.success(
+    lib.configOptions.setAllowUsageTracking.success(isEnabled.toString())
+  );
+}
+
+export async function setAllowAutoUpdates({
+  accountId,
+  allowAutoUpdates,
+}: {
+  accountId: number;
+  allowAutoUpdates?: boolean;
+}): Promise<void> {
+  trackCommandUsage('config-set-allow-auto-updates', undefined, accountId);
+
+  let isEnabled: boolean;
+
+  if (typeof allowAutoUpdates === 'boolean') {
+    isEnabled = allowAutoUpdates;
+  } else {
+    isEnabled = await enableOrDisableBooleanFieldPrompt(
+      lib.configOptions.setAllowAutoUpdates.fieldName
+    );
+  }
+
+  updateAllowAutoUpdates(isEnabled);
+
+  uiLogger.success(
+    lib.configOptions.setAllowAutoUpdates.success(isEnabled.toString())
   );
 }
 
@@ -77,9 +103,7 @@ async function selectCmsPublishMode(): Promise<CmsPublishMode> {
       type: 'list',
       name: 'cmsPublishMode',
       pageSize: 20,
-      message: i18n(
-        `commands.config.subcommands.set.options.defaultMode.promptMessage`
-      ),
+      message: lib.configOptions.setDefaultCmsPublishMode.promptMessage,
       choices: ALL_CMS_PUBLISH_MODES,
       default: CMS_PUBLISH_MODE.publish,
     },
@@ -107,20 +131,18 @@ export async function setDefaultCmsPublishMode({
   ) {
     newDefault = defaultCmsPublishMode;
   } else {
-    logger.error(
-      i18n(`commands.config.subcommands.set.options.defaultMode.error`, {
-        validModes: commaSeparatedValues(ALL_CMS_PUBLISH_MODES),
-      })
+    uiLogger.error(
+      lib.configOptions.setDefaultCmsPublishMode.error(
+        commaSeparatedValues(ALL_CMS_PUBLISH_MODES)
+      )
     );
     newDefault = await selectCmsPublishMode();
   }
 
   updateDefaultCmsPublishMode(newDefault);
 
-  logger.success(
-    i18n(`commands.config.subcommands.set.options.defaultMode.success`, {
-      mode: newDefault,
-    })
+  uiLogger.success(
+    lib.configOptions.setDefaultCmsPublishMode.success(newDefault)
   );
 }
 
@@ -128,9 +150,7 @@ async function enterTimeout(): Promise<string> {
   const { timeout } = await promptUser<{ timeout: string }>([
     {
       name: 'timeout',
-      message: i18n(
-        `commands.config.subcommands.set.options.httpTimeout.promptMessage`
-      ),
+      message: lib.configOptions.setHttpTimeout.promptMessage,
       type: 'input',
       default: 30000,
     },
@@ -158,9 +178,5 @@ export async function setHttpTimeout({
 
   updateHttpTimeout(newHttpTimeout);
 
-  logger.success(
-    i18n(`commands.config.subcommands.set.options.httpTimeout.success`, {
-      timeout: newHttpTimeout,
-    })
-  );
+  uiLogger.success(lib.configOptions.setHttpTimeout.success(newHttpTimeout));
 }

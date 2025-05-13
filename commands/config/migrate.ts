@@ -6,24 +6,23 @@ import {
 } from '@hubspot/local-dev-lib/constants/config';
 import { configFileExists } from '@hubspot/local-dev-lib/config/migrate';
 import { logger } from '@hubspot/local-dev-lib/logger';
-
 import { handleMigration, handleMerge } from '../../lib/configMigrate';
-import { addConfigOptions } from '../../lib/commonOpts';
 import { i18n } from '../../lib/lang';
-import { CommonArgs, ConfigArgs } from '../../types/Yargs';
+import { CommonArgs, ConfigArgs, YargsCommandModule } from '../../types/Yargs';
 import { trackCommandMetadataUsage } from '../../lib/usageTracking';
 import { logError } from '../../lib/errorHandlers/index';
 import { EXIT_CODES } from '../../lib/enums/exitCodes';
+import { makeYargsBuilder } from '../../lib/yargsUtils';
 
-export const describe = i18n('commands.config.subcommands.migrate.describe', {
+const describe = i18n('commands.config.subcommands.migrate.describe', {
   deprecatedConfigPath: DEFAULT_HUBSPOT_CONFIG_YAML_FILE_NAME,
   globalConfigPath: GLOBAL_CONFIG_PATH,
 });
-export const command = 'migrate';
+const command = 'migrate';
 
 type ConfigMigrateArgs = CommonArgs & ConfigArgs & { force?: boolean };
 
-export async function handler(
+async function handler(
   args: ArgumentsCamelCase<ConfigMigrateArgs>
 ): Promise<void> {
   const { config: configPath, force, derivedAccountId } = args;
@@ -71,9 +70,7 @@ export async function handler(
   }
 }
 
-export function builder(yargs: Argv): Argv<ConfigMigrateArgs> {
-  addConfigOptions(yargs);
-
+function configMigrateBuilder(yargs: Argv): Argv<ConfigMigrateArgs> {
   yargs
     .option('force', {
       alias: 'f',
@@ -99,3 +96,22 @@ export function builder(yargs: Argv): Argv<ConfigMigrateArgs> {
 
   return yargs as Argv<ConfigMigrateArgs>;
 }
+
+const builder = makeYargsBuilder<ConfigMigrateArgs>(
+  configMigrateBuilder,
+  command,
+  describe,
+  {
+    useGlobalOptions: true,
+    useConfigOptions: true,
+  }
+);
+
+const configMigrateCommand: YargsCommandModule<unknown, ConfigMigrateArgs> = {
+  command,
+  describe,
+  handler,
+  builder,
+};
+
+export default configMigrateCommand;
