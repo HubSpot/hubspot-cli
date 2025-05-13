@@ -34,15 +34,18 @@ export async function handleMigration(
     })
   );
   logger.log('');
-  const { shouldMigrateConfig } = await promptUser({
-    name: 'shouldMigrateConfig',
-    type: 'confirm',
-    message: i18n('lib.configMigrate.migrateConfigPrompt', {
+  logger.log(
+    i18n('lib.configMigrate.migrateConfigPromptDescription', {
       deprecatedConfigPath:
         getConfigPath(configPath, false) ||
         DEFAULT_HUBSPOT_CONFIG_YAML_FILE_NAME,
       globalConfigPath: GLOBAL_CONFIG_PATH,
-    }),
+    })
+  );
+  const { shouldMigrateConfig } = await promptUser({
+    name: 'shouldMigrateConfig',
+    type: 'confirm',
+    message: i18n('lib.configMigrate.migrateConfigPrompt'),
   });
 
   if (!shouldMigrateConfig) {
@@ -124,15 +127,18 @@ export async function handleMerge(
     })
   );
   logger.log('');
-  const { shouldMergeConfigs } = await promptUser({
-    name: 'shouldMergeConfigs',
-    type: 'confirm',
-    message: i18n('lib.configMigrate.mergeConfigsPrompt', {
+  logger.log(
+    i18n('lib.configMigrate.mergeConfigsPromptDescription', {
       deprecatedConfigPath:
         getConfigPath(configPath, false) ||
         DEFAULT_HUBSPOT_CONFIG_YAML_FILE_NAME,
       globalConfigPath: GLOBAL_CONFIG_PATH,
-    }),
+    })
+  );
+  const { shouldMergeConfigs } = await promptUser({
+    name: 'shouldMergeConfigs',
+    type: 'confirm',
+    message: i18n('lib.configMigrate.mergeConfigsPrompt'),
   });
 
   if (!shouldMergeConfigs) {
