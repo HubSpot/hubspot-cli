@@ -1,14 +1,8 @@
 import { Argv, ArgumentsCamelCase } from 'yargs';
 import { logger } from '@hubspot/local-dev-lib/logger';
 import { addSecret, fetchSecrets } from '@hubspot/local-dev-lib/api/secrets';
-
 import { logError, ApiErrorContext } from '../../lib/errorHandlers/index';
 import { trackCommandUsage } from '../../lib/usageTracking';
-import {
-  addConfigOptions,
-  addAccountOptions,
-  addUseEnvironmentOptions,
-} from '../../lib/commonOpts';
 import { uiAccountDescription } from '../../lib/ui';
 import {
   secretValuePrompt,
@@ -22,19 +16,19 @@ import {
   ConfigArgs,
   AccountArgs,
   EnvironmentArgs,
+  YargsCommandModule,
 } from '../../types/Yargs';
+import { makeYargsBuilder } from '../../lib/yargsUtils';
 
-const i18nKey = 'commands.secret.subcommands.add';
+const command = 'add [name]';
+const describe = i18n(`commands.secret.subcommands.add.describe`);
 
-export const command = 'add [name]';
-export const describe = i18n(`${i18nKey}.describe`);
+type AddSecretArgs = CommonArgs &
+  ConfigArgs &
+  AccountArgs &
+  EnvironmentArgs & { name?: string };
 
-type CombinedArgs = ConfigArgs & AccountArgs & EnvironmentArgs;
-type AddSecretArgs = CommonArgs & CombinedArgs & { name?: string };
-
-export async function handler(
-  args: ArgumentsCamelCase<AddSecretArgs>
-): Promise<void> {
+async function handler(args: ArgumentsCamelCase<AddSecretArgs>): Promise<void> {
   const { name, derivedAccountId } = args;
   let secretName = name;
 
@@ -52,7 +46,7 @@ export async function handler(
 
     if (secrets.includes(secretName)) {
       logger.error(
-        i18n(`${i18nKey}.errors.alreadyExists`, {
+        i18n(`commands.secret.subcommands.add.errors.alreadyExists`, {
           secretName,
           command: uiCommandReference('hs secret update'),
         })
@@ -64,14 +58,14 @@ export async function handler(
 
     await addSecret(derivedAccountId, secretName, secretValue);
     logger.success(
-      i18n(`${i18nKey}.success.add`, {
+      i18n(`commands.secret.subcommands.add.success.add`, {
         accountIdentifier: uiAccountDescription(derivedAccountId),
         secretName,
       })
     );
   } catch (err) {
     logger.error(
-      i18n(`${i18nKey}.errors.add`, {
+      i18n(`commands.secret.subcommands.add.errors.add`, {
         secretName: secretName || '',
       })
     );
@@ -85,15 +79,32 @@ export async function handler(
   }
 }
 
-export function builder(yargs: Argv): Argv<AddSecretArgs> {
-  addConfigOptions(yargs);
-  addAccountOptions(yargs);
-  addUseEnvironmentOptions(yargs);
-
+function addSecretBuilder(yargs: Argv): Argv<AddSecretArgs> {
   yargs.positional('name', {
-    describe: i18n(`${i18nKey}.positionals.name.describe`),
+    describe: i18n(`commands.secret.subcommands.add.positionals.name.describe`),
     type: 'string',
   });
 
   return yargs as Argv<AddSecretArgs>;
 }
+
+const builder = makeYargsBuilder<AddSecretArgs>(
+  addSecretBuilder,
+  command,
+  describe,
+  {
+    useGlobalOptions: true,
+    useConfigOptions: true,
+    useAccountOptions: true,
+    useEnvironmentOptions: true,
+  }
+);
+
+const addSecretCommand: YargsCommandModule<unknown, AddSecretArgs> = {
+  command,
+  describe,
+  handler,
+  builder,
+};
+
+export default addSecretCommand;

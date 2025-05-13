@@ -4,7 +4,7 @@ import {
   addConfigOptions,
   addUseEnvironmentOptions,
 } from '../../../lib/commonOpts';
-import * as hubdbDeleteCommand from '../delete';
+import hubdbDeleteCommand from '../delete';
 
 jest.mock('yargs');
 jest.mock('../../../lib/commonOpts');

@@ -3,7 +3,7 @@ import util from 'util';
 import path from 'path';
 import { exec as execAsync } from 'child_process';
 import { walk } from '@hubspot/local-dev-lib/fs';
-import { getProjectConfig } from './projects';
+import { getProjectConfig } from './projects/config';
 import { uiLink } from './ui';
 import { i18n } from './lang';
 import SpinniesManager from './ui/SpinniesManager';
@@ -12,13 +12,10 @@ import {
   executeInstall,
   DEFAULT_PACKAGE_MANAGER,
 } from './npm';
-
-const i18nKey = `commands.project.subcommands.installDeps`;
-
 class NoPackageJsonFilesError extends Error {
   constructor(projectName: string) {
     super(
-      i18n(`${i18nKey}.noPackageJsonInProject`, {
+      i18n(`commands.project.subcommands.installDeps.noPackageJsonInProject`, {
         projectName,
         link: uiLink(
           'Learn how to create a project from scratch.',
@@ -55,32 +52,47 @@ async function installPackagesInDirectory(
   SpinniesManager.add(spinner, {
     text:
       packages && packages.length
-        ? i18n(`${i18nKey}.addingDependenciesToLocation`, {
-            dependencies: `[${packages.join(', ')}]`,
-            directory: relativeDir,
-          })
-        : i18n(`${i18nKey}.installingDependencies`, {
-            directory: relativeDir,
-          }),
+        ? i18n(
+            `commands.project.subcommands.installDeps.addingDependenciesToLocation`,
+            {
+              dependencies: `[${packages.join(', ')}]`,
+              directory: relativeDir,
+            }
+          )
+        : i18n(
+            `commands.project.subcommands.installDeps.installingDependencies`,
+            {
+              directory: relativeDir,
+            }
+          ),
   });
 
   try {
     await executeInstall(packages, null, { cwd: directory });
     SpinniesManager.succeed(spinner, {
-      text: i18n(`${i18nKey}.installationSuccessful`, {
-        directory: relativeDir,
-      }),
+      text: i18n(
+        `commands.project.subcommands.installDeps.installationSuccessful`,
+        {
+          directory: relativeDir,
+        }
+      ),
     });
   } catch (e) {
     SpinniesManager.fail(spinner, {
-      text: i18n(`${i18nKey}.installingDependenciesFailed`, {
-        directory: relativeDir,
-      }),
+      text: i18n(
+        `commands.project.subcommands.installDeps.installingDependenciesFailed`,
+        {
+          directory: relativeDir,
+        }
+      ),
     });
     throw new Error(
-      i18n(`${i18nKey}.installingDependenciesFailed`, {
-        directory: relativeDir,
-      }),
+      i18n(
+        `commands.project.subcommands.installDeps.installingDependenciesFailed`,
+        {
+          directory: relativeDir,
+        }
+      ),
       {
         cause: e,
       }
@@ -96,7 +108,9 @@ export async function getProjectPackageJsonLocations(): Promise<string[]> {
     !projectConfig.projectDir ||
     !projectConfig.projectConfig
   ) {
-    throw new Error(i18n(`${i18nKey}.noProjectConfig`));
+    throw new Error(
+      i18n(`commands.project.subcommands.installDeps.noProjectConfig`)
+    );
   }
 
   const {
@@ -106,13 +120,16 @@ export async function getProjectPackageJsonLocations(): Promise<string[]> {
 
   if (!(await isGloballyInstalled())) {
     throw new Error(
-      i18n(`${i18nKey}.packageManagerNotInstalled`, {
-        packageManager: DEFAULT_PACKAGE_MANAGER,
-        link: uiLink(
-          DEFAULT_PACKAGE_MANAGER,
-          'https://docs.npmjs.com/downloading-and-installing-node-js-and-npm'
-        ),
-      })
+      i18n(
+        `commands.project.subcommands.installDeps.packageManagerNotInstalled`,
+        {
+          packageManager: DEFAULT_PACKAGE_MANAGER,
+          link: uiLink(
+            DEFAULT_PACKAGE_MANAGER,
+            'https://docs.npmjs.com/downloading-and-installing-node-js-and-npm'
+          ),
+        }
+      )
     );
   }
 

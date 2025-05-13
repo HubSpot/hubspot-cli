@@ -1,36 +1,31 @@
 import { Argv, ArgumentsCamelCase } from 'yargs';
 import { logger } from '@hubspot/local-dev-lib/logger';
 import { deleteSecret, fetchSecrets } from '@hubspot/local-dev-lib/api/secrets';
-
 import { secretListPrompt } from '../../lib/prompts/secretPrompt';
 import { confirmPrompt } from '../../lib/prompts/promptUtils';
 import { EXIT_CODES } from '../../lib/enums/exitCodes';
 import { ApiErrorContext, logError } from '../../lib/errorHandlers/index';
 import { trackCommandUsage } from '../../lib/usageTracking';
 import { uiAccountDescription } from '../../lib/ui';
-import {
-  addConfigOptions,
-  addAccountOptions,
-  addUseEnvironmentOptions,
-} from '../../lib/commonOpts';
 import { i18n } from '../../lib/lang';
 import {
   CommonArgs,
   ConfigArgs,
   AccountArgs,
   EnvironmentArgs,
+  YargsCommandModule,
 } from '../../types/Yargs';
+import { makeYargsBuilder } from '../../lib/yargsUtils';
 
-const i18nKey = 'commands.secret.subcommands.delete';
+const command = 'delete [name]';
+const describe = i18n(`commands.secret.subcommands.delete.describe`);
 
-export const command = 'delete [name]';
-export const describe = i18n(`${i18nKey}.describe`);
-
-type CombinedArgs = ConfigArgs & AccountArgs & EnvironmentArgs;
 type DeleteSecretArgs = CommonArgs &
-  CombinedArgs & { name?: string; force?: boolean };
+  ConfigArgs &
+  AccountArgs &
+  EnvironmentArgs & { name?: string; force?: boolean };
 
-export async function handler(
+async function handler(
   args: ArgumentsCamelCase<DeleteSecretArgs>
 ): Promise<void> {
   const { name, derivedAccountId, force } = args;
@@ -44,32 +39,41 @@ export async function handler(
     } = await fetchSecrets(derivedAccountId);
 
     if (secretName && !secrets.includes(secretName)) {
-      logger.error(i18n(`${i18nKey}.errors.noSecret`, { secretName }));
+      logger.error(
+        i18n(`commands.secret.subcommands.delete.errors.noSecret`, {
+          secretName,
+        })
+      );
       process.exit(EXIT_CODES.ERROR);
     }
 
     if (!secretName) {
       const { secretToModify } = await secretListPrompt(
         secrets,
-        i18n(`${i18nKey}.selectSecret`)
+        i18n(`commands.secret.subcommands.delete.selectSecret`)
       );
       secretName = secretToModify;
     }
 
     const confirmDelete =
       force ||
-      (await confirmPrompt(i18n(`${i18nKey}.confirmDelete`, { secretName }), {
-        defaultAnswer: false,
-      }));
+      (await confirmPrompt(
+        i18n(`commands.secret.subcommands.delete.confirmDelete`, {
+          secretName,
+        }),
+        {
+          defaultAnswer: false,
+        }
+      ));
 
     if (!confirmDelete) {
-      logger.success(i18n(`${i18nKey}.deleteCanceled`));
+      logger.success(i18n(`commands.secret.subcommands.delete.deleteCanceled`));
       process.exit(EXIT_CODES.SUCCESS);
     }
 
     await deleteSecret(derivedAccountId, secretName);
     logger.success(
-      i18n(`${i18nKey}.success.delete`, {
+      i18n(`commands.secret.subcommands.delete.success.delete`, {
         accountIdentifier: uiAccountDescription(derivedAccountId),
         secretName,
       })
@@ -77,7 +81,7 @@ export async function handler(
   } catch (err) {
     if (secretName) {
       logger.error(
-        i18n(`${i18nKey}.errors.delete`, {
+        i18n(`commands.secret.subcommands.delete.errors.delete`, {
           secretName,
         })
       );
@@ -92,14 +96,12 @@ export async function handler(
   }
 }
 
-export function builder(yargs: Argv): Argv<DeleteSecretArgs> {
-  addConfigOptions(yargs);
-  addAccountOptions(yargs);
-  addUseEnvironmentOptions(yargs);
-
+function deleteSecretBuilder(yargs: Argv): Argv<DeleteSecretArgs> {
   yargs
     .positional('name', {
-      describe: i18n(`${i18nKey}.positionals.name.describe`),
+      describe: i18n(
+        `commands.secret.subcommands.delete.positionals.name.describe`
+      ),
       type: 'string',
     })
     .options('force', {
@@ -109,3 +111,24 @@ export function builder(yargs: Argv): Argv<DeleteSecretArgs> {
 
   return yargs as Argv<DeleteSecretArgs>;
 }
+
+const builder = makeYargsBuilder<DeleteSecretArgs>(
+  deleteSecretBuilder,
+  command,
+  describe,
+  {
+    useGlobalOptions: true,
+    useConfigOptions: true,
+    useAccountOptions: true,
+    useEnvironmentOptions: true,
+  }
+);
+
+const deleteSecretCommand: YargsCommandModule<unknown, DeleteSecretArgs> = {
+  command,
+  describe,
+  handler,
+  builder,
+};
+
+export default deleteSecretCommand;

@@ -1,59 +1,78 @@
-// @ts-nocheck
-const { i18n } = require('../../lib/lang');
-const { createWatcher } = require('../../lib/projects/watch');
-const { logError, ApiErrorContext } = require('../../lib/errorHandlers/index');
-const { logger } = require('@hubspot/local-dev-lib/logger');
-const { PROJECT_ERROR_TYPES } = require('../../lib/constants');
-const {
-  addAccountOptions,
-  addConfigOptions,
-  addUseEnvironmentOptions,
-} = require('../../lib/commonOpts');
-const { trackCommandUsage } = require('../../lib/usageTracking');
-const { uiBetaTag } = require('../../lib/ui');
-const {
-  ensureProjectExists,
-  getProjectConfig,
-  validateProjectConfig,
-  logFeedbackMessage,
-} = require('../../lib/projects');
-const { handleProjectUpload } = require('../../lib/projects/upload');
-const {
-  pollBuildStatus,
-  pollDeployStatus,
-} = require('../../lib/projects/buildAndDeploy');
-const {
+import { ArgumentsCamelCase, Argv } from 'yargs';
+import {
   cancelStagedBuild,
   fetchProjectBuilds,
-} = require('@hubspot/local-dev-lib/api/projects');
-const { isSpecifiedError } = require('@hubspot/local-dev-lib/errors/index');
-const { EXIT_CODES } = require('../../lib/enums/exitCodes');
-const { handleKeypress, handleExit } = require('../../lib/process');
+} from '@hubspot/local-dev-lib/api/projects';
+import { isSpecifiedError } from '@hubspot/local-dev-lib/errors/index';
+import { useV3Api } from '../../lib/projects/buildAndDeploy';
+import { uiCommandReference, uiLink, uiBetaTag } from '../../lib/ui';
+import { i18n } from '../../lib/lang';
+import { createWatcher } from '../../lib/projects/watch';
+import { logError, ApiErrorContext } from '../../lib/errorHandlers/index';
+import { logger } from '@hubspot/local-dev-lib/logger';
+import { PROJECT_ERROR_TYPES } from '../../lib/constants';
+import { trackCommandUsage } from '../../lib/usageTracking';
+import {
+  getProjectConfig,
+  validateProjectConfig,
+} from '../../lib/projects/config';
+import { logFeedbackMessage } from '../../lib/projects/ui';
+import { handleProjectUpload } from '../../lib/projects/upload';
+import {
+  pollBuildStatus,
+  pollDeployStatus,
+} from '../../lib/projects/buildAndDeploy';
+import { EXIT_CODES } from '../../lib/enums/exitCodes';
+import { handleKeypress, handleExit } from '../../lib/process';
+import {
+  CommonArgs,
+  AccountArgs,
+  ConfigArgs,
+  EnvironmentArgs,
+  YargsCommandModule,
+} from '../../types/Yargs';
+import { makeYargsBuilder } from '../../lib/yargsUtils';
 
-const i18nKey = 'commands.project.subcommands.watch';
+const command = 'watch';
+const describe = uiBetaTag(
+  i18n(`commands.project.subcommands.watch.describe`),
+  false
+);
 
-exports.command = 'watch';
-exports.describe = uiBetaTag(i18n(`${i18nKey}.describe`), false);
+type ProjectWatchArgs = CommonArgs &
+  ConfigArgs &
+  AccountArgs &
+  EnvironmentArgs & {
+    initialUpload?: boolean;
+  };
 
-const handleBuildStatus = async (accountId, projectName, buildId) => {
+async function handleBuildStatus(
+  accountId: number,
+  projectName: string,
+  buildId: number
+): Promise<void> {
   const { isAutoDeployEnabled, deployStatusTaskLocator } =
-    await pollBuildStatus(accountId, projectName, buildId);
+    await pollBuildStatus(accountId, projectName, buildId, null);
 
   if (isAutoDeployEnabled && deployStatusTaskLocator) {
     await pollDeployStatus(
       accountId,
       projectName,
-      deployStatusTaskLocator.id,
+      Number(deployStatusTaskLocator.id),
       buildId
     );
   }
 
   logFeedbackMessage(buildId);
-};
+}
 
-const handleUserInput = (accountId, projectName, currentBuildId) => {
+function handleUserInput(
+  accountId: number,
+  projectName: string,
+  currentBuildId: number
+): void {
   const onTerminate = async () => {
-    logger.log(i18n(`${i18nKey}.logs.processExited`));
+    logger.log(i18n(`commands.project.subcommands.watch.logs.processExited`));
 
     if (currentBuildId) {
       try {
@@ -82,23 +101,47 @@ const handleUserInput = (accountId, projectName, currentBuildId) => {
       onTerminate();
     }
   });
-};
+}
 
-exports.handler = async options => {
-  const { initialUpload, derivedAccountId } = options;
+async function handler(
+  args: ArgumentsCamelCase<ProjectWatchArgs>
+): Promise<void> {
+  const { initialUpload, derivedAccountId } = args;
 
-  trackCommandUsage('project-watch', null, derivedAccountId);
+  trackCommandUsage('project-watch', undefined, derivedAccountId);
 
   const { projectConfig, projectDir } = await getProjectConfig();
 
   validateProjectConfig(projectConfig, projectDir);
 
-  await ensureProjectExists(derivedAccountId, projectConfig.name);
+  if (!projectConfig || !projectDir) {
+    logger.error(
+      i18n(`commands.project.subcommands.watch.errors.projectConfigNotFound`)
+    );
+    return process.exit(EXIT_CODES.ERROR);
+  }
+
+  if (useV3Api(projectConfig.platformVersion)) {
+    logger.error(
+      i18n(`commands.project.subcommands.watch.errors.v3ApiError`, {
+        command: uiCommandReference('hs project watch'),
+        newCommand: uiCommandReference('hs project dev'),
+        platformVersion: projectConfig.platformVersion,
+        linkToDocs: uiLink(
+          'How to develop locally.',
+          'https://developers.hubspot.com/docs/guides/crm/ui-extensions/local-development'
+        ),
+      })
+    );
+    return process.exit(EXIT_CODES.ERROR);
+  }
+
+  validateProjectConfig(projectConfig, projectDir);
 
   try {
     const {
       data: { results: builds },
-    } = await fetchProjectBuilds(derivedAccountId, projectConfig.name, options);
+    } = await fetchProjectBuilds(derivedAccountId, projectConfig.name);
     const hasNoBuilds = !builds || !builds.length;
 
     const startWatching = async () => {
@@ -113,12 +156,13 @@ exports.handler = async options => {
 
     // Upload all files if no build exists for this project yet
     if (initialUpload || hasNoBuilds) {
-      const { uploadError } = await handleProjectUpload(
-        derivedAccountId,
+      const { uploadError } = await handleProjectUpload({
+        accountId: derivedAccountId,
         projectConfig,
         projectDir,
-        startWatching
-      );
+        callbackFunc: startWatching,
+        isUploadCommand: false,
+      });
 
       if (uploadError) {
         if (
@@ -127,7 +171,9 @@ exports.handler = async options => {
           })
         ) {
           logger.log();
-          logger.error(i18n(`${i18nKey}.errors.projectLockedError`));
+          logger.error(
+            i18n(`commands.project.subcommands.watch.errors.projectLockedError`)
+          );
           logger.log();
         } else {
           logError(
@@ -146,20 +192,44 @@ exports.handler = async options => {
   } catch (e) {
     logError(e, new ApiErrorContext({ accountId: derivedAccountId }));
   }
-};
+}
 
-exports.builder = yargs => {
+function projectWatchBuilder(yargs: Argv): Argv<ProjectWatchArgs> {
   yargs.option('initial-upload', {
     alias: 'i',
-    describe: i18n(`${i18nKey}.options.initialUpload.describe`),
+    describe: i18n(
+      `commands.project.subcommands.watch.options.initialUpload.describe`
+    ),
     type: 'boolean',
   });
 
-  yargs.example([['$0 project watch', i18n(`${i18nKey}.examples.default`)]]);
+  yargs.example([
+    [
+      '$0 project watch',
+      i18n(`commands.project.subcommands.watch.examples.default`),
+    ],
+  ]);
 
-  addConfigOptions(yargs);
-  addAccountOptions(yargs);
-  addUseEnvironmentOptions(yargs);
+  return yargs as Argv<ProjectWatchArgs>;
+}
 
-  return yargs;
+const builder = makeYargsBuilder<ProjectWatchArgs>(
+  projectWatchBuilder,
+  command,
+  describe,
+  {
+    useGlobalOptions: true,
+    useAccountOptions: true,
+    useConfigOptions: true,
+    useEnvironmentOptions: true,
+  }
+);
+
+const projectWatchCommand: YargsCommandModule<unknown, ProjectWatchArgs> = {
+  command,
+  describe,
+  handler,
+  builder,
 };
+
+export default projectWatchCommand;

@@ -1,118 +1,87 @@
-// @ts-nocheck
-/**
- * To add a new asset type: See vue-app.js for a simple example
- * 1. Create a new file under the `create` directory with the command name being the name of the file
- * 2. The file _must_ export a `dest` function and an `execute` function.  See below for details
- * Note: No changes should be needed to this file when adding new types, unless you need new functionality
- *
- * @export {(Data) => String} dest - A function returning the destination of the asset we are creating
- * @export {(Data) => Object=} execute - The code called once all other checks pass. This should contain the logic
- *                                       for handling your command.  Optionally return an object containing KV pairs
- *                                       of any context or data you want passed along to usage tracking
- * @export {Boolean=} hidden - If true, the command will not show up in --help
- * @export {(Data) => Boolean=} validate - If provided, return true if it passes validation, false otherwise.
- *                                         If not provided, validation will automatically succeed
- *
- * The Data object contains
- * {
- *   assetType: String - Type of the asset (e.g. api-sample, react-app, template)
- *   name:      String - Filename of the asset
- *   dest:      String - The path specified by the user on where to create the asset
- *   internal:  Boolean - A flag for retrieving the internal spec for the asset type
- *   options:   Object - The options object passed to the command by Yargs
- * }
- */
-
-const fs = require('fs-extra');
-const { logError } = require('../lib/errorHandlers/index');
-const { logger } = require('@hubspot/local-dev-lib/logger');
-const {
-  setLogLevel,
-  addGlobalOptions,
-  addConfigOptions,
-} = require('../lib/commonOpts');
-const { resolveLocalPath } = require('../lib/filesystem');
-const { trackCommandUsage } = require('../lib/usageTracking');
-const assets = require('./create/index');
-const { i18n } = require('../lib/lang');
-
-const i18nKey = 'commands.create';
-
+import fs from 'fs-extra';
+import { logError } from '../lib/errorHandlers/index';
+import { setLogLevel } from '../lib/commonOpts';
+import { resolveLocalPath } from '../lib/filesystem';
+import { trackCommandUsage } from '../lib/usageTracking';
+import assets from './create/index';
+import { commands } from '../lang/en';
+import { uiLogger } from '../lib/ui/logger';
+import { CreateArgs } from '../types/Cms';
+import { ArgumentsCamelCase, Argv } from 'yargs';
+import { makeYargsBuilder } from '../lib/yargsUtils';
+import { YargsCommandModule } from '../types/Yargs';
 const SUPPORTED_ASSET_TYPES = Object.keys(assets)
   .filter(t => !assets[t].hidden)
   .join(', ');
 
-exports.command = 'create <type> [name] [dest]';
-exports.describe = i18n(`${i18nKey}.describe`, {
-  supportedAssetTypes: SUPPORTED_ASSET_TYPES,
-});
+const command = 'create <type> [name] [dest]';
+const describe = commands.create.describe(SUPPORTED_ASSET_TYPES);
 
-exports.handler = async options => {
-  let { type: assetType, dest } = options;
-  const { name, internal: getInternalVersion } = options;
+async function handler(args: ArgumentsCamelCase<CreateArgs>): Promise<void> {
+  const { name, internal: getInternalVersion, type } = args;
+  let { dest } = args;
 
-  setLogLevel(options);
-  assetType = typeof assetType === 'string' && assetType.toLowerCase();
+  setLogLevel(args);
+  const assetType = type.toLowerCase();
 
   if (assetType === 'global-partial') {
-    logger.error(
-      i18n(`${i18nKey}.errors.deprecatedAssetType`, {
+    uiLogger.error(
+      commands.create.errors.deprecatedAssetType(
         assetType,
-        newCommand: 'hs create template',
-        type: 'global partial',
-      })
+        'hs create template',
+        'global partial'
+      )
     );
     return;
   }
 
   if (!assetType || !assets[assetType]) {
-    logger.error(
-      i18n(`${i18nKey}.errors.unsupportedAssetType`, {
+    uiLogger.error(
+      commands.create.errors.unsupportedAssetType(
         assetType,
-        supportedAssetTypes: SUPPORTED_ASSET_TYPES,
-      })
+        SUPPORTED_ASSET_TYPES
+      )
     );
     return;
   }
 
   const asset = assets[assetType];
-  const argsToPass = { assetType, name, dest, getInternalVersion, options };
+  const argsToPass = {
+    commandArgs: args,
+    assetType,
+    name,
+    dest,
+    getInternalVersion: getInternalVersion || false,
+  };
   dest = argsToPass.dest = resolveLocalPath(asset.dest(argsToPass));
 
-  const { derivedAccountId } = options;
+  const { derivedAccountId } = args;
   trackCommandUsage('create', { assetType }, derivedAccountId);
 
   try {
     await fs.ensureDir(dest);
   } catch (e) {
-    logger.error(
-      i18n(`${i18nKey}.errors.unusablePath`, {
-        path: dest,
-      })
-    );
-    logError(e, {
-      filepath: dest,
-      operation: 'write',
-    });
+    uiLogger.error(commands.create.errors.unusablePath(dest));
+    logError(e);
     return;
   }
 
   if (asset.validate && !asset.validate(argsToPass)) return;
 
   await asset.execute(argsToPass);
-};
+}
 
-exports.builder = yargs => {
+function createBuilder(yargs: Argv): Argv<CreateArgs> {
   yargs.positional('type', {
-    describe: i18n(`${i18nKey}.positionals.type.describe`),
+    describe: commands.create.positionals.type.describe,
     type: 'string',
   });
   yargs.positional('name', {
-    describe: i18n(`${i18nKey}.positionals.name.describe`),
+    describe: commands.create.positionals.name.describe,
     type: 'string',
   });
   yargs.positional('dest', {
-    describe: i18n(`${i18nKey}.positionals.dest.describe`),
+    describe: commands.create.positionals.dest.describe,
     type: 'string',
   });
   yargs.option('internal', {
@@ -121,8 +90,20 @@ exports.builder = yargs => {
     hidden: true,
   });
 
-  addConfigOptions(yargs);
-  addGlobalOptions(yargs);
+  return yargs as Argv<CreateArgs>;
+}
 
-  return yargs;
+const builder = makeYargsBuilder<CreateArgs>(createBuilder, command, describe, {
+  useGlobalOptions: true,
+  useConfigOptions: true,
+});
+
+const createCommand: YargsCommandModule<unknown, CreateArgs> = {
+  command,
+  describe,
+  builder,
+  handler,
 };
+
+export default createCommand;
+module.exports = createCommand;

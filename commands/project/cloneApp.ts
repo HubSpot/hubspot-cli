@@ -1,67 +1,75 @@
-// @ts-nocheck
-const path = require('path');
-const fs = require('fs');
-const {
-  addAccountOptions,
-  addConfigOptions,
-  addUseEnvironmentOptions,
-} = require('../../lib/commonOpts');
-const {
+import { ArgumentsCamelCase, Argv } from 'yargs';
+import path from 'path';
+import fs from 'fs';
+import {
   trackCommandUsage,
   trackCommandMetadataUsage,
-} = require('../../lib/usageTracking');
-const { i18n } = require('../../lib/lang');
-const {
-  selectPublicAppPrompt,
-} = require('../../lib/prompts/selectPublicAppPrompt');
-const {
-  createProjectPrompt,
-} = require('../../lib/prompts/createProjectPrompt');
-const { poll } = require('../../lib/polling');
-const {
-  uiBetaTag,
-  uiLine,
-  uiCommandReference,
-  uiAccountDescription,
-} = require('../../lib/ui');
-const SpinniesManager = require('../../lib/ui/SpinniesManager');
-const { logError, ApiErrorContext } = require('../../lib/errorHandlers/index');
-const { EXIT_CODES } = require('../../lib/enums/exitCodes');
-const { isAppDeveloperAccount } = require('../../lib/accountTypes');
-const { writeProjectConfig } = require('../../lib/projects');
-const { PROJECT_CONFIG_FILE } = require('../../lib/constants');
-const {
+} from '../../lib/usageTracking';
+import { i18n } from '../../lib/lang';
+import { selectPublicAppPrompt } from '../../lib/prompts/selectPublicAppPrompt';
+import { createProjectPrompt } from '../../lib/prompts/createProjectPrompt';
+import { poll } from '../../lib/polling';
+import { logError, ApiErrorContext } from '../../lib/errorHandlers';
+import { EXIT_CODES } from '../../lib/enums/exitCodes';
+import {
+  isAppDeveloperAccount,
+  isUnifiedAccount,
+} from '../../lib/accountTypes';
+import { writeProjectConfig } from '../../lib/projects/config';
+import { PROJECT_CONFIG_FILE } from '../../lib/constants';
+import {
   cloneApp,
   checkCloneStatus,
   downloadClonedProject,
-} = require('@hubspot/local-dev-lib/api/projects');
-const { getCwd, sanitizeFileName } = require('@hubspot/local-dev-lib/path');
-const { logger } = require('@hubspot/local-dev-lib/logger');
-const { getAccountConfig } = require('@hubspot/local-dev-lib/config');
-const { extractZipArchive } = require('@hubspot/local-dev-lib/archive');
+} from '@hubspot/local-dev-lib/api/projects';
+import { getCwd, sanitizeFileName } from '@hubspot/local-dev-lib/path';
+import { logger } from '@hubspot/local-dev-lib/logger';
+import { extractZipArchive } from '@hubspot/local-dev-lib/archive';
+import { getAccountConfig } from '@hubspot/local-dev-lib/config';
+import SpinniesManager from '../../lib/ui/SpinniesManager';
+import {
+  AccountArgs,
+  CommonArgs,
+  ConfigArgs,
+  EnvironmentArgs,
+  YargsCommandModule,
+} from '../../types/Yargs';
+import { logInvalidAccountError } from '../../lib/app/migrate';
+import { makeYargsBuilder } from '../../lib/yargsUtils';
+import { uiDeprecatedTag, uiLine, uiAccountDescription } from '../../lib/ui';
 
-const i18nKey = 'commands.project.subcommands.cloneApp';
+const command = 'clone-app';
+const describe = uiDeprecatedTag(
+  i18n(`commands.project.subcommands.cloneApp.describe`),
+  false
+);
+const deprecated = true;
 
-exports.command = 'clone-app';
-exports.describe = uiBetaTag(i18n(`${i18nKey}.describe`), false);
+export type CloneAppArgs = ConfigArgs &
+  EnvironmentArgs &
+  AccountArgs &
+  CommonArgs & {
+    dest: string;
+    appId: number;
+  };
 
-exports.handler = async options => {
-  const { derivedAccountId } = options;
+async function handler(args: ArgumentsCamelCase<CloneAppArgs>): Promise<void> {
+  const { derivedAccountId } = args;
+  await trackCommandUsage('clone-app', {}, derivedAccountId);
+
   const accountConfig = getAccountConfig(derivedAccountId);
   const accountName = uiAccountDescription(derivedAccountId);
 
-  trackCommandUsage('clone-app', {}, derivedAccountId);
-
-  if (!isAppDeveloperAccount(accountConfig)) {
-    uiLine();
-    logger.error(i18n(`${i18nKey}.errors.invalidAccountTypeTitle`));
-    logger.log(
-      i18n(`${i18nKey}.errors.invalidAccountTypeDescription`, {
-        useCommand: uiCommandReference('hs accounts use'),
-        authCommand: uiCommandReference('hs auth'),
-      })
+  if (!accountConfig) {
+    throw new Error(
+      i18n(`commands.projects.subcommands.cloneApp.errors.noAccountConfig`)
     );
-    uiLine();
+  }
+
+  const defaultAccountIsUnified = await isUnifiedAccount(accountConfig);
+
+  if (!isAppDeveloperAccount(accountConfig) && !defaultAccountIsUnified) {
+    logInvalidAccountError();
     process.exit(EXIT_CODES.SUCCESS);
   }
 
@@ -69,17 +77,16 @@ exports.handler = async options => {
   let projectName;
   let projectDest;
   try {
-    appId = options.appId;
+    appId = args.appId;
     if (!appId) {
       const appIdResponse = await selectPublicAppPrompt({
         accountId: derivedAccountId,
         accountName,
-        options,
         isMigratingApp: false,
       });
       appId = appIdResponse.appId;
     }
-    const createProjectPromptResponse = await createProjectPrompt(options);
+    const createProjectPromptResponse = await createProjectPrompt(args);
 
     projectName = createProjectPromptResponse.name;
     projectDest = createProjectPromptResponse.dest;
@@ -90,7 +97,7 @@ exports.handler = async options => {
 
   await trackCommandMetadataUsage(
     'clone-app',
-    { status: 'STARTED' },
+    { step: 'STARTED' },
     derivedAccountId
   );
 
@@ -98,7 +105,9 @@ exports.handler = async options => {
     SpinniesManager.init();
 
     SpinniesManager.add('cloneApp', {
-      text: i18n(`${i18nKey}.cloneStatus.inProgress`),
+      text: i18n(
+        `commands.project.subcommands.cloneApp.cloneStatus.inProgress`
+      ),
     });
 
     const {
@@ -138,34 +147,46 @@ exports.handler = async options => {
       const success = writeProjectConfig(configPath, configContent);
 
       SpinniesManager.succeed('cloneApp', {
-        text: i18n(`${i18nKey}.cloneStatus.done`),
+        text: i18n(`commands.project.subcommands.cloneApp.cloneStatus.done`),
         succeedColor: 'white',
       });
       if (!success) {
         logger.error(
-          i18n(`${i18nKey}.errors.couldNotWriteConfigPath`),
+          i18n(
+            `commands.project.subcommands.cloneApp.errors.couldNotWriteConfigPath`
+          ),
           configPath
         );
       }
       logger.log('');
       uiLine();
-      logger.success(i18n(`${i18nKey}.cloneStatus.success`, { dest }));
+      logger.success(
+        i18n(`commands.project.subcommands.cloneApp.cloneStatus.success`, {
+          dest: projectDest,
+        })
+      );
       logger.log('');
       process.exit(EXIT_CODES.SUCCESS);
     }
   } catch (error) {
     await trackCommandMetadataUsage(
       'clone-app',
-      { status: 'FAILURE' },
+      { successful: false },
       derivedAccountId
     );
 
     SpinniesManager.fail('cloneApp', {
-      text: i18n(`${i18nKey}.cloneStatus.failure`),
+      text: i18n(`commands.project.subcommands.cloneApp.cloneStatus.failure`),
       failColor: 'white',
     });
+
     // Migrations endpoints return a response object with an errors property. The errors property contains an array of errors.
-    if (error.errors && Array.isArray(error.errors)) {
+    if (
+      error &&
+      typeof error === 'object' &&
+      'errors' in error &&
+      Array.isArray(error.errors)
+    ) {
       error.errors.forEach(e =>
         logError(e, new ApiErrorContext({ accountId: derivedAccountId }))
       );
@@ -176,31 +197,56 @@ exports.handler = async options => {
 
   await trackCommandMetadataUsage(
     'clone-app',
-    { status: 'SUCCESS' },
+    { successful: true },
     derivedAccountId
   );
   process.exit(EXIT_CODES.SUCCESS);
-};
+}
 
-exports.builder = yargs => {
+function cloneAppBuilder(yargs: Argv): Argv<CloneAppArgs> {
   yargs.options({
     dest: {
-      describe: i18n(`${i18nKey}.options.dest.describe`),
+      describe: i18n(
+        `commands.project.subcommands.cloneApp.options.dest.describe`
+      ),
       type: 'string',
     },
     'app-id': {
-      describe: i18n(`${i18nKey}.options.appId.describe`),
+      describe: i18n(
+        `commands.project.subcommands.cloneApp.options.appId.describe`
+      ),
       type: 'number',
     },
   });
 
   yargs.example([
-    ['$0 project clone-app', i18n(`${i18nKey}.examples.default`)],
+    [
+      '$0 project clone-app',
+      i18n(`commands.project.subcommands.cloneApp.examples.default`),
+    ],
   ]);
 
-  addConfigOptions(yargs);
-  addAccountOptions(yargs);
-  addUseEnvironmentOptions(yargs);
+  return yargs as Argv<CloneAppArgs>;
+}
 
-  return yargs;
+const builder = makeYargsBuilder<CloneAppArgs>(
+  cloneAppBuilder,
+  command,
+  describe,
+  {
+    useGlobalOptions: true,
+    useAccountOptions: true,
+    useConfigOptions: true,
+    useEnvironmentOptions: true,
+  }
+);
+
+const cloneAppCommand: YargsCommandModule<unknown, CloneAppArgs> = {
+  command,
+  describe,
+  handler,
+  builder,
+  deprecated,
 };
+
+export default cloneAppCommand;

@@ -5,7 +5,7 @@ import {
   addUseEnvironmentOptions,
   addTestingOptions,
 } from '../../../lib/commonOpts';
-import * as sandboxDeleteCommand from '../delete';
+import sandboxDeleteCommand from '../delete';
 
 jest.mock('yargs');
 jest.mock('../../../lib/commonOpts');

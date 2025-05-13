@@ -1,22 +1,18 @@
 import { Argv } from 'yargs';
-import * as createCommand from './schema/create';
-import * as fetchCommand from './schema/fetch';
-import * as fetchAllCommand from './schema/fetch-all';
-import * as deleteCommand from './schema/delete';
-import * as listCommand from './schema/list';
-import * as updateSchema from './schema/update';
+import createCommand from './schema/create';
+import fetchCommand from './schema/fetch';
+import fetchAllCommand from './schema/fetch-all';
+import deleteCommand from './schema/delete';
+import listCommand from './schema/list';
+import updateSchema from './schema/update';
 import { i18n } from '../../lib/lang';
+import { YargsCommandModuleBucket } from '../../types/Yargs';
+import { makeYargsBuilder } from '../../lib/yargsUtils';
 
-const i18nKey = 'commands.customObject.subcommands.schema';
+const command = ['schema', 'schemas'];
+const describe = i18n(`commands.customObject.subcommands.schema.describe`);
 
-export const command = ['schema', 'schemas'];
-export const describe = i18n(`${i18nKey}.describe`);
-
-export function handler(): void {
-  // No specific handler needed for the schema command
-}
-
-export function builder(yargs: Argv): Argv {
+function customObjectSchemaBuilder(yargs: Argv): Argv {
   yargs
     .command(listCommand)
     .command(fetchCommand)
@@ -28,3 +24,14 @@ export function builder(yargs: Argv): Argv {
 
   return yargs;
 }
+
+const builder = makeYargsBuilder(customObjectSchemaBuilder, command, describe);
+
+const customObjectSchemaCommand: YargsCommandModuleBucket = {
+  command,
+  describe,
+  builder,
+  handler: () => {},
+};
+
+export default customObjectSchemaCommand;

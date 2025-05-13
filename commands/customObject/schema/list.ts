@@ -1,11 +1,5 @@
 import { Argv, ArgumentsCamelCase } from 'yargs';
 import { logger } from '@hubspot/local-dev-lib/logger';
-
-import {
-  addConfigOptions,
-  addAccountOptions,
-  addUseEnvironmentOptions,
-} from '../../../lib/commonOpts';
 import { logError } from '../../../lib/errorHandlers/index';
 import { trackCommandUsage } from '../../../lib/usageTracking';
 import { listSchemas } from '../../../lib/schema';
@@ -15,17 +9,19 @@ import {
   ConfigArgs,
   AccountArgs,
   EnvironmentArgs,
+  YargsCommandModule,
 } from '../../../types/Yargs';
+import { makeYargsBuilder } from '../../../lib/yargsUtils';
 
-const i18nKey = 'commands.customObject.subcommands.schema.subcommands.list';
+const command = 'list';
+const describe = i18n(
+  `commands.customObject.subcommands.schema.subcommands.list.describe`
+);
 
-export const command = 'list';
-export const describe = i18n(`${i18nKey}.describe`);
+type SchemaListArgs = CommonArgs & ConfigArgs & AccountArgs & EnvironmentArgs;
 
-type CombinedArgs = CommonArgs & ConfigArgs & AccountArgs & EnvironmentArgs;
-
-export async function handler(
-  args: ArgumentsCamelCase<CombinedArgs>
+async function handler(
+  args: ArgumentsCamelCase<SchemaListArgs>
 ): Promise<void> {
   const { derivedAccountId } = args;
 
@@ -35,14 +31,35 @@ export async function handler(
     await listSchemas(derivedAccountId);
   } catch (e) {
     logError(e);
-    logger.error(i18n(`${i18nKey}.errors.list`));
+    logger.error(
+      i18n(
+        `commands.customObject.subcommands.schema.subcommands.list.errors.list`
+      )
+    );
   }
 }
 
-export function builder(yargs: Argv): Argv<CombinedArgs> {
-  addConfigOptions(yargs);
-  addAccountOptions(yargs);
-  addUseEnvironmentOptions(yargs);
-
-  return yargs as Argv<CombinedArgs>;
+function schemaListBuilder(yargs: Argv): Argv<SchemaListArgs> {
+  return yargs as Argv<SchemaListArgs>;
 }
+
+const builder = makeYargsBuilder<SchemaListArgs>(
+  schemaListBuilder,
+  command,
+  describe,
+  {
+    useGlobalOptions: true,
+    useConfigOptions: true,
+    useAccountOptions: true,
+    useEnvironmentOptions: true,
+  }
+);
+
+const schemaListCommand: YargsCommandModule<unknown, SchemaListArgs> = {
+  command,
+  describe,
+  handler,
+  builder,
+};
+
+export default schemaListCommand;

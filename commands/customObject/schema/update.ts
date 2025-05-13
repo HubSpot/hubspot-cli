@@ -13,12 +13,6 @@ import { listPrompt } from '../../../lib/prompts/promptUtils';
 import { logError } from '../../../lib/errorHandlers/index';
 import { checkAndConvertToJson } from '../../../lib/validation';
 import { trackCommandUsage } from '../../../lib/usageTracking';
-import {
-  addConfigOptions,
-  addAccountOptions,
-  addUseEnvironmentOptions,
-  addTestingOptions,
-} from '../../../lib/commonOpts';
 import { i18n } from '../../../lib/lang';
 import { EXIT_CODES } from '../../../lib/enums/exitCodes';
 import { isSchemaDefinition } from '../../../lib/customObject';
@@ -28,21 +22,22 @@ import {
   AccountArgs,
   EnvironmentArgs,
   TestingArgs,
+  YargsCommandModule,
 } from '../../../types/Yargs';
+import { makeYargsBuilder } from '../../../lib/yargsUtils';
 
-const i18nKey = 'commands.customObject.subcommands.schema.subcommands.update';
+const command = 'update [name]';
+const describe = i18n(
+  `commands.customObject.subcommands.schema.subcommands.update.describe`
+);
 
-export const command = 'update [name]';
-export const describe = i18n(`${i18nKey}.describe`);
-
-type CombinedArgs = CommonArgs &
+type SchemaUpdateArgs = CommonArgs &
   ConfigArgs &
   AccountArgs &
   EnvironmentArgs &
-  TestingArgs;
-type SchemaUpdateArgs = CombinedArgs & { name?: string; path: string };
+  TestingArgs & { name?: string; path: string };
 
-export async function handler(
+async function handler(
   args: ArgumentsCamelCase<SchemaUpdateArgs>
 ): Promise<void> {
   const { path, name: providedName, derivedAccountId } = args;
@@ -52,7 +47,11 @@ export async function handler(
   const filePath = getAbsoluteFilePath(path);
   const schemaJson = checkAndConvertToJson(filePath);
   if (!isSchemaDefinition(schemaJson)) {
-    logger.error(i18n(`${i18nKey}.errors.invalidSchema`));
+    logger.error(
+      i18n(
+        `commands.customObject.subcommands.schema.subcommands.update.errors.invalidSchema`
+      )
+    );
     process.exit(EXIT_CODES.ERROR);
   }
 
@@ -66,9 +65,14 @@ export async function handler(
     name =
       providedName && typeof providedName === 'string'
         ? providedName
-        : await listPrompt(i18n(`${i18nKey}.selectSchema`), {
-            choices: schemaNames,
-          });
+        : await listPrompt<string>(
+            i18n(
+              `commands.customObject.subcommands.schema.subcommands.update.selectSchema`
+            ),
+            {
+              choices: schemaNames,
+            }
+          );
 
     const { data } = await updateObjectSchema(
       derivedAccountId,
@@ -76,38 +80,65 @@ export async function handler(
       schemaJson
     );
     logger.success(
-      i18n(`${i18nKey}.success.viewAtUrl`, {
-        url: `${getHubSpotWebsiteOrigin(
-          getEnv() === 'qa' ? ENVIRONMENTS.QA : ENVIRONMENTS.PROD
-        )}/contacts/${derivedAccountId}/objects/${data.objectTypeId}`,
-      })
+      i18n(
+        `commands.customObject.subcommands.schema.subcommands.update.success.viewAtUrl`,
+        {
+          url: `${getHubSpotWebsiteOrigin(
+            getEnv() === 'qa' ? ENVIRONMENTS.QA : ENVIRONMENTS.PROD
+          )}/contacts/${derivedAccountId}/objects/${data.objectTypeId}`,
+        }
+      )
     );
   } catch (e) {
     logError(e, { accountId: derivedAccountId });
     logger.error(
-      i18n(`${i18nKey}.errors.update`, {
-        definition: path,
-      })
+      i18n(
+        `commands.customObject.subcommands.schema.subcommands.update.errors.update`,
+        {
+          definition: path,
+        }
+      )
     );
   }
 }
 
-export function builder(yargs: Argv): Argv<SchemaUpdateArgs> {
-  addConfigOptions(yargs);
-  addAccountOptions(yargs);
-  addUseEnvironmentOptions(yargs);
-  addTestingOptions(yargs);
-
+function schemaUpdateBuilder(yargs: Argv): Argv<SchemaUpdateArgs> {
   yargs
     .positional('name', {
-      describe: i18n(`${i18nKey}.positionals.name.describe`),
+      describe: i18n(
+        `commands.customObject.subcommands.schema.subcommands.update.positionals.name.describe`
+      ),
       type: 'string',
     })
     .option('path', {
-      describe: i18n(`${i18nKey}.options.path.describe`),
+      describe: i18n(
+        `commands.customObject.subcommands.schema.subcommands.update.options.path.describe`
+      ),
       type: 'string',
       required: true,
     });
 
   return yargs as Argv<SchemaUpdateArgs>;
 }
+
+const builder = makeYargsBuilder<SchemaUpdateArgs>(
+  schemaUpdateBuilder,
+  command,
+  describe,
+  {
+    useGlobalOptions: true,
+    useConfigOptions: true,
+    useAccountOptions: true,
+    useEnvironmentOptions: true,
+    useTestingOptions: true,
+  }
+);
+
+const schemaUpdateCommand: YargsCommandModule<unknown, SchemaUpdateArgs> = {
+  command,
+  describe,
+  handler,
+  builder,
+};
+
+export default schemaUpdateCommand;

@@ -5,7 +5,7 @@ import {
   addUseEnvironmentOptions,
   addTestingOptions,
 } from '../../../lib/commonOpts';
-import * as sandboxCreateCommand from '../create';
+import sandboxCreateCommand from '../create';
 
 jest.mock('yargs');
 jest.mock('../../../lib/commonOpts');

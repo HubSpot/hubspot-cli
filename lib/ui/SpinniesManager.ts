@@ -148,9 +148,9 @@ class SpinniesManager {
     return spinner;
   }
 
-  stopAll(
-    newStatus: typeof VALID_STATUSES[number] = 'stopped'
-  ): { [key: string]: SpinnerState } {
+  stopAll(newStatus: (typeof VALID_STATUSES)[number] = 'stopped'): {
+    [key: string]: SpinnerState;
+  } {
     Object.keys(this.spinners).forEach(name => {
       const { status: currentStatus } = this.spinners[name];
       if (
@@ -185,7 +185,7 @@ class SpinniesManager {
   private setSpinnerProperties(
     name: string,
     options: Partial<SpinnerState>,
-    status?: typeof VALID_STATUSES[number]
+    status?: (typeof VALID_STATUSES)[number]
   ): void {
     if (typeof name !== 'string') {
       throw Error('A spinner reference name must be specified');

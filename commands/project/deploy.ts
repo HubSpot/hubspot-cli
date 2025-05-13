@@ -10,7 +10,7 @@ import { isHubSpotHttpError } from '@hubspot/local-dev-lib/errors/index';
 import { useV3Api } from '../../lib/projects/buildAndDeploy';
 import { trackCommandUsage } from '../../lib/usageTracking';
 import { logError, ApiErrorContext } from '../../lib/errorHandlers/index';
-import { getProjectConfig } from '../../lib/projects';
+import { getProjectConfig } from '../../lib/projects/config';
 import { pollDeployStatus } from '../../lib/projects/buildAndDeploy';
 import { getProjectDetailUrl } from '../../lib/projects/urls';
 import { projectNamePrompt } from '../../lib/prompts/projectNamePrompt';
@@ -24,13 +24,15 @@ import {
   ConfigArgs,
   AccountArgs,
   EnvironmentArgs,
+  YargsCommandModule,
 } from '../../types/Yargs';
 import { makeYargsBuilder } from '../../lib/yargsUtils';
 
-const i18nKey = 'commands.project.subcommands.deploy';
-
-export const command = 'deploy';
-export const describe = uiBetaTag(i18n(`${i18nKey}.describe`), false);
+const command = 'deploy';
+const describe = uiBetaTag(
+  i18n(`commands.project.subcommands.deploy.describe`),
+  false
+);
 
 export type ProjectDeployArgs = CommonArgs &
   ConfigArgs &
@@ -49,28 +51,34 @@ function validateBuildId(
   accountId: number
 ): boolean | string {
   if (Number(buildId) > latestBuildId) {
-    return i18n(`${i18nKey}.errors.buildIdDoesNotExist`, {
-      buildId: buildId,
-      projectName: projectName!,
-      linkToProject: uiLink(
-        i18n(`${i18nKey}.errors.viewProjectsBuilds`),
-        getProjectDetailUrl(projectName!, accountId)!
-      ),
-    });
+    return i18n(
+      `commands.project.subcommands.deploy.errors.buildIdDoesNotExist`,
+      {
+        buildId: buildId,
+        projectName: projectName!,
+        linkToProject: uiLink(
+          i18n(`commands.project.subcommands.deploy.errors.viewProjectsBuilds`),
+          getProjectDetailUrl(projectName!, accountId)!
+        ),
+      }
+    );
   }
   if (Number(buildId) === deployedBuildId) {
-    return i18n(`${i18nKey}.errors.buildAlreadyDeployed`, {
-      buildId: buildId,
-      linkToProject: uiLink(
-        i18n(`${i18nKey}.errors.viewProjectsBuilds`),
-        getProjectDetailUrl(projectName!, accountId)!
-      ),
-    });
+    return i18n(
+      `commands.project.subcommands.deploy.errors.buildAlreadyDeployed`,
+      {
+        buildId: buildId,
+        linkToProject: uiLink(
+          i18n(`commands.project.subcommands.deploy.errors.viewProjectsBuilds`),
+          getProjectDetailUrl(projectName!, accountId)!
+        ),
+      }
+    );
   }
   return true;
 }
 
-export async function handler(
+async function handler(
   args: ArgumentsCamelCase<ProjectDeployArgs>
 ): Promise<void> {
   const { derivedAccountId } = args;
@@ -105,7 +113,7 @@ export async function handler(
     } = await fetchProject(derivedAccountId, projectName);
 
     if (!latestBuild || !latestBuild.buildId) {
-      logger.error(i18n(`${i18nKey}.errors.noBuilds`));
+      logger.error(i18n(`commands.project.subcommands.deploy.errors.noBuilds`));
       return process.exit(EXIT_CODES.ERROR);
     }
 
@@ -124,7 +132,9 @@ export async function handler(
     } else {
       const deployBuildIdPromptResponse = await promptUser({
         name: 'buildId',
-        message: i18n(`${i18nKey}.deployBuildIdPrompt`),
+        message: i18n(
+          `commands.project.subcommands.deploy.deployBuildIdPrompt`
+        ),
         default:
           latestBuild.buildId === deployedBuildId
             ? undefined
@@ -142,7 +152,9 @@ export async function handler(
     }
 
     if (!buildIdToDeploy) {
-      logger.error(i18n(`${i18nKey}.errors.noBuildId`));
+      logger.error(
+        i18n(`commands.project.subcommands.deploy.errors.noBuildId`)
+      );
       return process.exit(EXIT_CODES.ERROR);
     }
 
@@ -154,7 +166,7 @@ export async function handler(
     );
 
     if (!deployResp) {
-      logger.error(i18n(`${i18nKey}.errors.deploy`));
+      logger.error(i18n(`commands.project.subcommands.deploy.errors.deploy`));
       return process.exit(EXIT_CODES.ERROR);
     }
 
@@ -167,7 +179,7 @@ export async function handler(
   } catch (e) {
     if (isHubSpotHttpError(e) && e.status === 404) {
       logger.error(
-        i18n(`${i18nKey}.errors.projectNotFound`, {
+        i18n(`commands.project.subcommands.deploy.errors.projectNotFound`, {
           projectName: chalk.bold(projectName),
           accountIdentifier: uiAccountDescription(derivedAccountId),
           command: uiCommandReference('hs project upload'),
@@ -191,41 +203,51 @@ export async function handler(
 function projectDeployBuilder(yargs: Argv): Argv<ProjectDeployArgs> {
   yargs.options({
     project: {
-      describe: i18n(`${i18nKey}.options.project.describe`),
+      describe: i18n(
+        `commands.project.subcommands.deploy.options.project.describe`
+      ),
       type: 'string',
     },
     build: {
       alias: ['build-id'],
-      describe: i18n(`${i18nKey}.options.build.describe`),
+      describe: i18n(
+        `commands.project.subcommands.deploy.options.build.describe`
+      ),
       type: 'number',
     },
   });
 
   yargs.example([
-    ['$0 project deploy', i18n(`${i18nKey}.examples.default`)],
+    [
+      '$0 project deploy',
+      i18n(`commands.project.subcommands.deploy.examples.default`),
+    ],
     [
       '$0 project deploy --project="my-project" --build=5',
-      i18n(`${i18nKey}.examples.withOptions`),
+      i18n(`commands.project.subcommands.deploy.examples.withOptions`),
     ],
   ]);
 
   return yargs as Argv<ProjectDeployArgs>;
 }
 
-export const builder = makeYargsBuilder<ProjectDeployArgs>(
+const builder = makeYargsBuilder<ProjectDeployArgs>(
   projectDeployBuilder,
   command,
   describe,
   {
+    useGlobalOptions: true,
     useConfigOptions: true,
     useAccountOptions: true,
     useEnvironmentOptions: true,
   }
 );
 
-module.exports = {
+const projectDeployCommand: YargsCommandModule<unknown, ProjectDeployArgs> = {
   command,
   describe,
   builder,
   handler,
 };
+
+export default projectDeployCommand;

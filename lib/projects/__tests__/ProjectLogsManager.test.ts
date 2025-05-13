@@ -1,5 +1,6 @@
 import { ProjectLogsManager } from '../ProjectLogsManager';
-import { getProjectConfig, ensureProjectExists } from '..';
+import { getProjectConfig } from '../config';
+import { ensureProjectExists } from '../ensureProjectExists';
 import { fetchProjectComponentsMetadata } from '@hubspot/local-dev-lib/api/projects';
 
 const SUBCOMPONENT_TYPES = {
@@ -15,7 +16,8 @@ const SUBCOMPONENT_TYPES = {
   REACT_EXTENSION: 'REACT_EXTENSION',
 } as const;
 
-jest.mock('../../projects');
+jest.mock('../../projects/config');
+jest.mock('../../projects/ensureProjectExists');
 jest.mock('@hubspot/local-dev-lib/api/projects');
 
 describe('lib/projects/ProjectLogsManager', () => {

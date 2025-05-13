@@ -1,27 +1,27 @@
-// @ts-nocheck
-const { i18n } = require('../../lib/lang');
-const { trackCommandUsage } = require('../../lib/usageTracking');
-const { promptUser } = require('../../lib/prompts/promptUtils');
-const { EXIT_CODES } = require('../../lib/enums/exitCodes');
-const {
+import { ArgumentsCamelCase, Argv } from 'yargs';
+
+import { i18n } from '../../lib/lang';
+import { trackCommandUsage } from '../../lib/usageTracking';
+import { promptUser } from '../../lib/prompts/promptUtils';
+import { EXIT_CODES } from '../../lib/enums/exitCodes';
+import {
   setDefaultCmsPublishMode,
   setHttpTimeout,
   setAllowUsageTracking,
-} = require('../../lib/configOptions');
-
-const i18nKey = 'commands.config.subcommands.set';
+} from '../../lib/configOptions';
+import { CommonArgs } from '../../types/Yargs';
+import { CmsPublishMode } from '@hubspot/local-dev-lib/types/Files';
 
 exports.command = 'set';
-exports.describe = i18n(`${i18nKey}.describe`);
+exports.describe = i18n(`commands.config.subcommands.set.describe`);
 
-const selectOptions = async () => {
+async function selectOptions(): Promise<ConfigSetArgs> {
   const { cmsPublishMode } = await promptUser([
     {
       type: 'list',
-      look: false,
       name: 'cmsPublishMode',
       pageSize: 20,
-      message: i18n(`${i18nKey}.promptMessage`),
+      message: i18n(`commands.config.subcommands.set.promptMessage`),
       choices: [
         {
           name: 'Default CMS publish mode',
@@ -34,9 +34,12 @@ const selectOptions = async () => {
   ]);
 
   return cmsPublishMode;
-};
+}
 
-const handleConfigUpdate = async (accountId, options) => {
+async function handleConfigUpdate(
+  accountId: number,
+  options: ConfigSetArgs
+): Promise<boolean> {
   const { allowUsageTracking, defaultCmsPublishMode, httpTimeout } = options;
 
   if (typeof defaultCmsPublishMode !== 'undefined') {
@@ -51,14 +54,22 @@ const handleConfigUpdate = async (accountId, options) => {
   }
 
   return false;
+}
+
+type ConfigSetArgs = CommonArgs & {
+  defaultCmsPublishMode: CmsPublishMode;
+  allowUsageTracking?: boolean;
+  httpTimeout?: string;
 };
 
-exports.handler = async options => {
-  const { derivedAccountId } = options;
+export async function handler(
+  args: ArgumentsCamelCase<ConfigSetArgs>
+): Promise<void> {
+  const { derivedAccountId } = args;
 
-  trackCommandUsage('config-set', null, derivedAccountId);
+  trackCommandUsage('config-set', {}, derivedAccountId);
 
-  const configUpdated = await handleConfigUpdate(derivedAccountId, options);
+  const configUpdated = await handleConfigUpdate(derivedAccountId, args);
 
   if (!configUpdated) {
     const selectedOptions = await selectOptions();
@@ -67,28 +78,39 @@ exports.handler = async options => {
   }
 
   process.exit(EXIT_CODES.SUCCESS);
-};
+}
 
-exports.builder = yargs => {
+export function builder(yargs: Argv): Argv<ConfigSetArgs> {
   yargs
     .options({
       'default-cms-publish-mode': {
-        describe: i18n(`${i18nKey}.options.defaultMode.describe`),
+        describe: i18n(
+          `commands.config.subcommands.set.options.defaultMode.describe`
+        ),
         type: 'string',
       },
       'allow-usage-tracking': {
-        describe: i18n(`${i18nKey}.options.allowUsageTracking.describe`),
+        describe: i18n(
+          `commands.config.subcommands.set.options.allowUsageTracking.describe`
+        ),
         type: 'boolean',
       },
       'http-timeout': {
-        describe: i18n(`${i18nKey}.options.httpTimeout.describe`),
+        describe: i18n(
+          `commands.config.subcommands.set.options.httpTimeout.describe`
+        ),
         type: 'string',
       },
     })
     .conflicts('defaultCmsPublishMode', 'allowUsageTracking')
     .conflicts('defaultCmsPublishMode', 'httpTimeout')
     .conflicts('allowUsageTracking', 'httpTimeout')
-    .example([['$0 config set', i18n(`${i18nKey}.examples.default`)]]);
+    .example([
+      [
+        '$0 config set',
+        i18n(`commands.config.subcommands.set.examples.default`),
+      ],
+    ]);
 
-  return yargs;
-};
+  return yargs as Argv<ConfigSetArgs>;
+}

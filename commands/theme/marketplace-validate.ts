@@ -22,10 +22,10 @@ import {
   EnvironmentArgs,
 } from '../../types/Yargs';
 
-const i18nKey = 'commands.theme.subcommands.marketplaceValidate';
-
 export const command = 'marketplace-validate <path>';
-export const describe = i18n(`${i18nKey}.describe`);
+export const describe = i18n(
+  'commands.theme.subcommands.marketplaceValidate.describe'
+);
 
 type CombinedArgs = CommonArgs & ConfigArgs & AccountArgs & EnvironmentArgs;
 type ThemeValidateArgs = CombinedArgs & { path: string };
@@ -40,9 +40,12 @@ export async function handler(
   SpinniesManager.init();
 
   SpinniesManager.add('marketplaceValidation', {
-    text: i18n(`${i18nKey}.logs.validatingTheme`, {
-      path,
-    }),
+    text: i18n(
+      'commands.theme.subcommands.marketplaceValidate.logs.validatingTheme',
+      {
+        path,
+      }
+    ),
   });
 
   const assetType = 'THEME';
@@ -59,8 +62,14 @@ export async function handler(
     derivedAccountId,
     validationId
   );
-  processValidationErrors(i18nKey, validationResults);
-  displayValidationResults(i18nKey, validationResults);
+  processValidationErrors(
+    'commands.theme.subcommands.marketplaceValidate',
+    validationResults
+  );
+  displayValidationResults(
+    'commands.theme.subcommands.marketplaceValidate',
+    validationResults
+  );
 
   process.exit();
 }
@@ -71,7 +80,9 @@ export function builder(yargs: Argv): Argv<ThemeValidateArgs> {
   addUseEnvironmentOptions(yargs);
 
   yargs.positional('path', {
-    describe: i18n(`${i18nKey}.positionals.path.describe`),
+    describe: i18n(
+      'commands.theme.subcommands.marketplaceValidate.positionals.path.describe'
+    ),
     type: 'string',
     required: true,
   });

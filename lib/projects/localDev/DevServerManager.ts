@@ -1,7 +1,6 @@
-import { logger } from '@hubspot/local-dev-lib/logger';
 import { Environment } from '@hubspot/local-dev-lib/types/Config';
-import { i18n } from './lang';
-import { promptUser } from './prompts/promptUtils';
+import { logger } from '@hubspot/local-dev-lib/logger';
+import { promptUser } from '../../prompts/promptUtils';
 import { DevModeInterface as UIEDevModeInterface } from '@hubspot/ui-extensions-dev-server';
 import {
   startPortManagerServer,
@@ -13,9 +12,13 @@ import {
   getHubSpotWebsiteOrigin,
 } from '@hubspot/local-dev-lib/urls';
 import { getAccountConfig } from '@hubspot/local-dev-lib/config';
-import { ProjectConfig, ComponentTypes, Component } from '../types/Projects';
-
-const i18nKey = 'lib.DevServerManager';
+import {
+  ProjectConfig,
+  ComponentTypes,
+  Component,
+} from '../../../types/Projects';
+import { lib } from '../../../lang/en';
+import { uiLogger } from '../../ui/logger';
 
 const SERVER_KEYS = {
   privateApp: 'privateApp',
@@ -83,7 +86,7 @@ class DevServerManager {
       if (Object.keys(compatibleComponents).length) {
         await callback(devServer.serverInterface, compatibleComponents);
       } else {
-        logger.debug(i18n(`${i18nKey}.noCompatibleComponents`, { serverKey }));
+        uiLogger.debug(lib.DevServerManager.noCompatibleComponents(serverKey));
       }
     }
   }
@@ -159,7 +162,7 @@ class DevServerManager {
         }
       });
     } else {
-      throw new Error(i18n(`${i18nKey}.notInitialized`));
+      throw new Error(lib.DevServerManager.notInitialized);
     }
 
     this.started = true;

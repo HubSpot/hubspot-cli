@@ -3,6 +3,7 @@ import { bold, green, red } from 'chalk';
 import { helpers } from '../interpolation';
 import { DiagnosticInfo } from './DiagnosticInfoBuilder';
 import { uiAccountDescription } from '../ui';
+import { indent } from '../ui/index';
 const { i18n } = require('../lang');
 
 interface DiagnosisOptions {
@@ -30,14 +31,12 @@ interface DiagnosisCategories {
   cli: DiagnosisCategory;
   project: DiagnosisCategory;
   cliConfig: DiagnosisCategory;
+  defaultAccountOverrideFile: DiagnosisCategory;
 }
-
-const i18nKey = `lib.doctor.diagnosis`;
 
 export class Diagnosis {
   private readonly prefixes: prefixes;
   private readonly diagnosis: DiagnosisCategories;
-  private readonly indentation = '  ';
   private errorCount = 0;
   private warningCount = 0;
 
@@ -52,20 +51,24 @@ export class Diagnosis {
 
     this.diagnosis = {
       cli: {
-        header: i18n(`${i18nKey}.cli.header`),
+        header: i18n(`lib.doctor.diagnosis.cli.header`),
         sections: [],
       },
       cliConfig: {
-        header: i18n(`${i18nKey}.cliConfig.header`),
+        header: i18n(`lib.doctor.diagnosis.cliConfig.header`),
+        sections: [],
+      },
+      defaultAccountOverrideFile: {
+        header: i18n(`lib.doctor.diagnosis.defaultAccountOverrideFile.header`),
         sections: [],
       },
       project: {
-        header: i18n(`${i18nKey}.projectConfig.header`),
+        header: i18n(`lib.doctor.diagnosis.projectConfig.header`),
         subheaders: [
-          i18n(`${i18nKey}.projectConfig.projectDirSubHeader`, {
+          i18n(`lib.doctor.diagnosis.projectConfig.projectDirSubHeader`, {
             projectDir: diagnosticInfo.project?.config?.projectDir,
           }),
-          i18n(`${i18nKey}.projectConfig.projectNameSubHeader`, {
+          i18n(`lib.doctor.diagnosis.projectConfig.projectNameSubHeader`, {
             projectName: diagnosticInfo.project?.config?.projectConfig?.name,
           }),
         ],
@@ -75,18 +78,14 @@ export class Diagnosis {
 
     if (diagnosticInfo.config) {
       this.diagnosis.cliConfig.subheaders = [
-        i18n(`${i18nKey}.cliConfig.configFileSubHeader`, {
+        i18n(`lib.doctor.diagnosis.cliConfig.configFileSubHeader`, {
           filename: diagnosticInfo.config,
         }),
-        i18n(`${i18nKey}.cliConfig.defaultAccountSubHeader`, {
+        i18n(`lib.doctor.diagnosis.cliConfig.defaultAccountSubHeader`, {
           accountDetails: uiAccountDescription(accountId!),
         }),
       ];
     }
-  }
-
-  private indent(level: number): string {
-    return this.indentation.repeat(level);
   }
 
   getErrorCount(): number {
@@ -109,6 +108,10 @@ export class Diagnosis {
     this.diagnosis.cliConfig.sections.push(section);
   }
 
+  addDefaultAccountOverrideFileSection(section: Section): void {
+    this.diagnosis.defaultAccountOverrideFile.sections.push(section);
+  }
+
   toString(): string {
     const output = [];
     for (const value of Object.values(this.diagnosis)) {
@@ -124,12 +127,12 @@ export class Diagnosis {
 
     output.push('');
     output.push(
-      i18n(`${i18nKey}.counts.errors`, {
+      i18n(`lib.doctor.diagnosis.counts.errors`, {
         count: this.errorCount,
       })
     );
     output.push(
-      i18n(`${i18nKey}.counts.warnings`, {
+      i18n(`lib.doctor.diagnosis.counts.warnings`, {
         count: this.warningCount,
       })
     );
@@ -159,10 +162,10 @@ export class Diagnosis {
       }
 
       output.push(
-        `${this.indent(1)}${this.prefixes[section.type]} ${section.message}`
+        `${indent(1)}${this.prefixes[section.type]} ${section.message}`
       );
       if (section.secondaryMessaging) {
-        output.push(`${this.indent(2)}- ${section.secondaryMessaging}`);
+        output.push(`${indent(2)}- ${section.secondaryMessaging}`);
       }
     });
 

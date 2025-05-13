@@ -84,3 +84,8 @@ export const APP_AUTH_TYPES = {
   OAUTH: 'oauth',
   STATIC: 'static',
 } as const;
+
+export const FEATURES = {
+  UNIFIED_THEME_PREVIEW: 'cms:react:unifiedThemePreview',
+  UNIFIED_APPS: 'Developers:UnifiedApps:PrivateBeta',
+} as const;

@@ -4,7 +4,7 @@ import {
   addConfigOptions,
   addUseEnvironmentOptions,
 } from '../../../lib/commonOpts';
-import * as hubdbFetchCommand from '../fetch';
+import hubdbFetchCommand from '../fetch';
 
 jest.mock('yargs');
 jest.mock('../../../lib/commonOpts');

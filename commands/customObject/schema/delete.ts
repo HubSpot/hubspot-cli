@@ -3,7 +3,6 @@ import {
   fetchObjectSchemas,
   deleteObjectSchema,
 } from '@hubspot/local-dev-lib/api/customObjects';
-
 import { EXIT_CODES } from '../../../lib/enums/exitCodes';
 import { confirmPrompt, listPrompt } from '../../../lib/prompts/promptUtils';
 import { logger } from '@hubspot/local-dev-lib/logger';
@@ -11,26 +10,25 @@ import { trackCommandUsage } from '../../../lib/usageTracking';
 import { i18n } from '../../../lib/lang';
 import { logError } from '../../../lib/errorHandlers';
 import {
-  addConfigOptions,
-  addAccountOptions,
-  addUseEnvironmentOptions,
-} from '../../../lib/commonOpts';
-import {
   CommonArgs,
   ConfigArgs,
   AccountArgs,
   EnvironmentArgs,
+  YargsCommandModule,
 } from '../../../types/Yargs';
+import { makeYargsBuilder } from '../../../lib/yargsUtils';
 
-const i18nKey = 'commands.customObject.subcommands.schema.subcommands.delete';
+const command = 'delete [name]';
+const describe = i18n(
+  `commands.customObject.subcommands.schema.subcommands.delete.describe`
+);
 
-export const command = 'delete [name]';
-export const describe = i18n(`${i18nKey}.describe`);
+type SchemaDeleteArgs = CommonArgs &
+  ConfigArgs &
+  AccountArgs &
+  EnvironmentArgs & { name?: string; force?: boolean };
 
-type CombinedArgs = CommonArgs & ConfigArgs & AccountArgs & EnvironmentArgs;
-type SchemaDeleteArgs = CombinedArgs & { name?: string; force?: boolean };
-
-export async function handler(
+async function handler(
   args: ArgumentsCamelCase<SchemaDeleteArgs>
 ): Promise<void> {
   const { name: providedName, force, derivedAccountId } = args;
@@ -46,52 +44,99 @@ export async function handler(
     name =
       providedName && typeof providedName === 'string'
         ? providedName
-        : await listPrompt(i18n(`${i18nKey}.selectSchema`), {
-            choices: schemaNames,
-          });
+        : await listPrompt(
+            i18n(
+              `commands.customObject.subcommands.schema.subcommands.delete.selectSchema`
+            ),
+            {
+              choices: schemaNames,
+            }
+          );
 
     const shouldDelete =
       force ||
-      (await confirmPrompt(i18n(`${i18nKey}.confirmDelete`, { name })));
+      (await confirmPrompt(
+        i18n(
+          `commands.customObject.subcommands.schema.subcommands.delete.confirmDelete`,
+          { name }
+        )
+      ));
 
     if (!shouldDelete) {
-      logger.info(i18n(`${i18nKey}.deleteCancelled`, { name }));
+      logger.info(
+        i18n(
+          `commands.customObject.subcommands.schema.subcommands.delete.deleteCancelled`,
+          { name }
+        )
+      );
       return process.exit(EXIT_CODES.SUCCESS);
     }
 
     await deleteObjectSchema(derivedAccountId, name);
     logger.success(
-      i18n(`${i18nKey}.success.delete`, {
-        name,
-      })
+      i18n(
+        `commands.customObject.subcommands.schema.subcommands.delete.success.delete`,
+        {
+          name,
+        }
+      )
     );
   } catch (e) {
     logError(e);
     logger.error(
-      i18n(`${i18nKey}.errors.delete`, {
-        name: name || '',
-      })
+      i18n(
+        `commands.customObject.subcommands.schema.subcommands.delete.errors.delete`,
+        {
+          name: name || '',
+        }
+      )
     );
   }
 }
 
-export function builder(yargs: Argv): Argv<SchemaDeleteArgs> {
-  addConfigOptions(yargs);
-  addAccountOptions(yargs);
-  addUseEnvironmentOptions(yargs);
-
+function schemaDeleteBuilder(yargs: Argv): Argv<SchemaDeleteArgs> {
   yargs
     .example([
-      ['$0 schema delete schemaName', i18n(`${i18nKey}.examples.default`)],
+      [
+        '$0 schema delete schemaName',
+        i18n(
+          `commands.customObject.subcommands.schema.subcommands.delete.examples.default`
+        ),
+      ],
     ])
     .positional('name', {
-      describe: i18n(`${i18nKey}.positionals.name.describe`),
+      describe: i18n(
+        `commands.customObject.subcommands.schema.subcommands.delete.positionals.name.describe`
+      ),
       type: 'string',
     })
     .option('force', {
-      describe: i18n(`${i18nKey}.options.force.describe`),
+      describe: i18n(
+        `commands.customObject.subcommands.schema.subcommands.delete.options.force.describe`
+      ),
       type: 'boolean',
     });
 
   return yargs as Argv<SchemaDeleteArgs>;
 }
+
+const builder = makeYargsBuilder<SchemaDeleteArgs>(
+  schemaDeleteBuilder,
+  command,
+  describe,
+  {
+    useGlobalOptions: true,
+    useConfigOptions: true,
+    useAccountOptions: true,
+    useEnvironmentOptions: true,
+  }
+);
+
+const schemaDeleteCommand: YargsCommandModule<unknown, SchemaDeleteArgs> = {
+  command,
+  describe,
+  handler,
+  builder,
+};
+
+export default schemaDeleteCommand;

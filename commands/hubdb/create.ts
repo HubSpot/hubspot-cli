@@ -7,11 +7,6 @@ import { createHubDbTable } from '@hubspot/local-dev-lib/hubdb';
 import { promptUser } from '../../lib/prompts/promptUtils';
 import { checkAndConvertToJson } from '../../lib/validation';
 import { trackCommandUsage } from '../../lib/usageTracking';
-import {
-  addConfigOptions,
-  addAccountOptions,
-  addUseEnvironmentOptions,
-} from '../../lib/commonOpts';
 import { i18n } from '../../lib/lang';
 import { EXIT_CODES } from '../../lib/enums/exitCodes';
 import {
@@ -19,28 +14,32 @@ import {
   ConfigArgs,
   AccountArgs,
   EnvironmentArgs,
+  YargsCommandModule,
 } from '../../types/Yargs';
+import { makeYargsBuilder } from '../../lib/yargsUtils';
 
-const i18nKey = 'commands.hubdb.subcommands.create';
+const command = 'create';
+const describe = i18n(`commands.hubdb.subcommands.create.describe`);
 
-export const command = 'create';
-export const describe = i18n(`${i18nKey}.describe`);
-
-type CombinedArgs = ConfigArgs & AccountArgs & EnvironmentArgs;
-type HubdbCreateArgs = CommonArgs & CombinedArgs & { path?: string };
+type HubdbCreateArgs = CommonArgs &
+  ConfigArgs &
+  AccountArgs &
+  EnvironmentArgs & { path?: string };
 
 function selectPathPrompt(options: HubdbCreateArgs): Promise<{ path: string }> {
   return promptUser([
     {
       name: 'path',
-      message: i18n(`${i18nKey}.enterPath`),
+      message: i18n(`commands.hubdb.subcommands.create.enterPath`),
       when: !options.path,
       validate: (input: string) => {
         if (!input) {
-          return i18n(`${i18nKey}.errors.pathRequired`);
+          return i18n(`commands.hubdb.subcommands.create.errors.pathRequired`);
         }
         if (!isValidPath(input)) {
-          return i18n(`${i18nKey}.errors.invalidCharacters`);
+          return i18n(
+            `commands.hubdb.subcommands.create.errors.invalidCharacters`
+          );
         }
         return true;
       },
@@ -51,7 +50,7 @@ function selectPathPrompt(options: HubdbCreateArgs): Promise<{ path: string }> {
   ]);
 }
 
-export async function handler(
+async function handler(
   args: ArgumentsCamelCase<HubdbCreateArgs>
 ): Promise<void> {
   const { derivedAccountId } = args;
@@ -73,7 +72,7 @@ export async function handler(
       path.resolve(getCwd(), filePath)
     );
     logger.success(
-      i18n(`${i18nKey}.success.create`, {
+      i18n(`commands.hubdb.subcommands.create.success.create`, {
         accountId: derivedAccountId,
         rowCount: table.rowCount,
         tableId: table.tableId,
@@ -81,7 +80,7 @@ export async function handler(
     );
   } catch (e) {
     logger.error(
-      i18n(`${i18nKey}.errors.create`, {
+      i18n(`commands.hubdb.subcommands.create.errors.create`, {
         filePath: filePath || '',
       })
     );
@@ -89,15 +88,32 @@ export async function handler(
   }
 }
 
-export function builder(yargs: Argv): Argv<HubdbCreateArgs> {
-  addAccountOptions(yargs);
-  addConfigOptions(yargs);
-  addUseEnvironmentOptions(yargs);
-
+function hubdbCreateBuilder(yargs: Argv): Argv<HubdbCreateArgs> {
   yargs.options('path', {
-    describe: i18n(`${i18nKey}.options.path.describe`),
+    describe: i18n(`commands.hubdb.subcommands.create.options.path.describe`),
     type: 'string',
   });
 
   return yargs as Argv<HubdbCreateArgs>;
 }
+
+const builder = makeYargsBuilder<HubdbCreateArgs>(
+  hubdbCreateBuilder,
+  command,
+  describe,
+  {
+    useGlobalOptions: true,
+    useConfigOptions: true,
+    useAccountOptions: true,
+    useEnvironmentOptions: true,
+  }
+);
+
+const hubdbCreateCommand: YargsCommandModule<unknown, HubdbCreateArgs> = {
+  command,
+  describe,
+  handler,
+  builder,
+};
+
+export default hubdbCreateCommand;

@@ -1,29 +1,27 @@
-// @ts-nocheck
-const { addGlobalOptions } = require('../lib/commonOpts');
-const { i18n } = require('../lib/lang');
-const { uiBetaTag } = require('../lib/ui');
-const deploy = require('./project/deploy');
-const create = require('./project/create');
-const upload = require('./project/upload');
-const listBuilds = require('./project/listBuilds');
-const logs = require('./project/logs');
-const watch = require('./project/watch');
-const download = require('./project/download');
-const open = require('./project/open');
-const dev = require('./project/dev');
-const add = require('./project/add');
-const migrateApp = require('./project/migrateApp');
-const cloneApp = require('./project/cloneApp');
-const installDeps = require('./project/installDeps');
+import { Argv } from 'yargs';
+import { i18n } from '../lib/lang';
+import { uiBetaTag } from '../lib/ui';
+import deploy from './project/deploy';
+import create from './project/create';
+import upload from './project/upload';
+import listBuilds from './project/listBuilds';
+import logs from './project/logs';
+import watch from './project/watch';
+import download from './project/download';
+import open from './project/open';
+import dev from './project/dev';
+import add from './project/add';
+import migrate from './project/migrate';
+import migrateApp from './project/migrateApp';
+import cloneApp from './project/cloneApp';
+import installDeps from './project/installDeps';
+import { makeYargsBuilder } from '../lib/yargsUtils';
+import { YargsCommandModuleBucket } from '../types/Yargs';
 
-const i18nKey = 'commands.project';
+const command = ['project', 'projects'];
+const describe = uiBetaTag(i18n(`commands.project.describe`), false);
 
-exports.command = ['project', 'projects'];
-exports.describe = uiBetaTag(i18n(`${i18nKey}.describe`), false);
-
-exports.builder = yargs => {
-  addGlobalOptions(yargs);
-
+function projectBuilder(yargs: Argv): Argv {
   yargs
     .command(create)
     .command(add)
@@ -36,9 +34,24 @@ exports.builder = yargs => {
     .command(download)
     .command(open)
     .command(migrateApp)
+    .command(migrate)
     .command(cloneApp)
     .command(installDeps)
     .demandCommand(1, '');
 
   return yargs;
+}
+
+const builder = makeYargsBuilder(projectBuilder, command, describe);
+
+const projectCommand: YargsCommandModuleBucket = {
+  command,
+  describe,
+  builder,
+  handler: () => {},
 };
+
+export default projectCommand;
+
+// TODO Remove this legacy export once we've migrated all commands to TS
+module.exports = projectCommand;

@@ -1,83 +1,93 @@
-// @ts-nocheck
-const fs = require('fs');
-const path = require('path');
-const {
+import { Argv, ArgumentsCamelCase } from 'yargs';
+import fs from 'fs';
+import path from 'path';
+import {
   uploadFolder,
   hasUploadErrors,
-} = require('@hubspot/local-dev-lib/cms/uploadFolder');
-const {
-  getFileMapperQueryValues,
-} = require('@hubspot/local-dev-lib/fileMapper');
-const { upload, deleteFile } = require('@hubspot/local-dev-lib/api/fileMapper');
-const {
+} from '@hubspot/local-dev-lib/cms/uploadFolder';
+import { getFileMapperQueryValues } from '@hubspot/local-dev-lib/fileMapper';
+import { upload, deleteFile } from '@hubspot/local-dev-lib/api/fileMapper';
+import {
   getCwd,
   convertToUnixPath,
   isAllowedExtension,
-} = require('@hubspot/local-dev-lib/path');
-const { logger } = require('@hubspot/local-dev-lib/logger');
-const { ApiErrorContext, logError } = require('../lib/errorHandlers/index');
-const {
-  validateSrcAndDestPaths,
-} = require('@hubspot/local-dev-lib/cms/modules');
-const { shouldIgnoreFile } = require('@hubspot/local-dev-lib/ignoreRules');
-const {
+} from '@hubspot/local-dev-lib/path';
+import { logger } from '@hubspot/local-dev-lib/logger';
+import { validateSrcAndDestPaths } from '@hubspot/local-dev-lib/cms/modules';
+import { shouldIgnoreFile } from '@hubspot/local-dev-lib/ignoreRules';
+import {
   getThemePreviewUrl,
   getThemeJSONPath,
-} = require('@hubspot/local-dev-lib/cms/themes');
-
-const {
-  addConfigOptions,
-  addAccountOptions,
-  addCmsPublishModeOptions,
-  addUseEnvironmentOptions,
-  addGlobalOptions,
-  getCmsPublishMode,
-} = require('../lib/commonOpts');
-const { uploadPrompt } = require('../lib/prompts/uploadPrompt');
-const { confirmPrompt } = require('../lib/prompts/promptUtils');
-const { validateCmsPublishMode } = require('../lib/validation');
-const { trackCommandUsage } = require('../lib/usageTracking');
-const { getUploadableFileList } = require('../lib/upload');
-
-const { i18n } = require('../lib/lang');
-const i18nKey = 'commands.upload';
-const { EXIT_CODES } = require('../lib/enums/exitCodes');
-const {
+} from '@hubspot/local-dev-lib/cms/themes';
+import {
   FieldsJs,
   isConvertableFieldJs,
   cleanupTmpDirSync,
-} = require('@hubspot/local-dev-lib/cms/handleFieldsJS');
+} from '@hubspot/local-dev-lib/cms/handleFieldsJS';
 
-exports.command = 'upload [src] [dest]';
-exports.describe = i18n(`${i18nKey}.describe`);
+import { ApiErrorContext, logError } from '../lib/errorHandlers/index';
+import { getCmsPublishMode } from '../lib/commonOpts';
+import { uploadPrompt } from '../lib/prompts/uploadPrompt';
+import { confirmPrompt } from '../lib/prompts/promptUtils';
+import { validateCmsPublishMode } from '../lib/validation';
+import { trackCommandUsage } from '../lib/usageTracking';
+import { getUploadableFileList } from '../lib/upload';
+import { i18n } from '../lib/lang';
+import { EXIT_CODES } from '../lib/enums/exitCodes';
+import {
+  CommonArgs,
+  ConfigArgs,
+  AccountArgs,
+  EnvironmentArgs,
+  CmsPublishModeArgs,
+  YargsCommandModule,
+} from '../types/Yargs';
+import { makeYargsBuilder } from '../lib/yargsUtils';
 
-const logThemePreview = (filePath, accountId) => {
+const command = 'upload [src] [dest]';
+const describe = i18n('commands.upload.describe');
+
+function logThemePreview(filePath: string, accountId: number): void {
   const previewUrl = getThemePreviewUrl(filePath, accountId);
   // Only log if we are actually in a theme
   if (previewUrl) {
     logger.log(
-      i18n(`${i18nKey}.previewUrl`, {
+      i18n('commands.upload.previewUrl', {
         previewUrl,
       })
     );
   }
-};
+}
 
-exports.handler = async options => {
-  if (!validateCmsPublishMode(options)) {
+type UploadArgs = CommonArgs &
+  ConfigArgs &
+  AccountArgs &
+  EnvironmentArgs &
+  CmsPublishModeArgs & {
+    src?: string;
+    dest?: string;
+    fieldOptions?: string | string[];
+    saveOutput?: boolean;
+    convertFields?: boolean;
+    clean?: boolean;
+    force?: boolean;
+  };
+
+async function handler(args: ArgumentsCamelCase<UploadArgs>): Promise<void> {
+  if (!validateCmsPublishMode(args)) {
     process.exit(EXIT_CODES.WARNING);
   }
 
-  const { derivedAccountId } = options;
-  const cmsPublishMode = getCmsPublishMode(options);
+  const { derivedAccountId } = args;
+  const cmsPublishMode = getCmsPublishMode(args);
 
-  const uploadPromptAnswers = await uploadPrompt(options);
-  const src = options.src || uploadPromptAnswers.src;
-  const saveOutput = options.saveOutput;
-  let dest = options.dest || uploadPromptAnswers.dest;
+  const uploadPromptAnswers = await uploadPrompt(args);
+  const src = args.src || uploadPromptAnswers.src;
+  const saveOutput = args.saveOutput;
+  let dest = args.dest || uploadPromptAnswers.dest;
   let absoluteSrcPath = path.resolve(getCwd(), src);
   if (!dest) {
-    logger.error(i18n(`${i18nKey}.errors.destinationRequired`));
+    logger.error(i18n('commands.upload.errors.destinationRequired'));
     return;
   }
   // Check for theme.json file and determine the root path for the project based on it if it exists
@@ -87,18 +97,20 @@ exports.handler = async options => {
     : path.dirname(getCwd());
   const convertFields =
     projectRoot &&
-    isConvertableFieldJs(projectRoot, absoluteSrcPath, options.convertFields);
-  let fieldsJs;
+    isConvertableFieldJs(projectRoot, absoluteSrcPath, args.convertFields);
+  let fieldsJs: FieldsJs | undefined;
   if (convertFields) {
     fieldsJs = await new FieldsJs(
       projectRoot,
       absoluteSrcPath,
       undefined,
-      options.fieldOptions
+      args.fieldOptions
     ).init();
     if (fieldsJs.rejected) return;
     // Ensures that the dest path is a .json. The user might pass '.js' accidentally - this ensures it just works.
-    absoluteSrcPath = fieldsJs.outputPath;
+    if (fieldsJs.outputPath) {
+      absoluteSrcPath = fieldsJs.outputPath;
+    }
     dest = path.join(path.dirname(dest), 'fields.json');
   }
   let stats;
@@ -106,7 +118,7 @@ exports.handler = async options => {
     stats = fs.statSync(absoluteSrcPath);
     if (!stats.isFile() && !stats.isDirectory()) {
       logger.error(
-        i18n(`${i18nKey}.errors.invalidPath`, {
+        i18n('commands.upload.errors.invalidPath', {
           path: src,
         })
       );
@@ -114,7 +126,7 @@ exports.handler = async options => {
     }
   } catch (e) {
     logger.error(
-      i18n(`${i18nKey}.errors.invalidPath`, {
+      i18n('commands.upload.errors.invalidPath', {
         path: src,
       })
     );
@@ -139,7 +151,7 @@ exports.handler = async options => {
   if (stats.isFile()) {
     if (!isAllowedExtension(src) && !convertFields) {
       logger.error(
-        i18n(`${i18nKey}.errors.invalidPath`, {
+        i18n('commands.upload.errors.invalidPath', {
           path: src,
         })
       );
@@ -148,7 +160,7 @@ exports.handler = async options => {
 
     if (shouldIgnoreFile(absoluteSrcPath)) {
       logger.error(
-        i18n(`${i18nKey}.errors.fileIgnored`, {
+        i18n('commands.upload.errors.fileIgnored', {
           path: src,
         })
       );
@@ -158,11 +170,11 @@ exports.handler = async options => {
       derivedAccountId,
       absoluteSrcPath,
       normalizedDest,
-      getFileMapperQueryValues(cmsPublishMode, options)
+      getFileMapperQueryValues(cmsPublishMode)
     )
       .then(() => {
         logger.success(
-          i18n(`${i18nKey}.success.fileUploaded`, {
+          i18n('commands.upload.success.fileUploaded', {
             accountId: derivedAccountId,
             dest: normalizedDest,
             src,
@@ -172,7 +184,7 @@ exports.handler = async options => {
       })
       .catch(error => {
         logger.error(
-          i18n(`${i18nKey}.errors.uploadFailed`, {
+          i18n('commands.upload.errors.uploadFailed', {
             dest: normalizedDest,
             src,
           })
@@ -189,14 +201,16 @@ exports.handler = async options => {
       })
       .finally(() => {
         if (!convertFields) return;
-        if (saveOutput) {
+        if (saveOutput && fieldsJs) {
           fieldsJs.saveOutput();
         }
-        cleanupTmpDirSync(fieldsJs.rootWriteDir);
+        if (fieldsJs) {
+          cleanupTmpDirSync(fieldsJs.rootWriteDir);
+        }
       });
   } else {
     logger.log(
-      i18n(`${i18nKey}.uploading`, {
+      i18n('commands.upload.uploading', {
         accountId: derivedAccountId,
         dest,
         src,
@@ -206,15 +220,15 @@ exports.handler = async options => {
     // Generate the first-pass file list in here, and pass to uploadFolder.
     const filePaths = await getUploadableFileList(
       absoluteSrcPath,
-      options.convertFields
+      args.convertFields ?? false
     );
 
-    if (options.clean) {
+    if (args.clean) {
       //  If clean is true, will first delete the dest folder and then upload src. Cleans up files that only exist on HS.
-      let cleanUpload = options.force;
-      if (!options.force) {
+      let cleanUpload = args.force;
+      if (!args.force) {
         cleanUpload = await confirmPrompt(
-          i18n(`${i18nKey}.confirmCleanUpload`, {
+          i18n('commands.upload.confirmCleanUpload', {
             accountId: derivedAccountId,
             path: dest,
           }),
@@ -225,14 +239,14 @@ exports.handler = async options => {
         try {
           await deleteFile(derivedAccountId, dest);
           logger.log(
-            i18n(`${i18nKey}.cleaning`, {
+            i18n('commands.upload.cleaning', {
               accountId: derivedAccountId,
               filePath: dest,
             })
           );
         } catch (error) {
           logger.error(
-            i18n(`${i18nKey}.errors.deleteFailed`, {
+            i18n('commands.upload.errors.deleteFailed', {
               accountId: derivedAccountId,
               path: dest,
             })
@@ -244,23 +258,26 @@ exports.handler = async options => {
       derivedAccountId,
       absoluteSrcPath,
       dest,
+      {},
       {
-        cmsPublishMode,
+        convertFields: args.convertFields,
+        // @ts-expect-error - fieldOptions is a string or string[]
+        fieldOptions: args.fieldOptions ?? undefined,
+        saveOutput: args.saveOutput,
       },
-      options,
       filePaths
     )
       .then(results => {
         if (!hasUploadErrors(results)) {
           logger.success(
-            i18n(`${i18nKey}.success.uploadComplete`, {
+            i18n('commands.upload.success.uploadComplete', {
               dest,
             })
           );
           logThemePreview(src, derivedAccountId);
         } else {
           logger.error(
-            i18n(`${i18nKey}.errors.someFilesFailed`, {
+            i18n('commands.upload.errors.someFilesFailed', {
               dest,
             })
           );
@@ -269,7 +286,7 @@ exports.handler = async options => {
       })
       .catch(error => {
         logger.error(
-          i18n(`${i18nKey}.errors.uploadFailed`, {
+          i18n('commands.upload.errors.uploadFailed', {
             dest,
             src,
           })
@@ -280,49 +297,63 @@ exports.handler = async options => {
         process.exit(EXIT_CODES.WARNING);
       });
   }
-};
+}
 
-exports.builder = yargs => {
+function uploadBuilder(yargs: Argv): Argv<UploadArgs> {
   yargs.positional('src', {
-    describe: i18n(`${i18nKey}.positionals.src.describe`),
+    describe: i18n('commands.upload.positionals.src.describe'),
     type: 'string',
   });
   yargs.positional('dest', {
-    describe: i18n(`${i18nKey}.positionals.dest.describe`),
+    describe: i18n('commands.upload.positionals.dest.describe'),
     type: 'string',
   });
   yargs.option('fieldOptions', {
-    describe: i18n(`${i18nKey}.options.options.describe`),
+    describe: i18n('commands.upload.options.options.describe'),
     type: 'array',
     default: [''],
     hidden: true,
   });
   yargs.option('saveOutput', {
-    describe: i18n(`${i18nKey}.options.saveOutput.describe`),
+    describe: i18n('commands.upload.options.saveOutput.describe'),
     type: 'boolean',
     default: false,
   });
   yargs.option('convertFields', {
-    describe: i18n(`${i18nKey}.options.convertFields.describe`),
+    describe: i18n('commands.upload.options.convertFields.describe'),
     type: 'boolean',
     default: false,
   });
   yargs.option('clean', {
-    describe: i18n(`${i18nKey}.options.clean.describe`),
+    describe: i18n('commands.upload.options.clean.describe'),
     type: 'boolean',
     default: false,
   });
   yargs.option('force', {
-    describe: i18n(`${i18nKey}.options.force.describe`),
+    describe: i18n('commands.upload.options.force.describe'),
     type: 'boolean',
     default: false,
   });
 
-  addConfigOptions(yargs);
-  addAccountOptions(yargs);
-  addCmsPublishModeOptions(yargs, { write: true });
-  addUseEnvironmentOptions(yargs);
-  addGlobalOptions(yargs);
+  return yargs as Argv<UploadArgs>;
+}
 
-  return yargs;
+const builder = makeYargsBuilder<UploadArgs>(uploadBuilder, command, describe, {
+  useGlobalOptions: true,
+  useConfigOptions: true,
+  useAccountOptions: true,
+  useEnvironmentOptions: true,
+  useCmsPublishModeOptions: true,
+});
+
+const uploadCommand: YargsCommandModule<unknown, UploadArgs> = {
+  command,
+  describe,
+  handler,
+  builder,
 };
+
+export default uploadCommand;
+
+// TODO remove this after cli.ts is ported to TS
+module.exports = uploadCommand;

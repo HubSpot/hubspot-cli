@@ -8,9 +8,6 @@ jest.mock('../../lib/commonOpts');
 const optionsSpy = jest
   .spyOn(yargs as Argv, 'options')
   .mockReturnValue(yargs as Argv);
-const conflictsSpy = jest
-  .spyOn(yargs as Argv, 'conflicts')
-  .mockReturnValue(yargs as Argv);
 
 describe('commands/init', () => {
   describe('command', () => {
@@ -37,16 +34,12 @@ describe('commands/init', () => {
           default: 'personalaccesskey',
         }),
         account: expect.objectContaining({ type: 'string' }),
-        'use-hidden-config': expect.objectContaining({ type: 'boolean' }),
         'disable-tracking': expect.objectContaining({
           type: 'boolean',
           hidden: true,
           default: false,
         }),
       });
-
-      expect(conflictsSpy).toHaveBeenCalledTimes(1);
-      expect(conflictsSpy).toHaveBeenCalledWith('use-hidden-config', 'config');
 
       expect(addConfigOptions).toHaveBeenCalledTimes(1);
       expect(addConfigOptions).toHaveBeenCalledWith(yargs);

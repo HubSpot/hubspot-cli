@@ -1,20 +1,17 @@
-// @ts-nocheck
-const { createTemplate } = require('@hubspot/local-dev-lib/cms/templates');
-const { logger } = require('@hubspot/local-dev-lib/logger');
-const { logError } = require('../../lib/errorHandlers/index');
-const {
-  createTemplatePrompt,
-} = require('../../lib/prompts/createTemplatePrompt');
-const { i18n } = require('../../lib/lang');
-const { EXIT_CODES } = require('../../lib/enums/exitCodes');
+import { createTemplate } from '@hubspot/local-dev-lib/cms/templates';
+import { logError } from '../../lib/errorHandlers/index';
+import { createTemplatePrompt } from '../../lib/prompts/createTemplatePrompt';
+import { EXIT_CODES } from '../../lib/enums/exitCodes';
+import { CreatableCmsAsset } from '../../types/Cms';
+import { uiLogger } from '../../lib/ui/logger';
+import { commands } from '../../lang/en';
 
-const i18nKey = 'commands.create.subcommands.template';
-
-module.exports = {
+const templateAssetType: CreatableCmsAsset = {
   dest: ({ dest }) => dest,
+  hidden: false,
   validate: ({ name }) => {
     if (!name) {
-      logger.error(i18n(`${i18nKey}.errors.nameRequired`));
+      uiLogger.error(commands.create.subcommands.template.errors.nameRequired);
       return false;
     }
 
@@ -28,6 +25,7 @@ module.exports = {
       logError(e);
       process.exit(EXIT_CODES.ERROR);
     }
-    return { templateType };
   },
 };
+
+export default templateAssetType;

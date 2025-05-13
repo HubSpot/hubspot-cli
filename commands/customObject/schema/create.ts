@@ -5,16 +5,9 @@ import { ENVIRONMENTS } from '@hubspot/local-dev-lib/constants/environments';
 import { getAbsoluteFilePath } from '@hubspot/local-dev-lib/path';
 import { createObjectSchema } from '@hubspot/local-dev-lib/api/customObjects';
 import { getHubSpotWebsiteOrigin } from '@hubspot/local-dev-lib/urls';
-
 import { logError } from '../../../lib/errorHandlers/index';
 import { checkAndConvertToJson } from '../../../lib/validation';
 import { trackCommandUsage } from '../../../lib/usageTracking';
-import {
-  addConfigOptions,
-  addAccountOptions,
-  addUseEnvironmentOptions,
-  addTestingOptions,
-} from '../../../lib/commonOpts';
 import { i18n } from '../../../lib/lang';
 import { EXIT_CODES } from '../../../lib/enums/exitCodes';
 import { isSchemaDefinition } from '../../../lib/customObject';
@@ -24,21 +17,22 @@ import {
   AccountArgs,
   EnvironmentArgs,
   TestingArgs,
+  YargsCommandModule,
 } from '../../../types/Yargs';
+import { makeYargsBuilder } from '../../../lib/yargsUtils';
 
-const i18nKey = 'commands.customObject.subcommands.schema.subcommands.create';
+const command = 'create';
+const describe = i18n(
+  `commands.customObject.subcommands.schema.subcommands.create.describe`
+);
 
-export const command = 'create';
-export const describe = i18n(`${i18nKey}.describe`);
-
-type CombinedArgs = CommonArgs &
+type SchemaCreateArgs = CommonArgs &
   ConfigArgs &
   AccountArgs &
   EnvironmentArgs &
-  TestingArgs;
-type SchemaCreateArgs = CombinedArgs & { path: string };
+  TestingArgs & { path: string };
 
-export async function handler(
+async function handler(
   args: ArgumentsCamelCase<SchemaCreateArgs>
 ): Promise<void> {
   const { path, derivedAccountId } = args;
@@ -49,40 +43,69 @@ export async function handler(
   const schemaJson = checkAndConvertToJson(filePath);
 
   if (!isSchemaDefinition(schemaJson)) {
-    logger.error(i18n(`${i18nKey}.errors.invalidSchema`));
+    logger.error(
+      i18n(
+        `commands.customObject.subcommands.schema.subcommands.create.errors.invalidSchema`
+      )
+    );
     process.exit(EXIT_CODES.ERROR);
   }
 
   try {
     const { data } = await createObjectSchema(derivedAccountId, schemaJson);
     logger.success(
-      i18n(`${i18nKey}.success.schemaViewable`, {
-        url: `${getHubSpotWebsiteOrigin(
-          getEnv() === 'qa' ? ENVIRONMENTS.QA : ENVIRONMENTS.PROD
-        )}/contacts/${derivedAccountId}/objects/${data.objectTypeId}`,
-      })
+      i18n(
+        `commands.customObject.subcommands.schema.subcommands.create.success.schemaViewable`,
+        {
+          url: `${getHubSpotWebsiteOrigin(
+            getEnv() === 'qa' ? ENVIRONMENTS.QA : ENVIRONMENTS.PROD
+          )}/contacts/${derivedAccountId}/objects/${data.objectTypeId}`,
+        }
+      )
     );
   } catch (e) {
     logError(e, { accountId: derivedAccountId });
     logger.error(
-      i18n(`${i18nKey}.errors.creationFailed`, {
-        definition: path,
-      })
+      i18n(
+        `commands.customObject.subcommands.schema.subcommands.create.errors.creationFailed`,
+        {
+          definition: path,
+        }
+      )
     );
   }
 }
 
-export function builder(yargs: Argv): Argv<SchemaCreateArgs> {
-  addConfigOptions(yargs);
-  addAccountOptions(yargs);
-  addUseEnvironmentOptions(yargs);
-  addTestingOptions(yargs);
-
+function schemaCreateBuilder(yargs: Argv): Argv<SchemaCreateArgs> {
   yargs.option('path', {
-    describe: i18n(`${i18nKey}.options.definition.describe`),
+    describe: i18n(
+      `commands.customObject.subcommands.schema.subcommands.create.options.definition.describe`
+    ),
     type: 'string',
     required: true,
   });
 
   return yargs as Argv<SchemaCreateArgs>;
 }
+
+const builder = makeYargsBuilder<SchemaCreateArgs>(
+  schemaCreateBuilder,
+  command,
+  describe,
+  {
+    useGlobalOptions: true,
+    useConfigOptions: true,
+    useAccountOptions: true,
+    useEnvironmentOptions: true,
+    useTestingOptions: true,
+  }
+);
+
+const schemaCreateCommand: YargsCommandModule<unknown, SchemaCreateArgs> = {
+  command,
+  describe,
+  handler,
+  builder,
+};
+
+export default schemaCreateCommand;

@@ -7,6 +7,7 @@ import {
   addConfigOptions,
   addGlobalOptions,
   addUseEnvironmentOptions,
+  addCmsPublishModeOptions,
 } from './commonOpts';
 
 // See https://github.com/sindresorhus/has-flag/blob/main/index.js (License: https://github.com/sindresorhus/has-flag/blob/main/license)
@@ -22,14 +23,15 @@ export function hasFlag(flag: string, argv = process.argv): boolean {
 
 export function makeYargsBuilder<T>(
   callback: (yargs: Argv) => Argv<T>,
-  command: string,
-  describe: string,
+  command: string | string[],
+  describe?: string,
   options: {
     useGlobalOptions?: boolean;
     useAccountOptions?: boolean;
     useConfigOptions?: boolean;
     useEnvironmentOptions?: boolean;
     useTestingOptions?: boolean;
+    useCmsPublishModeOptions?: boolean | { read?: boolean; write?: boolean };
   } = {}
 ): (yargs: Argv) => Promise<Argv<T>> {
   return async function (yargs: Argv): Promise<Argv<T>> {
@@ -47,6 +49,13 @@ export function makeYargsBuilder<T>(
     }
     if (options.useTestingOptions) {
       addTestingOptions(yargs);
+    }
+    if (options.useCmsPublishModeOptions) {
+      const opts =
+        typeof options.useCmsPublishModeOptions === 'object'
+          ? options.useCmsPublishModeOptions
+          : { write: true };
+      addCmsPublishModeOptions(yargs, opts);
     }
 
     const result = callback(yargs);

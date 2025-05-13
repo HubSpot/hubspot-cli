@@ -15,22 +15,21 @@ import {
   ConfigArgs,
   AccountArgs,
   EnvironmentArgs,
+  YargsCommandModule,
 } from '../../../types/Yargs';
-import {
-  addAccountOptions,
-  addConfigOptions,
-  addUseEnvironmentOptions,
-} from '../../../lib/commonOpts';
+import { makeYargsBuilder } from '../../../lib/yargsUtils';
 
-const i18nKey = 'commands.customObject.subcommands.schema.subcommands.fetch';
+const command = 'fetch [name] [dest]';
+const describe = i18n(
+  `commands.customObject.subcommands.schema.subcommands.fetch.describe`
+);
 
-export const command = 'fetch [name] [dest]';
-export const describe = i18n(`${i18nKey}.describe`);
+type SchemaFetchArgs = CommonArgs &
+  ConfigArgs &
+  AccountArgs &
+  EnvironmentArgs & { name?: string; dest?: string };
 
-type CombinedArgs = CommonArgs & ConfigArgs & AccountArgs & EnvironmentArgs;
-type SchemaFetchArgs = CombinedArgs & { name?: string; dest?: string };
-
-export async function handler(
+async function handler(
   args: ArgumentsCamelCase<SchemaFetchArgs>
 ): Promise<void> {
   const { name: providedName, dest: providedDest, derivedAccountId } = args;
@@ -46,53 +45,94 @@ export async function handler(
 
     name =
       providedName ||
-      (await listPrompt(i18n(`${i18nKey}.selectSchema`), {
-        choices: schemaNames,
-      }));
+      (await listPrompt(
+        i18n(
+          `commands.customObject.subcommands.schema.subcommands.fetch.selectSchema`
+        ),
+        {
+          choices: schemaNames,
+        }
+      ));
 
     const dest =
-      providedDest || (await inputPrompt(i18n(`${i18nKey}.inputDest`)));
+      providedDest ||
+      (await inputPrompt(
+        i18n(
+          `commands.customObject.subcommands.schema.subcommands.fetch.inputDest`
+        )
+      ));
 
     await downloadSchema(derivedAccountId, name, dest);
     logger.success(
-      i18n(`${i18nKey}.success.savedToPath`, {
-        path: getResolvedPath(dest, name),
-      })
+      i18n(
+        `commands.customObject.subcommands.schema.subcommands.fetch.success.savedToPath`,
+        {
+          path: getResolvedPath(dest, name),
+        }
+      )
     );
   } catch (e) {
     logError(e);
     logger.error(
-      i18n(`${i18nKey}.errors.fetch`, {
-        name: name || '',
-      })
+      i18n(
+        `commands.customObject.subcommands.schema.subcommands.fetch.errors.fetch`,
+        {
+          name: name || '',
+        }
+      )
     );
   }
 }
 
-export function builder(yargs: Argv): Argv<SchemaFetchArgs> {
-  addConfigOptions(yargs);
-  addAccountOptions(yargs);
-  addUseEnvironmentOptions(yargs);
-
+function schemaFetchBuilder(yargs: Argv): Argv<SchemaFetchArgs> {
   yargs
     .example([
       [
         '$0 custom-object schema fetch schemaName',
-        i18n(`${i18nKey}.examples.default`),
+        i18n(
+          `commands.customObject.subcommands.schema.subcommands.fetch.examples.default`
+        ),
       ],
       [
         '$0 custom-object schema fetch schemaName my/folder',
-        i18n(`${i18nKey}.examples.specifyPath`),
+        i18n(
+          `commands.customObject.subcommands.schema.subcommands.fetch.examples.specifyPath`
+        ),
       ],
     ])
     .positional('name', {
-      describe: i18n(`${i18nKey}.positionals.name.describe`),
+      describe: i18n(
+        `commands.customObject.subcommands.schema.subcommands.fetch.positionals.name.describe`
+      ),
       type: 'string',
     })
     .positional('dest', {
-      describe: i18n(`${i18nKey}.positionals.dest.describe`),
+      describe: i18n(
+        `commands.customObject.subcommands.schema.subcommands.fetch.positionals.dest.describe`
+      ),
       type: 'string',
     });
 
   return yargs as Argv<SchemaFetchArgs>;
 }
+
+const builder = makeYargsBuilder<SchemaFetchArgs>(
+  schemaFetchBuilder,
+  command,
+  describe,
+  {
+    useGlobalOptions: true,
+    useConfigOptions: true,
+    useAccountOptions: true,
+    useEnvironmentOptions: true,
+  }
+);
+
+const schemaFetchCommand: YargsCommandModule<unknown, SchemaFetchArgs> = {
+  command,
+  describe,
+  handler,
+  builder,
+};
+
+export default schemaFetchCommand;

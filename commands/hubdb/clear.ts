@@ -5,29 +5,25 @@ import { clearHubDbTableRows } from '@hubspot/local-dev-lib/hubdb';
 import { publishTable } from '@hubspot/local-dev-lib/api/hubdb';
 import { selectHubDBTablePrompt } from '../../lib/prompts/selectHubDBTablePrompt';
 import { trackCommandUsage } from '../../lib/usageTracking';
-import {
-  addConfigOptions,
-  addAccountOptions,
-  addUseEnvironmentOptions,
-} from '../../lib/commonOpts';
 import { i18n } from '../../lib/lang';
 import {
   CommonArgs,
   ConfigArgs,
   AccountArgs,
   EnvironmentArgs,
+  YargsCommandModule,
 } from '../../types/Yargs';
+import { makeYargsBuilder } from '../../lib/yargsUtils';
 
-const i18nKey = 'commands.hubdb.subcommands.clear';
+const command = 'clear [table-id]';
+const describe = i18n('commands.hubdb.subcommands.clear.describe');
 
-export const command = 'clear [table-id]';
-export const describe = i18n(`${i18nKey}.describe`);
-
-type CombinedArgs = ConfigArgs & AccountArgs & EnvironmentArgs;
 type HubdbClearArgs = CommonArgs &
-  CombinedArgs & { tableId?: number; dest?: string };
+  ConfigArgs &
+  AccountArgs &
+  EnvironmentArgs & { tableId?: number; dest?: string };
 
-export async function handler(
+async function handler(
   args: ArgumentsCamelCase<HubdbClearArgs>
 ): Promise<void> {
   const { derivedAccountId } = args;
@@ -48,7 +44,7 @@ export async function handler(
     );
     if (deletedRowCount > 0) {
       logger.log(
-        i18n(`${i18nKey}.logs.removedRows`, {
+        i18n('commands.hubdb.subcommands.clear.logs.removedRows', {
           deletedRowCount,
           tableId,
         })
@@ -57,14 +53,14 @@ export async function handler(
         data: { rowCount },
       } = await publishTable(derivedAccountId, tableId);
       logger.log(
-        i18n(`${i18nKey}.logs.rowCount`, {
+        i18n('commands.hubdb.subcommands.clear.logs.rowCount', {
           rowCount,
           tableId,
         })
       );
     } else {
       logger.log(
-        i18n(`${i18nKey}.logs.emptyTable`, {
+        i18n('commands.hubdb.subcommands.clear.logs.emptyTable', {
           tableId,
         })
       );
@@ -74,15 +70,34 @@ export async function handler(
   }
 }
 
-export function builder(yargs: Argv): Argv<HubdbClearArgs> {
-  addAccountOptions(yargs);
-  addConfigOptions(yargs);
-  addUseEnvironmentOptions(yargs);
-
+function hubdbClearBuilder(yargs: Argv): Argv<HubdbClearArgs> {
   yargs.positional('table-id', {
-    describe: i18n(`${i18nKey}.positionals.tableId.describe`),
+    describe: i18n(
+      'commands.hubdb.subcommands.clear.positionals.tableId.describe'
+    ),
     type: 'string',
   });
 
   return yargs as Argv<HubdbClearArgs>;
 }
+
+const builder = makeYargsBuilder<HubdbClearArgs>(
+  hubdbClearBuilder,
+  command,
+  describe,
+  {
+    useGlobalOptions: true,
+    useConfigOptions: true,
+    useAccountOptions: true,
+    useEnvironmentOptions: true,
+  }
+);
+
+const hubdbClearCommand: YargsCommandModule<unknown, HubdbClearArgs> = {
+  command,
+  describe,
+  handler,
+  builder,
+};
+
+export default hubdbClearCommand;

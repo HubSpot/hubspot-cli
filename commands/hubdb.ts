@@ -1,19 +1,16 @@
 import { Argv } from 'yargs';
-import { addGlobalOptions } from '../lib/commonOpts';
-import * as createCommand from './hubdb/create';
-import * as fetchCommand from './hubdb/fetch';
-import * as deleteCommand from './hubdb/delete';
-import * as clearCommand from './hubdb/clear';
+import createCommand from './hubdb/create';
+import fetchCommand from './hubdb/fetch';
+import deleteCommand from './hubdb/delete';
+import clearCommand from './hubdb/clear';
 import { i18n } from '../lib/lang';
-
-const i18nKey = 'commands.hubdb';
+import { YargsCommandModuleBucket } from '../types/Yargs';
+import { makeYargsBuilder } from '../lib/yargsUtils';
 
 export const command = 'hubdb';
-export const describe = i18n(`${i18nKey}.describe`);
+export const describe = i18n('commands.hubdb.describe');
 
-export function builder(yargs: Argv): Argv {
-  addGlobalOptions(yargs);
-
+function hubdbBuilder(yargs: Argv): Argv {
   yargs
     .command(clearCommand)
     .command(createCommand)
@@ -23,3 +20,17 @@ export function builder(yargs: Argv): Argv {
 
   return yargs;
 }
+
+const builder = makeYargsBuilder(hubdbBuilder, command, describe);
+
+const hubdbCommand: YargsCommandModuleBucket = {
+  command,
+  describe,
+  builder,
+  handler: () => {},
+};
+
+export default hubdbCommand;
+
+// TODO Remove this legacy export once we've migrated all commands to TS
+module.exports = hubdbCommand;
