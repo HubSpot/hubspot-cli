@@ -29,7 +29,7 @@ import {
 } from '../../../lib/accountTypes';
 import { uiCommandReference } from '../../../lib/ui';
 import { i18n } from '../../../lib/lang';
-import LocalDevUIWebsocketServer from '../../../lib/projects/localDev/LocalDevWebsocketServer';
+import LocalDevWebsocketServer from '../../../lib/projects/localDev/LocalDevWebsocketServer';
 
 export async function unifiedProjectDevFlow(
   args: ArgumentsCamelCase<ProjectDevArgs>,
@@ -175,7 +175,7 @@ export async function unifiedProjectDevFlow(
   const watcher = new LocalDevWatcher(localDevProcess);
   watcher.start();
 
-  const websocketServer = new LocalDevUIWebsocketServer(localDevProcess, true);
+  const websocketServer = new LocalDevWebsocketServer(localDevProcess, true);
   await websocketServer.start();
 
   handleKeypress(async key => {

@@ -2758,6 +2758,24 @@ export const lib = {
     defaultMarketplaceAppWarning: (installCount: number) =>
       `\n\nYour marketplace app is currently installed in ${chalk.bold(`${installCount} ${installCount === 1 ? 'account' : 'accounts'}`)}. Any uploaded changes will impact your app's users. We strongly recommend creating a copy of this app to test your changes before proceding.`,
   },
+  LocalDevWebsocketServer: {
+    errors: {
+      notInitialized: (prefix: string) =>
+        `${prefix}Error: Attempted to access websocket before initialization`,
+      missingTypeField: (data: string) =>
+        `Unsupported message received. Missing type field: ${data}`,
+      unknownMessageType: (type: string) =>
+        `Unsupported message received. Unknown message type: ${type}`,
+      invalidJSON: (data: string) =>
+        `Unsupported message received. Invalid JSON: ${data}`,
+      portManagerNotRunning: (prefix: string) =>
+        `${prefix}Error: PortManagerServing must be running before starting LocalDevUIWebsocketServer.`,
+    },
+    logs: {
+      startup: (port: number) =>
+        `LocalDevUIWebsocketServer running on port ${port}`,
+    },
+  },
   localDevHelpers: {
     confirmDefaultAccountIsTarget: {
       configError: `An error occurred while reading the default account from your config. Run ${uiCommandReference('hs auth')} to re-auth this account`,
