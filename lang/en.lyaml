@@ -169,7 +169,7 @@ en:
       subcommands:
         migrate:
           describe: "Migrate from the deprecated {{ deprecatedConfigPath }} file to the new global config file at {{ globalConfigPath }}."
-          verboseDescribe: "This command will create a new global configuration file at the root of your working directory and rename the deprecated config to {{ archivedConfigPath }}. If any conflicting values are detected, we will prompt you to reconcile them unless the \"--force\" flag is supplied."
+          verboseDescribe: "This command will create a new global configuration file in your root directory and rename the deprecated config to {{ archivedConfigPath }}. If any conflicting values are detected, we will prompt you to reconcile them unless the \"--force\" flag is supplied."
           migrationAlreadyCompleted: "No {{ deprecatedConfigPath }} deprecated configuration file found. No migration necessary."
           errors:
             configNotFound: "A configuration file at {{ configPath }} could not be found. Please try again with a valid file path."
@@ -1335,9 +1335,9 @@ en:
           describe: "Set log level to debug"
     configMigrate:
       migrationHeader: "Migrate your existing configuration file to the new global location?"
-      migrationDescription: "This action will create a new global configuration file at the root of your working directory and rename the deprecated config to {{ archivedConfigPath}}. If any conflicting values are detected, we will prompt you to reconcile them unless the \"--force\" flag is supplied."
+      migrationDescription: "This action will create a new global configuration file in your root directory and rename the deprecated config to {{ archivedConfigPath}}. If any conflicting values are detected, we will prompt you to reconcile them unless the \"--force\" flag is supplied."
       mergeHeader: "Merge your existing configuration file with the global config?"
-      mergeDescription: "This action will merge your deprecated config file with the global config file located at the root of your working directory. It will also rename the deprecated config to {{ archivedConfigPath }}. If any conflicting values are detected, we will prompt you to reconcile them unless the \"--force\" flag is supplied."
+      mergeDescription: "This action will merge your deprecated config file with the global config file located in your root directory. It will also rename the deprecated config to {{ archivedConfigPath }}. If any conflicting values are detected, we will prompt you to reconcile them unless the \"--force\" flag is supplied."
       migrateConfigPrompt: "Migrate config?\n From deprecated config file: {{ deprecatedConfigPath }}\n To new global config file: {{ globalConfigPath }}\n (This action will delete the deprecated config file).\n"
       mergeConfigConflictPrompt: "Change the {{ property }} property in the global config from {{ newValue }} to {{ oldValue }}?"
       mergeConfigsPrompt: "Two config files detected. Merge them?\n Deprecated config file: {{ deprecatedConfigPath }}\n Global config: {{ globalConfigPath }}\n (This action will delete the deprecated config file).\n"
