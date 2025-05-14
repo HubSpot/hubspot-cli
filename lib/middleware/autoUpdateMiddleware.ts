@@ -8,6 +8,7 @@ import SpinniesManager from '../ui/SpinniesManager';
 import { lib } from '../../lang/en';
 import { isGloballyInstalled, executeInstall } from '../npm';
 import { debugError } from '../errorHandlers';
+import { uiLogger } from '../ui/logger';
 
 // Default behavior is to check for notifications at most once per day
 // update-notifier stores the last checked date in the user's home directory
@@ -76,6 +77,7 @@ export async function autoUpdateCLI() {
                 notifier.update.latest
               ),
             });
+            uiLogger.log('');
           } else {
             SpinniesManager.fail('cliAutoUpdate', {
               text: lib.middleware.autoUpdateCLI.notInstalledGlobally,

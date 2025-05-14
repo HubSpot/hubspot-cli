@@ -2823,13 +2823,13 @@ export const lib = {
     },
     autoUpdateCLI: {
       updateAvailable: (latestVersion: string) =>
-        `New HubSpot CLI version available. Updating to version ${latestVersion}`,
+        `There's a new HubSpot CLI version available! Updating to version ${chalk.bold(latestVersion)}`,
       updateSucceeded: (latestVersion: string) =>
-        `Successfully updated HubSpot CLI to version ${latestVersion}`,
+        `Successfully updated HubSpot CLI to version ${chalk.bold(latestVersion)}`,
       notInstalledGlobally:
-        'Cannot auto-update the HubSpot CLI if NPM is not installed globally',
+        'Cannot auto-update the HubSpot CLI because NPM is not installed globally',
       updateFailed: (latestVersion: string) =>
-        `Failed to update HubSpot CLI to version ${latestVersion}`,
+        `Failed to update HubSpot CLI to version ${chalk.bold(latestVersion)}`,
     },
   },
   projects: {
