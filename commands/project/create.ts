@@ -74,7 +74,7 @@ async function handler(
     } catch (err) {
       logger.error(
         i18n(
-          `commands.project.subcommands.create.error.failedToFetchProjectList`
+          `commands.project.subcommands.create.errors.failedToFetchProjectList`
         )
       );
       process.exit(EXIT_CODES.ERROR);
@@ -83,7 +83,7 @@ async function handler(
 
   if (!templateSource || !templateSource.includes('/')) {
     logger.error(
-      i18n(`commands.project.subcommands.create.error.invalidTemplateSource`)
+      i18n(`commands.project.subcommands.create.errors.invalidTemplateSource`)
     );
     process.exit(EXIT_CODES.ERROR);
   }
@@ -95,7 +95,9 @@ async function handler(
 
   if (!projectTemplates.length) {
     logger.error(
-      i18n(`commands.project.subcommands.create.error.failedToFetchProjectList`)
+      i18n(
+        `commands.project.subcommands.create.errors.failedToFetchProjectList`
+      )
     );
     process.exit(EXIT_CODES.ERROR);
   }
