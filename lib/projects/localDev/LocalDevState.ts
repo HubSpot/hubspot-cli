@@ -2,11 +2,10 @@ import { Build } from '@hubspot/local-dev-lib/types/Build';
 import { IntermediateRepresentationNodeLocalDev } from '@hubspot/project-parsing-lib/src/lib/types';
 import { Environment } from '@hubspot/local-dev-lib/types/Config';
 import { ProjectConfig } from '../../../types/Projects';
-import { LocalDevStateConstructorOptions } from '../../../types/LocalDev';
-
-type LocalDevStateListener<K extends keyof LocalDevState> = (
-  value: LocalDevState[K]
-) => void;
+import {
+  LocalDevStateConstructorOptions,
+  LocalDevStateListener,
+} from '../../../types/LocalDev';
 
 class LocalDevState {
   private _targetProjectAccountId: number;

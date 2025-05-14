@@ -2,6 +2,7 @@ import { IntermediateRepresentationNodeLocalDev } from '@hubspot/project-parsing
 import { Build } from '@hubspot/local-dev-lib/types/Build';
 import { Environment } from '@hubspot/local-dev-lib/types/Config';
 import { ProjectConfig } from './Projects';
+import LocalDevState from '../lib/projects/localDev/LocalDevState';
 
 export type LocalDevStateConstructorOptions = {
   targetProjectAccountId: number;
@@ -22,3 +23,7 @@ export type LocalDevWebsocketMessage = {
   type: string;
   data: unknown;
 };
+
+export type LocalDevStateListener<K extends keyof LocalDevState> = (
+  value: LocalDevState[K]
+) => void;

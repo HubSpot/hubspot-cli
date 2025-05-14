@@ -94,4 +94,5 @@ export const LOCAL_DEV_UI_WEBSOCKET_MESSAGE_TYPES = {
   UPLOAD: 'upload',
   INSTALL_DEPS: 'installDeps',
   APP_INSTALLED: 'appInstalled',
+  UPDATE_PROJECT_NODES: 'updateProjectNodes',
 } as const;

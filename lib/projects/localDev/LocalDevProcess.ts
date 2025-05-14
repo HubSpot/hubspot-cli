@@ -11,7 +11,10 @@ import { mapToUserFriendlyName } from '@hubspot/project-parsing-lib/src/lib/tran
 import { getProjectConfig } from '../config';
 import { handleProjectUpload } from '../upload';
 import { pollProjectBuildAndDeploy } from '../buildAndDeploy';
-import { LocalDevStateConstructorOptions } from '../../../types/LocalDev';
+import {
+  LocalDevStateConstructorOptions,
+  LocalDevStateListener,
+} from '../../../types/LocalDev';
 
 class LocalDevProcess {
   private state: LocalDevState;
@@ -200,6 +203,13 @@ class LocalDevProcess {
       this.logger.uploadSuccess();
       this.logger.clearUploadWarnings();
     }
+  }
+
+  addStateListener<K extends keyof LocalDevState>(
+    key: K,
+    listener: LocalDevStateListener<K>
+  ): void {
+    this.state.addListener(key, listener);
   }
 }
 

@@ -45,6 +45,10 @@ class LocalDevWebsocketServer {
     }
   }
 
+  private sendMessage(message: LocalDevWebsocketMessage) {
+    this.websocket().send(JSON.stringify(message));
+  }
+
   private setupMessageHandlers() {
     this.websocket().on('message', data => {
       try {
@@ -80,6 +84,15 @@ class LocalDevWebsocketServer {
     });
   }
 
+  private setupStateListeners() {
+    this.localDevProcess.addStateListener('projectNodes', nodes => {
+      this.sendMessage({
+        type: LOCAL_DEV_UI_WEBSOCKET_MESSAGE_TYPES.UPDATE_PROJECT_NODES,
+        data: nodes,
+      });
+    });
+  }
+
   async start() {
     const portManagerIsRunning = await isPortManagerServerRunning();
     if (!portManagerIsRunning) {
@@ -97,6 +110,7 @@ class LocalDevWebsocketServer {
     this.server.on('connection', ws => {
       this._websocket = ws;
       this.setupMessageHandlers();
+      this.setupStateListeners();
     });
   }
 
