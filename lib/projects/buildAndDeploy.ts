@@ -39,6 +39,8 @@ import {
 import { EXIT_CODES } from '../enums/exitCodes';
 import { lib } from '../../lang/en';
 import { uiLogger } from '../ui/logger';
+import { AppFunctionsPackageKey } from '@hubspot/project-parsing-lib/src/lib/constants';
+import { mapToInternalType } from '@hubspot/project-parsing-lib';
 
 const SPINNER_STATUS = {
   SPINNING: 'spinning',
@@ -169,25 +171,37 @@ function makePollTaskStatusFunc<T extends ProjectTask>({
 
     const subtasks = getSubtasks(initialTaskStatus);
 
-    const tasksById = subtasks.reduce(
-      (acc: { [key: string]: ProjectSubtask }, subtask) => {
+    const hiddenComponentBuildIds: string[] = [];
+
+    const tasksById = subtasks
+      .filter(subtask => {
+        // TODO: Remove this filtering logic when visible=false for SERVERLESS_PACKAGE
+        const shouldBeVisible =
+          getSubtaskType(subtask) !== mapToInternalType(AppFunctionsPackageKey);
+        if (!shouldBeVisible) {
+          hiddenComponentBuildIds.push(subtask.id);
+        }
+        return shouldBeVisible;
+      })
+      .reduce((acc: { [key: string]: ProjectSubtask }, subtask) => {
         const { id, visible } = subtask;
         if (visible) {
           acc[id] = subtask;
         }
         return acc;
-      },
-      {}
-    );
+      }, {});
 
-    const structuredTasks = Object.keys(taskStructure).map(key => {
-      return {
-        ...tasksById[key],
-        subtasks: taskStructure[key]
-          .filter(taskId => Boolean(tasksById[taskId]))
-          .map(taskId => tasksById[taskId]),
-      };
-    });
+    const structuredTasks = Object.keys(taskStructure)
+      // TODO: Remove this filtering logic when visible=false for SERVERLESS_PACKAGE
+      .filter(buildId => !hiddenComponentBuildIds.includes(buildId))
+      .map(key => {
+        return {
+          ...tasksById[key],
+          subtasks: taskStructure[key]
+            .filter(taskId => Boolean(tasksById[taskId]))
+            .map(taskId => tasksById[taskId]),
+        };
+      });
 
     const numComponents = structuredTasks.length;
     const componentCountText = silenceLogs
