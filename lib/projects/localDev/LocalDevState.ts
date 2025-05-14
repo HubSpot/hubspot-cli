@@ -65,7 +65,9 @@ class LocalDevState {
   }
 
   get projectConfig(): ProjectConfig {
-    return this._projectConfig;
+    return {
+      ...this._projectConfig,
+    };
   }
 
   get projectDir(): string {
@@ -81,7 +83,11 @@ class LocalDevState {
   }
 
   get deployedBuild(): Build | undefined {
-    return this._deployedBuild;
+    return (
+      this._deployedBuild && {
+        ...this._deployedBuild,
+      }
+    );
   }
 
   get isGithubLinked(): boolean {
@@ -91,7 +97,7 @@ class LocalDevState {
   get projectNodes(): {
     [key: string]: IntermediateRepresentationNodeLocalDev;
   } {
-    return this._projectNodes;
+    return { ...this._projectNodes };
   }
 
   set projectNodes(nodes: {
