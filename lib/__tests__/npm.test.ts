@@ -25,7 +25,7 @@ describe('lib/npm', () => {
 
   describe('isGloballyInstalled()', () => {
     it('should return true when exec is successful', async () => {
-      const actual = await isGloballyInstalled();
+      const actual = await isGloballyInstalled(DEFAULT_PACKAGE_MANAGER);
 
       expect(actual).toBe(true);
       expect(execMock).toHaveBeenCalledTimes(1);
@@ -39,7 +39,7 @@ describe('lib/npm', () => {
         throw new Error('unsuccessful');
       });
       util.promisify = mockedPromisify(execMock);
-      const actual = await isGloballyInstalled();
+      const actual = await isGloballyInstalled(DEFAULT_PACKAGE_MANAGER);
 
       expect(actual).toBe(false);
       expect(execMock).toHaveBeenCalledTimes(1);

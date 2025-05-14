@@ -6,7 +6,11 @@ import pkg from '../../package.json';
 import { UI_COLORS } from '../ui';
 import SpinniesManager from '../ui/SpinniesManager';
 import { lib } from '../../lang/en';
-import { isGloballyInstalled, executeInstall } from '../npm';
+import {
+  DEFAULT_PACKAGE_MANAGER,
+  isGloballyInstalled,
+  executeInstall,
+} from '../npm';
 import { debugError } from '../errorHandlers';
 import { uiLogger } from '../ui/logger';
 
@@ -68,7 +72,10 @@ export async function autoUpdateCLI() {
         });
 
         try {
-          if (await isGloballyInstalled()) {
+          if (
+            (await isGloballyInstalled(DEFAULT_PACKAGE_MANAGER)) &&
+            (await isGloballyInstalled('hs'))
+          ) {
             await executeInstall(['@hubspot/cli@latest'], '-g');
             showManualInstallHelp = false;
 

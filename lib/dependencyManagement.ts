@@ -118,7 +118,7 @@ export async function getProjectPackageJsonLocations(): Promise<string[]> {
     projectConfig: { srcDir, name },
   } = projectConfig;
 
-  if (!(await isGloballyInstalled())) {
+  if (!(await isGloballyInstalled(DEFAULT_PACKAGE_MANAGER))) {
     throw new Error(
       i18n(
         `commands.project.subcommands.installDeps.packageManagerNotInstalled`,

@@ -5,10 +5,12 @@ import pkg from '../package.json';
 
 export const DEFAULT_PACKAGE_MANAGER = 'npm';
 
-export async function isGloballyInstalled(): Promise<boolean> {
+export async function isGloballyInstalled(
+  packageName: string
+): Promise<boolean> {
   const exec = util.promisify(execAsync);
   try {
-    await exec(`${DEFAULT_PACKAGE_MANAGER} --version`);
+    await exec(`${packageName} --version`);
     return true;
   } catch (e) {
     return false;
