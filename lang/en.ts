@@ -5,7 +5,11 @@ import {
   uiCommandReference,
   uiLink,
 } from '../lib/ui';
-import { getProjectSettingsUrl } from '../lib/projects/urls';
+import {
+  getProjectDetailUrl,
+  getProjectSettingsUrl,
+} from '../lib/projects/urls';
+import { UI_COLORS } from '../lib/ui';
 
 type LangFunction = (...args: never[]) => string;
 
@@ -2689,11 +2693,20 @@ export const lib = {
       `Your project ${chalk.bold(projectName)} exists in ${accountIdentifier}, but has no deployed build. Projects must be successfully deployed to be developed locally. Address any build and deploy errors your project may have, then run ${uploadCommand} to upload and deploy your project.`,
     noComponents: 'There are no components in this project.',
     betaMessage: 'HubSpot projects local development',
-    learnMoreLocalDevServer: 'Learn more about the projects local dev server',
+    learnMoreLocalDevServer: uiLink(
+      'Learn more about the projects local dev server',
+      'https://developers.hubspot.com/docs/platform/project-cli-commands#start-a-local-development-server'
+    ),
     running: (projectName: string, accountIdentifier: string) =>
-      `Running ${chalk.bold(projectName)} locally on ${accountIdentifier}, waiting for changes ...`,
+      chalk.hex(UI_COLORS.SORBET)(
+        `Running ${chalk.bold(projectName)} locally on ${accountIdentifier}, waiting for changes ...`
+      ),
     quitHelper: `Press ${chalk.bold('q')} to stop the local dev server`,
-    viewProjectLink: 'View project in HubSpot',
+    viewProjectLink: (name: string, accountId: number) =>
+      uiLink(
+        'View project in HubSpot',
+        getProjectDetailUrl(name, accountId) || ''
+      ),
     viewTestAccountLink: 'View developer test account in HubSpot',
     exitingStart: 'Stopping local dev server ...',
     exitingSucceed: 'Successfully exited',
@@ -2711,6 +2724,7 @@ export const lib = {
         `${chalk.bold('Changing project configuration requires a new project build.')}\n\nThis will affect your public app's ${chalk.bold(`${installCount} existing ${installText}`)}. If your app has users in production, we strongly recommend creating a copy of this app to test your changes before proceding.`,
       header: (warning: string) =>
         `${warning} To reflect these changes and continue testing:`,
+      instructionsHeader: 'To reflect these changes and continue testing:',
       stopDev: `  * Stop ${uiCommandReference('hs project dev')}`,
       runUpload: (command: string) => `  * Run ${command}`,
       restartDev: `  * Re-run ${uiCommandReference('hs project dev')}`,
@@ -2722,12 +2736,8 @@ export const lib = {
         `${chalk.bold('Changing project configuration requires creating a new project build.')}\n\nYour marketplace app is currently installed in ${chalk.bold(`${installCount} ${accountText}`)}. Any uploaded changes will impact your app's users. We strongly recommend creating a copy of this app to test your changes before proceding.`,
     },
     activeInstallWarning: {
-      installCount: (
-        appName: string,
-        installCount: number,
-        installText: string
-      ) =>
-        `${chalk.bold(`The app ${appName} has ${installCount} production ${installText}`)}`,
+      installCount: (appName: string, installCount: number) =>
+        `${chalk.bold(`The app ${appName} is installed in ${installCount} production ${installCount === 1 ? 'account' : 'accounts'}`)}`,
       explanation:
         'Some changes made during local development may need to be synced to HubSpot, which will impact those existing installs. We strongly recommend creating a copy of this app to use instead.',
       confirmation: `You will always be asked to confirm any permanent changes to your app's configuration before uploading them.`,
@@ -2743,6 +2753,36 @@ export const lib = {
       fileChangeError: (message: string) =>
         `Failed to notify local dev server of file change: ${message}`,
     },
+  },
+  AppDevModeInterface: {
+    defaultMarketplaceAppWarning: (installCount: number) =>
+      `\n\nYour marketplace app is currently installed in ${chalk.bold(`${installCount} ${installCount === 1 ? 'account' : 'accounts'}`)}. Any uploaded changes will impact your app's users. We strongly recommend creating a copy of this app to test your changes before proceding.`,
+  },
+  LocalDevWebsocketServer: {
+    errors: {
+      notInitialized: (prefix: string) =>
+        `${prefix}Error: Attempted to access websocket before initialization`,
+      missingTypeField: (data: string) =>
+        `Unsupported message received. Missing type field: ${data}`,
+      unknownMessageType: (type: string) =>
+        `Unsupported message received. Unknown message type: ${type}`,
+      invalidJSON: (data: string) =>
+        `Unsupported message received. Invalid JSON: ${data}`,
+      portManagerNotRunning: (prefix: string) =>
+        `${prefix}Error: PortManagerServing must be running before starting LocalDevWebsocketServer.`,
+    },
+    logs: {
+      startup: (port: number) =>
+        `LocalDevWebsocketServer running on port ${port}`,
+    },
+  },
+  LocalDevProcess: {
+    projectConfigMismatch: `Unable to upload project. The project config has been modified since starting ${uiCommandReference('hs project dev')}.`,
+    uploadInitiated: 'Project upload initiated from Local Dev UI.',
+    uploadFailed:
+      'Project upload failed. To proceed with local development, fix any necessary errors, then re-upload your project.',
+    uploadSuccess:
+      'Project upload completed successfully. Resuming local dev...',
   },
   localDevHelpers: {
     confirmDefaultAccountIsTarget: {

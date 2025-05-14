@@ -94,7 +94,12 @@ export async function handler(
   // Get updated version of the config
   loadConfig(getConfigPath()!);
 
-  if (accountToRemove === currentDefaultAccount) {
+  const accountToRemoveId = getAccountId(accountToRemove);
+  let defaultAccountId;
+  if (currentDefaultAccount) {
+    defaultAccountId = getAccountId(currentDefaultAccount);
+  }
+  if (accountToRemoveId === defaultAccountId) {
     logger.log();
     logger.log(
       i18n(`commands.account.subcommands.remove.logs.replaceDefaultAccount`)
