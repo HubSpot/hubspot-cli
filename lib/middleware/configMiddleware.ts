@@ -130,6 +130,13 @@ const sandboxesSubCommands = {
   },
 };
 
+const configSubCommands = {
+  target: false,
+  subCommands: {
+    migrate: { target: true },
+  },
+};
+
 const SKIP_ACCOUNT_VALIDATION = {
   init: { target: true },
   auth: { target: true },
@@ -137,6 +144,7 @@ const SKIP_ACCOUNT_VALIDATION = {
   accounts: accountsSubCommands,
   sandbox: sandboxesSubCommands,
   sandboxes: sandboxesSubCommands,
+  config: configSubCommands,
 };
 
 export async function validateAccountOptions(argv: Arguments): Promise<void> {
