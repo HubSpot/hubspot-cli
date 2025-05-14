@@ -80,6 +80,7 @@ export async function loadConfigMiddleware(
     !configFileExists(true) &&
     isTargetedCommand(argv._, {
       account: { target: false, subCommands: { auth: { target: true } } },
+      config: { target: false, subCommands: { migrate: { target: true } } },
     })
   ) {
     return;
@@ -129,6 +130,13 @@ const sandboxesSubCommands = {
   },
 };
 
+const configSubCommands = {
+  target: false,
+  subCommands: {
+    migrate: { target: true },
+  },
+};
+
 const SKIP_ACCOUNT_VALIDATION = {
   init: { target: true },
   auth: { target: true },
@@ -136,6 +144,7 @@ const SKIP_ACCOUNT_VALIDATION = {
   accounts: accountsSubCommands,
   sandbox: sandboxesSubCommands,
   sandboxes: sandboxesSubCommands,
+  config: configSubCommands,
 };
 
 export async function validateAccountOptions(argv: Arguments): Promise<void> {
