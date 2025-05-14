@@ -50,13 +50,9 @@ class LocalDevState {
     this._listeners = {};
   }
 
-  private setState<K extends keyof LocalDevState>(
-    key: K,
-    value: this[K]
-  ): void {
-    this[key] = value;
+  private runListeners<K extends keyof LocalDevState>(key: K): void {
     if (this._listeners[key] && this._listeners[key].length) {
-      this._listeners[key].forEach(listener => listener(value));
+      this._listeners[key].forEach(listener => listener(this[key]));
     }
   }
 
@@ -101,7 +97,8 @@ class LocalDevState {
   set projectNodes(nodes: {
     [key: string]: IntermediateRepresentationNodeLocalDev;
   }) {
-    this.setState('projectNodes', nodes);
+    this._projectNodes = nodes;
+    this.runListeners('projectNodes');
   }
 
   get env(): Environment {
