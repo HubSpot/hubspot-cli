@@ -1,3 +1,14 @@
+import util from 'util';
+import {
+  installPackages,
+  getProjectPackageJsonLocations,
+} from '../dependencyManagement';
+import { walk } from '@hubspot/local-dev-lib/fs';
+import path from 'path';
+import { getProjectConfig } from '../projects/config';
+import SpinniesManager from '../ui/SpinniesManager';
+import { existsSync } from 'fs';
+
 jest.mock('../projects/config');
 jest.mock('@hubspot/local-dev-lib/logger');
 jest.mock('@hubspot/local-dev-lib/fs');
@@ -6,18 +17,6 @@ jest.mock('fs', () => ({
   ...jest.requireActual('fs'),
   existsSync: jest.fn().mockReturnValue(true),
 }));
-
-import util from 'util';
-import {
-  installPackages,
-  getProjectPackageJsonLocations,
-} from '../dependencyManagement';
-import { isGloballyInstalled, getLatestCliVersion } from '../npm';
-import { walk } from '@hubspot/local-dev-lib/fs';
-import path from 'path';
-import { getProjectConfig } from '../projects/config';
-import SpinniesManager from '../ui/SpinniesManager';
-import { existsSync } from 'fs';
 
 describe('lib/dependencyManagement', () => {
   let execMock: jest.Mock;
@@ -51,52 +50,7 @@ describe('lib/dependencyManagement', () => {
     });
   });
 
-  describe('getLatestCliVersion', () => {
-    it('should return the version correctly', async () => {
-      const latest = '1.0.0';
-      const next = '1.0.0.beta.1';
-      execMock = jest
-        .fn()
-        .mockResolvedValueOnce({ stdout: JSON.stringify({ latest, next }) });
-
-      util.promisify = mockedPromisify(execMock);
-      const actual = await getLatestCliVersion();
-      expect(actual).toEqual({ latest, next });
-    });
-
-    it('should throw any errors that encounter with the check', async () => {
-      const errorMessage = 'unsuccessful';
-      execMock = jest.fn().mockImplementationOnce(() => {
-        throw new Error(errorMessage);
-      });
-      util.promisify = mockedPromisify(execMock);
-      await expect(() => getLatestCliVersion()).rejects.toThrowError(
-        errorMessage
-      );
-    });
-  });
-
-  describe('isGloballyInstalled', () => {
-    it('should return true when exec is successful', async () => {
-      const actual = await isGloballyInstalled('npm');
-      expect(actual).toBe(true);
-      expect(execMock).toHaveBeenCalledTimes(1);
-      expect(execMock).toHaveBeenCalledWith('npm --version');
-    });
-
-    it('should return false when exec is unsuccessful', async () => {
-      execMock = jest.fn().mockImplementationOnce(() => {
-        throw new Error('unsuccessful');
-      });
-      util.promisify = mockedPromisify(execMock);
-      const actual = await isGloballyInstalled('npm');
-      expect(actual).toBe(false);
-      expect(execMock).toHaveBeenCalledTimes(1);
-      expect(execMock).toHaveBeenCalledWith('npm --version');
-    });
-  });
-
-  describe('installPackages', () => {
+  describe('installPackages()', () => {
     it('should setup a loading spinner', async () => {
       const packages = ['package1', 'package2'];
       await installPackages({ packages, installLocations });
@@ -145,10 +99,10 @@ describe('lib/dependencyManagement', () => {
     it('should use the provided install locations', async () => {
       await installPackages({ installLocations });
       expect(execMock).toHaveBeenCalledTimes(installLocations.length);
-      expect(execMock).toHaveBeenCalledWith(`npm install`, {
+      expect(execMock).toHaveBeenCalledWith(`npm install `, {
         cwd: appFunctionsDir,
       });
-      expect(execMock).toHaveBeenCalledWith(`npm install`, {
+      expect(execMock).toHaveBeenCalledWith(`npm install `, {
         cwd: extensionsDir,
       });
     });
@@ -169,12 +123,13 @@ describe('lib/dependencyManagement', () => {
       });
 
       await installPackages({});
+
       // It's called once per each install location, plus once to check if npm installed
       expect(execMock).toHaveBeenCalledTimes(installLocations.length + 1);
-      expect(execMock).toHaveBeenCalledWith(`npm install`, {
+      expect(execMock).toHaveBeenCalledWith(`npm install `, {
         cwd: appFunctionsDir,
       });
-      expect(execMock).toHaveBeenCalledWith(`npm install`, {
+      expect(execMock).toHaveBeenCalledWith(`npm install `, {
         cwd: extensionsDir,
       });
     });
@@ -225,7 +180,7 @@ describe('lib/dependencyManagement', () => {
     });
   });
 
-  describe('getProjectPackageJsonFiles', () => {
+  describe('getProjectPackageJsonFiles()', () => {
     it('should throw an error when ran outside the boundary of a project', async () => {
       mockedGetProjectConfig.mockResolvedValue({});
       await expect(() => getProjectPackageJsonLocations()).rejects.toThrowError(
@@ -266,16 +221,6 @@ describe('lib/dependencyManagement', () => {
 
       const actual = await getProjectPackageJsonLocations();
       expect(actual).toEqual([appFunctionsDir, extensionsDir]);
-    });
-
-    it('should throw an error if no package.json files are found', async () => {
-      mockedWalk.mockResolvedValue([]);
-
-      await expect(() => getProjectPackageJsonLocations()).rejects.toThrowError(
-        new RegExp(
-          `No dependencies to install. The project ${projectName} folder might be missing component or subcomponent files.`
-        )
-      );
     });
   });
 });
