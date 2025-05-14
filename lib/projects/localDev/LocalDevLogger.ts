@@ -12,6 +12,7 @@ import {
 import { lib } from '../../../lang/en';
 import { LocalDevState } from '../../../types/LocalDev';
 import SpinniesManager from '../../ui/SpinniesManager';
+import { logError } from '../../errorHandlers';
 
 class LocalDevLogger {
   private state: LocalDevState;
@@ -24,7 +25,9 @@ class LocalDevLogger {
     this.uploadWarnings = new Set();
   }
 
-  private logUploadInstructions(): void {
+  private logUploadInstructions(warning: string): void {
+    uiLogger.log('');
+    uiLogger.warn(warning);
     uiLogger.log('');
     uiLogger.log(lib.LocalDevManager.uploadWarning.instructionsHeader);
 
@@ -69,9 +72,7 @@ class LocalDevLogger {
     // Avoid logging the warning to the console if it is currently the most
     // recently logged warning. We do not want to spam the console with the same message.
     if (warning !== this.mostRecentUploadWarning) {
-      uiLogger.log('');
-      uiLogger.warn(warning);
-      this.logUploadInstructions();
+      this.logUploadInstructions(warning);
 
       this.mostRecentUploadWarning = warning;
     }
@@ -81,15 +82,17 @@ class LocalDevLogger {
     this.uploadWarnings.add(warning);
   }
 
+  clearUploadWarnings(): void {
+    this.uploadWarnings.clear();
+  }
+
   missingComponentsWarning(components: string[]): void {
     const warning = lib.LocalDevManager.uploadWarning.missingComponents(
       components.join(', ')
     );
 
     if (warning !== this.mostRecentUploadWarning) {
-      uiLogger.log('');
-      uiLogger.warn(warning);
-      this.logUploadInstructions();
+      this.logUploadInstructions(warning);
       this.mostRecentUploadWarning = warning;
     }
   }
@@ -171,6 +174,28 @@ class LocalDevLogger {
     SpinniesManager.succeed('cleanupMessage', {
       text: lib.LocalDevManager.exitingSucceed,
     });
+  }
+
+  uploadInitiated(): void {
+    uiLogger.log(lib.LocalDevProcess.uploadInitiated);
+  }
+
+  projectConfigMismatch(): void {
+    uiLogger.log(lib.LocalDevProcess.projectConfigMismatch);
+  }
+
+  uploadError(error: unknown): void {
+    logger.log('');
+    logError(error);
+    uiLogger.log(lib.LocalDevProcess.uploadFailed);
+    logger.log('');
+  }
+
+  uploadSuccess(): void {
+    logger.log('');
+    uiLogger.log(lib.LocalDevProcess.uploadSuccess);
+    uiLine();
+    logger.log('');
   }
 
   monitorConsoleOutput(): void {
