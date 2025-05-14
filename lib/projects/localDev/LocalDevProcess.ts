@@ -4,12 +4,15 @@ import { Build } from '@hubspot/local-dev-lib/types/Build';
 import { Environment } from '@hubspot/local-dev-lib/types/Config';
 import path from 'path';
 
-import { ProjectConfig } from '../../../types/Projects';
+import { ProjectConfig, ProjectPollResult } from '../../../types/Projects';
 import { LocalDevState } from '../../../types/LocalDev';
 import LocalDevLogger from './LocalDevLogger';
 import DevServerManagerV2 from './DevServerManagerV2';
 import { EXIT_CODES } from '../../enums/exitCodes';
 import { mapToUserFriendlyName } from '@hubspot/project-parsing-lib/src/lib/transform';
+import { getProjectConfig } from '../config';
+import { handleProjectUpload } from '../upload';
+import { pollProjectBuildAndDeploy } from '../buildAndDeploy';
 
 type LocalDevProcessConstructorOptions = {
   targetProjectAccountId: number;
@@ -126,6 +129,23 @@ class LocalDevProcess {
     }
   }
 
+  private async projectConfigValidForUpload(): Promise<boolean> {
+    const { projectConfig } = await getProjectConfig();
+
+    if (!projectConfig) {
+      return false;
+    }
+
+    Object.keys(projectConfig).forEach(key => {
+      const field = key as keyof ProjectConfig;
+      if (projectConfig[field] !== this.state.projectConfig[field]) {
+        return false;
+      }
+    });
+
+    return true;
+  }
+
   handleFileChange(filePath: string, event: string): void {
     try {
       this.devServerManager.fileChange({ filePath, event });
@@ -192,6 +212,32 @@ class LocalDevProcess {
 
     this.state.projectNodes =
       intermediateRepresentation.intermediateNodesIndexedByUid;
+  }
+
+  async uploadProject(): Promise<void> {
+    this.logger.uploadInitiated();
+    const isUploadable = await this.projectConfigValidForUpload();
+
+    if (!isUploadable) {
+      this.logger.projectConfigMismatch();
+      return;
+    }
+
+    const { uploadError } = await handleProjectUpload<ProjectPollResult>({
+      accountId: this.state.targetProjectAccountId,
+      projectConfig: this.state.projectConfig,
+      projectDir: this.state.projectDir,
+      callbackFunc: pollProjectBuildAndDeploy,
+      sendIR: true,
+      skipValidation: true,
+    });
+
+    if (uploadError) {
+      this.logger.uploadError(uploadError);
+    } else {
+      this.logger.uploadSuccess();
+      this.logger.clearUploadWarnings();
+    }
   }
 }
 

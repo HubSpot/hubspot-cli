@@ -386,7 +386,7 @@ class LocalDevManager {
   monitorConsoleOutput(): void {
     const originalStdoutWrite = process.stdout.write.bind(process.stdout);
 
-    type StdoutCallback = (err?: Error) => void;
+    type StdoutCallback = (err?: Error | null) => void;
 
     // Need to provide both overloads for process.stdout.write to satisfy TS
     function customStdoutWrite(

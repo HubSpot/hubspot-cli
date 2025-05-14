@@ -1,12 +1,12 @@
 {
   "name": "@hubspot/cli",
-  "version": "7.4.8",
+  "version": "7.4.9-beta.0",
   "description": "The official CLI for developing on HubSpot",
   "license": "Apache-2.0",
   "repository": "https://github.com/HubSpot/hubspot-cli",
   "dependencies": {
-    "@hubspot/local-dev-lib": "0.3.1-experimental.0",
-    "@hubspot/project-parsing-lib": "0.1.7",
+    "@hubspot/local-dev-lib": "3.5.6",
+    "@hubspot/project-parsing-lib": "0.1.11",
     "@hubspot/serverless-dev-runtime": "7.0.2",
     "@hubspot/theme-preview-dev-server": "0.0.10",
     "@hubspot/ui-extensions-dev-server": "0.8.52",
@@ -28,6 +28,7 @@
     "table": "6.9.0",
     "tmp": "0.2.3",
     "update-notifier": "5.1.0",
+    "ws": "^8.18.2",
     "yargs": "17.7.2",
     "yargs-parser": "21.1.1"
   },
