@@ -17,3 +17,8 @@ export type LocalDevState = {
   };
   env: Environment;
 };
+
+export type LocalDevWebsocketMessage = {
+  type: string;
+  data: unknown;
+};

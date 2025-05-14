@@ -28,6 +28,7 @@
     "table": "6.9.0",
     "tmp": "0.2.3",
     "update-notifier": "5.1.0",
+    "ws": "^8.18.2",
     "yargs": "17.7.2",
     "yargs-parser": "21.1.1"
   },
