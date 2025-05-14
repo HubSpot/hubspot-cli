@@ -3,6 +3,7 @@ import fs from 'fs';
 import {
   DEFAULT_HUBSPOT_CONFIG_YAML_FILE_NAME,
   GLOBAL_CONFIG_PATH,
+  ARCHIVED_HUBSPOT_CONFIG_YAML_FILE_NAME,
 } from '@hubspot/local-dev-lib/constants/config';
 import { configFileExists } from '@hubspot/local-dev-lib/config/migrate';
 import { logger } from '@hubspot/local-dev-lib/logger';
@@ -71,12 +72,14 @@ async function handler(
 }
 
 function configMigrateBuilder(yargs: Argv): Argv<ConfigMigrateArgs> {
-  yargs
-    .option('force', {
-      alias: 'f',
-      type: 'boolean',
-      default: false,
-      description: i18n('commands.config.subcommands.migrate.options.force'),
+  return yargs
+    .option({
+      force: {
+        alias: 'f',
+        type: 'boolean',
+        default: false,
+        description: i18n('commands.config.subcommands.migrate.options.force'),
+      },
     })
     .example([
       [
@@ -92,15 +95,15 @@ function configMigrateBuilder(yargs: Argv): Argv<ConfigMigrateArgs> {
           globalConfigPath: GLOBAL_CONFIG_PATH,
         }),
       ],
-    ]);
-
-  return yargs as Argv<ConfigMigrateArgs>;
+    ]) as Argv<ConfigMigrateArgs>;
 }
 
 const builder = makeYargsBuilder<ConfigMigrateArgs>(
   configMigrateBuilder,
   command,
-  describe,
+  i18n('commands.config.subcommands.migrate.verboseDescribe', {
+    archivedConfigPath: ARCHIVED_HUBSPOT_CONFIG_YAML_FILE_NAME,
+  }),
   {
     useGlobalOptions: true,
     useConfigOptions: true,

@@ -36,6 +36,7 @@ class LocalDevWatcher {
   start(): void {
     this.watcher = chokidar.watch(this.localDevProcess.projectDir, {
       ignoreInitial: true,
+      ignored: ['**/dist'],
     });
 
     const configPaths = Object.values(this.localDevProcess.projectNodes).map(

@@ -22,8 +22,8 @@ import { toKebabCase } from '@hubspot/local-dev-lib/text';
 import { Environment } from '@hubspot/local-dev-lib/types/Config';
 import { CLIAccount } from '@hubspot/local-dev-lib/types/Accounts';
 import { PERSONAL_ACCESS_KEY_AUTH_METHOD } from '@hubspot/local-dev-lib/constants/auth';
+import { GLOBAL_CONFIG_PATH } from '@hubspot/local-dev-lib/constants/config';
 
-import { addGlobalOptions, addTestingOptions } from '../../lib/commonOpts';
 import { handleMerge, handleMigration } from '../../lib/configMigrate';
 import { handleExit } from '../../lib/process';
 import { debugError } from '../../lib/errorHandlers/index';
@@ -37,6 +37,7 @@ import { trackCommandMetadataUsage } from '../../lib/usageTracking';
 import { EXIT_CODES } from '../../lib/enums/exitCodes';
 import { uiCommandReference, uiFeatureHighlight } from '../../lib/ui';
 import { CommonArgs, ConfigArgs } from '../../types/Yargs';
+import { makeYargsBuilder } from '../../lib/yargsUtils';
 
 const TRACKING_STATUS = {
   STARTED: 'started',
@@ -269,7 +270,7 @@ export async function handler(
   );
 }
 
-export function builder(yargs: Argv): Argv<AccountAuthArgs> {
+function accountAuthBuilder(yargs: Argv): Argv<AccountAuthArgs> {
   yargs.options({
     account: {
       describe: i18n(
@@ -285,8 +286,18 @@ export function builder(yargs: Argv): Argv<AccountAuthArgs> {
     },
   });
 
-  addTestingOptions(yargs);
-  addGlobalOptions(yargs);
-
   return yargs as Argv<AccountAuthArgs>;
 }
+
+export const builder = makeYargsBuilder<AccountAuthArgs>(
+  accountAuthBuilder,
+  command,
+  i18n('commands.account.subcommands.auth.verboseDescribe', {
+    authMethod: PERSONAL_ACCESS_KEY_AUTH_METHOD.value,
+    globalConfigPath: GLOBAL_CONFIG_PATH,
+  }),
+  {
+    useGlobalOptions: true,
+    useTestingOptions: true,
+  }
+);
