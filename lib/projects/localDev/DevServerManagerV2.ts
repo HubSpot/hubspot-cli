@@ -12,7 +12,7 @@ import {
 import { getAccountConfig } from '@hubspot/local-dev-lib/config';
 import AppDevModeInterface from './AppDevModeInterface';
 import { lib } from '../../../lang/en';
-import { LocalDevState } from '../../../types/LocalDev';
+import LocalDevState from './LocalDevState';
 import LocalDevLogger from './LocalDevLogger';
 
 type DevServerInterface = {

@@ -3,16 +3,16 @@ import { Build } from '@hubspot/local-dev-lib/types/Build';
 import { Environment } from '@hubspot/local-dev-lib/types/Config';
 import { ProjectConfig } from './Projects';
 
-export type LocalDevState = {
+export type LocalDevStateConstructorOptions = {
   targetProjectAccountId: number;
   targetTestingAccountId: number;
   projectConfig: ProjectConfig;
   projectDir: string;
   projectId: number;
-  debug: boolean;
+  debug?: boolean;
   deployedBuild?: Build;
   isGithubLinked: boolean;
-  projectNodes: {
+  initialProjectNodes: {
     [key: string]: IntermediateRepresentationNodeLocalDev;
   };
   env: Environment;
