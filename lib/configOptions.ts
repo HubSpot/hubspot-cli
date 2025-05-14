@@ -8,20 +8,16 @@ import { CmsPublishMode } from '@hubspot/local-dev-lib/types/Files';
 import { CMS_PUBLISH_MODE } from '@hubspot/local-dev-lib/constants/files';
 import { commaSeparatedValues } from '@hubspot/local-dev-lib/text';
 import { trackCommandUsage } from './usageTracking';
-import { promptUser } from './prompts/promptUtils';
+import { promptUser, listPrompt } from './prompts/promptUtils';
 import { lib } from '../lang/en';
 import { uiLogger } from './ui/logger';
 
 async function enableOrDisableBooleanFieldPrompt(
   fieldName: string
 ): Promise<boolean> {
-  const { isEnabled } = await promptUser<{ isEnabled: boolean }>([
+  const isEnabled = await listPrompt<boolean>(
+    lib.configOptions.enableOrDisableBooleanFieldPrompt.message(fieldName),
     {
-      type: 'list',
-      name: 'isEnabled',
-      pageSize: 20,
-      message:
-        lib.configOptions.enableOrDisableBooleanFieldPrompt.message(fieldName),
       choices: [
         {
           name: lib.configOptions.enableOrDisableBooleanFieldPrompt.labels
@@ -34,9 +30,9 @@ async function enableOrDisableBooleanFieldPrompt(
           value: false,
         },
       ],
-      default: true,
-    },
-  ]);
+      defaultAnswer: true,
+    }
+  );
 
   return isEnabled;
 }
@@ -96,18 +92,13 @@ export async function setAllowAutoUpdates({
 const ALL_CMS_PUBLISH_MODES = Object.values(CMS_PUBLISH_MODE);
 
 async function selectCmsPublishMode(): Promise<CmsPublishMode> {
-  const { cmsPublishMode } = await promptUser<{
-    cmsPublishMode: CmsPublishMode;
-  }>([
+  const cmsPublishMode = await listPrompt<CmsPublishMode>(
+    lib.configOptions.setDefaultCmsPublishMode.promptMessage,
     {
-      type: 'list',
-      name: 'cmsPublishMode',
-      pageSize: 20,
-      message: lib.configOptions.setDefaultCmsPublishMode.promptMessage,
       choices: ALL_CMS_PUBLISH_MODES,
-      default: CMS_PUBLISH_MODE.publish,
-    },
-  ]);
+      defaultAnswer: CMS_PUBLISH_MODE.publish,
+    }
+  );
 
   return cmsPublishMode;
 }
