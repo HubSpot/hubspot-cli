@@ -22,6 +22,7 @@ en:
       subcommands:
         auth:
           describe: "Configure authentication for your HubSpot account."
+          verboseDescribe: "Configure authentication for a HubSpot account. This will create or update the global config file at {{ globalConfigPath }} that stores your account information.\n\nThe recommended authentication method is {{#bold}}{{ authMethod }}{{/bold}}, which uses an access token tied to a specific user account.\nIf a deprecated config file exists, you will be prompted to migrate it to the new global config file. If both deprecated and global config files exist, you will be prompted to merge them. If any conflicts exist between the two files, you will be prompted to reconcile them."
           options:
             account:
               describe: "HubSpot account to authenticate"
@@ -39,6 +40,7 @@ en:
           prompts:
             replaceOverrideFile: "Replace existing account override file?"
           errors:
+            globalConfigNotFound: "This command is only compatible with our new global config. Run {{ authCommand }} to get started."
             accountNotFound: "The specified account could not be found in the config file {{ configPath }}"
           options:
             account:
@@ -54,6 +56,8 @@ en:
             deleteOverrideFile: "Delete account override file?"
           success: "Removed the default account override file."
           noOverrideFile: "No default account override file found in the current working directory. No action required."
+          errors:
+            globalConfigNotFound: "This command is only compatible with our new global config. Run {{ authCommand }} to get started."
           options:
             force:
               describe: "Skip confirmation prompt when removing the override file"
@@ -165,6 +169,7 @@ en:
       subcommands:
         migrate:
           describe: "Migrate from the deprecated {{ deprecatedConfigPath }} file to the new global config file at {{ globalConfigPath }}."
+          verboseDescribe: "This command will create a new global configuration file in your root directory and rename the deprecated config to {{ archivedConfigPath }}. If any conflicting values are detected, we will prompt you to reconcile them unless the \"--force\" flag is supplied."
           migrationAlreadyCompleted: "No {{ deprecatedConfigPath }} deprecated configuration file found. No migration necessary."
           errors:
             configNotFound: "A configuration file at {{ configPath }} could not be found. Please try again with a valid file path."
@@ -1236,9 +1241,6 @@ en:
         compressed: "Project files compressed: {{ byteCount }} bytes"
         compressing: "Compressing build files to \"{{ path }}\""
         fileFiltered: "Ignore rule triggered for \"{{ filename }}\""
-    middleware:
-      fireAlarm:
-        failedToLoadBoxen: "Failed to load boxen util."
     ui:
       betaTag: "{{#bold}}[BETA]{{/bold}}"
       betaWarning:
@@ -1332,9 +1334,15 @@ en:
         debug:
           describe: "Set log level to debug"
     configMigrate:
-      migrateConfigPrompt: "Migrate config?\n From deprecated config file: {{ deprecatedConfigPath }}\n To new global config file: {{ globalConfigPath }}\n (This action will delete the deprecated config file).\n"
+      migrationHeader: "Migrate your existing configuration file to the new global location?"
+      migrationDescription: "This action will create a new global configuration file in your root directory and rename the deprecated config to {{ archivedConfigPath}}. If any conflicting values are detected, we will prompt you to reconcile them unless the \"--force\" flag is supplied."
+      mergeHeader: "Merge your existing configuration file with the global config?"
+      mergeDescription: "This action will merge your deprecated config file with the global config file located in your root directory. It will also rename the deprecated config to {{ archivedConfigPath }}. If any conflicting values are detected, we will prompt you to reconcile them unless the \"--force\" flag is supplied."
+      migrateConfigPromptDescription: "From deprecated config file: {{ deprecatedConfigPath }}\nTo new global config file: {{ globalConfigPath }}"
+      migrateConfigPrompt: "Migrate to the new config?"
       mergeConfigConflictPrompt: "Change the {{ property }} property in the global config from {{ newValue }} to {{ oldValue }}?"
-      mergeConfigsPrompt: "Two config files detected. Merge them?\n Deprecated config file: {{ deprecatedConfigPath }}\n Global config: {{ globalConfigPath }}\n (This action will delete the deprecated config file).\n"
+      mergeConfigsPromptDescription: "Two config files detected. \nDeprecated config file: {{ deprecatedConfigPath }}\nGlobal config: {{ globalConfigPath }}"
+      mergeConfigsPrompt: "Merge configs?"
       migrationSuccess: "The deprecated config file has been migrated to the new global config file at {{ globalConfigPath }}."
       mergeSuccess: "The deprecated config file has been merged with the global config file at {{ globalConfigPath }}."
       skippedExistingAccounts: "\nThe following accounts were not merged, because they already exist in the global config: {{ skippedAccountIds }}.\n"

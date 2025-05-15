@@ -1,5 +1,5 @@
-import { logger } from '@hubspot/local-dev-lib/logger';
 import { Environment } from '@hubspot/local-dev-lib/types/Config';
+import { logger } from '@hubspot/local-dev-lib/logger';
 import { promptUser } from '../../prompts/promptUtils';
 import { DevModeInterface as UIEDevModeInterface } from '@hubspot/ui-extensions-dev-server';
 import {
@@ -18,6 +18,7 @@ import {
   Component,
 } from '../../../types/Projects';
 import { lib } from '../../../lang/en';
+import { uiLogger } from '../../ui/logger';
 
 const SERVER_KEYS = {
   privateApp: 'privateApp',
@@ -85,7 +86,7 @@ class DevServerManager {
       if (Object.keys(compatibleComponents).length) {
         await callback(devServer.serverInterface, compatibleComponents);
       } else {
-        logger.debug(lib.DevServerManager.noCompatibleComponents(serverKey));
+        uiLogger.debug(lib.DevServerManager.noCompatibleComponents(serverKey));
       }
     }
   }

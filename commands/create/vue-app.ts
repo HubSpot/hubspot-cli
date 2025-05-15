@@ -1,11 +1,16 @@
-// @ts-nocheck
-const { cloneGithubRepo } = require('@hubspot/local-dev-lib/github');
+import { cloneGithubRepo } from '@hubspot/local-dev-lib/github';
 
-module.exports = {
+import { CreatableCmsAsset } from '../../types/Cms';
+
+const vueAppAssetType: CreatableCmsAsset = {
+  hidden: false,
   dest: ({ name, assetType }) => name || assetType,
-  execute: async ({ options, dest, assetType }) =>
-    cloneGithubRepo('HubSpot/cms-vue-boilerplate', dest, {
+  execute: async ({ commandArgs, dest, assetType }) => {
+    await cloneGithubRepo('HubSpot/cms-vue-boilerplate', dest, {
+      ...commandArgs,
       type: assetType,
-      ...options,
-    }),
+    });
+  },
 };
+
+export default vueAppAssetType;

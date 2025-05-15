@@ -4,7 +4,7 @@ import {
   addAccountOptions,
   addUseEnvironmentOptions,
 } from '../../../lib/commonOpts';
-import * as deleteSecretCommand from '../deleteSecret';
+import deleteSecretCommand from '../deleteSecret';
 
 jest.mock('yargs');
 jest.mock('../../../lib/commonOpts');

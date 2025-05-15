@@ -1,11 +1,15 @@
-// @ts-nocheck
-const { cloneGithubRepo } = require('@hubspot/local-dev-lib/github');
+import { cloneGithubRepo } from '@hubspot/local-dev-lib/github';
+import { CreatableCmsAsset } from '../../types/Cms';
 
-module.exports = {
+const webpackServerlessAssetType: CreatableCmsAsset = {
+  hidden: false,
   dest: ({ name, assetType }) => name || assetType,
-  execute: async ({ options, dest, assetType }) =>
-    cloneGithubRepo('HubSpot/cms-webpack-serverless-boilerplate', dest, {
+  execute: async ({ commandArgs, dest, assetType }) => {
+    await cloneGithubRepo('HubSpot/cms-webpack-serverless-boilerplate', dest, {
+      ...commandArgs,
       type: assetType,
-      ...options,
-    }),
+    });
+  },
 };
+
+export default webpackServerlessAssetType;

@@ -1,4 +1,3 @@
-import { logger } from '@hubspot/local-dev-lib/logger';
 import { fetchRepoFile } from '@hubspot/local-dev-lib/api/github';
 import { RepoPath } from '@hubspot/local-dev-lib/types/Github';
 import {
@@ -13,6 +12,7 @@ import {
 } from '../../types/Projects';
 import { debugError } from '../errorHandlers/index';
 import { lib } from '../../lang/en';
+import { uiLogger } from '../ui/logger';
 
 export const EMPTY_PROJECT_TEMPLATE_NAME = 'no-template';
 const PROJECT_TEMPLATE_PROPERTIES = ['name', 'label', 'path', 'insertPath'];
@@ -54,12 +54,12 @@ export async function getProjectTemplateListFromRepo(
     config = data;
   } catch (e) {
     debugError(e);
-    logger.error(lib.projects.create.errors.missingConfigFileTemplateSource);
+    uiLogger.error(lib.projects.create.errors.missingConfigFileTemplateSource);
     return process.exit(EXIT_CODES.ERROR);
   }
 
   if (!config || !config[PROJECT_COMPONENT_TYPES.PROJECTS]) {
-    logger.error(lib.projects.create.errors.noProjectsInConfig);
+    uiLogger.error(lib.projects.create.errors.noProjectsInConfig);
     return process.exit(EXIT_CODES.ERROR);
   }
 
@@ -72,7 +72,7 @@ export async function getProjectTemplateListFromRepo(
   );
 
   if (!templatesContainAllProperties) {
-    logger.error(lib.projects.create.errors.missingPropertiesInConfig);
+    uiLogger.error(lib.projects.create.errors.missingPropertiesInConfig);
     return process.exit(EXIT_CODES.ERROR);
   }
 

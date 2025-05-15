@@ -1,21 +1,25 @@
-// @ts-nocheck
-const { cloneGithubRepo } = require('@hubspot/local-dev-lib/github');
-const { getIsInProject } = require('../../lib/projects/config');
+import { cloneGithubRepo } from '@hubspot/local-dev-lib/github';
+import { getIsInProject } from '../../lib/projects/config';
+import { CreatableCmsAsset } from '../../types/Cms';
 
 const PROJECT_BOILERPLATE_BRANCH = 'cms-boilerplate-developer-projects';
 
-module.exports = {
+const websiteThemeAssetType: CreatableCmsAsset = {
+  hidden: false,
   dest: ({ name, assetType }) => name || assetType,
-  execute: async ({ dest, assetType, options }) => {
+  execute: async ({ dest, assetType, commandArgs }) => {
     const isInProject = await getIsInProject(dest);
 
     if (isInProject) {
-      options.branch = PROJECT_BOILERPLATE_BRANCH;
+      commandArgs.branch = PROJECT_BOILERPLATE_BRANCH;
     }
-    cloneGithubRepo('HubSpot/cms-theme-boilerplate', dest, {
+
+    await cloneGithubRepo('HubSpot/cms-theme-boilerplate', dest, {
+      ...commandArgs,
       type: assetType,
       sourceDir: 'src',
-      ...options,
     });
   },
 };
+
+export default websiteThemeAssetType;

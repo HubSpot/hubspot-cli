@@ -4,7 +4,7 @@ import {
   addConfigOptions,
   addUseEnvironmentOptions,
 } from '../../../../lib/commonOpts';
-import * as schemaDeleteCommand from '../delete';
+import schemaDeleteCommand from '../delete';
 
 jest.mock('yargs');
 jest.mock('../../../../lib/commonOpts');

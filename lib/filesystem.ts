@@ -2,7 +2,7 @@ import path from 'path';
 import { getCwd } from '@hubspot/local-dev-lib/path';
 import { FOLDER_DOT_EXTENSIONS } from '@hubspot/local-dev-lib/constants/extensions';
 
-export function resolveLocalPath(filepath: string): string {
+export function resolveLocalPath(filepath?: string): string {
   return filepath && typeof filepath === 'string'
     ? path.resolve(getCwd(), filepath)
     : // Use CWD if optional filepath is not passed.

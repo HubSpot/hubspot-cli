@@ -20,14 +20,16 @@ import {
 } from '../../../lib/projects/localDev/helpers';
 import { selectDeveloperTestTargetAccountPrompt } from '../../../lib/prompts/projectDevTargetAccountPrompt';
 import SpinniesManager from '../../../lib/ui/SpinniesManager';
-import LocalDevManagerV2 from '../../../lib/projects/localDev/LocalDevManagerV2';
-import { handleExit } from '../../../lib/process';
+import LocalDevProcess from '../../../lib/projects/localDev/LocalDevProcess';
+import LocalDevWatcher from '../../../lib/projects/localDev/LocalDevWatcher';
+import { handleExit, handleKeypress } from '../../../lib/process';
 import {
   isAppDeveloperAccount,
   isStandardAccount,
 } from '../../../lib/accountTypes';
 import { uiCommandReference } from '../../../lib/ui';
 import { i18n } from '../../../lib/lang';
+// import LocalDevWebsocketServer from '../../../lib/projects/localDev/LocalDevWebsocketServer';
 
 export async function unifiedProjectDevFlow(
   args: ArgumentsCamelCase<ProjectDevArgs>,
@@ -154,8 +156,9 @@ export async function unifiedProjectDevFlow(
     );
   }
 
-  const LocalDev = new LocalDevManagerV2({
-    projectNodes,
+  // End setup, start local dev process
+  const localDevProcess = new LocalDevProcess({
+    initialProjectNodes: projectNodes,
     debug: args.debug,
     deployedBuild,
     isGithubLinked,
@@ -167,7 +170,30 @@ export async function unifiedProjectDevFlow(
     env,
   });
 
-  await LocalDev.start();
+  await localDevProcess.start();
 
-  handleExit(({ isSIGHUP }) => LocalDev.stop(!isSIGHUP));
+  const watcher = new LocalDevWatcher(localDevProcess);
+  watcher.start();
+
+  // const websocketServer = new LocalDevWebsocketServer(
+  //   localDevProcess,
+  //   args.debug
+  // );
+  // await websocketServer.start();
+
+  handleKeypress(async key => {
+    if ((key.ctrl && key.name === 'c') || key.name === 'q') {
+      await Promise.all([
+        localDevProcess.stop(),
+        watcher.stop(),
+        // websocketServer.shutdown(),
+      ]);
+    }
+  });
+
+  handleExit(({ isSIGHUP }) => {
+    localDevProcess.stop(!isSIGHUP);
+    watcher.stop();
+    // websocketServer.shutdown();
+  });
 }

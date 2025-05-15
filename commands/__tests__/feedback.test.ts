@@ -1,10 +1,11 @@
-// @ts-nocheck
-import yargs from 'yargs';
+import yargs, { Argv } from 'yargs';
+import feedbackCommand from '../feedback';
 
 jest.mock('yargs');
 
-// Import this last so mocks apply
-import feedbackCommand from '../feedback';
+const optionsSpy = jest
+  .spyOn(yargs as Argv, 'options')
+  .mockReturnValue(yargs as Argv);
 
 describe('commands/feedback', () => {
   describe('command', () => {
@@ -21,10 +22,10 @@ describe('commands/feedback', () => {
 
   describe('builder', () => {
     it('should support the correct options', () => {
-      feedbackCommand.builder(yargs);
+      feedbackCommand.builder(yargs as Argv);
 
-      expect(yargs.options).toHaveBeenCalledTimes(1);
-      expect(yargs.options).toHaveBeenCalledWith({
+      expect(optionsSpy).toHaveBeenCalledTimes(1);
+      expect(optionsSpy).toHaveBeenCalledWith({
         bug: expect.objectContaining({ type: 'boolean' }),
         general: expect.objectContaining({ type: 'boolean' }),
       });

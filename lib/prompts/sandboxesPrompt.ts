@@ -12,8 +12,6 @@ import { CLIAccount } from '@hubspot/local-dev-lib/types/Accounts';
 import { PromptChoices } from '../../types/Prompts';
 import { SandboxAccountType } from '../../types/Sandboxes';
 
-const i18nKey = 'lib.prompts.sandboxesPrompt';
-
 type SandboxTypePromptResponse = {
   type: SandboxAccountType;
 };
@@ -52,15 +50,15 @@ export async function sandboxTypePrompt(): Promise<SandboxTypePromptResponse> {
   return promptUser<SandboxTypePromptResponse>([
     {
       name: 'type',
-      message: i18n(`${i18nKey}.type.message`),
+      message: i18n(`lib.prompts.sandboxesPrompt.type.message`),
       type: 'list',
       choices: [
         {
-          name: i18n(`${i18nKey}.type.developer`),
+          name: i18n(`lib.prompts.sandboxesPrompt.type.developer`),
           value: HUBSPOT_ACCOUNT_TYPES.DEVELOPMENT_SANDBOX,
         },
         {
-          name: i18n(`${i18nKey}.type.standard`),
+          name: i18n(`lib.prompts.sandboxesPrompt.type.standard`),
           value: HUBSPOT_ACCOUNT_TYPES.STANDARD_SANDBOX,
         },
       ],
@@ -84,8 +82,8 @@ export function deleteSandboxPrompt(
       name: 'account',
       message: i18n(
         promptParentAccount
-          ? `${i18nKey}.selectParentAccountName`
-          : `${i18nKey}.selectAccountName`
+          ? `lib.prompts.sandboxesPrompt.selectParentAccountName`
+          : `lib.prompts.sandboxesPrompt.selectAccountName`
       ),
       type: 'list',
       pageSize: 20,

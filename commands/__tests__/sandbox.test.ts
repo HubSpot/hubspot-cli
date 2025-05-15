@@ -1,7 +1,7 @@
 import yargs, { Argv } from 'yargs';
-import * as create from '../sandbox/create';
-import * as del from '../sandbox/delete';
-import * as sandboxCommands from '../sandbox';
+import create from '../sandbox/create';
+import del from '../sandbox/delete';
+import sandboxCommands from '../sandbox';
 
 jest.mock('yargs');
 jest.mock('../sandbox/create');

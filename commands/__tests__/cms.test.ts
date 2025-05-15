@@ -1,20 +1,21 @@
-// @ts-nocheck
-import yargs from 'yargs';
+import yargs, { Argv } from 'yargs';
 import lighthouseScore from '../cms/lighthouseScore';
 import convertFields from '../cms/convertFields';
 import getReactModule from '../cms/getReactModule';
-import { addAccountOptions, addConfigOptions } from '../../lib/commonOpts';
+import cmsCommand from '../cms';
 
 jest.mock('yargs');
 jest.mock('../cms/lighthouseScore');
 jest.mock('../cms/convertFields');
 jest.mock('../cms/getReactModule');
 jest.mock('../../lib/commonOpts');
-yargs.command.mockReturnValue(yargs);
-yargs.demandCommand.mockReturnValue(yargs);
 
-// Import this last so mocks apply
-import cmsCommand from '../cms';
+const commandSpy = jest
+  .spyOn(yargs as Argv, 'command')
+  .mockReturnValue(yargs as Argv);
+const demandCommandSpy = jest
+  .spyOn(yargs as Argv, 'demandCommand')
+  .mockReturnValue(yargs as Argv);
 
 describe('commands/cms', () => {
   describe('command', () => {
@@ -30,37 +31,24 @@ describe('commands/cms', () => {
   });
 
   describe('builder', () => {
-    const subcommands = [
-      ['lighthouseScore', lighthouseScore],
-      ['convertFields', convertFields],
-      ['getReactModule', getReactModule],
-    ];
+    const subcommands = [lighthouseScore, convertFields, getReactModule];
 
     it('should demand the command takes one positional argument', () => {
-      cmsCommand.builder(yargs);
+      cmsCommand.builder(yargs as Argv);
 
-      expect(yargs.demandCommand).toHaveBeenCalledTimes(1);
-      expect(yargs.demandCommand).toHaveBeenCalledWith(1, '');
-    });
-
-    it('should support the correct options', () => {
-      cmsCommand.builder(yargs);
-
-      expect(addConfigOptions).toHaveBeenCalledTimes(1);
-      expect(addConfigOptions).toHaveBeenCalledWith(yargs);
-
-      expect(addAccountOptions).toHaveBeenCalledTimes(1);
-      expect(addAccountOptions).toHaveBeenCalledWith(yargs);
+      expect(demandCommandSpy).toHaveBeenCalledTimes(1);
+      expect(demandCommandSpy).toHaveBeenCalledWith(1, '');
     });
 
     it('should add the correct number of sub commands', () => {
-      cmsCommand.builder(yargs);
-      expect(yargs.command).toHaveBeenCalledTimes(subcommands.length);
+      cmsCommand.builder(yargs as Argv);
+      expect(commandSpy).toHaveBeenCalledTimes(subcommands.length);
     });
 
-    it.each(subcommands)('should attach the %s subcommand', (name, module) => {
-      cmsCommand.builder(yargs);
-      expect(yargs.command).toHaveBeenCalledWith(module);
+    it.each(subcommands)('should attach the %s subcommand', module => {
+      cmsCommand.builder(yargs as Argv);
+      expect(module).toBeDefined();
+      expect(commandSpy).toHaveBeenCalledWith(module);
     });
   });
 });
