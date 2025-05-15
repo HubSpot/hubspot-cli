@@ -5,7 +5,7 @@ const reactAppAssetType: CreatableCmsAsset = {
   hidden: false,
   dest: ({ name, assetType }) => name || assetType,
   execute: async ({ commandArgs, dest, assetType }) => {
-    cloneGithubRepo('HubSpot/cms-react-boilerplate', dest, {
+    await cloneGithubRepo('HubSpot/cms-react-boilerplate', dest, {
       ...commandArgs,
       type: assetType,
     });

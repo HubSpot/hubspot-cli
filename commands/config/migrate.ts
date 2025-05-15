@@ -3,17 +3,18 @@ import fs from 'fs';
 import {
   DEFAULT_HUBSPOT_CONFIG_YAML_FILE_NAME,
   GLOBAL_CONFIG_PATH,
+  ARCHIVED_HUBSPOT_CONFIG_YAML_FILE_NAME,
 } from '@hubspot/local-dev-lib/constants/config';
 import { configFileExists } from '@hubspot/local-dev-lib/config/migrate';
 import { logger } from '@hubspot/local-dev-lib/logger';
 
 import { handleMigration, handleMerge } from '../../lib/configMigrate';
-import { addConfigOptions } from '../../lib/commonOpts';
 import { i18n } from '../../lib/lang';
 import { CommonArgs, ConfigArgs } from '../../types/Yargs';
 import { trackCommandMetadataUsage } from '../../lib/usageTracking';
 import { logError } from '../../lib/errorHandlers/index';
 import { EXIT_CODES } from '../../lib/enums/exitCodes';
+import { makeYargsBuilder } from '../../lib/yargsUtils';
 
 export const describe = i18n('commands.config.subcommands.migrate.describe', {
   deprecatedConfigPath: DEFAULT_HUBSPOT_CONFIG_YAML_FILE_NAME,
@@ -71,15 +72,15 @@ export async function handler(
   }
 }
 
-export function builder(yargs: Argv): Argv<ConfigMigrateArgs> {
-  addConfigOptions(yargs);
-
-  yargs
-    .option('force', {
-      alias: 'f',
-      type: 'boolean',
-      default: false,
-      description: i18n('commands.config.subcommands.migrate.options.force'),
+function configMigrateBuilder(yargs: Argv): Argv<ConfigMigrateArgs> {
+  return yargs
+    .option({
+      force: {
+        alias: 'f',
+        type: 'boolean',
+        default: false,
+        description: i18n('commands.config.subcommands.migrate.options.force'),
+      },
     })
     .example([
       [
@@ -95,7 +96,16 @@ export function builder(yargs: Argv): Argv<ConfigMigrateArgs> {
           globalConfigPath: GLOBAL_CONFIG_PATH,
         }),
       ],
-    ]);
-
-  return yargs as Argv<ConfigMigrateArgs>;
+    ]) as Argv<ConfigMigrateArgs>;
 }
+
+export const builder = makeYargsBuilder<ConfigMigrateArgs>(
+  configMigrateBuilder,
+  command,
+  i18n('commands.config.subcommands.migrate.verboseDescribe', {
+    archivedConfigPath: ARCHIVED_HUBSPOT_CONFIG_YAML_FILE_NAME,
+  }),
+  {
+    useConfigOptions: true,
+  }
+);
