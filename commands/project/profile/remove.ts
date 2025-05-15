@@ -6,6 +6,7 @@ import {
   getHsProfileFilename,
   loadHsProfileFile,
 } from '@hubspot/project-parsing-lib';
+import { fetchProject } from '@hubspot/local-dev-lib/api/projects';
 import { deleteProject } from '@hubspot/local-dev-lib/api/projects';
 import { trackCommandUsage } from '../../../lib/usageTracking';
 import { getProjectConfig } from '../../../lib/projects/config';
@@ -17,7 +18,7 @@ import { makeYargsBuilder } from '../../../lib/yargsUtils';
 import { commands } from '../../../lang/en';
 import { confirmPrompt, listPrompt } from '../../../lib/prompts/promptUtils';
 import { fileExists } from '../../../lib/validation';
-import { ensureProjectExists } from '../../../lib/projects/ensureProjectExists';
+import { debugError } from '../../../lib/errorHandlers';
 
 const command = 'remove [name]';
 const describe = uiBetaTag(commands.project.profile.remove.describe, false);
@@ -93,13 +94,16 @@ async function handler(
   }
 
   if (targetAccountId) {
-    const { projectExists } = await ensureProjectExists(
-      targetAccountId,
-      projectConfig.name,
-      {
-        allowCreate: false,
-      }
-    );
+    let projectExists = false;
+    try {
+      const fetchProjectResponse = await fetchProject(
+        targetAccountId,
+        projectConfig.name
+      );
+      projectExists = !!fetchProjectResponse.data;
+    } catch (err) {
+      debugError(err);
+    }
 
     if (projectExists) {
       const confirmResponse = await confirmPrompt(

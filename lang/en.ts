@@ -930,7 +930,9 @@ export const commands = {
           targetAccountPrompt:
             '[target-account] Select a target account for this profile',
           copyExistingProfilePrompt: 'Select a profile to copy variables from',
-          copyExistingProfilePromptEmpty: 'None (do not copy any variables)',
+          copyExistingProfilePromptEmpty: "Skip (don't copy any variables)",
+          invalidProfileName:
+            'Profile name cannot contain special characters or spaces',
         },
         errors: {
           noProjectConfig:

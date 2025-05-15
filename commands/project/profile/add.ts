@@ -79,6 +79,9 @@ async function handler(
         if (input.trim() === '') {
           return commands.project.profile.add.prompts.emptyName;
         }
+        if (!/^[a-zA-Z0-9]+$/.test(input.trim())) {
+          return commands.project.profile.add.prompts.invalidProfileName;
+        }
         if (checkIfProfileExists(input.trim())) {
           return commands.project.profile.add.errors.profileExists(
             input.trim()

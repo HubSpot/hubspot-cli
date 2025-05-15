@@ -10,6 +10,7 @@ import { lib } from '../lang/en';
 import { uiBetaTag, uiLine } from './ui';
 import { uiLogger } from './ui/logger';
 import { EXIT_CODES } from './enums/exitCodes';
+
 export function logProfileHeader(profileName: string): void {
   uiLine();
   uiBetaTag(
