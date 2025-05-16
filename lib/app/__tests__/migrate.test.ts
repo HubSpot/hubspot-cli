@@ -132,19 +132,19 @@ const createMockUnmigratableApp = (
 const createLoadedProjectConfig = (name: string): LoadedProjectConfig =>
   ({
     projectConfig: { name },
-    projectDir: '/mock/project/dir',
+    projectDir: MOCK_PROJECT_DIR,
   }) as LoadedProjectConfig;
 
-// Common test values
-const accountId = 123;
-const projectName = 'Test Project';
-const appId = 1;
-const platformVersion = '2025.2';
-const migrationId = 456;
-const buildId = 789;
-const projectDest = '/mock/dest';
+const ACCOUNT_ID = 123;
+const PROJECT_NAME = 'Test Project';
+const APP_ID = 1;
+const PLATFORM_VERSION = '2025.2';
+const MIGRATION_ID = 456;
+const BUILD_ID = 789;
+const PROJECT_DEST = '/mock/dest';
+const MOCK_CWD = '/mock/cwd';
+const MOCK_PROJECT_DIR = '/mock/project/dir';
 
-// Mock unmigratable apps with proper enum values
 const mockUnmigratableApps: UnmigratableApp[] = [
   createMockUnmigratableApp(3, 'App 3', UNMIGRATABLE_REASONS.UP_TO_DATE),
   createMockUnmigratableApp(4, 'App 4', UNMIGRATABLE_REASONS.IS_A_PRIVATE_APP),
@@ -152,7 +152,7 @@ const mockUnmigratableApps: UnmigratableApp[] = [
 
 describe('lib/app/migrate', () => {
   beforeEach(() => {
-    mockedGetCwd.mockReturnValue('/mock/cwd');
+    mockedGetCwd.mockReturnValue(MOCK_CWD);
     mockedSanitizeFileName.mockImplementation(name => name);
     mockedValidateUid.mockReturnValue(undefined);
     mockedHasFeature.mockResolvedValue(true);
@@ -184,8 +184,8 @@ describe('lib/app/migrate', () => {
         reason: UNMIGRATABLE_REASONS.PROJECT_CONNECTED_TO_GITHUB,
         expected:
           lib.migrate.errors.unmigratableReasons.projectConnectedToGitHub(
-            projectName,
-            accountId
+            PROJECT_NAME,
+            ACCOUNT_ID
           ),
       },
       {
@@ -205,8 +205,8 @@ describe('lib/app/migrate', () => {
       it(`should return the correct message for ${testCase.name}`, () => {
         const result = getUnmigratableReason(
           testCase.reason,
-          projectName,
-          accountId
+          PROJECT_NAME,
+          ACCOUNT_ID
         );
         expect(result).toBe(testCase.expected);
       });
@@ -215,10 +215,10 @@ describe('lib/app/migrate', () => {
 
   describe('generateFilterAppsByProjectNameFunction', () => {
     it('should return a function that filters by project name when projectConfig is provided', () => {
-      const projectConfig = createLoadedProjectConfig(projectName);
+      const projectConfig = createLoadedProjectConfig(PROJECT_NAME);
       const filterFn = generateFilterAppsByProjectNameFunction(projectConfig);
 
-      const matchingApp = createMockMigratableApp(1, 'App 1', projectName);
+      const matchingApp = createMockMigratableApp(1, 'App 1', PROJECT_NAME);
       const nonMatchingApp = createMockMigratableApp(
         2,
         'App 2',
@@ -232,7 +232,7 @@ describe('lib/app/migrate', () => {
     it('should return a function that always returns true when projectConfig is not provided', () => {
       const filterFn = generateFilterAppsByProjectNameFunction(undefined);
 
-      const app1 = createMockMigratableApp(1, 'App 1', projectName);
+      const app1 = createMockMigratableApp(1, 'App 1', PROJECT_NAME);
       const app2 = createMockMigratableApp(2, 'App 2', 'Other Project');
 
       expect(filterFn(app1)).toBe(true);
@@ -295,8 +295,8 @@ describe('lib/app/migrate', () => {
     beforeEach(() => {
       setupMockApps(
         [
-          createMockMigratableApp(1, 'App 1', projectName),
-          createMockMigratableApp(2, 'App 2', projectName),
+          createMockMigratableApp(1, 'App 1', PROJECT_NAME),
+          createMockMigratableApp(2, 'App 2', PROJECT_NAME),
         ],
         [createMockUnmigratableApp(3, 'App 3', UNMIGRATABLE_REASONS.UP_TO_DATE)]
       );
@@ -307,59 +307,69 @@ describe('lib/app/migrate', () => {
 
       const result = await fetchMigrationApps(
         undefined,
-        accountId,
-        platformVersion
+        ACCOUNT_ID,
+        PLATFORM_VERSION
       );
       expect(result).toHaveLength(1);
       expect(result[0].appId).toBe(1);
     });
 
     it('should filter apps by project name when projectConfig is provided', async () => {
-      const projectConfig = createLoadedProjectConfig(projectName);
-      setupMockApps([createMockMigratableApp(1, 'App 1', projectName)]);
+      const projectConfig = createLoadedProjectConfig(PROJECT_NAME);
+      setupMockApps([createMockMigratableApp(1, 'App 1', PROJECT_NAME)]);
 
       const result = await fetchMigrationApps(
         undefined,
-        accountId,
-        platformVersion,
+        ACCOUNT_ID,
+        PLATFORM_VERSION,
         projectConfig
       );
       expect(result).toHaveLength(1);
-      expect(result[0].projectName).toBe(projectName);
+      expect(result[0].projectName).toBe(PROJECT_NAME);
     });
 
     it('should throw an error when multiple apps are found for a project', async () => {
-      const projectConfig = createLoadedProjectConfig(projectName);
+      const projectConfig = createLoadedProjectConfig(PROJECT_NAME);
       setupMockApps([
-        createMockMigratableApp(1, 'App 1', projectName),
-        createMockMigratableApp(2, 'App 2', projectName),
+        createMockMigratableApp(1, 'App 1', PROJECT_NAME),
+        createMockMigratableApp(2, 'App 2', PROJECT_NAME),
       ]);
 
       await expect(
-        fetchMigrationApps(undefined, accountId, platformVersion, projectConfig)
+        fetchMigrationApps(
+          undefined,
+          ACCOUNT_ID,
+          PLATFORM_VERSION,
+          projectConfig
+        )
       ).rejects.toThrow(lib.migrate.errors.project.multipleApps);
     });
 
     it('should throw an error when no apps are found for a project', async () => {
-      const projectConfig = createLoadedProjectConfig(projectName);
+      const projectConfig = createLoadedProjectConfig(PROJECT_NAME);
       setupMockApps([], []);
 
       await expect(
-        fetchMigrationApps(undefined, accountId, platformVersion, projectConfig)
-      ).rejects.toThrow(lib.migrate.errors.noAppsForProject(projectName));
+        fetchMigrationApps(
+          undefined,
+          ACCOUNT_ID,
+          PLATFORM_VERSION,
+          projectConfig
+        )
+      ).rejects.toThrow(lib.migrate.errors.noAppsForProject(PROJECT_NAME));
     });
 
     it('should throw an error when no migratable apps are found', async () => {
       setupMockApps([], mockUnmigratableApps);
 
       await expect(
-        fetchMigrationApps(undefined, accountId, platformVersion)
+        fetchMigrationApps(undefined, ACCOUNT_ID, PLATFORM_VERSION)
       ).rejects.toThrow(/No apps in account/);
     });
 
     it('should throw an error when appId is provided but not found', async () => {
       await expect(
-        fetchMigrationApps(999, accountId, platformVersion)
+        fetchMigrationApps(999, ACCOUNT_ID, PLATFORM_VERSION)
       ).rejects.toThrow(/No apps in account/);
     });
   });
@@ -375,7 +385,7 @@ describe('lib/app/migrate', () => {
     });
 
     it('should prompt the user to select an app', async () => {
-      await promptForAppToMigrate(mockApps, accountId);
+      await promptForAppToMigrate(mockApps, ACCOUNT_ID);
 
       expect(mockedListPrompt).toHaveBeenCalledWith(
         lib.migrate.prompt.chooseApp,
@@ -385,7 +395,7 @@ describe('lib/app/migrate', () => {
 
     it('should return the selected app', async () => {
       mockedListPrompt.mockResolvedValue({ appId: mockApps[0].appId });
-      const result = await promptForAppToMigrate(mockApps, accountId);
+      const result = await promptForAppToMigrate(mockApps, ACCOUNT_ID);
       expect(result).toBe(mockApps[0].appId);
     });
   });
@@ -411,12 +421,12 @@ describe('lib/app/migrate', () => {
 
     it('should throw an error when appId is provided but not found', async () => {
       await expect(
-        selectAppToMigrate(mockApps, accountId, 999)
+        selectAppToMigrate(mockApps, ACCOUNT_ID, 999)
       ).rejects.toThrow(lib.migrate.errors.appWithAppIdNotFound(999));
     });
 
     it('should call listPrompt when appId is not provided', async () => {
-      await selectAppToMigrate(mockApps, accountId);
+      await selectAppToMigrate(mockApps, ACCOUNT_ID);
 
       expect(mockedListPrompt).toHaveBeenCalledWith(
         lib.migrate.prompt.chooseApp,
@@ -426,22 +436,22 @@ describe('lib/app/migrate', () => {
 
     it('should return proceed: false and appIdToMigrate when user cancels', async () => {
       mockedConfirmPrompt.mockResolvedValue(false);
-      const result = await selectAppToMigrate(mockApps, accountId);
+      const result = await selectAppToMigrate(mockApps, ACCOUNT_ID);
       expect(result).toEqual({ proceed: false, appIdToMigrate: 1 });
     });
 
     it('should return proceed: true and appIdToMigrate when user confirms', async () => {
-      const result = await selectAppToMigrate(mockApps, accountId);
+      const result = await selectAppToMigrate(mockApps, ACCOUNT_ID);
       expect(result).toEqual({ proceed: true, appIdToMigrate: 1 });
     });
   });
 
   describe('handleMigrationSetup', () => {
     const defaultOptions = {
-      name: projectName,
-      dest: projectDest,
-      appId: appId,
-      platformVersion: platformVersion,
+      name: PROJECT_NAME,
+      dest: PROJECT_DEST,
+      appId: APP_ID,
+      platformVersion: PLATFORM_VERSION,
       unstable: false,
     } as ArgumentsCamelCase<MigrateAppArgs>;
 
@@ -465,31 +475,31 @@ describe('lib/app/migrate', () => {
 
     it('should return early when user cancels', async () => {
       mockedConfirmPrompt.mockResolvedValueOnce(false);
-      const result = await handleMigrationSetup(accountId, defaultOptions);
+      const result = await handleMigrationSetup(ACCOUNT_ID, defaultOptions);
       expect(result).toEqual({});
     });
 
     it('should return project details when projectConfig is provided', async () => {
-      const projectConfig = createLoadedProjectConfig(projectName);
+      const projectConfig = createLoadedProjectConfig(PROJECT_NAME);
 
       // @ts-expect-error
       mockedListAppsForMigration.mockResolvedValueOnce({
         data: {
-          migratableApps: [createMockMigratableApp(1, 'App 1', projectName)],
+          migratableApps: [createMockMigratableApp(1, 'App 1', PROJECT_NAME)],
           unmigratableApps: [],
         },
       });
 
       const result = await handleMigrationSetup(
-        accountId,
+        ACCOUNT_ID,
         defaultOptions,
         projectConfig
       );
 
       expect(result).toEqual({
         appIdToMigrate: 1,
-        projectName: projectName,
-        projectDest: '/mock/project/dir',
+        projectName: PROJECT_NAME,
+        projectDest: MOCK_PROJECT_DIR,
       });
     });
 
@@ -497,7 +507,7 @@ describe('lib/app/migrate', () => {
       const optionsWithoutName = { ...defaultOptions, name: undefined };
       mockedInputPrompt.mockResolvedValue('New Project');
 
-      await handleMigrationSetup(accountId, optionsWithoutName);
+      await handleMigrationSetup(ACCOUNT_ID, optionsWithoutName);
 
       expect(mockedInputPrompt).toHaveBeenCalledWith(
         lib.migrate.prompt.inputName,
@@ -509,7 +519,7 @@ describe('lib/app/migrate', () => {
       const optionsWithoutDest = { ...defaultOptions, dest: undefined };
       mockedInputPrompt.mockResolvedValue('/mock/new/dest');
 
-      await handleMigrationSetup(accountId, optionsWithoutDest);
+      await handleMigrationSetup(ACCOUNT_ID, optionsWithoutDest);
 
       expect(mockedInputPrompt).toHaveBeenCalledWith(
         lib.migrate.prompt.inputDest,
@@ -521,8 +531,8 @@ describe('lib/app/migrate', () => {
       mockedEnsureProjectExists.mockResolvedValue({ projectExists: true });
 
       await expect(
-        handleMigrationSetup(accountId, defaultOptions)
-      ).rejects.toThrow(lib.migrate.errors.project.alreadyExists(projectName));
+        handleMigrationSetup(ACCOUNT_ID, defaultOptions)
+      ).rejects.toThrow(lib.migrate.errors.project.alreadyExists(PROJECT_NAME));
     });
   });
 
@@ -530,7 +540,7 @@ describe('lib/app/migrate', () => {
     beforeEach(() => {
       // @ts-expect-error
       mockedInitializeMigration.mockResolvedValue({
-        data: { migrationId: migrationId },
+        data: { migrationId: MIGRATION_ID },
       });
 
       mockedPoll.mockResolvedValue({
@@ -543,10 +553,10 @@ describe('lib/app/migrate', () => {
     });
 
     it('should initialize migration and return migrationId and uidMap', async () => {
-      const result = await beginMigration(accountId, appId, platformVersion);
+      const result = await beginMigration(ACCOUNT_ID, APP_ID, PLATFORM_VERSION);
 
       expect(result).toEqual({
-        migrationId: migrationId,
+        migrationId: MIGRATION_ID,
         uidMap: {},
       });
     });
@@ -564,7 +574,7 @@ describe('lib/app/migrate', () => {
         },
       });
 
-      await beginMigration(accountId, appId, platformVersion);
+      await beginMigration(ACCOUNT_ID, APP_ID, PLATFORM_VERSION);
 
       expect(mockedInputPrompt).toHaveBeenCalledWith(
         lib.migrate.prompt.uidForComponent("card 'test-card'"),
@@ -579,7 +589,7 @@ describe('lib/app/migrate', () => {
       mockedPoll.mockRejectedValue(new Error('Failed'));
 
       await expect(
-        beginMigration(accountId, appId, platformVersion)
+        beginMigration(ACCOUNT_ID, APP_ID, PLATFORM_VERSION)
       ).rejects.toThrow(/Migration Failed/);
     });
   });
@@ -587,14 +597,14 @@ describe('lib/app/migrate', () => {
   describe('pollMigrationStatus', () => {
     it('should call poll with checkMigrationStatusV2', async () => {
       const mockStatus = {
-        id: migrationId,
+        id: MIGRATION_ID,
         status: MIGRATION_STATUS.SUCCESS,
-        buildId: buildId,
+        buildId: BUILD_ID,
       };
 
       mockedPoll.mockResolvedValue(mockStatus);
 
-      const result = await pollMigrationStatus(accountId, migrationId);
+      const result = await pollMigrationStatus(ACCOUNT_ID, MIGRATION_ID);
 
       expect(mockedPoll).toHaveBeenCalledWith(
         expect.any(Function),
@@ -610,32 +620,32 @@ describe('lib/app/migrate', () => {
     beforeEach(() => {
       // @ts-expect-error
       mockedContinueMigration.mockResolvedValue({
-        data: { migrationId: migrationId },
+        data: { migrationId: MIGRATION_ID },
       });
 
       mockedPoll.mockResolvedValue({
         status: MIGRATION_STATUS.SUCCESS,
         // @ts-expect-error
-        buildId: buildId,
+        buildId: BUILD_ID,
       });
     });
 
     it('should continue migration and return buildId', async () => {
       const result = await finalizeMigration(
-        accountId,
-        migrationId,
+        ACCOUNT_ID,
+        MIGRATION_ID,
         uidMap,
-        projectName
+        PROJECT_NAME
       );
 
-      expect(result).toBe(buildId);
+      expect(result).toBe(BUILD_ID);
     });
 
     it('should throw an error when migration fails', async () => {
       mockedPoll.mockRejectedValue(new Error('Test error'));
 
       await expect(
-        finalizeMigration(accountId, migrationId, uidMap, projectName)
+        finalizeMigration(ACCOUNT_ID, MIGRATION_ID, uidMap, PROJECT_NAME)
       ).rejects.toThrow(/Migration Failed/);
     });
   });
@@ -647,23 +657,28 @@ describe('lib/app/migrate', () => {
         data: Buffer.from('mock-zip-data'),
       });
       mockedExtractZipArchive.mockResolvedValue(true);
-      mockedGetCwd.mockReturnValue('/mock/cwd');
-      mockedSanitizeFileName.mockReturnValue(projectName);
+      mockedGetCwd.mockReturnValue(MOCK_CWD);
+      mockedSanitizeFileName.mockReturnValue(PROJECT_NAME);
     });
 
     it('should download and extract project files', async () => {
-      await downloadProjectFiles(accountId, projectName, buildId, projectDest);
+      await downloadProjectFiles(
+        ACCOUNT_ID,
+        PROJECT_NAME,
+        BUILD_ID,
+        PROJECT_DEST
+      );
 
       expect(mockedDownloadProject).toHaveBeenCalledWith(
-        accountId,
-        projectName,
-        buildId
+        ACCOUNT_ID,
+        PROJECT_NAME,
+        BUILD_ID
       );
 
       expect(mockedExtractZipArchive).toHaveBeenCalledWith(
         expect.any(Buffer),
-        projectName,
-        expect.stringContaining(projectDest),
+        PROJECT_NAME,
+        expect.stringContaining(PROJECT_DEST),
         {
           includesRootDir: true,
           hideLogs: true,
@@ -673,27 +688,27 @@ describe('lib/app/migrate', () => {
 
     it('should handle projectConfig correctly', async () => {
       const projectConfig = {
-        projectConfig: { name: projectName, srcDir: 'src' },
-        projectDir: '/mock/project/dir',
+        projectConfig: { name: PROJECT_NAME, srcDir: 'src' },
+        projectDir: MOCK_PROJECT_DIR,
       } as LoadedProjectConfig;
 
       await downloadProjectFiles(
-        accountId,
-        projectName,
-        buildId,
-        projectDest,
+        ACCOUNT_ID,
+        PROJECT_NAME,
+        BUILD_ID,
+        PROJECT_DEST,
         projectConfig
       );
 
       expect(mockedFs.renameSync).toHaveBeenCalledWith(
-        '/mock/project/dir/src',
-        '/mock/project/dir/archive'
+        `${MOCK_PROJECT_DIR}/src`,
+        `${MOCK_PROJECT_DIR}/archive`
       );
 
       expect(mockedExtractZipArchive).toHaveBeenCalledWith(
         expect.any(Buffer),
-        projectName,
-        '/mock/project/dir',
+        PROJECT_NAME,
+        MOCK_PROJECT_DIR,
         {
           includesRootDir: true,
           hideLogs: true,
@@ -706,17 +721,17 @@ describe('lib/app/migrate', () => {
       mockedDownloadProject.mockRejectedValue(error);
 
       await expect(
-        downloadProjectFiles(accountId, projectName, buildId, projectDest)
+        downloadProjectFiles(ACCOUNT_ID, PROJECT_NAME, BUILD_ID, PROJECT_DEST)
       ).rejects.toThrow(error);
     });
   });
 
   describe('migrateApp2025_2', () => {
     const options = {
-      name: projectName,
-      dest: projectDest,
-      appId: appId,
-      platformVersion: platformVersion,
+      name: PROJECT_NAME,
+      dest: PROJECT_DEST,
+      appId: APP_ID,
+      platformVersion: PLATFORM_VERSION,
       unstable: false,
     } as ArgumentsCamelCase<MigrateAppArgs>;
 
@@ -727,7 +742,7 @@ describe('lib/app/migrate', () => {
     it('should throw an error when account is not ungated for unified apps', async () => {
       mockedHasFeature.mockResolvedValueOnce(false);
 
-      await expect(migrateApp2025_2(accountId, options)).rejects.toThrowError(
+      await expect(migrateApp2025_2(ACCOUNT_ID, options)).rejects.toThrowError(
         /isn't enrolled in the required product beta to access this command./
       );
     });
@@ -739,19 +754,19 @@ describe('lib/app/migrate', () => {
       } as unknown as LoadedProjectConfig;
 
       await expect(
-        migrateApp2025_2(accountId, options, invalidProjectConfig)
+        migrateApp2025_2(ACCOUNT_ID, options, invalidProjectConfig)
       ).rejects.toThrow(/The project configuration file is invalid/);
     });
 
     it('should throw an error when project does not exist', async () => {
-      const projectConfig = createLoadedProjectConfig(projectName);
+      const projectConfig = createLoadedProjectConfig(PROJECT_NAME);
 
       mockedEnsureProjectExists.mockResolvedValueOnce({
         projectExists: false,
       });
 
       await expect(
-        migrateApp2025_2(accountId, options, projectConfig)
+        migrateApp2025_2(ACCOUNT_ID, options, projectConfig)
       ).rejects.toThrow(/Migrations are only supported for existing projects/);
     });
   });
