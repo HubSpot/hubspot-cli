@@ -54,20 +54,46 @@ async function handler(
   let profileName = args.name;
   let targetAccount = args.targetAccount;
 
-  const checkIfProfileExists = (profileName: string) => {
+  function checkIfProfileExists(profileName: string): boolean {
     return fileExists(
       path.join(projectSourceDir, getHsProfileFilename(profileName))
     );
-  };
+  }
 
-  if (profileName && checkIfProfileExists(profileName)) {
-    uiLogger.error(
-      commands.project.profile.add.errors.profileExists(
-        getHsProfileFilename(profileName)
-      )
-    );
-    uiLogger.log('');
-    profileName = undefined;
+  function isValidProfileName(profileName: string): string | true {
+    const trimmedProfileName = profileName.trim();
+
+    if (trimmedProfileName === '') {
+      return commands.project.profile.add.prompts.emptyName;
+    }
+    if (!/^[a-zA-Z0-9]+$/.test(trimmedProfileName)) {
+      return commands.project.profile.add.prompts.invalidProfileName;
+    }
+    if (checkIfProfileExists(trimmedProfileName)) {
+      return commands.project.profile.add.errors.profileExists(
+        trimmedProfileName
+      );
+    }
+    return true;
+  }
+
+  if (profileName) {
+    if (checkIfProfileExists(profileName)) {
+      uiLogger.error(
+        commands.project.profile.add.errors.profileExists(
+          getHsProfileFilename(profileName)
+        )
+      );
+      uiLogger.log('');
+      profileName = undefined;
+    } else {
+      const validationResult = isValidProfileName(profileName);
+      if (validationResult !== true) {
+        uiLogger.error(validationResult);
+        uiLogger.log('');
+        profileName = undefined;
+      }
+    }
   }
 
   if (!profileName) {
@@ -75,20 +101,7 @@ async function handler(
       type: 'input',
       name: 'name',
       message: commands.project.profile.add.prompts.namePrompt,
-      validate: input => {
-        if (input.trim() === '') {
-          return commands.project.profile.add.prompts.emptyName;
-        }
-        if (!/^[a-zA-Z0-9]+$/.test(input.trim())) {
-          return commands.project.profile.add.prompts.invalidProfileName;
-        }
-        if (checkIfProfileExists(input.trim())) {
-          return commands.project.profile.add.errors.profileExists(
-            input.trim()
-          );
-        }
-        return true;
-      },
+      validate: isValidProfileName,
     });
 
     profileName = promptResponse.name;
