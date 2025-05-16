@@ -36,6 +36,55 @@ type ProjectProfileAddArgs = CommonArgs & {
   targetAccount?: number;
 };
 
+async function selectProfileToCopyVariablesFrom(
+  projectSourceDir: string
+): Promise<string | undefined> {
+  const existingProfiles = await getAllHsProfiles(projectSourceDir);
+  let profileToCopyVariablesFrom: string | undefined;
+
+  if (existingProfiles.length == 1) {
+    uiLogger.log('');
+    uiLogger.log(
+      commands.project.profile.add.logs.copyExistingProfile(
+        getHsProfileFilename(existingProfiles[0])
+      )
+    );
+    const shouldCopyVariables = await confirmPrompt('Copy profile variables?', {
+      defaultAnswer: true,
+    });
+
+    if (shouldCopyVariables) {
+      profileToCopyVariablesFrom = existingProfiles[0];
+    }
+  } else if (existingProfiles.length > 1) {
+    uiLogger.log('');
+    uiLogger.log(commands.project.profile.add.logs.copyExistingProfiles);
+    const emptyChoice = {
+      name: commands.project.profile.add.prompts.copyExistingProfilePromptEmpty,
+      value: undefined,
+    };
+
+    const promptResponse = await listPrompt(
+      commands.project.profile.add.prompts.copyExistingProfilePrompt,
+      {
+        choices: [
+          ...existingProfiles.map(profile => ({
+            name: getHsProfileFilename(profile),
+            value: profile,
+          })),
+          emptyChoice,
+        ],
+      }
+    );
+
+    if (promptResponse) {
+      profileToCopyVariablesFrom = promptResponse;
+    }
+  }
+
+  return profileToCopyVariablesFrom;
+}
+
 async function handler(
   args: ArgumentsCamelCase<ProjectProfileAddArgs>
 ): Promise<void> {
@@ -149,48 +198,8 @@ async function handler(
     variables: {},
   };
 
-  const existingProfiles = await getAllHsProfiles(projectSourceDir);
-  let profileToCopyVariablesFrom: string | undefined;
-
-  if (existingProfiles.length == 1) {
-    uiLogger.log('');
-    uiLogger.log(
-      commands.project.profile.add.logs.copyExistingProfile(
-        getHsProfileFilename(existingProfiles[0])
-      )
-    );
-    const shouldCopyVariables = await confirmPrompt('Copy profile variables?', {
-      defaultAnswer: true,
-    });
-
-    if (shouldCopyVariables) {
-      profileToCopyVariablesFrom = existingProfiles[0];
-    }
-  } else if (existingProfiles.length > 1) {
-    uiLogger.log('');
-    uiLogger.log(commands.project.profile.add.logs.copyExistingProfiles);
-    const emptyChoice = {
-      name: commands.project.profile.add.prompts.copyExistingProfilePromptEmpty,
-      value: undefined,
-    };
-
-    const promptResponse = await listPrompt(
-      commands.project.profile.add.prompts.copyExistingProfilePrompt,
-      {
-        choices: [
-          ...existingProfiles.map(profile => ({
-            name: getHsProfileFilename(profile),
-            value: profile,
-          })),
-          emptyChoice,
-        ],
-      }
-    );
-
-    if (promptResponse) {
-      profileToCopyVariablesFrom = promptResponse;
-    }
-  }
+  const profileToCopyVariablesFrom =
+    await selectProfileToCopyVariablesFrom(projectSourceDir);
 
   if (profileToCopyVariablesFrom) {
     try {
