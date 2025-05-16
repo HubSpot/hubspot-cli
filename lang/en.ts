@@ -953,7 +953,7 @@ export const commands = {
         },
       },
       remove: {
-        describe: 'Remove an exisiting project profile',
+        describe: 'Remove an existing project profile',
         example: 'Remove a project profile named hsprofile.qa.json',
         logs: {
           profileRemoved: (profileName: string) =>

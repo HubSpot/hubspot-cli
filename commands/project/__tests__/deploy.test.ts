@@ -63,6 +63,10 @@ const exampleSpy = jest
   .spyOn(yargs as Argv, 'example')
   .mockReturnValue(yargs as Argv);
 
+const conflictsSpy = jest
+  .spyOn(yargs as Argv, 'conflicts')
+  .mockReturnValue(yargs as Argv);
+
 describe('commands/project/deploy', () => {
   const projectFlag = 'project';
   const buildFlag = 'build';
@@ -88,6 +92,10 @@ describe('commands/project/deploy', () => {
   describe('builder', () => {
     it('should support the correct options', () => {
       projectDeployCommand.builder(yargs as Argv);
+
+      expect(conflictsSpy).toHaveBeenCalledTimes(2);
+      expect(conflictsSpy).toHaveBeenNthCalledWith(1, profileFlag, projectFlag);
+      expect(conflictsSpy).toHaveBeenNthCalledWith(2, profileFlag, 'account');
 
       expect(optionsSpy).toHaveBeenCalledTimes(1);
       expect(optionsSpy).toHaveBeenCalledWith({
