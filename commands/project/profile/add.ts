@@ -181,7 +181,7 @@ async function handler(
 
   if (profileToCopyVariablesFrom) {
     try {
-      const profileToCopyFileContent = await loadHsProfileFile(
+      const profileToCopyFileContent = loadHsProfileFile(
         projectSourceDir,
         profileToCopyVariablesFrom
       );

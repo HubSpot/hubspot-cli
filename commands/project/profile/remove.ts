@@ -81,10 +81,7 @@ async function handler(
   let targetAccountId: number | undefined;
 
   try {
-    const profileToRemove = await loadHsProfileFile(
-      projectSourceDir,
-      profileName
-    );
+    const profileToRemove = loadHsProfileFile(projectSourceDir, profileName);
 
     targetAccountId = profileToRemove?.accountId;
   } catch (err) {

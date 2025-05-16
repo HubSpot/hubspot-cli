@@ -51,7 +51,7 @@ export async function loadProfile(
   const profileFilename = getHsProfileFilename(profileName);
 
   try {
-    const profile = await loadHsProfileFile(projectSourceDir, profileName);
+    const profile = loadHsProfileFile(projectSourceDir, profileName);
 
     if (!profile) {
       uiLogger.error(
