@@ -37,7 +37,7 @@ export async function migrateApp2023_2(
 
   if (!isAppDeveloperAccount(accountConfig) && !defaultAccountIsUnified) {
     logInvalidAccountError();
-    process.exit(EXIT_CODES.SUCCESS);
+    return process.exit(EXIT_CODES.SUCCESS);
   }
 
   let appId = options.appId;
@@ -66,11 +66,11 @@ export async function migrateApp2023_2(
           appId,
         })
       );
-      process.exit(EXIT_CODES.ERROR);
+      return process.exit(EXIT_CODES.ERROR);
     }
   } catch (error) {
     logError(error, new ApiErrorContext({ accountId: derivedAccountId }));
-    process.exit(EXIT_CODES.ERROR);
+    return process.exit(EXIT_CODES.ERROR);
   }
 
   const createProjectPromptResponse = await createProjectPrompt(options);
@@ -130,7 +130,7 @@ export async function migrateApp2023_2(
   process.stdin.resume();
 
   if (!shouldCreateApp) {
-    process.exit(EXIT_CODES.SUCCESS);
+    return process.exit(EXIT_CODES.SUCCESS);
   }
 
   try {
@@ -148,7 +148,7 @@ export async function migrateApp2023_2(
         logger.log(
           i18n(`commands.project.subcommands.migrateApp.migrationInterrupted`)
         );
-        process.exit(EXIT_CODES.SUCCESS);
+        return process.exit(EXIT_CODES.SUCCESS);
       }
     });
 
