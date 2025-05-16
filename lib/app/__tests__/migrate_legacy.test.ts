@@ -1,29 +1,21 @@
-import { fetchPublicAppMetadata } from '@hubspot/local-dev-lib/api/appsDev';
+import { fetchPublicAppMetadata as _fetchPublicAppMetadata } from '@hubspot/local-dev-lib/api/appsDev';
 import { CLIAccount } from '@hubspot/local-dev-lib/types/Accounts';
-import { logger } from '@hubspot/local-dev-lib/logger';
 import {
-  checkMigrationStatus,
-  downloadProject,
-  migrateApp as migrateNonProjectApp_v2023_2,
+  downloadProject as _downloadProject,
+  migrateApp as _migrateNonProjectApp_v2023_2,
 } from '@hubspot/local-dev-lib/api/projects';
-import path from 'path';
-import { getCwd, sanitizeFileName } from '@hubspot/local-dev-lib/path';
-import { getHubSpotWebsiteOrigin } from '@hubspot/local-dev-lib/urls';
 import { extractZipArchive } from '@hubspot/local-dev-lib/archive';
 import { ArgumentsCamelCase } from 'yargs';
-import { promptUser } from '../../prompts/promptUtils';
-import { ApiErrorContext, logError } from '../../errorHandlers';
+import { promptUser as _promptUser } from '../../prompts/promptUtils';
 import { EXIT_CODES } from '../../enums/exitCodes';
-import { uiAccountDescription, uiLine, uiLink } from '../../ui';
-import { i18n } from '../../lang';
-import { isAppDeveloperAccount, isUnifiedAccount } from '../../accountTypes';
-import { selectPublicAppPrompt } from '../../prompts/selectPublicAppPrompt';
-import { createProjectPrompt } from '../../prompts/createProjectPrompt';
-import { ensureProjectExists } from '../../projects/ensureProjectExists';
-import { trackCommandMetadataUsage } from '../../usageTracking';
-import SpinniesManager from '../../ui/SpinniesManager';
-import { handleKeypress } from '../../process';
-import { poll } from '../../polling';
+import {
+  isAppDeveloperAccount as _isAppDeveloperAccount,
+  isUnifiedAccount as _isUnifiedAccount,
+} from '../../accountTypes';
+import { selectPublicAppPrompt as _selectPublicAppPrompt } from '../../prompts/selectPublicAppPrompt';
+import { createProjectPrompt as _createProjectPrompt } from '../../prompts/createProjectPrompt';
+import { ensureProjectExists as _ensureProjectExists } from '../../projects/ensureProjectExists';
+import { poll as _poll } from '../../polling';
 import { migrateApp2023_2 } from '../migrate_legacy';
 import { MigrateAppArgs } from '../migrate';
 
@@ -45,6 +37,41 @@ jest.mock('../../ui/SpinniesManager');
 jest.mock('../../process');
 jest.mock('../../polling');
 
+const isAppDeveloperAccount = _isAppDeveloperAccount as jest.MockedFunction<
+  typeof _isAppDeveloperAccount
+>;
+
+const isUnifiedAccount = _isUnifiedAccount as jest.MockedFunction<
+  typeof _isUnifiedAccount
+>;
+
+const selectPublicAppPrompt = _selectPublicAppPrompt as jest.MockedFunction<
+  typeof _selectPublicAppPrompt
+>;
+
+const createProjectPrompt = _createProjectPrompt as jest.MockedFunction<
+  typeof _createProjectPrompt
+>;
+
+const ensureProjectExists = _ensureProjectExists as jest.MockedFunction<
+  typeof _ensureProjectExists
+>;
+
+const poll = _poll as jest.MockedFunction<typeof _poll>;
+const fetchPublicAppMetadata = _fetchPublicAppMetadata as jest.MockedFunction<
+  typeof _fetchPublicAppMetadata
+>;
+
+const migrateNonProjectApp_v2023_2 =
+  _migrateNonProjectApp_v2023_2 as jest.MockedFunction<
+    typeof _migrateNonProjectApp_v2023_2
+  >;
+
+const downloadProject = _downloadProject as jest.MockedFunction<
+  typeof _downloadProject
+>;
+const promptUser = _promptUser as jest.MockedFunction<typeof _promptUser>;
+
 describe('migrateApp2023_2', () => {
   const mockDerivedAccountId = 123;
   const mockOptions: ArgumentsCamelCase<MigrateAppArgs> = {
@@ -61,55 +88,70 @@ describe('migrateApp2023_2', () => {
     name: 'Test Account',
     env: 'prod',
   };
+  const appId = 12345;
+  const projectName = 'test-project';
 
   beforeEach(() => {
     // @ts-expect-error function mismatch
     jest.spyOn(process, 'exit').mockImplementation(() => {});
+    selectPublicAppPrompt.mockResolvedValue({
+      appId,
+    });
+
+    isAppDeveloperAccount.mockReturnValue(true);
+    isUnifiedAccount.mockResolvedValue(false);
+
+    fetchPublicAppMetadata.mockResolvedValue({
+      // @ts-expect-error Mocking the return type
+      data: { preventProjectMigrations: false },
+    });
+
+    createProjectPrompt.mockResolvedValue({
+      name: projectName,
+      dest: '/test/dest',
+    });
+
+    promptUser.mockResolvedValue({
+      shouldCreateApp: true,
+    });
+
+    ensureProjectExists.mockResolvedValue({
+      projectExists: false,
+    });
+
+    migrateNonProjectApp_v2023_2.mockResolvedValue({
+      // @ts-expect-error Mocking the return type
+      data: { id: 'migration-id' },
+    });
+
+    poll.mockResolvedValue({
+      status: 'SUCCESS',
+      // @ts-expect-error
+      project: {
+        name: projectName,
+      },
+    });
+
+    downloadProject.mockResolvedValue({
+      // @ts-expect-error Mocking the return type
+      data: 'zipped-project-data',
+    });
   });
 
   it('should exit if account is not an app developer account and not unified', async () => {
-    (isAppDeveloperAccount as jest.Mock).mockReturnValue(false);
-    (isUnifiedAccount as jest.Mock).mockResolvedValue(false);
+    isAppDeveloperAccount.mockReturnValue(false);
 
     await migrateApp2023_2(
       mockDerivedAccountId,
       mockOptions,
       mockAccountConfig
     );
+
+    expect(migrateNonProjectApp_v2023_2).not.toHaveBeenCalled();
     expect(process.exit).toHaveBeenCalledWith(EXIT_CODES.SUCCESS);
   });
 
   it('should proceed with migration for valid app developer account', async () => {
-    (isAppDeveloperAccount as jest.Mock).mockReturnValue(true);
-    (isUnifiedAccount as jest.Mock).mockResolvedValue(false);
-    (selectPublicAppPrompt as jest.Mock).mockResolvedValue({
-      appId: 'test-app-id',
-    });
-    (fetchPublicAppMetadata as jest.Mock).mockResolvedValue({
-      data: { preventProjectMigrations: false },
-    });
-    (createProjectPrompt as jest.Mock).mockResolvedValue({
-      name: 'test-project',
-      dest: '/test/dest',
-    });
-    (ensureProjectExists as jest.Mock).mockResolvedValue({
-      projectExists: false,
-    });
-    (migrateNonProjectApp_v2023_2 as jest.Mock).mockResolvedValue({
-      data: { id: 'migration-id' },
-    });
-    (poll as jest.Mock).mockResolvedValue({
-      status: 'SUCCESS',
-      project: { name: 'test-project' },
-    });
-    (downloadProject as jest.Mock).mockResolvedValue({
-      data: 'zipped-project-data',
-    });
-    // Mock promptUser correctly
-    (promptUser as jest.Mock).mockResolvedValue({
-      shouldCreateApp: true,
-    });
-
     await migrateApp2023_2(
       mockDerivedAccountId,
       mockOptions,
@@ -118,7 +160,7 @@ describe('migrateApp2023_2', () => {
 
     expect(selectPublicAppPrompt).toHaveBeenCalled();
     expect(fetchPublicAppMetadata).toHaveBeenCalledWith(
-      'test-app-id',
+      appId,
       mockDerivedAccountId
     );
     expect(createProjectPrompt).toHaveBeenCalled();
@@ -130,42 +172,19 @@ describe('migrateApp2023_2', () => {
   });
 
   it('should handle migration failure gracefully', async () => {
-    (isAppDeveloperAccount as jest.Mock).mockReturnValue(true);
-    (isUnifiedAccount as jest.Mock).mockResolvedValue(false);
-    (selectPublicAppPrompt as jest.Mock).mockResolvedValue({
-      appId: 'test-app-id',
-    });
-    (fetchPublicAppMetadata as jest.Mock).mockResolvedValue({
-      data: { preventProjectMigrations: false },
-    });
-    (createProjectPrompt as jest.Mock).mockResolvedValue({
-      name: 'test-project',
-      dest: '/test/dest',
-    });
-    (ensureProjectExists as jest.Mock).mockResolvedValue({
-      projectExists: false,
-    });
-    (promptUser as jest.Mock).mockResolvedValue({
-      shouldCreateApp: true,
-    });
-    (migrateNonProjectApp_v2023_2 as jest.Mock).mockRejectedValue(
-      new Error('Migration failed')
-    );
+    const errorMessage = 'Migration failed';
+    migrateNonProjectApp_v2023_2.mockRejectedValue(new Error(errorMessage));
 
     await expect(
       migrateApp2023_2(mockDerivedAccountId, mockOptions, mockAccountConfig)
-    ).rejects.toThrow('Migration failed');
+    ).rejects.toThrow(errorMessage);
   });
 
   it('should handle non-migratable apps', async () => {
-    (isAppDeveloperAccount as jest.Mock).mockReturnValue(true);
-    (isUnifiedAccount as jest.Mock).mockResolvedValue(false);
-    (selectPublicAppPrompt as jest.Mock).mockResolvedValue({
-      appId: 'test-app-id',
-    });
-    (fetchPublicAppMetadata as jest.Mock).mockResolvedValue({
+    fetchPublicAppMetadata.mockResolvedValue({
       data: {
         preventProjectMigrations: true,
+        // @ts-expect-error
         listingInfo: { someInfo: 'test' },
       },
     });
@@ -179,23 +198,8 @@ describe('migrateApp2023_2', () => {
   });
 
   it('should handle existing project error', async () => {
-    (isAppDeveloperAccount as jest.Mock).mockReturnValue(true);
-    (isUnifiedAccount as jest.Mock).mockResolvedValue(false);
-    (selectPublicAppPrompt as jest.Mock).mockResolvedValue({
-      appId: 'test-app-id',
-    });
-    (fetchPublicAppMetadata as jest.Mock).mockResolvedValue({
-      data: { preventProjectMigrations: false },
-    });
-    (createProjectPrompt as jest.Mock).mockResolvedValue({
-      name: 'test-project',
-      dest: '/test/dest',
-    });
-    (ensureProjectExists as jest.Mock).mockResolvedValue({
+    ensureProjectExists.mockResolvedValue({
       projectExists: true,
-    });
-    (promptUser as jest.Mock).mockResolvedValue({
-      shouldCreateApp: true,
     });
 
     await expect(
