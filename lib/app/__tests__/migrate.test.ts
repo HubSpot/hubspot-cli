@@ -25,8 +25,6 @@ import {
   MigrationFailed,
   MigratableApp,
   UnmigratableApp,
-  ListAppsResponse,
-  InitializeMigrationResponse,
 } from '../../../api/migrate';
 import { lib } from '../../../lang/en';
 
@@ -131,6 +129,8 @@ type GenericPollingResponse = {
 };
 
 describe('lib/app/migrate', () => {
+  const projectName = 'Test Project';
+  const accountId = 123;
   beforeEach(() => {
     mockedGetCwd.mockReturnValue('/mock/cwd');
     mockedSanitizeFileName.mockImplementation(name => name);
@@ -143,7 +143,7 @@ describe('lib/app/migrate', () => {
     it('should return the correct message for UP_TO_DATE', () => {
       const result = getUnmigratableReason(
         UNMIGRATABLE_REASONS.UP_TO_DATE,
-        'Test Project',
+        projectName,
         123
       );
       expect(result).toBe(lib.migrate.errors.unmigratableReasons.upToDate);
@@ -152,7 +152,7 @@ describe('lib/app/migrate', () => {
     it('should return the correct message for IS_A_PRIVATE_APP', () => {
       const result = getUnmigratableReason(
         UNMIGRATABLE_REASONS.IS_A_PRIVATE_APP,
-        'Test Project',
+        projectName,
         123
       );
       expect(result).toBe(lib.migrate.errors.unmigratableReasons.isPrivateApp);
@@ -161,7 +161,7 @@ describe('lib/app/migrate', () => {
     it('should return the correct message for LISTED_IN_MARKETPLACE', () => {
       const result = getUnmigratableReason(
         UNMIGRATABLE_REASONS.LISTED_IN_MARKETPLACE,
-        'Test Project',
+        projectName,
         123
       );
       expect(result).toBe(
@@ -318,636 +318,621 @@ describe('lib/app/migrate', () => {
           ],
         },
       });
-
-      it('should return all apps when no projectConfig is provided', async () => {
-        // @ts-expect-error
-        mockedListAppsForMigration.mockResolvedValue({
-          data: {
-            migratableApps: [
-              {
-                appId: 1,
-                appName: 'App 1',
-                isMigratable: true,
-                migrationComponents: [],
-              },
-            ],
-            unmigratableApps: [],
-          },
-        });
-
-        const result = await fetchMigrationApps(
-          undefined,
-          accountId,
-          platformVersion
-        );
-        expect(result).toHaveLength(1);
-        expect(result[0].appId).toBe(1);
-      });
-
-      it('should filter apps by project name when projectConfig is provided', async () => {
-        const projectConfig = {
-          projectConfig: { name: 'Test Project' },
-          projectDir: '/mock/project/dir',
-        } as LoadedProjectConfig;
-
-        // @ts-expect-error Axios response
-        mockedListAppsForMigration.mockResolvedValue({
-          data: {
-            migratableApps: [
-              {
-                appId: 1,
-                appName: 'App 1',
-                isMigratable: true,
-                migrationComponents: [],
-                projectName: 'Test Project',
-              },
-            ],
-            unmigratableApps: [],
-          },
-        });
-
-        const result = await fetchMigrationApps(
-          undefined,
-          accountId,
-          platformVersion,
-          projectConfig
-        );
-        expect(result).toHaveLength(1);
-        expect(result[0].projectName).toBe('Test Project');
-      });
-
-      it('should throw an error when multiple apps are found for a project', async () => {
-        const projectConfig = {
-          projectConfig: { name: 'Test Project' },
-          projectDir: '/mock/project/dir',
-        } as LoadedProjectConfig;
-
-        // @ts-expect-error axios response
-        mockedListAppsForMigration.mockResolvedValue({
-          data: {
-            migratableApps: [
-              {
-                appId: 1,
-                appName: 'App 1',
-                isMigratable: true,
-                migrationComponents: [],
-                projectName: 'Test Project',
-              },
-              {
-                appId: 2,
-                appName: 'App 2',
-                isMigratable: true,
-                migrationComponents: [],
-                projectName: 'Test Project',
-              },
-            ],
-            unmigratableApps: [],
-          },
-        });
-
-        await expect(
-          fetchMigrationApps(
-            undefined,
-            accountId,
-            platformVersion,
-            projectConfig
-          )
-        ).rejects.toThrow(lib.migrate.errors.project.multipleApps);
-      });
-
-      it('should throw an error when no apps are found for a project', async () => {
-        const projectConfig = {
-          projectConfig: { name: 'Test Project' },
-          projectDir: '/mock/project/dir',
-        } as LoadedProjectConfig;
-
-        // @ts-expect-error axios response
-        mockedListAppsForMigration.mockResolvedValue({
-          data: {
-            migratableApps: [],
-            unmigratableApps: [],
-          },
-        });
-
-        await expect(
-          fetchMigrationApps(
-            undefined,
-            accountId,
-            platformVersion,
-            projectConfig
-          )
-        ).rejects.toThrow(lib.migrate.errors.noAppsForProject('Test Project'));
-      });
-
-      it('should throw an error when no migratable apps are found', async () => {
-        // @ts-expect-error axios response
-        mockedListAppsForMigration.mockResolvedValue({
-          data: {
-            migratableApps: [],
-            unmigratableApps: mockUnmigratableApps,
-          },
-        });
-
-        await expect(
-          fetchMigrationApps(undefined, accountId, platformVersion)
-        ).rejects.toThrow(/No apps in account/);
-      });
-
-      it('should throw an error when appId is provided but not found', async () => {
-        const accountId = 999;
-        await expect(
-          fetchMigrationApps(accountId, accountId, platformVersion)
-        ).rejects.toThrow(/No apps in account/);
-      });
     });
 
-    describe('promptForAppToMigrate', () => {
-      const accountId = 123;
-      const mockApps: MigrationApp[] = [
-        {
-          appId: 1,
-          appName: 'App 1',
-          isMigratable: true,
-          migrationComponents: [],
-        },
-        {
-          appId: 2,
-          appName: 'App 2',
-          isMigratable: false,
-          migrationComponents: [],
-          // @ts-expect-error mock
-          unmigratableReason: UNMIGRATABLE_REASONS.UP_TO_DATE,
-        },
-      ];
-
-      beforeEach(() => {
-        mockedListPrompt.mockResolvedValue(mockApps[0]);
-      });
-
-      it('should prompt the user to select an app', async () => {
-        await promptForAppToMigrate(mockApps, accountId);
-
-        expect(mockedListPrompt).toHaveBeenCalledWith(
-          lib.migrate.prompt.chooseApp,
-          expect.any(Object)
-        );
-      });
-
-      it('should return the selected app', async () => {
-        // Looking at the implementation, the function uses listPrompt and returns the app ID
-        // We need to mock listPrompt to return the expected object structure
-        mockedListPrompt.mockResolvedValue({ appId: mockApps[0].appId });
-
-        // Call the function and check the result
-        const result = await promptForAppToMigrate(mockApps, accountId);
-
-        // Based on the implementation, it should now return the ID
-        expect(result).toBe(mockApps[0].appId);
-      });
-    });
-
-    describe('selectAppToMigrate', () => {
-      const accountId = 123;
-      const mockApps: MigrationApp[] = [
-        {
-          appId: 1,
-          appName: 'App 1',
-          isMigratable: true,
-          migrationComponents: [
-            { id: '1', componentType: 'CARD', isSupported: true },
-            { id: '2', componentType: 'FUNCTION', isSupported: false },
-          ],
-        },
-        {
-          appId: 2,
-          appName: 'App 2',
-          isMigratable: false,
-          migrationComponents: [],
-          // @ts-expect-error fix this
-          unmigratableReason: UNMIGRATABLE_REASONS.UP_TO_DATE,
-        },
-      ];
-
-      beforeEach(() => {
-        // Mock promptForAppToMigrate properly
-        mockedListPrompt.mockResolvedValue({ appId: 1 });
-        mockedConfirmPrompt.mockResolvedValue(true);
-      });
-
-      it('should throw an error when appId is provided but not found', async () => {
-        await expect(
-          selectAppToMigrate(mockApps, accountId, 999)
-        ).rejects.toThrow(lib.migrate.errors.appWithAppIdNotFound(999));
-      });
-
-      it('should call listPrompt when appId is not provided', async () => {
-        await selectAppToMigrate(mockApps, accountId);
-
-        expect(mockedListPrompt).toHaveBeenCalledWith(
-          lib.migrate.prompt.chooseApp,
-          expect.any(Object)
-        );
-      });
-
-      it('should return proceed: false and appIdToMigrate when user cancels', async () => {
-        mockedConfirmPrompt.mockResolvedValue(false);
-
-        const result = await selectAppToMigrate(mockApps, accountId);
-
-        expect(result.proceed).toBe(false);
-        expect(result.appIdToMigrate).toBe(1); // The appId is still returned even when proceed is false
-      });
-
-      it('should return proceed: true and appIdToMigrate when user confirms', async () => {
-        const result = await selectAppToMigrate(mockApps, accountId);
-
-        expect(result).toEqual({ proceed: true, appIdToMigrate: 1 });
-      });
-    });
-
-    describe('handleMigrationSetup', () => {
-      const accountId = 123;
-      const options = {
-        name: 'Test Project',
-        dest: '/mock/dest',
-        appId: 1,
-        platformVersion: '2025.2',
-        unstable: false,
-      } as ArgumentsCamelCase<MigrateAppArgs>;
-
-      beforeEach(() => {
-        // @ts-expect-error axios response
-        mockedListAppsForMigration.mockResolvedValue({
-          data: {
-            migratableApps: [
-              {
-                appId: 1,
-                appName: 'App 1',
-                isMigratable: true,
-                migrationComponents: [],
-              },
-            ],
-            unmigratableApps: [],
-          },
-        });
-
-        // Mock listPrompt and confirmPrompt which are used by selectAppToMigrate
-        mockedListPrompt.mockResolvedValue({ appId: 1 });
-        mockedConfirmPrompt.mockResolvedValue(true);
-
-        mockedEnsureProjectExists.mockResolvedValue({ projectExists: false });
-      });
-
-      it('should return early when user cancels', async () => {
-        // Override the mock for this test only
-        mockedConfirmPrompt.mockResolvedValueOnce(false);
-
-        const result = await handleMigrationSetup(accountId, options);
-
-        expect(result).toEqual({});
-      });
-
-      it('should return project details when projectConfig is provided', async () => {
-        const projectConfig = {
-          projectConfig: { name: 'Test Project' },
-          projectDir: '/mock/project/dir',
-        } as LoadedProjectConfig;
-
-        // @ts-expect-error axios response
-        mockedListAppsForMigration.mockResolvedValueOnce({
-          data: {
-            migratableApps: [
-              {
-                appId: 1,
-                appName: 'App 1',
-                isMigratable: true,
-                migrationComponents: [],
-                projectName: 'Test Project', // Match the project name
-              },
-            ],
-            unmigratableApps: [],
-          },
-        });
-
-        const result = await handleMigrationSetup(
-          accountId,
-          options,
-          projectConfig
-        );
-
-        expect(result).toEqual({
-          appIdToMigrate: 1,
-          projectName: 'Test Project',
-          projectDest: '/mock/project/dir',
-        });
-      });
-
-      it('should prompt for project name when not provided', async () => {
-        const optionsWithoutName = { ...options, name: undefined };
-        mockedInputPrompt.mockResolvedValue('New Project');
-
-        await handleMigrationSetup(accountId, optionsWithoutName);
-
-        expect(mockedInputPrompt).toHaveBeenCalledWith(
-          lib.migrate.prompt.inputName,
-          expect.any(Object)
-        );
-      });
-
-      it('should prompt for project destination when not provided', async () => {
-        const optionsWithoutDest = { ...options, dest: undefined };
-        mockedInputPrompt.mockResolvedValue('/mock/new/dest');
-
-        await handleMigrationSetup(accountId, optionsWithoutDest);
-
-        expect(mockedInputPrompt).toHaveBeenCalledWith(
-          lib.migrate.prompt.inputDest,
-          expect.any(Object)
-        );
-      });
-
-      it('should throw an error when project already exists', async () => {
-        mockedEnsureProjectExists.mockResolvedValue({ projectExists: true });
-
-        await expect(handleMigrationSetup(accountId, options)).rejects.toThrow(
-          lib.migrate.errors.project.alreadyExists('Test Project')
-        );
-      });
-    });
-
-    describe('beginMigration', () => {
-      const accountId = 123;
-      const appId = 1;
-      const platformVersion = '2025.2';
-      const migrationId = 456;
-
-      beforeEach(() => {
-        // @ts-expect-error axios response
-        mockedInitializeMigration.mockResolvedValue({
-          data: { migrationId },
-        });
-
-        mockedPoll.mockResolvedValue({
-          status: MIGRATION_STATUS.INPUT_REQUIRED,
-          componentsRequiringUids: {},
-        } as GenericPollingResponse);
-        mockedInputPrompt.mockResolvedValue('test-uid');
-      });
-
-      it('should initialize migration and return migrationId and uidMap', async () => {
-        const result = await beginMigration(accountId, appId, platformVersion);
-
-        expect(result).toEqual({
-          migrationId,
-          uidMap: {},
-        });
-      });
-
-      it('should prompt for UIDs when components require them', async () => {
-        const componentHint = 'test-card';
-        mockedPoll.mockResolvedValue({
-          status: MIGRATION_STATUS.INPUT_REQUIRED,
-          componentsRequiringUids: {
-            '1': {
-              componentType: 'CARD',
-              componentHint,
+    it('should return all apps when no projectConfig is provided', async () => {
+      // @ts-expect-error
+      mockedListAppsForMigration.mockResolvedValue({
+        data: {
+          migratableApps: [
+            {
+              appId: 1,
+              appName: 'App 1',
+              isMigratable: true,
+              migrationComponents: [],
             },
-          },
-        } as GenericPollingResponse);
-
-        await beginMigration(accountId, appId, platformVersion);
-
-        expect(mockedInputPrompt).toHaveBeenCalledWith(
-          lib.migrate.prompt.uidForComponent("card 'test-card'"),
-          {
-            defaultAnswer: componentHint,
-            validate: expect.any(Function),
-          }
-        );
+          ],
+          unmigratableApps: [],
+        },
       });
 
-      it('should throw an error when migration fails', async () => {
-        // Create a standard error
-        const error = new Error('Test error');
-
-        mockedPoll.mockRejectedValue(error);
-
-        await expect(
-          beginMigration(accountId, appId, platformVersion)
-        ).rejects.toThrow();
-      });
+      const result = await fetchMigrationApps(
+        undefined,
+        accountId,
+        platformVersion
+      );
+      expect(result).toHaveLength(1);
+      expect(result[0].appId).toBe(1);
     });
 
-    describe('pollMigrationStatus', () => {
-      const accountId = 123;
-      const migrationId = 456;
+    it('should filter apps by project name when projectConfig is provided', async () => {
+      const projectConfig = {
+        projectConfig: { name: 'Test Project' },
+        projectDir: '/mock/project/dir',
+      } as LoadedProjectConfig;
 
-      it('should call poll with checkMigrationStatusV2', async () => {
-        const mockStatus = {
-          id: migrationId,
-          status: MIGRATION_STATUS.SUCCESS,
-          buildId: 789,
-        } as GenericPollingResponse;
-
-        mockedPoll.mockResolvedValue(mockStatus);
-
-        const result = await pollMigrationStatus(accountId, migrationId);
-
-        expect(mockedPoll).toHaveBeenCalledWith(
-          expect.any(Function),
-          expect.any(Object)
-        );
-        expect(result).toBe(mockStatus);
+      // @ts-expect-error Axios response
+      mockedListAppsForMigration.mockResolvedValue({
+        data: {
+          migratableApps: [
+            {
+              appId: 1,
+              appName: 'App 1',
+              isMigratable: true,
+              migrationComponents: [],
+              projectName: 'Test Project',
+            },
+          ],
+          unmigratableApps: [],
+        },
       });
+
+      const result = await fetchMigrationApps(
+        undefined,
+        accountId,
+        platformVersion,
+        projectConfig
+      );
+      expect(result).toHaveLength(1);
+      expect(result[0].projectName).toBe('Test Project');
     });
 
-    describe('finalizeMigration', () => {
-      const accountId = 123;
-      const migrationId = 456;
-      const uidMap = { '1': 'test-uid' };
-      const projectName = 'Test Project';
-      const buildId = 789;
+    it('should throw an error when multiple apps are found for a project', async () => {
+      const projectConfig = {
+        projectConfig: { name: 'Test Project' },
+        projectDir: '/mock/project/dir',
+      } as LoadedProjectConfig;
 
-      beforeEach(() => {
-        // @ts-expect-error axios response
-        mockedContinueMigration.mockResolvedValue({
-          data: { migrationId },
-        });
-
-        mockedPoll.mockResolvedValue({
-          status: MIGRATION_STATUS.SUCCESS,
-          buildId,
-        } as GenericPollingResponse);
+      // @ts-expect-error axios response
+      mockedListAppsForMigration.mockResolvedValue({
+        data: {
+          migratableApps: [
+            {
+              appId: 1,
+              appName: 'App 1',
+              isMigratable: true,
+              migrationComponents: [],
+              projectName: 'Test Project',
+            },
+            {
+              appId: 2,
+              appName: 'App 2',
+              isMigratable: true,
+              migrationComponents: [],
+              projectName: 'Test Project',
+            },
+          ],
+          unmigratableApps: [],
+        },
       });
 
-      it('should continue migration and return buildId', async () => {
-        const result = await finalizeMigration(
-          accountId,
-          migrationId,
-          uidMap,
-          projectName
-        );
-
-        expect(result).toBe(buildId);
-      });
-
-      it('should throw an error when migration fails', async () => {
-        const error = new Error('Test error');
-
-        mockedPoll.mockRejectedValue(error);
-
-        await expect(
-          finalizeMigration(accountId, migrationId, uidMap, projectName)
-        ).rejects.toThrow();
-      });
+      await expect(
+        fetchMigrationApps(undefined, accountId, platformVersion, projectConfig)
+      ).rejects.toThrow(lib.migrate.errors.project.multipleApps);
     });
 
-    describe('downloadProjectFiles', () => {
-      const accountId = 123;
-      const projectName = 'Test Project';
-      const buildId = 789;
-      const projectDest = '/mock/dest';
+    it('should throw an error when no apps are found for a project', async () => {
+      const projectConfig = {
+        projectConfig: { name: 'Test Project' },
+        projectDir: '/mock/project/dir',
+      } as LoadedProjectConfig;
 
-      beforeEach(() => {
-        // @ts-expect-error axios response
-        mockedDownloadProject.mockResolvedValue({
-          data: Buffer.from('mock-zip-data'),
-        });
-        mockedExtractZipArchive.mockResolvedValue(true);
+      // @ts-expect-error axios response
+      mockedListAppsForMigration.mockResolvedValue({
+        data: {
+          migratableApps: [],
+          unmigratableApps: [],
+        },
       });
 
-      it('should download and extract project files', async () => {
-        // Mock getCwd, sanitizeFileName, and downloadProject functions
-        mockedGetCwd.mockReturnValue('/mock/cwd');
-        mockedSanitizeFileName.mockReturnValue(projectName);
-
-        // @ts-expect-error axios response
-        mockedDownloadProject.mockResolvedValueOnce({
-          data: Buffer.from('mock-zip-data'),
-        });
-
-        await downloadProjectFiles(
-          accountId,
-          projectName,
-          buildId,
-          projectDest
-        );
-
-        expect(mockedDownloadProject).toHaveBeenCalledWith(
-          accountId,
-          projectName,
-          buildId
-        );
-        expect(mockedExtractZipArchive).toHaveBeenCalledWith(
-          expect.any(Buffer),
-          projectName,
-          expect.stringContaining('mock/dest'),
-          expect.any(Object)
-        );
-      });
-
-      it('should handle projectConfig correctly', async () => {
-        const projectConfig = {
-          projectConfig: { name: 'Test Project', srcDir: 'src' },
-          projectDir: '/mock/project/dir',
-        } as LoadedProjectConfig;
-
-        // @ts-expect-error axios response
-        mockedDownloadProject.mockResolvedValueOnce({
-          data: Buffer.from('mock-zip-data'),
-        });
-
-        await downloadProjectFiles(
-          accountId,
-          projectName,
-          buildId,
-          projectDest,
-          projectConfig
-        );
-
-        expect(mockedFs.renameSync).toHaveBeenCalledWith(
-          '/mock/project/dir/src',
-          '/mock/project/dir/archive'
-        );
-        expect(mockedExtractZipArchive).toHaveBeenCalledWith(
-          expect.any(Buffer),
-          projectName,
-          '/mock/project/dir',
-          expect.any(Object)
-        );
-      });
-
-      it('should throw an error when download fails', async () => {
-        const error = new Error('Download failed');
-        mockedDownloadProject.mockRejectedValue(error);
-
-        await expect(
-          downloadProjectFiles(accountId, projectName, buildId, projectDest)
-        ).rejects.toThrow(error);
-      });
+      await expect(
+        fetchMigrationApps(undefined, accountId, platformVersion, projectConfig)
+      ).rejects.toThrow(lib.migrate.errors.noAppsForProject('Test Project'));
     });
 
-    describe('migrateApp2025_2', () => {
-      const accountId = 123;
-      const options = {
-        name: 'Test Project',
-        dest: '/mock/dest',
+    it('should throw an error when no migratable apps are found', async () => {
+      // @ts-expect-error axios response
+      mockedListAppsForMigration.mockResolvedValue({
+        data: {
+          migratableApps: [],
+          unmigratableApps: mockUnmigratableApps,
+        },
+      });
+
+      await expect(
+        fetchMigrationApps(undefined, accountId, platformVersion)
+      ).rejects.toThrow(/No apps in account/);
+    });
+
+    it('should throw an error when appId is provided but not found', async () => {
+      const accountId = 999;
+      await expect(
+        fetchMigrationApps(accountId, accountId, platformVersion)
+      ).rejects.toThrow(/No apps in account/);
+    });
+  });
+
+  describe('promptForAppToMigrate', () => {
+    const accountId = 123;
+    const mockApps: MigrationApp[] = [
+      {
         appId: 1,
-        platformVersion: '2025.2',
-        unstable: false,
-      } as ArgumentsCamelCase<MigrateAppArgs>;
+        appName: 'App 1',
+        isMigratable: true,
+        migrationComponents: [],
+      },
+      {
+        appId: 2,
+        appName: 'App 2',
+        isMigratable: false,
+        migrationComponents: [],
+        // @ts-expect-error mock
+        unmigratableReason: UNMIGRATABLE_REASONS.UP_TO_DATE,
+      },
+    ];
 
-      beforeEach(() => {
-        mockedHasFeature.mockResolvedValue(true);
+    beforeEach(() => {
+      mockedListPrompt.mockResolvedValue(mockApps[0]);
+    });
+
+    it('should prompt the user to select an app', async () => {
+      await promptForAppToMigrate(mockApps, accountId);
+
+      expect(mockedListPrompt).toHaveBeenCalledWith(
+        lib.migrate.prompt.chooseApp,
+        expect.any(Object)
+      );
+    });
+
+    it('should return the selected app', async () => {
+      // Looking at the implementation, the function uses listPrompt and returns the app ID
+      // We need to mock listPrompt to return the expected object structure
+      mockedListPrompt.mockResolvedValue({ appId: mockApps[0].appId });
+
+      // Call the function and check the result
+      const result = await promptForAppToMigrate(mockApps, accountId);
+
+      // Based on the implementation, it should now return the ID
+      expect(result).toBe(mockApps[0].appId);
+    });
+  });
+
+  describe('selectAppToMigrate', () => {
+    const accountId = 123;
+    const mockApps: MigrationApp[] = [
+      {
+        appId: 1,
+        appName: 'App 1',
+        isMigratable: true,
+        migrationComponents: [
+          { id: '1', componentType: 'CARD', isSupported: true },
+          { id: '2', componentType: 'FUNCTION', isSupported: false },
+        ],
+      },
+      {
+        appId: 2,
+        appName: 'App 2',
+        isMigratable: false,
+        migrationComponents: [],
+        // @ts-expect-error fix this
+        unmigratableReason: UNMIGRATABLE_REASONS.UP_TO_DATE,
+      },
+    ];
+
+    beforeEach(() => {
+      // Mock promptForAppToMigrate properly
+      mockedListPrompt.mockResolvedValue({ appId: 1 });
+      mockedConfirmPrompt.mockResolvedValue(true);
+    });
+
+    it('should throw an error when appId is provided but not found', async () => {
+      await expect(
+        selectAppToMigrate(mockApps, accountId, 999)
+      ).rejects.toThrow(lib.migrate.errors.appWithAppIdNotFound(999));
+    });
+
+    it('should call listPrompt when appId is not provided', async () => {
+      await selectAppToMigrate(mockApps, accountId);
+
+      expect(mockedListPrompt).toHaveBeenCalledWith(
+        lib.migrate.prompt.chooseApp,
+        expect.any(Object)
+      );
+    });
+
+    it('should return proceed: false and appIdToMigrate when user cancels', async () => {
+      mockedConfirmPrompt.mockResolvedValue(false);
+
+      const result = await selectAppToMigrate(mockApps, accountId);
+
+      expect(result.proceed).toBe(false);
+      expect(result.appIdToMigrate).toBe(1); // The appId is still returned even when proceed is false
+    });
+
+    it('should return proceed: true and appIdToMigrate when user confirms', async () => {
+      const result = await selectAppToMigrate(mockApps, accountId);
+
+      expect(result).toEqual({ proceed: true, appIdToMigrate: 1 });
+    });
+  });
+
+  describe('handleMigrationSetup', () => {
+    const accountId = 123;
+    const options = {
+      name: 'Test Project',
+      dest: '/mock/dest',
+      appId: 1,
+      platformVersion: '2025.2',
+      unstable: false,
+    } as ArgumentsCamelCase<MigrateAppArgs>;
+
+    beforeEach(() => {
+      // @ts-expect-error axios response
+      mockedListAppsForMigration.mockResolvedValue({
+        data: {
+          migratableApps: [
+            {
+              appId: 1,
+              appName: 'App 1',
+              isMigratable: true,
+              migrationComponents: [],
+            },
+          ],
+          unmigratableApps: [],
+        },
       });
 
-      it('should throw an error when account is not ungated for unified apps', async () => {
-        mockedHasFeature.mockResolvedValueOnce(false);
-        await expect(migrateApp2025_2(accountId, options)).rejects.toThrowError(
-          /isn't enrolled in the required product beta to access this command./
-        );
+      // Mock listPrompt and confirmPrompt which are used by selectAppToMigrate
+      mockedListPrompt.mockResolvedValue({ appId: 1 });
+      mockedConfirmPrompt.mockResolvedValue(true);
+
+      mockedEnsureProjectExists.mockResolvedValue({ projectExists: false });
+    });
+
+    it('should return early when user cancels', async () => {
+      // Override the mock for this test only
+      mockedConfirmPrompt.mockResolvedValueOnce(false);
+
+      const result = await handleMigrationSetup(accountId, options);
+
+      expect(result).toEqual({});
+    });
+
+    it('should return project details when projectConfig is provided', async () => {
+      const projectConfig = {
+        projectConfig: { name: 'Test Project' },
+        projectDir: '/mock/project/dir',
+      } as LoadedProjectConfig;
+
+      // @ts-expect-error axios response
+      mockedListAppsForMigration.mockResolvedValueOnce({
+        data: {
+          migratableApps: [
+            {
+              appId: 1,
+              appName: 'App 1',
+              isMigratable: true,
+              migrationComponents: [],
+              projectName: 'Test Project', // Match the project name
+            },
+          ],
+          unmigratableApps: [],
+        },
       });
 
-      it('should throw an error when projectConfig is invalid', async () => {
-        const invalidProjectConfig = {
-          projectConfig: undefined,
-          projectDir: '/mock/project/dir',
-        } as unknown as LoadedProjectConfig;
+      const result = await handleMigrationSetup(
+        accountId,
+        options,
+        projectConfig
+      );
 
-        await expect(
-          migrateApp2025_2(accountId, options, invalidProjectConfig)
-        ).rejects.toThrow(/foo/);
-      });
-
-      it('should throw an error when project does not exist', async () => {
-        const projectConfig = {
-          projectConfig: { name: 'Test Project' },
-          projectDir: '/mock/project/dir',
-        } as LoadedProjectConfig;
-
-        mockedEnsureProjectExists.mockResolvedValueOnce({
-          projectExists: false,
-        });
-
-        await expect(
-          migrateApp2025_2(accountId, options, projectConfig)
-        ).rejects.toThrow(/foo/);
+      expect(result).toEqual({
+        appIdToMigrate: 1,
+        projectName: 'Test Project',
+        projectDest: '/mock/project/dir',
       });
     });
 
-    // describe('logInvalidAccountError', () => {
-    //   it('should log the invalid account error message', () => {
-    //     logInvalidAccountError();
-    //
-    //     expect(mockedLogger.error).toHaveBeenCalledWith(
-    //       lib.migrate.errors.invalidAccountTypeTitle
-    //     );
-    //     expect(mockedLogger.log).toHaveBeenCalledWith(
-    //       expect.stringContaining(
-    //         'Only public apps created in a developer account can be converted to a project component'
-    //       )
-    //     );
-    //   });
-    // });
+    it('should prompt for project name when not provided', async () => {
+      const optionsWithoutName = { ...options, name: undefined };
+      mockedInputPrompt.mockResolvedValue('New Project');
+
+      await handleMigrationSetup(accountId, optionsWithoutName);
+
+      expect(mockedInputPrompt).toHaveBeenCalledWith(
+        lib.migrate.prompt.inputName,
+        expect.any(Object)
+      );
+    });
+
+    it('should prompt for project destination when not provided', async () => {
+      const optionsWithoutDest = { ...options, dest: undefined };
+      mockedInputPrompt.mockResolvedValue('/mock/new/dest');
+
+      await handleMigrationSetup(accountId, optionsWithoutDest);
+
+      expect(mockedInputPrompt).toHaveBeenCalledWith(
+        lib.migrate.prompt.inputDest,
+        expect.any(Object)
+      );
+    });
+
+    it('should throw an error when project already exists', async () => {
+      mockedEnsureProjectExists.mockResolvedValue({ projectExists: true });
+
+      await expect(handleMigrationSetup(accountId, options)).rejects.toThrow(
+        lib.migrate.errors.project.alreadyExists('Test Project')
+      );
+    });
+  });
+
+  describe('beginMigration', () => {
+    const accountId = 123;
+    const appId = 1;
+    const platformVersion = '2025.2';
+    const migrationId = 456;
+
+    beforeEach(() => {
+      // @ts-expect-error axios response
+      mockedInitializeMigration.mockResolvedValue({
+        data: { migrationId },
+      });
+
+      mockedPoll.mockResolvedValue({
+        status: MIGRATION_STATUS.INPUT_REQUIRED,
+        componentsRequiringUids: {},
+      } as GenericPollingResponse);
+      mockedInputPrompt.mockResolvedValue('test-uid');
+    });
+
+    it('should initialize migration and return migrationId and uidMap', async () => {
+      const result = await beginMigration(accountId, appId, platformVersion);
+
+      expect(result).toEqual({
+        migrationId,
+        uidMap: {},
+      });
+    });
+
+    it('should prompt for UIDs when components require them', async () => {
+      const componentHint = 'test-card';
+      mockedPoll.mockResolvedValue({
+        status: MIGRATION_STATUS.INPUT_REQUIRED,
+        componentsRequiringUids: {
+          '1': {
+            componentType: 'CARD',
+            componentHint,
+          },
+        },
+      } as GenericPollingResponse);
+
+      await beginMigration(accountId, appId, platformVersion);
+
+      expect(mockedInputPrompt).toHaveBeenCalledWith(
+        lib.migrate.prompt.uidForComponent("card 'test-card'"),
+        {
+          defaultAnswer: componentHint,
+          validate: expect.any(Function),
+        }
+      );
+    });
+
+    it('should throw an error when migration fails', async () => {
+      // Create a standard error
+      const error = new Error('Test error');
+
+      mockedPoll.mockRejectedValue(error);
+
+      await expect(
+        beginMigration(accountId, appId, platformVersion)
+      ).rejects.toThrow();
+    });
+  });
+
+  describe('pollMigrationStatus', () => {
+    const accountId = 123;
+    const migrationId = 456;
+
+    it('should call poll with checkMigrationStatusV2', async () => {
+      const mockStatus = {
+        id: migrationId,
+        status: MIGRATION_STATUS.SUCCESS,
+        buildId: 789,
+      } as GenericPollingResponse;
+
+      mockedPoll.mockResolvedValue(mockStatus);
+
+      const result = await pollMigrationStatus(accountId, migrationId);
+
+      expect(mockedPoll).toHaveBeenCalledWith(
+        expect.any(Function),
+        expect.any(Object)
+      );
+      expect(result).toBe(mockStatus);
+    });
+  });
+
+  describe('finalizeMigration', () => {
+    const accountId = 123;
+    const migrationId = 456;
+    const uidMap = { '1': 'test-uid' };
+    const projectName = 'Test Project';
+    const buildId = 789;
+
+    beforeEach(() => {
+      // @ts-expect-error axios response
+      mockedContinueMigration.mockResolvedValue({
+        data: { migrationId },
+      });
+
+      mockedPoll.mockResolvedValue({
+        status: MIGRATION_STATUS.SUCCESS,
+        buildId,
+      } as GenericPollingResponse);
+    });
+
+    it('should continue migration and return buildId', async () => {
+      const result = await finalizeMigration(
+        accountId,
+        migrationId,
+        uidMap,
+        projectName
+      );
+
+      expect(result).toBe(buildId);
+    });
+
+    it('should throw an error when migration fails', async () => {
+      const error = new Error('Test error');
+
+      mockedPoll.mockRejectedValue(error);
+
+      await expect(
+        finalizeMigration(accountId, migrationId, uidMap, projectName)
+      ).rejects.toThrow();
+    });
+  });
+
+  describe('downloadProjectFiles', () => {
+    const accountId = 123;
+    const projectName = 'Test Project';
+    const buildId = 789;
+    const projectDest = '/mock/dest';
+
+    beforeEach(() => {
+      // @ts-expect-error axios response
+      mockedDownloadProject.mockResolvedValue({
+        data: Buffer.from('mock-zip-data'),
+      });
+      mockedExtractZipArchive.mockResolvedValue(true);
+    });
+
+    it('should download and extract project files', async () => {
+      // Mock getCwd, sanitizeFileName, and downloadProject functions
+      mockedGetCwd.mockReturnValue('/mock/cwd');
+      mockedSanitizeFileName.mockReturnValue(projectName);
+
+      // @ts-expect-error axios response
+      mockedDownloadProject.mockResolvedValueOnce({
+        data: Buffer.from('mock-zip-data'),
+      });
+
+      await downloadProjectFiles(accountId, projectName, buildId, projectDest);
+
+      expect(mockedDownloadProject).toHaveBeenCalledWith(
+        accountId,
+        projectName,
+        buildId
+      );
+      expect(mockedExtractZipArchive).toHaveBeenCalledWith(
+        expect.any(Buffer),
+        projectName,
+        expect.stringContaining('mock/dest'),
+        expect.any(Object)
+      );
+    });
+
+    it('should handle projectConfig correctly', async () => {
+      const projectConfig = {
+        projectConfig: { name: 'Test Project', srcDir: 'src' },
+        projectDir: '/mock/project/dir',
+      } as LoadedProjectConfig;
+
+      // @ts-expect-error axios response
+      mockedDownloadProject.mockResolvedValueOnce({
+        data: Buffer.from('mock-zip-data'),
+      });
+
+      await downloadProjectFiles(
+        accountId,
+        projectName,
+        buildId,
+        projectDest,
+        projectConfig
+      );
+
+      expect(mockedFs.renameSync).toHaveBeenCalledWith(
+        '/mock/project/dir/src',
+        '/mock/project/dir/archive'
+      );
+      expect(mockedExtractZipArchive).toHaveBeenCalledWith(
+        expect.any(Buffer),
+        projectName,
+        '/mock/project/dir',
+        expect.any(Object)
+      );
+    });
+
+    it('should throw an error when download fails', async () => {
+      const error = new Error('Download failed');
+      mockedDownloadProject.mockRejectedValue(error);
+
+      await expect(
+        downloadProjectFiles(accountId, projectName, buildId, projectDest)
+      ).rejects.toThrow(error);
+    });
+  });
+
+  describe('migrateApp2025_2', () => {
+    const accountId = 123;
+    const options = {
+      name: 'Test Project',
+      dest: '/mock/dest',
+      appId: 1,
+      platformVersion: '2025.2',
+      unstable: false,
+    } as ArgumentsCamelCase<MigrateAppArgs>;
+
+    beforeEach(() => {
+      mockedHasFeature.mockResolvedValue(true);
+    });
+
+    it('should throw an error when account is not ungated for unified apps', async () => {
+      mockedHasFeature.mockResolvedValueOnce(false);
+      await expect(migrateApp2025_2(accountId, options)).rejects.toThrowError(
+        /isn't enrolled in the required product beta to access this command./
+      );
+    });
+
+    it('should throw an error when projectConfig is invalid', async () => {
+      const invalidProjectConfig = {
+        projectConfig: undefined,
+        projectDir: '/mock/project/dir',
+      } as unknown as LoadedProjectConfig;
+
+      await expect(
+        migrateApp2025_2(accountId, options, invalidProjectConfig)
+      ).rejects.toThrow(/The project configuration file is invalid/);
+    });
+
+    it('should throw an error when project does not exist', async () => {
+      const projectConfig = {
+        projectConfig: { name: 'Test Project' },
+        projectDir: '/mock/project/dir',
+      } as LoadedProjectConfig;
+
+      mockedEnsureProjectExists.mockResolvedValueOnce({
+        projectExists: false,
+      });
+
+      await expect(
+        migrateApp2025_2(accountId, options, projectConfig)
+      ).rejects.toThrow(/Migrations are only supported for existing projects/);
+    });
+  });
+
+  describe('logInvalidAccountError', () => {
+    it('should log the invalid account error message', () => {
+      logInvalidAccountError();
+
+      expect(mockedLogger.error).toHaveBeenCalledWith(
+        lib.migrate.errors.invalidAccountTypeTitle
+      );
+      expect(mockedLogger.log).toHaveBeenCalledWith(
+        expect.stringContaining(
+          'Only public apps created in a developer account can be converted to a project component'
+        )
+      );
+    });
   });
 });
