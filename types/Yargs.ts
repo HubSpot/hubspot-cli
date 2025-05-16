@@ -31,7 +31,11 @@ export type StringArgType = Options & {
   type: 'string';
 };
 
-export type ProjectDevArgs = CommonArgs & ConfigArgs & EnvironmentArgs;
+export type ProjectDevArgs = CommonArgs &
+  ConfigArgs &
+  EnvironmentArgs & {
+    profile?: string;
+  };
 
 export type TestingArgs = {
   qa?: boolean;

@@ -15,6 +15,7 @@ import migrate from './project/migrate';
 import migrateApp from './project/migrateApp';
 import cloneApp from './project/cloneApp';
 import installDeps from './project/installDeps';
+import profile from './project/profile';
 import { makeYargsBuilder } from '../lib/yargsUtils';
 import { YargsCommandModuleBucket } from '../types/Yargs';
 
@@ -37,6 +38,7 @@ function projectBuilder(yargs: Argv): Argv {
     .command(migrate)
     .command(cloneApp)
     .command(installDeps)
+    .command(profile)
     .demandCommand(1, '');
 
   return yargs;

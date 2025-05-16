@@ -63,10 +63,15 @@ const exampleSpy = jest
   .spyOn(yargs as Argv, 'example')
   .mockReturnValue(yargs as Argv);
 
+const conflictsSpy = jest
+  .spyOn(yargs as Argv, 'conflicts')
+  .mockReturnValue(yargs as Argv);
+
 describe('commands/project/deploy', () => {
   const projectFlag = 'project';
   const buildFlag = 'build';
   const buildAliases = ['build-id'];
+  const profileFlag = 'profile';
 
   describe('command', () => {
     it('should have the correct command structure', () => {
@@ -88,12 +93,21 @@ describe('commands/project/deploy', () => {
     it('should support the correct options', () => {
       projectDeployCommand.builder(yargs as Argv);
 
+      expect(conflictsSpy).toHaveBeenCalledTimes(2);
+      expect(conflictsSpy).toHaveBeenNthCalledWith(1, profileFlag, projectFlag);
+      expect(conflictsSpy).toHaveBeenNthCalledWith(2, profileFlag, 'account');
+
       expect(optionsSpy).toHaveBeenCalledTimes(1);
       expect(optionsSpy).toHaveBeenCalledWith({
         [projectFlag]: expect.objectContaining({ type: 'string' }),
         [buildFlag]: expect.objectContaining({
           alias: buildAliases,
           type: 'number',
+        }),
+        [profileFlag]: expect.objectContaining({
+          type: 'string',
+          alias: ['p'],
+          hidden: true,
         }),
       });
 

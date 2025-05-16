@@ -16,7 +16,7 @@ import { getProjectDetailUrl } from '../../lib/projects/urls';
 import { projectNamePrompt } from '../../lib/prompts/projectNamePrompt';
 import { promptUser } from '../../lib/prompts/promptUtils';
 import { i18n } from '../../lib/lang';
-import { uiBetaTag, uiLink } from '../../lib/ui';
+import { uiBetaTag, uiLine, uiLink } from '../../lib/ui';
 import { EXIT_CODES } from '../../lib/enums/exitCodes';
 import { uiCommandReference, uiAccountDescription } from '../../lib/ui';
 import {
@@ -27,6 +27,12 @@ import {
   YargsCommandModule,
 } from '../../types/Yargs';
 import { makeYargsBuilder } from '../../lib/yargsUtils';
+import {
+  loadProfile,
+  logProfileFooter,
+  logProfileHeader,
+  exitIfUsingProfiles,
+} from '../../lib/projectProfiles';
 
 const command = 'deploy';
 const describe = uiBetaTag(
@@ -41,6 +47,7 @@ export type ProjectDeployArgs = CommonArgs &
     project?: string;
     build?: number;
     buildId?: number;
+    profile?: string;
   };
 
 function validateBuildId(
@@ -81,18 +88,45 @@ function validateBuildId(
 async function handler(
   args: ArgumentsCamelCase<ProjectDeployArgs>
 ): Promise<void> {
-  const { derivedAccountId } = args;
+  const {
+    derivedAccountId,
+    project: projectOption,
+    buildId: buildIdOption,
+  } = args;
   const accountConfig = getAccountConfig(derivedAccountId);
-  const { project: projectOption, buildId: buildIdOption } = args;
   const accountType = accountConfig && accountConfig.accountType;
+  let targetAccountId: number | undefined;
+
+  const { projectConfig, projectDir } = await getProjectConfig();
+
+  if (useV3Api(projectConfig?.platformVersion)) {
+    if (args.profile) {
+      logProfileHeader(args.profile);
+
+      const profile = loadProfile(projectConfig, projectDir, args.profile);
+
+      if (!profile) {
+        uiLine();
+        process.exit(EXIT_CODES.ERROR);
+      }
+      targetAccountId = profile.accountId;
+
+      logProfileFooter(profile);
+    } else {
+      // A profile must be specified if this project has profiles configured
+      await exitIfUsingProfiles(projectConfig, projectDir);
+    }
+  }
+
+  if (!targetAccountId) {
+    targetAccountId = derivedAccountId;
+  }
 
   trackCommandUsage(
     'project-deploy',
     accountType ? { type: accountType } : undefined,
-    derivedAccountId
+    targetAccountId
   );
-
-  const { projectConfig } = await getProjectConfig();
 
   let projectName = projectOption;
 
@@ -100,7 +134,7 @@ async function handler(
     projectName = projectConfig.name;
   }
 
-  const namePromptResponse = await projectNamePrompt(derivedAccountId, {
+  const namePromptResponse = await projectNamePrompt(targetAccountId, {
     project: projectName,
   });
   projectName = namePromptResponse.projectName;
@@ -110,7 +144,7 @@ async function handler(
   try {
     const {
       data: { latestBuild, deployedBuildId },
-    } = await fetchProject(derivedAccountId, projectName);
+    } = await fetchProject(targetAccountId, projectName);
 
     if (!latestBuild || !latestBuild.buildId) {
       logger.error(i18n(`commands.project.subcommands.deploy.errors.noBuilds`));
@@ -123,7 +157,7 @@ async function handler(
         deployedBuildId,
         latestBuild.buildId,
         projectName,
-        derivedAccountId
+        targetAccountId
       );
       if (validationResult !== true) {
         logger.error(validationResult);
@@ -145,7 +179,7 @@ async function handler(
             deployedBuildId,
             latestBuild.buildId,
             projectName,
-            derivedAccountId
+            targetAccountId
           ),
       });
       buildIdToDeploy = deployBuildIdPromptResponse.buildId;
@@ -159,7 +193,7 @@ async function handler(
     }
 
     const { data: deployResp } = await deployProject(
-      derivedAccountId,
+      targetAccountId,
       projectName,
       buildIdToDeploy,
       useV3Api(projectConfig?.platformVersion)
@@ -171,7 +205,7 @@ async function handler(
     }
 
     await pollDeployStatus(
-      derivedAccountId,
+      targetAccountId,
       projectName,
       Number(deployResp.id),
       buildIdToDeploy
@@ -181,7 +215,7 @@ async function handler(
       logger.error(
         i18n(`commands.project.subcommands.deploy.errors.projectNotFound`, {
           projectName: chalk.bold(projectName),
-          accountIdentifier: uiAccountDescription(derivedAccountId),
+          accountIdentifier: uiAccountDescription(targetAccountId),
           command: uiCommandReference('hs project upload'),
         })
       );
@@ -191,7 +225,7 @@ async function handler(
       logError(
         e,
         new ApiErrorContext({
-          accountId: derivedAccountId,
+          accountId: targetAccountId,
           request: 'project deploy',
         })
       );
@@ -215,7 +249,18 @@ function projectDeployBuilder(yargs: Argv): Argv<ProjectDeployArgs> {
       ),
       type: 'number',
     },
+    profile: {
+      alias: ['p'],
+      describe: i18n(
+        `commands.project.subcommands.deploy.options.profile.describe`
+      ),
+      type: 'string',
+      hidden: true,
+    },
   });
+
+  yargs.conflicts('profile', 'project');
+  yargs.conflicts('profile', 'account');
 
   yargs.example([
     [

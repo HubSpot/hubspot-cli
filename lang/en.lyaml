@@ -602,6 +602,9 @@ en:
             invalidUnifiedAppsAccount: "Local development of Unified Apps is currently only supported in standard and developer accounts. Target a standard or developer account with {{ authCommand }} and try again."
           examples:
             default: "Start local dev for the current project"
+          options:
+            profile:
+              describe: "The profile to target during local dev"
         create:
           describe: "Create a new project."
           errors:
@@ -720,6 +723,8 @@ en:
               describe: "Project build ID to be deployed"
             project:
               describe: "Project name"
+            profile:
+              describe: "The profile to target with this deploy"
         listBuilds:
           describe: "List the project's builds."
           continueOrExitPrompt: "Press <enter> to load more, or ctrl+c to exit"
@@ -787,6 +792,8 @@ en:
               describe: "Automatically create project if it does not exist"
             message:
               describe: "Add a message when you upload your project and create a build"
+            profile:
+              describe: "The profile to target with this upload"
         watch:
           describe: "Watch your local project for changes and automatically upload changed files to a new build in HubSpot."
           examples:

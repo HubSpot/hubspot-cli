@@ -168,20 +168,17 @@ export function validateCmsPublishMode(
 }
 
 export function fileExists(_path: string): boolean {
-  let isFile: boolean;
   try {
     const absoluteSrcPath = path.resolve(getCwd(), _path);
     if (!absoluteSrcPath) return false;
 
     const stats = fs.statSync(absoluteSrcPath);
-    isFile = stats.isFile();
+    const isFile = stats.isFile();
 
     if (!isFile) {
-      logger.error(`The path "${_path}" is not a path to a file`);
       return false;
     }
   } catch (e) {
-    logger.error(`The path "${_path}" is not a path to a file`);
     return false;
   }
 
@@ -190,7 +187,10 @@ export function fileExists(_path: string): boolean {
 
 export function checkAndConvertToJson(_path: string): unknown | null {
   const filePath = getAbsoluteFilePath(_path);
-  if (!fileExists(filePath)) return null;
+  if (!fileExists(filePath)) {
+    logger.error(`The path "${_path}" is not a path to a file`);
+    return null;
+  }
 
   if (getExt(_path) !== 'json') {
     logger.error(`The file "${_path}" must be a valid JSON file`);
