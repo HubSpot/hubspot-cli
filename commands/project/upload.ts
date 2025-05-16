@@ -64,11 +64,7 @@ async function handler(
     if (args.profile) {
       logProfileHeader(args.profile);
 
-      const profile = await loadProfile(
-        projectConfig,
-        projectDir,
-        args.profile
-      );
+      const profile = loadProfile(projectConfig, projectDir, args.profile);
 
       if (!profile) {
         uiLine();

@@ -54,7 +54,7 @@ export async function handler(
     if (args.profile) {
       logProfileHeader(args.profile);
 
-      profile = await loadProfile(projectConfig, projectDir, args.profile);
+      profile = loadProfile(projectConfig, projectDir, args.profile);
 
       if (!profile) {
         uiLine();

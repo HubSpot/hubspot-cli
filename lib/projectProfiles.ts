@@ -37,11 +37,11 @@ export function logProfileFooter(
   uiLogger.log('');
 }
 
-export async function loadProfile(
+export function loadProfile(
   projectConfig: ProjectConfig | null,
   projectDir: string | null,
   profileName: string
-): Promise<HsProfileFile | undefined> {
+): HsProfileFile | undefined {
   if (!projectConfig || !projectDir) {
     uiLogger.error(lib.projectProfiles.loadProfile.errors.noProjectConfig);
     return;
