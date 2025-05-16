@@ -20,6 +20,7 @@ jest.mock('../Diagnosis');
 jest.mock('../../ui/SpinniesManager');
 jest.mock('../DiagnosticInfoBuilder');
 jest.mock('../../dependencyManagement');
+jest.mock('../../npm');
 jest.mock('@hubspot/local-dev-lib/portManager');
 jest.mock('@hubspot/local-dev-lib/personalAccessKey');
 jest.mock('@hubspot/local-dev-lib/errors/index');

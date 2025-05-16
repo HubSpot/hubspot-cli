@@ -1,17 +1,29 @@
 import { Argv } from 'yargs';
-import { addConfigOptions, addGlobalOptions } from '../lib/commonOpts';
 import { i18n } from '../lib/lang';
-import * as set from './config/set';
-import * as migrate from './config/migrate';
+import set from './config/set';
+import migrate from './config/migrate';
+import { makeYargsBuilder } from '../lib/yargsUtils';
+import { YargsCommandModuleBucket } from '../types/Yargs';
 
-export const command = 'config';
-export const describe = i18n('commands.config.describe');
+const command = 'config';
+const describe = i18n('commands.config.describe');
 
-export function builder(yargs: Argv): Argv {
-  addConfigOptions(yargs);
-  addGlobalOptions(yargs);
-
+function configBuilder(yargs: Argv): Argv {
   yargs.command(set).command(migrate).demandCommand(1, '');
 
   return yargs;
 }
+
+const builder = makeYargsBuilder(configBuilder, command, describe);
+
+const configCommand: YargsCommandModuleBucket = {
+  command,
+  describe,
+  builder,
+  handler: () => {},
+};
+
+export default configCommand;
+
+// TODO Remove this legacy export once we've migrated all commands to TS
+module.exports = configCommand;

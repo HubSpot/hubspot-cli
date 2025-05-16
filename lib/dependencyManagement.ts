@@ -1,17 +1,17 @@
-import { logger } from '@hubspot/local-dev-lib/logger';
-import { getProjectConfig } from './projects/config';
+import fs from 'fs';
+import util from 'util';
+import path from 'path';
 import { exec as execAsync } from 'child_process';
 import { walk } from '@hubspot/local-dev-lib/fs';
-import path from 'path';
+import { getProjectConfig } from './projects/config';
 import { uiLink } from './ui';
-import util from 'util';
 import { i18n } from './lang';
 import SpinniesManager from './ui/SpinniesManager';
-import fs from 'fs';
-import pkg from '../package.json';
-
-const DEFAULT_PACKAGE_MANAGER = 'npm';
-
+import {
+  isGloballyInstalled,
+  executeInstall,
+  DEFAULT_PACKAGE_MANAGER,
+} from './npm';
 class NoPackageJsonFilesError extends Error {
   constructor(projectName: string) {
     super(
@@ -24,26 +24,6 @@ class NoPackageJsonFilesError extends Error {
       })
     );
   }
-}
-
-export async function isGloballyInstalled(command: string): Promise<boolean> {
-  const exec = util.promisify(execAsync);
-  try {
-    await exec(`${command} --version`);
-    return true;
-  } catch (e) {
-    return false;
-  }
-}
-
-export async function getLatestCliVersion(): Promise<{
-  latest: string;
-  next: string;
-}> {
-  const exec = util.promisify(execAsync);
-  const { stdout } = await exec(`npm info ${pkg.name} dist-tags --json`);
-  const { latest, next } = JSON.parse(stdout);
-  return { latest, next };
 }
 
 export async function installPackages({
@@ -86,16 +66,9 @@ async function installPackagesInDirectory(
             }
           ),
   });
-  let installCommand = `${DEFAULT_PACKAGE_MANAGER} install`;
 
-  if (packages) {
-    installCommand = `${installCommand} ${packages.join(' ')}`;
-  }
-
-  logger.debug(`Running ${installCommand}`);
   try {
-    const exec = util.promisify(execAsync);
-    await exec(installCommand, { cwd: directory });
+    await executeInstall(packages, null, { cwd: directory });
     SpinniesManager.succeed(spinner, {
       text: i18n(
         `commands.project.subcommands.installDeps.installationSuccessful`,
