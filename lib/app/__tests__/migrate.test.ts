@@ -47,7 +47,6 @@ import {
   MigrateAppArgs,
 } from '../migrate';
 
-// Mock dependencies
 jest.mock('@hubspot/local-dev-lib/logger');
 jest.mock('@hubspot/local-dev-lib/path');
 jest.mock('@hubspot/local-dev-lib/archive');
@@ -64,7 +63,6 @@ jest.mock('../../hasFeature');
 jest.mock('../../projects/urls');
 jest.mock('fs');
 
-// Mock implementations
 const mockedLogger = logger as jest.Mocked<typeof logger>;
 const mockedGetCwd = getCwd as jest.MockedFunction<typeof getCwd>;
 const mockedSanitizeFileName = sanitizeFileName as jest.MockedFunction<
@@ -103,7 +101,6 @@ const mockedContinueMigration = continueMigration as jest.MockedFunction<
 const mockedHasFeature = hasFeature as jest.MockedFunction<typeof hasFeature>;
 const mockedFs = fs as jest.Mocked<typeof fs>;
 
-// Test helpers and shared data
 const createMockMigratableApp = (
   id: number,
   name: string,
@@ -157,9 +154,6 @@ describe('lib/app/migrate', () => {
     mockedValidateUid.mockReturnValue(undefined);
     mockedHasFeature.mockResolvedValue(true);
     mockedFs.renameSync.mockImplementation(() => {});
-
-    // Clear all mocks between tests
-    jest.clearAllMocks();
   });
 
   describe('getUnmigratableReason', () => {
