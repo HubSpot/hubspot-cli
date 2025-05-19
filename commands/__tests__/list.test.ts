@@ -4,7 +4,7 @@ import {
   addAccountOptions,
   addUseEnvironmentOptions,
 } from '../../lib/commonOpts';
-import * as listCommand from '../list';
+import listCommand from '../list';
 
 jest.mock('yargs');
 jest.mock('../../lib/commonOpts');

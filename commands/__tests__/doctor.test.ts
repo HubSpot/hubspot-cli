@@ -7,13 +7,7 @@ jest.mock('@hubspot/local-dev-lib/path');
 jest.mock('yargs');
 
 import { ArgumentsCamelCase } from 'yargs';
-import {
-  describe as doctorDescribe,
-  command,
-  builder,
-  handler,
-  DoctorOptions,
-} from '../doctor';
+import doctorCommand, { DoctorArgs } from '../doctor';
 import { trackCommandUsage } from '../../lib/usageTracking';
 import { Doctor } from '../../lib/doctor/Doctor';
 import { logger } from '@hubspot/local-dev-lib/logger';
@@ -46,13 +40,13 @@ describe('doctor', () => {
 
   describe('command', () => {
     it('should have the proper command name', () => {
-      expect(command).toEqual('doctor');
+      expect(doctorCommand.command).toEqual('doctor');
     });
   });
 
   describe('describe', () => {
     it('should have a description', () => {
-      expect(doctorDescribe).toEqual(
+      expect(doctorCommand.describe).toEqual(
         'Retrieve diagnostic information about your local HubSpot configurations.'
       );
     });
@@ -60,7 +54,7 @@ describe('doctor', () => {
 
   describe('builder', () => {
     it('should apply the correct options', () => {
-      builder(mockYargs);
+      doctorCommand.builder(mockYargs);
       expect(mockYargs.option).toHaveBeenCalledWith('output-dir', {
         describe: 'Directory to save a detailed diagnosis JSON file in',
         type: 'string',
@@ -82,7 +76,7 @@ describe('doctor', () => {
     });
 
     it('should track the command usage', async () => {
-      await handler({} as ArgumentsCamelCase<DoctorOptions>);
+      await doctorCommand.handler({} as ArgumentsCamelCase<DoctorArgs>);
       expect(trackCommandUsage).toHaveBeenCalledTimes(1);
       expect(trackCommandUsage).toHaveBeenCalledWith(
         'doctor',
@@ -92,7 +86,7 @@ describe('doctor', () => {
     });
 
     it('should log the diagnosis if it is defined', async () => {
-      await handler({} as ArgumentsCamelCase<DoctorOptions>);
+      await doctorCommand.handler({} as ArgumentsCamelCase<DoctorArgs>);
       expect(logger.log).toHaveBeenCalledTimes(1);
       expect(logger.log).toHaveBeenCalledWith(diagnosis);
 
@@ -107,7 +101,7 @@ describe('doctor', () => {
           accountId,
         } as unknown as Doctor;
       });
-      await handler({} as ArgumentsCamelCase<DoctorOptions>);
+      await doctorCommand.handler({} as ArgumentsCamelCase<DoctorArgs>);
 
       expect(logger.error).toHaveBeenCalledTimes(1);
       expect(logger.error).toHaveBeenCalledWith('Error generating diagnosis');
@@ -121,7 +115,9 @@ describe('doctor', () => {
         .spyOn(fs, 'writeFileSync')
         .mockImplementationOnce(() => {});
       const expectedOutputFile = `/foo/hubspot-doctor-${date.toISOString()}.json`;
-      await handler({ outputDir: '/foo' } as ArgumentsCamelCase<DoctorOptions>);
+      await doctorCommand.handler({
+        outputDir: '/foo',
+      } as ArgumentsCamelCase<DoctorArgs>);
 
       expect(logger.log).not.toHaveBeenCalled();
       expect(logger.error).not.toHaveBeenCalled();
@@ -149,9 +145,9 @@ describe('doctor', () => {
       getCwd.mockImplementationOnce(() => cwd);
 
       const expectedOutputFile = `${cwd}/foo/hubspot-doctor-${date.toISOString()}.json`;
-      await handler({
+      await doctorCommand.handler({
         outputDir: './foo',
-      } as ArgumentsCamelCase<DoctorOptions>);
+      } as ArgumentsCamelCase<DoctorArgs>);
 
       expect(logger.log).not.toHaveBeenCalled();
       expect(logger.error).not.toHaveBeenCalled();
@@ -179,7 +175,9 @@ describe('doctor', () => {
           throw new Error(errorMessage);
         });
 
-      await handler({ outputDir: '/foo' } as ArgumentsCamelCase<DoctorOptions>);
+      await doctorCommand.handler({
+        outputDir: '/foo',
+      } as ArgumentsCamelCase<DoctorArgs>);
 
       expect(logger.error).toHaveBeenCalledTimes(1);
       expect(logger.error).toHaveBeenCalledWith(

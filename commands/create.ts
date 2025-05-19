@@ -113,4 +113,6 @@ const createCommand: YargsCommandModule<unknown, CreateArgs> = {
 };
 
 export default createCommand;
+
+// TODO Remove this legacy export once we've migrated all commands to TS
 module.exports = createCommand;
