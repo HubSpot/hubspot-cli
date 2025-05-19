@@ -853,18 +853,10 @@ en:
             default: "Opens the projects page for the specified account"
           success: "Successfully opened \"{{ projectName }}\""
         feedback:
-          describe: "Leave feedback on HubSpot projects or file a bug report."
-          feedbackType:
-            prompt: "What type of feedback would you like to leave?"
-            bug: "[--bug] Report a bug"
-            general: "[--general] Tell us about your experience with HubSpot's developer tools"
-          openPrompt: "Create a Github issue in your browser?"
+          describe: "Leave feedback or file a bug report."
+          openPrompt: "Open the feedback form in your browser?"
           success: "We opened {{ url }} in your browser."
-          options:
-            bug:
-              describe: "Open Github issues in your browser to report a bug."
-            general:
-              describe: "Open Github issues in your browser to give feedback."
+          error: "Navigate to {{ url }} to leave feedback."
         installDeps:
           help:
             describe: "Install the dependencies for your project, or add a dependency to a subcomponent of a project."
