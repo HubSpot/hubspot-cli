@@ -1,6 +1,7 @@
 import { cloneGithubRepo } from '@hubspot/local-dev-lib/github';
 import { getIsInProject } from '../../lib/projects/config';
 import { CreatableCmsAsset } from '../../types/Cms';
+
 const PROJECT_BOILERPLATE_BRANCH = 'cms-boilerplate-developer-projects';
 
 const websiteThemeAssetType: CreatableCmsAsset = {
@@ -12,7 +13,8 @@ const websiteThemeAssetType: CreatableCmsAsset = {
     if (isInProject) {
       commandArgs.branch = PROJECT_BOILERPLATE_BRANCH;
     }
-    cloneGithubRepo('HubSpot/cms-theme-boilerplate', dest, {
+
+    await cloneGithubRepo('HubSpot/cms-theme-boilerplate', dest, {
       ...commandArgs,
       type: assetType,
       sourceDir: 'src',

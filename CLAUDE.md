@@ -28,3 +28,4 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - ESM modules (Node.js 18+ support)
 - Type definitions in separate `/types` directory
 - Never commit or push to main branch without permission
+- Skipping tests is never a valid solution to fixing them

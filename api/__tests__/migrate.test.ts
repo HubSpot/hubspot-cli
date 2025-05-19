@@ -7,6 +7,7 @@ import {
   checkMigrationStatusV2,
   ListAppsResponse,
   MigrationStatus,
+  isMigrationStatus,
 } from '../migrate';
 
 jest.mock('@hubspot/local-dev-lib/http');
@@ -191,5 +192,53 @@ describe('api/migrate', () => {
 
       expect(result).toEqual(mockResponse);
     });
+  });
+});
+
+describe('isMigrationStatus', () => {
+  it.each([
+    {
+      id: 123,
+      status: MIGRATION_STATUS.IN_PROGRESS,
+    },
+    {
+      id: 456,
+      status: MIGRATION_STATUS.INPUT_REQUIRED,
+      componentsRequiringUids: {
+        'component-1': {
+          componentType: 'type1',
+          componentHint: 'hint1',
+        },
+      },
+    },
+    {
+      id: 789,
+      status: MIGRATION_STATUS.SUCCESS,
+      buildId: 98765,
+    },
+    {
+      id: 101,
+      status: MIGRATION_STATUS.FAILURE,
+      projectErrorDetail: 'Error details',
+      componentErrors: [],
+    },
+  ])('should return true for valid MigrationStatus object %j', status => {
+    expect(isMigrationStatus(status)).toBe(true);
+  });
+
+  it.each([null, undefined, 123, 'string', true, false, []])(
+    'should return false for non-object value %j',
+    value => {
+      expect(isMigrationStatus(value)).toBe(false);
+    }
+  );
+
+  it.each([
+    {},
+    { id: 123 },
+    { status: MIGRATION_STATUS.IN_PROGRESS },
+    { foo: 'bar' },
+  ])('should return false for invalid object %j', obj => {
+    expect(isMigrationStatus(obj)).toBe(false);
   });
 });

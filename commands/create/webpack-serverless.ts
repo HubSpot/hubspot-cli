@@ -5,7 +5,7 @@ const webpackServerlessAssetType: CreatableCmsAsset = {
   hidden: false,
   dest: ({ name, assetType }) => name || assetType,
   execute: async ({ commandArgs, dest, assetType }) => {
-    cloneGithubRepo('HubSpot/cms-webpack-serverless-boilerplate', dest, {
+    await cloneGithubRepo('HubSpot/cms-webpack-serverless-boilerplate', dest, {
       ...commandArgs,
       type: assetType,
     });

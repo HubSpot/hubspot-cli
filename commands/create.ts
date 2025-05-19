@@ -10,6 +10,8 @@ import { CreateArgs } from '../types/Cms';
 import { ArgumentsCamelCase, Argv } from 'yargs';
 import { makeYargsBuilder } from '../lib/yargsUtils';
 import { YargsCommandModule } from '../types/Yargs';
+import { EXIT_CODES } from '../lib/enums/exitCodes';
+
 const SUPPORTED_ASSET_TYPES = Object.keys(assets)
   .filter(t => !assets[t].hidden)
   .join(', ');
@@ -68,7 +70,12 @@ async function handler(args: ArgumentsCamelCase<CreateArgs>): Promise<void> {
 
   if (asset.validate && !asset.validate(argsToPass)) return;
 
-  await asset.execute(argsToPass);
+  try {
+    await asset.execute(argsToPass);
+  } catch (e) {
+    logError(e);
+    process.exit(EXIT_CODES.ERROR);
+  }
 }
 
 function createBuilder(yargs: Argv): Argv<CreateArgs> {

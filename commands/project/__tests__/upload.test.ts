@@ -11,6 +11,7 @@ jest.mock('../../../lib/commonOpts');
 
 const optionsSpy = jest.spyOn(yargs as Argv, 'options');
 const exampleSpy = jest.spyOn(yargs as Argv, 'example');
+const conflictsSpy = jest.spyOn(yargs as Argv, 'conflicts');
 
 describe('commands/project/upload', () => {
   describe('command', () => {
@@ -28,6 +29,9 @@ describe('commands/project/upload', () => {
   describe('builder', () => {
     it('should support the correct options', () => {
       projectUploadCommand.builder(yargs as Argv);
+
+      expect(conflictsSpy).toHaveBeenCalledTimes(1);
+      expect(conflictsSpy).toHaveBeenCalledWith('profile', 'account');
 
       expect(addAccountOptions).toHaveBeenCalledTimes(1);
       expect(addAccountOptions).toHaveBeenCalledWith(yargs);

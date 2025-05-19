@@ -1,11 +1,9 @@
 import { IntermediateRepresentationNodeLocalDev } from '@hubspot/project-parsing-lib/src/lib/types';
 import { translateForLocalDev } from '@hubspot/project-parsing-lib';
-import { Build } from '@hubspot/local-dev-lib/types/Build';
-import { Environment } from '@hubspot/local-dev-lib/types/Config';
 import path from 'path';
 
 import { ProjectConfig, ProjectPollResult } from '../../../types/Projects';
-import { LocalDevState } from '../../../types/LocalDev';
+import LocalDevState from './LocalDevState';
 import LocalDevLogger from './LocalDevLogger';
 import DevServerManagerV2 from './DevServerManagerV2';
 import { EXIT_CODES } from '../../enums/exitCodes';
@@ -13,50 +11,17 @@ import { mapToUserFriendlyName } from '@hubspot/project-parsing-lib/src/lib/tran
 import { getProjectConfig } from '../config';
 import { handleProjectUpload } from '../upload';
 import { pollProjectBuildAndDeploy } from '../buildAndDeploy';
-
-type LocalDevProcessConstructorOptions = {
-  targetProjectAccountId: number;
-  targetTestingAccountId: number;
-  projectConfig: ProjectConfig;
-  projectDir: string;
-  projectId: number;
-  debug?: boolean;
-  deployedBuild?: Build;
-  isGithubLinked: boolean;
-  initialProjectNodes: {
-    [key: string]: IntermediateRepresentationNodeLocalDev;
-  };
-  env: Environment;
-};
+import {
+  LocalDevStateConstructorOptions,
+  LocalDevStateListener,
+} from '../../../types/LocalDev';
 
 class LocalDevProcess {
   private state: LocalDevState;
   private _logger: LocalDevLogger;
   private devServerManager: DevServerManagerV2;
-  constructor({
-    targetProjectAccountId,
-    targetTestingAccountId,
-    projectConfig,
-    projectDir,
-    projectId,
-    debug,
-    deployedBuild,
-    isGithubLinked,
-    initialProjectNodes,
-    env,
-  }: LocalDevProcessConstructorOptions) {
-    this.state = {
-      targetProjectAccountId,
-      targetTestingAccountId,
-      projectConfig,
-      projectDir,
-      projectId,
-      debug: debug || false,
-      deployedBuild,
-      isGithubLinked,
-      projectNodes: initialProjectNodes,
-      env,
-    };
+  constructor(options: LocalDevStateConstructorOptions) {
+    this.state = new LocalDevState(options);
 
     this._logger = new LocalDevLogger(this.state);
     this.devServerManager = new DevServerManagerV2({
@@ -238,6 +203,13 @@ class LocalDevProcess {
       this.logger.uploadSuccess();
       this.logger.clearUploadWarnings();
     }
+  }
+
+  addStateListener<K extends keyof LocalDevState>(
+    key: K,
+    listener: LocalDevStateListener<K>
+  ): void {
+    this.state.addListener(key, listener);
   }
 }
 

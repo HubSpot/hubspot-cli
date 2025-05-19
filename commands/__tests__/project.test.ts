@@ -13,6 +13,7 @@ import migrateApp from '../project/migrateApp';
 import migrate from '../project/migrate';
 import cloneApp from '../project/cloneApp';
 import installDeps from '../project/installDeps';
+import profileCommands from '../project/profile';
 import projectCommand from '../project';
 
 jest.mock('yargs');
@@ -30,6 +31,7 @@ jest.mock('../project/migrateApp', () => ({}));
 jest.mock('../project/cloneApp', () => ({}));
 jest.mock('../project/migrate', () => ({}));
 jest.mock('../project/installDeps');
+jest.mock('../project/profile');
 jest.mock('../../lib/commonOpts');
 
 const commandSpy = jest
@@ -72,6 +74,7 @@ describe('commands/project', () => {
       migrate,
       cloneApp,
       installDeps,
+      profileCommands,
     ];
 
     it('should demand the command takes one positional argument', () => {

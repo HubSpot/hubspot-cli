@@ -10,7 +10,7 @@ import {
   uiCommandReference,
 } from '../../ui';
 import { lib } from '../../../lang/en';
-import { LocalDevState } from '../../../types/LocalDev';
+import LocalDevState from './LocalDevState';
 import SpinniesManager from '../../ui/SpinniesManager';
 import { logError } from '../../errorHandlers';
 

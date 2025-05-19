@@ -17,7 +17,7 @@ import { confirmPrompt } from '../../prompts/promptUtils';
 import { AppIRNode } from '../../../types/ProjectComponents';
 import { lib } from '../../../lang/en';
 import { uiLogger } from '../../ui/logger';
-import { LocalDevState } from '../../../types/LocalDev';
+import LocalDevState from './LocalDevState';
 import LocalDevLogger from './LocalDevLogger';
 
 type AppDevModeInterfaceConstructorOptions = {
