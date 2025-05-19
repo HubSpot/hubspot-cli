@@ -98,6 +98,7 @@ type HandleProjectUploadArg<T> = {
   isUploadCommand?: boolean;
   sendIR?: boolean;
   skipValidation?: boolean;
+  profile?: string;
 };
 
 export async function handleProjectUpload<T>({
@@ -105,6 +106,7 @@ export async function handleProjectUpload<T>({
   projectConfig,
   projectDir,
   callbackFunc,
+  profile,
   uploadMessage = '',
   forceCreate = false,
   isUploadCommand = false,
@@ -146,7 +148,7 @@ export async function handleProjectUpload<T>({
               platformVersion: projectConfig.platformVersion,
               accountId,
             },
-            { skipValidation }
+            { skipValidation, profile }
           );
 
           uiLogger.debug(
