@@ -45,7 +45,7 @@ const describe = uiDeprecatedTag(
 );
 const deprecated = true;
 
-export type CloneAppArgs = ConfigArgs &
+type CloneAppArgs = ConfigArgs &
   EnvironmentArgs &
   AccountArgs &
   CommonArgs & {

@@ -1,7 +1,7 @@
 import yargs, { Argv } from 'yargs';
-import * as fetch from '../filemanager/fetch';
-import * as upload from '../filemanager/upload';
-import * as fileManagerCommands from '../filemanager';
+import fetch from '../filemanager/fetch';
+import upload from '../filemanager/upload';
+import fileManagerCommands from '../filemanager';
 
 jest.mock('yargs');
 jest.mock('../filemanager/fetch');

@@ -6,7 +6,7 @@ import {
   addOverwriteOptions,
   addUseEnvironmentOptions,
 } from '../../../lib/commonOpts';
-import * as fileManagerFetchCommand from '../fetch';
+import fileManagerFetchCommand from '../fetch';
 
 jest.mock('yargs');
 jest.mock('../../../lib/commonOpts');
