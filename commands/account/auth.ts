@@ -36,7 +36,7 @@ import { logError } from '../../lib/errorHandlers/index';
 import { trackCommandMetadataUsage } from '../../lib/usageTracking';
 import { EXIT_CODES } from '../../lib/enums/exitCodes';
 import { uiCommandReference, uiFeatureHighlight } from '../../lib/ui';
-import { CommonArgs, ConfigArgs } from '../../types/Yargs';
+import { CommonArgs, ConfigArgs, YargsCommandModule } from '../../types/Yargs';
 import { makeYargsBuilder } from '../../lib/yargsUtils';
 
 const TRACKING_STATUS = {
@@ -237,15 +237,15 @@ async function handleConfigUpdate(
   process.exit(EXIT_CODES.SUCCESS);
 }
 
-export const describe = i18n('commands.account.subcommands.auth.describe');
-export const command = 'auth';
+const describe = i18n('commands.account.subcommands.auth.describe');
+const command = 'auth';
 
 type AccountAuthArgs = CommonArgs &
   ConfigArgs & {
     disableTracking?: boolean;
   };
 
-export async function handler(
+async function handler(
   args: ArgumentsCamelCase<AccountAuthArgs>
 ): Promise<void> {
   const { providedAccountId, disableTracking } = args;
@@ -289,7 +289,7 @@ function accountAuthBuilder(yargs: Argv): Argv<AccountAuthArgs> {
   return yargs as Argv<AccountAuthArgs>;
 }
 
-export const builder = makeYargsBuilder<AccountAuthArgs>(
+const builder = makeYargsBuilder<AccountAuthArgs>(
   accountAuthBuilder,
   command,
   i18n('commands.account.subcommands.auth.verboseDescribe', {
@@ -301,3 +301,12 @@ export const builder = makeYargsBuilder<AccountAuthArgs>(
     useTestingOptions: true,
   }
 );
+
+const accountAuthCommand: YargsCommandModule<unknown, AccountAuthArgs> = {
+  command,
+  describe,
+  handler,
+  builder,
+};
+
+export default accountAuthCommand;

@@ -1,11 +1,16 @@
 import yargs, { Argv } from 'yargs';
 import { addConfigOptions, addAccountOptions } from '../../../lib/commonOpts';
+import accountRenameCommand from '../rename';
 
 jest.mock('yargs');
 jest.mock('../../../lib/commonOpts');
 
-// Import this last so mocks apply
-import * as accountRenameCommand from '../rename';
+const positionalSpy = jest
+  .spyOn(yargs as Argv, 'positional')
+  .mockReturnValue(yargs as Argv);
+const exampleSpy = jest
+  .spyOn(yargs as Argv, 'example')
+  .mockReturnValue(yargs as Argv);
 
 describe('commands/account/rename', () => {
   const yargsMock = yargs as Argv;
@@ -28,13 +33,13 @@ describe('commands/account/rename', () => {
     it('should support the correct options', () => {
       accountRenameCommand.builder(yargsMock);
 
-      expect(yargsMock.example).toHaveBeenCalledTimes(1);
-      expect(yargsMock.positional).toHaveBeenCalledTimes(2);
-      expect(yargsMock.positional).toHaveBeenCalledWith('account-name', {
+      expect(exampleSpy).toHaveBeenCalledTimes(1);
+      expect(positionalSpy).toHaveBeenCalledTimes(2);
+      expect(positionalSpy).toHaveBeenCalledWith('account-name', {
         describe: expect.any(String),
         type: 'string',
       });
-      expect(yargsMock.positional).toHaveBeenCalledWith('new-name', {
+      expect(positionalSpy).toHaveBeenCalledWith('new-name', {
         describe: expect.any(String),
         type: 'string',
       });

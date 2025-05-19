@@ -1,12 +1,10 @@
 import yargs, { Argv } from 'yargs';
 import { addConfigOptions } from '../../../lib/commonOpts';
 import { addTestingOptions } from '../../../lib/commonOpts';
+import accountCleanCommand from '../clean';
 
 jest.mock('yargs');
 jest.mock('../../../lib/commonOpts');
-
-// Import this last so mocks apply
-import * as accountCleanCommand from '../clean';
 
 describe('commands/account/clean', () => {
   const yargsMock = yargs as Argv;
