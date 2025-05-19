@@ -2,40 +2,35 @@ import { Argv, ArgumentsCamelCase } from 'yargs';
 import { downloadFileOrFolder } from '@hubspot/local-dev-lib/fileManager';
 import { logger } from '@hubspot/local-dev-lib/logger';
 import { resolveLocalPath } from '../../lib/filesystem';
-import {
-  addConfigOptions,
-  addAccountOptions,
-  addOverwriteOptions,
-  addGlobalOptions,
-  addUseEnvironmentOptions,
-} from '../../lib/commonOpts';
 import { trackCommandUsage } from '../../lib/usageTracking';
 import { i18n } from '../../lib/lang';
 import { EXIT_CODES } from '../../lib/enums/exitCodes';
 import { logError } from '../../lib/errorHandlers/index';
+import { addOverwriteOptions } from '../../lib/commonOpts';
 import {
   AccountArgs,
   CommonArgs,
   ConfigArgs,
   EnvironmentArgs,
   OverwriteArgs,
+  YargsCommandModule,
 } from '../../types/Yargs';
+import { makeYargsBuilder } from '../../lib/yargsUtils';
 
-export const command = 'fetch <src> [dest]';
-export const describe = i18n(`commands.filemanager.subcommands.fetch.describe`);
+const command = 'fetch <src> [dest]';
+const describe = i18n(`commands.filemanager.subcommands.fetch.describe`);
 
-type CombinedArgs = CommonArgs &
+type FileManagerFetchArgs = CommonArgs &
   ConfigArgs &
   AccountArgs &
   EnvironmentArgs &
-  OverwriteArgs;
-type FileManagerFetchArgs = CombinedArgs & {
-  src: string;
-  dest: string;
-  includeArchived?: boolean;
-};
+  OverwriteArgs & {
+    src: string;
+    dest: string;
+    includeArchived?: boolean;
+  };
 
-export async function handler(
+async function handler(
   args: ArgumentsCamelCase<FileManagerFetchArgs>
 ): Promise<void> {
   const { src, includeArchived, derivedAccountId, overwrite } = args;
@@ -66,12 +61,8 @@ export async function handler(
   }
 }
 
-export function builder(yargs: Argv): Argv<FileManagerFetchArgs> {
-  addGlobalOptions(yargs);
-  addConfigOptions(yargs);
-  addAccountOptions(yargs);
+function fileManagerFetchBuilder(yargs: Argv): Argv<FileManagerFetchArgs> {
   addOverwriteOptions(yargs);
-  addUseEnvironmentOptions(yargs);
 
   yargs.positional('src', {
     describe: i18n(
@@ -95,3 +86,27 @@ export function builder(yargs: Argv): Argv<FileManagerFetchArgs> {
 
   return yargs as Argv<FileManagerFetchArgs>;
 }
+
+const builder = makeYargsBuilder<FileManagerFetchArgs>(
+  fileManagerFetchBuilder,
+  command,
+  describe,
+  {
+    useGlobalOptions: true,
+    useConfigOptions: true,
+    useAccountOptions: true,
+    useEnvironmentOptions: true,
+  }
+);
+
+const fileManagerFetchCommand: YargsCommandModule<
+  unknown,
+  FileManagerFetchArgs
+> = {
+  command,
+  describe,
+  handler,
+  builder,
+};
+
+export default fileManagerFetchCommand;

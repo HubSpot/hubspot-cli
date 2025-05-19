@@ -22,13 +22,13 @@ import {
   exitIfUsingProfiles,
 } from '../../../lib/projectProfiles';
 
-export const command = 'dev';
-export const describe = uiBetaTag(
+const command = 'dev';
+const describe = uiBetaTag(
   i18n(`commands.project.subcommands.dev.describe`),
   false
 );
 
-export async function handler(
+async function handler(
   args: ArgumentsCamelCase<ProjectDevArgs>
 ): Promise<void> {
   const { derivedAccountId, providedAccountId } = args;
