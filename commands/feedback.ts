@@ -20,7 +20,7 @@ async function handler() {
   );
 
   if (!shouldOpen) {
-    logger.error(
+    logger.log(
       i18n(`commands.project.subcommands.feedback.error`, {
         url: uiLink('the developer feedback form', FEEDBACK_URL),
       })
