@@ -12,14 +12,14 @@ import { makeYargsBuilder } from '../../lib/yargsUtils';
 import { i18n } from '../../lib/lang';
 import { indent } from '../../lib/ui/index';
 import { getTableContents } from '../../lib/ui/table';
-import { CommonArgs, ConfigArgs } from '../../types/Yargs';
+import { CommonArgs, ConfigArgs, YargsCommandModule } from '../../types/Yargs';
 
-export const describe = i18n(`commands.account.subcommands.info.describe`);
-export const command = 'info [account]';
+const describe = i18n(`commands.account.subcommands.info.describe`);
+const command = 'info [account]';
 
 type AccountInfoArgs = CommonArgs & ConfigArgs;
 
-export async function handler(
+async function handler(
   args: ArgumentsCamelCase<AccountInfoArgs>
 ): Promise<void> {
   const { derivedAccountId } = args;
@@ -118,9 +118,21 @@ function accountInfoBuilder(yargs: Argv): Argv<AccountInfoArgs> {
   return yargs as Argv<AccountInfoArgs>;
 }
 
-export const builder = makeYargsBuilder<AccountInfoArgs>(
+const builder = makeYargsBuilder<AccountInfoArgs>(
   accountInfoBuilder,
   command,
   describe,
-  { useConfigOptions: true }
+  {
+    useGlobalOptions: true,
+    useConfigOptions: true,
+  }
 );
+
+const accountInfoCommand: YargsCommandModule<unknown, AccountInfoArgs> = {
+  command,
+  describe,
+  handler,
+  builder,
+};
+
+export default accountInfoCommand;

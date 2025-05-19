@@ -9,7 +9,6 @@ import {
 } from '@hubspot/local-dev-lib/config';
 import { getAccountIdentifier } from '@hubspot/local-dev-lib/config/getAccountIdentifier';
 import { CLIAccount } from '@hubspot/local-dev-lib/types/Accounts';
-import { addConfigOptions } from '../../lib/commonOpts';
 import { indent } from '../../lib/ui/index';
 import { getTableContents, getTableHeader } from '../../lib/ui/table';
 import { trackCommandUsage } from '../../lib/usageTracking';
@@ -19,10 +18,11 @@ import {
   HUBSPOT_ACCOUNT_TYPES,
   HUBSPOT_ACCOUNT_TYPE_STRINGS,
 } from '@hubspot/local-dev-lib/constants/config';
-import { CommonArgs, ConfigArgs } from '../../types/Yargs';
+import { CommonArgs, ConfigArgs, YargsCommandModule } from '../../types/Yargs';
+import { makeYargsBuilder } from '../../lib/yargsUtils';
 
-export const command = ['list', 'ls'];
-export const describe = i18n('commands.account.subcommands.list.describe');
+const command = ['list', 'ls'];
+const describe = i18n('commands.account.subcommands.list.describe');
 
 type AccountListArgs = CommonArgs & ConfigArgs;
 
@@ -94,7 +94,7 @@ function getAccountData(mappedAccountData: {
   return accountData;
 }
 
-export async function handler(
+async function handler(
   args: ArgumentsCamelCase<AccountListArgs>
 ): Promise<void> {
   const { derivedAccountId } = args;
@@ -149,10 +149,27 @@ export async function handler(
   logger.log(getTableContents(accountData, { border: { bodyLeft: '  ' } }));
 }
 
-export function builder(yargs: Argv): Argv<AccountListArgs> {
-  addConfigOptions(yargs);
-
+function accountListBuilder(yargs: Argv): Argv<AccountListArgs> {
   yargs.example([['$0 accounts list']]);
 
   return yargs as Argv<AccountListArgs>;
 }
+
+const builder = makeYargsBuilder<AccountListArgs>(
+  accountListBuilder,
+  command,
+  describe,
+  {
+    useGlobalOptions: true,
+    useConfigOptions: true,
+  }
+);
+
+const accountListCommand: YargsCommandModule<unknown, AccountListArgs> = {
+  command,
+  describe,
+  handler,
+  builder,
+};
+
+export default accountListCommand;
