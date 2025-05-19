@@ -1,4 +1,5 @@
-import { AxiosResponse, AxiosHeaders } from 'axios';
+import { AxiosHeaders } from 'axios';
+import { HubSpotPromise } from '@hubspot/local-dev-lib/types/Http';
 import { HubSpotHttpError } from '@hubspot/local-dev-lib/models/HubSpotHttpError';
 
 type MockErrorResponse = {
@@ -12,8 +13,8 @@ type MockErrorResponse = {
 };
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-export const mockHubSpotHttpResponse = (data: any): AxiosResponse => {
-  return {
+export function mockHubSpotHttpResponse<T>(data?: any): HubSpotPromise<T> {
+  return Promise.resolve({
     data,
     status: 200,
     statusText: 'OK',
@@ -21,14 +22,14 @@ export const mockHubSpotHttpResponse = (data: any): AxiosResponse => {
     config: {
       headers: new AxiosHeaders(),
     },
-  };
-};
+  });
+}
 
-export const mockHubSpotHttpError = (
+export function mockHubSpotHttpError(
   message: string,
   response: MockErrorResponse
-): HubSpotHttpError => {
+): HubSpotHttpError {
   return new HubSpotHttpError(message, {
     cause: { isAxiosError: true, response },
   });
-};
+}
