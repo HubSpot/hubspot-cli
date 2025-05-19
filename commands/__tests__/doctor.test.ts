@@ -1,12 +1,6 @@
 import { EXIT_CODES } from '../../lib/enums/exitCodes';
 
-jest.mock('../../lib/usageTracking');
-jest.mock('../../lib/doctor/Doctor');
-jest.mock('@hubspot/local-dev-lib/logger');
-jest.mock('@hubspot/local-dev-lib/path');
-jest.mock('yargs');
-
-import { ArgumentsCamelCase } from 'yargs';
+import yargs, { ArgumentsCamelCase, Argv } from 'yargs';
 import doctorCommand, { DoctorArgs } from '../doctor';
 import { trackCommandUsage } from '../../lib/usageTracking';
 import { Doctor } from '../../lib/doctor/Doctor';
@@ -14,9 +8,19 @@ import { logger } from '@hubspot/local-dev-lib/logger';
 import __fs from 'fs';
 import { getCwd as __getCwd } from '@hubspot/local-dev-lib/path';
 
+jest.mock('../../lib/usageTracking');
+jest.mock('../../lib/doctor/Doctor');
+jest.mock('@hubspot/local-dev-lib/logger');
+jest.mock('@hubspot/local-dev-lib/path');
+jest.mock('yargs');
+
 const DoctorMock = Doctor as jest.MockedClass<typeof Doctor>;
 const fs = __fs as jest.Mocked<typeof __fs>;
 const getCwd = __getCwd as jest.MockedFunction<typeof __getCwd>;
+
+const optionSpy = jest
+  .spyOn(yargs as Argv, 'option')
+  .mockReturnValue(yargs as Argv);
 
 const date = new Date('2022-02-22');
 
@@ -24,18 +28,12 @@ jest.useFakeTimers().setSystemTime(date);
 
 describe('doctor', () => {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  let mockYargs: any;
   let processExitSpy: jest.SpyInstance;
   const accountId = 123456;
 
   beforeEach(() => {
     // @ts-expect-error Doesn't match the actual signature because then the linter complains about unused variables
     processExitSpy = jest.spyOn(process, 'exit').mockImplementation(() => {});
-
-    mockYargs = {
-      option: jest.fn(() => mockYargs),
-      version: jest.fn(() => mockYargs),
-    };
   });
 
   describe('command', () => {
@@ -54,8 +52,8 @@ describe('doctor', () => {
 
   describe('builder', () => {
     it('should apply the correct options', () => {
-      doctorCommand.builder(mockYargs);
-      expect(mockYargs.option).toHaveBeenCalledWith('output-dir', {
+      doctorCommand.builder(yargs as Argv);
+      expect(optionSpy).toHaveBeenCalledWith('output-dir', {
         describe: 'Directory to save a detailed diagnosis JSON file in',
         type: 'string',
       });

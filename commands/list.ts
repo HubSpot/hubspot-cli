@@ -46,7 +46,7 @@ function sortContents(a: string, b: string): number {
   return a.localeCompare(b);
 }
 
-const command = 'list [path]';
+const command = ['list [path]', 'ls [path]'];
 const describe = i18n(`commands.list.describe`);
 
 type ListArgs = CommonArgs &
