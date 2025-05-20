@@ -3,11 +3,6 @@ import { logger } from '@hubspot/local-dev-lib/logger';
 import { logError } from '../../lib/errorHandlers/index';
 import { deleteTable } from '@hubspot/local-dev-lib/api/hubdb';
 import { trackCommandUsage } from '../../lib/usageTracking';
-import {
-  addConfigOptions,
-  addAccountOptions,
-  addUseEnvironmentOptions,
-} from '../../lib/commonOpts';
 import { selectHubDBTablePrompt } from '../../lib/prompts/selectHubDBTablePrompt';
 import { promptUser } from '../../lib/prompts/promptUtils';
 import { EXIT_CODES } from '../../lib/enums/exitCodes';
@@ -17,15 +12,19 @@ import {
   ConfigArgs,
   AccountArgs,
   EnvironmentArgs,
+  YargsCommandModule,
 } from '../../types/Yargs';
+import { makeYargsBuilder } from '../../lib/yargsUtils';
 
-export const command = 'delete [table-id]';
-export const describe = i18n('commands.hubdb.subcommands.delete.describe');
+const command = 'delete [table-id]';
+const describe = i18n('commands.hubdb.subcommands.delete.describe');
 
-type CombinedArgs = ConfigArgs & AccountArgs & EnvironmentArgs;
-type HubdbDeleteArgs = CommonArgs & CombinedArgs & { tableId?: number };
+type HubdbDeleteArgs = CommonArgs &
+  ConfigArgs &
+  AccountArgs &
+  EnvironmentArgs & { tableId?: number };
 
-export async function handler(
+async function handler(
   args: ArgumentsCamelCase<HubdbDeleteArgs>
 ): Promise<void> {
   const { force, derivedAccountId } = args;
@@ -73,11 +72,7 @@ export async function handler(
   }
 }
 
-export function builder(yargs: Argv): Argv<HubdbDeleteArgs> {
-  addAccountOptions(yargs);
-  addConfigOptions(yargs);
-  addUseEnvironmentOptions(yargs);
-
+function hubdbDeleteBuilder(yargs: Argv): Argv<HubdbDeleteArgs> {
   yargs.positional('table-id', {
     describe: i18n(
       'commands.hubdb.subcommands.delete.positionals.tableId.describe'
@@ -92,3 +87,24 @@ export function builder(yargs: Argv): Argv<HubdbDeleteArgs> {
 
   return yargs as Argv<HubdbDeleteArgs>;
 }
+
+const builder = makeYargsBuilder<HubdbDeleteArgs>(
+  hubdbDeleteBuilder,
+  command,
+  describe,
+  {
+    useGlobalOptions: true,
+    useConfigOptions: true,
+    useAccountOptions: true,
+    useEnvironmentOptions: true,
+  }
+);
+
+const hubdbDeleteCommand: YargsCommandModule<unknown, HubdbDeleteArgs> = {
+  command,
+  describe,
+  handler,
+  builder,
+};
+
+export default hubdbDeleteCommand;

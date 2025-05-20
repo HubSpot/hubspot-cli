@@ -1,12 +1,15 @@
-// @ts-nocheck
-const { cloneGithubRepo } = require('@hubspot/local-dev-lib/github');
+import { cloneGithubRepo } from '@hubspot/local-dev-lib/github';
+import { CreatableCmsAsset } from '../../types/Cms';
 
-module.exports = {
+const appAssetType: CreatableCmsAsset = {
   hidden: true,
   dest: ({ name, assetType }) => name || assetType,
-  execute: async ({ options, dest, assetType }) =>
-    cloneGithubRepo('HubSpot/crm-card-weather-app', dest, {
+  execute: async ({ commandArgs, dest, assetType }) => {
+    await cloneGithubRepo('HubSpot/crm-card-weather-app', dest, {
+      ...commandArgs,
       type: assetType,
-      ...options,
-    }),
+    });
+  },
 };
+
+export default appAssetType;

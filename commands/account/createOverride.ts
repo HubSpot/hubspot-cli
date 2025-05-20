@@ -10,6 +10,7 @@ import {
   getConfigPath,
   getAccountId,
 } from '@hubspot/local-dev-lib/config';
+import { getGlobalConfig } from '@hubspot/local-dev-lib/config/migrate';
 
 import { i18n } from '../../lib/lang';
 import { promptUser } from '../../lib/prompts/promptUtils';
@@ -17,25 +18,36 @@ import { EXIT_CODES } from '../../lib/enums/exitCodes';
 import { trackCommandMetadataUsage } from '../../lib/usageTracking';
 import { selectAccountFromConfig } from '../../lib/prompts/accountsPrompt';
 import { logError } from '../../lib/errorHandlers/index';
-import { CommonArgs } from '../../types/Yargs';
+import { CommonArgs, YargsCommandModule } from '../../types/Yargs';
+import { uiCommandReference } from '../../lib/ui';
+import { makeYargsBuilder } from '../../lib/yargsUtils';
 
-export const describe = i18n(
-  'commands.account.subcommands.createOverride.describe',
-  {
-    hsAccountFileName: DEFAULT_ACCOUNT_OVERRIDE_FILE_NAME,
-  }
-);
-
-export const command = 'create-override [account]';
+const command = 'create-override [account]';
+const describe = i18n('commands.account.subcommands.createOverride.describe', {
+  hsAccountFileName: DEFAULT_ACCOUNT_OVERRIDE_FILE_NAME,
+});
 
 type AccountCreateOverrideArgs = CommonArgs & {
   account: string | number;
 };
 
-export async function handler(
+async function handler(
   args: ArgumentsCamelCase<AccountCreateOverrideArgs>
 ): Promise<void> {
   let overrideDefaultAccount = args.account;
+
+  const globalConfig = getGlobalConfig();
+  if (!globalConfig) {
+    logger.error(
+      i18n(
+        'commands.account.subcommands.createOverride.errors.globalConfigNotFound',
+        {
+          authCommand: uiCommandReference('hs account auth'),
+        }
+      )
+    );
+    process.exit(EXIT_CODES.ERROR);
+  }
 
   const accountOverride = getCWDAccountOverride();
   const overrideFilePath = getDefaultAccountOverrideFilePath();
@@ -113,7 +125,9 @@ export async function handler(
   }
 }
 
-export function builder(yargs: Argv): Argv<AccountCreateOverrideArgs> {
+function accountCreateOverrideBuilder(
+  yargs: Argv
+): Argv<AccountCreateOverrideArgs> {
   yargs.positional('account', {
     describe: i18n(
       'commands.account.subcommands.createOverride.options.account.describe'
@@ -143,3 +157,24 @@ export function builder(yargs: Argv): Argv<AccountCreateOverrideArgs> {
 
   return yargs as Argv<AccountCreateOverrideArgs>;
 }
+
+const builder = makeYargsBuilder<AccountCreateOverrideArgs>(
+  accountCreateOverrideBuilder,
+  command,
+  describe,
+  {
+    useGlobalOptions: true,
+  }
+);
+
+const accountCreateOverrideCommand: YargsCommandModule<
+  unknown,
+  AccountCreateOverrideArgs
+> = {
+  command,
+  describe,
+  handler,
+  builder,
+};
+
+export default accountCreateOverrideCommand;

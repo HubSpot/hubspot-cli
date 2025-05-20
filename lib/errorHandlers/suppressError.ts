@@ -14,45 +14,44 @@ import {
 import { ApiErrorContext } from './index';
 import { HubSpotHttpError } from '@hubspot/local-dev-lib/models/HubSpotHttpError';
 
-const i18nKey = 'lib.errorHandlers.suppressErrors';
-
 function createPlatformVersionError(
   err: HubSpotHttpError,
   subCategory: string
 ): void {
   let translationKey = 'unspecifiedPlatformVersion';
   let platformVersion = 'unspecified platformVersion';
-  const errorContext = err.data.context;
+  const errorContext = err?.data?.context;
 
-  switch (subCategory) {
-    case PLATFORM_VERSION_ERROR_TYPES.PLATFORM_VERSION_RETIRED:
-      translationKey = 'platformVersionRetired';
-      if (errorContext && errorContext[subCategory]) {
-        platformVersion = errorContext[subCategory];
-      }
-      break;
-    case PLATFORM_VERSION_ERROR_TYPES.PLATFORM_VERSION_SPECIFIED_DOES_NOT_EXIST:
-      translationKey = 'nonExistentPlatformVersion';
-      if (errorContext && errorContext[subCategory]) {
-        platformVersion = errorContext[subCategory];
-      }
-      break;
-    default:
-      break;
+  if (subCategory === PLATFORM_VERSION_ERROR_TYPES.PLATFORM_VERSION_RETIRED) {
+    platformVersion = errorContext?.RETIRED_PLATFORM_VERSION ?? platformVersion;
+    translationKey = 'platformVersionRetired';
+  } else if (
+    subCategory ===
+    PLATFORM_VERSION_ERROR_TYPES.PLATFORM_VERSION_SPECIFIED_DOES_NOT_EXIST
+  ) {
+    platformVersion = errorContext?.PLATFORM_VERSION ?? platformVersion;
+    translationKey = 'nonExistentPlatformVersion';
   }
 
   uiLine();
-  logger.error(i18n(`${i18nKey}.platformVersionErrors.header`));
-  logger.log(
-    i18n(`${i18nKey}.platformVersionErrors.${translationKey}`, {
-      platformVersion,
-    })
+  logger.error(
+    i18n(`lib.errorHandlers.suppressErrors.platformVersionErrors.header`)
   );
-  logger.log(i18n(`${i18nKey}.platformVersionErrors.updateProject`));
   logger.log(
-    i18n(`${i18nKey}.platformVersionErrors.betaLink`, {
+    i18n(
+      `lib.errorHandlers.suppressErrors.platformVersionErrors.${translationKey}`,
+      {
+        platformVersion,
+      }
+    )
+  );
+  logger.log(
+    i18n(`lib.errorHandlers.suppressErrors.platformVersionErrors.updateProject`)
+  );
+  logger.log(
+    i18n(`lib.errorHandlers.suppressErrors.platformVersionErrors.betaLink`, {
       docsLink: uiLink(
-        i18n(`${i18nKey}.platformVersionErrors.docsLink`),
+        i18n(`lib.errorHandlers.suppressErrors.platformVersionErrors.docsLink`),
         'https://developers.hubspot.com/docs/platform/platform-versioning'
       ),
     })
@@ -66,7 +65,7 @@ export function shouldSuppressError(
 ): boolean {
   if (isMissingScopeError(err)) {
     logger.error(
-      i18n(`${i18nKey}.missingScopeError`, {
+      i18n(`lib.errorHandlers.suppressErrors.missingScopeError`, {
         accountName: context?.accountId
           ? uiAccountDescription(context.accountId)
           : '',
@@ -83,7 +82,7 @@ export function shouldSuppressError(
     })
   ) {
     createPlatformVersionError(
-      err.data,
+      err,
       PLATFORM_VERSION_ERROR_TYPES.PLATFORM_VERSION_NOT_SPECIFIED
     );
     return true;
@@ -95,7 +94,7 @@ export function shouldSuppressError(
     })
   ) {
     createPlatformVersionError(
-      err.data,
+      err,
       PLATFORM_VERSION_ERROR_TYPES.PLATFORM_VERSION_RETIRED
     );
     return true;
@@ -108,7 +107,7 @@ export function shouldSuppressError(
     })
   ) {
     createPlatformVersionError(
-      err.data,
+      err,
       PLATFORM_VERSION_ERROR_TYPES.PLATFORM_VERSION_SPECIFIED_DOES_NOT_EXIST
     );
     return true;

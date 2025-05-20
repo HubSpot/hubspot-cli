@@ -1,7 +1,6 @@
 import path from 'path';
 import chokidar, { FSWatcher } from 'chokidar';
 import chalk from 'chalk';
-import { logger } from '@hubspot/local-dev-lib/logger';
 import { fetchAppInstallationData } from '@hubspot/local-dev-lib/api/localDevAuth';
 import {
   fetchPublicAppsForPortal,
@@ -14,12 +13,12 @@ import {
 import { Build } from '@hubspot/local-dev-lib/types/Build';
 import { PublicApp } from '@hubspot/local-dev-lib/types/Apps';
 import { Environment } from '@hubspot/local-dev-lib/types/Config';
+import { logger } from '@hubspot/local-dev-lib/logger';
 
 import { PROJECT_CONFIG_FILE } from '../../constants';
 import SpinniesManager from '../../ui/SpinniesManager';
 import DevServerManager from './DevServerManager';
 import { EXIT_CODES } from '../../enums/exitCodes';
-import { getProjectDetailUrl } from '../../projects/urls';
 import { getAccountHomeUrl } from './helpers';
 import {
   componentIsApp,
@@ -46,6 +45,7 @@ import { installPublicAppPrompt } from '../../prompts/installPublicAppPrompt';
 import { confirmPrompt } from '../../prompts/promptUtils';
 import { handleKeypress } from '../../process';
 import { lib } from '../../../lang/en';
+import { uiLogger } from '../../ui/logger';
 
 const WATCH_EVENTS = {
   add: 'add',
@@ -112,14 +112,14 @@ class LocalDevManager {
     );
 
     if (!this.targetAccountId || !this.projectConfig || !this.projectDir) {
-      logger.log(lib.LocalDevManager.failedToInitialize);
+      uiLogger.log(lib.LocalDevManager.failedToInitialize);
       process.exit(EXIT_CODES.ERROR);
     }
   }
 
   async setActiveApp(appUid?: string): Promise<void> {
     if (!appUid) {
-      logger.error(lib.LocalDevManager.missingUid);
+      uiLogger.error(lib.LocalDevManager.missingUid);
       process.exit(EXIT_CODES.ERROR);
     }
     this.activeApp =
@@ -176,14 +176,13 @@ class LocalDevManager {
     }
     uiLine();
 
-    logger.warn(
+    uiLogger.warn(
       lib.LocalDevManager.activeInstallWarning.installCount(
         this.activePublicAppData.name,
-        this.publicAppActiveInstalls,
-        this.publicAppActiveInstalls === 1 ? 'account' : 'accounts'
+        this.publicAppActiveInstalls
       )
     );
-    logger.log(lib.LocalDevManager.activeInstallWarning.explanation);
+    uiLogger.log(lib.LocalDevManager.activeInstallWarning.explanation);
     uiLine();
 
     const proceed = await confirmPrompt(
@@ -202,14 +201,14 @@ class LocalDevManager {
 
     // Local dev currently relies on the existence of a deployed build in the target account
     if (!this.deployedBuild) {
-      logger.error(
+      uiLogger.error(
         lib.LocalDevManager.noDeployedBuild(
           this.projectConfig.name,
           uiAccountDescription(this.targetProjectAccountId),
           this.getUploadCommand()
         )
       );
-      logger.log();
+      uiLogger.log('');
       process.exit(EXIT_CODES.SUCCESS);
     }
 
@@ -223,15 +222,15 @@ class LocalDevManager {
 
     uiBetaTag(lib.LocalDevManager.betaMessage);
 
-    logger.log(
+    uiLogger.log(
       uiLink(
         lib.LocalDevManager.learnMoreLocalDevServer,
         'https://developers.hubspot.com/docs/platform/project-cli-commands#start-a-local-development-server'
       )
     );
 
-    logger.log();
-    logger.log(
+    uiLogger.log('');
+    uiLogger.log(
       chalk.hex(UI_COLORS.SORBET)(
         lib.LocalDevManager.running(
           this.projectConfig.name,
@@ -239,18 +238,15 @@ class LocalDevManager {
         )
       )
     );
-    logger.log(
-      uiLink(
-        lib.LocalDevManager.viewProjectLink,
-        getProjectDetailUrl(
-          this.projectConfig.name,
-          this.targetProjectAccountId
-        ) || ''
+    uiLogger.log(
+      lib.LocalDevManager.viewProjectLink(
+        this.projectConfig.name,
+        this.targetProjectAccountId
       )
     );
 
     if (this.activeApp?.type === ComponentTypes.PublicApp) {
-      logger.log(
+      uiLogger.log(
         uiLink(
           lib.LocalDevManager.viewTestAccountLink,
           getAccountHomeUrl(this.targetAccountId)
@@ -258,10 +254,10 @@ class LocalDevManager {
       );
     }
 
-    logger.log();
-    logger.log(lib.LocalDevManager.quitHelper);
+    uiLogger.log('');
+    uiLogger.log(lib.LocalDevManager.quitHelper);
     uiLine();
-    logger.log();
+    uiLogger.log('');
 
     await this.devServerStart();
 
@@ -370,17 +366,17 @@ class LocalDevManager {
     // Avoid logging the warning to the console if it is currently the most
     // recently logged warning. We do not want to spam the console with the same message.
     if (!this.uploadWarnings[warning]) {
-      logger.log();
-      logger.warn(lib.LocalDevManager.uploadWarning.header(warning));
-      logger.log(lib.LocalDevManager.uploadWarning.stopDev);
+      uiLogger.log('');
+      uiLogger.warn(lib.LocalDevManager.uploadWarning.header(warning));
+      uiLogger.log(lib.LocalDevManager.uploadWarning.stopDev);
       if (this.isGithubLinked) {
-        logger.log(lib.LocalDevManager.uploadWarning.pushToGithub);
+        uiLogger.log(lib.LocalDevManager.uploadWarning.pushToGithub);
       } else {
-        logger.log(
+        uiLogger.log(
           lib.LocalDevManager.uploadWarning.runUpload(this.getUploadCommand())
         );
       }
-      logger.log(lib.LocalDevManager.uploadWarning.restartDev);
+      uiLogger.log(lib.LocalDevManager.uploadWarning.restartDev);
 
       this.mostRecentUploadWarning = warning;
       this.uploadWarnings[warning] = true;
@@ -390,7 +386,7 @@ class LocalDevManager {
   monitorConsoleOutput(): void {
     const originalStdoutWrite = process.stdout.write.bind(process.stdout);
 
-    type StdoutCallback = (err?: Error) => void;
+    type StdoutCallback = (err?: Error | null) => void;
 
     // Need to provide both overloads for process.stdout.write to satisfy TS
     function customStdoutWrite(
@@ -534,7 +530,7 @@ class LocalDevManager {
       if (this.debug) {
         logger.error(e);
       }
-      logger.error(
+      uiLogger.error(
         lib.LocalDevManager.devServer.setupError(
           e instanceof Error ? e.message : ''
         )
@@ -553,7 +549,7 @@ class LocalDevManager {
       if (this.debug) {
         logger.error(e);
       }
-      logger.error(
+      uiLogger.error(
         lib.LocalDevManager.devServer.startError(
           e instanceof Error ? e.message : ''
         )
@@ -569,7 +565,7 @@ class LocalDevManager {
       if (this.debug) {
         logger.error(e);
       }
-      logger.error(
+      uiLogger.error(
         lib.LocalDevManager.devServer.fileChangeError(
           e instanceof Error ? e.message : ''
         )
@@ -585,7 +581,7 @@ class LocalDevManager {
       if (this.debug) {
         logger.error(e);
       }
-      logger.error(
+      uiLogger.error(
         lib.LocalDevManager.devServer.cleanupError(
           e instanceof Error ? e.message : ''
         )

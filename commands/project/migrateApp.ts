@@ -2,7 +2,7 @@ import { ArgumentsCamelCase, Argv } from 'yargs';
 import { logger } from '@hubspot/local-dev-lib/logger';
 import { i18n } from '../../lib/lang';
 import { uiCommandReference, uiDeprecatedTag } from '../../lib/ui';
-import { handler as migrateHandler } from '../app/migrate';
+import { handlerGenerator } from '../app/migrate';
 import { YargsCommandModule } from '../../types/Yargs';
 import { makeYargsBuilder } from '../../lib/yargsUtils';
 import { MigrateAppArgs } from '../../lib/app/migrate';
@@ -30,7 +30,8 @@ async function handler(
       ),
     })
   );
-  await migrateHandler(args);
+  const localHandler = handlerGenerator('migrate-app');
+  await localHandler(args);
 }
 
 function projectMigrateAppBuilder(yargs: Argv): Argv<MigrateAppArgs> {

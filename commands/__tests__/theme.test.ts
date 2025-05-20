@@ -1,8 +1,8 @@
 import yargs, { Argv } from 'yargs';
-import * as preview from '../theme/preview';
-import * as generateSelectors from '../theme/generate-selectors';
-import * as marketplaceValidate from '../theme/marketplace-validate';
-import * as themeCommands from '../theme';
+import preview from '../theme/preview';
+import generateSelectors from '../theme/generate-selectors';
+import marketplaceValidate from '../theme/marketplace-validate';
+import themeCommands from '../theme';
 
 jest.mock('yargs');
 jest.mock('../theme/preview');

@@ -4,7 +4,6 @@ import { HubSpotPromise } from '@hubspot/local-dev-lib/types/Http';
 import { ComponentStructureResponse } from '@hubspot/local-dev-lib/types/ComponentStructure';
 import { Build } from '@hubspot/local-dev-lib/types/Build';
 import { Deploy } from '@hubspot/local-dev-lib/types/Deploy';
-import { logger } from '@hubspot/local-dev-lib/logger';
 import {
   getBuildStatus,
   getBuildStructure,
@@ -39,6 +38,9 @@ import {
 } from '../../types/Projects';
 import { EXIT_CODES } from '../enums/exitCodes';
 import { lib } from '../../lang/en';
+import { uiLogger } from '../ui/logger';
+import { AppFunctionsPackageKey } from '@hubspot/project-parsing-lib/src/lib/constants';
+import { mapToInternalType } from '@hubspot/project-parsing-lib';
 
 const SPINNER_STATUS = {
   SPINNING: 'spinning',
@@ -116,7 +118,7 @@ type PollTaskStatusFunction<T extends ProjectTask> = (
 function handleTaskStatusError(
   statusText: ProjectPollStatusFunctionText
 ): never {
-  logger.error(
+  uiLogger.error(
     lib.projectBuildAndDeploy.makePollTaskStatusFunc.errorFetchingTaskStatus(
       statusText.TYPE_KEY === PROJECT_BUILD_TEXT.TYPE_KEY ? 'build' : 'deploy'
     )
@@ -141,7 +143,7 @@ function makePollTaskStatusFunc<T extends ProjectTask>({
     const displayId = deployedBuildId || taskId;
 
     if (linkToHubSpot && !silenceLogs) {
-      logger.log(
+      uiLogger.log(
         `\n${linkToHubSpot(accountId, taskName, taskId, deployedBuildId)}\n`
       );
     }
@@ -169,25 +171,37 @@ function makePollTaskStatusFunc<T extends ProjectTask>({
 
     const subtasks = getSubtasks(initialTaskStatus);
 
-    const tasksById = subtasks.reduce(
-      (acc: { [key: string]: ProjectSubtask }, subtask) => {
+    const hiddenComponentBuildIds: string[] = [];
+
+    const tasksById = subtasks
+      .filter(subtask => {
+        // TODO: Remove this filtering logic when visible=false for SERVERLESS_PACKAGE
+        const shouldBeVisible =
+          getSubtaskType(subtask) !== mapToInternalType(AppFunctionsPackageKey);
+        if (!shouldBeVisible) {
+          hiddenComponentBuildIds.push(subtask.id);
+        }
+        return shouldBeVisible;
+      })
+      .reduce((acc: { [key: string]: ProjectSubtask }, subtask) => {
         const { id, visible } = subtask;
         if (visible) {
           acc[id] = subtask;
         }
         return acc;
-      },
-      {}
-    );
+      }, {});
 
-    const structuredTasks = Object.keys(taskStructure).map(key => {
-      return {
-        ...tasksById[key],
-        subtasks: taskStructure[key]
-          .filter(taskId => Boolean(tasksById[taskId]))
-          .map(taskId => tasksById[taskId]),
-      };
-    });
+    const structuredTasks = Object.keys(taskStructure)
+      // TODO: Remove this filtering logic when visible=false for SERVERLESS_PACKAGE
+      .filter(buildId => !hiddenComponentBuildIds.includes(buildId))
+      .map(key => {
+        return {
+          ...tasksById[key],
+          subtasks: taskStructure[key]
+            .filter(taskId => Boolean(tasksById[taskId]))
+            .map(taskId => tasksById[taskId]),
+        };
+      });
 
     const numComponents = structuredTasks.length;
     const componentCountText = silenceLogs
@@ -244,7 +258,7 @@ function makePollTaskStatusFunc<T extends ProjectTask>({
           const { data } = await statusFn(accountId, taskName, taskId);
           taskStatus = data;
         } catch (e) {
-          logger.debug(e);
+          uiLogger.debug(e);
           logError(
             e,
             new ApiErrorContext({
@@ -323,7 +337,7 @@ function makePollTaskStatusFunc<T extends ProjectTask>({
               );
 
               uiLine();
-              logger.log(
+              uiLogger.log(
                 `${statusStrings.SUBTASK_FAIL(
                   failedSubtasks.length === 1
                     ? getSubtaskName(failedSubtasks[0])
@@ -331,7 +345,9 @@ function makePollTaskStatusFunc<T extends ProjectTask>({
                   displayId
                 )}\n`
               );
-              logger.log('See below for a summary of errors.');
+              uiLogger.log(
+                lib.projectBuildAndDeploy.makePollTaskStatusFunc.errorSummary
+              );
               uiLine();
 
               const displayErrors = failedSubtasks.filter(
@@ -343,18 +359,18 @@ function makePollTaskStatusFunc<T extends ProjectTask>({
               );
 
               displayErrors.forEach(subTask => {
-                logger.log(
+                uiLogger.log(
                   `\n--- ${chalk.bold(
                     getSubtaskName(subTask)
                   )} failed with the following error ---`
                 );
-                logger.error(subTask.errorMessage);
+                uiLogger.error(subTask.errorMessage);
 
                 // Log nested errors
                 if (subTask.standardError && subTask.standardError.errors) {
-                  logger.log();
+                  uiLogger.log('');
                   subTask.standardError.errors.forEach(error => {
-                    logger.log(error.message);
+                    uiLogger.log(error.message);
                   });
                 }
               });
@@ -385,7 +401,7 @@ function pollBuildAutodeployStatus(
         const response = await getBuildStatus(accountId, taskName, buildId);
         build = response.data;
       } catch (e) {
-        logger.debug(e);
+        uiLogger.debug(e);
         return reject(
           new Error(
             lib.projectBuildAndDeploy.pollBuildAutodeployStatusError(buildId)
@@ -485,9 +501,9 @@ export async function displayWarnLogs(
   if (result && result.logs) {
     const logLength = result.logs.length;
     result.logs.forEach((log, i) => {
-      logger.warn(log.message);
+      uiLogger.warn(log.message);
       if (i < logLength - 1) {
-        logger.log('');
+        uiLogger.log('');
       }
     });
   }
@@ -524,7 +540,7 @@ export async function pollProjectBuildAndDeploy(
     return result;
   } else if (buildStatus.isAutoDeployEnabled) {
     if (!silenceLogs) {
-      logger.log(
+      uiLogger.log(
         lib.projectBuildAndDeploy.pollProjectBuildAndDeploy.buildSucceededAutomaticallyDeploying(
           buildId,
           uiAccountDescription(accountId)
@@ -561,7 +577,7 @@ export async function pollProjectBuildAndDeploy(
         result.succeeded = false;
       }
     } else if (!silenceLogs) {
-      logger.log(
+      uiLogger.log(
         lib.projectBuildAndDeploy.pollProjectBuildAndDeploy.unableToFindAutodeployStatus(
           buildId,
           uiLink(
@@ -576,14 +592,14 @@ export async function pollProjectBuildAndDeploy(
   try {
     if (tempFile) {
       tempFile.removeCallback();
-      logger.debug(
+      uiLogger.debug(
         lib.projectBuildAndDeploy.pollProjectBuildAndDeploy.cleanedUpTempFile(
           tempFile.name
         )
       );
     }
   } catch (e) {
-    logger.error(e);
+    logError(e);
   }
 
   if (result && result.deployResult) {

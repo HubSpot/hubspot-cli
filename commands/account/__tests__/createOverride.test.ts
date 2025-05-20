@@ -1,7 +1,14 @@
 import yargs, { Argv } from 'yargs';
-import * as accountCreateOverrideCommand from '../createOverride';
+import accountCreateOverrideCommand from '../createOverride';
 
 jest.mock('yargs');
+
+const positionalSpy = jest
+  .spyOn(yargs as Argv, 'positional')
+  .mockReturnValue(yargs as Argv);
+const exampleSpy = jest
+  .spyOn(yargs as Argv, 'example')
+  .mockReturnValue(yargs as Argv);
 
 describe('commands/account/createOverride', () => {
   const yargsMock = yargs as Argv;
@@ -24,9 +31,9 @@ describe('commands/account/createOverride', () => {
     it('should support the correct options', () => {
       accountCreateOverrideCommand.builder(yargsMock);
 
-      expect(yargsMock.example).toHaveBeenCalledTimes(1);
-      expect(yargsMock.positional).toHaveBeenCalledTimes(1);
-      expect(yargsMock.positional).toHaveBeenCalledWith('account', {
+      expect(exampleSpy).toHaveBeenCalledTimes(1);
+      expect(positionalSpy).toHaveBeenCalledTimes(1);
+      expect(positionalSpy).toHaveBeenCalledWith('account', {
         describe: expect.any(String),
         type: 'string',
       });

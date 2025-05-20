@@ -11,24 +11,23 @@ import {
   getCWDAccountOverride,
   getDefaultAccountOverrideFilePath,
 } from '@hubspot/local-dev-lib/config';
-
 import { trackCommandUsage } from '../../lib/usageTracking';
 import { i18n } from '../../lib/lang';
 import { promptUser } from '../../lib/prompts/promptUtils';
 import { logError } from '../../lib/errorHandlers';
 import { selectAccountFromConfig } from '../../lib/prompts/accountsPrompt';
-import { addConfigOptions } from '../../lib/commonOpts';
-import { CommonArgs, ConfigArgs } from '../../types/Yargs';
+import { CommonArgs, ConfigArgs, YargsCommandModule } from '../../types/Yargs';
+import { makeYargsBuilder } from '../../lib/yargsUtils';
 
-export const command = 'remove [account]';
-export const describe = i18n(`commands.account.subcommands.remove.describe`);
+const command = 'remove [account]';
+const describe = i18n(`commands.account.subcommands.remove.describe`);
 
 type AccountRemoveArgs = CommonArgs &
   ConfigArgs & {
     account?: string;
   };
 
-export async function handler(
+async function handler(
   args: ArgumentsCamelCase<AccountRemoveArgs>
 ): Promise<void> {
   const { account } = args;
@@ -94,7 +93,12 @@ export async function handler(
   // Get updated version of the config
   loadConfig(getConfigPath()!);
 
-  if (accountToRemove === currentDefaultAccount) {
+  const accountToRemoveId = getAccountId(accountToRemove);
+  let defaultAccountId;
+  if (currentDefaultAccount) {
+    defaultAccountId = getAccountId(currentDefaultAccount);
+  }
+  if (accountToRemoveId === defaultAccountId) {
     logger.log();
     logger.log(
       i18n(`commands.account.subcommands.remove.logs.replaceDefaultAccount`)
@@ -104,9 +108,7 @@ export async function handler(
   }
 }
 
-export function builder(yargs: Argv): Argv<AccountRemoveArgs> {
-  addConfigOptions(yargs);
-
+function accountRemoveBuilder(yargs: Argv): Argv<AccountRemoveArgs> {
   yargs.positional('account', {
     describe: i18n(
       `commands.account.subcommands.remove.options.account.describe`
@@ -127,3 +129,22 @@ export function builder(yargs: Argv): Argv<AccountRemoveArgs> {
 
   return yargs as Argv<AccountRemoveArgs>;
 }
+
+const builder = makeYargsBuilder<AccountRemoveArgs>(
+  accountRemoveBuilder,
+  command,
+  describe,
+  {
+    useGlobalOptions: true,
+    useConfigOptions: true,
+  }
+);
+
+const accountRemoveCommand: YargsCommandModule<unknown, AccountRemoveArgs> = {
+  command,
+  describe,
+  handler,
+  builder,
+};
+
+export default accountRemoveCommand;

@@ -1,19 +1,7 @@
 import { promptUser } from './promptUtils';
 import { i18n } from '../lang';
 import { PromptConfig } from '../../types/Prompts';
-
-const i18nKey = 'lib.prompts.createApiSamplePrompt';
-
-type SampleChoice = {
-  name: string;
-  description: string;
-  id: string;
-  languages: string[];
-};
-
-type SampleConfig = {
-  samples: SampleChoice[];
-};
+import { ApiSampleChoice, ApiSampleConfig } from '../../types/Cms';
 
 type SampleTypePromptResponse = {
   sampleType?: string;
@@ -27,12 +15,12 @@ type CreateApiSamplePromptResponse = SampleTypePromptResponse &
   LanguagePromptResponse;
 
 function getSampleTypesPrompt(
-  choices: SampleChoice[]
+  choices: ApiSampleChoice[]
 ): PromptConfig<SampleTypePromptResponse> {
   return {
     type: 'rawlist',
     name: 'sampleType',
-    message: i18n(`${i18nKey}.selectApiSampleApp`),
+    message: i18n(`lib.prompts.createApiSamplePrompt.selectApiSampleApp`),
     choices: choices.map(choice => ({
       name: `${choice.name} - ${choice.description}`,
       value: choice.id,
@@ -42,7 +30,11 @@ function getSampleTypesPrompt(
         if (input && input.length > 0) {
           resolve(true);
         } else {
-          reject(i18n(`${i18nKey}.errors.apiSampleAppRequired`));
+          reject(
+            i18n(
+              `lib.prompts.createApiSamplePrompt.errors.apiSampleAppRequired`
+            )
+          );
         }
       });
     },
@@ -55,7 +47,7 @@ function getLanguagesPrompt(
   return {
     type: 'rawlist',
     name: 'sampleLanguage',
-    message: i18n(`${i18nKey}.selectLanguage`),
+    message: i18n(`lib.prompts.createApiSamplePrompt.selectLanguage`),
     choices: choices.map(choice => ({
       name: choice,
       value: choice,
@@ -65,14 +57,16 @@ function getLanguagesPrompt(
         if (input && input.length > 0) {
           resolve(true);
         }
-        reject(i18n(`${i18nKey}.errors.languageRequired`));
+        reject(
+          i18n(`lib.prompts.createApiSamplePrompt.errors.languageRequired`)
+        );
       });
     },
   };
 }
 
 export async function createApiSamplePrompt(
-  samplesConfig: SampleConfig
+  samplesConfig: ApiSampleConfig
 ): Promise<CreateApiSamplePromptResponse> {
   try {
     const { samples } = samplesConfig;

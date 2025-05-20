@@ -1,16 +1,14 @@
 import yargs, { Argv } from 'yargs';
-import * as accountRemoveOverrideCommand from '../removeOverride';
+import accountRemoveOverrideCommand from '../removeOverride';
 
 jest.mock('yargs');
 
-describe('commands/account/removeOverride', () => {
-  let yargsMock = yargs as Argv;
+const optionsSpy = jest
+  .spyOn(yargs as Argv, 'options')
+  .mockReturnValue(yargs as Argv);
 
-  beforeEach(() => {
-    yargsMock = {
-      options: jest.fn().mockReturnThis(),
-    } as unknown as Argv;
-  });
+describe('commands/account/removeOverride', () => {
+  const yargsMock = yargs as Argv;
 
   describe('command', () => {
     it('should have the correct command structure', () => {
@@ -28,7 +26,7 @@ describe('commands/account/removeOverride', () => {
     it('should support the correct options', () => {
       accountRemoveOverrideCommand.builder(yargsMock);
 
-      expect(yargsMock.options).toHaveBeenCalledTimes(1);
+      expect(optionsSpy).toHaveBeenCalledTimes(1);
     });
   });
 });

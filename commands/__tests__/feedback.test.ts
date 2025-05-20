@@ -1,10 +1,9 @@
-// @ts-nocheck
-import yargs from 'yargs';
+import yargs, { Argv } from 'yargs';
+import * as commonOpts from '../../lib/commonOpts';
+import feedbackCommand from '../feedback';
 
 jest.mock('yargs');
-
-// Import this last so mocks apply
-import feedbackCommand from '../feedback';
+jest.mock('../../lib/commonOpts');
 
 describe('commands/feedback', () => {
   describe('command', () => {
@@ -21,13 +20,10 @@ describe('commands/feedback', () => {
 
   describe('builder', () => {
     it('should support the correct options', () => {
-      feedbackCommand.builder(yargs);
+      feedbackCommand.builder(yargs as Argv);
 
-      expect(yargs.options).toHaveBeenCalledTimes(1);
-      expect(yargs.options).toHaveBeenCalledWith({
-        bug: expect.objectContaining({ type: 'boolean' }),
-        general: expect.objectContaining({ type: 'boolean' }),
-      });
+      expect(commonOpts.addGlobalOptions).toHaveBeenCalledTimes(1);
+      expect(commonOpts.addGlobalOptions).toHaveBeenCalledWith(yargs);
     });
   });
 });

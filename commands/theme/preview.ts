@@ -9,8 +9,6 @@ import { FILE_UPLOAD_RESULT_TYPES } from '@hubspot/local-dev-lib/constants/files
 import { getThemeJSONPath } from '@hubspot/local-dev-lib/cms/themes';
 import { preview } from '@hubspot/theme-preview-dev-server';
 import { UploadFolderResults } from '@hubspot/local-dev-lib/types/Files';
-
-import { addAccountOptions, addConfigOptions } from '../../lib/commonOpts';
 import { getUploadableFileList } from '../../lib/upload';
 import { trackCommandUsage } from '../../lib/usageTracking';
 import {
@@ -24,22 +22,29 @@ import { getProjectConfig } from '../../lib/projects/config';
 import { findProjectComponents } from '../../lib/projects/structure';
 import { ComponentTypes } from '../../types/Projects';
 import { hasFeature } from '../../lib/hasFeature';
-import { CommonArgs, ConfigArgs, AccountArgs } from '../../types/Yargs';
+import {
+  CommonArgs,
+  ConfigArgs,
+  AccountArgs,
+  YargsCommandModule,
+} from '../../types/Yargs';
 import { FEATURES } from '../../lib/constants';
+import { makeYargsBuilder } from '../../lib/yargsUtils';
 
-export const command = 'preview [--src] [--dest]';
-export const describe = i18n('commands.theme.subcommands.preview.describe');
+const command = 'preview [--src] [--dest]';
+const describe = i18n('commands.theme.subcommands.preview.describe');
 
-type CombinedArgs = CommonArgs & ConfigArgs & AccountArgs;
-type ThemePreviewArgs = CombinedArgs & {
-  src: string;
-  dest: string;
-  notify: string;
-  'no-ssl'?: boolean;
-  port?: number;
-  resetSession?: boolean;
-  generateFieldsTypes?: boolean;
-};
+type ThemePreviewArgs = CommonArgs &
+  ConfigArgs &
+  AccountArgs & {
+    src: string;
+    dest: string;
+    notify: string;
+    'no-ssl'?: boolean;
+    port?: number;
+    resetSession?: boolean;
+    generateFieldsTypes?: boolean;
+  };
 
 function validateSrcPath(src: string): boolean {
   const logInvalidPath = () => {
@@ -117,7 +122,7 @@ async function determineSrcAndDest(args: ThemePreviewArgs): Promise<{
   return { absoluteSrc, dest };
 }
 
-export async function handler(
+async function handler(
   args: ArgumentsCamelCase<ThemePreviewArgs>
 ): Promise<void> {
   const {
@@ -256,10 +261,7 @@ export async function handler(
   }
 }
 
-export function builder(yargs: Argv): Argv<ThemePreviewArgs> {
-  addConfigOptions(yargs);
-  addAccountOptions(yargs);
-
+function themePreviewBuilder(yargs: Argv): Argv<ThemePreviewArgs> {
   yargs
     .option('src', {
       describe: i18n('commands.theme.subcommands.preview.options.src.describe'),
@@ -304,3 +306,23 @@ export function builder(yargs: Argv): Argv<ThemePreviewArgs> {
 
   return yargs as Argv<ThemePreviewArgs>;
 }
+
+const builder = makeYargsBuilder<ThemePreviewArgs>(
+  themePreviewBuilder,
+  command,
+  describe,
+  {
+    useGlobalOptions: true,
+    useConfigOptions: true,
+    useAccountOptions: true,
+  }
+);
+
+const themePreviewCommand: YargsCommandModule<unknown, ThemePreviewArgs> = {
+  command,
+  describe,
+  handler,
+  builder,
+};
+
+export default themePreviewCommand;

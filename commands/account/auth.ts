@@ -22,8 +22,8 @@ import { toKebabCase } from '@hubspot/local-dev-lib/text';
 import { Environment } from '@hubspot/local-dev-lib/types/Config';
 import { CLIAccount } from '@hubspot/local-dev-lib/types/Accounts';
 import { PERSONAL_ACCESS_KEY_AUTH_METHOD } from '@hubspot/local-dev-lib/constants/auth';
+import { GLOBAL_CONFIG_PATH } from '@hubspot/local-dev-lib/constants/config';
 
-import { addGlobalOptions, addTestingOptions } from '../../lib/commonOpts';
 import { handleMerge, handleMigration } from '../../lib/configMigrate';
 import { handleExit } from '../../lib/process';
 import { debugError } from '../../lib/errorHandlers/index';
@@ -36,7 +36,8 @@ import { logError } from '../../lib/errorHandlers/index';
 import { trackCommandMetadataUsage } from '../../lib/usageTracking';
 import { EXIT_CODES } from '../../lib/enums/exitCodes';
 import { uiCommandReference, uiFeatureHighlight } from '../../lib/ui';
-import { CommonArgs, ConfigArgs } from '../../types/Yargs';
+import { CommonArgs, ConfigArgs, YargsCommandModule } from '../../types/Yargs';
+import { makeYargsBuilder } from '../../lib/yargsUtils';
 
 const TRACKING_STATUS = {
   STARTED: 'started',
@@ -236,15 +237,15 @@ async function handleConfigUpdate(
   process.exit(EXIT_CODES.SUCCESS);
 }
 
-export const describe = i18n('commands.account.subcommands.auth.describe');
-export const command = 'auth';
+const describe = i18n('commands.account.subcommands.auth.describe');
+const command = 'auth';
 
 type AccountAuthArgs = CommonArgs &
   ConfigArgs & {
     disableTracking?: boolean;
   };
 
-export async function handler(
+async function handler(
   args: ArgumentsCamelCase<AccountAuthArgs>
 ): Promise<void> {
   const { providedAccountId, disableTracking } = args;
@@ -269,7 +270,7 @@ export async function handler(
   );
 }
 
-export function builder(yargs: Argv): Argv<AccountAuthArgs> {
+function accountAuthBuilder(yargs: Argv): Argv<AccountAuthArgs> {
   yargs.options({
     account: {
       describe: i18n(
@@ -285,8 +286,27 @@ export function builder(yargs: Argv): Argv<AccountAuthArgs> {
     },
   });
 
-  addTestingOptions(yargs);
-  addGlobalOptions(yargs);
-
   return yargs as Argv<AccountAuthArgs>;
 }
+
+const builder = makeYargsBuilder<AccountAuthArgs>(
+  accountAuthBuilder,
+  command,
+  i18n('commands.account.subcommands.auth.verboseDescribe', {
+    authMethod: PERSONAL_ACCESS_KEY_AUTH_METHOD.value,
+    globalConfigPath: GLOBAL_CONFIG_PATH,
+  }),
+  {
+    useGlobalOptions: true,
+    useTestingOptions: true,
+  }
+);
+
+const accountAuthCommand: YargsCommandModule<unknown, AccountAuthArgs> = {
+  command,
+  describe,
+  handler,
+  builder,
+};
+
+export default accountAuthCommand;

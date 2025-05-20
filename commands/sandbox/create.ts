@@ -8,13 +8,6 @@ import {
   HUBSPOT_ACCOUNT_TYPE_STRINGS,
 } from '@hubspot/local-dev-lib/constants/config';
 import { getValidEnv } from '@hubspot/local-dev-lib/environment';
-
-import {
-  addAccountOptions,
-  addConfigOptions,
-  addUseEnvironmentOptions,
-  addTestingOptions,
-} from '../../lib/commonOpts';
 import { i18n } from '../../lib/lang';
 import { EXIT_CODES } from '../../lib/enums/exitCodes';
 import {
@@ -41,24 +34,28 @@ import {
   AccountArgs,
   EnvironmentArgs,
   TestingArgs,
+  YargsCommandModule,
 } from '../../types/Yargs';
 import { SandboxSyncTask } from '../../types/Sandboxes';
+import { makeYargsBuilder } from '../../lib/yargsUtils';
 
-export const command = 'create';
-export const describe = uiBetaTag(
+const command = 'create';
+const describe = uiBetaTag(
   i18n(`commands.sandbox.subcommands.create.describe`),
   false
 );
 
-type CombinedArgs = ConfigArgs & AccountArgs & EnvironmentArgs & TestingArgs;
 type SandboxCreateArgs = CommonArgs &
-  CombinedArgs & {
+  ConfigArgs &
+  AccountArgs &
+  EnvironmentArgs &
+  TestingArgs & {
     name?: string;
     force?: boolean;
     type?: string;
   };
 
-export async function handler(
+async function handler(
   args: ArgumentsCamelCase<SandboxCreateArgs>
 ): Promise<void> {
   const { name, type, force, derivedAccountId } = args;
@@ -229,7 +226,7 @@ export async function handler(
   }
 }
 
-export function builder(yargs: Argv): Argv<SandboxCreateArgs> {
+function sandboxCreateBuilder(yargs: Argv): Argv<SandboxCreateArgs> {
   yargs.option('force', {
     type: 'boolean',
     alias: 'f',
@@ -253,10 +250,27 @@ export function builder(yargs: Argv): Argv<SandboxCreateArgs> {
     ],
   ]);
 
-  addConfigOptions(yargs);
-  addAccountOptions(yargs);
-  addUseEnvironmentOptions(yargs);
-  addTestingOptions(yargs);
-
   return yargs as Argv<SandboxCreateArgs>;
 }
+
+const builder = makeYargsBuilder<SandboxCreateArgs>(
+  sandboxCreateBuilder,
+  command,
+  describe,
+  {
+    useGlobalOptions: true,
+    useConfigOptions: true,
+    useAccountOptions: true,
+    useEnvironmentOptions: true,
+    useTestingOptions: true,
+  }
+);
+
+const sandboxCreateCommand: YargsCommandModule<unknown, SandboxCreateArgs> = {
+  command,
+  describe,
+  handler,
+  builder,
+};
+
+export default sandboxCreateCommand;

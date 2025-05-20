@@ -1,9 +1,14 @@
 import yargs, { Argv } from 'yargs';
+import accountUseCommand from '../use';
 
 jest.mock('yargs');
 
-// Import this last so mocks apply
-import * as accountUseCommand from '../use';
+const positionalSpy = jest
+  .spyOn(yargs as Argv, 'positional')
+  .mockReturnValue(yargs as Argv);
+const exampleSpy = jest
+  .spyOn(yargs as Argv, 'example')
+  .mockReturnValue(yargs as Argv);
 
 describe('commands/account/use', () => {
   const yargsMock = yargs as Argv;
@@ -24,9 +29,9 @@ describe('commands/account/use', () => {
     it('should support the correct options', () => {
       accountUseCommand.builder(yargsMock);
 
-      expect(yargsMock.example).toHaveBeenCalledTimes(1);
-      expect(yargsMock.positional).toHaveBeenCalledTimes(1);
-      expect(yargsMock.positional).toHaveBeenCalledWith('account', {
+      expect(exampleSpy).toHaveBeenCalledTimes(1);
+      expect(positionalSpy).toHaveBeenCalledTimes(1);
+      expect(positionalSpy).toHaveBeenCalledWith('account', {
         describe: expect.any(String),
         type: 'string',
       });

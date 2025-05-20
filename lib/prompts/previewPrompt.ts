@@ -3,8 +3,6 @@ import { getCwd } from '@hubspot/local-dev-lib/path';
 import { promptUser } from './promptUtils';
 import { i18n } from '../lang';
 
-const i18nKey = 'lib.prompts.previewPrompt';
-
 type PreviewPromptResponse = {
   src: string;
   dest: string;
@@ -20,24 +18,24 @@ export async function previewPrompt(
   return promptUser<PreviewPromptResponse>([
     {
       name: 'src',
-      message: i18n(`${i18nKey}.enterSrc`),
+      message: i18n(`lib.prompts.previewPrompt.enterSrc`),
       when: !promptOptions.src,
       default: '.',
       validate: (input?: string) => {
         if (!input) {
-          return i18n(`${i18nKey}.errors.srcRequired`);
+          return i18n(`lib.prompts.previewPrompt.errors.srcRequired`);
         }
         return true;
       },
     },
     {
       name: 'dest',
-      message: i18n(`${i18nKey}.enterDest`),
+      message: i18n(`lib.prompts.previewPrompt.enterDest`),
       when: !promptOptions.dest,
       default: path.basename(getCwd()),
       validate: (input?: string) => {
         if (!input) {
-          return i18n(`${i18nKey}.errors.destRequired`);
+          return i18n(`lib.prompts.previewPrompt.errors.destRequired`);
         }
         return true;
       },
@@ -51,7 +49,7 @@ export async function previewProjectPrompt(
   return promptUser<PreviewProjectPromptResponse>([
     {
       name: 'themeComponentPath',
-      message: i18n(`${i18nKey}.themeProjectSelect`),
+      message: i18n(`lib.prompts.previewPrompt.themeProjectSelect`),
       type: 'list',
       choices: themeComponents.map(t => {
         const themeName = path.basename(t.path);

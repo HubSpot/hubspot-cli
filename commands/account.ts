@@ -1,22 +1,21 @@
 import { Argv } from 'yargs';
-import { addGlobalOptions } from '../lib/commonOpts';
 import { i18n } from '../lib/lang';
-import * as auth from './account/auth';
-import * as list from './account/list';
-import * as rename from './account/rename';
-import * as use from './account/use';
-import * as info from './account/info';
-import * as remove from './account/remove';
-import * as clean from './account/clean';
-import * as createOverride from './account/createOverride';
-import * as removeOverride from './account/removeOverride';
+import auth from './account/auth';
+import list from './account/list';
+import rename from './account/rename';
+import use from './account/use';
+import info from './account/info';
+import remove from './account/remove';
+import clean from './account/clean';
+import createOverride from './account/createOverride';
+import removeOverride from './account/removeOverride';
+import { makeYargsBuilder } from '../lib/yargsUtils';
+import { YargsCommandModuleBucket } from '../types/Yargs';
 
-export const command = ['account', 'accounts'];
-export const describe = i18n('commands.account.describe');
+const command = ['account', 'accounts'];
+const describe = i18n('commands.account.describe');
 
-export function builder(yargs: Argv): Argv {
-  addGlobalOptions(yargs);
-
+function accountBuilder(yargs: Argv): Argv {
   yargs
     .command(auth)
     .command(list)
@@ -31,3 +30,17 @@ export function builder(yargs: Argv): Argv {
 
   return yargs;
 }
+
+const builder = makeYargsBuilder(accountBuilder, command, describe);
+
+const accountCommand: YargsCommandModuleBucket = {
+  command,
+  describe,
+  builder,
+  handler: () => {},
+};
+
+export default accountCommand;
+
+// TODO Remove this legacy export once we've migrated all commands to TS
+module.exports = accountCommand;

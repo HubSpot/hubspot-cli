@@ -5,27 +5,25 @@ import { clearHubDbTableRows } from '@hubspot/local-dev-lib/hubdb';
 import { publishTable } from '@hubspot/local-dev-lib/api/hubdb';
 import { selectHubDBTablePrompt } from '../../lib/prompts/selectHubDBTablePrompt';
 import { trackCommandUsage } from '../../lib/usageTracking';
-import {
-  addConfigOptions,
-  addAccountOptions,
-  addUseEnvironmentOptions,
-} from '../../lib/commonOpts';
 import { i18n } from '../../lib/lang';
 import {
   CommonArgs,
   ConfigArgs,
   AccountArgs,
   EnvironmentArgs,
+  YargsCommandModule,
 } from '../../types/Yargs';
+import { makeYargsBuilder } from '../../lib/yargsUtils';
 
-export const command = 'clear [table-id]';
-export const describe = i18n('commands.hubdb.subcommands.clear.describe');
+const command = 'clear [table-id]';
+const describe = i18n('commands.hubdb.subcommands.clear.describe');
 
-type CombinedArgs = ConfigArgs & AccountArgs & EnvironmentArgs;
 type HubdbClearArgs = CommonArgs &
-  CombinedArgs & { tableId?: number; dest?: string };
+  ConfigArgs &
+  AccountArgs &
+  EnvironmentArgs & { tableId?: number; dest?: string };
 
-export async function handler(
+async function handler(
   args: ArgumentsCamelCase<HubdbClearArgs>
 ): Promise<void> {
   const { derivedAccountId } = args;
@@ -72,11 +70,7 @@ export async function handler(
   }
 }
 
-export function builder(yargs: Argv): Argv<HubdbClearArgs> {
-  addAccountOptions(yargs);
-  addConfigOptions(yargs);
-  addUseEnvironmentOptions(yargs);
-
+function hubdbClearBuilder(yargs: Argv): Argv<HubdbClearArgs> {
   yargs.positional('table-id', {
     describe: i18n(
       'commands.hubdb.subcommands.clear.positionals.tableId.describe'
@@ -86,3 +80,24 @@ export function builder(yargs: Argv): Argv<HubdbClearArgs> {
 
   return yargs as Argv<HubdbClearArgs>;
 }
+
+const builder = makeYargsBuilder<HubdbClearArgs>(
+  hubdbClearBuilder,
+  command,
+  describe,
+  {
+    useGlobalOptions: true,
+    useConfigOptions: true,
+    useAccountOptions: true,
+    useEnvironmentOptions: true,
+  }
+);
+
+const hubdbClearCommand: YargsCommandModule<unknown, HubdbClearArgs> = {
+  command,
+  describe,
+  handler,
+  builder,
+};
+
+export default hubdbClearCommand;

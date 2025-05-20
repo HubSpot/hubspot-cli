@@ -1,5 +1,4 @@
 import { ArgumentsCamelCase, Argv } from 'yargs';
-import { logger } from '@hubspot/local-dev-lib/logger';
 import {
   AccountArgs,
   CommonArgs,
@@ -13,14 +12,17 @@ import { PLATFORM_VERSIONS } from '@hubspot/local-dev-lib/constants/projects';
 import { logError } from '../../lib/errorHandlers';
 import { EXIT_CODES } from '../../lib/enums/exitCodes';
 import { makeYargsBuilder } from '../../lib/yargsUtils';
-import { uiBetaTag, uiCommandReference } from '../../lib/ui';
-import { commands } from '../../lang/en';
+import { uiCommandReference } from '../../lib/ui';
+import { commands, lib } from '../../lang/en';
+import { uiLogger } from '../../lib/ui/logger';
+import { logInBox } from '../../lib/ui/boxen';
 
 export type ProjectMigrateArgs = CommonArgs &
   AccountArgs &
   EnvironmentArgs &
   ConfigArgs & {
     platformVersion: string;
+    unstable: boolean;
   };
 
 const { v2025_2 } = PLATFORM_VERSIONS;
@@ -35,7 +37,7 @@ async function handler(
   const projectConfig = await getProjectConfig();
 
   if (!projectConfig.projectConfig) {
-    logger.error(
+    uiLogger.error(
       commands.project.migrate.errors.noProjectConfig(
         uiCommandReference('hs app migrate')
       )
@@ -43,10 +45,13 @@ async function handler(
     return process.exit(EXIT_CODES.ERROR);
   }
 
-  logger.log();
-  logger.log(
-    uiBetaTag(commands.project.migrate.preamble(platformVersion), false)
-  );
+  if (projectConfig?.projectConfig) {
+    await logInBox({
+      contents: lib.migrate.projectMigrationWarning,
+      options: { title: lib.migrate.projectMigrationWarningTitle },
+    });
+  }
+
   const { derivedAccountId } = args;
   try {
     await migrateApp2025_2(

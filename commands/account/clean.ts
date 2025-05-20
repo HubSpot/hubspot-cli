@@ -16,28 +16,27 @@ import {
   getCWDAccountOverride,
   getDefaultAccountOverrideFilePath,
 } from '@hubspot/local-dev-lib/config';
-
 import { trackCommandUsage } from '../../lib/usageTracking';
 import { i18n } from '../../lib/lang';
 import { EXIT_CODES } from '../../lib/enums/exitCodes';
-import { addTestingOptions, addConfigOptions } from '../../lib/commonOpts';
 import { promptUser } from '../../lib/prompts/promptUtils';
 import { selectAccountFromConfig } from '../../lib/prompts/accountsPrompt';
 import { getTableContents } from '../../lib/ui/table';
 import SpinniesManager from '../../lib/ui/SpinniesManager';
 import { uiAccountDescription } from '../../lib/ui';
-import { CommonArgs, ConfigArgs } from '../../types/Yargs';
+import { CommonArgs, ConfigArgs, YargsCommandModule } from '../../types/Yargs';
 import { logError } from '../../lib/errorHandlers';
+import { makeYargsBuilder } from '../../lib/yargsUtils';
 
-export const command = 'clean';
-export const describe = i18n(`commands.account.subcommands.clean.describe`);
+const command = 'clean';
+const describe = i18n(`commands.account.subcommands.clean.describe`);
 
 type AccountCleanArgs = CommonArgs &
   ConfigArgs & {
     qa?: boolean;
   };
 
-export async function handler(
+async function handler(
   args: ArgumentsCamelCase<AccountCleanArgs>
 ): Promise<void> {
   const { qa } = args;
@@ -183,11 +182,28 @@ export async function handler(
   process.exit(EXIT_CODES.SUCCESS);
 }
 
-export function builder(yargs: Argv): Argv<AccountCleanArgs> {
-  addConfigOptions(yargs);
-  addTestingOptions(yargs);
-
+function accountCleanBuilder(yargs: Argv): Argv<AccountCleanArgs> {
   yargs.example([['$0 accounts clean']]);
 
   return yargs as Argv<AccountCleanArgs>;
 }
+
+const builder = makeYargsBuilder<AccountCleanArgs>(
+  accountCleanBuilder,
+  command,
+  describe,
+  {
+    useGlobalOptions: true,
+    useConfigOptions: true,
+    useTestingOptions: true,
+  }
+);
+
+const accountCleanCommand: YargsCommandModule<unknown, AccountCleanArgs> = {
+  command,
+  describe,
+  handler,
+  builder,
+};
+
+export default accountCleanCommand;
