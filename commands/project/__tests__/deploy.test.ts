@@ -3,6 +3,7 @@ import yargs, { Argv, ArgumentsCamelCase } from 'yargs';
 import chalk from 'chalk';
 import * as configUtils from '@hubspot/local-dev-lib/config';
 import { logger } from '@hubspot/local-dev-lib/logger';
+import { Project } from '@hubspot/local-dev-lib/types/Project';
 import * as projectApiUtils from '@hubspot/local-dev-lib/api/projects';
 import * as ui from '../../../lib/ui';
 import {
@@ -161,12 +162,10 @@ describe('commands/project/deploy', () => {
         return text;
       });
       getAccountConfigSpy.mockReturnValue({ accountType, env: 'qa' });
-      fetchProjectSpy.mockResolvedValue(
-        mockHubSpotHttpResponse(exampleProject)
+      fetchProjectSpy.mockReturnValue(
+        mockHubSpotHttpResponse<Project>(exampleProject)
       );
-      deployProjectSpy.mockResolvedValue(
-        mockHubSpotHttpResponse(deployDetails)
-      );
+      deployProjectSpy.mockReturnValue(mockHubSpotHttpResponse(deployDetails));
 
       // Spy on process.exit so our tests don't close when it's called
       // @ts-expect-error Doesn't match the actual signature because then the linter complains about unused variables
@@ -249,7 +248,7 @@ describe('commands/project/deploy', () => {
     });
 
     it('should log an error and exit when latest build is not defined', async () => {
-      fetchProjectSpy.mockResolvedValue(mockHubSpotHttpResponse({}));
+      fetchProjectSpy.mockReturnValue(mockHubSpotHttpResponse({}));
       await projectDeployCommand.handler(args);
       expect(logger.error).toHaveBeenCalledTimes(1);
       expect(logger.error).toHaveBeenCalledWith(

@@ -1,15 +1,15 @@
 import { Argv, ArgumentsCamelCase } from 'yargs';
 import { logger } from '@hubspot/local-dev-lib/logger';
 import { renameAccount } from '@hubspot/local-dev-lib/config';
-import { addConfigOptions, addAccountOptions } from '../../lib/commonOpts';
 import { trackCommandUsage } from '../../lib/usageTracking';
 import { i18n } from '../../lib/lang';
-import { CommonArgs, ConfigArgs } from '../../types/Yargs';
+import { CommonArgs, ConfigArgs, YargsCommandModule } from '../../types/Yargs';
 import { logError } from '../../lib/errorHandlers';
 import { EXIT_CODES } from '../../lib/enums/exitCodes';
+import { makeYargsBuilder } from '../../lib/yargsUtils';
 
-export const command = 'rename <account-name> <new-name>';
-export const describe = i18n(`commands.account.subcommands.rename.describe`);
+const command = 'rename <account-name> <new-name>';
+const describe = i18n(`commands.account.subcommands.rename.describe`);
 
 type AccountRenameArgs = CommonArgs &
   ConfigArgs & {
@@ -17,7 +17,7 @@ type AccountRenameArgs = CommonArgs &
     newName: string;
   };
 
-export async function handler(
+async function handler(
   args: ArgumentsCamelCase<AccountRenameArgs>
 ): Promise<void> {
   const { accountName, newName, derivedAccountId } = args;
@@ -40,10 +40,7 @@ export async function handler(
   process.exit(EXIT_CODES.SUCCESS);
 }
 
-export function builder(yargs: Argv): Argv<AccountRenameArgs> {
-  addConfigOptions(yargs);
-  addAccountOptions(yargs);
-
+function accountRenameBuilder(yargs: Argv): Argv<AccountRenameArgs> {
   yargs.positional('account-name', {
     describe: i18n(
       `commands.account.subcommands.rename.positionals.accountName.describe`
@@ -63,3 +60,23 @@ export function builder(yargs: Argv): Argv<AccountRenameArgs> {
 
   return yargs as Argv<AccountRenameArgs>;
 }
+
+const builder = makeYargsBuilder<AccountRenameArgs>(
+  accountRenameBuilder,
+  command,
+  describe,
+  {
+    useGlobalOptions: true,
+    useConfigOptions: true,
+    useAccountOptions: true,
+  }
+);
+
+const accountRenameCommand: YargsCommandModule<unknown, AccountRenameArgs> = {
+  command,
+  describe,
+  handler,
+  builder,
+};
+
+export default accountRenameCommand;

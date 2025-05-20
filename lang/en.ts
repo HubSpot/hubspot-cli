@@ -1408,23 +1408,12 @@ export const commands = {
       success: (projectName: string) => `Successfully opened "${projectName}"`,
     },
     feedback: {
-      describe: 'Leave feedback on HubSpot projects or file a bug report.',
-      feedbackType: {
-        prompt: 'What type of feedback would you like to leave?',
-        bug: '[--bug] Report a bug',
-        general:
-          "[--general] Tell us about your experience with HubSpot's developer tools",
-      },
-      openPrompt: 'Create a Github issue in your browser?',
-      success: (url: string) => `We opened ${url} in your browser.`,
-      options: {
-        bug: {
-          describe: 'Open Github issues in your browser to report a bug.',
-        },
-        general: {
-          describe: 'Open Github issues in your browser to give feedback.',
-        },
-      },
+      describe: 'Leave feedback or file a bug report.',
+      openPrompt: 'Open the feedback form in your browser?',
+      success: (url: string) =>
+        `We opened ${uiLink('the developer feedback form', url)} in your browser.`,
+      error: (url: string) =>
+        `Navigate to ${uiLink('the developer feedback form', url)} to leave feedback.`,
     },
     installDeps: {
       help: {

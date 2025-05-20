@@ -1,11 +1,13 @@
 import yargs, { Argv } from 'yargs';
 import { addConfigOptions } from '../../../lib/commonOpts';
+import accountInfoCommand from '../info';
 
 jest.mock('yargs');
 jest.mock('../../../lib/commonOpts');
 
-// Import this last so mocks apply
-import * as accountInfoCommand from '../info';
+const exampleSpy = jest
+  .spyOn(yargs as Argv, 'example')
+  .mockReturnValue(yargs as Argv);
 
 describe('commands/account/info', () => {
   const yargsMock = yargs as Argv;
@@ -26,7 +28,7 @@ describe('commands/account/info', () => {
     it('should support the correct options', () => {
       accountInfoCommand.builder(yargsMock);
 
-      expect(yargsMock.example).toHaveBeenCalledTimes(1);
+      expect(exampleSpy).toHaveBeenCalledTimes(1);
 
       expect(addConfigOptions).toHaveBeenCalledTimes(1);
       expect(addConfigOptions).toHaveBeenCalledWith(yargsMock);

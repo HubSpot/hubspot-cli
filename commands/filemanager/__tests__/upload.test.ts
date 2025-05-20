@@ -5,7 +5,7 @@ import {
   addAccountOptions,
   addUseEnvironmentOptions,
 } from '../../../lib/commonOpts';
-import * as fileManagerUploadCommand from '../upload';
+import fileManagerUploadCommand from '../upload';
 
 jest.mock('yargs');
 jest.mock('../../../lib/commonOpts');

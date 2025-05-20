@@ -1,11 +1,6 @@
 import { Argv, ArgumentsCamelCase } from 'yargs';
 
 import SpinniesManager from '../../lib/ui/SpinniesManager';
-import {
-  addConfigOptions,
-  addAccountOptions,
-  addUseEnvironmentOptions,
-} from '../../lib/commonOpts';
 import { trackCommandUsage } from '../../lib/usageTracking';
 import {
   kickOffValidation,
@@ -20,17 +15,21 @@ import {
   ConfigArgs,
   AccountArgs,
   EnvironmentArgs,
+  YargsCommandModule,
 } from '../../types/Yargs';
+import { makeYargsBuilder } from '../../lib/yargsUtils';
 
-export const command = 'marketplace-validate <path>';
-export const describe = i18n(
+const command = 'marketplace-validate <path>';
+const describe = i18n(
   'commands.theme.subcommands.marketplaceValidate.describe'
 );
 
-type CombinedArgs = CommonArgs & ConfigArgs & AccountArgs & EnvironmentArgs;
-type ThemeValidateArgs = CombinedArgs & { path: string };
+type ThemeValidateArgs = CommonArgs &
+  ConfigArgs &
+  AccountArgs &
+  EnvironmentArgs & { path: string };
 
-export async function handler(
+async function handler(
   args: ArgumentsCamelCase<ThemeValidateArgs>
 ): Promise<void> {
   const { path, derivedAccountId } = args;
@@ -74,11 +73,7 @@ export async function handler(
   process.exit();
 }
 
-export function builder(yargs: Argv): Argv<ThemeValidateArgs> {
-  addConfigOptions(yargs);
-  addAccountOptions(yargs);
-  addUseEnvironmentOptions(yargs);
-
+function themeValidateBuilder(yargs: Argv): Argv<ThemeValidateArgs> {
   yargs.positional('path', {
     describe: i18n(
       'commands.theme.subcommands.marketplaceValidate.positionals.path.describe'
@@ -89,3 +84,24 @@ export function builder(yargs: Argv): Argv<ThemeValidateArgs> {
 
   return yargs as Argv<ThemeValidateArgs>;
 }
+
+const builder = makeYargsBuilder<ThemeValidateArgs>(
+  themeValidateBuilder,
+  command,
+  describe,
+  {
+    useGlobalOptions: true,
+    useConfigOptions: true,
+    useAccountOptions: true,
+    useEnvironmentOptions: true,
+  }
+);
+
+const themeValidateCommand: YargsCommandModule<unknown, ThemeValidateArgs> = {
+  command,
+  describe,
+  handler,
+  builder,
+};
+
+export default themeValidateCommand;
