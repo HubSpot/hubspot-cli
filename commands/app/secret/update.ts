@@ -3,7 +3,6 @@ import { logger } from '@hubspot/local-dev-lib/logger';
 import { updateAppSecret } from '@hubspot/local-dev-lib/api/devSecrets';
 import { logError } from '../../../lib/errorHandlers/index';
 import { trackCommandUsage } from '../../../lib/usageTracking';
-import { uiAccountDescription } from '../../../lib/ui';
 import {
   secretValuePrompt,
   secretNamePrompt,
@@ -66,7 +65,7 @@ async function handler(
     logger.success(
       commands.app.subcommands.secret.subcommands.update.success(
         appSecretName,
-        uiAccountDescription(derivedAccountId)
+        derivedAccountId
       )
     );
   } catch (err) {

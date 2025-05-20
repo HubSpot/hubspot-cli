@@ -1633,8 +1633,8 @@ export const commands = {
             },
             example:
               'Add a secret named "my-secret" to the app with ID 1234567890',
-            success: (secretName, accountIdentifier) =>
-              `The secret "${secretName}" was added to the HubSpot account: ${accountIdentifier}`,
+            success: (secretName: string, accountId: number) =>
+              `The secret "${secretName}" was added to the HubSpot account: ${uiAccountDescription(accountId)}`,
           },
           delete: {
             describe: 'Delete an app secret.',
@@ -1647,16 +1647,14 @@ export const commands = {
             },
             example:
               'Delete a secret named "my-secret" from the app with ID 1234567890',
-            success: (secretName, accountIdentifier) =>
-              `The secret "${secretName}" was removed from the HubSpot account: ${accountIdentifier}`,
+            success: (secretName: string, accountId: number) =>
+              `The secret "${secretName}" was removed from the HubSpot account: ${uiAccountDescription(accountId)}`,
           },
           list: {
             describe: 'List all app secrets.',
             appIdPrompt: 'Enter the app id',
             error: 'App ID is required',
             example: 'List all secrets for the app with ID 1234567890',
-            success: (secretName, accountIdentifier) =>
-              `The secret "${secretName}" was removed from the HubSpot account: ${accountIdentifier}`,
             options: {
               appId: 'The app id to list the secrets for',
             },
@@ -1672,8 +1670,8 @@ export const commands = {
             },
             example:
               'Update a secret named "my-secret" for the app with ID 1234567890',
-            success: (secretName, accountIdentifier) =>
-              `The secret "${secretName}" was updated in the HubSpot account: ${accountIdentifier}`,
+            success: (secretName: string, accountId: number) =>
+              `The secret "${secretName}" was updated in the HubSpot account: ${uiAccountDescription(accountId)}`,
           },
         },
       },

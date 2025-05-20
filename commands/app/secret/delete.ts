@@ -3,7 +3,6 @@ import { logger } from '@hubspot/local-dev-lib/logger';
 import { deleteAppSecret } from '@hubspot/local-dev-lib/api/devSecrets';
 import { logError } from '../../../lib/errorHandlers/index';
 import { trackCommandUsage } from '../../../lib/usageTracking';
-import { uiAccountDescription } from '../../../lib/ui';
 import { secretNamePrompt } from '../../../lib/prompts/secretPrompt';
 import { commands } from '../../../lang/en';
 import { EXIT_CODES } from '../../../lib/enums/exitCodes';
@@ -56,7 +55,7 @@ async function handler(
     logger.success(
       commands.app.subcommands.secret.subcommands.delete.success(
         appSecretName,
-        uiAccountDescription(derivedAccountId)
+        derivedAccountId
       )
     );
   } catch (err) {

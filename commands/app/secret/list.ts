@@ -3,7 +3,6 @@ import { logger } from '@hubspot/local-dev-lib/logger';
 import { fetchAppSecrets } from '@hubspot/local-dev-lib/api/devSecrets';
 import { logError } from '../../../lib/errorHandlers/index';
 import { trackCommandUsage } from '../../../lib/usageTracking';
-//import { uiAccountDescription } from '../../../lib/ui';
 import { commands } from '../../../lang/en';
 import { EXIT_CODES } from '../../../lib/enums/exitCodes';
 import {
