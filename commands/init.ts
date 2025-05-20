@@ -51,6 +51,7 @@ import {
   CommonArgs,
   TestingArgs,
   AccountArgs,
+  YargsCommandModule,
 } from '../types/Yargs';
 
 const TRACKING_STATUS = {
@@ -103,8 +104,8 @@ const AUTH_TYPE_NAMES = {
   [OAUTH_AUTH_METHOD.value]: OAUTH_AUTH_METHOD.name,
 };
 
-export const command = 'init';
-export const describe = i18n(`commands.init.describe`);
+const command = 'init';
+const describe = i18n(`commands.init.describe`);
 
 type InitArgs = CommonArgs &
   ConfigArgs &
@@ -115,9 +116,7 @@ type InitArgs = CommonArgs &
     'use-hidden-config'?: boolean;
   };
 
-export async function handler(
-  args: ArgumentsCamelCase<InitArgs>
-): Promise<void> {
+async function handler(args: ArgumentsCamelCase<InitArgs>): Promise<void> {
   const {
     authType: authTypeFlagValue,
     c: configFlagValue,
@@ -277,7 +276,7 @@ function initBuilder(yargs: Argv): Argv<InitArgs> {
   return yargs as Argv<InitArgs>;
 }
 
-export const builder = makeYargsBuilder<InitArgs>(
+const builder = makeYargsBuilder<InitArgs>(
   initBuilder,
   command,
   i18n(`commands.init.verboseDescribe`, {
@@ -291,3 +290,15 @@ export const builder = makeYargsBuilder<InitArgs>(
     useTestingOptions: true,
   }
 );
+
+const initCommand: YargsCommandModule<unknown, InitArgs> = {
+  command,
+  describe,
+  handler,
+  builder,
+};
+
+export default initCommand;
+
+// TODO Remove this legacy export once we've migrated all commands to TS
+module.exports = initCommand;

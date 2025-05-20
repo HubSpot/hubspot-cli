@@ -1,19 +1,26 @@
+import { Argv } from 'yargs';
+import { makeYargsBuilder } from '../lib/yargsUtils';
+import { YargsCommandModuleBucket } from '../types/Yargs';
 import migrateCommand from './app/migrate';
-import { Argv, CommandModule } from 'yargs';
 
-export const command = ['app', 'apps'];
-
+const command = ['app', 'apps'];
 // Keep the command hidden for now
-export const describe = undefined;
+const describe = undefined;
 
-export function builder(yargs: Argv) {
+function appBuilder(yargs: Argv) {
   return yargs.command(migrateCommand).demandCommand(1, '');
 }
 
-const appCommand: CommandModule = {
+const builder = makeYargsBuilder(appBuilder, command, describe);
+
+const appCommand: YargsCommandModuleBucket = {
   command,
   describe,
   builder,
   handler: () => {},
 };
+
 export default appCommand;
+
+// TODO Remove this legacy export once we've migrated all commands to TS
+module.exports = appCommand;

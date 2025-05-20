@@ -44,6 +44,7 @@ import {
   CommonArgs,
   ConfigArgs,
   TestingArgs,
+  YargsCommandModule,
 } from '../types/Yargs';
 
 const TRACKING_STATUS = {
@@ -59,8 +60,8 @@ const ALLOWED_AUTH_METHODS = [
 const SUPPORTED_AUTHENTICATION_PROTOCOLS_TEXT =
   commaSeparatedValues(ALLOWED_AUTH_METHODS);
 
-export const command = 'auth';
-export const describe = i18n('commands.auth.describe');
+const command = 'auth';
+const describe = i18n('commands.auth.describe');
 
 type AuthArgs = CommonArgs &
   ConfigArgs &
@@ -69,9 +70,7 @@ type AuthArgs = CommonArgs &
     authType?: string;
   };
 
-export async function handler(
-  args: ArgumentsCamelCase<AuthArgs>
-): Promise<void> {
+async function handler(args: ArgumentsCamelCase<AuthArgs>): Promise<void> {
   const {
     authType: authTypeFlagValue,
     config: configFlagValue,
@@ -246,7 +245,7 @@ function authBuilder(yargs: Argv): Argv<AuthArgs> {
   return yargs as Argv<AuthArgs>;
 }
 
-export const builder = makeYargsBuilder<AuthArgs>(
+const builder = makeYargsBuilder<AuthArgs>(
   authBuilder,
   command,
   i18n('commands.auth.verboseDescribe', {
@@ -259,3 +258,15 @@ export const builder = makeYargsBuilder<AuthArgs>(
     useTestingOptions: true,
   }
 );
+
+const authCommand: YargsCommandModule<unknown, AuthArgs> = {
+  command,
+  describe,
+  handler,
+  builder,
+};
+
+export default authCommand;
+
+// TODO Remove this legacy export once we've migrated all commands to TS
+module.exports = authCommand;

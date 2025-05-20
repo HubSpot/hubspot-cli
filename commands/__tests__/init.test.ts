@@ -1,6 +1,6 @@
 import yargs, { Argv } from 'yargs';
 import { addConfigOptions, addTestingOptions } from '../../lib/commonOpts';
-import * as initCommand from '../init';
+import initCommand from '../init';
 
 jest.mock('yargs');
 jest.mock('../../lib/commonOpts');
