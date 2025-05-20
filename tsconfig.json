@@ -11,8 +11,17 @@
     "allowJs": true,
     "rootDir": ".",
     "outDir": "dist",
-    "noErrorTruncation": true
+    "noErrorTruncation": true,
+    "isolatedModules": true
   },
-  "include": ["bin", "commands", "lib", "api", "lang"],
-  "exclude": ["**/__tests__/*"]
+  "include": [
+    "bin",
+    "commands",
+    "lib",
+    "api",
+    "lang"
+  ],
+  "exclude": [
+    "**/__tests__/*"
+  ]
 }
