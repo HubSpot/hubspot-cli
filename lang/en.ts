@@ -997,14 +997,16 @@ export const commands = {
         betaMessage: 'HubSpot projects local development',
         placeholderAccountSelection:
           'Using default account as target account (for now)',
-        learnMoreLocalDevServer:
+        learnMoreLocalDevServer: uiLink(
           'Learn more about the projects local dev server',
+          'https://developers.hubspot.com/docs/platform/project-cli-commands#start-a-local-development-server'
+        ),
       },
       errors: {
         noProjectConfig:
           'No project detected. Please run this command again from a project directory.',
-        noAccount: (accountId: string, authCommand: string) =>
-          `An error occurred while reading account ${accountId} from your config. Run ${chalk.bold(authCommand)} to re-auth this account.`,
+        noAccount: (accountId: number) =>
+          `An error occurred while reading account ${accountId} from your config. Run ${uiCommandReference('hs auth')} to re-auth this account.`,
         noAccountsInConfig: (authCommand: string) =>
           `No accounts found in your config. Run ${chalk.bold(authCommand)} to configure a HubSpot account with the CLI.`,
         invalidProjectComponents:
@@ -1014,6 +1016,12 @@ export const commands = {
       },
       examples: {
         default: 'Start local dev for the current project',
+      },
+      options: {
+        targetProjectAccount: 'The id of the account to upload your projec to',
+        targetTestingAccount:
+          'The id of the account to install apps and test on',
+        profile: 'The name of the profile to use',
       },
     },
     create: {

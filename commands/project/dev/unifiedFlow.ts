@@ -72,7 +72,6 @@ export async function unifiedProjectDevFlow(
     return process.exit(EXIT_CODES.ERROR);
   }
 
-  // @TODO Do we need to do more than this or leave it to the dev servers?
   if (!Object.keys(projectNodes).length) {
     logger.error(
       i18n(`commands.project.subcommands.dev.errors.noRunnableComponents`, {
@@ -83,16 +82,14 @@ export async function unifiedProjectDevFlow(
     process.exit(EXIT_CODES.SUCCESS);
   }
 
-  // @TODO Validate component types (i.e. previously you could not have both private and public apps)
-
   const accounts = getConfigAccounts();
 
   // TODO Ideally this should require the user to target a Combined account
   // For now, check if the account is either developer or standard
-  const derivedAccountIsRecommendedType =
+  const derivedAccountIsCompatible =
     isAppDeveloperAccount(accountConfig) || isStandardAccount(accountConfig);
 
-  if (!derivedAccountIsRecommendedType && !profileConfig) {
+  if (!derivedAccountIsCompatible && !profileConfig) {
     logger.error(
       i18n(`commands.project.subcommands.dev.errors.invalidUnifiedAppsAccount`),
       {
