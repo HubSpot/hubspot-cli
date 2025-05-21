@@ -19,7 +19,7 @@ async function fetchPublicAppOptions(
   try {
     if (!accountId) {
       logger.error(
-        i18n(`lib.prompts.selectPublicAppPrompt.errors.noAccountId`)
+        i18n(`lib.prompts.selectPublicAppForMigrationPrompt.errors.noAccountId`)
       );
       process.exit(EXIT_CODES.ERROR);
     }
@@ -47,11 +47,13 @@ async function fetchPublicAppOptions(
         : 'noAppsCloneMessage';
       uiLine();
       logger.error(
-        i18n(`lib.prompts.selectPublicAppPrompt.errors.${headerTranslationKey}`)
+        i18n(
+          `lib.prompts.selectPublicAppForMigrationPrompt.errors.${headerTranslationKey}`
+        )
       );
       logger.log(
         i18n(
-          `lib.prompts.selectPublicAppPrompt.errors.${messageTranslationKey}`,
+          `lib.prompts.selectPublicAppForMigrationPrompt.errors.${messageTranslationKey}`,
           { accountName }
         )
       );
@@ -62,13 +64,15 @@ async function fetchPublicAppOptions(
   } catch (error) {
     logError(error, accountId ? { accountId } : undefined);
     logger.error(
-      i18n(`lib.prompts.selectPublicAppPrompt.errors.errorFetchingApps`)
+      i18n(
+        `lib.prompts.selectPublicAppForMigrationPrompt.errors.errorFetchingApps`
+      )
     );
     process.exit(EXIT_CODES.ERROR);
   }
 }
 
-export async function selectPublicAppPrompt({
+export async function selectPublicAppForMigrationPrompt({
   accountId,
   accountName,
   isMigratingApp = false,
@@ -89,9 +93,12 @@ export async function selectPublicAppPrompt({
   return promptUser<PublicAppPromptResponse>([
     {
       name: 'appId',
-      message: i18n(`lib.prompts.selectPublicAppPrompt.${translationKey}`, {
-        accountName,
-      }),
+      message: i18n(
+        `lib.prompts.selectPublicAppForMigrationPrompt.${translationKey}`,
+        {
+          accountName,
+        }
+      ),
       type: 'list',
       choices: publicApps.map(app => {
         const { preventProjectMigrations, listingInfo } = app;
@@ -99,7 +106,7 @@ export async function selectPublicAppPrompt({
           return {
             name: `${app.name} (${app.id})`,
             disabled: i18n(
-              `lib.prompts.selectPublicAppPrompt.errors.cannotBeMigrated`
+              `lib.prompts.selectPublicAppForMigrationPrompt.errors.cannotBeMigrated`
             ),
           };
         }

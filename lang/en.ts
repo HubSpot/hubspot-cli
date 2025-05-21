@@ -1624,7 +1624,6 @@ export const commands = {
         subcommands: {
           add: {
             describe: 'Create a new app secret.',
-            appIdPrompt: 'Enter the app id',
             positionals: {
               name: 'Name of the secret',
             },
@@ -1633,12 +1632,11 @@ export const commands = {
             },
             example:
               'Add a secret named "my-secret" to the app with ID 1234567890',
-            success: (secretName: string, accountId: number) =>
-              `The secret "${secretName}" was added to the HubSpot account: ${uiAccountDescription(accountId)}`,
+            success: (accountId: number, appName: string, secretName: string) =>
+              `The secret "${secretName}" was added to app ${appName} in ${uiAccountDescription(accountId)}`,
           },
           delete: {
             describe: 'Delete an app secret.',
-            appIdPrompt: 'Enter the app id',
             positionals: {
               name: 'Name of the secret',
             },
@@ -1647,21 +1645,23 @@ export const commands = {
             },
             example:
               'Delete a secret named "my-secret" from the app with ID 1234567890',
-            success: (secretName: string, accountId: number) =>
-              `The secret "${secretName}" was removed from the HubSpot account: ${uiAccountDescription(accountId)}`,
+            success: (accountId: number, appName: string, secretName: string) =>
+              `The secret "${secretName}" was removed from app ${appName} in ${uiAccountDescription(accountId)}`,
           },
           list: {
             describe: 'List all app secrets.',
-            appIdPrompt: 'Enter the app id',
-            error: 'App ID is required',
             example: 'List all secrets for the app with ID 1234567890',
             options: {
               appId: 'The app id to list the secrets for',
             },
+            errors: {
+              noSecrets: 'No secrets found for the given app',
+            },
+            success: (accountId: number, appName: string) =>
+              `Secrets for app ${appName} in ${uiAccountDescription(accountId)}:`,
           },
           update: {
             describe: 'Update an app secret.',
-            appIdPrompt: 'Enter the app id',
             positionals: {
               name: 'Name of the secret',
             },
@@ -1670,8 +1670,8 @@ export const commands = {
             },
             example:
               'Update a secret named "my-secret" for the app with ID 1234567890',
-            success: (secretName: string, accountId: number) =>
-              `The secret "${secretName}" was updated in the HubSpot account: ${uiAccountDescription(accountId)}`,
+            success: (accountId: number, appName: string, secretName: string) =>
+              `The secret "${secretName}" was updated in app ${appName} in ${uiAccountDescription(accountId)}`,
           },
         },
       },
@@ -3367,7 +3367,14 @@ export const lib = {
           'Project template is required when projectTemplates is provided',
       },
     },
-    selectPublicAppPrompt: {
+    selectAppPrompt: {
+      selectAppId: '[--appId] Select an app:',
+      errors: {
+        noApps: 'No apps found for the given account',
+        invalidAppId: 'Invalid app id',
+      },
+    },
+    selectPublicAppForMigrationPrompt: {
       selectAppIdMigrate: (accountName: string) =>
         `[--appId] Choose an app under ${accountName} to migrate:`,
       selectAppIdClone: (accountName: string) =>

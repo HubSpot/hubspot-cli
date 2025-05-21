@@ -17,7 +17,7 @@ import {
   YargsCommandModule,
 } from '../../../types/Yargs';
 import { makeYargsBuilder } from '../../../lib/yargsUtils';
-import { promptUser } from '../../../lib/prompts/promptUtils';
+import { selectAppPrompt } from '../../../lib/prompts/selectAppPrompt';
 
 const command = 'update [name]';
 const describe = commands.app.subcommands.secret.subcommands.update.describe;
@@ -25,53 +25,46 @@ const describe = commands.app.subcommands.secret.subcommands.update.describe;
 type UpdateAppSecretArgs = CommonArgs &
   ConfigArgs &
   AccountArgs &
-  EnvironmentArgs & { name?: string; appId: number };
+  EnvironmentArgs & { name?: string; appId?: number };
 
 async function handler(
   args: ArgumentsCamelCase<UpdateAppSecretArgs>
 ): Promise<void> {
-  const { appId, name, derivedAccountId } = args;
-  let appSecretName = name;
-  let appSecretAppId = appId;
+  const { derivedAccountId } = args;
 
   trackCommandUsage('app-secret-update', {}, derivedAccountId);
 
+  const appSecretApp = await selectAppPrompt(derivedAccountId, args.appId);
+
+  let appSecretName = args.name;
+
+  if (!appSecretName) {
+    const { secretName: name } = await secretNamePrompt();
+    appSecretName = name;
+  }
+
+  const { secretValue } = await secretValuePrompt();
+
   try {
-    const { appId: appIdPromptValue } = await promptUser({
-      name: 'appId',
-      message: commands.app.subcommands.secret.subcommands.update.appIdPrompt,
-      type: 'number',
-      when: !appSecretAppId,
-    });
-
-    if (appIdPromptValue) {
-      appSecretAppId = appIdPromptValue;
-    }
-
-    if (!appSecretName) {
-      const { secretName: name } = await secretNamePrompt();
-      appSecretName = name;
-    }
-
-    const { secretValue } = await secretValuePrompt();
-
     await updateAppSecret(
       derivedAccountId,
-      appSecretAppId,
+      appSecretApp.id,
       appSecretName,
       secretValue
     );
 
     logger.success(
       commands.app.subcommands.secret.subcommands.update.success(
-        appSecretName,
-        derivedAccountId
+        derivedAccountId,
+        appSecretApp.name,
+        appSecretName
       )
     );
   } catch (err) {
     logError(err);
     process.exit(EXIT_CODES.ERROR);
   }
+
   process.exit(EXIT_CODES.SUCCESS);
 }
 

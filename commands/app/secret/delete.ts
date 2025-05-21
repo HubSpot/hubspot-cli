@@ -14,7 +14,7 @@ import {
   YargsCommandModule,
 } from '../../../types/Yargs';
 import { makeYargsBuilder } from '../../../lib/yargsUtils';
-import { promptUser } from '../../../lib/prompts/promptUtils';
+import { selectAppPrompt } from '../../../lib/prompts/selectAppPrompt';
 
 const command = 'delete [name]';
 const describe = commands.app.subcommands.secret.subcommands.delete.describe;
@@ -22,46 +22,39 @@ const describe = commands.app.subcommands.secret.subcommands.delete.describe;
 type DeleteAppSecretArgs = CommonArgs &
   ConfigArgs &
   AccountArgs &
-  EnvironmentArgs & { name?: string; appId: number };
+  EnvironmentArgs & { name?: string; appId?: number };
 
 async function handler(
   args: ArgumentsCamelCase<DeleteAppSecretArgs>
 ): Promise<void> {
-  const { appId, name, derivedAccountId } = args;
-  let appSecretName = name;
-  let appSecretAppId = appId;
+  const { derivedAccountId } = args;
 
   trackCommandUsage('app-secret-delete', {}, derivedAccountId);
 
+  const appSecretApp = await selectAppPrompt(derivedAccountId, args.appId);
+
+  let appSecretName = args.name;
+
+  if (!appSecretName) {
+    const { secretName: name } = await secretNamePrompt();
+    appSecretName = name;
+  }
+
   try {
-    const { appId: appIdPromptValue } = await promptUser({
-      name: 'appId',
-      message: commands.app.subcommands.secret.subcommands.delete.appIdPrompt,
-      type: 'number',
-      when: !appSecretAppId,
-    });
-
-    if (appIdPromptValue) {
-      appSecretAppId = appIdPromptValue;
-    }
-
-    if (!appSecretName) {
-      const { secretName: name } = await secretNamePrompt();
-      appSecretName = name;
-    }
-
-    await deleteAppSecret(derivedAccountId, appSecretAppId, appSecretName);
+    await deleteAppSecret(derivedAccountId, appSecretApp.id, appSecretName);
 
     logger.success(
       commands.app.subcommands.secret.subcommands.delete.success(
-        appSecretName,
-        derivedAccountId
+        derivedAccountId,
+        appSecretApp.name,
+        appSecretName
       )
     );
   } catch (err) {
     logError(err);
     process.exit(EXIT_CODES.ERROR);
   }
+
   process.exit(EXIT_CODES.SUCCESS);
 }
 

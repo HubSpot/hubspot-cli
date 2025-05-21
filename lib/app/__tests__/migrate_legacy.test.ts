@@ -12,7 +12,7 @@ import {
   isAppDeveloperAccount as _isAppDeveloperAccount,
   isUnifiedAccount as _isUnifiedAccount,
 } from '../../accountTypes';
-import { selectPublicAppPrompt as _selectPublicAppPrompt } from '../../prompts/selectPublicAppPrompt';
+import { selectPublicAppForMigrationPrompt as _selectPublicAppForMigrationPrompt } from '../../prompts/selectPublicAppForMigrationPrompt';
 import { createProjectPrompt as _createProjectPrompt } from '../../prompts/createProjectPrompt';
 import { ensureProjectExists as _ensureProjectExists } from '../../projects/ensureProjectExists';
 import { poll as _poll } from '../../polling';
@@ -29,7 +29,7 @@ jest.mock('@hubspot/local-dev-lib/archive');
 jest.mock('../../prompts/promptUtils');
 jest.mock('../../errorHandlers');
 jest.mock('../../accountTypes');
-jest.mock('../../prompts/selectPublicAppPrompt');
+jest.mock('../../prompts/selectPublicAppForMigrationPrompt');
 jest.mock('../../prompts/createProjectPrompt');
 jest.mock('../../projects/ensureProjectExists');
 jest.mock('../../usageTracking');
@@ -45,9 +45,10 @@ const isUnifiedAccount = _isUnifiedAccount as jest.MockedFunction<
   typeof _isUnifiedAccount
 >;
 
-const selectPublicAppPrompt = _selectPublicAppPrompt as jest.MockedFunction<
-  typeof _selectPublicAppPrompt
->;
+const selectPublicAppForMigrationPrompt =
+  _selectPublicAppForMigrationPrompt as jest.MockedFunction<
+    typeof _selectPublicAppForMigrationPrompt
+  >;
 
 const createProjectPrompt = _createProjectPrompt as jest.MockedFunction<
   typeof _createProjectPrompt
@@ -94,7 +95,7 @@ describe('migrateApp2023_2', () => {
   beforeEach(() => {
     // @ts-expect-error function mismatch
     jest.spyOn(process, 'exit').mockImplementation(() => {});
-    selectPublicAppPrompt.mockResolvedValue({
+    selectPublicAppForMigrationPrompt.mockResolvedValue({
       appId,
     });
 
@@ -158,7 +159,7 @@ describe('migrateApp2023_2', () => {
       mockAccountConfig
     );
 
-    expect(selectPublicAppPrompt).toHaveBeenCalled();
+    expect(selectPublicAppForMigrationPrompt).toHaveBeenCalled();
     expect(fetchPublicAppMetadata).toHaveBeenCalledWith(
       appId,
       mockDerivedAccountId

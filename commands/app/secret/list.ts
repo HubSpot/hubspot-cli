@@ -13,7 +13,7 @@ import {
   YargsCommandModule,
 } from '../../../types/Yargs';
 import { makeYargsBuilder } from '../../../lib/yargsUtils';
-import { promptUser } from '../../../lib/prompts/promptUtils';
+import { selectAppPrompt } from '../../../lib/prompts/selectAppPrompt';
 
 const command = 'list';
 const describe = commands.app.subcommands.secret.subcommands.list.describe;
@@ -26,35 +26,39 @@ type ListAppSecretArgs = CommonArgs &
 async function handler(
   args: ArgumentsCamelCase<ListAppSecretArgs>
 ): Promise<void> {
-  const { appId, derivedAccountId } = args;
-  let appSecretAppId = appId;
+  const { derivedAccountId } = args;
 
   trackCommandUsage('app-secret-list', {}, derivedAccountId);
 
+  const appSecretApp = await selectAppPrompt(derivedAccountId, args.appId);
+
   try {
-    const { appId: appIdPromptValue } = await promptUser({
-      name: 'appId',
-      message: commands.app.subcommands.secret.subcommands.list.appIdPrompt,
-      type: 'number',
-      when: !appSecretAppId,
-    });
+    const { data: secrets } = await fetchAppSecrets(
+      derivedAccountId,
+      appSecretApp.id
+    );
 
-    if (appIdPromptValue) {
-      appSecretAppId = appIdPromptValue;
+    if (secrets.results.length === 0) {
+      logger.log(
+        commands.app.subcommands.secret.subcommands.list.errors.noSecrets
+      );
+    } else {
+      logger.success(
+        commands.app.subcommands.secret.subcommands.list.success(
+          derivedAccountId,
+          appSecretApp.name
+        )
+      );
+
+      secrets.results.forEach(secret => {
+        logger.log(`- ${secret}`);
+      });
     }
-
-    if (!appSecretAppId) {
-      logger.error(commands.app.subcommands.secret.subcommands.list.error);
-      process.exit(EXIT_CODES.ERROR);
-    }
-
-    const secrets = await fetchAppSecrets(derivedAccountId, appSecretAppId);
-
-    logger.success('yay: ', secrets);
   } catch (err) {
     logError(err);
     process.exit(EXIT_CODES.ERROR);
   }
+
   process.exit(EXIT_CODES.SUCCESS);
 }
 
