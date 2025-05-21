@@ -23,9 +23,11 @@ const describe = undefined; // uiBetaTag(i18n(`commands.project.subcommands.migr
 
 export function handlerGenerator(
   commandTrackingName: string
-): (options: ArgumentsCamelCase<MigrateAppArgs>) => Promise<void> {
-  return async function handler(options: ArgumentsCamelCase<MigrateAppArgs>) {
-    const { derivedAccountId, platformVersion, unstable } = options;
+): (args: ArgumentsCamelCase<MigrateAppArgs>) => Promise<void> {
+  return async function handler(
+    args: ArgumentsCamelCase<MigrateAppArgs>
+  ): Promise<void> {
+    const { derivedAccountId, platformVersion, unstable } = args;
     await trackCommandUsage(commandTrackingName, {}, derivedAccountId);
     const accountConfig = getAccountConfig(derivedAccountId);
 
@@ -63,13 +65,13 @@ export function handlerGenerator(
           return process.exit(EXIT_CODES.ERROR);
         }
 
-        options.platformVersion = unstable
+        args.platformVersion = unstable
           ? PLATFORM_VERSIONS.unstable
           : platformVersion;
 
-        await migrateApp2025_2(derivedAccountId, options);
+        await migrateApp2025_2(derivedAccountId, args);
       } else {
-        await migrateApp2023_2(derivedAccountId, options, accountConfig);
+        await migrateApp2023_2(derivedAccountId, args, accountConfig);
       }
     } catch (error) {
       if (
@@ -99,7 +101,7 @@ export function handlerGenerator(
   };
 }
 
-export const handler = handlerGenerator('app-migrate');
+const handler = handlerGenerator('app-migrate');
 
 function appMigrateBuilder(yargs: Argv): Argv<MigrateAppArgs> {
   yargs.options({

@@ -4,7 +4,7 @@ import {
   addAccountOptions,
   addUseEnvironmentOptions,
 } from '../../lib/commonOpts';
-import * as listCommand from '../list';
+import listCommand from '../list';
 
 jest.mock('yargs');
 jest.mock('../../lib/commonOpts');
@@ -19,7 +19,7 @@ const exampleSpy = jest
 describe('commands/list', () => {
   describe('command', () => {
     it('should have the correct command structure', () => {
-      expect(listCommand.command).toEqual('list [path]');
+      expect(listCommand.command).toEqual(['list [path]', 'ls [path]']);
     });
   });
 

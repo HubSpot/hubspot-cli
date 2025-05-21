@@ -10,17 +10,18 @@ import {
 import { trackCommandUsage } from '../../lib/usageTracking';
 import { i18n } from '../../lib/lang';
 import { selectAccountFromConfig } from '../../lib/prompts/accountsPrompt';
-import { CommonArgs } from '../../types/Yargs';
+import { CommonArgs, YargsCommandModule } from '../../types/Yargs';
 import { uiCommandReference } from '../../lib/ui';
+import { makeYargsBuilder } from '../../lib/yargsUtils';
 
-export const command = 'use [account]';
-export const describe = i18n('commands.account.subcommands.use.describe');
+const command = 'use [account]';
+const describe = i18n('commands.account.subcommands.use.describe');
 
-interface AccountUseArgs extends CommonArgs {
+type AccountUseArgs = CommonArgs & {
   account?: string;
-}
+};
 
-export async function handler(
+async function handler(
   args: ArgumentsCamelCase<AccountUseArgs>
 ): Promise<void> {
   let newDefaultAccount = args.account;
@@ -69,7 +70,7 @@ export async function handler(
   );
 }
 
-export function builder(yargs: Argv): Argv<AccountUseArgs> {
+function accountUseBuilder(yargs: Argv): Argv<AccountUseArgs> {
   yargs.positional('account', {
     describe: i18n('commands.account.subcommands.use.options.account.describe'),
     type: 'string',
@@ -92,3 +93,21 @@ export function builder(yargs: Argv): Argv<AccountUseArgs> {
 
   return yargs as Argv<AccountUseArgs>;
 }
+
+const builder = makeYargsBuilder<AccountUseArgs>(
+  accountUseBuilder,
+  command,
+  describe,
+  {
+    useGlobalOptions: true,
+  }
+);
+
+const accountUseCommand: YargsCommandModule<unknown, AccountUseArgs> = {
+  command,
+  describe,
+  handler,
+  builder,
+};
+
+export default accountUseCommand;

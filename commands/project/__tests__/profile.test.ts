@@ -1,14 +1,12 @@
 import yargs, { Argv } from 'yargs';
-import preview from '../theme/preview';
-import generateSelectors from '../theme/generate-selectors';
-import marketplaceValidate from '../theme/marketplace-validate';
-import themeCommands from '../theme';
+import add from '../profile/add';
+import remove from '../profile/remove';
+import profileCommand from '../profile';
 
 jest.mock('yargs');
-jest.mock('../theme/preview');
-jest.mock('../theme/generate-selectors');
-jest.mock('../theme/marketplace-validate');
-jest.mock('../../lib/commonOpts');
+jest.mock('../profile/add');
+jest.mock('../profile/remove');
+jest.mock('../../../lib/commonOpts');
 
 const commandSpy = jest
   .spyOn(yargs as Argv, 'command')
@@ -17,41 +15,37 @@ const demandCommandSpy = jest
   .spyOn(yargs as Argv, 'demandCommand')
   .mockReturnValue(yargs as Argv);
 
-describe('commands/theme', () => {
+describe('commands/project', () => {
   describe('command', () => {
     it('should have the correct command structure', () => {
-      expect(themeCommands.command).toEqual(['theme', 'themes']);
+      expect(profileCommand.command).toEqual(['profile', 'profiles']);
     });
   });
 
   describe('describe', () => {
-    it('should provide a description', () => {
-      expect(themeCommands.describe).toBeDefined();
+    it('should not provide a description', () => {
+      expect(profileCommand.describe).not.toBeDefined();
     });
   });
 
   describe('builder', () => {
-    beforeEach(() => {
-      commandSpy.mockClear();
-      demandCommandSpy.mockClear();
-    });
-
-    const subcommands = [preview, generateSelectors, marketplaceValidate];
+    const subcommands = [add, remove];
 
     it('should demand the command takes one positional argument', () => {
-      themeCommands.builder(yargs as Argv);
+      profileCommand.builder(yargs as Argv);
 
       expect(demandCommandSpy).toHaveBeenCalledTimes(1);
       expect(demandCommandSpy).toHaveBeenCalledWith(1, '');
     });
 
     it('should add the correct number of sub commands', () => {
-      themeCommands.builder(yargs as Argv);
+      profileCommand.builder(yargs as Argv);
       expect(commandSpy).toHaveBeenCalledTimes(subcommands.length);
     });
 
     it.each(subcommands)('should attach the %s subcommand', module => {
-      themeCommands.builder(yargs as Argv);
+      profileCommand.builder(yargs as Argv);
+      expect(module).toBeDefined();
       expect(commandSpy).toHaveBeenCalledWith(module);
     });
   });

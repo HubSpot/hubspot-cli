@@ -8,14 +8,7 @@ import { getCwd, convertToUnixPath } from '@hubspot/local-dev-lib/path';
 import { logger } from '@hubspot/local-dev-lib/logger';
 import { validateSrcAndDestPaths } from '@hubspot/local-dev-lib/cms/modules';
 import { shouldIgnoreFile } from '@hubspot/local-dev-lib/ignoreRules';
-
 import { ApiErrorContext, logError } from '../../lib/errorHandlers/index';
-import {
-  addConfigOptions,
-  addGlobalOptions,
-  addAccountOptions,
-  addUseEnvironmentOptions,
-} from '../../lib/commonOpts';
 import { trackCommandUsage } from '../../lib/usageTracking';
 import { i18n } from '../../lib/lang';
 import { EXIT_CODES } from '../../lib/enums/exitCodes';
@@ -24,20 +17,22 @@ import {
   CommonArgs,
   ConfigArgs,
   EnvironmentArgs,
+  YargsCommandModule,
 } from '../../types/Yargs';
+import { makeYargsBuilder } from '../../lib/yargsUtils';
 
-export const command = 'upload <src> <dest>';
-export const describe = i18n(
-  `commands.filemanager.subcommands.upload.describe`
-);
+const command = 'upload <src> <dest>';
+const describe = i18n(`commands.filemanager.subcommands.upload.describe`);
 
-type CombinedArgs = CommonArgs & ConfigArgs & AccountArgs & EnvironmentArgs;
-type FileManagerUploadArgs = CombinedArgs & {
-  src: string;
-  dest: string;
-};
+type FileManagerUploadArgs = CommonArgs &
+  ConfigArgs &
+  AccountArgs &
+  EnvironmentArgs & {
+    src: string;
+    dest: string;
+  };
 
-export async function handler(
+async function handler(
   args: ArgumentsCamelCase<FileManagerUploadArgs>
 ): Promise<void> {
   const { src, dest, derivedAccountId } = args;
@@ -152,12 +147,7 @@ export async function handler(
   }
 }
 
-export function builder(yargs: Argv): Argv<FileManagerUploadArgs> {
-  addGlobalOptions(yargs);
-  addConfigOptions(yargs);
-  addAccountOptions(yargs);
-  addUseEnvironmentOptions(yargs);
-
+function fileManagerUploadBuilder(yargs: Argv): Argv<FileManagerUploadArgs> {
   yargs.positional('src', {
     describe: i18n(
       `commands.filemanager.subcommands.upload.positionals.src.describe`
@@ -173,3 +163,27 @@ export function builder(yargs: Argv): Argv<FileManagerUploadArgs> {
 
   return yargs as Argv<FileManagerUploadArgs>;
 }
+
+const builder = makeYargsBuilder<FileManagerUploadArgs>(
+  fileManagerUploadBuilder,
+  command,
+  describe,
+  {
+    useGlobalOptions: true,
+    useConfigOptions: true,
+    useAccountOptions: true,
+    useEnvironmentOptions: true,
+  }
+);
+
+const fileManagerUploadCommand: YargsCommandModule<
+  unknown,
+  FileManagerUploadArgs
+> = {
+  command,
+  describe,
+  handler,
+  builder,
+};
+
+export default fileManagerUploadCommand;

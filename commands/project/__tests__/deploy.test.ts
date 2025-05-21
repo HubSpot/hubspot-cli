@@ -3,6 +3,7 @@ import yargs, { Argv, ArgumentsCamelCase } from 'yargs';
 import chalk from 'chalk';
 import * as configUtils from '@hubspot/local-dev-lib/config';
 import { logger } from '@hubspot/local-dev-lib/logger';
+import { Project } from '@hubspot/local-dev-lib/types/Project';
 import * as projectApiUtils from '@hubspot/local-dev-lib/api/projects';
 import * as ui from '../../../lib/ui';
 import {
@@ -63,10 +64,15 @@ const exampleSpy = jest
   .spyOn(yargs as Argv, 'example')
   .mockReturnValue(yargs as Argv);
 
+const conflictsSpy = jest
+  .spyOn(yargs as Argv, 'conflicts')
+  .mockReturnValue(yargs as Argv);
+
 describe('commands/project/deploy', () => {
   const projectFlag = 'project';
   const buildFlag = 'build';
   const buildAliases = ['build-id'];
+  const profileFlag = 'profile';
 
   describe('command', () => {
     it('should have the correct command structure', () => {
@@ -88,12 +94,21 @@ describe('commands/project/deploy', () => {
     it('should support the correct options', () => {
       projectDeployCommand.builder(yargs as Argv);
 
+      expect(conflictsSpy).toHaveBeenCalledTimes(2);
+      expect(conflictsSpy).toHaveBeenNthCalledWith(1, profileFlag, projectFlag);
+      expect(conflictsSpy).toHaveBeenNthCalledWith(2, profileFlag, 'account');
+
       expect(optionsSpy).toHaveBeenCalledTimes(1);
       expect(optionsSpy).toHaveBeenCalledWith({
         [projectFlag]: expect.objectContaining({ type: 'string' }),
         [buildFlag]: expect.objectContaining({
           alias: buildAliases,
           type: 'number',
+        }),
+        [profileFlag]: expect.objectContaining({
+          type: 'string',
+          alias: ['p'],
+          hidden: true,
         }),
       });
 
@@ -147,12 +162,10 @@ describe('commands/project/deploy', () => {
         return text;
       });
       getAccountConfigSpy.mockReturnValue({ accountType, env: 'qa' });
-      fetchProjectSpy.mockResolvedValue(
-        mockHubSpotHttpResponse(exampleProject)
+      fetchProjectSpy.mockReturnValue(
+        mockHubSpotHttpResponse<Project>(exampleProject)
       );
-      deployProjectSpy.mockResolvedValue(
-        mockHubSpotHttpResponse(deployDetails)
-      );
+      deployProjectSpy.mockReturnValue(mockHubSpotHttpResponse(deployDetails));
 
       // Spy on process.exit so our tests don't close when it's called
       // @ts-expect-error Doesn't match the actual signature because then the linter complains about unused variables
@@ -235,7 +248,7 @@ describe('commands/project/deploy', () => {
     });
 
     it('should log an error and exit when latest build is not defined', async () => {
-      fetchProjectSpy.mockResolvedValue(mockHubSpotHttpResponse({}));
+      fetchProjectSpy.mockReturnValue(mockHubSpotHttpResponse({}));
       await projectDeployCommand.handler(args);
       expect(logger.error).toHaveBeenCalledTimes(1);
       expect(logger.error).toHaveBeenCalledWith(

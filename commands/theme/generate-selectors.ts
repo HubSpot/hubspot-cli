@@ -12,7 +12,8 @@ import {
   getMaxFieldsDepth,
 } from '../../lib/generateSelectors';
 import { EXIT_CODES } from '../../lib/enums/exitCodes';
-import { CommonArgs } from '../../types/Yargs';
+import { CommonArgs, YargsCommandModule } from '../../types/Yargs';
+import { makeYargsBuilder } from '../../lib/yargsUtils';
 
 const HUBL_EXPRESSION_REGEX = new RegExp(/{%\s*(.*)\s*%}/, 'g');
 const HUBL_VARIABLE_NAME_REGEX = new RegExp(/{%\s*set\s*(\w*)/, 'i');
@@ -25,14 +26,12 @@ const CSS_SELECTORS_REGEX = new RegExp(/([\s\w:.,\0-[\]]*){/, 'i');
 const CSS_EXPRESSION_REGEX = new RegExp(/(?!\s)([^}])*(?![.#\s,>])[^}]*}/, 'g');
 const THEME_PATH_REGEX = new RegExp(/=\s*.*(theme\.(\w|\.)*)/, 'i');
 
-export const command = 'generate-selectors <path>';
-export const describe = i18n(
-  'commands.theme.subcommands.generateSelectors.describe'
-);
+const command = 'generate-selectors <path>';
+const describe = i18n('commands.theme.subcommands.generateSelectors.describe');
 
 type ThemeSelectorArgs = CommonArgs & { path: string };
 
-export async function handler(
+async function handler(
   args: ArgumentsCamelCase<ThemeSelectorArgs>
 ): Promise<void> {
   const { path } = args;
@@ -225,7 +224,7 @@ export async function handler(
   );
 }
 
-export function builder(yargs: Argv): Argv<ThemeSelectorArgs> {
+function themeSelectorBuilder(yargs: Argv): Argv<ThemeSelectorArgs> {
   yargs.positional('path', {
     describe: i18n(
       'commands.theme.subcommands.generateSelectors.positionals.path.describe'
@@ -236,3 +235,21 @@ export function builder(yargs: Argv): Argv<ThemeSelectorArgs> {
 
   return yargs as Argv<ThemeSelectorArgs>;
 }
+
+const builder = makeYargsBuilder<ThemeSelectorArgs>(
+  themeSelectorBuilder,
+  command,
+  describe,
+  {
+    useGlobalOptions: true,
+  }
+);
+
+const themeSelectorsCommand: YargsCommandModule<unknown, ThemeSelectorArgs> = {
+  command,
+  describe,
+  handler,
+  builder,
+};
+
+export default themeSelectorsCommand;

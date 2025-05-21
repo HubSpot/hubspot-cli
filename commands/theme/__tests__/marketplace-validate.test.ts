@@ -4,20 +4,16 @@ import {
   addConfigOptions,
   addUseEnvironmentOptions,
 } from '../../../lib/commonOpts';
-import * as marketplaceValidateCommand from '../marketplace-validate';
+import marketplaceValidateCommand from '../marketplace-validate';
 
 jest.mock('yargs');
 jest.mock('../../../lib/commonOpts');
 
+const positionalSpy = jest
+  .spyOn(yargs as Argv, 'positional')
+  .mockReturnValue(yargs as Argv);
+
 describe('commands/theme/marketplace-validate', () => {
-  let yargsMock = yargs as Argv;
-
-  beforeEach(() => {
-    yargsMock = {
-      positional: jest.fn().mockReturnThis(),
-    } as unknown as Argv;
-  });
-
   describe('command', () => {
     it('should have the correct command structure', () => {
       expect(marketplaceValidateCommand.command).toEqual(
@@ -34,23 +30,23 @@ describe('commands/theme/marketplace-validate', () => {
 
   describe('builder', () => {
     it('should support the correct options', () => {
-      marketplaceValidateCommand.builder(yargsMock);
+      marketplaceValidateCommand.builder(yargs as Argv);
 
-      expect(yargsMock.positional).toHaveBeenCalledTimes(1);
-      expect(yargsMock.positional).toHaveBeenCalledWith('path', {
+      expect(positionalSpy).toHaveBeenCalledTimes(1);
+      expect(positionalSpy).toHaveBeenCalledWith('path', {
         describe: expect.any(String),
         required: true,
         type: 'string',
       });
 
       expect(addAccountOptions).toHaveBeenCalledTimes(1);
-      expect(addAccountOptions).toHaveBeenCalledWith(yargsMock);
+      expect(addAccountOptions).toHaveBeenCalledWith(yargs);
 
       expect(addConfigOptions).toHaveBeenCalledTimes(1);
-      expect(addConfigOptions).toHaveBeenCalledWith(yargsMock);
+      expect(addConfigOptions).toHaveBeenCalledWith(yargs);
 
       expect(addUseEnvironmentOptions).toHaveBeenCalledTimes(1);
-      expect(addUseEnvironmentOptions).toHaveBeenCalledWith(yargsMock);
+      expect(addUseEnvironmentOptions).toHaveBeenCalledWith(yargs);
     });
   });
 });

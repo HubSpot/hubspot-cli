@@ -8,27 +8,23 @@ import {
 } from '@hubspot/local-dev-lib/config';
 import { DEFAULT_ACCOUNT_OVERRIDE_FILE_NAME } from '@hubspot/local-dev-lib/constants/config';
 import { getGlobalConfig } from '@hubspot/local-dev-lib/config/migrate';
-
 import { i18n } from '../../lib/lang';
 import { promptUser } from '../../lib/prompts/promptUtils';
 import { trackCommandMetadataUsage } from '../../lib/usageTracking';
 import { EXIT_CODES } from '../../lib/enums/exitCodes';
 import { logError } from '../../lib/errorHandlers/index';
-import { CommonArgs } from '../../types/Yargs';
+import { CommonArgs, YargsCommandModule } from '../../types/Yargs';
 import { uiCommandReference } from '../../lib/ui';
+import { makeYargsBuilder } from '../../lib/yargsUtils';
 
-export const describe = i18n(
-  'commands.account.subcommands.removeOverride.describe',
-  {
-    overrideFile: DEFAULT_ACCOUNT_OVERRIDE_FILE_NAME,
-  }
-);
-
-export const command = 'remove-override';
+const command = 'remove-override';
+const describe = i18n('commands.account.subcommands.removeOverride.describe', {
+  overrideFile: DEFAULT_ACCOUNT_OVERRIDE_FILE_NAME,
+});
 
 type RemoveOverrideArgs = CommonArgs & { force?: boolean };
 
-export async function handler(
+async function handler(
   args: ArgumentsCamelCase<RemoveOverrideArgs>
 ): Promise<void> {
   const { force } = args;
@@ -112,7 +108,7 @@ export async function handler(
   }
 }
 
-export function builder(yargs: Argv): Argv<RemoveOverrideArgs> {
+function accountRemoveOverrideBuilder(yargs: Argv): Argv<RemoveOverrideArgs> {
   yargs.options('force', {
     describe: i18n(
       'commands.account.subcommands.removeOverride.options.force.describe'
@@ -122,3 +118,24 @@ export function builder(yargs: Argv): Argv<RemoveOverrideArgs> {
 
   return yargs as Argv<RemoveOverrideArgs>;
 }
+
+const builder = makeYargsBuilder<RemoveOverrideArgs>(
+  accountRemoveOverrideBuilder,
+  command,
+  describe,
+  {
+    useGlobalOptions: true,
+  }
+);
+
+const accountRemoveOverrideCommand: YargsCommandModule<
+  unknown,
+  RemoveOverrideArgs
+> = {
+  command,
+  describe,
+  handler,
+  builder,
+};
+
+export default accountRemoveOverrideCommand;

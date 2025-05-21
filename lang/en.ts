@@ -907,6 +907,90 @@ export const commands = {
     selectLink: 'Select a link to open',
   },
   project: {
+    profile: {
+      describe: 'Commands for managing project profiles',
+      verboseDescribe: `Commands for managing project profiles\n\nProfiles are stored at the root of your project's source directory and they make configuration dynamic. Use them to couple specialized configurations of your project to specific HubSpot accounts.\n\nRun ${uiCommandReference('hs project profile add')} to get started!`,
+      add: {
+        describe: 'Add a new project profile',
+        verboseDescribe: `Add a new project profile\n\nProfiles enable you to reference variables in your component configuration files. Use the syntax ${chalk.bold('\${VARIABLE_NAME}')} to reference profile variables in your component configuration files. Then target the profile using the ${uiCommandReference('--profile')} flag when you upload your project.`,
+        example: 'Add a new project profile named hsprofile.qa.json',
+        logs: {
+          copyExistingProfile: (profileName: string) =>
+            `Found an existing profile. We can copy the variables from ${chalk.bold(
+              profileName
+            )} into your new profile.`,
+          copyExistingProfiles:
+            'Found existing project profiles. We can copy the variables from one of them into your new profile.',
+          profileAdded: (profileName: string) =>
+            `Project profile ${chalk.bold(profileName)} was successfully added`,
+        },
+        prompts: {
+          namePrompt: '[name] Enter a name for the new project profile: ',
+          emptyName: 'Profile name cannot be empty',
+          targetAccountPrompt:
+            '[target-account] Select a target account for this profile',
+          copyExistingProfilePrompt: 'Select a profile to copy variables from',
+          copyExistingProfilePromptEmpty: "Skip (don't copy any variables)",
+          invalidProfileName:
+            'Profile name cannot contain special characters or spaces',
+        },
+        errors: {
+          noProjectConfig:
+            'No project config found. Please run this command from a project directory.',
+          profileExists: (profileName: string) =>
+            `Profile ${chalk.bold(profileName)} already exists. Please choose a different name.`,
+          invalidTargetAccount: 'Target account is not configured in the CLI',
+          noAccountsConfigured: 'No accounts configured in the CLI',
+          failedToLoadProfile: (profileName: string) =>
+            `Unable to copy variables. Failed to load profile ${chalk.bold(profileName)}`,
+          failedToCreateProfile: 'Failed to create profile',
+        },
+        positionals: {
+          name: 'The name of the project profile',
+        },
+        options: {
+          targetAccount: 'The target account ID for this profile',
+        },
+      },
+      remove: {
+        describe: 'Remove an existing project profile',
+        example: 'Remove a project profile named hsprofile.qa.json',
+        logs: {
+          profileRemoved: (profileName: string) =>
+            `Project profile ${chalk.bold(profileName)} was successfully removed`,
+          removedProject: (accountId: number) =>
+            `Successfully removed the project from ${uiAccountDescription(
+              accountId
+            )}`,
+          didNotRemoveProject: (accountId: number) =>
+            `Did not remove the project from ${uiAccountDescription(
+              accountId
+            )}`,
+        },
+        debug: {
+          failedToLoadProfile: (profileName: string) =>
+            `Failed to load profile ${chalk.bold(profileName)}`,
+        },
+        prompts: {
+          removeProfilePrompt: 'Select a profile to remove from your project',
+          removeProjectPrompt: (accountId: number) =>
+            `Would you like to remove this project from ${uiAccountDescription(
+              accountId
+            )}?`,
+        },
+        errors: {
+          noProjectConfig:
+            'No project config found. Please run this command from a project directory.',
+          noProfileFound: (profileName: string) =>
+            `No profile with filename ${chalk.bold(profileName)} found in your project.`,
+          failedToRemoveProfile: (profileName: string) =>
+            `Unable to remove profile ${chalk.bold(profileName)}. Please try again.`,
+        },
+        positionals: {
+          name: 'The name of the project profile',
+        },
+      },
+    },
     dev: {
       describe: 'Start local dev for the current project.',
       logs: {
@@ -1346,23 +1430,12 @@ export const commands = {
       success: (projectName: string) => `Successfully opened "${projectName}"`,
     },
     feedback: {
-      describe: 'Leave feedback on HubSpot projects or file a bug report.',
-      feedbackType: {
-        prompt: 'What type of feedback would you like to leave?',
-        bug: '[--bug] Report a bug',
-        general:
-          "[--general] Tell us about your experience with HubSpot's developer tools",
-      },
-      openPrompt: 'Create a Github issue in your browser?',
-      success: (url: string) => `We opened ${url} in your browser.`,
-      options: {
-        bug: {
-          describe: 'Open Github issues in your browser to report a bug.',
-        },
-        general: {
-          describe: 'Open Github issues in your browser to give feedback.',
-        },
-      },
+      describe: 'Leave feedback or file a bug report.',
+      openPrompt: 'Open the feedback form in your browser?',
+      success: (url: string) =>
+        `We opened ${uiLink('the developer feedback form', url)} in your browser.`,
+      error: (url: string) =>
+        `Navigate to ${uiLink('the developer feedback form', url)} to leave feedback.`,
     },
     installDeps: {
       help: {
@@ -2834,6 +2907,32 @@ export const lib = {
         `To develop this project locally, run ${uiCommandReference(
           `hs auth --account=${parentAccountId}`
         )} to authenticate the App Developer Account ${parentAccountId} associated with ${accountIdentifier}.`,
+    },
+  },
+  projectProfiles: {
+    logs: {
+      usingProfile: (profileName: string) =>
+        `Using profile from ${chalk.bold(profileName)}`,
+      profileTargetAccount: (accountId: number) =>
+        `Targeting ${uiAccountDescription(accountId)}`,
+      profileVariables: 'Profile variables',
+    },
+    exitIfUsingProfiles: {
+      errors: {
+        noProfileSpecified: `This project is configured to use profiles, but no profile was specified. Target a profile using the ${uiCommandReference('--profile')} flag.`,
+      },
+    },
+    loadProfile: {
+      errors: {
+        noProjectConfig:
+          'No project config found. Please run this command from a project directory.',
+        profileNotFound: (profileName: string) =>
+          `Profile ${chalk.bold(profileName)} not found.`,
+        missingAccountId: (profileName: string) =>
+          `Profile ${chalk.bold(profileName)} is missing an account id.`,
+        failedToLoadProfile: (profileName: string) =>
+          `Failed to load profile ${chalk.bold(profileName)}.`,
+      },
     },
   },
   projects: {

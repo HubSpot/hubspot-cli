@@ -3,17 +3,17 @@ import { logger } from '@hubspot/local-dev-lib/logger';
 import { moveFile } from '@hubspot/local-dev-lib/api/fileMapper';
 import { isSpecifiedError } from '@hubspot/local-dev-lib/errors/index';
 import { logError, ApiErrorContext } from '../lib/errorHandlers/index';
-import {
-  addConfigOptions,
-  addAccountOptions,
-  addUseEnvironmentOptions,
-  addGlobalOptions,
-} from '../lib/commonOpts';
 import { trackCommandUsage } from '../lib/usageTracking';
 import { isPathFolder } from '../lib/filesystem';
 import { i18n } from '../lib/lang';
 import { uiBetaTag } from '../lib/ui';
-import { CommonArgs, ConfigArgs, EnvironmentArgs } from '../types/Yargs';
+import {
+  CommonArgs,
+  ConfigArgs,
+  EnvironmentArgs,
+  YargsCommandModule,
+} from '../types/Yargs';
+import { makeYargsBuilder } from '../lib/yargsUtils';
 
 function getCorrectedDestPath(srcPath: string, destPath: string): string {
   if (!isPathFolder(srcPath)) {
@@ -24,14 +24,14 @@ function getCorrectedDestPath(srcPath: string, destPath: string): string {
   return `${destPath}/${srcPath.split('/').pop()}`;
 }
 
-export const command = 'mv <srcPath> <destPath>';
-export const describe = uiBetaTag(i18n(`commands.mv.describe`), false);
+const command = 'mv <srcPath> <destPath>';
+const describe = uiBetaTag(i18n(`commands.mv.describe`), false);
 
 type MvArgs = CommonArgs &
   ConfigArgs &
   EnvironmentArgs & { srcPath: string; destPath: string };
 
-export async function handler(args: ArgumentsCamelCase<MvArgs>) {
+async function handler(args: ArgumentsCamelCase<MvArgs>) {
   const { srcPath, destPath, derivedAccountId } = args;
 
   trackCommandUsage('mv', undefined, derivedAccountId);
@@ -75,12 +75,7 @@ export async function handler(args: ArgumentsCamelCase<MvArgs>) {
   }
 }
 
-export function builder(yargs: Argv): Argv<MvArgs> {
-  addConfigOptions(yargs);
-  addAccountOptions(yargs);
-  addUseEnvironmentOptions(yargs);
-  addGlobalOptions(yargs);
-
+function cmsMvBuilder(yargs: Argv): Argv<MvArgs> {
   yargs.positional('srcPath', {
     describe: 'Remote hubspot path',
     type: 'string',
@@ -92,3 +87,22 @@ export function builder(yargs: Argv): Argv<MvArgs> {
 
   return yargs as Argv<MvArgs>;
 }
+
+const builder = makeYargsBuilder<MvArgs>(cmsMvBuilder, command, describe, {
+  useGlobalOptions: true,
+  useConfigOptions: true,
+  useAccountOptions: true,
+  useEnvironmentOptions: true,
+});
+
+const cmsMvCommand: YargsCommandModule<unknown, MvArgs> = {
+  command,
+  describe,
+  handler,
+  builder,
+};
+
+export default cmsMvCommand;
+
+// TODO Remove this legacy export once we've migrated all commands to TS
+module.exports = cmsMvCommand;

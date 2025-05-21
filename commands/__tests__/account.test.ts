@@ -1,13 +1,14 @@
 import yargs, { Argv } from 'yargs';
-import * as auth from '../account/auth';
-import * as list from '../account/list';
-import * as rename from '../account/rename';
-import * as use from '../account/use';
-import * as info from '../account/info';
-import * as remove from '../account/remove';
-import * as clean from '../account/clean';
-import * as createOverride from '../account/createOverride';
-import * as removeOverride from '../account/removeOverride';
+import auth from '../account/auth';
+import list from '../account/list';
+import rename from '../account/rename';
+import use from '../account/use';
+import info from '../account/info';
+import remove from '../account/remove';
+import clean from '../account/clean';
+import createOverride from '../account/createOverride';
+import removeOverride from '../account/removeOverride';
+import accountCommands from '../account';
 
 jest.mock('yargs');
 jest.mock('../account/auth');
@@ -27,9 +28,6 @@ const commandSpy = jest
 const demandCommandSpy = jest
   .spyOn(yargs as Argv, 'demandCommand')
   .mockReturnValue(yargs as Argv);
-
-// Import this last so mocks apply
-import * as accountCommands from '../account';
 
 describe('commands/account', () => {
   describe('command', () => {
