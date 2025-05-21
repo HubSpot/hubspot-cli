@@ -67,6 +67,7 @@
     "build": "ts-node ./scripts/build.ts",
     "lint": "eslint . && prettier --list-different './**/*.{ts,js,json}'",
     "list-all-commands": "yarn ts-node ./scripts/get-all-commands.ts",
+    "local-link": "yarn ts-node ./scripts/linking.ts",
     "prettier:write": "prettier --write './**/*.{ts,js,json}'",
     "test": "yarn node --experimental-vm-modules $(yarn bin jest)",
     "test-cli": "yarn build && yarn --cwd 'acceptance-tests' test-ci",
