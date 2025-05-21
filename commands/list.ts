@@ -1,11 +1,5 @@
 import { Argv, ArgumentsCamelCase } from 'yargs';
 import chalk from 'chalk';
-import {
-  addAccountOptions,
-  addConfigOptions,
-  addGlobalOptions,
-  addUseEnvironmentOptions,
-} from '../lib/commonOpts';
 import { trackCommandUsage } from '../lib/usageTracking';
 import { isPathFolder } from '../lib/filesystem';
 import { logger } from '@hubspot/local-dev-lib/logger';
@@ -19,8 +13,10 @@ import {
   CommonArgs,
   ConfigArgs,
   EnvironmentArgs,
+  YargsCommandModule,
 } from '../types/Yargs';
 import { FileMapperNode } from '@hubspot/local-dev-lib/types/Files';
+import { makeYargsBuilder } from '../lib/yargsUtils';
 
 function addColorToContents(fileOrFolder: string | FileMapperNode): string {
   if (!isPathFolder(fileOrFolder as string)) {
@@ -50,17 +46,15 @@ function sortContents(a: string, b: string): number {
   return a.localeCompare(b);
 }
 
-export const command = 'list [path]';
-export const describe = i18n(`commands.list.describe`);
+const command = ['list [path]', 'ls [path]'];
+const describe = i18n(`commands.list.describe`);
 
 type ListArgs = CommonArgs &
   ConfigArgs &
   EnvironmentArgs &
   AccountArgs & { path: string };
 
-export async function handler(
-  args: ArgumentsCamelCase<ListArgs>
-): Promise<void> {
+async function handler(args: ArgumentsCamelCase<ListArgs>): Promise<void> {
   const { path, derivedAccountId } = args;
   const directoryPath = path || '/';
   let contentsResp;
@@ -116,12 +110,7 @@ export async function handler(
   process.exit(EXIT_CODES.SUCCESS);
 }
 
-export function builder(yargs: Argv): Argv<ListArgs> {
-  addConfigOptions(yargs);
-  addAccountOptions(yargs);
-  addUseEnvironmentOptions(yargs);
-  addGlobalOptions(yargs);
-
+function cmsListBuilder(yargs: Argv): Argv<ListArgs> {
   yargs.positional('path', {
     describe: i18n(`commands.list.positionals.path.describe`),
     type: 'string',
@@ -130,3 +119,22 @@ export function builder(yargs: Argv): Argv<ListArgs> {
 
   return yargs as Argv<ListArgs>;
 }
+
+const builder = makeYargsBuilder<ListArgs>(cmsListBuilder, command, describe, {
+  useGlobalOptions: true,
+  useConfigOptions: true,
+  useAccountOptions: true,
+  useEnvironmentOptions: true,
+});
+
+const cmsListCommand: YargsCommandModule<unknown, ListArgs> = {
+  command,
+  describe,
+  handler,
+  builder,
+};
+
+export default cmsListCommand;
+
+// TODO Remove this legacy export once we've migrated all commands to TS
+module.exports = cmsListCommand;

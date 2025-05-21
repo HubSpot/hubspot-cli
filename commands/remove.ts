@@ -2,12 +2,6 @@ import { Argv, ArgumentsCamelCase } from 'yargs';
 import { deleteFile } from '@hubspot/local-dev-lib/api/fileMapper';
 import { logger } from '@hubspot/local-dev-lib/logger';
 import { logError, ApiErrorContext } from '../lib/errorHandlers/index';
-import {
-  addConfigOptions,
-  addAccountOptions,
-  addUseEnvironmentOptions,
-  addGlobalOptions,
-} from '../lib/commonOpts';
 import { trackCommandUsage } from '../lib/usageTracking';
 import { i18n } from '../lib/lang';
 import {
@@ -15,19 +9,19 @@ import {
   CommonArgs,
   ConfigArgs,
   EnvironmentArgs,
+  YargsCommandModule,
 } from '../types/Yargs';
+import { makeYargsBuilder } from '../lib/yargsUtils';
 
-export const command = 'remove <path>';
-export const describe = i18n(`commands.remove.describe`);
+const command = 'remove <path>';
+const describe = i18n(`commands.remove.describe`);
 
 type RemoveArgs = CommonArgs &
   ConfigArgs &
   EnvironmentArgs &
   AccountArgs & { path: string };
 
-export async function handler(
-  args: ArgumentsCamelCase<RemoveArgs>
-): Promise<void> {
+async function handler(args: ArgumentsCamelCase<RemoveArgs>): Promise<void> {
   const { path: hsPath, derivedAccountId } = args;
 
   trackCommandUsage('remove', undefined, derivedAccountId);
@@ -57,12 +51,7 @@ export async function handler(
   }
 }
 
-export function builder(yargs: Argv): Argv<RemoveArgs> {
-  addConfigOptions(yargs);
-  addAccountOptions(yargs);
-  addUseEnvironmentOptions(yargs);
-  addGlobalOptions(yargs);
-
+function cmsRemoveBuilder(yargs: Argv): Argv<RemoveArgs> {
   yargs.positional('path', {
     describe: i18n(`commands.remove.positionals.path.describe`),
     type: 'string',
@@ -70,3 +59,27 @@ export function builder(yargs: Argv): Argv<RemoveArgs> {
 
   return yargs as Argv<RemoveArgs>;
 }
+
+const builder = makeYargsBuilder<RemoveArgs>(
+  cmsRemoveBuilder,
+  command,
+  describe,
+  {
+    useGlobalOptions: true,
+    useConfigOptions: true,
+    useAccountOptions: true,
+    useEnvironmentOptions: true,
+  }
+);
+
+const cmsRemoveCommand: YargsCommandModule<unknown, RemoveArgs> = {
+  command,
+  describe,
+  handler,
+  builder,
+};
+
+export default cmsRemoveCommand;
+
+// TODO Remove this legacy export once we've migrated all commands to TS
+module.exports = cmsRemoveCommand;

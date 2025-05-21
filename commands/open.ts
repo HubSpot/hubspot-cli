@@ -1,10 +1,4 @@
 import { Argv, ArgumentsCamelCase } from 'yargs';
-import {
-  addAccountOptions,
-  addConfigOptions,
-  addUseEnvironmentOptions,
-  addGlobalOptions,
-} from '../lib/commonOpts';
 import { trackCommandUsage } from '../lib/usageTracking';
 import { logSiteLinks, getSiteLinksAsArray, openLink } from '../lib/links';
 import { promptUser } from '../lib/prompts/promptUtils';
@@ -15,7 +9,9 @@ import {
   ConfigArgs,
   EnvironmentArgs,
   AccountArgs,
+  YargsCommandModule,
 } from '../types/Yargs';
+import { makeYargsBuilder } from '../lib/yargsUtils';
 
 const separator = ' => ';
 
@@ -34,8 +30,8 @@ async function createListPrompt(accountId: number): Promise<{ open: string }> {
   ]);
 }
 
-export const command = 'open [shortcut]';
-export const describe = i18n('commands.open.describe');
+const command = 'open [shortcut]';
+const describe = i18n('commands.open.describe');
 
 type OpenArgs = CommonArgs &
   ConfigArgs &
@@ -45,9 +41,7 @@ type OpenArgs = CommonArgs &
     list?: boolean;
   };
 
-export async function handler(
-  args: ArgumentsCamelCase<OpenArgs>
-): Promise<void> {
+async function handler(args: ArgumentsCamelCase<OpenArgs>): Promise<void> {
   const { shortcut, list, derivedAccountId } = args;
 
   trackCommandUsage('open', undefined, derivedAccountId);
@@ -63,12 +57,7 @@ export async function handler(
   process.exit(EXIT_CODES.SUCCESS);
 }
 
-export function builder(yargs: Argv) {
-  addConfigOptions(yargs);
-  addAccountOptions(yargs);
-  addUseEnvironmentOptions(yargs);
-  addGlobalOptions(yargs);
-
+function openBuilder(yargs: Argv): Argv<OpenArgs> {
   yargs.positional('[shortcut]', {
     describe: i18n('commands.open.positionals.shortcut.describe'),
     type: 'string',
@@ -90,3 +79,22 @@ export function builder(yargs: Argv) {
 
   return yargs as Argv<OpenArgs>;
 }
+
+const builder = makeYargsBuilder<OpenArgs>(openBuilder, command, describe, {
+  useGlobalOptions: true,
+  useConfigOptions: true,
+  useAccountOptions: true,
+  useEnvironmentOptions: true,
+});
+
+const openCommand: YargsCommandModule<unknown, OpenArgs> = {
+  command,
+  describe,
+  handler,
+  builder,
+};
+
+export default openCommand;
+
+// TODO Remove this legacy export once we've migrated all commands to TS
+module.exports = openCommand;

@@ -122,10 +122,7 @@ const argv = yargs
   .command(secretCommands)
   .command(customObjectCommand)
   .command(functionCommands)
-  .command({
-    ...listCommand,
-    aliases: 'ls',
-  })
+  .command(listCommand)
   .command(openCommand)
   .command(mvCommand)
   .command(projectCommands)

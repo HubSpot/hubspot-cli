@@ -1,27 +1,28 @@
+import { ArgumentsCamelCase, Argv } from 'yargs';
+import path from 'path';
+import fs from 'fs';
 import {
   trackCommandMetadataUsage,
   trackCommandUsage,
 } from '../lib/usageTracking';
 import { logger } from '@hubspot/local-dev-lib/logger';
-import fs from 'fs';
 import { Doctor } from '../lib/doctor/Doctor';
 import { EXIT_CODES } from '../lib/enums/exitCodes';
-import path from 'path';
-import { ArgumentsCamelCase, BuilderCallback, Options } from 'yargs';
 import { getCwd } from '@hubspot/local-dev-lib/path';
-import { addGlobalOptions } from '../lib/commonOpts';
-const { i18n } = require('../lib/lang');
+import { CommonArgs, YargsCommandModule } from '../types/Yargs';
+import { makeYargsBuilder } from '../lib/yargsUtils';
+import { i18n } from '../lib/lang';
 
-export interface DoctorOptions {
-  'output-dir'?: string;
-}
+export type DoctorArgs = CommonArgs & {
+  outputDir?: string;
+};
 
-export const command = 'doctor';
-export const describe = i18n(`commands.doctor.describe`);
+const command = 'doctor';
+const describe = i18n(`commands.doctor.describe`);
 
-export const handler = async ({
-  outputDir,
-}: ArgumentsCamelCase<DoctorOptions>) => {
+const handler = async (args: ArgumentsCamelCase<DoctorArgs>) => {
+  const { outputDir } = args;
+
   const doctor = new Doctor();
 
   trackCommandUsage(command, undefined, doctor.accountId || undefined);
@@ -47,12 +48,14 @@ export const handler = async ({
     return process.exit(EXIT_CODES.SUCCESS);
   }
 
-  if (!path.isAbsolute(outputDir)) {
-    outputDir = path.join(getCwd(), outputDir);
+  let outputDirPath = outputDir;
+
+  if (!path.isAbsolute(outputDirPath)) {
+    outputDirPath = path.join(getCwd(), outputDirPath);
   }
 
   const outputFile = path.join(
-    outputDir,
+    outputDirPath,
     `hubspot-doctor-${new Date().toISOString()}.json`
   );
 
@@ -65,7 +68,7 @@ export const handler = async ({
     logger.error(
       i18n(`commands.doctor.errors.unableToWriteOutputFile`, {
         file: outputFile,
-        errorMessage: e instanceof Error ? e.message : e,
+        errorMessage: e instanceof Error ? e.message : (e as string),
       })
     );
     return process.exit(EXIT_CODES.ERROR);
@@ -74,10 +77,27 @@ export const handler = async ({
   return process.exit(EXIT_CODES.SUCCESS);
 };
 
-export const builder: BuilderCallback<DoctorOptions, DoctorOptions> = yargs => {
-  yargs.option<keyof DoctorOptions, Options>('output-dir', {
+function doctorBuilder(yargs: Argv): Argv<DoctorArgs> {
+  yargs.option('output-dir', {
     describe: i18n(`commands.doctor.options.outputDir`),
     type: 'string',
   });
-  addGlobalOptions(yargs);
+
+  return yargs as Argv<DoctorArgs>;
+}
+
+const builder = makeYargsBuilder<DoctorArgs>(doctorBuilder, command, describe, {
+  useGlobalOptions: true,
+});
+
+const doctorCommand: YargsCommandModule<unknown, DoctorArgs> = {
+  command,
+  describe,
+  handler,
+  builder,
 };
+
+export default doctorCommand;
+
+// TODO Remove this after cli.ts is ported to TS
+module.exports = doctorCommand;

@@ -1,6 +1,6 @@
 import yargs, { Argv } from 'yargs';
 import * as commonOpts from '../../lib/commonOpts';
-import * as mvCommand from '../mv';
+import mvCommand from '../mv';
 
 jest.mock('yargs');
 jest.mock('../../lib/commonOpts');
