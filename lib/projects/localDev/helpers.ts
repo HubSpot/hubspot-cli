@@ -163,7 +163,7 @@ export function checkIfAccountFlagIsSupported(
 // If the user isn't using the recommended account type, prompt them to use or create one
 export async function suggestRecommendedNestedAccount(
   accounts: CLIAccount[],
-  accountConfig: CLIAccount,
+  parentAccountId: number,
   hasPublicApps: boolean
 ): Promise<ProjectDevTargetAccountPromptResponse> {
   uiLogger.log('');
@@ -183,7 +183,7 @@ export async function suggestRecommendedNestedAccount(
     ? selectDeveloperTestTargetAccountPrompt
     : selectSandboxTargetAccountPrompt;
 
-  return targetAccountPrompt(accounts, accountConfig);
+  return targetAccountPrompt(accounts, parentAccountId);
 }
 
 // Create a new sandbox and return its accountId

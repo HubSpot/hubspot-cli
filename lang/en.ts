@@ -1011,14 +1011,13 @@ export const commands = {
           `No accounts found in your config. Run ${chalk.bold(authCommand)} to configure a HubSpot account with the CLI.`,
         invalidProjectComponents:
           'Projects cannot contain both private and public apps. Move your apps to separate projects before attempting local development.',
-        noRunnableComponents: (command: string) =>
-          `No supported components were found in this project. Run ${chalk.bold(command)} to see a list of available components and add one to your project.`,
+        noRunnableComponents: `No supported components were found in this project. Run ${uiCommandReference('hs project add')} to see a list of available components and add one to your project.`,
       },
       examples: {
         default: 'Start local dev for the current project',
       },
       options: {
-        targetProjectAccount: 'The id of the account to upload your projec to',
+        targetProjectAccount: 'The id of the account to upload your project to',
         targetTestingAccount:
           'The id of the account to install apps and test on',
         profile: 'The name of the profile to use',

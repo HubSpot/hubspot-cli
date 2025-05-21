@@ -1,7 +1,6 @@
 import { ArgumentsCamelCase, Argv, CommandModule } from 'yargs';
 import { trackCommandUsage } from '../../../lib/usageTracking';
 import { uiLogger } from '../../../lib/ui/logger';
-import { getAccountConfig } from '@hubspot/local-dev-lib/config';
 import { HsProfileFile } from '@hubspot/project-parsing-lib/src/lib/types';
 import {
   getProjectConfig,
@@ -28,21 +27,43 @@ const describe = uiBetaTag(commands.project.dev.describe, false);
 async function handler(
   args: ArgumentsCamelCase<ProjectDevArgs>
 ): Promise<void> {
-  const { derivedAccountId, providedAccountId } = args;
+  const {
+    derivedAccountId,
+    providedAccountId,
+    targetTestingAccount,
+    targetProjectAccount,
+  } = args;
 
   const { projectConfig, projectDir } = await getProjectConfig();
   validateProjectConfig(projectConfig, projectDir);
+
+  const useV3 = useV3Api(projectConfig.platformVersion);
 
   if (!projectDir) {
     uiLogger.error(commands.project.dev.errors.noProjectConfig);
     process.exit(EXIT_CODES.ERROR);
   }
 
-  let targetAccountId = providedAccountId;
+  // If either targetTestingAccount or targetProjectAccount is provided, the other must be provided
+  if (
+    (targetTestingAccount && !targetProjectAccount) ||
+    (targetProjectAccount && !targetTestingAccount)
+  ) {
+    uiLogger.error('TODO');
+    process.exit(EXIT_CODES.ERROR);
+  }
+
+  // Legacy projects do not support targetTestingAccount and targetProjectAccount
+  if (targetTestingAccount && targetProjectAccount && !useV3) {
+    uiLogger.error('TODO');
+    process.exit(EXIT_CODES.ERROR);
+  }
+
+  let targetProjectAccountId = providedAccountId || targetProjectAccount;
 
   let profile: HsProfileFile | undefined;
 
-  if (!targetAccountId && useV3Api(projectConfig.platformVersion)) {
+  if (!targetProjectAccountId && useV3) {
     if (args.profile) {
       logProfileHeader(args.profile);
 
@@ -53,7 +74,7 @@ async function handler(
         process.exit(EXIT_CODES.ERROR);
       }
 
-      targetAccountId = profile.accountId;
+      targetProjectAccountId = profile.accountId;
 
       logProfileFooter(profile);
     } else {
@@ -62,28 +83,24 @@ async function handler(
     }
   }
 
-  if (!targetAccountId) {
-    // The user is not using profiles, so we can use the derived accountId
-    targetAccountId = derivedAccountId;
+  if (!targetProjectAccountId) {
+    // The user is not using profiles or any of the account flags, so we can use the derived accountId
+    targetProjectAccountId = derivedAccountId;
   }
 
-  trackCommandUsage('project-dev', {}, targetAccountId);
+  const targetTestingAccountId = targetTestingAccount || targetProjectAccountId;
 
-  const accountConfig = getAccountConfig(targetAccountId);
+  trackCommandUsage('project-dev', {}, targetProjectAccountId);
 
   uiBetaTag(commands.project.dev.logs.betaMessage);
 
   uiLogger.log(commands.project.dev.logs.learnMoreLocalDevServer);
 
-  if (!accountConfig) {
-    uiLogger.error(commands.project.dev.errors.noAccount(targetAccountId));
-    process.exit(EXIT_CODES.ERROR);
-  }
-
-  if (useV3Api(projectConfig.platformVersion)) {
+  if (useV3) {
     await unifiedProjectDevFlow(
       args,
-      accountConfig,
+      targetProjectAccountId,
+      targetTestingAccountId,
       projectConfig,
       projectDir,
       profile
@@ -91,7 +108,7 @@ async function handler(
   } else {
     await deprecatedProjectDevFlow(
       args,
-      accountConfig,
+      targetProjectAccountId,
       projectConfig,
       projectDir
     );
@@ -108,12 +125,14 @@ function projectDevBuilder(yargs: Argv): Argv<ProjectDevArgs> {
 
   yargs.options('targetTestingAccount', {
     type: 'string',
+    // TODO: We may want to add messaging that this only works on certain platform versions
     description: commands.project.dev.options.targetTestingAccount,
     hidden: true,
   });
 
   yargs.options('targetProjectAccount', {
     type: 'string',
+    // TODO: We may want to add messaging that this only works on certain platform versions
     description: commands.project.dev.options.targetProjectAccount,
     hidden: true,
   });

@@ -1,7 +1,11 @@
 import { ArgumentsCamelCase } from 'yargs';
 import { logger } from '@hubspot/local-dev-lib/logger';
-import { getConfigAccounts, getEnv } from '@hubspot/local-dev-lib/config';
-import { CLIAccount } from '@hubspot/local-dev-lib/types/Accounts';
+import {
+  getAccountConfig,
+  getConfigAccounts,
+  getEnv,
+} from '@hubspot/local-dev-lib/config';
+
 import { getValidEnv } from '@hubspot/local-dev-lib/environment';
 
 import {
@@ -34,7 +38,7 @@ import { ProjectDevArgs } from '../../../types/Yargs';
 
 export async function deprecatedProjectDevFlow(
   args: ArgumentsCamelCase<ProjectDevArgs>,
-  accountConfig: CLIAccount,
+  accountId: number,
   projectConfig: ProjectConfig,
   projectDir: string
 ): Promise<void> {
@@ -46,6 +50,17 @@ export async function deprecatedProjectDevFlow(
   const componentTypes = getProjectComponentTypes(runnableComponents);
   const hasPrivateApps = !!componentTypes[ComponentTypes.PrivateApp];
   const hasPublicApps = !!componentTypes[ComponentTypes.PublicApp];
+
+  const accountConfig = getAccountConfig(accountId);
+  if (!accountConfig) {
+    logger.error(
+      i18n('commands.project.subcommands.dev.errors.noAccount', {
+        accountId: accountId,
+        authCommand: uiCommandReference('hs auth'),
+      })
+    );
+    process.exit(EXIT_CODES.ERROR);
+  }
 
   if (runnableComponents.length === 0) {
     logger.error(
@@ -126,7 +141,7 @@ export async function deprecatedProjectDevFlow(
       notInConfigAccount,
     } = await suggestRecommendedNestedAccount(
       accounts,
-      accountConfig,
+      accountId,
       hasPublicApps
     );
 
