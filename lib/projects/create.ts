@@ -17,6 +17,22 @@ import { uiLogger } from '../ui/logger';
 export const EMPTY_PROJECT_TEMPLATE_NAME = 'no-template';
 const PROJECT_TEMPLATE_PROPERTIES = ['name', 'label', 'path', 'insertPath'];
 
+export async function getConfigFromRepo(
+  githubRef: string
+): Promise<ProjectTemplateRepoConfig | undefined> {
+  try {
+    const { data } = await fetchRepoFile<ProjectTemplateRepoConfig>(
+      HUBSPOT_PROJECT_COMPONENTS_GITHUB_PATH,
+      'config.json',
+      githubRef
+    );
+    return data;
+  } catch (err) {
+    debugError(err);
+  }
+  return;
+}
+
 export async function getProjectComponentListFromRepo(
   githubRef: string
 ): Promise<ComponentTemplate[]> {
@@ -41,8 +57,7 @@ export async function getProjectComponentListFromRepo(
 
 export async function getProjectTemplateListFromRepo(
   templateSource: RepoPath,
-  githubRef: string,
-  platformVersion: string
+  githubRef: string
 ): Promise<ProjectTemplate[]> {
   let config: ProjectTemplateRepoConfig;
 

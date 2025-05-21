@@ -3,10 +3,7 @@ import path from 'path';
 import fs from 'fs-extra';
 import chalk from 'chalk';
 import { logger } from '@hubspot/local-dev-lib/logger';
-import {
-  fetchReleaseData,
-  cloneGithubRepo,
-} from '@hubspot/local-dev-lib/github';
+import { cloneGithubRepo } from '@hubspot/local-dev-lib/github';
 import { RepoPath } from '@hubspot/local-dev-lib/types/Github';
 import { getCwd } from '@hubspot/local-dev-lib/path';
 import { trackCommandUsage } from '../../lib/usageTracking';
@@ -18,6 +15,8 @@ import {
 import {
   getProjectTemplateListFromRepo,
   EMPTY_PROJECT_TEMPLATE_NAME,
+  getProjectComponentListFromRepo,
+  getConfigFromRepo,
 } from '../../lib/projects/create';
 import { i18n } from '../../lib/lang';
 import { uiBetaTag, uiFeatureHighlight } from '../../lib/ui';
@@ -38,6 +37,7 @@ import {
 import { makeYargsBuilder } from '../../lib/yargsUtils';
 import { ProjectConfig } from '../../types/Projects';
 import { PLATFORM_VERSIONS } from '@hubspot/local-dev-lib/constants/projects';
+import { useV3Api } from '../../lib/projects/buildAndDeploy';
 
 const command = 'create';
 const describe = uiBetaTag(
@@ -56,7 +56,7 @@ type ProjectCreateArgs = CommonArgs &
     platformVersion: string;
   };
 
-const { v2023_2, v2025_2 } = PLATFORM_VERSIONS;
+const { v2023_2, v2025_1, v2025_2 } = PLATFORM_VERSIONS;
 
 async function handler(
   args: ArgumentsCamelCase<ProjectCreateArgs>
@@ -70,32 +70,62 @@ async function handler(
     process.exit(EXIT_CODES.ERROR);
   }
 
-  const projectTemplates = await getProjectTemplateListFromRepo(
-    templateSource || HUBSPOT_PROJECT_COMPONENTS_GITHUB_PATH,
-    DEFAULT_PROJECT_TEMPLATE_BRANCH,
-    platformVersion
-  );
+  let projectTemplates;
+  let componentTemplates;
+  const repo = templateSource || HUBSPOT_PROJECT_COMPONENTS_GITHUB_PATH;
+  let branch = platformVersion || DEFAULT_PROJECT_TEMPLATE_BRANCH;
+  let componentTemplateChoices;
+  let repoConfig;
 
-  if (!projectTemplates.length) {
-    logger.error(
-      i18n(
-        `commands.project.subcommands.create.errors.failedToFetchProjectList`
-      )
-    );
-    process.exit(EXIT_CODES.ERROR);
+  if (useV3Api(platformVersion)) {
+    branch = 'jy/2025.2';
+    repoConfig = await getConfigFromRepo(branch);
+    componentTemplates = repoConfig?.components || [];
+
+    componentTemplateChoices = componentTemplates.map(template => {
+      return {
+        name: template.label,
+        value: template,
+      };
+    });
+    console.log(componentTemplates);
+  } else {
+    projectTemplates = await getProjectTemplateListFromRepo(repo, branch);
+
+    if (!projectTemplates.length) {
+      logger.error(
+        i18n(
+          `commands.project.subcommands.create.errors.failedToFetchProjectList`
+        )
+      );
+      process.exit(EXIT_CODES.ERROR);
+    }
   }
 
   const createProjectPromptResponse = await createProjectPrompt(
     args,
-    projectTemplates
+    //@ts-ignore
+    projectTemplates,
+    componentTemplateChoices
   );
+
+  // @ts-ignore
   const projectDest = path.resolve(getCwd(), createProjectPromptResponse.dest);
 
-  trackCommandUsage(
-    'project-create',
-    { type: createProjectPromptResponse.projectTemplate.name },
-    derivedAccountId
-  );
+  // trackCommandUsage(
+  //   'project-create',
+  //   {
+  //     type:
+  //       // @ts-ignore
+  //       createProjectPromptResponse.projectTemplate?.name ||
+  //       // @ts-ignore
+  //       createProjectPromptResponse.componentTemplates
+  //         // @ts-ignore
+  //         .map((item: never) => item.label)
+  //         .join(','),
+  //   },
+  //   derivedAccountId
+  // );
 
   const {
     projectConfig: existingProjectConfig,
@@ -116,10 +146,33 @@ async function handler(
     process.exit(EXIT_CODES.ERROR);
   }
 
+  const components: string[] = Array.from(
+    new Set<string>(
+      // @ts-ignore
+      createProjectPromptResponse.componentTemplates
+        ?.map((item: { path: string; parentComponent?: string }) => [
+          item.path,
+          item.parentComponent,
+        ])
+        .flat()
+    )
+  );
+
+  // TODO: Get this working
+  // @ts-ignore
+  // components.push(...(repoConfig?.defaultFiles || []));
+
+  console.log(components);
+
   try {
-    await cloneGithubRepo(templateSource, projectDest, {
-      sourceDir: createProjectPromptResponse.projectTemplate.path,
+    await cloneGithubRepo(repo, projectDest, {
+      sourceDir:
+        // @ts-ignore
+        createProjectPromptResponse.projectTemplate?.path ||
+        // @ts-ignore
+        components,
       hideLogs: true,
+      branch,
     });
   } catch (err) {
     debugError(err);
@@ -129,20 +182,22 @@ async function handler(
     process.exit(EXIT_CODES.ERROR);
   }
 
-  const projectConfigPath = path.join(projectDest, PROJECT_CONFIG_FILE);
-
-  const parsedConfigFile: ProjectConfig = JSON.parse(
-    fs.readFileSync(projectConfigPath).toString()
-  );
-
-  writeProjectConfig(projectConfigPath, {
-    ...parsedConfigFile,
-    name: createProjectPromptResponse.name,
-  });
+  // const projectConfigPath = path.join(projectDest, PROJECT_CONFIG_FILE);
+  //
+  // const parsedConfigFile: ProjectConfig = JSON.parse(
+  //   fs.readFileSync(projectConfigPath).toString()
+  // );
+  //
+  // writeProjectConfig(projectConfigPath, {
+  //   ...parsedConfigFile,
+  //   // @ts-ignore
+  //   name: createProjectPromptResponse.name,
+  // });
 
   // If the template is 'no-template', we need to manually create a src directory
   if (
-    createProjectPromptResponse.projectTemplate.name ===
+    // @ts-ignore
+    createProjectPromptResponse.projectTemplate?.name ===
     EMPTY_PROJECT_TEMPLATE_NAME
   ) {
     fs.ensureDirSync(path.join(projectDest, 'src'));
@@ -151,6 +206,7 @@ async function handler(
   logger.log('');
   logger.success(
     i18n(`commands.project.subcommands.create.logs.success`, {
+      // @ts-ignore
       projectName: createProjectPromptResponse.name,
       projectDest,
     })
@@ -201,7 +257,7 @@ function projectCreateBuilder(yargs: Argv): Argv<ProjectCreateArgs> {
     'platform-version': {
       describe: undefined,
       type: 'string',
-      choices: [v2023_2, v2025_2],
+      choices: [v2023_2, v2025_1, v2025_2],
       default: v2023_2,
     },
   });
