@@ -41,7 +41,8 @@ export async function getProjectComponentListFromRepo(
 
 export async function getProjectTemplateListFromRepo(
   templateSource: RepoPath,
-  githubRef: string
+  githubRef: string,
+  platformVersion: string
 ): Promise<ProjectTemplate[]> {
   let config: ProjectTemplateRepoConfig;
 

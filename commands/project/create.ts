@@ -37,6 +37,7 @@ import {
 } from '../../types/Yargs';
 import { makeYargsBuilder } from '../../lib/yargsUtils';
 import { ProjectConfig } from '../../types/Projects';
+import { PLATFORM_VERSIONS } from '@hubspot/local-dev-lib/constants/projects';
 
 const command = 'create';
 const describe = uiBetaTag(
@@ -52,36 +53,17 @@ type ProjectCreateArgs = CommonArgs &
     dest?: string;
     templateSource?: RepoPath;
     template?: string;
+    platformVersion: string;
   };
+
+const { v2023_2, v2025_2 } = PLATFORM_VERSIONS;
 
 async function handler(
   args: ArgumentsCamelCase<ProjectCreateArgs>
 ): Promise<void> {
-  const { derivedAccountId } = args;
+  const { derivedAccountId, platformVersion, templateSource } = args;
 
-  let latestRepoReleaseTag: string | undefined;
-  let templateSource = args.templateSource;
-
-  if (!templateSource) {
-    templateSource = HUBSPOT_PROJECT_COMPONENTS_GITHUB_PATH;
-    try {
-      const releaseData = await fetchReleaseData(
-        HUBSPOT_PROJECT_COMPONENTS_GITHUB_PATH
-      );
-      if (releaseData) {
-        latestRepoReleaseTag = releaseData.tag_name;
-      }
-    } catch (err) {
-      logger.error(
-        i18n(
-          `commands.project.subcommands.create.errors.failedToFetchProjectList`
-        )
-      );
-      process.exit(EXIT_CODES.ERROR);
-    }
-  }
-
-  if (!templateSource || !templateSource.includes('/')) {
+  if (templateSource && !templateSource.includes('/')) {
     logger.error(
       i18n(`commands.project.subcommands.create.errors.invalidTemplateSource`)
     );
@@ -89,8 +71,9 @@ async function handler(
   }
 
   const projectTemplates = await getProjectTemplateListFromRepo(
-    templateSource,
-    latestRepoReleaseTag || DEFAULT_PROJECT_TEMPLATE_BRANCH
+    templateSource || HUBSPOT_PROJECT_COMPONENTS_GITHUB_PATH,
+    DEFAULT_PROJECT_TEMPLATE_BRANCH,
+    platformVersion
   );
 
   if (!projectTemplates.length) {
@@ -136,7 +119,6 @@ async function handler(
   try {
     await cloneGithubRepo(templateSource, projectDest, {
       sourceDir: createProjectPromptResponse.projectTemplate.path,
-      tag: latestRepoReleaseTag,
       hideLogs: true,
     });
   } catch (err) {
@@ -215,6 +197,12 @@ function projectCreateBuilder(yargs: Argv): Argv<ProjectCreateArgs> {
         `commands.project.subcommands.create.options.templateSource.describe`
       ),
       type: 'string',
+    },
+    'platform-version': {
+      describe: undefined,
+      type: 'string',
+      choices: [v2023_2, v2025_2],
+      default: v2023_2,
     },
   });
 
