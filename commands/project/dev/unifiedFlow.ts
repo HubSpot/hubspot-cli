@@ -28,6 +28,7 @@ import LocalDevWatcher from '../../../lib/projects/localDev/LocalDevWatcher';
 import { handleExit, handleKeypress } from '../../../lib/process';
 import { uiLogger } from '../../../lib/ui/logger';
 import { commands } from '../../../lang/en';
+import { isDeveloperTestAccount, isSandbox } from '../../../lib/accountTypes';
 // import LocalDevWebsocketServer from '../../../lib/projects/localDev/LocalDevWebsocketServer';
 
 export async function unifiedProjectDevFlow(
@@ -70,17 +71,35 @@ export async function unifiedProjectDevFlow(
     process.exit(EXIT_CODES.SUCCESS);
   }
 
+  const targetProjectAccountConfig = getAccountConfig(
+    initialTargetProjectAccountId
+  );
+
+  if (!targetProjectAccountConfig) {
+    uiLogger.error(
+      commands.project.dev.errors.noAccount(initialTargetProjectAccountId)
+    );
+    process.exit(EXIT_CODES.ERROR);
+  }
+
   let selectedTargetProjectAccountId = initialTargetProjectAccountId;
   let selectedTargetTestingAccountId = initialTargetTestingAccountId;
 
   const specifiedTargetProjectAndTestingAccounts =
     initialTargetProjectAccountId !== initialTargetTestingAccountId;
+  const targetProjectAccountIsRecommendedType =
+    isDeveloperTestAccount(targetProjectAccountConfig) ||
+    isSandbox(targetProjectAccountConfig);
+
+  const shouldPromptForTestAccount =
+    !specifiedTargetProjectAndTestingAccounts &&
+    !targetProjectAccountIsRecommendedType;
 
   if (profileConfig) {
     // Bypass the prompt for the testing account if the user has a profile configured
     selectedTargetProjectAccountId = profileConfig.accountId;
     selectedTargetTestingAccountId = profileConfig.accountId;
-  } else if (!specifiedTargetProjectAndTestingAccounts) {
+  } else if (shouldPromptForTestAccount) {
     const accounts = getConfigAccounts();
     const devAccountPromptResponse =
       await selectDeveloperTestTargetAccountPrompt(
@@ -102,12 +121,10 @@ export async function unifiedProjectDevFlow(
       }
     } else if (devAccountPromptResponse.createNestedAccount) {
       // Create a new developer test account and automatically add it to the CLI config
-      const targetProjectAccountConfig = getAccountConfig(
-        initialTargetProjectAccountId
-      );
+
       const newAccountId = await createDeveloperTestAccountForLocalDev(
         initialTargetProjectAccountId,
-        targetProjectAccountConfig!,
+        targetProjectAccountConfig,
         env
       );
 
