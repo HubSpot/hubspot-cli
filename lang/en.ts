@@ -975,23 +975,35 @@ export const commands = {
         betaMessage: 'HubSpot projects local development',
         placeholderAccountSelection:
           'Using default account as target account (for now)',
-        learnMoreLocalDevServer:
+        learnMoreLocalDevServer: uiLink(
           'Learn more about the projects local dev server',
+          'https://developers.hubspot.com/docs/platform/project-cli-commands#start-a-local-development-server'
+        ),
       },
       errors: {
         noProjectConfig:
           'No project detected. Please run this command again from a project directory.',
-        noAccount: (accountId: string, authCommand: string) =>
-          `An error occurred while reading account ${accountId} from your config. Run ${chalk.bold(authCommand)} to re-auth this account.`,
+        noAccount: (accountId: number) =>
+          `An error occurred while reading account ${accountId} from your config. Run ${uiCommandReference('hs auth')} to re-auth this account.`,
         noAccountsInConfig: (authCommand: string) =>
           `No accounts found in your config. Run ${chalk.bold(authCommand)} to configure a HubSpot account with the CLI.`,
         invalidProjectComponents:
           'Projects cannot contain both private and public apps. Move your apps to separate projects before attempting local development.',
-        noRunnableComponents: (command: string) =>
-          `No supported components were found in this project. Run ${chalk.bold(command)} to see a list of available components and add one to your project.`,
+        noRunnableComponents: `No supported components were found in this project. Run ${uiCommandReference('hs project add')} to see a list of available components and add one to your project.`,
+        invalidAccountFlags:
+          'Must specify both --projectAccount and --testingAccount flags. To use the same account for both, use the --account flag.',
+        unsupportedAccountFlags:
+          'The --projectAccount and --testingAccount flags are not supported for projects created with platform versions before 2025.2.',
       },
       examples: {
         default: 'Start local dev for the current project',
+      },
+      options: {
+        targetProjectAccount:
+          'The id of the account to upload your project to. Only compatible with platform versions 2025.2 and above.',
+        targetTestingAccount:
+          'The id of the account to install apps and test on. Only compatible with platform versions 2025.2 and above.',
+        profile: 'The name of the profile to use',
       },
     },
     create: {

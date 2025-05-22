@@ -52,17 +52,16 @@ function getNonConfigDeveloperTestAccountName(
 
 export async function selectSandboxTargetAccountPrompt(
   accounts: CLIAccount[],
-  defaultAccountConfig: CLIAccount
+  parentAccountId: number
 ): Promise<ProjectDevTargetAccountPromptResponse> {
-  const defaultAccountId = getAccountId(defaultAccountConfig.name);
   let choices = [];
   let sandboxUsage: Usage = {
     STANDARD: { used: 0, available: 0, limit: 0 },
     DEVELOPER: { used: 0, available: 0, limit: 0 },
   };
   try {
-    if (defaultAccountId) {
-      const { data } = await getSandboxUsageLimits(defaultAccountId);
+    if (parentAccountId) {
+      const { data } = await getSandboxUsageLimits(parentAccountId);
       sandboxUsage = data.usage;
     } else {
       logger.error(`lib.prompts.projectDevTargetAccountPrompt.noAccountId`);
@@ -75,7 +74,7 @@ export async function selectSandboxTargetAccountPrompt(
   const sandboxAccounts = accounts
     .reverse()
     .filter(
-      config => isSandbox(config) && config.parentAccountId === defaultAccountId
+      config => isSandbox(config) && config.parentAccountId === parentAccountId
     );
   let disabledMessage: string | boolean = false;
 
@@ -120,33 +119,23 @@ export async function selectSandboxTargetAccountPrompt(
         `lib.prompts.projectDevTargetAccountPrompt.chooseDefaultAccountOption`
       ),
       value: {
-        targetAccountId: defaultAccountId,
+        targetAccountId: parentAccountId,
         createNestedAccount: false,
       },
     },
   ];
 
-  return selectTargetAccountPrompt(
-    defaultAccountId,
-    'sandbox account',
-    choices
-  );
+  return selectTargetAccountPrompt(parentAccountId, 'sandbox account', choices);
 }
 
 export async function selectDeveloperTestTargetAccountPrompt(
   accounts: CLIAccount[],
-  defaultAccountConfig: CLIAccount
+  parentAccountId: number
 ): Promise<ProjectDevTargetAccountPromptResponse> {
-  const defaultAccountId = getAccountId(defaultAccountConfig.name);
   let devTestAccountsResponse: FetchDeveloperTestAccountsResponse | undefined;
   try {
-    if (defaultAccountId) {
-      const { data } = await fetchDeveloperTestAccounts(defaultAccountId);
-      devTestAccountsResponse = data;
-    } else {
-      logger.error(`lib.prompts.projectDevTargetAccountPrompt.noAccountId`);
-      process.exit(EXIT_CODES.ERROR);
-    }
+    const { data } = await fetchDeveloperTestAccounts(parentAccountId);
+    devTestAccountsResponse = data;
   } catch (err) {
     logger.debug('Unable to fetch developer test account usage limits: ', err);
   }
@@ -177,7 +166,7 @@ export async function selectDeveloperTestTargetAccountPrompt(
         value: {
           targetAccountId: acct.id,
           createNestedAccount: false,
-          parentAccountId: defaultAccountId ?? null,
+          parentAccountId,
           notInConfigAccount: inConfig ? null : acct,
         },
       });
@@ -199,7 +188,7 @@ export async function selectDeveloperTestTargetAccountPrompt(
   ];
 
   return selectTargetAccountPrompt(
-    defaultAccountId,
+    parentAccountId,
     HUBSPOT_ACCOUNT_TYPE_STRINGS[HUBSPOT_ACCOUNT_TYPES.DEVELOPER_TEST],
     choices
   );

@@ -1,13 +1,14 @@
 import path from 'path';
 import util from 'util';
 import { ArgumentsCamelCase } from 'yargs';
-import { logger } from '@hubspot/local-dev-lib/logger';
-import { getAccountIdentifier } from '@hubspot/local-dev-lib/config/getAccountIdentifier';
 import { isTranslationError } from '@hubspot/project-parsing-lib/src/lib/errors';
 import { translateForLocalDev } from '@hubspot/project-parsing-lib';
 import { HsProfileFile } from '@hubspot/project-parsing-lib/src/lib/types';
-import { CLIAccount } from '@hubspot/local-dev-lib/types/Accounts';
-import { getEnv, getConfigAccounts } from '@hubspot/local-dev-lib/config';
+import {
+  getEnv,
+  getConfigAccounts,
+  getAccountConfig,
+} from '@hubspot/local-dev-lib/config';
 import { getValidEnv } from '@hubspot/local-dev-lib/environment';
 import { ProjectDevArgs } from '../../../types/Yargs';
 import { ProjectConfig } from '../../../types/Projects';
@@ -25,27 +26,29 @@ import SpinniesManager from '../../../lib/ui/SpinniesManager';
 import LocalDevProcess from '../../../lib/projects/localDev/LocalDevProcess';
 import LocalDevWatcher from '../../../lib/projects/localDev/LocalDevWatcher';
 import { handleExit, handleKeypress } from '../../../lib/process';
-import {
-  isAppDeveloperAccount,
-  isStandardAccount,
-} from '../../../lib/accountTypes';
-import { uiCommandReference } from '../../../lib/ui';
-import { i18n } from '../../../lib/lang';
+import { uiLogger } from '../../../lib/ui/logger';
+import { commands } from '../../../lang/en';
+import { isDeveloperTestAccount, isSandbox } from '../../../lib/accountTypes';
 // import LocalDevWebsocketServer from '../../../lib/projects/localDev/LocalDevWebsocketServer';
 
-export async function unifiedProjectDevFlow(
-  args: ArgumentsCamelCase<ProjectDevArgs>,
-  accountConfig: CLIAccount,
-  projectConfig: ProjectConfig,
-  projectDir: string,
-  profileConfig?: HsProfileFile
-): Promise<void> {
-  const targetProjectAccountId = getAccountIdentifier(accountConfig);
-  const env = getValidEnv(getEnv(targetProjectAccountId));
+type UnifiedProjectDevFlowArgs = {
+  args: ArgumentsCamelCase<ProjectDevArgs>;
+  initialTargetProjectAccountId: number;
+  initialTargetTestingAccountId: number;
+  projectConfig: ProjectConfig;
+  projectDir: string;
+  profileConfig?: HsProfileFile;
+};
 
-  if (!targetProjectAccountId) {
-    process.exit(EXIT_CODES.ERROR);
-  }
+export async function unifiedProjectDevFlow({
+  args,
+  initialTargetProjectAccountId,
+  initialTargetTestingAccountId,
+  projectConfig,
+  projectDir,
+  profileConfig,
+}: UnifiedProjectDevFlowArgs): Promise<void> {
+  const env = getValidEnv(getEnv(initialTargetProjectAccountId));
 
   let projectNodes;
 
@@ -55,84 +58,93 @@ export async function unifiedProjectDevFlow(
       {
         projectSourceDir: path.join(projectDir, projectConfig.srcDir),
         platformVersion: projectConfig.platformVersion,
-        accountId: targetProjectAccountId,
+        accountId: initialTargetProjectAccountId,
       },
       { profile: args.profile }
     );
 
     projectNodes = intermediateRepresentation.intermediateNodesIndexedByUid;
 
-    logger.debug(util.inspect(projectNodes, false, null, true));
+    uiLogger.debug(util.inspect(projectNodes, false, null, true));
   } catch (e) {
     if (isTranslationError(e)) {
-      logger.error(e.toString());
+      uiLogger.error(e.toString());
     } else {
       logError(e);
     }
     return process.exit(EXIT_CODES.ERROR);
   }
 
-  // @TODO Do we need to do more than this or leave it to the dev servers?
   if (!Object.keys(projectNodes).length) {
-    logger.error(
-      i18n(`commands.project.subcommands.dev.errors.noRunnableComponents`, {
-        projectDir,
-        command: uiCommandReference('hs project add'),
-      })
-    );
+    uiLogger.error(commands.project.dev.errors.noRunnableComponents);
     process.exit(EXIT_CODES.SUCCESS);
   }
 
-  // @TODO Validate component types (i.e. previously you could not have both private and public apps)
+  const targetProjectAccountConfig = getAccountConfig(
+    initialTargetProjectAccountId
+  );
 
-  const accounts = getConfigAccounts();
-
-  // TODO Ideally this should require the user to target a Combined account
-  // For now, check if the account is either developer or standard
-  const derivedAccountIsRecommendedType =
-    isAppDeveloperAccount(accountConfig) || isStandardAccount(accountConfig);
-
-  if (!derivedAccountIsRecommendedType && !profileConfig) {
-    logger.error(
-      i18n(`commands.project.subcommands.dev.errors.invalidUnifiedAppsAccount`),
-      {
-        authCommand: uiCommandReference('hs auth'),
-      }
+  if (!targetProjectAccountConfig) {
+    uiLogger.error(
+      commands.project.dev.errors.noAccount(initialTargetProjectAccountId)
     );
-    process.exit(EXIT_CODES.SUCCESS);
+    process.exit(EXIT_CODES.ERROR);
   }
 
-  let targetTestingAccountId = null;
+  let selectedTargetProjectAccountId = initialTargetProjectAccountId;
+  let selectedTargetTestingAccountId = initialTargetTestingAccountId;
+
+  const specifiedTargetProjectAndTestingAccounts =
+    initialTargetProjectAccountId !== initialTargetTestingAccountId;
+  const targetProjectAccountIsRecommendedType =
+    isDeveloperTestAccount(targetProjectAccountConfig) ||
+    isSandbox(targetProjectAccountConfig);
+
+  const shouldPromptForTestAccount =
+    !specifiedTargetProjectAndTestingAccounts &&
+    !targetProjectAccountIsRecommendedType;
 
   if (profileConfig) {
     // Bypass the prompt for the testing account if the user has a profile configured
-    targetTestingAccountId = profileConfig.accountId;
-  } else {
+    selectedTargetProjectAccountId = profileConfig.accountId;
+    selectedTargetTestingAccountId = profileConfig.accountId;
+  } else if (shouldPromptForTestAccount) {
+    const accounts = getConfigAccounts();
     const devAccountPromptResponse =
-      await selectDeveloperTestTargetAccountPrompt(accounts!, accountConfig);
-
-    targetTestingAccountId = devAccountPromptResponse.targetAccountId;
-
-    if (!!devAccountPromptResponse.notInConfigAccount) {
-      // When the developer test account isn't configured in the CLI config yet
-      // Walk the user through adding the account's PAK to the config
-      await useExistingDevTestAccount(
-        env,
-        devAccountPromptResponse.notInConfigAccount
+      await selectDeveloperTestTargetAccountPrompt(
+        accounts!,
+        initialTargetProjectAccountId
       );
+
+    if (devAccountPromptResponse.targetAccountId) {
+      selectedTargetProjectAccountId = devAccountPromptResponse.targetAccountId;
+      selectedTargetTestingAccountId = devAccountPromptResponse.targetAccountId;
+
+      if (!!devAccountPromptResponse.notInConfigAccount) {
+        // When the developer test account isn't configured in the CLI config yet
+        // Walk the user through adding the account's PAK to the config
+        await useExistingDevTestAccount(
+          env,
+          devAccountPromptResponse.notInConfigAccount
+        );
+      }
     } else if (devAccountPromptResponse.createNestedAccount) {
       // Create a new developer test account and automatically add it to the CLI config
-      targetTestingAccountId = await createDeveloperTestAccountForLocalDev(
-        targetProjectAccountId,
-        accountConfig,
+
+      const newAccountId = await createDeveloperTestAccountForLocalDev(
+        initialTargetProjectAccountId,
+        targetProjectAccountConfig,
         env
       );
+
+      selectedTargetProjectAccountId = newAccountId;
+      selectedTargetTestingAccountId = newAccountId;
     }
   }
 
   // Check if project exists in HubSpot
   const { projectExists, project: uploadedProject } = await ensureProjectExists(
-    targetProjectAccountId,
+    selectedTargetProjectAccountId,
     projectConfig.name,
     {
       allowCreate: false,
@@ -154,7 +166,7 @@ export async function unifiedProjectDevFlow(
   } else {
     project = await createNewProjectForLocalDev(
       projectConfig,
-      targetProjectAccountId,
+      selectedTargetProjectAccountId,
       false,
       false
     );
@@ -162,7 +174,7 @@ export async function unifiedProjectDevFlow(
     deployedBuild = await createInitialBuildForNewProject(
       projectConfig,
       projectDir,
-      targetProjectAccountId,
+      selectedTargetProjectAccountId,
       true,
       args.profile
     );
@@ -174,8 +186,8 @@ export async function unifiedProjectDevFlow(
     debug: args.debug,
     deployedBuild,
     isGithubLinked,
-    targetProjectAccountId,
-    targetTestingAccountId: targetTestingAccountId!,
+    targetProjectAccountId: selectedTargetProjectAccountId,
+    targetTestingAccountId: selectedTargetTestingAccountId,
     projectConfig,
     projectDir,
     projectId: project.id,

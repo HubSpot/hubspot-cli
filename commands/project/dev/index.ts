@@ -1,15 +1,13 @@
 import { ArgumentsCamelCase, Argv, CommandModule } from 'yargs';
 import { trackCommandUsage } from '../../../lib/usageTracking';
-import { i18n } from '../../../lib/lang';
-import { logger } from '@hubspot/local-dev-lib/logger';
-import { getAccountConfig } from '@hubspot/local-dev-lib/config';
+import { uiLogger } from '../../../lib/ui/logger';
 import { HsProfileFile } from '@hubspot/project-parsing-lib/src/lib/types';
 import {
   getProjectConfig,
   validateProjectConfig,
 } from '../../../lib/projects/config';
 import { EXIT_CODES } from '../../../lib/enums/exitCodes';
-import { uiBetaTag, uiCommandReference, uiLink, uiLine } from '../../../lib/ui';
+import { uiBetaTag, uiLine } from '../../../lib/ui';
 import { ProjectDevArgs } from '../../../types/Yargs';
 import { deprecatedProjectDevFlow } from './deprecatedFlow';
 import { unifiedProjectDevFlow } from './unifiedFlow';
@@ -21,36 +19,54 @@ import {
   logProfileHeader,
   exitIfUsingProfiles,
 } from '../../../lib/projectProfiles';
+import { commands } from '../../../lang/en';
+import { getAccountId } from '@hubspot/local-dev-lib/config';
 
 const command = 'dev';
-const describe = uiBetaTag(
-  i18n(`commands.project.subcommands.dev.describe`),
-  false
-);
+const describe = uiBetaTag(commands.project.dev.describe, false);
 
 async function handler(
   args: ArgumentsCamelCase<ProjectDevArgs>
 ): Promise<void> {
-  const { derivedAccountId, providedAccountId } = args;
+  const {
+    derivedAccountId,
+    providedAccountId,
+    testingAccount,
+    projectAccount,
+  } = args;
 
   const { projectConfig, projectDir } = await getProjectConfig();
   validateProjectConfig(projectConfig, projectDir);
 
+  const useV3 = useV3Api(projectConfig.platformVersion);
+
   if (!projectDir) {
-    logger.error(
-      i18n(`commands.project.subcommands.dev.errors.noProjectConfig`, {
-        accountId: derivedAccountId,
-        authCommand: uiCommandReference('hs auth'),
-      })
-    );
+    uiLogger.error(commands.project.dev.errors.noProjectConfig);
     process.exit(EXIT_CODES.ERROR);
   }
 
-  let targetAccountId = providedAccountId;
+  // If either targetTestingAccount or targetProjectAccount is provided, the other must be provided
+  if (
+    (testingAccount && !projectAccount) ||
+    (projectAccount && !testingAccount)
+  ) {
+    uiLogger.error(commands.project.dev.errors.invalidAccountFlags);
+    process.exit(EXIT_CODES.ERROR);
+  }
+
+  // Legacy projects do not support targetTestingAccount and targetProjectAccount
+  if (testingAccount && projectAccount && !useV3) {
+    uiLogger.error(commands.project.dev.errors.unsupportedAccountFlags);
+    process.exit(EXIT_CODES.ERROR);
+  }
+
+  let targetProjectAccountId =
+    (providedAccountId && derivedAccountId) ||
+    (projectAccount && getAccountId(projectAccount));
 
   let profile: HsProfileFile | undefined;
 
-  if (!targetAccountId && useV3Api(projectConfig.platformVersion)) {
+  if (!targetProjectAccountId && useV3) {
     if (args.profile) {
       logProfileHeader(args.profile);
 
@@ -61,7 +77,7 @@ async function handler(
         process.exit(EXIT_CODES.ERROR);
       }
 
-      targetAccountId = profile.accountId;
+      targetProjectAccountId = profile.accountId;
 
       logProfileFooter(profile);
     } else {
@@ -70,44 +86,36 @@ async function handler(
     }
   }
 
-  if (!targetAccountId) {
-    // The user is not using profiles, so we can use the derived accountId
-    targetAccountId = derivedAccountId;
+  if (!targetProjectAccountId) {
+    // The user is not using profiles or any of the account flags, so we can use the derived accountId
+    targetProjectAccountId = derivedAccountId;
   }
 
-  trackCommandUsage('project-dev', {}, targetAccountId);
+  const targetTestingAccountId =
+    (testingAccount && getAccountId(testingAccount)) || targetProjectAccountId;
 
-  const accountConfig = getAccountConfig(targetAccountId);
+  trackCommandUsage('project-dev', {}, targetProjectAccountId);
 
-  uiBetaTag(i18n(`commands.project.subcommands.dev.logs.betaMessage`));
+  uiBetaTag(commands.project.dev.logs.betaMessage);
 
-  logger.log(
-    uiLink(
-      i18n(`commands.project.subcommands.dev.logs.learnMoreLocalDevServer`),
-      'https://developers.hubspot.com/docs/platform/project-cli-commands#start-a-local-development-server'
-    )
-  );
+  uiLogger.log(commands.project.dev.logs.learnMoreLocalDevServer);
 
-  if (!accountConfig) {
-    logger.error(i18n(`commands.project.subcommands.dev.errors.noAccount`));
-    process.exit(EXIT_CODES.ERROR);
-  }
-
-  if (useV3Api(projectConfig.platformVersion)) {
-    await unifiedProjectDevFlow(
+  if (useV3) {
+    await unifiedProjectDevFlow({
       args,
-      accountConfig,
+      initialTargetProjectAccountId: targetProjectAccountId,
+      initialTargetTestingAccountId: targetTestingAccountId,
       projectConfig,
       projectDir,
-      profile
-    );
+      profileConfig: profile,
+    });
   } else {
-    await deprecatedProjectDevFlow(
+    await deprecatedProjectDevFlow({
       args,
-      accountConfig,
+      accountId: targetProjectAccountId,
       projectConfig,
-      projectDir
-    );
+      projectDir,
+    });
   }
 }
 
@@ -115,18 +123,29 @@ function projectDevBuilder(yargs: Argv): Argv<ProjectDevArgs> {
   yargs.option('profile', {
     type: 'string',
     alias: 'p',
-    description: i18n(`commands.project.subcommands.dev.options.profile`),
+    description: commands.project.dev.options.profile,
     hidden: true,
   });
 
-  yargs.example([
-    [
-      '$0 project dev',
-      i18n(`commands.project.subcommands.dev.examples.default`),
-    ],
-  ]);
+  yargs.options('targetTestingAccount', {
+    type: 'string',
+    description: commands.project.dev.options.targetTestingAccount,
+    hidden: true,
+  });
+
+  yargs.options('targetProjectAccount', {
+    type: 'string',
+    description: commands.project.dev.options.targetProjectAccount,
+    hidden: true,
+  });
+
+  yargs.example([['$0 project dev', commands.project.dev.examples.default]]);
 
   yargs.conflicts('profile', 'account');
+  yargs.conflicts('targetTestingAccount', 'account');
+  yargs.conflicts('targetProjectAccount', 'account');
+  yargs.conflicts('targetTestingAccount', 'profile');
+  yargs.conflicts('targetProjectAccount', 'profile');
 
   return yargs as Argv<ProjectDevArgs>;
 }
