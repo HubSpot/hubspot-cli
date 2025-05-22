@@ -17,32 +17,27 @@ import { uiLogger } from '../ui/logger';
 export const EMPTY_PROJECT_TEMPLATE_NAME = 'no-template';
 const PROJECT_TEMPLATE_PROPERTIES = ['name', 'label', 'path', 'insertPath'];
 
-export async function getConfigFromRepo(
-  githubRef: string
-): Promise<ProjectTemplateRepoConfig | undefined> {
-  try {
-    const { data } = await fetchRepoFile<ProjectTemplateRepoConfig>(
-      HUBSPOT_PROJECT_COMPONENTS_GITHUB_PATH,
-      'config.json',
-      githubRef
-    );
-    return data;
-  } catch (err) {
-    debugError(err);
-  }
-  return;
+export async function getConfigForPlatformVersion(
+  platformVersion: string
+): Promise<ProjectTemplateRepoConfig> | never {
+  const { data } = await fetchRepoFile<ProjectTemplateRepoConfig>(
+    HUBSPOT_PROJECT_COMPONENTS_GITHUB_PATH,
+    `${platformVersion}/config.json`,
+    'jy/2025.2'
+  );
+  return data;
 }
 
 export async function getProjectComponentListFromRepo(
-  githubRef: string
+  platformVersion: string
 ): Promise<ComponentTemplate[]> {
   let config;
 
   try {
     const { data } = await fetchRepoFile<ProjectTemplateRepoConfig>(
       HUBSPOT_PROJECT_COMPONENTS_GITHUB_PATH,
-      'config.json',
-      githubRef
+      `${platformVersion}/config.json`,
+      'jy/2025.2'
     );
     config = data;
   } catch (err) {

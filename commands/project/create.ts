@@ -15,17 +15,15 @@ import {
 import {
   getProjectTemplateListFromRepo,
   EMPTY_PROJECT_TEMPLATE_NAME,
-  getProjectComponentListFromRepo,
-  getConfigFromRepo,
+  getConfigForPlatformVersion,
 } from '../../lib/projects/create';
 import { i18n } from '../../lib/lang';
 import { uiBetaTag, uiFeatureHighlight } from '../../lib/ui';
-import { debugError } from '../../lib/errorHandlers';
+import { debugError, logError } from '../../lib/errorHandlers';
 import { EXIT_CODES } from '../../lib/enums/exitCodes';
 import {
   PROJECT_CONFIG_FILE,
   HUBSPOT_PROJECT_COMPONENTS_GITHUB_PATH,
-  DEFAULT_PROJECT_TEMPLATE_BRANCH,
 } from '../../lib/constants';
 import {
   AccountArgs,
@@ -35,7 +33,7 @@ import {
   YargsCommandModule,
 } from '../../types/Yargs';
 import { makeYargsBuilder } from '../../lib/yargsUtils';
-import { ProjectConfig } from '../../types/Projects';
+import { ProjectConfig, ProjectTemplateRepoConfig } from '../../types/Projects';
 import { PLATFORM_VERSIONS } from '@hubspot/local-dev-lib/constants/projects';
 import { useV3Api } from '../../lib/projects/buildAndDeploy';
 
@@ -73,13 +71,17 @@ async function handler(
   let projectTemplates;
   let componentTemplates;
   const repo = templateSource || HUBSPOT_PROJECT_COMPONENTS_GITHUB_PATH;
-  let branch = platformVersion || DEFAULT_PROJECT_TEMPLATE_BRANCH;
   let componentTemplateChoices;
-  let repoConfig;
+  let repoConfig: ProjectTemplateRepoConfig | undefined = undefined;
 
   if (useV3Api(platformVersion)) {
-    branch = 'jy/2025.2';
-    repoConfig = await getConfigFromRepo(branch);
+    try {
+      repoConfig = await getConfigForPlatformVersion(platformVersion);
+    } catch (error) {
+      logError(error);
+      return process.exit(EXIT_CODES.SUCCESS);
+    }
+
     componentTemplates = repoConfig?.components || [];
 
     componentTemplateChoices = componentTemplates.map(template => {
@@ -88,9 +90,8 @@ async function handler(
         value: template,
       };
     });
-    console.log(componentTemplates);
   } else {
-    projectTemplates = await getProjectTemplateListFromRepo(repo, branch);
+    projectTemplates = await getProjectTemplateListFromRepo(repo, 'main');
 
     if (!projectTemplates.length) {
       logger.error(
@@ -104,28 +105,28 @@ async function handler(
 
   const createProjectPromptResponse = await createProjectPrompt(
     args,
-    //@ts-ignore
+    // @ts-expect-error
     projectTemplates,
     componentTemplateChoices
   );
 
-  // @ts-ignore
+  // @ts-expect-error
   const projectDest = path.resolve(getCwd(), createProjectPromptResponse.dest);
 
-  // trackCommandUsage(
-  //   'project-create',
-  //   {
-  //     type:
-  //       // @ts-ignore
-  //       createProjectPromptResponse.projectTemplate?.name ||
-  //       // @ts-ignore
-  //       createProjectPromptResponse.componentTemplates
-  //         // @ts-ignore
-  //         .map((item: never) => item.label)
-  //         .join(','),
-  //   },
-  //   derivedAccountId
-  // );
+  trackCommandUsage(
+    'project-create',
+    {
+      type:
+        // @ts-expect-error
+        createProjectPromptResponse.projectTemplate?.name ||
+        // @ts-expect-error
+        createProjectPromptResponse.componentTemplates
+          // @ts-expect-error
+          .map((item: never) => item.label)
+          .join(','),
+    },
+    derivedAccountId
+  );
 
   const {
     projectConfig: existingProjectConfig,
@@ -148,31 +149,35 @@ async function handler(
 
   const components: string[] = Array.from(
     new Set<string>(
-      // @ts-ignore
+      // @ts-expect-error
       createProjectPromptResponse.componentTemplates
-        ?.map((item: { path: string; parentComponent?: string }) => [
-          item.path,
-          item.parentComponent,
-        ])
+        ?.map((item: { path: string; parentComponent?: string }) => {
+          console.log(item);
+          return [
+            path.join(platformVersion, item.path),
+            item.parentComponent
+              ? path.join(platformVersion, item.parentComponent)
+              : undefined,
+          ];
+        })
         .flat()
     )
   );
 
-  // TODO: Get this working
-  // @ts-ignore
-  // components.push(...(repoConfig?.defaultFiles || []));
+  if (repoConfig?.defaultFiles) {
+    components.push(path.join(platformVersion, repoConfig?.defaultFiles));
+  }
 
-  console.log(components);
+  logger.debug(components);
 
   try {
     await cloneGithubRepo(repo, projectDest, {
       sourceDir:
-        // @ts-ignore
-        createProjectPromptResponse.projectTemplate?.path ||
-        // @ts-ignore
-        components,
+        // @ts-expect-error
+        createProjectPromptResponse.projectTemplate?.path || components,
       hideLogs: true,
-      branch,
+      // TODO: Change this to main when it's merged
+      branch: 'jy/2025.2',
     });
   } catch (err) {
     debugError(err);
@@ -182,21 +187,21 @@ async function handler(
     process.exit(EXIT_CODES.ERROR);
   }
 
-  // const projectConfigPath = path.join(projectDest, PROJECT_CONFIG_FILE);
-  //
-  // const parsedConfigFile: ProjectConfig = JSON.parse(
-  //   fs.readFileSync(projectConfigPath).toString()
-  // );
-  //
-  // writeProjectConfig(projectConfigPath, {
-  //   ...parsedConfigFile,
-  //   // @ts-ignore
-  //   name: createProjectPromptResponse.name,
-  // });
+  const projectConfigPath = path.join(projectDest, PROJECT_CONFIG_FILE);
+
+  const parsedConfigFile: ProjectConfig = JSON.parse(
+    fs.readFileSync(projectConfigPath).toString()
+  );
+
+  writeProjectConfig(projectConfigPath, {
+    ...parsedConfigFile,
+    // @ts-expect-error
+    name: createProjectPromptResponse.name,
+  });
 
   // If the template is 'no-template', we need to manually create a src directory
   if (
-    // @ts-ignore
+    // @ts-expect-error
     createProjectPromptResponse.projectTemplate?.name ===
     EMPTY_PROJECT_TEMPLATE_NAME
   ) {
@@ -206,7 +211,7 @@ async function handler(
   logger.log('');
   logger.success(
     i18n(`commands.project.subcommands.create.logs.success`, {
-      // @ts-ignore
+      // @ts-expect-error
       projectName: createProjectPromptResponse.name,
       projectDest,
     })
