@@ -61,7 +61,8 @@ async function handler(
   }
 
   let targetProjectAccountId =
-    providedAccountId || (projectAccount && getAccountId(projectAccount));
+    (providedAccountId && derivedAccountId) ||
+    (projectAccount && getAccountId(projectAccount));
 
   let profile: HsProfileFile | undefined;
 
