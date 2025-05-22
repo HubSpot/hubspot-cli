@@ -20,6 +20,7 @@ import {
   exitIfUsingProfiles,
 } from '../../../lib/projectProfiles';
 import { commands } from '../../../lang/en';
+import { getAccountId } from '@hubspot/local-dev-lib/config';
 
 const command = 'dev';
 const describe = uiBetaTag(commands.project.dev.describe, false);
@@ -59,7 +60,8 @@ async function handler(
     process.exit(EXIT_CODES.ERROR);
   }
 
-  let targetProjectAccountId = providedAccountId || targetProjectAccount;
+  let targetProjectAccountId =
+    providedAccountId || getAccountId(targetProjectAccount);
 
   let profile: HsProfileFile | undefined;
 
@@ -88,7 +90,8 @@ async function handler(
     targetProjectAccountId = derivedAccountId;
   }
 
-  const targetTestingAccountId = targetTestingAccount || targetProjectAccountId;
+  const targetTestingAccountId =
+    getAccountId(targetTestingAccount) || targetProjectAccountId;
 
   trackCommandUsage('project-dev', {}, targetProjectAccountId);
 
