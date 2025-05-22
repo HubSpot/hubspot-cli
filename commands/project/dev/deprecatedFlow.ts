@@ -36,12 +36,19 @@ import { isSandbox, isDeveloperTestAccount } from '../../../lib/accountTypes';
 import { ensureProjectExists } from '../../../lib/projects/ensureProjectExists';
 import { ProjectDevArgs } from '../../../types/Yargs';
 
-export async function deprecatedProjectDevFlow(
-  args: ArgumentsCamelCase<ProjectDevArgs>,
-  accountId: number,
-  projectConfig: ProjectConfig,
-  projectDir: string
-): Promise<void> {
+type DeprecatedProjectDevFlowArgs = {
+  args: ArgumentsCamelCase<ProjectDevArgs>;
+  accountId: number;
+  projectConfig: ProjectConfig;
+  projectDir: string;
+};
+
+export async function deprecatedProjectDevFlow({
+  args,
+  accountId,
+  projectConfig,
+  projectDir,
+}: DeprecatedProjectDevFlowArgs): Promise<void> {
   const { providedAccountId, derivedAccountId } = args;
   const env = getValidEnv(getEnv(derivedAccountId));
 

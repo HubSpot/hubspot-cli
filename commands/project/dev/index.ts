@@ -31,8 +31,8 @@ async function handler(
   const {
     derivedAccountId,
     providedAccountId,
-    targetTestingAccount,
-    targetProjectAccount,
+    testingAccount,
+    projectAccount,
   } = args;
 
   const { projectConfig, projectDir } = await getProjectConfig();
@@ -47,21 +47,21 @@ async function handler(
 
   // If either targetTestingAccount or targetProjectAccount is provided, the other must be provided
   if (
-    (targetTestingAccount && !targetProjectAccount) ||
-    (targetProjectAccount && !targetTestingAccount)
+    (testingAccount && !projectAccount) ||
+    (projectAccount && !testingAccount)
   ) {
-    uiLogger.error('TODO');
+    uiLogger.error(commands.project.dev.errors.invalidAccountFlags);
     process.exit(EXIT_CODES.ERROR);
   }
 
   // Legacy projects do not support targetTestingAccount and targetProjectAccount
-  if (targetTestingAccount && targetProjectAccount && !useV3) {
-    uiLogger.error('TODO');
+  if (testingAccount && projectAccount && !useV3) {
+    uiLogger.error(commands.project.dev.errors.unsupportedAccountFlags);
     process.exit(EXIT_CODES.ERROR);
   }
 
   let targetProjectAccountId =
-    providedAccountId || getAccountId(targetProjectAccount);
+    providedAccountId || getAccountId(projectAccount);
 
   let profile: HsProfileFile | undefined;
 
@@ -91,7 +91,7 @@ async function handler(
   }
 
   const targetTestingAccountId =
-    getAccountId(targetTestingAccount) || targetProjectAccountId;
+    getAccountId(testingAccount) || targetProjectAccountId;
 
   trackCommandUsage('project-dev', {}, targetProjectAccountId);
 
@@ -100,21 +100,21 @@ async function handler(
   uiLogger.log(commands.project.dev.logs.learnMoreLocalDevServer);
 
   if (useV3) {
-    await unifiedProjectDevFlow(
+    await unifiedProjectDevFlow({
       args,
-      targetProjectAccountId,
-      targetTestingAccountId,
+      initialTargetProjectAccountId: targetProjectAccountId,
+      initialTargetTestingAccountId: targetTestingAccountId,
       projectConfig,
       projectDir,
-      profile
-    );
+      profileConfig: profile,
+    });
   } else {
-    await deprecatedProjectDevFlow(
+    await deprecatedProjectDevFlow({
       args,
-      targetProjectAccountId,
+      accountId: targetProjectAccountId,
       projectConfig,
-      projectDir
-    );
+      projectDir,
+    });
   }
 }
 
@@ -128,14 +128,12 @@ function projectDevBuilder(yargs: Argv): Argv<ProjectDevArgs> {
 
   yargs.options('targetTestingAccount', {
     type: 'string',
-    // TODO: We may want to add messaging that this only works on certain platform versions
     description: commands.project.dev.options.targetTestingAccount,
     hidden: true,
   });
 
   yargs.options('targetProjectAccount', {
     type: 'string',
-    // TODO: We may want to add messaging that this only works on certain platform versions
     description: commands.project.dev.options.targetProjectAccount,
     hidden: true,
   });

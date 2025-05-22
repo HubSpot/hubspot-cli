@@ -1012,14 +1012,19 @@ export const commands = {
         invalidProjectComponents:
           'Projects cannot contain both private and public apps. Move your apps to separate projects before attempting local development.',
         noRunnableComponents: `No supported components were found in this project. Run ${uiCommandReference('hs project add')} to see a list of available components and add one to your project.`,
+        invalidAccountFlags:
+          'Must specify both --projectAccount and --testingAccount flags. To use the same account for both, use the --account flag.',
+        unsupportedAccountFlags:
+          'The --projectAccount and --testingAccount flags are not supported for projects created with platform versions before 2025.2.',
       },
       examples: {
         default: 'Start local dev for the current project',
       },
       options: {
-        targetProjectAccount: 'The id of the account to upload your project to',
+        targetProjectAccount:
+          'The id of the account to upload your project to. Only compatible with platform versions 2025.2 and above.',
         targetTestingAccount:
-          'The id of the account to install apps and test on',
+          'The id of the account to install apps and test on. Only compatible with platform versions 2025.2 and above.',
         profile: 'The name of the profile to use',
       },
     },

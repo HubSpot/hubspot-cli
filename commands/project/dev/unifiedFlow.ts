@@ -31,14 +31,23 @@ import { commands } from '../../../lang/en';
 import { isDeveloperTestAccount, isSandbox } from '../../../lib/accountTypes';
 // import LocalDevWebsocketServer from '../../../lib/projects/localDev/LocalDevWebsocketServer';
 
-export async function unifiedProjectDevFlow(
-  args: ArgumentsCamelCase<ProjectDevArgs>,
-  initialTargetProjectAccountId: number,
-  initialTargetTestingAccountId: number,
-  projectConfig: ProjectConfig,
-  projectDir: string,
-  profileConfig?: HsProfileFile
-): Promise<void> {
+type UnifiedProjectDevFlowArgs = {
+  args: ArgumentsCamelCase<ProjectDevArgs>;
+  initialTargetProjectAccountId: number;
+  initialTargetTestingAccountId: number;
+  projectConfig: ProjectConfig;
+  projectDir: string;
+  profileConfig?: HsProfileFile;
+};
+
+export async function unifiedProjectDevFlow({
+  args,
+  initialTargetProjectAccountId,
+  initialTargetTestingAccountId,
+  projectConfig,
+  projectDir,
+  profileConfig,
+}: UnifiedProjectDevFlowArgs): Promise<void> {
   const env = getValidEnv(getEnv(initialTargetProjectAccountId));
 
   let projectNodes;
