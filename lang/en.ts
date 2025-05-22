@@ -19,17 +19,6 @@ type LangObject = {
 
 export const commands = {
   generalErrors: {
-    updateNotify: {
-      notifyTitle: 'Update available',
-      cmsUpdateNotification: (packageName: string, updateCommand: string) =>
-        `${chalk.bold('The CMS CLI is now the HubSpot CLI')}\n\nTo upgrade, uninstall ${chalk.bold(packageName)}\nand then run ${updateCommand}`,
-      cliUpdateNotification: (
-        currentVersion: string,
-        latestVersion: string,
-        updateCommand: string
-      ) =>
-        `HubSpot CLI version ${chalk.cyan(chalk.bold(currentVersion))} is outdated.\nRun ${updateCommand} to upgrade to version ${chalk.cyan(chalk.bold(latestVersion))}`,
-    },
     srcIsProject: (src: string, command: string) =>
       `"${src}" is in a project folder. Did you mean "hs project ${command}"?`,
     handleDeprecatedEnvVariables: {
@@ -204,7 +193,7 @@ export const commands = {
     subcommands: {
       set: {
         describe:
-          'Set various configuration options within the hubspot.config.yml file.',
+          'Set various configuration options within the hubspot CLI config file.',
         promptMessage: 'Select a config option to update',
         examples: {
           default: 'Opens a prompt to select a config item to modify',
@@ -212,26 +201,15 @@ export const commands = {
         options: {
           defaultMode: {
             describe: 'Set the default CMS publish mode',
-            promptMessage: 'Select CMS publish mode to be used as the default',
-            error: (validModes: string) =>
-              `The provided CMS publish mode is invalid. Valid values are ${validModes}.`,
-            success: (mode: string) => `Default mode updated to: ${mode}`,
           },
           allowUsageTracking: {
             describe: 'Enable or disable usage tracking',
-            promptMessage: 'Choose to enable or disable usage tracking',
-            success: (isEnabled: string) =>
-              `Allow usage tracking set to: "${isEnabled}"`,
-            labels: {
-              enabled: 'Enabled',
-              disabled: 'Disabled',
-            },
           },
           httpTimeout: {
             describe: 'Set the http timeout duration',
-            promptMessage: 'Enter http timeout duration',
-            success: (timeout: string) =>
-              `The http timeout has been set to: ${timeout}`,
+          },
+          allowAutoUpdates: {
+            describe: 'Enable or disable auto updates',
           },
         },
       },
@@ -2909,6 +2887,24 @@ export const lib = {
         )} to authenticate the App Developer Account ${parentAccountId} associated with ${accountIdentifier}.`,
     },
   },
+  middleware: {
+    updateNotification: {
+      notifyTitle: chalk.bold('Update available'),
+      cmsUpdateNotification: (packageName: string) =>
+        `${chalk.bold('The CMS CLI is now the HubSpot CLI')}\n\nTo upgrade, uninstall ${chalk.bold(packageName)}\nand then run ${uiCommandReference('{updateCommand}')}`,
+      cliUpdateNotification: `HubSpot CLI version ${chalk.cyan(chalk.bold('{currentVersion}'))} is outdated.\nRun ${uiCommandReference('{updateCommand}')} to upgrade to version ${chalk.cyan(chalk.bold('{latestVersion}'))}`,
+    },
+    autoUpdateCLI: {
+      updateAvailable: (latestVersion: string) =>
+        `There's a new HubSpot CLI version available! Updating to version ${chalk.bold(latestVersion)}`,
+      updateSucceeded: (latestVersion: string) =>
+        `Successfully updated HubSpot CLI to version ${chalk.bold(latestVersion)}`,
+      notInstalledGlobally:
+        'Cannot auto-update the HubSpot CLI because NPM is not installed globally',
+      updateFailed: (latestVersion: string) =>
+        `Failed to update HubSpot CLI to version ${chalk.bold(latestVersion)}`,
+    },
+  },
   projectProfiles: {
     logs: {
       usingProfile: (profileName: string) =>
@@ -3137,6 +3133,36 @@ export const lib = {
     serverlessFunctionLogs: {
       unableToProcessLog: (log: string) => `Unable to process log ${log}`,
       noLogsFound: 'No logs found.',
+    },
+  },
+  configOptions: {
+    enableOrDisableBooleanFieldPrompt: {
+      message: (fieldName: string) =>
+        `Choose to enable or disable ${fieldName}`,
+      labels: {
+        enabled: 'Enabled',
+        disabled: 'Disabled',
+      },
+    },
+    setAllowUsageTracking: {
+      fieldName: 'usage tracking',
+      success: (isEnabled: string) =>
+        `Allow usage tracking set to: "${isEnabled}"`,
+    },
+    setAllowAutoUpdates: {
+      fieldName: 'auto updates',
+      success: (isEnabled: string) =>
+        `Allow auto updates set to: "${isEnabled}"`,
+    },
+    setDefaultCmsPublishMode: {
+      promptMessage: 'Select CMS publish mode to be used as the default',
+      error: (validModes: string) =>
+        `The provided CMS publish mode is invalid. Valid values are ${validModes}.`,
+      success: (mode: string) => `Default mode updated to: ${mode}`,
+    },
+    setHttpTimeout: {
+      promptMessage: 'Enter http timeout duration',
+      success: (timeout: string) => `HTTP timeout set to: ${timeout}`,
     },
   },
   commonOpts: {

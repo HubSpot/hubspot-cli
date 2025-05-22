@@ -15,9 +15,7 @@ const {
   validateAccountOptions,
   handleDeprecatedEnvVariables,
 } = require('../lib/middleware/configMiddleware');
-const {
-  notifyAboutUpdates,
-} = require('../lib/middleware/notificationsMiddleware');
+const { autoUpdateCLI } = require('../lib/middleware/autoUpdateMiddleware');
 const {
   checkAndWarnGitInclusionMiddleware,
 } = require('../lib/middleware/gitMiddleware');
@@ -54,8 +52,6 @@ const doctorCommand = require('../commands/doctor');
 const completionCommand = require('../commands/completion');
 const appCommand = require('../commands/app');
 
-notifyAboutUpdates();
-
 const getTerminalWidth = () => {
   const width = yargs.terminalWidth();
 
@@ -88,6 +84,7 @@ const argv = yargs
     handleDeprecatedEnvVariables,
     loadConfigMiddleware,
     injectAccountIdMiddleware,
+    autoUpdateCLI,
     checkAndWarnGitInclusionMiddleware,
     validateAccountOptions,
     checkFireAlarms,
