@@ -61,7 +61,7 @@ async function handler(
   }
 
   let targetProjectAccountId =
-    providedAccountId || getAccountId(projectAccount);
+    providedAccountId || (projectAccount && getAccountId(projectAccount));
 
   let profile: HsProfileFile | undefined;
 
@@ -91,7 +91,7 @@ async function handler(
   }
 
   const targetTestingAccountId =
-    getAccountId(testingAccount) || targetProjectAccountId;
+    (testingAccount && getAccountId(testingAccount)) || targetProjectAccountId;
 
   trackCommandUsage('project-dev', {}, targetProjectAccountId);
 
