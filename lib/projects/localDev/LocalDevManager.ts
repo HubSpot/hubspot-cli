@@ -41,11 +41,12 @@ import {
   uiLine,
 } from '../../ui';
 import { logError } from '../../errorHandlers/index';
-import { installPublicAppPrompt } from '../../prompts/installPublicAppPrompt';
+import { installAppPrompt } from '../../prompts/installAppPrompt';
 import { confirmPrompt } from '../../prompts/promptUtils';
 import { handleKeypress } from '../../process';
 import { lib } from '../../../lang/en';
 import { uiLogger } from '../../ui/logger';
+import { getOauthAppInstallUrl } from '../../app/urls';
 
 const WATCH_EVENTS = {
   add: 'add',
@@ -317,14 +318,14 @@ class LocalDevManager {
     const isReinstall = previouslyAuthorizedScopeGroups.length > 0;
 
     if (!isInstalledWithScopeGroups) {
-      await installPublicAppPrompt(
-        this.env,
-        this.targetAccountId,
-        this.activePublicAppData.clientId,
-        this.activeApp.config.auth.requiredScopes,
-        this.activeApp.config.auth.redirectUrls,
-        isReinstall
-      );
+      const installUrl = getOauthAppInstallUrl({
+        targetAccountId: this.targetAccountId,
+        env: this.env,
+        clientId: this.activePublicAppData.clientId,
+        scopes: this.activeApp.config.auth.requiredScopes,
+        redirectUrls: this.activeApp.config.auth.redirectUrls,
+      });
+      await installAppPrompt(installUrl, isReinstall);
     }
   }
 

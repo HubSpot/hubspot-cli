@@ -7,18 +7,22 @@ import { PublicApp } from '@hubspot/local-dev-lib/types/Apps';
 import { DevModeUnifiedInterface as UIEDevModeInterface } from '@hubspot/ui-extensions-dev-server';
 import { requestPorts } from '@hubspot/local-dev-lib/portManager';
 
-import { APP_DISTRIBUTION_TYPES } from '../../constants';
+import { APP_AUTH_TYPES, APP_DISTRIBUTION_TYPES } from '../../constants';
 import { EXIT_CODES } from '../../enums/exitCodes';
 import { isAppIRNode } from '../../projects/structure';
 import { uiLine } from '../../ui';
 import { logError } from '../../errorHandlers/index';
-import { installPublicAppPrompt } from '../../prompts/installPublicAppPrompt';
+import { installAppPrompt } from '../../prompts/installAppPrompt';
 import { confirmPrompt } from '../../prompts/promptUtils';
 import { AppIRNode } from '../../../types/ProjectComponents';
 import { lib } from '../../../lang/en';
 import { uiLogger } from '../../ui/logger';
 import LocalDevState from './LocalDevState';
 import LocalDevLogger from './LocalDevLogger';
+import {
+  getOauthAppInstallUrl,
+  getStaticAuthAppInstallUrl,
+} from '../../app/urls';
 
 type AppDevModeInterfaceConstructorOptions = {
   localDevState: LocalDevState;
@@ -54,6 +58,23 @@ class AppDevModeInterface {
         null;
     }
     return this._appNode;
+  }
+
+  private getAppInstallUrl(): string {
+    if (this.appNode?.config.auth.type === APP_AUTH_TYPES.OAUTH) {
+      return getOauthAppInstallUrl({
+        targetAccountId: this.localDevState.targetTestingAccountId,
+        env: this.localDevState.env,
+        clientId: this.appData!.clientId, // This is only called after checking that appData exists
+        scopes: this.appNode.config.auth.requiredScopes,
+        redirectUrls: this.appNode.config.auth.redirectUrls,
+      });
+    }
+    return getStaticAuthAppInstallUrl({
+      targetAccountId: this.localDevState.targetTestingAccountId,
+      env: this.localDevState.env,
+      appId: this.appNode!.uid,
+    });
   }
 
   private async fetchAppData(): Promise<void> {
@@ -131,14 +152,9 @@ class AppDevModeInterface {
     const isReinstall = previouslyAuthorizedScopeGroups.length > 0;
 
     if (!isInstalledWithScopeGroups) {
-      await installPublicAppPrompt(
-        this.localDevState.env,
-        this.localDevState.targetTestingAccountId,
-        this.appData.clientId,
-        this.appNode.config.auth.requiredScopes,
-        this.appNode.config.auth.redirectUrls,
-        isReinstall
-      );
+      const installUrl = this.getAppInstallUrl();
+
+      await installAppPrompt(installUrl, isReinstall);
     }
   }
 
