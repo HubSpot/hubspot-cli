@@ -200,6 +200,15 @@ export async function selectDeveloperTestTargetAccountPrompt(
       },
       disabled: disabledMessage,
     },
+    {
+      name: i18n(
+        `lib.prompts.projectDevTargetAccountPrompt.testOnThisAccountOption`
+      ),
+      value: {
+        targetAccountId: defaultAccountId,
+        createNestedAccount: false,
+      },
+    },
   ];
 
   return selectTargetAccountPrompt(

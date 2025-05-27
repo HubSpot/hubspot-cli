@@ -3199,6 +3199,7 @@ export const lib = {
       createNewSandboxOption: '<Test on a new development sandbox>',
       createNewDeveloperTestAccountOption:
         '<Test on a new developer test account>',
+      testOnThisAccountOption: '<Test on this account>',
       chooseDefaultAccountOption: () =>
         `<${chalk.bold('❗')} Test on this production account ${chalk.bold('❗')}>`,
       promptMessage: (accountType: string, accountIdentifier: string) =>

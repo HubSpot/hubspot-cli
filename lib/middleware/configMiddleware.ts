@@ -102,8 +102,6 @@ export async function loadConfigMiddleware(
   } else if (!isTargetedCommand(argv._, { init: { target: true } })) {
     const config = loadConfig(argv.config as string, argv);
 
-    console.log('config', config);
-
     // We don't run validateConfig() for auth because users should be able to run it when
     // no accounts are configured, but we still want to exit if the config file is not found
     if (isTargetedCommand(argv._, { auth: { target: true } }) && !config) {
