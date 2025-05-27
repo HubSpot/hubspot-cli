@@ -2735,6 +2735,10 @@ export const lib = {
       `Skipping call to ${serverKey} because there are no compatible components in the project.`,
   },
   LocalDevManager: {
+    staticAuthAccountsMustMatch:
+      'You must test static auth apps in the account the project exists in',
+    appNotFound: (accountId: number, appUid: string | undefined) =>
+      `Unable to find app with uid ${appUid} in account ${uiAccountDescription(accountId)}`,
     failedToInitialize: 'Missing required arguments to initialize Local Dev',
     noDeployedBuild: (
       projectName: string,
@@ -3199,6 +3203,7 @@ export const lib = {
       createNewSandboxOption: '<Test on a new development sandbox>',
       createNewDeveloperTestAccountOption:
         '<Test on a new developer test account>',
+      testOnThisAccountOption: '<Test on this account>',
       chooseDefaultAccountOption: () =>
         `<${chalk.bold('❗')} Test on this production account ${chalk.bold('❗')}>`,
       promptMessage: (accountType: string, accountIdentifier: string) =>
@@ -3414,15 +3419,14 @@ export const lib = {
         destRequired: 'You must specify a destination directory.',
       },
     },
-    installPublicAppPrompt: {
+    installAppPrompt: {
       explanation:
         'Local development requires this app to be installed in the target test account',
       reinstallExplanation:
         "This app's required scopes have been updated since it was last installed on the target test account. To avoid issues with local development, we recommend reinstalling the app with the updated scopes.",
       prompt: 'Open HubSpot to install this app?',
       reinstallPrompt: 'Open HubSpot to reinstall this app?',
-      decline: () =>
-        `To continue local development of this app, install it in your target test account and re-run ${chalk.bold('`hs project dev`')}`,
+      decline: `To continue local development of this app, install it in your target test account and re-run ${chalk.bold('`hs project dev`')}`,
     },
     selectHubDBTablePrompt: {
       selectTable: 'Select a HubDB table:',
