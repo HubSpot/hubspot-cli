@@ -9,7 +9,13 @@ import {
   validateProjectConfig,
 } from '../../../lib/projects/config';
 import { EXIT_CODES } from '../../../lib/enums/exitCodes';
-import { uiBetaTag, uiCommandReference, uiLink, uiLine } from '../../../lib/ui';
+import {
+  uiBetaTag,
+  uiCommandReference,
+  uiLink,
+  uiLine,
+  uiAccountDescription,
+} from '../../../lib/ui';
 import { ProjectDevArgs } from '../../../types/Yargs';
 import { deprecatedProjectDevFlow } from './deprecatedFlow';
 import { unifiedProjectDevFlow } from './unifiedFlow';
@@ -89,7 +95,12 @@ async function handler(
   );
 
   if (!accountConfig) {
-    logger.error(i18n(`commands.project.subcommands.dev.errors.noAccount`));
+    logger.error(
+      i18n(`commands.project.subcommands.dev.errors.noAccount`, {
+        accountId: uiAccountDescription(targetAccountId),
+        authCommand: uiCommandReference('hs auth'),
+      })
+    );
     process.exit(EXIT_CODES.ERROR);
   }
 

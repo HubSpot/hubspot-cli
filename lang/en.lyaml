@@ -1349,6 +1349,7 @@ en:
       projectDevTargetAccountPrompt:
         createNewSandboxOption: "<Test on a new development sandbox>"
         createNewDeveloperTestAccountOption: "<Test on a new developer test account>"
+        testOnThisAccountOption: '<Test on this account>'
         chooseDefaultAccountOption: "<{{#bold}}\U00002757{{/bold}} Test on this production account {{#bold}}\U00002757{{/bold}}>"
         promptMessage: "[--account] Choose a {{ accountType }} under {{ accountIdentifier }} to test with:"
         sandboxLimit: "Your account reached the limit of {{ limit }} development sandboxes"
