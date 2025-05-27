@@ -91,12 +91,8 @@ class AppDevModeInterface {
     const app = results.find(app => app.sourceId === this.appNode?.uid);
 
     if (!app) {
-      throw new Error(
-        lib.LocalDevManager.appNotFound(
-          this.localDevState.targetProjectAccountId,
-          this.appNode?.uid
-        )
-      );
+      uiLogger.error(lib.LocalDevManager.staticAuthAccountsMustMatch);
+      process.exit(EXIT_CODES.ERROR);
     }
 
     return getStaticAuthAppInstallUrl({
