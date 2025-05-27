@@ -41,6 +41,14 @@ class AppDevModeInterface {
     this.localDevLogger = options.localDevLogger;
 
     if (
+      this.appNode?.config.auth.type === APP_AUTH_TYPES.STATIC &&
+      this.localDevState.targetTestingAccountId !==
+        this.localDevState.targetProjectAccountId
+    ) {
+      throw new Error('Unable to start');
+    }
+
+    if (
       !this.localDevState.targetProjectAccountId ||
       !this.localDevState.projectConfig ||
       !this.localDevState.projectDir
@@ -60,7 +68,7 @@ class AppDevModeInterface {
     return this._appNode;
   }
 
-  private getAppInstallUrl(): string {
+  private async getAppInstallUrl(): Promise<string> {
     if (this.appNode?.config.auth.type === APP_AUTH_TYPES.OAUTH) {
       return getOauthAppInstallUrl({
         targetAccountId: this.localDevState.targetTestingAccountId,
@@ -70,10 +78,22 @@ class AppDevModeInterface {
         redirectUrls: this.appNode.config.auth.redirectUrls,
       });
     }
+
+    const {
+      data: { results },
+    } = await fetchPublicAppsForPortal(
+      this.localDevState.targetProjectAccountId
+    );
+    const app = results.find(app => app.sourceId === this.appNode?.uid);
+
+    if (!app) {
+      throw new Error('Unable to find app in the project account');
+    }
+
     return getStaticAuthAppInstallUrl({
       targetAccountId: this.localDevState.targetTestingAccountId,
       env: this.localDevState.env,
-      appId: this.appNode!.uid,
+      appId: `${app.id}`,
     });
   }
 
@@ -139,28 +159,23 @@ class AppDevModeInterface {
       return;
     }
 
-    if (this.appNode.config.auth.type === APP_AUTH_TYPES.OAUTH) {
-      const {
-        data: { isInstalledWithScopeGroups, previouslyAuthorizedScopeGroups },
-      } = await fetchAppInstallationData(
-        this.localDevState.targetTestingAccountId,
-        this.localDevState.projectId,
-        this.appNode.uid,
-        this.appNode.config.auth.requiredScopes,
-        this.appNode.config.auth.optionalScopes
-      );
+    if (this.appNode.config.auth.type === APP_AUTH_TYPES.STATIC) {
+      return installAppPrompt(await this.getAppInstallUrl(), false);
+    }
 
+    const {
+      data: { isInstalledWithScopeGroups, previouslyAuthorizedScopeGroups },
+    } = await fetchAppInstallationData(
+      this.localDevState.targetTestingAccountId,
+      this.localDevState.projectId,
+      this.appNode.uid,
+      this.appNode.config.auth.requiredScopes,
+      this.appNode.config.auth.optionalScopes
+    );
+
+    if (!isInstalledWithScopeGroups) {
       const isReinstall = previouslyAuthorizedScopeGroups.length > 0;
-
-      if (!isInstalledWithScopeGroups) {
-        const installUrl = this.getAppInstallUrl();
-
-        await installAppPrompt(installUrl, isReinstall);
-      }
-    } else {
-      const installUrl = this.getAppInstallUrl();
-
-      await installAppPrompt(installUrl, false);
+      await installAppPrompt(await this.getAppInstallUrl(), isReinstall);
     }
   }
 
