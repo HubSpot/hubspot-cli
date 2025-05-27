@@ -2735,6 +2735,10 @@ export const lib = {
       `Skipping call to ${serverKey} because there are no compatible components in the project.`,
   },
   LocalDevManager: {
+    staticAuthAccountsMustMatch:
+      'You must test static auth apps in the account the project exists in',
+    appNotFound: (accountId: number, appUid: string | undefined) =>
+      `Unable to find app with uid ${appUid} in account ${uiAccountDescription(accountId)}`,
     failedToInitialize: 'Missing required arguments to initialize Local Dev',
     noDeployedBuild: (
       projectName: string,

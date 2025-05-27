@@ -45,7 +45,8 @@ class AppDevModeInterface {
       this.localDevState.targetTestingAccountId !==
         this.localDevState.targetProjectAccountId
     ) {
-      throw new Error('Unable to start');
+      uiLogger.error(lib.LocalDevManager.staticAuthAccountsMustMatch);
+      process.exit(EXIT_CODES.ERROR);
     }
 
     if (
@@ -53,7 +54,7 @@ class AppDevModeInterface {
       !this.localDevState.projectConfig ||
       !this.localDevState.projectDir
     ) {
-      uiLogger.log(lib.LocalDevManager.failedToInitialize);
+      uiLogger.error(lib.LocalDevManager.failedToInitialize);
       process.exit(EXIT_CODES.ERROR);
     }
   }
@@ -87,7 +88,12 @@ class AppDevModeInterface {
     const app = results.find(app => app.sourceId === this.appNode?.uid);
 
     if (!app) {
-      throw new Error('Unable to find app in the project account');
+      throw new Error(
+        lib.LocalDevManager.appNotFound(
+          this.localDevState.targetProjectAccountId,
+          this.appNode?.uid
+        )
+      );
     }
 
     return getStaticAuthAppInstallUrl({
@@ -173,9 +179,12 @@ class AppDevModeInterface {
       this.appNode.config.auth.optionalScopes
     );
 
+    const isReinstall = previouslyAuthorizedScopeGroups.length > 0;
+
     if (!isInstalledWithScopeGroups) {
-      const isReinstall = previouslyAuthorizedScopeGroups.length > 0;
-      await installAppPrompt(await this.getAppInstallUrl(), isReinstall);
+      const installUrl = await this.getAppInstallUrl();
+
+      await installAppPrompt(installUrl, isReinstall);
     }
   }
 
