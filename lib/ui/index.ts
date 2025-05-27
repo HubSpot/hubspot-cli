@@ -64,8 +64,10 @@ export function uiAccountDescription(
     message = `${account.name} [${
       HUBSPOT_ACCOUNT_TYPE_STRINGS[account.accountType]
     }] (${accountId})`;
+  } else {
+    message = accountId ? accountId.toString() : '';
   }
-  return bold ? chalk.bold(message) : message || '';
+  return bold ? chalk.bold(message) : message;
 }
 
 export function uiInfoSection(title: string, logContent: () => void): void {

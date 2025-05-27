@@ -65,7 +65,9 @@ export async function selectSandboxTargetAccountPrompt(
       const { data } = await getSandboxUsageLimits(defaultAccountId);
       sandboxUsage = data.usage;
     } else {
-      logger.error(`lib.prompts.projectDevTargetAccountPrompt.noAccountId`);
+      logger.error(
+        i18n(`lib.prompts.projectDevTargetAccountPrompt.noAccountId`)
+      );
       process.exit(EXIT_CODES.ERROR);
     }
   } catch (err) {
@@ -144,7 +146,9 @@ export async function selectDeveloperTestTargetAccountPrompt(
       const { data } = await fetchDeveloperTestAccounts(defaultAccountId);
       devTestAccountsResponse = data;
     } else {
-      logger.error(`lib.prompts.projectDevTargetAccountPrompt.noAccountId`);
+      logger.error(
+        i18n(`lib.prompts.projectDevTargetAccountPrompt.noAccountId`)
+      );
       process.exit(EXIT_CODES.ERROR);
     }
   } catch (err) {
@@ -195,6 +199,15 @@ export async function selectDeveloperTestTargetAccountPrompt(
         createNestedAccount: true,
       },
       disabled: disabledMessage,
+    },
+    {
+      name: i18n(
+        `lib.prompts.projectDevTargetAccountPrompt.testOnThisAccountOption`
+      ),
+      value: {
+        targetAccountId: defaultAccountId,
+        createNestedAccount: false,
+      },
     },
   ];
 
