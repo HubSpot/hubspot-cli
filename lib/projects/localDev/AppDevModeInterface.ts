@@ -139,22 +139,28 @@ class AppDevModeInterface {
       return;
     }
 
-    const {
-      data: { isInstalledWithScopeGroups, previouslyAuthorizedScopeGroups },
-    } = await fetchAppInstallationData(
-      this.localDevState.targetTestingAccountId,
-      this.localDevState.projectId,
-      this.appNode.uid,
-      this.appNode.config.auth.requiredScopes,
-      this.appNode.config.auth.optionalScopes
-    );
+    if (this.appNode.config.auth.type === APP_AUTH_TYPES.OAUTH) {
+      const {
+        data: { isInstalledWithScopeGroups, previouslyAuthorizedScopeGroups },
+      } = await fetchAppInstallationData(
+        this.localDevState.targetTestingAccountId,
+        this.localDevState.projectId,
+        this.appNode.uid,
+        this.appNode.config.auth.requiredScopes,
+        this.appNode.config.auth.optionalScopes
+      );
 
-    const isReinstall = previouslyAuthorizedScopeGroups.length > 0;
+      const isReinstall = previouslyAuthorizedScopeGroups.length > 0;
 
-    if (!isInstalledWithScopeGroups) {
+      if (!isInstalledWithScopeGroups) {
+        const installUrl = this.getAppInstallUrl();
+
+        await installAppPrompt(installUrl, isReinstall);
+      }
+    } else {
       const installUrl = this.getAppInstallUrl();
 
-      await installAppPrompt(installUrl, isReinstall);
+      await installAppPrompt(installUrl, false);
     }
   }
 
