@@ -40,6 +40,9 @@ class AppDevModeInterface {
     this.localDevState = options.localDevState;
     this.localDevLogger = options.localDevLogger;
 
+    // Static auth apps are currently only installable in the portal that the project resides in
+    // This limitation will eventually be removed, but in the meantime we need this check or the install
+    // will always fail with a confusing message
     if (
       this.appNode?.config.auth.type === APP_AUTH_TYPES.STATIC &&
       this.localDevState.targetTestingAccountId !==
@@ -165,6 +168,9 @@ class AppDevModeInterface {
       return;
     }
 
+    // If the app is static auth, always prompt the user to install the app.
+    // We are currently going this because we have no method to determine if the static auth app
+    // is already installed in the portal
     if (this.appNode.config.auth.type === APP_AUTH_TYPES.STATIC) {
       return installAppPrompt(await this.getAppInstallUrl(), false);
     }
