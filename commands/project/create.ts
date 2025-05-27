@@ -152,7 +152,6 @@ async function handler(
       // @ts-expect-error
       createProjectPromptResponse.componentTemplates
         ?.map((item: { path: string; parentComponent?: string }) => {
-          console.log(item);
           return [
             path.join(platformVersion, item.path),
             item.parentComponent
@@ -163,6 +162,14 @@ async function handler(
         .flat()
     )
   );
+
+  // @ts-expect-error
+  if (repoConfig?.tooling) {
+    // @ts-expect-error
+    repoConfig.tooling.forEach((tooling: { path: string }) => {
+      components.push(path.join(platformVersion, tooling.path));
+    });
+  }
 
   if (repoConfig?.defaultFiles) {
     components.push(path.join(platformVersion, repoConfig?.defaultFiles));
