@@ -36,9 +36,7 @@ async function handler(args: ArgumentsCamelCase<AddSecretArgs>): Promise<void> {
 
   try {
     if (!secretName) {
-      const { secretName: name } = await secretNamePrompt(
-        i18n(`commands.secret.subcommands.add.actionType`)
-      );
+      const { secretName: name } = await secretNamePrompt();
       secretName = name;
     }
 

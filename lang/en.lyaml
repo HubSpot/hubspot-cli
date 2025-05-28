@@ -938,7 +938,6 @@ en:
       subcommands:
         add:
           describe: "Create a new secret."
-          actionType: " to add"
           errors:
             add: "The secret \"{{ secretName }}\" was not added"
             alreadyExists: "The secret \"{{ secretName }}\" already exists, it's value can be modified with {{ command }}"
@@ -1459,7 +1458,7 @@ en:
           invalidType: "[--type] Could not find type \"{{ type }}\". Please choose an available type:"
       secretPrompt:
         enterValue: "Enter a value for the secret: "
-        enterName: "Enter the name of the secret{{ actionType }}: "
+        enterName: "Enter the name of the secret to add: "
         selectSecretUpdate: "Select the secret you want to update"
         selectSecretDelete: "Select the secret you want to delete"
         errors:

@@ -69,14 +69,12 @@ async function handler(
   const { secretValue } = await secretValuePrompt();
 
   try {
-    const { data: res } = await updateAppSecret(
+    await updateAppSecret(
       derivedAccountId,
       appSecretApp.id,
       appSecretToUpdate!,
       secretValue
     );
-
-    console.log('res: ', res);
 
     logger.success(
       commands.app.subcommands.secret.subcommands.update.success(

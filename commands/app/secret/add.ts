@@ -39,9 +39,7 @@ async function handler(
   let appSecretName = args.name;
 
   if (!appSecretName) {
-    const { secretName: name } = await secretNamePrompt(
-      commands.app.subcommands.secret.subcommands.add.actionType
-    );
+    const { secretName: name } = await secretNamePrompt();
     appSecretName = name;
   }
 
