@@ -5,7 +5,7 @@ import profileCommand from '../profile';
 
 jest.mock('yargs');
 jest.mock('../profile/add');
-jest.mock('../profile/remove');
+jest.mock('../profile/delete');
 jest.mock('../../../lib/commonOpts');
 
 const commandSpy = jest
