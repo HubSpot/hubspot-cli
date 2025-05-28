@@ -20,24 +20,24 @@ import { confirmPrompt, listPrompt } from '../../../lib/prompts/promptUtils';
 import { fileExists } from '../../../lib/validation';
 import { debugError } from '../../../lib/errorHandlers';
 
-const command = 'remove [name]';
-const describe = uiBetaTag(commands.project.profile.remove.describe, false);
+const command = 'delete [name]';
+const describe = uiBetaTag(commands.project.profile.delete.describe, false);
 
-type ProjectProfileRemoveArgs = CommonArgs & {
+type ProjectProfileDeleteArgs = CommonArgs & {
   name?: string;
 };
 
 async function handler(
-  args: ArgumentsCamelCase<ProjectProfileRemoveArgs>
+  args: ArgumentsCamelCase<ProjectProfileDeleteArgs>
 ): Promise<void> {
   const { derivedAccountId } = args;
 
-  trackCommandUsage('project-profile-remove', undefined, derivedAccountId);
+  trackCommandUsage('project-profile-delete', undefined, derivedAccountId);
 
   const { projectConfig, projectDir } = await getProjectConfig();
 
   if (!projectConfig || !projectDir) {
-    uiLogger.error(commands.project.profile.remove.errors.noProjectConfig);
+    uiLogger.error(commands.project.profile.delete.errors.noProjectConfig);
     process.exit(EXIT_CODES.ERROR);
   }
 
@@ -50,15 +50,20 @@ async function handler(
 
     if (!fileExists(path.join(projectSourceDir, profileFilename))) {
       uiLogger.error(
-        commands.project.profile.remove.errors.noProfileFound(profileFilename)
+        commands.project.profile.delete.errors.noProfileFound(profileFilename)
       );
       process.exit(EXIT_CODES.ERROR);
     }
   } else {
     const existingProfiles = await getAllHsProfiles(projectSourceDir);
 
+    if (existingProfiles.length === 0) {
+      uiLogger.error(commands.project.profile.delete.errors.noProfilesFound);
+      process.exit(EXIT_CODES.ERROR);
+    }
+
     const promptResponse = await listPrompt(
-      commands.project.profile.remove.prompts.removeProfilePrompt,
+      commands.project.profile.delete.prompts.deleteProfilePrompt,
       {
         choices: existingProfiles.map(profile => ({
           name: getHsProfileFilename(profile),
@@ -81,12 +86,12 @@ async function handler(
   let targetAccountId: number | undefined;
 
   try {
-    const profileToRemove = loadHsProfileFile(projectSourceDir, profileName);
+    const profileToDelete = loadHsProfileFile(projectSourceDir, profileName);
 
-    targetAccountId = profileToRemove?.accountId;
+    targetAccountId = profileToDelete?.accountId;
   } catch (err) {
     uiLogger.debug(
-      commands.project.profile.remove.debug.failedToLoadProfile(profileName)
+      commands.project.profile.delete.debug.failedToLoadProfile(profileName)
     );
   }
 
@@ -104,7 +109,7 @@ async function handler(
 
     if (projectExists) {
       const confirmResponse = await confirmPrompt(
-        commands.project.profile.remove.prompts.removeProjectPrompt(
+        commands.project.profile.delete.prompts.deleteProjectPrompt(
           targetAccountId
         ),
         {
@@ -115,11 +120,11 @@ async function handler(
       if (confirmResponse) {
         await deleteProject(targetAccountId, projectConfig.name);
         uiLogger.log(
-          commands.project.profile.remove.logs.removedProject(targetAccountId)
+          commands.project.profile.delete.logs.deletedProject(targetAccountId)
         );
       } else {
         uiLogger.log(
-          commands.project.profile.remove.logs.didNotRemoveProject(
+          commands.project.profile.delete.logs.didNotDeleteProject(
             targetAccountId
           )
         );
@@ -134,7 +139,7 @@ async function handler(
     fs.unlinkSync(path.join(projectSourceDir, profileFilename));
   } catch (err) {
     uiLogger.error(
-      commands.project.profile.remove.errors.failedToRemoveProfile(
+      commands.project.profile.delete.errors.failedToDeleteProfile(
         profileFilename
       )
     );
@@ -142,28 +147,28 @@ async function handler(
   }
 
   uiLogger.log(
-    commands.project.profile.remove.logs.profileRemoved(profileFilename)
+    commands.project.profile.delete.logs.profileDeleted(profileFilename)
   );
   process.exit(EXIT_CODES.SUCCESS);
 }
 
-function projectProfileRemoveBuilder(
+function projectProfileDeleteBuilder(
   yargs: Argv
-): Argv<ProjectProfileRemoveArgs> {
+): Argv<ProjectProfileDeleteArgs> {
   yargs.positional('name', {
-    describe: commands.project.profile.remove.positionals.name,
+    describe: commands.project.profile.delete.positionals.name,
     type: 'string',
   });
 
   yargs.example([
-    ['$0 project profile remove qa', commands.project.profile.remove.example],
+    ['$0 project profile delete qa', commands.project.profile.delete.example],
   ]);
 
-  return yargs as Argv<ProjectProfileRemoveArgs>;
+  return yargs as Argv<ProjectProfileDeleteArgs>;
 }
 
-const builder = makeYargsBuilder<ProjectProfileRemoveArgs>(
-  projectProfileRemoveBuilder,
+const builder = makeYargsBuilder<ProjectProfileDeleteArgs>(
+  projectProfileDeleteBuilder,
   command,
   describe,
   {
@@ -171,9 +176,9 @@ const builder = makeYargsBuilder<ProjectProfileRemoveArgs>(
   }
 );
 
-const projectProfileRemoveCommand: YargsCommandModule<
+const projectProfileDeleteCommand: YargsCommandModule<
   unknown,
-  ProjectProfileRemoveArgs
+  ProjectProfileDeleteArgs
 > = {
   command,
   describe,
@@ -181,4 +186,4 @@ const projectProfileRemoveCommand: YargsCommandModule<
   builder,
 };
 
-export default projectProfileRemoveCommand;
+export default projectProfileDeleteCommand;

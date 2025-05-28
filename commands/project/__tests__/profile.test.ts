@@ -1,6 +1,6 @@
 import yargs, { Argv } from 'yargs';
 import add from '../profile/add';
-import remove from '../profile/remove';
+import deleteProfile from '../profile/delete';
 import profileCommand from '../profile';
 
 jest.mock('yargs');
@@ -29,7 +29,7 @@ describe('commands/project', () => {
   });
 
   describe('builder', () => {
-    const subcommands = [add, remove];
+    const subcommands = [add, deleteProfile];
 
     it('should demand the command takes one positional argument', () => {
       profileCommand.builder(yargs as Argv);
