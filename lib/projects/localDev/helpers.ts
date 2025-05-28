@@ -543,13 +543,6 @@ export async function selectAccountTypePrompt(
   accountConfig: CLIAccount
 ): Promise<string | null> {
   const hasAccessToSandboxes = await hasSandboxes(accountConfig);
-  let hasAccessToDeveloperTestAccounts = true;
-
-  try {
-    await validateDevTestAccountUsageLimits(accountConfig);
-  } catch (err) {
-    hasAccessToDeveloperTestAccounts = false;
-  }
 
   const result = await listPrompt(
     lib.localDevHelpers.selectAccountTypePrompt.message,
@@ -559,10 +552,6 @@ export async function selectAccountTypePrompt(
           name: lib.localDevHelpers.selectAccountTypePrompt
             .developerTestAccountOption,
           value: HUBSPOT_ACCOUNT_TYPES.DEVELOPER_TEST,
-          disabled: !hasAccessToDeveloperTestAccounts
-            ? lib.localDevHelpers.selectAccountTypePrompt
-                .developerTestAccountOptionDisabled
-            : false,
         },
         {
           name: lib.localDevHelpers.selectAccountTypePrompt

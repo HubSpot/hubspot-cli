@@ -2901,8 +2901,6 @@ export const lib = {
     selectAccountTypePrompt: {
       message: '[--account] Choose the type of account to test on',
       developerTestAccountOption: 'Test on a developer test account',
-      developerTestAccountOptionDisabled:
-        'Disabled - requires access to developer test accounts',
       sandboxAccountOption: 'Test on a sandbox account',
       sandboxAccountOptionDisabled:
         'Disabled - requires access to sandbox accounts',

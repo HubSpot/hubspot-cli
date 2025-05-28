@@ -92,9 +92,12 @@ export async function unifiedProjectDevFlow(
 
   if (!accountIsCombined && !profileConfig) {
     logger.log('');
-    logger.warn(
-      i18n(`commands.project.subcommands.dev.errors.unifiedAppsBetaWarning`)
+    logger.error(
+      i18n(`commands.project.subcommands.dev.errors.accountNotCombined`, {
+        accountUseCommand: uiCommandReference('hs account use'),
+      })
     );
+    process.exit(EXIT_CODES.ERROR);
   }
 
   let targetTestingAccountId = null;
