@@ -898,7 +898,7 @@ export const commands = {
               profileName
             )} into your new profile.`,
           copyExistingProfiles:
-            'Found existing project profiles. We can copy the variables from one of them into your new profile.',
+            'We can copy the variables from one of your existing profiles into your new profile.',
           profileAdded: (profileName: string) =>
             `Project profile ${chalk.bold(profileName)} was successfully added`,
         },
@@ -911,6 +911,10 @@ export const commands = {
           copyExistingProfilePromptEmpty: "Skip (don't copy any variables)",
           invalidProfileName:
             'Profile name cannot contain special characters or spaces',
+        },
+        warnings: {
+          duplicateTargetAccount: (targetAccountId: number) =>
+            `The account ${uiAccountDescription(targetAccountId)} is being used in an existing profile. Make sure to edit your project's name between uploads if you do not want to overwrite the existing project in this account.`,
         },
         errors: {
           noProjectConfig:
