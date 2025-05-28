@@ -23,6 +23,7 @@ import {
   confirmPrompt,
 } from '../../../lib/prompts/promptUtils';
 import { fileExists } from '../../../lib/validation';
+import { debugError } from '../../../lib/errorHandlers';
 
 const command = 'add [name]';
 const describe = uiBetaTag(commands.project.profile.add.describe, false);
@@ -204,7 +205,7 @@ async function handler(
       }
     } catch (err) {
       // Skip profiles that can't be loaded
-      continue;
+      debugError(err);
     }
   }
 
