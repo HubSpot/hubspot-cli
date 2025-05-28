@@ -30,10 +30,7 @@ import SpinniesManager from '../../../lib/ui/SpinniesManager';
 import LocalDevProcess from '../../../lib/projects/localDev/LocalDevProcess';
 import LocalDevWatcher from '../../../lib/projects/localDev/LocalDevWatcher';
 import { handleExit, handleKeypress } from '../../../lib/process';
-import {
-  isAppDeveloperAccount,
-  isStandardAccount,
-} from '../../../lib/accountTypes';
+import { isUnifiedAccount } from '../../../lib/accountTypes';
 import { uiCommandReference, uiLine, uiLink } from '../../../lib/ui';
 import { i18n } from '../../../lib/lang';
 // import LocalDevWebsocketServer from '../../../lib/projects/localDev/LocalDevWebsocketServer';
@@ -91,13 +88,9 @@ export async function unifiedProjectDevFlow(
   // @TODO Validate component types (i.e. previously you could not have both private and public apps)
 
   const accounts = getConfigAccounts();
+  const accountIsCombined = await isUnifiedAccount(accountConfig);
 
-  // TODO Ideally this should require the user to target a Combined account
-  // For now, check if the account is either developer or standard
-  const derivedAccountIsRecommendedType =
-    isAppDeveloperAccount(accountConfig) || isStandardAccount(accountConfig);
-
-  if (!derivedAccountIsRecommendedType && !profileConfig) {
+  if (!accountIsCombined && !profileConfig) {
     logger.log('');
     logger.warn(
       i18n(`commands.project.subcommands.dev.errors.unifiedAppsBetaWarning`)
