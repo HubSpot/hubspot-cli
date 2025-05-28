@@ -2862,16 +2862,17 @@ export const lib = {
       publicAppNonDeveloperTestAccountWarning: `Local development of public apps is only supported in ${chalk.bold('developer test accounts')}.`,
     },
     createNewProjectForLocalDev: {
-      projectMustExistExplanation: (
-        projectName: string,
-        accountIdentifier: string
-      ) =>
-        `The project ${projectName} does not exist in the target account ${accountIdentifier}. This command requires the project to exist in the target account.`,
+      projectMustExistExplanation: (projectName: string, accountId: number) =>
+        `The project ${projectName} does not exist in the target account ${uiAccountDescription(
+          accountId
+        )}. This command requires the project to exist in the target account.`,
       publicAppProjectMustExistExplanation: (
         projectName: string,
-        accountIdentifier: string
+        accountId: number
       ) =>
-        `The project ${projectName} does not exist in ${accountIdentifier}, the app developer account associated with your target account. This command requires the project to exist in this app developer account.`,
+        `The project ${projectName} does not exist in ${uiAccountDescription(
+          accountId
+        )}, the app developer account associated with your target account. This command requires the project to exist in this app developer account.`,
       createProject: (projectName: string, accountIdentifier: string) =>
         `Create new project ${projectName} in ${accountIdentifier}?`,
       choseNotToCreateProject:
@@ -2900,6 +2901,8 @@ export const lib = {
     selectAccountTypePrompt: {
       message: '[--account] Choose the type of account to test on',
       developerTestAccountOption: 'Test on a developer test account',
+      developerTestAccountOptionDisabled:
+        'Disabled - requires access to developer test accounts',
       sandboxAccountOption: 'Test on a sandbox account',
       sandboxAccountOptionDisabled:
         'Disabled - requires access to sandbox accounts',

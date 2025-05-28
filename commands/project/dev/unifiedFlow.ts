@@ -98,15 +98,10 @@ export async function unifiedProjectDevFlow(
     isAppDeveloperAccount(accountConfig) || isStandardAccount(accountConfig);
 
   if (!derivedAccountIsRecommendedType && !profileConfig) {
-    logger.error(
-      i18n(
-        `commands.project.subcommands.dev.errors.invalidUnifiedAppsAccount`,
-        {
-          authCommand: uiCommandReference('hs account use'),
-        }
-      )
+    logger.log('');
+    logger.warn(
+      i18n(`commands.project.subcommands.dev.errors.unifiedAppsBetaWarning`)
     );
-    process.exit(EXIT_CODES.SUCCESS);
   }
 
   let targetTestingAccountId = null;
@@ -114,6 +109,9 @@ export async function unifiedProjectDevFlow(
   if (profileConfig) {
     // Bypass the prompt for the testing account if the user has a profile configured
     targetTestingAccountId = profileConfig.accountId;
+  } else if (args.providedAccountId) {
+    // By pass the prompt if the user explicitly provides an --account flag.
+    targetTestingAccountId = targetProjectAccountId;
   } else {
     logger.log('');
     uiLine();
