@@ -7,18 +7,22 @@ import { PublicApp } from '@hubspot/local-dev-lib/types/Apps';
 import { DevModeUnifiedInterface as UIEDevModeInterface } from '@hubspot/ui-extensions-dev-server';
 import { requestPorts } from '@hubspot/local-dev-lib/portManager';
 
-import { APP_DISTRIBUTION_TYPES } from '../../constants';
+import { APP_AUTH_TYPES, APP_DISTRIBUTION_TYPES } from '../../constants';
 import { EXIT_CODES } from '../../enums/exitCodes';
 import { isAppIRNode } from '../../projects/structure';
 import { uiLine } from '../../ui';
 import { logError } from '../../errorHandlers/index';
-import { installPublicAppPrompt } from '../../prompts/installPublicAppPrompt';
+import { installAppPrompt } from '../../prompts/installAppPrompt';
 import { confirmPrompt } from '../../prompts/promptUtils';
 import { AppIRNode } from '../../../types/ProjectComponents';
 import { lib } from '../../../lang/en';
 import { uiLogger } from '../../ui/logger';
 import LocalDevState from './LocalDevState';
 import LocalDevLogger from './LocalDevLogger';
+import {
+  getOauthAppInstallUrl,
+  getStaticAuthAppInstallUrl,
+} from '../../app/urls';
 
 type AppDevModeInterfaceConstructorOptions = {
   localDevState: LocalDevState;
@@ -36,12 +40,24 @@ class AppDevModeInterface {
     this.localDevState = options.localDevState;
     this.localDevLogger = options.localDevLogger;
 
+    // Static auth apps are currently only installable in the portal that the project resides in
+    // This limitation will eventually be removed, but in the meantime we need this check or the install
+    // will always fail with a confusing message
+    if (
+      this.appNode?.config.auth.type === APP_AUTH_TYPES.STATIC &&
+      this.localDevState.targetTestingAccountId !==
+        this.localDevState.targetProjectAccountId
+    ) {
+      uiLogger.error(lib.LocalDevManager.staticAuthAccountsMustMatch);
+      process.exit(EXIT_CODES.ERROR);
+    }
+
     if (
       !this.localDevState.targetProjectAccountId ||
       !this.localDevState.projectConfig ||
       !this.localDevState.projectDir
     ) {
-      uiLogger.log(lib.LocalDevManager.failedToInitialize);
+      uiLogger.error(lib.LocalDevManager.failedToInitialize);
       process.exit(EXIT_CODES.ERROR);
     }
   }
@@ -54,6 +70,36 @@ class AppDevModeInterface {
         null;
     }
     return this._appNode;
+  }
+
+  private async getAppInstallUrl(): Promise<string> {
+    if (this.appNode?.config.auth.type === APP_AUTH_TYPES.OAUTH) {
+      return getOauthAppInstallUrl({
+        targetAccountId: this.localDevState.targetTestingAccountId,
+        env: this.localDevState.env,
+        clientId: this.appData!.clientId, // This is only called after checking that appData exists
+        scopes: this.appNode.config.auth.requiredScopes,
+        redirectUrls: this.appNode.config.auth.redirectUrls,
+      });
+    }
+
+    const {
+      data: { results },
+    } = await fetchPublicAppsForPortal(
+      this.localDevState.targetProjectAccountId
+    );
+    const app = results.find(app => app.sourceId === this.appNode?.uid);
+
+    if (!app) {
+      uiLogger.error(lib.LocalDevManager.staticAuthAccountsMustMatch);
+      process.exit(EXIT_CODES.ERROR);
+    }
+
+    return getStaticAuthAppInstallUrl({
+      targetAccountId: this.localDevState.targetTestingAccountId,
+      env: this.localDevState.env,
+      appId: `${app.id}`,
+    });
   }
 
   private async fetchAppData(): Promise<void> {
@@ -118,6 +164,13 @@ class AppDevModeInterface {
       return;
     }
 
+    // If the app is static auth, always prompt the user to install the app.
+    // We are currently going this because we have no method to determine if the static auth app
+    // is already installed in the portal
+    if (this.appNode.config.auth.type === APP_AUTH_TYPES.STATIC) {
+      return installAppPrompt(await this.getAppInstallUrl(), false);
+    }
+
     const {
       data: { isInstalledWithScopeGroups, previouslyAuthorizedScopeGroups },
     } = await fetchAppInstallationData(
@@ -131,14 +184,9 @@ class AppDevModeInterface {
     const isReinstall = previouslyAuthorizedScopeGroups.length > 0;
 
     if (!isInstalledWithScopeGroups) {
-      await installPublicAppPrompt(
-        this.localDevState.env,
-        this.localDevState.targetTestingAccountId,
-        this.appData.clientId,
-        this.appNode.config.auth.requiredScopes,
-        this.appNode.config.auth.redirectUrls,
-        isReinstall
-      );
+      const installUrl = await this.getAppInstallUrl();
+
+      await installAppPrompt(installUrl, isReinstall);
     }
   }
 

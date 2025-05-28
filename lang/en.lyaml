@@ -1349,6 +1349,7 @@ en:
       projectDevTargetAccountPrompt:
         createNewSandboxOption: "<Test on a new development sandbox>"
         createNewDeveloperTestAccountOption: "<Test on a new developer test account>"
+        testOnThisAccountOption: '<Test on this account>'
         chooseDefaultAccountOption: "<{{#bold}}\U00002757{{/bold}} Test on this production account {{#bold}}\U00002757{{/bold}}>"
         promptMessage: "[--account] Choose a {{ accountType }} under {{ accountIdentifier }} to test with:"
         sandboxLimit: "Your account reached the limit of {{ limit }} development sandboxes"
@@ -1488,12 +1489,6 @@ en:
         errors:
           srcRequired: "You must specify a source directory."
           destRequired: "You must specify a destination directory."
-      installPublicAppPrompt:
-        explanation: "Local development requires this app to be installed in the target test account"
-        reinstallExplanation: "This app's required scopes have been updated since it was last installed on the target test account. To avoid issues with local development, we recommend reinstalling the app with the updated scopes."
-        prompt: "Open HubSpot to install this app?"
-        reinstallPrompt: "Open HubSpot to reinstall this app?"
-        decline: "To continue local development of this app, install it in your target test account and re-run {{#bold}}`hs project dev`{{/bold}}"
       selectHubDBTablePrompt:
         selectTable: "Select a HubDB table:"
         enterDest: "Enter the destination path:"

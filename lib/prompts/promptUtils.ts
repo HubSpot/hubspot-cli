@@ -48,9 +48,11 @@ export async function listPrompt<T = string>(
   {
     choices,
     when,
+    defaultAnswer,
   }: {
     choices: PromptChoices<T>;
     when?: PromptWhen;
+    defaultAnswer?: string | number | boolean;
   }
 ): Promise<T> {
   const { choice } = await promptUser<ListPromptResponse<T>>([
@@ -60,6 +62,7 @@ export async function listPrompt<T = string>(
       message,
       choices,
       when,
+      default: defaultAnswer,
     },
   ]);
   return choice;
