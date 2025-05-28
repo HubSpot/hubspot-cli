@@ -25,7 +25,7 @@ describe('commands/app/secret/list', () => {
 
       expect(yargsMock.example).toHaveBeenCalledTimes(1);
       expect(yargsMock.option).toHaveBeenCalledWith(
-        'app-id',
+        'app',
         expect.objectContaining({
           type: 'number',
         })

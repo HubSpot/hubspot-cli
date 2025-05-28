@@ -1,9 +1,13 @@
 import { Argv, ArgumentsCamelCase } from 'yargs';
 import { logger } from '@hubspot/local-dev-lib/logger';
-import { deleteAppSecret } from '@hubspot/local-dev-lib/api/devSecrets';
+import {
+  deleteAppSecret,
+  fetchAppSecrets,
+} from '@hubspot/local-dev-lib/api/devSecrets';
 import { logError } from '../../../lib/errorHandlers/index';
 import { trackCommandUsage } from '../../../lib/usageTracking';
-import { secretNamePrompt } from '../../../lib/prompts/secretPrompt';
+import { confirmPrompt, listPrompt } from '../../../lib/prompts/promptUtils';
+import { selectAppPrompt } from '../../../lib/prompts/selectAppPrompt';
 import { commands } from '../../../lang/en';
 import { EXIT_CODES } from '../../../lib/enums/exitCodes';
 import {
@@ -14,7 +18,6 @@ import {
   YargsCommandModule,
 } from '../../../types/Yargs';
 import { makeYargsBuilder } from '../../../lib/yargsUtils';
-import { selectAppPrompt } from '../../../lib/prompts/selectAppPrompt';
 
 const command = 'delete [name]';
 const describe = commands.app.subcommands.secret.subcommands.delete.describe;
@@ -22,32 +25,69 @@ const describe = commands.app.subcommands.secret.subcommands.delete.describe;
 type DeleteAppSecretArgs = CommonArgs &
   ConfigArgs &
   AccountArgs &
-  EnvironmentArgs & { name?: string; appId?: number };
+  EnvironmentArgs & { name?: string; app?: number; force?: boolean };
 
 async function handler(
   args: ArgumentsCamelCase<DeleteAppSecretArgs>
 ): Promise<void> {
-  const { derivedAccountId } = args;
+  const { derivedAccountId, force } = args;
 
   trackCommandUsage('app-secret-delete', {}, derivedAccountId);
 
-  const appSecretApp = await selectAppPrompt(derivedAccountId, args.appId);
+  const appSecretApp = await selectAppPrompt(derivedAccountId, args.app);
 
-  let appSecretName = args.name;
+  let appSecrets: string[] = [];
 
-  if (!appSecretName) {
-    const { secretName: name } = await secretNamePrompt();
-    appSecretName = name;
+  try {
+    const { data: secrets } = await fetchAppSecrets(
+      derivedAccountId,
+      appSecretApp.id
+    );
+    appSecrets = secrets.results;
+  } catch (err) {
+    logError(err);
+    process.exit(EXIT_CODES.ERROR);
+  }
+
+  if (appSecrets.length === 0) {
+    logger.error(
+      commands.app.subcommands.secret.subcommands.delete.errors.noSecrets
+    );
+    process.exit(EXIT_CODES.ERROR);
+  }
+
+  const appSecretToDelete = await listPrompt(
+    commands.app.subcommands.secret.subcommands.delete.selectSecret,
+    { choices: appSecrets }
+  );
+
+  const confirmDelete =
+    force ||
+    (await confirmPrompt(
+      commands.app.subcommands.secret.subcommands.delete.confirmDelete(
+        appSecretApp.name,
+        appSecretToDelete
+      ),
+      {
+        defaultAnswer: false,
+      }
+    ));
+
+  if (!confirmDelete) {
+    logger.success(
+      commands.app.subcommands.secret.subcommands.delete.deleteCanceled
+    );
+    process.exit(EXIT_CODES.SUCCESS);
   }
 
   try {
-    await deleteAppSecret(derivedAccountId, appSecretApp.id, appSecretName);
+    await deleteAppSecret(derivedAccountId, appSecretApp.id, appSecretToDelete);
 
     logger.success(
       commands.app.subcommands.secret.subcommands.delete.success(
         derivedAccountId,
         appSecretApp.name,
-        appSecretName
+        appSecretToDelete
       )
     );
   } catch (err) {
@@ -64,14 +104,17 @@ function deleteAppSecretBuilder(yargs: Argv): Argv<DeleteAppSecretArgs> {
       commands.app.subcommands.secret.subcommands.delete.positionals.name,
     type: 'string',
   });
-  yargs.option('app-id', {
-    describe: commands.app.subcommands.secret.subcommands.delete.options.appId,
+  yargs.option('app', {
+    describe: commands.app.subcommands.secret.subcommands.delete.options.app,
     type: 'number',
-    required: true,
+  });
+  yargs.option('force', {
+    describe: commands.app.subcommands.secret.subcommands.delete.options.force,
+    type: 'boolean',
   });
 
   yargs.example(
-    'delete my-secret --app-id=1234567890',
+    'delete my-secret --app=1234567890',
     commands.app.subcommands.secret.subcommands.delete.example
   );
 

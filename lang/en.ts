@@ -1602,11 +1602,12 @@ export const commands = {
         subcommands: {
           add: {
             describe: 'Create a new app secret.',
+            actionType: ' to add',
             positionals: {
               name: 'Name of the secret',
             },
             options: {
-              appId: 'The app id to set the secret for',
+              app: 'The app id to set the secret for',
             },
             example:
               'Add a secret named "my-secret" to the app with ID 1234567890',
@@ -1615,11 +1616,19 @@ export const commands = {
           },
           delete: {
             describe: 'Delete an app secret.',
+            confirmDelete: (appName: string, secretName: string) =>
+              `Are you sure you want to delete the secret "${secretName}" from the app ${appName}?`,
+            deleteCanceled: 'Delete canceled',
+            selectSecret: 'Select the secret you want to delete',
+            errors: {
+              noSecrets: 'No secrets found for the given app',
+            },
             positionals: {
               name: 'Name of the secret',
             },
             options: {
-              appId: 'The app id to delete the secret for',
+              app: 'The app id to delete the secret for',
+              force: 'Force the deletion without confirmation',
             },
             example:
               'Delete a secret named "my-secret" from the app with ID 1234567890',
@@ -1630,7 +1639,7 @@ export const commands = {
             describe: 'List all app secrets.',
             example: 'List all secrets for the app with ID 1234567890',
             options: {
-              appId: 'The app id to list the secrets for',
+              app: 'The app id to list the secrets for',
             },
             errors: {
               noSecrets: 'No secrets found for the given app',
@@ -1640,11 +1649,15 @@ export const commands = {
           },
           update: {
             describe: 'Update an app secret.',
+            selectSecret: 'Select the secret you want to update',
+            errors: {
+              noSecrets: 'No secrets found for the given app',
+            },
             positionals: {
               name: 'Name of the secret',
             },
             options: {
-              appId: 'The app id to update the secret for',
+              app: 'The app id to update the secret for',
             },
             example:
               'Update a secret named "my-secret" for the app with ID 1234567890',
@@ -1660,6 +1673,7 @@ export const commands = {
     subcommands: {
       add: {
         describe: 'Create a new secret.',
+        actionType: ' to add',
         errors: {
           add: (secretName: string) =>
             `The secret "${secretName}" was not added`,
@@ -3440,8 +3454,9 @@ export const lib = {
       },
     },
     secretPrompt: {
-      enterValue: 'Enter a value for your secret: ',
-      enterName: 'Enter a name for your secret: ',
+      enterValue: 'Enter a value for the secret: ',
+      enterName: (actionType: string) =>
+        `Enter the name of the secret${actionType}: `,
       selectSecretUpdate: 'Select the secret you want to update',
       selectSecretDelete: 'Select the secret you want to delete',
       errors: {

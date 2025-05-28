@@ -7,6 +7,7 @@ import {
   secretValuePrompt,
   secretNamePrompt,
 } from '../../../lib/prompts/secretPrompt';
+import { selectAppPrompt } from '../../../lib/prompts/selectAppPrompt';
 import { commands } from '../../../lang/en';
 import { EXIT_CODES } from '../../../lib/enums/exitCodes';
 import {
@@ -17,7 +18,6 @@ import {
   YargsCommandModule,
 } from '../../../types/Yargs';
 import { makeYargsBuilder } from '../../../lib/yargsUtils';
-import { selectAppPrompt } from '../../../lib/prompts/selectAppPrompt';
 
 const command = 'add [name]';
 const describe = commands.app.subcommands.secret.subcommands.add.describe;
@@ -25,7 +25,7 @@ const describe = commands.app.subcommands.secret.subcommands.add.describe;
 type AddAppSecretArgs = CommonArgs &
   ConfigArgs &
   AccountArgs &
-  EnvironmentArgs & { name?: string; appId?: number };
+  EnvironmentArgs & { name?: string; app?: number };
 
 async function handler(
   args: ArgumentsCamelCase<AddAppSecretArgs>
@@ -34,12 +34,14 @@ async function handler(
 
   trackCommandUsage('app-secret-add', {}, derivedAccountId);
 
-  const appSecretApp = await selectAppPrompt(derivedAccountId, args.appId);
+  const appSecretApp = await selectAppPrompt(derivedAccountId, args.app);
 
   let appSecretName = args.name;
 
   if (!appSecretName) {
-    const { secretName: name } = await secretNamePrompt();
+    const { secretName: name } = await secretNamePrompt(
+      commands.app.subcommands.secret.subcommands.add.actionType
+    );
     appSecretName = name;
   }
 
@@ -74,13 +76,13 @@ function addAppSecretBuilder(yargs: Argv): Argv<AddAppSecretArgs> {
     type: 'string',
   });
 
-  yargs.option('app-id', {
-    describe: commands.app.subcommands.secret.subcommands.add.options.appId,
+  yargs.option('app', {
+    describe: commands.app.subcommands.secret.subcommands.add.options.app,
     type: 'number',
   });
 
   yargs.example(
-    'add my-secret --app-id=1234567890',
+    'add my-secret --app=1234567890',
     commands.app.subcommands.secret.subcommands.add.example
   );
 

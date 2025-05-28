@@ -31,7 +31,7 @@ describe('commands/app/secret/add', () => {
         })
       );
       expect(yargsMock.option).toHaveBeenCalledWith(
-        'app-id',
+        'app',
         expect.objectContaining({
           type: 'number',
         })

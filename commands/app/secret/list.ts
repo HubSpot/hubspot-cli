@@ -21,7 +21,7 @@ const describe = commands.app.subcommands.secret.subcommands.list.describe;
 type ListAppSecretArgs = CommonArgs &
   ConfigArgs &
   AccountArgs &
-  EnvironmentArgs & { appId?: number };
+  EnvironmentArgs & { app?: number };
 
 async function handler(
   args: ArgumentsCamelCase<ListAppSecretArgs>
@@ -30,46 +30,49 @@ async function handler(
 
   trackCommandUsage('app-secret-list', {}, derivedAccountId);
 
-  const appSecretApp = await selectAppPrompt(derivedAccountId, args.appId);
+  const appSecretApp = await selectAppPrompt(derivedAccountId, args.app);
+
+  let appSecrets: string[] = [];
 
   try {
     const { data: secrets } = await fetchAppSecrets(
       derivedAccountId,
       appSecretApp.id
     );
-
-    if (secrets.results.length === 0) {
-      logger.log(
-        commands.app.subcommands.secret.subcommands.list.errors.noSecrets
-      );
-    } else {
-      logger.success(
-        commands.app.subcommands.secret.subcommands.list.success(
-          derivedAccountId,
-          appSecretApp.name
-        )
-      );
-
-      secrets.results.forEach(secret => {
-        logger.log(`- ${secret}`);
-      });
-    }
+    appSecrets = secrets.results;
   } catch (err) {
     logError(err);
     process.exit(EXIT_CODES.ERROR);
+  }
+
+  if (appSecrets.length === 0) {
+    logger.log(
+      commands.app.subcommands.secret.subcommands.list.errors.noSecrets
+    );
+  } else {
+    logger.success(
+      commands.app.subcommands.secret.subcommands.list.success(
+        derivedAccountId,
+        appSecretApp.name
+      )
+    );
+
+    appSecrets.forEach(secret => {
+      logger.log(`- ${secret}`);
+    });
   }
 
   process.exit(EXIT_CODES.SUCCESS);
 }
 
 function listAppSecretBuilder(yargs: Argv): Argv<ListAppSecretArgs> {
-  yargs.option('app-id', {
-    describe: commands.app.subcommands.secret.subcommands.list.options.appId,
+  yargs.option('app', {
+    describe: commands.app.subcommands.secret.subcommands.list.options.app,
     type: 'number',
   });
 
   yargs.example(
-    'list --app-id=1234567890',
+    'list --app=1234567890',
     commands.app.subcommands.secret.subcommands.list.example
   );
 

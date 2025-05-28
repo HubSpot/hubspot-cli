@@ -1,12 +1,14 @@
 import { Argv, ArgumentsCamelCase } from 'yargs';
 import { logger } from '@hubspot/local-dev-lib/logger';
-import { updateAppSecret } from '@hubspot/local-dev-lib/api/devSecrets';
+import {
+  fetchAppSecrets,
+  updateAppSecret,
+} from '@hubspot/local-dev-lib/api/devSecrets';
 import { logError } from '../../../lib/errorHandlers/index';
 import { trackCommandUsage } from '../../../lib/usageTracking';
-import {
-  secretValuePrompt,
-  secretNamePrompt,
-} from '../../../lib/prompts/secretPrompt';
+import { secretValuePrompt } from '../../../lib/prompts/secretPrompt';
+import { selectAppPrompt } from '../../../lib/prompts/selectAppPrompt';
+import { listPrompt } from '../../../lib/prompts/promptUtils';
 import { commands } from '../../../lang/en';
 import { EXIT_CODES } from '../../../lib/enums/exitCodes';
 import {
@@ -17,7 +19,6 @@ import {
   YargsCommandModule,
 } from '../../../types/Yargs';
 import { makeYargsBuilder } from '../../../lib/yargsUtils';
-import { selectAppPrompt } from '../../../lib/prompts/selectAppPrompt';
 
 const command = 'update [name]';
 const describe = commands.app.subcommands.secret.subcommands.update.describe;
@@ -25,7 +26,7 @@ const describe = commands.app.subcommands.secret.subcommands.update.describe;
 type UpdateAppSecretArgs = CommonArgs &
   ConfigArgs &
   AccountArgs &
-  EnvironmentArgs & { name?: string; appId?: number };
+  EnvironmentArgs & { name?: string; app?: number };
 
 async function handler(
   args: ArgumentsCamelCase<UpdateAppSecretArgs>
@@ -34,30 +35,54 @@ async function handler(
 
   trackCommandUsage('app-secret-update', {}, derivedAccountId);
 
-  const appSecretApp = await selectAppPrompt(derivedAccountId, args.appId);
+  const appSecretApp = await selectAppPrompt(derivedAccountId, args.app);
 
-  let appSecretName = args.name;
+  let appSecretToUpdate = args.name;
 
-  if (!appSecretName) {
-    const { secretName: name } = await secretNamePrompt();
-    appSecretName = name;
+  if (!appSecretToUpdate) {
+    let appSecrets: string[] = [];
+
+    try {
+      const { data: secrets } = await fetchAppSecrets(
+        derivedAccountId,
+        appSecretApp.id
+      );
+      appSecrets = secrets.results;
+    } catch (err) {
+      logError(err);
+      process.exit(EXIT_CODES.ERROR);
+    }
+
+    if (appSecrets.length === 0) {
+      logger.error(
+        commands.app.subcommands.secret.subcommands.update.errors.noSecrets
+      );
+      process.exit(EXIT_CODES.ERROR);
+    }
+
+    appSecretToUpdate = await listPrompt(
+      commands.app.subcommands.secret.subcommands.update.selectSecret,
+      { choices: appSecrets }
+    );
   }
 
   const { secretValue } = await secretValuePrompt();
 
   try {
-    await updateAppSecret(
+    const { data: res } = await updateAppSecret(
       derivedAccountId,
       appSecretApp.id,
-      appSecretName,
+      appSecretToUpdate!,
       secretValue
     );
+
+    console.log('res: ', res);
 
     logger.success(
       commands.app.subcommands.secret.subcommands.update.success(
         derivedAccountId,
         appSecretApp.name,
-        appSecretName
+        appSecretToUpdate!
       )
     );
   } catch (err) {
@@ -75,13 +100,13 @@ function updateAppSecretBuilder(yargs: Argv): Argv<UpdateAppSecretArgs> {
     type: 'string',
   });
 
-  yargs.option('app-id', {
-    describe: commands.app.subcommands.secret.subcommands.update.options.appId,
+  yargs.option('app', {
+    describe: commands.app.subcommands.secret.subcommands.update.options.app,
     type: 'number',
   });
 
   yargs.example(
-    'update my-secret --app-id=1234567890',
+    'update my-secret --app=1234567890',
     commands.app.subcommands.secret.subcommands.update.example
   );
 

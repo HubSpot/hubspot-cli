@@ -20,12 +20,14 @@ type SecretNamePromptResponse = {
   secretName: string;
 };
 
-export function secretNamePrompt(): Promise<SecretNamePromptResponse> {
+export function secretNamePrompt(
+  actionType: string
+): Promise<SecretNamePromptResponse> {
   return promptUser<SecretNamePromptResponse>([
     {
       name: 'secretName',
       type: 'input',
-      message: i18n(`lib.prompts.secretPrompt.enterName`),
+      message: i18n(`lib.prompts.secretPrompt.enterName`, { actionType }),
     },
   ]);
 }

@@ -31,7 +31,7 @@ describe('commands/app/secret/delete', () => {
         })
       );
       expect(yargsMock.option).toHaveBeenCalledWith(
-        'app-id',
+        'app',
         expect.objectContaining({
           type: 'number',
         })
