@@ -3,6 +3,7 @@ import util from 'util';
 import { ArgumentsCamelCase } from 'yargs';
 import { logger } from '@hubspot/local-dev-lib/logger';
 import { getAccountIdentifier } from '@hubspot/local-dev-lib/config/getAccountIdentifier';
+import { HUBSPOT_ACCOUNT_TYPES } from '@hubspot/local-dev-lib/constants/config';
 import { isTranslationError } from '@hubspot/project-parsing-lib/src/lib/errors';
 import { translateForLocalDev } from '@hubspot/project-parsing-lib';
 import { HsProfileFile } from '@hubspot/project-parsing-lib/src/lib/types';
@@ -19,8 +20,12 @@ import {
   createNewProjectForLocalDev,
   useExistingDevTestAccount,
   createDeveloperTestAccountForLocalDev,
+  selectAccountTypePrompt,
 } from '../../../lib/projects/localDev/helpers';
-import { selectDeveloperTestTargetAccountPrompt } from '../../../lib/prompts/projectDevTargetAccountPrompt';
+import {
+  selectDeveloperTestTargetAccountPrompt,
+  selectSandboxTargetAccountPrompt,
+} from '../../../lib/prompts/projectDevTargetAccountPrompt';
 import SpinniesManager from '../../../lib/ui/SpinniesManager';
 import LocalDevProcess from '../../../lib/projects/localDev/LocalDevProcess';
 import LocalDevWatcher from '../../../lib/projects/localDev/LocalDevWatcher';
@@ -29,7 +34,7 @@ import {
   isAppDeveloperAccount,
   isStandardAccount,
 } from '../../../lib/accountTypes';
-import { uiCommandReference } from '../../../lib/ui';
+import { uiCommandReference, uiLine, uiLink } from '../../../lib/ui';
 import { i18n } from '../../../lib/lang';
 // import LocalDevWebsocketServer from '../../../lib/projects/localDev/LocalDevWebsocketServer';
 
@@ -94,10 +99,12 @@ export async function unifiedProjectDevFlow(
 
   if (!derivedAccountIsRecommendedType && !profileConfig) {
     logger.error(
-      i18n(`commands.project.subcommands.dev.errors.invalidUnifiedAppsAccount`),
-      {
-        authCommand: uiCommandReference('hs auth'),
-      }
+      i18n(
+        `commands.project.subcommands.dev.errors.invalidUnifiedAppsAccount`,
+        {
+          authCommand: uiCommandReference('hs account use'),
+        }
+      )
     );
     process.exit(EXIT_CODES.SUCCESS);
   }
@@ -108,25 +115,53 @@ export async function unifiedProjectDevFlow(
     // Bypass the prompt for the testing account if the user has a profile configured
     targetTestingAccountId = profileConfig.accountId;
   } else {
-    const devAccountPromptResponse =
-      await selectDeveloperTestTargetAccountPrompt(accounts!, accountConfig);
+    logger.log('');
+    uiLine();
+    logger.log(
+      i18n(`commands.project.subcommands.dev.logs.accountTypeInformation`)
+    );
+    logger.log('');
+    logger.log(
+      i18n(`commands.project.subcommands.dev.logs.learnMoreMessage`, {
+        learnMoreLink: uiLink(
+          i18n(`commands.project.subcommands.dev.logs.learnMoreLink`),
+          'https://developers.hubspot.com/docs/getting-started/account-types'
+        ),
+      })
+    );
+    uiLine();
+    logger.log('');
 
-    targetTestingAccountId = devAccountPromptResponse.targetAccountId;
+    const accountType = await selectAccountTypePrompt(accountConfig);
 
-    if (!!devAccountPromptResponse.notInConfigAccount) {
-      // When the developer test account isn't configured in the CLI config yet
-      // Walk the user through adding the account's PAK to the config
-      await useExistingDevTestAccount(
-        env,
-        devAccountPromptResponse.notInConfigAccount
-      );
-    } else if (devAccountPromptResponse.createNestedAccount) {
-      // Create a new developer test account and automatically add it to the CLI config
-      targetTestingAccountId = await createDeveloperTestAccountForLocalDev(
-        targetProjectAccountId,
-        accountConfig,
-        env
-      );
+    if (accountType === HUBSPOT_ACCOUNT_TYPES.DEVELOPER_TEST) {
+      const devAccountPromptResponse =
+        await selectDeveloperTestTargetAccountPrompt(accounts!, accountConfig);
+
+      targetTestingAccountId = devAccountPromptResponse.targetAccountId;
+
+      if (!!devAccountPromptResponse.notInConfigAccount) {
+        // When the developer test account isn't configured in the CLI config yet
+        // Walk the user through adding the account's PAK to the config
+        await useExistingDevTestAccount(
+          env,
+          devAccountPromptResponse.notInConfigAccount
+        );
+      } else if (devAccountPromptResponse.createNestedAccount) {
+        // Create a new developer test account and automatically add it to the CLI config
+        targetTestingAccountId = await createDeveloperTestAccountForLocalDev(
+          targetProjectAccountId,
+          accountConfig,
+          env
+        );
+      }
+    } else if (accountType === HUBSPOT_ACCOUNT_TYPES.DEVELOPMENT_SANDBOX) {
+      const sandboxAccountPromptResponse =
+        await selectSandboxTargetAccountPrompt(accounts!, accountConfig);
+
+      targetTestingAccountId = sandboxAccountPromptResponse.targetAccountId;
+    } else {
+      targetTestingAccountId = targetProjectAccountId;
     }
   }
 

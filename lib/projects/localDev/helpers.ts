@@ -18,21 +18,19 @@ import { DeveloperTestAccount } from '@hubspot/local-dev-lib/types/developerTest
 import { Project } from '@hubspot/local-dev-lib/types/Project';
 import { Build } from '@hubspot/local-dev-lib/types/Build';
 import { getSandboxUsageLimits } from '@hubspot/local-dev-lib/api/sandboxHubs';
-
 import {
   ProjectConfig,
   ProjectPollResult,
   ProjectSubtask,
 } from '../../../types/Projects';
-import { ProjectDevTargetAccountPromptResponse } from '../../../types/Prompts';
-
 import {
   confirmDefaultAccountPrompt,
   selectSandboxTargetAccountPrompt,
   selectDeveloperTestTargetAccountPrompt,
   confirmUseExistingDeveloperTestAccountPrompt,
+  ProjectDevTargetAccountPromptResponse,
 } from '../../prompts/projectDevTargetAccountPrompt';
-import { confirmPrompt } from '../../prompts/promptUtils';
+import { confirmPrompt, listPrompt } from '../../prompts/promptUtils';
 import {
   validateSandboxUsageLimits,
   getAvailableSyncTypes,
@@ -538,4 +536,40 @@ export async function hasSandboxes(account: CLIAccount): Promise<boolean> {
     debugError(e);
     return false;
   }
+}
+
+// Top level prompt to choose the type of account to test on
+export async function selectAccountTypePrompt(
+  accountConfig: CLIAccount
+): Promise<string | null> {
+  const hasAccessToSandboxes = await hasSandboxes(accountConfig);
+
+  const result = await listPrompt(
+    lib.localDevHelpers.selectAccountTypePrompt.message,
+    {
+      choices: [
+        {
+          name: lib.localDevHelpers.selectAccountTypePrompt
+            .developerTestAccountOption,
+          value: HUBSPOT_ACCOUNT_TYPES.DEVELOPER_TEST,
+        },
+        {
+          name: lib.localDevHelpers.selectAccountTypePrompt
+            .sandboxAccountOption,
+          value: HUBSPOT_ACCOUNT_TYPES.DEVELOPMENT_SANDBOX,
+          disabled: !hasAccessToSandboxes
+            ? lib.localDevHelpers.selectAccountTypePrompt
+                .sandboxAccountOptionDisabled
+            : false,
+        },
+        {
+          name: lib.localDevHelpers.selectAccountTypePrompt
+            .productionAccountOption,
+          value: null,
+        },
+      ],
+    }
+  );
+
+  return result;
 }

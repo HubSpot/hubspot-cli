@@ -981,6 +981,9 @@ export const commands = {
           'Using default account as target account (for now)',
         learnMoreLocalDevServer:
           'Learn more about the projects local dev server',
+        accountTypeInformation:
+          'Testing in a developer test account is strongly recommended, but you can use a sandbox account if your plan allows you to create one.',
+        learnMoreMessage: `Visit our ${uiLink('docs on Developer Test and Sandbox accounts', 'https://developers.hubspot.com/docs/getting-started/account-types')} to learn more.`,
       },
       errors: {
         noProjectConfig:
@@ -2894,6 +2897,14 @@ export const lib = {
           `hs auth --account=${parentAccountId}`
         )} to authenticate the App Developer Account ${parentAccountId} associated with ${accountIdentifier}.`,
     },
+    selectAccountTypePrompt: {
+      message: '[--account] Choose the type of account to test on',
+      developerTestAccountOption: 'Test on a developer test account',
+      sandboxAccountOption: 'Test on a sandbox account',
+      sandboxAccountOptionDisabled:
+        'Disabled - requires access to sandbox accounts',
+      productionAccountOption: `<${chalk.red('!')} Test on this account ${chalk.red('!')}>`,
+    },
   },
   middleware: {
     updateNotification: {
@@ -3207,7 +3218,6 @@ export const lib = {
       createNewSandboxOption: '<Test on a new development sandbox>',
       createNewDeveloperTestAccountOption:
         '<Test on a new developer test account>',
-      testOnThisAccountOption: '<Test on this account>',
       chooseDefaultAccountOption: () =>
         `<${chalk.bold('❗')} Test on this production account ${chalk.bold('❗')}>`,
       promptMessage: (accountType: string, accountIdentifier: string) =>

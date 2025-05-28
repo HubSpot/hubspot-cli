@@ -593,6 +593,9 @@ en:
             betaMessage: "HubSpot projects local development"
             placeholderAccountSelection: "Using default account as target account (for now)"
             learnMoreLocalDevServer: "Learn more about the projects local dev server"
+            accountTypeInformation: "Testing in a developer test account is strongly recommended, but you can use a sandbox account if your plan allows you to create one."
+            learnMoreMessage: "Visit our {{ learnMoreLink }} to learn more."
+            learnMoreLink: "docs on Developer Test and Sandbox accounts "
           errors:
             noProjectConfig: "No project detected. Please run this command again from a project directory."
             noAccount: "An error occurred while reading account {{ accountId }} from your config. Run {{ authCommand }} to re-auth this account."
@@ -1349,7 +1352,6 @@ en:
       projectDevTargetAccountPrompt:
         createNewSandboxOption: "<Test on a new development sandbox>"
         createNewDeveloperTestAccountOption: "<Test on a new developer test account>"
-        testOnThisAccountOption: '<Test on this account>'
         chooseDefaultAccountOption: "<{{#bold}}\U00002757{{/bold}} Test on this production account {{#bold}}\U00002757{{/bold}}>"
         promptMessage: "[--account] Choose a {{ accountType }} under {{ accountIdentifier }} to test with:"
         sandboxLimit: "Your account reached the limit of {{ limit }} development sandboxes"

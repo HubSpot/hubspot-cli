@@ -1,7 +1,3 @@
-import { promptUser } from './promptUtils';
-import { i18n } from '../lang';
-import { uiAccountDescription, uiCommandReference } from '../ui';
-import { isSandbox } from '../accountTypes';
 import { getAccountId } from '@hubspot/local-dev-lib/config';
 import { getSandboxUsageLimits } from '@hubspot/local-dev-lib/api/sandboxHubs';
 import {
@@ -17,10 +13,11 @@ import {
   DeveloperTestAccount,
   FetchDeveloperTestAccountsResponse,
 } from '@hubspot/local-dev-lib/types/developerTestAccounts';
-import {
-  PromptChoices,
-  ProjectDevTargetAccountPromptResponse,
-} from '../../types/Prompts';
+import { promptUser } from './promptUtils';
+import { i18n } from '../lang';
+import { uiAccountDescription, uiCommandReference } from '../ui';
+import { isSandbox } from '../accountTypes';
+import { PromptChoices } from '../../types/Prompts';
 import { EXIT_CODES } from '../enums/exitCodes';
 
 function mapNestedAccount(accountConfig: CLIAccount): {
@@ -49,6 +46,13 @@ function getNonConfigDeveloperTestAccountName(
     HUBSPOT_ACCOUNT_TYPE_STRINGS[HUBSPOT_ACCOUNT_TYPES.DEVELOPER_TEST]
   }] (${account.id})`;
 }
+
+export type ProjectDevTargetAccountPromptResponse = {
+  targetAccountId: number | null;
+  createNestedAccount: boolean;
+  parentAccountId?: number | null;
+  notInConfigAccount?: DeveloperTestAccount | null;
+};
 
 export async function selectSandboxTargetAccountPrompt(
   accounts: CLIAccount[],
@@ -199,15 +203,6 @@ export async function selectDeveloperTestTargetAccountPrompt(
         createNestedAccount: true,
       },
       disabled: disabledMessage,
-    },
-    {
-      name: i18n(
-        `lib.prompts.projectDevTargetAccountPrompt.testOnThisAccountOption`
-      ),
-      value: {
-        targetAccountId: defaultAccountId,
-        createNestedAccount: false,
-      },
     },
   ];
 
