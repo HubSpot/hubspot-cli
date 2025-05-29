@@ -934,18 +934,18 @@ export const commands = {
           targetAccount: 'The target account ID for this profile',
         },
       },
-      remove: {
-        describe: 'Remove an existing project profile',
-        example: 'Remove a project profile named hsprofile.qa.json',
+      delete: {
+        describe: 'Delete an existing project profile',
+        example: 'Delete a project profile named hsprofile.qa.json',
         logs: {
-          profileRemoved: (profileName: string) =>
-            `Project profile ${chalk.bold(profileName)} was successfully removed`,
-          removedProject: (accountId: number) =>
-            `Successfully removed the project from ${uiAccountDescription(
+          profileDeleted: (profileName: string) =>
+            `Project profile ${chalk.bold(profileName)} was successfully deleted`,
+          deletedProject: (accountId: number) =>
+            `Successfully deleted the project from ${uiAccountDescription(
               accountId
             )}`,
-          didNotRemoveProject: (accountId: number) =>
-            `Did not remove the project from ${uiAccountDescription(
+          didNotDeleteProject: (accountId: number) =>
+            `Did not delete the project from ${uiAccountDescription(
               accountId
             )}`,
         },
@@ -954,9 +954,9 @@ export const commands = {
             `Failed to load profile ${chalk.bold(profileName)}`,
         },
         prompts: {
-          removeProfilePrompt: 'Select a profile to remove from your project',
-          removeProjectPrompt: (accountId: number) =>
-            `Would you like to remove this project from ${uiAccountDescription(
+          deleteProfilePrompt: 'Select a profile to delete from your project',
+          deleteProjectPrompt: (accountId: number) =>
+            `Would you like to delete this project from ${uiAccountDescription(
               accountId
             )}?`,
         },
@@ -965,8 +965,9 @@ export const commands = {
             'No project config found. Please run this command from a project directory.',
           noProfileFound: (profileName: string) =>
             `No profile with filename ${chalk.bold(profileName)} found in your project.`,
-          failedToRemoveProfile: (profileName: string) =>
-            `Unable to remove profile ${chalk.bold(profileName)}. Please try again.`,
+          noProfilesFound: 'No profiles found in your project.',
+          failedToDeleteProfile: (profileName: string) =>
+            `Unable to delete profile ${chalk.bold(profileName)}. Please try again.`,
         },
         positionals: {
           name: 'The name of the project profile',
