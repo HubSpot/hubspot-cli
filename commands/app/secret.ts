@@ -8,7 +8,7 @@ import listAppSecretsCommand from './secret/list';
 import updateAppSecretCommand from './secret/update';
 
 const command = ['secret', 'secrets'];
-const describe = commands.app.subcommands.secret.describe;
+const describe = undefined; // commands.app.subcommands.secret.describe;
 
 function appSecretBuilder(yargs: Argv): Argv {
   yargs
@@ -21,7 +21,11 @@ function appSecretBuilder(yargs: Argv): Argv {
   return yargs;
 }
 
-const builder = makeYargsBuilder(appSecretBuilder, command, describe);
+const builder = makeYargsBuilder(
+  appSecretBuilder,
+  command,
+  commands.app.subcommands.secret.describe
+);
 
 const appSecretCommand: YargsCommandModuleBucket = {
   command,
