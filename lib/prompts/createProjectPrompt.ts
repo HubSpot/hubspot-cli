@@ -62,15 +62,18 @@ type PromptOptionsArg = {
 // Includes `projectTemplate` in the return value if `projectTemplates` is provided
 export async function createProjectPrompt(
   promptOptions: PromptOptionsArg,
-  projectTemplates: ProjectTemplate[]
+  projectTemplates: ProjectTemplate[],
+  componentTemplates?: never[]
 ): Promise<CreateProjectPromptResponseWithTemplate>;
 export async function createProjectPrompt(
   promptOptions: PromptOptionsArg,
-  projectTemplates?: undefined
+  projectTemplates?: undefined,
+  componentTemplates?: never[]
 ): Promise<CreateProjectPromptResponseWithoutTemplate>;
 export async function createProjectPrompt(
   promptOptions: PromptOptionsArg,
-  projectTemplates?: ProjectTemplate[]
+  projectTemplates?: ProjectTemplate[],
+  componentTemplates?: never[]
 ) {
   const createProjectFromTemplate =
     !!projectTemplates && projectTemplates.length > 0;
@@ -126,6 +129,14 @@ export async function createProjectPrompt(
             };
           })
         : undefined,
+    },
+    {
+      // @ts-ignore
+      name: 'componentTemplates',
+      message: 'Pick some components my dude',
+      when: !(createProjectFromTemplate && !providedTemplateIsValid),
+      type: 'checkbox',
+      choices: componentTemplates,
     },
   ]);
 

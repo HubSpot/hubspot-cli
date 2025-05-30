@@ -3,10 +3,7 @@ import path from 'path';
 import fs from 'fs-extra';
 import chalk from 'chalk';
 import { logger } from '@hubspot/local-dev-lib/logger';
-import {
-  fetchReleaseData,
-  cloneGithubRepo,
-} from '@hubspot/local-dev-lib/github';
+import { cloneGithubRepo } from '@hubspot/local-dev-lib/github';
 import { RepoPath } from '@hubspot/local-dev-lib/types/Github';
 import { getCwd } from '@hubspot/local-dev-lib/path';
 import { trackCommandUsage } from '../../lib/usageTracking';
@@ -18,15 +15,15 @@ import {
 import {
   getProjectTemplateListFromRepo,
   EMPTY_PROJECT_TEMPLATE_NAME,
+  getConfigForPlatformVersion,
 } from '../../lib/projects/create';
 import { i18n } from '../../lib/lang';
 import { uiBetaTag, uiFeatureHighlight } from '../../lib/ui';
-import { debugError } from '../../lib/errorHandlers';
+import { debugError, logError } from '../../lib/errorHandlers';
 import { EXIT_CODES } from '../../lib/enums/exitCodes';
 import {
   PROJECT_CONFIG_FILE,
   HUBSPOT_PROJECT_COMPONENTS_GITHUB_PATH,
-  DEFAULT_PROJECT_TEMPLATE_BRANCH,
 } from '../../lib/constants';
 import {
   AccountArgs,
@@ -36,7 +33,9 @@ import {
   YargsCommandModule,
 } from '../../types/Yargs';
 import { makeYargsBuilder } from '../../lib/yargsUtils';
-import { ProjectConfig } from '../../types/Projects';
+import { ProjectConfig, ProjectTemplateRepoConfig } from '../../types/Projects';
+import { PLATFORM_VERSIONS } from '@hubspot/local-dev-lib/constants/projects';
+import { useV3Api } from '../../lib/projects/buildAndDeploy';
 
 const command = 'create';
 const describe = uiBetaTag(
@@ -52,26 +51,49 @@ type ProjectCreateArgs = CommonArgs &
     dest?: string;
     templateSource?: RepoPath;
     template?: string;
+    platformVersion: string;
   };
+
+const { v2023_2, v2025_1, v2025_2 } = PLATFORM_VERSIONS;
 
 async function handler(
   args: ArgumentsCamelCase<ProjectCreateArgs>
 ): Promise<void> {
-  const { derivedAccountId } = args;
+  const { derivedAccountId, platformVersion, templateSource } = args;
 
-  let latestRepoReleaseTag: string | undefined;
-  let templateSource = args.templateSource;
+  if (templateSource && !templateSource.includes('/')) {
+    logger.error(
+      i18n(`commands.project.subcommands.create.errors.invalidTemplateSource`)
+    );
+    process.exit(EXIT_CODES.ERROR);
+  }
 
-  if (!templateSource) {
-    templateSource = HUBSPOT_PROJECT_COMPONENTS_GITHUB_PATH;
+  let projectTemplates;
+  let componentTemplates;
+  const repo = templateSource || HUBSPOT_PROJECT_COMPONENTS_GITHUB_PATH;
+  let componentTemplateChoices;
+  let repoConfig: ProjectTemplateRepoConfig | undefined = undefined;
+
+  if (useV3Api(platformVersion)) {
     try {
-      const releaseData = await fetchReleaseData(
-        HUBSPOT_PROJECT_COMPONENTS_GITHUB_PATH
-      );
-      if (releaseData) {
-        latestRepoReleaseTag = releaseData.tag_name;
-      }
-    } catch (err) {
+      repoConfig = await getConfigForPlatformVersion(platformVersion);
+    } catch (error) {
+      logError(error);
+      return process.exit(EXIT_CODES.SUCCESS);
+    }
+
+    componentTemplates = repoConfig?.components || [];
+
+    componentTemplateChoices = componentTemplates.map(template => {
+      return {
+        name: template.label,
+        value: template,
+      };
+    });
+  } else {
+    projectTemplates = await getProjectTemplateListFromRepo(repo, 'main');
+
+    if (!projectTemplates.length) {
       logger.error(
         i18n(
           `commands.project.subcommands.create.errors.failedToFetchProjectList`
@@ -81,36 +103,28 @@ async function handler(
     }
   }
 
-  if (!templateSource || !templateSource.includes('/')) {
-    logger.error(
-      i18n(`commands.project.subcommands.create.errors.invalidTemplateSource`)
-    );
-    process.exit(EXIT_CODES.ERROR);
-  }
-
-  const projectTemplates = await getProjectTemplateListFromRepo(
-    templateSource,
-    latestRepoReleaseTag || DEFAULT_PROJECT_TEMPLATE_BRANCH
-  );
-
-  if (!projectTemplates.length) {
-    logger.error(
-      i18n(
-        `commands.project.subcommands.create.errors.failedToFetchProjectList`
-      )
-    );
-    process.exit(EXIT_CODES.ERROR);
-  }
-
   const createProjectPromptResponse = await createProjectPrompt(
     args,
-    projectTemplates
+    // @ts-expect-error
+    projectTemplates,
+    componentTemplateChoices
   );
+
+  // @ts-expect-error
   const projectDest = path.resolve(getCwd(), createProjectPromptResponse.dest);
 
   trackCommandUsage(
     'project-create',
-    { type: createProjectPromptResponse.projectTemplate.name },
+    {
+      type:
+        // @ts-expect-error
+        createProjectPromptResponse.projectTemplate?.name ||
+        // @ts-expect-error
+        createProjectPromptResponse.componentTemplates
+          // @ts-expect-error
+          .map((item: never) => item.label)
+          .join(','),
+    },
     derivedAccountId
   );
 
@@ -133,11 +147,44 @@ async function handler(
     process.exit(EXIT_CODES.ERROR);
   }
 
+  const components: string[] = Array.from(
+    new Set<string>(
+      // @ts-expect-error
+      createProjectPromptResponse.componentTemplates
+        ?.map((item: { path: string; parentComponent?: string }) => {
+          return [
+            path.join(platformVersion, item.path),
+            item.parentComponent
+              ? path.join(platformVersion, item.parentComponent)
+              : undefined,
+          ];
+        })
+        .flat()
+    )
+  );
+
+  // @ts-expect-error
+  if (repoConfig?.tooling) {
+    // @ts-expect-error
+    repoConfig.tooling.forEach((tooling: { path: string }) => {
+      components.push(path.join(platformVersion, tooling.path));
+    });
+  }
+
+  if (repoConfig?.defaultFiles) {
+    components.push(path.join(platformVersion, repoConfig?.defaultFiles));
+  }
+
+  logger.debug(components);
+
   try {
-    await cloneGithubRepo(templateSource, projectDest, {
-      sourceDir: createProjectPromptResponse.projectTemplate.path,
-      tag: latestRepoReleaseTag,
+    await cloneGithubRepo(repo, projectDest, {
+      sourceDir:
+        // @ts-expect-error
+        createProjectPromptResponse.projectTemplate?.path || components,
       hideLogs: true,
+      // TODO: Change this to main when it's merged
+      branch: 'jy/2025.2',
     });
   } catch (err) {
     debugError(err);
@@ -155,12 +202,14 @@ async function handler(
 
   writeProjectConfig(projectConfigPath, {
     ...parsedConfigFile,
+    // @ts-expect-error
     name: createProjectPromptResponse.name,
   });
 
   // If the template is 'no-template', we need to manually create a src directory
   if (
-    createProjectPromptResponse.projectTemplate.name ===
+    // @ts-expect-error
+    createProjectPromptResponse.projectTemplate?.name ===
     EMPTY_PROJECT_TEMPLATE_NAME
   ) {
     fs.ensureDirSync(path.join(projectDest, 'src'));
@@ -169,6 +218,7 @@ async function handler(
   logger.log('');
   logger.success(
     i18n(`commands.project.subcommands.create.logs.success`, {
+      // @ts-expect-error
       projectName: createProjectPromptResponse.name,
       projectDest,
     })
@@ -215,6 +265,12 @@ function projectCreateBuilder(yargs: Argv): Argv<ProjectCreateArgs> {
         `commands.project.subcommands.create.options.templateSource.describe`
       ),
       type: 'string',
+    },
+    'platform-version': {
+      describe: undefined,
+      type: 'string',
+      choices: [v2023_2, v2025_1, v2025_2],
+      default: v2023_2,
     },
   });
 

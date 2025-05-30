@@ -12,6 +12,7 @@ export type ComponentTemplate = {
   path: string;
   label: string;
   insertPath: string;
+  parentComponent?: string;
 };
 
 export type ProjectConfig = {
@@ -42,6 +43,7 @@ export type ProjectPollStatusFunctionText = {
 export type ProjectTemplateRepoConfig = {
   projects?: ProjectTemplate[];
   components?: ComponentTemplate[];
+  defaultFiles?: string;
 };
 
 export type ProjectPollResult = {
