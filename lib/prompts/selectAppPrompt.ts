@@ -3,13 +3,12 @@ import { fetchPublicAppsForPortal } from '@hubspot/local-dev-lib/api/appsDev';
 import { PublicApp } from '@hubspot/local-dev-lib/types/Apps';
 import { debugError } from '../errorHandlers/index';
 import { lib } from '../../lang/en';
-import { EXIT_CODES } from '../enums/exitCodes';
 import { listPrompt } from '../prompts/promptUtils';
 
 export async function selectAppPrompt(
   accountId: number,
   appId?: number
-): Promise<PublicApp> {
+): Promise<PublicApp | null> {
   let availableApps: PublicApp[] = [];
 
   try {
@@ -23,7 +22,7 @@ export async function selectAppPrompt(
 
   if (availableApps.length === 0) {
     logger.error(lib.prompts.selectAppPrompt.errors.noApps);
-    process.exit(EXIT_CODES.ERROR);
+    return null;
   }
 
   if (appId) {
@@ -44,10 +43,6 @@ export async function selectAppPrompt(
       })),
     }
   );
-
-  if (!appPromptValue) {
-    process.exit(EXIT_CODES.ERROR);
-  }
 
   return appPromptValue;
 }

@@ -36,6 +36,10 @@ async function handler(
 
   const appSecretApp = await selectAppPrompt(derivedAccountId, args.app);
 
+  if (!appSecretApp) {
+    process.exit(EXIT_CODES.ERROR);
+  }
+
   let appSecretName = args.name;
 
   if (!appSecretName) {
