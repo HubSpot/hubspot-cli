@@ -55,5 +55,8 @@ export async function isUnifiedAccount(account: CLIAccount): Promise<boolean> {
     FEATURES.UNIFIED_APPS
   );
 
-  return isStandardAccount(account) && isUngatedForUnifiedApps;
+  return (
+    (isStandardAccount(account) || isAppDeveloperAccount(account)) &&
+    isUngatedForUnifiedApps
+  );
 }
