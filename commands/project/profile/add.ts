@@ -23,6 +23,7 @@ import {
   confirmPrompt,
 } from '../../../lib/prompts/promptUtils';
 import { fileExists } from '../../../lib/validation';
+import { debugError } from '../../../lib/errorHandlers';
 
 const command = 'add [name]';
 const describe = uiBetaTag(commands.project.profile.add.describe, false);
@@ -37,9 +38,8 @@ type ProjectProfileAddArgs = CommonArgs & {
 };
 
 async function selectProfileToCopyVariablesFrom(
-  projectSourceDir: string
+  existingProfiles: string[]
 ): Promise<string | undefined> {
-  const existingProfiles = await getAllHsProfiles(projectSourceDir);
   let profileToCopyVariablesFrom: string | undefined;
 
   if (existingProfiles.length == 1) {
@@ -101,7 +101,7 @@ async function handler(
 
   const projectSourceDir = path.join(projectDir, projectConfig.srcDir);
   let profileName = args.name;
-  let targetAccount = args.targetAccount;
+  let targetAccountId = args.targetAccount;
 
   function checkIfProfileExists(profileName: string): boolean {
     return fileExists(
@@ -156,18 +156,18 @@ async function handler(
     profileName = promptResponse.name;
   }
 
-  if (targetAccount) {
-    const accountId = getAccountId(targetAccount);
+  if (targetAccountId) {
+    const accountId = getAccountId(targetAccountId);
     if (accountId) {
-      targetAccount = accountId;
+      targetAccountId = accountId;
     } else {
       uiLogger.error(commands.project.profile.add.errors.invalidTargetAccount);
       uiLogger.log('');
-      targetAccount = undefined;
+      targetAccountId = undefined;
     }
   }
 
-  if (!targetAccount) {
+  if (!targetAccountId) {
     const configuredAccounts = getConfigAccounts();
 
     if (!configuredAccounts || !configuredAccounts.length) {
@@ -189,17 +189,42 @@ async function handler(
     );
 
     if (promptResponse) {
-      targetAccount = promptResponse;
+      targetAccountId = promptResponse;
     }
   }
 
+  const existingProfiles = await getAllHsProfiles(projectSourceDir);
+  let existingTargetAccountIdSelected = false;
+
+  for (const profile of existingProfiles) {
+    try {
+      const loadedProfile = loadHsProfileFile(projectSourceDir, profile);
+      if (loadedProfile?.accountId === targetAccountId) {
+        existingTargetAccountIdSelected = true;
+        break;
+      }
+    } catch (err) {
+      // Skip profiles that can't be loaded
+      debugError(err);
+    }
+  }
+
+  if (existingTargetAccountIdSelected) {
+    uiLogger.log('');
+    uiLogger.warn(
+      commands.project.profile.add.warnings.duplicateTargetAccount(
+        targetAccountId!
+      )
+    );
+  }
+
   const profileFileContent: HsProfileFile = {
-    accountId: Number(targetAccount),
+    accountId: targetAccountId!,
     variables: {},
   };
 
   const profileToCopyVariablesFrom =
-    await selectProfileToCopyVariablesFrom(projectSourceDir);
+    await selectProfileToCopyVariablesFrom(existingProfiles);
 
   if (profileToCopyVariablesFrom) {
     try {
