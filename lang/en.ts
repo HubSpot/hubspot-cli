@@ -903,7 +903,7 @@ export const commands = {
             `Project profile ${chalk.bold(profileName)} was successfully added`,
         },
         prompts: {
-          namePrompt: '[name] Enter a name for the new project profile: ',
+          namePrompt: 'Enter a name for the new project profile: ',
           emptyName: 'Profile name cannot be empty',
           targetAccountPrompt:
             '[target-account] Select a target account for this profile',
@@ -1629,7 +1629,7 @@ export const commands = {
             confirmDelete: (appName: string, secretName: string) =>
               `Are you sure you want to delete the secret "${secretName}" from "${appName}"?`,
             deleteCanceled: 'Delete canceled',
-            selectSecret: '[name] Select the secret you want to delete',
+            selectSecret: 'Select the secret you want to delete',
             errors: {
               noSecrets: 'No secrets found for the given app',
             },
@@ -1658,7 +1658,7 @@ export const commands = {
           },
           update: {
             describe: 'Update an app secret.',
-            selectSecret: '[name] Select the secret you want to update',
+            selectSecret: 'Select the secret you want to update',
             errors: {
               noSecrets: 'No secrets found for the given app',
             },
@@ -3471,7 +3471,7 @@ export const lib = {
     },
     secretPrompt: {
       enterValue: 'Enter a value for the secret: ',
-      enterName: '[name] Enter the name of the secret to add: ',
+      enterName: 'Enter the name of the secret to add: ',
       selectSecretUpdate: 'Select the secret you want to update',
       selectSecretDelete: 'Select the secret you want to delete',
       errors: {
