@@ -53,6 +53,7 @@ async function handler(
       secretValue
     );
 
+    logger.log('');
     logger.success(
       commands.app.subcommands.secret.subcommands.add.success(
         derivedAccountId,

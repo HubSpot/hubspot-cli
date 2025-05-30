@@ -39,18 +39,22 @@ async function handler(
       derivedAccountId,
       appSecretApp.id
     );
-    appSecrets = secrets.results;
+    if (secrets.secretKeys.length > 0) {
+      appSecrets = secrets.secretKeys.map(secret => secret.secretKey);
+    }
   } catch (err) {
     logError(err);
     process.exit(EXIT_CODES.ERROR);
   }
 
   if (appSecrets.length === 0) {
+    logger.log('');
     logger.log(
       commands.app.subcommands.secret.subcommands.list.errors.noSecrets
     );
   } else {
-    logger.success(
+    logger.log('');
+    logger.log(
       commands.app.subcommands.secret.subcommands.list.success(
         derivedAccountId,
         appSecretApp.name

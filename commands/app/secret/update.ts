@@ -47,7 +47,9 @@ async function handler(
         derivedAccountId,
         appSecretApp.id
       );
-      appSecrets = secrets.results;
+      if (secrets.secretKeys.length > 0) {
+        appSecrets = secrets.secretKeys.map(secret => secret.secretKey);
+      }
     } catch (err) {
       logError(err);
       process.exit(EXIT_CODES.ERROR);
@@ -76,6 +78,7 @@ async function handler(
       secretValue
     );
 
+    logger.log('');
     logger.success(
       commands.app.subcommands.secret.subcommands.update.success(
         derivedAccountId,

@@ -36,37 +36,43 @@ async function handler(
 
   const appSecretApp = await selectAppPrompt(derivedAccountId, args.app);
 
-  let appSecrets: string[] = [];
+  let appSecretToDelete = args.name;
 
-  try {
-    const { data: secrets } = await fetchAppSecrets(
-      derivedAccountId,
-      appSecretApp.id
+  if (!appSecretToDelete) {
+    let appSecrets: string[] = [];
+
+    try {
+      const { data: secrets } = await fetchAppSecrets(
+        derivedAccountId,
+        appSecretApp.id
+      );
+      if (secrets.secretKeys.length > 0) {
+        appSecrets = secrets.secretKeys.map(secret => secret.secretKey);
+      }
+    } catch (err) {
+      logError(err);
+      process.exit(EXIT_CODES.ERROR);
+    }
+
+    if (appSecrets.length === 0) {
+      logger.error(
+        commands.app.subcommands.secret.subcommands.delete.errors.noSecrets
+      );
+      process.exit(EXIT_CODES.ERROR);
+    }
+
+    appSecretToDelete = await listPrompt(
+      commands.app.subcommands.secret.subcommands.delete.selectSecret,
+      { choices: appSecrets }
     );
-    appSecrets = secrets.results;
-  } catch (err) {
-    logError(err);
-    process.exit(EXIT_CODES.ERROR);
   }
-
-  if (appSecrets.length === 0) {
-    logger.error(
-      commands.app.subcommands.secret.subcommands.delete.errors.noSecrets
-    );
-    process.exit(EXIT_CODES.ERROR);
-  }
-
-  const appSecretToDelete = await listPrompt(
-    commands.app.subcommands.secret.subcommands.delete.selectSecret,
-    { choices: appSecrets }
-  );
 
   const confirmDelete =
     force ||
     (await confirmPrompt(
       commands.app.subcommands.secret.subcommands.delete.confirmDelete(
         appSecretApp.name,
-        appSecretToDelete
+        appSecretToDelete!
       ),
       {
         defaultAnswer: false,
@@ -74,20 +80,25 @@ async function handler(
     ));
 
   if (!confirmDelete) {
-    logger.success(
+    logger.log(
       commands.app.subcommands.secret.subcommands.delete.deleteCanceled
     );
     process.exit(EXIT_CODES.SUCCESS);
   }
 
   try {
-    await deleteAppSecret(derivedAccountId, appSecretApp.id, appSecretToDelete);
+    await deleteAppSecret(
+      derivedAccountId,
+      appSecretApp.id,
+      appSecretToDelete!
+    );
 
+    logger.log('');
     logger.success(
       commands.app.subcommands.secret.subcommands.delete.success(
         derivedAccountId,
         appSecretApp.name,
-        appSecretToDelete
+        appSecretToDelete!
       )
     );
   } catch (err) {

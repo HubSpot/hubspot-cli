@@ -1611,12 +1611,12 @@ export const commands = {
             example:
               'Add a secret named "my-secret" to the app with ID 1234567890',
             success: (accountId: number, appName: string, secretName: string) =>
-              `The secret "${secretName}" was added to app "${appName}" in ${uiAccountDescription(accountId)}`,
+              `The secret "${secretName}" was added to "${appName}" in ${uiAccountDescription(accountId)}`,
           },
           delete: {
             describe: 'Delete an app secret.',
             confirmDelete: (appName: string, secretName: string) =>
-              `Are you sure you want to delete the secret "${secretName}" from the app "${appName}"?`,
+              `Are you sure you want to delete the secret "${secretName}" from "${appName}"?`,
             deleteCanceled: 'Delete canceled',
             selectSecret: 'Select the secret you want to delete',
             errors: {
@@ -1632,7 +1632,7 @@ export const commands = {
             example:
               'Delete a secret named "my-secret" from the app with ID 1234567890',
             success: (accountId: number, appName: string, secretName: string) =>
-              `The secret "${secretName}" was removed from app "${appName}" in ${uiAccountDescription(accountId)}`,
+              `The secret "${secretName}" was removed from "${appName}" in ${uiAccountDescription(accountId)}`,
           },
           list: {
             describe: 'List all app secrets.',
@@ -1644,7 +1644,7 @@ export const commands = {
               noSecrets: 'No secrets found for the given app',
             },
             success: (accountId: number, appName: string) =>
-              `Secrets for app "${appName}" in ${uiAccountDescription(accountId)}:`,
+              `Showing secrets for "${appName}" in ${uiAccountDescription(accountId)}:`,
           },
           update: {
             describe: 'Update an app secret.',
@@ -1661,7 +1661,7 @@ export const commands = {
             example:
               'Update a secret named "my-secret" for the app with ID 1234567890',
             success: (accountId: number, appName: string, secretName: string) =>
-              `The secret "${secretName}" was updated in app "${appName}" in ${uiAccountDescription(accountId)}`,
+              `The secret "${secretName}" was updated in "${appName}" in ${uiAccountDescription(accountId)}`,
           },
         },
       },
