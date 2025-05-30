@@ -1,5 +1,4 @@
 import { Argv, ArgumentsCamelCase } from 'yargs';
-import { logger } from '@hubspot/local-dev-lib/logger';
 import {
   deleteAppSecret,
   fetchAppSecrets,
@@ -18,6 +17,7 @@ import {
   YargsCommandModule,
 } from '../../../types/Yargs';
 import { makeYargsBuilder } from '../../../lib/yargsUtils';
+import { uiLogger } from '../../../lib/ui/logger';
 
 const command = 'delete [name]';
 const describe = commands.app.subcommands.secret.subcommands.delete.describe;
@@ -59,7 +59,7 @@ async function handler(
     }
 
     if (appSecrets.length === 0) {
-      logger.error(
+      uiLogger.error(
         commands.app.subcommands.secret.subcommands.delete.errors.noSecrets
       );
       process.exit(EXIT_CODES.ERROR);
@@ -84,7 +84,7 @@ async function handler(
     ));
 
   if (!confirmDelete) {
-    logger.log(
+    uiLogger.log(
       commands.app.subcommands.secret.subcommands.delete.deleteCanceled
     );
     process.exit(EXIT_CODES.SUCCESS);
@@ -97,10 +97,9 @@ async function handler(
       appSecretToDelete!
     );
 
-    logger.log('');
-    logger.success(
+    uiLogger.log('');
+    uiLogger.success(
       commands.app.subcommands.secret.subcommands.delete.success(
-        derivedAccountId,
         appSecretApp.name,
         appSecretToDelete!
       )

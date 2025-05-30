@@ -1613,20 +1613,23 @@ export const commands = {
             positionals: {
               name: 'Name of the secret',
             },
+            errors: {
+              noApps: `Please create a new app to add an app secret. Use ${uiCommandReference('hs project create')} to create a new project and begin the app creation process.`,
+            },
             options: {
               app: 'The app id to set the secret for',
             },
             example:
               'Add a secret named "my-secret" to the app with ID 1234567890',
-            success: (accountId: number, appName: string, secretName: string) =>
-              `The secret "${secretName}" was added to "${appName}" in ${uiAccountDescription(accountId)}`,
+            success: (appName: string, secretName: string) =>
+              `App secret "${secretName}" was added to "${appName}"`,
           },
           delete: {
             describe: 'Delete an app secret.',
             confirmDelete: (appName: string, secretName: string) =>
               `Are you sure you want to delete the secret "${secretName}" from "${appName}"?`,
             deleteCanceled: 'Delete canceled',
-            selectSecret: 'Select the secret you want to delete',
+            selectSecret: '[name] Select the secret you want to delete',
             errors: {
               noSecrets: 'No secrets found for the given app',
             },
@@ -1639,8 +1642,8 @@ export const commands = {
             },
             example:
               'Delete a secret named "my-secret" from the app with ID 1234567890',
-            success: (accountId: number, appName: string, secretName: string) =>
-              `The secret "${secretName}" was removed from "${appName}" in ${uiAccountDescription(accountId)}`,
+            success: (appName: string, secretName: string) =>
+              `App secret "${secretName}" was removed from "${appName}"`,
           },
           list: {
             describe: 'List all app secrets.',
@@ -1651,12 +1654,11 @@ export const commands = {
             errors: {
               noSecrets: 'No secrets found for the given app',
             },
-            success: (accountId: number, appName: string) =>
-              `Showing secrets for "${appName}" in ${uiAccountDescription(accountId)}:`,
+            success: (appName: string) => `Showing secrets for "${appName}":`,
           },
           update: {
             describe: 'Update an app secret.',
-            selectSecret: 'Select the secret you want to update',
+            selectSecret: '[name] Select the secret you want to update',
             errors: {
               noSecrets: 'No secrets found for the given app',
             },
@@ -1668,8 +1670,8 @@ export const commands = {
             },
             example:
               'Update a secret named "my-secret" for the app with ID 1234567890',
-            success: (accountId: number, appName: string, secretName: string) =>
-              `The secret "${secretName}" was updated in "${appName}" in ${uiAccountDescription(accountId)}`,
+            success: (appName: string, secretName: string) =>
+              `App secret "${secretName}" was updated in "${appName}"`,
           },
         },
       },
@@ -3429,7 +3431,7 @@ export const lib = {
     selectAppPrompt: {
       selectAppId: '[--app] Select an app:',
       errors: {
-        noApps: 'No apps found for the given account',
+        noApps: 'No apps were found for the given account.',
         invalidAppId: 'Invalid app id',
       },
     },
@@ -3469,7 +3471,7 @@ export const lib = {
     },
     secretPrompt: {
       enterValue: 'Enter a value for the secret: ',
-      enterName: 'Enter the name of the secret to add: ',
+      enterName: '[name] Enter the name of the secret to add: ',
       selectSecretUpdate: 'Select the secret you want to update',
       selectSecretDelete: 'Select the secret you want to delete',
       errors: {

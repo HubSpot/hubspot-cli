@@ -1,5 +1,4 @@
 import { Argv, ArgumentsCamelCase } from 'yargs';
-import { logger } from '@hubspot/local-dev-lib/logger';
 import { addAppSecret } from '@hubspot/local-dev-lib/api/devSecrets';
 import { logError } from '../../../lib/errorHandlers/index';
 import { trackCommandUsage } from '../../../lib/usageTracking';
@@ -18,6 +17,7 @@ import {
   YargsCommandModule,
 } from '../../../types/Yargs';
 import { makeYargsBuilder } from '../../../lib/yargsUtils';
+import { uiLogger } from '../../../lib/ui/logger';
 
 const command = 'add [name]';
 const describe = commands.app.subcommands.secret.subcommands.add.describe;
@@ -37,6 +37,8 @@ async function handler(
   const appSecretApp = await selectAppPrompt(derivedAccountId, args.app);
 
   if (!appSecretApp) {
+    uiLogger.log('');
+    uiLogger.log(commands.app.subcommands.secret.subcommands.add.errors.noApps);
     process.exit(EXIT_CODES.ERROR);
   }
 
@@ -57,10 +59,9 @@ async function handler(
       secretValue
     );
 
-    logger.log('');
-    logger.success(
+    uiLogger.log('');
+    uiLogger.success(
       commands.app.subcommands.secret.subcommands.add.success(
-        derivedAccountId,
         appSecretApp.name,
         appSecretName
       )
