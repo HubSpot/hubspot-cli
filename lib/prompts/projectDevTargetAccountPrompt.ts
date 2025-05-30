@@ -1,7 +1,3 @@
-import { promptUser } from './promptUtils';
-import { i18n } from '../lang';
-import { uiAccountDescription, uiCommandReference } from '../ui';
-import { isSandbox } from '../accountTypes';
 import { getAccountId } from '@hubspot/local-dev-lib/config';
 import { getSandboxUsageLimits } from '@hubspot/local-dev-lib/api/sandboxHubs';
 import {
@@ -17,10 +13,11 @@ import {
   DeveloperTestAccount,
   FetchDeveloperTestAccountsResponse,
 } from '@hubspot/local-dev-lib/types/developerTestAccounts';
-import {
-  PromptChoices,
-  ProjectDevTargetAccountPromptResponse,
-} from '../../types/Prompts';
+import { promptUser } from './promptUtils';
+import { i18n } from '../lang';
+import { uiAccountDescription, uiCommandReference } from '../ui';
+import { isSandbox } from '../accountTypes';
+import { PromptChoices } from '../../types/Prompts';
 import { EXIT_CODES } from '../enums/exitCodes';
 
 function mapNestedAccount(accountConfig: CLIAccount): {
@@ -50,6 +47,13 @@ function getNonConfigDeveloperTestAccountName(
   }] (${account.id})`;
 }
 
+export type ProjectDevTargetAccountPromptResponse = {
+  targetAccountId: number | null;
+  createNestedAccount: boolean;
+  parentAccountId?: number | null;
+  notInConfigAccount?: DeveloperTestAccount | null;
+};
+
 export async function selectSandboxTargetAccountPrompt(
   accounts: CLIAccount[],
   defaultAccountConfig: CLIAccount
@@ -65,7 +69,9 @@ export async function selectSandboxTargetAccountPrompt(
       const { data } = await getSandboxUsageLimits(defaultAccountId);
       sandboxUsage = data.usage;
     } else {
-      logger.error(`lib.prompts.projectDevTargetAccountPrompt.noAccountId`);
+      logger.error(
+        i18n(`lib.prompts.projectDevTargetAccountPrompt.noAccountId`)
+      );
       process.exit(EXIT_CODES.ERROR);
     }
   } catch (err) {
@@ -144,7 +150,9 @@ export async function selectDeveloperTestTargetAccountPrompt(
       const { data } = await fetchDeveloperTestAccounts(defaultAccountId);
       devTestAccountsResponse = data;
     } else {
-      logger.error(`lib.prompts.projectDevTargetAccountPrompt.noAccountId`);
+      logger.error(
+        i18n(`lib.prompts.projectDevTargetAccountPrompt.noAccountId`)
+      );
       process.exit(EXIT_CODES.ERROR);
     }
   } catch (err) {

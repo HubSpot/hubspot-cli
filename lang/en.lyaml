@@ -593,13 +593,16 @@ en:
             betaMessage: "HubSpot projects local development"
             placeholderAccountSelection: "Using default account as target account (for now)"
             learnMoreLocalDevServer: "Learn more about the projects local dev server"
+            accountTypeInformation: "Testing in a developer test account is strongly recommended, but you can use a sandbox account if your plan allows you to create one."
+            learnMoreMessage: "Visit our {{ learnMoreLink }} to learn more."
+            learnMoreLink: "docs on Developer Test and Sandbox accounts "
           errors:
             noProjectConfig: "No project detected. Please run this command again from a project directory."
             noAccount: "An error occurred while reading account {{ accountId }} from your config. Run {{ authCommand }} to re-auth this account."
             noAccountsInConfig: "No accounts found in your config. Run {{ authCommand }} to configure a HubSpot account with the CLI."
             invalidProjectComponents: "Projects cannot contain both private and public apps. Move your apps to separate projects before attempting local development."
             noRunnableComponents: "No supported components were found in this project. Run {{ command }} to see a list of available components and add one to your project."
-            invalidUnifiedAppsAccount: "Local development of Unified Apps is currently only supported in standard and developer accounts. Target a standard or developer account with {{ authCommand }} and try again."
+            accountNotCombined: "Local development of Unified Apps is currently only compatible with accounts that are opted into the unified apps beta. Make sure that this account is opted in or switch accounts using {{ accountUseCommand }}."
           examples:
             default: "Start local dev for the current project"
           options:
@@ -1488,12 +1491,6 @@ en:
         errors:
           srcRequired: "You must specify a source directory."
           destRequired: "You must specify a destination directory."
-      installPublicAppPrompt:
-        explanation: "Local development requires this app to be installed in the target test account"
-        reinstallExplanation: "This app's required scopes have been updated since it was last installed on the target test account. To avoid issues with local development, we recommend reinstalling the app with the updated scopes."
-        prompt: "Open HubSpot to install this app?"
-        reinstallPrompt: "Open HubSpot to reinstall this app?"
-        decline: "To continue local development of this app, install it in your target test account and re-run {{#bold}}`hs project dev`{{/bold}}"
       selectHubDBTablePrompt:
         selectTable: "Select a HubDB table:"
         enterDest: "Enter the destination path:"

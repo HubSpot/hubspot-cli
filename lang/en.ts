@@ -19,17 +19,6 @@ type LangObject = {
 
 export const commands = {
   generalErrors: {
-    updateNotify: {
-      notifyTitle: 'Update available',
-      cmsUpdateNotification: (packageName: string, updateCommand: string) =>
-        `${chalk.bold('The CMS CLI is now the HubSpot CLI')}\n\nTo upgrade, uninstall ${chalk.bold(packageName)}\nand then run ${updateCommand}`,
-      cliUpdateNotification: (
-        currentVersion: string,
-        latestVersion: string,
-        updateCommand: string
-      ) =>
-        `HubSpot CLI version ${chalk.cyan(chalk.bold(currentVersion))} is outdated.\nRun ${updateCommand} to upgrade to version ${chalk.cyan(chalk.bold(latestVersion))}`,
-    },
     srcIsProject: (src: string, command: string) =>
       `"${src}" is in a project folder. Did you mean "hs project ${command}"?`,
     handleDeprecatedEnvVariables: {
@@ -204,7 +193,7 @@ export const commands = {
     subcommands: {
       set: {
         describe:
-          'Set various configuration options within the hubspot.config.yml file.',
+          'Set various configuration options within the hubspot CLI config file.',
         promptMessage: 'Select a config option to update',
         examples: {
           default: 'Opens a prompt to select a config item to modify',
@@ -212,26 +201,15 @@ export const commands = {
         options: {
           defaultMode: {
             describe: 'Set the default CMS publish mode',
-            promptMessage: 'Select CMS publish mode to be used as the default',
-            error: (validModes: string) =>
-              `The provided CMS publish mode is invalid. Valid values are ${validModes}.`,
-            success: (mode: string) => `Default mode updated to: ${mode}`,
           },
           allowUsageTracking: {
             describe: 'Enable or disable usage tracking',
-            promptMessage: 'Choose to enable or disable usage tracking',
-            success: (isEnabled: string) =>
-              `Allow usage tracking set to: "${isEnabled}"`,
-            labels: {
-              enabled: 'Enabled',
-              disabled: 'Disabled',
-            },
           },
           httpTimeout: {
             describe: 'Set the http timeout duration',
-            promptMessage: 'Enter http timeout duration',
-            success: (timeout: string) =>
-              `The http timeout has been set to: ${timeout}`,
+          },
+          allowAutoUpdates: {
+            describe: 'Enable or disable auto updates',
           },
         },
       },
@@ -920,7 +898,7 @@ export const commands = {
               profileName
             )} into your new profile.`,
           copyExistingProfiles:
-            'Found existing project profiles. We can copy the variables from one of them into your new profile.',
+            'We can copy the variables from one of your existing profiles into your new profile.',
           profileAdded: (profileName: string) =>
             `Project profile ${chalk.bold(profileName)} was successfully added`,
         },
@@ -933,6 +911,10 @@ export const commands = {
           copyExistingProfilePromptEmpty: "Skip (don't copy any variables)",
           invalidProfileName:
             'Profile name cannot contain special characters or spaces',
+        },
+        warnings: {
+          duplicateTargetAccount: (targetAccountId: number) =>
+            `The account ${uiAccountDescription(targetAccountId)} is being used in an existing profile. Make sure to edit your project's name between uploads if you do not want to overwrite the existing project in this account.`,
         },
         errors: {
           noProjectConfig:
@@ -952,18 +934,18 @@ export const commands = {
           targetAccount: 'The target account ID for this profile',
         },
       },
-      remove: {
-        describe: 'Remove an existing project profile',
-        example: 'Remove a project profile named hsprofile.qa.json',
+      delete: {
+        describe: 'Delete an existing project profile',
+        example: 'Delete a project profile named hsprofile.qa.json',
         logs: {
-          profileRemoved: (profileName: string) =>
-            `Project profile ${chalk.bold(profileName)} was successfully removed`,
-          removedProject: (accountId: number) =>
-            `Successfully removed the project from ${uiAccountDescription(
+          profileDeleted: (profileName: string) =>
+            `Project profile ${chalk.bold(profileName)} was successfully deleted`,
+          deletedProject: (accountId: number) =>
+            `Successfully deleted the project from ${uiAccountDescription(
               accountId
             )}`,
-          didNotRemoveProject: (accountId: number) =>
-            `Did not remove the project from ${uiAccountDescription(
+          didNotDeleteProject: (accountId: number) =>
+            `Did not delete the project from ${uiAccountDescription(
               accountId
             )}`,
         },
@@ -972,9 +954,9 @@ export const commands = {
             `Failed to load profile ${chalk.bold(profileName)}`,
         },
         prompts: {
-          removeProfilePrompt: 'Select a profile to remove from your project',
-          removeProjectPrompt: (accountId: number) =>
-            `Would you like to remove this project from ${uiAccountDescription(
+          deleteProfilePrompt: 'Select a profile to delete from your project',
+          deleteProjectPrompt: (accountId: number) =>
+            `Would you like to delete this project from ${uiAccountDescription(
               accountId
             )}?`,
         },
@@ -983,8 +965,9 @@ export const commands = {
             'No project config found. Please run this command from a project directory.',
           noProfileFound: (profileName: string) =>
             `No profile with filename ${chalk.bold(profileName)} found in your project.`,
-          failedToRemoveProfile: (profileName: string) =>
-            `Unable to remove profile ${chalk.bold(profileName)}. Please try again.`,
+          noProfilesFound: 'No profiles found in your project.',
+          failedToDeleteProfile: (profileName: string) =>
+            `Unable to delete profile ${chalk.bold(profileName)}. Please try again.`,
         },
         positionals: {
           name: 'The name of the project profile',
@@ -999,6 +982,9 @@ export const commands = {
           'Using default account as target account (for now)',
         learnMoreLocalDevServer:
           'Learn more about the projects local dev server',
+        accountTypeInformation:
+          'Testing in a developer test account is strongly recommended, but you can use a sandbox account if your plan allows you to create one.',
+        learnMoreMessage: `Visit our ${uiLink('docs on Developer Test and Sandbox accounts', 'https://developers.hubspot.com/docs/getting-started/account-types')} to learn more.`,
       },
       errors: {
         noProjectConfig:
@@ -2757,6 +2743,10 @@ export const lib = {
       `Skipping call to ${serverKey} because there are no compatible components in the project.`,
   },
   LocalDevManager: {
+    staticAuthAccountsMustMatch:
+      'You must test static auth apps in the account the project exists in',
+    appNotFound: (accountId: number, appUid: string | undefined) =>
+      `Unable to find app with uid ${appUid} in account ${uiAccountDescription(accountId)}`,
     failedToInitialize: 'Missing required arguments to initialize Local Dev',
     noDeployedBuild: (
       projectName: string,
@@ -2873,16 +2863,17 @@ export const lib = {
       publicAppNonDeveloperTestAccountWarning: `Local development of public apps is only supported in ${chalk.bold('developer test accounts')}.`,
     },
     createNewProjectForLocalDev: {
-      projectMustExistExplanation: (
-        projectName: string,
-        accountIdentifier: string
-      ) =>
-        `The project ${projectName} does not exist in the target account ${accountIdentifier}. This command requires the project to exist in the target account.`,
+      projectMustExistExplanation: (projectName: string, accountId: number) =>
+        `The project ${projectName} does not exist in the target account ${uiAccountDescription(
+          accountId
+        )}. This command requires the project to exist in the target account.`,
       publicAppProjectMustExistExplanation: (
         projectName: string,
-        accountIdentifier: string
+        accountId: number
       ) =>
-        `The project ${projectName} does not exist in ${accountIdentifier}, the app developer account associated with your target account. This command requires the project to exist in this app developer account.`,
+        `The project ${projectName} does not exist in ${uiAccountDescription(
+          accountId
+        )}, the app developer account associated with your target account. This command requires the project to exist in this app developer account.`,
       createProject: (projectName: string, accountIdentifier: string) =>
         `Create new project ${projectName} in ${accountIdentifier}?`,
       choseNotToCreateProject:
@@ -2907,6 +2898,32 @@ export const lib = {
         `To develop this project locally, run ${uiCommandReference(
           `hs auth --account=${parentAccountId}`
         )} to authenticate the App Developer Account ${parentAccountId} associated with ${accountIdentifier}.`,
+    },
+    selectAccountTypePrompt: {
+      message: '[--account] Choose the type of account to test on',
+      developerTestAccountOption: 'Test on a developer test account',
+      sandboxAccountOption: 'Test on a sandbox account',
+      sandboxAccountOptionDisabled:
+        'Disabled - requires access to sandbox accounts',
+      productionAccountOption: `<${chalk.red('!')} Test on this account ${chalk.red('!')}>`,
+    },
+  },
+  middleware: {
+    updateNotification: {
+      notifyTitle: chalk.bold('Update available'),
+      cmsUpdateNotification: (packageName: string) =>
+        `${chalk.bold('The CMS CLI is now the HubSpot CLI')}\n\nTo upgrade, uninstall ${chalk.bold(packageName)}\nand then run ${uiCommandReference('{updateCommand}')}`,
+      cliUpdateNotification: `HubSpot CLI version ${chalk.cyan(chalk.bold('{currentVersion}'))} is outdated.\nRun ${uiCommandReference('{updateCommand}')} to upgrade to version ${chalk.cyan(chalk.bold('{latestVersion}'))}`,
+    },
+    autoUpdateCLI: {
+      updateAvailable: (latestVersion: string) =>
+        `There's a new HubSpot CLI version available! Updating to version ${chalk.bold(latestVersion)}`,
+      updateSucceeded: (latestVersion: string) =>
+        `Successfully updated HubSpot CLI to version ${chalk.bold(latestVersion)}`,
+      notInstalledGlobally:
+        'Cannot auto-update the HubSpot CLI because NPM is not installed globally',
+      updateFailed: (latestVersion: string) =>
+        `Failed to update HubSpot CLI to version ${chalk.bold(latestVersion)}`,
     },
   },
   projectProfiles: {
@@ -3137,6 +3154,36 @@ export const lib = {
     serverlessFunctionLogs: {
       unableToProcessLog: (log: string) => `Unable to process log ${log}`,
       noLogsFound: 'No logs found.',
+    },
+  },
+  configOptions: {
+    enableOrDisableBooleanFieldPrompt: {
+      message: (fieldName: string) =>
+        `Choose to enable or disable ${fieldName}`,
+      labels: {
+        enabled: 'Enabled',
+        disabled: 'Disabled',
+      },
+    },
+    setAllowUsageTracking: {
+      fieldName: 'usage tracking',
+      success: (isEnabled: string) =>
+        `Allow usage tracking set to: "${isEnabled}"`,
+    },
+    setAllowAutoUpdates: {
+      fieldName: 'auto updates',
+      success: (isEnabled: string) =>
+        `Allow auto updates set to: "${isEnabled}"`,
+    },
+    setDefaultCmsPublishMode: {
+      promptMessage: 'Select CMS publish mode to be used as the default',
+      error: (validModes: string) =>
+        `The provided CMS publish mode is invalid. Valid values are ${validModes}.`,
+      success: (mode: string) => `Default mode updated to: ${mode}`,
+    },
+    setHttpTimeout: {
+      promptMessage: 'Enter http timeout duration',
+      success: (timeout: string) => `HTTP timeout set to: ${timeout}`,
     },
   },
   commonOpts: {
@@ -3388,15 +3435,14 @@ export const lib = {
         destRequired: 'You must specify a destination directory.',
       },
     },
-    installPublicAppPrompt: {
+    installAppPrompt: {
       explanation:
         'Local development requires this app to be installed in the target test account',
       reinstallExplanation:
         "This app's required scopes have been updated since it was last installed on the target test account. To avoid issues with local development, we recommend reinstalling the app with the updated scopes.",
       prompt: 'Open HubSpot to install this app?',
       reinstallPrompt: 'Open HubSpot to reinstall this app?',
-      decline: () =>
-        `To continue local development of this app, install it in your target test account and re-run ${chalk.bold('`hs project dev`')}`,
+      decline: `To continue local development of this app, install it in your target test account and re-run ${chalk.bold('`hs project dev`')}`,
     },
     selectHubDBTablePrompt: {
       selectTable: 'Select a HubDB table:',

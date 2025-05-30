@@ -5,10 +5,8 @@ import {
 } from '@hubspot/local-dev-lib/config';
 
 import SpinniesManager from '../ui/SpinniesManager';
-import {
-  getLatestCliVersion,
-  hasMissingPackages,
-} from '../dependencyManagement';
+import { hasMissingPackages } from '../dependencyManagement';
+import { getLatestCliVersion } from '../npm';
 import util from 'util';
 import fs from 'fs';
 import path from 'path';
