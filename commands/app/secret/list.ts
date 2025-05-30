@@ -1,5 +1,4 @@
 import { Argv, ArgumentsCamelCase } from 'yargs';
-import { logger } from '@hubspot/local-dev-lib/logger';
 import { fetchAppSecrets } from '@hubspot/local-dev-lib/api/devSecrets';
 import { logError } from '../../../lib/errorHandlers/index';
 import { trackCommandUsage } from '../../../lib/usageTracking';
@@ -14,6 +13,7 @@ import {
 } from '../../../types/Yargs';
 import { makeYargsBuilder } from '../../../lib/yargsUtils';
 import { selectAppPrompt } from '../../../lib/prompts/selectAppPrompt';
+import { uiLogger } from '../../../lib/ui/logger';
 
 const command = 'list';
 const describe = commands.app.subcommands.secret.subcommands.list.describe;
@@ -52,21 +52,20 @@ async function handler(
   }
 
   if (appSecrets.length === 0) {
-    logger.log('');
-    logger.log(
+    uiLogger.log('');
+    uiLogger.log(
       commands.app.subcommands.secret.subcommands.list.errors.noSecrets
     );
   } else {
-    logger.log('');
-    logger.log(
+    uiLogger.log('');
+    uiLogger.log(
       commands.app.subcommands.secret.subcommands.list.success(
-        derivedAccountId,
         appSecretApp.name
       )
     );
 
     appSecrets.forEach(secret => {
-      logger.log(`- ${secret}`);
+      uiLogger.log(`- ${secret}`);
     });
   }
 

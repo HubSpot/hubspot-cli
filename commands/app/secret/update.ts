@@ -1,5 +1,4 @@
 import { Argv, ArgumentsCamelCase } from 'yargs';
-import { logger } from '@hubspot/local-dev-lib/logger';
 import {
   fetchAppSecrets,
   updateAppSecret,
@@ -19,6 +18,7 @@ import {
   YargsCommandModule,
 } from '../../../types/Yargs';
 import { makeYargsBuilder } from '../../../lib/yargsUtils';
+import { uiLogger } from '../../../lib/ui/logger';
 
 const command = 'update [name]';
 const describe = commands.app.subcommands.secret.subcommands.update.describe;
@@ -60,7 +60,7 @@ async function handler(
     }
 
     if (appSecrets.length === 0) {
-      logger.error(
+      uiLogger.error(
         commands.app.subcommands.secret.subcommands.update.errors.noSecrets
       );
       process.exit(EXIT_CODES.ERROR);
@@ -82,10 +82,9 @@ async function handler(
       secretValue
     );
 
-    logger.log('');
-    logger.success(
+    uiLogger.log('');
+    uiLogger.success(
       commands.app.subcommands.secret.subcommands.update.success(
-        derivedAccountId,
         appSecretApp.name,
         appSecretToUpdate!
       )
