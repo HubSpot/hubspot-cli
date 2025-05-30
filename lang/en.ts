@@ -1602,6 +1602,79 @@ export const commands = {
       },
     },
   },
+  app: {
+    describe: 'Commands for managing apps.',
+    subcommands: {
+      secret: {
+        describe: 'Commands for managing secrets.',
+        subcommands: {
+          add: {
+            describe: 'Create a new app secret.',
+            positionals: {
+              name: 'Name of the secret',
+            },
+            options: {
+              app: 'The app id to set the secret for',
+            },
+            example:
+              'Add a secret named "my-secret" to the app with ID 1234567890',
+            success: (accountId: number, appName: string, secretName: string) =>
+              `The secret "${secretName}" was added to "${appName}" in ${uiAccountDescription(accountId)}`,
+          },
+          delete: {
+            describe: 'Delete an app secret.',
+            confirmDelete: (appName: string, secretName: string) =>
+              `Are you sure you want to delete the secret "${secretName}" from "${appName}"?`,
+            deleteCanceled: 'Delete canceled',
+            selectSecret: 'Select the secret you want to delete',
+            errors: {
+              noSecrets: 'No secrets found for the given app',
+            },
+            positionals: {
+              name: 'Name of the secret',
+            },
+            options: {
+              app: 'The app id to delete the secret for',
+              force: 'Force the deletion without confirmation',
+            },
+            example:
+              'Delete a secret named "my-secret" from the app with ID 1234567890',
+            success: (accountId: number, appName: string, secretName: string) =>
+              `The secret "${secretName}" was removed from "${appName}" in ${uiAccountDescription(accountId)}`,
+          },
+          list: {
+            describe: 'List all app secrets.',
+            example: 'List all secrets for the app with ID 1234567890',
+            options: {
+              app: 'The app id to list the secrets for',
+            },
+            errors: {
+              noSecrets: 'No secrets found for the given app',
+            },
+            success: (accountId: number, appName: string) =>
+              `Showing secrets for "${appName}" in ${uiAccountDescription(accountId)}:`,
+          },
+          update: {
+            describe: 'Update an app secret.',
+            selectSecret: 'Select the secret you want to update',
+            errors: {
+              noSecrets: 'No secrets found for the given app',
+            },
+            positionals: {
+              name: 'Name of the secret',
+            },
+            options: {
+              app: 'The app id to update the secret for',
+            },
+            example:
+              'Update a secret named "my-secret" for the app with ID 1234567890',
+            success: (accountId: number, appName: string, secretName: string) =>
+              `The secret "${secretName}" was updated in "${appName}" in ${uiAccountDescription(accountId)}`,
+          },
+        },
+      },
+    },
+  },
   secret: {
     describe: 'Commands for managing secrets.',
     subcommands: {
@@ -3353,7 +3426,14 @@ export const lib = {
           'Project template is required when projectTemplates is provided',
       },
     },
-    selectPublicAppPrompt: {
+    selectAppPrompt: {
+      selectAppId: '[--app] Select an app:',
+      errors: {
+        noApps: 'No apps found for the given account',
+        invalidAppId: 'Invalid app id',
+      },
+    },
+    selectPublicAppForMigrationPrompt: {
       selectAppIdMigrate: (accountName: string) =>
         `[--appId] Choose an app under ${accountName} to migrate:`,
       selectAppIdClone: (accountName: string) =>
@@ -3388,8 +3468,8 @@ export const lib = {
       },
     },
     secretPrompt: {
-      enterValue: 'Enter a value for your secret: ',
-      enterName: 'Enter a name for your secret: ',
+      enterValue: 'Enter a value for the secret: ',
+      enterName: 'Enter the name of the secret to add: ',
       selectSecretUpdate: 'Select the secret you want to update',
       selectSecretDelete: 'Select the secret you want to delete',
       errors: {

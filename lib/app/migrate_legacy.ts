@@ -17,7 +17,7 @@ import { EXIT_CODES } from '../enums/exitCodes';
 import { uiAccountDescription, uiLine, uiLink } from '../ui';
 import { i18n } from '../lang';
 import { isAppDeveloperAccount, isUnifiedAccount } from '../accountTypes';
-import { selectPublicAppPrompt } from '../prompts/selectPublicAppPrompt';
+import { selectPublicAppForMigrationPrompt } from '../prompts/selectPublicAppForMigrationPrompt';
 import { createProjectPrompt } from '../prompts/createProjectPrompt';
 import { ensureProjectExists } from '../projects/ensureProjectExists';
 import { trackCommandMetadataUsage } from '../usageTracking';
@@ -43,7 +43,7 @@ export async function migrateApp2023_2(
   let appId = options.appId;
 
   if (!appId) {
-    const { appId: selectAppId } = await selectPublicAppPrompt({
+    const { appId: selectAppId } = await selectPublicAppForMigrationPrompt({
       accountId: derivedAccountId,
       accountName,
       isMigratingApp: true,

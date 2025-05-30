@@ -6,7 +6,7 @@ import {
   trackCommandMetadataUsage,
 } from '../../lib/usageTracking';
 import { i18n } from '../../lib/lang';
-import { selectPublicAppPrompt } from '../../lib/prompts/selectPublicAppPrompt';
+import { selectPublicAppForMigrationPrompt } from '../../lib/prompts/selectPublicAppForMigrationPrompt';
 import { createProjectPrompt } from '../../lib/prompts/createProjectPrompt';
 import { poll } from '../../lib/polling';
 import { logError, ApiErrorContext } from '../../lib/errorHandlers';
@@ -79,7 +79,7 @@ async function handler(args: ArgumentsCamelCase<CloneAppArgs>): Promise<void> {
   try {
     appId = args.appId;
     if (!appId) {
-      const appIdResponse = await selectPublicAppPrompt({
+      const appIdResponse = await selectPublicAppForMigrationPrompt({
         accountId: derivedAccountId,
         accountName,
         isMigratingApp: false,

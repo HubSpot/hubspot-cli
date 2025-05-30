@@ -1,14 +1,16 @@
 import { Argv } from 'yargs';
+import migrateCommand from './app/migrate';
+import appSecretCommand from './app/secret';
 import { makeYargsBuilder } from '../lib/yargsUtils';
 import { YargsCommandModuleBucket } from '../types/Yargs';
-import migrateCommand from './app/migrate';
 
 const command = ['app', 'apps'];
 // Keep the command hidden for now
 const describe = undefined;
 
 function appBuilder(yargs: Argv) {
-  return yargs.command(migrateCommand).demandCommand(1, '');
+  yargs.command(migrateCommand).command(appSecretCommand).demandCommand(1, '');
+  return yargs;
 }
 
 const builder = makeYargsBuilder(appBuilder, command, describe);
