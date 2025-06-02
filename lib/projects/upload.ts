@@ -9,12 +9,17 @@ import SpinniesManager from '../ui/SpinniesManager';
 import { uiAccountDescription } from '../ui';
 import { EXIT_CODES } from '../enums/exitCodes';
 import { ProjectConfig } from '../../types/Projects';
-import { isTranslationError, translate } from '@hubspot/project-parsing-lib';
+import {
+  isTranslationError,
+  translate,
+  projectContainsHsMetaFiles,
+} from '@hubspot/project-parsing-lib';
 import { logError } from '../errorHandlers';
 import util from 'node:util';
 import { lib } from '../../lang/en';
 import { ensureProjectExists } from './ensureProjectExists';
 import { uiLogger } from '../ui/logger';
+import { useV3Api } from './buildAndDeploy';
 
 async function uploadProjectFiles(
   accountId: number,
@@ -121,6 +126,12 @@ export async function handleProjectUpload<T>({
       lib.projectUpload.handleProjectUpload.emptySource(projectConfig.srcDir)
     );
     process.exit(EXIT_CODES.SUCCESS);
+  }
+
+  const hasHsMetaFiles = await projectContainsHsMetaFiles(srcDir);
+
+  if (!useV3Api(projectConfig.platformVersion) && hasHsMetaFiles) {
+    throw new Error(lib.projectUpload.wrongPlatformVersionMetaFiles);
   }
 
   const tempFile = tmp.fileSync({ postfix: '.zip' });
