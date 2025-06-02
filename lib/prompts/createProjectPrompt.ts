@@ -133,7 +133,7 @@ export async function createProjectPrompt(
     {
       // @ts-ignore
       name: 'componentTemplates',
-      message: 'Pick some components my dude',
+      message: 'Which components would you like your project to include?',
       when: !(createProjectFromTemplate && !providedTemplateIsValid),
       type: 'checkbox',
       choices: componentTemplates,
