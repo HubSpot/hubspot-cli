@@ -989,8 +989,8 @@ export const commands = {
       errors: {
         noProjectConfig:
           'No project detected. Please run this command again from a project directory.',
-        noAccount: (accountId: string, authCommand: string) =>
-          `An error occurred while reading account ${accountId} from your config. Run ${chalk.bold(authCommand)} to re-auth this account.`,
+        noAccount: (accountId: number) =>
+          `An error occurred while reading account ${uiAccountDescription(accountId)} from your config. Run ${uiCommandReference('hs auth')} to re-auth this account.`,
         noAccountsInConfig: (authCommand: string) =>
           `No accounts found in your config. Run ${chalk.bold(authCommand)} to configure a HubSpot account with the CLI.`,
         invalidProjectComponents:
@@ -1000,6 +1000,9 @@ export const commands = {
       },
       examples: {
         default: 'Start local dev for the current project',
+      },
+      options: {
+        profile: 'The profile to target during local dev',
       },
     },
     create: {

@@ -1,7 +1,5 @@
 import { ArgumentsCamelCase, Argv, CommandModule } from 'yargs';
 import { trackCommandUsage } from '../../../lib/usageTracking';
-import { i18n } from '../../../lib/lang';
-import { logger } from '@hubspot/local-dev-lib/logger';
 import { getAccountConfig } from '@hubspot/local-dev-lib/config';
 import { HsProfileFile } from '@hubspot/project-parsing-lib/src/lib/types';
 import {
@@ -9,13 +7,7 @@ import {
   validateProjectConfig,
 } from '../../../lib/projects/config';
 import { EXIT_CODES } from '../../../lib/enums/exitCodes';
-import {
-  uiBetaTag,
-  uiCommandReference,
-  uiLink,
-  uiLine,
-  uiAccountDescription,
-} from '../../../lib/ui';
+import { uiBetaTag, uiLine } from '../../../lib/ui';
 import { ProjectDevArgs } from '../../../types/Yargs';
 import { deprecatedProjectDevFlow } from './deprecatedFlow';
 import { unifiedProjectDevFlow } from './unifiedFlow';
@@ -27,12 +19,11 @@ import {
   logProfileHeader,
   exitIfUsingProfiles,
 } from '../../../lib/projectProfiles';
+import { commands } from '../../../lang/en';
+import { uiLogger } from '../../../lib/ui/logger';
 
 const command = 'dev';
-const describe = uiBetaTag(
-  i18n(`commands.project.subcommands.dev.describe`),
-  false
-);
+const describe = uiBetaTag(commands.project.dev.describe, false);
 
 async function handler(
   args: ArgumentsCamelCase<ProjectDevArgs>
@@ -43,12 +34,7 @@ async function handler(
   validateProjectConfig(projectConfig, projectDir);
 
   if (!projectDir) {
-    logger.error(
-      i18n(`commands.project.subcommands.dev.errors.noProjectConfig`, {
-        accountId: derivedAccountId,
-        authCommand: uiCommandReference('hs auth'),
-      })
-    );
+    uiLogger.error(commands.project.dev.errors.noProjectConfig);
     process.exit(EXIT_CODES.ERROR);
   }
 
@@ -85,22 +71,12 @@ async function handler(
 
   const accountConfig = getAccountConfig(targetAccountId);
 
-  uiBetaTag(i18n(`commands.project.subcommands.dev.logs.betaMessage`));
+  uiBetaTag(commands.project.dev.logs.betaMessage);
 
-  logger.log(
-    uiLink(
-      i18n(`commands.project.subcommands.dev.logs.learnMoreLocalDevServer`),
-      'https://developers.hubspot.com/docs/platform/project-cli-commands#start-a-local-development-server'
-    )
-  );
+  uiLogger.log(commands.project.dev.logs.learnMoreLocalDevServer);
 
   if (!accountConfig) {
-    logger.error(
-      i18n(`commands.project.subcommands.dev.errors.noAccount`, {
-        accountId: uiAccountDescription(targetAccountId),
-        authCommand: uiCommandReference('hs auth'),
-      })
-    );
+    uiLogger.error(commands.project.dev.errors.noAccount(targetAccountId));
     process.exit(EXIT_CODES.ERROR);
   }
 
@@ -126,16 +102,11 @@ function projectDevBuilder(yargs: Argv): Argv<ProjectDevArgs> {
   yargs.option('profile', {
     type: 'string',
     alias: 'p',
-    description: i18n(`commands.project.subcommands.dev.options.profile`),
+    description: commands.project.dev.options.profile,
     hidden: true,
   });
 
-  yargs.example([
-    [
-      '$0 project dev',
-      i18n(`commands.project.subcommands.dev.examples.default`),
-    ],
-  ]);
+  yargs.example([['$0 project dev', commands.project.dev.examples.default]]);
 
   yargs.conflicts('profile', 'account');
 
