@@ -1,7 +1,6 @@
 import path from 'path';
 import util from 'util';
 import { ArgumentsCamelCase } from 'yargs';
-import { logger } from '@hubspot/local-dev-lib/logger';
 import { getAccountIdentifier } from '@hubspot/local-dev-lib/config/getAccountIdentifier';
 import { HUBSPOT_ACCOUNT_TYPES } from '@hubspot/local-dev-lib/constants/config';
 import { isTranslationError } from '@hubspot/project-parsing-lib/src/lib/errors';
@@ -31,8 +30,10 @@ import LocalDevProcess from '../../../lib/projects/localDev/LocalDevProcess';
 import LocalDevWatcher from '../../../lib/projects/localDev/LocalDevWatcher';
 import { handleExit, handleKeypress } from '../../../lib/process';
 import { isUnifiedAccount } from '../../../lib/accountTypes';
-import { uiCommandReference, uiLine, uiLink } from '../../../lib/ui';
-import { i18n } from '../../../lib/lang';
+import { uiLine } from '../../../lib/ui';
+import { uiLogger } from '../../../lib/ui/logger';
+import { commands } from '../../../lang/en';
+
 // import LocalDevWebsocketServer from '../../../lib/projects/localDev/LocalDevWebsocketServer';
 
 export async function unifiedProjectDevFlow(
@@ -64,10 +65,10 @@ export async function unifiedProjectDevFlow(
 
     projectNodes = intermediateRepresentation.intermediateNodesIndexedByUid;
 
-    logger.debug(util.inspect(projectNodes, false, null, true));
+    uiLogger.debug(util.inspect(projectNodes, false, null, true));
   } catch (e) {
     if (isTranslationError(e)) {
-      logger.error(e.toString());
+      uiLogger.error(e.toString());
     } else {
       logError(e);
     }
@@ -76,12 +77,7 @@ export async function unifiedProjectDevFlow(
 
   // @TODO Do we need to do more than this or leave it to the dev servers?
   if (!Object.keys(projectNodes).length) {
-    logger.error(
-      i18n(`commands.project.subcommands.dev.errors.noRunnableComponents`, {
-        projectDir,
-        command: uiCommandReference('hs project add'),
-      })
-    );
+    uiLogger.error(commands.project.dev.errors.noRunnableComponents);
     process.exit(EXIT_CODES.SUCCESS);
   }
 
@@ -91,12 +87,8 @@ export async function unifiedProjectDevFlow(
   const accountIsCombined = await isUnifiedAccount(accountConfig);
 
   if (!accountIsCombined && !profileConfig) {
-    logger.log('');
-    logger.error(
-      i18n(`commands.project.subcommands.dev.errors.accountNotCombined`, {
-        accountUseCommand: uiCommandReference('hs account use'),
-      })
-    );
+    uiLogger.log('');
+    uiLogger.error(commands.project.dev.errors.accountNotCombined);
     process.exit(EXIT_CODES.ERROR);
   }
 
@@ -109,22 +101,13 @@ export async function unifiedProjectDevFlow(
     // By pass the prompt if the user explicitly provides an --account flag.
     targetTestingAccountId = targetProjectAccountId;
   } else {
-    logger.log('');
+    uiLogger.log('');
     uiLine();
-    logger.log(
-      i18n(`commands.project.subcommands.dev.logs.accountTypeInformation`)
-    );
-    logger.log('');
-    logger.log(
-      i18n(`commands.project.subcommands.dev.logs.learnMoreMessage`, {
-        learnMoreLink: uiLink(
-          i18n(`commands.project.subcommands.dev.logs.learnMoreLink`),
-          'https://developers.hubspot.com/docs/getting-started/account-types'
-        ),
-      })
-    );
+    uiLogger.log(commands.project.dev.logs.accountTypeInformation);
+    uiLogger.log('');
+    uiLogger.log(commands.project.dev.logs.learnMoreMessage);
     uiLine();
-    logger.log('');
+    uiLogger.log('');
 
     const accountType = await selectAccountTypePrompt(accountConfig);
 
