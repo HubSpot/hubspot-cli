@@ -164,13 +164,6 @@ class AppDevModeInterface {
       return;
     }
 
-    // If the app is static auth, always prompt the user to install the app.
-    // We are currently going this because we have no method to determine if the static auth app
-    // is already installed in the portal
-    if (this.appNode.config.auth.type === APP_AUTH_TYPES.STATIC) {
-      return installAppPrompt(await this.getAppInstallUrl(), false);
-    }
-
     const {
       data: { isInstalledWithScopeGroups, previouslyAuthorizedScopeGroups },
     } = await fetchAppInstallationData(
