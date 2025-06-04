@@ -131,7 +131,8 @@ export async function handleProjectUpload<T>({
   const hasHsMetaFiles = await projectContainsHsMetaFiles(srcDir);
 
   if (!useV3Api(projectConfig.platformVersion) && hasHsMetaFiles) {
-    throw new Error(lib.projectUpload.wrongPlatformVersionMetaFiles);
+    uiLogger.error(lib.projectUpload.wrongPlatformVersionMetaFiles);
+    process.exit(EXIT_CODES.ERROR);
   }
 
   const tempFile = tmp.fileSync({ postfix: '.zip' });
