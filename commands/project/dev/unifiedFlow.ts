@@ -129,7 +129,8 @@ export async function unifiedProjectDevFlow({
           targetProjectAccountConfig
         );
 
-      targetTestingAccountId = devAccountPromptResponse.targetAccountId;
+      targetTestingAccountId =
+        devAccountPromptResponse.targetAccountId || undefined;
 
       if (!!devAccountPromptResponse.notInConfigAccount) {
         // When the developer test account isn't configured in the CLI config yet
@@ -153,7 +154,8 @@ export async function unifiedProjectDevFlow({
           targetProjectAccountConfig
         );
 
-      targetTestingAccountId = sandboxAccountPromptResponse.targetAccountId;
+      targetTestingAccountId =
+        sandboxAccountPromptResponse.targetAccountId || undefined;
     } else {
       targetTestingAccountId = targetProjectAccountId;
     }

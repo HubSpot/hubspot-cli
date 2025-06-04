@@ -153,7 +153,7 @@ export async function deprecatedProjectDevFlow({
 
     targetProjectAccountId = hasPublicApps
       ? parentAccountId || null
-      : targetAccountId || null;
+      : targetAccountId;
     targetTestingAccountId = targetAccountId;
 
     // Only used for developer test accounts that are not yet in the config

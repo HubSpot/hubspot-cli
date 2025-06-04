@@ -48,10 +48,10 @@ function getNonConfigDeveloperTestAccountName(
 }
 
 export type ProjectDevTargetAccountPromptResponse = {
-  targetAccountId?: number;
+  targetAccountId: number | null;
   createNestedAccount: boolean;
-  parentAccountId?: number;
-  notInConfigAccount?: DeveloperTestAccount;
+  parentAccountId?: number | null;
+  notInConfigAccount?: DeveloperTestAccount | null;
 };
 
 export async function selectSandboxTargetAccountPrompt(
