@@ -1,6 +1,6 @@
 import { ArgumentsCamelCase, Argv, CommandModule } from 'yargs';
 import { trackCommandUsage } from '../../../lib/usageTracking';
-import { getAccountConfig } from '@hubspot/local-dev-lib/config';
+import { getAccountId } from '@hubspot/local-dev-lib/config';
 import { HsProfileFile } from '@hubspot/project-parsing-lib/src/lib/types';
 import {
   getProjectConfig,
@@ -25,24 +25,67 @@ import { uiLogger } from '../../../lib/ui/logger';
 const command = 'dev';
 const describe = uiBetaTag(commands.project.dev.describe, false);
 
+function validateAccountFlags(
+  testingAccount: string | number | undefined,
+  projectAccount: string | number | undefined,
+  providedAccountId: string | number | undefined,
+  useV3: boolean
+) {
+  // If either targetTestingAccount or targetProjectAccount is provided, the other must be provided
+  if (
+    (testingAccount && !projectAccount) ||
+    (projectAccount && !testingAccount)
+  ) {
+    uiLogger.error(commands.project.dev.errors.invalidAccountFlags);
+    process.exit(EXIT_CODES.ERROR);
+  }
+
+  // Legacy projects do not support targetTestingAccount and targetProjectAccount
+  if (testingAccount && projectAccount && !useV3) {
+    uiLogger.error(commands.project.dev.errors.unsupportedAccountFlagLegacy);
+    process.exit(EXIT_CODES.ERROR);
+  }
+
+  if (providedAccountId && useV3) {
+    uiLogger.error(commands.project.dev.errors.unsupportedAccountFlagV3);
+    process.exit(EXIT_CODES.ERROR);
+  }
+}
+
 async function handler(
   args: ArgumentsCamelCase<ProjectDevArgs>
 ): Promise<void> {
-  const { derivedAccountId, providedAccountId } = args;
+  const {
+    derivedAccountId,
+    providedAccountId,
+    testingAccount,
+    projectAccount,
+  } = args;
 
   const { projectConfig, projectDir } = await getProjectConfig();
   validateProjectConfig(projectConfig, projectDir);
+
+  const useV3 = useV3Api(projectConfig.platformVersion);
 
   if (!projectDir) {
     uiLogger.error(commands.project.dev.errors.noProjectConfig);
     process.exit(EXIT_CODES.ERROR);
   }
 
-  let targetAccountId = providedAccountId;
+  validateAccountFlags(
+    testingAccount,
+    projectAccount,
+    providedAccountId,
+    useV3
+  );
+
+  let targetProjectAccountId =
+    (projectAccount && getAccountId(projectAccount)) ||
+    (providedAccountId && derivedAccountId);
 
   let profile: HsProfileFile | undefined;
 
-  if (!targetAccountId && useV3Api(projectConfig.platformVersion)) {
+  if (!targetProjectAccountId && useV3Api(projectConfig.platformVersion)) {
     if (args.profile) {
       logProfileHeader(args.profile);
 
@@ -53,7 +96,7 @@ async function handler(
         process.exit(EXIT_CODES.ERROR);
       }
 
-      targetAccountId = profile.accountId;
+      targetProjectAccountId = profile.accountId;
 
       logProfileFooter(profile);
     } else {
@@ -62,39 +105,36 @@ async function handler(
     }
   }
 
-  if (!targetAccountId) {
-    // The user is not using profiles, so we can use the derived accountId
-    targetAccountId = derivedAccountId;
+  if (!targetProjectAccountId) {
+    // The user is not using profile or account flags, so we can use the derived accountId
+    targetProjectAccountId = derivedAccountId;
   }
 
-  trackCommandUsage('project-dev', {}, targetAccountId);
-
-  const accountConfig = getAccountConfig(targetAccountId);
+  trackCommandUsage('project-dev', {}, targetProjectAccountId);
 
   uiBetaTag(commands.project.dev.logs.betaMessage);
 
   uiLogger.log(commands.project.dev.logs.learnMoreLocalDevServer);
 
-  if (!accountConfig) {
-    uiLogger.error(commands.project.dev.errors.noAccount(targetAccountId));
-    process.exit(EXIT_CODES.ERROR);
-  }
-
   if (useV3Api(projectConfig.platformVersion)) {
-    await unifiedProjectDevFlow(
+    const targetTestingAccountId =
+      (testingAccount && getAccountId(testingAccount)) || undefined;
+
+    await unifiedProjectDevFlow({
       args,
-      accountConfig,
+      targetProjectAccountId,
+      providedTargetTestingAccountId: targetTestingAccountId,
       projectConfig,
       projectDir,
-      profile
-    );
+      profileConfig: profile,
+    });
   } else {
-    await deprecatedProjectDevFlow(
+    await deprecatedProjectDevFlow({
       args,
-      accountConfig,
+      accountId: targetProjectAccountId,
       projectConfig,
-      projectDir
-    );
+      projectDir,
+    });
   }
 }
 
@@ -106,9 +146,23 @@ function projectDevBuilder(yargs: Argv): Argv<ProjectDevArgs> {
     hidden: true,
   });
 
+  yargs.options('testingAccount', {
+    type: 'string',
+    description: commands.project.dev.options.testingAccount,
+    hidden: true,
+  });
+
+  yargs.options('projectAccount', {
+    type: 'string',
+    description: commands.project.dev.options.projectAccount,
+    hidden: true,
+  });
+
   yargs.example([['$0 project dev', commands.project.dev.examples.default]]);
 
   yargs.conflicts('profile', 'account');
+  yargs.conflicts('profile', 'testingAccount');
+  yargs.conflicts('profile', 'projectAccount');
 
   return yargs as Argv<ProjectDevArgs>;
 }

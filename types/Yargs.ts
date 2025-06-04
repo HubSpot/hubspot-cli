@@ -35,6 +35,8 @@ export type ProjectDevArgs = CommonArgs &
   ConfigArgs &
   EnvironmentArgs & {
     profile?: string;
+    testingAccount?: string | number;
+    projectAccount?: string | number;
   };
 
 export type TestingArgs = {
