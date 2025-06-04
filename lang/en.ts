@@ -10,6 +10,8 @@ import {
   getProjectSettingsUrl,
 } from '../lib/projects/urls';
 import { UI_COLORS } from '../lib/ui';
+import { PLATFORM_VERSIONS } from '@hubspot/local-dev-lib/constants/projects';
+import { PROJECT_CONFIG_FILE } from '../lib/constants';
 
 type LangFunction = (...args: never[]) => string;
 
@@ -3098,6 +3100,7 @@ export const lib = {
     },
   },
   projectUpload: {
+    wrongPlatformVersionMetaFiles: `Detected components that require a minimum platform version of ${PLATFORM_VERSIONS.v2025_2}.  You need to update your platform version in your ${PROJECT_CONFIG_FILE} and run ${uiCommandReference('hs project upload')}`,
     uploadProjectFiles: {
       add: (projectName: string, accountIdentifier: string) =>
         `Uploading ${chalk.bold(projectName)} project files to ${accountIdentifier}`,
