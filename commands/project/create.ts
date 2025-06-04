@@ -36,7 +36,8 @@ import { makeYargsBuilder } from '../../lib/yargsUtils';
 import { ProjectConfig, ProjectTemplateRepoConfig } from '../../types/Projects';
 import { PLATFORM_VERSIONS } from '@hubspot/local-dev-lib/constants/projects';
 import { useV3Api } from '../../lib/projects/buildAndDeploy';
-
+import { listPrompt } from '../../lib/prompts/promptUtils';
+const inquirer = require('inquirer');
 const command = 'create';
 const describe = uiBetaTag(
   i18n(`commands.project.subcommands.create.describe`),
@@ -71,8 +72,10 @@ async function handler(
   let projectTemplates;
   let componentTemplates;
   const repo = templateSource || HUBSPOT_PROJECT_COMPONENTS_GITHUB_PATH;
-  let componentTemplateChoices;
+  let componentTemplateChoices: unknown[] | undefined;
   let repoConfig: ProjectTemplateRepoConfig | undefined = undefined;
+  let authType: string | undefined;
+  let distribution: string | undefined;
 
   if (useV3Api(platformVersion)) {
     try {
@@ -82,14 +85,70 @@ async function handler(
       return process.exit(EXIT_CODES.SUCCESS);
     }
 
+    distribution = await listPrompt(
+      'How would you like to distribute your application?',
+      {
+        choices: [
+          { name: 'On the HubSpot marketplace', value: 'marketplace' },
+          { name: 'Privately', value: 'private' },
+        ],
+      }
+    );
+
+    if (distribution === 'marketplace') {
+      // This is the only valid auth type for marketplace
+      authType = 'oauth';
+    } else {
+      authType = await listPrompt(
+        'What type of authentication would you like your application to use',
+        {
+          choices: [
+            { name: 'Static Auth', value: 'static' },
+            { name: 'OAuth', value: 'oauth' },
+          ],
+        }
+      );
+    }
+
     componentTemplates = repoConfig?.components || [];
 
-    componentTemplateChoices = componentTemplates.map(template => {
-      return {
-        name: template.label,
+    const enabledComponents: unknown[] = [];
+    const disabledComponents: unknown[] = [];
+
+    componentTemplates.forEach(template => {
+      let disabled: boolean | string = false;
+
+      // @ts-expect-error
+      const { supportedAuthTypes, supportedDistributions } = template;
+
+      if (
+        Array.isArray(supportedAuthTypes) &&
+        !supportedAuthTypes.includes(authType)
+      ) {
+        disabled = `Auth type '${authType}' not allowed`;
+      } else if (
+        Array.isArray(supportedDistributions) &&
+        !supportedDistributions.includes(distribution)
+      ) {
+        disabled = `Distribution '${distribution}' not allowed`;
+      }
+
+      const component = {
+        name: `${disabled ? `[${chalk.yellow('DISABLED')}] ` : ''}${template.label}`,
         value: template,
+        disabled,
       };
+
+      if (disabled) {
+        disabledComponents.push(component);
+      } else {
+        enabledComponents.push(component);
+      }
     });
+
+    componentTemplateChoices = disabledComponents.length
+      ? [...enabledComponents, new inquirer.Separator(), ...disabledComponents]
+      : [...enabledComponents];
   } else {
     projectTemplates = await getProjectTemplateListFromRepo(repo, 'main');
 
@@ -151,12 +210,21 @@ async function handler(
     new Set<string>(
       // @ts-expect-error
       createProjectPromptResponse.componentTemplates
-        ?.map((item: { path: string; parentComponent?: string }) => {
+        ?.map((item: { path: string; parentType?: string }) => {
+          let parent = undefined;
+          if (item.parentType) {
+            // @ts-expect-error Fix the type
+            parent = repoConfig.parentComponents.find(possibleParent => {
+              return (
+                possibleParent.type === item.parentType &&
+                possibleParent.authType === authType &&
+                possibleParent.distribution === distribution
+              );
+            });
+          }
           return [
             path.join(platformVersion, item.path),
-            item.parentComponent
-              ? path.join(platformVersion, item.parentComponent)
-              : undefined,
+            parent ? path.join(platformVersion, parent.path) : undefined,
           ];
         })
         .flat()
