@@ -40,10 +40,25 @@ export type ProjectPollStatusFunctionText = {
   SUBTASK_NAME_KEY: string;
 };
 
+export const staticAuth = 'static';
+export const oAuth = 'oauth';
+export const privateDistribution = 'private';
+export const marketplaceDistribution = 'marketplace';
+export const appComponent = 'app';
+
+export type ParentComponent = {
+  label: string;
+  type: typeof appComponent;
+  authType: typeof staticAuth | typeof oAuth;
+  distribution: typeof privateDistribution | typeof marketplaceDistribution;
+  path: string;
+};
+
 export type ProjectTemplateRepoConfig = {
   projects?: ProjectTemplate[];
   components?: ComponentTemplate[];
   defaultFiles?: string;
+  parentComponents?: ParentComponent[];
 };
 
 export type ProjectPollResult = {

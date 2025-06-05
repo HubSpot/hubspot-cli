@@ -17,7 +17,6 @@ import {
   EMPTY_PROJECT_TEMPLATE_NAME,
   getConfigForPlatformVersion,
 } from '../../lib/projects/create';
-import { i18n } from '../../lib/lang';
 import { uiBetaTag, uiFeatureHighlight } from '../../lib/ui';
 import { debugError, logError } from '../../lib/errorHandlers';
 import { EXIT_CODES } from '../../lib/enums/exitCodes';
@@ -33,16 +32,22 @@ import {
   YargsCommandModule,
 } from '../../types/Yargs';
 import { makeYargsBuilder } from '../../lib/yargsUtils';
-import { ProjectConfig, ProjectTemplateRepoConfig } from '../../types/Projects';
+import {
+  marketplaceDistribution,
+  oAuth,
+  privateDistribution,
+  ProjectConfig,
+  ProjectTemplateRepoConfig,
+  staticAuth,
+} from '../../types/Projects';
 import { PLATFORM_VERSIONS } from '@hubspot/local-dev-lib/constants/projects';
 import { useV3Api } from '../../lib/projects/buildAndDeploy';
 import { listPrompt } from '../../lib/prompts/promptUtils';
+import { commands } from '../../lang/en';
 const inquirer = require('inquirer');
-const command = 'create';
-const describe = uiBetaTag(
-  i18n(`commands.project.subcommands.create.describe`),
-  false
-);
+
+const command = ['create', 'init'];
+const describe = uiBetaTag(commands.project.create.describe, false);
 
 type ProjectCreateArgs = CommonArgs &
   ConfigArgs &
@@ -63,9 +68,7 @@ async function handler(
   const { derivedAccountId, platformVersion, templateSource } = args;
 
   if (templateSource && !templateSource.includes('/')) {
-    logger.error(
-      i18n(`commands.project.subcommands.create.errors.invalidTemplateSource`)
-    );
+    logger.error(commands.project.create.errors.invalidTemplateSource);
     process.exit(EXIT_CODES.ERROR);
   }
 
@@ -76,6 +79,7 @@ async function handler(
   let repoConfig: ProjectTemplateRepoConfig | undefined = undefined;
   let authType: string | undefined;
   let distribution: string | undefined;
+  let projectContents: string | undefined;
 
   if (useV3Api(platformVersion)) {
     try {
@@ -84,30 +88,47 @@ async function handler(
       logError(error);
       return process.exit(EXIT_CODES.SUCCESS);
     }
-
-    distribution = await listPrompt(
-      'How would you like to distribute your application?',
+    projectContents = await listPrompt(
+      commands.project.create.prompts.parentComponents,
       {
         choices: [
-          { name: 'On the HubSpot marketplace', value: 'marketplace' },
-          { name: 'Privately', value: 'private' },
+          {
+            name: commands.project.create.prompts.emptyProject,
+            value: 'empty',
+          },
+          { name: commands.project.create.prompts.app, value: 'app' },
         ],
       }
     );
 
-    if (distribution === 'marketplace') {
-      // This is the only valid auth type for marketplace
-      authType = 'oauth';
-    } else {
-      authType = await listPrompt(
-        'What type of authentication would you like your application to use',
+    if (projectContents === 'app') {
+      distribution = await listPrompt(
+        'How would you like to distribute your application?',
         {
           choices: [
-            { name: 'Static Auth', value: 'static' },
-            { name: 'OAuth', value: 'oauth' },
+            {
+              name: 'On the HubSpot marketplace',
+              value: marketplaceDistribution,
+            },
+            { name: 'Privately', value: privateDistribution },
           ],
         }
       );
+
+      if (distribution === 'marketplace') {
+        // This is the only valid auth type for marketplace
+        authType = 'oauth';
+      } else {
+        authType = await listPrompt(
+          'What type of authentication would you like your application to use',
+          {
+            choices: [
+              { name: 'Static Auth', value: staticAuth },
+              { name: 'OAuth', value: oAuth },
+            ],
+          }
+        );
+      }
     }
 
     componentTemplates = repoConfig?.components || [];
@@ -153,11 +174,7 @@ async function handler(
     projectTemplates = await getProjectTemplateListFromRepo(repo, 'main');
 
     if (!projectTemplates.length) {
-      logger.error(
-        i18n(
-          `commands.project.subcommands.create.errors.failedToFetchProjectList`
-        )
-      );
+      logger.error(commands.project.create.errors.failedToFetchProjectList);
       process.exit(EXIT_CODES.ERROR);
     }
   }
@@ -179,7 +196,7 @@ async function handler(
         // @ts-expect-error
         createProjectPromptResponse.projectTemplate?.name ||
         // @ts-expect-error
-        createProjectPromptResponse.componentTemplates
+        (createProjectPromptResponse.componentTemplates || [])
           // @ts-expect-error
           .map((item: never) => item.label)
           .join(','),
@@ -199,9 +216,7 @@ async function handler(
     projectDest.startsWith(existingProjectDir)
   ) {
     logger.error(
-      i18n(`commands.project.subcommands.create.errors.cannotNestProjects`, {
-        projectDir: existingProjectDir,
-      })
+      commands.project.create.errors.cannotNestProjects(existingProjectDir)
     );
     process.exit(EXIT_CODES.ERROR);
   }
@@ -209,34 +224,28 @@ async function handler(
   const components: string[] = Array.from(
     new Set<string>(
       // @ts-expect-error
-      createProjectPromptResponse.componentTemplates
-        ?.map((item: { path: string; parentType?: string }) => {
-          let parent = undefined;
-          if (item.parentType) {
-            // @ts-expect-error Fix the type
-            parent = repoConfig.parentComponents.find(possibleParent => {
-              return (
-                possibleParent.type === item.parentType &&
-                possibleParent.authType === authType &&
-                possibleParent.distribution === distribution
-              );
-            });
-          }
-          return [
-            path.join(platformVersion, item.path),
-            parent ? path.join(platformVersion, parent.path) : undefined,
-          ];
-        })
-        .flat()
+      createProjectPromptResponse.componentTemplates?.map(
+        (item: { path: string; parentType?: string }) => {
+          return path.join(platformVersion, item.path);
+        }
+      )
     )
   );
 
-  // @ts-expect-error
-  if (repoConfig?.tooling) {
-    // @ts-expect-error
-    repoConfig.tooling.forEach((tooling: { path: string }) => {
-      components.push(path.join(platformVersion, tooling.path));
-    });
+  if (projectContents !== 'empty') {
+    const parentComponent = repoConfig?.parentComponents?.find(
+      possibleParent => {
+        return (
+          possibleParent.type === projectContents &&
+          possibleParent.authType === authType &&
+          possibleParent.distribution === distribution
+        );
+      }
+    );
+
+    if (parentComponent) {
+      components.push(path.join(platformVersion, parentComponent.path));
+    }
   }
 
   if (repoConfig?.defaultFiles) {
@@ -256,9 +265,7 @@ async function handler(
     });
   } catch (err) {
     debugError(err);
-    logger.error(
-      i18n(`commands.project.subcommands.create.errors.failedToDownloadProject`)
-    );
+    logger.error(commands.project.create.errors.failedToDownloadProject);
     process.exit(EXIT_CODES.ERROR);
   }
 
@@ -278,24 +285,21 @@ async function handler(
   if (
     // @ts-expect-error
     createProjectPromptResponse.projectTemplate?.name ===
-    EMPTY_PROJECT_TEMPLATE_NAME
+      EMPTY_PROJECT_TEMPLATE_NAME ||
+    projectContents === 'empty'
   ) {
     fs.ensureDirSync(path.join(projectDest, 'src'));
   }
 
-  logger.log('');
   logger.success(
-    i18n(`commands.project.subcommands.create.logs.success`, {
+    commands.project.create.logs.success(
       // @ts-expect-error
-      projectName: createProjectPromptResponse.name,
-      projectDest,
-    })
+      createProjectPromptResponse.name,
+      projectDest
+    )
   );
 
-  logger.log('');
-  logger.log(
-    chalk.bold(i18n(`commands.project.subcommands.create.logs.welcomeMessage`))
-  );
+  logger.log(commands.project.create.logs.welcomeMessage);
   uiFeatureHighlight([
     'projectCommandTip',
     'projectUploadCommand',
@@ -311,27 +315,19 @@ async function handler(
 function projectCreateBuilder(yargs: Argv): Argv<ProjectCreateArgs> {
   yargs.options({
     name: {
-      describe: i18n(
-        `commands.project.subcommands.create.options.name.describe`
-      ),
+      describe: commands.project.create.options.name.describe,
       type: 'string',
     },
     dest: {
-      describe: i18n(
-        `commands.project.subcommands.create.options.dest.describe`
-      ),
+      describe: commands.project.create.options.dest.describe,
       type: 'string',
     },
     template: {
-      describe: i18n(
-        `commands.project.subcommands.create.options.template.describe`
-      ),
+      describe: commands.project.create.options.template.describe,
       type: 'string',
     },
     'template-source': {
-      describe: i18n(
-        `commands.project.subcommands.create.options.templateSource.describe`
-      ),
+      describe: commands.project.create.options.templateSource.describe,
       type: 'string',
     },
     'platform-version': {
@@ -343,15 +339,12 @@ function projectCreateBuilder(yargs: Argv): Argv<ProjectCreateArgs> {
   });
 
   yargs.example([
-    [
-      '$0 project create',
-      i18n(`commands.project.subcommands.create.examples.default`),
-    ],
+    ['$0 project create', commands.project.create.examples.default],
   ]);
   yargs.example([
     [
       '$0 project create --template-source HubSpot/ui-extensions-examples',
-      i18n(`commands.project.subcommands.create.examples.templateSource`),
+      commands.project.create.examples.templateSource,
     ],
   ]);
 

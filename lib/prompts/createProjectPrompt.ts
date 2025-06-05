@@ -77,6 +77,8 @@ export async function createProjectPrompt(
 ) {
   const createProjectFromTemplate =
     !!projectTemplates && projectTemplates.length > 0;
+  const createProjectFromComponents =
+    Array.isArray(componentTemplates) && componentTemplates?.length > 0;
 
   const providedTemplateIsValid =
     createProjectFromTemplate &&
@@ -133,8 +135,8 @@ export async function createProjectPrompt(
     {
       // @ts-ignore
       name: 'componentTemplates',
-      message: 'Which components would you like your project to include?',
-      when: !(createProjectFromTemplate && !providedTemplateIsValid),
+      message: 'Which features would you like your project to include?',
+      when: createProjectFromComponents,
       type: 'checkbox',
       choices: componentTemplates,
     },

@@ -1016,8 +1016,13 @@ export const commands = {
       },
       logs: {
         success: (projectName: string, projectDest: string) =>
-          `Project ${chalk.bold(projectName)} was successfully created in ${projectDest}`,
-        welcomeMessage: 'Welcome to HubSpot Developer Projects!',
+          `\nProject ${chalk.bold(projectName)} was successfully created in ${projectDest}`,
+        welcomeMessage: `\n${chalk.bold('Welcome to HubSpot Developer Projects!')}`,
+      },
+      prompts: {
+        parentComponents: 'What would you like in your project?',
+        emptyProject: 'Empty Project',
+        app: 'App',
       },
       examples: {
         default: 'Create a new project',
