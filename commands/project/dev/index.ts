@@ -31,15 +31,6 @@ function validateAccountFlags(
   providedAccountId: string | number | undefined,
   useV3: boolean
 ) {
-  // If either targetTestingAccount or targetProjectAccount is provided, the other must be provided
-  if (
-    (testingAccount && !projectAccount) ||
-    (projectAccount && !testingAccount)
-  ) {
-    uiLogger.error(commands.project.dev.errors.invalidAccountFlags);
-    process.exit(EXIT_CODES.ERROR);
-  }
-
   // Legacy projects do not support targetTestingAccount and targetProjectAccount
   if (testingAccount && projectAccount && !useV3) {
     uiLogger.error(commands.project.dev.errors.unsupportedAccountFlagLegacy);
@@ -150,12 +141,14 @@ function projectDevBuilder(yargs: Argv): Argv<ProjectDevArgs> {
     type: 'string',
     description: commands.project.dev.options.testingAccount,
     hidden: true,
+    implies: ['projectAccount'],
   });
 
   yargs.options('projectAccount', {
     type: 'string',
     description: commands.project.dev.options.projectAccount,
     hidden: true,
+    implies: ['testingAccount'],
   });
 
   yargs.example([['$0 project dev', commands.project.dev.examples.default]]);

@@ -984,7 +984,7 @@ export const commands = {
           'Learn more about the projects local dev server',
         accountTypeInformation:
           'Testing in a developer test account is strongly recommended, but you can use a sandbox account if your plan allows you to create one.',
-        learnMoreMessage: `Visit our ${uiLink('docs on Developer Test and Sandbox accounts', 'https://developers.hubspot.com/docs/getting-started/account-types')} to learn more.`,
+        learnMoreMessage: `\nVisit our ${uiLink('docs on Developer Test and Sandbox accounts', 'https://developers.hubspot.com/docs/getting-started/account-types')} to learn more.`,
       },
       errors: {
         noProjectConfig:
@@ -996,13 +996,11 @@ export const commands = {
         invalidProjectComponents:
           'Projects cannot contain both private and public apps. Move your apps to separate projects before attempting local development.',
         noRunnableComponents: `No supported components were found in this project. Run ${uiCommandReference('hs project add')} to see a list of available components and add one to your project.`,
-        accountNotCombined: `Local development of Unified Apps is currently only compatible with accounts that are opted into the unified apps beta. Make sure that this account is opted in or switch accounts using ${uiCommandReference('hs account use')}.`,
-        invalidAccountFlags:
-          'Must specify both --projectAccount and --testingAccount flags. To use the same account for both, use the --account flag.',
+        accountNotCombined: `\nLocal development of unified apps is currently only compatible with accounts that are opted into the unified apps beta. Make sure that this account is opted in or switch accounts using ${uiCommandReference('hs account use')}.`,
         unsupportedAccountFlagLegacy:
           'The --projectAccount and --testingAccount flags are not supported for projects with platform versions earlier than 2025.2.',
         unsupportedAccountFlagV3:
-          'The --account flag is is not supported supported for projects with platform versions 2025.2 and newer. User --testingAccount and --projectAccount flags to specify accounts to use for local dev',
+          'The --account flag is is not supported supported for projects with platform versions 2025.2 and newer. Use --testingAccount and --projectAccount flags to specify accounts to use for local dev',
       },
       examples: {
         default: 'Start local dev for the current project',

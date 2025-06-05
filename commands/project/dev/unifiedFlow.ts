@@ -99,7 +99,6 @@ export async function unifiedProjectDevFlow({
   const accountIsCombined = await isUnifiedAccount(targetProjectAccountConfig);
 
   if (!accountIsCombined && !profileConfig) {
-    uiLogger.log('');
     uiLogger.error(commands.project.dev.errors.accountNotCombined);
     process.exit(EXIT_CODES.ERROR);
   }
@@ -113,7 +112,6 @@ export async function unifiedProjectDevFlow({
     uiLogger.log('');
     uiLine();
     uiLogger.log(commands.project.dev.logs.accountTypeInformation);
-    uiLogger.log('');
     uiLogger.log(commands.project.dev.logs.learnMoreMessage);
     uiLine();
     uiLogger.log('');
