@@ -1,14 +1,15 @@
 import path from 'path';
 import util from 'util';
 import { ArgumentsCamelCase } from 'yargs';
-import { logger } from '@hubspot/local-dev-lib/logger';
-import { getAccountIdentifier } from '@hubspot/local-dev-lib/config/getAccountIdentifier';
 import { HUBSPOT_ACCOUNT_TYPES } from '@hubspot/local-dev-lib/constants/config';
 import { isTranslationError } from '@hubspot/project-parsing-lib/src/lib/errors';
 import { translateForLocalDev } from '@hubspot/project-parsing-lib';
 import { HsProfileFile } from '@hubspot/project-parsing-lib/src/lib/types';
-import { CLIAccount } from '@hubspot/local-dev-lib/types/Accounts';
-import { getEnv, getConfigAccounts } from '@hubspot/local-dev-lib/config';
+import {
+  getEnv,
+  getConfigAccounts,
+  getAccountConfig,
+} from '@hubspot/local-dev-lib/config';
 import { getValidEnv } from '@hubspot/local-dev-lib/environment';
 import { ProjectDevArgs } from '../../../types/Yargs';
 import { ProjectConfig } from '../../../types/Projects';
@@ -31,23 +32,30 @@ import LocalDevProcess from '../../../lib/projects/localDev/LocalDevProcess';
 import LocalDevWatcher from '../../../lib/projects/localDev/LocalDevWatcher';
 import { handleExit, handleKeypress } from '../../../lib/process';
 import { isUnifiedAccount } from '../../../lib/accountTypes';
-import { uiCommandReference, uiLine, uiLink } from '../../../lib/ui';
-import { i18n } from '../../../lib/lang';
+import { uiLine } from '../../../lib/ui';
+import { uiLogger } from '../../../lib/ui/logger';
+import { commands } from '../../../lang/en';
+
 // import LocalDevWebsocketServer from '../../../lib/projects/localDev/LocalDevWebsocketServer';
 
-export async function unifiedProjectDevFlow(
-  args: ArgumentsCamelCase<ProjectDevArgs>,
-  accountConfig: CLIAccount,
-  projectConfig: ProjectConfig,
-  projectDir: string,
-  profileConfig?: HsProfileFile
-): Promise<void> {
-  const targetProjectAccountId = getAccountIdentifier(accountConfig);
-  const env = getValidEnv(getEnv(targetProjectAccountId));
+type UnifiedProjectDevFlowArgs = {
+  args: ArgumentsCamelCase<ProjectDevArgs>;
+  targetProjectAccountId: number;
+  providedTargetTestingAccountId?: number;
+  projectConfig: ProjectConfig;
+  projectDir: string;
+  profileConfig?: HsProfileFile;
+};
 
-  if (!targetProjectAccountId) {
-    process.exit(EXIT_CODES.ERROR);
-  }
+export async function unifiedProjectDevFlow({
+  args,
+  targetProjectAccountId,
+  providedTargetTestingAccountId,
+  projectConfig,
+  projectDir,
+  profileConfig,
+}: UnifiedProjectDevFlowArgs): Promise<void> {
+  const env = getValidEnv(getEnv(targetProjectAccountId));
 
   let projectNodes;
 
@@ -64,75 +72,63 @@ export async function unifiedProjectDevFlow(
 
     projectNodes = intermediateRepresentation.intermediateNodesIndexedByUid;
 
-    logger.debug(util.inspect(projectNodes, false, null, true));
+    uiLogger.debug(util.inspect(projectNodes, false, null, true));
   } catch (e) {
     if (isTranslationError(e)) {
-      logger.error(e.toString());
+      uiLogger.error(e.toString());
     } else {
       logError(e);
     }
     return process.exit(EXIT_CODES.ERROR);
   }
 
-  // @TODO Do we need to do more than this or leave it to the dev servers?
   if (!Object.keys(projectNodes).length) {
-    logger.error(
-      i18n(`commands.project.subcommands.dev.errors.noRunnableComponents`, {
-        projectDir,
-        command: uiCommandReference('hs project add'),
-      })
-    );
+    uiLogger.error(commands.project.dev.errors.noRunnableComponents);
     process.exit(EXIT_CODES.SUCCESS);
   }
 
-  // @TODO Validate component types (i.e. previously you could not have both private and public apps)
-
-  const accounts = getConfigAccounts();
-  const accountIsCombined = await isUnifiedAccount(accountConfig);
-
-  if (!accountIsCombined && !profileConfig) {
-    logger.log('');
-    logger.error(
-      i18n(`commands.project.subcommands.dev.errors.accountNotCombined`, {
-        accountUseCommand: uiCommandReference('hs account use'),
-      })
+  const targetProjectAccountConfig = getAccountConfig(targetProjectAccountId);
+  if (!targetProjectAccountConfig) {
+    uiLogger.error(
+      commands.project.dev.errors.noAccount(targetProjectAccountId)
     );
     process.exit(EXIT_CODES.ERROR);
   }
 
-  let targetTestingAccountId = null;
+  const accounts = getConfigAccounts();
+  const accountIsCombined = await isUnifiedAccount(targetProjectAccountConfig);
+
+  if (!accountIsCombined && !profileConfig) {
+    uiLogger.error(commands.project.dev.errors.accountNotCombined);
+    process.exit(EXIT_CODES.ERROR);
+  }
+
+  let targetTestingAccountId = providedTargetTestingAccountId;
 
   if (profileConfig) {
     // Bypass the prompt for the testing account if the user has a profile configured
     targetTestingAccountId = profileConfig.accountId;
-  } else if (args.providedAccountId) {
-    // By pass the prompt if the user explicitly provides an --account flag.
-    targetTestingAccountId = targetProjectAccountId;
-  } else {
-    logger.log('');
+  } else if (!targetTestingAccountId) {
+    uiLogger.log('');
     uiLine();
-    logger.log(
-      i18n(`commands.project.subcommands.dev.logs.accountTypeInformation`)
-    );
-    logger.log('');
-    logger.log(
-      i18n(`commands.project.subcommands.dev.logs.learnMoreMessage`, {
-        learnMoreLink: uiLink(
-          i18n(`commands.project.subcommands.dev.logs.learnMoreLink`),
-          'https://developers.hubspot.com/docs/getting-started/account-types'
-        ),
-      })
-    );
+    uiLogger.log(commands.project.dev.logs.accountTypeInformation);
+    uiLogger.log(commands.project.dev.logs.learnMoreMessage);
     uiLine();
-    logger.log('');
+    uiLogger.log('');
 
-    const accountType = await selectAccountTypePrompt(accountConfig);
+    const accountType = await selectAccountTypePrompt(
+      targetProjectAccountConfig
+    );
 
     if (accountType === HUBSPOT_ACCOUNT_TYPES.DEVELOPER_TEST) {
       const devAccountPromptResponse =
-        await selectDeveloperTestTargetAccountPrompt(accounts!, accountConfig);
+        await selectDeveloperTestTargetAccountPrompt(
+          accounts!,
+          targetProjectAccountConfig
+        );
 
-      targetTestingAccountId = devAccountPromptResponse.targetAccountId;
+      targetTestingAccountId =
+        devAccountPromptResponse.targetAccountId || undefined;
 
       if (!!devAccountPromptResponse.notInConfigAccount) {
         // When the developer test account isn't configured in the CLI config yet
@@ -145,15 +141,19 @@ export async function unifiedProjectDevFlow(
         // Create a new developer test account and automatically add it to the CLI config
         targetTestingAccountId = await createDeveloperTestAccountForLocalDev(
           targetProjectAccountId,
-          accountConfig,
+          targetProjectAccountConfig,
           env
         );
       }
     } else if (accountType === HUBSPOT_ACCOUNT_TYPES.DEVELOPMENT_SANDBOX) {
       const sandboxAccountPromptResponse =
-        await selectSandboxTargetAccountPrompt(accounts!, accountConfig);
+        await selectSandboxTargetAccountPrompt(
+          accounts!,
+          targetProjectAccountConfig
+        );
 
-      targetTestingAccountId = sandboxAccountPromptResponse.targetAccountId;
+      targetTestingAccountId =
+        sandboxAccountPromptResponse.targetAccountId || undefined;
     } else {
       targetTestingAccountId = targetProjectAccountId;
     }

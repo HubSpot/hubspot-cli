@@ -1,7 +1,10 @@
 import { ArgumentsCamelCase } from 'yargs';
 import { logger } from '@hubspot/local-dev-lib/logger';
-import { getConfigAccounts, getEnv } from '@hubspot/local-dev-lib/config';
-import { CLIAccount } from '@hubspot/local-dev-lib/types/Accounts';
+import {
+  getAccountConfig,
+  getConfigAccounts,
+  getEnv,
+} from '@hubspot/local-dev-lib/config';
 import { getValidEnv } from '@hubspot/local-dev-lib/environment';
 
 import {
@@ -32,12 +35,19 @@ import { isSandbox, isDeveloperTestAccount } from '../../../lib/accountTypes';
 import { ensureProjectExists } from '../../../lib/projects/ensureProjectExists';
 import { ProjectDevArgs } from '../../../types/Yargs';
 
-export async function deprecatedProjectDevFlow(
-  args: ArgumentsCamelCase<ProjectDevArgs>,
-  accountConfig: CLIAccount,
-  projectConfig: ProjectConfig,
-  projectDir: string
-): Promise<void> {
+type DeprecatedProjectDevFlowArgs = {
+  args: ArgumentsCamelCase<ProjectDevArgs>;
+  accountId: number;
+  projectConfig: ProjectConfig;
+  projectDir: string;
+};
+
+export async function deprecatedProjectDevFlow({
+  args,
+  accountId,
+  projectConfig,
+  projectDir,
+}: DeprecatedProjectDevFlowArgs): Promise<void> {
   const { providedAccountId, derivedAccountId } = args;
   const env = getValidEnv(getEnv(derivedAccountId));
 
@@ -46,6 +56,17 @@ export async function deprecatedProjectDevFlow(
   const componentTypes = getProjectComponentTypes(runnableComponents);
   const hasPrivateApps = !!componentTypes[ComponentTypes.PrivateApp];
   const hasPublicApps = !!componentTypes[ComponentTypes.PublicApp];
+
+  const accountConfig = getAccountConfig(accountId);
+  if (!accountConfig) {
+    logger.error(
+      i18n('commands.project.subcommands.dev.errors.noAccount', {
+        accountId: accountId,
+        authCommand: uiCommandReference('hs auth'),
+      })
+    );
+    process.exit(EXIT_CODES.ERROR);
+  }
 
   if (runnableComponents.length === 0) {
     logger.error(
