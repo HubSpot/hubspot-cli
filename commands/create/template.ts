@@ -1,10 +1,10 @@
 import { createTemplate } from '@hubspot/local-dev-lib/cms/templates';
-import { logError } from '../../lib/errorHandlers/index';
-import { createTemplatePrompt } from '../../lib/prompts/createTemplatePrompt';
-import { EXIT_CODES } from '../../lib/enums/exitCodes';
-import { CreatableCmsAsset } from '../../types/Cms';
-import { uiLogger } from '../../lib/ui/logger';
-import { commands } from '../../lang/en';
+import { logError } from '../../lib/errorHandlers/index.js';
+import { createTemplatePrompt } from '../../lib/prompts/createTemplatePrompt.js';
+import { EXIT_CODES } from '../../lib/enums/exitCodes.js';
+import { CreatableCmsAsset } from '../../types/Cms.js';
+import { uiLogger } from '../../lib/ui/logger.js';
+import { commands } from '../../lang/en.js';
 
 const templateAssetType: CreatableCmsAsset = {
   dest: ({ dest }) => dest,
@@ -17,8 +17,9 @@ const templateAssetType: CreatableCmsAsset = {
 
     return true;
   },
-  execute: async ({ name, dest }) => {
-    const { templateType } = await createTemplatePrompt();
+  execute: async ({ name, dest, commandArgs }) => {
+    const { templateType } = await createTemplatePrompt(commandArgs);
+
     try {
       await createTemplate(name, dest, templateType);
     } catch (e) {

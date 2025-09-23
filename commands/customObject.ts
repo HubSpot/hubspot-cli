@@ -1,24 +1,18 @@
 import { Argv } from 'yargs';
-import schemaCommand from './customObject/schema';
-import createCommand from './customObject/create';
-import { i18n } from '../lib/lang';
-import { logger } from '@hubspot/local-dev-lib/logger';
-import { uiBetaTag, uiLink } from '../lib/ui';
-import { YargsCommandModuleBucket } from '../types/Yargs';
-import { makeYargsBuilder } from '../lib/yargsUtils';
+import schemaCommand from './customObject/schema.js';
+import createCommand from './customObject/create.js';
+import { commands } from '../lang/en.js';
+import { uiBetaTag } from '../lib/ui/index.js';
+import { YargsCommandModuleBucket } from '../types/Yargs.js';
+import { makeYargsBuilder } from '../lib/yargsUtils.js';
+import { uiLogger } from '../lib/ui/logger.js';
 
 const command = ['custom-object', 'custom-objects', 'co'];
-const describe = uiBetaTag(i18n(`commands.customObject.describe`), false);
+const describe = uiBetaTag(commands.customObject.describe, false);
 
 function logBetaMessage() {
-  uiBetaTag(i18n(`commands.customObject.betaMessage`));
-  logger.log(
-    uiLink(
-      i18n(`commands.customObject.seeMoreLink`),
-      'https://developers.hubspot.com/docs/api/crm/crm-custom-objects'
-    )
-  );
-  logger.log();
+  uiBetaTag(commands.customObject.betaMessage);
+  uiLogger.log(commands.customObject.seeMoreLink);
 }
 
 function customObjectBuilder(yargs: Argv): Argv {
@@ -39,6 +33,3 @@ const customObjectCommand: YargsCommandModuleBucket = {
 };
 
 export default customObjectCommand;
-
-// TODO Remove this legacy export once we've migrated all commands to TS
-module.exports = customObjectCommand;

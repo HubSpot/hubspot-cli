@@ -3,15 +3,15 @@ import {
   isMissingScopeError,
 } from '@hubspot/local-dev-lib/errors/index';
 import { logger } from '@hubspot/local-dev-lib/logger';
-import { PLATFORM_VERSION_ERROR_TYPES } from '../constants';
-import { i18n } from '../lang';
+import { PLATFORM_VERSION_ERROR_TYPES } from '../constants.js';
+import { i18n } from '../lang.js';
 import {
   uiAccountDescription,
   uiLine,
   uiLink,
   uiCommandReference,
-} from '../ui';
-import { ApiErrorContext } from './index';
+} from '../ui/index.js';
+import { ApiErrorContext } from './index.js';
 import { HubSpotHttpError } from '@hubspot/local-dev-lib/models/HubSpotHttpError';
 
 function createPlatformVersionError(
@@ -52,7 +52,7 @@ function createPlatformVersionError(
     i18n(`lib.errorHandlers.suppressErrors.platformVersionErrors.betaLink`, {
       docsLink: uiLink(
         i18n(`lib.errorHandlers.suppressErrors.platformVersionErrors.docsLink`),
-        'https://developers.hubspot.com/docs/platform/platform-versioning'
+        'https://developers.hubspot.com/docs/developer-tooling/platform/versioning'
       ),
     })
   );

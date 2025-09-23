@@ -1,24 +1,20 @@
 import { Argv, ArgumentsCamelCase } from 'yargs';
 import fs from 'fs';
-import {
-  DEFAULT_HUBSPOT_CONFIG_YAML_FILE_NAME,
-  GLOBAL_CONFIG_PATH,
-  ARCHIVED_HUBSPOT_CONFIG_YAML_FILE_NAME,
-} from '@hubspot/local-dev-lib/constants/config';
 import { configFileExists } from '@hubspot/local-dev-lib/config/migrate';
-import { logger } from '@hubspot/local-dev-lib/logger';
-import { handleMigration, handleMerge } from '../../lib/configMigrate';
-import { i18n } from '../../lib/lang';
-import { CommonArgs, ConfigArgs, YargsCommandModule } from '../../types/Yargs';
-import { trackCommandMetadataUsage } from '../../lib/usageTracking';
-import { logError } from '../../lib/errorHandlers/index';
-import { EXIT_CODES } from '../../lib/enums/exitCodes';
-import { makeYargsBuilder } from '../../lib/yargsUtils';
+import { handleMigration, handleMerge } from '../../lib/configMigrate.js';
+import {
+  CommonArgs,
+  ConfigArgs,
+  YargsCommandModule,
+} from '../../types/Yargs.js';
+import { logError } from '../../lib/errorHandlers/index.js';
+import { EXIT_CODES } from '../../lib/enums/exitCodes.js';
+import { makeYargsBuilder } from '../../lib/yargsUtils.js';
+import { trackCommandUsage } from '../../lib/usageTracking.js';
+import { uiLogger } from '../../lib/ui/logger.js';
+import { commands } from '../../lang/en.js';
 
-const describe = i18n('commands.config.subcommands.migrate.describe', {
-  deprecatedConfigPath: DEFAULT_HUBSPOT_CONFIG_YAML_FILE_NAME,
-  globalConfigPath: GLOBAL_CONFIG_PATH,
-});
+const describe = commands.config.subcommands.migrate.describe;
 const command = 'migrate';
 
 type ConfigMigrateArgs = CommonArgs & ConfigArgs & { force?: boolean };
@@ -26,13 +22,13 @@ type ConfigMigrateArgs = CommonArgs & ConfigArgs & { force?: boolean };
 async function handler(
   args: ArgumentsCamelCase<ConfigMigrateArgs>
 ): Promise<void> {
-  const { config: configPath, force, derivedAccountId } = args;
+  const { derivedAccountId, config: configPath, force } = args;
+
+  trackCommandUsage('config-migrate', {}, derivedAccountId);
 
   if (configPath && !fs.existsSync(configPath)) {
-    logger.log(
-      i18n('commands.config.subcommands.migrate.errors.configNotFound', {
-        configPath,
-      })
+    uiLogger.error(
+      commands.config.subcommands.migrate.errors.configNotFound(configPath)
     );
     process.exit(EXIT_CODES.ERROR);
   }
@@ -41,34 +37,24 @@ async function handler(
   const globalConfigExists = configFileExists(true);
 
   if (!deprecatedConfigExists) {
-    logger.log(
-      i18n('commands.config.subcommands.migrate.migrationAlreadyCompleted', {
-        deprecatedConfigPath: DEFAULT_HUBSPOT_CONFIG_YAML_FILE_NAME,
-      })
+    uiLogger.error(
+      commands.config.subcommands.migrate.errors.noConfigToMigrate
     );
-    process.exit(EXIT_CODES.SUCCESS);
-  }
-
-  try {
-    if (!globalConfigExists) {
-      await handleMigration(derivedAccountId, configPath);
-    } else {
-      await handleMerge(derivedAccountId, configPath, force);
-    }
-    process.exit(EXIT_CODES.SUCCESS);
-  } catch (error) {
-    trackCommandMetadataUsage(
-      'config-migrate',
-      {
-        command: 'hs config migrate',
-        type: 'Migration/merge',
-        successful: false,
-      },
-      derivedAccountId
-    );
-    logError(error);
     process.exit(EXIT_CODES.ERROR);
   }
+
+  let success = false;
+  try {
+    if (!globalConfigExists) {
+      success = await handleMigration(configPath, true);
+    } else {
+      success = await handleMerge(configPath, force, true);
+    }
+  } catch (error) {
+    logError(error);
+  }
+
+  process.exit(success ? EXIT_CODES.SUCCESS : EXIT_CODES.ERROR);
 }
 
 function configMigrateBuilder(yargs: Argv): Argv<ConfigMigrateArgs> {
@@ -78,22 +64,17 @@ function configMigrateBuilder(yargs: Argv): Argv<ConfigMigrateArgs> {
         alias: 'f',
         type: 'boolean',
         default: false,
-        description: i18n('commands.config.subcommands.migrate.options.force'),
+        description: commands.config.subcommands.migrate.options.force,
       },
     })
     .example([
       [
         '$0 config migrate',
-        i18n('commands.config.subcommands.migrate.examples.default', {
-          deprecatedConfigPath: DEFAULT_HUBSPOT_CONFIG_YAML_FILE_NAME,
-          globalConfigPath: GLOBAL_CONFIG_PATH,
-        }),
+        commands.config.subcommands.migrate.examples.default,
       ],
       [
         '$0 config migrate --config=/path/to/config.yml',
-        i18n('commands.config.subcommands.migrate.examples.configFlag', {
-          globalConfigPath: GLOBAL_CONFIG_PATH,
-        }),
+        commands.config.subcommands.migrate.examples.configFlag,
       ],
     ]) as Argv<ConfigMigrateArgs>;
 }
@@ -101,9 +82,7 @@ function configMigrateBuilder(yargs: Argv): Argv<ConfigMigrateArgs> {
 const builder = makeYargsBuilder<ConfigMigrateArgs>(
   configMigrateBuilder,
   command,
-  i18n('commands.config.subcommands.migrate.verboseDescribe', {
-    archivedConfigPath: ARCHIVED_HUBSPOT_CONFIG_YAML_FILE_NAME,
-  }),
+  commands.config.subcommands.migrate.verboseDescribe,
   {
     useGlobalOptions: true,
     useConfigOptions: true,

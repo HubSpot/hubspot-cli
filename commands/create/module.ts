@@ -1,10 +1,10 @@
 import { createModule } from '@hubspot/local-dev-lib/cms/modules';
-import { createModulePrompt } from '../../lib/prompts/createModulePrompt';
-import { logError } from '../../lib/errorHandlers/index';
-import { EXIT_CODES } from '../../lib/enums/exitCodes';
-import { CreatableCmsAsset } from '../../types/Cms';
-import { uiLogger } from '../../lib/ui/logger';
-import { commands } from '../../lang/en';
+import { createModulePrompt } from '../../lib/prompts/createModulePrompt.js';
+import { logError } from '../../lib/errorHandlers/index.js';
+import { EXIT_CODES } from '../../lib/enums/exitCodes.js';
+import { CreatableCmsAsset } from '../../types/Cms.js';
+import { uiLogger } from '../../lib/ui/logger.js';
+import { commands } from '../../lang/en.js';
 
 const moduleAssetType: CreatableCmsAsset = {
   hidden: false,
@@ -16,8 +16,8 @@ const moduleAssetType: CreatableCmsAsset = {
     }
     return true;
   },
-  execute: async ({ name, dest, getInternalVersion }) => {
-    const moduleDefinition = await createModulePrompt();
+  execute: async ({ name, dest, getInternalVersion, commandArgs }) => {
+    const moduleDefinition = await createModulePrompt(commandArgs);
     try {
       await createModule(moduleDefinition, name, dest, getInternalVersion);
     } catch (e) {

@@ -3,7 +3,7 @@ import { getEnv } from '@hubspot/local-dev-lib/config';
 import { ENVIRONMENTS } from '@hubspot/local-dev-lib/constants/environments';
 import { getHubSpotWebsiteOrigin } from '@hubspot/local-dev-lib/urls';
 import { logger } from '@hubspot/local-dev-lib/logger';
-import { getTableContents, getTableHeader } from './ui/table';
+import { getTableContents, getTableHeader } from './ui/table.js';
 
 type SiteLink = {
   shortcut: string;
@@ -12,7 +12,7 @@ type SiteLink = {
   url?: string;
 };
 
-const SITE_LINKS: { [key: string]: SiteLink } = {
+const COMMON_SITE_LINKS: { [key: string]: SiteLink } = {
   APPS_MARKETPLACE: {
     shortcut: 'apps-marketplace',
     alias: 'apm',
@@ -100,7 +100,7 @@ export function getSiteLinksAsArray(accountId: number): SiteLink[] {
     getEnv() === 'qa' ? ENVIRONMENTS.QA : ENVIRONMENTS.PROD
   );
 
-  return Object.values(SITE_LINKS)
+  return Object.values(COMMON_SITE_LINKS)
     .sort((a, b) => (a.shortcut < b.shortcut ? -1 : 1))
     .map(l => ({ ...l, url: l.getUrl(accountId, baseUrl) }));
 }
@@ -118,7 +118,7 @@ export function logSiteLinks(accountId: number): void {
 }
 
 export function openLink(accountId: number, shortcut: string): void {
-  const match = Object.values(SITE_LINKS).find(
+  const match = Object.values(COMMON_SITE_LINKS).find(
     l => l.shortcut === shortcut || (l.alias && l.alias === shortcut)
   );
 
@@ -137,4 +137,18 @@ export function openLink(accountId: number, shortcut: string): void {
   logger.success(
     `We opened ${match.getUrl(accountId, baseUrl)} in your browser`
   );
+}
+
+export function getProductUpdatesUrl(
+  rolloutId: string,
+  accountId?: number
+): string {
+  const baseUrl = getHubSpotWebsiteOrigin(
+    getEnv() === 'qa' ? ENVIRONMENTS.QA : ENVIRONMENTS.PROD
+  );
+
+  if (accountId) {
+    return `${baseUrl}/product-updates/${accountId}/in-beta?rollout=${rolloutId}`;
+  }
+  return `${baseUrl}/l/product-updates/in-beta?rollout=${rolloutId}`;
 }

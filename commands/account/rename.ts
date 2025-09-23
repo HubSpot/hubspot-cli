@@ -1,15 +1,19 @@
 import { Argv, ArgumentsCamelCase } from 'yargs';
-import { logger } from '@hubspot/local-dev-lib/logger';
 import { renameAccount } from '@hubspot/local-dev-lib/config';
-import { trackCommandUsage } from '../../lib/usageTracking';
-import { i18n } from '../../lib/lang';
-import { CommonArgs, ConfigArgs, YargsCommandModule } from '../../types/Yargs';
-import { logError } from '../../lib/errorHandlers';
-import { EXIT_CODES } from '../../lib/enums/exitCodes';
-import { makeYargsBuilder } from '../../lib/yargsUtils';
+import { trackCommandUsage } from '../../lib/usageTracking.js';
+import { commands } from '../../lang/en.js';
+import { uiLogger } from '../../lib/ui/logger.js';
+import {
+  CommonArgs,
+  ConfigArgs,
+  YargsCommandModule,
+} from '../../types/Yargs.js';
+import { logError } from '../../lib/errorHandlers/index.js';
+import { EXIT_CODES } from '../../lib/enums/exitCodes.js';
+import { makeYargsBuilder } from '../../lib/yargsUtils.js';
 
 const command = 'rename <account-name> <new-name>';
-const describe = i18n(`commands.account.subcommands.rename.describe`);
+const describe = commands.account.subcommands.rename.describe;
 
 type AccountRenameArgs = CommonArgs &
   ConfigArgs & {
@@ -31,26 +35,20 @@ async function handler(
     process.exit(EXIT_CODES.ERROR);
   }
 
-  logger.log(
-    i18n(`commands.account.subcommands.rename.success.renamed`, {
-      name: accountName,
-      newName,
-    })
+  uiLogger.log(
+    commands.account.subcommands.rename.success.renamed(accountName, newName)
   );
   process.exit(EXIT_CODES.SUCCESS);
 }
 
 function accountRenameBuilder(yargs: Argv): Argv<AccountRenameArgs> {
   yargs.positional('account-name', {
-    describe: i18n(
-      `commands.account.subcommands.rename.positionals.accountName.describe`
-    ),
+    describe:
+      commands.account.subcommands.rename.positionals.accountName.describe,
     type: 'string',
   });
   yargs.positional('new-name', {
-    describe: i18n(
-      `commands.account.subcommands.rename.positionals.newName.describe`
-    ),
+    describe: commands.account.subcommands.rename.positionals.newName.describe,
     type: 'string',
   });
 

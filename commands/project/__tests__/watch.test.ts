@@ -3,11 +3,10 @@ import {
   addAccountOptions,
   addConfigOptions,
   addUseEnvironmentOptions,
-} from '../../../lib/commonOpts';
-import projectWatchCommand from '../watch';
+} from '../../../lib/commonOpts.js';
+import projectWatchCommand from '../watch.js';
 
-jest.mock('yargs');
-jest.mock('../../../lib/commonOpts');
+vi.mock('../../../lib/commonOpts');
 
 describe('commands/project/watch', () => {
   const yargsMock = yargs as Argv;
@@ -39,8 +38,8 @@ describe('commands/project/watch', () => {
     });
 
     it('should define options', () => {
-      const optionSpy = jest.spyOn(yargsMock, 'option');
-      const exampleSpy = jest.spyOn(yargsMock, 'example');
+      const optionSpy = vi.spyOn(yargsMock, 'option');
+      const exampleSpy = vi.spyOn(yargsMock, 'example');
 
       projectWatchCommand.builder(yargsMock);
 

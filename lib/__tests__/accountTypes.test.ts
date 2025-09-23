@@ -7,7 +7,7 @@ import {
   isDevelopmentSandbox,
   isDeveloperTestAccount,
   isAppDeveloperAccount,
-} from '../accountTypes';
+} from '../accountTypes.js';
 
 const STANDARD_ACCOUNT: CLIAccount = {
   name: 'standard-account',

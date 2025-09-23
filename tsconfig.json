@@ -11,8 +11,21 @@
     "allowJs": true,
     "rootDir": ".",
     "outDir": "dist",
-    "noErrorTruncation": true
+    "noErrorTruncation": true,
+    "isolatedModules": true,
+    "jsx": "react-jsx",
+    "typeRoots": ["./node_modules/@types", "./node_modules", "./@types"],
+    "types": ["vitest/globals", "node"]
   },
-  "include": ["bin", "commands", "lib", "api", "lang"],
-  "exclude": ["**/__tests__/*"]
+  "include": [
+    "bin",
+    "commands",
+    "ui",
+    "lib",
+    "api",
+    "lang",
+    "mcp-server",
+    "vitest.d.ts",
+    "@types"
+  ]
 }

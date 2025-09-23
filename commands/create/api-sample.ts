@@ -3,13 +3,13 @@ import fs from 'fs-extra';
 import { fetchRepoFile } from '@hubspot/local-dev-lib/api/github';
 import { cloneGithubRepo } from '@hubspot/local-dev-lib/github';
 
-import { createApiSamplePrompt } from '../../lib/prompts/createApiSamplePrompt';
-import { confirmPrompt } from '../../lib/prompts/promptUtils';
-import { debugError } from '../../lib/errorHandlers';
-import { EXIT_CODES } from '../../lib/enums/exitCodes';
-import { CreatableCmsAsset, ApiSampleConfig } from '../../types/Cms';
-import { commands } from '../../lang/en';
-import { uiLogger } from '../../lib/ui/logger';
+import { createApiSamplePrompt } from '../../lib/prompts/createApiSamplePrompt.js';
+import { confirmPrompt } from '../../lib/prompts/promptUtils.js';
+import { debugError } from '../../lib/errorHandlers/index.js';
+import { EXIT_CODES } from '../../lib/enums/exitCodes.js';
+import { CreatableCmsAsset, ApiSampleConfig } from '../../types/Cms.js';
+import { commands } from '../../lang/en.js';
+import { uiLogger } from '../../lib/ui/logger.js';
 
 const apiSampleAssetType: CreatableCmsAsset = {
   hidden: true,

@@ -1,4 +1,3 @@
-import { AxiosHeaders } from 'axios';
 import { HubSpotPromise } from '@hubspot/local-dev-lib/types/Http';
 import { HubSpotHttpError } from '@hubspot/local-dev-lib/models/HubSpotHttpError';
 
@@ -20,9 +19,9 @@ export function mockHubSpotHttpResponse<T>(data?: any): HubSpotPromise<T> {
     statusText: 'OK',
     headers: {},
     config: {
-      headers: new AxiosHeaders(),
+      headers: {},
     },
-  });
+  }) as HubSpotPromise<T>;
 }
 
 export function mockHubSpotHttpError(

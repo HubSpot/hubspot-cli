@@ -1,14 +1,14 @@
 import { Argv } from 'yargs';
-import addSecretCommand from './secret/addSecret';
-import listSecretCommand from './secret/listSecret';
-import deleteSecretCommand from './secret/deleteSecret';
-import updateSecretCommand from './secret/updateSecret';
-import { i18n } from '../lib/lang';
-import { YargsCommandModuleBucket } from '../types/Yargs';
-import { makeYargsBuilder } from '../lib/yargsUtils';
+import addSecretCommand from './secret/addSecret.js';
+import listSecretCommand from './secret/listSecret.js';
+import deleteSecretCommand from './secret/deleteSecret.js';
+import updateSecretCommand from './secret/updateSecret.js';
+import { commands } from '../lang/en.js';
+import { YargsCommandModuleBucket } from '../types/Yargs.js';
+import { makeYargsBuilder } from '../lib/yargsUtils.js';
 
 const command = ['secret', 'secrets'];
-const describe = i18n(`commands.secret.describe`);
+const describe = commands.secret.describe;
 
 function secretBuilder(yargs: Argv): Argv {
   yargs
@@ -30,6 +30,3 @@ const secretCommand: YargsCommandModuleBucket = {
 };
 
 export default secretCommand;
-
-// TODO Remove this legacy export once we've migrated all commands to TS
-module.exports = secretCommand;

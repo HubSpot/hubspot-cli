@@ -1,50 +1,49 @@
 import yargs, { Argv, ArgumentsCamelCase } from 'yargs';
-import { addUseEnvironmentOptions } from '../../../lib/commonOpts';
-import { ProjectLogsManager } from '../../../lib/projects/ProjectLogsManager';
-import * as projectLogsPrompt from '../../../lib/prompts/projectsLogsPrompt';
-import * as table from '../../../lib/ui/table';
-import { trackCommandUsage } from '../../../lib/usageTracking';
-import * as ui from '../../../lib/ui';
-import { EXIT_CODES } from '../../../lib/enums/exitCodes';
-import { logError } from '../../../lib/errorHandlers';
-import projectLogsCommand, { ProjectLogsArgs } from '../logs';
+import { addUseEnvironmentOptions } from '../../../lib/commonOpts.js';
+import { ProjectLogsManager } from '../../../lib/projects/ProjectLogsManager.js';
+import * as projectLogsPrompt from '../../../lib/prompts/projectsLogsPrompt.js';
+import * as table from '../../../lib/ui/table.js';
+import { trackCommandUsage } from '../../../lib/usageTracking.js';
+import * as ui from '../../../lib/ui/index.js';
+import { EXIT_CODES } from '../../../lib/enums/exitCodes.js';
+import { logError } from '../../../lib/errorHandlers/index.js';
+import projectLogsCommand, { ProjectLogsArgs } from '../logs.js';
 
-jest.mock('yargs');
-jest.mock('@hubspot/local-dev-lib/logger');
-jest.mock('../../../lib/commonOpts');
-jest.mock('../../../lib/usageTracking');
-jest.mock('../../../lib/validation');
-jest.mock('../../../lib/projects/ProjectLogsManager');
-jest.mock('../../../lib/prompts/projectsLogsPrompt');
-jest.mock('../../../lib/ui/table');
-jest.mock('../../../lib/errorHandlers');
+vi.mock('@hubspot/local-dev-lib/logger');
+vi.mock('../../../lib/commonOpts');
+vi.mock('../../../lib/usageTracking');
+vi.mock('../../../lib/validation');
+vi.mock('../../../lib/projects/ProjectLogsManager');
+vi.mock('../../../lib/prompts/projectsLogsPrompt');
+vi.mock('../../../lib/ui/table');
+vi.mock('../../../lib/errorHandlers');
 
-const uiLinkSpy = jest.spyOn(ui, 'uiLink');
-const uiLineSpy = jest.spyOn(ui, 'uiLine');
-const processExitSpy = jest.spyOn(process, 'exit');
-const projectLogsPromptSpy = jest.spyOn(projectLogsPrompt, 'projectLogsPrompt');
-const projectLogsManagerSetFunctionSpy = jest.spyOn(
+const uiLinkSpy = vi.spyOn(ui, 'uiLink');
+const uiLineSpy = vi.spyOn(ui, 'uiLine');
+const processExitSpy = vi.spyOn(process, 'exit');
+const projectLogsPromptSpy = vi.spyOn(projectLogsPrompt, 'projectLogsPrompt');
+const projectLogsManagerSetFunctionSpy = vi.spyOn(
   ProjectLogsManager,
   'setFunction'
 );
-const projectLogsManagerGetFunctionNamesSpy = jest.spyOn(
+const projectLogsManagerGetFunctionNamesSpy = vi.spyOn(
   ProjectLogsManager,
   'getFunctionNames'
 );
-const projectLogsManagerInitSpy = jest.spyOn(ProjectLogsManager, 'init');
+const projectLogsManagerInitSpy = vi.spyOn(ProjectLogsManager, 'init');
 
-const getTableHeaderSpy = jest.spyOn(table, 'getTableHeader');
-const getTableContentsSpy = jest.spyOn(table, 'getTableContents');
+const getTableHeaderSpy = vi.spyOn(table, 'getTableHeader');
+const getTableContentsSpy = vi.spyOn(table, 'getTableContents');
 
-const optionsSpy = jest
+const optionsSpy = vi
   .spyOn(yargs as Argv, 'options')
   .mockReturnValue(yargs as Argv);
 
-const conflictsSpy = jest
+const conflictsSpy = vi
   .spyOn(yargs as Argv, 'conflicts')
   .mockReturnValue(yargs as Argv);
 
-const exampleSpy = jest
+const exampleSpy = vi
   .spyOn(yargs as Argv, 'example')
   .mockReturnValue(yargs as Argv);
 
@@ -61,10 +60,6 @@ describe('commands/project/logs', () => {
   });
 
   describe('describe', () => {
-    it('should contain the beta tag', () => {
-      expect(projectLogsCommand.describe).toContain('[BETA]');
-    });
-
     it('should provide a description', () => {
       expect(projectLogsCommand.describe).toBeDefined();
     });

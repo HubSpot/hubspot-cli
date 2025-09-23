@@ -14,11 +14,11 @@ import {
 } from '@hubspot/local-dev-lib/api/projects';
 import { isSpecifiedError } from '@hubspot/local-dev-lib/errors/index';
 
-import { logError, ApiErrorContext } from '../errorHandlers';
-import { PROJECT_ERROR_TYPES } from '../constants';
-import { ProjectConfig } from '../../types/Projects';
-import { commands } from '../../lang/en';
-import { uiLogger } from '../ui/logger';
+import { logError, ApiErrorContext } from '../errorHandlers/index.js';
+import { PROJECT_ERROR_TYPES } from '../constants.js';
+import { ProjectConfig } from '../../types/Projects.js';
+import { commands } from '../../lang/en.js';
+import { uiLogger } from '../ui/logger.js';
 
 type ProjectWatchHandlerFunction = (
   accountId: number,

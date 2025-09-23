@@ -1,12 +1,12 @@
 import { Argv } from 'yargs';
 import yargsParser from 'yargs-parser';
-import { i18n } from '../lib/lang';
-import { trackCommandUsage } from '../lib/usageTracking';
-import { makeYargsBuilder } from '../lib/yargsUtils';
-import { CommonArgs, YargsCommandModule } from '../types/Yargs';
+import { commands } from '../lang/en.js';
+import { trackCommandUsage } from '../lib/usageTracking.js';
+import { makeYargsBuilder } from '../lib/yargsUtils.js';
+import { CommonArgs, YargsCommandModule } from '../types/Yargs.js';
 
 const command = 'completion';
-const describe = i18n('commands.completion.describe');
+const describe = commands.completion.describe;
 
 async function handler(): Promise<void> {
   await trackCommandUsage('completion');
@@ -20,7 +20,7 @@ function completionBuilder(yargs: Argv): Argv<CommonArgs> {
   }
 
   yargs.example([
-    ['$0 completion >> ~/.zshrc', i18n('commands.completion.examples.default')],
+    ['$0 completion >> ~/.zshrc', commands.completion.examples.default],
   ]);
 
   return yargs as Argv<CommonArgs>;
@@ -36,6 +36,3 @@ const completionCommand: YargsCommandModule<unknown, CommonArgs> = {
 };
 
 export default completionCommand;
-
-// TODO Remove this legacy export once we've migrated all commands to TS
-module.exports = completionCommand;

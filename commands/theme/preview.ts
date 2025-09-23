@@ -2,37 +2,37 @@ import fs from 'fs';
 import path from 'path';
 import { Argv, ArgumentsCamelCase } from 'yargs';
 import cliProgress from 'cli-progress';
-import { i18n } from '../../lib/lang';
-import { logger } from '@hubspot/local-dev-lib/logger';
+import { commands } from '../../lang/en.js';
 import { getCwd } from '@hubspot/local-dev-lib/path';
 import { FILE_UPLOAD_RESULT_TYPES } from '@hubspot/local-dev-lib/constants/files';
 import { getThemeJSONPath } from '@hubspot/local-dev-lib/cms/themes';
 import { preview } from '@hubspot/theme-preview-dev-server';
 import { UploadFolderResults } from '@hubspot/local-dev-lib/types/Files';
-import { getUploadableFileList } from '../../lib/upload';
-import { trackCommandUsage } from '../../lib/usageTracking';
+import { getUploadableFileList } from '../../lib/upload.js';
+import { trackCommandUsage } from '../../lib/usageTracking.js';
 import {
   previewPrompt,
   previewProjectPrompt,
-} from '../../lib/prompts/previewPrompt';
-import { EXIT_CODES } from '../../lib/enums/exitCodes';
-import { ApiErrorContext, logError } from '../../lib/errorHandlers/index';
-import { handleExit, handleKeypress } from '../../lib/process';
-import { getProjectConfig } from '../../lib/projects/config';
-import { findProjectComponents } from '../../lib/projects/structure';
-import { ComponentTypes } from '../../types/Projects';
-import { hasFeature } from '../../lib/hasFeature';
+} from '../../lib/prompts/previewPrompt.js';
+import { EXIT_CODES } from '../../lib/enums/exitCodes.js';
+import { ApiErrorContext, logError } from '../../lib/errorHandlers/index.js';
+import { handleExit, handleKeypress } from '../../lib/process.js';
+import { getProjectConfig } from '../../lib/projects/config.js';
+import { findProjectComponents } from '../../lib/projects/structure.js';
+import { ComponentTypes } from '../../types/Projects.js';
+import { hasFeature } from '../../lib/hasFeature.js';
 import {
   CommonArgs,
   ConfigArgs,
   AccountArgs,
   YargsCommandModule,
-} from '../../types/Yargs';
-import { FEATURES } from '../../lib/constants';
-import { makeYargsBuilder } from '../../lib/yargsUtils';
+} from '../../types/Yargs.js';
+import { FEATURES } from '../../lib/constants.js';
+import { makeYargsBuilder } from '../../lib/yargsUtils.js';
+import { uiLogger } from '../../lib/ui/logger.js';
 
 const command = 'preview [--src] [--dest]';
-const describe = i18n('commands.theme.subcommands.preview.describe');
+const describe = commands.theme.subcommands.preview.describe;
 
 type ThemePreviewArgs = CommonArgs &
   ConfigArgs &
@@ -48,11 +48,7 @@ type ThemePreviewArgs = CommonArgs &
 
 function validateSrcPath(src: string): boolean {
   const logInvalidPath = () => {
-    logger.error(
-      i18n('commands.theme.subcommands.preview.errors.invalidPath', {
-        path: src,
-      })
-    );
+    uiLogger.error(commands.theme.subcommands.preview.errors.invalidPath(src));
   };
   try {
     const stats = fs.statSync(src);
@@ -69,7 +65,7 @@ function validateSrcPath(src: string): boolean {
 
 function handleUserInput(): void {
   const onTerminate = () => {
-    logger.log(i18n('commands.theme.subcommands.preview.logs.processExited'));
+    uiLogger.log(commands.theme.subcommands.preview.logs.processExited);
     process.exit(EXIT_CODES.SUCCESS);
   };
 
@@ -106,8 +102,8 @@ async function determineSrcAndDest(args: ThemePreviewArgs): Promise<{
         c => c.type === ComponentTypes.HublTheme
       );
       if (themeComponents.length === 0) {
-        logger.error(
-          i18n('commands.theme.subcommands.preview.errors.noThemeComponents')
+        uiLogger.error(
+          commands.theme.subcommands.preview.errors.noThemeComponents
         );
         process.exit(EXIT_CODES.ERROR);
       }
@@ -155,9 +151,7 @@ async function handler(
       cliProgress.Presets.rect
     );
     initialUploadProgressBar.start(numFiles, 0, {
-      label: i18n(
-        'commands.theme.subcommands.preview.initialUploadProgressBar.start'
-      ),
+      label: commands.theme.subcommands.preview.initialUploadProgressBar.start,
     });
     let uploadsHaveStarted = false;
     const uploadOptions = {
@@ -169,9 +163,9 @@ async function handler(
         if (!uploadsHaveStarted) {
           uploadsHaveStarted = true;
           initialUploadProgressBar.update(0, {
-            label: i18n(
-              'commands.theme.subcommands.preview.initialUploadProgressBar.uploading'
-            ),
+            label:
+              commands.theme.subcommands.preview.initialUploadProgressBar
+                .uploading,
           });
         }
       },
@@ -184,17 +178,17 @@ async function handler(
       onFinalErrorCallback: () => initialUploadProgressBar.increment(),
       onFinishCallback: (results: UploadFolderResults[]) => {
         initialUploadProgressBar.update(numFiles, {
-          label: i18n(
-            'commands.theme.subcommands.preview.initialUploadProgressBar.finish'
-          ),
+          label:
+            commands.theme.subcommands.preview.initialUploadProgressBar.finish,
         });
         initialUploadProgressBar.stop();
         results.forEach(result => {
           if (result.resultType == FILE_UPLOAD_RESULT_TYPES.FAILURE) {
-            logger.error(
-              'Uploading file "%s" to "%s" failed',
-              result.file,
-              dest
+            uiLogger.error(
+              commands.theme.subcommands.preview.errors.uploadFailed(
+                result.file,
+                dest
+              )
             );
             logError(
               result.error,
@@ -221,7 +215,7 @@ async function handler(
     const { createDevServer } = await import('@hubspot/cms-dev-server');
     createUnifiedDevServer = createDevServer;
   } catch (e) {
-    logger.warn(
+    uiLogger.warn(
       'Unified dev server requires node 20 to run. Defaulting to legacy preview.'
     );
   }
@@ -264,35 +258,27 @@ async function handler(
 function themePreviewBuilder(yargs: Argv): Argv<ThemePreviewArgs> {
   yargs
     .option('src', {
-      describe: i18n('commands.theme.subcommands.preview.options.src.describe'),
+      describe: commands.theme.subcommands.preview.positionals.src,
       type: 'string',
       requiresArg: true,
     })
     .option('dest', {
-      describe: i18n(
-        'commands.theme.subcommands.preview.options.dest.describe'
-      ),
+      describe: commands.theme.subcommands.preview.positionals.dest,
       type: 'string',
       requiresArg: true,
     })
     .option('notify', {
       alias: 'n',
-      describe: i18n(
-        'commands.theme.subcommands.preview.options.notify.describe'
-      ),
+      describe: commands.theme.subcommands.preview.options.notify,
       type: 'string',
       requiresArg: true,
     })
     .option('no-ssl', {
-      describe: i18n(
-        'commands.theme.subcommands.preview.options.noSsl.describe'
-      ),
+      describe: commands.theme.subcommands.preview.options.noSsl,
       type: 'boolean',
     })
     .option('port', {
-      describe: i18n(
-        'commands.theme.subcommands.preview.options.port.describe'
-      ),
+      describe: commands.theme.subcommands.preview.options.port,
       type: 'number',
     })
     .option('resetSession', {

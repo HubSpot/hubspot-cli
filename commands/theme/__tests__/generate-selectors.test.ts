@@ -1,9 +1,7 @@
 import yargs, { Argv } from 'yargs';
-import generateSelectorsCommand from '../generate-selectors';
+import generateSelectorsCommand from '../generate-selectors.js';
 
-jest.mock('yargs');
-
-const positionalSpy = jest
+const positionalSpy = vi
   .spyOn(yargs as Argv, 'positional')
   .mockReturnValue(yargs as Argv);
 

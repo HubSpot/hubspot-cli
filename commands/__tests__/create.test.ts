@@ -1,12 +1,11 @@
 import yargs, { Argv } from 'yargs';
-import createCommand from '../create';
+import createCommand from '../create.js';
+import { TEMPLATE_TYPES, HTTP_METHODS } from '../../types/Cms.js';
 
-jest.mock('yargs');
-
-const positionalSpy = jest
+const positionalSpy = vi
   .spyOn(yargs as Argv, 'positional')
   .mockReturnValue(yargs as Argv);
-const optionSpy = jest
+const optionSpy = vi
   .spyOn(yargs as Argv, 'option')
   .mockReturnValue(yargs as Argv);
 
@@ -48,6 +47,58 @@ describe('commands/create', () => {
       expect(optionSpy).toHaveBeenCalledWith(
         'internal',
         expect.objectContaining({ type: 'boolean', hidden: true })
+      );
+
+      // Template creation flags
+      expect(optionSpy).toHaveBeenCalledWith(
+        'template-type',
+        expect.objectContaining({
+          type: 'string',
+          choices: [...TEMPLATE_TYPES],
+        })
+      );
+
+      // Module creation flags
+      expect(optionSpy).toHaveBeenCalledWith(
+        'module-label',
+        expect.objectContaining({ type: 'string' })
+      );
+      expect(optionSpy).toHaveBeenCalledWith(
+        'react-type',
+        expect.objectContaining({ type: 'boolean' })
+      );
+      expect(optionSpy).toHaveBeenCalledWith(
+        'content-types',
+        expect.objectContaining({ type: 'string' })
+      );
+      expect(optionSpy).toHaveBeenCalledWith(
+        'global',
+        expect.objectContaining({ type: 'boolean' })
+      );
+      expect(optionSpy).toHaveBeenCalledWith(
+        'available-for-new-content',
+        expect.objectContaining({ type: 'boolean' })
+      );
+
+      // Function creation flags
+      expect(optionSpy).toHaveBeenCalledWith(
+        'functions-folder',
+        expect.objectContaining({ type: 'string' })
+      );
+      expect(optionSpy).toHaveBeenCalledWith(
+        'filename',
+        expect.objectContaining({ type: 'string' })
+      );
+      expect(optionSpy).toHaveBeenCalledWith(
+        'endpoint-method',
+        expect.objectContaining({
+          type: 'string',
+          choices: [...HTTP_METHODS],
+        })
+      );
+      expect(optionSpy).toHaveBeenCalledWith(
+        'endpoint-path',
+        expect.objectContaining({ type: 'string' })
       );
     });
   });

@@ -1,17 +1,16 @@
 import yargs, { Argv } from 'yargs';
-import create from '../customObject/create';
-import schema from '../customObject/schema';
-import customObjectCommands from '../customObject';
+import create from '../customObject/create.js';
+import schema from '../customObject/schema.js';
+import customObjectCommands from '../customObject.js';
 
-jest.mock('yargs');
-jest.mock('../customObject/create');
-jest.mock('../customObject/schema');
-jest.mock('../../lib/commonOpts');
+vi.mock('../customObject/create');
+vi.mock('../customObject/schema');
+vi.mock('../../lib/commonOpts');
 
-const commandSpy = jest
+const commandSpy = vi
   .spyOn(yargs as Argv, 'command')
   .mockReturnValue(yargs as Argv);
-const demandCommandSpy = jest
+const demandCommandSpy = vi
   .spyOn(yargs as Argv, 'demandCommand')
   .mockReturnValue(yargs as Argv);
 

@@ -1,8 +1,6 @@
 import fs from 'fs';
 import { Argv, ArgumentsCamelCase } from 'yargs';
-import { logger } from '@hubspot/local-dev-lib/logger';
-
-import { i18n } from '../../lib/lang';
+import { commands } from '../../lang/en.js';
 import {
   findFieldsJsonPath,
   combineThemeCss,
@@ -10,10 +8,11 @@ import {
   generateInheritedSelectors,
   generateSelectorsMap,
   getMaxFieldsDepth,
-} from '../../lib/generateSelectors';
-import { EXIT_CODES } from '../../lib/enums/exitCodes';
-import { CommonArgs, YargsCommandModule } from '../../types/Yargs';
-import { makeYargsBuilder } from '../../lib/yargsUtils';
+} from '../../lib/generateSelectors.js';
+import { EXIT_CODES } from '../../lib/enums/exitCodes.js';
+import { CommonArgs, YargsCommandModule } from '../../types/Yargs.js';
+import { makeYargsBuilder } from '../../lib/yargsUtils.js';
+import { uiLogger } from '../../lib/ui/logger.js';
 
 const HUBL_EXPRESSION_REGEX = new RegExp(/{%\s*(.*)\s*%}/, 'g');
 const HUBL_VARIABLE_NAME_REGEX = new RegExp(/{%\s*set\s*(\w*)/, 'i');
@@ -27,7 +26,7 @@ const CSS_EXPRESSION_REGEX = new RegExp(/(?!\s)([^}])*(?![.#\s,>])[^}]*}/, 'g');
 const THEME_PATH_REGEX = new RegExp(/=\s*.*(theme\.(\w|\.)*)/, 'i');
 
 const command = 'generate-selectors <path>';
-const describe = i18n('commands.theme.subcommands.generateSelectors.describe');
+const describe = commands.theme.subcommands.generateSelectors.describe;
 
 type ThemeSelectorArgs = CommonArgs & { path: string };
 
@@ -38,8 +37,8 @@ async function handler(
 
   const fieldsJsonPath = findFieldsJsonPath(path);
   if (!fieldsJsonPath) {
-    logger.error(
-      i18n('commands.theme.subcommands.generateSelectors.errors.fieldsNotFound')
+    uiLogger.error(
+      commands.theme.subcommands.generateSelectors.errors.fieldsNotFound
     );
     process.exit(EXIT_CODES.ERROR);
   }
@@ -188,10 +187,8 @@ async function handler(
   );
 
   if (!Object.keys(finalMap).length) {
-    logger.error(
-      i18n(
-        'commands.theme.subcommands.generateSelectors.errors.noSelectorsFound'
-      )
+    uiLogger.error(
+      commands.theme.subcommands.generateSelectors.errors.noSelectorsFound
     );
     process.exit(EXIT_CODES.ERROR);
   }
@@ -216,19 +213,14 @@ async function handler(
     `${JSON.stringify({ selectors: selectorsMap }, null, 2)}\n`
   );
 
-  logger.success(
-    i18n('commands.theme.subcommands.generateSelectors.success', {
-      themePath: path,
-      selectorsPath,
-    })
+  uiLogger.success(
+    commands.theme.subcommands.generateSelectors.success(path, selectorsPath)
   );
 }
 
 function themeSelectorBuilder(yargs: Argv): Argv<ThemeSelectorArgs> {
   yargs.positional('path', {
-    describe: i18n(
-      'commands.theme.subcommands.generateSelectors.positionals.path.describe'
-    ),
+    describe: commands.theme.subcommands.generateSelectors.positionals.path,
     type: 'string',
     required: true,
   });

@@ -1,5 +1,4 @@
 import { Argv, ArgumentsCamelCase } from 'yargs';
-import { logger } from '@hubspot/local-dev-lib/logger';
 import {
   getConfigPath,
   getConfigAccounts,
@@ -9,20 +8,25 @@ import {
 } from '@hubspot/local-dev-lib/config';
 import { getAccountIdentifier } from '@hubspot/local-dev-lib/config/getAccountIdentifier';
 import { CLIAccount } from '@hubspot/local-dev-lib/types/Accounts';
-import { indent } from '../../lib/ui/index';
-import { getTableContents, getTableHeader } from '../../lib/ui/table';
-import { trackCommandUsage } from '../../lib/usageTracking';
-import { isSandbox, isDeveloperTestAccount } from '../../lib/accountTypes';
-import { i18n } from '../../lib/lang';
+import { indent } from '../../lib/ui/index.js';
+import { getTableContents, getTableHeader } from '../../lib/ui/table.js';
+import { trackCommandUsage } from '../../lib/usageTracking.js';
+import { isSandbox, isDeveloperTestAccount } from '../../lib/accountTypes.js';
 import {
   HUBSPOT_ACCOUNT_TYPES,
   HUBSPOT_ACCOUNT_TYPE_STRINGS,
 } from '@hubspot/local-dev-lib/constants/config';
-import { CommonArgs, ConfigArgs, YargsCommandModule } from '../../types/Yargs';
-import { makeYargsBuilder } from '../../lib/yargsUtils';
+import {
+  CommonArgs,
+  ConfigArgs,
+  YargsCommandModule,
+} from '../../types/Yargs.js';
+import { makeYargsBuilder } from '../../lib/yargsUtils.js';
+import { uiLogger } from '../../lib/ui/logger.js';
+import { commands } from '../../lang/en.js';
 
 const command = ['list', 'ls'];
-const describe = i18n('commands.account.subcommands.list.describe');
+const describe = commands.account.subcommands.list.describe;
 
 type AccountListArgs = CommonArgs & ConfigArgs;
 
@@ -109,44 +113,42 @@ async function handler(
 
   accountData.unshift(
     getTableHeader([
-      i18n('commands.account.subcommands.list.labels.name'),
-      i18n('commands.account.subcommands.list.labels.accountId'),
-      i18n('commands.account.subcommands.list.labels.authType'),
+      commands.account.subcommands.list.labels.name,
+      commands.account.subcommands.list.labels.accountId,
+      commands.account.subcommands.list.labels.authType,
     ])
   );
 
   // If a default account is present in the config, display it
   if (configPath) {
-    logger.log(i18n(`commands.account.subcommands.list.defaultAccountTitle`));
-    logger.log(
-      `${indent(1)}${i18n(`commands.account.subcommands.list.configPath`, {
-        configPath,
-      })}`
+    uiLogger.log(commands.account.subcommands.list.defaultAccountTitle);
+    uiLogger.log(
+      `${indent(1)}${commands.account.subcommands.list.configPath(configPath)}`
     );
-    logger.log(
-      `${indent(1)}${i18n(`commands.account.subcommands.list.defaultAccount`, {
-        account: getDisplayDefaultAccount()!,
-      })}`
+    uiLogger.log(
+      `${indent(1)}${commands.account.subcommands.list.defaultAccount(
+        getDisplayDefaultAccount()!.toString()
+      )}`
     );
-    logger.log('');
+    uiLogger.log('');
   }
 
   // If a default account override is present, display it
   const overrideFilePath = getDefaultAccountOverrideFilePath();
   if (overrideFilePath) {
-    logger.log(i18n(`commands.account.subcommands.list.overrideFilePathTitle`));
-    logger.log(
-      `${indent(1)}${i18n(`commands.account.subcommands.list.overrideFilePath`, { overrideFilePath })}`
+    uiLogger.log(commands.account.subcommands.list.overrideFilePathTitle);
+    uiLogger.log(
+      `${indent(1)}${commands.account.subcommands.list.overrideFilePath(overrideFilePath)}`
     );
-    logger.log(
-      `${indent(1)}${i18n(`commands.account.subcommands.list.overrideAccount`, {
-        account: getConfigDefaultAccount()!,
-      })}`
+    uiLogger.log(
+      `${indent(1)}${commands.account.subcommands.list.overrideAccount(
+        getConfigDefaultAccount()!.toString()
+      )}`
     );
-    logger.log('');
+    uiLogger.log('');
   }
-  logger.log(i18n(`commands.account.subcommands.list.accounts`));
-  logger.log(getTableContents(accountData, { border: { bodyLeft: '  ' } }));
+  uiLogger.log(commands.account.subcommands.list.accounts);
+  uiLogger.log(getTableContents(accountData, { border: { bodyLeft: '  ' } }));
 }
 
 function accountListBuilder(yargs: Argv): Argv<AccountListArgs> {

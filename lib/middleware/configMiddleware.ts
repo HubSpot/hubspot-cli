@@ -8,11 +8,14 @@ import {
   getConfigPath,
   validateConfig,
 } from '@hubspot/local-dev-lib/config';
-import { validateAccount } from '../validation';
-import { EXIT_CODES } from '../enums/exitCodes';
-import { i18n } from '../lang';
-import { uiDeprecatedTag } from '../ui';
-import { isTargetedCommand } from './utils';
+import { validateAccount } from '../validation.js';
+import { EXIT_CODES } from '../enums/exitCodes.js';
+import { i18n } from '../lang.js';
+import { uiDeprecatedTag } from '../ui/index.js';
+import { isTargetedCommand } from './utils.js';
+import { parseStringToNumber } from '../parsing.js';
+import { uiLogger } from '../ui/logger.js';
+import { lib } from '../../lang/en.js';
 
 export function handleDeprecatedEnvVariables(
   argv: Arguments<{ useEnv?: boolean }>
@@ -45,10 +48,16 @@ export async function injectAccountIdMiddleware(
   const { account } = argv;
 
   // Preserves the original --account flag for certain commands.
-  argv.providedAccountId = account;
+  argv.userProvidedAccount = account;
 
   if (argv.useEnv && process.env.HUBSPOT_ACCOUNT_ID) {
-    argv.derivedAccountId = parseInt(process.env.HUBSPOT_ACCOUNT_ID, 10);
+    try {
+      argv.derivedAccountId = parseStringToNumber(
+        process.env.HUBSPOT_ACCOUNT_ID
+      );
+    } catch (err) {
+      uiLogger.error(lib.configMiddleWare.invalidAccountIdEnvironmentVariable);
+    }
   } else {
     argv.derivedAccountId = getAccountId(account);
   }
@@ -57,6 +66,13 @@ export async function injectAccountIdMiddleware(
 const SKIP_CONFIG_VALIDATION = {
   init: { target: true },
   auth: { target: true },
+  mcp: {
+    target: false,
+    subCommands: {
+      setup: { target: true },
+      start: { target: true },
+    },
+  },
 };
 
 export async function loadConfigMiddleware(
@@ -120,6 +136,7 @@ const accountsSubCommands = {
     list: { target: true },
     ls: { target: true },
     remove: { target: true },
+    use: { target: true },
   },
 };
 
@@ -140,6 +157,13 @@ const configSubCommands = {
 const SKIP_ACCOUNT_VALIDATION = {
   init: { target: true },
   auth: { target: true },
+  mcp: {
+    target: false,
+    subCommands: {
+      setup: { target: true },
+      start: { target: true },
+    },
+  },
   account: accountsSubCommands,
   accounts: accountsSubCommands,
   sandbox: sandboxesSubCommands,

@@ -1,16 +1,17 @@
 import fs from 'fs';
 import os from 'os';
 import path from 'path';
-import { EXIT_CODES } from '../../enums/exitCodes';
-import { validateProjectConfig } from '../../projects/config';
+import { EXIT_CODES } from '../../enums/exitCodes.js';
+import { validateProjectConfig } from '../../projects/config.js';
 import { logger } from '@hubspot/local-dev-lib/logger';
+import { Mock } from 'vitest';
 
-jest.mock('@hubspot/local-dev-lib/logger');
+vi.mock('@hubspot/local-dev-lib/logger');
 
 describe('lib/projects', () => {
   describe('validateProjectConfig()', () => {
     let projectDir: string;
-    let exitMock: jest.SpyInstance;
+    let exitMock: Mock<typeof process.exit>;
 
     beforeAll(() => {
       projectDir = fs.mkdtempSync(path.join(os.tmpdir(), 'projects-'));
@@ -18,7 +19,8 @@ describe('lib/projects', () => {
     });
 
     beforeEach(() => {
-      exitMock = jest
+      // @ts-expect-error - Mocking process.exit
+      exitMock = vi
         .spyOn(process, 'exit')
         .mockImplementation((): never => undefined as never);
     });

@@ -1,11 +1,10 @@
-import { Doctor } from '../Doctor';
-import { hasMissingPackages as _hasMissingPackages } from '../../dependencyManagement';
+import { Doctor } from '../Doctor.js';
+import { hasMissingPackages as _hasMissingPackages } from '../../dependencyManagement.js';
 import { isPortManagerPortAvailable as _isPortManagerPortAvailable } from '@hubspot/local-dev-lib/portManager';
 import {
   DiagnosticInfo,
   DiagnosticInfoBuilder,
-} from '../DiagnosticInfoBuilder';
-import util from 'util';
+} from '../DiagnosticInfoBuilder.js';
 import {
   accessTokenForPersonalAccessKey as _accessTokenForPersonalAccessKey,
   authorizedScopesForPortalAndUser as _authorizedScopesForPortalAndUser,
@@ -14,51 +13,29 @@ import {
 import { HubSpotHttpError } from '@hubspot/local-dev-lib/models/HubSpotHttpError';
 import { AxiosError } from 'axios';
 import { isSpecifiedError as _isSpecifiedError } from '@hubspot/local-dev-lib/errors/index';
+import { promisify as _promisify } from 'util';
+vi.mock('@hubspot/local-dev-lib/logger');
+vi.mock('../Diagnosis');
+vi.mock('../../ui/SpinniesManager');
+vi.mock('../DiagnosticInfoBuilder');
+vi.mock('../../dependencyManagement');
+vi.mock('../../npm');
+vi.mock('@hubspot/local-dev-lib/portManager');
+vi.mock('@hubspot/local-dev-lib/personalAccessKey');
+vi.mock('@hubspot/local-dev-lib/errors/index');
+vi.mock('util');
 
-jest.mock('@hubspot/local-dev-lib/logger');
-jest.mock('../Diagnosis');
-jest.mock('../../ui/SpinniesManager');
-jest.mock('../DiagnosticInfoBuilder');
-jest.mock('../../dependencyManagement');
-jest.mock('../../npm');
-jest.mock('@hubspot/local-dev-lib/portManager');
-jest.mock('@hubspot/local-dev-lib/personalAccessKey');
-jest.mock('@hubspot/local-dev-lib/errors/index');
-
-jest.mock('util', () => ({
-  ...jest.requireActual('util'),
-  promisify: jest.fn().mockReturnValue(jest.fn()),
-}));
-
-const hasMissingPackages = _hasMissingPackages as jest.MockedFunction<
-  typeof _hasMissingPackages
->;
-const isPortManagerPortAvailable =
-  _isPortManagerPortAvailable as jest.MockedFunction<
-    typeof _isPortManagerPortAvailable
-  >;
-
-const utilPromisify = util.promisify as jest.MockedFunction<
-  typeof util.promisify
->;
-
-const accessTokenForPersonalAccessKey =
-  _accessTokenForPersonalAccessKey as jest.MockedFunction<
-    typeof _accessTokenForPersonalAccessKey
-  >;
-
-const authorizedScopesForPortalAndUser =
-  _authorizedScopesForPortalAndUser as jest.MockedFunction<
-    typeof _authorizedScopesForPortalAndUser
-  >;
-
-const scopesOnAccessToken = _scopesOnAccessToken as jest.MockedFunction<
-  typeof _scopesOnAccessToken
->;
-
-const isSpecifiedError = _isSpecifiedError as jest.MockedFunction<
-  typeof _isSpecifiedError
->;
+const hasMissingPackages = vi.mocked(_hasMissingPackages);
+const isPortManagerPortAvailable = vi.mocked(_isPortManagerPortAvailable);
+const utilPromisify = vi.mocked(_promisify);
+const accessTokenForPersonalAccessKey = vi.mocked(
+  _accessTokenForPersonalAccessKey
+);
+const authorizedScopesForPortalAndUser = vi.mocked(
+  _authorizedScopesForPortalAndUser
+);
+const scopesOnAccessToken = vi.mocked(_scopesOnAccessToken);
+const isSpecifiedError = vi.mocked(_isSpecifiedError);
 
 describe('lib/doctor/Doctor', () => {
   let doctor: Doctor;
@@ -97,19 +74,23 @@ describe('lib/doctor/Doctor', () => {
 
   beforeEach(() => {
     doctor = new Doctor({
-      generateDiagnosticInfo: jest.fn().mockResolvedValue({
+      generateDiagnosticInfo: vi.fn().mockResolvedValue({
         ...diagnosticInfo,
       }),
     } as unknown as DiagnosticInfoBuilder);
 
     utilPromisify.mockReturnValue(
-      jest.fn().mockImplementationOnce((filename: string) => {
+      vi.fn().mockImplementation((filename: string) => {
         if (filename.includes('invalid')) {
           return 'not-valid-json';
         }
         return JSON.stringify({ valid: true });
       })
     );
+  });
+
+  afterEach(() => {
+    vi.clearAllMocks();
   });
 
   describe('CLI Checks', () => {
@@ -126,7 +107,7 @@ describe('lib/doctor/Doctor', () => {
 
       it('should add error section if node version is not available', async () => {
         doctor = new Doctor({
-          generateDiagnosticInfo: jest.fn().mockResolvedValue({
+          generateDiagnosticInfo: vi.fn().mockResolvedValue({
             ...diagnosticInfo,
             versions: {},
           }),
@@ -143,7 +124,7 @@ describe('lib/doctor/Doctor', () => {
 
       it('should add error section if minimum node version is not met', async () => {
         doctor = new Doctor({
-          generateDiagnosticInfo: jest.fn().mockResolvedValue({
+          generateDiagnosticInfo: vi.fn().mockResolvedValue({
             ...diagnosticInfo,
             versions: { node: '1.0.0' },
           }),
@@ -171,7 +152,7 @@ describe('lib/doctor/Doctor', () => {
 
       it('should add error section if npm is not installed', async () => {
         doctor = new Doctor({
-          generateDiagnosticInfo: jest.fn().mockResolvedValue({
+          generateDiagnosticInfo: vi.fn().mockResolvedValue({
             ...diagnosticInfo,
             versions: {},
           }),
@@ -427,7 +408,7 @@ describe('lib/doctor/Doctor', () => {
           throw new Error('Uh oh');
         });
         utilPromisify.mockReturnValueOnce(
-          jest.fn().mockImplementation((filename: string) => {
+          vi.fn().mockImplementation((filename: string) => {
             if (filename.endsWith('package.json')) {
               return 'not-valid-json';
             }
@@ -448,7 +429,6 @@ describe('lib/doctor/Doctor', () => {
         hasMissingPackages.mockImplementationOnce(() => {
           throw new Error('Uh oh');
         });
-
         await doctor.diagnose();
 
         // @ts-expect-error Testing private method
@@ -491,7 +471,7 @@ describe('lib/doctor/Doctor', () => {
     describe('JSON Files', () => {
       it('should add success section if project json files are valid', async () => {
         utilPromisify.mockReturnValueOnce(
-          jest.fn().mockResolvedValue(JSON.stringify({ valid: true }))
+          vi.fn().mockResolvedValue(JSON.stringify({ valid: true }))
         );
         await doctor.diagnose();
 
@@ -504,7 +484,7 @@ describe('lib/doctor/Doctor', () => {
 
       it('should add error section if project json files are invalid', async () => {
         utilPromisify.mockReturnValueOnce(
-          jest.fn().mockResolvedValue('not-valid-json')
+          vi.fn().mockResolvedValue('not-valid-json')
         );
         await doctor.diagnose();
 

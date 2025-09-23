@@ -3,11 +3,10 @@ import {
   addAccountOptions,
   addConfigOptions,
   addUseEnvironmentOptions,
-} from '../../../lib/commonOpts';
-import hubdbCreateCommand from '../create';
+} from '../../../lib/commonOpts.js';
+import hubdbCreateCommand from '../create.js';
 
-jest.mock('yargs');
-jest.mock('../../../lib/commonOpts');
+vi.mock('../../../lib/commonOpts');
 
 describe('commands/hubdb/create', () => {
   const yargsMock = yargs as Argv;

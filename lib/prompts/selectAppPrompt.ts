@@ -1,9 +1,9 @@
 import { logger } from '@hubspot/local-dev-lib/logger';
 import { fetchPublicAppsForPortal } from '@hubspot/local-dev-lib/api/appsDev';
 import { PublicApp } from '@hubspot/local-dev-lib/types/Apps';
-import { debugError } from '../errorHandlers/index';
-import { lib } from '../../lang/en';
-import { listPrompt } from '../prompts/promptUtils';
+import { debugError } from '../errorHandlers/index.js';
+import { lib } from '../../lang/en.js';
+import { listPrompt } from '../prompts/promptUtils.js';
 
 export async function selectAppPrompt(
   accountId: number,

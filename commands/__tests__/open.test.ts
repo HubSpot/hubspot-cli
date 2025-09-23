@@ -1,19 +1,13 @@
 import yargs, { Argv } from 'yargs';
-import openCommand from '../open';
-import * as commonOpts from '../../lib/commonOpts';
+import openCommand from '../open.js';
+import * as commonOpts from '../../lib/commonOpts.js';
 
-jest.mock('yargs');
-jest.mock('../../lib/commonOpts');
+vi.mock('../../lib/commonOpts');
 
-const positionalSpy = jest
-  .spyOn(yargs as Argv, 'positional')
-  .mockReturnValue(yargs as Argv);
-const optionSpy = jest
-  .spyOn(yargs as Argv, 'option')
-  .mockReturnValue(yargs as Argv);
-const exampleSpy = jest
-  .spyOn(yargs as Argv, 'example')
-  .mockReturnValue(yargs as Argv);
+// Spies are now safe to create since the methods exist on the mock
+const positionalSpy = vi.spyOn(mockYargs, 'positional');
+const optionSpy = vi.spyOn(mockYargs, 'option');
+const exampleSpy = vi.spyOn(mockYargs, 'example');
 
 describe('commands/open', () => {
   describe('command', () => {

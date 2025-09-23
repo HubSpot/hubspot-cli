@@ -2,7 +2,7 @@ import * as fs from 'fs';
 import * as path from 'path';
 import { walk } from '@hubspot/local-dev-lib/fs';
 import { logger } from '@hubspot/local-dev-lib/logger';
-import { logError } from '../errorHandlers/index';
+import { logError } from '../errorHandlers/index.js';
 import {
   ComponentTypes,
   Component,
@@ -10,17 +10,22 @@ import {
   PublicAppComponentConfig,
   PrivateAppComponentConfig,
   AppCardComponentConfig,
-} from '../../types/Projects';
-import { IntermediateRepresentationNodeLocalDev } from '@hubspot/project-parsing-lib/src/lib/types';
-import { AppIRNode } from '../../types/ProjectComponents';
-import { IR_COMPONENT_TYPES } from '../constants';
+} from '../../types/Projects.js';
+import { IntermediateRepresentationNodeLocalDev } from '@hubspot/project-parsing-lib/src/lib/types.js';
+import { AppIRNode } from '../../types/ProjectComponents.js';
+import {
+  IR_COMPONENT_TYPES,
+  LEGACY_PRIVATE_APP_FILE,
+  LEGACY_PUBLIC_APP_FILE,
+  THEME_FILE,
+} from '../constants.js';
 
 export const CONFIG_FILES: {
   [k in ComponentTypes]: string;
 } = {
-  [ComponentTypes.PrivateApp]: 'app.json',
-  [ComponentTypes.PublicApp]: 'public-app.json',
-  [ComponentTypes.HublTheme]: 'theme.json',
+  [ComponentTypes.PrivateApp]: LEGACY_PRIVATE_APP_FILE,
+  [ComponentTypes.PublicApp]: LEGACY_PUBLIC_APP_FILE,
+  [ComponentTypes.HublTheme]: THEME_FILE,
 };
 
 export function getComponentTypeFromConfigFile(

@@ -2,7 +2,6 @@ import fs from 'fs-extra';
 import path from 'path';
 import { Argv, ArgumentsCamelCase } from 'yargs';
 import { getCwd } from '@hubspot/local-dev-lib/path';
-import { logger } from '@hubspot/local-dev-lib/logger';
 import { DEFAULT_ACCOUNT_OVERRIDE_FILE_NAME } from '@hubspot/local-dev-lib/constants/config';
 import {
   getCWDAccountOverride,
@@ -12,20 +11,20 @@ import {
 } from '@hubspot/local-dev-lib/config';
 import { getGlobalConfig } from '@hubspot/local-dev-lib/config/migrate';
 
-import { i18n } from '../../lib/lang';
-import { promptUser } from '../../lib/prompts/promptUtils';
-import { EXIT_CODES } from '../../lib/enums/exitCodes';
-import { trackCommandMetadataUsage } from '../../lib/usageTracking';
-import { selectAccountFromConfig } from '../../lib/prompts/accountsPrompt';
-import { logError } from '../../lib/errorHandlers/index';
-import { CommonArgs, YargsCommandModule } from '../../types/Yargs';
-import { uiCommandReference } from '../../lib/ui';
-import { makeYargsBuilder } from '../../lib/yargsUtils';
+import { promptUser } from '../../lib/prompts/promptUtils.js';
+import { EXIT_CODES } from '../../lib/enums/exitCodes.js';
+import { trackCommandMetadataUsage } from '../../lib/usageTracking.js';
+import { selectAccountFromConfig } from '../../lib/prompts/accountsPrompt.js';
+import { logError } from '../../lib/errorHandlers/index.js';
+import { CommonArgs, YargsCommandModule } from '../../types/Yargs.js';
+import { makeYargsBuilder } from '../../lib/yargsUtils.js';
+import { commands } from '../../lang/en.js';
+import { uiLogger } from '../../lib/ui/logger.js';
 
 const command = 'create-override [account]';
-const describe = i18n('commands.account.subcommands.createOverride.describe', {
-  hsAccountFileName: DEFAULT_ACCOUNT_OVERRIDE_FILE_NAME,
-});
+const describe = commands.account.subcommands.createOverride.describe(
+  DEFAULT_ACCOUNT_OVERRIDE_FILE_NAME
+);
 
 type AccountCreateOverrideArgs = CommonArgs & {
   account: string | number;
@@ -38,13 +37,8 @@ async function handler(
 
   const globalConfig = getGlobalConfig();
   if (!globalConfig) {
-    logger.error(
-      i18n(
-        'commands.account.subcommands.createOverride.errors.globalConfigNotFound',
-        {
-          authCommand: uiCommandReference('hs account auth'),
-        }
-      )
+    uiLogger.error(
+      commands.account.subcommands.createOverride.errors.globalConfigNotFound
     );
     process.exit(EXIT_CODES.ERROR);
   }
@@ -52,21 +46,20 @@ async function handler(
   const accountOverride = getCWDAccountOverride();
   const overrideFilePath = getDefaultAccountOverrideFilePath();
   if (accountOverride && overrideFilePath) {
-    logger.log(
-      i18n('commands.account.subcommands.createOverride.accountOverride', {
-        accountOverride,
+    uiLogger.log(
+      commands.account.subcommands.createOverride.accountOverride(
         overrideFilePath,
-      })
+        accountOverride.toString()
+      )
     );
 
     const { replaceOverrideFile } = await promptUser({
       type: 'confirm',
       name: 'replaceOverrideFile',
-      message: i18n(
-        'commands.account.subcommands.createOverride.prompts.replaceOverrideFile'
-      ),
+      message:
+        commands.account.subcommands.createOverride.prompts.replaceOverrideFile,
     });
-    logger.log('');
+    uiLogger.log('');
 
     if (!replaceOverrideFile) {
       const accountId = getAccountId(accountOverride) || undefined;
@@ -85,12 +78,9 @@ async function handler(
   if (!overrideDefaultAccount) {
     overrideDefaultAccount = await selectAccountFromConfig();
   } else if (!getAccountId(overrideDefaultAccount)) {
-    logger.error(
-      i18n(
-        'commands.account.subcommands.createOverride.errors.accountNotFound',
-        {
-          configPath: getConfigPath() || '',
-        }
+    uiLogger.error(
+      commands.account.subcommands.createOverride.errors.accountNotFound(
+        getConfigPath() || ''
       )
     );
     overrideDefaultAccount = await selectAccountFromConfig();
@@ -103,10 +93,8 @@ async function handler(
       DEFAULT_ACCOUNT_OVERRIDE_FILE_NAME
     );
     await fs.writeFile(overrideFilePath, accountId!.toString(), 'utf8');
-    logger.success(
-      i18n('commands.account.subcommands.createOverride.success', {
-        overrideFilePath,
-      })
+    uiLogger.success(
+      commands.account.subcommands.createOverride.success(overrideFilePath)
     );
     const trackingId = accountId || undefined;
     trackCommandMetadataUsage(
@@ -129,29 +117,28 @@ function accountCreateOverrideBuilder(
   yargs: Argv
 ): Argv<AccountCreateOverrideArgs> {
   yargs.positional('account', {
-    describe: i18n(
-      'commands.account.subcommands.createOverride.options.account.describe'
-    ),
+    describe:
+      commands.account.subcommands.createOverride.options.account.describe,
     type: 'string',
   });
   yargs.example([
     [
       '$0 account create-override',
-      i18n('commands.account.subcommands.createOverride.examples.default', {
-        hsAccountFileName: DEFAULT_ACCOUNT_OVERRIDE_FILE_NAME,
-      }),
+      commands.account.subcommands.createOverride.examples.default(
+        DEFAULT_ACCOUNT_OVERRIDE_FILE_NAME
+      ),
     ],
     [
       '$0 account create-override 12345678',
-      i18n('commands.account.subcommands.createOverride.examples.idBased', {
-        hsAccountFileName: DEFAULT_ACCOUNT_OVERRIDE_FILE_NAME,
-      }),
+      commands.account.subcommands.createOverride.examples.idBased(
+        DEFAULT_ACCOUNT_OVERRIDE_FILE_NAME
+      ),
     ],
     [
       '$0 account create-override MyAccount',
-      i18n('commands.account.subcommands.createOverride.examples.nameBased', {
-        hsAccountFileName: DEFAULT_ACCOUNT_OVERRIDE_FILE_NAME,
-      }),
+      commands.account.subcommands.createOverride.examples.nameBased(
+        DEFAULT_ACCOUNT_OVERRIDE_FILE_NAME
+      ),
     ],
   ]);
 

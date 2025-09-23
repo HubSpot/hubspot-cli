@@ -1,4 +1,4 @@
-const { notifyAboutUpdates } = require('../notificationsMiddleware');
+import { notifyAboutUpdates } from '../notificationsMiddleware.js';
 
 describe('lib/middleware/notificationsMiddleware', () => {
   describe('notifyAboutUpdates()', () => {

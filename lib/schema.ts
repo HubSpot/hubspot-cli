@@ -1,13 +1,19 @@
 import chalk from 'chalk';
 import { table, getBorderCharacters } from 'table';
-import { logger } from '@hubspot/local-dev-lib/logger';
 import { fetchObjectSchemas } from '@hubspot/local-dev-lib/api/customObjects';
 import { Schema } from '@hubspot/local-dev-lib/types/Schemas';
+import { uiLogger } from './ui/logger.js';
 
 export function logSchemas(schemas: Array<Schema>): void {
   const data = schemas
     .map(r => [r.labels.singular, r.name, r.objectTypeId || ''])
     .sort((a, b) => (a[1] > b[1] ? 1 : -1));
+
+  if (data.length === 0) {
+    uiLogger.log('No Schemas were found');
+    return;
+  }
+
   data.unshift([
     chalk.bold('Label'),
     chalk.bold('Name'),
@@ -19,7 +25,7 @@ export function logSchemas(schemas: Array<Schema>): void {
     border: getBorderCharacters('honeywell'),
   };
 
-  logger.log(data.length ? table(data, tableConfig) : 'No Schemas were found');
+  uiLogger.log(table(data, tableConfig));
 }
 
 export async function listSchemas(accountId: number): Promise<void> {

@@ -12,7 +12,6 @@ import {
   convertToUnixPath,
   isAllowedExtension,
 } from '@hubspot/local-dev-lib/path';
-import { logger } from '@hubspot/local-dev-lib/logger';
 import { validateSrcAndDestPaths } from '@hubspot/local-dev-lib/cms/modules';
 import { shouldIgnoreFile } from '@hubspot/local-dev-lib/ignoreRules';
 import {
@@ -25,15 +24,15 @@ import {
   cleanupTmpDirSync,
 } from '@hubspot/local-dev-lib/cms/handleFieldsJS';
 
-import { ApiErrorContext, logError } from '../lib/errorHandlers/index';
-import { getCmsPublishMode } from '../lib/commonOpts';
-import { uploadPrompt } from '../lib/prompts/uploadPrompt';
-import { confirmPrompt } from '../lib/prompts/promptUtils';
-import { validateCmsPublishMode } from '../lib/validation';
-import { trackCommandUsage } from '../lib/usageTracking';
-import { getUploadableFileList } from '../lib/upload';
-import { i18n } from '../lib/lang';
-import { EXIT_CODES } from '../lib/enums/exitCodes';
+import { ApiErrorContext, logError } from '../lib/errorHandlers/index.js';
+import { getCmsPublishMode } from '../lib/commonOpts.js';
+import { uploadPrompt } from '../lib/prompts/uploadPrompt.js';
+import { confirmPrompt } from '../lib/prompts/promptUtils.js';
+import { validateCmsPublishMode } from '../lib/validation.js';
+import { trackCommandUsage } from '../lib/usageTracking.js';
+import { getUploadableFileList } from '../lib/upload.js';
+import { commands } from '../lang/en.js';
+import { EXIT_CODES } from '../lib/enums/exitCodes.js';
 import {
   CommonArgs,
   ConfigArgs,
@@ -41,21 +40,18 @@ import {
   EnvironmentArgs,
   CmsPublishModeArgs,
   YargsCommandModule,
-} from '../types/Yargs';
-import { makeYargsBuilder } from '../lib/yargsUtils';
+} from '../types/Yargs.js';
+import { makeYargsBuilder } from '../lib/yargsUtils.js';
+import { uiLogger } from '../lib/ui/logger.js';
 
 const command = 'upload [src] [dest]';
-const describe = i18n('commands.upload.describe');
+const describe = commands.upload.describe;
 
 function logThemePreview(filePath: string, accountId: number): void {
   const previewUrl = getThemePreviewUrl(filePath, accountId);
   // Only log if we are actually in a theme
   if (previewUrl) {
-    logger.log(
-      i18n('commands.upload.previewUrl', {
-        previewUrl,
-      })
-    );
+    uiLogger.log(commands.upload.previewUrl(previewUrl));
   }
 }
 
@@ -87,7 +83,7 @@ async function handler(args: ArgumentsCamelCase<UploadArgs>): Promise<void> {
   let dest = args.dest || uploadPromptAnswers.dest;
   let absoluteSrcPath = path.resolve(getCwd(), src);
   if (!dest) {
-    logger.error(i18n('commands.upload.errors.destinationRequired'));
+    uiLogger.error(commands.upload.errors.destinationRequired);
     return;
   }
   // Check for theme.json file and determine the root path for the project based on it if it exists
@@ -117,19 +113,11 @@ async function handler(args: ArgumentsCamelCase<UploadArgs>): Promise<void> {
   try {
     stats = fs.statSync(absoluteSrcPath);
     if (!stats.isFile() && !stats.isDirectory()) {
-      logger.error(
-        i18n('commands.upload.errors.invalidPath', {
-          path: src,
-        })
-      );
+      uiLogger.error(commands.upload.errors.invalidPath(src));
       return;
     }
   } catch (e) {
-    logger.error(
-      i18n('commands.upload.errors.invalidPath', {
-        path: src,
-      })
-    );
+    uiLogger.error(commands.upload.errors.invalidPath(src));
     return;
   }
 
@@ -145,25 +133,17 @@ async function handler(args: ArgumentsCamelCase<UploadArgs>): Promise<void> {
   );
 
   if (srcDestIssues.length) {
-    srcDestIssues.forEach(({ message }) => logger.error(message));
+    srcDestIssues.forEach(({ message }) => uiLogger.error(message));
     process.exit(EXIT_CODES.WARNING);
   }
   if (stats.isFile()) {
     if (!isAllowedExtension(src) && !convertFields) {
-      logger.error(
-        i18n('commands.upload.errors.invalidPath', {
-          path: src,
-        })
-      );
+      uiLogger.error(commands.upload.errors.invalidPath(src));
       return;
     }
 
     if (shouldIgnoreFile(absoluteSrcPath)) {
-      logger.error(
-        i18n('commands.upload.errors.fileIgnored', {
-          path: src,
-        })
-      );
+      uiLogger.error(commands.upload.errors.fileIgnored(src));
       return;
     }
     upload(
@@ -173,21 +153,18 @@ async function handler(args: ArgumentsCamelCase<UploadArgs>): Promise<void> {
       getFileMapperQueryValues(cmsPublishMode)
     )
       .then(() => {
-        logger.success(
-          i18n('commands.upload.success.fileUploaded', {
-            accountId: derivedAccountId,
-            dest: normalizedDest,
+        uiLogger.success(
+          commands.upload.success.fileUploaded(
             src,
-          })
+            normalizedDest,
+            derivedAccountId
+          )
         );
         logThemePreview(src, derivedAccountId);
       })
       .catch(error => {
-        logger.error(
-          i18n('commands.upload.errors.uploadFailed', {
-            dest: normalizedDest,
-            src,
-          })
+        uiLogger.error(
+          commands.upload.errors.uploadFailed(src, normalizedDest)
         );
         logError(
           error,
@@ -209,13 +186,7 @@ async function handler(args: ArgumentsCamelCase<UploadArgs>): Promise<void> {
         }
       });
   } else {
-    logger.log(
-      i18n('commands.upload.uploading', {
-        accountId: derivedAccountId,
-        dest,
-        src,
-      })
-    );
+    uiLogger.log(commands.upload.uploading(src, dest, derivedAccountId));
 
     // Generate the first-pass file list in here, and pass to uploadFolder.
     const filePaths = await getUploadableFileList(
@@ -228,28 +199,17 @@ async function handler(args: ArgumentsCamelCase<UploadArgs>): Promise<void> {
       let cleanUpload = args.force;
       if (!args.force) {
         cleanUpload = await confirmPrompt(
-          i18n('commands.upload.confirmCleanUpload', {
-            accountId: derivedAccountId,
-            path: dest,
-          }),
+          commands.upload.confirmCleanUpload(dest, derivedAccountId),
           { defaultAnswer: false }
         );
       }
       if (cleanUpload) {
         try {
           await deleteFile(derivedAccountId, dest);
-          logger.log(
-            i18n('commands.upload.cleaning', {
-              accountId: derivedAccountId,
-              filePath: dest,
-            })
-          );
+          uiLogger.log(commands.upload.cleaning(dest, derivedAccountId));
         } catch (error) {
-          logger.error(
-            i18n('commands.upload.errors.deleteFailed', {
-              accountId: derivedAccountId,
-              path: dest,
-            })
+          uiLogger.error(
+            commands.upload.errors.deleteFailed(dest, derivedAccountId)
           );
         }
       }
@@ -269,28 +229,15 @@ async function handler(args: ArgumentsCamelCase<UploadArgs>): Promise<void> {
     )
       .then(results => {
         if (!hasUploadErrors(results)) {
-          logger.success(
-            i18n('commands.upload.success.uploadComplete', {
-              dest,
-            })
-          );
+          uiLogger.success(commands.upload.success.uploadComplete(dest));
           logThemePreview(src, derivedAccountId);
         } else {
-          logger.error(
-            i18n('commands.upload.errors.someFilesFailed', {
-              dest,
-            })
-          );
+          uiLogger.error(commands.upload.errors.someFilesFailed(dest));
           process.exit(EXIT_CODES.WARNING);
         }
       })
       .catch(error => {
-        logger.error(
-          i18n('commands.upload.errors.uploadFailed', {
-            dest,
-            src,
-          })
-        );
+        uiLogger.error(commands.upload.errors.uploadFailed(src, dest));
         logError(error, {
           accountId: derivedAccountId,
         });
@@ -301,36 +248,36 @@ async function handler(args: ArgumentsCamelCase<UploadArgs>): Promise<void> {
 
 function uploadBuilder(yargs: Argv): Argv<UploadArgs> {
   yargs.positional('src', {
-    describe: i18n('commands.upload.positionals.src.describe'),
+    describe: commands.upload.positionals.src,
     type: 'string',
   });
   yargs.positional('dest', {
-    describe: i18n('commands.upload.positionals.dest.describe'),
+    describe: commands.upload.positionals.dest,
     type: 'string',
   });
   yargs.option('fieldOptions', {
-    describe: i18n('commands.upload.options.options.describe'),
+    describe: commands.upload.options.options,
     type: 'array',
     default: [''],
     hidden: true,
   });
   yargs.option('saveOutput', {
-    describe: i18n('commands.upload.options.saveOutput.describe'),
+    describe: commands.upload.options.saveOutput,
     type: 'boolean',
     default: false,
   });
   yargs.option('convertFields', {
-    describe: i18n('commands.upload.options.convertFields.describe'),
+    describe: commands.upload.options.convertFields,
     type: 'boolean',
     default: false,
   });
   yargs.option('clean', {
-    describe: i18n('commands.upload.options.clean.describe'),
+    describe: commands.upload.options.clean,
     type: 'boolean',
     default: false,
   });
   yargs.option('force', {
-    describe: i18n('commands.upload.options.force.describe'),
+    describe: commands.upload.options.force,
     type: 'boolean',
     default: false,
   });
@@ -354,6 +301,3 @@ const uploadCommand: YargsCommandModule<unknown, UploadArgs> = {
 };
 
 export default uploadCommand;
-
-// TODO remove this after cli.ts is ported to TS
-module.exports = uploadCommand;

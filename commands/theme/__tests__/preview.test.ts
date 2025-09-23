@@ -1,11 +1,13 @@
 import yargs, { Argv } from 'yargs';
-import { addAccountOptions, addConfigOptions } from '../../../lib/commonOpts';
-import themePreviewCommand from '../preview';
+import {
+  addAccountOptions,
+  addConfigOptions,
+} from '../../../lib/commonOpts.js';
+import themePreviewCommand from '../preview.js';
 
-jest.mock('yargs');
-jest.mock('../../../lib/commonOpts');
+vi.mock('../../../lib/commonOpts');
 
-const optionSpy = jest
+const optionSpy = vi
   .spyOn(yargs as Argv, 'option')
   .mockReturnValue(yargs as Argv);
 

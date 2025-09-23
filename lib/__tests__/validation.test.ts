@@ -1,14 +1,15 @@
 import { getAccountId, getAccountConfig } from '@hubspot/local-dev-lib/config';
 import { getOauthManager } from '@hubspot/local-dev-lib/oauth';
 import { accessTokenForPersonalAccessKey } from '@hubspot/local-dev-lib/personalAccessKey';
-import { validateAccount } from '../validation';
+import { validateAccount } from '../validation.js';
 import { Arguments } from 'yargs';
+import { Mock } from 'vitest';
 
-jest.mock('@hubspot/local-dev-lib/config');
-jest.mock('@hubspot/local-dev-lib/logger');
-jest.mock('@hubspot/local-dev-lib/oauth');
-jest.mock('@hubspot/local-dev-lib/personalAccessKey');
-jest.mock('../commonOpts');
+vi.mock('@hubspot/local-dev-lib/config');
+vi.mock('@hubspot/local-dev-lib/logger');
+vi.mock('@hubspot/local-dev-lib/oauth');
+vi.mock('@hubspot/local-dev-lib/personalAccessKey');
+vi.mock('../commonOpts');
 
 const yargsOption = (option: { [key: string]: string }): Arguments => ({
   $0: '',
@@ -17,11 +18,11 @@ const yargsOption = (option: { [key: string]: string }): Arguments => ({
 });
 
 describe('lib/validation', () => {
-  const getAccountIdMock = getAccountId as jest.Mock;
-  const getAccountConfigMock = getAccountConfig as jest.Mock;
-  const getOauthManagerMock = getOauthManager as jest.Mock;
+  const getAccountIdMock = getAccountId as Mock;
+  const getAccountConfigMock = getAccountConfig as Mock;
+  const getOauthManagerMock = getOauthManager as Mock;
   const accessTokenForPersonalAccessKeyMock =
-    accessTokenForPersonalAccessKey as jest.Mock;
+    accessTokenForPersonalAccessKey as Mock;
 
   describe('validateAccount', () => {
     it('returns false if an account is missing', async () => {

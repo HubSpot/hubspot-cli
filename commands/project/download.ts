@@ -1,33 +1,29 @@
 import { Argv, ArgumentsCamelCase } from 'yargs';
 import path from 'path';
 import { getCwd, sanitizeFileName } from '@hubspot/local-dev-lib/path';
-import { logger } from '@hubspot/local-dev-lib/logger';
 import { extractZipArchive } from '@hubspot/local-dev-lib/archive';
 import {
   downloadProject,
   fetchProjectBuilds,
 } from '@hubspot/local-dev-lib/api/projects';
-import { logError, ApiErrorContext } from '../../lib/errorHandlers/index';
-import { getProjectConfig } from '../../lib/projects/config';
-import { downloadProjectPrompt } from '../../lib/prompts/downloadProjectPrompt';
-import { i18n } from '../../lib/lang';
-import { uiBetaTag } from '../../lib/ui';
-import { trackCommandUsage } from '../../lib/usageTracking';
-import { EXIT_CODES } from '../../lib/enums/exitCodes';
+import { logError, ApiErrorContext } from '../../lib/errorHandlers/index.js';
+import { getProjectConfig } from '../../lib/projects/config.js';
+import { downloadProjectPrompt } from '../../lib/prompts/downloadProjectPrompt.js';
+import { commands } from '../../lang/en.js';
+import { uiLogger } from '../../lib/ui/logger.js';
+import { trackCommandUsage } from '../../lib/usageTracking.js';
+import { EXIT_CODES } from '../../lib/enums/exitCodes.js';
 import {
   CommonArgs,
   ConfigArgs,
   AccountArgs,
   EnvironmentArgs,
   YargsCommandModule,
-} from '../../types/Yargs';
-import { makeYargsBuilder } from '../../lib/yargsUtils';
+} from '../../types/Yargs.js';
+import { makeYargsBuilder } from '../../lib/yargsUtils.js';
 
 const command = 'download';
-const describe = uiBetaTag(
-  i18n(`commands.project.subcommands.download.describe`),
-  false
-);
+const describe = commands.project.download.describe;
 
 type ProjectDownloadArgs = CommonArgs &
   ConfigArgs &
@@ -40,10 +36,8 @@ async function handler(
   const { projectConfig } = await getProjectConfig();
 
   if (projectConfig) {
-    logger.error(
-      i18n(
-        `commands.project.subcommands.download.warnings.cannotDownloadWithinProject`
-      )
+    uiLogger.error(
+      commands.project.download.warnings.cannotDownloadWithinProject
     );
     process.exit(EXIT_CODES.ERROR);
   }
@@ -70,9 +64,7 @@ async function handler(
     }
 
     if (!buildNumberToDownload) {
-      logger.error(
-        i18n(`commands.project.subcommands.download.errors.noBuildIdToDownload`)
-      );
+      uiLogger.error(commands.project.download.errors.noBuildIdToDownload);
       process.exit(EXIT_CODES.ERROR);
     }
 
@@ -91,11 +83,11 @@ async function handler(
       { includesRootDir: false }
     );
 
-    logger.log(
-      i18n(`commands.project.subcommands.download.logs.downloadSucceeded`, {
-        buildId: buildNumberToDownload,
-        projectName,
-      })
+    uiLogger.log(
+      commands.project.download.logs.downloadSucceeded(
+        buildNumberToDownload,
+        projectName
+      )
     );
     process.exit(EXIT_CODES.SUCCESS);
   } catch (e) {
@@ -113,21 +105,15 @@ async function handler(
 function projectDownloadBuilder(yargs: Argv): Argv<ProjectDownloadArgs> {
   yargs.options({
     project: {
-      describe: i18n(
-        `commands.project.subcommands.download.options.project.describe`
-      ),
+      describe: commands.project.download.options.project.describe,
       type: 'string',
     },
     dest: {
-      describe: i18n(
-        `commands.project.subcommands.download.options.dest.describe`
-      ),
+      describe: commands.project.download.options.dest.describe,
       type: 'string',
     },
     build: {
-      describe: i18n(
-        `commands.project.subcommands.download.options.build.describe`
-      ),
+      describe: commands.project.download.options.build.describe,
       alias: ['build-id'],
       type: 'number',
     },
@@ -136,7 +122,7 @@ function projectDownloadBuilder(yargs: Argv): Argv<ProjectDownloadArgs> {
   yargs.example([
     [
       '$0 project download --project=myProject --dest=myProjectFolder',
-      i18n(`commands.project.subcommands.download.examples.default`),
+      commands.project.download.examples.default,
     ],
   ]);
 

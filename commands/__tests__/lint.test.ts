@@ -1,11 +1,10 @@
 import yargs, { Argv } from 'yargs';
-import { addConfigOptions, addAccountOptions } from '../../lib/commonOpts';
-import lintCommand from '../lint';
+import { addConfigOptions, addAccountOptions } from '../../lib/commonOpts.js';
+import lintCommand from '../lint.js';
 
-jest.mock('yargs');
-jest.mock('../../lib/commonOpts');
+vi.mock('../../lib/commonOpts');
 
-const positionalSpy = jest
+const positionalSpy = vi
   .spyOn(yargs as Argv, 'positional')
   .mockReturnValue(yargs as Argv);
 

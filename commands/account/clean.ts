@@ -1,6 +1,5 @@
 import fs from 'fs';
 import { Argv, ArgumentsCamelCase } from 'yargs';
-import { logger } from '@hubspot/local-dev-lib/logger';
 import { accessTokenForPersonalAccessKey } from '@hubspot/local-dev-lib/personalAccessKey';
 import {
   loadConfig,
@@ -16,20 +15,25 @@ import {
   getCWDAccountOverride,
   getDefaultAccountOverrideFilePath,
 } from '@hubspot/local-dev-lib/config';
-import { trackCommandUsage } from '../../lib/usageTracking';
-import { i18n } from '../../lib/lang';
-import { EXIT_CODES } from '../../lib/enums/exitCodes';
-import { promptUser } from '../../lib/prompts/promptUtils';
-import { selectAccountFromConfig } from '../../lib/prompts/accountsPrompt';
-import { getTableContents } from '../../lib/ui/table';
-import SpinniesManager from '../../lib/ui/SpinniesManager';
-import { uiAccountDescription } from '../../lib/ui';
-import { CommonArgs, ConfigArgs, YargsCommandModule } from '../../types/Yargs';
-import { logError } from '../../lib/errorHandlers';
-import { makeYargsBuilder } from '../../lib/yargsUtils';
+import { trackCommandUsage } from '../../lib/usageTracking.js';
+import { EXIT_CODES } from '../../lib/enums/exitCodes.js';
+import { promptUser } from '../../lib/prompts/promptUtils.js';
+import { selectAccountFromConfig } from '../../lib/prompts/accountsPrompt.js';
+import { getTableContents } from '../../lib/ui/table.js';
+import SpinniesManager from '../../lib/ui/SpinniesManager.js';
+import { uiAccountDescription } from '../../lib/ui/index.js';
+import {
+  CommonArgs,
+  ConfigArgs,
+  YargsCommandModule,
+} from '../../types/Yargs.js';
+import { logError } from '../../lib/errorHandlers/index.js';
+import { makeYargsBuilder } from '../../lib/yargsUtils.js';
+import { commands } from '../../lang/en.js';
+import { uiLogger } from '../../lib/ui/logger.js';
 
 const command = 'clean';
-const describe = i18n(`commands.account.subcommands.clean.describe`);
+const describe = commands.account.subcommands.clean.describe;
 
 type AccountCleanArgs = CommonArgs &
   ConfigArgs & {
@@ -49,7 +53,7 @@ async function handler(
   );
 
   if (filteredTestAccounts && filteredTestAccounts.length === 0) {
-    logger.log(i18n(`commands.account.subcommands.clean.noResults`));
+    uiLogger.log(commands.account.subcommands.clean.noResults);
     process.exit(EXIT_CODES.SUCCESS);
   }
 
@@ -58,7 +62,7 @@ async function handler(
     succeedColor: 'white',
   });
   SpinniesManager.add('accountsClean', {
-    text: i18n(`commands.account.subcommands.clean.loading.add`),
+    text: commands.account.subcommands.clean.loading.add,
   });
 
   for (const account of filteredTestAccounts) {
@@ -86,16 +90,13 @@ async function handler(
   if (accountsToRemove.length > 0) {
     const oneAccountFound = accountsToRemove.length === 1;
     SpinniesManager.succeed('accountsClean', {
-      text: i18n(
-        oneAccountFound
-          ? `commands.account.subcommands.clean.inactiveAccountsFound.one`
-          : `commands.account.subcommands.clean.inactiveAccountsFound.other`,
-        {
-          count: accountsToRemove.length,
-        }
-      ),
+      text: oneAccountFound
+        ? commands.account.subcommands.clean.inactiveAccountsFound.one
+        : commands.account.subcommands.clean.inactiveAccountsFound.other(
+            accountsToRemove.length
+          ),
     });
-    logger.log(
+    uiLogger.log(
       getTableContents(
         accountsToRemove.map(p => [
           uiAccountDescription(getAccountIdentifier(p)),
@@ -104,14 +105,11 @@ async function handler(
       )
     );
 
-    let promptMessage = i18n(
-      oneAccountFound
-        ? `commands.account.subcommands.clean.confirm.one`
-        : `commands.account.subcommands.clean.confirm.other`,
-      {
-        count: accountsToRemove.length,
-      }
-    );
+    let promptMessage = oneAccountFound
+      ? commands.account.subcommands.clean.confirm.one
+      : commands.account.subcommands.clean.confirm.other(
+          accountsToRemove.length
+        );
 
     const accountOverride = getCWDAccountOverride();
     const overrideFilePath = getDefaultAccountOverrideFilePath();
@@ -122,11 +120,8 @@ async function handler(
         account.accountId === accountOverride
     );
     if (overrideFilePath && accountOverride && accountOverrideMatches) {
-      promptMessage = `${promptMessage}${i18n(
-        `commands.account.subcommands.clean.defaultAccountOverride`,
-        {
-          overrideFilePath,
-        }
+      promptMessage = `${promptMessage}${commands.account.subcommands.clean.defaultAccountOverride(
+        overrideFilePath
       )}`;
     }
 
@@ -138,7 +133,7 @@ async function handler(
       },
     ]);
     if (accountsCleanPrompt) {
-      logger.log('');
+      uiLogger.log('');
       try {
         if (overrideFilePath) {
           fs.unlinkSync(overrideFilePath);
@@ -149,10 +144,10 @@ async function handler(
 
       for (const accountToRemove of accountsToRemove) {
         await deleteAccount(accountToRemove.name!);
-        logger.log(
-          i18n(`commands.account.subcommands.clean.removeSuccess`, {
-            accountName: accountToRemove.name!,
-          })
+        uiLogger.log(
+          commands.account.subcommands.clean.removeSuccess(
+            accountToRemove.name!
+          )
         );
       }
 
@@ -164,21 +159,18 @@ async function handler(
         defaultAccount &&
         accountsToRemove.some(p => p.name === defaultAccount)
       ) {
-        logger.log();
-        logger.log(
-          i18n(`commands.account.subcommands.clean.replaceDefaultAccount`)
-        );
+        uiLogger.log(commands.account.subcommands.clean.replaceDefaultAccount);
         const newDefaultAccount = await selectAccountFromConfig();
         updateDefaultAccount(newDefaultAccount);
       }
     }
   } else {
     SpinniesManager.succeed('accountsClean', {
-      text: i18n(`commands.account.subcommands.clean.noResults`),
+      text: commands.account.subcommands.clean.noResults,
     });
   }
 
-  logger.log('');
+  uiLogger.log('');
   process.exit(EXIT_CODES.SUCCESS);
 }
 

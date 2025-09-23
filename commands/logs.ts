@@ -1,15 +1,13 @@
 import { Argv, ArgumentsCamelCase } from 'yargs';
-import { trackCommandUsage } from '../lib/usageTracking';
-import { logger } from '@hubspot/local-dev-lib/logger';
-import { outputLogs } from '../lib/ui/serverlessFunctionLogs';
+import { trackCommandUsage } from '../lib/usageTracking.js';
+import { outputLogs } from '../lib/ui/serverlessFunctionLogs.js';
 import {
   getFunctionLogs,
   getLatestFunctionLog,
 } from '@hubspot/local-dev-lib/api/functions';
-import { tailLogs } from '../lib/serverlessLogs';
-import { i18n } from '../lib/lang';
-import { promptUser } from '../lib/prompts/promptUtils';
-import { EXIT_CODES } from '../lib/enums/exitCodes';
+import { tailLogs } from '../lib/serverlessLogs.js';
+import { promptUser } from '../lib/prompts/promptUtils.js';
+import { EXIT_CODES } from '../lib/enums/exitCodes.js';
 import { isHubSpotHttpError } from '@hubspot/local-dev-lib/errors/index';
 import {
   CommonArgs,
@@ -17,13 +15,15 @@ import {
   AccountArgs,
   YargsCommandModule,
   EnvironmentArgs,
-} from '../types/Yargs';
-import { makeYargsBuilder } from '../lib/yargsUtils';
+} from '../types/Yargs.js';
+import { makeYargsBuilder } from '../lib/yargsUtils.js';
 import {
   GetFunctionLogsResponse,
   FunctionLog,
 } from '@hubspot/local-dev-lib/types/Functions';
 import { QueryParams } from '@hubspot/local-dev-lib/types/Http';
+import { uiLogger } from '../lib/ui/logger.js';
+import { commands } from '../lang/en.js';
 
 type LogsArgs = CommonArgs &
   ConfigArgs &
@@ -42,12 +42,7 @@ const handleLogsError = (
   functionPath: string
 ): void => {
   if (isHubSpotHttpError(e) && (e.status === 404 || e.status == 400)) {
-    logger.error(
-      i18n(`commands.logs.errors.noLogsFound`, {
-        accountId,
-        functionPath,
-      })
-    );
+    uiLogger.error(commands.logs.errors.noLogsFound(functionPath, accountId));
   }
 };
 
@@ -65,12 +60,7 @@ const endpointLog = async (
     endpoint: functionPath,
   };
 
-  logger.debug(
-    i18n(`commands.logs.gettingLogs`, {
-      latest,
-      functionPath,
-    })
-  );
+  uiLogger.debug(commands.logs.gettingLogs(latest, functionPath));
 
   let logsResp: GetFunctionLogsResponse | FunctionLog | undefined;
 
@@ -115,7 +105,7 @@ const endpointLog = async (
 };
 
 const command = 'logs [endpoint]';
-const describe = i18n(`commands.logs.describe`);
+const describe = commands.logs.describe;
 
 const handler = async (
   options: ArgumentsCamelCase<LogsArgs>
@@ -132,7 +122,7 @@ const handler = async (
     endpointPromptValue: string;
   }>({
     name: 'endpointPromptValue',
-    message: i18n(`commands.logs.endpointPrompt`),
+    message: commands.logs.endpointPrompt,
     when: !endpointArgValue,
   });
 
@@ -145,36 +135,36 @@ const handler = async (
 
 function logsBuilder(yargs: Argv): Argv<LogsArgs> {
   yargs.positional('endpoint', {
-    describe: i18n(`commands.logs.positionals.endpoint.describe`),
+    describe: commands.logs.positionals.endpoint.describe,
     type: 'string',
   });
   yargs
     .options({
       latest: {
         alias: 'l',
-        describe: i18n(`commands.logs.options.latest.describe`),
+        describe: commands.logs.options.latest.describe,
         type: 'boolean',
       },
       compact: {
-        describe: i18n(`commands.logs.options.compact.describe`),
+        describe: commands.logs.options.compact.describe,
         type: 'boolean',
       },
       follow: {
         alias: ['f'],
-        describe: i18n(`commands.logs.options.follow.describe`),
+        describe: commands.logs.options.follow.describe,
         type: 'boolean',
       },
       limit: {
-        describe: i18n(`commands.logs.options.limit.describe`),
+        describe: commands.logs.options.limit.describe,
         type: 'number',
       },
     })
     .conflicts('follow', 'limit');
 
   yargs.example([
-    ['$0 logs my-endpoint', i18n(`commands.logs.examples.default`)],
-    ['$0 logs my-endpoint --limit=10', i18n(`commands.logs.examples.limit`)],
-    ['$0 logs my-endpoint --follow', i18n(`commands.logs.examples.follow`)],
+    ['$0 logs my-endpoint', commands.logs.examples.default],
+    ['$0 logs my-endpoint --limit=10', commands.logs.examples.limit],
+    ['$0 logs my-endpoint --follow', commands.logs.examples.follow],
   ]);
 
   return yargs as Argv<LogsArgs>;
@@ -195,5 +185,3 @@ const logsCommand: YargsCommandModule<unknown, LogsArgs> = {
 };
 
 export default logsCommand;
-
-module.exports = logsCommand;

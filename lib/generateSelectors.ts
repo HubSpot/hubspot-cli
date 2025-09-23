@@ -1,8 +1,7 @@
 import fs from 'fs';
-import { logger } from '@hubspot/local-dev-lib/logger';
-
-import { EXIT_CODES } from './enums/exitCodes';
-import { i18n } from './lang';
+import { EXIT_CODES } from './enums/exitCodes.js';
+import { commands } from '../lang/en.js';
+import { uiLogger } from './ui/logger.js';
 
 const CSS_COMMENTS_REGEX = new RegExp(/\/\*.*\*\//, 'g');
 const CSS_PSEUDO_CLASS_REGEX = new RegExp(
@@ -19,10 +18,8 @@ export function getMaxFieldsDepth(): number {
 export function findFieldsJsonPath(basePath: string): string | null {
   const _path = basePath.endsWith('/') ? basePath.slice(0, -1) : basePath;
   if (!fs.existsSync(_path)) {
-    logger.error(
-      i18n(`commands.theme.subcommands.generateSelectors.errors.invalidPath`, {
-        themePath: basePath,
-      })
+    uiLogger.error(
+      commands.theme.subcommands.generateSelectors.errors.invalidPath(basePath)
     );
     process.exit(EXIT_CODES.ERROR);
   }

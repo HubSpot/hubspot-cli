@@ -1,8 +1,7 @@
 import yargs, { Argv } from 'yargs';
-import listAppSecretsCommand from '../list';
+import listAppSecretsCommand from '../list.js';
 
-jest.mock('yargs');
-jest.mock('../../../../lib/commonOpts');
+vi.mock('../../../../lib/commonOpts');
 
 describe('commands/app/secret/list', () => {
   const yargsMock = yargs as Argv;

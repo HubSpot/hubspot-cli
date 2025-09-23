@@ -3,23 +3,24 @@ import { logger } from '@hubspot/local-dev-lib/logger';
 import { CLIAccount } from '@hubspot/local-dev-lib/types/Accounts';
 import { HUBSPOT_ACCOUNT_TYPES } from '@hubspot/local-dev-lib/constants/config';
 import { fetchDeveloperTestAccounts } from '@hubspot/local-dev-lib/api/developerTestAccounts';
-import { mockHubSpotHttpError } from '../testUtils';
-import * as errorHandlers from '../errorHandlers';
+import { mockHubSpotHttpError } from '../testUtils.js';
+import * as errorHandlers from '../errorHandlers/index.js';
 import {
   getHasDevTestAccounts,
   handleDeveloperTestAccountCreateError,
   validateDevTestAccountUsageLimits,
-} from '../developerTestAccounts';
+} from '../developerTestAccounts.js';
+import { Mock } from 'vitest';
+import { logError } from '../errorHandlers/index.js';
 
-jest.mock('@hubspot/local-dev-lib/config');
-jest.mock('@hubspot/local-dev-lib/logger');
-jest.mock('@hubspot/local-dev-lib/api/developerTestAccounts');
-jest.mock('../errorHandlers');
+vi.mock('@hubspot/local-dev-lib/config');
+vi.mock('@hubspot/local-dev-lib/logger');
+vi.mock('@hubspot/local-dev-lib/api/developerTestAccounts');
+vi.mock('../errorHandlers');
 
-const mockedGetAccountId = getAccountId as jest.Mock;
-const mockedGetConfigAccounts = getConfigAccounts as jest.Mock;
-const mockedFetchDeveloperTestAccounts =
-  fetchDeveloperTestAccounts as jest.Mock;
+const mockedGetAccountId = getAccountId as Mock;
+const mockedGetConfigAccounts = getConfigAccounts as Mock;
+const mockedFetchDeveloperTestAccounts = fetchDeveloperTestAccounts as Mock;
 
 const APP_DEVELOPER_ACCOUNT_1: CLIAccount = {
   name: 'app-developer-1',
@@ -117,7 +118,7 @@ describe('lib/developerTestAccounts', () => {
       expect(result).toEqual(expect.objectContaining(testAccountData));
     });
 
-    it('should throw an error if the account has reached the limit', () => {
+    it('should throw an error if the account has reached the limit', async () => {
       mockedGetAccountId.mockReturnValueOnce(APP_DEVELOPER_ACCOUNT_1.accountId);
       mockedFetchDeveloperTestAccounts.mockResolvedValueOnce({
         data: {
@@ -126,19 +127,21 @@ describe('lib/developerTestAccounts', () => {
         },
       });
 
-      expect(
+      await expect(
         validateDevTestAccountUsageLimits(APP_DEVELOPER_ACCOUNT_1)
       ).rejects.toThrow();
     });
   });
 
   describe('handleDeveloperTestAccountCreateError()', () => {
-    let loggerErrorSpy: jest.SpyInstance;
-    let logErrorSpy: jest.SpyInstance;
+    let loggerErrorSpy: Mock<typeof logger.error>;
+    let logErrorSpy: Mock<typeof logError>;
 
     beforeEach(() => {
-      loggerErrorSpy = jest.spyOn(logger, 'error');
-      logErrorSpy = jest.spyOn(errorHandlers, 'logError');
+      loggerErrorSpy = vi.spyOn(logger, 'error') as Mock<typeof logger.error>;
+      logErrorSpy = vi.spyOn(errorHandlers, 'logError') as Mock<
+        typeof logError
+      >;
     });
 
     afterEach(() => {

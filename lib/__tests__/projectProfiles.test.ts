@@ -4,36 +4,37 @@ import {
   getHsProfileFilename,
   getAllHsProfiles,
 } from '@hubspot/project-parsing-lib';
-import { HsProfileFile } from '@hubspot/project-parsing-lib/src/lib/types';
-import { ProjectConfig } from '../../types/Projects';
-import { lib } from '../../lang/en';
-import { uiBetaTag, uiLine } from '../ui';
-import { uiLogger } from '../ui/logger';
-import { EXIT_CODES } from '../enums/exitCodes';
+import { HsProfileFile } from '@hubspot/project-parsing-lib/src/lib/types.js';
+import { ProjectConfig } from '../../types/Projects.js';
+import { lib } from '../../lang/en.js';
+import { uiBetaTag, uiLine } from '../ui/index.js';
+import { uiLogger } from '../ui/logger.js';
+import { EXIT_CODES } from '../enums/exitCodes.js';
 import {
   logProfileHeader,
   logProfileFooter,
   loadProfile,
   exitIfUsingProfiles,
-} from '../projectProfiles';
+} from '../projectProfiles.js';
+import { Mock, Mocked } from 'vitest';
 
 // Mock dependencies
-jest.mock('@hubspot/project-parsing-lib');
-jest.mock('../ui');
-jest.mock('../ui/logger');
-jest.mock('../../lang/en');
+vi.mock('@hubspot/project-parsing-lib');
+vi.mock('../ui');
+vi.mock('../ui/logger');
+vi.mock('../../lang/en');
 
 // Mock process.exit
-const mockExit = jest.spyOn(process, 'exit').mockImplementation(code => {
+const mockExit = vi.spyOn(process, 'exit').mockImplementation(code => {
   throw new Error(`Process.exit called with code ${code}`);
 });
 
-const mockedLoadHsProfileFile = loadHsProfileFile as jest.Mock;
-const mockedGetHsProfileFilename = getHsProfileFilename as jest.Mock;
-const mockedGetAllHsProfiles = getAllHsProfiles as jest.Mock;
-const mockedUiBetaTag = uiBetaTag as jest.Mock;
-const mockedUiLine = uiLine as jest.Mock;
-const mockedUiLogger = uiLogger as jest.Mocked<typeof uiLogger>;
+const mockedLoadHsProfileFile = loadHsProfileFile as Mock;
+const mockedGetHsProfileFilename = getHsProfileFilename as Mock;
+const mockedGetAllHsProfiles = getAllHsProfiles as Mock;
+const mockedUiBetaTag = uiBetaTag as Mock;
+const mockedUiLine = uiLine as Mock;
+const mockedUiLogger = uiLogger as Mocked<typeof uiLogger>;
 
 describe('lib/projectProfiles', () => {
   describe('logProfileHeader()', () => {

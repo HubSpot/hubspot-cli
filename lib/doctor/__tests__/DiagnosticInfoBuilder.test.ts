@@ -1,20 +1,25 @@
 import util from 'util';
+import { MockedFunction, vi } from 'vitest';
 
-jest.mock('@hubspot/local-dev-lib/fs');
-jest.mock('@hubspot/local-dev-lib/config');
-jest.mock('@hubspot/local-dev-lib/personalAccessKey');
-jest.mock('../../projects/config');
-jest.mock('@hubspot/local-dev-lib/api/projects');
-jest.mock('util', () => ({
-  ...jest.requireActual('util'),
-  promisify: jest.fn().mockReturnValue(jest.fn()),
-}));
+vi.mock('@hubspot/local-dev-lib/fs');
+vi.mock('@hubspot/local-dev-lib/config');
+vi.mock('@hubspot/local-dev-lib/personalAccessKey');
+vi.mock('../../projects/config');
+vi.mock('@hubspot/local-dev-lib/api/projects');
+vi.mock('util');
 
-jest.mock('../../../package.json', () => ({
-  version: '1.0.0',
-}));
+vi.mock('../../../package.json', () => {
+  return {
+    default: {
+      version: '1.0.0',
+    },
+  };
+});
 
-import { DiagnosticInfoBuilder, ProjectConfig } from '../DiagnosticInfoBuilder';
+import {
+  DiagnosticInfoBuilder,
+  ProjectConfig,
+} from '../DiagnosticInfoBuilder.js';
 import {
   getAccountId as _getAccountId,
   getAccountConfig as _getAccountConfig,
@@ -25,37 +30,38 @@ import {
 import { getAccessToken as _getAccessToken } from '@hubspot/local-dev-lib/personalAccessKey';
 import { walk as _walk } from '@hubspot/local-dev-lib/fs';
 import { AccessToken, CLIAccount } from '@hubspot/local-dev-lib/types/Accounts';
-import { getProjectConfig as _getProjectConfig } from '../../projects/config';
+import { getProjectConfig as _getProjectConfig } from '../../projects/config.js';
 import { fetchProject as _fetchProject } from '@hubspot/local-dev-lib/api/projects';
 import { Project } from '@hubspot/local-dev-lib/types/Project';
-import { HubSpotPromise } from '@hubspot/local-dev-lib/types/Http';
+// import { HubSpotPromise } from '@hubspot/local-dev-lib/types/Http';
+import { AxiosResponse } from 'axios';
 
-const walk = _walk as jest.MockedFunction<typeof _walk>;
-const getAccessToken = _getAccessToken as jest.MockedFunction<
+const walk = _walk as MockedFunction<typeof _walk>;
+const getAccessToken = _getAccessToken as MockedFunction<
   typeof _getAccessToken
 >;
-const getAccountConfig = _getAccountConfig as jest.MockedFunction<
+const getAccountConfig = _getAccountConfig as MockedFunction<
   typeof _getAccountConfig
 >;
-const getConfigPath = _getConfigPath as jest.MockedFunction<
-  typeof _getConfigPath
->;
+const getConfigPath = _getConfigPath as MockedFunction<typeof _getConfigPath>;
 const getDefaultAccountOverrideFilePath =
-  _getDefaultAccountOverrideFilePath as jest.MockedFunction<
+  _getDefaultAccountOverrideFilePath as MockedFunction<
     typeof _getDefaultAccountOverrideFilePath
   >;
-const getAccountId = _getAccountId as jest.MockedFunction<typeof _getAccountId>;
-const getProjectConfig = _getProjectConfig as jest.MockedFunction<
+const getAccountId = _getAccountId as MockedFunction<typeof _getAccountId>;
+const getProjectConfig = _getProjectConfig as MockedFunction<
   typeof _getProjectConfig
 >;
-const isConfigFlagEnabled = _isConfigFlagEnabled as jest.MockedFunction<
+const isConfigFlagEnabled = _isConfigFlagEnabled as MockedFunction<
   typeof _isConfigFlagEnabled
 >;
-const fetchProject = _fetchProject as jest.MockedFunction<typeof _fetchProject>;
+const fetchProject = _fetchProject as MockedFunction<typeof _fetchProject>;
 
-const utilPromisify = util.promisify as jest.MockedFunction<
-  typeof util.promisify
->;
+const mockPromisifyImpl = vi.fn();
+const utilPromisify = vi.fn(
+  () => mockPromisifyImpl
+) as unknown as typeof util.promisify;
+util.promisify = utilPromisify;
 
 describe('lib/doctor/DiagnosticInfo', () => {
   const accountId = 898989;
@@ -95,11 +101,17 @@ describe('lib/doctor/DiagnosticInfo', () => {
     `${projectDir}/src/app/app.functions/node_modules/axios`,
   ];
 
+  const npmVersion = 'v8.17.0';
+  const configPath = '/path/to/config';
+  const defaultAccountOverrideFile =
+    'path/to/default/account/override/.hsaccount';
+
   beforeEach(() => {
     getAccountId.mockReturnValue(accountId);
     getAccountConfig.mockReturnValue(accountConfig);
     walk.mockResolvedValue(projectFiles);
     isConfigFlagEnabled.mockReturnValue(false);
+    mockPromisifyImpl.mockResolvedValue(npmVersion);
   });
 
   it('should initialize the required state on creation', () => {
@@ -122,11 +134,6 @@ describe('lib/doctor/DiagnosticInfo', () => {
     let projectConfig: ProjectConfig;
     let projectDetails: Project;
     let accessToken: AccessToken;
-
-    const npmVersion = 'v8.17.0';
-    const configPath = '/path/to/config';
-    const defaultAccountOverrideFile =
-      'path/to/default/account/override/.hsaccount';
 
     beforeEach(() => {
       builder = new DiagnosticInfoBuilder(processInfo);
@@ -163,15 +170,15 @@ describe('lib/doctor/DiagnosticInfo', () => {
       };
 
       getProjectConfig.mockResolvedValue(projectConfig);
+      // @ts-expect-error - Mocking AxiosResponse
       fetchProject.mockResolvedValue({
         data: projectDetails,
-      } as unknown as HubSpotPromise<Project>);
+      } as unknown as AxiosResponse<Project>);
       getAccessToken.mockResolvedValue(accessToken);
       getConfigPath.mockReturnValue(configPath);
       getDefaultAccountOverrideFilePath.mockReturnValue(
         defaultAccountOverrideFile
       );
-      utilPromisify.mockReturnValue(jest.fn().mockResolvedValue(npmVersion));
     });
 
     it('should gather the required data and generate the diagnostic', async () => {

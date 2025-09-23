@@ -1,6 +1,6 @@
 import { cloneGithubRepo } from '@hubspot/local-dev-lib/github';
-import { getIsInProject } from '../../lib/projects/config';
-import { CreatableCmsAsset } from '../../types/Cms';
+import { getIsInProject } from '../../lib/projects/config.js';
+import { CreatableCmsAsset } from '../../types/Cms.js';
 
 const PROJECT_BOILERPLATE_BRANCH = 'cms-boilerplate-developer-projects';
 

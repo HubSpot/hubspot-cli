@@ -4,8 +4,8 @@ import { createIgnoreFilter } from '@hubspot/local-dev-lib/ignoreRules';
 import { isConvertableFieldJs } from '@hubspot/local-dev-lib/cms/handleFieldsJS';
 import { isAllowedExtension } from '@hubspot/local-dev-lib/path';
 
-import { fieldsJsPrompt } from './prompts/cmsFieldPrompt';
-import { logError } from './errorHandlers/index';
+import { fieldsJsPrompt } from './prompts/cmsFieldPrompt.js';
+import { logError } from './errorHandlers/index.js';
 
 /*
  * Walks the src folder for files, filters them based on ignore filter.

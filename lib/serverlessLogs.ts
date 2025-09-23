@@ -12,12 +12,12 @@ import {
 import { getAccountConfig } from '@hubspot/local-dev-lib/config';
 import { fetchScopeData } from '@hubspot/local-dev-lib/api/localDevAuth';
 
-import { outputLogs } from './ui/serverlessFunctionLogs';
-import { logError, ApiErrorContext } from './errorHandlers/index';
-import SpinniesManager from './ui/SpinniesManager';
-import { handleExit, handleKeypress } from './process';
-import { EXIT_CODES } from './enums/exitCodes';
-import { i18n } from './lang';
+import { outputLogs } from './ui/serverlessFunctionLogs.js';
+import { logError, ApiErrorContext } from './errorHandlers/index.js';
+import SpinniesManager from './ui/SpinniesManager.js';
+import { handleExit, handleKeypress } from './process.js';
+import { EXIT_CODES } from './enums/exitCodes.js';
+import { i18n } from './lang.js';
 import { HubSpotPromise } from '@hubspot/local-dev-lib/types/Http';
 import {
   FunctionLog,

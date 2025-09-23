@@ -3,19 +3,19 @@ import {
   addAccountOptions,
   addConfigOptions,
   addUseEnvironmentOptions,
-} from '../../../../lib/commonOpts';
-import schemaFetchAllCommand from '../fetch-all';
+} from '../../../../lib/commonOpts.js';
+import schemaFetchAllCommand from '../fetch-all.js';
 
-jest.mock('yargs');
-jest.mock('../../../../lib/commonOpts');
+vi.mock('yargs');
+vi.mock('../../../../lib/commonOpts');
 
 describe('commands/customObject/schema/fetch-all', () => {
   let yargsMock = yargs as Argv;
 
   beforeEach(() => {
     yargsMock = {
-      positional: jest.fn().mockReturnThis(),
-      example: jest.fn().mockReturnThis(),
+      positional: vi.fn().mockReturnThis(),
+      example: vi.fn().mockReturnThis(),
     } as unknown as Argv;
   });
 

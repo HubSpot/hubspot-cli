@@ -1,7 +1,7 @@
-import { exec as execAsync } from 'child_process';
+import { exec as execAsync } from 'node:child_process';
 import util from 'util';
 import { logger } from '@hubspot/local-dev-lib/logger';
-import pkg from '../package.json';
+import pkg from '../package.json' with { type: 'json' };
 
 export const DEFAULT_PACKAGE_MANAGER = 'npm';
 

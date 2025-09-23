@@ -2,24 +2,31 @@ import util from 'util';
 import {
   installPackages,
   getProjectPackageJsonLocations,
-} from '../dependencyManagement';
+} from '../dependencyManagement.js';
 import { walk } from '@hubspot/local-dev-lib/fs';
 import path from 'path';
-import { getProjectConfig } from '../projects/config';
-import SpinniesManager from '../ui/SpinniesManager';
-import { existsSync } from 'fs';
+import { getProjectConfig } from '../projects/config.js';
+import SpinniesManager from '../ui/SpinniesManager.js';
+import fs from 'fs';
+import { Mock } from 'vitest';
 
-jest.mock('../projects/config');
-jest.mock('@hubspot/local-dev-lib/logger');
-jest.mock('@hubspot/local-dev-lib/fs');
-jest.mock('../ui/SpinniesManager');
-jest.mock('fs', () => ({
-  ...jest.requireActual('fs'),
-  existsSync: jest.fn().mockReturnValue(true),
+vi.mock('../projects/config');
+vi.mock('@hubspot/local-dev-lib/logger');
+vi.mock('@hubspot/local-dev-lib/fs');
+vi.mock('fs');
+vi.mock('../ui/SpinniesManager', () => ({
+  default: {
+    init: vi.fn(),
+    add: vi.fn(),
+    succeed: vi.fn(),
+    fail: vi.fn(),
+  },
 }));
 
+const mockedFs = vi.mocked(fs);
+
 describe('lib/dependencyManagement', () => {
-  let execMock: jest.Mock;
+  let execMock: Mock;
 
   const projectDir = path.join('path', 'to', 'project');
   const srcDir = 'src';
@@ -29,17 +36,17 @@ describe('lib/dependencyManagement', () => {
   const projectName = 'super cool test project';
   const installLocations = [appFunctionsDir, extensionsDir];
 
-  function mockedPromisify(execMock: jest.Mock): typeof util.promisify {
-    return jest
+  function mockedPromisify(execMock: Mock): typeof util.promisify {
+    return vi
       .fn()
       .mockReturnValue(execMock) as unknown as typeof util.promisify;
   }
 
-  const mockedWalk = walk as jest.Mock;
-  const mockedGetProjectConfig = getProjectConfig as jest.Mock;
+  const mockedWalk = walk as Mock;
+  const mockedGetProjectConfig = getProjectConfig as Mock;
 
   beforeEach(() => {
-    execMock = jest.fn();
+    execMock = vi.fn();
     util.promisify = mockedPromisify(execMock);
     mockedGetProjectConfig.mockResolvedValue({
       projectDir,
@@ -48,6 +55,8 @@ describe('lib/dependencyManagement', () => {
         name: projectName,
       },
     });
+    mockedFs.existsSync.mockReturnValue(true); // Default to true, override in specific tests
+    vi.clearAllMocks();
   });
 
   describe('installPackages()', () => {
@@ -135,29 +144,31 @@ describe('lib/dependencyManagement', () => {
     });
 
     it('should throw an error when installing the dependencies fails', async () => {
-      execMock = jest.fn().mockImplementation(command => {
-        if (command !== 'npm --version') {
-          throw new Error('OH NO');
+      execMock = vi.fn().mockImplementation(command => {
+        if (command === 'npm --version') {
+          return;
         }
+        throw new Error('OH NO');
       });
 
       util.promisify = mockedPromisify(execMock);
 
-      const installLocations = [
-        path.join(appFunctionsDir, 'package.json'),
-        path.join(extensionsDir, 'package.json'),
-      ];
-
-      mockedWalk.mockResolvedValue(installLocations);
-
-      mockedGetProjectConfig.mockResolvedValue({
-        projectDir,
-        projectConfig: {
-          srcDir,
-        },
+      // Mock walk to return the directory paths instead of package.json paths
+      mockedWalk.mockResolvedValue([appFunctionsDir, extensionsDir]);
+      mockedFs.existsSync.mockImplementation(filePath => {
+        const pathStr = filePath.toString();
+        if (
+          pathStr === projectDir ||
+          pathStr === path.join(projectDir, srcDir)
+        ) {
+          return true;
+        }
+        return false;
       });
 
-      await expect(() => installPackages({})).rejects.toThrowError(
+      await expect(() =>
+        installPackages({ installLocations: [appFunctionsDir, extensionsDir] })
+      ).rejects.toThrowError(
         `Installing dependencies for ${appFunctionsDir} failed`
       );
 
@@ -189,7 +200,7 @@ describe('lib/dependencyManagement', () => {
     });
 
     it('should throw an error if npm is not globally installed', async () => {
-      execMock = jest.fn().mockImplementation(() => {
+      execMock = vi.fn().mockImplementation(() => {
         throw new Error('OH NO');
       });
       util.promisify = mockedPromisify(execMock);
@@ -199,7 +210,7 @@ describe('lib/dependencyManagement', () => {
     });
 
     it('should throw an error if the project directory does not exist', async () => {
-      (existsSync as jest.Mock).mockReturnValueOnce(false);
+      mockedFs.existsSync.mockReturnValueOnce(false);
       await expect(() => getProjectPackageJsonLocations()).rejects.toThrowError(
         new RegExp(
           `No dependencies to install. The project ${projectName} folder might be missing component or subcomponent files.`
@@ -218,6 +229,17 @@ describe('lib/dependencyManagement', () => {
       ];
 
       mockedWalk.mockResolvedValue(installLocations);
+      mockedFs.existsSync.mockImplementation(filePath => {
+        // Return true for project directory and src directory
+        const pathStr = filePath.toString();
+        if (
+          pathStr === projectDir ||
+          pathStr === path.join(projectDir, srcDir)
+        ) {
+          return true;
+        }
+        return false;
+      });
 
       const actual = await getProjectPackageJsonLocations();
       expect(actual).toEqual([appFunctionsDir, extensionsDir]);

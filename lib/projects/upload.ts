@@ -4,22 +4,26 @@ import fs from 'fs-extra';
 import path from 'path';
 import { uploadProject } from '@hubspot/local-dev-lib/api/projects';
 import { shouldIgnoreFile } from '@hubspot/local-dev-lib/ignoreRules';
-
-import SpinniesManager from '../ui/SpinniesManager';
-import { uiAccountDescription } from '../ui';
-import { EXIT_CODES } from '../enums/exitCodes';
-import { ProjectConfig } from '../../types/Projects';
 import {
   isTranslationError,
   translate,
   projectContainsHsMetaFiles,
 } from '@hubspot/project-parsing-lib';
-import { logError } from '../errorHandlers';
+
+import SpinniesManager from '../ui/SpinniesManager.js';
+import { uiAccountDescription } from '../ui/index.js';
+import { ProjectConfig } from '../../types/Projects.js';
+
+import { logError } from '../errorHandlers/index.js';
 import util from 'node:util';
-import { lib } from '../../lang/en';
-import { ensureProjectExists } from './ensureProjectExists';
-import { uiLogger } from '../ui/logger';
-import { useV3Api } from './buildAndDeploy';
+import { lib } from '../../lang/en.js';
+import { ensureProjectExists } from './ensureProjectExists.js';
+import { uiLogger } from '../ui/logger.js';
+import { isV2Project } from './platformVersion.js';
+import { EXIT_CODES } from '../enums/exitCodes.js';
+import ProjectValidationError from '../errors/ProjectValidationError.js';
+import { walk } from '@hubspot/local-dev-lib/fs';
+import { LEGACY_CONFIG_FILES } from '../constants.js';
 
 async function uploadProjectFiles(
   accountId: number,
@@ -30,7 +34,7 @@ async function uploadProjectFiles(
   intermediateRepresentation?: unknown
 ): Promise<{ buildId?: number; error: unknown }> {
   SpinniesManager.init({});
-  const accountIdentifier = uiAccountDescription(accountId);
+  const accountIdentifier = uiAccountDescription(accountId) || `${accountId}`;
 
   SpinniesManager.add('upload', {
     text: lib.projectUpload.uploadProjectFiles.add(
@@ -120,18 +124,17 @@ export async function handleProjectUpload<T>({
 }: HandleProjectUploadArg<T>): Promise<ProjectUploadResult<T>> {
   const srcDir = path.resolve(projectDir, projectConfig.srcDir);
 
-  const filenames = fs.readdirSync(srcDir);
-  if (!filenames || filenames.length === 0) {
-    uiLogger.log(
-      lib.projectUpload.handleProjectUpload.emptySource(projectConfig.srcDir)
-    );
-    process.exit(EXIT_CODES.SUCCESS);
+  try {
+    await validateSourceDirectory(srcDir, projectConfig, projectDir);
+  } catch (e) {
+    logError(e);
+    process.exit(EXIT_CODES.ERROR);
   }
 
-  const hasHsMetaFiles = await projectContainsHsMetaFiles(srcDir);
-
-  if (!useV3Api(projectConfig.platformVersion) && hasHsMetaFiles) {
-    uiLogger.error(lib.projectUpload.wrongPlatformVersionMetaFiles);
+  try {
+    await validateNoHSMetaMismatch(srcDir, projectConfig);
+  } catch (e) {
+    logError(e);
     process.exit(EXIT_CODES.ERROR);
   }
 
@@ -154,25 +157,15 @@ export async function handleProjectUpload<T>({
 
       if (sendIR) {
         try {
-          intermediateRepresentation = await translate(
-            {
-              projectSourceDir: path.join(projectDir, projectConfig.srcDir),
-              platformVersion: projectConfig.platformVersion,
-              accountId,
-            },
-            { skipValidation, profile }
-          );
-
-          uiLogger.debug(
-            util.inspect(intermediateRepresentation, false, null, true)
+          intermediateRepresentation = await handleTranslate(
+            projectDir,
+            projectConfig,
+            accountId,
+            skipValidation,
+            profile
           );
         } catch (e) {
-          if (isTranslationError(e)) {
-            uiLogger.error(e.toString());
-          } else {
-            logError(e);
-          }
-          return process.exit(EXIT_CODES.ERROR);
+          resolve({ uploadError: e });
         }
       }
 
@@ -229,4 +222,69 @@ export async function handleProjectUpload<T>({
   archive.finalize();
 
   return result;
+}
+
+export async function validateSourceDirectory(
+  srcDir: string,
+  projectConfig: ProjectConfig,
+  projectDir: string
+) {
+  const projectFilePaths = await walk(srcDir, ['node_modules']);
+  if (!projectFilePaths || projectFilePaths.length === 0) {
+    throw new ProjectValidationError(
+      lib.projectUpload.handleProjectUpload.emptySource(projectConfig.srcDir)
+    );
+  }
+
+  if (isV2Project(projectConfig.platformVersion)) {
+    projectFilePaths.forEach(filePath => {
+      const filename = path.basename(filePath);
+      if (LEGACY_CONFIG_FILES.includes(filename)) {
+        uiLogger.warn(
+          lib.projectUpload.handleProjectUpload.legacyFileDetected(
+            path.relative(projectDir, filePath),
+            projectConfig.platformVersion
+          )
+        );
+      }
+    });
+  }
+}
+
+export async function validateNoHSMetaMismatch(
+  srcDir: string,
+  projectConfig: ProjectConfig
+) {
+  const hasHsMetaFiles = await projectContainsHsMetaFiles(srcDir);
+  if (!isV2Project(projectConfig.platformVersion) && hasHsMetaFiles) {
+    throw new ProjectValidationError(
+      lib.projectUpload.wrongPlatformVersionMetaFiles
+    );
+  }
+}
+
+export async function handleTranslate(
+  projectDir: string,
+  projectConfig: ProjectConfig,
+  accountId: number,
+  skipValidation: boolean,
+  profile: string | undefined
+): Promise<unknown> {
+  try {
+    const intermediateRepresentation = await translate(
+      {
+        projectSourceDir: path.join(projectDir, projectConfig.srcDir),
+        platformVersion: projectConfig.platformVersion,
+        accountId,
+      },
+      { skipValidation, profile }
+    );
+    uiLogger.debug(util.inspect(intermediateRepresentation, false, null, true));
+    return intermediateRepresentation;
+  } catch (e) {
+    if (isTranslationError(e)) {
+      throw new ProjectValidationError(e.toString(), { cause: e });
+    }
+    throw e;
+  }
 }

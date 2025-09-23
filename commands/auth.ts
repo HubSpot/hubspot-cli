@@ -1,6 +1,5 @@
 import { Argv, ArgumentsCamelCase } from 'yargs';
-import { checkAndWarnGitInclusion } from '../lib/ui/git';
-import { logger } from '@hubspot/local-dev-lib/logger';
+import { checkAndWarnGitInclusion } from '../lib/ui/git.js';
 import {
   OAUTH_AUTH_METHOD,
   PERSONAL_ACCESS_KEY_AUTH_METHOD,
@@ -8,7 +7,6 @@ import {
 import { ENVIRONMENTS } from '@hubspot/local-dev-lib/constants/environments';
 import { DEFAULT_HUBSPOT_CONFIG_YAML_FILE_NAME } from '@hubspot/local-dev-lib/constants/config';
 import { AccessToken, CLIAccount } from '@hubspot/local-dev-lib/types/Accounts';
-import { i18n } from '../lib/lang';
 import {
   getAccessToken,
   updateConfigWithAccessToken,
@@ -18,34 +16,35 @@ import {
   writeConfig,
   getConfigPath,
   loadConfig,
-  getConfigDefaultAccount,
   getAccountId,
   configFileExists,
 } from '@hubspot/local-dev-lib/config';
 import { commaSeparatedValues, toKebabCase } from '@hubspot/local-dev-lib/text';
-import { promptUser } from '../lib/prompts/promptUtils';
+import { promptUser } from '../lib/prompts/promptUtils.js';
 import {
   personalAccessKeyPrompt,
   OAUTH_FLOW,
   OauthPromptResponse,
-  PersonalAccessKeyPromptResponse,
-} from '../lib/prompts/personalAccessKeyPrompt';
-import { cliAccountNamePrompt } from '../lib/prompts/accountNamePrompt';
-import { setAsDefaultAccountPrompt } from '../lib/prompts/setAsDefaultAccountPrompt';
-import { setLogLevel } from '../lib/commonOpts';
-import { makeYargsBuilder } from '../lib/yargsUtils';
-import { trackAuthAction, trackCommandUsage } from '../lib/usageTracking';
-import { authenticateWithOauth } from '../lib/oauth';
-import { EXIT_CODES } from '../lib/enums/exitCodes';
-import { uiFeatureHighlight, uiCommandReference } from '../lib/ui';
-import { logError } from '../lib/errorHandlers/index';
+} from '../lib/prompts/personalAccessKeyPrompt.js';
+import { cliAccountNamePrompt } from '../lib/prompts/accountNamePrompt.js';
+import { setAsDefaultAccountPrompt } from '../lib/prompts/setAsDefaultAccountPrompt.js';
+import { setCLILogLevel } from '../lib/commonOpts.js';
+import { makeYargsBuilder } from '../lib/yargsUtils.js';
+import { trackAuthAction, trackCommandUsage } from '../lib/usageTracking.js';
+import { authenticateWithOauth } from '../lib/oauth.js';
+import { EXIT_CODES } from '../lib/enums/exitCodes.js';
+import { uiFeatureHighlight } from '../lib/ui/index.js';
+import { logError } from '../lib/errorHandlers/index.js';
 import {
   AccountArgs,
   CommonArgs,
   ConfigArgs,
   TestingArgs,
   YargsCommandModule,
-} from '../types/Yargs';
+} from '../types/Yargs.js';
+import { commands } from '../lang/en.js';
+import { uiLogger } from '../lib/ui/logger.js';
+import { parseStringToNumber } from '../lib/parsing.js';
 
 const TRACKING_STATUS = {
   STARTED: 'started',
@@ -61,26 +60,41 @@ const SUPPORTED_AUTHENTICATION_PROTOCOLS_TEXT =
   commaSeparatedValues(ALLOWED_AUTH_METHODS);
 
 const command = 'auth';
-const describe = i18n('commands.auth.describe');
+const describe = commands.auth.describe;
 
 type AuthArgs = CommonArgs &
   ConfigArgs &
   TestingArgs &
   AccountArgs & {
     authType?: string;
-  };
+    disableTracking: boolean;
+  } & { personalAccessKey?: string };
 
 async function handler(args: ArgumentsCamelCase<AuthArgs>): Promise<void> {
   const {
     authType: authTypeFlagValue,
     config: configFlagValue,
     qa,
-    providedAccountId,
+    personalAccessKey: providedPersonalAccessKey,
+    userProvidedAccount,
+    disableTracking,
   } = args;
+
+  let parsedUserProvidedAccountId;
+
+  try {
+    if (userProvidedAccount) {
+      parsedUserProvidedAccountId = parseStringToNumber(userProvidedAccount);
+    }
+  } catch (err) {
+    uiLogger.error(commands.auth.errors.invalidAccountIdProvided);
+    process.exit(EXIT_CODES.ERROR);
+  }
+
   const authType =
     (authTypeFlagValue && authTypeFlagValue.toLowerCase()) ||
     PERSONAL_ACCESS_KEY_AUTH_METHOD.value;
-  setLogLevel(args);
+  setCLILogLevel(args);
 
   const env = qa ? ENVIRONMENTS.QA : ENVIRONMENTS.PROD;
   // Needed to load deprecated config
@@ -91,23 +105,23 @@ async function handler(args: ArgumentsCamelCase<AuthArgs>): Promise<void> {
   }
 
   if (configFileExists(true)) {
-    const globalConfigPath = getConfigPath('', true);
-    logger.error(
-      i18n(`commands.auth.errors.globalConfigFileExists`, {
-        configPath: globalConfigPath!,
-        authCommand: uiCommandReference('hs account auth'),
-      })
+    uiLogger.error(
+      commands.auth.errors.globalConfigFileExists('hs account auth')
     );
     process.exit(EXIT_CODES.ERROR);
   }
 
-  trackCommandUsage('auth');
-  trackAuthAction('auth', authType, TRACKING_STATUS.STARTED, providedAccountId);
+  if (!disableTracking) {
+    trackCommandUsage('auth');
+    trackAuthAction(
+      'auth',
+      authType,
+      TRACKING_STATUS.STARTED,
+      parsedUserProvidedAccountId
+    );
+  }
 
-  let configData:
-    | OauthPromptResponse
-    | PersonalAccessKeyPromptResponse
-    | undefined;
+  let configData: OauthPromptResponse | undefined;
   let updatedConfig: CLIAccount | null | undefined;
   let validName: string | undefined;
   let successAuthMethod: string | undefined;
@@ -124,18 +138,20 @@ async function handler(args: ArgumentsCamelCase<AuthArgs>): Promise<void> {
       successAuthMethod = OAUTH_AUTH_METHOD.name;
       break;
     case PERSONAL_ACCESS_KEY_AUTH_METHOD.value:
-      configData = await personalAccessKeyPrompt({
-        env,
-        account: providedAccountId,
-      });
+      const { personalAccessKey } = providedPersonalAccessKey
+        ? { personalAccessKey: providedPersonalAccessKey }
+        : await personalAccessKeyPrompt({
+            env,
+            account: parsedUserProvidedAccountId,
+          });
 
       try {
-        token = await getAccessToken(configData.personalAccessKey, env);
+        token = await getAccessToken(personalAccessKey, env);
         defaultName = token.hubName ? toKebabCase(token.hubName) : undefined;
 
         updatedConfig = await updateConfigWithAccessToken(
           token,
-          configData.personalAccessKey,
+          personalAccessKey,
           env
         );
       } catch (e) {
@@ -164,53 +180,39 @@ async function handler(args: ArgumentsCamelCase<AuthArgs>): Promise<void> {
       successAuthMethod = PERSONAL_ACCESS_KEY_AUTH_METHOD.name;
       break;
     default:
-      logger.error(
-        i18n('commands.auth.errors.unsupportedAuthType', {
-          supportedProtocols: SUPPORTED_AUTHENTICATION_PROTOCOLS_TEXT,
-          type: authType,
-        })
+      uiLogger.error(
+        commands.auth.errors.unsupportedAuthType(
+          authType,
+          SUPPORTED_AUTHENTICATION_PROTOCOLS_TEXT
+        )
       );
       break;
   }
 
-  if (!successAuthMethod) {
+  if (!successAuthMethod && !disableTracking) {
     await trackAuthAction(
       'auth',
       authType,
       TRACKING_STATUS.ERROR,
-      providedAccountId
+      parsedUserProvidedAccountId
     );
     process.exit(EXIT_CODES.ERROR);
   }
 
   const nameFromConfigData =
-    'name' in configData! ? configData!.name : undefined;
+    configData && 'name' in configData ? configData.name : undefined;
 
   const accountName =
     (updatedConfig && updatedConfig.name) || validName || nameFromConfigData!;
 
-  const setAsDefault = await setAsDefaultAccountPrompt(accountName);
+  await setAsDefaultAccountPrompt(accountName);
 
-  logger.log('');
-  if (setAsDefault) {
-    logger.success(
-      i18n('lib.prompts.setAsDefaultAccountPrompt.setAsDefaultAccount', {
-        accountName,
-      })
-    );
-  } else {
-    logger.info(
-      i18n('lib.prompts.setAsDefaultAccountPrompt.keepingCurrentDefault', {
-        accountName: getConfigDefaultAccount()!,
-      })
-    );
-  }
-  logger.success(
-    i18n('commands.auth.success.configFileUpdated', {
-      configFilename: DEFAULT_HUBSPOT_CONFIG_YAML_FILE_NAME,
-      authType: successAuthMethod,
+  uiLogger.success(
+    commands.auth.success.configFileUpdated(
       accountName,
-    })
+      DEFAULT_HUBSPOT_CONFIG_YAML_FILE_NAME,
+      successAuthMethod!
+    )
   );
   uiFeatureHighlight([
     'accountsUseCommand',
@@ -219,7 +221,15 @@ async function handler(args: ArgumentsCamelCase<AuthArgs>): Promise<void> {
   ]);
 
   const accountId = getAccountId(accountName) || undefined;
-  await trackAuthAction('auth', authType, TRACKING_STATUS.COMPLETE, accountId);
+
+  if (!disableTracking) {
+    await trackAuthAction(
+      'auth',
+      authType,
+      TRACKING_STATUS.COMPLETE,
+      accountId
+    );
+  }
 
   process.exit(EXIT_CODES.SUCCESS);
 }
@@ -227,7 +237,7 @@ async function handler(args: ArgumentsCamelCase<AuthArgs>): Promise<void> {
 function authBuilder(yargs: Argv): Argv<AuthArgs> {
   yargs.options({
     'auth-type': {
-      describe: i18n('commands.auth.options.authType.describe'),
+      describe: commands.auth.options.authType.describe,
       type: 'string',
       choices: [
         `${PERSONAL_ACCESS_KEY_AUTH_METHOD.value}`,
@@ -236,9 +246,20 @@ function authBuilder(yargs: Argv): Argv<AuthArgs> {
       default: PERSONAL_ACCESS_KEY_AUTH_METHOD.value,
     },
     account: {
-      describe: i18n('commands.auth.options.account.describe'),
+      describe: commands.auth.options.account.describe,
       type: 'string',
       alias: 'a',
+    },
+    'personal-access-key': {
+      describe: commands.auth.options.personalAccessKey.describe,
+      type: 'string',
+      hidden: false,
+      alias: 'pak',
+    },
+    'disable-tracking': {
+      type: 'boolean',
+      hidden: true,
+      default: false,
     },
   });
 
@@ -248,10 +269,10 @@ function authBuilder(yargs: Argv): Argv<AuthArgs> {
 const builder = makeYargsBuilder<AuthArgs>(
   authBuilder,
   command,
-  i18n('commands.auth.verboseDescribe', {
-    authMethod: PERSONAL_ACCESS_KEY_AUTH_METHOD.value,
-    configName: DEFAULT_HUBSPOT_CONFIG_YAML_FILE_NAME,
-  }),
+  commands.auth.verboseDescribe(
+    PERSONAL_ACCESS_KEY_AUTH_METHOD.value,
+    DEFAULT_HUBSPOT_CONFIG_YAML_FILE_NAME
+  ),
   {
     useGlobalOptions: true,
     useConfigOptions: true,
@@ -267,6 +288,3 @@ const authCommand: YargsCommandModule<unknown, AuthArgs> = {
 };
 
 export default authCommand;
-
-// TODO Remove this legacy export once we've migrated all commands to TS
-module.exports = authCommand;

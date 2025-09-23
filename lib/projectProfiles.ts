@@ -4,12 +4,12 @@ import {
   getHsProfileFilename,
   getAllHsProfiles,
 } from '@hubspot/project-parsing-lib';
-import { HsProfileFile } from '@hubspot/project-parsing-lib/src/lib/types';
-import { ProjectConfig } from '../types/Projects';
-import { lib } from '../lang/en';
-import { uiBetaTag, uiLine } from './ui';
-import { uiLogger } from './ui/logger';
-import { EXIT_CODES } from './enums/exitCodes';
+import { HsProfileFile } from '@hubspot/project-parsing-lib/src/lib/types.js';
+import { ProjectConfig } from '../types/Projects.js';
+import { lib } from '../lang/en.js';
+import { uiBetaTag, uiLine } from './ui/index.js';
+import { uiLogger } from './ui/logger.js';
+import { EXIT_CODES } from './enums/exitCodes.js';
 
 export function logProfileHeader(profileName: string): void {
   uiLine();
@@ -94,4 +94,26 @@ export async function exitIfUsingProfiles(
       process.exit(EXIT_CODES.ERROR);
     }
   }
+}
+export async function loadAndValidateProfile(
+  projectConfig: ProjectConfig | null,
+  projectDir: string | null,
+  argsProfile: string | undefined
+) {
+  if (argsProfile) {
+    logProfileHeader(argsProfile);
+
+    const profile = loadProfile(projectConfig, projectDir, argsProfile);
+
+    if (!profile) {
+      uiLine();
+      process.exit(EXIT_CODES.ERROR);
+    }
+    logProfileFooter(profile, true);
+    return profile.accountId;
+  } else {
+    // A profile must be specified if this project has profiles configured
+    await exitIfUsingProfiles(projectConfig, projectDir);
+  }
+  return undefined;
 }

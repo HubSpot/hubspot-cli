@@ -1,28 +1,27 @@
 import { Argv, ArgumentsCamelCase } from 'yargs';
 import { fetchObjectSchemas } from '@hubspot/local-dev-lib/api/customObjects';
-import { logger } from '@hubspot/local-dev-lib/logger';
+import { uiLogger } from '../../../lib/ui/logger.js';
 import {
   downloadSchema,
   getResolvedPath,
 } from '@hubspot/local-dev-lib/customObjects';
 
-import { inputPrompt, listPrompt } from '../../../lib/prompts/promptUtils';
-import { trackCommandUsage } from '../../../lib/usageTracking';
-import { i18n } from '../../../lib/lang';
-import { logError } from '../../../lib/errorHandlers';
+import { inputPrompt, listPrompt } from '../../../lib/prompts/promptUtils.js';
+import { trackCommandUsage } from '../../../lib/usageTracking.js';
+import { commands } from '../../../lang/en.js';
+import { logError } from '../../../lib/errorHandlers/index.js';
 import {
   CommonArgs,
   ConfigArgs,
   AccountArgs,
   EnvironmentArgs,
   YargsCommandModule,
-} from '../../../types/Yargs';
-import { makeYargsBuilder } from '../../../lib/yargsUtils';
+} from '../../../types/Yargs.js';
+import { makeYargsBuilder } from '../../../lib/yargsUtils.js';
 
 const command = 'fetch [name] [dest]';
-const describe = i18n(
-  `commands.customObject.subcommands.schema.subcommands.fetch.describe`
-);
+const describe =
+  commands.customObject.subcommands.schema.subcommands.fetch.describe;
 
 type SchemaFetchArgs = CommonArgs &
   ConfigArgs &
@@ -46,9 +45,7 @@ async function handler(
     name =
       providedName ||
       (await listPrompt(
-        i18n(
-          `commands.customObject.subcommands.schema.subcommands.fetch.selectSchema`
-        ),
+        commands.customObject.subcommands.schema.subcommands.fetch.selectSchema,
         {
           choices: schemaNames,
         }
@@ -57,28 +54,20 @@ async function handler(
     const dest =
       providedDest ||
       (await inputPrompt(
-        i18n(
-          `commands.customObject.subcommands.schema.subcommands.fetch.inputDest`
-        )
+        commands.customObject.subcommands.schema.subcommands.fetch.inputDest
       ));
 
     await downloadSchema(derivedAccountId, name, dest);
-    logger.success(
-      i18n(
-        `commands.customObject.subcommands.schema.subcommands.fetch.success.savedToPath`,
-        {
-          path: getResolvedPath(dest, name),
-        }
+    uiLogger.success(
+      commands.customObject.subcommands.schema.subcommands.fetch.success.savedToPath(
+        getResolvedPath(dest, name)
       )
     );
   } catch (e) {
     logError(e);
-    logger.error(
-      i18n(
-        `commands.customObject.subcommands.schema.subcommands.fetch.errors.fetch`,
-        {
-          name: name || '',
-        }
+    uiLogger.error(
+      commands.customObject.subcommands.schema.subcommands.fetch.errors.fetch(
+        name || ''
       )
     );
   }
@@ -89,27 +78,25 @@ function schemaFetchBuilder(yargs: Argv): Argv<SchemaFetchArgs> {
     .example([
       [
         '$0 custom-object schema fetch schemaName',
-        i18n(
-          `commands.customObject.subcommands.schema.subcommands.fetch.examples.default`
-        ),
+        commands.customObject.subcommands.schema.subcommands.fetch.examples
+          .default,
       ],
       [
         '$0 custom-object schema fetch schemaName my/folder',
-        i18n(
-          `commands.customObject.subcommands.schema.subcommands.fetch.examples.specifyPath`
-        ),
+        commands.customObject.subcommands.schema.subcommands.fetch.examples
+          .specifyPath,
       ],
     ])
     .positional('name', {
-      describe: i18n(
-        `commands.customObject.subcommands.schema.subcommands.fetch.positionals.name.describe`
-      ),
+      describe:
+        commands.customObject.subcommands.schema.subcommands.fetch.positionals
+          .name.describe,
       type: 'string',
     })
     .positional('dest', {
-      describe: i18n(
-        `commands.customObject.subcommands.schema.subcommands.fetch.positionals.dest.describe`
-      ),
+      describe:
+        commands.customObject.subcommands.schema.subcommands.fetch.positionals
+          .dest.describe,
       type: 'string',
     });
 

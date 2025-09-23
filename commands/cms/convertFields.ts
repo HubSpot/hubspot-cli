@@ -3,22 +3,22 @@ import path from 'path';
 import fs from 'fs';
 import { createIgnoreFilter } from '@hubspot/local-dev-lib/ignoreRules';
 import { isAllowedExtension, getCwd } from '@hubspot/local-dev-lib/path';
-import { logger } from '@hubspot/local-dev-lib/logger';
 import { walk } from '@hubspot/local-dev-lib/fs';
 import { getThemeJSONPath } from '@hubspot/local-dev-lib/cms/themes';
-import { i18n } from '../../lib/lang';
+import { commands } from '../../lang/en.js';
+import { uiLogger } from '../../lib/ui/logger.js';
 import {
   FieldsJs,
   isConvertableFieldJs,
 } from '@hubspot/local-dev-lib/cms/handleFieldsJS';
-import { trackConvertFieldsUsage } from '../../lib/usageTracking';
-import { logError } from '../../lib/errorHandlers/index';
-import { EXIT_CODES } from '../../lib/enums/exitCodes';
-import { CommonArgs, YargsCommandModule } from '../../types/Yargs';
-import { makeYargsBuilder } from '../../lib/yargsUtils';
+import { trackConvertFieldsUsage } from '../../lib/usageTracking.js';
+import { logError } from '../../lib/errorHandlers/index.js';
+import { EXIT_CODES } from '../../lib/enums/exitCodes.js';
+import { CommonArgs, YargsCommandModule } from '../../types/Yargs.js';
+import { makeYargsBuilder } from '../../lib/yargsUtils.js';
 
 const command = 'convert-fields';
-const describe = i18n(`commands.convertFields.describe`);
+const describe = commands.convertFields.describe;
 
 type ConvertFieldsArgs = CommonArgs & {
   src: string;
@@ -26,11 +26,7 @@ type ConvertFieldsArgs = CommonArgs & {
 };
 
 function invalidPath(src: string): void {
-  logger.error(
-    i18n(`commands.convertFields.errors.invalidPath`, {
-      path: src,
-    })
-  );
+  uiLogger.error(commands.convertFields.errors.invalidPath(src));
   process.exit(EXIT_CODES.ERROR);
 }
 
@@ -104,13 +100,13 @@ async function handler(
 
 function convertFieldsBuilder(yargs: Argv): Argv<ConvertFieldsArgs> {
   yargs.option('src', {
-    describe: i18n(`commands.convertFields.positionals.src.describe`),
+    describe: commands.convertFields.positionals.src.describe,
     type: 'string',
     required: true,
-    demandOption: i18n(`commands.convertFields.errors.missingSrc`),
+    demandOption: commands.convertFields.errors.missingSrc,
   });
   yargs.option('fieldOptions', {
-    describe: i18n(`commands.convertFields.options.options.describe`),
+    describe: commands.convertFields.options.options.describe,
     type: 'array',
     default: [''],
   });

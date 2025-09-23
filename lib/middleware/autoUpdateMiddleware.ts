@@ -1,18 +1,17 @@
-// Update-notifier is CommonJS, so we need to use require
-const updateNotifier = require('update-notifier');
+import updateNotifier from 'update-notifier';
 
 import { isConfigFlagEnabled } from '@hubspot/local-dev-lib/config';
-import pkg from '../../package.json';
-import { UI_COLORS } from '../ui';
-import SpinniesManager from '../ui/SpinniesManager';
-import { lib } from '../../lang/en';
+import pkg from '../../package.json' with { type: 'json' };
+import { UI_COLORS } from '../ui/index.js';
+import SpinniesManager from '../ui/SpinniesManager.js';
+import { lib } from '../../lang/en.js';
 import {
   DEFAULT_PACKAGE_MANAGER,
   isGloballyInstalled,
   executeInstall,
-} from '../npm';
-import { debugError } from '../errorHandlers';
-import { uiLogger } from '../ui/logger';
+} from '../npm.js';
+import { debugError } from '../errorHandlers/index.js';
+import { uiLogger } from '../ui/logger.js';
 
 // Default behavior is to check for notifications at most once per day
 // update-notifier stores the last checked date in the user's home directory
@@ -41,7 +40,7 @@ function updateNotification(): void {
       borderStyle: 'round',
       title:
         pkg.name === CMS_CLI_PACKAGE_NAME
-          ? null
+          ? undefined
           : lib.middleware.updateNotification.notifyTitle,
     },
   });

@@ -1,7 +1,7 @@
-import { getProjectConfig } from '../projects/config';
+import { getProjectConfig } from '../projects/config.js';
 import { fetchProject } from '@hubspot/local-dev-lib/api/projects';
 import path from 'path';
-import pkg from '../../package.json';
+import pkg from '../../package.json' with { type: 'json' };
 import { logger } from '@hubspot/local-dev-lib/logger';
 import { Environment } from '@hubspot/local-dev-lib/types/Config';
 import {
@@ -19,8 +19,16 @@ import { getAccountConfig, getConfigPath } from '@hubspot/local-dev-lib/config';
 import { getAccessToken } from '@hubspot/local-dev-lib/personalAccessKey';
 import { walk } from '@hubspot/local-dev-lib/fs';
 import util from 'util';
-import { exec as execAsync } from 'child_process';
+import { exec as execAsync } from 'node:child_process';
 import process from 'process';
+import {
+  CMS_ASSETS_FILE,
+  LEGACY_PRIVATE_APP_FILE,
+  LEGACY_PUBLIC_APP_FILE,
+  LEGACY_SERVERLESS_FILE,
+  PROJECT_CONFIG_FILE,
+  THEME_FILE,
+} from '../constants.js';
 
 export type ProjectConfig = Awaited<ReturnType<typeof getProjectConfig>>;
 
@@ -62,12 +70,12 @@ export interface DiagnosticInfo extends FilesInfo {
 }
 
 const configFiles = [
-  'serverless.json',
-  'hsproject.json',
-  'app.json',
-  'public-app.json',
-  'theme.json',
-  'cms-assets.json',
+  LEGACY_SERVERLESS_FILE,
+  PROJECT_CONFIG_FILE,
+  LEGACY_PRIVATE_APP_FILE,
+  LEGACY_PUBLIC_APP_FILE,
+  THEME_FILE,
+  CMS_ASSETS_FILE,
 ];
 
 export class DiagnosticInfoBuilder {

@@ -1,6 +1,7 @@
-import { promptUser } from './promptUtils';
-import { i18n } from '../lang';
-import { PromptConfig } from '../../types/Prompts';
+import { promptUser } from './promptUtils.js';
+import { i18n } from '../lang.js';
+import { PromptConfig } from '../../types/Prompts.js';
+import { CreateArgs } from '../../types/Cms.js';
 
 type CreateFunctionPromptResponse = {
   functionsFolder: string;
@@ -62,11 +63,54 @@ const ENDPOINT_PATH_PROMPT: PromptConfig<CreateFunctionPromptResponse> = {
   },
 };
 
-export function createFunctionPrompt(): Promise<CreateFunctionPromptResponse> {
-  return promptUser<CreateFunctionPromptResponse>([
-    FUNCTIONS_FOLDER_PROMPT,
-    FUNCTION_FILENAME_PROMPT,
-    ENDPOINT_METHOD_PROMPT,
-    ENDPOINT_PATH_PROMPT,
-  ]);
+export function createFunctionPrompt(
+  commandArgs: Partial<CreateArgs> = {}
+): Promise<CreateFunctionPromptResponse> {
+  // Check if all required parameters are provided (endpointMethod has default)
+  const hasAllRequired =
+    commandArgs.functionsFolder &&
+    commandArgs.filename &&
+    commandArgs.endpointPath;
+
+  if (hasAllRequired) {
+    return Promise.resolve({
+      functionsFolder: commandArgs.functionsFolder!,
+      filename: commandArgs.filename!,
+      endpointMethod: commandArgs.endpointMethod || 'GET',
+      endpointPath: commandArgs.endpointPath!,
+    });
+  }
+
+  const prompts: PromptConfig<CreateFunctionPromptResponse>[] = [];
+
+  // Only prompt for missing parameters
+  if (!commandArgs.functionsFolder) {
+    prompts.push(FUNCTIONS_FOLDER_PROMPT);
+  }
+
+  if (!commandArgs.filename) {
+    prompts.push(FUNCTION_FILENAME_PROMPT);
+  }
+
+  if (!commandArgs.endpointMethod) {
+    prompts.push(ENDPOINT_METHOD_PROMPT);
+  }
+
+  if (!commandArgs.endpointPath) {
+    prompts.push(ENDPOINT_PATH_PROMPT);
+  }
+
+  return promptUser<CreateFunctionPromptResponse>(prompts).then(
+    promptResponse => {
+      // Merge prompted values with provided commandArgs
+      return {
+        functionsFolder:
+          commandArgs.functionsFolder || promptResponse.functionsFolder,
+        filename: commandArgs.filename || promptResponse.filename,
+        endpointMethod:
+          commandArgs.endpointMethod || promptResponse.endpointMethod || 'GET',
+        endpointPath: commandArgs.endpointPath || promptResponse.endpointPath,
+      };
+    }
+  );
 }

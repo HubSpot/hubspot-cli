@@ -1,16 +1,15 @@
 import yargs, { Argv } from 'yargs';
-import set from '../config/set';
-import migrate from '../config/migrate';
-import configCommands from '../config';
+import set from '../config/set.js';
+import migrate from '../config/migrate.js';
+import configCommands from '../config.js';
 
-jest.mock('yargs');
-jest.mock('../config/set');
-jest.mock('../config/set');
+vi.mock('../config/set');
+vi.mock('../config/set');
 
-const commandSpy = jest
+const commandSpy = vi
   .spyOn(yargs as Argv, 'command')
   .mockReturnValue(yargs as Argv);
-const demandCommandSpy = jest
+const demandCommandSpy = vi
   .spyOn(yargs as Argv, 'demandCommand')
   .mockReturnValue(yargs as Argv);
 

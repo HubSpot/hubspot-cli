@@ -1,4 +1,4 @@
-import SpinniesManager from './ui/SpinniesManager';
+import SpinniesManager from './ui/SpinniesManager.js';
 import { getHubSpotWebsiteOrigin } from '@hubspot/local-dev-lib/urls';
 import { logger } from '@hubspot/local-dev-lib/logger';
 import { initiateSync } from '@hubspot/local-dev-lib/api/sandboxSync';
@@ -8,18 +8,21 @@ import { getAccountIdentifier } from '@hubspot/local-dev-lib/config/getAccountId
 import { CLIAccount } from '@hubspot/local-dev-lib/types/Accounts';
 import { Environment } from '@hubspot/local-dev-lib/types/Config';
 
-import { i18n } from './lang';
-import { getAvailableSyncTypes } from './sandboxes';
-import { debugError, logError, ApiErrorContext } from './errorHandlers/index';
-import { getSandboxTypeAsString } from './sandboxes';
+import { i18n } from './lang.js';
+import { getAvailableSyncTypes, getSandboxTypeAsString } from './sandboxes.js';
+import {
+  debugError,
+  logError,
+  ApiErrorContext,
+} from './errorHandlers/index.js';
 import {
   uiAccountDescription,
   uiLine,
   uiLink,
   uiCommandDisabledBanner,
-} from './ui';
-import { isDevelopmentSandbox } from './accountTypes';
-import { SandboxSyncTask } from '../types/Sandboxes';
+} from './ui/index.js';
+import { isDevelopmentSandbox } from './accountTypes.js';
+import { SandboxSyncTask } from '../types/Sandboxes.js';
 
 export async function syncSandbox(
   accountConfig: CLIAccount,

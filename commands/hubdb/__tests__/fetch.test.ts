@@ -3,11 +3,10 @@ import {
   addAccountOptions,
   addConfigOptions,
   addUseEnvironmentOptions,
-} from '../../../lib/commonOpts';
-import hubdbFetchCommand from '../fetch';
+} from '../../../lib/commonOpts.js';
+import hubdbFetchCommand from '../fetch.js';
 
-jest.mock('yargs');
-jest.mock('../../../lib/commonOpts');
+vi.mock('../../../lib/commonOpts');
 
 describe('commands/hubdb/fetch', () => {
   const yargsMock = yargs as Argv;

@@ -1,22 +1,22 @@
 import { Argv, ArgumentsCamelCase } from 'yargs';
 import chalk from 'chalk';
-import { trackCommandUsage } from '../lib/usageTracking';
-import { isPathFolder } from '../lib/filesystem';
-import { logger } from '@hubspot/local-dev-lib/logger';
-import { logError } from '../lib/errorHandlers/index';
+import { trackCommandUsage } from '../lib/usageTracking.js';
+import { isPathFolder } from '../lib/filesystem.js';
+import { logError } from '../lib/errorHandlers/index.js';
 import { getDirectoryContentsByPath } from '@hubspot/local-dev-lib/api/fileMapper';
-import { HUBSPOT_FOLDER, MARKETPLACE_FOLDER } from '../lib/constants';
-import { i18n } from '../lib/lang';
-import { EXIT_CODES } from '../lib/enums/exitCodes';
+import { HUBSPOT_FOLDER, MARKETPLACE_FOLDER } from '../lib/constants.js';
+import { EXIT_CODES } from '../lib/enums/exitCodes.js';
 import {
   AccountArgs,
   CommonArgs,
   ConfigArgs,
   EnvironmentArgs,
   YargsCommandModule,
-} from '../types/Yargs';
+} from '../types/Yargs.js';
 import { FileMapperNode } from '@hubspot/local-dev-lib/types/Files';
-import { makeYargsBuilder } from '../lib/yargsUtils';
+import { makeYargsBuilder } from '../lib/yargsUtils.js';
+import { uiLogger } from '../lib/ui/logger.js';
+import { commands } from '../lang/en.js';
 
 function addColorToContents(fileOrFolder: string | FileMapperNode): string {
   if (!isPathFolder(fileOrFolder as string)) {
@@ -47,7 +47,7 @@ function sortContents(a: string, b: string): number {
 }
 
 const command = ['list [path]', 'ls [path]'];
-const describe = i18n(`commands.list.describe`);
+const describe = commands.list.describe;
 
 type ListArgs = CommonArgs &
   ConfigArgs &
@@ -61,11 +61,7 @@ async function handler(args: ArgumentsCamelCase<ListArgs>): Promise<void> {
 
   trackCommandUsage('list', undefined, derivedAccountId);
 
-  logger.debug(
-    i18n(`commands.list.gettingPathContents`, {
-      path: directoryPath,
-    })
-  );
+  uiLogger.debug(commands.list.gettingPathContents(directoryPath));
 
   try {
     const { data } = await getDirectoryContentsByPath(
@@ -79,11 +75,7 @@ async function handler(args: ArgumentsCamelCase<ListArgs>): Promise<void> {
   }
 
   if (!contentsResp.folder) {
-    logger.info(
-      i18n(`commands.list.noFilesFoundAtPath`, {
-        path: directoryPath,
-      })
-    );
+    uiLogger.info(commands.list.noFilesFoundAtPath(directoryPath));
     return;
   }
   // getDirectoryContentsByPath omits @hubspot
@@ -93,11 +85,7 @@ async function handler(args: ArgumentsCamelCase<ListArgs>): Promise<void> {
       : contentsResp.children;
 
   if (contents.length === 0) {
-    logger.info(
-      i18n(`commands.list.noFilesFoundAtPath`, {
-        path: directoryPath,
-      })
-    );
+    uiLogger.info(commands.list.noFilesFoundAtPath(directoryPath));
     return;
   }
 
@@ -106,13 +94,13 @@ async function handler(args: ArgumentsCamelCase<ListArgs>): Promise<void> {
     .sort(sortContents)
     .join('\n');
 
-  logger.log(folderContentsOutput);
+  uiLogger.log(folderContentsOutput);
   process.exit(EXIT_CODES.SUCCESS);
 }
 
 function cmsListBuilder(yargs: Argv): Argv<ListArgs> {
   yargs.positional('path', {
-    describe: i18n(`commands.list.positionals.path.describe`),
+    describe: commands.list.positionals.path.describe,
     type: 'string',
   });
   yargs.example([['$0 list'], ['$0 list /'], ['$0 list my-modules']]);
@@ -135,6 +123,3 @@ const cmsListCommand: YargsCommandModule<unknown, ListArgs> = {
 };
 
 export default cmsListCommand;
-
-// TODO Remove this legacy export once we've migrated all commands to TS
-module.exports = cmsListCommand;

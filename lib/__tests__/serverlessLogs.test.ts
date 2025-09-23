@@ -1,10 +1,20 @@
 import mockStdIn from 'mock-stdin';
-import { outputLogs } from '../ui/serverlessFunctionLogs';
-import { tailLogs } from '../serverlessLogs';
+import { outputLogs } from '../ui/serverlessFunctionLogs.js';
+import { tailLogs } from '../serverlessLogs.js';
 
-jest.mock('../ui/serverlessFunctionLogs');
-jest.mock('@hubspot/local-dev-lib/logger');
-jest.useFakeTimers();
+vi.mock('../ui/serverlessFunctionLogs');
+vi.mock('@hubspot/local-dev-lib/logger');
+vi.mock('../ui/SpinniesManager', () => ({
+  default: {
+    init: vi.fn(),
+    add: vi.fn(),
+    remove: vi.fn(),
+    succeed: vi.fn(),
+    fail: vi.fn(),
+    stopAll: vi.fn(),
+  },
+}));
+vi.useFakeTimers();
 
 const ACCOUNT_ID = 123;
 
@@ -14,18 +24,18 @@ describe('lib/serverlessLogs', () => {
 
     beforeEach(() => {
       // @ts-ignore - we don't need to mock the entire process object
-      jest.spyOn(process, 'exit').mockImplementation(() => {});
+      vi.spyOn(process, 'exit').mockImplementation(() => {});
       stdinMock = mockStdIn.stdin();
     });
 
     afterEach(() => {
-      jest.clearAllTimers();
+      vi.clearAllTimers();
       stdinMock.restore();
     });
 
     it('calls tailCall() to get the next results', async () => {
       const compact = false;
-      const fetchLatest = jest.fn(() => {
+      const fetchLatest = vi.fn(() => {
         return Promise.resolve({
           data: {
             id: '1234',
@@ -43,7 +53,7 @@ describe('lib/serverlessLogs', () => {
           config: {},
         });
       });
-      const tailCall = jest.fn(() => {
+      const tailCall = vi.fn(() => {
         return Promise.resolve({
           data: {
             results: [],
@@ -62,7 +72,7 @@ describe('lib/serverlessLogs', () => {
 
       // @ts-ignore - headers is not used in the actual function and does not need to be mocked
       await tailLogs(ACCOUNT_ID, 'name', fetchLatest, tailCall, compact);
-      jest.runOnlyPendingTimers();
+      vi.runOnlyPendingTimers();
 
       expect(fetchLatest).toHaveBeenCalled();
       expect(tailCall).toHaveBeenCalledTimes(2);
@@ -70,7 +80,7 @@ describe('lib/serverlessLogs', () => {
     it('outputs results', async () => {
       const compact = false;
 
-      const fetchLatest = jest.fn(() => {
+      const fetchLatest = vi.fn(() => {
         return Promise.resolve({
           data: {
             id: '1234',
@@ -117,13 +127,13 @@ describe('lib/serverlessLogs', () => {
           },
         },
       };
-      const tailCall = jest.fn(() =>
+      const tailCall = vi.fn(() =>
         Promise.resolve({ data: latestLogResponse })
       );
 
       // @ts-ignore - headers is not used in the actual function and does not need to be mocked
       await tailLogs(ACCOUNT_ID, 'name', fetchLatest, tailCall, compact);
-      jest.runOnlyPendingTimers();
+      vi.runOnlyPendingTimers();
       expect(outputLogs).toHaveBeenCalledWith(
         latestLogResponse,
         expect.objectContaining({ compact })
@@ -133,7 +143,7 @@ describe('lib/serverlessLogs', () => {
     it('handles no logs', async () => {
       const compact = false;
 
-      const fetchLatest = jest.fn(() => {
+      const fetchLatest = vi.fn(() => {
         return Promise.reject({
           message: '',
           type: '',
@@ -141,7 +151,7 @@ describe('lib/serverlessLogs', () => {
           statusCode: 404,
         });
       });
-      const tailCall = jest.fn(() =>
+      const tailCall = vi.fn(() =>
         Promise.reject({
           message: '',
           type: '',
@@ -151,7 +161,7 @@ describe('lib/serverlessLogs', () => {
       );
 
       await tailLogs(ACCOUNT_ID, 'name', fetchLatest, tailCall, compact);
-      jest.runOnlyPendingTimers();
+      vi.runOnlyPendingTimers();
       expect(tailCall).toHaveBeenCalledTimes(2);
     });
   });

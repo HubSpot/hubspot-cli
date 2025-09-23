@@ -1,25 +1,25 @@
 import { Argv, ArgumentsCamelCase } from 'yargs';
 import path from 'path';
-import { logger } from '@hubspot/local-dev-lib/logger';
-import { logError } from '../../lib/errorHandlers/index';
+import { uiLogger } from '../../lib/ui/logger.js';
+import { logError } from '../../lib/errorHandlers/index.js';
 import { getCwd, untildify, isValidPath } from '@hubspot/local-dev-lib/path';
 import { createHubDbTable } from '@hubspot/local-dev-lib/hubdb';
-import { promptUser } from '../../lib/prompts/promptUtils';
-import { checkAndConvertToJson } from '../../lib/validation';
-import { trackCommandUsage } from '../../lib/usageTracking';
-import { i18n } from '../../lib/lang';
-import { EXIT_CODES } from '../../lib/enums/exitCodes';
+import { promptUser } from '../../lib/prompts/promptUtils.js';
+import { checkAndConvertToJson } from '../../lib/validation.js';
+import { trackCommandUsage } from '../../lib/usageTracking.js';
+import { commands } from '../../lang/en.js';
+import { EXIT_CODES } from '../../lib/enums/exitCodes.js';
 import {
   CommonArgs,
   ConfigArgs,
   AccountArgs,
   EnvironmentArgs,
   YargsCommandModule,
-} from '../../types/Yargs';
-import { makeYargsBuilder } from '../../lib/yargsUtils';
+} from '../../types/Yargs.js';
+import { makeYargsBuilder } from '../../lib/yargsUtils.js';
 
 const command = 'create';
-const describe = i18n(`commands.hubdb.subcommands.create.describe`);
+const describe = commands.hubdb.subcommands.create.describe;
 
 type HubdbCreateArgs = CommonArgs &
   ConfigArgs &
@@ -30,16 +30,14 @@ function selectPathPrompt(options: HubdbCreateArgs): Promise<{ path: string }> {
   return promptUser([
     {
       name: 'path',
-      message: i18n(`commands.hubdb.subcommands.create.enterPath`),
+      message: commands.hubdb.subcommands.create.enterPath,
       when: !options.path,
       validate: (input: string) => {
         if (!input) {
-          return i18n(`commands.hubdb.subcommands.create.errors.pathRequired`);
+          return commands.hubdb.subcommands.create.errors.pathRequired;
         }
         if (!isValidPath(input)) {
-          return i18n(
-            `commands.hubdb.subcommands.create.errors.invalidCharacters`
-          );
+          return commands.hubdb.subcommands.create.errors.invalidCharacters;
         }
         return true;
       },
@@ -71,18 +69,16 @@ async function handler(
       derivedAccountId,
       path.resolve(getCwd(), filePath)
     );
-    logger.success(
-      i18n(`commands.hubdb.subcommands.create.success.create`, {
-        accountId: derivedAccountId,
-        rowCount: table.rowCount,
-        tableId: table.tableId,
-      })
+    uiLogger.success(
+      commands.hubdb.subcommands.create.success.create(
+        table.tableId,
+        derivedAccountId,
+        table.rowCount
+      )
     );
   } catch (e) {
-    logger.error(
-      i18n(`commands.hubdb.subcommands.create.errors.create`, {
-        filePath: filePath || '',
-      })
+    uiLogger.error(
+      commands.hubdb.subcommands.create.errors.create(filePath || '')
     );
     logError(e);
   }
@@ -90,7 +86,7 @@ async function handler(
 
 function hubdbCreateBuilder(yargs: Argv): Argv<HubdbCreateArgs> {
   yargs.options('path', {
-    describe: i18n(`commands.hubdb.subcommands.create.options.path.describe`),
+    describe: commands.hubdb.subcommands.create.options.path.describe,
     type: 'string',
   });
 

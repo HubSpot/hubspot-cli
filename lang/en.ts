@@ -1,17 +1,35 @@
 import chalk from 'chalk';
+import { mapToUserFriendlyName } from '@hubspot/project-parsing-lib';
+import { PLATFORM_VERSIONS } from '@hubspot/local-dev-lib/constants/projects';
+import { PERSONAL_ACCESS_KEY_AUTH_METHOD } from '@hubspot/local-dev-lib/constants/auth';
+import {
+  ARCHIVED_HUBSPOT_CONFIG_YAML_FILE_NAME,
+  GLOBAL_CONFIG_PATH,
+  DEFAULT_HUBSPOT_CONFIG_YAML_FILE_NAME,
+} from '@hubspot/local-dev-lib/constants/config';
 import {
   uiAccountDescription,
   uiBetaTag,
   uiCommandReference,
   uiLink,
-} from '../lib/ui';
+  UI_COLORS,
+} from '../lib/ui/index.js';
 import {
   getProjectDetailUrl,
   getProjectSettingsUrl,
-} from '../lib/projects/urls';
-import { UI_COLORS } from '../lib/ui';
-import { PLATFORM_VERSIONS } from '@hubspot/local-dev-lib/constants/projects';
-import { PROJECT_CONFIG_FILE } from '../lib/constants';
+  getLocalDevUiUrl,
+  getAppAllowlistUrl,
+} from '../lib/projects/urls.js';
+import { getProductUpdatesUrl } from '../lib/links.js';
+import {
+  APP_DISTRIBUTION_TYPES,
+  APP_AUTH_TYPES,
+  PROJECT_CONFIG_FILE,
+  PROJECT_WITH_APP,
+  LEGACY_PUBLIC_APP_FILE,
+} from '../lib/constants.js';
+import { CLIAccount } from '@hubspot/local-dev-lib/types/Accounts';
+import { getAccountIdentifier } from '@hubspot/local-dev-lib/config/getAccountIdentifier';
 
 type LangFunction = (...args: never[]) => string;
 
@@ -32,6 +50,64 @@ export const commands = {
         `A configuration file already exists at ${configPath}. To specify a new configuration file, delete the existing one and try again.`,
     },
   },
+  getStarted: {
+    describe:
+      'A step-by-step command to get you started with a HubSpot project.',
+    options: {
+      dest: {
+        describe: 'Directory where the project should be created',
+      },
+      name: {
+        describe: 'Project name (cannot be changed)',
+      },
+      templateSource: {
+        describe:
+          'Path to custom GitHub repository from which to create project template',
+      },
+    },
+    startTitle: 'Welcome to HubSpot Development!',
+    verboseDescribe:
+      'A step-by-step command to get you started with a HubSpot project.',
+    startDescription:
+      'You can use the HubSpot CLI to build apps, CMS themes, and more.\n',
+    guideOverview: (accountName: string) =>
+      `This guide will walk you through deploying your first project to ${chalk.bold(accountName)}.\nTo target a different account, exit this guide ${chalk.bold('(ctrl + c)')} and run ${uiCommandReference('hs account use')} before trying again.`,
+    designManager:
+      'To onboard with CMS, please visit the HubSpot Design Manager in your account and follow the checklist items.',
+    openDesignManager: 'Click here to go to the HubSpot Design Manager',
+    openDesignManagerPrompt: 'Open Design Manager in your browser?',
+    openedDesignManager: 'Redirected to Design Manager!',
+    developerOverviewBrowserOpenPrep:
+      "We'll take you to your HubSpot account and walk you through installing and previewing your new app.",
+    openInstallUrl: 'Open HubSpot to install your app in your account?',
+    openedDeveloperOverview: 'HubSpot opened!',
+    prompts: {
+      selectOption: 'Are you looking to build apps or CMS assets?',
+      options: {
+        app: 'App',
+        cms: 'CMS assets',
+      },
+      uploadProject: (accountName: string) =>
+        `Would you like to upload this project to account "${accountName}" now?`,
+      projectCreated: {
+        title: chalk.bold('Next steps:'),
+        description: `Let's prepare and upload your project to HubSpot.\nYou can use ${uiCommandReference('hs project install-deps')} to ${chalk.bold('install dependencies')} and ${uiCommandReference('hs project upload')} to ${chalk.bold('upload')} your project.`,
+      },
+    },
+    logs: {
+      appSelected: `We'll create a new project with a sample app for you.\nProjects are what you can use to create apps with HubSpot.\nUsually you'll use the ${uiCommandReference('hs project create')} command, but we'll go ahead and make one now.`,
+      dependenciesInstalled: 'Dependencies installed successfully.',
+      uploadingProject: 'Uploading your project to HubSpot...',
+      uploadSuccess: 'Project uploaded successfully!',
+      developerOverviewLink:
+        'Open this link to navigate to your HubSpot developer portal',
+    },
+    errors: {
+      uploadFailed: 'Failed to upload project to HubSpot.',
+      configFileNotFound: 'Could not find project configuration for upload.',
+      installDepsFailed: 'Failed to install dependencies.',
+    },
+  },
   completion: {
     describe:
       'Enable bash completion shortcuts for commands. Concat the generated script to your .bashrc, .bash_profile, or .zshrc file.',
@@ -42,13 +118,37 @@ export const commands = {
   account: {
     describe: 'Commands for managing configured accounts.',
     subcommands: {
+      auth: {
+        describe: 'Configure authentication for your HubSpot account.',
+        verboseDescribe: `Configure authentication for a HubSpot account. This will create or update the global config file at ${GLOBAL_CONFIG_PATH} that stores your account information.\n\nThe authentication method is ${chalk.bold(PERSONAL_ACCESS_KEY_AUTH_METHOD.value)}, which is an access token tied to a specific user account.\n\nGlobal configuration replaces ${DEFAULT_HUBSPOT_CONFIG_YAML_FILE_NAME}, and you will be prompted to migrate your existing config if one exists.`,
+        options: {
+          account: 'HubSpot account to authenticate',
+          personalAccessKey: 'Enter existing personal access key',
+        },
+        errors: {
+          invalidAccountIdProvided: `--account must be a number.`,
+          failedToUpdateConfig:
+            'Failed to update the configuration file. Please try again.',
+          migrationNotConfirmed: `Did not migrate your configuration file. Run ${uiCommandReference('hs auth')} to update your existing config, or use ${uiCommandReference('hs config migrate')} to switch to the new global configuration.`,
+          mergeNotConfirmed: `Did not merge configuration files. When you are ready to merge the deprecated config file with the global config file, run ${uiCommandReference('hs config migrate')}.`,
+        },
+        success: {
+          configFileCreated: (configPath: string) =>
+            `Created config file "${configPath}"`,
+          configFileUpdated: (accountId: number) =>
+            `Connected account ${uiAccountDescription(accountId)} and set it as the default account`,
+        },
+      },
       list: {
         accounts: `${chalk.bold('Accounts')}:`,
-        defaultAccount: (account: string) =>
-          `${chalk.bold('Default account')}: ${account}`,
+        defaultAccountTitle: `${chalk.bold('Default Account')}`,
+        defaultAccount: (account: string) => `Account: ${account}`,
         describe: 'List names of accounts defined in config.',
-        configPath: (configPath: string) =>
-          `${chalk.bold('Config path')}: ${configPath}`,
+        configPath: (configPath: string) => `Source: ${configPath}`,
+        overrideFilePathTitle: `${chalk.bold('Default Account Override')}`,
+        overrideFilePath: (overrideFilePath: string) =>
+          `Source: ${overrideFilePath}`,
+        overrideAccount: (account: string) => `Account: ${account}`,
         labels: {
           accountId: 'Account ID',
           authType: 'Auth Type',
@@ -77,6 +177,9 @@ export const commands = {
           accountNotFound: (specifiedAccount: string, configPath: string) =>
             `The account "${specifiedAccount}" could not be found in ${configPath}`,
         },
+        accountOverride: (accountOverride: string) =>
+          `This project currently has an account override set: "${accountOverride}". Account "${accountOverride}" will continue to act as the default account for this project.`,
+        accountOverrideCommands: `Use ${uiCommandReference('hs account create-override')} to change override accounts, or ${uiCommandReference('hs account remove-override')} to remove the override and use your default account.`,
         examples: {
           default: 'Select a HubSpot account to use as the default account',
           idBased:
@@ -101,6 +204,8 @@ export const commands = {
           replaceDefaultAccount: 'The removed account was the default account.',
         },
         prompts: {
+          deleteOverrideFile: (overrideFilePath: string, accountName: string) =>
+            `Delete the override file (${overrideFilePath}) associated with ${accountName}?`,
           selectAccountToRemove: 'Select an account to remove from the config',
         },
         errors: {
@@ -122,14 +227,47 @@ export const commands = {
             `Account "${accountName}" removed from the config`,
         },
       },
+      removeOverride: {
+        describe: (overrideFile: string) =>
+          `Remove the default account override file (${overrideFile}) from the current working directory.`,
+        accountOverride: (overrideFilePath: string, accountOverride: string) =>
+          `There is an account override file at ${overrideFilePath} associated with account "${accountOverride}".`,
+        prompts: {
+          deleteOverrideFile: 'Delete account override file?',
+        },
+        success: 'Removed the default account override file.',
+        noOverrideFile:
+          'No default account override file found in the current working directory. No action required.',
+        errors: {
+          globalConfigNotFound: `This command is only compatible with our new global config. Run ${uiCommandReference('hs account auth')} to get started.`,
+        },
+        options: {
+          force: {
+            describe:
+              'Skip confirmation prompt when removing the override file',
+          },
+        },
+      },
       info: {
-        accountId: (accountId: string) =>
+        accountId: (accountId: number) =>
           `${chalk.bold('Account ID')}: ${accountId}`,
+        defaultAccountTitle: `${chalk.bold('Default Account')}`,
+        configPath: (configPath: string) => `Source: ${configPath}`,
+        defaultAccount: (accountName: string) => `Account: ${accountName}`,
+        overrideFilePathTitle: `${chalk.bold('Default Account Override')}`,
+        overrideFilePath: (overrideFilePath: string) =>
+          `Source: ${overrideFilePath}`,
+        overrideAccount: (accountName: string) => `Account: ${accountName}`,
         describe:
           'Print information about the default account, or about the account specified with the "account" option.',
         errors: {
           notUsingPersonalAccessKey:
             'This command currently only supports fetching scopes for the personal access key auth type.',
+        },
+        options: {
+          account: {
+            describe: 'Account name or id to show info for',
+          },
         },
         examples: {
           default: 'Print information for the default account',
@@ -150,22 +288,59 @@ export const commands = {
         },
         inactiveAccountsFound: {
           one: '1 inactive account found:',
-          other: (count: string) => `${count} inactive accounts found:`,
+          other: (count: number) => `${count} inactive accounts found:`,
         },
         confirm: {
           one: 'Remove 1 inactive account from the CLI config?',
-          other: (count: string) =>
+          other: (count: number) =>
             `Remove ${count} inactive accounts from the CLI config?`,
         },
         removeSuccess: (accountName: string) =>
           `Removed ${accountName} from the CLI config.`,
+        replaceDefaultAccount: 'The default account was removed.',
+        defaultAccountOverride: (overrideFilePath: string) =>
+          `\n(This will also delete the default account override file at ${overrideFilePath})`,
+      },
+      createOverride: {
+        describe: (hsAccountFileName: string) =>
+          `Create a new default account override file (${hsAccountFileName}) in the current working directory.`,
+        success: (overrideFilePath: string) =>
+          `Default account override file created at ${overrideFilePath}`,
+        accountOverride: (overrideFilePath: string, accountOverride: string) =>
+          `An account override file already exists at ${overrideFilePath} associated with account "${accountOverride}".`,
+        prompts: {
+          replaceOverrideFile: 'Replace existing account override file?',
+        },
+        errors: {
+          globalConfigNotFound: `This command is only compatible with our new global config. Run ${uiCommandReference('hs account auth')} to get started.`,
+          accountNotFound: (configPath: string) =>
+            `The specified account could not be found in the config file ${configPath}`,
+        },
+        options: {
+          account: {
+            describe:
+              'Name or ID of the account to create an override file for.',
+          },
+        },
+        examples: {
+          default: (hsAccountFileName: string) =>
+            `Create a new default account override file (${hsAccountFileName}) in the current working directory`,
+          idBased: (hsAccountFileName: string) =>
+            `Create a new default account override file (${hsAccountFileName}) in the current working directory, using the account with accountId "1234567"`,
+          nameBased: (hsAccountFileName: string) =>
+            `Create a new default account override file (${hsAccountFileName}) in the current working directory, using the account with name "MyAccount"`,
+        },
       },
     },
   },
   auth: {
-    describe: (configName: string) =>
-      `Configure authentication for your HubSpot account. This will update the ${configName} file that stores your account information.`,
+    describe: 'Configure authentication for your HubSpot account.',
+    verboseDescribe: (configName: string, authMethod: string) =>
+      `Configure authentication for a HubSpot account. This will update the ${configName} file that stores your account information.\n\nThe recommended authentication method is ${chalk.bold(authMethod)}, which uses an access token tied to a specific user account.`,
     errors: {
+      invalidAccountIdProvided: `--account must be a number.`,
+      globalConfigFileExists: (accountAuthCommand: string) =>
+        `You are using our new global configuration for account management, which is not compatible with this command. Please use ${uiCommandReference(accountAuthCommand)} instead.`,
       noConfigFileFound:
         'No config file was found. To create a new config file, use the "hs init" command.',
       unsupportedAuthType: (type: string, supportedProtocols: string) =>
@@ -180,6 +355,9 @@ export const commands = {
       account: {
         describe: 'HubSpot account to authenticate',
       },
+      personalAccessKey: {
+        describe: 'Enter existing personal access key',
+      },
     },
     success: {
       configFileUpdated: (
@@ -193,6 +371,23 @@ export const commands = {
   config: {
     describe: 'Commands for managing the CLI config file.',
     subcommands: {
+      migrate: {
+        describe: `Migrate from the deprecated ${DEFAULT_HUBSPOT_CONFIG_YAML_FILE_NAME} file to the new global config file at ${GLOBAL_CONFIG_PATH}.`,
+        verboseDescribe: `This command will create or update the global configuration file in your root directory. It will archive the current config as ${ARCHIVED_HUBSPOT_CONFIG_YAML_FILE_NAME}.`,
+        errors: {
+          noConfigToMigrate: `No ${DEFAULT_HUBSPOT_CONFIG_YAML_FILE_NAME} was found. There is nothing to migrate.`,
+          configNotFound: (configPath: string) =>
+            `A configuration file at ${configPath} could not be found. Please try again with a valid file path.`,
+        },
+        options: {
+          force:
+            'Bypass prompts and overwrite any conflicting values in the global config with the deprecated config values.',
+        },
+        examples: {
+          default: `Migrate from the deprecated ${DEFAULT_HUBSPOT_CONFIG_YAML_FILE_NAME} file to the new global config file at ${GLOBAL_CONFIG_PATH}`,
+          configFlag: `Migrate a specific config file (specified with the config flag) to the new global config file at ${GLOBAL_CONFIG_PATH}`,
+        },
+      },
       set: {
         describe:
           'Set various configuration options within the hubspot CLI config file.',
@@ -213,6 +408,14 @@ export const commands = {
           allowAutoUpdates: {
             describe: 'Enable or disable auto updates',
           },
+          autoOpenBrowser: {
+            describe: 'Enable or disable automatic opening of the browser',
+          },
+        },
+        errors: {
+          invalidBoolean: (commandName: string, value: string) =>
+            `Invalid boolean value "${value}" for --${commandName}. Valid values are: true, false`,
+          invalidHTTPTimeout: `Invalid HTTP timeout value. Must be a number greater than 3000.`,
         },
       },
     },
@@ -238,6 +441,13 @@ export const commands = {
           lighthouseLinksTitle: 'Lighthouse links',
           failedTemplatePathsTitle:
             'The following templates could not be scored',
+          themeToCheckTitle: (themeToCheck: string, target: string) =>
+            `${themeToCheck} ${target} scores`,
+          themeTitle: (themeToCheck: string) => `Theme: ${themeToCheck}`,
+          poweredByLink: `Powered by ${uiLink(
+            'Google Lighthouse',
+            'https://developer.chrome.com/docs/lighthouse/overview/'
+          )}`,
         },
         errors: {
           targetOptionRequired: '[--target] is required for detailed view',
@@ -311,6 +521,46 @@ export const commands = {
         describe: 'Type of asset',
       },
     },
+    flags: {
+      templateType: {
+        describe:
+          'Template type for template creation - only used when type is template',
+      },
+      moduleLabel: {
+        describe: 'Label for module creation - only used when type is module',
+      },
+      reactType: {
+        describe:
+          'Whether to create a React module - only used when type is module',
+      },
+      contentTypes: {
+        describe: (contentTypes: readonly string[]) =>
+          `Content types where the module can be used (comma-separated list: ${contentTypes.join(', ')}) - only used when type is module`,
+      },
+      global: {
+        describe:
+          'Whether to create a global module - only used when type is module',
+      },
+      availableForNewContent: {
+        describe:
+          'Whether the template is available for new content - only used when type is template',
+      },
+      functionsFolder: {
+        describe:
+          'Folder to create functions in - only used when type is function',
+      },
+      filename: {
+        describe: 'Filename for the function - only used when type is function',
+      },
+      endpointMethod: {
+        describe:
+          'HTTP method for the function endpoint - only used when type is function',
+      },
+      endpointPath: {
+        describe:
+          'API endpoint path for the function - only used when type is function',
+      },
+    },
     subcommands: {
       apiSample: {
         folderOverwritePrompt: (folderName: string) =>
@@ -345,9 +595,9 @@ export const commands = {
     },
   },
   customObject: {
-    betaMessage: `${chalk.bold('[BETA]')} The Custom Object CLI is currently in beta and is subject to change.`,
+    betaMessage: `The Custom Object CLI is currently in beta and is subject to change.`,
     describe: 'Commands for managing custom objects.',
-    seeMoreLink: 'View our docs to find out more.',
+    seeMoreLink: `${uiLink('View our docs to find out more', 'https://developers.hubspot.com/docs/api-reference/crm-custom-objects-v3/guide#custom-objects-api-guide')}`,
     subcommands: {
       create: {
         describe: 'Create custom object instances.',
@@ -585,7 +835,7 @@ export const commands = {
           uploadingFailed: 'Uploading failed',
         },
         logs: {
-          uploading: (src: string, dest: string, accountId: string) =>
+          uploading: (src: string, dest: string, accountId: number) =>
             `Uploading files from "${src}" to "${dest}" in the File Manager of account ${accountId}`,
         },
         positionals: {
@@ -598,7 +848,7 @@ export const commands = {
           },
         },
         success: {
-          upload: (src: string, dest: string, accountId: string) =>
+          upload: (src: string, dest: string, accountId: number) =>
             `Uploaded file from "${src}" to "${dest}" in the File Manager of account ${accountId}`,
           uploadComplete: (dest: string) =>
             `Uploading files to "${dest}" in the File Manager is complete`,
@@ -637,8 +887,8 @@ export const commands = {
         success: {
           deployed: (
             functionPath: string,
-            accountId: string,
-            buildTimeSeconds: string
+            accountId: number,
+            buildTimeSeconds: string | 0
           ) =>
             `Built and deployed bundle from package.json for ${functionPath} on account ${accountId} in ${buildTimeSeconds}s.`,
         },
@@ -695,11 +945,11 @@ export const commands = {
       clear: {
         describe: 'Clear all rows in a HubDB table.',
         logs: {
-          removedRows: (deletedRowCount: string, tableId: string) =>
+          removedRows: (deletedRowCount: number, tableId: number) =>
             `Removed ${deletedRowCount} rows from HubDB table ${tableId}`,
-          rowCount: (tableId: string, rowCount: string) =>
+          rowCount: (tableId: number, rowCount: number) =>
             `HubDB table ${tableId} now contains ${rowCount} rows`,
-          tableEmpty: (tableId: string) =>
+          tableEmpty: (tableId: number) =>
             `HubDB table ${tableId} is already empty`,
         },
         positionals: {
@@ -725,16 +975,17 @@ export const commands = {
           },
         },
         success: {
-          create: (tableId: string, accountId: string, rowCount: string) =>
+          create: (tableId: string, accountId: number, rowCount: number) =>
             `The table ${tableId} was created in ${accountId} with ${rowCount} rows`,
         },
       },
       delete: {
         describe: 'Delete a HubDB table.',
-        shouldDeleteTable: (tableId: string) =>
+        shouldDeleteTable: (tableId: number) =>
           `Proceed with deleting HubDB table ${tableId}?`,
         errors: {
-          delete: (tableId: string) => `Deleting the table ${tableId} failed`,
+          delete: (tableId: number | '') =>
+            `Deleting the table ${tableId} failed`,
         },
         positionals: {
           tableId: {
@@ -747,7 +998,7 @@ export const commands = {
           },
         },
         success: {
-          delete: (tableId: string, accountId: string) =>
+          delete: (tableId: string, accountId: number) =>
             `The table ${tableId} was deleted from ${accountId}`,
         },
       },
@@ -762,15 +1013,48 @@ export const commands = {
           },
         },
         success: {
-          fetch: (tableId: string, path: string) =>
+          fetch: (tableId: number, path: string) =>
             `Downloaded HubDB table ${tableId} to ${path}`,
         },
+      },
+      list: {
+        tables: `${chalk.bold('Tables')}:`,
+        describe: 'List HubDB tables.',
+        labels: {
+          label: 'Label',
+          id: 'ID',
+          name: 'Name',
+          columns: 'Columns',
+          rows: 'Rows',
+        },
+        success: (accountId: number) =>
+          `Showing tables for account ${accountId}:`,
+        noTables: (accountId: number) =>
+          `No tables found for account ${accountId}.`,
+        tablesDisplayed: (
+          displayed: number,
+          total: number,
+          truncated?: number
+        ) =>
+          `Displaying ${displayed} of ${total} tables${
+            truncated
+              ? `, the remaining ${truncated} tables were not displayed.`
+              : '.'
+          }`,
+        viewTablesLink: (baseUrl: string, accountId: number) =>
+          uiLink('Manage tables in HubSpot', `${baseUrl}/hubdb/${accountId}`),
       },
     },
   },
   init: {
-    describe: (configName: string) =>
-      `Configure authentication for your HubSpot account. This will create a ${configName} file to store your account information.`,
+    describe:
+      'Create a CLI config file and configure authentication for your HubSpot account.',
+    verboseDescribe: (
+      configName: string,
+      command: string,
+      authMethod: string
+    ) =>
+      `Configure authentication for a HubSpot account. This will create a ${configName} file to store your account information. To configure authentication for additional accounts, run ${command}.\n\nThe recommended authentication method is ${chalk.bold(authMethod)}, which uses an access token tied to a specific user account.`,
     options: {
       authType: {
         describe: 'Authentication mechanism',
@@ -788,7 +1072,7 @@ export const commands = {
     success: {
       configFileCreated: (configPath: string) =>
         `Created config file "${configPath}"`,
-      configFileUpdated: (account: string, authType: string) =>
+      configFileUpdated: (authType: string, account: string | number) =>
         `Connected account "${account}" using "${authType}" and set it as the default account`,
     },
     logs: {
@@ -796,14 +1080,16 @@ export const commands = {
         'To update an existing config file, use the "hs auth" command.',
     },
     errors: {
+      invalidAccountIdProvided: `--account must be a number.`,
       configFileExists: (configPath: string) =>
         `The config file ${configPath} already exists.`,
       bothConfigFilesNotAllowed: (path: string) =>
         `Unable to create config file, because there is an existing one at "${path}". To create a new config file, delete the existing one and try again.`,
+      globalConfigFileExists: `You are using our new global configuration for account management, which is not compatible with this command. Please use ${uiCommandReference('hs account auth')} instead.`,
     },
   },
   lint: {
-    issuesFound: (count: string) => `${count} issues found.`,
+    issuesFound: (count: number) => `${count} issues found.`,
     groupName: (path: string) => `Linting ${path}`,
     positionals: {
       path: {
@@ -824,7 +1110,7 @@ export const commands = {
   logs: {
     describe: 'View logs for a CMS serverless function.',
     errors: {
-      noLogsFound: (functionPath: string, accountId: string) =>
+      noLogsFound: (functionPath: string, accountId: number) =>
         `No logs were found for the function path "${functionPath}" in account "${accountId}".`,
     },
     examples: {
@@ -836,7 +1122,7 @@ export const commands = {
         'Get 10 most recent logs for function residing at /_hcms/api/my-endpoint',
     },
     endpointPrompt: 'Enter a serverless function endpoint:',
-    gettingLogs: (latest: string, functionPath: string) =>
+    gettingLogs: (latest: boolean | undefined, functionPath: string) =>
       `Getting ${latest ? 'latest ' : ''}logs for function with path: ${functionPath}.`,
     options: {
       compact: {
@@ -860,16 +1146,82 @@ export const commands = {
     tailLogs: (functionPath: string, accountId: string) =>
       `Waiting for log entries for "${functionPath}" on account "${accountId}".\n`,
   },
+  mcp: {
+    describe: 'Commands for managing HubSpot MCP servers.',
+    setup: {
+      describe: 'Setup the HubSpot development MCP servers.',
+      installingDocSearch: 'Adding the docs-search mcp server',
+      claudeCode: 'Claude Code',
+      cursor: 'Cursor',
+      windsurf: 'Windsurf',
+      vsCode: 'VSCode',
+      args: {
+        client: 'Target applications to configure',
+        docsSearch: 'Should the docs search mcp server be installed',
+      },
+      success: (derivedTargets: string[]) =>
+        `You can now use the HubSpot CLI MCP Server in ${derivedTargets.join(', ')}.  ${chalk.bold('You may need to restart these tools to apply the changes')}.`,
+      errors: {
+        needsMcpAccess: (accountId?: number) =>
+          `You must opt in to the developer MCP beta to use this feature on ${uiAccountDescription(accountId)}. Try again with a different account or ${uiLink('join the beta now', getProductUpdatesUrl('239890', accountId))}`,
+        needsNode20: `This feature requires node >=20`,
+        errorParsingJsonFIle: (filename: string, errorMessage: string) =>
+          `Unable to update ${chalk.bold(filename)} due to invalid JSON: ${errorMessage}`,
+      },
+      spinners: {
+        failedToConfigure: 'Failed to configure the HubSpot mcp server.',
+        // Claude
+        configuringClaudeCode: 'Configuring Claude Code...',
+        configuredClaudeCode: 'Configured Claude Code',
+        claudeCodeNotFound: 'Claude Code not found - skipping configuration',
+        claudeCodeInstallFailed:
+          'Claude Code CLI not working - skipping configuration',
+        failedToConfigureClaudeDesktop: 'Failed to configure Claude Desktop',
+        // Cursor
+        configuringCursor: 'Configuring Cursor...',
+        failedToConfigureCursor: 'Failed to configure Cursor',
+        configuredCursor: 'Configured Cursor',
+        alreadyInstalled:
+          'HubSpot CLI mcp server already installed, reinstalling',
+        // Windsurf
+        configuringWindsurf: 'Configuring Windsurf...',
+        failedToConfigureWindsurf: 'Failed to configure Windsurf',
+        configuredWindsurf: 'Configured Windsurf',
+        // VS Code
+        configuringVsCode: 'Configuring VSCode...',
+        failedToConfigureVsCode: 'Failed to configure VSCode',
+        configuredVsCode: 'Configured VSCode',
+        vsCodeNotFound: 'VSCode not found - skipping configuration',
+      },
+      prompts: {
+        targets:
+          '[--client] Which tools would you like to add the HubSpot CLI MCP server to?',
+        targetsRequired: 'Must choose at least one application to configure.',
+      },
+    },
+    start: {
+      errors: {
+        needsNode20: `This feature requires node >=20`,
+        serverFileNotFound: (serverPath: string) =>
+          `MCP server file not found at ${serverPath}`,
+        failedToStart: 'Failed to start MCP server',
+      },
+      startingServer: 'Starting HubSpot CLI MCP server...',
+      stopInstructions: 'Press Ctrl+C to stop the server',
+      stoppedSuccessfully: 'Stopped successfully.',
+      shuttingDown: 'Shutting down MCP server...',
+    },
+  },
   mv: {
     describe:
       'Move a remote file or folder in HubSpot. This feature is currently in beta and the CLI contract is subject to change.',
     errors: {
       sourcePathExists: (srcPath: string, destPath: string) =>
         `The folder "${srcPath}" already exists in "${destPath}".`,
-      moveFailed: (srcPath: string, destPath: string, accountId: string) =>
+      moveFailed: (srcPath: string, destPath: string, accountId: number) =>
         `Moving "${srcPath}" to "${destPath}" in account ${accountId} failed`,
     },
-    move: (srcPath: string, destPath: string, accountId: string) =>
+    move: (srcPath: string, destPath: string, accountId: number) =>
       `Moved "${srcPath}" to "${destPath}" in account ${accountId}`,
   },
   open: {
@@ -887,6 +1239,7 @@ export const commands = {
     selectLink: 'Select a link to open',
   },
   project: {
+    describe: `Commands for managing projects. For more information visit our documentation https://developers.hubspot.com/docs/getting-started/quickstart`,
     profile: {
       describe: 'Commands for managing project profiles',
       verboseDescribe: `Commands for managing project profiles\n\nProfiles are stored at the root of your project's source directory and they make configuration dynamic. Use them to couple specialized configurations of your project to specific HubSpot accounts.\n\nRun ${uiCommandReference('hs project profile add')} to get started!`,
@@ -970,6 +1323,10 @@ export const commands = {
           noProfilesFound: 'No profiles found in your project.',
           failedToDeleteProfile: (profileName: string) =>
             `Unable to delete profile ${chalk.bold(profileName)}. Please try again.`,
+          failedToDeleteProject: (accountId: number) =>
+            `Failed to delete the project from ${uiAccountDescription(
+              accountId
+            )}`,
         },
         positionals: {
           name: 'The name of the project profile',
@@ -979,30 +1336,49 @@ export const commands = {
     dev: {
       describe: 'Start local dev for the current project.',
       logs: {
-        betaMessage: 'HubSpot projects local development',
+        header: 'HubSpot projects local development',
         placeholderAccountSelection:
           'Using default account as target account (for now)',
-        learnMoreLocalDevServer:
-          'Learn more about the projects local dev server',
         accountTypeInformation:
           'Testing in a developer test account is strongly recommended, but you can use a sandbox account if your plan allows you to create one.',
-        learnMoreMessage: `\nVisit our ${uiLink('docs on Developer Test and Sandbox accounts', 'https://developers.hubspot.com/docs/getting-started/account-types')} to learn more.`,
+        learnMoreMessageV3: `Learn more about ${uiLink(
+          'HubSpot projects local dev',
+          'https://developers.hubspot.com/docs/developer-tooling/local-development/hubspot-cli/project-commands#start-a-local-development-server'
+        )} | ${uiLink('HubSpot account types', 'https://developers.hubspot.com/docs/getting-started/account-types')}`,
+        learnMoreMessageLegacy: uiLink(
+          'Learn more about the projects local dev server',
+          'https://developers.hubspot.com/docs/platform/project-cli-commands#start-a-local-development-server'
+        ),
+        profileProjectAccountExplanation: (
+          accountId: number,
+          profileName: string
+        ) =>
+          `Using account ${uiAccountDescription(accountId)} from profile ${chalk.bold(profileName)} for project upload`,
+        defaultProjectAccountExplanation: (accountId: number) =>
+          `Using default account ${uiAccountDescription(accountId)} for project upload`,
+        projectAccountFlagExplanation: (accountId: number) =>
+          `Using account ${uiAccountDescription(accountId)} provided by the --project-account flag for project upload`,
+        accountFlagExplanation: (accountId: number) =>
+          `Using account ${uiAccountDescription(accountId)} provided by the --account flag for project upload`,
+        defaultSandboxOrDevTestTestingAccountExplanation: (accountId: number) =>
+          `Using default account ${uiAccountDescription(accountId)} for testing`,
+        testingAccountFlagExplanation: (accountId: number) =>
+          `Using account ${uiAccountDescription(accountId)} provided by the --testing-account flag for testing`,
       },
       errors: {
         noProjectConfig:
           'No project detected. Please run this command again from a project directory.',
         noAccount: (accountId: number) =>
           `An error occurred while reading account ${uiAccountDescription(accountId)} from your config. Run ${uiCommandReference('hs auth')} to re-auth this account.`,
-        noAccountsInConfig: (authCommand: string) =>
-          `No accounts found in your config. Run ${chalk.bold(authCommand)} to configure a HubSpot account with the CLI.`,
+        noAccountsInConfig: `No accounts found in your config. Run ${uiCommandReference('hs auth')} to configure a HubSpot account with the CLI.`,
         invalidProjectComponents:
           'Projects cannot contain both private and public apps. Move your apps to separate projects before attempting local development.',
         noRunnableComponents: `No supported components were found in this project. Run ${uiCommandReference('hs project add')} to see a list of available components and add one to your project.`,
         accountNotCombined: `\nLocal development of unified apps is currently only compatible with accounts that are opted into the unified apps beta. Make sure that this account is opted in or switch accounts using ${uiCommandReference('hs account use')}.`,
         unsupportedAccountFlagLegacy:
-          'The --projectAccount and --testingAccount flags are not supported for projects with platform versions earlier than 2025.2.',
+          'The --project-account and --testing-account flags are not supported for projects with platform versions earlier than 2025.2.',
         unsupportedAccountFlagV3:
-          'The --account flag is is not supported supported for projects with platform versions 2025.2 and newer. Use --testingAccount and --projectAccount flags to specify accounts to use for local dev',
+          'The --account flag is is not supported supported for projects with platform versions 2025.2 and newer. Use --testing-account and --project-account flags to specify accounts to use for local dev',
       },
       examples: {
         default: 'Start local dev for the current project',
@@ -1030,7 +1406,13 @@ export const commands = {
       logs: {
         success: (projectName: string, projectDest: string) =>
           `Project ${chalk.bold(projectName)} was successfully created in ${projectDest}`,
-        welcomeMessage: 'Welcome to HubSpot Developer Projects!',
+        welcomeMessage: `\n${chalk.bold('Welcome to HubSpot Developer Projects!')}`,
+      },
+      prompts: {
+        parentComponents:
+          '[--project-base] What would you like in your project?',
+        emptyProject: 'Empty Project',
+        app: 'App',
       },
       examples: {
         default: 'Create a new project',
@@ -1045,11 +1427,27 @@ export const commands = {
           describe: 'Project name (cannot be changed)',
         },
         template: {
-          describe: 'The starting template',
+          describe:
+            'The starting template.  Only applies when platform version is less than 2025.2.',
         },
         templateSource: {
           describe:
             'Path to custom GitHub repository from which to create project template',
+        },
+        platformVersion: {
+          describe: 'The target platform version for the new project.',
+        },
+        projectBase: {
+          describe: 'The top level component to include in the project.',
+        },
+        distribution: {
+          describe: 'How the app will be distributed.',
+        },
+        auth: {
+          describe: 'Authentication model for the application.',
+        },
+        features: {
+          describe: `Features to include in the project. Only valid if project-base is ${PROJECT_WITH_APP}`,
         },
       },
     },
@@ -1070,21 +1468,18 @@ export const commands = {
           describe: 'Project name (cannot be changed)',
         },
       },
-      header: {
-        text: 'This command will migrate an app to the projects framework. It will walk you through the fields required to complete the migration and download the project source code into a directory of your choosing.',
-        link: 'Learn more about migrating apps to the projects framework',
-      },
-      deprecationWarning: (oldCommand: string, newCommand: string) =>
-        `The ${oldCommand} command is deprecated and will be removed. Use ${newCommand} going forward.`,
+      header: `This command will migrate an app to the projects framework. It will walk you through the fields required to complete the migration and download the project source code into a directory of your choosing.\n${uiLink('Learn more about migrating apps to the projects framework', 'https://developers.hubspot.com/docs/platform/migrate-a-public-app-to-projects')}`,
+      deprecationWarning: (platformVersion: string) =>
+        `The ${uiCommandReference('hs project migrate-app')} command is deprecated and will be removed. Use ${uiCommandReference(`hs app migrate --platform-version=${platformVersion}`)} going forward.`,
       migrationStatus: {
         inProgress: () =>
-          `Converting app configuration to ${chalk.bold('public-app.json')} component definition ...`,
+          `Converting app configuration to ${chalk.bold(LEGACY_PUBLIC_APP_FILE)} component definition ...`,
         success: () =>
           `${chalk.bold('Your app was converted and build #1 is deployed')}`,
         done: () =>
-          'Converting app configuration to public-app.json component definition ... DONE',
+          `Converting app configuration to ${LEGACY_PUBLIC_APP_FILE} component definition ... DONE`,
         failure: () =>
-          'Converting app configuration to public-app.json component definition ... FAILED',
+          `Converting app configuration to ${LEGACY_PUBLIC_APP_FILE} component definition ... FAILED`,
       },
       warning: {
         title: () =>
@@ -1092,7 +1487,7 @@ export const commands = {
         projectConversion: () =>
           `${chalk.bold('The selected app will be converted to a project component.')}`,
         appConfig: () =>
-          `All supported app configuration will be moved to the ${chalk.bold('public-app.json')} component definition file. Future updates to those features must be made through the project build and deploy pipeline, not the developer account UI.`,
+          `All supported app configuration will be moved to the ${chalk.bold(LEGACY_PUBLIC_APP_FILE)} component definition file. Future updates to those features must be made through the project build and deploy pipeline, not the developer account UI.`,
         buildAndDeploy:
           'This will create a new project with a single app component and immediately build and deploy it to your developer account (build #1).',
         existingApps: () =>
@@ -1105,6 +1500,18 @@ export const commands = {
       createAppPrompt:
         "Proceed with migrating this app to a project component (this process can't be aborted)?",
       projectDetailsLink: 'View project details in your developer account',
+      errors: {
+        noAppsForProject: (projectName: string) =>
+          `No apps associated with project ${projectName}`,
+        noAccountConfig:
+          'No account configuration found. Please check your account settings.',
+        projectAlreadyExists: (projectName: string) =>
+          `A project with name ${projectName} already exists. Please choose another name.`,
+        invalidApp: (appId: number) =>
+          `Could not migrate appId ${appId}. This app cannot be migrated at this time. Please choose another public app.`,
+        migrationFailed: 'Migration Failed',
+        notAllowedWithinProject: `This command cannot be run from within a project directory. Run the command again from outside a project directory. If you are trying to migrate a project, run ${uiCommandReference('hs project migrate')}`,
+      },
     },
     migrate: {
       preamble: (platformVersion: string) =>
@@ -1114,6 +1521,8 @@ export const commands = {
       errors: {
         noProjectConfig: (command: string) =>
           `No project detected. Please run this command again from a project directory.  If you are trying to migrate an app, run ${command}`,
+        noThemeMigrationAccess: (accountId?: number) =>
+          `This project contains a CMS theme. You must opt in to theme migration beta to continue updating it on ${uiAccountDescription(accountId)}. Try again with a different account or ${uiLink('join the beta now', getProductUpdatesUrl('253920', accountId))}`,
       },
       examples: {
         default:
@@ -1134,12 +1543,10 @@ export const commands = {
         },
       },
       cloneStatus: {
-        inProgress: () =>
-          `Cloning app configuration to ${chalk.bold('public-app.json')} component definition ...`,
-        done: 'Cloning app configuration to public-app.json component definition ... DONE',
+        inProgress: `Cloning app configuration to ${chalk.bold(LEGACY_PUBLIC_APP_FILE)} component definition ...`,
+        done: `Cloning app configuration to ${LEGACY_PUBLIC_APP_FILE} component definition ... DONE`,
         success: (dest: string) => `Your cloned project was created in ${dest}`,
-        failure:
-          'Cloning app configuration to public-app.json component definition ... FAILED',
+        failure: `Cloning app configuration to ${LEGACY_PUBLIC_APP_FILE} component definition ... FAILED`,
       },
       errors: {
         invalidAccountTypeTitle: () =>
@@ -1151,6 +1558,8 @@ export const commands = {
           `Only public apps created in a developer account can be converted to a project component. Select a connected developer account with ${useCommand} or ${authCommand} and try again.`,
         couldNotWriteConfigPath: (configPath: string) =>
           `Failed to write project config at ${configPath}`,
+        noAccountConfig: (accountId: number) =>
+          `No account config found for ${uiAccountDescription(accountId)}`,
       },
     },
     add: {
@@ -1163,23 +1572,42 @@ export const commands = {
           describe:
             "The path to the component type's location within the hubspot-project-components Github repo: https://github.com/HubSpot/hubspot-project-components",
         },
+        distribution: {
+          describe: 'The distribution method for the application.',
+        },
+        auth: {
+          describe: 'The authentication type for the application.',
+        },
+        features: {
+          describe: 'Which features to include with the application.',
+        },
       },
       creatingComponent: (projectName: string) =>
-        `Adding a new component to ${chalk.bold(projectName)}`,
-      success: (componentName: string) =>
-        `${componentName} was successfully added to your project.`,
+        `\nAdding a new app feature to ${chalk.bold(projectName)}\n`,
+      success: (componentName: string, multiple: boolean = false) =>
+        `${componentName || 'An app'} ${multiple ? 'were' : 'was'} successfully added to your ${componentName ? 'app' : 'project'}.`,
       error: {
         failedToDownloadComponent:
-          'Failed to download project component. Please try again later.',
+          'Failed to download project. Please try again later.',
+        invalidComponentType: (componentType: string) =>
+          `'${componentType}' is not a valid project component type.`,
+        maxExceeded: (maxCount: number) =>
+          `This project has the maximum allowed(${maxCount})`,
+        authTypeNotAllowed: (authType: string) =>
+          `Auth type '${authType}' not allowed.`,
+        distributionNotAllowed: (dist: string) =>
+          `Distribution '${dist}' not allowed.`,
+        portalDoesNotHaveAccessToThisFeature: (accountId: number) =>
+          `The account ${uiAccountDescription(accountId)} does not have access to this feature.`,
         locationInProject:
           'This command must be run from within a project directory.',
         failedToFetchComponentList:
-          'Failed to fetch the list of available components. Please try again later.',
+          'Failed to fetch the list of available features. Please try again later.',
         projectContainsPublicApp:
           'This project contains a public app. This command is currently only compatible with projects that contain private apps.',
       },
       examples: {
-        default: 'Create a component within your project',
+        default: 'Create an app feature within your project',
         withFlags: 'Use --name and --type flags to bypass the prompt.',
       },
     },
@@ -1190,46 +1618,64 @@ export const commands = {
         deploying: (path: string) => `Deploying project at path: ${path}`,
       },
       errors: {
-        deploy: (details: string) => `Deploy error: ${details}`,
+        deploy: 'Deploy error: an unknown error occurred.',
         noBuilds: 'Deploy error: no builds for this project were found.',
         noBuildId: 'You must specify a build to deploy',
-        projectNotFound: (
-          projectName: string,
-          accountIdentifier: string,
-          command: string
-        ) =>
-          `The project ${chalk.bold(projectName)} does not exist in account ${accountIdentifier}. Run ${command} to upload your project files to HubSpot.`,
+        projectNotFound: (accountId: number, projectName: string) =>
+          `The project ${chalk.bold(projectName)} does not exist in account ${uiAccountDescription(accountId)}. Run ${uiCommandReference('hs project upload')} to upload your project files to HubSpot.`,
         buildIdDoesNotExist: (
-          buildId: string,
-          projectName: string,
-          linkToProject: string
+          accountId: number,
+          buildId: number,
+          projectName: string
         ) =>
-          `Build ${buildId} does not exist for project ${chalk.bold(projectName)}. ${linkToProject}`,
-        buildAlreadyDeployed: (buildId: string, linkToProject: string) =>
-          `Build ${buildId} is already deployed. ${linkToProject}`,
-        viewProjectsBuilds: 'View project builds in HubSpot',
+          `Build ${buildId} does not exist for project ${chalk.bold(projectName)}. ${uiLink(
+            'View project builds in HubSpot',
+            getProjectDetailUrl(projectName, accountId)!
+          )}`,
+        buildAlreadyDeployed: (
+          accountId: number,
+          buildId: number,
+          projectName: string
+        ) =>
+          `Build ${buildId} is already deployed. ${uiLink(
+            'View project builds in HubSpot',
+            getProjectDetailUrl(projectName, accountId)!
+          )}`,
+        deployContainsRemovals: (componentName: string) =>
+          `- This deploy would remove the ${chalk.bold(componentName)} component. To proceed, run the deploy command with the ${uiCommandReference('--force')} flag`,
+        deployBlockedHeader:
+          "This build couldn't be deployed because it will be too disruptive for existing users. Fix the following issues and try again:",
+        deployWarningsHeader: `Deploying this build might have unintended consequences for users. Review the following issues and run ${uiCommandReference('hs project deploy --force')} to try again:`,
+        deployIssueComponentGeneric: (uid: string, componentTypeName: string) =>
+          `- [${mapToUserFriendlyName(componentTypeName)}] ${chalk.bold('(' + uid + ')')}  reported issues with the deploy`,
+        deployIssueComponentWarning: (
+          uid: string,
+          componentTypeName: string,
+          message: string
+        ) =>
+          `- [${mapToUserFriendlyName(componentTypeName)}] ${chalk.bold('(' + uid + ')')} ${message}`,
       },
       examples: {
         default: 'Deploy the latest build of the current project',
         withOptions: 'Deploy build 5 of the project my-project',
       },
       options: {
-        build: {
-          describe: 'Project build ID to be deployed',
-        },
-        project: {
-          describe: 'Project name',
-        },
+        build: 'Project build ID to be deployed',
+        project: 'Project name',
+        profile: 'The profile to target with this deploy',
+        force:
+          'Skip warnings and force deploy. Use this carefully as it will bypass warnings for destructive actions.',
+        deployLatestBuild: 'Deploy the latest build of the current project',
       },
     },
     listBuilds: {
       describe: "List the project's builds.",
       continueOrExitPrompt: 'Press <enter> to load more, or ctrl+c to exit',
       viewAllBuildsLink: 'View all builds',
-      showingNextBuilds: (count: string, projectName: string) =>
+      showingNextBuilds: (count: number, projectName: string) =>
         `Showing the next ${count} builds for ${projectName}`,
       showingRecentBuilds: (
-        count: string,
+        count: number,
         projectName: string,
         viewAllBuildsLink: string
       ) =>
@@ -1273,7 +1719,8 @@ export const commands = {
       },
       logs: {
         showingLogs: 'Showing logs for:',
-        hubspotLogsDirectLink: 'View function logs in HubSpot',
+        hubspotLogsDirectLink: (url: string) =>
+          `${uiLink('View function logs in HubSpot', url)}`,
         noLogsFound: (name: string) => `No logs were found for "${name}"`,
       },
       table: {
@@ -1314,15 +1761,15 @@ export const commands = {
         default: 'Upload a project into your HubSpot account',
       },
       logs: {
-        buildSucceeded: (buildId: string) => `Build #${buildId} succeeded\n`,
+        buildSucceeded: (buildId: number) => `Build #${buildId} succeeded\n`,
         readyToGoLive: '🚀 Ready to take your project live?',
-        runCommand: (command: string) => `Run \`${command}\``,
+        runCommand: (command: string) =>
+          `Run \`${uiCommandReference(command)}\``,
         autoDeployDisabled: (deployCommand: string) =>
-          `Automatic deploys are disabled for this project. Run ${deployCommand} to deploy this build.`,
+          `Automatic deploys are disabled for this project. Run ${uiCommandReference(deployCommand)} to deploy this build.`,
       },
       errors: {
-        projectLockedError: () =>
-          `Your project is locked. This may mean that another user is running the ${chalk.bold('`hs project dev`')} command for this project. If this is you, unlock the project in Projects UI.`,
+        projectLockedError: `Your project is locked. This may mean that another user is running the ${uiCommandReference('hs project dev')} command for this project. If this is you, unlock the project in Projects UI.`,
       },
       options: {
         forceCreate: {
@@ -1331,6 +1778,9 @@ export const commands = {
         message: {
           describe:
             'Add a message when you upload your project and create a build',
+        },
+        profile: {
+          describe: 'Profile to target for this upload',
         },
       },
     },
@@ -1383,6 +1833,8 @@ export const commands = {
           `Failed to delete file "${remotePath}"`,
         deleteFolderFailed: (remotePath: string) =>
           `Failed to delete folder "${remotePath}"`,
+        v3ApiError: (platformVersion: string) =>
+          `${uiCommandReference('hs project watch')} is not supported for platform version '${platformVersion}' use ${uiCommandReference('hs project dev')} instead to develop locally. ${uiLink('How to develop locally', 'https://developers.hubspot.com/docs/guides/crm/ui-extensions/local-development')}`,
       },
     },
     download: {
@@ -1392,13 +1844,14 @@ export const commands = {
       },
       logs: {
         downloadCancelled: 'Cancelling project download',
-        downloadSucceeded: (buildId: string, projectName: string) =>
+        downloadSucceeded: (buildId: number, projectName: string) =>
           `Downloaded build "${buildId}" from project "${projectName}"`,
       },
       errors: {
         downloadFailed: 'Something went wrong downloading the project',
         projectNotFound: (projectName: string, accountId: string) =>
           `Your project ${chalk.bold(projectName)} could not be found in ${accountId}`,
+        noBuildIdToDownload: 'No build ID available for download',
       },
       warnings: {
         cannotDownloadWithinProject:
@@ -1463,25 +1916,68 @@ export const commands = {
       packageManagerNotInstalled: (packageManager: string, link: string) =>
         `This command depends on ${packageManager}, install ${chalk.bold(link)}`,
     },
+    validate: {
+      describe: 'Validate the project before uploading',
+      mustBeRanWithinAProject:
+        'This command must be run from within a project directory.',
+      badVersion:
+        'This command is only available for projects 2025.2 and later.',
+      examples: {
+        default: 'Validate the project before uploading',
+      },
+      success: (projectName: string) =>
+        `Project ${projectName} is valid and ready to upload`,
+      failure: (projectName: string) => `Project ${projectName} is invalid`,
+      options: {
+        profile: {
+          describe: 'The profile to target for this validation',
+        },
+      },
+    },
   },
   remove: {
-    describe: 'Delete a file or folder from HubSpot.',
-    deleted: (path: string, accountId: string) =>
-      `Deleted "${path}" from account ${accountId}`,
+    describe: 'Delete a file or folder from the HubSpot CMS.',
+    deleted: (path: string, accountId: number) =>
+      `Deleted "${path}" from account ${uiAccountDescription(accountId)}`,
     errors: {
-      deleteFailed: (path: string, accountId: string) =>
-        `Deleting "${path}" from account ${accountId} failed`,
+      deleteFailed: (path: string, accountId: number) =>
+        `Deleting "${path}" from account ${uiAccountDescription(accountId)} failed`,
     },
     positionals: {
-      path: {
-        describe: 'Remote hubspot path',
-      },
+      path: 'Remote hubspot path',
     },
   },
   sandbox: {
     describe: 'Commands for managing sandboxes.',
     subcommands: {
       create: {
+        describe: 'Create a sandbox account.',
+        failure: {
+          noAccountConfig: (accountId: number) =>
+            `No account config found for ${uiAccountDescription(accountId)}. Run ${uiCommandReference('hs auth')} to add it.`,
+          invalidAccountType: (accountType: string, accountName: string) =>
+            `Account ${accountName} is a ${accountType} account. Sandboxes can only be created from standard accounts.`,
+          noSandboxAccountConfig: (accountId: number) =>
+            `No account config found for ${uiAccountDescription(accountId)}. Run ${uiCommandReference('hs auth')} to add the sandbox account.`,
+          optionMissing: {
+            type: 'Type is required when using --force. Use --type=developer or --type=standard.',
+            name: 'Name is required when using --force. Use --name=YourSandboxName.',
+          },
+        },
+        options: {
+          force: {
+            describe: 'Skips all prompts and uses provided options.',
+          },
+          name: {
+            describe: 'Name of the sandbox account to create',
+          },
+          type: {
+            describe: 'Type of sandbox to create (developer or standard)',
+          },
+        },
+        examples: {
+          default: 'Creates a standard sandbox named MySandboxAccount.',
+        },
         developer: {
           loading: {
             add: (accountName: string) =>
@@ -1542,42 +2038,40 @@ export const commands = {
       delete: {
         describe: 'Delete a sandbox account.',
         debug: {
-          deleting: (account: string) =>
-            `Deleting sandbox account "${account}"`,
+          deleting: (account: number) =>
+            `Deleting sandbox account "${uiAccountDescription(account)}"`,
           error: 'Error deleting sandbox account:',
         },
         examples: {
           default: 'Deletes the sandbox account named MySandboxAccount.',
         },
-        confirm: (account: string) =>
-          `Delete sandbox ${chalk.bold(account)}? All data for this sandbox will be permanently deleted.`,
-        defaultAccountWarning: (account: string) =>
-          `The sandbox ${chalk.bold(account)} is currently set as the default account.`,
+        confirm: (account: number) =>
+          `Delete sandbox ${uiAccountDescription(account)}? All data for this sandbox will be permanently deleted.`,
+        defaultAccountWarning: (account: number) =>
+          `The sandbox ${uiAccountDescription(account)} is currently set as the default account.`,
         success: {
-          delete: (account: string, sandboxHubId: string) =>
+          delete: (account: string, sandboxHubId: number) =>
             `Sandbox "${account}" with portalId "${sandboxHubId}" was deleted successfully.`,
-          deleteDefault: (account: string, sandboxHubId: string) =>
+          deleteDefault: (account: string, sandboxHubId: number) =>
             `Sandbox "${account}" with portalId "${sandboxHubId}" was deleted successfully and removed as the default account.`,
           configFileUpdated: (account: string, configFilename: string) =>
             `Removed account ${account} from ${configFilename}.`,
         },
         failure: {
-          invalidUser: (accountName: string, parentAccountName: string) =>
-            `Couldn't delete ${accountName} because your account has been removed from ${parentAccountName} or your permission set doesn't allow you to delete the sandbox. To update your permissions, contact a super admin in ${parentAccountName}.`,
+          invalidUser: (account: number, parentAccount: number) =>
+            `Couldn't delete ${uiAccountDescription(account)} because your account has been removed from ${uiAccountDescription(parentAccount)} or your permission set doesn't allow you to delete the sandbox. To update your permissions, contact a super admin in ${uiAccountDescription(parentAccount)}.`,
           noAccount:
             'No account specified. Specify an account by using the --account flag.',
-          noSandboxAccounts: (authCommand: string) =>
-            `There are no sandboxes connected to the CLI. To add a sandbox, run ${authCommand}.`,
+          noSandboxAccounts: `There are no sandboxes connected to the CLI. To add a sandbox, run ${uiCommandReference('hs auth')}.`,
           noSandboxAccountId:
             "This sandbox can't be deleted from the CLI because we could not find the associated sandbox account.",
-          noParentAccount: (authCommand: string) =>
-            `This sandbox can't be deleted from the CLI because you haven't given the CLI access to its parent account. To do this, run ${authCommand} and add the parent account.`,
-          objectNotFound: (account: string) =>
-            `Sandbox ${chalk.bold(account)} may have been deleted through the UI. The account has been removed from the config.`,
+          noParentAccount: `This sandbox can't be deleted from the CLI because you haven't given the CLI access to its parent account. To do this, run ${uiCommandReference('hs auth')} and add the parent account.`,
+          objectNotFound: (account: number) =>
+            `Sandbox ${uiAccountDescription(account)} may have been deleted through the UI. The account has been removed from the config.`,
           noParentPortalAvailable: (command: string, url: string) =>
-            `This sandbox can't be deleted from the CLI because you haven't given the CLI access to its parent account. To do this, run ${command}. You can also delete the sandbox from the HubSpot management tool: ${chalk.bold(url)}.`,
-          invalidKey: (account: string, authCommand: string) =>
-            `Your personal access key for account ${chalk.bold(account)} is inactive. To re-authenticate, please run ${authCommand}.`,
+            `This sandbox can't be deleted from the CLI because you haven't given the CLI access to its parent account. To do this, run ${uiCommandReference(command)}. You can also delete the sandbox from the HubSpot management tool: ${chalk.bold(url)}.`,
+          invalidKey: (account: number | null | undefined) =>
+            `Your personal access key for account ${uiAccountDescription(account)} is inactive. To re-authenticate, please run ${uiCommandReference('hs auth')}.`,
         },
         options: {
           force: {
@@ -1611,6 +2105,14 @@ export const commands = {
             "The personal access key you provided doesn't include sandbox sync permissions.",
           instructions: (accountName: string, url: string) =>
             `To update CLI permissions for "${accountName}": \n- Go to ${url}, deactivate the existing personal access key, and create a new one that includes sandbox sync permissions. \n- Update the CLI config for this account by running ${chalk.bold('hs auth')} and entering the new key.\n`,
+        },
+      },
+      confirm: {
+        syncContactRecords: {
+          standard:
+            'Copy up to 5000 most recently updated contacts? This includes up to 100 of each of the following: associated deals, tickets, and companies.',
+          developer:
+            'Include up to 100 most recently updated contacts? This includes up to 100 of each of the following: associated deals, tickets, and companies. This can be done once per sandbox.',
         },
       },
     },
@@ -1698,8 +2200,8 @@ export const commands = {
         errors: {
           add: (secretName: string) =>
             `The secret "${secretName}" was not added`,
-          alreadyExists: (secretName: string, command: string) =>
-            `The secret "${secretName}" already exists, it's value can be modified with ${command}`,
+          alreadyExists: (secretName: string) =>
+            `The secret "${secretName}" already exists, it's value can be modified with ${uiCommandReference('hs secret update')}`,
         },
         positionals: {
           name: {
@@ -1707,8 +2209,8 @@ export const commands = {
           },
         },
         success: {
-          add: (secretName: string, accountIdentifier: string) =>
-            `The secret "${secretName}" was added to the HubSpot account: ${accountIdentifier}`,
+          add: (secretName: string, accountId: number) =>
+            `The secret "${secretName}" was added to the HubSpot account: ${uiAccountDescription(accountId)}`,
         },
       },
       delete: {
@@ -1729,8 +2231,8 @@ export const commands = {
           },
         },
         success: {
-          delete: (secretName: string, accountIdentifier: string) =>
-            `The secret "${secretName}" was deleted from the HubSpot account: ${accountIdentifier}`,
+          delete: (secretName: string, accountId: number) =>
+            `The secret "${secretName}" was deleted from the HubSpot account: ${uiAccountDescription(accountId)}`,
         },
       },
       list: {
@@ -1756,8 +2258,8 @@ export const commands = {
           },
         },
         success: {
-          update: (secretName: string, accountIdentifier: string) =>
-            `The secret "${secretName}" was updated in the HubSpot account: ${accountIdentifier}`,
+          update: (secretName: string, accountId: number) =>
+            `The secret "${secretName}" was updated in the HubSpot account: ${accountId}`,
           updateExplanation:
             'Existing serverless functions will start using this new value within 10 seconds.',
         },
@@ -1779,10 +2281,7 @@ export const commands = {
         success: (themePath: string, selectorsPath: string) =>
           `Selectors generated for ${themePath}, please double check the selectors generated at ${selectorsPath} before uploading the theme.`,
         positionals: {
-          path: {
-            describe:
-              "The path of the theme you'd like to generate an editor-preview.json for.",
-          },
+          path: "The path of the theme you'd like to generate an editor-preview.json for.",
         },
       },
       marketplaceValidate: {
@@ -1817,28 +2316,18 @@ export const commands = {
             `The path "${path}" is not a path to a directory`,
           noThemeComponents:
             'Your project has no theme components available to preview.',
+          uploadFailed: (src: string, dest: string) =>
+            `Uploading file "${src}" to "${dest}" failed`,
         },
         positionals: {
-          src: {
-            describe:
-              'Path to the local directory your theme is in, relative to your current working directory',
-          },
-          dest: {
-            describe:
-              'Path in HubSpot Design Tools. Can be a net new path. If you wish to preview a site page using your theme changes it must match the path of the theme used by the site.',
-          },
+          src: 'Path to the local directory your theme is in, relative to your current working directory',
+          dest: 'Path in HubSpot Design Tools. Can be a net new path. If you wish to preview a site page using your theme changes it must match the path of the theme used by the site.',
         },
         options: {
-          notify: {
-            describe:
-              'Log to specified file when a watch task is triggered and after workers have gone idle. Ex. --notify path/to/file',
-          },
-          noSsl: {
-            describe: 'Disable HTTPS',
-          },
-          port: {
-            describe: 'The port on which to start the local server',
-          },
+          notify:
+            'Log to specified file when a watch task is triggered and after workers have gone idle. Ex. --notify path/to/file',
+          noSsl: 'Disable HTTPS',
+          port: 'The port on which to start the local server',
         },
         initialUploadProgressBar: {
           start: 'Starting...',
@@ -1865,11 +2354,6 @@ export const commands = {
         logs: {
           validatingModule: (path: string) => `Validating module "${path}" \n`,
         },
-        options: {
-          json: {
-            describe: 'Output raw json data',
-          },
-        },
         results: {
           required: 'Required validation results:',
           recommended: 'Recommended validation results:',
@@ -1880,9 +2364,7 @@ export const commands = {
           noErrors: 'No errors',
         },
         positionals: {
-          src: {
-            describe: 'Path to the module within the Design Manager.',
-          },
+          src: 'Path to the module within the Design Manager.',
         },
       },
     },
@@ -1899,111 +2381,75 @@ export const commands = {
         `Uploading file "${src}" to "${dest}" failed`,
       someFilesFailed: (dest: string) =>
         `One or more files failed to upload to "${dest}" in the Design Manager`,
-      deleteFailed: (path: string, accountId: string) =>
-        `Deleting "${path}" from account ${accountId} failed`,
+      deleteFailed: (path: string, accountId: number) =>
+        `Deleting "${path}" from account ${uiAccountDescription(accountId)} failed`,
     },
     options: {
-      options: {
-        describe: 'Options to pass to javascript fields files',
-      },
-      saveOutput: {
-        describe:
-          "If true, saves all output from javascript fields files as 'fields.output.json'.",
-      },
-      convertFields: {
-        describe:
-          'If true, converts any javascript fields files contained in module folder or project root.',
-      },
-      clean: {
-        describe:
-          'Will delete the destination directory and its contents before uploading. This will also clear the global content associated with any global partial templates and modules.',
-      },
-      force: {
-        describe: 'Skips confirmation prompts when doing a clean upload.',
-      },
+      options: 'Options to pass to javascript fields files',
+      saveOutput:
+        "If true, saves all output from javascript fields files as 'fields.output.json'.",
+      convertFields:
+        'If true, converts any javascript fields files contained in module folder or project root.',
+      clean:
+        'Will delete the destination directory and its contents before uploading. This will also clear the global content associated with any global partial templates and modules.',
+      force: 'Skips confirmation prompts when doing a clean upload.',
     },
     previewUrl: (previewUrl: string) =>
       `To preview this theme, visit: ${previewUrl}`,
     positionals: {
-      src: {
-        describe:
-          'Path to the local file, relative to your current working directory.',
-      },
-      dest: {
-        describe: 'Path in HubSpot Design Tools, can be a net new path.',
-      },
+      src: 'Path to the local file, relative to your current working directory.',
+      dest: 'Path in HubSpot Design Tools, can be a net new path.',
     },
     success: {
-      fileUploaded: (src: string, dest: string, accountId: string) =>
-        `Uploaded file from "${src}" to "${dest}" in the Design Manager of account ${accountId}`,
+      fileUploaded: (src: string, dest: string, accountId: number) =>
+        `Uploaded file from "${src}" to "${dest}" in the Design Manager of account ${uiAccountDescription(accountId)}`,
       uploadComplete: (dest: string) =>
         `Uploading files to "${dest}" in the Design Manager is complete`,
     },
-    uploading: (src: string, dest: string, accountId: string) =>
-      `Uploading files from "${src}" to "${dest}" in the Design Manager of account ${accountId}`,
+    uploading: (src: string, dest: string, accountId: number) =>
+      `Uploading files from "${src}" to "${dest}" in the Design Manager of account ${uiAccountDescription(accountId)}`,
     notUploaded: (src: string) =>
       `There was an error processing "${src}". The file has not been uploaded.`,
-    cleaning: (filePath: string, accountId: string) =>
-      `Removing "${filePath}" from account ${accountId} and uploading local...`,
-    confirmCleanUpload: (filePath: string, accountId: string) =>
-      `You are about to delete the directory "${filePath}" and its contents on HubSpot account ${accountId} before uploading. This will also clear the global content associated with any global partial templates and modules. Are you sure you want to do this?`,
+    cleaning: (filePath: string, accountId: number) =>
+      `Removing "${filePath}" from account ${uiAccountDescription(accountId)} and uploading local...`,
+    confirmCleanUpload: (filePath: string, accountId: number) =>
+      `You are about to delete the directory "${filePath}" and its contents on HubSpot account ${uiAccountDescription(accountId)} before uploading. This will also clear the global content associated with any global partial templates and modules. Are you sure you want to do this?`,
   },
   watch: {
     describe:
       'Watch a directory on your computer for changes and upload the changed files to the HubSpot CMS.',
     errors: {
-      folderFailed: (src: string, dest: string, accountId: string) =>
-        `Initial uploading of folder "${src}" to "${dest}" in account ${accountId} had failures`,
-      fileFailed: (file: string, dest: string, accountId: string) =>
-        `Upload of file "${file}" to "${dest}" in account ${accountId} failed`,
+      folderFailed: (src: string, dest: string, accountId: number) =>
+        `Initial uploading of folder "${src}" to "${dest}" in account ${uiAccountDescription(accountId)} had failures`,
+      fileFailed: (file: string, dest: string, accountId: number) =>
+        `Upload of file "${file}" to "${dest}" in account ${uiAccountDescription(accountId)} failed`,
       destinationRequired: 'A destination directory needs to be passed',
       invalidPath: (path: string) =>
         `The "${path}" is not a path to a directory`,
     },
     options: {
-      disableInitial: {
-        describe:
-          'Disable the initial upload when watching a directory (default)',
-      },
-      initialUpload: {
-        describe: 'Upload directory before watching for updates',
-      },
-      notify: {
-        describe:
-          'Log to specified file when a watch task is triggered and after workers have gone idle. Ex. --notify path/to/file',
-      },
-      remove: {
-        describe:
-          'Will cause watch to delete files in your HubSpot account that are not found locally.',
-      },
-      convertFields: {
-        describe:
-          'If true, converts any javascript fields files contained in module folder or project root.',
-      },
-      saveOutput: {
-        describe:
-          "If true, saves all output from javascript fields files as 'fields.output.json'.",
-      },
-      options: {
-        describe: 'Options to pass to javascript fields files',
-      },
+      disableInitial:
+        'Disable the initial upload when watching a directory (default)',
+      initialUpload: 'Upload directory before watching for updates',
+      notify:
+        'Log to specified file when a watch task is triggered and after workers have gone idle. Ex. --notify path/to/file',
+      remove:
+        'Will cause watch to delete files in your HubSpot account that are not found locally.',
+      convertFields:
+        'If true, converts any javascript fields files contained in module folder or project root.',
+      saveOutput:
+        "If true, saves all output from javascript fields files as 'fields.output.json'.",
+      options: 'Options to pass to javascript fields files',
     },
     positionals: {
-      src: {
-        describe:
-          'Path to the local directory your files are in, relative to your current working directory',
-      },
-      dest: {
-        describe: 'Path in HubSpot Design Tools. Can be a net new path',
-      },
+      src: 'Path to the local directory your files are in, relative to your current working directory',
+      dest: 'Path in HubSpot Design Tools. Can be a net new path',
     },
     warnings: {
-      disableInitial: () =>
-        `Passing the "${chalk.bold('--disable-initial')}" option is no longer necessary. Running "${chalk.bold('hs watch')}" no longer uploads the watched directory by default.`,
-      initialUpload: () =>
-        `To upload the directory run "${chalk.bold('hs upload')}" beforehand or add the "${chalk.bold('--initial-upload')}" option when running "${chalk.bold('hs watch')}".`,
+      disableInitial: `Passing the "${chalk.bold('--disable-initial')}" option is no longer necessary. Running "${uiCommandReference('hs watch')}" no longer uploads the watched directory by default.`,
+      initialUpload: `To upload the directory run "${uiCommandReference('hs upload')}" beforehand or add the "${chalk.bold('--initial-upload')}" option when running "${uiCommandReference('hs watch')}".`,
       notUploaded: (path: string) =>
-        `The "${chalk.bold('hs watch')}" command no longer uploads the watched directory when started. The directory "${path}" was not uploaded.`,
+        `The "${uiCommandReference('hs watch')}" command no longer uploads the watched directory when started. The directory "${path}" was not uploaded.`,
     },
   },
   convertFields: {
@@ -2025,6 +2471,130 @@ export const commands = {
         `The path "${path}" specified in the "--src" flag is not a path to a file or directory`,
       missingSrc:
         'Please specify the path to your javascript fields file or directory with the --src flag.',
+    },
+  },
+  testAccount: {
+    describe: 'Commands for working with test accounts.',
+    subcommands: {
+      importData: {
+        describe: 'Import data into the CRM',
+        options: {
+          skipConfirm: {
+            describe: 'Skip the confirmation prompt',
+          },
+          filePath: {
+            describe: 'The path to the JSON file containing the import schema',
+          },
+        },
+      },
+    },
+    create: {
+      describe: 'Create a test account from a config file',
+      configPathPrompt:
+        '[--config-path] Enter the path to the test account config: ',
+      createTestAccountFromConfigPrompt:
+        'How would you like to create your test account?',
+      createFromConfigOption: 'Create test account from config file',
+      createFromScratchOption: 'Create test account from scratch',
+      errors: {
+        configFileNotFound: (configPath: string) =>
+          `No test account config file exists at ${configPath}. Create a test account config file with the ${uiCommandReference('hs test-account create-config')} command.`,
+        configFileParseFailed: (configPath: string) =>
+          `Failed to parse test account config file at ${configPath}`,
+        saveAccountToConfigFailure: (accountName: string) =>
+          `Failed to save test account config file to config at ${accountName}`,
+      },
+      polling: {
+        start: (testAccountName: string) =>
+          `Creating test account "${chalk.bold(testAccountName)}"...`,
+        syncing:
+          'Test account created! Syncing account data... (may take a few minutes - you can exit and the sync will continue)',
+        success: (testAccountName: string, testAccountId: number) =>
+          `Test account "${chalk.bold(testAccountName)}" successfully created with id: ${chalk.bold(testAccountId)}`,
+        createFailure: 'Failed to create test account.',
+      },
+      options: {
+        configPath: 'The path to the test account config',
+      },
+      example: (configPath: string) =>
+        `Create a test account from the config file at ${configPath}`,
+    },
+    createConfig: {
+      describe: 'Create a test account config file.',
+      pathPrompt: '[--path] Enter the name of the Test Account config file: ',
+      errors: {
+        pathError: 'Path is required',
+        pathFormatError: 'Path must end with .json',
+        failedToCreate: 'Failed to create test account config',
+        pathExistsError:
+          'A file already exists at this path. Please try again with a different path.',
+      },
+      success: {
+        configFileCreated: (path: string) =>
+          `Test account config successfully created at ${path}`,
+      },
+      options: {
+        name: 'The name of the test account',
+        description: 'The description of the test account',
+        path: 'The path to the test account config',
+      },
+      example: (name: string) =>
+        `Create a test account config file with the name "${name}"`,
+    },
+    delete: {
+      describe:
+        'Delete a test account from your HubSpot account and CLI config',
+      pathPrompt: '[--path] What is the path to the test account config?',
+      info: {
+        deletionCanceled: 'Deletion canceled by user',
+        accountNotFoundWithId: (id: number) =>
+          `No account was found with ID ${id}`,
+        replaceDefaultAccount: (
+          testAccountId: number,
+          parentAccountName: string
+        ) =>
+          `The removed test account ${chalk.bold(testAccountId)} was the default account. Replaced default account to parent account: ${chalk.bold(parentAccountName)}`,
+      },
+      prompts: {
+        selectTestAccounts: 'Select test account(s) to delete',
+        confirmDeletion:
+          'All data for the account will be permanently deleted. Any connected apps will have their access tokens revoked. Do you wish to proceed?',
+      },
+      errors: {
+        failedToDelete: (testAccountToDelete: number) =>
+          `Failed to delete test account with ID ${testAccountToDelete}`,
+        failedToSelectAccount: 'Failed to select a test account to delete',
+        noAccountsToDelete: (accountId: number) =>
+          `There are no test accounts associated with ${uiAccountDescription(accountId)} to delete. Try running ${uiCommandReference('hs account use')} to change your default account`,
+        failedToDeleteFromConfig: (testAccountToDelete: number) =>
+          `Failed to delete test account with ID ${testAccountToDelete} from the CLI config`,
+        failedToFetchTestAccounts: 'Failed to fetch developer test accounts',
+        testAccountNotFound: (nameOrId: string | number | null) =>
+          `Test account${nameOrId ? ` ${chalk.bold(nameOrId)}` : ''} not found in config. \nTry running ${uiCommandReference('hs account auth')} to add the account to config or visit ${uiLink('developer test accounts', 'https://app.hubspot.com/l/developer-test-accounts/')} to delete the test account.`,
+        parentAccountNotFound: (testAccountId: number) =>
+          `Parent account of test account ${chalk.bold(testAccountId)} not found in config. \nTry running ${uiCommandReference('hs account auth')} to add the parent account to config or visit ${uiLink('developer test accounts', 'https://app.hubspot.com/l/developer-test-accounts/')} to delete the test account.`,
+      },
+      success: {
+        testAccountDeletedFromHubSpot: (testAccountToDelete: number) =>
+          `Successfully deleted test account with ID ${testAccountToDelete}`,
+        testAccountDeletedFromConfig: (accountId: number) =>
+          `Successfully deleted test account with ID ${accountId} from the CLI config`,
+      },
+      options: {
+        name: 'The name of the test account (in your CLI config) to delete',
+        id: 'The id of the test account',
+      },
+      examples: {
+        withPositionalID: (testAccountToDelete: number) =>
+          `Delete a test account with id "${testAccountToDelete}" using positional argument`,
+        withPositionalName: (testAccountToDelete: string) =>
+          `Delete a test account with name "${testAccountToDelete}" using positional argument`,
+        withID: (testAccountToDelete: number) =>
+          `Delete a test account with the id "${testAccountToDelete}"`,
+        withName: (testAccountToDelete: string) =>
+          `Delete a test account with the name "${testAccountToDelete}"`,
+        withoutId: 'Delete a test account via a prompt',
+      },
     },
   },
   secrets: {
@@ -2819,6 +3389,13 @@ export const commands = {
 } as const satisfies LangObject;
 
 export const lib = {
+  parsing: {
+    unableToParseStringToNumber: 'Unable to parse string to number',
+  },
+  configMiddleWare: {
+    invalidAccountIdEnvironmentVariable:
+      'Unable to parse `HUBSPOT_ACCOUNT_ID` environment variable into a number',
+  },
   process: {
     exitDebug: (signal: string) =>
       `Attempting to gracefully exit. Triggered by ${signal}`,
@@ -2831,8 +3408,6 @@ export const lib = {
       `Skipping call to ${serverKey} because there are no compatible components in the project.`,
   },
   LocalDevManager: {
-    staticAuthAccountsMustMatch:
-      'You must test static auth apps in the account the project exists in',
     appNotFound: (accountId: number, appUid: string | undefined) =>
       `Unable to find app with uid ${appUid} in account ${uiAccountDescription(accountId)}`,
     failedToInitialize: 'Missing required arguments to initialize Local Dev',
@@ -2858,6 +3433,16 @@ export const lib = {
         'View project in HubSpot',
         getProjectDetailUrl(name, accountId) || ''
       ),
+    viewLocalDevUILink: (accountId: number, showWelcomeScreen: boolean) =>
+      uiLink(
+        'View local dev session in HubSpot',
+        getLocalDevUiUrl(accountId, showWelcomeScreen)
+      ),
+    localDevUIAutoMessage: (accountId: number, showWelcomeScreen: boolean) =>
+      `Opening your ${uiLink(
+        'local dev session in HubSpot',
+        getLocalDevUiUrl(accountId, showWelcomeScreen)
+      )}...`,
     viewTestAccountLink: 'View developer test account in HubSpot',
     exitingStart: 'Stopping local dev server ...',
     exitingSucceed: 'Successfully exited',
@@ -2872,7 +3457,7 @@ export const lib = {
         'Changing project configuration requires a new project build.'
       ),
       defaultPublicAppWarning: (installCount: number, installText: string) =>
-        `${chalk.bold('Changing project configuration requires a new project build.')}\n\nThis will affect your public app's ${chalk.bold(`${installCount} existing ${installText}`)}. If your app has users in production, we strongly recommend creating a copy of this app to test your changes before proceding.`,
+        `${chalk.bold('Changing project configuration requires a new project build.')}\n\nThis will affect your public app's ${chalk.bold(`${installCount} existing ${installText}`)}. If your app has users in production, we strongly recommend creating a copy of this app to test your changes before proceeding.`,
       header: (warning: string) =>
         `${warning} To reflect these changes and continue testing:`,
       instructionsHeader: 'To reflect these changes and continue testing:',
@@ -2884,7 +3469,7 @@ export const lib = {
         installCount: number,
         accountText: string
       ) =>
-        `${chalk.bold('Changing project configuration requires creating a new project build.')}\n\nYour marketplace app is currently installed in ${chalk.bold(`${installCount} ${accountText}`)}. Any uploaded changes will impact your app's users. We strongly recommend creating a copy of this app to test your changes before proceding.`,
+        `${chalk.bold('Changing project configuration requires creating a new project build.')}\n\nYour marketplace app is currently installed in ${chalk.bold(`${installCount} ${accountText}`)}. Any uploaded changes will impact your app's users. We strongly recommend creating a copy of this app to test your changes before proceeding.`,
     },
     activeInstallWarning: {
       installCount: (appName: string, installCount: number) =>
@@ -2907,7 +3492,26 @@ export const lib = {
   },
   AppDevModeInterface: {
     defaultMarketplaceAppWarning: (installCount: number) =>
-      `\n\nYour marketplace app is currently installed in ${chalk.bold(`${installCount} ${installCount === 1 ? 'account' : 'accounts'}`)}. Any uploaded changes will impact your app's users. We strongly recommend creating a copy of this app to test your changes before proceding.`,
+      `Your marketplace app is currently installed in ${chalk.bold(`${installCount} ${installCount === 1 ? 'account' : 'accounts'}`)}. Any uploaded changes will impact your app's users. We strongly recommend creating a copy of this app to test your changes before proceeding.`,
+    autoInstallDeclined:
+      'You must install your app on your target test account to proceed with local development.',
+    autoInstallSuccess: (appName: string, targetTestAccountId: number) =>
+      `Successfully installed app ${appName} on account ${uiAccountDescription(targetTestAccountId)}\n`,
+    autoInstallError: (appName: string, targetTestAccountId: number) =>
+      `Error installing app ${appName} on account ${uiAccountDescription(targetTestAccountId)}. You may still be able to install your app in your browser.`,
+    fetchAppData: {
+      checking: (appName: string) =>
+        `Checking installations for your app ${chalk.bold(appName)}...`,
+      success: (appName: string, accountId: number) =>
+        `Your app ${chalk.bold(appName)} is installed on account ${uiAccountDescription(accountId, false)}`,
+      notInstalled: (appName: string, accountId: number) =>
+        `Your app ${chalk.bold(appName)} is not currently installed on account ${uiAccountDescription(accountId, false)}`,
+      activeInstallations: (appName: string, installCount: number) =>
+        `[WARNING] Your app ${chalk.bold(appName)} is installed in ${chalk.bold(`${installCount} ${installCount === 1 ? 'account' : 'accounts'}`)}`,
+      error: 'An error occurred while checking installations for your app',
+    },
+    distributionChanged: `Your app's distribution type has been changed from ${APP_DISTRIBUTION_TYPES.PRIVATE} to ${APP_DISTRIBUTION_TYPES.MARKETPLACE}. Once uploaded, this change cannot be reversed. Before uploading your project, confirm that you want to ${chalk.bold('permanantly')} change your app's distribution type. This will uninstall your app from all accounts.`,
+    authTypeChanged: `Your app's auth type has been changed from ${APP_AUTH_TYPES.STATIC} to ${APP_AUTH_TYPES.OAUTH}. Once uploaded, this change cannot be reversed. Before uploading your project, confirm that you want to ${chalk.bold('permanantly')} change your app's auth type. This will uninstall your app from all accounts.`,
   },
   LocalDevWebsocketServer: {
     errors: {
@@ -2921,6 +3525,8 @@ export const lib = {
         `Unsupported message received. Invalid JSON: ${data}`,
       portManagerNotRunning: (prefix: string) =>
         `${prefix}Error: PortManagerServing must be running before starting LocalDevWebsocketServer.`,
+      originNotAllowed: (origin?: string) =>
+        `Connections from ${origin ? `origin ${origin}` : 'this origin'} are not allowed.`,
     },
     logs: {
       startup: (port: number) =>
@@ -2930,70 +3536,97 @@ export const lib = {
   LocalDevProcess: {
     projectConfigMismatch: `Unable to upload project. The project config has been modified since starting ${uiCommandReference('hs project dev')}.`,
     uploadInitiated: 'Project upload initiated from Local Dev UI.',
+    deployInitiated: 'Project deploy initiated from Local Dev UI.',
     uploadFailed:
       'Project upload failed. To proceed with local development, fix any necessary errors, then re-upload your project.',
+    deployFailed:
+      'Project deploy failed. To proceed with local development, fix any necessary errors, then re-deploy your project.',
     uploadSuccess:
       'Project upload completed successfully. Resuming local dev...',
+    uploadSuccessAutoDeployDisabled:
+      'Project upload completed successfully, but auto-deploy is disabled for this project. Deploy your latest build to proceed with local development.',
+    deploySuccess:
+      'Project deploy completed successfully. Resuming local dev...',
+    noBuildToDeploy: 'Error deploying project. No build was found to deploy.',
   },
   localDevHelpers: {
-    confirmDefaultAccountIsTarget: {
-      configError: `An error occurred while reading the default account from your config. Run ${uiCommandReference('hs auth')} to re-auth this account`,
-      declineDefaultAccountExplanation: `To develop on a different account, run ${uiCommandReference('hs accounts use')} to change your default account, then re-run ${uiCommandReference('hs project dev')}.`,
+    project: {
+      compareLocalProjectToDeployed: {
+        noDeployedBuild: (projectName: string, accountIdentifier: string) =>
+          `Your project ${chalk.bold(projectName)} exists in ${accountIdentifier}, but has no deployed build. Projects must be successfully deployed to be developed locally. Address any build and deploy errors your project may have, then run ${uiCommandReference('hs project upload')} to upload and deploy your project.`,
+        checking: 'Checking if your deployed build is up to date...',
+        upToDate: 'Deployed build is up to date.',
+        notUpToDate: `Your project contains undeployed local changes.`,
+        notUpToDateExplanation: (profile?: string) =>
+          `Run ${uiCommandReference(`hs project upload ${profile ? `--profile ${profile}` : ''}`)} to upload these changes to HubSpot, then re-run ${uiCommandReference(`hs project dev ${profile ? `--profile ${profile}` : ''}`)} to continue local development.`,
+      },
+      createNewProjectForLocalDev: {
+        projectMustExistExplanation: (projectName: string, accountId: number) =>
+          `The project ${projectName} does not exist in the target account ${uiAccountDescription(
+            accountId
+          )}. This command requires the project to exist in the target account.`,
+        publicAppProjectMustExistExplanation: (
+          projectName: string,
+          accountId: number
+        ) =>
+          `The project ${projectName} does not exist in ${uiAccountDescription(
+            accountId
+          )}, the app developer account associated with your target account. This command requires the project to exist in this app developer account.`,
+        createProject: (projectName: string, accountIdentifier: string) =>
+          `Create new project ${projectName} in ${accountIdentifier}?`,
+        choseNotToCreateProject:
+          'Exiting because this command requires the project to exist in the target account.',
+        creatingProject: (projectName: string, accountIdentifier: string) =>
+          `Creating project ${projectName} in ${accountIdentifier}`,
+        createdProject: (projectName: string, accountIdentifier: string) =>
+          `Created project ${projectName} in ${accountIdentifier}`,
+        failedToCreateProject:
+          'Failed to create project in the target account.',
+      },
+      createInitialBuildForNewProject: {
+        initialUploadMessage: 'HubSpot Local Dev Server Startup',
+        projectLockedError:
+          'Your project is locked. This may mean that another user is running the `hs project watch` command for this project. If this is you, unlock the project in Projects UI.',
+        genericError: `An error occurred while creating the initial build for this project. Run ${uiCommandReference('hs project upload')} to try again.`,
+      },
     },
-    checkIfDefaultAccountIsSupported: {
-      publicApp: `This project contains a public app. Local development of public apps is only supported on developer accounts and developer test accounts. Change your default account using ${uiCommandReference('hs accounts use')}, or link a new account with ${uiCommandReference('hs auth')}.`,
-      privateApp: `This project contains a private app. Local development of private apps is not supported in developer accounts. Change your default account using ${uiCommandReference('hs accounts use')}, or link a new account with ${uiCommandReference('hs auth')}.`,
-    },
-    validateAccountOption: {
-      invalidPublicAppAccount: `This project contains a public app. The "--account" flag must point to a developer test account to develop this project locally. Alternatively, change your default account to an App Developer Account using ${uiCommandReference('hs accounts use')} and run ${uiCommandReference('hs project dev')} to set up a new Developer Test Account.`,
-      invalidPrivateAppAccount: `This project contains a private app. The account specified with the "--account" flag points to a developer account, which do not support the local development of private apps. Update the "--account" flag to point to a standard, sandbox, or developer test account, or change your default account by running ${uiCommandReference('hs accounts use')}.`,
-      nonSandboxWarning: `Testing in a sandbox is strongly recommended. To switch the target account, select an option below or run ${uiCommandReference('hs accounts use')} before running the command again.`,
-      publicAppNonDeveloperTestAccountWarning: `Local development of public apps is only supported in ${chalk.bold('developer test accounts')}.`,
-    },
-    createNewProjectForLocalDev: {
-      projectMustExistExplanation: (projectName: string, accountId: number) =>
-        `The project ${projectName} does not exist in the target account ${uiAccountDescription(
-          accountId
-        )}. This command requires the project to exist in the target account.`,
-      publicAppProjectMustExistExplanation: (
-        projectName: string,
-        accountId: number
-      ) =>
-        `The project ${projectName} does not exist in ${uiAccountDescription(
-          accountId
-        )}, the app developer account associated with your target account. This command requires the project to exist in this app developer account.`,
-      createProject: (projectName: string, accountIdentifier: string) =>
-        `Create new project ${projectName} in ${accountIdentifier}?`,
-      choseNotToCreateProject:
-        'Exiting because this command requires the project to exist in the target account.',
-      creatingProject: (projectName: string, accountIdentifier: string) =>
-        `Creating project ${projectName} in ${accountIdentifier}`,
-      createdProject: (projectName: string, accountIdentifier: string) =>
-        `Created project ${projectName} in ${accountIdentifier}`,
-      failedToCreateProject: 'Failed to create project in the target account.',
-    },
-    createInitialBuildForNewProject: {
-      initialUploadMessage: 'HubSpot Local Dev Server Startup',
-      projectLockedError:
-        'Your project is locked. This may mean that another user is running the `hs project watch` command for this project. If this is you, unlock the project in Projects UI.',
-      genericError: `An error occurred while creating the initial build for this project. Run ${uiCommandReference('hs project upload')} to try again.`,
-    },
-    checkIfParentAccountIsAuthed: {
-      notAuthedError: (
-        parentAccountId: number | string,
-        accountIdentifier: string
-      ) =>
-        `To develop this project locally, run ${uiCommandReference(
-          `hs auth --account=${parentAccountId}`
-        )} to authenticate the App Developer Account ${parentAccountId} associated with ${accountIdentifier}.`,
-    },
-    selectAccountTypePrompt: {
-      message: '[--account] Choose the type of account to test on',
-      developerTestAccountOption: 'Test on a developer test account',
-      sandboxAccountOption: 'Test on a sandbox account',
-      sandboxAccountOptionDisabled:
-        'Disabled - requires access to sandbox accounts',
-      productionAccountOption: `<${chalk.red('!')} Test on this account ${chalk.red('!')}>`,
+    account: {
+      checkIfDefaultAccountIsSupported: {
+        publicApp: `This project contains a public app. Local development of public apps is only supported on developer accounts and developer test accounts. Change your default account using ${uiCommandReference('hs accounts use')}, or link a new account with ${uiCommandReference('hs auth')}.`,
+        privateApp: `This project contains a private app. Local development of private apps is not supported in developer accounts. Change your default account using ${uiCommandReference('hs accounts use')}, or link a new account with ${uiCommandReference('hs auth')}.`,
+      },
+      validateAccountOption: {
+        invalidPublicAppAccount: `This project contains a public app. The "--account" flag must point to a developer test account to develop this project locally. Alternatively, change your default account to an App Developer Account using ${uiCommandReference('hs accounts use')} and run ${uiCommandReference('hs project dev')} to set up a new Developer Test Account.`,
+        invalidPrivateAppAccount: `This project contains a private app. The account specified with the "--account" flag points to a developer account, which do not support the local development of private apps. Update the "--account" flag to point to a standard, sandbox, or developer test account, or change your default account by running ${uiCommandReference('hs accounts use')}.`,
+        nonSandboxWarning: `Testing in a sandbox is strongly recommended. To switch the target account, select an option below or run ${uiCommandReference('hs accounts use')} before running the command again.`,
+        publicAppNonDeveloperTestAccountWarning: `Local development of public apps is only supported in ${chalk.bold('developer test accounts')}.`,
+      },
+      checkIfParentAccountIsAuthed: {
+        notAuthedError: (
+          parentAccountId: number | string,
+          accountIdentifier: string
+        ) =>
+          `To develop this project locally, run ${uiCommandReference(
+            `hs auth --account=${parentAccountId}`
+          )} to authenticate the App Developer Account ${parentAccountId} associated with ${accountIdentifier}.`,
+      },
+      selectAccountTypePrompt: {
+        message: '[--testing-account] Choose the type of account to test on',
+        developerTestAccountOption:
+          'Test on a developer test account (recommended)',
+        sandboxAccountOption: 'Test on a sandbox account',
+        sandboxAccountOptionDisabled:
+          'Disabled - requires access to sandbox accounts',
+        productionAccountOption: (accountId?: number) =>
+          `<${chalk.red('!')} Test on your project account: ${uiAccountDescription(
+            accountId,
+            false
+          )} ${chalk.red('!')}>`,
+      },
+      confirmDefaultAccountIsTarget: {
+        configError: `An error occurred while reading the default account from your config. Run ${uiCommandReference('hs auth')} to re-auth this account`,
+        declineDefaultAccountExplanation: `To develop on a different account, run ${uiCommandReference('hs accounts use')} to change your default account, then re-run ${uiCommandReference('hs project dev')}.`,
+      },
     },
   },
   middleware: {
@@ -3042,14 +3675,39 @@ export const lib = {
   },
   projects: {
     create: {
+      prompt: {
+        marketPlaceDistribution: 'On the HubSpot marketplace',
+        privateDistribution: 'Privately',
+        distribution:
+          '[--distribution] How would you like to distribute your application?',
+        auth: '[--auth] What type of authentication would you like your application to use',
+        staticAuth: 'Static Auth',
+        oauth: 'OAuth',
+      },
       errors: {
         noProjectsInConfig:
           'Unable to find any projects in the target repository\'s config.json file. Please ensure that there is a "projects" array in the config file.',
         missingConfigFileTemplateSource:
           'Failed to fetch the config.json file from the target repository. Please ensure that there is a valid config.json file at the root of the repository and try again.',
         missingPropertiesInConfig:
-          'Found misconfigured projects in the target repository\'s config.json file. Please ensure that each project in the target repository\'s config.json file contains the following properties: ["name", "label", "path", "insertPath"].',
+          'Found misconfigured projects in the target repository\'s config.json file. Please ensure that each project in the target repository\'s config.json file contains the following properties: ["name", "label", "path"].',
+        exceededMaxNumberOfApps: (max: number) =>
+          `This project currently has the maximum number of apps: ${max}`,
+        unableToParseAppConfig: (file: string) =>
+          `Unable to parse app file: ${file}`,
+        invalidAuthDistCombo: (authType: string, distribution: string) =>
+          `Invalid distribution and auth combination. Apps with distribution '${distribution}' must have auth '${authType}'`,
       },
+    },
+    add: {
+      nothingAdded: 'No features added.',
+    },
+    updateHsMetaFilesWithAutoGeneratedFields: {
+      header: 'Created the following components and features:',
+      applicationLog: (componentType: string, uid: string, name: string) =>
+        `  - Created ${chalk.bold(componentType)} with uid ${chalk.bold(uid)} and name ${chalk.bold(name)}`,
+      componentLog: (componentType: string, uid: string) =>
+        `  - Created ${chalk.bold(componentType)} feature with uid ${chalk.bold(uid)}`,
     },
     validateProjectConfig: {
       configNotFound: `Unable to locate a project configuration file. Try running again from a project directory, or run ${uiCommandReference('hs project create')} to create a new project.`,
@@ -3102,12 +3760,12 @@ export const lib = {
       ) =>
         `Build #${buildId} succeeded. ${chalk.bold('Automatically deploying')} to ${accountIdentifier}\n`,
       cleanedUpTempFile: (path: string) => `Cleaned up temporary file ${path}`,
-      viewDeploys: 'View all deploys for this project in HubSpot',
+      viewDeploys: 'view all deploys for this project in HubSpot',
       unableToFindAutodeployStatus: (
         buildId: number,
         viewDeploysLink: string
       ) =>
-        `Unable to find the auto deploy for build #${buildId}. This deploy may have been skipped. ${viewDeploysLink}.`,
+        `Unable to find the auto deploy for build #${buildId}. This deploy may have been skipped or blocked due to components being removed. Manually deploy with ${uiCommandReference('hs project deploy')} or ${viewDeploysLink}.`,
     },
   },
   projectUpload: {
@@ -3130,10 +3788,31 @@ export const lib = {
       compressing: (path: string) => `Compressing build files to "${path}"`,
       fileFiltered: (filename: string) =>
         `Ignore rule triggered for "${filename}"`,
+      legacyFileDetected: (filename: string, platformVersion: string) =>
+        `The ${chalk.bold(filename)} file is not supported on platform version ${chalk.bold(platformVersion)} and will be ignored.`,
     },
   },
   boxen: {
     failedToLoad: 'Failed to load boxen util.',
+  },
+  importData: {
+    errors: {
+      incorrectAccountType: (derivedAccountId: number) =>
+        `The account ${uiAccountDescription(derivedAccountId)} is not a standard account, developer test account, or app developer account.`,
+      failedToImportData: 'Failed to import data into portal.',
+      notDeveloperTestAccount: 'The account is not a developer test account.',
+      noAccountConfig: (accountId: number) =>
+        `No account config found for ${uiAccountDescription(accountId)}`,
+    },
+    inProgress: (portalId: number, fileNames: string[]) =>
+      `Importing data into ${uiAccountDescription(portalId)} from [${fileNames.join(
+        ', '
+      )}]`,
+    viewImportLink: (baseUrl: string, accountId: number, importId: string) =>
+      `Data import currently processing. You can view the status of your import ${uiLink(
+        'here',
+        `${baseUrl}/import/${accountId}/post/${importId}`
+      )}`,
   },
   ui: {
     betaTag: chalk.bold('[BETA]'),
@@ -3167,32 +3846,31 @@ export const lib = {
         accountsListCommand: {
           command: 'hs accounts list',
           message: (command: string) =>
-            `Run ${command} to see a list of configured HubSpot accounts`,
+            `${command} - See a list of configured HubSpot accounts`,
         },
         accountsUseCommand: {
           command: 'hs accounts use',
           message: (command: string) =>
-            `Run ${command} to set the Hubspot account that the CLI will target by default`,
+            `${command} - Set the Hubspot account that the CLI will target by default`,
         },
         authCommand: {
           command: 'hs auth',
           message: (command: string) =>
-            `Run ${command} to connect the CLI to additional HubSpot accounts`,
+            `${command} - Connect the CLI to additional HubSpot accounts`,
         },
         feedbackCommand: {
           command: 'hs feedback',
           message: (command: string) =>
-            `Run ${command} to report a bug or leave feedback`,
+            `${command} - Report a bug or leave feedback`,
         },
         helpCommand: {
           command: 'hs help',
           message: (command: string) =>
-            `Run ${command} to see a list of available commands`,
+            `${command} - See a list of available commands`,
         },
         projectCreateCommand: {
           command: 'hs project create',
-          message: (command: string) =>
-            `Run ${command} to create a new project`,
+          message: (command: string) => `${command} - Create a new project`,
         },
         projectDeployCommand: {
           command: 'hs project deploy',
@@ -3202,22 +3880,22 @@ export const lib = {
         projectHelpCommand: {
           command: 'hs project --help',
           message: (command: string) =>
-            `Run ${command} to learn more about available project commands`,
+            `${command} - Learn more about available project commands`,
         },
         projectUploadCommand: {
           command: 'hs project upload',
           message: (command: string) =>
-            `Run ${command} to upload your project to HubSpot and trigger builds`,
+            `${command} - Upload your project to HubSpot and trigger builds`,
         },
         projectDevCommand: {
           command: 'hs project dev',
           message: (command: string) =>
-            `Run ${command} to set up your test environment and start local development`,
+            `${command} - Set up a test environment and start local development`,
         },
         projectInstallDepsCommand: {
           command: 'hs project install-deps',
           message: (command: string) =>
-            `Run ${command} to install dependencies for your project components`,
+            `${command} - Install all project dependencies`,
         },
         sampleProjects: {
           linkText: "HubSpot's sample projects",
@@ -3245,6 +3923,13 @@ export const lib = {
       noLogsFound: 'No logs found.',
     },
   },
+  buildAccount: {
+    createDeveloperTestAccountV3: {
+      syncFailure: 'Failed to sync developer test account',
+      pakFailure:
+        'Failed to generate personal access key for developer test account',
+    },
+  },
   configOptions: {
     enableOrDisableBooleanFieldPrompt: {
       message: (fieldName: string) =>
@@ -3257,54 +3942,102 @@ export const lib = {
     setAllowUsageTracking: {
       fieldName: 'usage tracking',
       success: (isEnabled: string) =>
-        `Allow usage tracking set to: "${isEnabled}"`,
+        `Successfully updated ${chalk.bold('allow usage tracking')} to ${chalk.bold(isEnabled)}`,
     },
     setAllowAutoUpdates: {
       fieldName: 'auto updates',
       success: (isEnabled: string) =>
-        `Allow auto updates set to: "${isEnabled}"`,
+        `Successfully updated ${chalk.bold('allow auto updates')} to ${chalk.bold(isEnabled)}`,
     },
     setDefaultCmsPublishMode: {
       promptMessage: 'Select CMS publish mode to be used as the default',
       error: (validModes: string) =>
         `The provided CMS publish mode is invalid. Valid values are ${validModes}.`,
-      success: (mode: string) => `Default mode updated to: ${mode}`,
+      success: (mode: string) =>
+        `Successfully updated ${chalk.bold('default CMS publish mode')} to ${chalk.bold(mode)}`,
     },
     setHttpTimeout: {
       promptMessage: 'Enter http timeout duration',
-      success: (timeout: string) => `HTTP timeout set to: ${timeout}`,
+      success: (timeout: string) =>
+        `Successfully updated ${chalk.bold('HTTP timeout')} to ${chalk.bold(timeout)}`,
+      error: (timeout: string) =>
+        `Invalid HTTP timeout value "${timeout}". Must be a number greater than 3000.`,
+    },
+    setAutoOpenBrowser: {
+      fieldName: 'auto open browser',
+      enabled: `Successfully updated ${chalk.bold('auto open browser')} to ${chalk.bold('enabled')}`,
+      disabled: `Successfully updated ${chalk.bold('auto open browser')} to ${chalk.bold('disabled')}`,
     },
   },
   commonOpts: {
     options: {
-      account: {
-        describe: 'HubSpot account id or name from config',
-      },
-      config: {
-        describe: 'Path to a config file',
-      },
-      overwrite: {
-        describe: 'Overwrite existing files',
-      },
+      account: 'HubSpot account id or name from config',
+      config: 'Path to a config file',
+      overwrite: 'Overwrite existing files',
       modes: {
-        describe: {
-          default: (modes: string) => `${modes}`,
-          read: (modes: string) => `Read from ${modes}`,
-          write: (modes: string) => `Write to ${modes}`,
-        },
+        default: (modes: string) => `${modes}`,
+        read: (modes: string) => `Read from ${modes}`,
+        write: (modes: string) => `Write to ${modes}`,
       },
-      qa: {
-        describe: 'Run command in QA mode',
-      },
-      useEnv: {
-        describe: 'Use environment variable config',
-      },
-      debug: {
-        describe: 'Set log level to debug',
-      },
+      qa: 'Run command in QA mode',
+      useEnv: 'Use environment variable config',
+      jsonOutput: 'Format output as JSON',
+      debug: 'Set log level to debug',
+    },
+  },
+  configMigrate: {
+    deprecatedConfigWarning: (deprecatedConfigPath: string) =>
+      `This command applies to global configuration, but we detected a deprecated config at ${deprecatedConfigPath}.`,
+    handleMigration: {
+      description: (archivedConfigName: string) =>
+        `We will migrate your deprecated config file to the new global configuration file location. This will create a new global configuration file in your root directory. Then it will archive the deprecated config as ${archivedConfigName} for you to manually cleanup at your convenience.`,
+      confirmPrompt: 'Migrate the deprecated config to the global location?',
+      success: 'Your deprecated config file has been successfully migrated.',
+    },
+    handleMergeConfigProperties: {
+      mergeConflictMessage: (count: number, propertyList: string) =>
+        `Conflict${count > 1 ? 's' : ''} detected for ${chalk.bold(propertyList)}.`,
+      mergeConfigConflictPrompt: (
+        property: string,
+        newValue: string,
+        oldValue: string
+      ) => `Change ${property} from ${newValue} to ${oldValue}?`,
+    },
+    handleMerge: {
+      description: (archivedConfigName: string) =>
+        `We will automatically merge the contents of your deprecated config file into your global configuration file. This will merge the configured accounts and settings into the global config. Then it will archive the deprecated config as ${archivedConfigName} for you to manually cleanup at your convenience.`,
+      confirmPrompt: 'Merge the deprecated config into your global config?',
+      skippedExistingAccounts: (accountIds: (string | number)[]) =>
+        `The following accounts were not merged because they already exist in the global config:${accountIds.map(id => `\n- ${uiAccountDescription(Number(id))}`).join('')}`,
+      success:
+        'Your deprecated config file has been successfully merged with the global config file.',
     },
   },
   prompts: {
+    promptUtils: {
+      errors: {
+        noSelectableChoices:
+          'Exiting prompt because no selectable choices are available',
+      },
+    },
+    importDataFilePathPrompt: {
+      promptContext: `To view the JSON schema for data imports, visit ${uiLink('the docs', 'https://developers.hubspot.com/docs/guides/api/crm/imports')}`,
+      promptMessage:
+        '[--file-path] Select the JSON file that will be used to import your data.',
+    },
+    confirmImportDataPrompt: {
+      message: (dataFileNames: string[], cliAccount: CLIAccount | null) =>
+        `You are importing [${dataFileNames.join(
+          ', '
+        )}] into ${uiAccountDescription(getAccountIdentifier(cliAccount))}. Continue?`,
+    },
+    importDataTestAccountSelectPrompt: {
+      errors: {
+        noAccountsFound: 'No accounts found.',
+        noChildTestAccountsFound: (parentAccountId: number) =>
+          `No developer test accounts found under the parent account ${uiAccountDescription(parentAccountId)}`,
+      },
+    },
     projectDevTargetAccountPrompt: {
       createNewSandboxOption: '<Test on a new development sandbox>',
       createNewDeveloperTestAccountOption:
@@ -3337,6 +4070,33 @@ export const lib = {
       keepingCurrentDefault: (accountName: string) =>
         `Account "${accountName}" will continue to be the default account`,
     },
+    createDeveloperTestAccountConfigPrompt: {
+      namePrompt: (withFlag: boolean = true) =>
+        `${withFlag ? '[--name] ' : ''}Enter the name of the Test Account:`,
+      descriptionPrompt: (withFlag: boolean = true) =>
+        `${withFlag ? '[--description] ' : ''}Enter the description of the Test Account:`,
+      useDefaultAccountLevelsPrompt: {
+        message:
+          'Would you like to create a default Test Account, or customize your own?',
+        default: 'Default (All Hubs, ENTERPRISE)',
+        manual: 'Customize my own',
+      },
+      tiersPrompt:
+        'Select an option per hub to customize tiers. If left blank, default is ENTERPRISE',
+      hubTypes: {
+        marketing: 'Marketing',
+        ops: 'Ops',
+        service: 'Service',
+        sales: 'Sales',
+        content: 'Content',
+      },
+      errors: {
+        allHubsRequired: 'Select a tier for each hub',
+        tiersError: 'Cannot have more than one tier per hub',
+        nameRequired:
+          'The name may not be blank. Please add a name for the Test Account.',
+      },
+    },
     accountNamePrompt: {
       enterAccountName:
         'Enter a unique name to reference this account in the CLI:',
@@ -3359,14 +4119,17 @@ export const lib = {
         'Enter the account ID for your account (the number under the DOMAIN column at https://app.hubspot.com/myaccounts-beta ): ',
       enterClientId: 'Enter your OAuth2 client ID: ',
       enterClientSecret: 'Enter your OAuth2 client secret: ',
-      enterPersonalAccessKey: 'Enter your personal access key: ',
+      enterPersonalAccessKey:
+        '[--personal-access-key] Enter your personal access key: ',
       selectScopes:
         'Select access scopes (see https://developers.hubspot.com/docs/methods/oauth2/initiate-oauth-integration#scopes)',
       personalAccessKeySetupTitle: 'HubSpot Personal Access Key Setup',
       personalAccessKeyBrowserOpenPrep:
-        "A personal access key is required to authenticate the CLI to interact with your HubSpot account. We'll open a secure page in your default browser where you can view and copy your personal access key.",
-      personalAccessKeyBrowserOpenPrompt:
-        'Open HubSpot to copy your personal access key?',
+        'A personal access key is required to authenticate the CLI to interact with your HubSpot account.',
+      personalAccessKeyPromptChoices: {
+        OPEN_BROWSER: 'Open HubSpot to copy your personal access key',
+        PASTE_EXISTING: 'Enter existing personal access key',
+      },
       logs: {
         openingWebBrowser: (url: string) =>
           `Opening ${url} in your web browser`,
@@ -3425,10 +4188,9 @@ export const lib = {
         languageRequired: "Please select API sample app's language",
       },
     },
-    createProjectPrompt: {
+    projectNameAndDestPrompt: {
       enterName: '[--name] Give your project a name: ',
       enterDest: '[--dest] Enter the folder to create the project in:',
-      selectTemplate: '[--template] Choose a project template: ',
       errors: {
         nameRequired: 'A project name is required',
         destRequired: 'A project dest is required',
@@ -3436,6 +4198,13 @@ export const lib = {
           'There is an existing project at this destination. Please provide a new path for this project.',
         invalidCharacters:
           'The selected destination contains invalid characters. Please provide a new path and try again.',
+      },
+    },
+    selectProjectTemplatePrompt: {
+      selectTemplate: '[--template] Choose a project template: ',
+      features:
+        '[--features] Which features would you like your app to include?',
+      errors: {
         invalidTemplate: (template: string) =>
           `[--template] Could not find template "${template}". Please choose an available template:`,
         projectTemplateRequired:
@@ -3475,12 +4244,18 @@ export const lib = {
       },
     },
     projectAddPrompt: {
-      selectType: '[--type] Select a component to add: ',
+      selectType: '[--type] Select an app feature to add: ',
+      selectFeatures: '[--features] Select an app feature to add: ',
       enterName: '[--name] Give your component a name: ',
       errors: {
         nameRequired: 'A component name is required',
+        componentRequired: 'Must select a feature to add',
+        noSelectableChoices:
+          'There are no available features that can be added to this project',
         invalidType: (type: string) =>
           `[--type] Could not find type "${type}". Please choose an available type:`,
+        cannotAddFeature: (feature: string, reasons: string | boolean) =>
+          `Cannot Add feature '${feature}' to project for the following reasons: ${reasons}`,
       },
     },
     secretPrompt: {
@@ -3533,10 +4308,18 @@ export const lib = {
     },
     installAppPrompt: {
       explanation:
-        'Local development requires this app to be installed in the target test account',
+        'Local development requires this app to be installed in the target test account.',
       reinstallExplanation:
         "This app's required scopes have been updated since it was last installed on the target test account. To avoid issues with local development, we recommend reinstalling the app with the updated scopes.",
+      staticAuthExplanation: (
+        projectAccountId: number,
+        testingAccountId: number,
+        projectName: string,
+        appUid: string
+      ) =>
+        `To install this static auth app, your testing account ${uiAccountDescription(testingAccountId)} must be on ${uiLink("this app's allowlist", getAppAllowlistUrl(projectAccountId, projectName, appUid))}.`,
       prompt: 'Open HubSpot to install this app?',
+      autoPrompt: 'Install this app in your target test account?',
       reinstallPrompt: 'Open HubSpot to reinstall this app?',
       decline: `To continue local development of this app, install it in your target test account and re-run ${chalk.bold('`hs project dev`')}`,
     },
@@ -3555,6 +4338,10 @@ export const lib = {
           'The selected destination contains invalid characters. Please provide a new path and try again.',
       },
     },
+  },
+  polling: {
+    timeoutError: (timeoutMs: number) =>
+      `Polling timed out after ${timeoutMs}ms.`,
   },
   convertFields: {
     positionals: {
@@ -3618,14 +4405,14 @@ export const lib = {
           invalidUser: (accountName: string, parentAccountName: string) =>
             `Couldn't create ${chalk.bold(accountName)} because your account has been removed from ${chalk.bold(parentAccountName)} or your permission set doesn't allow you to create the sandbox. To update your permissions, contact a super admin in ${chalk.bold(parentAccountName)}.`,
           limit: (accountName: string, limit: string) =>
-            `${chalk.bold(accountName)} reached the limit of ${limit} developer sandboxes. \n- To connect a developer sandbox to your HubSpot CLI, run ${chalk.bold('hs auth')} and follow the prompts.`,
+            `${chalk.bold(accountName)} reached the limit of ${limit} developer sandboxes. \n- To connect a developer sandbox to your HubSpot CLI, run ${uiCommandReference('hs auth')} and follow the prompts.`,
           alreadyInConfig: (accountName: string, limit: string) =>
-            `${chalk.bold(accountName)} reached the limit of ${limit} developer sandboxes. \n- To use an existing developer sandbox, run ${chalk.bold('hs accounts use')}.`,
+            `${chalk.bold(accountName)} reached the limit of ${limit} developer sandboxes. \n- To use an existing developer sandbox, run ${uiCommandReference('hs accounts use')}.`,
           scopes: {
             message:
               "The personal access key you provided doesn't include developer sandbox permissions.",
             instructions: (accountName: string | number, url: string) =>
-              `To update CLI permissions for "${accountName}": \n- Go to ${url}, deactivate the existing personal access key, and create a new one that includes developer sandbox permissions. \n- Update the CLI config for this account by running ${chalk.bold('hs auth')} and entering the new key.\n`,
+              `To update CLI permissions for "${accountName}": \n- Go to ${url}, deactivate the existing personal access key, and create a new one that includes developer sandbox permissions. \n- Update the CLI config for this account by running ${uiCommandReference('hs auth')} and entering the new key.\n`,
           },
           generic: 'An error occurred while creating a developer sandbox',
         },
@@ -3660,6 +4447,12 @@ export const lib = {
       },
     },
     sync: {
+      confirm: {
+        syncContactRecords: {
+          standard:
+            'Do you want to sync contact records from your production account?',
+        },
+      },
       loading: {
         add: (accountName: string) =>
           `Syncing sandbox ${chalk.bold(accountName)}`,
@@ -3827,21 +4620,38 @@ export const lib = {
     sourceContentsMoved: (newLocation: string) =>
       `The contents of your old source directory have been moved to ${newLocation}, move any required files to the new source directory.`,
     projectMigrationWarningTitle:
-      '⚠️ Important: Migrating to platformVersion 2025.2 is irreversible ⚠️',
+      'Important: Migrating to platformVersion 2025.2 is irreversible',
     projectMigrationWarning: uiBetaTag(
       `Running the ${uiCommandReference('hs project migrate')} command will permanently upgrade your project to platformVersion 2025.2. This action cannot be undone. To ensure you have access to your original files, they will be copied to a new directory (archive) for safekeeping.\n\nThis command will guide you through the process, prompting you to enter the required fields and will download the new project source code into your project source directory.`,
       false
     ),
+    exitWithoutMigrating: 'Exiting without migrating',
+    success: {
+      downloadedProject: (projectName: string, projectDest: string) =>
+        `Saved ${projectName} to ${projectDest}`,
+      themesMigrationSuccess: (platformVersion: string) =>
+        `Successfully migrated project to platformVersion ${chalk.bold(platformVersion)}. Upload your project using ${uiCommandReference('hs project upload')}`,
+    },
     errors: {
       project: {
         invalidConfig:
           'The project configuration file is invalid. Please check the config file and try again.',
         doesNotExist: (account: number) =>
           `Project does not exist in ${uiAccountDescription(account)}. Migrations are only supported for existing projects.`,
+        themesAlreadyMigrated:
+          'This project has already been migrated to the latest platform version.',
+        noProjectForThemesMigration:
+          'Theme migrations are only supported for projects. Please try again from a project directory.',
+        themesAndAppsNotAllowed:
+          'Support for migrating projects containing both themes and apps to the latest platform version is coming soon. Try again later.',
         multipleApps:
           'Multiple apps found in project, this is not allowed in 2025.2',
         alreadyExists: (projectName: string) =>
           `A project with name ${projectName} already exists. Please choose another name.`,
+        failedToMigrateThemes:
+          'Failed to migrate project themes. Please verify that your themes are properly formatted before trying again.',
+        failedToUpdateProjectConfig:
+          'Failed to update project config file. Please update the platformVersion in the project config file manually.',
       },
       unmigratableReasons: {
         upToDate: 'App is already up to date',
@@ -3857,7 +4667,6 @@ export const lib = {
       },
       noAppsEligible: (accountId: string, reasons: string[]) =>
         `No apps in account ${accountId} are currently migratable${reasons.length ? `\n  - ${reasons.join('\n  - ')}` : ''}`,
-
       invalidAccountTypeTitle: `${chalk.bold('Developer account not targeted')}`,
       invalidAccountTypeDescription: (
         useCommand: string,
@@ -3873,6 +4682,8 @@ export const lib = {
         `Your account ${account} isn't enrolled in the required product beta to access this command.`,
     },
     prompt: {
+      themesMigration: (count: number) =>
+        `Identified ${count} theme${count === 1 ? '' : 's'} to migrate. This will migrate all themes in the project.`,
       chooseApp: 'Which app would you like to migrate?',
       inputName: '[--name] What would you like to name the project?',
       inputDest: '[--dest] Where would you like to save the project?',
@@ -3881,6 +4692,8 @@ export const lib = {
       proceed: 'Would you like to proceed?',
     },
     spinners: {
+      checkingForMigratableComponents:
+        'Checking project for migratable components...',
       beginningMigration: 'Beginning migration',
       unableToStartMigration: 'Unable to begin migration',
       finishingMigration: 'Wrapping up migration',

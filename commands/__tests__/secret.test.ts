@@ -1,21 +1,20 @@
 import yargs, { Argv } from 'yargs';
-import addSecret from '../secret/addSecret';
-import deleteSecret from '../secret/deleteSecret';
-import listSecret from '../secret/listSecret';
-import updateSecret from '../secret/updateSecret';
-import secretCommands from '../secret';
+import addSecret from '../secret/addSecret.js';
+import deleteSecret from '../secret/deleteSecret.js';
+import listSecret from '../secret/listSecret.js';
+import updateSecret from '../secret/updateSecret.js';
+import secretCommands from '../secret.js';
 
-jest.mock('yargs');
-jest.mock('../secret/addSecret');
-jest.mock('../secret/deleteSecret');
-jest.mock('../secret/listSecret');
-jest.mock('../secret/updateSecret');
-jest.mock('../../lib/commonOpts');
+vi.mock('../secret/addSecret');
+vi.mock('../secret/deleteSecret');
+vi.mock('../secret/listSecret');
+vi.mock('../secret/updateSecret');
+vi.mock('../../lib/commonOpts');
 
-const commandSpy = jest
+const commandSpy = vi
   .spyOn(yargs as Argv, 'command')
   .mockReturnValue(yargs as Argv);
-const demandCommandSpy = jest
+const demandCommandSpy = vi
   .spyOn(yargs as Argv, 'demandCommand')
   .mockReturnValue(yargs as Argv);
 

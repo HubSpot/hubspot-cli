@@ -3,15 +3,15 @@ import {
   addAccountOptions,
   addConfigOptions,
   addUseEnvironmentOptions,
-} from '../../../lib/commonOpts';
-import projectUploadCommand from '../upload';
+  addJSONOutputOptions,
+} from '../../../lib/commonOpts.js';
+import projectUploadCommand from '../upload.js';
 
-jest.mock('yargs');
-jest.mock('../../../lib/commonOpts');
+vi.mock('../../../lib/commonOpts');
 
-const optionsSpy = jest.spyOn(yargs as Argv, 'options');
-const exampleSpy = jest.spyOn(yargs as Argv, 'example');
-const conflictsSpy = jest.spyOn(yargs as Argv, 'conflicts');
+const optionsSpy = vi.spyOn(yargs as Argv, 'options');
+const exampleSpy = vi.spyOn(yargs as Argv, 'example');
+const conflictsSpy = vi.spyOn(yargs as Argv, 'conflicts');
 
 describe('commands/project/upload', () => {
   describe('command', () => {
@@ -41,6 +41,9 @@ describe('commands/project/upload', () => {
 
       expect(addUseEnvironmentOptions).toHaveBeenCalledTimes(1);
       expect(addUseEnvironmentOptions).toHaveBeenCalledWith(yargs);
+
+      expect(addJSONOutputOptions).toHaveBeenCalledTimes(1);
+      expect(addJSONOutputOptions).toHaveBeenCalledWith(yargs);
     });
 
     it('should define force-create, message, and skip-validation options', () => {

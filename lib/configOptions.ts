@@ -3,14 +3,16 @@ import {
   updateAllowAutoUpdates,
   updateDefaultCmsPublishMode,
   updateHttpTimeout,
+  isConfigFlagEnabled,
+  updateAutoOpenBrowser,
 } from '@hubspot/local-dev-lib/config';
 import { CmsPublishMode } from '@hubspot/local-dev-lib/types/Files';
 import { CMS_PUBLISH_MODE } from '@hubspot/local-dev-lib/constants/files';
 import { commaSeparatedValues } from '@hubspot/local-dev-lib/text';
-import { trackCommandUsage } from './usageTracking';
-import { promptUser, listPrompt } from './prompts/promptUtils';
-import { lib } from '../lang/en';
-import { uiLogger } from './ui/logger';
+import { trackCommandUsage } from './usageTracking.js';
+import { promptUser, listPrompt } from './prompts/promptUtils.js';
+import { lib } from '../lang/en.js';
+import { uiLogger } from './ui/logger.js';
 
 async function enableOrDisableBooleanFieldPrompt(
   fieldName: string
@@ -144,6 +146,13 @@ async function enterTimeout(): Promise<string> {
       message: lib.configOptions.setHttpTimeout.promptMessage,
       type: 'input',
       default: 30000,
+      validate: (timeout: string) => {
+        const timeoutNum = parseInt(timeout, 10);
+        if (isNaN(timeoutNum) || timeoutNum < 3000) {
+          return lib.configOptions.setHttpTimeout.error(timeout);
+        }
+        return true;
+      },
     },
   ]);
 
@@ -170,4 +179,26 @@ export async function setHttpTimeout({
   updateHttpTimeout(newHttpTimeout);
 
   uiLogger.success(lib.configOptions.setHttpTimeout.success(newHttpTimeout));
+}
+
+export async function setAutoOpenBrowser({
+  accountId,
+  autoOpenBrowser,
+}: {
+  accountId: number;
+  autoOpenBrowser: boolean;
+}): Promise<void> {
+  trackCommandUsage('config-set-auto-open-browser', undefined, accountId);
+
+  updateAutoOpenBrowser(autoOpenBrowser);
+
+  uiLogger.success(
+    autoOpenBrowser
+      ? lib.configOptions.setAutoOpenBrowser.enabled
+      : lib.configOptions.setAutoOpenBrowser.disabled
+  );
+}
+
+export function isAutoOpenBrowserEnabled(): boolean {
+  return isConfigFlagEnabled('autoOpenBrowser', true);
 }

@@ -4,7 +4,7 @@ import { Environment } from '@hubspot/local-dev-lib/types/Config';
 type PrivateAppInstallUrlArgs = {
   targetAccountId: number;
   env: Environment;
-  appId: string;
+  appId: number;
 };
 
 type PublicAppInstallUrlArgs = {

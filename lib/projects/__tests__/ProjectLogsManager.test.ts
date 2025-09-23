@@ -1,6 +1,6 @@
-import { ProjectLogsManager } from '../ProjectLogsManager';
-import { getProjectConfig } from '../config';
-import { ensureProjectExists } from '../ensureProjectExists';
+import { ProjectLogsManager } from '../ProjectLogsManager.js';
+import { getProjectConfig } from '../config.js';
+import { ensureProjectExists } from '../ensureProjectExists.js';
 import { fetchProjectComponentsMetadata } from '@hubspot/local-dev-lib/api/projects';
 
 const SUBCOMPONENT_TYPES = {
@@ -16,9 +16,11 @@ const SUBCOMPONENT_TYPES = {
   REACT_EXTENSION: 'REACT_EXTENSION',
 } as const;
 
-jest.mock('../../projects/config');
-jest.mock('../../projects/ensureProjectExists');
-jest.mock('@hubspot/local-dev-lib/api/projects');
+import { Mock } from 'vitest';
+
+vi.mock('../../projects/config');
+vi.mock('../../projects/ensureProjectExists');
+vi.mock('@hubspot/local-dev-lib/api/projects');
 
 describe('lib/projects/ProjectLogsManager', () => {
   const accountId = 12345678;
@@ -62,9 +64,9 @@ describe('lib/projects/ProjectLogsManager', () => {
   beforeEach(() => {
     ProjectLogsManager.reset();
 
-    (getProjectConfig as jest.Mock).mockResolvedValue(projectConfig);
-    (ensureProjectExists as jest.Mock).mockResolvedValue(projectDetails);
-    (fetchProjectComponentsMetadata as jest.Mock).mockResolvedValue({
+    (getProjectConfig as Mock).mockResolvedValue(projectConfig);
+    (ensureProjectExists as Mock).mockResolvedValue(projectDetails);
+    (fetchProjectComponentsMetadata as Mock).mockResolvedValue({
       data: {
         topLevelComponentMetadata: [
           {
@@ -95,7 +97,7 @@ describe('lib/projects/ProjectLogsManager', () => {
     });
 
     it('should throw an error if there is a problem with the config', async () => {
-      (getProjectConfig as jest.Mock).mockResolvedValue({});
+      (getProjectConfig as Mock).mockResolvedValue({});
       await expect(async () =>
         ProjectLogsManager.init(accountId)
       ).rejects.toThrow(
@@ -113,7 +115,7 @@ describe('lib/projects/ProjectLogsManager', () => {
     });
 
     it('should throw an error if there is data missing from the project details', async () => {
-      (ensureProjectExists as jest.Mock).mockResolvedValue({});
+      (ensureProjectExists as Mock).mockResolvedValue({});
       await expect(async () =>
         ProjectLogsManager.init(accountId)
       ).rejects.toThrow(/There was an error fetching project details/);

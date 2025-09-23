@@ -1,19 +1,20 @@
 import readline from 'readline';
 import { logger, setLogLevel, LOG_LEVEL } from '@hubspot/local-dev-lib/logger';
-import { handleExit, handleKeypress, TERMINATION_SIGNALS } from '../process';
+import { handleExit, handleKeypress, TERMINATION_SIGNALS } from '../process.js';
+import { Mock, Mocked } from 'vitest';
 
-jest.mock('readline');
-jest.mock('@hubspot/local-dev-lib/logger');
+vi.mock('readline');
+vi.mock('@hubspot/local-dev-lib/logger');
 
-const mockedReadline = readline as jest.Mocked<typeof readline>;
-const mockedLogger = logger as jest.Mocked<typeof logger>;
-const mockedSetLogLevel = setLogLevel as jest.Mock;
-const processRemoveListenerSpy = jest.spyOn(process, 'removeAllListeners');
-const processOnSpy = jest.spyOn(process, 'on');
+const mockedReadline = readline as Mocked<typeof readline>;
+const mockedLogger = logger as Mocked<typeof logger>;
+const mockedSetLogLevel = setLogLevel as Mock;
+const processRemoveListenerSpy = vi.spyOn(process, 'removeAllListeners');
+const processOnSpy = vi.spyOn(process, 'on');
 
 describe('lib/process', () => {
   describe('handleExit()', () => {
-    const mockCallback = jest.fn();
+    const mockCallback = vi.fn();
 
     it('should set up listeners for all termination signals', () => {
       handleExit(mockCallback);
@@ -80,16 +81,16 @@ describe('lib/process', () => {
   });
 
   describe('handleKeypress()', () => {
-    const mockCallback = jest.fn();
+    const mockCallback = vi.fn();
 
     it('should set up keypress handling correctly', () => {
       // Mock process.stdin
       Object.defineProperty(process, 'stdin', {
         value: {
           isTTY: true,
-          setRawMode: jest.fn(),
-          on: jest.fn(),
-          removeAllListeners: jest.fn(),
+          setRawMode: vi.fn(),
+          on: vi.fn(),
+          removeAllListeners: vi.fn(),
         },
       });
 
@@ -118,8 +119,8 @@ describe('lib/process', () => {
       Object.defineProperty(process, 'stdin', {
         value: {
           isTTY: false,
-          on: jest.fn(),
-          removeAllListeners: jest.fn(),
+          on: vi.fn(),
+          removeAllListeners: vi.fn(),
         },
       });
 

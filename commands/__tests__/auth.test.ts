@@ -1,12 +1,11 @@
 import yargs, { Argv } from 'yargs';
-import { addConfigOptions, addTestingOptions } from '../../lib/commonOpts';
-import authCommand from '../auth';
+import { addConfigOptions, addTestingOptions } from '../../lib/commonOpts.js';
+import authCommand from '../auth.js';
 
-jest.mock('yargs');
-jest.mock('../../lib/commonOpts');
+vi.mock('../../lib/commonOpts');
 
-const optionsSpy = jest
-  .spyOn(yargs as Argv, 'options')
+const optionsSpy = vi
+  .spyOn(mockYargs, 'options')
   .mockReturnValue(yargs as Argv);
 
 describe('commands/auth', () => {
@@ -34,6 +33,12 @@ describe('commands/auth', () => {
           default: 'personalaccesskey',
         }),
         account: expect.objectContaining({ type: 'string' }),
+        'personal-access-key': expect.objectContaining({ type: 'string' }),
+        'disable-tracking': expect.objectContaining({
+          type: 'boolean',
+          hidden: true,
+          default: false,
+        }),
       });
 
       expect(addConfigOptions).toHaveBeenCalledTimes(1);

@@ -1,43 +1,49 @@
 import yargs, { Argv } from 'yargs';
-import deploy from '../project/deploy';
-import create from '../project/create';
-import upload from '../project/upload';
-import listBuilds from '../project/listBuilds';
-import logs from '../project/logs';
-import watch from '../project/watch';
-import download from '../project/download';
-import open from '../project/open';
-import dev from '../project/dev';
-import add from '../project/add';
-import migrateApp from '../project/migrateApp';
-import migrate from '../project/migrate';
-import cloneApp from '../project/cloneApp';
-import installDeps from '../project/installDeps';
-import profileCommands from '../project/profile';
-import projectCommand from '../project';
+import deploy from '../project/deploy.js';
+import create from '../project/create.js';
+import upload from '../project/upload.js';
+import listBuilds from '../project/listBuilds.js';
+import logs from '../project/logs.js';
+import watch from '../project/watch.js';
+import download from '../project/download.js';
+import open from '../project/open.js';
+import dev from '../project/dev/index.js';
+import add from '../project/add.js';
+import migrateApp from '../project/migrateApp.js';
+import migrate from '../project/migrate.js';
+import cloneApp from '../project/cloneApp.js';
+import installDeps from '../project/installDeps.js';
+import validate from '../project/validate.js';
+import profileCommands from '../project/profile.js';
+import projectCommand from '../project.js';
 
-jest.mock('yargs');
-jest.mock('../project/deploy');
-jest.mock('../project/create');
-jest.mock('../project/upload');
-jest.mock('../project/listBuilds');
-jest.mock('../project/logs');
-jest.mock('../project/watch');
-jest.mock('../project/download');
-jest.mock('../project/open');
-jest.mock('../project/dev');
-jest.mock('../project/add');
-jest.mock('../project/migrateApp', () => ({}));
-jest.mock('../project/cloneApp', () => ({}));
-jest.mock('../project/migrate', () => ({}));
-jest.mock('../project/installDeps');
-jest.mock('../project/profile');
-jest.mock('../../lib/commonOpts');
+vi.mock('../project/deploy');
+vi.mock('../project/create');
+vi.mock('../project/upload');
+vi.mock('../project/listBuilds');
+vi.mock('../project/logs');
+vi.mock('../project/watch');
+vi.mock('../project/download');
+vi.mock('../project/open');
+vi.mock('../project/dev');
+vi.mock('../project/add');
+vi.mock('../project/migrateApp', () => ({
+  default: {},
+}));
+vi.mock('../project/cloneApp', () => ({
+  default: {},
+}));
+vi.mock('../project/migrate', () => ({
+  default: {},
+}));
+vi.mock('../project/installDeps');
+vi.mock('../project/profile');
+vi.mock('../../lib/commonOpts');
 
-const commandSpy = jest
+const commandSpy = vi
   .spyOn(yargs as Argv, 'command')
   .mockReturnValue(yargs as Argv);
-const demandCommandSpy = jest
+const demandCommandSpy = vi
   .spyOn(yargs as Argv, 'demandCommand')
   .mockReturnValue(yargs as Argv);
 
@@ -49,10 +55,6 @@ describe('commands/project', () => {
   });
 
   describe('describe', () => {
-    it('should contain the beta tag', () => {
-      expect(projectCommand.describe).toContain('[BETA]');
-    });
-
     it('should provide a description', () => {
       expect(projectCommand.describe).toBeDefined();
     });
@@ -75,6 +77,7 @@ describe('commands/project', () => {
       cloneApp,
       installDeps,
       profileCommands,
+      validate,
     ];
 
     it('should demand the command takes one positional argument', () => {

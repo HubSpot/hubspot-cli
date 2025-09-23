@@ -1,17 +1,16 @@
 import yargs, { Argv } from 'yargs';
-import add from '../profile/add';
-import deleteProfile from '../profile/delete';
-import profileCommand from '../profile';
+import add from '../profile/add.js';
+import deleteProfile from '../profile/delete.js';
+import profileCommand from '../profile.js';
 
-jest.mock('yargs');
-jest.mock('../profile/add');
-jest.mock('../profile/delete');
-jest.mock('../../../lib/commonOpts');
+vi.mock('../profile/add');
+vi.mock('../profile/delete');
+vi.mock('../../../lib/commonOpts');
 
-const commandSpy = jest
+const commandSpy = vi
   .spyOn(yargs as Argv, 'command')
   .mockReturnValue(yargs as Argv);
-const demandCommandSpy = jest
+const demandCommandSpy = vi
   .spyOn(yargs as Argv, 'demandCommand')
   .mockReturnValue(yargs as Argv);
 
@@ -24,7 +23,7 @@ describe('commands/project', () => {
 
   describe('describe', () => {
     it('should not provide a description', () => {
-      expect(profileCommand.describe).not.toBeDefined();
+      expect(profileCommand.describe).toBeDefined();
     });
   });
 

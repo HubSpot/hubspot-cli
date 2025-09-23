@@ -20,19 +20,6 @@ en:
     account:
       describe: "Commands for managing configured accounts."
       subcommands:
-        auth:
-          describe: "Configure authentication for your HubSpot account."
-          verboseDescribe: "Configure authentication for a HubSpot account. This will create or update the global config file at {{ globalConfigPath }} that stores your account information.\n\nThe recommended authentication method is {{#bold}}{{ authMethod }}{{/bold}}, which uses an access token tied to a specific user account.\nIf a deprecated config file exists, you will be prompted to migrate it to the new global config file. If both deprecated and global config files exist, you will be prompted to merge them. If any conflicts exist between the two files, you will be prompted to reconcile them."
-          options:
-            account:
-              describe: "HubSpot account to authenticate"
-          errors:
-            failedToUpdateConfig: "Failed to update the configuration file. Please try again."
-            migrationNotConfirmed: "Did not migrate. Use the {{ authCommand }} command to update the deprecated config at {{ deprecatedConfigPath }}."
-            mergeNotConfirmed: "Did not merge. When you are ready to merge the deprecated config file with the global config file, run the {{ authCommand }} or {{ migrateCommand }} command."
-          success:
-            configFileCreated: "Created config file \"{{ configPath }}\""
-            configFileUpdated: "Connected account \"{{ account }}\" and set it as the default account"
         createOverride:
           describe: "Create a new default account override file ({{ hsAccountFileName }}) in the current working directory."
           success: "Default account override file created at {{ overrideFilePath }}"
@@ -156,7 +143,7 @@ en:
       verboseDescribe: "Configure authentication for a HubSpot account. This will update the {{ configName }} file that stores your account information.\n\nThe recommended authentication method is {{#bold}}{{ authMethod }}{{/bold}}, which uses an access token tied to a specific user account."
       errors:
         unsupportedAuthType: "Unsupported auth type: {{ type }}. The only supported authentication protocols are {{ supportedProtocols }}."
-        globalConfigFileExists: "A global config file exists at {{ configPath }}. To authorize an account, please use {{ authCommand }}."
+        globalConfigFileExists: "You are using our new global configuration for account management, which is not compatible with this command. Please use {{ accountAuthCommand }} instead."
       options:
         authType:
           describe: "Authentication method"
@@ -167,17 +154,6 @@ en:
     config:
       describe: "Commands for managing the CLI config file."
       subcommands:
-        migrate:
-          describe: "Migrate from the deprecated {{ deprecatedConfigPath }} file to the new global config file at {{ globalConfigPath }}."
-          verboseDescribe: "This command will create a new global configuration file in your root directory and rename the deprecated config to {{ archivedConfigPath }}. If any conflicting values are detected, we will prompt you to reconcile them unless the \"--force\" flag is supplied."
-          migrationAlreadyCompleted: "No {{ deprecatedConfigPath }} deprecated configuration file found. No migration necessary."
-          errors:
-            configNotFound: "A configuration file at {{ configPath }} could not be found. Please try again with a valid file path."
-          options:
-            force: "When merging a deprecated configuration file with an existing global configuration file, overwrite any conflicting values in the global config with the deprecated config values."
-          examples:
-            default: "Migrate from the deprecated {{ deprecatedConfigPath }} file to the new global config file at {{ globalConfigPath }}"
-            configFlag: "Migrate a specific config file (specified with the config flag) to the new global config file at {{ globalConfigPath }}"
         set:
           describe: "Set various configuration options within the hubspot.config.yml file."
           promptMessage: "Select a config option to update"
@@ -255,6 +231,27 @@ en:
           describe: "Name of new asset"
         type:
           describe: "Type of asset"
+      flags:
+        templateType:
+          describe: "Template type for template creation (page-template, email-template, partial, global-partial, blog-listing-template, blog-post-template, search-template, section) - only used when type is template"
+        moduleLabel:
+          describe: "Label for module creation - only used when type is module"
+        reactType:
+          describe: "Whether to create a React module - only used when type is module"
+        contentTypes:
+          describe: "Content types where the module can be used (comma-separated list: ANY, LANDING_PAGE, SITE_PAGE, BLOG_POST, BLOG_LISTING, EMAIL, KNOWLEDGE_BASE, QUOTE_TEMPLATE, CUSTOMER_PORTAL, WEB_INTERACTIVE, SUBSCRIPTION, MEMBERSHIP) - only used when type is module"
+        global:
+          describe: "Whether to create a global module - only used when type is module"
+        availableForNewContent:
+          describe: "Whether the template is available for new content"
+        functionsFolder:
+          describe: "Folder to create functions in - only used when type is function"
+        filename:
+          describe: "Filename for the function - only used when type is function"
+        endpointMethod:
+          describe: "HTTP method for the function endpoint - only used when type is function"
+        endpointPath:
+          describe: "API endpoint path for the function - only used when type is function"
       subcommands:
         apiSample:
           folderOverwritePrompt: "The folder with name \"{{ folderName }}\" already exists. Overwrite?"
@@ -532,7 +529,7 @@ en:
         updateConfig: "To update an existing config file, use the \"hs auth\" command."
       errors:
         configFileExists: "The config file {{ configPath }} already exists."
-        globalConfigFileExists: "A global config file already exists at {{ configPath }}. To specify a new local config file, delete the existing one and try again."
+        globalConfigFileExists: "You are using our new global configuration for account management, which is not compatible with this command. Please use {{ accountAuthCommand }} instead."
     lint:
       issuesFound: "{{ count }} issues found."
       groupName: "Linting {{ path }}"
@@ -705,29 +702,6 @@ en:
           examples:
             default: "Create a component within your project"
             withFlags: "Use --name and --type flags to bypass the prompt."
-        deploy:
-          describe: "Deploy a project build."
-          deployBuildIdPrompt: "[--build] Deploy which build?"
-          debug:
-            deploying: "Deploying project at path: {{ path }}"
-          errors:
-            deploy: "Deploy error: an unknown error occurred."
-            noBuilds: "Deploy error: no builds for this project were found."
-            noBuildId: "You must specify a build to deploy"
-            projectNotFound: "The project {{ projectName }} does not exist in account {{ accountIdentifier }}. Run {{ command }} to upload your project files to HubSpot."
-            buildIdDoesNotExist: "Build {{ buildId }} does not exist for project {{ projectName }}. {{ linkToProject }}"
-            buildAlreadyDeployed: "Build {{ buildId }} is already deployed. {{ linkToProject}}"
-            viewProjectsBuilds: 'View project builds in HubSpot'
-          examples:
-            default: "Deploy the latest build of the current project"
-            withOptions: "Deploy build 5 of the project my-project"
-          options:
-            build:
-              describe: "Project build ID to be deployed"
-            project:
-              describe: "Project name"
-            profile:
-              describe: "The profile to target with this deploy"
         listBuilds:
           describe: "List the project's builds."
           continueOrExitPrompt: "Press <enter> to load more, or ctrl+c to exit"
@@ -874,14 +848,6 @@ en:
           noProjectConfig: "No project detected. Run this command from a project directory."
           noPackageJsonInProject: "No dependencies to install. The project {{ projectName }} folder might be missing component or subcomponent files. {{ link }}"
           packageManagerNotInstalled: "This command depends on {{ packageManager }}, install {{#bold}}{{ link }}{{/bold}}"
-    remove:
-      describe: "Delete a file or folder from HubSpot."
-      deleted: "Deleted \"{{ path }}\" from account {{ accountId }}"
-      errors:
-        deleteFailed: "Deleting \"{{ path }}\" from account {{ accountId }} failed"
-      positionals:
-        path:
-          describe: "Remote hubspot path"
     sandbox:
       describe: "Commands for managing sandboxes."
       subcommands:
@@ -979,144 +945,6 @@ en:
           success:
             update: "The secret \"{{ secretName }}\" was updated in the HubSpot account: {{ accountIdentifier }}"
             updateExplanation: "Existing serverless functions will start using this new value within 10 seconds."
-    theme:
-      describe: "Commands for managing themes."
-      subcommands:
-        generateSelectors:
-          describe: "Automatically generates an editor-preview.json file for the given theme. The selectors this command generates are not perfect, so please edit editor-preview.json after running."
-          errors:
-            invalidPath: "Could not find directory \"{{ themePath }}\""
-            fieldsNotFound: "Unable to find theme's fields.json."
-            noSelectorsFound: "No selectors found."
-          success: "Selectors generated for {{ themePath }}, please double check the selectors generated at {{ selectorsPath }} before uploading the theme."
-          positionals:
-            path:
-              describe: "The path of the theme you'd like to generate an editor-preview.json for."
-        marketplaceValidate:
-          describe: "Validate a theme for the marketplace."
-          errors:
-            invalidPath: "The path \"{{ path }}\" is not a path to a folder in the Design Manager"
-          logs:
-            validatingTheme: "Validating theme \"{{ path }}\" \n"
-          results:
-            required: "Required validation results:"
-            recommended: "Recommended validation results:"
-            warnings:
-              file: "File: {{ file }}"
-              lineNumber: "Line number: {{ line }}"
-            noErrors: "No errors"
-          positionals:
-            path:
-              describe: "Path to the theme within the Design Manager."
-        preview:
-          describe: "Upload and watch a theme directory on your computer for changes and start a local development server to preview theme changes on a site."
-          errors:
-            invalidPath: "The path \"{{ path }}\" is not a path to a directory"
-            noThemeComponents: "Your project has no theme components available to preview."
-          positionals:
-            src:
-              describe: "Path to the local directory your theme is in, relative to your current working directory"
-            dest:
-              describe: "Path in HubSpot Design Tools. Can be a net new path. If you wish to preview a site page using your theme changes it must match the path of the theme used by the site."
-          options:
-            notify:
-              describe: "Log to specified file when a watch task is triggered and after workers have gone idle. Ex. --notify path/to/file"
-            noSsl:
-              describe: "Disable HTTPS"
-            port:
-              describe: "The port on which to start the local server"
-          initialUploadProgressBar:
-            start: "Starting..."
-            uploading: "Uploading..."
-            finish: "Complete!"
-          logs:
-            processExited: "Stopping dev server..."
-    module:
-      describe: "Commands for working with modules, including marketplace validation with the marketplace-validate subcommand."
-      subcommands:
-        marketplaceValidate:
-          describe: "Validate a module for the marketplace. Make sure to include the suffix .module in the path to the module within the Design Manager."
-          errors:
-            invalidPath: "The path \"{{ path }}\" is not a path to a module within the Design Manager."
-          logs:
-            validatingModule: "Validating module \"{{ path }}\" \n"
-          options:
-            json:
-              describe: "Output raw json data"
-          results:
-            required: "Required validation results:"
-            recommended: "Recommended validation results:"
-            warnings:
-              file: "File: {{ file }}"
-              lineNumber: "Line number: {{ line }}"
-            noErrors: "No errors"
-          positionals:
-            src:
-              describe: "Path to the module within the Design Manager."
-    upload:
-      describe: "Upload a folder or file from your computer to the HubSpot CMS."
-      errors:
-        destinationRequired: "A destination path needs to be passed"
-        fileIgnored: "The file \"{{ path }}\" is being ignored via an .hsignore rule"
-        invalidPath: "The path \"{{ path }}\" is not a path to a file or folder"
-        uploadFailed: "Uploading file \"{{ src }}\" to \"{{ dest }}\" failed"
-        someFilesFailed: "One or more files failed to upload to \"{{ dest }}\" in the Design Manager"
-        deleteFailed: "Deleting \"{{ path }}\" from account {{ accountId }} failed"
-      options:
-        options:
-          describe: "Options to pass to javascript fields files"
-        saveOutput:
-          describe: "If true, saves all output from javascript fields files as 'fields.output.json'."
-        convertFields:
-          describe: "If true, converts any javascript fields files contained in module folder or project root."
-        clean:
-          describe: "Will delete the destination directory and its contents before uploading. This will also clear the global content associated with any global partial templates and modules."
-        force:
-          describe: "Skips confirmation prompts when doing a clean upload."
-      previewUrl: "To preview this theme, visit: {{ previewUrl }}"
-      positionals:
-        src:
-          describe: "Path to the local file, relative to your current working directory."
-        dest:
-          describe: "Path in HubSpot Design Tools, can be a net new path."
-      success:
-        fileUploaded: "Uploaded file from \"{{ src }}\" to \"{{ dest }}\" in the Design Manager of account {{ accountId }}"
-        uploadComplete: "Uploading files to \"{{ dest }}\" in the Design Manager is complete"
-      uploading: "Uploading files from \"{{ src }}\" to \"{{ dest }}\" in the Design Manager of account {{ accountId }}"
-      notUploaded: "There was an error processing \"{{ src }}\". The file has not been uploaded."
-      cleaning: "Removing \"{{ filePath }}\" from account {{ accountId }} and uploading local..."
-      confirmCleanUpload: "You are about to delete the directory \"{{ filePath }}\" and its contents on HubSpot account {{ accountId }} before uploading. This will also clear the global content associated with any global partial templates and modules. Are you sure you want to do this?"
-    watch:
-      describe: "Watch a directory on your computer for changes and upload the changed files to the HubSpot CMS."
-      errors:
-        folderFailed: "Initial uploading of folder \"{{ src }}\" to \"{{ dest }}\" in account {{ accountId }} had failures"
-        fileFailed: "Upload of file \"{{ file }}\" to \"{{ dest }}\" in account {{ accountId }} failed"
-        destinationRequired: "A destination directory needs to be passed"
-        invalidPath: "The \"{{ path }}\" is not a path to a directory"
-      options:
-        disableInitial:
-          describe: "Disable the initial upload when watching a directory (default)"
-        initialUpload:
-          describe: "Upload directory before watching for updates"
-        notify:
-          describe: "Log to specified file when a watch task is triggered and after workers have gone idle. Ex. --notify path/to/file"
-        remove:
-          describe: "Will cause watch to delete files in your HubSpot account that are not found locally."
-        convertFields:
-          describe: "If true, converts any javascript fields files contained in module folder or project root."
-        saveOutput:
-          describe: "If true, saves all output from javascript fields files as 'fields.output.json'."
-        options:
-          describe: "Options to pass to javascript fields files"
-      positionals:
-        src:
-          describe: "Path to the local directory your files are in, relative to your current working directory"
-        dest:
-          describe: "Path in HubSpot Design Tools. Can be a net new path"
-      warnings:
-        disableInitial: "Passing the \"--disable-initial\" option is no longer necessary. Running \"hs watch\" no longer uploads the watched directory by default."
-        initialUpload: "To upload the directory run \"hs upload\" beforehand or add the \"--initial-upload\" option when running \"hs watch\"."
-        notUploaded: "The \"hs watch\" command no longer uploads the watched directory when started. The directory \"{{ path }}\" was not uploaded."
     convertFields:
       describe: "Converts a specific JavaScript fields file of a module or theme to JSON."
       positionals:
@@ -1155,8 +983,8 @@ en:
         uiExtensionLabel: "[UI Extension]"
         missingComponents: "Couldn't find the following components in the deployed build for this project: {{#bold}}'{{ missingComponents }}'{{/bold}}. This may cause issues in local development."
         defaultWarning: "{{#bold}}Changing project configuration requires a new project build.{{/bold}}"
-        defaultPublicAppWarning: "{{#bold}}Changing project configuration requires a new project build.{{/bold}}\n\nThis will affect your public app's {{#bold}}{{ installCount }} existing {{ installText }}{{/bold}}. If your app has users in production, we strongly recommend creating a copy of this app to test your changes before proceding."
-        defaultMarketplaceAppWarning: "{{#bold}}Changing project configuration requires creating a new project build.{{/bold}}\n\nYour marketplace app is currently installed in {{#bold}}{{ installCount }} {{ accountText }}{{/bold}}. Any uploaded changes will impact your app's users. We strongly recommend creating a copy of this app to test your changes before proceding."
+        defaultPublicAppWarning: "{{#bold}}Changing project configuration requires a new project build.{{/bold}}\n\nThis will affect your public app's {{#bold}}{{ installCount }} existing {{ installText }}{{/bold}}. If your app has users in production, we strongly recommend creating a copy of this app to test your changes before proceeding."
+        defaultMarketplaceAppWarning: "{{#bold}}Changing project configuration requires creating a new project build.{{/bold}}\n\nYour marketplace app is currently installed in {{#bold}}{{ installCount }} {{ accountText }}{{/bold}}. Any uploaded changes will impact your app's users. We strongly recommend creating a copy of this app to test your changes before proceeding."
         header: "{{ warning }} To reflect these changes and continue testing:"
         stopDev: "  * Stop {{ command }}"
         runUpload: "  * Run {{ command }}"
@@ -1203,7 +1031,7 @@ en:
         errors:
           noProjectsInConfig: "Unable to find any projects in the target repository's config.json file. Please ensure that there is a \"projects\" array in the config file."
           missingConfigFileTemplateSource: "Failed to fetch the config.json file from the target repository. Please ensure that there is a valid config.json file at the root of the repository and try again."
-          missingPropertiesInConfig: "Found misconfigured projects in the target repository's config.json file. Please ensure that each project in the target repository's config.json file contains the following properties: [\"name\", \"label\", \"path\", \"insertPath\"]."
+          missingPropertiesInConfig: "Found misconfigured projects in the target repository's config.json file. Please ensure that each project in the target repository's config.json file contains the following properties: [\"name\", \"label\", \"path\"]."
       validateProjectConfig:
         configNotFound: "Unable to locate a project configuration file. Try running again from a project directory, or run {{ createCommand }} to create a new project."
         configMissingFields: "The project configuration file is missing required fields."
@@ -1219,19 +1047,6 @@ en:
       logFeedbackMessage:
         feedbackHeader: "We'd love to hear your feedback!"
         feedbackMessage: "How are you liking the new projects and developer tools? \n > Run `{{#yellow}}hs feedback{{/yellow}}` to let us know what you think!\n"
-    projectBuildAndDeploy:
-      makePollTaskStatusFunc:
-        componentCountSingular: "Found 1 component in this project"
-        componentCount: "Found {{ numComponents }} components in this project"
-        successStatusText: "DONE"
-        failedStatusText: "FAILED"
-        errorFetchingTaskStatus: "An error occurred while fetching the status of the current {{ taskType }}. For more information, view this project in HubSpot by running {{ openCommand }}."
-      pollBuildAutodeployStatusError: "Error fetching autodeploy status for build #{{ buildId }}"
-      pollProjectBuildAndDeploy:
-        buildSucceededAutomaticallyDeploying: "Build #{{ buildId }} succeeded. {{#bold}}Automatically deploying{{/bold}} to {{ accountIdentifier }}\n"
-        cleanedUpTempFile: "Cleaned up temporary file {{ path }}"
-        viewDeploys: "View all deploys for this project in HubSpot"
-        unableToFindAutodeployStatus: "Unable to find the auto deploy for build #{{ buildId }}. This deploy may have been skipped. {{ viewDeploysLink }}."
     projectUpload:
       uploadProjectFiles:
         add: "Uploading {{#bold}}{{ projectName }}{{/bold}} project files to {{ accountIdentifier }}"
@@ -1244,12 +1059,14 @@ en:
         compressing: "Compressing build files to \"{{ path }}\""
         fileFiltered: "Ignore rule triggered for \"{{ filename }}\""
     ui:
-      betaTag: "{{#bold}}[BETA]{{/bold}}"
+      betaTag: "[BETA]"
+      betaTagWithStyle: "{{#bold}}[BETA]{{/bold}}"
       betaWarning:
         header: "{{#yellow}}***************************** WARNING ****************************{{/yellow}}"
         footer: "{{#yellow}}******************************************************************{{/yellow}}"
       infoTag: "{{#bold}}[INFO]{{/bold}}"
-      deprecatedTag: "{{#bold}}[DEPRECATED]{{/bold}}"
+      deprecatedTag: "[DEPRECATED]"
+      deprecatedTagWithStyle: "{{#bold}}[DEPRECATED]{{/bold}}"
       errorTag: "{{#bold}}[ERROR]{{/bold}}"
       deprecatedMessage: "The {{ command }} command is deprecated and will be disabled soon. {{ url }}"
       deprecatedDescription: "{{ message }}. The {{ command }} command is deprecated and will be disabled soon. {{ url }}"
@@ -1264,40 +1081,43 @@ en:
             message: "Use the {{ command }} option with any command to override the default account"
           accountsListCommand:
             command: "hs account list"
-            message: "Run {{ command }} to see a list of configured HubSpot accounts"
+            message: "{{ command }} - See a list of configured HubSpot accounts"
           accountsUseCommand:
             command: "hs account use"
-            message: "Run {{ command }} to set the Hubspot account that the CLI will target by default"
+            message: "{{ command }} - Set the Hubspot account that the CLI will target by default"
           accountAuthCommand:
             command: "hs account auth"
-            message: "Run {{ command }} to connect the CLI to additional HubSpot accounts"
+            message: "{{ command }} - Connect the CLI to additional HubSpot accounts"
           authCommand:
             command: "hs auth"
-            message: "Run {{ command }} to connect the CLI to additional HubSpot accounts"
+            message: "{{ command }} - Connect the CLI to additional HubSpot accounts"
           feedbackCommand:
             command: "hs feedback"
-            message: "Run {{ command }} to report a bug or leave feedback"
+            message: "{{ command }} - Report bugs or leave feedback"
+          getStartedCommand:
+            command: "hs get-started"
+            message: "{{ command }} - Get started with HubSpot development"
           helpCommand:
             command: "hs help"
-            message: "Run {{ command }} to see a list of available commands"
+            message: "{{ command }} - See a list of available commands"
           projectCreateCommand:
             command: "hs project create"
-            message: "Run {{ command }} to create a new project"
+            message: "{{ command }} - create a new project"
           projectDeployCommand:
             command: "hs project deploy"
             message: "Ready to take your project live? Run {{ command }}"
           projectHelpCommand:
             command: "hs project --help"
-            message: "Run {{ command }} to learn more about available project commands"
+            message: "{{ command }} - Learn more about available project commands"
           projectUploadCommand:
             command: "hs project upload"
-            message: "Run {{ command }} to upload your project to your HubSpot account"
+            message: "{{ command }} - Upload the project to your HubSpot account"
           projectDevCommand:
             command: "hs project dev"
-            message: "Run {{ command }} to set up your test environment and start local development"
+            message: "{{ command }} - Set up a test environment and start local development"
           projectInstallDepsCommand:
             command: "hs project install-deps"
-            message: "Run {{ command }} to install dependencies for your project components"
+            message: "{{ command }} - Install all project dependencies"
           projectCommandTip:
             message: "Tip: All project commands must be run from within a project directory"
           sampleProjects:
@@ -1335,19 +1155,8 @@ en:
           describe: "Use environment variable config"
         debug:
           describe: "Set log level to debug"
-    configMigrate:
-      migrationHeader: "Migrate your existing configuration file to the new global location?"
-      migrationDescription: "This action will create a new global configuration file in your root directory and rename the deprecated config to {{ archivedConfigPath}}. If any conflicting values are detected, we will prompt you to reconcile them unless the \"--force\" flag is supplied."
-      mergeHeader: "Merge your existing configuration file with the global config?"
-      mergeDescription: "This action will merge your deprecated config file with the global config file located in your root directory. It will also rename the deprecated config to {{ archivedConfigPath }}. If any conflicting values are detected, we will prompt you to reconcile them unless the \"--force\" flag is supplied."
-      migrateConfigPromptDescription: "From deprecated config file: {{ deprecatedConfigPath }}\nTo new global config file: {{ globalConfigPath }}"
-      migrateConfigPrompt: "Migrate to the new config?"
-      mergeConfigConflictPrompt: "Change the {{ property }} property in the global config from {{ newValue }} to {{ oldValue }}?"
-      mergeConfigsPromptDescription: "Two config files detected. \nDeprecated config file: {{ deprecatedConfigPath }}\nGlobal config: {{ globalConfigPath }}"
-      mergeConfigsPrompt: "Merge configs?"
-      migrationSuccess: "The deprecated config file has been migrated to the new global config file at {{ globalConfigPath }}."
-      mergeSuccess: "The deprecated config file has been merged with the global config file at {{ globalConfigPath }}."
-      skippedExistingAccounts: "\nThe following accounts were not merged, because they already exist in the global config: {{ skippedAccountIds }}.\n"
+        jsonOutput:
+          describe: "Format output as JSON"
     prompts:
       projectDevTargetAccountPrompt:
         createNewSandboxOption: "<Test on a new development sandbox>"
@@ -1539,7 +1348,7 @@ en:
             succeed: "Created {{#bold}}{{ accountName }} [standard sandbox] ({{ accountId }}){{/bold}}."
         failure:
           invalidUser: "Couldn't create {{#bold}}{{ accountName }}{{/bold}} because your account has been removed from {{#bold}}{{ parentAccountName }}{{/bold}} or your permission set doesn't allow you to create the sandbox. To update your permissions, contact a super admin in {{#bold}}{{ parentAccountName }}{{/bold}}."
-          403Gating: "Couldn't create {{#bold}}{{ accountName }}{{/bold}} because {{#bold}}{{ parentAccountName }}{{/bold}} does not have access to development sandboxes. To opt in to the CRM Development Beta and use development sandboxes, visit https://app.hubspot.com/l/product-updates/in-beta?update=13899236."
+          403Gating: "We couldn't create {{#bold}}{{ accountName }}{{/bold}} because {{#bold}}{{ parentAccountName }}{{/bold}} is a developer account and does not have access to development sandboxes. To gain access to developer sandboxes, you can convert your account: https://developers.hubspot.com/docs/getting-started/convert-your-account-into-a-developer-crm-account"
           usageLimitsFetch: "Unable to fetch sandbox usage limits. Please try again."
           generic: "An error occurred while creating a new sandbox. Please try again."
           limit:

@@ -1,13 +1,11 @@
 import chalk from 'chalk';
 import { getAccountConfig } from '@hubspot/local-dev-lib/config';
 import { logger } from '@hubspot/local-dev-lib/logger';
-import { supportsHyperlinkModule } from './supportHyperlinks';
-import { supportsColor } from './supportsColor';
-import { i18n } from '../lang';
+import { supportsHyperlinkModule } from './supportHyperlinks.js';
+import { supportsColor } from './supportsColor.js';
+import { i18n } from '../lang.js';
 
-const {
-  HUBSPOT_ACCOUNT_TYPE_STRINGS,
-} = require('@hubspot/local-dev-lib/constants/config');
+import { HUBSPOT_ACCOUNT_TYPE_STRINGS } from '@hubspot/local-dev-lib/constants/config';
 
 type TerminalSupport = {
   hyperlinks: boolean;
@@ -24,7 +22,7 @@ export function uiLine(): void {
   logger.log('-'.repeat(50));
 }
 
-function getTerminalUISupport(): TerminalSupport {
+export function getTerminalUISupport(): TerminalSupport {
   return {
     hyperlinks: supportsHyperlinkModule.stdout,
     color: supportsColor.stdout.hasBasic,
@@ -61,7 +59,7 @@ export function uiAccountDescription(
   const account = getAccountConfig(accountId || undefined);
   let message;
   if (account && account.accountType) {
-    message = `${account.name} [${
+    message = `${account.name ? `${account.name} ` : ''}[${
       HUBSPOT_ACCOUNT_TYPE_STRINGS[account.accountType]
     }] (${accountId})`;
   } else {
@@ -95,8 +93,8 @@ export function uiFeatureHighlight(features: string[], title?: string): void {
   uiInfoSection(
     title ? title : i18n(`lib.ui.featureHighlight.defaultTitle`),
     () => {
-      features.forEach((c, i) => {
-        const featureKey = `lib.ui.featureHighlight.featureKeys.${c}`;
+      features.forEach(feature => {
+        const featureKey = `lib.ui.featureHighlight.featureKeys.${feature}`;
         const message = i18n(`${featureKey}.message`, {
           command: uiCommandReference(i18n(`${featureKey}.command`)),
           link: uiLink(
@@ -104,24 +102,36 @@ export function uiFeatureHighlight(features: string[], title?: string): void {
             i18n(`${featureKey}.url`)
           ),
         });
-        if (i !== 0) {
-          logger.log('');
-        }
-        logger.log(message);
+        logger.log(`  - ${message}`);
       });
     }
   );
 }
 
+// export function uiBetaTag(message: string, log?: true): undefined;
+// export function uiBetaTag(message: string, log: false): string;
+// export function uiBetaTag(message: string, log = true): string | undefined {
+//   const terminalUISupport = getTerminalUISupport();
+//   const tag = i18n(`lib.ui.betaTag`);
+
+//   const result = `${
+//     terminalUISupport.color ? chalk.hex(UI_COLORS.SORBET)(tag) : tag
+//   } ${message}`;
+
+//   if (log) {
+//     logger.log(result);
+//     return;
+//   }
+//   return result;
+// }
+
+// Replace this with the above code once we've upgraded to yargs 18.0.0
 export function uiBetaTag(message: string, log?: true): undefined;
 export function uiBetaTag(message: string, log: false): string;
 export function uiBetaTag(message: string, log = true): string | undefined {
-  const terminalUISupport = getTerminalUISupport();
   const tag = i18n(`lib.ui.betaTag`);
 
-  const result = `${
-    terminalUISupport.color ? chalk.hex(UI_COLORS.SORBET)(tag) : tag
-  } ${message}`;
+  const result = `${tag} ${message}`;
 
   if (log) {
     logger.log(result);
@@ -130,18 +140,36 @@ export function uiBetaTag(message: string, log = true): string | undefined {
   return result;
 }
 
+// export function uiDeprecatedTag(message: string, log?: true): undefined;
+// export function uiDeprecatedTag(message: string, log: false): string;
+// export function uiDeprecatedTag(
+//   message: string,
+//   log = true
+// ): string | undefined {
+//   const terminalUISupport = getTerminalUISupport();
+//   const tag = i18n(`lib.ui.deprecatedTag`);
+
+//   const result = `${
+//     terminalUISupport.color ? chalk.yellow(tag) : tag
+//   } ${message}`;
+
+//   if (log) {
+//     logger.log(result);
+//     return;
+//   }
+//   return result;
+// }
+
+// Replace this with the above code once we've upgraded to yargs 18.0.0
 export function uiDeprecatedTag(message: string, log?: true): undefined;
 export function uiDeprecatedTag(message: string, log: false): string;
 export function uiDeprecatedTag(
   message: string,
   log = true
 ): string | undefined {
-  const terminalUISupport = getTerminalUISupport();
   const tag = i18n(`lib.ui.deprecatedTag`);
 
-  const result = `${
-    terminalUISupport.color ? chalk.yellow(tag) : tag
-  } ${message}`;
+  const result = `${tag} ${message}`;
 
   if (log) {
     logger.log(result);

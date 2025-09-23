@@ -1,7 +1,7 @@
 import path from 'path';
 import fs from 'fs';
-import { promptUser } from './promptUtils';
-import { i18n } from '../lang';
+import { promptUser } from './promptUtils.js';
+import { i18n } from '../lang.js';
 import { escapeRegExp } from '@hubspot/local-dev-lib/escapeRegExp';
 
 const FIELDS_FILES = ['fields.json', 'fields.js', 'fields.cjs', 'fields.mjs'];

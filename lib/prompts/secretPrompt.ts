@@ -1,5 +1,5 @@
-import { promptUser } from './promptUtils';
-import { i18n } from '../lang';
+import { promptUser } from './promptUtils.js';
+import { i18n } from '../lang.js';
 
 type SecretValuePromptResponse = {
   secretValue: string;

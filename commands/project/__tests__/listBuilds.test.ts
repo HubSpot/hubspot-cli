@@ -3,11 +3,10 @@ import {
   addAccountOptions,
   addConfigOptions,
   addUseEnvironmentOptions,
-} from '../../../lib/commonOpts';
-import projectListBuildsCommand from '../listBuilds';
+} from '../../../lib/commonOpts.js';
+import projectListBuildsCommand from '../listBuilds.js';
 
-jest.mock('yargs');
-jest.mock('../../../lib/commonOpts');
+vi.mock('../../../lib/commonOpts');
 
 describe('commands/project/listBuilds', () => {
   const yargsMock = yargs as Argv;
@@ -39,8 +38,8 @@ describe('commands/project/listBuilds', () => {
     });
 
     it('should define project and limit options', () => {
-      const optionsSpy = jest.spyOn(yargsMock, 'options');
-      const exampleSpy = jest.spyOn(yargsMock, 'example');
+      const optionsSpy = vi.spyOn(yargsMock, 'options');
+      const exampleSpy = vi.spyOn(yargsMock, 'example');
 
       projectListBuildsCommand.builder(yargsMock);
 

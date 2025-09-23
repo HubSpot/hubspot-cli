@@ -1,48 +1,44 @@
 import { Argv, ArgumentsCamelCase } from 'yargs';
 import chalk from 'chalk';
-import { logger } from '@hubspot/local-dev-lib/logger';
+import { uiLogger } from '../../lib/ui/logger.js';
 import { getAccountConfig } from '@hubspot/local-dev-lib/config';
 import { isSpecifiedError } from '@hubspot/local-dev-lib/errors/index';
-import { useV3Api } from '../../lib/projects/buildAndDeploy';
-import { uiBetaTag, uiCommandReference, uiLine } from '../../lib/ui';
-import { trackCommandUsage } from '../../lib/usageTracking';
+import { isV2Project } from '../../lib/projects/platformVersion.js';
+import { trackCommandUsage } from '../../lib/usageTracking.js';
 import {
   getProjectConfig,
   validateProjectConfig,
-} from '../../lib/projects/config';
-import { logFeedbackMessage } from '../../lib/projects/ui';
-import { handleProjectUpload } from '../../lib/projects/upload';
+} from '../../lib/projects/config.js';
+import { logFeedbackMessage } from '../../lib/projects/ui.js';
+import { handleProjectUpload } from '../../lib/projects/upload.js';
+import { loadAndValidateProfile } from '../../lib/projectProfiles.js';
 import {
   displayWarnLogs,
   pollProjectBuildAndDeploy,
-} from '../../lib/projects/buildAndDeploy';
-import { i18n } from '../../lib/lang';
-import { PROJECT_ERROR_TYPES } from '../../lib/constants';
-import { logError, ApiErrorContext } from '../../lib/errorHandlers/index';
-import { EXIT_CODES } from '../../lib/enums/exitCodes';
-import { CommonArgs, YargsCommandModule } from '../../types/Yargs';
-import { ProjectPollResult } from '../../types/Projects';
-import { makeYargsBuilder } from '../../lib/yargsUtils';
+} from '../../lib/projects/pollProjectBuildAndDeploy.js';
+import { commands } from '../../lang/en.js';
+import { PROJECT_ERROR_TYPES } from '../../lib/constants.js';
+import { logError, ApiErrorContext } from '../../lib/errorHandlers/index.js';
+import { EXIT_CODES } from '../../lib/enums/exitCodes.js';
 import {
-  loadProfile,
-  logProfileFooter,
-  logProfileHeader,
-  exitIfUsingProfiles,
-} from '../../lib/projectProfiles';
+  CommonArgs,
+  JSONOutputArgs,
+  YargsCommandModule,
+} from '../../types/Yargs.js';
+import { ProjectPollResult } from '../../types/Projects.js';
+import { makeYargsBuilder } from '../../lib/yargsUtils.js';
 
 const command = 'upload';
-const describe = uiBetaTag(
-  i18n(`commands.project.subcommands.upload.describe`),
-  false
-);
+const describe = commands.project.upload.describe;
 
-type ProjectUploadArgs = CommonArgs & {
-  forceCreate: boolean;
-  message: string;
-  m: string;
-  skipValidation: boolean;
-  profile?: string;
-};
+type ProjectUploadArgs = CommonArgs &
+  JSONOutputArgs & {
+    forceCreate: boolean;
+    message: string;
+    m: string;
+    skipValidation: boolean;
+    profile?: string;
+  };
 
 async function handler(
   args: ArgumentsCamelCase<ProjectUploadArgs>
@@ -51,44 +47,35 @@ async function handler(
     forceCreate,
     message,
     derivedAccountId,
-    providedAccountId,
     skipValidation,
+    formatOutputAsJson,
+    profile,
   } = args;
+  const jsonOutput: { buildId?: number; deployId?: number } = {};
 
   const { projectConfig, projectDir } = await getProjectConfig();
   validateProjectConfig(projectConfig, projectDir);
 
-  let targetAccountId = providedAccountId;
+  let targetAccountId;
 
-  if (!targetAccountId && useV3Api(projectConfig.platformVersion)) {
-    if (args.profile) {
-      logProfileHeader(args.profile);
-
-      const profile = loadProfile(projectConfig, projectDir, args.profile);
-
-      if (!profile) {
-        uiLine();
-        process.exit(EXIT_CODES.ERROR);
-      }
-
-      targetAccountId = profile.accountId;
-
-      logProfileFooter(profile, true);
-    } else {
-      // A profile must be specified if this project has profiles configured
-      await exitIfUsingProfiles(projectConfig, projectDir);
-    }
+  if (isV2Project(projectConfig.platformVersion)) {
+    targetAccountId = await loadAndValidateProfile(
+      projectConfig,
+      projectDir,
+      profile
+    );
   }
 
-  if (!targetAccountId) {
-    // The user is not using profiles, so we can use the derived accountId
-    targetAccountId = derivedAccountId;
-  }
+  targetAccountId = targetAccountId || derivedAccountId;
 
   const accountConfig = getAccountConfig(targetAccountId!);
   const accountType = accountConfig && accountConfig.accountType;
 
-  trackCommandUsage('project-upload', { type: accountType! }, targetAccountId);
+  trackCommandUsage(
+    'project-upload',
+    { type: accountType!, assetType: projectConfig.platformVersion },
+    targetAccountId
+  );
 
   try {
     const { result, uploadError } =
@@ -100,7 +87,7 @@ async function handler(
         uploadMessage: message,
         forceCreate,
         isUploadCommand: true,
-        sendIR: useV3Api(projectConfig.platformVersion),
+        sendIR: isV2Project(projectConfig.platformVersion),
         skipValidation,
         profile: args.profile,
       });
@@ -111,11 +98,9 @@ async function handler(
           subCategory: PROJECT_ERROR_TYPES.PROJECT_LOCKED,
         })
       ) {
-        logger.log();
-        logger.error(
-          i18n(`commands.project.subcommands.upload.errors.projectLockedError`)
-        );
-        logger.log();
+        uiLogger.log('');
+        uiLogger.error(commands.project.upload.errors.projectLockedError);
+        uiLogger.log('');
       } else {
         logError(
           uploadError,
@@ -128,19 +113,13 @@ async function handler(
       process.exit(EXIT_CODES.ERROR);
     }
     if (result && result.succeeded && !result.buildResult.isAutoDeployEnabled) {
-      logger.log(
-        chalk.bold(
-          i18n(`commands.project.subcommands.upload.logs.buildSucceeded`, {
-            buildId: result.buildId,
-          })
-        )
+      uiLogger.log(
+        chalk.bold(commands.project.upload.logs.buildSucceeded(result.buildId))
       );
-      logger.log(
-        i18n(`commands.project.subcommands.upload.logs.autoDeployDisabled`, {
-          deployCommand: uiCommandReference(
-            `hs project deploy --build=${result.buildId}`
-          ),
-        })
+      uiLogger.log(
+        commands.project.upload.logs.autoDeployDisabled(
+          `hs project deploy --build=${result.buildId}`
+        )
       );
       logFeedbackMessage(result.buildId);
 
@@ -149,7 +128,13 @@ async function handler(
         projectConfig.name,
         result.buildId
       );
-      process.exit(EXIT_CODES.SUCCESS);
+    }
+
+    if (result && result.succeeded && formatOutputAsJson) {
+      jsonOutput.buildId = result.buildId;
+      if (result.deployResult) {
+        jsonOutput.deployId = result.deployResult.deployId;
+      }
     }
   } catch (e) {
     logError(
@@ -161,23 +146,24 @@ async function handler(
     );
     process.exit(EXIT_CODES.ERROR);
   }
+
+  if (formatOutputAsJson) {
+    uiLogger.json(jsonOutput);
+  }
+
   process.exit(EXIT_CODES.SUCCESS);
 }
 
 function projectUploadBuilder(yargs: Argv): Argv<ProjectUploadArgs> {
   yargs.options({
     'force-create': {
-      describe: i18n(
-        `commands.project.subcommands.upload.options.forceCreate.describe`
-      ),
+      describe: commands.project.upload.options.forceCreate.describe,
       type: 'boolean',
       default: false,
     },
     message: {
       alias: 'm',
-      describe: i18n(
-        `commands.project.subcommands.upload.options.message.describe`
-      ),
+      describe: commands.project.upload.options.message.describe,
       type: 'string',
       default: '',
     },
@@ -189,9 +175,7 @@ function projectUploadBuilder(yargs: Argv): Argv<ProjectUploadArgs> {
     profile: {
       type: 'string',
       alias: 'p',
-      describe: i18n(
-        `commands.project.subcommands.upload.options.profile.describe`
-      ),
+      describe: commands.project.upload.options.profile.describe,
       hidden: true,
     },
   });
@@ -199,10 +183,7 @@ function projectUploadBuilder(yargs: Argv): Argv<ProjectUploadArgs> {
   yargs.conflicts('profile', 'account');
 
   yargs.example([
-    [
-      '$0 project upload',
-      i18n(`commands.project.subcommands.upload.examples.default`),
-    ],
+    ['$0 project upload', commands.project.upload.examples.default],
   ]);
 
   return yargs as Argv<ProjectUploadArgs>;
@@ -217,6 +198,7 @@ const builder = makeYargsBuilder<ProjectUploadArgs>(
     useConfigOptions: true,
     useAccountOptions: true,
     useEnvironmentOptions: true,
+    useJSONOutputOptions: true,
   }
 );
 

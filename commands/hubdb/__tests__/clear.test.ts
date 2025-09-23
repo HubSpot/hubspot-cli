@@ -3,11 +3,10 @@ import {
   addAccountOptions,
   addConfigOptions,
   addUseEnvironmentOptions,
-} from '../../../lib/commonOpts';
-import hubdbClearCommand from '../clear';
+} from '../../../lib/commonOpts.js';
+import hubdbClearCommand from '../clear.js';
 
-jest.mock('yargs');
-jest.mock('../../../lib/commonOpts');
+vi.mock('../../../lib/commonOpts');
 
 describe('commands/hubdb/clear', () => {
   const yargsMock = yargs as Argv;

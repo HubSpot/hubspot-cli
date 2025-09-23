@@ -1,10 +1,9 @@
 import yargs, { Argv } from 'yargs';
-import { addConfigOptions } from '../../../lib/commonOpts';
-import { addTestingOptions } from '../../../lib/commonOpts';
-import accountCleanCommand from '../clean';
+import { addConfigOptions } from '../../../lib/commonOpts.js';
+import { addTestingOptions } from '../../../lib/commonOpts.js';
+import accountCleanCommand from '../clean.js';
 
-jest.mock('yargs');
-jest.mock('../../../lib/commonOpts');
+vi.mock('../../../lib/commonOpts');
 
 describe('commands/account/clean', () => {
   const yargsMock = yargs as Argv;

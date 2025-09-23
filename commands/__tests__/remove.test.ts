@@ -1,11 +1,10 @@
 import yargs, { Argv } from 'yargs';
-import * as commonOpts from '../../lib/commonOpts';
-import removeCommand from '../remove';
+import * as commonOpts from '../../lib/commonOpts.js';
+import removeCommand from '../remove.js';
 
-jest.mock('yargs');
-jest.mock('../../lib/commonOpts');
+vi.mock('../../lib/commonOpts');
 
-const positionalSpy = jest
+const positionalSpy = vi
   .spyOn(yargs as Argv, 'positional')
   .mockReturnValue(yargs as Argv);
 

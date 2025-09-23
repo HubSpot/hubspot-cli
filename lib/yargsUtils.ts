@@ -1,4 +1,3 @@
-import process from 'process';
 import { Argv } from 'yargs';
 import {
   addCustomHelpOutput,
@@ -8,18 +7,13 @@ import {
   addGlobalOptions,
   addUseEnvironmentOptions,
   addCmsPublishModeOptions,
-} from './commonOpts';
+  addJSONOutputOptions,
+} from './commonOpts.js';
+import { hasFlag } from './utils/hasFlag.js';
+import { commands } from '../lang/en.js';
 
-// See https://github.com/sindresorhus/has-flag/blob/main/index.js (License: https://github.com/sindresorhus/has-flag/blob/main/license)
-export function hasFlag(flag: string, argv = process.argv): boolean {
-  const prefix = flag.startsWith('-') ? '' : flag.length === 1 ? '-' : '--';
-  const position = argv.indexOf(prefix + flag);
-  const terminatorPosition = argv.indexOf('--');
-  return (
-    position !== -1 &&
-    (terminatorPosition === -1 || position < terminatorPosition)
-  );
-}
+// Re-export for backwards compatibility
+export { hasFlag };
 
 export function makeYargsBuilder<T>(
   callback: (yargs: Argv) => Argv<T>,
@@ -32,6 +26,7 @@ export function makeYargsBuilder<T>(
     useEnvironmentOptions?: boolean;
     useTestingOptions?: boolean;
     useCmsPublishModeOptions?: boolean | { read?: boolean; write?: boolean };
+    useJSONOutputOptions?: boolean;
   } = {}
 ): (yargs: Argv) => Promise<Argv<T>> {
   return async function (yargs: Argv): Promise<Argv<T>> {
@@ -50,6 +45,9 @@ export function makeYargsBuilder<T>(
     if (options.useTestingOptions) {
       addTestingOptions(yargs);
     }
+    if (options.useJSONOutputOptions) {
+      addJSONOutputOptions(yargs);
+    }
     if (options.useCmsPublishModeOptions) {
       const opts =
         typeof options.useCmsPublishModeOptions === 'object'
@@ -65,4 +63,23 @@ export function makeYargsBuilder<T>(
 
     return result;
   };
+}
+
+export function strictEnforceBoolean(
+  rawArgs: string[],
+  booleanOptions: string[]
+) {
+  for (const option of booleanOptions) {
+    const argIndex = rawArgs.findIndex(arg => arg.startsWith(`--${option}=`));
+    if (argIndex !== -1) {
+      const value = rawArgs[argIndex].split('=')[1];
+      if (value && !['true', 'false'].includes(value.toLowerCase())) {
+        throw new Error(
+          commands.config.subcommands.set.errors.invalidBoolean(option, value)
+        );
+      }
+    }
+  }
+
+  return true;
 }

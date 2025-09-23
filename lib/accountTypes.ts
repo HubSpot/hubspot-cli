@@ -1,47 +1,52 @@
 import { HUBSPOT_ACCOUNT_TYPES } from '@hubspot/local-dev-lib/constants/config';
 import { CLIAccount, AccountType } from '@hubspot/local-dev-lib/types/Accounts';
-import { hasFeature } from './hasFeature';
-import { FEATURES } from './constants';
+import { hasUnfiedAppsAccess } from './hasFeature.js';
 import { getAccountIdentifier } from '@hubspot/local-dev-lib/config/getAccountIdentifier';
 
 function isAccountType(
   accountConfig: CLIAccount,
-  accountType: AccountType
+  accountType: AccountType[]
 ): boolean {
-  return (
-    Boolean(accountConfig.accountType) &&
-    accountConfig.accountType === accountType
+  return Boolean(
+    accountConfig.accountType && accountType.includes(accountConfig.accountType)
   );
 }
 
 export function isStandardAccount(accountConfig: CLIAccount): boolean {
-  return isAccountType(accountConfig, HUBSPOT_ACCOUNT_TYPES.STANDARD);
+  return isAccountType(accountConfig, [HUBSPOT_ACCOUNT_TYPES.STANDARD]);
 }
 
 export function isSandbox(accountConfig: CLIAccount): boolean {
-  return (
-    isAccountType(accountConfig, HUBSPOT_ACCOUNT_TYPES.STANDARD_SANDBOX) ||
-    isAccountType(accountConfig, HUBSPOT_ACCOUNT_TYPES.DEVELOPMENT_SANDBOX)
-  );
+  return isAccountType(accountConfig, [
+    HUBSPOT_ACCOUNT_TYPES.STANDARD_SANDBOX,
+    HUBSPOT_ACCOUNT_TYPES.DEVELOPMENT_SANDBOX,
+  ]);
 }
 
 export function isStandardSandbox(accountConfig: CLIAccount): boolean {
-  return isAccountType(accountConfig, HUBSPOT_ACCOUNT_TYPES.STANDARD_SANDBOX);
+  return isAccountType(accountConfig, [HUBSPOT_ACCOUNT_TYPES.STANDARD_SANDBOX]);
 }
 
 export function isDevelopmentSandbox(accountConfig: CLIAccount): boolean {
-  return isAccountType(
-    accountConfig,
-    HUBSPOT_ACCOUNT_TYPES.DEVELOPMENT_SANDBOX
-  );
+  return isAccountType(accountConfig, [
+    HUBSPOT_ACCOUNT_TYPES.DEVELOPMENT_SANDBOX,
+  ]);
 }
 
 export function isDeveloperTestAccount(accountConfig: CLIAccount): boolean {
-  return isAccountType(accountConfig, HUBSPOT_ACCOUNT_TYPES.DEVELOPER_TEST);
+  return isAccountType(accountConfig, [HUBSPOT_ACCOUNT_TYPES.DEVELOPER_TEST]);
 }
 
 export function isAppDeveloperAccount(accountConfig: CLIAccount): boolean {
-  return isAccountType(accountConfig, HUBSPOT_ACCOUNT_TYPES.APP_DEVELOPER);
+  return isAccountType(accountConfig, [HUBSPOT_ACCOUNT_TYPES.APP_DEVELOPER]);
+}
+
+export function isTestAccountOrSandbox(accountConfig: CLIAccount): boolean {
+  return isAccountType(accountConfig, [
+    HUBSPOT_ACCOUNT_TYPES.DEVELOPER_TEST,
+    HUBSPOT_ACCOUNT_TYPES.STANDARD_SANDBOX,
+    HUBSPOT_ACCOUNT_TYPES.DEVELOPMENT_SANDBOX,
+  ]);
 }
 
 export async function isUnifiedAccount(account: CLIAccount): Promise<boolean> {
@@ -50,5 +55,5 @@ export async function isUnifiedAccount(account: CLIAccount): Promise<boolean> {
     return false;
   }
 
-  return hasFeature(accountId, FEATURES.UNIFIED_APPS);
+  return hasUnfiedAppsAccess(accountId);
 }

@@ -6,72 +6,73 @@ import {
 } from '@hubspot/local-dev-lib/api/projects';
 import { extractZipArchive } from '@hubspot/local-dev-lib/archive';
 import { ArgumentsCamelCase } from 'yargs';
-import { promptUser as _promptUser } from '../../prompts/promptUtils';
-import { EXIT_CODES } from '../../enums/exitCodes';
+import { promptUser as _promptUser } from '../../prompts/promptUtils.js';
+import { EXIT_CODES } from '../../enums/exitCodes.js';
 import {
   isAppDeveloperAccount as _isAppDeveloperAccount,
   isUnifiedAccount as _isUnifiedAccount,
-} from '../../accountTypes';
-import { selectPublicAppForMigrationPrompt as _selectPublicAppForMigrationPrompt } from '../../prompts/selectPublicAppForMigrationPrompt';
-import { createProjectPrompt as _createProjectPrompt } from '../../prompts/createProjectPrompt';
-import { ensureProjectExists as _ensureProjectExists } from '../../projects/ensureProjectExists';
-import { poll as _poll } from '../../polling';
-import { migrateApp2023_2 } from '../migrate_legacy';
-import { MigrateAppArgs } from '../migrate';
+} from '../../accountTypes.js';
+import { selectPublicAppForMigrationPrompt as _selectPublicAppForMigrationPrompt } from '../../prompts/selectPublicAppForMigrationPrompt.js';
+import { projectNameAndDestPrompt as _projectNameAndDestPrompt } from '../../prompts/projectNameAndDestPrompt.js';
+import { ensureProjectExists as _ensureProjectExists } from '../../projects/ensureProjectExists.js';
+import { poll as _poll } from '../../polling.js';
+import { migrateApp2023_2 } from '../migrate_legacy.js';
+import { MigrateAppArgs } from '../migrate.js';
+import { MockedFunction } from 'vitest';
 
 // Mock all external dependencies
-jest.mock('@hubspot/local-dev-lib/api/appsDev');
-jest.mock('@hubspot/local-dev-lib/logger');
-jest.mock('@hubspot/local-dev-lib/api/projects');
-jest.mock('@hubspot/local-dev-lib/path');
-jest.mock('@hubspot/local-dev-lib/urls');
-jest.mock('@hubspot/local-dev-lib/archive');
-jest.mock('../../prompts/promptUtils');
-jest.mock('../../errorHandlers');
-jest.mock('../../accountTypes');
-jest.mock('../../prompts/selectPublicAppForMigrationPrompt');
-jest.mock('../../prompts/createProjectPrompt');
-jest.mock('../../projects/ensureProjectExists');
-jest.mock('../../usageTracking');
-jest.mock('../../ui/SpinniesManager');
-jest.mock('../../process');
-jest.mock('../../polling');
+vi.mock('@hubspot/local-dev-lib/api/appsDev');
+vi.mock('@hubspot/local-dev-lib/logger');
+vi.mock('@hubspot/local-dev-lib/api/projects');
+vi.mock('@hubspot/local-dev-lib/path');
+vi.mock('@hubspot/local-dev-lib/urls');
+vi.mock('@hubspot/local-dev-lib/archive');
+vi.mock('../../prompts/promptUtils');
+vi.mock('../../errorHandlers');
+vi.mock('../../accountTypes');
+vi.mock('../../prompts/selectPublicAppForMigrationPrompt');
+vi.mock('../../prompts/projectNameAndDestPrompt');
+vi.mock('../../projects/ensureProjectExists');
+vi.mock('../../usageTracking');
+vi.mock('../../ui/SpinniesManager');
+vi.mock('../../process');
+vi.mock('../../polling');
 
-const isAppDeveloperAccount = _isAppDeveloperAccount as jest.MockedFunction<
+const isAppDeveloperAccount = _isAppDeveloperAccount as MockedFunction<
   typeof _isAppDeveloperAccount
 >;
 
-const isUnifiedAccount = _isUnifiedAccount as jest.MockedFunction<
+const isUnifiedAccount = _isUnifiedAccount as MockedFunction<
   typeof _isUnifiedAccount
 >;
 
 const selectPublicAppForMigrationPrompt =
-  _selectPublicAppForMigrationPrompt as jest.MockedFunction<
+  _selectPublicAppForMigrationPrompt as MockedFunction<
     typeof _selectPublicAppForMigrationPrompt
   >;
 
-const createProjectPrompt = _createProjectPrompt as jest.MockedFunction<
-  typeof _createProjectPrompt
+const projectNameAndDestPrompt = _projectNameAndDestPrompt as MockedFunction<
+  typeof _projectNameAndDestPrompt
 >;
 
-const ensureProjectExists = _ensureProjectExists as jest.MockedFunction<
+const ensureProjectExists = _ensureProjectExists as MockedFunction<
   typeof _ensureProjectExists
 >;
 
-const poll = _poll as jest.MockedFunction<typeof _poll>;
-const fetchPublicAppMetadata = _fetchPublicAppMetadata as jest.MockedFunction<
+const poll = _poll as MockedFunction<typeof _poll>;
+const fetchPublicAppMetadata = _fetchPublicAppMetadata as MockedFunction<
   typeof _fetchPublicAppMetadata
 >;
 
 const migrateNonProjectApp_v2023_2 =
-  _migrateNonProjectApp_v2023_2 as jest.MockedFunction<
+  _migrateNonProjectApp_v2023_2 as MockedFunction<
     typeof _migrateNonProjectApp_v2023_2
   >;
 
-const downloadProject = _downloadProject as jest.MockedFunction<
+const downloadProject = _downloadProject as MockedFunction<
   typeof _downloadProject
 >;
-const promptUser = _promptUser as jest.MockedFunction<typeof _promptUser>;
+const promptUser = _promptUser as MockedFunction<typeof _promptUser>;
 
 describe('migrateApp2023_2', () => {
   const mockDerivedAccountId = 123;
@@ -94,7 +95,7 @@ describe('migrateApp2023_2', () => {
 
   beforeEach(() => {
     // @ts-expect-error function mismatch
-    jest.spyOn(process, 'exit').mockImplementation(() => {});
+    vi.spyOn(process, 'exit').mockImplementation(() => {});
     selectPublicAppForMigrationPrompt.mockResolvedValue({
       appId,
     });
@@ -107,7 +108,7 @@ describe('migrateApp2023_2', () => {
       data: { preventProjectMigrations: false },
     });
 
-    createProjectPrompt.mockResolvedValue({
+    projectNameAndDestPrompt.mockResolvedValue({
       name: projectName,
       dest: '/test/dest',
     });
@@ -164,7 +165,7 @@ describe('migrateApp2023_2', () => {
       appId,
       mockDerivedAccountId
     );
-    expect(createProjectPrompt).toHaveBeenCalled();
+    expect(projectNameAndDestPrompt).toHaveBeenCalled();
     expect(ensureProjectExists).toHaveBeenCalled();
     expect(migrateNonProjectApp_v2023_2).toHaveBeenCalled();
     expect(poll).toHaveBeenCalled();

@@ -2,31 +2,31 @@ import { Arguments } from 'yargs';
 import { logger } from '@hubspot/local-dev-lib/logger';
 import { CLIConfig } from '@hubspot/local-dev-lib/types/Config';
 import * as cliConfig from '@hubspot/local-dev-lib/config';
-import * as validation from '../../validation';
-import { EXIT_CODES } from '../../enums/exitCodes';
+import * as validation from '../../validation.js';
+import { EXIT_CODES } from '../../enums/exitCodes.js';
 import {
   handleDeprecatedEnvVariables,
   injectAccountIdMiddleware,
   loadConfigMiddleware,
   validateAccountOptions,
-} from '../configMiddleware';
+} from '../configMiddleware.js';
 
-jest.mock('@hubspot/local-dev-lib/logger', () => ({
+vi.mock('@hubspot/local-dev-lib/logger', () => ({
   logger: {
-    error: jest.fn(),
-    log: jest.fn(),
+    error: vi.fn(),
+    log: vi.fn(),
   },
 }));
-jest.mock('@hubspot/local-dev-lib/config');
-jest.mock('../../validation');
+vi.mock('@hubspot/local-dev-lib/config');
+vi.mock('../../validation');
 
-const validateAccountSpy = jest.spyOn(validation, 'validateAccount');
-const loadConfigSpy = jest.spyOn(cliConfig, 'loadConfig');
-const getAccountIdSpy = jest.spyOn(cliConfig, 'getAccountId');
-const configFileExistsSpy = jest.spyOn(cliConfig, 'configFileExists');
-const getConfigPathSpy = jest.spyOn(cliConfig, 'getConfigPath');
-const validateConfigSpy = jest.spyOn(cliConfig, 'validateConfig');
-const processExitSpy = jest.spyOn(process, 'exit');
+const validateAccountSpy = vi.spyOn(validation, 'validateAccount');
+const loadConfigSpy = vi.spyOn(cliConfig, 'loadConfig');
+const getAccountIdSpy = vi.spyOn(cliConfig, 'getAccountId');
+const configFileExistsSpy = vi.spyOn(cliConfig, 'configFileExists');
+const getConfigPathSpy = vi.spyOn(cliConfig, 'getConfigPath');
+const validateConfigSpy = vi.spyOn(cliConfig, 'validateConfig');
+const processExitSpy = vi.spyOn(process, 'exit');
 
 describe('lib/middleware/configMiddleware', () => {
   beforeEach(() => {
@@ -101,7 +101,7 @@ describe('lib/middleware/configMiddleware', () => {
 
       await injectAccountIdMiddleware(argv);
 
-      expect(argv.providedAccountId).toBeUndefined();
+      expect(argv.userProvidedAccount).toBeUndefined();
       expect(argv.derivedAccountId).toBe(123);
       expect(getAccountIdSpy).not.toHaveBeenCalled();
 
@@ -120,7 +120,7 @@ describe('lib/middleware/configMiddleware', () => {
 
       await injectAccountIdMiddleware(argv);
 
-      expect(argv.providedAccountId).toBe('test-account');
+      expect(argv.userProvidedAccount).toBe('test-account');
       expect(argv.derivedAccountId).toBe(456);
       expect(getAccountIdSpy).toHaveBeenCalledWith('test-account');
     });

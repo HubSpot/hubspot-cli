@@ -4,21 +4,21 @@ import fs from 'fs';
 import {
   trackCommandMetadataUsage,
   trackCommandUsage,
-} from '../lib/usageTracking';
-import { logger } from '@hubspot/local-dev-lib/logger';
-import { Doctor } from '../lib/doctor/Doctor';
-import { EXIT_CODES } from '../lib/enums/exitCodes';
+} from '../lib/usageTracking.js';
+import { Doctor } from '../lib/doctor/Doctor.js';
+import { EXIT_CODES } from '../lib/enums/exitCodes.js';
 import { getCwd } from '@hubspot/local-dev-lib/path';
-import { CommonArgs, YargsCommandModule } from '../types/Yargs';
-import { makeYargsBuilder } from '../lib/yargsUtils';
-import { i18n } from '../lib/lang';
+import { CommonArgs, YargsCommandModule } from '../types/Yargs.js';
+import { makeYargsBuilder } from '../lib/yargsUtils.js';
+import { uiLogger } from '../lib/ui/logger.js';
+import { commands } from '../lang/en.js';
 
 export type DoctorArgs = CommonArgs & {
   outputDir?: string;
 };
 
 const command = 'doctor';
-const describe = i18n(`commands.doctor.describe`);
+const describe = commands.doctor.describe;
 
 const handler = async (args: ArgumentsCamelCase<DoctorArgs>) => {
   const { outputDir } = args;
@@ -40,9 +40,9 @@ const handler = async (args: ArgumentsCamelCase<DoctorArgs>) => {
 
   if (!outputDir) {
     if (output?.diagnosis) {
-      logger.log(output.diagnosis);
+      uiLogger.log(output.diagnosis);
     } else {
-      logger.error(i18n(`commands.doctor.errors.generatingDiagnosis`));
+      uiLogger.error(commands.doctor.errors.generatingDiagnosis);
       return process.exit(EXIT_CODES.ERROR);
     }
     return process.exit(EXIT_CODES.SUCCESS);
@@ -61,15 +61,13 @@ const handler = async (args: ArgumentsCamelCase<DoctorArgs>) => {
 
   try {
     fs.writeFileSync(outputFile, JSON.stringify(output, null, 4));
-    logger.success(
-      i18n(`commands.doctor.outputWritten`, { filename: outputFile })
-    );
+    uiLogger.success(commands.doctor.outputWritten(outputFile));
   } catch (e) {
-    logger.error(
-      i18n(`commands.doctor.errors.unableToWriteOutputFile`, {
-        file: outputFile,
-        errorMessage: e instanceof Error ? e.message : (e as string),
-      })
+    uiLogger.error(
+      commands.doctor.errors.unableToWriteOutputFile(
+        outputFile,
+        e instanceof Error ? e.message : (e as string)
+      )
     );
     return process.exit(EXIT_CODES.ERROR);
   }
@@ -79,7 +77,7 @@ const handler = async (args: ArgumentsCamelCase<DoctorArgs>) => {
 
 function doctorBuilder(yargs: Argv): Argv<DoctorArgs> {
   yargs.option('output-dir', {
-    describe: i18n(`commands.doctor.options.outputDir`),
+    describe: commands.doctor.options.outputDir,
     type: 'string',
   });
 
@@ -98,6 +96,3 @@ const doctorCommand: YargsCommandModule<unknown, DoctorArgs> = {
 };
 
 export default doctorCommand;
-
-// TODO Remove this after cli.ts is ported to TS
-module.exports = doctorCommand;

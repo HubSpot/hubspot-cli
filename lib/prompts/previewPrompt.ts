@@ -1,7 +1,7 @@
 import path from 'path';
 import { getCwd } from '@hubspot/local-dev-lib/path';
-import { promptUser } from './promptUtils';
-import { i18n } from '../lang';
+import { promptUser } from './promptUtils.js';
+import { i18n } from '../lang.js';
 
 type PreviewPromptResponse = {
   src: string;

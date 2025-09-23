@@ -1,38 +1,35 @@
 import { Argv, ArgumentsCamelCase } from 'yargs';
 import { Project } from '@hubspot/local-dev-lib/types/Project';
 import { isHubSpotHttpError } from '@hubspot/local-dev-lib/errors/index';
-import { logger } from '@hubspot/local-dev-lib/logger';
 import {
   fetchProject,
   fetchProjectBuilds,
 } from '@hubspot/local-dev-lib/api/projects';
-import { getTableContents, getTableHeader } from '../../lib/ui/table';
-import { uiBetaTag, uiLink } from '../../lib/ui';
+import { getTableContents, getTableHeader } from '../../lib/ui/table.js';
+import { uiLink } from '../../lib/ui/index.js';
 import {
   getProjectConfig,
   validateProjectConfig,
-} from '../../lib/projects/config';
-import { getProjectDetailUrl } from '../../lib/projects/urls';
+} from '../../lib/projects/config.js';
+import { getProjectDetailUrl } from '../../lib/projects/urls.js';
 import moment from 'moment';
-import { promptUser } from '../../lib/prompts/promptUtils';
-import { trackCommandUsage } from '../../lib/usageTracking';
-import { i18n } from '../../lib/lang';
-import { logError, ApiErrorContext } from '../../lib/errorHandlers/index';
+import { promptUser } from '../../lib/prompts/promptUtils.js';
+import { trackCommandUsage } from '../../lib/usageTracking.js';
+import { uiLogger } from '../../lib/ui/logger.js';
+import { logError, ApiErrorContext } from '../../lib/errorHandlers/index.js';
 import {
   CommonArgs,
   ConfigArgs,
   AccountArgs,
   EnvironmentArgs,
   YargsCommandModule,
-} from '../../types/Yargs';
-import { EXIT_CODES } from '../../lib/enums/exitCodes';
-import { makeYargsBuilder } from '../../lib/yargsUtils';
+} from '../../types/Yargs.js';
+import { EXIT_CODES } from '../../lib/enums/exitCodes.js';
+import { makeYargsBuilder } from '../../lib/yargsUtils.js';
+import { commands } from '../../lang/en.js';
 
 const command = 'list-builds';
-const describe = uiBetaTag(
-  i18n(`commands.project.subcommands.listBuilds.describe`),
-  false
-);
+const describe = commands.project.listBuilds.describe;
 
 type ProjectListBuildsArgs = CommonArgs &
   ConfigArgs &
@@ -49,29 +46,27 @@ async function fetchAndDisplayBuilds(
   } = await fetchProjectBuilds(accountId, project.name, options);
   const currentDeploy = project.deployedBuildId;
   if (options && options.after) {
-    logger.log(
-      i18n(`commands.project.subcommands.listBuilds.logs.showingNextBuilds`, {
-        count: results.length,
-        projectName: project.name,
-      })
+    uiLogger.log(
+      commands.project.listBuilds.showingNextBuilds(
+        results.length,
+        project.name
+      )
     );
   } else {
-    logger.log(
-      i18n(`commands.project.subcommands.listBuilds.logs.showingRecentBuilds`, {
-        count: results.length,
-        projectName: project.name,
-        viewBuildsLink: uiLink(
-          i18n(
-            `commands.project.subcommands.listBuilds.logs.viewAllBuildsLink`
-          ),
+    uiLogger.log(
+      commands.project.listBuilds.showingRecentBuilds(
+        results.length,
+        project.name,
+        uiLink(
+          commands.project.listBuilds.viewAllBuildsLink,
           getProjectDetailUrl(project.name, accountId)!
-        ),
-      })
+        )
+      )
     );
   }
 
   if (results.length === 0) {
-    logger.log(i18n(`commands.project.subcommands.listBuilds.errors.noBuilds`));
+    uiLogger.log(commands.project.listBuilds.errors.noBuilds);
   } else {
     const builds = results.map(build => {
       const isCurrentlyDeployed = build.buildId === currentDeploy;
@@ -96,7 +91,7 @@ async function fetchAndDisplayBuilds(
     builds.unshift(
       getTableHeader(['Build ID', 'Status', 'Completed', 'Duration', 'Details'])
     );
-    logger.log(
+    uiLogger.log(
       getTableContents(builds, {
         columnDefault: {
           paddingLeft: 3,
@@ -107,9 +102,7 @@ async function fetchAndDisplayBuilds(
   if (paging && paging.next) {
     await promptUser({
       name: 'more',
-      message: i18n(
-        `commands.project.subcommands.listBuilds.continueOrExitPrompt`
-      ),
+      message: commands.project.listBuilds.continueOrExitPrompt,
     });
     await fetchAndDisplayBuilds(accountId, project, {
       limit: options.limit,
@@ -138,10 +131,8 @@ async function handler(
     await fetchAndDisplayBuilds(derivedAccountId, project, { limit });
   } catch (e) {
     if (isHubSpotHttpError(e) && e.status === 404) {
-      logger.error(
-        i18n(`commands.project.subcommands.listBuilds.errors.projectNotFound`, {
-          projectName,
-        })
+      uiLogger.error(
+        commands.project.listBuilds.errors.projectNotFound(projectName)
       );
     } else {
       logError(
@@ -159,24 +150,17 @@ async function handler(
 function projectListBuildsBuilder(yargs: Argv): Argv<ProjectListBuildsArgs> {
   yargs.options({
     project: {
-      describe: i18n(
-        `commands.project.subcommands.listBuilds.options.project.describe`
-      ),
+      describe: commands.project.listBuilds.options.project.describe,
       type: 'string',
     },
     limit: {
-      describe: i18n(
-        `commands.project.subcommands.listBuilds.options.limit.describe`
-      ),
+      describe: commands.project.listBuilds.options.limit.describe,
       type: 'string',
     },
   });
 
   yargs.example([
-    [
-      '$0 project list-builds',
-      i18n(`commands.project.subcommands.listBuilds.examples.default`),
-    ],
+    ['$0 project list-builds', commands.project.listBuilds.examples.default],
   ]);
 
   return yargs as Argv<ProjectListBuildsArgs>;

@@ -1,17 +1,17 @@
 import { getAccountId } from '@hubspot/local-dev-lib/config';
 import { fetchProjects } from '@hubspot/local-dev-lib/api/projects';
-import { downloadProjectPrompt } from '../downloadProjectPrompt';
+import { downloadProjectPrompt } from '../downloadProjectPrompt.js';
 
-jest.mock('../promptUtils', () => ({
-  promptUser: jest.fn().mockResolvedValue({ project: 'test-project' }),
+vi.mock('../promptUtils', () => ({
+  promptUser: vi.fn().mockResolvedValue({ project: 'test-project' }),
 }));
-jest.mock('@hubspot/local-dev-lib/api/projects', () => ({
-  fetchProjects: jest.fn().mockResolvedValue({
+vi.mock('@hubspot/local-dev-lib/api/projects', () => ({
+  fetchProjects: vi.fn().mockResolvedValue({
     data: { results: [] },
   }),
 }));
-jest.mock('@hubspot/local-dev-lib/config', () => ({
-  getAccountId: jest.fn().mockImplementation(() => 123456789),
+vi.mock('@hubspot/local-dev-lib/config', () => ({
+  getAccountId: vi.fn().mockImplementation(() => 123456789),
 }));
 
 describe('lib/prompts/downloadProjectPrompt', () => {

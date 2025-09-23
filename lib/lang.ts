@@ -1,10 +1,13 @@
 import util from 'util';
-import path from 'path';
+import path, { dirname } from 'path';
 import fs from 'fs-extra';
 import yaml from 'js-yaml';
 import { logger } from '@hubspot/local-dev-lib/logger';
-import { interpolate, InterpolationData } from './interpolation';
+import { interpolate, InterpolationData } from './interpolation.js';
+import { fileURLToPath } from 'url';
 
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
 export const MISSING_LANGUAGE_DATA_PREFIX = '[Missing language data]';
 
 type LanguageObject = { [key: string]: string | LanguageObject };

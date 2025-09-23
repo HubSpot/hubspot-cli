@@ -1,25 +1,21 @@
 import { Argv, ArgumentsCamelCase } from 'yargs';
-import { logger } from '@hubspot/local-dev-lib/logger';
 import {
   installPackages,
   getProjectPackageJsonLocations,
-} from '../../lib/dependencyManagement';
-import { EXIT_CODES } from '../../lib/enums/exitCodes';
-import { getProjectConfig } from '../../lib/projects/config';
-import { promptUser } from '../../lib/prompts/promptUtils';
+} from '../../lib/dependencyManagement.js';
+import { EXIT_CODES } from '../../lib/enums/exitCodes.js';
+import { getProjectConfig } from '../../lib/projects/config.js';
+import { promptUser } from '../../lib/prompts/promptUtils.js';
 import path from 'path';
-import { i18n } from '../../lib/lang';
-import { trackCommandUsage } from '../../lib/usageTracking';
-import { uiBetaTag } from '../../lib/ui';
-import { CommonArgs, YargsCommandModule } from '../../types/Yargs';
-import { logError } from '../../lib/errorHandlers';
-import { makeYargsBuilder } from '../../lib/yargsUtils';
+import { commands } from '../../lang/en.js';
+import { uiLogger } from '../../lib/ui/logger.js';
+import { trackCommandUsage } from '../../lib/usageTracking.js';
+import { CommonArgs, YargsCommandModule } from '../../types/Yargs.js';
+import { logError } from '../../lib/errorHandlers/index.js';
+import { makeYargsBuilder } from '../../lib/yargsUtils.js';
 
 const command = 'install-deps [packages..]';
-const describe = uiBetaTag(
-  i18n(`commands.project.subcommands.installDeps.help.describe`),
-  false
-);
+const describe = commands.project.installDeps.help.describe;
 
 export type ProjectInstallDepsArgs = CommonArgs & {
   packages?: string[];
@@ -34,9 +30,7 @@ async function handler(
 
     const projectConfig = await getProjectConfig();
     if (!projectConfig || !projectConfig.projectDir) {
-      logger.error(
-        i18n(`commands.project.subcommands.installDeps.noProjectConfig`)
-      );
+      uiLogger.error(commands.project.installDeps.noProjectConfig);
       return process.exit(EXIT_CODES.ERROR);
     }
 
@@ -49,18 +43,14 @@ async function handler(
           name: 'selectedInstallLocations',
           type: 'checkbox',
           when: () => packages && packages.length > 0,
-          message: i18n(
-            `commands.project.subcommands.installDeps.installLocationPrompt`
-          ),
+          message: commands.project.installDeps.installLocationPrompt,
           choices: installLocations.map(dir => ({
             name: path.relative(projectDir, dir),
             value: dir,
           })),
-          validate: choices => {
+          validate: (choices: string[]) => {
             if (choices === undefined || choices.length === 0) {
-              return i18n(
-                `commands.project.subcommands.installDeps.installLocationPromptRequired`
-              );
+              return commands.project.installDeps.installLocationPromptRequired;
             }
             return true;
           },
@@ -85,15 +75,11 @@ function projectInstallDepsBuilder(yargs: Argv): Argv<ProjectInstallDepsArgs> {
   yargs.example([
     [
       '$0 project install-deps',
-      i18n(
-        `commands.project.subcommands.installDeps.help.installAppDepsExample`
-      ),
+      commands.project.installDeps.help.installAppDepsExample,
     ],
     [
       '$0 project install-deps dependency1 dependency2',
-      i18n(
-        `commands.project.subcommands.installDeps.help.addDepToSubComponentExample`
-      ),
+      commands.project.installDeps.help.addDepToSubComponentExample,
     ],
   ]);
 

@@ -1,39 +1,41 @@
-import { EXIT_CODES } from '../../lib/enums/exitCodes';
+import { EXIT_CODES } from '../../lib/enums/exitCodes.js';
 
 import yargs, { ArgumentsCamelCase, Argv } from 'yargs';
-import doctorCommand, { DoctorArgs } from '../doctor';
-import { trackCommandUsage } from '../../lib/usageTracking';
-import { Doctor } from '../../lib/doctor/Doctor';
+import doctorCommand, { DoctorArgs } from '../doctor.js';
+import { trackCommandUsage } from '../../lib/usageTracking.js';
+import { Doctor } from '../../lib/doctor/Doctor.js';
 import { logger } from '@hubspot/local-dev-lib/logger';
-import __fs from 'fs';
+import fs from 'fs';
 import { getCwd as __getCwd } from '@hubspot/local-dev-lib/path';
+import { Mock } from 'vitest';
 
-jest.mock('../../lib/usageTracking');
-jest.mock('../../lib/doctor/Doctor');
-jest.mock('@hubspot/local-dev-lib/logger');
-jest.mock('@hubspot/local-dev-lib/path');
-jest.mock('yargs');
+vi.mock('../../lib/usageTracking');
+vi.mock('../../lib/doctor/Doctor');
+vi.mock('@hubspot/local-dev-lib/logger');
+vi.mock('@hubspot/local-dev-lib/path');
+vi.mock('fs');
 
-const DoctorMock = Doctor as jest.MockedClass<typeof Doctor>;
-const fs = __fs as jest.Mocked<typeof __fs>;
-const getCwd = __getCwd as jest.MockedFunction<typeof __getCwd>;
+// @ts-expect-error Doesn't match the actual signature because then the linter complains about unused variables
+const DoctorMock = Doctor as Mock<typeof Doctor>;
+const mockedFs = vi.mocked(fs);
+const getCwd = __getCwd as Mock<typeof __getCwd>;
 
-const optionSpy = jest
+const optionSpy = vi
   .spyOn(yargs as Argv, 'option')
   .mockReturnValue(yargs as Argv);
 
 const date = new Date('2022-02-22');
 
-jest.useFakeTimers().setSystemTime(date);
+vi.useFakeTimers().setSystemTime(date);
 
 describe('doctor', () => {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  let processExitSpy: jest.SpyInstance;
+  let processExitSpy: Mock<typeof process.exit>;
   const accountId = 123456;
 
   beforeEach(() => {
     // @ts-expect-error Doesn't match the actual signature because then the linter complains about unused variables
-    processExitSpy = jest.spyOn(process, 'exit').mockImplementation(() => {});
+    processExitSpy = vi.spyOn(process, 'exit').mockImplementation(() => {});
   });
 
   describe('command', () => {
@@ -67,7 +69,7 @@ describe('doctor', () => {
       diagnosis = 'Yooooooooooooooo';
       DoctorMock.mockImplementation(() => {
         return {
-          diagnose: jest.fn().mockResolvedValue({ diagnosis }),
+          diagnose: vi.fn().mockResolvedValue({ diagnosis }),
           accountId,
         } as unknown as Doctor;
       });
@@ -95,7 +97,7 @@ describe('doctor', () => {
     it('should log an error if the diagnosis is undefined', async () => {
       DoctorMock.mockImplementationOnce(() => {
         return {
-          diagnose: jest.fn().mockResolvedValue(undefined),
+          diagnose: vi.fn().mockResolvedValue(undefined),
           accountId,
         } as unknown as Doctor;
       });
@@ -109,9 +111,7 @@ describe('doctor', () => {
     });
 
     it('should write the output to a file if output-dir is defined', async () => {
-      const writeFileSpy = jest
-        .spyOn(fs, 'writeFileSync')
-        .mockImplementationOnce(() => {});
+      mockedFs.writeFileSync.mockImplementationOnce(() => {});
       const expectedOutputFile = `/foo/hubspot-doctor-${date.toISOString()}.json`;
       await doctorCommand.handler({
         outputDir: '/foo',
@@ -120,8 +120,8 @@ describe('doctor', () => {
       expect(logger.log).not.toHaveBeenCalled();
       expect(logger.error).not.toHaveBeenCalled();
 
-      expect(writeFileSpy).toHaveBeenCalledTimes(1);
-      expect(writeFileSpy).toHaveBeenCalledWith(
+      expect(mockedFs.writeFileSync).toHaveBeenCalledTimes(1);
+      expect(mockedFs.writeFileSync).toHaveBeenCalledWith(
         expectedOutputFile,
         expect.stringContaining(diagnosis)
       );
@@ -136,9 +136,7 @@ describe('doctor', () => {
     });
 
     it('should handle absolute paths', async () => {
-      const writeFileSpy = jest
-        .spyOn(fs, 'writeFileSync')
-        .mockImplementationOnce(() => {});
+      mockedFs.writeFileSync.mockImplementationOnce(() => {});
       const cwd = '/some/path/to';
       getCwd.mockImplementationOnce(() => cwd);
 
@@ -150,8 +148,8 @@ describe('doctor', () => {
       expect(logger.log).not.toHaveBeenCalled();
       expect(logger.error).not.toHaveBeenCalled();
 
-      expect(writeFileSpy).toHaveBeenCalledTimes(1);
-      expect(writeFileSpy).toHaveBeenCalledWith(
+      expect(mockedFs.writeFileSync).toHaveBeenCalledTimes(1);
+      expect(mockedFs.writeFileSync).toHaveBeenCalledWith(
         expectedOutputFile,
         expect.stringContaining(diagnosis)
       );
@@ -167,11 +165,9 @@ describe('doctor', () => {
 
     it('should log an error message when writing the output fails', async () => {
       const errorMessage = 'Something bad happened';
-      const writeFileSpy = jest
-        .spyOn(fs, 'writeFileSync')
-        .mockImplementationOnce(() => {
-          throw new Error(errorMessage);
-        });
+      mockedFs.writeFileSync.mockImplementationOnce(() => {
+        throw new Error(errorMessage);
+      });
 
       await doctorCommand.handler({
         outputDir: '/foo',
@@ -182,8 +178,8 @@ describe('doctor', () => {
         expect.stringMatching(/Unable to write output to/)
       );
 
-      expect(writeFileSpy).toHaveBeenCalledTimes(1);
-      expect(writeFileSpy).toHaveBeenCalledWith(
+      expect(mockedFs.writeFileSync).toHaveBeenCalledTimes(1);
+      expect(mockedFs.writeFileSync).toHaveBeenCalledWith(
         `/foo/hubspot-doctor-${date.toISOString()}.json`,
         expect.stringContaining(diagnosis)
       );

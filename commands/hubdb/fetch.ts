@@ -1,21 +1,21 @@
 import { Argv, ArgumentsCamelCase } from 'yargs';
-import { logger } from '@hubspot/local-dev-lib/logger';
-import { logError } from '../../lib/errorHandlers/index';
+import { uiLogger } from '../../lib/ui/logger.js';
+import { logError } from '../../lib/errorHandlers/index.js';
 import { downloadHubDbTable } from '@hubspot/local-dev-lib/hubdb';
-import { selectHubDBTablePrompt } from '../../lib/prompts/selectHubDBTablePrompt';
-import { trackCommandUsage } from '../../lib/usageTracking';
-import { i18n } from '../../lib/lang';
+import { selectHubDBTablePrompt } from '../../lib/prompts/selectHubDBTablePrompt.js';
+import { trackCommandUsage } from '../../lib/usageTracking.js';
+import { commands } from '../../lang/en.js';
 import {
   CommonArgs,
   ConfigArgs,
   AccountArgs,
   EnvironmentArgs,
   YargsCommandModule,
-} from '../../types/Yargs';
-import { makeYargsBuilder } from '../../lib/yargsUtils';
+} from '../../types/Yargs.js';
+import { makeYargsBuilder } from '../../lib/yargsUtils.js';
 
 const command = 'fetch [table-id] [dest]';
-const describe = i18n('commands.hubdb.subcommands.fetch.describe');
+const describe = commands.hubdb.subcommands.fetch.describe;
 
 type HubdbFetchArgs = CommonArgs &
   ConfigArgs &
@@ -44,11 +44,8 @@ async function handler(
       dest
     );
 
-    logger.success(
-      i18n('commands.hubdb.subcommands.fetch.success.fetch', {
-        path: filePath,
-        tableId,
-      })
+    uiLogger.success(
+      commands.hubdb.subcommands.fetch.success.fetch(tableId, filePath)
     );
   } catch (e) {
     logError(e);
@@ -57,16 +54,12 @@ async function handler(
 
 function hubdbFetchBuilder(yargs: Argv): Argv<HubdbFetchArgs> {
   yargs.positional('table-id', {
-    describe: i18n(
-      'commands.hubdb.subcommands.fetch.positionals.tableId.describe'
-    ),
+    describe: commands.hubdb.subcommands.fetch.positionals.tableId.describe,
     type: 'string',
   });
 
   yargs.positional('dest', {
-    describe: i18n(
-      'commands.hubdb.subcommands.fetch.positionals.dest.describe'
-    ),
+    describe: commands.hubdb.subcommands.fetch.positionals.dest.describe,
     type: 'string',
   });
 

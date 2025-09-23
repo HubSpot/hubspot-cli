@@ -11,9 +11,9 @@ import { DEFAULT_OAUTH_SCOPES } from '@hubspot/local-dev-lib/constants/auth';
 import { OAuth2ManagerAccountConfig } from '@hubspot/local-dev-lib/types/Accounts';
 import { Server } from 'http';
 
-import { handleExit } from './process';
-import { i18n } from './lang';
-import { EXIT_CODES } from './enums/exitCodes';
+import { handleExit } from './process.js';
+import { i18n } from './lang.js';
+import { EXIT_CODES } from './enums/exitCodes.js';
 
 const PORT = 3000;
 const redirectUri = `http://localhost:${PORT}/oauth-callback`;

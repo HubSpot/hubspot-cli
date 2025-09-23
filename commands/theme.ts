@@ -1,13 +1,13 @@
 import { Argv } from 'yargs';
-import marketplaceValidate from './theme/marketplace-validate';
-import generateSelectors from './theme/generate-selectors';
-import previewCommand from './theme/preview';
-import { i18n } from '../lib/lang';
-import { YargsCommandModuleBucket } from '../types/Yargs';
-import { makeYargsBuilder } from '../lib/yargsUtils';
+import marketplaceValidate from './theme/marketplace-validate.js';
+import generateSelectors from './theme/generate-selectors.js';
+import previewCommand from './theme/preview.js';
+import { commands } from '../lang/en.js';
+import { YargsCommandModuleBucket } from '../types/Yargs.js';
+import { makeYargsBuilder } from '../lib/yargsUtils.js';
 
 const command = ['theme', 'themes'];
-const describe = i18n('commands.theme.describe');
+const describe = commands.theme.describe;
 
 function themeBuilder(yargs: Argv): Argv {
   yargs
@@ -29,6 +29,3 @@ const themeCommand: YargsCommandModuleBucket = {
 };
 
 export default themeCommand;
-
-// TODO Remove this legacy export once we've migrated all commands to TS
-module.exports = themeCommand;

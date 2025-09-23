@@ -39,7 +39,14 @@ export interface ListAppsResponse {
   unmigratableApps: UnmigratableApp[];
 }
 
-export interface InitializeMigrationResponse {
+export interface ListThemesResponse {
+  migratableThemes: {
+    THEME: string[];
+    REACT_THEME: string[];
+  };
+}
+
+export interface InitializeAppMigrationResponse {
   migrationId: number;
 }
 
@@ -49,7 +56,7 @@ export interface ListAppsMigrationComponent {
   isSupported: boolean;
 }
 
-export type ContinueMigrationResponse = {
+export type ContinueAppMigrationResponse = {
   migrationId: number;
 };
 
@@ -124,11 +131,11 @@ function mapPlatformVersionToEnum(platformVersion: string): string {
   return `V${platformVersion.replace('.', '_')}`;
 }
 
-export async function initializeMigration(
+export async function initializeAppMigration(
   accountId: number,
   applicationId: number,
   platformVersion: string
-): HubSpotPromise<InitializeMigrationResponse> {
+): HubSpotPromise<InitializeAppMigrationResponse> {
   return http.post(accountId, {
     url: `${MIGRATIONS_API_PATH_V2}/migrations`,
     data: {
@@ -138,12 +145,12 @@ export async function initializeMigration(
   });
 }
 
-export async function continueMigration(
+export async function continueAppMigration(
   portalId: number,
   migrationId: number,
   componentUids: Record<string, string>,
   projectName: string
-): HubSpotPromise<ContinueMigrationResponse> {
+): HubSpotPromise<ContinueAppMigrationResponse> {
   return http.post(portalId, {
     url: `${MIGRATIONS_API_PATH_V2}/migrations/continue`,
     data: {

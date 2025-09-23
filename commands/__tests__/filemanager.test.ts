@@ -1,17 +1,16 @@
 import yargs, { Argv } from 'yargs';
-import fetch from '../filemanager/fetch';
-import upload from '../filemanager/upload';
-import fileManagerCommands from '../filemanager';
+import fetch from '../filemanager/fetch.js';
+import upload from '../filemanager/upload.js';
+import fileManagerCommands from '../filemanager.js';
 
-jest.mock('yargs');
-jest.mock('../filemanager/fetch');
-jest.mock('../filemanager/upload');
-jest.mock('../../lib/commonOpts');
+vi.mock('../filemanager/fetch');
+vi.mock('../filemanager/upload');
+vi.mock('../../lib/commonOpts');
 
-const commandSpy = jest
+const commandSpy = vi
   .spyOn(yargs as Argv, 'command')
   .mockReturnValue(yargs as Argv);
-const demandCommandSpy = jest
+const demandCommandSpy = vi
   .spyOn(yargs as Argv, 'demandCommand')
   .mockReturnValue(yargs as Argv);
 

@@ -4,40 +4,36 @@ import {
   fetchProjectBuilds,
 } from '@hubspot/local-dev-lib/api/projects';
 import { isSpecifiedError } from '@hubspot/local-dev-lib/errors/index';
-import { useV3Api } from '../../lib/projects/buildAndDeploy';
-import { uiCommandReference, uiLink, uiBetaTag } from '../../lib/ui';
-import { i18n } from '../../lib/lang';
-import { createWatcher } from '../../lib/projects/watch';
-import { logError, ApiErrorContext } from '../../lib/errorHandlers/index';
-import { logger } from '@hubspot/local-dev-lib/logger';
-import { PROJECT_ERROR_TYPES } from '../../lib/constants';
-import { trackCommandUsage } from '../../lib/usageTracking';
+import { isV2Project } from '../../lib/projects/platformVersion.js';
+import { commands } from '../../lang/en.js';
+import { createWatcher } from '../../lib/projects/watch.js';
+import { logError, ApiErrorContext } from '../../lib/errorHandlers/index.js';
+import { uiLogger } from '../../lib/ui/logger.js';
+import { PROJECT_ERROR_TYPES } from '../../lib/constants.js';
+import { trackCommandUsage } from '../../lib/usageTracking.js';
 import {
   getProjectConfig,
   validateProjectConfig,
-} from '../../lib/projects/config';
-import { logFeedbackMessage } from '../../lib/projects/ui';
-import { handleProjectUpload } from '../../lib/projects/upload';
+} from '../../lib/projects/config.js';
+import { logFeedbackMessage } from '../../lib/projects/ui.js';
+import { handleProjectUpload } from '../../lib/projects/upload.js';
 import {
   pollBuildStatus,
   pollDeployStatus,
-} from '../../lib/projects/buildAndDeploy';
-import { EXIT_CODES } from '../../lib/enums/exitCodes';
-import { handleKeypress, handleExit } from '../../lib/process';
+} from '../../lib/projects/pollProjectBuildAndDeploy.js';
+import { EXIT_CODES } from '../../lib/enums/exitCodes.js';
+import { handleKeypress, handleExit } from '../../lib/process.js';
 import {
   CommonArgs,
   AccountArgs,
   ConfigArgs,
   EnvironmentArgs,
   YargsCommandModule,
-} from '../../types/Yargs';
-import { makeYargsBuilder } from '../../lib/yargsUtils';
+} from '../../types/Yargs.js';
+import { makeYargsBuilder } from '../../lib/yargsUtils.js';
 
 const command = 'watch';
-const describe = uiBetaTag(
-  i18n(`commands.project.subcommands.watch.describe`),
-  false
-);
+const describe = commands.project.watch.describe;
 
 type ProjectWatchArgs = CommonArgs &
   ConfigArgs &
@@ -72,7 +68,7 @@ function handleUserInput(
   currentBuildId: number
 ): void {
   const onTerminate = async () => {
-    logger.log(i18n(`commands.project.subcommands.watch.logs.processExited`));
+    uiLogger.log(commands.project.watch.logs.processExited);
 
     if (currentBuildId) {
       try {
@@ -115,24 +111,12 @@ async function handler(
   validateProjectConfig(projectConfig, projectDir);
 
   if (!projectConfig || !projectDir) {
-    logger.error(
-      i18n(`commands.project.subcommands.watch.errors.projectConfigNotFound`)
-    );
+    uiLogger.error(commands.project.watch.errors.projectConfigNotFound);
     return process.exit(EXIT_CODES.ERROR);
   }
 
-  if (useV3Api(projectConfig.platformVersion)) {
-    logger.error(
-      i18n(`commands.project.subcommands.watch.errors.v3ApiError`, {
-        command: uiCommandReference('hs project watch'),
-        newCommand: uiCommandReference('hs project dev'),
-        platformVersion: projectConfig.platformVersion,
-        linkToDocs: uiLink(
-          'How to develop locally.',
-          'https://developers.hubspot.com/docs/guides/crm/ui-extensions/local-development'
-        ),
-      })
-    );
+  if (isV2Project(projectConfig.platformVersion)) {
+    uiLogger.error(projectConfig.platformVersion);
     return process.exit(EXIT_CODES.ERROR);
   }
 
@@ -170,11 +154,9 @@ async function handler(
             subCategory: PROJECT_ERROR_TYPES.PROJECT_LOCKED,
           })
         ) {
-          logger.log();
-          logger.error(
-            i18n(`commands.project.subcommands.watch.errors.projectLockedError`)
-          );
-          logger.log();
+          uiLogger.log('');
+          uiLogger.error(commands.project.watch.errors.projectLockedError);
+          uiLogger.log('');
         } else {
           logError(
             uploadError,
@@ -197,17 +179,12 @@ async function handler(
 function projectWatchBuilder(yargs: Argv): Argv<ProjectWatchArgs> {
   yargs.option('initial-upload', {
     alias: 'i',
-    describe: i18n(
-      `commands.project.subcommands.watch.options.initialUpload.describe`
-    ),
+    describe: commands.project.watch.options.initialUpload.describe,
     type: 'boolean',
   });
 
   yargs.example([
-    [
-      '$0 project watch',
-      i18n(`commands.project.subcommands.watch.examples.default`),
-    ],
+    ['$0 project watch', commands.project.watch.examples.default],
   ]);
 
   return yargs as Argv<ProjectWatchArgs>;

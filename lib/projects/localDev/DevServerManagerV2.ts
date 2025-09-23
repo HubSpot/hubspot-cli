@@ -1,6 +1,6 @@
 import { Environment } from '@hubspot/local-dev-lib/types/Config';
 import { logger } from '@hubspot/local-dev-lib/logger';
-import { promptUser } from '../../prompts/promptUtils';
+
 import {
   startPortManagerServer,
   stopPortManagerServer,
@@ -10,10 +10,10 @@ import {
   getHubSpotWebsiteOrigin,
 } from '@hubspot/local-dev-lib/urls';
 import { getAccountConfig } from '@hubspot/local-dev-lib/config';
-import AppDevModeInterface from './AppDevModeInterface';
-import { lib } from '../../../lang/en';
-import LocalDevState from './LocalDevState';
-import LocalDevLogger from './LocalDevLogger';
+import AppDevModeInterface from './AppDevModeInterface.js';
+import { lib } from '../../../lang/en.js';
+import LocalDevState from './LocalDevState.js';
+import LocalDevLogger from './LocalDevLogger.js';
 
 type DevServerInterface = {
   // eslint-disable-next-line @typescript-eslint/no-unsafe-function-type
@@ -66,7 +66,7 @@ class DevServerManagerV2 {
         // @TODO: In the future, update UIE Dev Server to use LocalDevState
         await serverInterface.setup({
           components: this.localDevState.projectNodes,
-          promptUser,
+          profileData: this.localDevState.projectProfileData,
           logger,
           urls: {
             api: getHubSpotApiOrigin(env),

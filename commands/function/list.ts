@@ -1,24 +1,24 @@
 import { Argv, ArgumentsCamelCase } from 'yargs';
 import moment from 'moment';
 import { getRoutes } from '@hubspot/local-dev-lib/api/functions';
-import { logger } from '@hubspot/local-dev-lib/logger';
+import { uiLogger } from '../../lib/ui/logger.js';
 
-import { logError, ApiErrorContext } from '../../lib/errorHandlers/index';
-import { getTableContents, getTableHeader } from '../../lib/ui/table';
-import { trackCommandUsage } from '../../lib/usageTracking';
-import { i18n } from '../../lib/lang';
-import { EXIT_CODES } from '../../lib/enums/exitCodes';
+import { logError, ApiErrorContext } from '../../lib/errorHandlers/index.js';
+import { getTableContents, getTableHeader } from '../../lib/ui/table.js';
+import { trackCommandUsage } from '../../lib/usageTracking.js';
+import { commands } from '../../lang/en.js';
+import { EXIT_CODES } from '../../lib/enums/exitCodes.js';
 import {
   CommonArgs,
   ConfigArgs,
   AccountArgs,
   EnvironmentArgs,
   YargsCommandModule,
-} from '../../types/Yargs';
-import { makeYargsBuilder } from '../../lib/yargsUtils';
+} from '../../types/Yargs.js';
+import { makeYargsBuilder } from '../../lib/yargsUtils.js';
 
 const command = ['list', 'ls'];
-const describe = i18n('commands.function.subcommands.list.describe');
+const describe = commands.function.subcommands.list.describe;
 
 type FunctionListArgs = CommonArgs &
   ConfigArgs &
@@ -32,9 +32,7 @@ async function handler(
 
   trackCommandUsage('function-list', undefined, derivedAccountId);
 
-  logger.debug(
-    i18n('commands.function.subcommands.list.debug.gettingFunctions')
-  );
+  uiLogger.debug(commands.function.subcommands.list.debug.gettingFunctions);
 
   const { data: routesResp } = await getRoutes(derivedAccountId).catch(
     async e => {
@@ -44,13 +42,11 @@ async function handler(
   );
 
   if (!routesResp.objects.length) {
-    return logger.info(
-      i18n('commands.function.subcommands.list.info.noFunctions')
-    );
+    return uiLogger.info(commands.function.subcommands.list.info.noFunctions);
   }
 
   if (args.json) {
-    return logger.log(routesResp.objects);
+    return uiLogger.json(routesResp.objects);
   }
 
   const functionsAsArrays = routesResp.objects.map(func => {
@@ -67,15 +63,13 @@ async function handler(
   functionsAsArrays.unshift(
     getTableHeader(['Route', 'Method', 'Secrets', 'Created', 'Updated'])
   );
-  return logger.log(getTableContents(functionsAsArrays));
+  return uiLogger.log(getTableContents(functionsAsArrays));
 }
 
 function functionListBuilder(yargs: Argv): Argv<FunctionListArgs> {
   yargs.options({
     json: {
-      describe: i18n(
-        'commands.function.subcommands.list.options.json.describe'
-      ),
+      describe: commands.function.subcommands.list.options.json.describe,
       type: 'boolean',
     },
   });

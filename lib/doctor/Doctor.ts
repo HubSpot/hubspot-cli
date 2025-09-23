@@ -4,18 +4,18 @@ import {
   getCWDAccountOverride,
 } from '@hubspot/local-dev-lib/config';
 
-import SpinniesManager from '../ui/SpinniesManager';
-import { hasMissingPackages } from '../dependencyManagement';
-import { getLatestCliVersion } from '../npm';
+import SpinniesManager from '../ui/SpinniesManager.js';
+import { hasMissingPackages } from '../dependencyManagement.js';
+import { getLatestCliVersion } from '../npm.js';
 import util from 'util';
 import fs from 'fs';
 import path from 'path';
-import { Diagnosis } from './Diagnosis';
+import { Diagnosis } from './Diagnosis.js';
 import {
   DiagnosticInfoBuilder,
   DiagnosticInfo,
   ProjectConfig,
-} from './DiagnosticInfoBuilder';
+} from './DiagnosticInfoBuilder.js';
 import { isPortManagerPortAvailable } from '@hubspot/local-dev-lib/portManager';
 import { PORT_MANAGER_SERVER_PORT } from '@hubspot/local-dev-lib/constants/ports';
 import {
@@ -26,11 +26,11 @@ import {
 import { ScopeGroupAuthorization } from '@hubspot/local-dev-lib/types/Accounts';
 import { isSpecifiedError } from '@hubspot/local-dev-lib/errors/index';
 import { getHubSpotWebsiteOrigin } from '@hubspot/local-dev-lib/urls';
-import { uiCommandReference } from '../ui';
-import pkg from '../../package.json';
+import { uiCommandReference } from '../ui/index.js';
+import pkg from '../../package.json' with { type: 'json' };
 
-const { i18n } = require('../lang');
-const { uiLink } = require('../ui');
+import { i18n } from '../lang.js';
+import { uiLink } from '../ui/index.js';
 const minMajorNodeVersion = 18;
 
 export class Doctor {
@@ -341,7 +341,7 @@ export class Doctor {
       this.diagnosis?.addCliSection({
         type: 'success',
         message: i18n(`lib.doctor.hsChecks.latest`, {
-          hsVersion: latestCLIVersion,
+          hsVersion: pkg.version,
         }),
       });
     }

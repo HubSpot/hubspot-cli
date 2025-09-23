@@ -5,24 +5,24 @@ import { Argv, ArgumentsCamelCase } from 'yargs';
 import { uploadFolder } from '@hubspot/local-dev-lib/fileManager';
 import { uploadFile } from '@hubspot/local-dev-lib/api/fileManager';
 import { getCwd, convertToUnixPath } from '@hubspot/local-dev-lib/path';
-import { logger } from '@hubspot/local-dev-lib/logger';
+import { uiLogger } from '../../lib/ui/logger.js';
 import { validateSrcAndDestPaths } from '@hubspot/local-dev-lib/cms/modules';
 import { shouldIgnoreFile } from '@hubspot/local-dev-lib/ignoreRules';
-import { ApiErrorContext, logError } from '../../lib/errorHandlers/index';
-import { trackCommandUsage } from '../../lib/usageTracking';
-import { i18n } from '../../lib/lang';
-import { EXIT_CODES } from '../../lib/enums/exitCodes';
+import { ApiErrorContext, logError } from '../../lib/errorHandlers/index.js';
+import { trackCommandUsage } from '../../lib/usageTracking.js';
+import { commands } from '../../lang/en.js';
+import { EXIT_CODES } from '../../lib/enums/exitCodes.js';
 import {
   AccountArgs,
   CommonArgs,
   ConfigArgs,
   EnvironmentArgs,
   YargsCommandModule,
-} from '../../types/Yargs';
-import { makeYargsBuilder } from '../../lib/yargsUtils';
+} from '../../types/Yargs.js';
+import { makeYargsBuilder } from '../../lib/yargsUtils.js';
 
 const command = 'upload <src> <dest>';
-const describe = i18n(`commands.filemanager.subcommands.upload.describe`);
+const describe = commands.filemanager.subcommands.upload.describe;
 
 type FileManagerUploadArgs = CommonArgs &
   ConfigArgs &
@@ -43,25 +43,21 @@ async function handler(
   try {
     stats = fs.statSync(absoluteSrcPath);
     if (!stats.isFile() && !stats.isDirectory()) {
-      logger.error(
-        i18n(`commands.filemanager.subcommands.upload.errors.invalidPath`, {
-          path: src,
-        })
+      uiLogger.error(
+        commands.filemanager.subcommands.upload.errors.invalidPath(src)
       );
       return;
     }
   } catch (e) {
-    logger.error(
-      i18n(`commands.filemanager.subcommands.upload.errors.invalidPath`, {
-        path: src,
-      })
+    uiLogger.error(
+      commands.filemanager.subcommands.upload.errors.invalidPath(src)
     );
     return;
   }
 
   if (!dest) {
-    logger.error(
-      i18n(`commands.filemanager.subcommands.upload.errors.destinationRequired`)
+    uiLogger.error(
+      commands.filemanager.subcommands.upload.errors.destinationRequired
     );
     return;
   }
@@ -77,36 +73,34 @@ async function handler(
     { isHubSpot: true, path: dest }
   );
   if (srcDestIssues.length) {
-    srcDestIssues.forEach(({ message }) => logger.error(message));
+    srcDestIssues.forEach(({ message }) => uiLogger.error(message));
     process.exit(EXIT_CODES.ERROR);
   }
 
   if (stats.isFile()) {
     if (shouldIgnoreFile(absoluteSrcPath)) {
-      logger.error(
-        i18n(`commands.filemanager.subcommands.upload.errors.fileIgnored`, {
-          path: src,
-        })
+      uiLogger.error(
+        commands.filemanager.subcommands.upload.errors.fileIgnored(src)
       );
       return;
     }
 
     uploadFile(derivedAccountId, absoluteSrcPath, normalizedDest)
       .then(() => {
-        logger.success(
-          i18n(`commands.filemanager.subcommands.upload.success.upload`, {
-            accountId: derivedAccountId,
-            dest: normalizedDest,
+        uiLogger.success(
+          commands.filemanager.subcommands.upload.success.upload(
             src,
-          })
+            normalizedDest,
+            derivedAccountId
+          )
         );
       })
       .catch(error => {
-        logger.error(
-          i18n(`commands.filemanager.subcommands.upload.errors.upload`, {
-            dest: normalizedDest,
+        uiLogger.error(
+          commands.filemanager.subcommands.upload.errors.upload(
             src,
-          })
+            normalizedDest
+          )
         );
         logError(
           error,
@@ -118,27 +112,22 @@ async function handler(
         );
       });
   } else {
-    logger.log(
-      i18n(`commands.filemanager.subcommands.upload.logs.uploading`, {
-        accountId: derivedAccountId,
-        dest,
+    uiLogger.log(
+      commands.filemanager.subcommands.upload.logs.uploading(
         src,
-      })
+        dest,
+        derivedAccountId
+      )
     );
     uploadFolder(derivedAccountId, absoluteSrcPath, dest)
       .then(() => {
-        logger.success(
-          i18n(
-            `commands.filemanager.subcommands.upload.success.uploadComplete`,
-            {
-              dest,
-            }
-          )
+        uiLogger.success(
+          commands.filemanager.subcommands.upload.success.uploadComplete(dest)
         );
       })
       .catch(error => {
-        logger.error(
-          i18n(`commands.filemanager.subcommands.upload.errors.uploadingFailed`)
+        uiLogger.error(
+          commands.filemanager.subcommands.upload.errors.uploadingFailed
         );
         logError(error, {
           accountId: derivedAccountId,
@@ -149,15 +138,11 @@ async function handler(
 
 function fileManagerUploadBuilder(yargs: Argv): Argv<FileManagerUploadArgs> {
   yargs.positional('src', {
-    describe: i18n(
-      `commands.filemanager.subcommands.upload.positionals.src.describe`
-    ),
+    describe: commands.filemanager.subcommands.upload.positionals.src.describe,
     type: 'string',
   });
   yargs.positional('dest', {
-    describe: i18n(
-      `commands.filemanager.subcommands.upload.positionals.dest.describe`
-    ),
+    describe: commands.filemanager.subcommands.upload.positionals.dest.describe,
     type: 'string',
   });
 

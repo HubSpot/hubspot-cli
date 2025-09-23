@@ -1,8 +1,8 @@
-import { trackCommandUsage } from '../../lib/usageTracking';
-import { logger } from '@hubspot/local-dev-lib/logger';
+import { trackCommandUsage } from '../../lib/usageTracking.js';
+import { uiLogger } from '../../lib/ui/logger.js';
 // This package is not typed, so we need to use require
-const { start: startTestServer } = require('@hubspot/serverless-dev-runtime');
-import { i18n } from '../../lib/lang';
+import { start as startTestServer } from '@hubspot/serverless-dev-runtime';
+import { commands } from '../../lang/en.js';
 import { Argv, ArgumentsCamelCase } from 'yargs';
 import {
   CommonArgs,
@@ -10,8 +10,8 @@ import {
   AccountArgs,
   EnvironmentArgs,
   YargsCommandModule,
-} from '../../types/Yargs';
-import { makeYargsBuilder } from '../../lib/yargsUtils';
+} from '../../types/Yargs.js';
+import { makeYargsBuilder } from '../../lib/yargsUtils.js';
 
 const command = 'server <path>';
 const describe = undefined;
@@ -34,10 +34,8 @@ async function handler(
 
   trackCommandUsage('functions-server', undefined, derivedAccountId);
 
-  logger.debug(
-    i18n('commands.function.subcommands.server.debug.startingServer', {
-      functionPath,
-    })
+  uiLogger.debug(
+    commands.function.subcommands.server.debug.startingServer(functionPath)
   );
 
   startTestServer({
@@ -48,38 +46,28 @@ async function handler(
 
 function functionServerBuilder(yargs: Argv): Argv<FunctionServerArgs> {
   yargs.positional('path', {
-    describe: i18n(
-      'commands.function.subcommands.server.positionals.path.describe'
-    ),
+    describe: commands.function.subcommands.server.positionals.path.describe,
     type: 'string',
   });
 
   yargs.options({
     port: {
-      describe: i18n(
-        'commands.function.subcommands.server.options.port.describe'
-      ),
+      describe: commands.function.subcommands.server.options.port.describe,
       type: 'string',
       default: 5432,
     },
     contact: {
-      describe: i18n(
-        'commands.function.subcommands.server.options.contact.describe'
-      ),
+      describe: commands.function.subcommands.server.options.contact.describe,
       type: 'boolean',
       default: true,
     },
     watch: {
-      describe: i18n(
-        'commands.function.subcommands.server.options.watch.describe'
-      ),
+      describe: commands.function.subcommands.server.options.watch.describe,
       type: 'boolean',
       default: true,
     },
     'log-output': {
-      describe: i18n(
-        'commands.function.subcommands.server.options.logOutput.describe'
-      ),
+      describe: commands.function.subcommands.server.options.logOutput.describe,
       type: 'boolean',
       default: false,
     },
@@ -88,7 +76,7 @@ function functionServerBuilder(yargs: Argv): Argv<FunctionServerArgs> {
   yargs.example([
     [
       '$0 functions server ./tmp/myFunctionFolder.functions',
-      i18n('commands.function.subcommands.server.examples.default'),
+      commands.function.subcommands.server.examples.default,
     ],
   ]);
 

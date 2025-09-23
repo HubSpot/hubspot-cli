@@ -3,11 +3,11 @@ import path from 'path';
 import findup from 'findup-sync';
 import { getAbsoluteFilePath, getCwd } from '@hubspot/local-dev-lib/path';
 
-import { ProjectConfig } from '../../types/Projects';
-import { PROJECT_CONFIG_FILE } from '../constants';
-import { lib } from '../../lang/en';
-import { EXIT_CODES } from '../enums/exitCodes';
-import { uiLogger } from '../ui/logger';
+import { ProjectConfig } from '../../types/Projects.js';
+import { PROJECT_CONFIG_FILE } from '../constants.js';
+import { lib } from '../../lang/en.js';
+import { EXIT_CODES } from '../enums/exitCodes.js';
+import { uiLogger } from '../ui/logger.js';
 
 export function writeProjectConfig(
   configPath: string,

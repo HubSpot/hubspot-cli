@@ -27,32 +27,33 @@ import {
   OAuth2ManagerAccountConfig,
 } from '@hubspot/local-dev-lib/types/Accounts';
 import { ENVIRONMENTS } from '@hubspot/local-dev-lib/constants/environments';
-import { logger } from '@hubspot/local-dev-lib/logger';
 import { getAccountIdentifier } from '@hubspot/local-dev-lib/config/getAccountIdentifier';
 import { CLIOptions } from '@hubspot/local-dev-lib/types/CLIOptions';
-import { setLogLevel } from '../lib/commonOpts';
-import { makeYargsBuilder } from '../lib/yargsUtils';
-import { handleExit } from '../lib/process';
-import { debugError, logError } from '../lib/errorHandlers/index';
-import { i18n } from '../lib/lang';
-import { trackCommandUsage, trackAuthAction } from '../lib/usageTracking';
-import { promptUser } from '../lib/prompts/promptUtils';
+import { setCLILogLevel } from '../lib/commonOpts.js';
+import { makeYargsBuilder } from '../lib/yargsUtils.js';
+import { handleExit } from '../lib/process.js';
+import { debugError, logError } from '../lib/errorHandlers/index.js';
+import { trackCommandUsage, trackAuthAction } from '../lib/usageTracking.js';
+import { promptUser } from '../lib/prompts/promptUtils.js';
 import {
   OAUTH_FLOW,
   personalAccessKeyPrompt,
   OauthPromptResponse,
-} from '../lib/prompts/personalAccessKeyPrompt';
-import { cliAccountNamePrompt } from '../lib/prompts/accountNamePrompt';
-import { authenticateWithOauth } from '../lib/oauth';
-import { EXIT_CODES } from '../lib/enums/exitCodes';
-import { uiCommandReference, uiFeatureHighlight } from '../lib/ui';
+} from '../lib/prompts/personalAccessKeyPrompt.js';
+import { cliAccountNamePrompt } from '../lib/prompts/accountNamePrompt.js';
+import { authenticateWithOauth } from '../lib/oauth.js';
+import { EXIT_CODES } from '../lib/enums/exitCodes.js';
+import { uiCommandReference, uiFeatureHighlight } from '../lib/ui/index.js';
 import {
   ConfigArgs,
   CommonArgs,
   TestingArgs,
   AccountArgs,
   YargsCommandModule,
-} from '../types/Yargs';
+} from '../types/Yargs.js';
+import { uiLogger } from '../lib/ui/logger.js';
+import { commands } from '../lang/en.js';
+import { parseStringToNumber } from '../lib/parsing.js';
 
 const TRACKING_STATUS = {
   STARTED: 'started',
@@ -105,7 +106,7 @@ const AUTH_TYPE_NAMES = {
 };
 
 const command = 'init';
-const describe = i18n(`commands.init.describe`);
+const describe = commands.init.describe;
 
 type InitArgs = CommonArgs &
   ConfigArgs &
@@ -120,10 +121,22 @@ async function handler(args: ArgumentsCamelCase<InitArgs>): Promise<void> {
   const {
     authType: authTypeFlagValue,
     c: configFlagValue,
-    providedAccountId,
     disableTracking,
     useHiddenConfig,
+    userProvidedAccount,
   } = args;
+
+  let parsedUserProvidedAccountId;
+
+  try {
+    if (userProvidedAccount) {
+      parsedUserProvidedAccountId = parseStringToNumber(userProvidedAccount);
+    }
+  } catch (err) {
+    uiLogger.error(commands.init.errors.invalidAccountIdProvided);
+    process.exit(EXIT_CODES.ERROR);
+  }
+
   const authType =
     (authTypeFlagValue && authTypeFlagValue.toLowerCase()) ||
     PERSONAL_ACCESS_KEY_AUTH_METHOD.value;
@@ -131,7 +144,7 @@ async function handler(args: ArgumentsCamelCase<InitArgs>): Promise<void> {
   const configPath =
     (configFlagValue && path.join(getCwd(), configFlagValue)) ||
     getConfigPath('', useHiddenConfig);
-  setLogLevel(args);
+  setCLILogLevel(args);
 
   if (!disableTracking) {
     trackCommandUsage('init', {
@@ -142,22 +155,13 @@ async function handler(args: ArgumentsCamelCase<InitArgs>): Promise<void> {
   const env = args.qa ? ENVIRONMENTS.QA : ENVIRONMENTS.PROD;
 
   if (configFileExists(true)) {
-    const globalConfigPath = getConfigPath('', true);
-    logger.error(
-      i18n(`commands.init.errors.globalConfigFileExists`, {
-        configPath: globalConfigPath!,
-      })
-    );
+    uiLogger.error(commands.init.errors.globalConfigFileExists);
     process.exit(EXIT_CODES.ERROR);
   }
 
   if (fs.existsSync(configPath!)) {
-    logger.error(
-      i18n(`commands.init.errors.configFileExists`, {
-        configPath: configPath!,
-      })
-    );
-    logger.info(i18n(`commands.init.logs.updateConfig`));
+    uiLogger.error(commands.init.errors.configFileExists(configPath!));
+    uiLogger.info(commands.init.logs.updateConfig);
     process.exit(EXIT_CODES.ERROR);
   }
 
@@ -166,20 +170,17 @@ async function handler(args: ArgumentsCamelCase<InitArgs>): Promise<void> {
       'init',
       authType,
       TRACKING_STATUS.STARTED,
-      providedAccountId
+      parsedUserProvidedAccountId
     );
   }
 
   const doesOtherConfigFileExist = configFileExists(!useHiddenConfig);
   if (doesOtherConfigFileExist) {
     const path = getConfigPath('', !useHiddenConfig);
-    logger.error(
-      i18n(`commands.init.errors.bothConfigFilesNotAllowed`, { path: path! })
-    );
+    uiLogger.error(commands.init.errors.bothConfigFilesNotAllowed(path!));
     process.exit(EXIT_CODES.ERROR);
   }
 
-  trackAuthAction('init', authType, TRACKING_STATUS.STARTED, providedAccountId);
   createEmptyConfigFile({ path: configPath! }, useHiddenConfig);
   //Needed to load deprecated config
   loadConfig(configPath!, args as CLIOptions);
@@ -192,7 +193,7 @@ async function handler(args: ArgumentsCamelCase<InitArgs>): Promise<void> {
     if (authType === PERSONAL_ACCESS_KEY_AUTH_METHOD.value) {
       const personalAccessKeyResult = await personalAccessKeyConfigCreationFlow(
         env,
-        providedAccountId
+        parsedUserProvidedAccountId
       );
       if (personalAccessKeyResult) {
         accountId = getAccountIdentifier(personalAccessKeyResult)!;
@@ -211,19 +212,20 @@ async function handler(args: ArgumentsCamelCase<InitArgs>): Promise<void> {
       debugError(e);
     }
 
-    logger.log('');
-    logger.success(
-      i18n(`commands.init.success.configFileCreated`, {
-        configPath: configPath!,
-      })
+    uiLogger.log('');
+    uiLogger.success(commands.init.success.configFileCreated(configPath!));
+    uiLogger.success(
+      commands.init.success.configFileUpdated(
+        AUTH_TYPE_NAMES[authType as keyof typeof AUTH_TYPE_NAMES],
+        name || accountId!
+      )
     );
-    logger.success(
-      i18n(`commands.init.success.configFileUpdated`, {
-        authType: AUTH_TYPE_NAMES[authType as keyof typeof AUTH_TYPE_NAMES],
-        account: name || accountId!,
-      })
-    );
-    uiFeatureHighlight(['helpCommand', 'authCommand', 'accountsListCommand']);
+    uiFeatureHighlight([
+      'getStartedCommand',
+      'helpCommand',
+      'authCommand',
+      'accountsListCommand',
+    ]);
 
     if (!disableTracking) {
       await trackAuthAction(
@@ -241,7 +243,7 @@ async function handler(args: ArgumentsCamelCase<InitArgs>): Promise<void> {
         'init',
         authType,
         TRACKING_STATUS.ERROR,
-        providedAccountId
+        parsedUserProvidedAccountId
       );
     }
     process.exit(EXIT_CODES.ERROR);
@@ -251,7 +253,7 @@ async function handler(args: ArgumentsCamelCase<InitArgs>): Promise<void> {
 function initBuilder(yargs: Argv): Argv<InitArgs> {
   yargs.options({
     'auth-type': {
-      describe: i18n(`commands.init.options.authType.describe`),
+      describe: commands.init.options.authType.describe,
       type: 'string',
       choices: [
         `${PERSONAL_ACCESS_KEY_AUTH_METHOD.value}`,
@@ -260,7 +262,7 @@ function initBuilder(yargs: Argv): Argv<InitArgs> {
       default: PERSONAL_ACCESS_KEY_AUTH_METHOD.value,
     },
     account: {
-      describe: i18n(`commands.init.options.account.describe`),
+      describe: commands.init.options.account.describe,
       type: 'string',
       alias: 'a',
     },
@@ -279,11 +281,11 @@ function initBuilder(yargs: Argv): Argv<InitArgs> {
 const builder = makeYargsBuilder<InitArgs>(
   initBuilder,
   command,
-  i18n(`commands.init.verboseDescribe`, {
-    command: uiCommandReference('hs auth'),
-    configName: DEFAULT_HUBSPOT_CONFIG_YAML_FILE_NAME,
-    authMethod: PERSONAL_ACCESS_KEY_AUTH_METHOD.value,
-  }),
+  commands.init.verboseDescribe(
+    DEFAULT_HUBSPOT_CONFIG_YAML_FILE_NAME,
+    uiCommandReference('hs auth'),
+    PERSONAL_ACCESS_KEY_AUTH_METHOD.value
+  ),
   {
     useGlobalOptions: true,
     useConfigOptions: true,
@@ -299,6 +301,3 @@ const initCommand: YargsCommandModule<unknown, InitArgs> = {
 };
 
 export default initCommand;
-
-// TODO Remove this legacy export once we've migrated all commands to TS
-module.exports = initCommand;

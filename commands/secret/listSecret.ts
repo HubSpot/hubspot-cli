@@ -1,21 +1,21 @@
 import { Argv, ArgumentsCamelCase } from 'yargs';
-import { logger } from '@hubspot/local-dev-lib/logger';
 import { fetchSecrets } from '@hubspot/local-dev-lib/api/secrets';
-import { logError, ApiErrorContext } from '../../lib/errorHandlers/index';
-import { trackCommandUsage } from '../../lib/usageTracking';
-import { uiAccountDescription } from '../../lib/ui';
-import { i18n } from '../../lib/lang';
+import { logError, ApiErrorContext } from '../../lib/errorHandlers/index.js';
+import { trackCommandUsage } from '../../lib/usageTracking.js';
+import { uiAccountDescription } from '../../lib/ui/index.js';
+import { commands } from '../../lang/en.js';
+import { uiLogger } from '../../lib/ui/logger.js';
 import {
   CommonArgs,
   ConfigArgs,
   AccountArgs,
   EnvironmentArgs,
   YargsCommandModule,
-} from '../../types/Yargs';
-import { makeYargsBuilder } from '../../lib/yargsUtils';
+} from '../../types/Yargs.js';
+import { makeYargsBuilder } from '../../lib/yargsUtils.js';
 
 const command = 'list';
-const describe = i18n(`commands.secret.subcommands.list.describe`);
+const describe = commands.secret.subcommands.list.describe;
 
 type ListSecretArgs = CommonArgs & ConfigArgs & AccountArgs & EnvironmentArgs;
 
@@ -29,14 +29,14 @@ async function handler(
     const {
       data: { results },
     } = await fetchSecrets(derivedAccountId);
-    const groupLabel = i18n(`commands.secret.subcommands.list.groupLabel`, {
-      accountIdentifier: uiAccountDescription(derivedAccountId),
-    });
-    logger.group(groupLabel);
-    results.forEach(secret => logger.log(secret));
-    logger.groupEnd();
+    const groupLabel = commands.secret.subcommands.list.groupLabel(
+      uiAccountDescription(derivedAccountId)
+    );
+    uiLogger.group(groupLabel);
+    results.forEach(secret => uiLogger.log(secret));
+    uiLogger.groupEnd();
   } catch (err) {
-    logger.error(i18n(`commands.secret.subcommands.list.errors.list`));
+    uiLogger.error(commands.secret.subcommands.list.errors.list);
     logError(
       err,
       new ApiErrorContext({

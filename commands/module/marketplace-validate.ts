@@ -1,28 +1,26 @@
 import { Argv, ArgumentsCamelCase } from 'yargs';
-import SpinniesManager from '../../lib/ui/SpinniesManager';
-import { trackCommandUsage } from '../../lib/usageTracking';
+import SpinniesManager from '../../lib/ui/SpinniesManager.js';
+import { trackCommandUsage } from '../../lib/usageTracking.js';
 import {
   kickOffValidation,
   pollForValidationFinish,
   fetchValidationResults,
   processValidationErrors,
   displayValidationResults,
-} from '../../lib/marketplaceValidate';
-import { i18n } from '../../lib/lang';
+} from '../../lib/marketplaceValidate.js';
+import { commands } from '../../lang/en.js';
 import {
   CommonArgs,
   ConfigArgs,
   AccountArgs,
   EnvironmentArgs,
   YargsCommandModule,
-} from '../../types/Yargs';
-import { EXIT_CODES } from '../../lib/enums/exitCodes';
-import { makeYargsBuilder } from '../../lib/yargsUtils';
+} from '../../types/Yargs.js';
+import { EXIT_CODES } from '../../lib/enums/exitCodes.js';
+import { makeYargsBuilder } from '../../lib/yargsUtils.js';
 
 const command = 'marketplace-validate <src>';
-const describe = i18n(
-  `commands.module.subcommands.marketplaceValidate.describe`
-);
+const describe = commands.module.subcommands.marketplaceValidate.describe;
 
 type MarketplaceValidateArgs = CommonArgs &
   ConfigArgs &
@@ -41,11 +39,8 @@ async function handler(
   SpinniesManager.init();
 
   SpinniesManager.add('marketplaceValidation', {
-    text: i18n(
-      `commands.module.subcommands.marketplaceValidate.logs.validatingModule`,
-      {
-        path: src,
-      }
+    text: commands.module.subcommands.marketplaceValidate.logs.validatingModule(
+      src
     ),
   });
 
@@ -64,11 +59,11 @@ async function handler(
     validationId
   );
   processValidationErrors(
-    'commands.module.subcommands.marketplaceValidate',
+    commands.module.subcommands.marketplaceValidate.errors.invalidPath,
     validationResults
   );
   displayValidationResults(
-    'commands.module.subcommands.marketplaceValidate',
+    commands.module.subcommands.marketplaceValidate.results,
     validationResults
   );
 
@@ -79,9 +74,7 @@ function marketplaceValidateBuilder(
   yargs: Argv
 ): Argv<MarketplaceValidateArgs> {
   yargs.positional('src', {
-    describe: i18n(
-      `commands.module.subcommands.marketplaceValidate.positionals.src.describe`
-    ),
+    describe: commands.module.subcommands.marketplaceValidate.positionals.src,
     type: 'string',
   });
 

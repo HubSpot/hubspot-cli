@@ -1,19 +1,18 @@
 import yargs, { Argv } from 'yargs';
-import lighthouseScore from '../cms/lighthouseScore';
-import convertFields from '../cms/convertFields';
-import getReactModule from '../cms/getReactModule';
-import cmsCommand from '../cms';
+import lighthouseScore from '../cms/lighthouseScore.js';
+import convertFields from '../cms/convertFields.js';
+import getReactModule from '../cms/getReactModule.js';
+import cmsCommand from '../cms.js';
 
-jest.mock('yargs');
-jest.mock('../cms/lighthouseScore');
-jest.mock('../cms/convertFields');
-jest.mock('../cms/getReactModule');
-jest.mock('../../lib/commonOpts');
+vi.mock('../cms/lighthouseScore');
+vi.mock('../cms/convertFields');
+vi.mock('../cms/getReactModule');
+vi.mock('../../lib/commonOpts');
 
-const commandSpy = jest
+const commandSpy = vi
   .spyOn(yargs as Argv, 'command')
   .mockReturnValue(yargs as Argv);
-const demandCommandSpy = jest
+const demandCommandSpy = vi
   .spyOn(yargs as Argv, 'demandCommand')
   .mockReturnValue(yargs as Argv);
 

@@ -1,3 +1,3 @@
-import { build } from './lib/build';
+import { build } from './lib/build.ts';
 
 build();

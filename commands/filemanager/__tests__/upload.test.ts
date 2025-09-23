@@ -4,11 +4,10 @@ import {
   addConfigOptions,
   addAccountOptions,
   addUseEnvironmentOptions,
-} from '../../../lib/commonOpts';
-import fileManagerUploadCommand from '../upload';
+} from '../../../lib/commonOpts.js';
+import fileManagerUploadCommand from '../upload.js';
 
-jest.mock('yargs');
-jest.mock('../../../lib/commonOpts');
+vi.mock('../../../lib/commonOpts');
 
 describe('commands/filemanager/upload', () => {
   const yargsMock = yargs as Argv;

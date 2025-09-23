@@ -1,12 +1,10 @@
 import yargs, { Argv } from 'yargs';
-import accountCreateOverrideCommand from '../createOverride';
+import accountCreateOverrideCommand from '../createOverride.js';
 
-jest.mock('yargs');
-
-const positionalSpy = jest
+const positionalSpy = vi
   .spyOn(yargs as Argv, 'positional')
   .mockReturnValue(yargs as Argv);
-const exampleSpy = jest
+const exampleSpy = vi
   .spyOn(yargs as Argv, 'example')
   .mockReturnValue(yargs as Argv);
 

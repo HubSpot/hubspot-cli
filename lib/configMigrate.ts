@@ -3,85 +3,57 @@ import {
   getGlobalConfig,
   getConfigPath,
   migrateConfig,
-  mergeConfigProperties as _mergeConfigProperties,
+  mergeConfigProperties,
   mergeExistingConfigs,
   ConflictProperty,
 } from '@hubspot/local-dev-lib/config/migrate';
-import {
-  DEFAULT_HUBSPOT_CONFIG_YAML_FILE_NAME,
-  ARCHIVED_HUBSPOT_CONFIG_YAML_FILE_NAME,
-  GLOBAL_CONFIG_PATH,
-} from '@hubspot/local-dev-lib/constants/config';
-import { logger } from '@hubspot/local-dev-lib/logger';
+import { ARCHIVED_HUBSPOT_CONFIG_YAML_FILE_NAME } from '@hubspot/local-dev-lib/constants/config';
 import {
   CLIConfig_NEW,
   CLIConfig_DEPRECATED,
 } from '@hubspot/local-dev-lib/types/Config';
-
-import { promptUser } from './prompts/promptUtils';
-import { i18n } from './lang';
-import { trackCommandMetadataUsage } from './usageTracking';
+import { promptUser } from './prompts/promptUtils.js';
+import { lib } from '../lang/en.js';
+import { uiLogger } from './ui/logger.js';
 
 export async function handleMigration(
-  accountId: number | undefined,
-  configPath?: string
+  deprecatedConfigPath?: string,
+  hideWarning?: boolean
 ): Promise<boolean> {
-  logger.log(i18n('lib.configMigrate.migrationHeader'));
-  logger.log('');
-  logger.log(
-    i18n('lib.configMigrate.migrationDescription', {
-      archivedConfigPath: ARCHIVED_HUBSPOT_CONFIG_YAML_FILE_NAME,
-    })
+  if (!hideWarning) {
+    uiLogger.warn(
+      lib.configMigrate.deprecatedConfigWarning(
+        deprecatedConfigPath || getConfigPath(undefined, false)!
+      )
+    );
+    uiLogger.log('');
+  }
+  uiLogger.log(
+    lib.configMigrate.handleMigration.description(
+      ARCHIVED_HUBSPOT_CONFIG_YAML_FILE_NAME
+    )
   );
-  logger.log('');
-  logger.log(
-    i18n('lib.configMigrate.migrateConfigPromptDescription', {
-      deprecatedConfigPath:
-        getConfigPath(configPath, false) ||
-        DEFAULT_HUBSPOT_CONFIG_YAML_FILE_NAME,
-      globalConfigPath: GLOBAL_CONFIG_PATH,
-    })
-  );
+  uiLogger.log('');
+
   const { shouldMigrateConfig } = await promptUser({
     name: 'shouldMigrateConfig',
     type: 'confirm',
-    message: i18n('lib.configMigrate.migrateConfigPrompt'),
+    message: lib.configMigrate.handleMigration.confirmPrompt,
   });
 
   if (!shouldMigrateConfig) {
-    trackCommandMetadataUsage(
-      'config-migrate',
-      {
-        command: 'hs config migrate',
-        type: 'migration',
-        step: 'Reject migration via prompt',
-      },
-      accountId
-    );
     return false;
   }
 
-  const deprecatedConfig = getDeprecatedConfig(configPath);
+  const deprecatedConfig = getDeprecatedConfig(deprecatedConfigPath);
   migrateConfig(deprecatedConfig);
-  trackCommandMetadataUsage(
-    'config-migrate',
-    {
-      command: 'hs config migrate',
-      type: 'migration',
-      step: 'Confirm migration via prompt',
-      successful: true,
-    },
-    accountId
-  );
-  logger.success(
-    i18n('lib.configMigrate.migrationSuccess', {
-      globalConfigPath: GLOBAL_CONFIG_PATH,
-    })
-  );
+
+  uiLogger.success(lib.configMigrate.handleMigration.success);
+
   return true;
 }
 
-async function mergeConfigProperties(
+async function handleMergeConfigProperties(
   globalConfig: CLIConfig_NEW,
   deprecatedConfig: CLIConfig_DEPRECATED,
   force?: boolean
@@ -90,19 +62,33 @@ async function mergeConfigProperties(
     initialConfig,
     conflicts,
   }: { initialConfig: CLIConfig_NEW; conflicts: ConflictProperty[] } =
-    _mergeConfigProperties(globalConfig, deprecatedConfig, force);
+    mergeConfigProperties(globalConfig, deprecatedConfig, force);
 
   if (conflicts.length > 0) {
+    const properties = conflicts.map(c => c.property);
+    const propertyList =
+      properties.length <= 2
+        ? properties.join(' and ')
+        : `${properties.slice(0, -1).join(', ')}, and ${properties.at(-1)}`;
+
+    uiLogger.log('');
+    uiLogger.warn(
+      lib.configMigrate.handleMergeConfigProperties.mergeConflictMessage(
+        conflicts.length,
+        propertyList
+      )
+    );
     for (const conflict of conflicts) {
       const { property, newValue, oldValue } = conflict;
       const { shouldOverwrite } = await promptUser({
         name: 'shouldOverwrite',
         type: 'confirm',
-        message: i18n('lib.configMigrate.mergeConfigConflictPrompt', {
-          property,
-          oldValue: `${oldValue}`,
-          newValue: `${newValue}`,
-        }),
+        message:
+          lib.configMigrate.handleMergeConfigProperties.mergeConfigConflictPrompt(
+            property,
+            newValue.toString(),
+            oldValue.toString()
+          ),
       });
 
       if (shouldOverwrite) {
@@ -115,53 +101,43 @@ async function mergeConfigProperties(
 }
 
 export async function handleMerge(
-  accountId: number | undefined,
-  configPath?: string,
-  force?: boolean
+  deprecatedConfigPath?: string,
+  force?: boolean,
+  hideWarning?: boolean
 ): Promise<boolean> {
-  logger.log(i18n('lib.configMigrate.mergeHeader'));
-  logger.log('');
-  logger.log(
-    i18n('lib.configMigrate.mergeDescription', {
-      archivedConfigPath: ARCHIVED_HUBSPOT_CONFIG_YAML_FILE_NAME,
-    })
+  if (!hideWarning) {
+    uiLogger.warn(
+      lib.configMigrate.deprecatedConfigWarning(
+        deprecatedConfigPath || getConfigPath(undefined, false)!
+      )
+    );
+    uiLogger.log('');
+  }
+  uiLogger.log(
+    lib.configMigrate.handleMerge.description(
+      ARCHIVED_HUBSPOT_CONFIG_YAML_FILE_NAME
+    )
   );
-  logger.log('');
-  logger.log(
-    i18n('lib.configMigrate.mergeConfigsPromptDescription', {
-      deprecatedConfigPath:
-        getConfigPath(configPath, false) ||
-        DEFAULT_HUBSPOT_CONFIG_YAML_FILE_NAME,
-      globalConfigPath: GLOBAL_CONFIG_PATH,
-    })
-  );
+  uiLogger.log('');
+
   const { shouldMergeConfigs } = await promptUser({
     name: 'shouldMergeConfigs',
     type: 'confirm',
-    message: i18n('lib.configMigrate.mergeConfigsPrompt'),
+    message: lib.configMigrate.handleMerge.confirmPrompt,
   });
 
   if (!shouldMergeConfigs) {
-    trackCommandMetadataUsage(
-      'config-migrate',
-      {
-        command: 'hs config migrate',
-        type: 'merge',
-        step: 'Reject merge via prompt',
-      },
-      accountId
-    );
     return false;
   }
 
-  const deprecatedConfig = getDeprecatedConfig(configPath);
+  const deprecatedConfig = getDeprecatedConfig(deprecatedConfigPath);
   const globalConfig = getGlobalConfig();
 
   if (!deprecatedConfig || !globalConfig) {
     return true;
   }
 
-  const mergedConfig = await mergeConfigProperties(
+  const mergedConfig = await handleMergeConfigProperties(
     globalConfig,
     deprecatedConfig,
     force
@@ -173,27 +149,13 @@ export async function handleMerge(
   );
 
   if (skippedAccountIds.length > 0) {
-    logger.log(
-      i18n('lib.configMigrate.skippedExistingAccounts', {
-        skippedAccountIds: skippedAccountIds.join(', '),
-      })
+    uiLogger.log('');
+    uiLogger.log(
+      lib.configMigrate.handleMerge.skippedExistingAccounts(skippedAccountIds)
     );
+    uiLogger.log('');
   }
 
-  logger.success(
-    i18n('lib.configMigrate.mergeSuccess', {
-      globalConfigPath: GLOBAL_CONFIG_PATH,
-    })
-  );
-  trackCommandMetadataUsage(
-    'config-migrate',
-    {
-      command: 'hs config migrate',
-      type: 'merge',
-      step: 'Confirm merge via prompt',
-      successful: true,
-    },
-    accountId
-  );
+  uiLogger.success(lib.configMigrate.handleMerge.success);
   return true;
 }

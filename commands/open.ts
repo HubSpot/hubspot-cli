@@ -1,37 +1,37 @@
 import { Argv, ArgumentsCamelCase } from 'yargs';
-import { trackCommandUsage } from '../lib/usageTracking';
-import { logSiteLinks, getSiteLinksAsArray, openLink } from '../lib/links';
-import { promptUser } from '../lib/prompts/promptUtils';
-import { i18n } from '../lib/lang';
-import { EXIT_CODES } from '../lib/enums/exitCodes';
+import { trackCommandUsage } from '../lib/usageTracking.js';
+import { logSiteLinks, getSiteLinksAsArray, openLink } from '../lib/links.js';
+import { promptUser } from '../lib/prompts/promptUtils.js';
+import { commands } from '../lang/en.js';
+import { EXIT_CODES } from '../lib/enums/exitCodes.js';
 import {
   CommonArgs,
   ConfigArgs,
   EnvironmentArgs,
   AccountArgs,
   YargsCommandModule,
-} from '../types/Yargs';
-import { makeYargsBuilder } from '../lib/yargsUtils';
+} from '../types/Yargs.js';
+import { makeYargsBuilder } from '../lib/yargsUtils.js';
 
 const separator = ' => ';
 
 async function createListPrompt(accountId: number): Promise<{ open: string }> {
-  return promptUser([
-    {
-      type: 'rawlist',
-      name: 'open',
-      pageSize: 20,
-      message: i18n('commands.open.selectLink'),
-      choices: getSiteLinksAsArray(accountId).map(
-        l => `${l.shortcut}${separator}${l.url}`
-      ),
-      filter: val => val.split(separator)[0],
-    },
-  ]);
+  return promptUser({
+    name: 'open',
+    type: 'rawlist',
+    pageSize: 20,
+    message: commands.open.selectLink,
+    choices: getSiteLinksAsArray(accountId)
+      .filter(l => !!l.url)
+      .map(l => ({
+        name: `${l.shortcut}${separator}${l.url}`,
+        value: l.shortcut,
+      })),
+  });
 }
 
 const command = 'open [shortcut]';
-const describe = i18n('commands.open.describe');
+const describe = commands.open.describe;
 
 type OpenArgs = CommonArgs &
   ConfigArgs &
@@ -47,8 +47,8 @@ async function handler(args: ArgumentsCamelCase<OpenArgs>): Promise<void> {
   trackCommandUsage('open', undefined, derivedAccountId);
 
   if (shortcut === undefined && !list) {
-    const choice = await createListPrompt(derivedAccountId);
-    openLink(derivedAccountId, choice.open);
+    const { open } = await createListPrompt(derivedAccountId);
+    openLink(derivedAccountId, open);
   } else if (list) {
     logSiteLinks(derivedAccountId);
   } else if (shortcut) {
@@ -59,13 +59,13 @@ async function handler(args: ArgumentsCamelCase<OpenArgs>): Promise<void> {
 
 function openBuilder(yargs: Argv): Argv<OpenArgs> {
   yargs.positional('[shortcut]', {
-    describe: i18n('commands.open.positionals.shortcut.describe'),
+    describe: commands.open.positionals.shortcut.describe,
     type: 'string',
   });
 
   yargs.option('list', {
     alias: 'l',
-    describe: i18n('commands.open.options.list.describe'),
+    describe: commands.open.options.list.describe,
     type: 'boolean',
   });
 
@@ -95,6 +95,3 @@ const openCommand: YargsCommandModule<unknown, OpenArgs> = {
 };
 
 export default openCommand;
-
-// TODO Remove this legacy export once we've migrated all commands to TS
-module.exports = openCommand;

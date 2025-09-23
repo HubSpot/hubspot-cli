@@ -1,15 +1,14 @@
 import { CLIAccount } from '@hubspot/local-dev-lib/types/Accounts';
 
-jest.mock('@hubspot/local-dev-lib/config');
+vi.mock('@hubspot/local-dev-lib/config');
 
-import { Diagnosis } from '../Diagnosis';
-import { DiagnosticInfo } from '../DiagnosticInfoBuilder';
+import { Diagnosis } from '../Diagnosis.js';
+import { DiagnosticInfo } from '../DiagnosticInfoBuilder.js';
 import { getAccountConfig as __getAccountConfig } from '@hubspot/local-dev-lib/config';
 import stripAnsi from 'strip-ansi';
+import { Mock } from 'vitest';
 
-const getAccountConfig = __getAccountConfig as jest.MockedFunction<
-  typeof __getAccountConfig
->;
+const getAccountConfig = __getAccountConfig as Mock<typeof __getAccountConfig>;
 
 describe('lib/doctor/Diagnosis', () => {
   const diagnosticInfo: DiagnosticInfo = {

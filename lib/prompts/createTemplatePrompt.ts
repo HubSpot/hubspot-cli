@@ -1,6 +1,7 @@
-import { promptUser } from './promptUtils';
-import { i18n } from '../lang';
-import { PromptChoices, PromptConfig } from '../../types/Prompts';
+import { promptUser } from './promptUtils.js';
+import { i18n } from '../lang.js';
+import { PromptChoices, PromptConfig } from '../../types/Prompts.js';
+import { CreateArgs, TemplateType } from '../../types/Cms.js';
 
 const templateTypeChoices = [
   { name: 'page', value: 'page-template' },
@@ -10,10 +11,11 @@ const templateTypeChoices = [
   { name: 'blog listing', value: 'blog-listing-template' },
   { name: 'blog post', value: 'blog-post-template' },
   { name: 'search results', value: 'search-template' },
+  { name: 'section', value: 'section' },
 ] as const satisfies PromptChoices;
 
 interface CreateTemplatePromptResponse {
-  templateType: (typeof templateTypeChoices)[number]['value'];
+  templateType: TemplateType;
 }
 
 const TEMPLATE_TYPE_PROMPT: PromptConfig<CreateTemplatePromptResponse> = {
@@ -24,6 +26,16 @@ const TEMPLATE_TYPE_PROMPT: PromptConfig<CreateTemplatePromptResponse> = {
   choices: templateTypeChoices,
 };
 
-export function createTemplatePrompt(): Promise<CreateTemplatePromptResponse> {
+export function createTemplatePrompt(
+  commandArgs: Partial<CreateArgs> = {}
+): Promise<CreateTemplatePromptResponse> {
+  // If templateType is provided, return it directly
+  if (commandArgs.templateType) {
+    return Promise.resolve({
+      templateType: commandArgs.templateType,
+    });
+  }
+
+  // No templateType provided, prompt for it (original behavior)
   return promptUser<CreateTemplatePromptResponse>([TEMPLATE_TYPE_PROMPT]);
 }

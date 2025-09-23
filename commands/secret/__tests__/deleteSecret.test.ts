@@ -3,23 +3,23 @@ import {
   addConfigOptions,
   addAccountOptions,
   addUseEnvironmentOptions,
-} from '../../../lib/commonOpts';
-import deleteSecretCommand from '../deleteSecret';
+} from '../../../lib/commonOpts.js';
+import deleteSecretCommand from '../deleteSecret.js';
 
-jest.mock('yargs');
-jest.mock('../../../lib/commonOpts');
+vi.mock('yargs');
+vi.mock('../../../lib/commonOpts');
 
 describe('commands/secret/deleteSecret', () => {
   let yargsMock = yargs as Argv;
 
   beforeEach(() => {
     yargsMock = {
-      positional: jest.fn().mockReturnThis(),
-      options: jest.fn().mockReturnThis(),
-      command: jest.fn().mockReturnThis(),
-      demandCommand: jest.fn().mockReturnThis(),
-      help: jest.fn().mockReturnThis(),
-      alias: jest.fn().mockReturnThis(),
+      positional: vi.fn().mockReturnThis(),
+      options: vi.fn().mockReturnThis(),
+      command: vi.fn().mockReturnThis(),
+      demandCommand: vi.fn().mockReturnThis(),
+      help: vi.fn().mockReturnThis(),
+      alias: vi.fn().mockReturnThis(),
       argv: {},
     } as unknown as Argv;
   });

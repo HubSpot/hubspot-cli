@@ -1,28 +1,26 @@
 import { Argv, ArgumentsCamelCase } from 'yargs';
 
-import SpinniesManager from '../../lib/ui/SpinniesManager';
-import { trackCommandUsage } from '../../lib/usageTracking';
+import SpinniesManager from '../../lib/ui/SpinniesManager.js';
+import { trackCommandUsage } from '../../lib/usageTracking.js';
 import {
   kickOffValidation,
   pollForValidationFinish,
   fetchValidationResults,
   processValidationErrors,
   displayValidationResults,
-} from '../../lib/marketplaceValidate';
-import { i18n } from '../../lib/lang';
+} from '../../lib/marketplaceValidate.js';
+import { commands } from '../../lang/en.js';
 import {
   CommonArgs,
   ConfigArgs,
   AccountArgs,
   EnvironmentArgs,
   YargsCommandModule,
-} from '../../types/Yargs';
-import { makeYargsBuilder } from '../../lib/yargsUtils';
+} from '../../types/Yargs.js';
+import { makeYargsBuilder } from '../../lib/yargsUtils.js';
 
 const command = 'marketplace-validate <path>';
-const describe = i18n(
-  'commands.theme.subcommands.marketplaceValidate.describe'
-);
+const describe = commands.theme.subcommands.marketplaceValidate.describe;
 
 type ThemeValidateArgs = CommonArgs &
   ConfigArgs &
@@ -39,11 +37,8 @@ async function handler(
   SpinniesManager.init();
 
   SpinniesManager.add('marketplaceValidation', {
-    text: i18n(
-      'commands.theme.subcommands.marketplaceValidate.logs.validatingTheme',
-      {
-        path,
-      }
+    text: commands.theme.subcommands.marketplaceValidate.logs.validatingTheme(
+      path
     ),
   });
 
@@ -62,11 +57,11 @@ async function handler(
     validationId
   );
   processValidationErrors(
-    'commands.theme.subcommands.marketplaceValidate',
+    commands.theme.subcommands.marketplaceValidate.errors.invalidPath,
     validationResults
   );
   displayValidationResults(
-    'commands.theme.subcommands.marketplaceValidate',
+    commands.theme.subcommands.marketplaceValidate.results,
     validationResults
   );
 
@@ -75,9 +70,8 @@ async function handler(
 
 function themeValidateBuilder(yargs: Argv): Argv<ThemeValidateArgs> {
   yargs.positional('path', {
-    describe: i18n(
-      'commands.theme.subcommands.marketplaceValidate.positionals.path.describe'
-    ),
+    describe:
+      commands.theme.subcommands.marketplaceValidate.positionals.path.describe,
     type: 'string',
     required: true,
   });

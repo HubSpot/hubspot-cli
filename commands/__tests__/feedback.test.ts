@@ -1,9 +1,9 @@
 import yargs, { Argv } from 'yargs';
-import * as commonOpts from '../../lib/commonOpts';
-import feedbackCommand from '../feedback';
+import * as commonOpts from '../../lib/commonOpts.js';
+import feedbackCommand from '../feedback.js';
 
-jest.mock('yargs');
-jest.mock('../../lib/commonOpts');
+vi.mock('yargs');
+vi.mock('../../lib/commonOpts');
 
 describe('commands/feedback', () => {
   describe('command', () => {

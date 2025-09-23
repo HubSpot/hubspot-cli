@@ -3,23 +3,24 @@ import {
   isGloballyInstalled,
   getLatestCliVersion,
   DEFAULT_PACKAGE_MANAGER,
-} from '../npm';
-import pkg from '../../package.json';
+} from '../npm.js';
+import pkg from '../../package.json' with { type: 'json' };
+import { Mock } from 'vitest';
 
-jest.mock('@hubspot/local-dev-lib/logger');
-jest.mock('../ui/SpinniesManager');
+vi.mock('@hubspot/local-dev-lib/logger');
+vi.mock('../ui/SpinniesManager');
 
 describe('lib/npm', () => {
-  let execMock: jest.Mock;
+  let execMock: Mock;
 
-  function mockedPromisify(execMock: jest.Mock): typeof util.promisify {
-    return jest
+  function mockedPromisify(execMock: Mock): typeof util.promisify {
+    return vi
       .fn()
       .mockReturnValue(execMock) as unknown as typeof util.promisify;
   }
 
   beforeEach(() => {
-    execMock = jest.fn();
+    execMock = vi.fn();
     util.promisify = mockedPromisify(execMock);
   });
 

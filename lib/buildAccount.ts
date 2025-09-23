@@ -10,22 +10,40 @@ import {
 } from '@hubspot/local-dev-lib/config';
 import { getAccountIdentifier } from '@hubspot/local-dev-lib/config/getAccountIdentifier';
 import { logger } from '@hubspot/local-dev-lib/logger';
-import { createDeveloperTestAccount } from '@hubspot/local-dev-lib/api/developerTestAccounts';
+import {
+  createDeveloperTestAccount,
+  fetchDeveloperTestAccountGateSyncStatus,
+  generateDeveloperTestAccountPersonalAccessKey,
+} from '@hubspot/local-dev-lib/api/developerTestAccounts';
+import { DeveloperTestAccountConfig } from '@hubspot/local-dev-lib/types/developerTestAccounts';
 import { HUBSPOT_ACCOUNT_TYPES } from '@hubspot/local-dev-lib/constants/config';
-import { createSandbox } from '@hubspot/local-dev-lib/api/sandboxHubs';
+import {
+  createSandbox,
+  createV2Sandbox,
+  getSandboxPersonalAccessKey,
+} from '@hubspot/local-dev-lib/api/sandboxHubs';
 import { Environment } from '@hubspot/local-dev-lib/types/Config';
 
-import { personalAccessKeyPrompt } from './prompts/personalAccessKeyPrompt';
-import { i18n } from './lang';
-import { cliAccountNamePrompt } from './prompts/accountNamePrompt';
-import SpinniesManager from './ui/SpinniesManager';
-import { debugError, logError } from './errorHandlers/index';
-
-import { SANDBOX_API_TYPE_MAP, handleSandboxCreateError } from './sandboxes';
-import { handleDeveloperTestAccountCreateError } from './developerTestAccounts';
+import { personalAccessKeyPrompt } from './prompts/personalAccessKeyPrompt.js';
+import { createDeveloperTestAccountConfigPrompt } from './prompts/createDeveloperTestAccountConfigPrompt.js';
+import { i18n } from './lang.js';
+import { cliAccountNamePrompt } from './prompts/accountNamePrompt.js';
+import SpinniesManager from './ui/SpinniesManager.js';
+import { debugError, logError } from './errorHandlers/index.js';
+import {
+  SANDBOX_API_TYPE_MAP,
+  SANDBOX_TYPE_MAP_V2,
+  handleSandboxCreateError,
+} from './sandboxes.js';
+import { handleDeveloperTestAccountCreateError } from './developerTestAccounts.js';
 import { CLIAccount } from '@hubspot/local-dev-lib/types/Accounts';
-import { SandboxResponse } from '@hubspot/local-dev-lib/types/Sandbox';
-import { SandboxAccountType } from '../types/Sandboxes';
+import {
+  SandboxResponse,
+  V2Sandbox,
+} from '@hubspot/local-dev-lib/types/Sandbox';
+import { SandboxAccountType } from '../types/Sandboxes.js';
+import { lib } from '../lang/en.js';
+import { poll } from './polling.js';
 
 export async function saveAccountToConfig(
   accountId: number | undefined,
@@ -85,17 +103,91 @@ export async function saveAccountToConfig(
   return validName;
 }
 
+export async function createDeveloperTestAccountV3(
+  parentAccountId: number,
+  testAccountConfig: DeveloperTestAccountConfig
+): Promise<{
+  accountName: string;
+  accountId?: number;
+  personalAccessKey?: string;
+}> {
+  const result: {
+    accountName: string;
+    accountId?: number;
+    personalAccessKey?: string;
+  } = {
+    accountName: testAccountConfig.accountName,
+  };
+
+  const { data } = await createDeveloperTestAccount(
+    parentAccountId,
+    testAccountConfig
+  );
+
+  result.accountId = data.id;
+
+  try {
+    await poll(
+      () =>
+        fetchDeveloperTestAccountGateSyncStatus(
+          parentAccountId,
+          result.accountId!
+        ),
+      {
+        successStates: ['SUCCESS'],
+        errorStates: [],
+      }
+    );
+  } catch (err) {
+    debugError(err);
+    throw new Error(lib.buildAccount.createDeveloperTestAccountV3.syncFailure);
+  }
+
+  // HACK: The status endpoint sometimes returns an early success status.
+  // Sleep for an extra 5 seconds to make sure the sync is actually complete.
+  await new Promise(resolve => setTimeout(resolve, 5000));
+
+  try {
+    // Attempt to generate a new personal access key for the test account now that gate sync is complete.
+    const { data } = await generateDeveloperTestAccountPersonalAccessKey(
+      parentAccountId,
+      result.accountId!
+    );
+
+    result.personalAccessKey = data.personalAccessKey;
+  } catch (err) {
+    debugError(err);
+    throw new Error(lib.buildAccount.createDeveloperTestAccountV3.pakFailure);
+  }
+
+  return result;
+}
+
 export async function buildDeveloperTestAccount(
   testAccountName: string,
   parentAccountConfig: CLIAccount,
   env: Environment,
-  portalLimit: number
+  portalLimit: number,
+  useV3 = false
 ): Promise<number> {
   const id = getAccountIdentifier(parentAccountConfig);
   const parentAccountId = getAccountId(id);
+  let testAccountConfig: DeveloperTestAccountConfig = {
+    accountName: testAccountName,
+  };
 
   if (!parentAccountId) {
     throw new Error(i18n(`lib.developerTestAccount.create.loading.fail`));
+  }
+
+  if (useV3) {
+    testAccountConfig = await createDeveloperTestAccountConfigPrompt(
+      {
+        name: testAccountConfig.accountName,
+        description: 'Test Account created by the HubSpot CLI',
+      },
+      false
+    );
   }
 
   SpinniesManager.init({
@@ -113,13 +205,23 @@ export async function buildDeveloperTestAccount(
   let developerTestAccountPersonalAccessKey: string;
 
   try {
-    const { data } = await createDeveloperTestAccount(
-      parentAccountId,
-      testAccountName
-    );
+    if (useV3) {
+      const result = await createDeveloperTestAccountV3(
+        parentAccountId,
+        testAccountConfig
+      );
 
-    developerTestAccountId = data.id;
-    developerTestAccountPersonalAccessKey = data.personalAccessKey;
+      developerTestAccountId = result.accountId!;
+      developerTestAccountPersonalAccessKey = result.personalAccessKey!;
+    } else {
+      const { data } = await createDeveloperTestAccount(
+        parentAccountId,
+        testAccountName
+      );
+
+      developerTestAccountId = data.id;
+      developerTestAccountPersonalAccessKey = data.personalAccessKey;
+    }
 
     SpinniesManager.succeed('buildDeveloperTestAccount', {
       text: i18n(`lib.developerTestAccount.create.loading.succeed`, {
@@ -234,4 +336,90 @@ export async function buildSandbox(
   }
 
   return sandbox;
+}
+
+export async function buildV2Sandbox(
+  sandboxName: string,
+  parentAccountConfig: CLIAccount,
+  sandboxType: SandboxAccountType,
+  syncObjectRecords: boolean,
+  env: Environment,
+  force = false
+) {
+  let i18nKey: string;
+  if (sandboxType === HUBSPOT_ACCOUNT_TYPES.STANDARD_SANDBOX) {
+    i18nKey = 'lib.sandbox.create.loading.standard';
+  } else {
+    i18nKey = 'lib.sandbox.create.loading.developer';
+  }
+  const id = getAccountIdentifier(parentAccountConfig);
+  const parentAccountId = getAccountId(id);
+
+  if (!parentAccountId) {
+    throw new Error(i18n(`${i18nKey}.fail`));
+  }
+
+  SpinniesManager.init({
+    succeedColor: 'white',
+  });
+
+  logger.log('');
+  SpinniesManager.add('buildV2Sandbox', {
+    text: i18n(`${i18nKey}.add`, {
+      accountName: sandboxName,
+    }),
+  });
+
+  let sandbox: V2Sandbox;
+  let pak: string;
+
+  try {
+    const sandboxTypeV2 = SANDBOX_TYPE_MAP_V2[sandboxType];
+    const { data } = await createV2Sandbox(
+      parentAccountId,
+      sandboxName,
+      sandboxTypeV2,
+      syncObjectRecords
+    );
+    sandbox = { ...data };
+
+    const {
+      data: { personalAccessKey },
+    } = await getSandboxPersonalAccessKey(
+      parentAccountId,
+      sandbox.sandboxHubId
+    );
+    pak = personalAccessKey.encodedOAuthRefreshToken;
+
+    SpinniesManager.succeed('buildV2Sandbox', {
+      text: i18n(`${i18nKey}.succeed`, {
+        accountName: sandboxName,
+        accountId: sandbox.sandboxHubId,
+      }),
+    });
+  } catch (e) {
+    debugError(e);
+    SpinniesManager.fail('buildV2Sandbox', {
+      text: i18n(`${i18nKey}.fail`, {
+        accountName: sandboxName,
+      }),
+    });
+
+    handleSandboxCreateError(e, env, sandboxName, parentAccountId);
+  }
+
+  try {
+    await saveAccountToConfig(
+      sandbox.sandboxHubId,
+      sandboxName,
+      env,
+      pak,
+      force
+    );
+  } catch (err) {
+    logError(err);
+    throw err;
+  }
+
+  return { sandbox };
 }

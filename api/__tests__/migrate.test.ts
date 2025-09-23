@@ -2,17 +2,18 @@ import { http } from '@hubspot/local-dev-lib/http';
 import { MIGRATION_STATUS } from '@hubspot/local-dev-lib/types/Migration';
 import {
   listAppsForMigration,
-  initializeMigration,
-  continueMigration,
+  initializeAppMigration,
+  continueAppMigration,
   checkMigrationStatusV2,
   ListAppsResponse,
   MigrationStatus,
   isMigrationStatus,
-} from '../migrate';
+} from '../migrate.js';
+import { Mocked } from 'vitest';
 
-jest.mock('@hubspot/local-dev-lib/http');
+vi.mock('@hubspot/local-dev-lib/http');
 
-const httpMock = http as jest.Mocked<typeof http>;
+const httpMock = http as Mocked<typeof http>;
 
 describe('api/migrate', () => {
   const mockAccountId = 12345;
@@ -68,13 +69,13 @@ describe('api/migrate', () => {
     });
   });
 
-  describe('initializeMigration', () => {
+  describe('initializeAppMigration', () => {
     it('should call http.post with correct parameters', async () => {
       const mockResponse = { migrationId: mockMigrationId };
       // @ts-expect-error Mock
       httpMock.post.mockResolvedValue(mockResponse);
 
-      const result = await initializeMigration(
+      const result = await initializeAppMigration(
         mockAccountId,
         mockAppId,
         mockPlatformVersion
@@ -91,13 +92,13 @@ describe('api/migrate', () => {
     });
   });
 
-  describe('continueMigration', () => {
+  describe('continueAppMigration', () => {
     it('should call http.post with correct parameters', async () => {
       const mockResponse = { migrationId: mockMigrationId };
       // @ts-expect-error Mock
       httpMock.post.mockResolvedValue(mockResponse);
 
-      const result = await continueMigration(
+      const result = await continueAppMigration(
         mockPortalId,
         mockMigrationId,
         mockComponentUids,

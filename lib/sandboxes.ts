@@ -12,10 +12,10 @@ import {
 import { AccountType, CLIAccount } from '@hubspot/local-dev-lib/types/Accounts';
 import { Environment } from '@hubspot/local-dev-lib/types/Config';
 
-import { i18n } from './lang';
-import { uiAccountDescription } from './ui';
-import { logError } from './errorHandlers/index';
-import { SandboxSyncTask, SandboxAccountType } from '../types/Sandboxes';
+import { i18n } from './lang.js';
+import { uiAccountDescription } from './ui/index.js';
+import { logError } from './errorHandlers/index.js';
+import { SandboxSyncTask, SandboxAccountType } from '../types/Sandboxes.js';
 
 export const SYNC_TYPES = {
   OBJECT_RECORDS: 'object-records',
@@ -31,6 +31,11 @@ export const SANDBOX_TYPE_MAP: { [key: string]: SandboxAccountType } = {
 export const SANDBOX_API_TYPE_MAP = {
   [HUBSPOT_ACCOUNT_TYPES.STANDARD_SANDBOX]: 1,
   [HUBSPOT_ACCOUNT_TYPES.DEVELOPMENT_SANDBOX]: 2,
+} as const;
+
+export const SANDBOX_TYPE_MAP_V2 = {
+  [HUBSPOT_ACCOUNT_TYPES.STANDARD_SANDBOX]: 'STANDARD',
+  [HUBSPOT_ACCOUNT_TYPES.DEVELOPMENT_SANDBOX]: 'DEVELOPER',
 } as const;
 
 export function getSandboxTypeAsString(accountType?: AccountType): string {

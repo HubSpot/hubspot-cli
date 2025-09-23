@@ -5,14 +5,12 @@ import {
   writeConfig,
   createEmptyConfigFile,
   deleteEmptyConfigFile,
-  getConfigDefaultAccount,
 } from '@hubspot/local-dev-lib/config';
 import {
   configFileExists,
   getConfigPath,
 } from '@hubspot/local-dev-lib/config/migrate';
 import { getAccountIdentifier } from '@hubspot/local-dev-lib/config/getAccountIdentifier';
-import { logger } from '@hubspot/local-dev-lib/logger';
 import {
   getAccessToken,
   updateConfigWithAccessToken,
@@ -22,60 +20,70 @@ import { toKebabCase } from '@hubspot/local-dev-lib/text';
 import { Environment } from '@hubspot/local-dev-lib/types/Config';
 import { CLIAccount } from '@hubspot/local-dev-lib/types/Accounts';
 import { PERSONAL_ACCESS_KEY_AUTH_METHOD } from '@hubspot/local-dev-lib/constants/auth';
-import { GLOBAL_CONFIG_PATH } from '@hubspot/local-dev-lib/constants/config';
-
-import { handleMerge, handleMigration } from '../../lib/configMigrate';
-import { handleExit } from '../../lib/process';
-import { debugError } from '../../lib/errorHandlers/index';
-import { i18n } from '../../lib/lang';
-import { trackCommandUsage, trackAuthAction } from '../../lib/usageTracking';
-import { personalAccessKeyPrompt } from '../../lib/prompts/personalAccessKeyPrompt';
-import { cliAccountNamePrompt } from '../../lib/prompts/accountNamePrompt';
-import { setAsDefaultAccountPrompt } from '../../lib/prompts/setAsDefaultAccountPrompt';
-import { logError } from '../../lib/errorHandlers/index';
-import { trackCommandMetadataUsage } from '../../lib/usageTracking';
-import { EXIT_CODES } from '../../lib/enums/exitCodes';
-import { uiCommandReference, uiFeatureHighlight } from '../../lib/ui';
-import { CommonArgs, ConfigArgs, YargsCommandModule } from '../../types/Yargs';
-import { makeYargsBuilder } from '../../lib/yargsUtils';
+import { handleMerge, handleMigration } from '../../lib/configMigrate.js';
+import { handleExit } from '../../lib/process.js';
+import { debugError } from '../../lib/errorHandlers/index.js';
+import { trackCommandUsage, trackAuthAction } from '../../lib/usageTracking.js';
+import { personalAccessKeyPrompt } from '../../lib/prompts/personalAccessKeyPrompt.js';
+import { cliAccountNamePrompt } from '../../lib/prompts/accountNamePrompt.js';
+import { setAsDefaultAccountPrompt } from '../../lib/prompts/setAsDefaultAccountPrompt.js';
+import { logError } from '../../lib/errorHandlers/index.js';
+import { EXIT_CODES } from '../../lib/enums/exitCodes.js';
+import { uiFeatureHighlight } from '../../lib/ui/index.js';
+import { parseStringToNumber } from '../../lib/parsing.js';
+import {
+  CommonArgs,
+  ConfigArgs,
+  YargsCommandModule,
+} from '../../types/Yargs.js';
+import { makeYargsBuilder } from '../../lib/yargsUtils.js';
+import { commands } from '../../lang/en.js';
+import { uiLogger } from '../../lib/ui/logger.js';
 
 const TRACKING_STATUS = {
   STARTED: 'started',
   ERROR: 'error',
   COMPLETE: 'complete',
 };
+const authType = PERSONAL_ACCESS_KEY_AUTH_METHOD.value;
 
-async function updateConfig(
+async function updateConfigWithNewAccount(
   env: Environment,
-  doesConfigExist: boolean,
-  disableTracking: boolean | undefined,
-  authType: string,
-  account?: number
+  configAlreadyExists: boolean,
+  providedPersonalAccessKey?: string,
+  accountId?: number
 ): Promise<CLIAccount | null> {
   try {
-    const { personalAccessKey } = await personalAccessKeyPrompt({
-      env,
-      account,
-    });
+    const { personalAccessKey } = providedPersonalAccessKey
+      ? { personalAccessKey: providedPersonalAccessKey }
+      : await personalAccessKeyPrompt({
+          env,
+          account: accountId,
+        });
     const token = await getAccessToken(personalAccessKey, env);
-    const defaultName = token.hubName ? toKebabCase(token.hubName) : undefined;
+    const defaultAccountName = token.hubName
+      ? toKebabCase(token.hubName)
+      : undefined;
 
-    const name = doesConfigExist
+    const accountName = configAlreadyExists
       ? undefined
-      : (await cliAccountNamePrompt(defaultName)).name;
+      : (await cliAccountNamePrompt(defaultAccountName)).name;
 
     const updatedConfig = await updateConfigWithAccessToken(
       token,
       personalAccessKey,
       env,
-      name,
-      !doesConfigExist
+      accountName,
+      !configAlreadyExists
     );
 
     if (!updatedConfig) return null;
 
-    if (doesConfigExist && !updatedConfig.name) {
-      updatedConfig.name = (await cliAccountNamePrompt(defaultName)).name;
+    // Can happen if the user is re-authenticating an account with no name
+    if (configAlreadyExists && !updatedConfig.name) {
+      updatedConfig.name = (
+        await cliAccountNamePrompt(defaultAccountName)
+      ).name;
       updateAccountConfig({
         ...updatedConfig,
       });
@@ -84,140 +92,137 @@ async function updateConfig(
 
     return updatedConfig;
   } catch (e) {
-    if (!disableTracking) {
-      await trackAuthAction('account-auth', authType, TRACKING_STATUS.ERROR);
-    }
     debugError(e);
     return null;
   }
 }
 
-async function handleConfigMigration(
-  providedAccountId: number | undefined
-): Promise<boolean> {
+async function handleConfigMigration(): Promise<boolean> {
   const deprecatedConfigExists = configFileExists(false);
   const globalConfigExists = configFileExists(true);
 
+  // No deprecated config exists, so no migration is needed
   if (!deprecatedConfigExists) {
     return true;
   }
 
+  // Global config exists, so we need to merge the deprecated config with the global config
   if (globalConfigExists) {
     try {
-      const mergeConfirmed = await handleMerge(providedAccountId);
+      const mergeConfirmed = await handleMerge();
       if (!mergeConfirmed) {
-        logger.log(
-          i18n('commands.account.subcommands.auth.errors.mergeNotConfirmed', {
-            authCommand: uiCommandReference('hs account auth'),
-            migrateCommand: uiCommandReference('hs config migrate'),
-          })
+        uiLogger.log('');
+        uiLogger.log(
+          commands.account.subcommands.auth.errors.mergeNotConfirmed
         );
-        process.exit(EXIT_CODES.SUCCESS);
       }
       return mergeConfirmed;
     } catch (error) {
       logError(error);
-      trackCommandMetadataUsage(
-        'account-auth',
-        {
-          command: 'hs account auth',
-          type: 'Merge configs',
-          successful: false,
-        },
-        providedAccountId
+      return false;
+    }
+  }
+
+  // Global config does not exist, so we only need to migrate the deprecated config
+  try {
+    const migrationConfirmed = await handleMigration();
+    if (!migrationConfirmed) {
+      uiLogger.log('');
+      uiLogger.log(
+        commands.account.subcommands.auth.errors.migrationNotConfirmed
+      );
+    }
+    return migrationConfirmed;
+  } catch (error) {
+    logError(error);
+    return false;
+  }
+}
+
+const describe = commands.account.subcommands.auth.describe;
+const command = 'auth';
+
+type AccountAuthArgs = CommonArgs &
+  ConfigArgs & {
+    disableTracking?: boolean;
+  } & { personalAccessKey?: string };
+
+async function handler(
+  args: ArgumentsCamelCase<AccountAuthArgs>
+): Promise<void> {
+  const {
+    disableTracking,
+    personalAccessKey: providedPersonalAccessKey,
+    userProvidedAccount,
+  } = args;
+
+  let parsedUserProvidedAccountId: number | undefined;
+
+  if (userProvidedAccount) {
+    try {
+      parsedUserProvidedAccountId = parseStringToNumber(userProvidedAccount);
+    } catch (err) {
+      uiLogger.error(
+        commands.account.subcommands.auth.errors.invalidAccountIdProvided
       );
       process.exit(EXIT_CODES.ERROR);
     }
   }
 
-  try {
-    const migrationConfirmed = await handleMigration(providedAccountId);
-    if (!migrationConfirmed) {
-      logger.log(
-        i18n('commands.account.subcommands.auth.errors.migrationNotConfirmed', {
-          authCommand: uiCommandReference('hs auth'),
-          deprecatedConfigPath: getConfigPath('', false)!,
-        })
-      );
-      process.exit(EXIT_CODES.SUCCESS);
-    }
-    return migrationConfirmed;
-  } catch (error) {
-    logError(error);
-    trackCommandMetadataUsage(
-      'account-auth',
-      {
-        command: 'hs account auth',
-        type: 'Migrate a single config',
-        successful: false,
-      },
-      providedAccountId
-    );
+  if (!disableTracking) {
+    trackCommandUsage('account-auth', {}, parsedUserProvidedAccountId);
+    await trackAuthAction('account-auth', authType, TRACKING_STATUS.STARTED);
+  }
+
+  const configMigrationSuccess = await handleConfigMigration();
+
+  if (!configMigrationSuccess) {
+    await trackAuthAction('account-auth', authType, TRACKING_STATUS.ERROR);
     process.exit(EXIT_CODES.ERROR);
   }
-}
 
-async function handleConfigUpdate(
-  env: Environment,
-  configAlreadyExists: boolean,
-  disableTracking: boolean | undefined,
-  authType: string,
-  providedAccountId: number | undefined
-): Promise<void> {
+  const configAlreadyExists = configFileExists(true);
+
   if (!configAlreadyExists) {
     createEmptyConfigFile({}, true);
   }
+
   loadConfig('');
 
   handleExit(deleteEmptyConfigFile);
 
-  const updatedConfig = await updateConfig(
-    env,
+  const updatedConfig = await updateConfigWithNewAccount(
+    args.qa ? ENVIRONMENTS.QA : ENVIRONMENTS.PROD,
     configAlreadyExists,
-    disableTracking,
-    authType,
-    providedAccountId
+    providedPersonalAccessKey,
+    parsedUserProvidedAccountId
   );
 
   if (!updatedConfig) {
-    logger.error(
-      i18n('commands.account.subcommands.auth.errors.failedToUpdateConfig')
+    if (!disableTracking) {
+      await trackAuthAction('account-auth', authType, TRACKING_STATUS.ERROR);
+    }
+
+    uiLogger.error(
+      commands.account.subcommands.auth.errors.failedToUpdateConfig
     );
     process.exit(EXIT_CODES.ERROR);
   }
 
-  const { name } = updatedConfig;
   const accountId = getAccountIdentifier(updatedConfig);
 
   if (!configAlreadyExists) {
-    logger.log('');
-    logger.success(
-      i18n('commands.account.subcommands.auth.success.configFileCreated', {
-        configPath: getConfigPath('', true)!,
-      })
+    uiLogger.log('');
+    uiLogger.success(
+      commands.account.subcommands.auth.success.configFileCreated(
+        getConfigPath('', true)!
+      )
     );
-    logger.success(
-      i18n('commands.account.subcommands.auth.success.configFileUpdated', {
-        account: name || accountId?.toString() || '',
-      })
+    uiLogger.success(
+      commands.account.subcommands.auth.success.configFileUpdated(accountId!)
     );
   } else {
-    const setAsDefault = await setAsDefaultAccountPrompt(name!);
-
-    logger.log('');
-    if (setAsDefault) {
-      logger.success(
-        i18n(`lib.prompts.setAsDefaultAccountPrompt.setAsDefaultAccount`, {
-          accountName: name!,
-        })
-      );
-    } else {
-      logger.info(
-        i18n(`lib.prompts.setAsDefaultAccountPrompt.keepingCurrentDefault`, {
-          accountName: getConfigDefaultAccount()!,
-        })
-      );
-    }
+    await setAsDefaultAccountPrompt(updatedConfig.name!);
   }
 
   uiFeatureHighlight([
@@ -234,55 +239,27 @@ async function handleConfigUpdate(
       accountId
     );
   }
+
   process.exit(EXIT_CODES.SUCCESS);
-}
-
-const describe = i18n('commands.account.subcommands.auth.describe');
-const command = 'auth';
-
-type AccountAuthArgs = CommonArgs &
-  ConfigArgs & {
-    disableTracking?: boolean;
-  };
-
-async function handler(
-  args: ArgumentsCamelCase<AccountAuthArgs>
-): Promise<void> {
-  const { providedAccountId, disableTracking } = args;
-  const authType = PERSONAL_ACCESS_KEY_AUTH_METHOD.value;
-
-  await handleConfigMigration(providedAccountId);
-
-  if (!disableTracking) {
-    trackCommandUsage('account-auth', {}, providedAccountId);
-    await trackAuthAction('account-auth', authType, TRACKING_STATUS.STARTED);
-  }
-
-  const env = args.qa ? ENVIRONMENTS.QA : ENVIRONMENTS.PROD;
-  const configAlreadyExists = configFileExists(true);
-
-  await handleConfigUpdate(
-    env,
-    configAlreadyExists,
-    disableTracking,
-    authType,
-    providedAccountId
-  );
 }
 
 function accountAuthBuilder(yargs: Argv): Argv<AccountAuthArgs> {
   yargs.options({
     account: {
-      describe: i18n(
-        'commands.account.subcommands.auth.options.account.describe'
-      ),
-      type: 'string',
+      describe: commands.account.subcommands.auth.options.account,
+      type: 'number',
       alias: 'a',
     },
     'disable-tracking': {
       type: 'boolean',
       hidden: true,
       default: false,
+    },
+    'personal-access-key': {
+      describe: commands.account.subcommands.auth.options.personalAccessKey,
+      type: 'string',
+      hidden: false,
+      alias: 'pak',
     },
   });
 
@@ -292,10 +269,7 @@ function accountAuthBuilder(yargs: Argv): Argv<AccountAuthArgs> {
 const builder = makeYargsBuilder<AccountAuthArgs>(
   accountAuthBuilder,
   command,
-  i18n('commands.account.subcommands.auth.verboseDescribe', {
-    authMethod: PERSONAL_ACCESS_KEY_AUTH_METHOD.value,
-    globalConfigPath: GLOBAL_CONFIG_PATH,
-  }),
+  commands.account.subcommands.auth.verboseDescribe,
   {
     useGlobalOptions: true,
     useTestingOptions: true,

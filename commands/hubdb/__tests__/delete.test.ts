@@ -3,11 +3,10 @@ import {
   addAccountOptions,
   addConfigOptions,
   addUseEnvironmentOptions,
-} from '../../../lib/commonOpts';
-import hubdbDeleteCommand from '../delete';
+} from '../../../lib/commonOpts.js';
+import hubdbDeleteCommand from '../delete.js';
 
-jest.mock('yargs');
-jest.mock('../../../lib/commonOpts');
+vi.mock('../../../lib/commonOpts');
 
 describe('commands/hubdb/delete', () => {
   const yargsMock = yargs as Argv;

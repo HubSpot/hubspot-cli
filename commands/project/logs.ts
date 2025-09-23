@@ -2,17 +2,17 @@ import { Argv, ArgumentsCamelCase } from 'yargs';
 import { getEnv } from '@hubspot/local-dev-lib/config';
 import { getHubSpotWebsiteOrigin } from '@hubspot/local-dev-lib/urls';
 import { ENVIRONMENTS } from '@hubspot/local-dev-lib/constants/environments';
-import { logger } from '@hubspot/local-dev-lib/logger';
-import { trackCommandUsage } from '../../lib/usageTracking';
-import { getTableContents, getTableHeader } from '../../lib/ui/table';
-import { logError } from '../../lib/errorHandlers/';
-import { uiBetaTag, uiLine, uiLink } from '../../lib/ui';
-import { projectLogsPrompt } from '../../lib/prompts/projectsLogsPrompt';
-import { i18n } from '../../lib/lang';
-import { EXIT_CODES } from '../../lib/enums/exitCodes';
-import { ProjectLogsManager } from '../../lib/projects/ProjectLogsManager';
-import { CommonArgs, YargsCommandModule } from '../../types/Yargs';
-import { makeYargsBuilder } from '../../lib/yargsUtils';
+import { trackCommandUsage } from '../../lib/usageTracking.js';
+import { getTableContents, getTableHeader } from '../../lib/ui/table.js';
+import { logError } from '../../lib/errorHandlers/index.js';
+import { uiLine } from '../../lib/ui/index.js';
+import { projectLogsPrompt } from '../../lib/prompts/projectsLogsPrompt.js';
+import { commands } from '../../lang/en.js';
+import { uiLogger } from '../../lib/ui/logger.js';
+import { EXIT_CODES } from '../../lib/enums/exitCodes.js';
+import { ProjectLogsManager } from '../../lib/projects/ProjectLogsManager.js';
+import { CommonArgs, YargsCommandModule } from '../../types/Yargs.js';
+import { makeYargsBuilder } from '../../lib/yargsUtils.js';
 
 function getPrivateAppsUrl(accountId: number): string {
   const baseUrl = getHubSpotWebsiteOrigin(
@@ -26,8 +26,8 @@ function logTable(
   tableHeader: string[],
   logsInfo: (string | number | undefined)[]
 ): void {
-  logger.log(i18n(`commands.project.subcommands.logs.logs.showingLogs`));
-  logger.log(
+  uiLogger.log(commands.project.logs.logs.showingLogs);
+  uiLogger.log(
     getTableContents([tableHeader, logsInfo], { border: { bodyLeft: '  ' } })
   );
 }
@@ -36,9 +36,9 @@ function logPreamble(): void {
   if (ProjectLogsManager.isPublicFunction) {
     logTable(
       getTableHeader([
-        i18n(`commands.project.subcommands.logs.table.accountHeader`),
-        i18n(`commands.project.subcommands.logs.table.functionHeader`),
-        i18n(`commands.project.subcommands.logs.table.endpointHeader`),
+        commands.project.logs.table.accountHeader,
+        commands.project.logs.table.functionHeader,
+        commands.project.logs.table.endpointHeader,
       ]),
       [
         ProjectLogsManager.accountId,
@@ -46,9 +46,8 @@ function logPreamble(): void {
         ProjectLogsManager.endpointName,
       ]
     );
-    logger.log(
-      uiLink(
-        i18n(`commands.project.subcommands.logs.logs.hubspotLogsDirectLink`),
+    uiLogger.log(
+      commands.project.logs.logs.hubspotLogsDirectLink(
         `${getPrivateAppsUrl(ProjectLogsManager.accountId!)}/${
           ProjectLogsManager.appId
         }/logs/serverlessGatewayExecution?path=${
@@ -59,29 +58,25 @@ function logPreamble(): void {
   } else {
     logTable(
       getTableHeader([
-        i18n(`commands.project.subcommands.logs.table.accountHeader`),
-        i18n(`commands.project.subcommands.logs.table.functionHeader`),
+        commands.project.logs.table.accountHeader,
+        commands.project.logs.table.functionHeader,
       ]),
       [ProjectLogsManager.accountId, ProjectLogsManager.functionName]
     );
-    logger.log(
-      uiLink(
-        i18n(`commands.project.subcommands.logs.logs.hubspotLogsDirectLink`),
+    uiLogger.log(
+      commands.project.logs.logs.hubspotLogsDirectLink(
         `${getPrivateAppsUrl(ProjectLogsManager.accountId!)}/${
           ProjectLogsManager.appId
         }/logs/crm?serverlessFunction=${ProjectLogsManager.functionName}`
       )
     );
   }
-  logger.log();
+  uiLogger.log('');
   uiLine();
 }
 
 const command = 'logs';
-const describe = uiBetaTag(
-  i18n(`commands.project.subcommands.logs.describe`),
-  false
-);
+const describe = commands.project.logs.describe;
 
 export type ProjectLogsArgs = CommonArgs & {
   function?: string;
@@ -124,34 +119,26 @@ function projectLogsBuilder(yargs: Argv): Argv<ProjectLogsArgs> {
   yargs.options({
     function: {
       alias: 'function',
-      describe: i18n(
-        `commands.project.subcommands.logs.options.function.describe`
-      ),
+      describe: commands.project.logs.options.function.describe,
       requiresArg: true,
       type: 'string',
     },
     latest: {
       alias: 'l',
-      describe: i18n(
-        `commands.project.subcommands.logs.options.latest.describe`
-      ),
+      describe: commands.project.logs.options.latest.describe,
       type: 'boolean',
     },
     compact: {
-      describe: i18n(
-        `commands.project.subcommands.logs.options.compact.describe`
-      ),
+      describe: commands.project.logs.options.compact.describe,
       type: 'boolean',
     },
     tail: {
       alias: ['t', 'follow'],
-      describe: i18n(`commands.project.subcommands.logs.options.tail.describe`),
+      describe: commands.project.logs.options.tail.describe,
       type: 'boolean',
     },
     limit: {
-      describe: i18n(
-        `commands.project.subcommands.logs.options.limit.describe`
-      ),
+      describe: commands.project.logs.options.limit.describe,
       type: 'number',
     },
   });
@@ -159,13 +146,10 @@ function projectLogsBuilder(yargs: Argv): Argv<ProjectLogsArgs> {
   yargs.conflicts('tail', 'limit');
 
   yargs.example([
-    [
-      '$0 project logs',
-      i18n(`commands.project.subcommands.logs.examples.default`),
-    ],
+    ['$0 project logs', commands.project.logs.examples.default],
     [
       '$0 project logs --function=my-function',
-      i18n(`commands.project.subcommands.logs.examples.withOptions`),
+      commands.project.logs.examples.withOptions,
     ],
   ]);
 

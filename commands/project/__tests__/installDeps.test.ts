@@ -1,32 +1,31 @@
 import yargs, { Argv, ArgumentsCamelCase } from 'yargs';
 import path from 'path';
 import { logger } from '@hubspot/local-dev-lib/logger';
-import * as projectUtils from '../../../lib/projects/config';
-import { EXIT_CODES } from '../../../lib/enums/exitCodes';
-import { trackCommandUsage } from '../../../lib/usageTracking';
-import * as dependencyManagement from '../../../lib/dependencyManagement';
-import * as promptUtils from '../../../lib/prompts/promptUtils';
+import * as projectUtils from '../../../lib/projects/config.js';
+import { EXIT_CODES } from '../../../lib/enums/exitCodes.js';
+import { trackCommandUsage } from '../../../lib/usageTracking.js';
+import * as dependencyManagement from '../../../lib/dependencyManagement.js';
+import * as promptUtils from '../../../lib/prompts/promptUtils.js';
 import projectInstallDepsCommand, {
   ProjectInstallDepsArgs,
-} from '../installDeps';
+} from '../installDeps.js';
 
-jest.mock('yargs');
-jest.mock('@hubspot/local-dev-lib/logger');
-jest.mock('../../../lib/projects/config');
-jest.mock('../../../lib/dependencyManagement');
-jest.mock('../../../lib/prompts/promptUtils');
-jest.mock('../../../lib/usageTracking');
-jest.mock('../../../lib/commonOpts');
+vi.mock('@hubspot/local-dev-lib/logger');
+vi.mock('../../../lib/projects/config');
+vi.mock('../../../lib/dependencyManagement');
+vi.mock('../../../lib/prompts/promptUtils');
+vi.mock('../../../lib/usageTracking');
+vi.mock('../../../lib/commonOpts');
 
-const exampleSpy = jest.spyOn(yargs as Argv, 'example');
-const processExitSpy = jest.spyOn(process, 'exit');
-const getProjectConfigSpy = jest.spyOn(projectUtils, 'getProjectConfig');
-const promptUserSpy = jest.spyOn(promptUtils, 'promptUser');
-const getProjectPackageJsonLocationsSpy = jest.spyOn(
+const exampleSpy = vi.spyOn(yargs as Argv, 'example');
+const processExitSpy = vi.spyOn(process, 'exit');
+const getProjectConfigSpy = vi.spyOn(projectUtils, 'getProjectConfig');
+const promptUserSpy = vi.spyOn(promptUtils, 'promptUser');
+const getProjectPackageJsonLocationsSpy = vi.spyOn(
   dependencyManagement,
   'getProjectPackageJsonLocations'
 );
-const installPackagesSpy = jest.spyOn(dependencyManagement, 'installPackages');
+const installPackagesSpy = vi.spyOn(dependencyManagement, 'installPackages');
 
 describe('commands/project/installDeps', () => {
   describe('command', () => {

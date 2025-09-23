@@ -12,7 +12,6 @@ npm-debug.log.*
 coverage
 .env
 dist
-.node-version
 yarn.lock
 
 # Acceptance Tests
@@ -22,3 +21,6 @@ acceptance-tests/*.html
 acceptance-tests/test-output
 
 **/.claude/settings.local.json
+
+# Dir to sync to public repo
+temp-repo-sync
