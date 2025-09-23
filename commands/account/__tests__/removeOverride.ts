@@ -1,9 +1,9 @@
 import yargs, { Argv } from 'yargs';
-import accountRemoveOverrideCommand from '../removeOverride';
+import accountRemoveOverrideCommand from '../removeOverride.js';
 
-jest.mock('yargs');
+vi.mock('yargs');
 
-const optionsSpy = jest
+const optionsSpy = vi
   .spyOn(yargs as Argv, 'options')
   .mockReturnValue(yargs as Argv);
 

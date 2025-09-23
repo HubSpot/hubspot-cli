@@ -1,10 +1,19 @@
-import { promptUser } from './promptUtils';
-import { ComponentTemplate } from '../../types/Projects';
-import { i18n } from '../lang';
+import { Separator } from '@inquirer/prompts';
+import { promptUser } from './promptUtils.js';
+import {
+  ComponentTemplate,
+  ComponentTemplateChoice,
+} from '../../types/Projects.js';
+import { lib } from '../../lang/en.js';
+import { uiLogger } from '../ui/logger.js';
 
 type ProjectAddPromptResponse = {
   componentTemplate: ComponentTemplate;
   name: string;
+};
+
+type ProjectAddPromptResponseV3 = {
+  componentTemplate: ComponentTemplate[];
 };
 
 function findComponentByPathOrLabel(
@@ -29,10 +38,8 @@ export async function projectAddPrompt(
       name: 'componentTemplate',
       message: () => {
         return promptOptions.type && !providedTypeIsValid
-          ? i18n(`lib.prompts.projectAddPrompt.errors.invalidType`, {
-              type: promptOptions.type,
-            })
-          : i18n(`lib.prompts.projectAddPrompt.selectType`);
+          ? lib.prompts.projectAddPrompt.errors.invalidType(promptOptions.type)
+          : lib.prompts.projectAddPrompt.selectType;
       },
       when: !providedTypeIsValid,
       type: 'list',
@@ -45,11 +52,11 @@ export async function projectAddPrompt(
     },
     {
       name: 'name',
-      message: i18n(`lib.prompts.projectAddPrompt.enterName`),
+      message: lib.prompts.projectAddPrompt.enterName,
       when: !promptOptions.name,
       validate: (input?: string) => {
         if (!input) {
-          return i18n(`lib.prompts.projectAddPrompt.errors.nameRequired`);
+          return lib.prompts.projectAddPrompt.errors.nameRequired;
         }
         return true;
       },
@@ -65,6 +72,60 @@ export async function projectAddPrompt(
       components,
       promptOptions.type!
     )!;
+  }
+
+  return result;
+}
+
+export async function projectAddPromptV3(
+  components: (ComponentTemplateChoice | Separator)[],
+  selectedFeatures: string[] | undefined
+): Promise<ProjectAddPromptResponseV3> {
+  const selectedComponents: ComponentTemplate[] = [];
+
+  if (selectedFeatures) {
+    components.forEach(template => {
+      if (template instanceof Separator || !template.value) {
+        return;
+      }
+
+      if (
+        selectedFeatures?.includes(
+          template.value.cliSelector || template.value.type
+        )
+      ) {
+        if (template.disabled) {
+          throw new Error(
+            lib.prompts.projectAddPrompt.errors.cannotAddFeature(
+              template.value.type,
+              template.disabled
+            )
+          );
+        }
+        selectedComponents.push(template.value);
+      }
+    });
+  }
+
+  if (!components?.length) {
+    uiLogger.error(lib.prompts.projectAddPrompt.errors.noSelectableChoices);
+    uiLogger.log('');
+    return { componentTemplate: [] };
+  }
+
+  const result = await promptUser<ProjectAddPromptResponseV3>([
+    {
+      name: 'componentTemplate',
+      message: lib.prompts.projectAddPrompt.selectFeatures,
+      when: !selectedFeatures && selectedComponents.length === 0,
+      type: 'checkbox',
+      choices: components,
+      pageSize: components.length,
+    },
+  ]);
+
+  if (!result.componentTemplate) {
+    result.componentTemplate = selectedComponents;
   }
 
   return result;

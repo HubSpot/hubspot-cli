@@ -4,11 +4,10 @@ import {
   addConfigOptions,
   addUseEnvironmentOptions,
   addTestingOptions,
-} from '../../../lib/commonOpts';
-import sandboxDeleteCommand from '../delete';
+} from '../../../lib/commonOpts.js';
+import sandboxDeleteCommand from '../delete.js';
 
-jest.mock('yargs');
-jest.mock('../../../lib/commonOpts');
+vi.mock('../../../lib/commonOpts');
 
 describe('commands/sandbox/delete', () => {
   const yargsMock = yargs as Argv;

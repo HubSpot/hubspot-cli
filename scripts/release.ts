@@ -1,4 +1,4 @@
-import { exec as _exec, spawn } from 'child_process';
+import { exec as _exec, spawn } from 'node:child_process';
 import { promisify } from 'util';
 import yargs, { ArgumentsCamelCase, Argv } from 'yargs';
 import { logger, setLogLevel, LOG_LEVEL } from '@hubspot/local-dev-lib/logger';
@@ -10,16 +10,15 @@ import {
   version as localVersion,
   publishConfig,
 } from '../package.json';
-import { EXIT_CODES } from '../lib/enums/exitCodes';
-import { build } from './lib/build';
-
-// TODO: Change to import when this is converted to TS
-const { uiLink, uiLine } = require('../lib/ui');
-const { confirmPrompt, promptUser } = require('../lib/prompts/promptUtils');
+import { EXIT_CODES } from '../lib/enums/exitCodes.js';
+import { build } from './lib/build.js';
+// import { syncToPublicRepo } from './sync-to-public.js';
+import { uiLine, uiLink } from '../lib/ui/index.ts';
+import { confirmPrompt, promptUser } from '../lib/prompts/promptUtils.ts';
 
 const exec = promisify(_exec);
 
-const MAIN_BRANCH = 'main';
+const MASTER_BRANCH = 'master';
 
 const TAG = {
   LATEST: 'latest',
@@ -172,14 +171,14 @@ async function handler({
   const isExperimental = tag === TAG.EXPERIMENTAL;
   const isDryRun = Boolean(dryRun);
 
-  if (isExperimental && branch === MAIN_BRANCH) {
+  if (isExperimental && branch === MASTER_BRANCH) {
     logger.error(
-      'Releases to experimental tag cannot be published from the main branch'
+      'Releases to experimental tag cannot be published from the master branch'
     );
     process.exit(EXIT_CODES.ERROR);
-  } else if (!isExperimental && branch !== MAIN_BRANCH) {
+  } else if (!isExperimental && branch !== MASTER_BRANCH) {
     logger.error(
-      'Releases to latest and next tags can only be published from the main branch'
+      'Releases to latest and next tags can only be published from the master branch'
     );
     process.exit(EXIT_CODES.ERROR);
   }
@@ -216,6 +215,8 @@ async function handler({
     prereleaseIdentifier
   );
 
+  const tempBranch = `v${newVersion}-publish`;
+
   if (!newVersion) {
     logger.error('Error incrementing version.');
     process.exit(EXIT_CODES.ERROR);
@@ -236,6 +237,11 @@ async function handler({
     process.exit(EXIT_CODES.SUCCESS);
   }
 
+  if (branch === MASTER_BRANCH && !dryRun) {
+    logger.log(`Creating a temporary branch '${tempBranch}' for the release`);
+    await exec(`git checkout -b ${tempBranch}`);
+  }
+
   if (
     tag === TAG.LATEST &&
     !localVersion.includes(PRERELEASE_IDENTIFIER.NEXT)
@@ -243,7 +249,7 @@ async function handler({
     logger.log();
     const proceedWithoutBetaRelease = await confirmPrompt(
       `The current changes have not yet been released in beta. It's recommended to release and test all changes on the ${TAG.NEXT} tag before releasing them to ${TAG.LATEST}. Are you sure you want to proceed?`,
-      false
+      { defaultAnswer: false }
     );
 
     if (!proceedWithoutBetaRelease) {
@@ -290,7 +296,7 @@ async function handler({
     process.exit(EXIT_CODES.ERROR);
   }
 
-  const gitCommand = `git push --atomic origin ${branch} v${newVersion}`;
+  const gitCommand = `git push --atomic origin ${tempBranch} v${newVersion}`;
 
   if (tag === TAG.LATEST) {
     try {
@@ -325,6 +331,9 @@ async function handler({
     logger.log(`Pushing changes to Github...`);
     await exec(gitCommand);
     logger.log(`Changes pushed successfully`);
+    open(
+      `https://git.hubteam.com/HubSpot/hubspot-cli-private/compare/master...${tempBranch}`
+    );
   }
 
   logger.log();
@@ -340,6 +349,20 @@ async function handler({
     logger.log();
     logger.log('Remember to create a new release on Github!');
     open('https://github.com/HubSpot/hubspot-cli/releases/new');
+
+    // Sync to public repository
+    // TODO Add this back after inbound
+    // logger.log();
+    // logger.log('Syncing to public repository...');
+    // try {
+    //   await syncToPublicRepo({ version: newVersion, dryRun: isDryRun });
+    // } catch (e) {
+    //   logger.error('Failed to sync to public repository:', e);
+    //   logger.log('You can manually sync later by running:');
+    //   logger.log(
+    //     `yarn ts-node scripts/sync-to-public.ts --version ${newVersion}`
+    //   );
+    // }
   }
 }
 

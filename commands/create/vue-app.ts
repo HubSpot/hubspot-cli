@@ -1,6 +1,6 @@
 import { cloneGithubRepo } from '@hubspot/local-dev-lib/github';
 
-import { CreatableCmsAsset } from '../../types/Cms';
+import { CreatableCmsAsset } from '../../types/Cms.js';
 
 const vueAppAssetType: CreatableCmsAsset = {
   hidden: false,

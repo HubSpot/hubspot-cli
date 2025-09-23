@@ -1,7 +1,7 @@
-import { promptUser } from './promptUtils';
-import { i18n } from '../lang';
-import { PromptConfig } from '../../types/Prompts';
-import { ApiSampleChoice, ApiSampleConfig } from '../../types/Cms';
+import { promptUser } from './promptUtils.js';
+import { i18n } from '../lang.js';
+import { PromptConfig } from '../../types/Prompts.js';
+import { ApiSampleChoice, ApiSampleConfig } from '../../types/Cms.js';
 
 type SampleTypePromptResponse = {
   sampleType?: string;

@@ -1,5 +1,6 @@
 import { HubSpotPromise } from '@hubspot/local-dev-lib/types/Http';
-import { DEFAULT_POLLING_DELAY } from './constants';
+import { DEFAULT_POLLING_DELAY } from './constants.js';
+import { lib } from '../lang/en.js';
 
 export const DEFAULT_POLLING_STATES = {
   STARTED: 'STARTED',
@@ -30,7 +31,8 @@ export function poll<T extends GenericPollingResponse>(
   statusLookup: {
     successStates: string[];
     errorStates: string[];
-  } = DEFAULT_POLLING_STATUS_LOOKUP
+  } = DEFAULT_POLLING_STATUS_LOOKUP,
+  timeoutMs: number = 60000 // Default 60 second timeout
 ): Promise<T> {
   return new Promise((resolve, reject) => {
     const pollInterval = setInterval(async () => {
@@ -40,15 +42,24 @@ export function poll<T extends GenericPollingResponse>(
 
         if (statusLookup.successStates.includes(status)) {
           clearInterval(pollInterval);
+          clearTimeout(timeoutId);
           resolve(pollResp);
         } else if (statusLookup.errorStates.includes(status)) {
           clearInterval(pollInterval);
+          clearTimeout(timeoutId);
           reject(pollResp);
         }
       } catch (error) {
         clearInterval(pollInterval);
+        clearTimeout(timeoutId);
         reject(error);
       }
     }, DEFAULT_POLLING_DELAY);
+
+    // Set a timeout to stop polling after specified duration
+    const timeoutId = setTimeout(() => {
+      clearInterval(pollInterval);
+      reject(new Error(lib.polling.timeoutError(timeoutMs)));
+    }, timeoutMs);
   });
 }

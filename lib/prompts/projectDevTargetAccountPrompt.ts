@@ -12,13 +12,13 @@ import { Usage } from '@hubspot/local-dev-lib/types/Sandbox';
 import {
   DeveloperTestAccount,
   FetchDeveloperTestAccountsResponse,
-} from '@hubspot/local-dev-lib/types/developerTestAccounts';
-import { promptUser } from './promptUtils';
-import { i18n } from '../lang';
-import { uiAccountDescription, uiCommandReference } from '../ui';
-import { isSandbox } from '../accountTypes';
-import { PromptChoices } from '../../types/Prompts';
-import { EXIT_CODES } from '../enums/exitCodes';
+} from '@hubspot/local-dev-lib/types/developerTestAccounts.js';
+import { promptUser } from './promptUtils.js';
+import { i18n } from '../lang.js';
+import { uiAccountDescription, uiCommandReference } from '../ui/index.js';
+import { isSandbox } from '../accountTypes.js';
+import { PromptChoices } from '../../types/Prompts.js';
+import { EXIT_CODES } from '../enums/exitCodes.js';
 
 function mapNestedAccount(accountConfig: CLIAccount): {
   name: string;
@@ -230,6 +230,7 @@ async function selectTargetAccountPrompt(
         accountType,
       }),
       choices,
+      loop: false,
     },
   ]);
 

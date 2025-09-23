@@ -1,39 +1,29 @@
 import { Argv } from 'yargs';
 import open from 'open';
-import { i18n } from '../lib/lang';
-import { logger } from '@hubspot/local-dev-lib/logger';
-import { confirmPrompt } from '../lib/prompts/promptUtils';
-import { CommonArgs, YargsCommandModule } from '../types/Yargs';
-import { makeYargsBuilder } from '../lib/yargsUtils';
-import { EXIT_CODES } from '../lib/enums/exitCodes';
-import { uiLink } from '../lib/ui';
+import { confirmPrompt } from '../lib/prompts/promptUtils.js';
+import { CommonArgs, YargsCommandModule } from '../types/Yargs.js';
+import { makeYargsBuilder } from '../lib/yargsUtils.js';
+import { EXIT_CODES } from '../lib/enums/exitCodes.js';
+import { commands } from '../lang/en.js';
+import { uiLogger } from '../lib/ui/logger.js';
+
 const FEEDBACK_URL = 'https://developers.hubspot.com/feedback';
 
 const command = 'feedback';
-const describe = i18n(`commands.project.subcommands.feedback.describe`);
+const describe = commands.project.feedback.describe;
 
 type FeedbackArgs = CommonArgs;
 
 async function handler() {
-  const shouldOpen = await confirmPrompt(
-    i18n(`commands.project.subcommands.feedback.openPrompt`)
-  );
+  const shouldOpen = await confirmPrompt(commands.project.feedback.openPrompt);
 
   if (!shouldOpen) {
-    logger.log(
-      i18n(`commands.project.subcommands.feedback.error`, {
-        url: uiLink('the developer feedback form', FEEDBACK_URL),
-      })
-    );
+    uiLogger.log(commands.project.feedback.error(FEEDBACK_URL));
     process.exit(EXIT_CODES.ERROR);
   }
 
   open(FEEDBACK_URL, { url: true });
-  logger.success(
-    i18n(`commands.project.subcommands.feedback.success`, {
-      url: uiLink('the developer feedback form', FEEDBACK_URL),
-    })
-  );
+  uiLogger.success(commands.project.feedback.success(FEEDBACK_URL));
 
   process.exit(EXIT_CODES.SUCCESS);
 }
@@ -59,6 +49,3 @@ const feedbackCommand: YargsCommandModule<unknown, FeedbackArgs> = {
 };
 
 export default feedbackCommand;
-
-// TODO remove this after cli.ts is ported to TS
-module.exports = feedbackCommand;

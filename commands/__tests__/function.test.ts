@@ -1,19 +1,18 @@
 import yargs, { Argv } from 'yargs';
-import list from '../function/list';
-import deploy from '../function/deploy';
-import server from '../function/server';
-import functionCommands from '../function';
+import list from '../function/list.js';
+import deploy from '../function/deploy.js';
+import server from '../function/server.js';
+import functionCommands from '../function.js';
 
-jest.mock('yargs');
-jest.mock('../function/list');
-jest.mock('../function/deploy');
-jest.mock('../function/server');
-jest.mock('../../lib/commonOpts');
+vi.mock('../function/list');
+vi.mock('../function/deploy');
+vi.mock('../function/server');
+vi.mock('../../lib/commonOpts');
 
-const commandSpy = jest
+const commandSpy = vi
   .spyOn(yargs as Argv, 'command')
   .mockReturnValue(yargs as Argv);
-const demandCommandSpy = jest
+const demandCommandSpy = vi
   .spyOn(yargs as Argv, 'demandCommand')
   .mockReturnValue(yargs as Argv);
 

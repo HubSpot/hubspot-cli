@@ -2,24 +2,29 @@ import yargs, { ArgumentsCamelCase, Argv } from 'yargs';
 import { PLATFORM_VERSIONS } from '@hubspot/local-dev-lib/constants/projects';
 import { logger } from '@hubspot/local-dev-lib/logger';
 import { getAccountConfig } from '@hubspot/local-dev-lib/config';
-import { migrateApp2025_2, MigrateAppArgs } from '../../../lib/app/migrate';
-import { migrateApp2023_2 } from '../../../lib/app/migrate_legacy';
-import { EXIT_CODES } from '../../../lib/enums/exitCodes';
-import migrateCommand from '../migrate';
+import { migrateApp2025_2, MigrateAppArgs } from '../../../lib/app/migrate.js';
+import { migrateApp2023_2 } from '../../../lib/app/migrate_legacy.js';
+import { EXIT_CODES } from '../../../lib/enums/exitCodes.js';
+import migrateCommand from '../migrate.js';
+import { Mock, Mocked } from 'vitest';
 
-jest.mock('yargs');
-jest.mock('@hubspot/local-dev-lib/config');
-jest.mock('@hubspot/local-dev-lib/logger');
-jest.mock('../../../lib/app/migrate');
-jest.mock('../../../lib/app/migrate_legacy');
+vi.mock('@hubspot/local-dev-lib/config');
+vi.mock('@hubspot/local-dev-lib/logger');
+vi.mock('../../../lib/app/migrate');
+vi.mock('../../../lib/app/migrate_legacy');
+vi.mock('../../../lib/projects/config.js');
 const mockYargs = yargs as Argv;
 
-const mockedGetAccountConfig = getAccountConfig as jest.Mock;
-const mockedMigrateApp2023_2 = migrateApp2023_2 as jest.Mock;
-const mockedMigrateApp2025_2 = migrateApp2025_2 as jest.Mock;
-const mockedLogger = logger as jest.Mocked<typeof logger>;
-const optionsSpy = jest.spyOn(mockYargs, 'options');
-const exampleSpy = jest.spyOn(mockYargs, 'example');
+const mockedGetAccountConfig = getAccountConfig as Mock;
+const mockedMigrateApp2023_2 = migrateApp2023_2 as Mock;
+const mockedMigrateApp2025_2 = migrateApp2025_2 as Mock;
+const mockedLogger = logger as Mocked<typeof logger>;
+const optionsSpy = vi.spyOn(mockYargs, 'options');
+const exampleSpy = vi.spyOn(mockYargs, 'example');
+
+const exitSpy = vi
+  .spyOn(process, 'exit')
+  .mockImplementation(() => undefined as never);
 
 describe('commands/app/migrate', () => {
   const mockAccountId = 123;
@@ -27,11 +32,14 @@ describe('commands/app/migrate', () => {
     name: 'Test Account',
     env: 'prod',
   };
-  let exitSpy: jest.SpyInstance;
 
   beforeEach(() => {
-    exitSpy = jest.spyOn(process, 'exit').mockImplementation();
     mockedGetAccountConfig.mockReturnValue(mockAccountConfig);
+    exitSpy.mockClear();
+  });
+
+  afterEach(() => {
+    exitSpy.mockClear();
   });
 
   describe('handler', () => {
@@ -44,7 +52,6 @@ describe('commands/app/migrate', () => {
 
       expect(mockedLogger.error).toHaveBeenCalled();
       expect(exitSpy).toHaveBeenCalledWith(EXIT_CODES.ERROR);
-      exitSpy.mockRestore();
     });
 
     it('should call migrateApp2025_2 for platform version 2025.2', async () => {
@@ -60,6 +67,7 @@ describe('commands/app/migrate', () => {
         options
       );
       expect(mockedMigrateApp2023_2).not.toHaveBeenCalled();
+      expect(exitSpy).toHaveBeenCalledWith(EXIT_CODES.SUCCESS);
     });
 
     it('should call migrateApp2025_2 when unstable is true', async () => {
@@ -75,6 +83,7 @@ describe('commands/app/migrate', () => {
         options
       );
       expect(mockedMigrateApp2023_2).not.toHaveBeenCalled();
+      expect(exitSpy).toHaveBeenCalledWith(EXIT_CODES.SUCCESS);
     });
 
     it('should call migrateApp2023_2 for platform version 2023.2', async () => {
@@ -91,12 +100,12 @@ describe('commands/app/migrate', () => {
         mockAccountConfig
       );
       expect(mockedMigrateApp2025_2).not.toHaveBeenCalled();
+      expect(exitSpy).toHaveBeenCalledWith(EXIT_CODES.SUCCESS);
     });
 
     it('should handle errors during migration', async () => {
       const mockError = new Error('Migration failed');
       mockedMigrateApp2023_2.mockRejectedValue(mockError);
-      const exitSpy = jest.spyOn(process, 'exit').mockImplementation();
 
       await migrateCommand.handler({
         derivedAccountId: mockAccountId,
@@ -105,7 +114,6 @@ describe('commands/app/migrate', () => {
 
       expect(mockedLogger.error).toHaveBeenCalled();
       expect(exitSpy).toHaveBeenCalledWith(EXIT_CODES.ERROR);
-      exitSpy.mockRestore();
     });
   });
 
@@ -130,7 +138,6 @@ describe('commands/app/migrate', () => {
           'platform-version': expect.objectContaining({
             type: 'string',
             default: '2025.2',
-            hidden: true,
           }),
         })
       );

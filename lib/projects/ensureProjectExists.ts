@@ -6,14 +6,14 @@ import { isSpecifiedError } from '@hubspot/local-dev-lib/errors/index';
 import { Project } from '@hubspot/local-dev-lib/types/Project';
 import { HubSpotPromise } from '@hubspot/local-dev-lib/types/Http';
 
-import { DEFAULT_POLLING_DELAY } from '../constants';
-import { promptUser } from '../prompts/promptUtils';
-import { EXIT_CODES } from '../enums/exitCodes';
-import { uiAccountDescription } from '../ui';
-import SpinniesManager from '../ui/SpinniesManager';
-import { logError, ApiErrorContext } from '../errorHandlers/index';
-import { lib } from '../../lang/en';
-import { uiLogger } from '../ui/logger';
+import { DEFAULT_POLLING_DELAY } from '../constants.js';
+import { promptUser } from '../prompts/promptUtils.js';
+import { EXIT_CODES } from '../enums/exitCodes.js';
+import { uiAccountDescription } from '../ui/index.js';
+import SpinniesManager from '../ui/SpinniesManager.js';
+import { logError, ApiErrorContext } from '../errorHandlers/index.js';
+import { lib } from '../../lang/en.js';
+import { uiLogger } from '../ui/logger.js';
 
 async function pollFetchProject(
   accountId: number,

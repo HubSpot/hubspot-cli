@@ -1,8 +1,8 @@
 import path from 'path';
 import chokidar, { FSWatcher } from 'chokidar';
 
-import { PROJECT_CONFIG_FILE } from '../../constants';
-import LocalDevProcess from './LocalDevProcess';
+import { PROJECT_CONFIG_FILE } from '../../constants.js';
+import LocalDevProcess from './LocalDevProcess.js';
 
 const WATCH_EVENTS = {
   add: 'add',
@@ -20,17 +20,15 @@ class LocalDevWatcher {
     this.watcher = null;
   }
 
-  private async handleWatchEvent(
+  private handleWatchEvent(
     filePath: string,
     event: string,
     configPaths: string[]
   ): Promise<void> {
-    await this.localDevProcess.updateProjectNodes();
     if (configPaths.includes(filePath)) {
-      this.localDevProcess.logger.uploadWarning();
-    } else {
-      this.localDevProcess.handleFileChange(filePath, event);
+      return this.localDevProcess.handleConfigFileChange();
     }
+    return this.localDevProcess.handleFileChange(filePath, event);
   }
 
   start(): void {

@@ -1,10 +1,14 @@
 import os from 'os';
 import path from 'path';
 import fs from 'fs-extra';
-import { execSync } from 'child_process';
+import { execSync } from 'node:child_process';
 import chalk from 'chalk';
+import { fileURLToPath } from 'url';
 
-const { promptUser } = require('../lib/prompts/promptUtils');
+import { promptUser } from '../lib/prompts/promptUtils.ts';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 function getSymLinksInDirectory(directory: string): string[] {
   return fs

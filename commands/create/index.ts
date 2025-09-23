@@ -1,14 +1,14 @@
-import apiSampleAssetType from './api-sample';
-import appAssetType from './app';
-import functionAssetType from './function';
-import moduleAssetType from './module';
-import reactAppAssetType from './react-app';
-import templateAssetType from './template';
-import vueAppAssetType from './vue-app';
-import webpackServerlessAssetType from './webpack-serverless';
-import websiteThemeAssetType from './website-theme';
+import apiSampleAssetType from './api-sample.js';
+import appAssetType from './app.js';
+import functionAssetType from './function.js';
+import moduleAssetType from './module.js';
+import reactAppAssetType from './react-app.js';
+import templateAssetType from './template.js';
+import vueAppAssetType from './vue-app.js';
+import webpackServerlessAssetType from './webpack-serverless.js';
+import websiteThemeAssetType from './website-theme.js';
 
-import { CreatableCmsAsset } from '../../types/Cms';
+import { CreatableCmsAsset } from '../../types/Cms.js';
 
 const assets: { [key: string]: CreatableCmsAsset } = {
   'api-sample': apiSampleAssetType,

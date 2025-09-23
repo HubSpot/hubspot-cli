@@ -1,10 +1,10 @@
 import fs from 'fs';
-import { promptUser } from './promptUtils';
-import { i18n } from '../lang';
-import { debugError } from '../errorHandlers/index';
+import { promptUser } from './promptUtils.js';
+import { i18n } from '../lang.js';
+import { debugError } from '../errorHandlers/index.js';
 import { logger } from '@hubspot/local-dev-lib/logger';
 import { fetchTables } from '@hubspot/local-dev-lib/api/hubdb';
-import { EXIT_CODES } from '../enums/exitCodes';
+import { EXIT_CODES } from '../enums/exitCodes.js';
 import { Table } from '@hubspot/local-dev-lib/types/Hubdb';
 import { isValidPath, untildify } from '@hubspot/local-dev-lib/path';
 

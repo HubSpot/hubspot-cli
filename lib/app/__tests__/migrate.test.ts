@@ -7,29 +7,27 @@ import { UNMIGRATABLE_REASONS } from '@hubspot/local-dev-lib/constants/projects'
 import { MIGRATION_STATUS } from '@hubspot/local-dev-lib/types/Migration';
 import { downloadProject } from '@hubspot/local-dev-lib/api/projects';
 import fs from 'fs';
-
+import { MockedFunction, Mocked } from 'vitest';
 import {
   confirmPrompt,
   inputPrompt,
   listPrompt,
-} from '../../prompts/promptUtils';
-import { LoadedProjectConfig } from '../../projects/config';
-import { ensureProjectExists } from '../../projects/ensureProjectExists';
-import { poll } from '../../polling';
+} from '../../prompts/promptUtils.js';
+import { LoadedProjectConfig } from '../../projects/config.js';
+import { ensureProjectExists } from '../../projects/ensureProjectExists.js';
+import { poll } from '../../polling.js';
 import {
   CLI_UNMIGRATABLE_REASONS,
-  continueMigration,
-  initializeMigration,
+  continueAppMigration,
+  initializeAppMigration,
   listAppsForMigration,
   MigrationApp,
   MigrationFailed,
   MigratableApp,
   UnmigratableApp,
-} from '../../../api/migrate';
-import { lib } from '../../../lang/en';
-
-import { hasFeature } from '../../hasFeature';
-
+} from '../../../api/migrate.js';
+import { lib } from '../../../lang/en.js';
+import { hasUnfiedAppsAccess } from '../../hasFeature.js';
 import {
   getUnmigratableReason,
   generateFilterAppsByProjectNameFunction,
@@ -38,68 +36,67 @@ import {
   promptForAppToMigrate,
   selectAppToMigrate,
   handleMigrationSetup,
-  beginMigration,
+  beginAppMigration,
   pollMigrationStatus,
-  finalizeMigration,
+  finalizeAppMigration,
   downloadProjectFiles,
   migrateApp2025_2,
   logInvalidAccountError,
   MigrateAppArgs,
-} from '../migrate';
+  validateMigrationApps,
+} from '../migrate.js';
 
-jest.mock('@hubspot/local-dev-lib/logger');
-jest.mock('@hubspot/local-dev-lib/path');
-jest.mock('@hubspot/local-dev-lib/archive');
-jest.mock('@hubspot/project-parsing-lib');
-jest.mock('@hubspot/local-dev-lib/api/projects');
-jest.mock('inquirer');
-jest.mock('../../prompts/promptUtils');
-jest.mock('../../projects/config');
-jest.mock('../../projects/ensureProjectExists');
-jest.mock('../../ui/SpinniesManager');
-jest.mock('../../polling');
-jest.mock('../../../api/migrate');
-jest.mock('../../hasFeature');
-jest.mock('../../projects/urls');
-jest.mock('fs');
+vi.mock('@hubspot/local-dev-lib/logger');
+vi.mock('@hubspot/local-dev-lib/path');
+vi.mock('@hubspot/local-dev-lib/archive');
+vi.mock('@hubspot/project-parsing-lib');
+vi.mock('@hubspot/local-dev-lib/api/projects');
+vi.mock('inquirer');
+vi.mock('../../prompts/promptUtils');
+vi.mock('../../projects/config');
+vi.mock('../../projects/ensureProjectExists');
+vi.mock('../../ui/SpinniesManager');
+vi.mock('../../polling');
+vi.mock('../../../api/migrate');
+vi.mock('../../hasFeature');
+vi.mock('../../projects/urls');
+vi.mock('fs');
 
-const mockedLogger = logger as jest.Mocked<typeof logger>;
-const mockedGetCwd = getCwd as jest.MockedFunction<typeof getCwd>;
-const mockedSanitizeFileName = sanitizeFileName as jest.MockedFunction<
+const mockedLogger = logger as Mocked<typeof logger>;
+const mockedGetCwd = getCwd as MockedFunction<typeof getCwd>;
+const mockedSanitizeFileName = sanitizeFileName as MockedFunction<
   typeof sanitizeFileName
 >;
-const mockedExtractZipArchive = extractZipArchive as jest.MockedFunction<
+const mockedExtractZipArchive = extractZipArchive as MockedFunction<
   typeof extractZipArchive
 >;
-const mockedValidateUid = validateUid as jest.MockedFunction<
-  typeof validateUid
->;
-const mockedDownloadProject = downloadProject as jest.MockedFunction<
+const mockedValidateUid = validateUid as MockedFunction<typeof validateUid>;
+const mockedDownloadProject = downloadProject as MockedFunction<
   typeof downloadProject
 >;
-const mockedConfirmPrompt = confirmPrompt as jest.MockedFunction<
+const mockedConfirmPrompt = confirmPrompt as MockedFunction<
   typeof confirmPrompt
 >;
-const mockedInputPrompt = inputPrompt as jest.MockedFunction<
-  typeof inputPrompt
->;
-const mockedListPrompt = listPrompt as jest.MockedFunction<typeof listPrompt>;
-const mockedEnsureProjectExists = ensureProjectExists as jest.MockedFunction<
+const mockedInputPrompt = inputPrompt as MockedFunction<typeof inputPrompt>;
+const mockedListPrompt = listPrompt as MockedFunction<typeof listPrompt>;
+const mockedEnsureProjectExists = ensureProjectExists as MockedFunction<
   typeof ensureProjectExists
 >;
-const mockedPoll = poll as jest.MockedFunction<typeof poll>;
-const mockedListAppsForMigration = listAppsForMigration as jest.MockedFunction<
+const mockedPoll = poll as MockedFunction<typeof poll>;
+const mockedListAppsForMigration = listAppsForMigration as MockedFunction<
   typeof listAppsForMigration
 >;
-const mockedInitializeMigration = initializeMigration as jest.MockedFunction<
-  typeof initializeMigration
->;
-const mockedContinueMigration = continueMigration as jest.MockedFunction<
-  typeof continueMigration
->;
 
-const mockedHasFeature = hasFeature as jest.MockedFunction<typeof hasFeature>;
-const mockedFs = fs as jest.Mocked<typeof fs>;
+const mockedInitializeAppMigration = initializeAppMigration as MockedFunction<
+  typeof initializeAppMigration
+>;
+const mockedContinueAppMigration = continueAppMigration as MockedFunction<
+  typeof continueAppMigration
+>;
+const mockedHasUnfiedAppsAccess = hasUnfiedAppsAccess as MockedFunction<
+  typeof hasUnfiedAppsAccess
+>;
+const mockedFs = fs as Mocked<typeof fs>;
 
 const createMockMigratableApp = (
   id: number,
@@ -128,7 +125,7 @@ const createMockUnmigratableApp = (
 
 const createLoadedProjectConfig = (name: string): LoadedProjectConfig =>
   ({
-    projectConfig: { name },
+    projectConfig: { name, srcDir: 'src' },
     projectDir: MOCK_PROJECT_DIR,
   }) as LoadedProjectConfig;
 
@@ -152,7 +149,7 @@ describe('lib/app/migrate', () => {
     mockedGetCwd.mockReturnValue(MOCK_CWD);
     mockedSanitizeFileName.mockImplementation(name => name);
     mockedValidateUid.mockReturnValue(undefined);
-    mockedHasFeature.mockResolvedValue(true);
+    mockedHasUnfiedAppsAccess.mockResolvedValue(true);
     mockedFs.renameSync.mockImplementation(() => {});
   });
 
@@ -299,13 +296,10 @@ describe('lib/app/migrate', () => {
     it('should return all apps when no projectConfig is provided', async () => {
       setupMockApps([createMockMigratableApp(1, 'App 1')]);
 
-      const result = await fetchMigrationApps(
-        undefined,
-        ACCOUNT_ID,
-        PLATFORM_VERSION
-      );
-      expect(result).toHaveLength(1);
-      expect(result[0].appId).toBe(1);
+      const result = await fetchMigrationApps(ACCOUNT_ID, PLATFORM_VERSION);
+      expect(result.migratableApps).toHaveLength(1);
+      expect(result.migratableApps[0].appId).toBe(1);
+      expect(result.unmigratableApps).toHaveLength(0);
     });
 
     it('should filter apps by project name when projectConfig is provided', async () => {
@@ -313,27 +307,38 @@ describe('lib/app/migrate', () => {
       setupMockApps([createMockMigratableApp(1, 'App 1', PROJECT_NAME)]);
 
       const result = await fetchMigrationApps(
-        undefined,
         ACCOUNT_ID,
         PLATFORM_VERSION,
         projectConfig
       );
-      expect(result).toHaveLength(1);
-      expect(result[0].projectName).toBe(PROJECT_NAME);
+      expect(result.migratableApps).toHaveLength(1);
+      expect(result.migratableApps[0].projectName).toBe(PROJECT_NAME);
     });
+  });
+
+  describe('validateMigrationApps', () => {
+    const mockMigratableApp1 = createMockMigratableApp(
+      1,
+      'App 1',
+      PROJECT_NAME
+    );
+    const mockMigratableApp2 = createMockMigratableApp(
+      2,
+      'App 2',
+      PROJECT_NAME
+    );
 
     it('should throw an error when multiple apps are found for a project', async () => {
       const projectConfig = createLoadedProjectConfig(PROJECT_NAME);
-      setupMockApps([
-        createMockMigratableApp(1, 'App 1', PROJECT_NAME),
-        createMockMigratableApp(2, 'App 2', PROJECT_NAME),
-      ]);
 
       await expect(
-        fetchMigrationApps(
-          undefined,
+        validateMigrationApps(
+          APP_ID,
           ACCOUNT_ID,
-          PLATFORM_VERSION,
+          {
+            migratableApps: [mockMigratableApp1, mockMigratableApp2],
+            unmigratableApps: [],
+          },
           projectConfig
         )
       ).rejects.toThrow(lib.migrate.errors.project.multipleApps);
@@ -341,29 +346,32 @@ describe('lib/app/migrate', () => {
 
     it('should throw an error when no apps are found for a project', async () => {
       const projectConfig = createLoadedProjectConfig(PROJECT_NAME);
-      setupMockApps([], []);
 
       await expect(
-        fetchMigrationApps(
-          undefined,
+        validateMigrationApps(
+          APP_ID,
           ACCOUNT_ID,
-          PLATFORM_VERSION,
+          { migratableApps: [], unmigratableApps: [] },
           projectConfig
         )
       ).rejects.toThrow(lib.migrate.errors.noAppsForProject(PROJECT_NAME));
     });
 
     it('should throw an error when no migratable apps are found', async () => {
-      setupMockApps([], mockUnmigratableApps);
-
       await expect(
-        fetchMigrationApps(undefined, ACCOUNT_ID, PLATFORM_VERSION)
+        validateMigrationApps(APP_ID, ACCOUNT_ID, {
+          migratableApps: [],
+          unmigratableApps: mockUnmigratableApps,
+        })
       ).rejects.toThrow(/No apps in account/);
     });
 
     it('should throw an error when appId is provided but not found', async () => {
       await expect(
-        fetchMigrationApps(999, ACCOUNT_ID, PLATFORM_VERSION)
+        validateMigrationApps(APP_ID, ACCOUNT_ID, {
+          migratableApps: [],
+          unmigratableApps: [],
+        })
       ).rejects.toThrow(/No apps in account/);
     });
   });
@@ -461,7 +469,6 @@ describe('lib/app/migrate', () => {
           unmigratableApps: [],
         },
       });
-
       mockedListPrompt.mockResolvedValue({ appId: 1 });
       mockedConfirmPrompt.mockResolvedValue(true);
       mockedEnsureProjectExists.mockResolvedValue({ projectExists: false });
@@ -530,10 +537,10 @@ describe('lib/app/migrate', () => {
     });
   });
 
-  describe('beginMigration', () => {
+  describe('beginAppMigration', () => {
     beforeEach(() => {
       // @ts-expect-error
-      mockedInitializeMigration.mockResolvedValue({
+      mockedInitializeAppMigration.mockResolvedValue({
         data: { migrationId: MIGRATION_ID },
       });
 
@@ -547,7 +554,11 @@ describe('lib/app/migrate', () => {
     });
 
     it('should initialize migration and return migrationId and uidMap', async () => {
-      const result = await beginMigration(ACCOUNT_ID, APP_ID, PLATFORM_VERSION);
+      const result = await beginAppMigration(
+        ACCOUNT_ID,
+        APP_ID,
+        PLATFORM_VERSION
+      );
 
       expect(result).toEqual({
         migrationId: MIGRATION_ID,
@@ -568,10 +579,10 @@ describe('lib/app/migrate', () => {
         },
       });
 
-      await beginMigration(ACCOUNT_ID, APP_ID, PLATFORM_VERSION);
+      await beginAppMigration(ACCOUNT_ID, APP_ID, PLATFORM_VERSION);
 
       expect(mockedInputPrompt).toHaveBeenCalledWith(
-        lib.migrate.prompt.uidForComponent("card 'test-card'"),
+        lib.migrate.prompt.uidForComponent("card 'test-card' (ID: 1)"),
         {
           defaultAnswer: componentHint,
           validate: expect.any(Function),
@@ -583,7 +594,7 @@ describe('lib/app/migrate', () => {
       mockedPoll.mockRejectedValue(new Error('Failed'));
 
       await expect(
-        beginMigration(ACCOUNT_ID, APP_ID, PLATFORM_VERSION)
+        beginAppMigration(ACCOUNT_ID, APP_ID, PLATFORM_VERSION)
       ).rejects.toThrow(/Migration Failed/);
     });
   });
@@ -608,12 +619,12 @@ describe('lib/app/migrate', () => {
     });
   });
 
-  describe('finalizeMigration', () => {
+  describe('finalizeAppMigration', () => {
     const uidMap = { '1': 'test-uid' };
 
     beforeEach(() => {
       // @ts-expect-error
-      mockedContinueMigration.mockResolvedValue({
+      mockedContinueAppMigration.mockResolvedValue({
         data: { migrationId: MIGRATION_ID },
       });
 
@@ -625,7 +636,7 @@ describe('lib/app/migrate', () => {
     });
 
     it('should continue migration and return buildId', async () => {
-      const result = await finalizeMigration(
+      const result = await finalizeAppMigration(
         ACCOUNT_ID,
         MIGRATION_ID,
         uidMap,
@@ -639,7 +650,7 @@ describe('lib/app/migrate', () => {
       mockedPoll.mockRejectedValue(new Error('Test error'));
 
       await expect(
-        finalizeMigration(ACCOUNT_ID, MIGRATION_ID, uidMap, PROJECT_NAME)
+        finalizeAppMigration(ACCOUNT_ID, MIGRATION_ID, uidMap, PROJECT_NAME)
       ).rejects.toThrow(/Migration Failed/);
     });
   });
@@ -730,11 +741,11 @@ describe('lib/app/migrate', () => {
     } as ArgumentsCamelCase<MigrateAppArgs>;
 
     beforeEach(() => {
-      mockedHasFeature.mockResolvedValue(true);
+      mockedHasUnfiedAppsAccess.mockResolvedValue(true);
     });
 
     it('should throw an error when account is not ungated for unified apps', async () => {
-      mockedHasFeature.mockResolvedValueOnce(false);
+      mockedHasUnfiedAppsAccess.mockResolvedValueOnce(false);
 
       await expect(migrateApp2025_2(ACCOUNT_ID, options)).rejects.toThrowError(
         /isn't enrolled in the required product beta to access this command./

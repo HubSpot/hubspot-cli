@@ -1,6 +1,5 @@
 import fs from 'fs';
 import { Argv, ArgumentsCamelCase } from 'yargs';
-import { logger } from '@hubspot/local-dev-lib/logger';
 import {
   loadConfig,
   getConfigPath,
@@ -11,16 +10,21 @@ import {
   getCWDAccountOverride,
   getDefaultAccountOverrideFilePath,
 } from '@hubspot/local-dev-lib/config';
-import { trackCommandUsage } from '../../lib/usageTracking';
-import { i18n } from '../../lib/lang';
-import { promptUser } from '../../lib/prompts/promptUtils';
-import { logError } from '../../lib/errorHandlers';
-import { selectAccountFromConfig } from '../../lib/prompts/accountsPrompt';
-import { CommonArgs, ConfigArgs, YargsCommandModule } from '../../types/Yargs';
-import { makeYargsBuilder } from '../../lib/yargsUtils';
+import { trackCommandUsage } from '../../lib/usageTracking.js';
+import { promptUser } from '../../lib/prompts/promptUtils.js';
+import { logError } from '../../lib/errorHandlers/index.js';
+import { selectAccountFromConfig } from '../../lib/prompts/accountsPrompt.js';
+import {
+  CommonArgs,
+  ConfigArgs,
+  YargsCommandModule,
+} from '../../types/Yargs.js';
+import { makeYargsBuilder } from '../../lib/yargsUtils.js';
+import { uiLogger } from '../../lib/ui/logger.js';
+import { commands } from '../../lang/en.js';
 
 const command = 'remove [account]';
-const describe = i18n(`commands.account.subcommands.remove.describe`);
+const describe = commands.account.subcommands.remove.describe;
 
 type AccountRemoveArgs = CommonArgs &
   ConfigArgs & {
@@ -34,17 +38,17 @@ async function handler(
   let accountToRemove = account;
 
   if (accountToRemove && !getAccountId(accountToRemove)) {
-    logger.error(
-      i18n(`commands.account.subcommands.remove.errors.accountNotFound`, {
-        specifiedAccount: accountToRemove,
-        configPath: getConfigPath()!,
-      })
+    uiLogger.error(
+      commands.account.subcommands.remove.errors.accountNotFound(
+        accountToRemove,
+        getConfigPath()!
+      )
     );
   }
 
   if (!accountToRemove || !getAccountId(accountToRemove)) {
     accountToRemove = await selectAccountFromConfig(
-      i18n(`commands.account.subcommands.remove.prompts.selectAccountToRemove`)
+      commands.account.subcommands.remove.prompts.selectAccountToRemove
     );
   }
 
@@ -66,12 +70,9 @@ async function handler(
     const { deleteOverrideFile } = await promptUser({
       type: 'confirm',
       name: 'deleteOverrideFile',
-      message: i18n(
-        `commands.account.subcommands.remove.prompts.deleteOverrideFile`,
-        {
-          overrideFilePath,
-          accountName: accountToRemove,
-        }
+      message: commands.account.subcommands.remove.prompts.deleteOverrideFile(
+        overrideFilePath,
+        accountToRemove
       ),
     });
     try {
@@ -84,10 +85,8 @@ async function handler(
   }
 
   await deleteAccount(accountToRemove);
-  logger.success(
-    i18n(`commands.account.subcommands.remove.success.accountRemoved`, {
-      accountName: accountToRemove,
-    })
+  uiLogger.success(
+    commands.account.subcommands.remove.success.accountRemoved(accountToRemove)
   );
 
   // Get updated version of the config
@@ -99,9 +98,9 @@ async function handler(
     defaultAccountId = getAccountId(currentDefaultAccount);
   }
   if (accountToRemoveId === defaultAccountId) {
-    logger.log();
-    logger.log(
-      i18n(`commands.account.subcommands.remove.logs.replaceDefaultAccount`)
+    uiLogger.log('');
+    uiLogger.log(
+      commands.account.subcommands.remove.logs.replaceDefaultAccount
     );
     const newDefaultAccount = await selectAccountFromConfig();
     updateDefaultAccount(newDefaultAccount);
@@ -110,20 +109,18 @@ async function handler(
 
 function accountRemoveBuilder(yargs: Argv): Argv<AccountRemoveArgs> {
   yargs.positional('account', {
-    describe: i18n(
-      `commands.account.subcommands.remove.options.account.describe`
-    ),
+    describe: commands.account.subcommands.remove.options.account.describe,
     type: 'string',
   });
 
   yargs.example([
     [
       '$0 accounts remove',
-      i18n(`commands.account.subcommands.remove.examples.default`),
+      commands.account.subcommands.remove.examples.default,
     ],
     [
       '$0 accounts remove MyAccount',
-      i18n(`commands.account.subcommands.remove.examples.byName`),
+      commands.account.subcommands.remove.examples.byName,
     ],
   ]);
 

@@ -1,5 +1,4 @@
 import { ArgumentsCamelCase } from 'yargs';
-import { logger } from '@hubspot/local-dev-lib/logger';
 import {
   getAccountConfig,
   getConfigAccounts,
@@ -10,13 +9,13 @@ import { getValidEnv } from '@hubspot/local-dev-lib/environment';
 import {
   findProjectComponents,
   getProjectComponentTypes,
-} from '../../../lib/projects/structure';
-import { ComponentTypes, ProjectConfig } from '../../../types/Projects';
-import { i18n } from '../../../lib/lang';
-import { EXIT_CODES } from '../../../lib/enums/exitCodes';
-import { uiCommandReference } from '../../../lib/ui';
-import SpinniesManager from '../../../lib/ui/SpinniesManager';
-import LocalDevManager from '../../../lib/projects/localDev/LocalDevManager';
+} from '../../../lib/projects/structure.js';
+import { ComponentTypes, ProjectConfig } from '../../../types/Projects.js';
+import { commands } from '../../../lang/en.js';
+import { uiLogger } from '../../../lib/ui/logger.js';
+import { EXIT_CODES } from '../../../lib/enums/exitCodes.js';
+import SpinniesManager from '../../../lib/ui/SpinniesManager.js';
+import LocalDevManager from '../../../lib/projects/localDev/LocalDevManager.js';
 import {
   confirmDefaultAccountIsTarget,
   suggestRecommendedNestedAccount,
@@ -24,16 +23,21 @@ import {
   checkIfDefaultAccountIsSupported,
   createSandboxForLocalDev,
   createDeveloperTestAccountForLocalDev,
-  createNewProjectForLocalDev,
-  createInitialBuildForNewProject,
   useExistingDevTestAccount,
   checkIfParentAccountIsAuthed,
   hasSandboxes,
-} from '../../../lib/projects/localDev/helpers';
-import { handleExit } from '../../../lib/process';
-import { isSandbox, isDeveloperTestAccount } from '../../../lib/accountTypes';
-import { ensureProjectExists } from '../../../lib/projects/ensureProjectExists';
-import { ProjectDevArgs } from '../../../types/Yargs';
+} from '../../../lib/projects/localDev/helpers/account.js';
+import {
+  createInitialBuildForNewProject,
+  createNewProjectForLocalDev,
+} from '../../../lib/projects/localDev/helpers/project.js';
+import { handleExit } from '../../../lib/process.js';
+import {
+  isSandbox,
+  isDeveloperTestAccount,
+} from '../../../lib/accountTypes.js';
+import { ensureProjectExists } from '../../../lib/projects/ensureProjectExists.js';
+import { ProjectDevArgs } from '../../../types/Yargs.js';
 
 type DeprecatedProjectDevFlowArgs = {
   args: ArgumentsCamelCase<ProjectDevArgs>;
@@ -48,7 +52,7 @@ export async function deprecatedProjectDevFlow({
   projectConfig,
   projectDir,
 }: DeprecatedProjectDevFlowArgs): Promise<void> {
-  const { providedAccountId, derivedAccountId } = args;
+  const { userProvidedAccount, derivedAccountId } = args;
   const env = getValidEnv(getEnv(derivedAccountId));
 
   const components = await findProjectComponents(projectDir);
@@ -59,38 +63,22 @@ export async function deprecatedProjectDevFlow({
 
   const accountConfig = getAccountConfig(accountId);
   if (!accountConfig) {
-    logger.error(
-      i18n('commands.project.subcommands.dev.errors.noAccount', {
-        accountId: accountId,
-        authCommand: uiCommandReference('hs auth'),
-      })
-    );
+    uiLogger.error(commands.project.dev.errors.noAccount(accountId));
     process.exit(EXIT_CODES.ERROR);
   }
 
   if (runnableComponents.length === 0) {
-    logger.error(
-      i18n(`commands.project.subcommands.dev.errors.noRunnableComponents`, {
-        projectDir,
-        command: uiCommandReference('hs project add'),
-      })
-    );
+    uiLogger.error(commands.project.dev.errors.noRunnableComponents);
     process.exit(EXIT_CODES.SUCCESS);
   } else if (hasPrivateApps && hasPublicApps) {
-    logger.error(
-      i18n(`commands.project.subcommands.dev.errors.invalidProjectComponents`)
-    );
+    uiLogger.error(commands.project.dev.errors.invalidProjectComponents);
     process.exit(EXIT_CODES.SUCCESS);
   }
 
   const accounts = getConfigAccounts();
 
   if (!accounts) {
-    logger.error(
-      i18n(`commands.project.subcommands.dev.errors.noAccountsInConfig`, {
-        authCommand: uiCommandReference('hs auth'),
-      })
-    );
+    uiLogger.error(commands.project.dev.errors.noAccountsInConfig);
     process.exit(EXIT_CODES.ERROR);
   }
 
@@ -107,12 +95,12 @@ export async function deprecatedProjectDevFlow({
 
   // targetProjectAccountId and targetTestingAccountId are set to null if --account flag is not provided.
   // By setting them to null, we can later check if they need to be assigned based on the default account configuration and the type of app.
-  let targetProjectAccountId = providedAccountId ? derivedAccountId : null;
+  let targetProjectAccountId = userProvidedAccount ? derivedAccountId : null;
   // The account that we are locally testing against
-  let targetTestingAccountId = providedAccountId ? derivedAccountId : null;
+  let targetTestingAccountId = userProvidedAccount ? derivedAccountId : null;
 
   // Check that the default account or flag option is valid for the type of app in this project
-  if (providedAccountId) {
+  if (userProvidedAccount) {
     checkIfAccountFlagIsSupported(accountConfig, hasPublicApps);
 
     if (hasPublicApps) {
@@ -184,7 +172,7 @@ export async function deprecatedProjectDevFlow({
   }
 
   if (!targetProjectAccountId || !targetTestingAccountId) {
-    logger.error(i18n(`commands.project.subcommands.dev.errors.noAccount`));
+    uiLogger.error(commands.project.dev.errors.noAccount(accountId));
     process.exit(EXIT_CODES.ERROR);
   }
 

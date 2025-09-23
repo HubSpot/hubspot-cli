@@ -1,21 +1,18 @@
 import { Arguments } from 'yargs';
 import * as config from '@hubspot/local-dev-lib/config';
-import * as gitUI from '../../ui/git';
-import { checkAndWarnGitInclusionMiddleware } from '../gitMiddleware';
+import * as gitUI from '../../ui/git.js';
+import { checkAndWarnGitInclusionMiddleware } from '../gitMiddleware.js';
 
-jest.mock('@hubspot/local-dev-lib/config');
-jest.mock('../../ui/git');
+vi.mock('@hubspot/local-dev-lib/config');
+vi.mock('../../ui/git');
 
-const getConfigPathSpy = jest.spyOn(config, 'getConfigPath');
-const checkAndWarnGitInclusionSpy = jest.spyOn(
-  gitUI,
-  'checkAndWarnGitInclusion'
-);
+const getConfigPathSpy = vi.spyOn(config, 'getConfigPath');
+const checkAndWarnGitInclusionSpy = vi.spyOn(gitUI, 'checkAndWarnGitInclusion');
 
 describe('lib/middleware/gitMiddleware', () => {
   describe('checkAndWarnGitInclusionMiddleware()', () => {
     it('should call checkAndWarnGitInclusion when command is provided and config path exists', () => {
-      const mockConfigPath = '/path/to/config';
+      const mockConfigPath = '/path/to/config.js';
       getConfigPathSpy.mockReturnValue(mockConfigPath);
 
       const argv: Arguments = {

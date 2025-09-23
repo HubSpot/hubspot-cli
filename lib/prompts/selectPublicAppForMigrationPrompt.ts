@@ -1,10 +1,10 @@
-import { promptUser } from './promptUtils';
-import { i18n } from '../lang';
-import { uiLine } from '../ui';
-import { logError } from '../errorHandlers/index';
+import { promptUser } from './promptUtils.js';
+import { i18n } from '../lang.js';
+import { uiLine } from '../ui/index.js';
+import { logError } from '../errorHandlers/index.js';
 import { logger } from '@hubspot/local-dev-lib/logger';
 import { fetchPublicAppsForPortal } from '@hubspot/local-dev-lib/api/appsDev';
-import { EXIT_CODES } from '../enums/exitCodes';
+import { EXIT_CODES } from '../enums/exitCodes.js';
 import { PublicApp } from '@hubspot/local-dev-lib/types/Apps';
 
 type PublicAppPromptResponse = {

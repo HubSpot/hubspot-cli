@@ -1,5 +1,5 @@
-import { poll, DEFAULT_POLLING_STATES } from '../polling';
-import { DEFAULT_POLLING_DELAY } from '../constants';
+import { poll, DEFAULT_POLLING_STATES } from '../polling.js';
+import { DEFAULT_POLLING_DELAY } from '../constants.js';
 import { HubSpotPromise } from '@hubspot/local-dev-lib/types/Http';
 
 // Mock response types
@@ -10,7 +10,7 @@ type MockResponse = {
 // Helper to create a mock polling callback
 const createMockCallback = (responses: MockResponse[]) => {
   let callCount = 0;
-  return jest.fn((): HubSpotPromise<{ status: string }> => {
+  return vi.fn((): HubSpotPromise<{ status: string }> => {
     const response = responses[callCount];
     callCount++;
     return Promise.resolve({ data: response }) as HubSpotPromise<{
@@ -21,11 +21,11 @@ const createMockCallback = (responses: MockResponse[]) => {
 
 describe('lib/polling', () => {
   beforeEach(() => {
-    jest.useFakeTimers();
+    vi.useFakeTimers();
   });
 
   afterEach(() => {
-    jest.useRealTimers();
+    vi.useRealTimers();
   });
 
   describe('poll()', () => {
@@ -38,7 +38,7 @@ describe('lib/polling', () => {
       const pollPromise = poll(mockCallback);
 
       // Fast-forward through two polling intervals
-      jest.advanceTimersByTime(DEFAULT_POLLING_DELAY * 2);
+      vi.advanceTimersByTime(DEFAULT_POLLING_DELAY * 2);
 
       const result = await pollPromise;
       expect(result.status).toBe(DEFAULT_POLLING_STATES.SUCCESS);
@@ -53,7 +53,7 @@ describe('lib/polling', () => {
 
       const pollPromise = poll(mockCallback);
 
-      jest.advanceTimersByTime(DEFAULT_POLLING_DELAY * 2);
+      vi.advanceTimersByTime(DEFAULT_POLLING_DELAY * 2);
 
       await expect(pollPromise).rejects.toEqual({
         status: DEFAULT_POLLING_STATES.ERROR,
@@ -69,7 +69,7 @@ describe('lib/polling', () => {
 
       const pollPromise = poll(mockCallback);
 
-      jest.advanceTimersByTime(DEFAULT_POLLING_DELAY * 2);
+      vi.advanceTimersByTime(DEFAULT_POLLING_DELAY * 2);
 
       await expect(pollPromise).rejects.toEqual({
         status: DEFAULT_POLLING_STATES.FAILURE,
@@ -84,7 +84,7 @@ describe('lib/polling', () => {
 
       const pollPromise = poll(mockCallback);
 
-      jest.advanceTimersByTime(DEFAULT_POLLING_DELAY * 2);
+      vi.advanceTimersByTime(DEFAULT_POLLING_DELAY * 2);
 
       await expect(pollPromise).rejects.toEqual({
         status: DEFAULT_POLLING_STATES.REVERTED,
@@ -92,13 +92,13 @@ describe('lib/polling', () => {
     });
 
     it('should reject when callback throws an error', async () => {
-      const mockCallback = jest
+      const mockCallback = vi
         .fn()
         .mockRejectedValue(new Error('Network error'));
 
       const pollPromise = poll(mockCallback);
 
-      jest.advanceTimersByTime(DEFAULT_POLLING_DELAY);
+      vi.advanceTimersByTime(DEFAULT_POLLING_DELAY);
 
       await expect(pollPromise).rejects.toThrow('Network error');
       expect(mockCallback).toHaveBeenCalledTimes(1);

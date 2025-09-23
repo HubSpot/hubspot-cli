@@ -1,28 +1,28 @@
-import { getAccountId } from '@hubspot/local-dev-lib/config';
+import { getAccountId, hasLocalStateFlag } from '@hubspot/local-dev-lib/config';
 import { getConfigDefaultAccount } from '@hubspot/local-dev-lib/config';
 import { logger } from '@hubspot/local-dev-lib/logger';
 
-import { uiLogger } from '../../ui/logger';
+import { uiLogger } from '../../ui/logger.js';
 import {
   uiBetaTag,
   uiLine,
   uiAccountDescription,
   uiCommandReference,
-} from '../../ui';
-import { lib } from '../../../lang/en';
-import LocalDevState from './LocalDevState';
-import SpinniesManager from '../../ui/SpinniesManager';
-import { logError } from '../../errorHandlers';
+} from '../../ui/index.js';
+import { lib } from '../../../lang/en.js';
+import LocalDevState from './LocalDevState.js';
+import SpinniesManager from '../../ui/SpinniesManager.js';
+import { logError } from '../../errorHandlers/index.js';
+import { isAutoOpenBrowserEnabled } from '../../configOptions.js';
+import { CONFIG_LOCAL_STATE_FLAGS } from '../../constants.js';
 
 class LocalDevLogger {
   private state: LocalDevState;
   private mostRecentUploadWarning: string | null;
-  private uploadWarnings: Set<string>;
 
   constructor(state: LocalDevState) {
     this.state = state;
     this.mostRecentUploadWarning = null;
-    this.uploadWarnings = new Set();
   }
 
   private logUploadInstructions(warning: string): void {
@@ -32,13 +32,11 @@ class LocalDevLogger {
     uiLogger.log(lib.LocalDevManager.uploadWarning.instructionsHeader);
 
     uiLogger.log(lib.LocalDevManager.uploadWarning.stopDev);
-    if (this.state.isGithubLinked) {
-      uiLogger.log(lib.LocalDevManager.uploadWarning.pushToGithub);
-    } else {
-      uiLogger.log(
-        lib.LocalDevManager.uploadWarning.runUpload(this.getUploadCommand())
-      );
-    }
+
+    uiLogger.log(
+      lib.LocalDevManager.uploadWarning.runUpload(this.getUploadCommand())
+    );
+
     uiLogger.log(lib.LocalDevManager.uploadWarning.restartDev);
   }
 
@@ -66,7 +64,9 @@ class LocalDevLogger {
   uploadWarning(): void {
     // At the moment, there is only one additional warning. We may need to do this in a
     // more robust way in the future
-    const additionalWarnings = Array.from(this.uploadWarnings).join('\n\n');
+    const additionalWarnings = Array.from(this.state.uploadWarnings).join(
+      '\n\n'
+    );
     const warning = `${lib.LocalDevManager.uploadWarning.defaultWarning} ${additionalWarnings}`;
 
     // Avoid logging the warning to the console if it is currently the most
@@ -76,14 +76,6 @@ class LocalDevLogger {
 
       this.mostRecentUploadWarning = warning;
     }
-  }
-
-  addUploadWarning(warning: string): void {
-    this.uploadWarnings.add(warning);
-  }
-
-  clearUploadWarnings(): void {
-    this.uploadWarnings.clear();
   }
 
   missingComponentsWarning(components: string[]): void {
@@ -111,17 +103,6 @@ class LocalDevLogger {
 
   devServerCleanupError(e: unknown): void {
     this.handleError(e, lib.LocalDevManager.devServer.cleanupError);
-  }
-
-  noDeployedBuild(): void {
-    uiLogger.error(
-      lib.LocalDevManager.noDeployedBuild(
-        this.state.projectConfig.name,
-        uiAccountDescription(this.state.targetProjectAccountId),
-        this.getUploadCommand()
-      )
-    );
-    uiLogger.log('');
   }
 
   resetSpinnies(): void {
@@ -152,6 +133,27 @@ class LocalDevLogger {
       )
     );
 
+    const showWelcomeScreen = !hasLocalStateFlag(
+      CONFIG_LOCAL_STATE_FLAGS.LOCAL_DEV_UI_WELCOME
+    );
+
+    if (!isAutoOpenBrowserEnabled()) {
+      uiLogger.log(
+        lib.LocalDevManager.viewLocalDevUILink(
+          this.state.targetTestingAccountId,
+          showWelcomeScreen
+        )
+      );
+    } else {
+      uiLogger.log('');
+      uiLogger.log(
+        lib.LocalDevManager.localDevUIAutoMessage(
+          this.state.targetTestingAccountId,
+          showWelcomeScreen
+        )
+      );
+    }
+
     uiLogger.log('');
     uiLogger.log(lib.LocalDevManager.quitHelper);
     uiLine();
@@ -180,6 +182,10 @@ class LocalDevLogger {
     uiLogger.log(lib.LocalDevProcess.uploadInitiated);
   }
 
+  deployInitiated(): void {
+    uiLogger.log(lib.LocalDevProcess.deployInitiated);
+  }
+
   projectConfigMismatch(): void {
     uiLogger.log(lib.LocalDevProcess.projectConfigMismatch);
   }
@@ -194,6 +200,30 @@ class LocalDevLogger {
   uploadSuccess(): void {
     logger.log('');
     uiLogger.log(lib.LocalDevProcess.uploadSuccess);
+    uiLine();
+    logger.log('');
+  }
+
+  uploadSuccessAutoDeployDisabled(): void {
+    uiLogger.warn(lib.LocalDevProcess.uploadSuccessAutoDeployDisabled);
+    uiLine();
+    logger.log('');
+  }
+
+  deployError(error?: unknown): void {
+    logger.log('');
+
+    if (error) {
+      logError(error);
+    }
+
+    uiLogger.log(lib.LocalDevProcess.deployFailed);
+    logger.log('');
+  }
+
+  deploySuccess(): void {
+    logger.log('');
+    uiLogger.log(lib.LocalDevProcess.deploySuccess);
     uiLine();
     logger.log('');
   }

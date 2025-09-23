@@ -3,13 +3,12 @@ import {
   addAccountOptions,
   addConfigOptions,
   addUseEnvironmentOptions,
-} from '../../../lib/commonOpts';
-import marketplaceValidateCommand from '../marketplace-validate';
+} from '../../../lib/commonOpts.js';
+import marketplaceValidateCommand from '../marketplace-validate.js';
 
-jest.mock('yargs');
-jest.mock('../../../lib/commonOpts');
+vi.mock('../../../lib/commonOpts');
 
-const positionalSpy = jest
+const positionalSpy = vi
   .spyOn(yargs as Argv, 'positional')
   .mockReturnValue(yargs as Argv);
 

@@ -3,11 +3,10 @@ import {
   addAccountOptions,
   addConfigOptions,
   addUseEnvironmentOptions,
-} from '../../../lib/commonOpts';
-import projectDownloadCommand from '../download';
+} from '../../../lib/commonOpts.js';
+import projectDownloadCommand from '../download.js';
 
-jest.mock('yargs');
-jest.mock('../../../lib/commonOpts');
+vi.mock('../../../lib/commonOpts');
 
 describe('commands/project/download', () => {
   const yargsMock = yargs as Argv;
@@ -39,8 +38,8 @@ describe('commands/project/download', () => {
     });
 
     it('should define project, dest, and build options', () => {
-      const optionsSpy = jest.spyOn(yargsMock, 'options');
-      const exampleSpy = jest.spyOn(yargsMock, 'example');
+      const optionsSpy = vi.spyOn(yargsMock, 'options');
+      const exampleSpy = vi.spyOn(yargsMock, 'example');
 
       projectDownloadCommand.builder(yargsMock);
 

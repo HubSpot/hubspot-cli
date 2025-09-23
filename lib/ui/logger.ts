@@ -10,4 +10,5 @@ export const uiLogger = {
   debug: _logger.debug,
   group: (message: string) => _logger.group(message),
   groupEnd: () => _logger.groupEnd(),
+  json: (json: object) => console.log(JSON.stringify(json, null, 2)),
 };

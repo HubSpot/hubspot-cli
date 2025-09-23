@@ -1,16 +1,16 @@
-import { promptUser } from './promptUtils';
-import { i18n } from '../lang';
-import { uiAccountDescription } from '../ui';
+import { promptUser } from './promptUtils.js';
+import { i18n } from '../lang.js';
+import { uiAccountDescription } from '../ui/index.js';
 import { HUBSPOT_ACCOUNT_TYPES } from '@hubspot/local-dev-lib/constants/config';
 import { getAccountIdentifier } from '@hubspot/local-dev-lib/config/getAccountIdentifier';
-import { isSandbox } from '../accountTypes';
+import { isSandbox } from '../accountTypes.js';
 import {
   getConfigDefaultAccount,
   getConfigAccounts,
 } from '@hubspot/local-dev-lib/config';
 import { CLIAccount } from '@hubspot/local-dev-lib/types/Accounts';
-import { PromptChoices } from '../../types/Prompts';
-import { SandboxAccountType } from '../../types/Sandboxes';
+import { PromptChoices } from '../../types/Prompts.js';
+import { SandboxAccountType } from '../../types/Sandboxes.js';
 
 type SandboxTypePromptResponse = {
   type: SandboxAccountType;

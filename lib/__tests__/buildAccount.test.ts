@@ -10,33 +10,54 @@ import {
   writeConfig,
   getAccountId,
 } from '@hubspot/local-dev-lib/config';
-import { createDeveloperTestAccount } from '@hubspot/local-dev-lib/api/developerTestAccounts';
-import { createSandbox } from '@hubspot/local-dev-lib/api/sandboxHubs';
+import {
+  createDeveloperTestAccount,
+  fetchDeveloperTestAccountGateSyncStatus,
+  generateDeveloperTestAccountPersonalAccessKey,
+} from '@hubspot/local-dev-lib/api/developerTestAccounts';
+import {
+  createSandbox,
+  createV2Sandbox,
+  getSandboxPersonalAccessKey,
+} from '@hubspot/local-dev-lib/api/sandboxHubs';
 import { HUBSPOT_ACCOUNT_TYPES } from '@hubspot/local-dev-lib/constants/config';
-import { personalAccessKeyPrompt } from '../prompts/personalAccessKeyPrompt';
-import { cliAccountNamePrompt } from '../prompts/accountNamePrompt';
-import * as buildAccount from '../buildAccount';
+import { personalAccessKeyPrompt } from '../prompts/personalAccessKeyPrompt.js';
+import { cliAccountNamePrompt } from '../prompts/accountNamePrompt.js';
+import * as buildAccount from '../buildAccount.js';
+import { Mock } from 'vitest';
 
-jest.mock('@hubspot/local-dev-lib/personalAccessKey');
-jest.mock('@hubspot/local-dev-lib/config');
-jest.mock('@hubspot/local-dev-lib/api/developerTestAccounts');
-jest.mock('@hubspot/local-dev-lib/api/sandboxHubs');
-jest.mock('@hubspot/local-dev-lib/logger');
-jest.mock('../prompts/personalAccessKeyPrompt');
-jest.mock('../prompts/accountNamePrompt');
+vi.mock('@hubspot/local-dev-lib/personalAccessKey');
+vi.mock('@hubspot/local-dev-lib/config');
+vi.mock('@hubspot/local-dev-lib/api/developerTestAccounts');
+vi.mock('@hubspot/local-dev-lib/api/sandboxHubs');
+vi.mock('@hubspot/local-dev-lib/logger');
+vi.mock('../prompts/personalAccessKeyPrompt');
+vi.mock('../prompts/accountNamePrompt');
+vi.mock('../ui/SpinniesManager', () => ({
+  default: {
+    init: vi.fn(),
+    add: vi.fn(),
+    succeed: vi.fn(),
+    fail: vi.fn(),
+  },
+}));
 
-const mockedPersonalAccessKeyPrompt = personalAccessKeyPrompt as jest.Mock;
-const mockedGetAccessToken = getAccessToken as jest.Mock;
-const mockedUpdateConfigWithAccessToken =
-  updateConfigWithAccessToken as jest.Mock;
-const mockedAccountNameExistsInConfig = accountNameExistsInConfig as jest.Mock;
-const mockedUpdateAccountConfig = updateAccountConfig as jest.Mock;
-const mockedWriteConfig = writeConfig as jest.Mock;
-const mockedCliAccountNamePrompt = cliAccountNamePrompt as jest.Mock;
-const mockedGetAccountId = getAccountId as jest.Mock;
-const mockedCreateDeveloperTestAccount =
-  createDeveloperTestAccount as jest.Mock;
-const mockedCreateSandbox = createSandbox as jest.Mock;
+const mockedPersonalAccessKeyPrompt = personalAccessKeyPrompt as Mock;
+const mockedGetAccessToken = getAccessToken as Mock;
+const mockedUpdateConfigWithAccessToken = updateConfigWithAccessToken as Mock;
+const mockedAccountNameExistsInConfig = accountNameExistsInConfig as Mock;
+const mockedUpdateAccountConfig = updateAccountConfig as Mock;
+const mockedWriteConfig = writeConfig as Mock;
+const mockedCliAccountNamePrompt = cliAccountNamePrompt as Mock;
+const mockedGetAccountId = getAccountId as Mock;
+const mockedCreateDeveloperTestAccount = createDeveloperTestAccount as Mock;
+const mockedFetchDeveloperTestAccountGateSyncStatus =
+  fetchDeveloperTestAccountGateSyncStatus as Mock;
+const mockedGenerateDeveloperTestAccountPersonalAccessKey =
+  generateDeveloperTestAccountPersonalAccessKey as Mock;
+const mockedCreateSandbox = createSandbox as Mock;
+const mockedCreateV2Sandbox = createV2Sandbox as Mock;
+const mockedGetPersonalAccessKey = getSandboxPersonalAccessKey as Mock;
 
 describe('lib/buildAccount', () => {
   describe('saveAccountToConfig()', () => {
@@ -70,7 +91,7 @@ describe('lib/buildAccount', () => {
     });
 
     afterEach(() => {
-      jest.clearAllMocks();
+      vi.clearAllMocks();
     });
 
     it('should save account with provided personal access key', async () => {
@@ -139,11 +160,43 @@ describe('lib/buildAccount', () => {
     });
   });
 
+  describe('createDeveloperTestAccountV3()', () => {
+    const parentAccountId = 123456;
+    const mockDeveoperTestAccountConfig = {
+      accountName: 'Developer Test Account',
+      description: 'Test Account created by the HubSpot CLI',
+    };
+
+    beforeEach(() => {
+      mockedCreateDeveloperTestAccount.mockResolvedValue({
+        data: { id: 123456 },
+      });
+      mockedFetchDeveloperTestAccountGateSyncStatus.mockResolvedValue({
+        data: { status: 'SUCCESS' },
+      });
+      mockedGenerateDeveloperTestAccountPersonalAccessKey.mockResolvedValue({
+        data: { personalAccessKey: 'test-key' },
+      });
+    });
+
+    it('should create a developer test account successfully', async () => {
+      const result = await buildAccount.createDeveloperTestAccountV3(
+        parentAccountId,
+        mockDeveoperTestAccountConfig
+      );
+      expect(result).toEqual({
+        accountName: mockDeveoperTestAccountConfig.accountName,
+        accountId: 123456,
+        personalAccessKey: 'test-key',
+      });
+    }, 10000);
+  });
+
   describe('buildDeveloperTestAccount()', () => {
     const mockParentAccountConfig = {
-      name: 'Developer Test Account',
+      name: 'Developer Account',
       accountId: 123456,
-      accountType: HUBSPOT_ACCOUNT_TYPES.DEVELOPER_TEST,
+      accountType: HUBSPOT_ACCOUNT_TYPES.APP_DEVELOPER,
       env: 'prod' as Environment,
     };
     const mockDeveloperTestAccount = {
@@ -157,9 +210,9 @@ describe('lib/buildAccount', () => {
     };
 
     beforeEach(() => {
-      jest
-        .spyOn(buildAccount, 'saveAccountToConfig')
-        .mockResolvedValue(mockParentAccountConfig.name);
+      vi.spyOn(buildAccount, 'saveAccountToConfig').mockResolvedValue(
+        mockParentAccountConfig.name
+      );
       mockedGetAccountId.mockReturnValue(mockParentAccountConfig.accountId);
       mockedCreateDeveloperTestAccount.mockResolvedValue({
         data: mockDeveloperTestAccount,
@@ -167,7 +220,7 @@ describe('lib/buildAccount', () => {
     });
 
     afterEach(() => {
-      jest.clearAllMocks();
+      vi.clearAllMocks();
     });
 
     it('should create a developer test account successfully', async () => {
@@ -209,16 +262,17 @@ describe('lib/buildAccount', () => {
 
   describe('buildSandbox()', () => {
     const mockParentAccountConfig = {
-      name: 'Developer Test Account',
+      name: 'Prod account',
       accountId: 123456,
-      accountType: HUBSPOT_ACCOUNT_TYPES.DEVELOPER_TEST,
+      accountType: HUBSPOT_ACCOUNT_TYPES.STANDARD,
       env: 'prod' as Environment,
     };
     const mockSandbox = {
       sandboxHubId: 56789,
       parentHubId: 123456,
       createdAt: '2025-01-01',
-      type: 'sandbox',
+      type: 'STANDARD',
+      version: 'V1',
       archived: false,
       name: 'Test Sandbox',
       domain: 'test-sandbox.hubspot.com',
@@ -231,9 +285,9 @@ describe('lib/buildAccount', () => {
     };
 
     beforeEach(() => {
-      jest
-        .spyOn(buildAccount, 'saveAccountToConfig')
-        .mockResolvedValue(mockParentAccountConfig.name);
+      vi.spyOn(buildAccount, 'saveAccountToConfig').mockResolvedValue(
+        mockParentAccountConfig.name
+      );
       mockedGetAccountId.mockReturnValue(mockParentAccountConfig.accountId);
       mockedCreateSandbox.mockResolvedValue({
         data: { sandbox: mockSandbox, personalAccessKey: 'test-key' },
@@ -241,7 +295,7 @@ describe('lib/buildAccount', () => {
     });
 
     afterEach(() => {
-      jest.clearAllMocks();
+      vi.clearAllMocks();
     });
 
     it('should create a standard sandbox successfully', async () => {
@@ -292,6 +346,108 @@ describe('lib/buildAccount', () => {
           mockSandbox.name,
           mockParentAccountConfig,
           HUBSPOT_ACCOUNT_TYPES.STANDARD_SANDBOX,
+          mockParentAccountConfig.env,
+          false
+        )
+      ).rejects.toThrow();
+    });
+  });
+
+  describe('buildV2Sandbox()', () => {
+    const mockParentAccountConfig = {
+      name: 'Prod account',
+      accountId: 123456,
+      accountType: HUBSPOT_ACCOUNT_TYPES.STANDARD,
+      env: 'prod' as Environment,
+    };
+    const mockSandbox = {
+      sandboxHubId: 56789,
+      parentHubId: 123456,
+      createdAt: '2025-01-01',
+      type: 'STANDARD',
+      archived: false,
+      version: 'V2',
+      name: 'Test v2 Sandbox',
+      domain: 'test-v2-sandbox.hubspot.com',
+      createdByUser: {
+        id: 123456,
+        email: 'test@test.com',
+        firstName: 'Test',
+        lastName: 'User',
+      },
+    };
+
+    beforeEach(() => {
+      vi.spyOn(buildAccount, 'saveAccountToConfig').mockResolvedValue(
+        mockParentAccountConfig.name
+      );
+      mockedGetAccountId.mockReturnValue(mockParentAccountConfig.accountId);
+      mockedCreateV2Sandbox.mockResolvedValue({
+        data: mockSandbox,
+      });
+      mockedGetPersonalAccessKey.mockResolvedValue({
+        data: { personalAccessKey: { encodedOAuthRefreshToken: 'test-key' } },
+      });
+    });
+
+    afterEach(() => {
+      vi.clearAllMocks();
+    });
+
+    it('should create a v2 standard sandbox successfully and fetch a personal access key', async () => {
+      const result = await buildAccount.buildV2Sandbox(
+        mockSandbox.name,
+        mockParentAccountConfig,
+        HUBSPOT_ACCOUNT_TYPES.STANDARD_SANDBOX,
+        false,
+        mockParentAccountConfig.env,
+        false
+      );
+      expect(result).toEqual({ sandbox: mockSandbox });
+      expect(mockedGetPersonalAccessKey).toHaveBeenCalledWith(
+        mockParentAccountConfig.accountId,
+        mockSandbox.sandboxHubId
+      );
+    });
+
+    it('should create a development sandbox successfully and fetch a personal access key', async () => {
+      const result = await buildAccount.buildV2Sandbox(
+        mockSandbox.name,
+        mockParentAccountConfig,
+        HUBSPOT_ACCOUNT_TYPES.DEVELOPMENT_SANDBOX,
+        false,
+        mockParentAccountConfig.env,
+        false
+      );
+      expect(result).toEqual({ sandbox: mockSandbox });
+      expect(mockedGetPersonalAccessKey).toHaveBeenCalledWith(
+        mockParentAccountConfig.accountId,
+        mockSandbox.sandboxHubId
+      );
+    });
+
+    it('should throw error if account ID is not found', async () => {
+      mockedGetAccountId.mockReturnValue(null);
+      await expect(
+        buildAccount.buildV2Sandbox(
+          mockSandbox.name,
+          mockParentAccountConfig,
+          HUBSPOT_ACCOUNT_TYPES.STANDARD_SANDBOX,
+          false,
+          mockParentAccountConfig.env,
+          false
+        )
+      ).rejects.toThrow();
+    });
+
+    it('should handle API errors when creating sandbox', async () => {
+      mockedCreateV2Sandbox.mockRejectedValue(new Error('test-error'));
+      await expect(
+        buildAccount.buildV2Sandbox(
+          mockSandbox.name,
+          mockParentAccountConfig,
+          HUBSPOT_ACCOUNT_TYPES.STANDARD_SANDBOX,
+          false,
           mockParentAccountConfig.env,
           false
         )

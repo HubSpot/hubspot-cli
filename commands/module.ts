@@ -1,10 +1,11 @@
 import { Argv } from 'yargs';
-import marketplaceValidate from './module/marketplace-validate';
-import { YargsCommandModuleBucket } from '../types/Yargs';
-import { makeYargsBuilder } from '../lib/yargsUtils';
+import marketplaceValidate from './module/marketplace-validate.js';
+import { commands } from '../lang/en.js';
+import { YargsCommandModuleBucket } from '../types/Yargs.js';
+import { makeYargsBuilder } from '../lib/yargsUtils.js';
 
 const command = 'module';
-const describe = undefined;
+const describe = commands.module.describe;
 
 function moduleBuilder(yargs: Argv): Argv {
   yargs.command(marketplaceValidate).demandCommand(1, '');
@@ -25,5 +26,3 @@ const moduleCommand: YargsCommandModuleBucket = {
 };
 
 export default moduleCommand;
-
-module.exports = moduleCommand;

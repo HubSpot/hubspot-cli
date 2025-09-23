@@ -1,12 +1,12 @@
 import { Argv } from 'yargs';
-import upload from './filemanager/upload';
-import fetch from './filemanager/fetch';
-import { i18n } from '../lib/lang';
-import { YargsCommandModuleBucket } from '../types/Yargs';
-import { makeYargsBuilder } from '../lib/yargsUtils';
+import upload from './filemanager/upload.js';
+import fetch from './filemanager/fetch.js';
+import { commands } from '../lang/en.js';
+import { YargsCommandModuleBucket } from '../types/Yargs.js';
+import { makeYargsBuilder } from '../lib/yargsUtils.js';
 
 const command = 'filemanager';
-const describe = i18n(`commands.filemanager.describe`);
+const describe = commands.filemanager.describe;
 
 function fileManagerBuilder(yargs: Argv): Argv {
   yargs.command(upload).command(fetch).demandCommand(1, '');
@@ -24,6 +24,3 @@ const fileManagerCommand: YargsCommandModuleBucket = {
 };
 
 export default fileManagerCommand;
-
-// TODO Remove this legacy export once we've migrated all commands to TS
-module.exports = fileManagerCommand;

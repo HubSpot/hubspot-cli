@@ -1,19 +1,19 @@
 import { Argv, ArgumentsCamelCase } from 'yargs';
-import { logger } from '@hubspot/local-dev-lib/logger';
 import { moveFile } from '@hubspot/local-dev-lib/api/fileMapper';
 import { isSpecifiedError } from '@hubspot/local-dev-lib/errors/index';
-import { logError, ApiErrorContext } from '../lib/errorHandlers/index';
-import { trackCommandUsage } from '../lib/usageTracking';
-import { isPathFolder } from '../lib/filesystem';
-import { i18n } from '../lib/lang';
-import { uiBetaTag } from '../lib/ui';
+import { logError, ApiErrorContext } from '../lib/errorHandlers/index.js';
+import { trackCommandUsage } from '../lib/usageTracking.js';
+import { isPathFolder } from '../lib/filesystem.js';
+import { uiBetaTag } from '../lib/ui/index.js';
 import {
   CommonArgs,
   ConfigArgs,
   EnvironmentArgs,
   YargsCommandModule,
-} from '../types/Yargs';
-import { makeYargsBuilder } from '../lib/yargsUtils';
+} from '../types/Yargs.js';
+import { makeYargsBuilder } from '../lib/yargsUtils.js';
+import { uiLogger } from '../lib/ui/logger.js';
+import { commands } from '../lang/en.js';
 
 function getCorrectedDestPath(srcPath: string, destPath: string): string {
   if (!isPathFolder(srcPath)) {
@@ -25,7 +25,7 @@ function getCorrectedDestPath(srcPath: string, destPath: string): string {
 }
 
 const command = 'mv <srcPath> <destPath>';
-const describe = uiBetaTag(i18n(`commands.mv.describe`), false);
+const describe = uiBetaTag(commands.mv.describe, false);
 
 type MvArgs = CommonArgs &
   ConfigArgs &
@@ -42,28 +42,13 @@ async function handler(args: ArgumentsCamelCase<MvArgs>) {
       srcPath,
       getCorrectedDestPath(srcPath, destPath)
     );
-    logger.success(
-      i18n(`commands.mv.move`, {
-        accountId: derivedAccountId,
-        destPath,
-        srcPath,
-      })
-    );
+    uiLogger.success(commands.mv.move(srcPath, destPath, derivedAccountId));
   } catch (error) {
-    logger.error(
-      i18n(`commands.mv.errors.moveFailed`, {
-        accountId: derivedAccountId,
-        destPath,
-        srcPath,
-      })
+    uiLogger.error(
+      commands.mv.errors.moveFailed(srcPath, destPath, derivedAccountId)
     );
     if (isSpecifiedError(error, { statusCode: 409 })) {
-      logger.error(
-        i18n(`commands.mv.errors.sourcePathExists`, {
-          destPath,
-          srcPath,
-        })
-      );
+      uiLogger.error(commands.mv.errors.sourcePathExists(srcPath, destPath));
     } else {
       logError(
         error,
@@ -103,6 +88,3 @@ const cmsMvCommand: YargsCommandModule<unknown, MvArgs> = {
 };
 
 export default cmsMvCommand;
-
-// TODO Remove this legacy export once we've migrated all commands to TS
-module.exports = cmsMvCommand;

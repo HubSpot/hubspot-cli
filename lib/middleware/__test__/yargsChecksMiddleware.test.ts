@@ -1,21 +1,21 @@
 import { Arguments } from 'yargs';
 import { logger } from '@hubspot/local-dev-lib/logger';
-import { EXIT_CODES } from '../../enums/exitCodes';
-import * as projectsConfig from '../../projects/config';
-import { performChecks } from '../yargsChecksMiddleware';
+import { EXIT_CODES } from '../../enums/exitCodes.js';
+import * as projectsConfig from '../../projects/config.js';
+import { performChecks } from '../yargsChecksMiddleware.js';
 
-jest.mock('@hubspot/local-dev-lib/logger', () => ({
+vi.mock('@hubspot/local-dev-lib/logger', () => ({
   logger: {
-    error: jest.fn(),
+    error: vi.fn(),
   },
 }));
-jest.mock('../../projects/config');
-jest.mock('../../lang', () => ({
-  i18n: jest.fn(key => key),
+vi.mock('../../projects/config');
+vi.mock('../../lang', () => ({
+  i18n: vi.fn(key => key),
 }));
 
-const getIsInProjectSpy = jest.spyOn(projectsConfig, 'getIsInProject');
-const processExitSpy = jest.spyOn(process, 'exit');
+const getIsInProjectSpy = vi.spyOn(projectsConfig, 'getIsInProject');
+const processExitSpy = vi.spyOn(process, 'exit');
 
 describe('lib/middleware/yargsChecksMiddleware', () => {
   beforeEach(() => {

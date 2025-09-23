@@ -1,6 +1,6 @@
-// Jest Snapshot v1, https://goo.gl/fbAQLP
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`lib/doctor/Diagnosis toString should generate categories that have sections 1`] = `
+exports[`lib/doctor/Diagnosis > toString > should generate categories that have sections 1`] = `
 "
 HubSpot CLI install
   ✓ Important CLI Message
@@ -11,7 +11,7 @@ Warning: 0
 "
 `;
 
-exports[`lib/doctor/Diagnosis toString should generate the diagnosis output 1`] = `
+exports[`lib/doctor/Diagnosis > toString > should generate the diagnosis output 1`] = `
 "
 HubSpot CLI install
   ✓ Important CLI Message

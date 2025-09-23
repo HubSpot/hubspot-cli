@@ -3,7 +3,7 @@ import { CmsPublishMode } from '@hubspot/local-dev-lib/types/Files';
 
 export type CommonArgs = {
   derivedAccountId: number;
-  providedAccountId?: number;
+  userProvidedAccount?: string;
   d: boolean;
   debug: boolean;
 };
@@ -29,6 +29,11 @@ export type OverwriteArgs = Options & {
 
 export type StringArgType = Options & {
   type: 'string';
+};
+
+export type JSONOutputArgs = Options & {
+  json?: boolean;
+  formatOutputAsJson?: boolean;
 };
 
 export type ProjectDevArgs = CommonArgs &

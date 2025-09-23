@@ -1,17 +1,13 @@
 import { Argv } from 'yargs';
-import { uiBetaTag } from '../../lib/ui';
-import add from './profile/add';
-import deleteProfile from './profile/delete';
-import { makeYargsBuilder } from '../../lib/yargsUtils';
-import { YargsCommandModuleBucket } from '../../types/Yargs';
-import { commands } from '../../lang/en';
+import add from './profile/add.js';
+import deleteProfile from './profile/delete.js';
+import { makeYargsBuilder } from '../../lib/yargsUtils.js';
+import { YargsCommandModuleBucket } from '../../types/Yargs.js';
+import { commands } from '../../lang/en.js';
 
 const command = ['profile', 'profiles'];
-const describe = undefined; // uiBetaTag(commands.project.profile.describe, false);
-const verboseDescribe = uiBetaTag(
-  commands.project.profile.verboseDescribe,
-  false
-);
+const describe = commands.project.profile.describe;
+const verboseDescribe = commands.project.profile.verboseDescribe;
 
 function projectProfileBuilder(yargs: Argv): Argv {
   yargs.command(add).command(deleteProfile).demandCommand(1, '');

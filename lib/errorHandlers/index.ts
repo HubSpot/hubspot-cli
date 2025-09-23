@@ -5,13 +5,19 @@ import {
 } from '@hubspot/local-dev-lib/errors/index';
 import { getConfig } from '@hubspot/local-dev-lib/config';
 
-import { shouldSuppressError } from './suppressError';
-import { i18n } from '../lang';
+import { shouldSuppressError } from './suppressError.js';
+import { i18n } from '../lang.js';
 import util from 'util';
-import { uiCommandReference } from '../ui';
+import { uiCommandReference } from '../ui/index.js';
+import { isProjectValidationError } from '../errors/ProjectValidationError.js';
 
 export function logError(error: unknown, context?: ApiErrorContext): void {
   debugError(error, context);
+
+  if (isProjectValidationError(error)) {
+    logger.error(error.message);
+    return;
+  }
 
   if (shouldSuppressError(error, context)) {
     return;
@@ -109,7 +115,7 @@ export class ApiErrorContext {
   }
 }
 
-function isErrorWithMessageOrReason(
+export function isErrorWithMessageOrReason(
   error: unknown
 ): error is { message?: string; reason?: string } {
   return (

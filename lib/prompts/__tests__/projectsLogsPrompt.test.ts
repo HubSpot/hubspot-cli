@@ -1,8 +1,8 @@
-import { projectLogsPrompt } from '../projectsLogsPrompt';
-import { promptUser } from '../promptUtils';
+import { projectLogsPrompt } from '../projectsLogsPrompt.js';
+import { promptUser } from '../promptUtils.js';
 import chalk from 'chalk';
 
-jest.mock('../promptUtils');
+vi.mock('../promptUtils');
 
 describe('lib/prompts/projectsLogsPrompt', () => {
   it('should return undefined functionName when functionChoices is undefined', async () => {

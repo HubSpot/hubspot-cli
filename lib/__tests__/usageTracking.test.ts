@@ -11,17 +11,19 @@ import {
   trackConvertFieldsUsage,
   trackAuthAction,
   trackCommandMetadataUsage,
-} from '../usageTracking';
-import { version } from '../../package.json';
+} from '../usageTracking.js';
+import packageJson from '../../package.json' with { type: 'json' };
+const version = packageJson.version;
+import { Mock, Mocked } from 'vitest';
 
-jest.mock('@hubspot/local-dev-lib/trackUsage');
-jest.mock('@hubspot/local-dev-lib/config');
-jest.mock('@hubspot/local-dev-lib/logger');
+vi.mock('@hubspot/local-dev-lib/trackUsage');
+vi.mock('@hubspot/local-dev-lib/config');
+vi.mock('@hubspot/local-dev-lib/logger');
 
-const mockedTrackUsage = trackUsage as jest.Mock;
-const mockedIsTrackingAllowed = isTrackingAllowed as jest.Mock;
-const mockedGetAccountConfig = getAccountConfig as jest.Mock;
-const mockedLogger = logger as jest.Mocked<typeof logger>;
+const mockedTrackUsage = trackUsage as Mock;
+const mockedIsTrackingAllowed = isTrackingAllowed as Mock;
+const mockedGetAccountConfig = getAccountConfig as Mock;
+const mockedLogger = logger as Mocked<typeof logger>;
 
 describe('lib/usageTracking', () => {
   const mockPlatform = 'darwin';
@@ -48,9 +50,6 @@ describe('lib/usageTracking', () => {
     it('should track command usage with default auth type', async () => {
       await trackCommandUsage(mockCommand, {}, mockAccountId);
 
-      // Allow setImmediate to execute
-      await new Promise(resolve => setImmediate(resolve));
-
       expect(mockedTrackUsage).toHaveBeenCalledWith(
         'cli-interaction',
         'INTERACTION',
@@ -72,9 +71,6 @@ describe('lib/usageTracking', () => {
 
       await trackCommandUsage(mockCommand, {}, mockAccountId);
 
-      // Allow setImmediate to execute
-      await new Promise(resolve => setImmediate(resolve));
-
       expect(mockedTrackUsage).toHaveBeenCalledWith(
         'cli-interaction',
         'INTERACTION',
@@ -87,12 +83,11 @@ describe('lib/usageTracking', () => {
 
     it('should handle tracking errors gracefully', async () => {
       const error = new Error('Tracking failed');
-      mockedTrackUsage.mockRejectedValue(error);
+      mockedTrackUsage.mockImplementationOnce(() => {
+        throw error;
+      });
 
       await trackCommandUsage(mockCommand);
-
-      // Allow setImmediate to execute
-      await new Promise(resolve => setImmediate(resolve));
 
       expect(mockedLogger.debug).toHaveBeenCalledWith(
         expect.stringContaining(error.message)
@@ -124,7 +119,8 @@ describe('lib/usageTracking', () => {
           nodeVersion: mockNodeVersion,
           nodeMajorVersion: 'v16',
           version,
-        })
+        }),
+        undefined
       );
     });
 
@@ -161,7 +157,8 @@ describe('lib/usageTracking', () => {
           nodeVersion: mockNodeVersion,
           nodeMajorVersion: 'v16',
           version,
-        })
+        }),
+        undefined
       );
     });
   });
@@ -217,9 +214,6 @@ describe('lib/usageTracking', () => {
     it('should track command metadata usage', async () => {
       await trackCommandMetadataUsage(mockCommand, mockMeta, mockAccountId);
 
-      // Allow setImmediate to execute
-      await new Promise(resolve => setImmediate(resolve));
-
       expect(mockedTrackUsage).toHaveBeenCalledWith(
         'cli-interaction',
         'INTERACTION',
@@ -246,7 +240,8 @@ describe('lib/usageTracking', () => {
       expect(mockedTrackUsage).toHaveBeenCalledWith(
         expect.anything(),
         expect.anything(),
-        expect.objectContaining({ os: 'macos' })
+        expect.objectContaining({ os: 'macos' }),
+        undefined
       );
     });
 
@@ -258,7 +253,8 @@ describe('lib/usageTracking', () => {
       expect(mockedTrackUsage).toHaveBeenCalledWith(
         expect.anything(),
         expect.anything(),
-        expect.objectContaining({ os: 'windows' })
+        expect.objectContaining({ os: 'windows' }),
+        undefined
       );
     });
 
@@ -270,7 +266,8 @@ describe('lib/usageTracking', () => {
       expect(mockedTrackUsage).toHaveBeenCalledWith(
         expect.anything(),
         expect.anything(),
-        expect.objectContaining({ os: 'linux' })
+        expect.objectContaining({ os: 'linux' }),
+        undefined
       );
     });
   });

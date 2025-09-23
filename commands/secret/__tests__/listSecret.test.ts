@@ -3,11 +3,11 @@ import {
   addConfigOptions,
   addAccountOptions,
   addUseEnvironmentOptions,
-} from '../../../lib/commonOpts';
-import listSecretCommand from '../listSecret';
+} from '../../../lib/commonOpts.js';
+import listSecretCommand from '../listSecret.js';
 
-jest.mock('yargs');
-jest.mock('../../../lib/commonOpts');
+vi.mock('yargs');
+vi.mock('../../../lib/commonOpts');
 
 describe('commands/secret/listSecret', () => {
   const yargsMock = yargs as Argv;

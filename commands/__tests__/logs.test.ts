@@ -3,21 +3,28 @@ import {
   addConfigOptions,
   addAccountOptions,
   addUseEnvironmentOptions,
-} from '../../lib/commonOpts';
+} from '../../lib/commonOpts.js';
 
-jest.mock('yargs');
-jest.mock('../../lib/commonOpts');
+vi.mock('../../lib/commonOpts');
 
-const optionsSpy = jest
+const optionsSpy = vi
   .spyOn(yargs as Argv, 'options')
   .mockReturnValue(yargs as Argv);
 
-const conflictsSpy = jest
+const conflictsSpy = vi
   .spyOn(yargs as Argv, 'conflicts')
   .mockReturnValue(yargs as Argv);
 
+const exampleSpy = vi
+  .spyOn(yargs as Argv, 'example')
+  .mockReturnValue(yargs as Argv);
+
+const positionalSpy = vi
+  .spyOn(yargs as Argv, 'positional')
+  .mockReturnValue(yargs as Argv);
+
 // Import this last so mocks apply
-import logsCommand from '../logs';
+import logsCommand from '../logs.js';
 
 describe('commands/logs', () => {
   describe('command', () => {
@@ -34,17 +41,17 @@ describe('commands/logs', () => {
 
   describe('builder', () => {
     it('should support the correct positional arguments', () => {
-      logsCommand.builder(yargs);
+      logsCommand.builder(yargs as Argv);
 
-      expect(yargs.positional).toHaveBeenCalledTimes(1);
-      expect(yargs.positional).toHaveBeenCalledWith(
+      expect(positionalSpy).toHaveBeenCalledTimes(1);
+      expect(positionalSpy).toHaveBeenCalledWith(
         'endpoint',
         expect.objectContaining({ type: 'string' })
       );
     });
 
     it('should support the correct options', () => {
-      logsCommand.builder(yargs);
+      logsCommand.builder(yargs as Argv);
 
       expect(optionsSpy).toHaveBeenCalledTimes(1);
       expect(optionsSpy).toHaveBeenCalledWith({
@@ -75,14 +82,14 @@ describe('commands/logs', () => {
     });
 
     it('should set the correct conflicts', () => {
-      logsCommand.builder(yargs);
+      logsCommand.builder(yargs as Argv);
       expect(conflictsSpy).toHaveBeenCalledTimes(1);
       expect(conflictsSpy).toHaveBeenCalledWith('follow', 'limit');
     });
 
     it('should provide examples', () => {
-      logsCommand.builder(yargs);
-      expect(yargs.example).toHaveBeenCalledTimes(1);
+      logsCommand.builder(yargs as Argv);
+      expect(exampleSpy).toHaveBeenCalledTimes(1);
     });
   });
 });

@@ -1,9 +1,9 @@
-import { getProjectConfig } from './config';
-import { ensureProjectExists } from './ensureProjectExists';
+import { getProjectConfig } from './config.js';
+import { ensureProjectExists } from './ensureProjectExists.js';
 import { fetchProjectComponentsMetadata } from '@hubspot/local-dev-lib/api/projects';
 import { AppFunctionComponentMetadata } from '@hubspot/local-dev-lib/types/ComponentStructure';
-import { uiLogger } from '../ui/logger';
-import { commands } from '../../lang/en';
+import { uiLogger } from '../ui/logger.js';
+import { commands } from '../../lang/en.js';
 
 class _ProjectLogsManager {
   projectName: string | undefined;

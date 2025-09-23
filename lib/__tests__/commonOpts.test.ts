@@ -7,13 +7,14 @@ import {
   getAccountConfig,
   loadConfigFromEnvironment,
 } from '@hubspot/local-dev-lib/config';
-import { getCmsPublishMode } from '../commonOpts';
+import { getCmsPublishMode } from '../commonOpts.js';
 import { CmsPublishMode } from '@hubspot/local-dev-lib/types/Files';
 import { Arguments } from 'yargs';
+import { Mock } from 'vitest';
 
-const mockedGetAccountConfig = getAccountConfig as jest.Mock;
-const mockedGetAndLoadConfigIfNeeded = getAndLoadConfigIfNeeded as jest.Mock;
-const mockedLoadConfigFromEnvironment = loadConfigFromEnvironment as jest.Mock;
+const mockedGetAccountConfig = getAccountConfig as Mock;
+const mockedGetAndLoadConfigIfNeeded = getAndLoadConfigIfNeeded as Mock;
+const mockedLoadConfigFromEnvironment = loadConfigFromEnvironment as Mock;
 
 type CmsPublishModeArgs = {
   cmsPublishMode?: CmsPublishMode;
@@ -30,8 +31,8 @@ function buildArguments(
   };
 }
 
-jest.mock('@hubspot/local-dev-lib/config');
-jest.mock('@hubspot/local-dev-lib/logger');
+vi.mock('@hubspot/local-dev-lib/config');
+vi.mock('@hubspot/local-dev-lib/logger');
 
 describe('lib/commonOpts', () => {
   describe('getCmsPublishMode()', () => {
@@ -58,7 +59,7 @@ describe('lib/commonOpts', () => {
     };
 
     afterEach(() => {
-      jest.resetAllMocks();
+      vi.resetAllMocks();
     });
 
     describe('cms publish mode option precedence', () => {

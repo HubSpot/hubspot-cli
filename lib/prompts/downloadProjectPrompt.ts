@@ -1,10 +1,10 @@
-import { promptUser } from './promptUtils';
+import { promptUser } from './promptUtils.js';
 import { getAccountId } from '@hubspot/local-dev-lib/config';
 import { fetchProjects } from '@hubspot/local-dev-lib/api/projects';
-import { logError, ApiErrorContext } from '../errorHandlers/index';
+import { logError, ApiErrorContext } from '../errorHandlers/index.js';
 import { logger } from '@hubspot/local-dev-lib/logger';
-import { EXIT_CODES } from '../enums/exitCodes';
-import { i18n } from '../lang';
+import { EXIT_CODES } from '../enums/exitCodes.js';
+import { i18n } from '../lang.js';
 import { Project } from '@hubspot/local-dev-lib/types/Project';
 
 type DownloadProjectPromptResponse = {

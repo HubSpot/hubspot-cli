@@ -5,17 +5,15 @@ import { AxiosError } from 'axios';
 
 import { watch } from '@hubspot/local-dev-lib/cms/watch';
 import { getCwd } from '@hubspot/local-dev-lib/path';
-import { logger } from '@hubspot/local-dev-lib/logger';
-
-import { getCmsPublishMode } from '../lib/commonOpts';
-import { uploadPrompt } from '../lib/prompts/uploadPrompt';
-import { validateCmsPublishMode } from '../lib/validation';
-import { trackCommandUsage } from '../lib/usageTracking';
-import { i18n } from '../lib/lang';
-import { getUploadableFileList } from '../lib/upload';
-import { logError, ApiErrorContext } from '../lib/errorHandlers';
-import { EXIT_CODES } from '../lib/enums/exitCodes';
-import { makeYargsBuilder } from '../lib/yargsUtils';
+import { getCmsPublishMode } from '../lib/commonOpts.js';
+import { uploadPrompt } from '../lib/prompts/uploadPrompt.js';
+import { validateCmsPublishMode } from '../lib/validation.js';
+import { trackCommandUsage } from '../lib/usageTracking.js';
+import { commands } from '../lang/en.js';
+import { getUploadableFileList } from '../lib/upload.js';
+import { logError, ApiErrorContext } from '../lib/errorHandlers/index.js';
+import { EXIT_CODES } from '../lib/enums/exitCodes.js';
+import { makeYargsBuilder } from '../lib/yargsUtils.js';
 import {
   AccountArgs,
   CmsPublishModeArgs,
@@ -23,8 +21,9 @@ import {
   ConfigArgs,
   EnvironmentArgs,
   YargsCommandModule,
-} from '../types/Yargs';
+} from '../types/Yargs.js';
 import { WatchErrorHandler } from '@hubspot/local-dev-lib/types/Files';
+import { uiLogger } from '../lib/ui/logger.js';
 
 type WatchCommandArgs = ConfigArgs &
   AccountArgs &
@@ -43,7 +42,7 @@ type WatchCommandArgs = ConfigArgs &
   };
 
 const command = 'watch [src] [dest]';
-const describe = i18n(`commands.watch.describe`);
+const describe = commands.watch.describe;
 
 const handler = async (
   args: ArgumentsCamelCase<WatchCommandArgs>
@@ -66,34 +65,26 @@ const handler = async (
   try {
     const stats = fs.statSync(absoluteSrcPath);
     if (!stats.isDirectory()) {
-      logger.log(
-        i18n(`commands.watch.errors.invalidPath`, {
-          path: src,
-        })
-      );
+      uiLogger.log(commands.watch.errors.invalidPath(src));
       return;
     }
   } catch (e) {
-    logger.log(
-      i18n(`commands.watch.errors.invalidPath`, {
-        path: src,
-      })
-    );
+    uiLogger.log(commands.watch.errors.invalidPath(src));
     return;
   }
 
   if (!dest) {
-    logger.log(i18n(`commands.watch.errors.destinationRequired`));
+    uiLogger.log(commands.watch.errors.destinationRequired);
     return;
   }
 
   let filesToUpload: string[] = [];
 
   if (disableInitial) {
-    logger.info(i18n(`commands.watch.warnings.disableInitial`));
+    uiLogger.info(commands.watch.warnings.disableInitial);
   } else if (!initialUpload) {
-    logger.info(i18n(`commands.watch.warnings.notUploaded`, { path: src }));
-    logger.info(i18n(`commands.watch.warnings.initialUpload`));
+    uiLogger.info(commands.watch.warnings.notUploaded(src));
+    uiLogger.info(commands.watch.warnings.initialUpload);
   }
 
   if (initialUpload) {
@@ -108,12 +99,8 @@ const handler = async (
   const onUploadFolderError: WatchErrorHandler = (
     error: Error | AxiosError
   ) => {
-    logger.error(
-      i18n(`commands.watch.errors.folderFailed`, {
-        src,
-        dest,
-        accountId: derivedAccountId,
-      })
+    uiLogger.error(
+      commands.watch.errors.folderFailed(src, dest, derivedAccountId)
     );
     logError(error, {
       accountId: derivedAccountId,
@@ -123,12 +110,8 @@ const handler = async (
   const onUploadFileError =
     (file: string, destPath: string, accountId: number) =>
     (error: Error | AxiosError) => {
-      logger.error(
-        i18n(`commands.watch.errors.fileFailed`, {
-          file,
-          dest: destPath,
-          accountId,
-        })
+      uiLogger.error(
+        commands.watch.errors.fileFailed(file, destPath, accountId)
       );
       logError(
         error,
@@ -161,47 +144,47 @@ const handler = async (
 
 function watchBuilder(yargs: Argv): Argv<WatchCommandArgs> {
   yargs.positional('src', {
-    describe: i18n(`commands.watch.positionals.src.describe`),
+    describe: commands.watch.positionals.src,
     type: 'string',
   });
   yargs.positional('dest', {
-    describe: i18n(`commands.watch.positionals.dest.describe`),
+    describe: commands.watch.positionals.dest,
     type: 'string',
   });
   yargs.option('fieldOptions', {
-    describe: i18n(`commands.watch.options.options.describe`),
+    describe: commands.watch.options.options,
     type: 'array',
     default: [''],
     hidden: true,
   });
   yargs.option('remove', {
     alias: 'r',
-    describe: i18n(`commands.watch.options.remove.describe`),
+    describe: commands.watch.options.remove,
     type: 'boolean',
   });
   yargs.option('initial-upload', {
     alias: 'i',
-    describe: i18n(`commands.watch.options.initialUpload.describe`),
+    describe: commands.watch.options.initialUpload,
     type: 'boolean',
   });
   yargs.option('disable-initial', {
-    describe: i18n(`commands.watch.options.disableInitial.describe`),
+    describe: commands.watch.options.disableInitial,
     type: 'boolean',
     hidden: true,
   });
   yargs.option('notify', {
     alias: 'n',
-    describe: i18n(`commands.watch.options.notify.describe`),
+    describe: commands.watch.options.notify,
     type: 'string',
     requiresArg: true,
   });
   yargs.option('convertFields', {
-    describe: i18n(`commands.watch.options.convertFields.describe`),
+    describe: commands.watch.options.convertFields,
     type: 'boolean',
     default: false,
   });
   yargs.option('saveOutput', {
-    describe: i18n(`commands.watch.options.saveOutput.describe`),
+    describe: commands.watch.options.saveOutput,
     type: 'boolean',
     default: false,
   });
@@ -230,5 +213,3 @@ const watchCommand: YargsCommandModule<unknown, WatchCommandArgs> = {
 };
 
 export default watchCommand;
-
-module.exports = watchCommand;

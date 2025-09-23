@@ -1,27 +1,27 @@
 import { Argv, ArgumentsCamelCase } from 'yargs';
 import { downloadFileOrFolder } from '@hubspot/local-dev-lib/fileMapper';
-import { logger } from '@hubspot/local-dev-lib/logger';
 import { CmsPublishMode } from '@hubspot/local-dev-lib/types/Files';
 import {
   addCmsPublishModeOptions,
   addOverwriteOptions,
   getCmsPublishMode,
-} from '../lib/commonOpts';
-import { resolveLocalPath } from '../lib/filesystem';
-import { validateCmsPublishMode } from '../lib/validation';
-import { trackCommandUsage } from '../lib/usageTracking';
-import { i18n } from '../lib/lang';
-import { makeYargsBuilder } from '../lib/yargsUtils';
+} from '../lib/commonOpts.js';
+import { resolveLocalPath } from '../lib/filesystem.js';
+import { validateCmsPublishMode } from '../lib/validation.js';
+import { trackCommandUsage } from '../lib/usageTracking.js';
+import { makeYargsBuilder } from '../lib/yargsUtils.js';
 import {
   AccountArgs,
   CommonArgs,
   ConfigArgs,
   EnvironmentArgs,
   YargsCommandModule,
-} from '../types/Yargs';
+} from '../types/Yargs.js';
 
-import { EXIT_CODES } from '../lib/enums/exitCodes';
-import { logError } from '../lib/errorHandlers/index';
+import { EXIT_CODES } from '../lib/enums/exitCodes.js';
+import { logError } from '../lib/errorHandlers/index.js';
+import { commands } from '../lang/en.js';
+import { uiLogger } from '../lib/ui/logger.js';
 
 type FetchCommandArgs = {
   src: string;
@@ -36,7 +36,7 @@ type FetchCommandArgs = {
   CommonArgs;
 
 const command = 'fetch <src> [dest]';
-const describe = i18n('commands.fetch.describe');
+const describe = commands.fetch.describe;
 
 const handler = async (
   options: ArgumentsCamelCase<FetchCommandArgs>
@@ -48,7 +48,7 @@ const handler = async (
   }
 
   if (typeof src !== 'string') {
-    logger.error(i18n('commands.fetch.errors.sourceRequired'));
+    uiLogger.error(commands.fetch.errors.sourceRequired);
     process.exit(EXIT_CODES.ERROR);
   }
 
@@ -80,18 +80,18 @@ const handler = async (
 
 const fetchBuilder = (yargs: Argv): Argv<FetchCommandArgs> => {
   yargs.positional('src', {
-    describe: i18n('commands.fetch.positionals.src.describe'),
+    describe: commands.fetch.positionals.src.describe,
     type: 'string',
   });
 
   yargs.positional('dest', {
-    describe: i18n('commands.fetch.positionals.dest.describe'),
+    describe: commands.fetch.positionals.dest.describe,
     type: 'string',
   });
 
   yargs.options({
     staging: {
-      describe: i18n('commands.fetch.options.staging.describe'),
+      describe: commands.fetch.options.staging.describe,
       type: 'boolean',
       default: false,
       hidden: true,
@@ -101,7 +101,7 @@ const fetchBuilder = (yargs: Argv): Argv<FetchCommandArgs> => {
   yargs.options({
     assetVersion: {
       type: 'number',
-      describe: i18n('commands.fetch.options.assetVersion.describe'),
+      describe: commands.fetch.options.assetVersion.describe,
     },
   });
 
@@ -131,5 +131,3 @@ const fetchCommand: YargsCommandModule<unknown, FetchCommandArgs> = {
 };
 
 export default fetchCommand;
-
-module.exports = fetchCommand;

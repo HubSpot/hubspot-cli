@@ -1,12 +1,12 @@
 import { Argv, ArgumentsCamelCase } from 'yargs';
 import { downloadFileOrFolder } from '@hubspot/local-dev-lib/fileManager';
-import { logger } from '@hubspot/local-dev-lib/logger';
-import { resolveLocalPath } from '../../lib/filesystem';
-import { trackCommandUsage } from '../../lib/usageTracking';
-import { i18n } from '../../lib/lang';
-import { EXIT_CODES } from '../../lib/enums/exitCodes';
-import { logError } from '../../lib/errorHandlers/index';
-import { addOverwriteOptions } from '../../lib/commonOpts';
+import { uiLogger } from '../../lib/ui/logger.js';
+import { resolveLocalPath } from '../../lib/filesystem.js';
+import { trackCommandUsage } from '../../lib/usageTracking.js';
+import { commands } from '../../lang/en.js';
+import { EXIT_CODES } from '../../lib/enums/exitCodes.js';
+import { logError } from '../../lib/errorHandlers/index.js';
+import { addOverwriteOptions } from '../../lib/commonOpts.js';
 import {
   AccountArgs,
   CommonArgs,
@@ -14,11 +14,11 @@ import {
   EnvironmentArgs,
   OverwriteArgs,
   YargsCommandModule,
-} from '../../types/Yargs';
-import { makeYargsBuilder } from '../../lib/yargsUtils';
+} from '../../types/Yargs.js';
+import { makeYargsBuilder } from '../../lib/yargsUtils.js';
 
 const command = 'fetch <src> [dest]';
-const describe = i18n(`commands.filemanager.subcommands.fetch.describe`);
+const describe = commands.filemanager.subcommands.fetch.describe;
 
 type FileManagerFetchArgs = CommonArgs &
   ConfigArgs &
@@ -36,8 +36,8 @@ async function handler(
   const { src, includeArchived, derivedAccountId, overwrite } = args;
 
   if (typeof src !== 'string') {
-    logger.error(
-      i18n(`commands.filemanager.subcommands.fetch.errors.sourceRequired`)
+    uiLogger.error(
+      commands.filemanager.subcommands.fetch.errors.sourceRequired
     );
     process.exit(EXIT_CODES.ERROR);
   }
@@ -65,22 +65,17 @@ function fileManagerFetchBuilder(yargs: Argv): Argv<FileManagerFetchArgs> {
   addOverwriteOptions(yargs);
 
   yargs.positional('src', {
-    describe: i18n(
-      `commands.filemanager.subcommands.fetch.positionals.src.describe`
-    ),
+    describe: commands.filemanager.subcommands.fetch.positionals.src.describe,
     type: 'string',
   });
   yargs.positional('dest', {
-    describe: i18n(
-      `commands.filemanager.subcommands.fetch.positionals.dest.describe`
-    ),
+    describe: commands.filemanager.subcommands.fetch.positionals.dest.describe,
     type: 'string',
   });
   yargs.option('include-archived', {
     alias: ['i'],
-    describe: i18n(
-      `commands.filemanager.subcommands.fetch.options.includeArchived.describe`
-    ),
+    describe:
+      commands.filemanager.subcommands.fetch.options.includeArchived.describe,
     type: 'boolean',
   });
 

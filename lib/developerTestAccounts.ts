@@ -10,10 +10,10 @@ import { logger } from '@hubspot/local-dev-lib/logger';
 import { getHubSpotWebsiteOrigin } from '@hubspot/local-dev-lib/urls';
 import { CLIAccount } from '@hubspot/local-dev-lib/types/Accounts';
 
-import { i18n } from './lang';
-import { uiAccountDescription } from './ui';
-import { logError } from './errorHandlers/index';
-import { FetchDeveloperTestAccountsResponse } from '@hubspot/local-dev-lib/types/developerTestAccounts';
+import { i18n } from './lang.js';
+import { uiAccountDescription } from './ui/index.js';
+import { logError } from './errorHandlers/index.js';
+import { FetchDeveloperTestAccountsResponse } from '@hubspot/local-dev-lib/types/developerTestAccounts.js';
 import { Environment } from '@hubspot/local-dev-lib/types/Config';
 
 export function getHasDevTestAccounts(

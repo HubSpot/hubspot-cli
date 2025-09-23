@@ -1,26 +1,26 @@
 import { Argv } from 'yargs';
-import { i18n } from '../lib/lang';
-import { uiBetaTag } from '../lib/ui';
-import deploy from './project/deploy';
-import create from './project/create';
-import upload from './project/upload';
-import listBuilds from './project/listBuilds';
-import logs from './project/logs';
-import watch from './project/watch';
-import download from './project/download';
-import open from './project/open';
-import dev from './project/dev';
-import add from './project/add';
-import migrate from './project/migrate';
-import migrateApp from './project/migrateApp';
-import cloneApp from './project/cloneApp';
-import installDeps from './project/installDeps';
-import profile from './project/profile';
-import { makeYargsBuilder } from '../lib/yargsUtils';
-import { YargsCommandModuleBucket } from '../types/Yargs';
+import { commands } from '../lang/en.js';
+import deploy from './project/deploy.js';
+import create from './project/create.js';
+import upload from './project/upload.js';
+import listBuilds from './project/listBuilds.js';
+import logs from './project/logs.js';
+import watch from './project/watch.js';
+import download from './project/download.js';
+import open from './project/open.js';
+import dev from './project/dev/index.js';
+import add from './project/add.js';
+import migrate from './project/migrate.js';
+import migrateApp from './project/migrateApp.js';
+import cloneApp from './project/cloneApp.js';
+import installDeps from './project/installDeps.js';
+import profile from './project/profile.js';
+import projectValidate from './project/validate.js';
+import { makeYargsBuilder } from '../lib/yargsUtils.js';
+import { YargsCommandModuleBucket } from '../types/Yargs.js';
 
 const command = ['project', 'projects'];
-const describe = uiBetaTag(i18n(`commands.project.describe`), false);
+const describe = commands.project.describe;
 
 function projectBuilder(yargs: Argv): Argv {
   yargs
@@ -39,6 +39,7 @@ function projectBuilder(yargs: Argv): Argv {
     .command(cloneApp)
     .command(installDeps)
     .command(profile)
+    .command(projectValidate)
     .demandCommand(1, '');
 
   return yargs;
@@ -54,6 +55,3 @@ const projectCommand: YargsCommandModuleBucket = {
 };
 
 export default projectCommand;
-
-// TODO Remove this legacy export once we've migrated all commands to TS
-module.exports = projectCommand;

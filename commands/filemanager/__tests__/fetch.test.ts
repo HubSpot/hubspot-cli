@@ -5,11 +5,10 @@ import {
   addAccountOptions,
   addOverwriteOptions,
   addUseEnvironmentOptions,
-} from '../../../lib/commonOpts';
-import fileManagerFetchCommand from '../fetch';
+} from '../../../lib/commonOpts.js';
+import fileManagerFetchCommand from '../fetch.js';
 
-jest.mock('yargs');
-jest.mock('../../../lib/commonOpts');
+vi.mock('../../../lib/commonOpts');
 
 describe('commands/filemanager/fetch', () => {
   const yargsMock = yargs as Argv;

@@ -3,25 +3,24 @@ import {
   fetchObjectSchemas,
   deleteObjectSchema,
 } from '@hubspot/local-dev-lib/api/customObjects';
-import { EXIT_CODES } from '../../../lib/enums/exitCodes';
-import { confirmPrompt, listPrompt } from '../../../lib/prompts/promptUtils';
-import { logger } from '@hubspot/local-dev-lib/logger';
-import { trackCommandUsage } from '../../../lib/usageTracking';
-import { i18n } from '../../../lib/lang';
-import { logError } from '../../../lib/errorHandlers';
+import { EXIT_CODES } from '../../../lib/enums/exitCodes.js';
+import { confirmPrompt, listPrompt } from '../../../lib/prompts/promptUtils.js';
+import { uiLogger } from '../../../lib/ui/logger.js';
+import { trackCommandUsage } from '../../../lib/usageTracking.js';
+import { commands } from '../../../lang/en.js';
+import { logError } from '../../../lib/errorHandlers/index.js';
 import {
   CommonArgs,
   ConfigArgs,
   AccountArgs,
   EnvironmentArgs,
   YargsCommandModule,
-} from '../../../types/Yargs';
-import { makeYargsBuilder } from '../../../lib/yargsUtils';
+} from '../../../types/Yargs.js';
+import { makeYargsBuilder } from '../../../lib/yargsUtils.js';
 
 const command = 'delete [name]';
-const describe = i18n(
-  `commands.customObject.subcommands.schema.subcommands.delete.describe`
-);
+const describe =
+  commands.customObject.subcommands.schema.subcommands.delete.describe;
 
 type SchemaDeleteArgs = CommonArgs &
   ConfigArgs &
@@ -45,9 +44,8 @@ async function handler(
       providedName && typeof providedName === 'string'
         ? providedName
         : await listPrompt(
-            i18n(
-              `commands.customObject.subcommands.schema.subcommands.delete.selectSchema`
-            ),
+            commands.customObject.subcommands.schema.subcommands.delete
+              .selectSchema,
             {
               choices: schemaNames,
             }
@@ -56,39 +54,31 @@ async function handler(
     const shouldDelete =
       force ||
       (await confirmPrompt(
-        i18n(
-          `commands.customObject.subcommands.schema.subcommands.delete.confirmDelete`,
-          { name }
+        commands.customObject.subcommands.schema.subcommands.delete.confirmDelete(
+          name
         )
       ));
 
     if (!shouldDelete) {
-      logger.info(
-        i18n(
-          `commands.customObject.subcommands.schema.subcommands.delete.deleteCancelled`,
-          { name }
+      uiLogger.info(
+        commands.customObject.subcommands.schema.subcommands.delete.deleteCancelled(
+          name
         )
       );
       return process.exit(EXIT_CODES.SUCCESS);
     }
 
     await deleteObjectSchema(derivedAccountId, name);
-    logger.success(
-      i18n(
-        `commands.customObject.subcommands.schema.subcommands.delete.success.delete`,
-        {
-          name,
-        }
+    uiLogger.success(
+      commands.customObject.subcommands.schema.subcommands.delete.success.delete(
+        name
       )
     );
   } catch (e) {
     logError(e);
-    logger.error(
-      i18n(
-        `commands.customObject.subcommands.schema.subcommands.delete.errors.delete`,
-        {
-          name: name || '',
-        }
+    uiLogger.error(
+      commands.customObject.subcommands.schema.subcommands.delete.errors.delete(
+        name || ''
       )
     );
   }
@@ -98,22 +88,21 @@ function schemaDeleteBuilder(yargs: Argv): Argv<SchemaDeleteArgs> {
   yargs
     .example([
       [
-        '$0 schema delete schemaName',
-        i18n(
-          `commands.customObject.subcommands.schema.subcommands.delete.examples.default`
-        ),
+        '$0 custom-object schema delete schemaName',
+        commands.customObject.subcommands.schema.subcommands.delete.examples
+          .default,
       ],
     ])
     .positional('name', {
-      describe: i18n(
-        `commands.customObject.subcommands.schema.subcommands.delete.positionals.name.describe`
-      ),
+      describe:
+        commands.customObject.subcommands.schema.subcommands.delete.positionals
+          .name.describe,
       type: 'string',
     })
     .option('force', {
-      describe: i18n(
-        `commands.customObject.subcommands.schema.subcommands.delete.options.force.describe`
-      ),
+      describe:
+        commands.customObject.subcommands.schema.subcommands.delete.options
+          .force.describe,
       type: 'boolean',
     });
 

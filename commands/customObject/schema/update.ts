@@ -3,19 +3,19 @@ import {
   fetchObjectSchemas,
   updateObjectSchema,
 } from '@hubspot/local-dev-lib/api/customObjects';
-import { logger } from '@hubspot/local-dev-lib/logger';
+import { uiLogger } from '../../../lib/ui/logger.js';
 import { getAbsoluteFilePath } from '@hubspot/local-dev-lib/path';
 import { ENVIRONMENTS } from '@hubspot/local-dev-lib/constants/environments';
 import { getEnv } from '@hubspot/local-dev-lib/config';
 import { getHubSpotWebsiteOrigin } from '@hubspot/local-dev-lib/urls';
 
-import { listPrompt } from '../../../lib/prompts/promptUtils';
-import { logError } from '../../../lib/errorHandlers/index';
-import { checkAndConvertToJson } from '../../../lib/validation';
-import { trackCommandUsage } from '../../../lib/usageTracking';
-import { i18n } from '../../../lib/lang';
-import { EXIT_CODES } from '../../../lib/enums/exitCodes';
-import { isSchemaDefinition } from '../../../lib/customObject';
+import { listPrompt } from '../../../lib/prompts/promptUtils.js';
+import { logError } from '../../../lib/errorHandlers/index.js';
+import { checkAndConvertToJson } from '../../../lib/validation.js';
+import { trackCommandUsage } from '../../../lib/usageTracking.js';
+import { commands } from '../../../lang/en.js';
+import { EXIT_CODES } from '../../../lib/enums/exitCodes.js';
+import { isSchemaDefinition } from '../../../lib/customObject.js';
 import {
   CommonArgs,
   ConfigArgs,
@@ -23,13 +23,12 @@ import {
   EnvironmentArgs,
   TestingArgs,
   YargsCommandModule,
-} from '../../../types/Yargs';
-import { makeYargsBuilder } from '../../../lib/yargsUtils';
+} from '../../../types/Yargs.js';
+import { makeYargsBuilder } from '../../../lib/yargsUtils.js';
 
 const command = 'update [name]';
-const describe = i18n(
-  `commands.customObject.subcommands.schema.subcommands.update.describe`
-);
+const describe =
+  commands.customObject.subcommands.schema.subcommands.update.describe;
 
 type SchemaUpdateArgs = CommonArgs &
   ConfigArgs &
@@ -47,10 +46,9 @@ async function handler(
   const filePath = getAbsoluteFilePath(path);
   const schemaJson = checkAndConvertToJson(filePath);
   if (!isSchemaDefinition(schemaJson)) {
-    logger.error(
-      i18n(
-        `commands.customObject.subcommands.schema.subcommands.update.errors.invalidSchema`
-      )
+    uiLogger.error(
+      commands.customObject.subcommands.schema.subcommands.update.errors
+        .invalidSchema
     );
     process.exit(EXIT_CODES.ERROR);
   }
@@ -66,9 +64,8 @@ async function handler(
       providedName && typeof providedName === 'string'
         ? providedName
         : await listPrompt<string>(
-            i18n(
-              `commands.customObject.subcommands.schema.subcommands.update.selectSchema`
-            ),
+            commands.customObject.subcommands.schema.subcommands.update
+              .selectSchema,
             {
               choices: schemaNames,
             }
@@ -79,24 +76,18 @@ async function handler(
       name,
       schemaJson
     );
-    logger.success(
-      i18n(
-        `commands.customObject.subcommands.schema.subcommands.update.success.viewAtUrl`,
-        {
-          url: `${getHubSpotWebsiteOrigin(
-            getEnv() === 'qa' ? ENVIRONMENTS.QA : ENVIRONMENTS.PROD
-          )}/contacts/${derivedAccountId}/objects/${data.objectTypeId}`,
-        }
+    uiLogger.success(
+      commands.customObject.subcommands.schema.subcommands.update.success.viewAtUrl(
+        `${getHubSpotWebsiteOrigin(
+          getEnv() === 'qa' ? ENVIRONMENTS.QA : ENVIRONMENTS.PROD
+        )}/contacts/${derivedAccountId}/objects/${data.objectTypeId}`
       )
     );
   } catch (e) {
     logError(e, { accountId: derivedAccountId });
-    logger.error(
-      i18n(
-        `commands.customObject.subcommands.schema.subcommands.update.errors.update`,
-        {
-          definition: path,
-        }
+    uiLogger.error(
+      commands.customObject.subcommands.schema.subcommands.update.errors.update(
+        path
       )
     );
   }
@@ -105,15 +96,15 @@ async function handler(
 function schemaUpdateBuilder(yargs: Argv): Argv<SchemaUpdateArgs> {
   yargs
     .positional('name', {
-      describe: i18n(
-        `commands.customObject.subcommands.schema.subcommands.update.positionals.name.describe`
-      ),
+      describe:
+        commands.customObject.subcommands.schema.subcommands.update.positionals
+          .name.describe,
       type: 'string',
     })
     .option('path', {
-      describe: i18n(
-        `commands.customObject.subcommands.schema.subcommands.update.options.path.describe`
-      ),
+      describe:
+        commands.customObject.subcommands.schema.subcommands.update.options.path
+          .describe,
       type: 'string',
       required: true,
     });

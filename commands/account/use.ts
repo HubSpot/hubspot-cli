@@ -1,5 +1,4 @@
 import { Argv, ArgumentsCamelCase } from 'yargs';
-import { logger } from '@hubspot/local-dev-lib/logger';
 import {
   getConfigPath,
   updateDefaultAccount,
@@ -7,15 +6,15 @@ import {
   getCWDAccountOverride,
   getDefaultAccountOverrideFilePath,
 } from '@hubspot/local-dev-lib/config';
-import { trackCommandUsage } from '../../lib/usageTracking';
-import { i18n } from '../../lib/lang';
-import { selectAccountFromConfig } from '../../lib/prompts/accountsPrompt';
-import { CommonArgs, YargsCommandModule } from '../../types/Yargs';
-import { uiCommandReference } from '../../lib/ui';
-import { makeYargsBuilder } from '../../lib/yargsUtils';
+import { trackCommandUsage } from '../../lib/usageTracking.js';
+import { commands } from '../../lang/en.js';
+import { uiLogger } from '../../lib/ui/logger.js';
+import { selectAccountFromConfig } from '../../lib/prompts/accountsPrompt.js';
+import { CommonArgs, YargsCommandModule } from '../../types/Yargs.js';
+import { makeYargsBuilder } from '../../lib/yargsUtils.js';
 
 const command = 'use [account]';
-const describe = i18n('commands.account.subcommands.use.describe');
+const describe = commands.account.subcommands.use.describe;
 
 type AccountUseArgs = CommonArgs & {
   account?: string;
@@ -29,11 +28,11 @@ async function handler(
   if (!newDefaultAccount) {
     newDefaultAccount = await selectAccountFromConfig();
   } else if (!getAccountId(newDefaultAccount)) {
-    logger.error(
-      i18n('commands.account.subcommands.use.errors.accountNotFound', {
-        specifiedAccount: newDefaultAccount,
-        configPath: getConfigPath()!,
-      })
+    uiLogger.error(
+      commands.account.subcommands.use.errors.accountNotFound(
+        newDefaultAccount,
+        getConfigPath()!
+      )
     );
     newDefaultAccount = await selectAccountFromConfig();
   }
@@ -47,47 +46,39 @@ async function handler(
   const accountOverride = getCWDAccountOverride();
   const overrideFilePath = getDefaultAccountOverrideFilePath();
   if (accountOverride && overrideFilePath) {
-    logger.warn(
-      i18n(`commands.account.subcommands.use.accountOverride`, {
-        accountOverride,
-      })
+    uiLogger.warn(
+      commands.account.subcommands.use.accountOverride(
+        accountOverride.toString()
+      )
     );
-    logger.log(
-      i18n(`commands.account.subcommands.use.accountOverrideCommands`, {
-        createOverrideCommand: uiCommandReference('hs account create-override'),
-        removeOverrideCommand: uiCommandReference('hs account remove-override'),
-      })
-    );
-    logger.log('');
+    uiLogger.log(commands.account.subcommands.use.accountOverrideCommands);
+    uiLogger.log('');
   }
 
   updateDefaultAccount(newDefaultAccount);
 
-  return logger.success(
-    i18n('commands.account.subcommands.use.success.defaultAccountUpdated', {
-      accountName: newDefaultAccount,
-    })
+  return uiLogger.success(
+    commands.account.subcommands.use.success.defaultAccountUpdated(
+      newDefaultAccount
+    )
   );
 }
 
 function accountUseBuilder(yargs: Argv): Argv<AccountUseArgs> {
   yargs.positional('account', {
-    describe: i18n('commands.account.subcommands.use.options.account.describe'),
+    describe: commands.account.subcommands.use.options.account.describe,
     type: 'string',
   });
 
   yargs.example([
-    [
-      '$0 accounts use',
-      i18n('commands.account.subcommands.use.examples.default'),
-    ],
+    ['$0 accounts use', commands.account.subcommands.use.examples.default],
     [
       '$0 accounts use MyAccount',
-      i18n('commands.account.subcommands.use.examples.nameBased'),
+      commands.account.subcommands.use.examples.nameBased,
     ],
     [
       '$0 accounts use 1234567',
-      i18n('commands.account.subcommands.use.examples.idBased'),
+      commands.account.subcommands.use.examples.idBased,
     ],
   ]);
 

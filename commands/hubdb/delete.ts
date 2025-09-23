@@ -1,23 +1,23 @@
 import { Argv, ArgumentsCamelCase } from 'yargs';
-import { logger } from '@hubspot/local-dev-lib/logger';
-import { logError } from '../../lib/errorHandlers/index';
+import { uiLogger } from '../../lib/ui/logger.js';
+import { logError } from '../../lib/errorHandlers/index.js';
 import { deleteTable } from '@hubspot/local-dev-lib/api/hubdb';
-import { trackCommandUsage } from '../../lib/usageTracking';
-import { selectHubDBTablePrompt } from '../../lib/prompts/selectHubDBTablePrompt';
-import { promptUser } from '../../lib/prompts/promptUtils';
-import { EXIT_CODES } from '../../lib/enums/exitCodes';
-import { i18n } from '../../lib/lang';
+import { trackCommandUsage } from '../../lib/usageTracking.js';
+import { selectHubDBTablePrompt } from '../../lib/prompts/selectHubDBTablePrompt.js';
+import { promptUser } from '../../lib/prompts/promptUtils.js';
+import { EXIT_CODES } from '../../lib/enums/exitCodes.js';
+import { commands } from '../../lang/en.js';
 import {
   CommonArgs,
   ConfigArgs,
   AccountArgs,
   EnvironmentArgs,
   YargsCommandModule,
-} from '../../types/Yargs';
-import { makeYargsBuilder } from '../../lib/yargsUtils';
+} from '../../types/Yargs.js';
+import { makeYargsBuilder } from '../../lib/yargsUtils.js';
 
 const command = 'delete [table-id]';
-const describe = i18n('commands.hubdb.subcommands.delete.describe');
+const describe = commands.hubdb.subcommands.delete.describe;
 
 type HubdbDeleteArgs = CommonArgs &
   ConfigArgs &
@@ -44,9 +44,7 @@ async function handler(
       const { shouldDeleteTable } = await promptUser({
         name: 'shouldDeleteTable',
         type: 'confirm',
-        message: i18n('commands.hubdb.subcommands.delete.shouldDeleteTable', {
-          tableId,
-        }),
+        message: commands.hubdb.subcommands.delete.shouldDeleteTable(tableId),
       });
 
       if (!shouldDeleteTable) {
@@ -55,18 +53,16 @@ async function handler(
     }
 
     await deleteTable(derivedAccountId, tableId);
-    logger.success(
-      i18n('commands.hubdb.subcommands.delete.success.delete', {
-        accountId: derivedAccountId,
+    uiLogger.success(
+      commands.hubdb.subcommands.delete.success.delete(
         tableId,
-      })
+        derivedAccountId
+      )
     );
     process.exit(EXIT_CODES.SUCCESS);
   } catch (e) {
-    logger.error(
-      i18n('commands.hubdb.subcommands.delete.errors.delete', {
-        tableId: args.tableId || '',
-      })
+    uiLogger.error(
+      commands.hubdb.subcommands.delete.errors.delete(args.tableId || '')
     );
     logError(e);
   }
@@ -74,14 +70,12 @@ async function handler(
 
 function hubdbDeleteBuilder(yargs: Argv): Argv<HubdbDeleteArgs> {
   yargs.positional('table-id', {
-    describe: i18n(
-      'commands.hubdb.subcommands.delete.positionals.tableId.describe'
-    ),
+    describe: commands.hubdb.subcommands.delete.positionals.tableId.describe,
     type: 'string',
   });
 
   yargs.option('force', {
-    describe: i18n('commands.hubdb.subcommands.delete.options.force.describe'),
+    describe: commands.hubdb.subcommands.delete.options.force.describe,
     type: 'boolean',
   });
 

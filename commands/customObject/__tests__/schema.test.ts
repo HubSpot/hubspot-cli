@@ -1,25 +1,24 @@
 import yargs, { Argv } from 'yargs';
-import create from '../schema/create';
-import deleteCommand from '../schema/delete';
-import fetchAll from '../schema/fetch-all';
-import fetch from '../schema/fetch';
-import list from '../schema/list';
-import update from '../schema/update';
-import schemaCommands from '../schema';
+import create from '../schema/create.js';
+import deleteCommand from '../schema/delete.js';
+import fetchAll from '../schema/fetch-all.js';
+import fetch from '../schema/fetch.js';
+import list from '../schema/list.js';
+import update from '../schema/update.js';
+import schemaCommands from '../schema.js';
 
-jest.mock('yargs');
-jest.mock('../schema/create');
-jest.mock('../schema/delete');
-jest.mock('../schema/fetch-all');
-jest.mock('../schema/fetch');
-jest.mock('../schema/list');
-jest.mock('../schema/update');
-jest.mock('../../../lib/commonOpts');
+vi.mock('../schema/create');
+vi.mock('../schema/delete');
+vi.mock('../schema/fetch-all');
+vi.mock('../schema/fetch');
+vi.mock('../schema/list');
+vi.mock('../schema/update');
+vi.mock('../../../lib/commonOpts');
 
-const commandSpy = jest
+const commandSpy = vi
   .spyOn(yargs as Argv, 'command')
   .mockReturnValue(yargs as Argv);
-const demandCommandSpy = jest
+const demandCommandSpy = vi
   .spyOn(yargs as Argv, 'demandCommand')
   .mockReturnValue(yargs as Argv);
 

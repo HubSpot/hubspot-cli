@@ -1,17 +1,24 @@
-import yargs from 'yargs';
+import yargs, { Argv } from 'yargs';
 import {
   addAccountOptions,
   addConfigOptions,
   addOverwriteOptions,
   addCmsPublishModeOptions,
   addUseEnvironmentOptions,
-} from '../../lib/commonOpts';
+} from '../../lib/commonOpts.js';
 
-jest.mock('yargs');
-jest.mock('../../lib/commonOpts');
+vi.mock('../../lib/commonOpts');
 
 // Import this last so mocks apply
-import fetchCommand from '../fetch';
+import fetchCommand from '../fetch.js';
+
+const positionalSpy = vi
+  .spyOn(yargs as Argv, 'positional')
+  .mockReturnValue(yargs as Argv);
+
+const optionsSpy = vi
+  .spyOn(yargs as Argv, 'options')
+  .mockReturnValue(yargs as Argv);
 
 describe('commands/fetch', () => {
   describe('command', () => {
@@ -28,31 +35,31 @@ describe('commands/fetch', () => {
 
   describe('builder', () => {
     it('should support the correct positional arguments', () => {
-      fetchCommand.builder(yargs);
+      fetchCommand.builder(yargs as Argv);
 
-      expect(yargs.positional).toHaveBeenCalledTimes(2);
-      expect(yargs.positional).toHaveBeenCalledWith(
+      expect(positionalSpy).toHaveBeenCalledTimes(2);
+      expect(positionalSpy).toHaveBeenCalledWith(
         'src',
         expect.objectContaining({ type: 'string' })
       );
-      expect(yargs.positional).toHaveBeenCalledWith(
+      expect(positionalSpy).toHaveBeenCalledWith(
         'dest',
         expect.objectContaining({ type: 'string' })
       );
     });
 
     it('should support the correct options', () => {
-      fetchCommand.builder(yargs);
+      fetchCommand.builder(yargs as Argv);
 
-      expect(yargs.options).toHaveBeenCalledTimes(2);
-      expect(yargs.options).toHaveBeenCalledWith({
+      expect(optionsSpy).toHaveBeenCalledTimes(2);
+      expect(optionsSpy).toHaveBeenCalledWith({
         staging: expect.objectContaining({
           type: 'boolean',
           default: false,
           hidden: true,
         }),
       });
-      expect(yargs.options).toHaveBeenCalledWith({
+      expect(optionsSpy).toHaveBeenCalledWith({
         assetVersion: expect.objectContaining({ type: 'number' }),
       });
 

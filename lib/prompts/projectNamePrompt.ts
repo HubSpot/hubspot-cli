@@ -1,7 +1,7 @@
-import { promptUser } from './promptUtils';
-import { i18n } from '../lang';
-import { ensureProjectExists } from '../projects/ensureProjectExists';
-import { uiAccountDescription } from '../ui';
+import { promptUser } from './promptUtils.js';
+import { i18n } from '../lang.js';
+import { ensureProjectExists } from '../projects/ensureProjectExists.js';
+import { uiAccountDescription } from '../ui/index.js';
 
 export type ProjectNamePromptResponse = {
   projectName: string;
@@ -15,7 +15,7 @@ export async function projectNamePrompt(
     name: 'projectName',
     message: i18n(`lib.prompts.projectNamePrompt.enterName`),
     when: !options.project,
-    validate: async val => {
+    validate: async (val: string) => {
       if (typeof val !== 'string' || !val) {
         return i18n(`lib.prompts.projectNamePrompt.errors.invalidName`);
       }

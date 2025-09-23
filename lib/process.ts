@@ -1,6 +1,7 @@
 import readline from 'readline';
 import { logger, setLogLevel, LOG_LEVEL } from '@hubspot/local-dev-lib/logger';
-import { i18n } from './lang';
+import { i18n } from './lang.js';
+import { logError } from './errorHandlers/index.js';
 
 interface KeyPress {
   ctrl?: boolean;
@@ -10,14 +11,17 @@ interface KeyPress {
   name?: string;
 }
 
+const SIGHUP = 'SIGHUP';
+const uncaughtException = 'uncaughtException';
+
 export const TERMINATION_SIGNALS = [
   'beforeExit',
   'SIGINT', // Terminal trying to interrupt (Ctrl + C)
   'SIGUSR1', // Start Debugger User-defined signal 1
   'SIGUSR2', // User-defined signal 2
-  'uncaughtException',
+  uncaughtException,
   'SIGTERM', // Represents a graceful termination
-  'SIGHUP', // Parent terminal has been closed
+  SIGHUP, // Parent terminal has been closed
 ];
 
 export function handleExit(
@@ -28,11 +32,11 @@ export function handleExit(
   TERMINATION_SIGNALS.forEach(signal => {
     process.removeAllListeners(signal);
 
-    process.on(signal, async () => {
+    process.on(signal, async (...args: unknown[]) => {
       // Prevent duplicate exit handling
       if (!exitInProgress) {
         exitInProgress = true;
-        const isSIGHUP = signal === 'SIGHUP';
+        const isSIGHUP = signal === SIGHUP;
 
         // Prevent logs when terminal closes
         if (isSIGHUP) {
@@ -40,6 +44,15 @@ export function handleExit(
         }
 
         logger.debug(i18n(`lib.process.exitDebug`, { signal }));
+
+        if (signal === uncaughtException && args && args.length > 0) {
+          try {
+            logError(args[0]);
+          } catch (e) {
+            logger.error(args[0]);
+          }
+        }
+
         await callback({ isSIGHUP });
       }
     });

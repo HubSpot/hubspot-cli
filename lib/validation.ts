@@ -24,24 +24,24 @@ import {
   getExt,
 } from '@hubspot/local-dev-lib/path';
 
-import { getCmsPublishMode } from './commonOpts';
-import { logError } from './errorHandlers/index';
+import { getCmsPublishMode } from './commonOpts.js';
+import { logError } from './errorHandlers/index.js';
 
 export async function validateAccount(
   options: Arguments<{
     account?: string;
     accountId?: string;
     derivedAccountId?: number;
-    providedAccountId?: string;
+    userProvidedAccount?: string;
   }>
 ): Promise<boolean> {
-  const { derivedAccountId, providedAccountId } = options;
+  const { derivedAccountId, userProvidedAccount } = options;
   const accountId = getAccountId(derivedAccountId);
 
   if (!accountId) {
-    if (providedAccountId) {
+    if (userProvidedAccount) {
       logger.error(
-        `The account "${providedAccountId}" could not be found in the config`
+        `The account "${userProvidedAccount}" could not be found in the config`
       );
     } else {
       logger.error(
@@ -51,7 +51,7 @@ export async function validateAccount(
     return false;
   }
 
-  if (providedAccountId && loadConfigFromEnvironment()) {
+  if (userProvidedAccount && loadConfigFromEnvironment()) {
     throw new Error(
       'Cannot specify an account when environment variables are supplied. Please unset the environment variables or do not use the "--account" flag.'
     );

@@ -1,7 +1,8 @@
-import { PromptConfig } from '../../types/Prompts';
+import { PromptConfig } from '../../types/Prompts.js';
 
-import { promptUser } from './promptUtils';
-import { i18n } from '../lang';
+import { promptUser } from './promptUtils.js';
+import { i18n } from '../lang.js';
+import { CreateArgs } from '../../types/Cms.js';
 
 type CreateModulePromptResponse = {
   moduleLabel: string;
@@ -35,9 +36,8 @@ const CONTENT_TYPES_PROMPT: PromptConfig<CreateModulePromptResponse> = {
   type: 'checkbox',
   name: 'contentTypes',
   message: i18n(`lib.prompts.createModulePrompt.selectContentType`),
-  default: ['ANY'],
   choices: [
-    { name: 'Any', value: 'ANY' },
+    { name: 'Any', value: 'ANY', checked: true },
     { name: 'Landing page', value: 'LANDING_PAGE' },
     { name: 'Site page', value: 'SITE_PAGE' },
     { name: 'Blog post', value: 'BLOG_POST' },
@@ -74,7 +74,68 @@ const AVAILABLE_FOR_NEW_CONTENT: PromptConfig<CreateModulePromptResponse> = {
   default: true,
 };
 
-export function createModulePrompt(): Promise<CreateModulePromptResponse> {
+export function createModulePrompt(
+  commandArgs: Partial<CreateArgs> = {}
+): Promise<CreateModulePromptResponse> {
+  // Check if moduleLabel is provided (main requirement to skip full prompting)
+  // but still allow individual parameter prompting for enhanced UX
+  if (commandArgs.moduleLabel) {
+    const prompts: PromptConfig<CreateModulePromptResponse>[] = [];
+
+    // Only prompt for parameters not explicitly provided
+    if (commandArgs.reactType === undefined) {
+      prompts.push(REACT_TYPE_PROMPT);
+    }
+
+    if (!commandArgs.contentTypes) {
+      prompts.push(CONTENT_TYPES_PROMPT);
+    }
+
+    if (commandArgs.global === undefined) {
+      prompts.push(GLOBAL_PROMPT);
+    }
+
+    if (commandArgs.availableForNewContent === undefined) {
+      prompts.push(AVAILABLE_FOR_NEW_CONTENT);
+    }
+
+    // If no additional prompts needed, return with defaults
+    if (prompts.length === 0) {
+      const contentTypesArray = commandArgs.contentTypes
+        ? commandArgs.contentTypes.split(',').map((t: string) => t.trim())
+        : ['ANY'];
+
+      return Promise.resolve({
+        moduleLabel: commandArgs.moduleLabel!,
+        reactType: commandArgs.reactType ?? false,
+        contentTypes: contentTypesArray,
+        global: commandArgs.global ?? false,
+        availableForNewContent: commandArgs.availableForNewContent ?? true,
+      });
+    }
+
+    // Prompt only for missing optional parameters
+    return promptUser<CreateModulePromptResponse>(prompts).then(
+      promptResponse => {
+        const contentTypesArray = commandArgs.contentTypes
+          ? commandArgs.contentTypes.split(',').map((t: string) => t.trim())
+          : promptResponse.contentTypes || ['ANY'];
+
+        return {
+          moduleLabel: commandArgs.moduleLabel!,
+          reactType: commandArgs.reactType ?? promptResponse.reactType ?? false,
+          contentTypes: contentTypesArray,
+          global: commandArgs.global ?? promptResponse.global ?? false,
+          availableForNewContent:
+            commandArgs.availableForNewContent ??
+            promptResponse.availableForNewContent ??
+            true,
+        };
+      }
+    );
+  }
+
+  // No moduleLabel provided, prompt for everything (original behavior)
   return promptUser<CreateModulePromptResponse>([
     MODULE_LABEL_PROMPT,
     REACT_TYPE_PROMPT,

@@ -4,25 +4,26 @@ import { fetchTypes } from '@hubspot/local-dev-lib/api/sandboxSync';
 import { getAccountId, getConfigAccounts } from '@hubspot/local-dev-lib/config';
 import { HUBSPOT_ACCOUNT_TYPES } from '@hubspot/local-dev-lib/constants/config';
 import { Environment } from '@hubspot/local-dev-lib/types/Config';
-import { mockHubSpotHttpError } from '../testUtils';
+import { mockHubSpotHttpError } from '../testUtils.js';
 import {
   getSandboxTypeAsString,
   getHasSandboxesByType,
   getAvailableSyncTypes,
   validateSandboxUsageLimits,
   handleSandboxCreateError,
-} from '../sandboxes';
+} from '../sandboxes.js';
+import { Mock, Mocked } from 'vitest';
 
-jest.mock('@hubspot/local-dev-lib/logger');
-jest.mock('@hubspot/local-dev-lib/api/sandboxHubs');
-jest.mock('@hubspot/local-dev-lib/api/sandboxSync');
-jest.mock('@hubspot/local-dev-lib/config');
+vi.mock('@hubspot/local-dev-lib/logger');
+vi.mock('@hubspot/local-dev-lib/api/sandboxHubs');
+vi.mock('@hubspot/local-dev-lib/api/sandboxSync');
+vi.mock('@hubspot/local-dev-lib/config');
 
-const mockedGetAccountId = getAccountId as jest.Mock;
-const mockedGetSandboxUsageLimits = getSandboxUsageLimits as jest.Mock;
-const mockedFetchTypes = fetchTypes as jest.Mock;
-const mockedGetConfigAccounts = getConfigAccounts as jest.Mock;
-const mockedLogger = logger as jest.Mocked<typeof logger>;
+const mockedGetAccountId = getAccountId as Mock;
+const mockedGetSandboxUsageLimits = getSandboxUsageLimits as Mock;
+const mockedFetchTypes = fetchTypes as Mock;
+const mockedGetConfigAccounts = getConfigAccounts as Mock;
+const mockedLogger = logger as Mocked<typeof logger>;
 
 describe('lib/sandboxes', () => {
   describe('getSandboxTypeAsString()', () => {

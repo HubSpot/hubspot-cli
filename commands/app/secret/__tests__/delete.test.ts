@@ -1,8 +1,7 @@
 import yargs, { Argv } from 'yargs';
-import deleteAppSecretCommand from '../delete';
+import deleteAppSecretCommand from '../delete.js';
 
-jest.mock('yargs');
-jest.mock('../../../../lib/commonOpts');
+vi.mock('../../../../lib/commonOpts');
 
 describe('commands/app/secret/delete', () => {
   const yargsMock = yargs as Argv;

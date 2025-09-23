@@ -4,10 +4,8 @@ import {
   getValidationStatus,
   getValidationResults,
 } from '@hubspot/local-dev-lib/api/marketplaceValidation';
-import { logger } from '@hubspot/local-dev-lib/logger';
-
-import { i18n } from './lang';
-import { EXIT_CODES } from './enums/exitCodes';
+import { uiLogger } from './ui/logger.js';
+import { EXIT_CODES } from './enums/exitCodes.js';
 import {
   Check,
   GetValidationResultsResponse,
@@ -29,7 +27,7 @@ export async function kickOffValidation(
     });
     return requestResult;
   } catch (err) {
-    logger.debug(err);
+    uiLogger.debug(err);
     process.exit(EXIT_CODES.ERROR);
   }
 }
@@ -51,7 +49,7 @@ export async function pollForValidationFinish(
     };
     await checkValidationStatus();
   } catch (err) {
-    logger.debug(err);
+    uiLogger.debug(err);
     process.exit(EXIT_CODES.ERROR);
   }
 }
@@ -66,13 +64,13 @@ export async function fetchValidationResults(
     });
     return validationResults;
   } catch (err) {
-    logger.debug(err);
+    uiLogger.debug(err);
     process.exit(EXIT_CODES.ERROR);
   }
 }
 
 export function processValidationErrors(
-  i18nKey: string,
+  invalidPathError: (path: string) => string,
   validationResults: GetValidationResultsResponse
 ): void {
   if (validationResults.errors.length) {
@@ -80,13 +78,9 @@ export function processValidationErrors(
 
     errors.forEach(err => {
       if (err.failureReasonType === 'DOWNLOAD_EMPTY') {
-        logger.error(
-          i18n(`${i18nKey}.errors.invalidPath`, {
-            path: assetPath,
-          })
-        );
+        uiLogger.error(invalidPathError(assetPath));
       } else {
-        logger.error(`${err.context}`);
+        uiLogger.error(`${err.context}`);
       }
     });
     process.exit(EXIT_CODES.ERROR);
@@ -96,21 +90,13 @@ export function processValidationErrors(
 function displayFileInfo(
   file: string,
   line: number | null,
-  i18nKey: string
+  resultsCopy: ResultsCopy
 ): void {
   if (file) {
-    logger.log(
-      i18n(`${i18nKey}.results.warnings.file`, {
-        file,
-      })
-    );
+    uiLogger.log(resultsCopy.warnings.file(file));
   }
   if (line) {
-    logger.log(
-      i18n(`${i18nKey}.results.warnings.lineNumber`, {
-        line,
-      })
-    );
+    uiLogger.log(resultsCopy.warnings.lineNumber(line.toString()));
   }
 }
 
@@ -121,7 +107,7 @@ type Result = {
 
 type ValidationType = keyof GetValidationResultsResponse['results'];
 
-function displayResults(checks: Result, i18nKey: string): void {
+function displayResults(checks: Result, resultsCopy: ResultsCopy): void {
   if (checks) {
     const { status, results } = checks;
 
@@ -129,21 +115,21 @@ function displayResults(checks: Result, i18nKey: string): void {
       const failedValidations = results.filter(test => test.status === 'FAIL');
       const warningValidations = results.filter(test => test.status === 'WARN');
       failedValidations.forEach(val => {
-        logger.error(`${val.message}`);
-        displayFileInfo(val.file, val.line, i18nKey);
+        uiLogger.error(`${val.message}`);
+        displayFileInfo(val.file, val.line, resultsCopy);
       });
       warningValidations.forEach(val => {
-        logger.warn(`${val.message}`);
-        displayFileInfo(val.file, val.line, i18nKey);
+        uiLogger.warn(`${val.message}`);
+        displayFileInfo(val.file, val.line, resultsCopy);
       });
     }
     if (status === 'PASS') {
-      logger.success(i18n(`${i18nKey}.results.noErrors`));
+      uiLogger.success(resultsCopy.noErrors);
 
       results.forEach(test => {
         if (test.status === 'WARN') {
-          logger.warn(`${test.message}`);
-          displayFileInfo(test.file, test.line, i18nKey);
+          uiLogger.warn(`${test.message}`);
+          displayFileInfo(test.file, test.line, resultsCopy);
         }
       });
     }
@@ -151,13 +137,28 @@ function displayResults(checks: Result, i18nKey: string): void {
   return;
 }
 
+type ResultsCopy = {
+  noErrors: string;
+  required: string;
+  recommended: string;
+  warnings: {
+    file: (file: string) => string;
+    lineNumber: (line: string) => string;
+  };
+};
+
 export function displayValidationResults(
-  i18nKey: string,
+  resultsCopy: ResultsCopy,
   validationResults: GetValidationResultsResponse
 ) {
   Object.keys(validationResults.results).forEach(type => {
-    logger.log(chalk.bold(i18n(`${i18nKey}.results.${type.toLowerCase()}`)));
-    displayResults(validationResults.results[type as ValidationType], i18nKey);
-    logger.log();
+    uiLogger.log(
+      chalk.bold(resultsCopy[type.toLowerCase() as keyof ResultsCopy])
+    );
+    displayResults(
+      validationResults.results[type as ValidationType],
+      resultsCopy
+    );
+    uiLogger.log('');
   });
 }

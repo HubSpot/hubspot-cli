@@ -2,35 +2,32 @@ import path from 'path';
 import fs from 'fs';
 import { Argv, ArgumentsCamelCase } from 'yargs';
 import { getAccountId, getConfigAccounts } from '@hubspot/local-dev-lib/config';
-import { HsProfileFile } from '@hubspot/project-parsing-lib/src/lib/types';
+import { HsProfileFile } from '@hubspot/project-parsing-lib/src/lib/types.js';
 import { getAccountIdentifier } from '@hubspot/local-dev-lib/config/getAccountIdentifier';
 import {
   getAllHsProfiles,
   getHsProfileFilename,
   loadHsProfileFile,
 } from '@hubspot/project-parsing-lib';
-import { trackCommandUsage } from '../../../lib/usageTracking';
-import { getProjectConfig } from '../../../lib/projects/config';
-import { uiBetaTag, uiAccountDescription } from '../../../lib/ui';
-import { uiLogger } from '../../../lib/ui/logger';
-import { EXIT_CODES } from '../../../lib/enums/exitCodes';
-import { YargsCommandModule, CommonArgs } from '../../../types/Yargs';
-import { makeYargsBuilder } from '../../../lib/yargsUtils';
-import { commands } from '../../../lang/en';
+import { trackCommandUsage } from '../../../lib/usageTracking.js';
+import { getProjectConfig } from '../../../lib/projects/config.js';
+import { uiAccountDescription } from '../../../lib/ui/index.js';
+import { uiLogger } from '../../../lib/ui/logger.js';
+import { EXIT_CODES } from '../../../lib/enums/exitCodes.js';
+import { YargsCommandModule, CommonArgs } from '../../../types/Yargs.js';
+import { makeYargsBuilder } from '../../../lib/yargsUtils.js';
+import { commands } from '../../../lang/en.js';
 import {
   promptUser,
   listPrompt,
   confirmPrompt,
-} from '../../../lib/prompts/promptUtils';
-import { fileExists } from '../../../lib/validation';
-import { debugError } from '../../../lib/errorHandlers';
+} from '../../../lib/prompts/promptUtils.js';
+import { fileExists } from '../../../lib/validation.js';
+import { debugError } from '../../../lib/errorHandlers/index.js';
 
 const command = 'add [name]';
-const describe = uiBetaTag(commands.project.profile.add.describe, false);
-const verboseDescribe = uiBetaTag(
-  commands.project.profile.add.verboseDescribe,
-  false
-);
+const describe = commands.project.profile.add.describe;
+const verboseDescribe = commands.project.profile.add.verboseDescribe;
 
 type ProjectProfileAddArgs = CommonArgs & {
   name?: string;

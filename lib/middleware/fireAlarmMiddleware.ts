@@ -2,9 +2,11 @@ import { Arguments } from 'yargs';
 import chalk from 'chalk';
 import { fetchFireAlarms } from '@hubspot/local-dev-lib/api/fireAlarm';
 import { FireAlarm } from '@hubspot/local-dev-lib/types/FireAlarm';
-import { debugError } from '../errorHandlers';
-import pkg from '../../package.json';
-import { logInBox } from '../ui/boxen';
+import { debugError } from '../errorHandlers/index.js';
+import pkg from '../../package.json' with { type: 'json' };
+import { logInBox } from '../ui/boxen.js';
+import { renderInline } from '../../ui/index.js';
+import { getWarningBox } from '../../ui/components/StatusMessageBoxes.js';
 
 /*
  * Versions can be formatted like this:
@@ -156,21 +158,32 @@ async function logFireAlarms(
       return acc;
     }, '');
 
-    await logInBox({
-      contents: notifications,
-      options: {
-        title: 'Notifications',
-      },
-    });
+    if (!process.env.HUBSPOT_ENABLE_INK) {
+      await logInBox({
+        contents: notifications,
+        options: {
+          title: 'Notifications',
+        },
+      });
+    } else {
+      await renderInline(
+        getWarningBox({
+          title: 'Notifications',
+          message: notifications,
+        })
+      );
+    }
   }
 }
 
 export async function checkFireAlarms(
-  args: Arguments<{ derivedAccountId: number }>
+  argv: Arguments<{ derivedAccountId?: number }>
 ): Promise<void> {
-  const { derivedAccountId } = args;
+  const { derivedAccountId } = argv;
   try {
-    await logFireAlarms(derivedAccountId, args._.join(' '), pkg.version);
+    if (derivedAccountId) {
+      await logFireAlarms(derivedAccountId, argv._.join(' '), pkg.version);
+    }
   } catch (error) {
     debugError(error);
   }

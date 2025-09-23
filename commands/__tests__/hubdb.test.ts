@@ -1,21 +1,21 @@
 import yargs, { Argv } from 'yargs';
-import clear from '../hubdb/clear';
-import create from '../hubdb/create';
-import deleteCommand from '../hubdb/delete';
-import fetch from '../hubdb/fetch';
-import hubdbCommands from '../hubdb';
+import clear from '../hubdb/clear.js';
+import create from '../hubdb/create.js';
+import deleteCommand from '../hubdb/delete.js';
+import fetch from '../hubdb/fetch.js';
+import list from '../hubdb/list.js';
+import hubdbCommands from '../hubdb.js';
 
-jest.mock('yargs');
-jest.mock('../hubdb/clear');
-jest.mock('../hubdb/create');
-jest.mock('../hubdb/delete');
-jest.mock('../hubdb/fetch');
-jest.mock('../../lib/commonOpts');
+vi.mock('../hubdb/clear');
+vi.mock('../hubdb/create');
+vi.mock('../hubdb/delete');
+vi.mock('../hubdb/fetch');
+vi.mock('../../lib/commonOpts');
 
-const commandSpy = jest
+const commandSpy = vi
   .spyOn(yargs as Argv, 'command')
   .mockReturnValue(yargs as Argv);
-const demandCommandSpy = jest
+const demandCommandSpy = vi
   .spyOn(yargs as Argv, 'demandCommand')
   .mockReturnValue(yargs as Argv);
 
@@ -38,7 +38,7 @@ describe('commands/hubdb', () => {
       demandCommandSpy.mockClear();
     });
 
-    const subcommands = [clear, create, deleteCommand, fetch];
+    const subcommands = [clear, create, deleteCommand, fetch, list];
 
     it('should demand the command takes one positional argument', () => {
       hubdbCommands.builder(yargs as Argv);

@@ -1,16 +1,16 @@
 import { Argv, ArgumentsCamelCase } from 'yargs';
-import { logger } from '@hubspot/local-dev-lib/logger';
+import { uiLogger } from '../../../lib/ui/logger.js';
 import { getEnv } from '@hubspot/local-dev-lib/config';
 import { ENVIRONMENTS } from '@hubspot/local-dev-lib/constants/environments';
 import { getAbsoluteFilePath } from '@hubspot/local-dev-lib/path';
 import { createObjectSchema } from '@hubspot/local-dev-lib/api/customObjects';
 import { getHubSpotWebsiteOrigin } from '@hubspot/local-dev-lib/urls';
-import { logError } from '../../../lib/errorHandlers/index';
-import { checkAndConvertToJson } from '../../../lib/validation';
-import { trackCommandUsage } from '../../../lib/usageTracking';
-import { i18n } from '../../../lib/lang';
-import { EXIT_CODES } from '../../../lib/enums/exitCodes';
-import { isSchemaDefinition } from '../../../lib/customObject';
+import { logError } from '../../../lib/errorHandlers/index.js';
+import { checkAndConvertToJson } from '../../../lib/validation.js';
+import { trackCommandUsage } from '../../../lib/usageTracking.js';
+import { commands } from '../../../lang/en.js';
+import { EXIT_CODES } from '../../../lib/enums/exitCodes.js';
+import { isSchemaDefinition } from '../../../lib/customObject.js';
 import {
   CommonArgs,
   ConfigArgs,
@@ -18,13 +18,12 @@ import {
   EnvironmentArgs,
   TestingArgs,
   YargsCommandModule,
-} from '../../../types/Yargs';
-import { makeYargsBuilder } from '../../../lib/yargsUtils';
+} from '../../../types/Yargs.js';
+import { makeYargsBuilder } from '../../../lib/yargsUtils.js';
 
 const command = 'create';
-const describe = i18n(
-  `commands.customObject.subcommands.schema.subcommands.create.describe`
-);
+const describe =
+  commands.customObject.subcommands.schema.subcommands.create.describe;
 
 type SchemaCreateArgs = CommonArgs &
   ConfigArgs &
@@ -43,34 +42,27 @@ async function handler(
   const schemaJson = checkAndConvertToJson(filePath);
 
   if (!isSchemaDefinition(schemaJson)) {
-    logger.error(
-      i18n(
-        `commands.customObject.subcommands.schema.subcommands.create.errors.invalidSchema`
-      )
+    uiLogger.error(
+      commands.customObject.subcommands.schema.subcommands.create.errors
+        .invalidSchema
     );
     process.exit(EXIT_CODES.ERROR);
   }
 
   try {
     const { data } = await createObjectSchema(derivedAccountId, schemaJson);
-    logger.success(
-      i18n(
-        `commands.customObject.subcommands.schema.subcommands.create.success.schemaViewable`,
-        {
-          url: `${getHubSpotWebsiteOrigin(
-            getEnv() === 'qa' ? ENVIRONMENTS.QA : ENVIRONMENTS.PROD
-          )}/contacts/${derivedAccountId}/objects/${data.objectTypeId}`,
-        }
+    uiLogger.success(
+      commands.customObject.subcommands.schema.subcommands.create.success.schemaViewable(
+        `${getHubSpotWebsiteOrigin(
+          getEnv() === 'qa' ? ENVIRONMENTS.QA : ENVIRONMENTS.PROD
+        )}/contacts/${derivedAccountId}/objects/${data.objectTypeId}`
       )
     );
   } catch (e) {
     logError(e, { accountId: derivedAccountId });
-    logger.error(
-      i18n(
-        `commands.customObject.subcommands.schema.subcommands.create.errors.creationFailed`,
-        {
-          definition: path,
-        }
+    uiLogger.error(
+      commands.customObject.subcommands.schema.subcommands.create.errors.creationFailed(
+        path
       )
     );
   }
@@ -78,9 +70,9 @@ async function handler(
 
 function schemaCreateBuilder(yargs: Argv): Argv<SchemaCreateArgs> {
   yargs.option('path', {
-    describe: i18n(
-      `commands.customObject.subcommands.schema.subcommands.create.options.definition.describe`
-    ),
+    describe:
+      commands.customObject.subcommands.schema.subcommands.create.options
+        .definition.describe,
     type: 'string',
     required: true,
   });

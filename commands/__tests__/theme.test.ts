@@ -1,19 +1,18 @@
 import yargs, { Argv } from 'yargs';
-import preview from '../theme/preview';
-import generateSelectors from '../theme/generate-selectors';
-import marketplaceValidate from '../theme/marketplace-validate';
-import themeCommands from '../theme';
+import preview from '../theme/preview.js';
+import generateSelectors from '../theme/generate-selectors.js';
+import marketplaceValidate from '../theme/marketplace-validate.js';
+import themeCommands from '../theme.js';
 
-jest.mock('yargs');
-jest.mock('../theme/preview');
-jest.mock('../theme/generate-selectors');
-jest.mock('../theme/marketplace-validate');
-jest.mock('../../lib/commonOpts');
+vi.mock('../theme/preview');
+vi.mock('../theme/generate-selectors');
+vi.mock('../theme/marketplace-validate');
+vi.mock('../../lib/commonOpts');
 
-const commandSpy = jest
+const commandSpy = vi
   .spyOn(yargs as Argv, 'command')
   .mockReturnValue(yargs as Argv);
-const demandCommandSpy = jest
+const demandCommandSpy = vi
   .spyOn(yargs as Argv, 'demandCommand')
   .mockReturnValue(yargs as Argv);
 

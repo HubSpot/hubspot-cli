@@ -6,24 +6,25 @@ import { addOauthToAccountConfig } from '@hubspot/local-dev-lib/oauth';
 import { logger } from '@hubspot/local-dev-lib/logger';
 import { ENVIRONMENTS } from '@hubspot/local-dev-lib/constants/environments';
 import { DEFAULT_OAUTH_SCOPES } from '@hubspot/local-dev-lib/constants/auth';
-import { authenticateWithOauth } from '../oauth';
+import { authenticateWithOauth } from '../oauth.js';
+import { Mock } from 'vitest';
 
-jest.mock('express');
-jest.mock('open');
-jest.mock('@hubspot/local-dev-lib/models/OAuth2Manager');
-jest.mock('@hubspot/local-dev-lib/config');
-jest.mock('@hubspot/local-dev-lib/oauth');
-jest.mock('@hubspot/local-dev-lib/logger');
+vi.mock('express');
+vi.mock('open');
+vi.mock('@hubspot/local-dev-lib/models/OAuth2Manager');
+vi.mock('@hubspot/local-dev-lib/config');
+vi.mock('@hubspot/local-dev-lib/oauth');
+vi.mock('@hubspot/local-dev-lib/logger');
 
-const mockedExpress = express as unknown as jest.Mock;
-const mockedOAuth2Manager = OAuth2Manager as unknown as jest.Mock;
-const mockedGetAccountConfig = getAccountConfig as jest.Mock;
+const mockedExpress = express as unknown as Mock;
+const mockedOAuth2Manager = OAuth2Manager as unknown as Mock;
+const mockedGetAccountConfig = getAccountConfig as Mock;
 
 describe('lib/oauth', () => {
   const mockExpressReq = {
     query: { code: 'test-auth-code' },
   } as unknown as Request;
-  const mockExpressResp = { send: jest.fn() } as unknown as Response;
+  const mockExpressResp = { send: vi.fn() } as unknown as Response;
 
   const mockAccountConfig = {
     accountId: 123,
@@ -35,17 +36,17 @@ describe('lib/oauth', () => {
 
   beforeEach(() => {
     mockedExpress.mockReturnValue({
-      get: jest.fn().mockImplementation((path, callback) => {
+      get: vi.fn().mockImplementation((path, callback) => {
         if (path === '/oauth-callback') {
           callback(mockExpressReq, mockExpressResp);
         }
       }),
-      listen: jest.fn().mockReturnValue({ close: jest.fn() }),
+      listen: vi.fn().mockReturnValue({ close: vi.fn() }),
     });
   });
 
   afterEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   describe('authenticateWithOauth()', () => {
@@ -53,7 +54,7 @@ describe('lib/oauth', () => {
       // Mock successful OAuth flow
       const mockOAuth2Manager = {
         account: mockAccountConfig,
-        exchangeForTokens: jest.fn().mockResolvedValue({}),
+        exchangeForTokens: vi.fn().mockResolvedValue({}),
       };
 
       mockedOAuth2Manager.mockImplementation(() => mockOAuth2Manager);
@@ -86,7 +87,7 @@ describe('lib/oauth', () => {
         account: invalidConfig,
       }));
 
-      const exitSpy = jest.spyOn(process, 'exit').mockImplementation(() => {
+      const exitSpy = vi.spyOn(process, 'exit').mockImplementation(() => {
         throw new Error('exit');
       });
 
@@ -106,7 +107,7 @@ describe('lib/oauth', () => {
 
       const mockOAuth2Manager = {
         account: configWithoutScopes,
-        exchangeForTokens: jest.fn().mockResolvedValue({}),
+        exchangeForTokens: vi.fn().mockResolvedValue({}),
       };
 
       mockedOAuth2Manager.mockImplementation(() => mockOAuth2Manager);
@@ -125,7 +126,7 @@ describe('lib/oauth', () => {
     it('should handle OAuth exchange failure', async () => {
       const mockOAuth2Manager = {
         account: mockAccountConfig,
-        exchangeForTokens: jest
+        exchangeForTokens: vi
           .fn()
           .mockRejectedValue(new Error('Exchange failed')),
       };

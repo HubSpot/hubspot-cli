@@ -1,23 +1,23 @@
 import { Argv, ArgumentsCamelCase } from 'yargs';
 import { lint } from '@hubspot/local-dev-lib/cms/validate';
-import { logger } from '@hubspot/local-dev-lib/logger';
 import {
   HubLValidationError,
   LintResult,
   Validation,
 } from '@hubspot/local-dev-lib/types/HublValidation';
-import { logError } from '../lib/errorHandlers/index';
-import { trackCommandUsage } from '../lib/usageTracking';
-import { i18n } from '../lib/lang';
-import { resolveLocalPath } from '../lib/filesystem';
-import { EXIT_CODES } from '../lib/enums/exitCodes';
+import { logError } from '../lib/errorHandlers/index.js';
+import { trackCommandUsage } from '../lib/usageTracking.js';
+import { commands } from '../lang/en.js';
+import { resolveLocalPath } from '../lib/filesystem.js';
+import { EXIT_CODES } from '../lib/enums/exitCodes.js';
 import {
   AccountArgs,
   CommonArgs,
   ConfigArgs,
   YargsCommandModule,
-} from '../types/Yargs';
-import { makeYargsBuilder } from '../lib/yargsUtils';
+} from '../types/Yargs.js';
+import { makeYargsBuilder } from '../lib/yargsUtils.js';
+import { uiLogger } from '../lib/ui/logger.js';
 
 const command = 'lint <path>';
 // Hiding since this command is still experimental
@@ -33,8 +33,11 @@ function getErrorsFromHublValidationObject(
 
 function printHublValidationError(err: HubLValidationError): void {
   const { severity, message, lineno, startPosition } = err;
-  const method = severity === 'FATAL' ? 'error' : 'warn';
-  logger[method]('[%d, %d]: %s', lineno, startPosition, message);
+  if (severity === 'FATAL') {
+    uiLogger.error(`[${lineno}, ${startPosition}]: ${message}`);
+  } else {
+    uiLogger.warn(`[${lineno}, ${startPosition}]: ${message}`);
+  }
 }
 
 function printHublValidationResult({ file, validation }: LintResult): number {
@@ -48,7 +51,7 @@ function printHublValidationResult({ file, validation }: LintResult): number {
   if (!errors.length) {
     return count;
   }
-  logger.group(file);
+  uiLogger.group(file);
   errors.forEach(err => {
     if (err.reason !== 'SYNTAX_ERROR') {
       return;
@@ -56,7 +59,7 @@ function printHublValidationResult({ file, validation }: LintResult): number {
     ++count;
     printHublValidationError(err);
   });
-  logger.groupEnd();
+  uiLogger.groupEnd();
   return count;
 }
 
@@ -66,34 +69,28 @@ async function handler(args: ArgumentsCamelCase<LintArgs>): Promise<void> {
   const { path: lintPath, derivedAccountId } = args;
 
   const localPath = resolveLocalPath(lintPath);
-  const groupName = i18n(`commands.lint.groupName`, {
-    path: localPath,
-  });
+  const groupName = commands.lint.groupName(localPath);
 
   trackCommandUsage('lint', undefined, derivedAccountId);
 
-  logger.group(groupName);
+  uiLogger.group(groupName);
   let count = 0;
   try {
     await lint(derivedAccountId, localPath, (result: LintResult) => {
       return (count += printHublValidationResult(result));
     });
   } catch (err) {
-    logger.groupEnd();
+    uiLogger.groupEnd();
     logError(err, { accountId: derivedAccountId });
     process.exit(EXIT_CODES.ERROR);
   }
-  logger.groupEnd();
-  logger.log(
-    i18n(`commands.lint.issuesFound`, {
-      count,
-    })
-  );
+  uiLogger.groupEnd();
+  uiLogger.log(commands.lint.issuesFound(count));
 }
 
 function lintBuilder(yargs: Argv): Argv<LintArgs> {
   yargs.positional('path', {
-    describe: i18n(`commands.lint.positionals.path.describe`),
+    describe: commands.lint.positionals.path.describe,
     required: true,
     type: 'string',
   });
@@ -115,6 +112,3 @@ const lintCommand: YargsCommandModule<unknown, LintArgs> = {
 };
 
 export default lintCommand;
-
-// TODO Remove this after cli.ts is ported to TS
-module.exports = lintCommand;

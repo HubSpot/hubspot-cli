@@ -1,9 +1,9 @@
 import { Argv, ArgumentsCamelCase } from 'yargs';
-import SpinniesManager from '../../lib/ui/SpinniesManager';
-import { logger } from '@hubspot/local-dev-lib/logger';
-import { getTableContents, getTableHeader } from '../../lib/ui/table';
-import { promptUser } from '../../lib/prompts/promptUtils';
-import { i18n } from '../../lib/lang';
+import SpinniesManager from '../../lib/ui/SpinniesManager.js';
+import { getTableContents, getTableHeader } from '../../lib/ui/table.js';
+import { promptUser } from '../../lib/prompts/promptUtils.js';
+import { commands } from '../../lang/en.js';
+import { uiLogger } from '../../lib/ui/logger.js';
 import { fetchThemes } from '@hubspot/local-dev-lib/api/designManager';
 import {
   requestLighthouseScore,
@@ -14,16 +14,16 @@ import {
   RequestLighthouseScoreResponse,
   GetLighthouseScoreResponse,
 } from '@hubspot/local-dev-lib/types/Lighthouse';
-import { HUBSPOT_FOLDER, MARKETPLACE_FOLDER } from '../../lib/constants';
-import { uiLink } from '../../lib/ui';
-import { EXIT_CODES } from '../../lib/enums/exitCodes';
+import { HUBSPOT_FOLDER, MARKETPLACE_FOLDER } from '../../lib/constants.js';
+import { uiLink } from '../../lib/ui/index.js';
+import { EXIT_CODES } from '../../lib/enums/exitCodes.js';
 import {
   AccountArgs,
   CommonArgs,
   EnvironmentArgs,
   YargsCommandModule,
-} from '../../types/Yargs';
-import { makeYargsBuilder } from '../../lib/yargsUtils';
+} from '../../types/Yargs.js';
+import { makeYargsBuilder } from '../../lib/yargsUtils.js';
 
 const DEFAULT_TABLE_HEADER = [
   'Accessibility',
@@ -70,10 +70,8 @@ async function selectTheme(accountId: number): Promise<string> {
         );
     }
   } catch (err) {
-    logger.error(
-      i18n(
-        `commands.cms.subcommands.lighthouseScore.errors.failedToFetchThemes`
-      )
+    uiLogger.error(
+      commands.cms.subcommands.lighthouseScore.errors.failedToFetchThemes
     );
     process.exit(EXIT_CODES.ERROR);
   }
@@ -82,9 +80,7 @@ async function selectTheme(accountId: number): Promise<string> {
     {
       type: 'list',
       name: 'theme',
-      message: i18n(
-        `commands.cms.subcommands.lighthouseScore.info.promptMessage`
-      ),
+      message: commands.cms.subcommands.lighthouseScore.info.promptMessage,
       choices: themes,
     },
   ]);
@@ -110,16 +106,16 @@ async function handler(args: ArgumentsCamelCase<LighthouseScoreArgs>) {
       isValidTheme = false;
     }
     if (!isValidTheme) {
-      logger.error(
-        i18n(`commands.cms.subcommands.lighthouseScore.errors.themeNotFound`, {
-          theme: themeToCheck,
-        })
+      uiLogger.error(
+        commands.cms.subcommands.lighthouseScore.errors.themeNotFound(
+          themeToCheck
+        )
       );
       process.exit(EXIT_CODES.ERROR);
     }
   } else {
     themeToCheck = await selectTheme(derivedAccountId);
-    logger.log();
+    uiLogger.log('');
   }
 
   // Kick off the scoring
@@ -131,14 +127,12 @@ async function handler(args: ArgumentsCamelCase<LighthouseScoreArgs>) {
     });
     requestResult = data;
   } catch (err) {
-    logger.debug(err);
+    uiLogger.debug(err);
   }
 
   if (!requestResult || !requestResult.mobileId || !requestResult.desktopId) {
-    logger.error(
-      i18n(
-        `commands.cms.subcommands.lighthouseScore.errors.failedToGetLighthouseScore`
-      )
+    uiLogger.error(
+      commands.cms.subcommands.lighthouseScore.errors.failedToGetLighthouseScore
     );
     process.exit(EXIT_CODES.ERROR);
   }
@@ -148,9 +142,8 @@ async function handler(args: ArgumentsCamelCase<LighthouseScoreArgs>) {
     SpinniesManager.init();
 
     SpinniesManager.add('lighthouseScore', {
-      text: i18n(
-        `commands.cms.subcommands.lighthouseScore.info.generatingScore`,
-        { theme: themeToCheck }
+      text: commands.cms.subcommands.lighthouseScore.info.generatingScore(
+        themeToCheck
       ),
     });
 
@@ -184,7 +177,7 @@ async function handler(args: ArgumentsCamelCase<LighthouseScoreArgs>) {
 
     SpinniesManager.remove('lighthouseScore');
   } catch (err) {
-    logger.debug(err);
+    uiLogger.debug(err);
     process.exit(EXIT_CODES.ERROR);
   }
 
@@ -221,10 +214,8 @@ async function handler(args: ArgumentsCamelCase<LighthouseScoreArgs>) {
       verboseViewAverageScoreResult = data;
     }
   } catch (err) {
-    logger.error(
-      i18n(
-        `commands.cms.subcommands.lighthouseScore.errors.failedToGetLighthouseScore`
-      )
+    uiLogger.error(
+      commands.cms.subcommands.lighthouseScore.errors.failedToGetLighthouseScore
     );
     process.exit(EXIT_CODES.ERROR);
   }
@@ -234,15 +225,19 @@ async function handler(args: ArgumentsCamelCase<LighthouseScoreArgs>) {
       target === 'desktop' ? desktopScoreResult : mobileScoreResult;
 
     if (!verboseViewAverageScoreResult || !scoreResult) {
-      logger.error(
-        i18n(
-          `commands.cms.subcommands.lighthouseScore.errors.failedToGetLighthouseScore`
-        )
+      uiLogger.error(
+        commands.cms.subcommands.lighthouseScore.errors
+          .failedToGetLighthouseScore
       );
       process.exit(EXIT_CODES.ERROR);
     }
 
-    logger.log(`${themeToCheck} ${target} scores`);
+    uiLogger.log(
+      commands.cms.subcommands.lighthouseScore.info.themeToCheckTitle(
+        themeToCheck,
+        target
+      )
+    );
 
     const tableHeader = getTableHeader(DEFAULT_TABLE_HEADER);
 
@@ -258,15 +253,13 @@ async function handler(args: ArgumentsCamelCase<LighthouseScoreArgs>) {
       scores.seoScore,
     ];
 
-    logger.log(
+    uiLogger.log(
       getTableContents([tableHeader, averageTableData], {
         border: { bodyLeft: '  ' },
       })
     );
-    logger.log(
-      i18n(
-        `commands.cms.subcommands.lighthouseScore.info.pageTemplateScoreTitle`
-      )
+    uiLogger.log(
+      commands.cms.subcommands.lighthouseScore.info.pageTemplateScoreTitle
     );
 
     const table2Header = getTableHeader([
@@ -285,42 +278,40 @@ async function handler(args: ArgumentsCamelCase<LighthouseScoreArgs>) {
       ];
     });
 
-    logger.log(
+    uiLogger.log(
       getTableContents([table2Header, ...templateTableData], {
         border: { bodyLeft: '  ' },
       })
     );
 
-    logger.log(
-      i18n(`commands.cms.subcommands.lighthouseScore.info.lighthouseLinksTitle`)
+    uiLogger.log(
+      commands.cms.subcommands.lighthouseScore.info.lighthouseLinksTitle
     );
 
     scoreResult.scores.forEach(score => {
       if (score.templatePath && score.link) {
-        logger.log(' ', uiLink(score.templatePath, score.link));
+        uiLogger.log(` ${uiLink(score.templatePath, score.link)}`);
       }
     });
 
     if (scoreResult.failedTemplatePaths.length) {
-      logger.log();
-      logger.error(
-        i18n(
-          `commands.cms.subcommands.lighthouseScore.info.failedTemplatePathsTitle`
-        )
+      uiLogger.log('');
+      uiLogger.error(
+        commands.cms.subcommands.lighthouseScore.info.failedTemplatePathsTitle
       );
       scoreResult.failedTemplatePaths.forEach(failedTemplatePath => {
-        logger.log(' ', failedTemplatePath);
+        uiLogger.log(` ${failedTemplatePath}`);
       });
     }
 
-    logger.log();
-    logger.info(
-      i18n(`commands.cms.subcommands.lighthouseScore.info.targetDeviceNote`, {
-        target,
-      })
+    uiLogger.log('');
+    uiLogger.info(
+      commands.cms.subcommands.lighthouseScore.info.targetDeviceNote(target)
     );
   } else {
-    logger.log(`Theme: ${themeToCheck}`);
+    uiLogger.log(
+      commands.cms.subcommands.lighthouseScore.info.themeTitle(themeToCheck)
+    );
     const tableHeader = getTableHeader(['Target', ...DEFAULT_TABLE_HEADER]);
 
     const getTableData = (
@@ -343,54 +334,43 @@ async function handler(args: ArgumentsCamelCase<LighthouseScoreArgs>) {
       getTableData('mobile', mobileScoreResult),
     ];
 
-    logger.log(
+    uiLogger.log(
       getTableContents([tableHeader, ...tableData], {
         border: { bodyLeft: '  ' },
       })
     );
 
-    logger.info(
-      i18n(`commands.cms.subcommands.lighthouseScore.info.verboseOptionNote`)
+    uiLogger.info(
+      commands.cms.subcommands.lighthouseScore.info.verboseOptionNote
     );
   }
 
-  logger.log();
-  logger.log(
-    `Powered by ${uiLink(
-      'Google Lighthouse',
-      'https://developer.chrome.com/docs/lighthouse/overview/'
-    )}.`
-  );
+  uiLogger.log('');
+  uiLogger.log(commands.cms.subcommands.lighthouseScore.info.poweredByLink);
 
   process.exit(EXIT_CODES.SUCCESS);
 }
 
 function cmslighthouseScoreBuilder(yargs: Argv): Argv<LighthouseScoreArgs> {
   yargs.option('theme', {
-    describe: i18n(
-      `commands.cms.subcommands.lighthouseScore.options.theme.describe`
-    ),
+    describe: commands.cms.subcommands.lighthouseScore.options.theme.describe,
     type: 'string',
   });
   yargs.option('target', {
-    describe: i18n(
-      `commands.cms.subcommands.lighthouseScore.options.target.describe`
-    ),
+    describe: commands.cms.subcommands.lighthouseScore.options.target.describe,
     type: 'string',
     choices: ['desktop', 'mobile'],
     default: 'desktop',
   });
   yargs.option('verbose', {
-    describe: i18n(
-      `commands.cms.subcommands.lighthouseScore.options.verbose.describe`
-    ),
+    describe: commands.cms.subcommands.lighthouseScore.options.verbose.describe,
     boolean: true,
     default: false,
   });
   yargs.example([
     [
       '$0 cms lighthouse-score --theme=my-theme',
-      i18n(`commands.cms.subcommands.lighthouseScore.examples.default`),
+      commands.cms.subcommands.lighthouseScore.examples.default,
     ],
   ]);
 

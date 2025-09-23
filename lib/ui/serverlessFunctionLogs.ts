@@ -1,7 +1,7 @@
 import moment from 'moment';
 import chalk from 'chalk';
 import { logger, Styles } from '@hubspot/local-dev-lib/logger';
-import { i18n } from '../lang';
+import { i18n } from '../lang.js';
 import {
   FunctionLog,
   GetFunctionLogsResponse,

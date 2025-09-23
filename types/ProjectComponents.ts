@@ -1,11 +1,11 @@
 // These types are for Unified Apps and projects on platform version 2025.1 and above
 
-import { IntermediateRepresentationNodeLocalDev } from '@hubspot/project-parsing-lib/src/lib/types';
+import { IntermediateRepresentationNodeLocalDev } from '@hubspot/project-parsing-lib/src/lib/types.js';
 import {
   IR_COMPONENT_TYPES,
   APP_DISTRIBUTION_TYPES,
   APP_AUTH_TYPES,
-} from '../lib/constants';
+} from '../lib/constants.js';
 import { ValueOf } from '@hubspot/local-dev-lib/types/Utils';
 
 type AppDistributionType = ValueOf<typeof APP_DISTRIBUTION_TYPES>;

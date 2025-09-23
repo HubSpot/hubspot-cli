@@ -24,7 +24,7 @@ import {
   SpinnerOptions as BaseSpinnerOptions,
   VALID_STATUSES,
   prefixOptions,
-} from './spinniesUtils';
+} from './spinniesUtils.js';
 
 interface SpinnerState extends BaseSpinnerOptions {
   name?: string;
@@ -40,6 +40,7 @@ function safeColor(text: string, color?: string): string {
 }
 
 class SpinniesManager {
+  private disableOutput = false;
   private options!: SpinnerState;
   private spinners: { [key: string]: SpinnerState } = {};
   private isCursorHidden = false;
@@ -85,6 +86,10 @@ class SpinniesManager {
     this.stream = process.stderr;
     this.lineCount = 0;
     this.currentFrameIndex = 0;
+  }
+
+  setDisableOutput(disableOutput: boolean) {
+    this.disableOutput = disableOutput;
   }
 
   pick(name: string): SpinnerState | undefined {
@@ -200,6 +205,10 @@ class SpinniesManager {
   }
 
   private updateSpinnerState(): void {
+    if (this.disableOutput) {
+      return;
+    }
+
     if (this.spin) {
       if (this.currentInterval) {
         clearInterval(this.currentInterval);
@@ -326,4 +335,3 @@ class SpinniesManager {
 
 const toExport = new SpinniesManager();
 export default toExport;
-module.exports = toExport;

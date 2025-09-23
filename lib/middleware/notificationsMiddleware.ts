@@ -1,9 +1,8 @@
-// Update-notifier is CommonJS, so we need to use require
-const updateNotifier = require('update-notifier');
-const chalk = require('chalk');
-const pkg = require('../../package.json');
-const { UI_COLORS, uiCommandReference } = require('../ui');
-const { i18n } = require('../lang');
+import updateNotifier from 'update-notifier';
+import chalk from 'chalk';
+import pkg from '../../package.json' with { type: 'json' };
+import { UI_COLORS, uiCommandReference } from '../ui/index.js';
+import { i18n } from '../lang.js';
 
 const notifier = updateNotifier({
   pkg: { ...pkg, name: '@hubspot/cli' },
@@ -33,7 +32,7 @@ export function notifyAboutUpdates(): void {
       borderStyle: 'round',
       title:
         pkg.name === CMS_CLI_PACKAGE_NAME
-          ? null
+          ? undefined
           : chalk.bold(i18n(`commands.generalErrors.updateNotify.notifyTitle`)),
     },
   });

@@ -1,6 +1,5 @@
 import fs from 'fs-extra';
 import { Argv, ArgumentsCamelCase } from 'yargs';
-import { logger } from '@hubspot/local-dev-lib/logger';
 import {
   getCWDAccountOverride,
   getDefaultAccountOverrideFilePath,
@@ -8,19 +7,19 @@ import {
 } from '@hubspot/local-dev-lib/config';
 import { DEFAULT_ACCOUNT_OVERRIDE_FILE_NAME } from '@hubspot/local-dev-lib/constants/config';
 import { getGlobalConfig } from '@hubspot/local-dev-lib/config/migrate';
-import { i18n } from '../../lib/lang';
-import { promptUser } from '../../lib/prompts/promptUtils';
-import { trackCommandMetadataUsage } from '../../lib/usageTracking';
-import { EXIT_CODES } from '../../lib/enums/exitCodes';
-import { logError } from '../../lib/errorHandlers/index';
-import { CommonArgs, YargsCommandModule } from '../../types/Yargs';
-import { uiCommandReference } from '../../lib/ui';
-import { makeYargsBuilder } from '../../lib/yargsUtils';
+import { promptUser } from '../../lib/prompts/promptUtils.js';
+import { trackCommandMetadataUsage } from '../../lib/usageTracking.js';
+import { EXIT_CODES } from '../../lib/enums/exitCodes.js';
+import { logError } from '../../lib/errorHandlers/index.js';
+import { CommonArgs, YargsCommandModule } from '../../types/Yargs.js';
+import { makeYargsBuilder } from '../../lib/yargsUtils.js';
+import { uiLogger } from '../../lib/ui/logger.js';
+import { commands } from '../../lang/en.js';
 
 const command = 'remove-override';
-const describe = i18n('commands.account.subcommands.removeOverride.describe', {
-  overrideFile: DEFAULT_ACCOUNT_OVERRIDE_FILE_NAME,
-});
+const describe = commands.account.subcommands.removeOverride.describe(
+  DEFAULT_ACCOUNT_OVERRIDE_FILE_NAME
+);
 
 type RemoveOverrideArgs = CommonArgs & { force?: boolean };
 
@@ -31,13 +30,8 @@ async function handler(
 
   const globalConfig = getGlobalConfig();
   if (!globalConfig) {
-    logger.error(
-      i18n(
-        'commands.account.subcommands.createOverride.errors.globalConfigNotFound',
-        {
-          authCommand: uiCommandReference('hs account auth'),
-        }
-      )
+    uiLogger.error(
+      commands.account.subcommands.removeOverride.errors.globalConfigNotFound
     );
     process.exit(EXIT_CODES.ERROR);
   }
@@ -48,25 +42,21 @@ async function handler(
     const accountId = getAccountId(accountOverride) || undefined;
 
     if (!force) {
-      logger.log(
-        i18n('commands.account.subcommands.removeOverride.accountOverride', {
-          accountOverride,
+      uiLogger.log(
+        commands.account.subcommands.removeOverride.accountOverride(
           overrideFilePath,
-        })
+          accountOverride.toString()
+        )
       );
 
       const { deleteOverrideFile } = await promptUser({
         type: 'confirm',
         name: 'deleteOverrideFile',
-        message: i18n(
-          'commands.account.subcommands.removeOverride.prompts.deleteOverrideFile',
-          {
-            accountOverride,
-            overrideFilePath,
-          }
-        ),
+        message:
+          commands.account.subcommands.removeOverride.prompts
+            .deleteOverrideFile,
       });
-      logger.log('');
+      uiLogger.log('');
 
       if (!deleteOverrideFile) {
         trackCommandMetadataUsage(
@@ -83,9 +73,7 @@ async function handler(
 
     try {
       fs.unlinkSync(overrideFilePath);
-      logger.success(
-        i18n('commands.account.subcommands.removeOverride.success')
-      );
+      uiLogger.success(commands.account.subcommands.removeOverride.success);
       trackCommandMetadataUsage(
         'account-removeOverride',
         {
@@ -101,18 +89,15 @@ async function handler(
       process.exit(EXIT_CODES.ERROR);
     }
   } else {
-    logger.log(
-      i18n('commands.account.subcommands.removeOverride.noOverrideFile')
-    );
+    uiLogger.log(commands.account.subcommands.removeOverride.noOverrideFile);
     process.exit(EXIT_CODES.SUCCESS);
   }
 }
 
 function accountRemoveOverrideBuilder(yargs: Argv): Argv<RemoveOverrideArgs> {
   yargs.options('force', {
-    describe: i18n(
-      'commands.account.subcommands.removeOverride.options.force.describe'
-    ),
+    describe:
+      commands.account.subcommands.removeOverride.options.force.describe,
     type: 'boolean',
   });
 

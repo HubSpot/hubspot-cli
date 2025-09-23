@@ -1,10 +1,10 @@
-import { prefixOptions } from '../ui/spinniesUtils';
-import { bold, green, red } from 'chalk';
-import { helpers } from '../interpolation';
-import { DiagnosticInfo } from './DiagnosticInfoBuilder';
-import { uiAccountDescription } from '../ui';
-import { indent } from '../ui/index';
-const { i18n } = require('../lang');
+import { prefixOptions } from '../ui/spinniesUtils.js';
+import chalk from 'chalk';
+import { helpers } from '../interpolation.js';
+import { DiagnosticInfo } from './DiagnosticInfoBuilder.js';
+import { uiAccountDescription } from '../ui/index.js';
+import { indent } from '../ui/index.js';
+import { i18n } from '../lang.js';
 
 interface DiagnosisOptions {
   diagnosticInfo: DiagnosticInfo;
@@ -44,8 +44,8 @@ export class Diagnosis {
     const { succeedPrefix, failPrefix } = prefixOptions({});
 
     this.prefixes = {
-      success: green(succeedPrefix),
-      error: red(failPrefix),
+      success: chalk.green(succeedPrefix),
+      error: chalk.red(failPrefix),
       warning: helpers.orange('!'),
     };
 
@@ -148,7 +148,7 @@ export class Diagnosis {
       return '';
     }
 
-    output.push(`\n${bold(category.header)}`);
+    output.push(`\n${chalk.bold(category.header)}`);
 
     (category.subheaders || []).forEach(subheader => {
       output.push(`${subheader}`);

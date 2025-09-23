@@ -1,3 +1,5 @@
+import { Separator } from '@inquirer/prompts';
+
 export type GenericPromptResponse = {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   [key: string]: any;
@@ -19,12 +21,20 @@ export type PromptChoices<T = any> = Array<
       name: string;
       value?: T;
       disabled?: string | boolean;
+      checked?: boolean;
     }
+  | Separator
 >;
 
 export type PromptWhen = boolean | (() => boolean);
 
-type PromptOperand = string | number | boolean | string[] | boolean[] | null;
+export type PromptOperand =
+  | string
+  | number
+  | boolean
+  | string[]
+  | boolean[]
+  | null;
 
 export type PromptConfig<T extends GenericPromptResponse> = {
   name: keyof T;
@@ -39,4 +49,5 @@ export type PromptConfig<T extends GenericPromptResponse> = {
   validate?: (answer?: any) => PromptOperand | Promise<PromptOperand>;
   mask?: string;
   filter?: (input: string) => string;
+  loop?: boolean;
 };

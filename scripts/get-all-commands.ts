@@ -1,5 +1,5 @@
-import { exec } from 'child_process';
-import SpinniesManager from '../lib/ui/SpinniesManager';
+import { exec } from 'node:child_process';
+import SpinniesManager from '../lib/ui/SpinniesManager.ts';
 import util from 'util';
 
 const output = {};

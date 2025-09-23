@@ -3,25 +3,26 @@ import { initiateSync } from '@hubspot/local-dev-lib/api/sandboxSync';
 import { getAccountId } from '@hubspot/local-dev-lib/config';
 import { HUBSPOT_ACCOUNT_TYPES } from '@hubspot/local-dev-lib/constants/config';
 import { Environment } from '@hubspot/local-dev-lib/types/Config';
-import { mockHubSpotHttpError } from '../testUtils';
-import { getAvailableSyncTypes } from '../sandboxes';
-import { syncSandbox } from '../sandboxSync';
-import SpinniesManager from '../ui/SpinniesManager';
+import { mockHubSpotHttpError } from '../testUtils.js';
+import { getAvailableSyncTypes } from '../sandboxes.js';
+import { syncSandbox } from '../sandboxSync.js';
+import SpinniesManager from '../ui/SpinniesManager.js';
+import { Mock, Mocked } from 'vitest';
 
-jest.mock('@hubspot/local-dev-lib/logger');
-jest.mock('@hubspot/local-dev-lib/api/sandboxSync');
-jest.mock('@hubspot/local-dev-lib/config');
-jest.mock('../sandboxes');
-jest.mock('../ui/SpinniesManager');
+vi.mock('@hubspot/local-dev-lib/logger');
+vi.mock('@hubspot/local-dev-lib/api/sandboxSync');
+vi.mock('@hubspot/local-dev-lib/config');
+vi.mock('../sandboxes');
+vi.mock('../ui/SpinniesManager');
 
-const mockedLogger = logger as jest.Mocked<typeof logger>;
-const mockedInitiateSync = initiateSync as jest.Mock;
-const mockedGetAccountId = getAccountId as jest.Mock;
-const mockedGetAvailableSyncTypes = getAvailableSyncTypes as jest.Mock;
-const mockedSpinniesInit = SpinniesManager.init as jest.Mock;
-const mockedSpinniesAdd = SpinniesManager.add as jest.Mock;
-const mockedSpinniesSucceed = SpinniesManager.succeed as jest.Mock;
-const mockedSpinniesFail = SpinniesManager.fail as jest.Mock;
+const mockedLogger = logger as Mocked<typeof logger>;
+const mockedInitiateSync = initiateSync as Mock;
+const mockedGetAccountId = getAccountId as Mock;
+const mockedGetAvailableSyncTypes = getAvailableSyncTypes as Mock;
+const mockedSpinniesInit = SpinniesManager.init as Mock;
+const mockedSpinniesAdd = SpinniesManager.add as Mock;
+const mockedSpinniesSucceed = SpinniesManager.succeed as Mock;
+const mockedSpinniesFail = SpinniesManager.fail as Mock;
 
 describe('lib/sandboxSync', () => {
   const mockEnv = 'qa' as Environment;

@@ -1,13 +1,13 @@
 import { Argv } from 'yargs';
-import { i18n } from '../lib/lang';
-import { makeYargsBuilder } from '../lib/yargsUtils';
-import { YargsCommandModuleBucket } from '../types/Yargs';
-import lighthouseScore from './cms/lighthouseScore';
-import convertFields from './cms/convertFields';
-import getReactModule from './cms/getReactModule';
+import { commands } from '../lang/en.js';
+import { makeYargsBuilder } from '../lib/yargsUtils.js';
+import { YargsCommandModuleBucket } from '../types/Yargs.js';
+import lighthouseScore from './cms/lighthouseScore.js';
+import convertFields from './cms/convertFields.js';
+import getReactModule from './cms/getReactModule.js';
 
 const command = 'cms';
-const describe = i18n(`commands.cms.describe`);
+const describe = commands.cms.describe;
 
 function cmsBuilder(yargs: Argv): Argv {
   yargs
@@ -29,6 +29,3 @@ const cmsCommand: YargsCommandModuleBucket = {
 };
 
 export default cmsCommand;
-
-// TODO Remove this legacy export once we've migrated all commands to TS
-module.exports = cmsCommand;

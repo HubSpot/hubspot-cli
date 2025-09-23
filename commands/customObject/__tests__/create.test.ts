@@ -3,19 +3,19 @@ import {
   addAccountOptions,
   addConfigOptions,
   addUseEnvironmentOptions,
-} from '../../../lib/commonOpts';
-import customObjectCreateCommand from '../create';
+} from '../../../lib/commonOpts.js';
+import customObjectCreateCommand from '../create.js';
 
-jest.mock('yargs');
-jest.mock('../../../lib/commonOpts');
+vi.mock('yargs');
+vi.mock('../../../lib/commonOpts');
 
 describe('commands/customObject/create', () => {
   let yargsMock = yargs as Argv;
 
   beforeEach(() => {
     yargsMock = {
-      positional: jest.fn().mockReturnThis(),
-      option: jest.fn().mockReturnThis(),
+      positional: vi.fn().mockReturnThis(),
+      option: vi.fn().mockReturnThis(),
     } as unknown as Argv;
   });
 

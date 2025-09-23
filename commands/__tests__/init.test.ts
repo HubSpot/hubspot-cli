@@ -1,11 +1,10 @@
 import yargs, { Argv } from 'yargs';
-import { addConfigOptions, addTestingOptions } from '../../lib/commonOpts';
-import initCommand from '../init';
+import { addConfigOptions, addTestingOptions } from '../../lib/commonOpts.js';
+import initCommand from '../init.js';
 
-jest.mock('yargs');
-jest.mock('../../lib/commonOpts');
+vi.mock('../../lib/commonOpts');
 
-const optionsSpy = jest
+const optionsSpy = vi
   .spyOn(yargs as Argv, 'options')
   .mockReturnValue(yargs as Argv);
 

@@ -15,23 +15,23 @@ import { PublicApp } from '@hubspot/local-dev-lib/types/Apps';
 import { Environment } from '@hubspot/local-dev-lib/types/Config';
 import { logger } from '@hubspot/local-dev-lib/logger';
 
-import { PROJECT_CONFIG_FILE } from '../../constants';
-import SpinniesManager from '../../ui/SpinniesManager';
-import DevServerManager from './DevServerManager';
-import { EXIT_CODES } from '../../enums/exitCodes';
-import { getAccountHomeUrl } from './helpers';
+import { PROJECT_CONFIG_FILE } from '../../constants.js';
+import SpinniesManager from '../../ui/SpinniesManager.js';
+import DevServerManager from './DevServerManager.js';
+import { EXIT_CODES } from '../../enums/exitCodes.js';
+import { getAccountHomeUrl } from '../urls.js';
 import {
   componentIsApp,
   componentIsPublicApp,
   CONFIG_FILES,
   getAppCardConfigs,
   getComponentUid,
-} from '../../projects/structure';
+} from '../../projects/structure.js';
 import {
   Component,
   ComponentTypes,
   ProjectConfig,
-} from '../../../types/Projects';
+} from '../../../types/Projects.js';
 import {
   UI_COLORS,
   uiCommandReference,
@@ -39,14 +39,14 @@ import {
   uiBetaTag,
   uiLink,
   uiLine,
-} from '../../ui';
-import { logError } from '../../errorHandlers/index';
-import { installAppPrompt } from '../../prompts/installAppPrompt';
-import { confirmPrompt } from '../../prompts/promptUtils';
-import { handleKeypress } from '../../process';
-import { lib } from '../../../lang/en';
-import { uiLogger } from '../../ui/logger';
-import { getOauthAppInstallUrl } from '../../app/urls';
+} from '../../ui/index.js';
+import { logError } from '../../errorHandlers/index.js';
+import { installAppBrowserPrompt } from '../../prompts/installAppPrompt.js';
+import { confirmPrompt } from '../../prompts/promptUtils.js';
+import { handleKeypress } from '../../process.js';
+import { lib } from '../../../lang/en.js';
+import { uiLogger } from '../../ui/logger.js';
+import { getOauthAppInstallUrl } from '../../app/urls.js';
 
 const WATCH_EVENTS = {
   add: 'add',
@@ -325,7 +325,7 @@ class LocalDevManager {
         scopes: this.activeApp.config.auth.requiredScopes,
         redirectUrls: this.activeApp.config.auth.redirectUrls,
       });
-      await installAppPrompt(installUrl, isReinstall);
+      await installAppBrowserPrompt(installUrl, isReinstall);
     }
   }
 

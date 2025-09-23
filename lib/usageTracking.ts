@@ -5,8 +5,9 @@ import {
 } from '@hubspot/local-dev-lib/config';
 import { API_KEY_AUTH_METHOD } from '@hubspot/local-dev-lib/constants/auth';
 import { logger } from '@hubspot/local-dev-lib/logger';
-import { version } from '../package.json';
-import { debugError } from './errorHandlers';
+import packageJson from '../package.json' with { type: 'json' };
+const version = packageJson.version;
+import { debugError } from './errorHandlers/index.js';
 
 type Meta = {
   action?: string; // "The specific action taken in the CLI"
@@ -24,14 +25,14 @@ type Meta = {
   successful?: boolean; // "Whether or not the CLI interaction was successful"
 };
 
-const EventClass = {
+export const EventClass = {
   USAGE: 'USAGE',
   INTERACTION: 'INTERACTION',
   VIEW: 'VIEW',
   ACTIVATION: 'ACTIVATION',
 };
 
-function getNodeVersionData(): {
+export function getNodeVersionData(): {
   nodeVersion: string;
   nodeMajorVersion: string;
 } {
@@ -41,7 +42,7 @@ function getNodeVersionData(): {
   };
 }
 
-function getPlatform(): string {
+export function getPlatform(): string {
   switch (process.platform) {
     case 'darwin':
       return 'macos';
@@ -60,8 +61,10 @@ export async function trackCommandUsage(
   if (!isTrackingAllowed()) {
     return;
   }
+
   logger.debug('Attempting to track usage of "%s" command', command);
   let authType = 'unknown';
+
   if (accountId) {
     const accountConfig = getAccountConfig(accountId);
     authType =
@@ -69,27 +72,13 @@ export async function trackCommandUsage(
         ? accountConfig.authType
         : API_KEY_AUTH_METHOD.value;
   }
-  setImmediate(async () => {
-    const usageTrackingEvent = {
-      action: 'cli-command',
-      os: getPlatform(),
-      ...getNodeVersionData(),
-      version,
-      command,
-      authType,
-      ...meta,
-    };
-    try {
-      await trackUsage(
-        'cli-interaction',
-        EventClass.INTERACTION,
-        usageTrackingEvent,
-        accountId
-      );
-      logger.debug('Sent usage tracking command event: %o', usageTrackingEvent);
-    } catch (e) {
-      debugError(e);
-    }
+
+  return trackCliInteraction({
+    action: 'cli-command',
+    command,
+    authType,
+    meta,
+    accountId,
   });
 }
 
@@ -97,40 +86,23 @@ export async function trackHelpUsage(command: string): Promise<void> {
   if (!isTrackingAllowed()) {
     return;
   }
-  try {
-    if (command) {
-      logger.debug('Tracking help usage of "%s" sub-command', command);
-    } else {
-      logger.debug('Tracking help usage of main command');
-    }
-    await trackUsage('cli-interaction', EventClass.INTERACTION, {
-      action: 'cli-help',
-      os: getPlatform(),
-      ...getNodeVersionData(),
-      version,
-      command,
-    });
-  } catch (e) {
-    debugError(e);
+  if (command) {
+    logger.debug('Tracking help usage of "%s" sub-command', command);
+  } else {
+    logger.debug('Tracking help usage of main command');
   }
+
+  return trackCliInteraction({
+    action: 'cli-help',
+    command,
+  });
 }
 
 export async function trackConvertFieldsUsage(command: string): Promise<void> {
-  if (!isTrackingAllowed()) {
-    return;
-  }
-  try {
-    logger.debug('Attempting to track usage of "%s" command', command);
-    await trackUsage('cli-interaction', EventClass.INTERACTION, {
-      action: 'cli-process-fields',
-      os: getPlatform(),
-      ...getNodeVersionData(),
-      version,
-      command,
-    });
-  } catch (e) {
-    debugError(e);
-  }
+  return trackCliInteraction({
+    action: 'cli-process-fields',
+    command,
+  });
 }
 
 export async function trackAuthAction(
@@ -139,30 +111,15 @@ export async function trackAuthAction(
   step: string,
   accountId?: number
 ): Promise<void> {
-  if (!isTrackingAllowed()) {
-    return;
-  }
-  const usageTrackingEvent = {
+  return trackCliInteraction({
     action: 'cli-auth',
-    os: getPlatform(),
-    ...getNodeVersionData(),
-    version,
     command,
     authType,
-    step,
-  };
-  try {
-    await trackUsage(
-      'cli-interaction',
-      EventClass.INTERACTION,
-      usageTrackingEvent,
-      accountId
-    );
-
-    logger.debug('Sent usage tracking command event: %o', usageTrackingEvent);
-  } catch (e) {
-    debugError(e);
-  }
+    accountId,
+    meta: {
+      step,
+    },
+  });
 }
 
 export async function trackCommandMetadataUsage(
@@ -182,9 +139,36 @@ export async function trackCommandMetadataUsage(
         ? accountConfig.authType
         : API_KEY_AUTH_METHOD.value;
   }
-  setImmediate(async () => {
+
+  return trackCliInteraction({
+    action: 'cli-command-metadata',
+    command,
+    authType,
+    accountId,
+    meta,
+  });
+}
+
+async function trackCliInteraction({
+  action,
+  accountId,
+  command,
+  authType,
+  meta = {},
+}: {
+  action: string;
+  accountId?: number;
+  command?: string;
+  authType?: string;
+  meta?: Meta;
+}): Promise<void> {
+  try {
+    if (!isTrackingAllowed()) {
+      return;
+    }
+
     const usageTrackingEvent = {
-      action: 'cli-command-metadata',
+      action,
       os: getPlatform(),
       ...getNodeVersionData(),
       version,
@@ -192,16 +176,41 @@ export async function trackCommandMetadataUsage(
       authType,
       ...meta,
     };
+
+    if (process.env.HUBSPOT_MCP_AI_AGENT) {
+      try {
+        await trackUsage(
+          'cli-interaction',
+          EventClass.INTERACTION,
+          {
+            ...usageTrackingEvent,
+            action: 'cli-mcp-server',
+            type: process.env.HUBSPOT_MCP_AI_AGENT,
+          },
+          accountId
+        );
+        logger.debug('Sent AI usage tracking command event: %o', {
+          ...usageTrackingEvent,
+          action: 'cli-mcp-server',
+          type: process.env.HUBSPOT_MCP_AI_AGENT,
+        });
+      } catch (error) {
+        debugError(error);
+      }
+    }
+
     try {
-      await trackUsage(
+      logger.debug('Sent usage tracking command event: %o', usageTrackingEvent);
+      return trackUsage(
         'cli-interaction',
         EventClass.INTERACTION,
         usageTrackingEvent,
         accountId
       );
-      logger.debug('Sent usage tracking command event: %o', usageTrackingEvent);
-    } catch (e) {
-      debugError(e);
+    } catch (error) {
+      debugError(error);
     }
-  });
+  } catch (e) {
+    debugError(e);
+  }
 }

@@ -3,20 +3,20 @@ import {
   addAccountOptions,
   addConfigOptions,
   addUseEnvironmentOptions,
-} from '../../../../lib/commonOpts';
-import schemaDeleteCommand from '../delete';
+} from '../../../../lib/commonOpts.js';
+import schemaDeleteCommand from '../delete.js';
 
-jest.mock('yargs');
-jest.mock('../../../../lib/commonOpts');
+vi.mock('yargs');
+vi.mock('../../../../lib/commonOpts');
 
 describe('commands/customObject/schema/delete', () => {
   let yargsMock = yargs as Argv;
 
   beforeEach(() => {
     yargsMock = {
-      positional: jest.fn().mockReturnThis(),
-      option: jest.fn().mockReturnThis(),
-      example: jest.fn().mockReturnThis(),
+      positional: vi.fn().mockReturnThis(),
+      option: vi.fn().mockReturnThis(),
+      example: vi.fn().mockReturnThis(),
     } as unknown as Argv;
   });
 

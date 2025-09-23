@@ -1,42 +1,36 @@
 import yargs, { Argv, ArgumentsCamelCase } from 'yargs';
-import { i18n } from '../../../lib/lang';
-import { uiCommandReference, uiDeprecatedTag } from '../../../lib/ui';
-import { handlerGenerator } from '../../app/migrate';
+import { i18n } from '../../../lib/lang.js';
+import { uiCommandReference, uiDeprecatedTag } from '../../../lib/ui/index.js';
+import { handlerGenerator } from '../../app/migrate.js';
 import { PLATFORM_VERSIONS } from '@hubspot/local-dev-lib/constants/projects';
-import { MigrateAppArgs } from '../../../lib/app/migrate';
-import migrateAppCommand from '../migrateApp';
+import { MigrateAppArgs } from '../../../lib/app/migrate.js';
+import migrateAppCommand from '../migrateApp.js';
+import { Mock } from 'vitest';
 
-jest.mock('yargs');
-jest.mock('@hubspot/local-dev-lib/logger');
-jest.mock('../../../lib/lang');
-jest.mock('../../../lib/ui');
-jest.mock('../../app/migrate');
+vi.mock('@hubspot/local-dev-lib/logger');
+vi.mock('../../../lib/lang');
+vi.mock('../../../lib/ui');
+vi.mock('../../app/migrate');
 
 const { v2023_2, v2025_2 } = PLATFORM_VERSIONS;
 
 describe('commands/project/migrateApp', () => {
   const yargsMock = yargs as Argv;
-  const optionsSpy = jest
-    .spyOn(yargsMock, 'options')
-    .mockReturnValue(yargsMock);
-  const exampleSpy = jest
-    .spyOn(yargsMock, 'example')
-    .mockReturnValue(yargsMock);
+  const optionsSpy = vi.spyOn(yargsMock, 'options').mockReturnValue(yargsMock);
+  const exampleSpy = vi.spyOn(yargsMock, 'example').mockReturnValue(yargsMock);
 
   // Mock the imported functions
-  const i18nMock = i18n as jest.Mock;
-  const uiDeprecatedTagMock = uiDeprecatedTag as jest.Mock;
-  const uiCommandReferenceMock = uiCommandReference as jest.Mock;
-  const handlerGeneratorMock = handlerGenerator as jest.Mock;
+  const i18nMock = i18n as Mock;
+  const uiDeprecatedTagMock = uiDeprecatedTag as Mock;
+  const uiCommandReferenceMock = uiCommandReference as Mock;
+  const handlerGeneratorMock = handlerGenerator as Mock;
 
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
     i18nMock.mockReturnValue('test description');
     uiDeprecatedTagMock.mockReturnValue('deprecated test description');
     uiCommandReferenceMock.mockReturnValue('command reference');
-    handlerGeneratorMock.mockReturnValue(
-      jest.fn().mockResolvedValue(undefined)
-    );
+    handlerGeneratorMock.mockReturnValue(vi.fn().mockResolvedValue(undefined));
   });
 
   describe('command', () => {
@@ -75,8 +69,7 @@ describe('commands/project/migrateApp', () => {
         'platform-version': expect.objectContaining({
           type: 'string',
           choices: [v2023_2, v2025_2],
-          hidden: true,
-          default: v2023_2,
+          default: v2025_2,
         }),
       });
 
@@ -86,7 +79,7 @@ describe('commands/project/migrateApp', () => {
 
   describe('handler', () => {
     let options: ArgumentsCamelCase<MigrateAppArgs>;
-    const mockLocalHandler = jest.fn().mockResolvedValue(undefined);
+    const mockLocalHandler = vi.fn().mockResolvedValue(undefined);
 
     beforeEach(() => {
       options = {

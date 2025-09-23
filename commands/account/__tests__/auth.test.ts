@@ -1,9 +1,11 @@
 import yargs, { Argv } from 'yargs';
-import { addGlobalOptions, addTestingOptions } from '../../../lib/commonOpts';
-import accountAuthCommand from '../auth';
+import {
+  addGlobalOptions,
+  addTestingOptions,
+} from '../../../lib/commonOpts.js';
+import accountAuthCommand from '../auth.js';
 
-jest.mock('yargs');
-jest.mock('../../../lib/commonOpts');
+vi.mock('../../../lib/commonOpts');
 
 describe('commands/account/auth', () => {
   const yargsMock = yargs as Argv;

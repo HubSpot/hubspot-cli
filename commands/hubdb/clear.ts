@@ -1,22 +1,22 @@
 import { Argv, ArgumentsCamelCase } from 'yargs';
-import { logger } from '@hubspot/local-dev-lib/logger';
-import { logError } from '../../lib/errorHandlers/index';
+import { uiLogger } from '../../lib/ui/logger.js';
+import { logError } from '../../lib/errorHandlers/index.js';
 import { clearHubDbTableRows } from '@hubspot/local-dev-lib/hubdb';
 import { publishTable } from '@hubspot/local-dev-lib/api/hubdb';
-import { selectHubDBTablePrompt } from '../../lib/prompts/selectHubDBTablePrompt';
-import { trackCommandUsage } from '../../lib/usageTracking';
-import { i18n } from '../../lib/lang';
+import { selectHubDBTablePrompt } from '../../lib/prompts/selectHubDBTablePrompt.js';
+import { trackCommandUsage } from '../../lib/usageTracking.js';
+import { commands } from '../../lang/en.js';
 import {
   CommonArgs,
   ConfigArgs,
   AccountArgs,
   EnvironmentArgs,
   YargsCommandModule,
-} from '../../types/Yargs';
-import { makeYargsBuilder } from '../../lib/yargsUtils';
+} from '../../types/Yargs.js';
+import { makeYargsBuilder } from '../../lib/yargsUtils.js';
 
 const command = 'clear [table-id]';
-const describe = i18n('commands.hubdb.subcommands.clear.describe');
+const describe = commands.hubdb.subcommands.clear.describe;
 
 type HubdbClearArgs = CommonArgs &
   ConfigArgs &
@@ -43,27 +43,20 @@ async function handler(
       tableId
     );
     if (deletedRowCount > 0) {
-      logger.log(
-        i18n('commands.hubdb.subcommands.clear.logs.removedRows', {
+      uiLogger.log(
+        commands.hubdb.subcommands.clear.logs.removedRows(
           deletedRowCount,
-          tableId,
-        })
+          tableId
+        )
       );
       const {
         data: { rowCount },
       } = await publishTable(derivedAccountId, tableId);
-      logger.log(
-        i18n('commands.hubdb.subcommands.clear.logs.rowCount', {
-          rowCount,
-          tableId,
-        })
+      uiLogger.log(
+        commands.hubdb.subcommands.clear.logs.rowCount(tableId, rowCount)
       );
     } else {
-      logger.log(
-        i18n('commands.hubdb.subcommands.clear.logs.emptyTable', {
-          tableId,
-        })
-      );
+      uiLogger.log(commands.hubdb.subcommands.clear.logs.tableEmpty(tableId));
     }
   } catch (e) {
     logError(e);
@@ -72,9 +65,7 @@ async function handler(
 
 function hubdbClearBuilder(yargs: Argv): Argv<HubdbClearArgs> {
   yargs.positional('table-id', {
-    describe: i18n(
-      'commands.hubdb.subcommands.clear.positionals.tableId.describe'
-    ),
+    describe: commands.hubdb.subcommands.clear.positionals.tableId.describe,
     type: 'string',
   });
 

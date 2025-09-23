@@ -1,5 +1,6 @@
 export const HUBSPOT_PROJECT_COMPONENTS_GITHUB_PATH =
   'HubSpot/hubspot-project-components' as const;
+
 export const DEFAULT_PROJECT_TEMPLATE_BRANCH = 'main' as const;
 
 export const FEEDBACK_INTERVAL = 10 as const;
@@ -48,6 +49,8 @@ export const PROJECT_ERROR_TYPES = {
   BUILD_NOT_IN_PROGRESS: 'BuildPipelineErrorType.BUILD_NOT_IN_PROGRESS',
   SUBBUILD_FAILED: 'BuildPipelineErrorType.DEPENDENT_SUBBUILD_FAILED',
   SUBDEPLOY_FAILED: 'DeployPipelineErrorType.DEPENDENT_SUBDEPLOY_FAILED',
+  DEPLOY_CONTAINS_REMOVALS:
+    'DeployPipelineErrorType.WARNING_DEPLOY_CONTAINS_REMOVALS',
 } as const;
 
 export const PROJECT_TASK_TYPES: { [key: string]: string } = {
@@ -88,11 +91,70 @@ export const APP_AUTH_TYPES = {
 export const FEATURES = {
   UNIFIED_THEME_PREVIEW: 'cms:react:unifiedThemePreview',
   UNIFIED_APPS: 'Developers:UnifiedApps:PrivateBeta',
+  SANDBOXES_V2: 'sandboxes:v2:enabled',
+  SANDBOXES_V2_CLI: 'sandboxes:v2:cliEnabled',
+  APP_EVENTS: 'Developers:UnifiedApps:AppEventsAccess',
+  APPS_HOME: 'UIE:AppHome',
+  MCP_ACCESS: 'Developers:CLIMCPAccess',
+  THEME_MIGRATION_2025_2: 'Developers:ProjectThemeMigrations:2025.2',
+  AGENT_TOOLS: 'ThirdPartyAgentTools',
 } as const;
 
-export const LOCAL_DEV_UI_WEBSOCKET_MESSAGE_TYPES = {
-  UPLOAD: 'upload',
-  INSTALL_DEPS: 'installDeps',
-  APP_INSTALLED: 'appInstalled',
-  UPDATE_PROJECT_NODES: 'updateProjectNodes',
+export const LOCAL_DEV_UI_MESSAGE_SEND_TYPES = {
+  UPLOAD_SUCCESS: 'server:uploadSuccess',
+  UPLOAD_FAILURE: 'server:uploadFailure',
+  DEPLOY_SUCCESS: 'server:deploySuccess',
+  DEPLOY_FAILURE: 'server:deployFailure',
+  UPDATE_PROJECT_NODES: 'server:updateProjectNodes',
+  UPDATE_APP_DATA: 'server:updateAppData',
+  UPDATE_PROJECT_DATA: 'server:updateProjectData',
+  UPDATE_UPLOAD_WARNINGS: 'server:updateUploadWarnings',
+  CLI_METADATA: 'server:cliMetadata',
+};
+
+export const LOCAL_DEV_UI_MESSAGE_RECEIVE_TYPES = {
+  UPLOAD: 'client:upload',
+  DEPLOY: 'client:deploy',
+  VIEWED_WELCOME_SCREEN: 'client:viewedWelcomeScreen',
+};
+
+export const APP_INSTALLATION_STATES = {
+  NOT_INSTALLED: 'NOT_INSTALLED',
+  INSTALLED: 'INSTALLED',
+  INSTALLED_WITH_OUTDATED_SCOPES: 'INSTALLED_WITH_OUTDATED_SCOPES',
 } as const;
+
+export const staticAuth = 'static';
+export const oAuth = 'oauth';
+export const privateDistribution = 'private';
+export const marketplaceDistribution = 'marketplace';
+export const appComponent = 'app';
+
+export const GET_STARTED_OPTIONS = {
+  APP: 'APP',
+  CMS: 'CMS',
+} as const;
+
+export const LOCAL_DEV_SERVER_MESSAGE_TYPES = {
+  INITIAL: 'INITIAL',
+  WEBSOCKET_SERVER_CONNECTED: 'WEBSOCKET_SERVER_CONNECTED',
+} as const;
+
+export const CONFIG_LOCAL_STATE_FLAGS = {
+  LOCAL_DEV_UI_WELCOME: 'LOCAL_DEV_UI_WELCOME',
+} as const;
+
+export const EMPTY_PROJECT = 'empty';
+export const PROJECT_WITH_APP = 'app';
+
+export const LEGACY_SERVERLESS_FILE = 'serverless.json';
+export const LEGACY_PUBLIC_APP_FILE = 'public-app.json';
+export const LEGACY_PRIVATE_APP_FILE = 'app.json';
+export const THEME_FILE = 'theme.json';
+export const CMS_ASSETS_FILE = 'cms-assets.json';
+
+export const LEGACY_CONFIG_FILES = [
+  LEGACY_SERVERLESS_FILE,
+  LEGACY_PRIVATE_APP_FILE,
+  LEGACY_PUBLIC_APP_FILE,
+];

@@ -1,4 +1,4 @@
-import { isTargetedCommand } from '../utils';
+import { isTargetedCommand } from '../utils.js';
 
 const targetCommandMap = {
   init: { target: true },

@@ -1,6 +1,6 @@
 import { Environment } from '@hubspot/local-dev-lib/types/Config';
 import { logger } from '@hubspot/local-dev-lib/logger';
-import { promptUser } from '../../prompts/promptUtils';
+
 import { DevModeInterface as UIEDevModeInterface } from '@hubspot/ui-extensions-dev-server';
 import {
   startPortManagerServer,
@@ -16,9 +16,9 @@ import {
   ProjectConfig,
   ComponentTypes,
   Component,
-} from '../../../types/Projects';
-import { lib } from '../../../lang/en';
-import { uiLogger } from '../../ui/logger';
+} from '../../../types/Projects.js';
+import { lib } from '../../../lang/en.js';
+import { uiLogger } from '../../ui/logger.js';
 
 const SERVER_KEYS = {
   privateApp: 'privateApp',
@@ -129,7 +129,6 @@ class DevServerManager {
           await serverInterface.setup({
             components: compatibleComponents,
             onUploadRequired,
-            promptUser,
             logger,
             urls: {
               api: getHubSpotApiOrigin(env),
@@ -200,4 +199,3 @@ class DevServerManager {
 const Manager = new DevServerManager();
 
 export default Manager;
-module.exports = Manager;

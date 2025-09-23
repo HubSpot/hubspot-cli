@@ -1,16 +1,15 @@
 import yargs, { Argv } from 'yargs';
-import create from '../sandbox/create';
-import del from '../sandbox/delete';
-import sandboxCommands from '../sandbox';
+import create from '../sandbox/create.js';
+import del from '../sandbox/delete.js';
+import sandboxCommands from '../sandbox.js';
 
-jest.mock('yargs');
-jest.mock('../sandbox/create');
-jest.mock('../sandbox/delete');
+vi.mock('../sandbox/create');
+vi.mock('../sandbox/delete');
 
-const commandSpy = jest
+const commandSpy = vi
   .spyOn(yargs as Argv, 'command')
   .mockReturnValue(yargs as Argv);
-const demandCommandSpy = jest
+const demandCommandSpy = vi
   .spyOn(yargs as Argv, 'demandCommand')
   .mockReturnValue(yargs as Argv);
 

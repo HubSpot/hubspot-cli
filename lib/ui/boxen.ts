@@ -1,8 +1,8 @@
 import { Options } from 'boxen';
-import { uiLogger } from './logger';
-import { UI_COLORS } from './index';
+import { uiLogger } from './logger.js';
+import { UI_COLORS } from './index.js';
 import { logger } from '@hubspot/local-dev-lib/logger';
-import { lib } from '../../lang/en';
+import { lib } from '../../lang/en.js';
 
 const defaultOptions: Options = {
   titleAlignment: 'left',

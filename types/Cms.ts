@@ -1,4 +1,38 @@
-import { CommonArgs, ConfigArgs } from './Yargs';
+import { CommonArgs, ConfigArgs } from './Yargs.js';
+
+export const TEMPLATE_TYPES = [
+  'page-template',
+  'email-template',
+  'partial',
+  'global-partial',
+  'blog-listing-template',
+  'blog-post-template',
+  'search-template',
+  'section',
+] as const;
+
+export type TemplateType = (typeof TEMPLATE_TYPES)[number];
+
+export const HTTP_METHODS = ['DELETE', 'GET', 'PATCH', 'POST', 'PUT'] as const;
+
+export type HttpMethod = (typeof HTTP_METHODS)[number];
+
+export const CONTENT_TYPES = [
+  'ANY',
+  'LANDING_PAGE',
+  'SITE_PAGE',
+  'BLOG_POST',
+  'BLOG_LISTING',
+  'EMAIL',
+  'KNOWLEDGE_BASE',
+  'QUOTE_TEMPLATE',
+  'CUSTOMER_PORTAL',
+  'WEB_INTERACTIVE',
+  'SUBSCRIPTION',
+  'MEMBERSHIP',
+] as const;
+
+export type ContentType = (typeof CONTENT_TYPES)[number];
 
 export type CreateArgs = CommonArgs &
   ConfigArgs & {
@@ -7,6 +41,16 @@ export type CreateArgs = CommonArgs &
     dest: string;
     name: string;
     internal?: boolean;
+    templateType?: TemplateType;
+    moduleLabel?: string;
+    reactType?: boolean;
+    contentTypes?: string;
+    global?: boolean;
+    availableForNewContent?: boolean;
+    functionsFolder?: string;
+    filename?: string;
+    endpointMethod?: HttpMethod;
+    endpointPath?: string;
   };
 
 export type CmsAssetOperationArgs = {

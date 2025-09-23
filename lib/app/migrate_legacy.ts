@@ -11,20 +11,20 @@ import { getCwd, sanitizeFileName } from '@hubspot/local-dev-lib/path';
 import { getHubSpotWebsiteOrigin } from '@hubspot/local-dev-lib/urls';
 import { extractZipArchive } from '@hubspot/local-dev-lib/archive';
 import { ArgumentsCamelCase } from 'yargs';
-import { promptUser } from '../prompts/promptUtils';
-import { ApiErrorContext, logError } from '../errorHandlers';
-import { EXIT_CODES } from '../enums/exitCodes';
-import { uiAccountDescription, uiLine, uiLink } from '../ui';
-import { i18n } from '../lang';
-import { isAppDeveloperAccount, isUnifiedAccount } from '../accountTypes';
-import { selectPublicAppForMigrationPrompt } from '../prompts/selectPublicAppForMigrationPrompt';
-import { createProjectPrompt } from '../prompts/createProjectPrompt';
-import { ensureProjectExists } from '../projects/ensureProjectExists';
-import { trackCommandMetadataUsage } from '../usageTracking';
-import SpinniesManager from '../ui/SpinniesManager';
-import { handleKeypress } from '../process';
-import { poll } from '../polling';
-import { logInvalidAccountError, MigrateAppArgs } from './migrate';
+import { promptUser } from '../prompts/promptUtils.js';
+import { ApiErrorContext, logError } from '../errorHandlers/index.js';
+import { EXIT_CODES } from '../enums/exitCodes.js';
+import { uiAccountDescription, uiLine, uiLink } from '../ui/index.js';
+import { i18n } from '../lang.js';
+import { isAppDeveloperAccount, isUnifiedAccount } from '../accountTypes.js';
+import { selectPublicAppForMigrationPrompt } from '../prompts/selectPublicAppForMigrationPrompt.js';
+import { projectNameAndDestPrompt } from '../prompts/projectNameAndDestPrompt.js';
+import { ensureProjectExists } from '../projects/ensureProjectExists.js';
+import { trackCommandMetadataUsage } from '../usageTracking.js';
+import SpinniesManager from '../ui/SpinniesManager.js';
+import { handleKeypress } from '../process.js';
+import { poll } from '../polling.js';
+import { logInvalidAccountError, MigrateAppArgs } from './migrate.js';
 
 export async function migrateApp2023_2(
   derivedAccountId: number,
@@ -73,8 +73,8 @@ export async function migrateApp2023_2(
     return process.exit(EXIT_CODES.ERROR);
   }
 
-  const createProjectPromptResponse = await createProjectPrompt(options);
-  const { name: projectName, dest: projectDest } = createProjectPromptResponse;
+  const { name: projectName, dest: projectDest } =
+    await projectNameAndDestPrompt(options);
 
   const { projectExists } = await ensureProjectExists(
     derivedAccountId,

@@ -1,5 +1,5 @@
-import { i18n } from '../lang';
-import { promptUser } from './promptUtils';
+import { i18n } from '../lang.js';
+import { promptUser } from './promptUtils.js';
 
 type ProjectLogsPromptOptions = {
   functionChoices?: string[];

@@ -1,26 +1,30 @@
 import { Argv, ArgumentsCamelCase } from 'yargs';
 import { addAppSecret } from '@hubspot/local-dev-lib/api/devSecrets';
-import { logError } from '../../../lib/errorHandlers/index';
-import { trackCommandUsage } from '../../../lib/usageTracking';
+import { logError } from '../../../lib/errorHandlers/index.js';
+import { trackCommandUsage } from '../../../lib/usageTracking.js';
 import {
   secretValuePrompt,
   secretNamePrompt,
-} from '../../../lib/prompts/secretPrompt';
-import { selectAppPrompt } from '../../../lib/prompts/selectAppPrompt';
-import { commands } from '../../../lang/en';
-import { EXIT_CODES } from '../../../lib/enums/exitCodes';
+} from '../../../lib/prompts/secretPrompt.js';
+import { selectAppPrompt } from '../../../lib/prompts/selectAppPrompt.js';
+import { commands } from '../../../lang/en.js';
+import { EXIT_CODES } from '../../../lib/enums/exitCodes.js';
 import {
   CommonArgs,
   ConfigArgs,
   AccountArgs,
   EnvironmentArgs,
   YargsCommandModule,
-} from '../../../types/Yargs';
-import { makeYargsBuilder } from '../../../lib/yargsUtils';
-import { uiLogger } from '../../../lib/ui/logger';
+} from '../../../types/Yargs.js';
+import { makeYargsBuilder } from '../../../lib/yargsUtils.js';
+import { uiLogger } from '../../../lib/ui/logger.js';
+import { uiBetaTag } from '../../../lib/ui/index.js';
 
 const command = 'add [name]';
-const describe = commands.app.subcommands.secret.subcommands.add.describe;
+const describe = uiBetaTag(
+  commands.app.subcommands.secret.subcommands.add.describe,
+  false
+);
 
 type AddAppSecretArgs = CommonArgs &
   ConfigArgs &

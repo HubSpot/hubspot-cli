@@ -3,11 +3,11 @@ import {
   addAccountOptions,
   addConfigOptions,
   addUseEnvironmentOptions,
-} from '../../../../lib/commonOpts';
-import schemaListCommand from '../list';
+} from '../../../../lib/commonOpts.js';
+import schemaListCommand from '../list.js';
 
-jest.mock('yargs');
-jest.mock('../../../../lib/commonOpts');
+vi.mock('yargs');
+vi.mock('../../../../lib/commonOpts');
 
 describe('commands/customObject/schema/list', () => {
   const yargsMock = yargs as Argv;

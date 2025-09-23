@@ -1,0 +1,309 @@
+import { exec as _exec } from 'child_process';
+import { promisify } from 'util';
+import { LOG_LEVEL, logger, setLogLevel } from '@hubspot/local-dev-lib/logger';
+import fs from 'fs-extra';
+import path from 'path';
+import open from 'open';
+import { EXIT_CODES } from '../lib/enums/exitCodes.js';
+
+const exec = promisify(_exec);
+
+// Configuration
+const PRIVATE_REPO_PATH = process.cwd();
+const PUBLIC_REPO_URL = 'https://github.com/HubSpot/hubspot-cli.git';
+const PUBLIC_REPO_NAME = 'hubspot-cli';
+const SYNC_BRANCH_PREFIX = 'sync-from-internal';
+const TEMP_SYNC_DIR = 'temp-repo-sync';
+const PUBLIC_README_PATH = 'PUBLIC_README.md';
+
+// Files and directories to exclude from sync
+const EXCLUDE_PATTERNS = [
+  'acceptance-tests',
+  '.blazar.yaml',
+  '.blazar-enabled',
+  '.git',
+  '.github',
+  'node_modules',
+  'dist',
+  'coverage',
+  'tmp',
+  'context',
+  'temp-sync',
+  '*.log',
+  '.DS_Store',
+  'yarn.lock',
+  'hubspot.config.yml',
+  'hubspot.config.yaml',
+  'hs-acceptance-test.config.yml',
+  '.env',
+  'acceptance-tests/my-project',
+  'acceptance-tests/*.yml',
+  'acceptance-tests/*.html',
+  'acceptance-tests/test-output',
+  '**/.claude/settings.local.json',
+  'CONTRIBUTING.md',
+  'README.md',
+  'CLAUDE.md',
+  '.claude',
+  '.cursor',
+  'docs',
+];
+
+interface SyncOptions {
+  version: string;
+  dryRun?: boolean;
+}
+
+async function getGitBranch(): Promise<string> {
+  const { stdout } = await exec('git rev-parse --abbrev-ref HEAD');
+  return stdout.trim();
+}
+
+async function createTempDirectory(): Promise<string> {
+  const tempDir = path.join(PRIVATE_REPO_PATH, TEMP_SYNC_DIR);
+  await fs.ensureDir(tempDir);
+  return tempDir;
+}
+
+async function clonePublicRepo(tempDir: string): Promise<void> {
+  logger.log('Cloning public repository into temp directory...');
+  const publicRepoPath = path.join(tempDir, PUBLIC_REPO_NAME);
+
+  // Remove existing directory if it exists
+  try {
+    await fs.remove(publicRepoPath);
+  } catch (error) {
+    // Ignore error if directory doesn't exist
+  }
+
+  await exec(`git clone ${PUBLIC_REPO_URL} ${publicRepoPath}`);
+}
+
+async function setupPublicRepo(
+  tempDir: string,
+  version: string
+): Promise<string> {
+  const publicRepoPath = path.join(tempDir, PUBLIC_REPO_NAME);
+
+  // Change to public repo directory
+  process.chdir(publicRepoPath);
+
+  // Create sync branch
+  const syncBranch = `${SYNC_BRANCH_PREFIX}-${version}`;
+  await exec(`git checkout -b ${syncBranch}`);
+
+  return publicRepoPath;
+}
+
+function getDestItemPath(destPath: string, item: string): string {
+  // Rename PUBLIC_README.md to README.md
+  if (item === PUBLIC_README_PATH) {
+    return path.join(destPath, 'README.md');
+  }
+  return path.join(destPath, item);
+}
+
+async function copyFiles(sourcePath: string, destPath: string): Promise<void> {
+  logger.log('Copying files from internal to public repo...');
+
+  // Clear the destination directory first (except .git)
+  logger.log('Clearing destination directory...');
+  const items = await fs.readdir(destPath);
+  for (const item of items) {
+    if (item !== '.git') {
+      const itemPath = path.join(destPath, item);
+      await fs.remove(itemPath);
+    }
+  }
+
+  // Use manual copy which has better pattern matching
+  logger.log('Using manual copy with exclude patterns...');
+  await manualCopy(sourcePath, destPath);
+}
+
+async function manualCopy(sourcePath: string, destPath: string): Promise<void> {
+  const items = await fs.readdir(sourcePath);
+
+  for (const item of items) {
+    const sourceItem = path.join(sourcePath, item);
+    const destItem = getDestItemPath(destPath, item);
+
+    // Skip excluded patterns and temp directories
+    if (shouldExclude(item) || item === TEMP_SYNC_DIR) {
+      continue;
+    }
+
+    const stats = await fs.stat(sourceItem);
+
+    if (stats.isDirectory()) {
+      await fs.ensureDir(destItem);
+      await manualCopy(sourceItem, destItem);
+    } else {
+      await fs.copyFile(sourceItem, destItem);
+    }
+  }
+}
+
+function shouldExclude(item: string): boolean {
+  return EXCLUDE_PATTERNS.some(pattern => {
+    if (pattern.includes('*')) {
+      const regex = new RegExp(pattern.replace(/\*/g, '.*'));
+      return regex.test(item);
+    }
+    return item === pattern;
+  });
+}
+
+async function commitChanges(
+  publicRepoPath: string,
+  version: string
+): Promise<void> {
+  process.chdir(publicRepoPath);
+
+  // Add all changes
+  await exec('git add .');
+
+  // Check if there are any changes to commit
+  try {
+    const { stdout } = await exec('git status --porcelain');
+    if (!stdout.trim()) {
+      logger.log('No changes to sync');
+      return;
+    }
+  } catch (error) {
+    logger.error('Error checking git status');
+    throw error;
+  }
+
+  // Commit changes
+  const commitMessage = `Sync from internal - version ${version}
+
+This commit syncs changes from the internal repository to keep the public repo up to date.
+Version: ${version}
+Generated by: hubspot-cli internal`;
+
+  await exec(`git commit -m "${commitMessage}"`);
+  logger.success('Changes committed successfully');
+}
+
+async function pushToPublicRepo(
+  publicRepoPath: string,
+  version: string
+): Promise<void> {
+  process.chdir(publicRepoPath);
+
+  const syncBranch = `${SYNC_BRANCH_PREFIX}-${version}`;
+
+  logger.log(`Pushing sync branch to public repository...`);
+  await exec(`git push origin ${syncBranch}`);
+  logger.success(`Sync branch pushed successfully: ${syncBranch}`);
+}
+
+async function createPullRequest(version: string): Promise<void> {
+  const syncBranch = `${SYNC_BRANCH_PREFIX}-${version}`;
+  const prUrl = `https://github.com/HubSpot/hubspot-cli/compare/main...${syncBranch}?expand=1`;
+
+  logger.log();
+  logger.log('Opening public-sync pull request URL in browser...');
+  open(prUrl);
+  logger.log();
+  logger.log('Pull Request URL:');
+  logger.log(prUrl);
+}
+
+async function cleanup(tempDir: string): Promise<void> {
+  logger.log('Cleaning up temporary files...');
+  await fs.remove(tempDir);
+  process.chdir(PRIVATE_REPO_PATH);
+}
+
+export async function syncToPublicRepo({
+  version,
+  dryRun = false,
+}: SyncOptions): Promise<void> {
+  setLogLevel(LOG_LEVEL.LOG);
+
+  const originalCwd = process.cwd();
+  let tempDir = '';
+
+  try {
+    logger.log();
+    logger.log('Starting sync to public repository...');
+    logger.log(`Version: ${version}`);
+    logger.log(`Dry run: ${dryRun}`);
+
+    // Validate we're on the master branch
+    const currentBranch = await getGitBranch();
+    if (currentBranch !== 'master') {
+      logger.error(
+        'Sync to public repo can only be run from the master branch'
+      );
+      process.exit(EXIT_CODES.ERROR);
+    }
+
+    // Create temporary directory
+    tempDir = await createTempDirectory();
+
+    // Clone public repo
+    await clonePublicRepo(tempDir);
+
+    // Setup public repo
+    const publicRepoPath = await setupPublicRepo(tempDir, version);
+
+    // Copy files from private to public repo
+    await copyFiles(PRIVATE_REPO_PATH, publicRepoPath);
+
+    if (dryRun) {
+      logger.log();
+      logger.log('DRY RUN: Would commit and push changes');
+      logger.log(`Public repo path: ${publicRepoPath}`);
+      return;
+    }
+
+    // Commit changes
+    await commitChanges(publicRepoPath, version);
+
+    // Push to public repo
+    await pushToPublicRepo(publicRepoPath, version);
+
+    // Create pull request
+    await createPullRequest(version);
+
+    logger.success('Sync to public repository completed successfully');
+  } catch (error) {
+    logger.error('Error syncing to public repository:', error);
+    process.exit(EXIT_CODES.ERROR);
+  } finally {
+    // Cleanup
+    if (tempDir) {
+      await cleanup(tempDir);
+    }
+    process.chdir(originalCwd);
+  }
+}
+
+// CLI interface
+if (import.meta.url === `file://${process.argv[1]}`) {
+  const args = process.argv.slice(2);
+  const versionIndex =
+    args.indexOf('--version') !== -1
+      ? args.indexOf('--version')
+      : args.indexOf('-v');
+  const dryRunIndex =
+    args.indexOf('--dry-run') !== -1 || args.indexOf('-d') !== -1
+      ? args.indexOf('--dry-run')
+      : args.indexOf('-d');
+
+  if (versionIndex === -1 || versionIndex === args.length - 1) {
+    console.error('Error: --version (-v) is required');
+    process.exit(1);
+  }
+
+  const version = args[versionIndex + 1];
+  const dryRun = dryRunIndex !== -1;
+
+  syncToPublicRepo({ version, dryRun }).catch(error => {
+    console.error('Error:', error);
+    process.exit(1);
+  });
+}

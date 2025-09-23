@@ -1,27 +1,25 @@
 import { Argv, ArgumentsCamelCase } from 'yargs';
-import { logger } from '@hubspot/local-dev-lib/logger';
 import { addSecret, fetchSecrets } from '@hubspot/local-dev-lib/api/secrets';
-import { logError, ApiErrorContext } from '../../lib/errorHandlers/index';
-import { trackCommandUsage } from '../../lib/usageTracking';
-import { uiAccountDescription } from '../../lib/ui';
+import { logError, ApiErrorContext } from '../../lib/errorHandlers/index.js';
+import { trackCommandUsage } from '../../lib/usageTracking.js';
 import {
   secretValuePrompt,
   secretNamePrompt,
-} from '../../lib/prompts/secretPrompt';
-import { i18n } from '../../lib/lang';
-import { EXIT_CODES } from '../../lib/enums/exitCodes';
-import { uiCommandReference } from '../../lib/ui';
+} from '../../lib/prompts/secretPrompt.js';
+import { commands } from '../../lang/en.js';
+import { uiLogger } from '../../lib/ui/logger.js';
+import { EXIT_CODES } from '../../lib/enums/exitCodes.js';
 import {
   CommonArgs,
   ConfigArgs,
   AccountArgs,
   EnvironmentArgs,
   YargsCommandModule,
-} from '../../types/Yargs';
-import { makeYargsBuilder } from '../../lib/yargsUtils';
+} from '../../types/Yargs.js';
+import { makeYargsBuilder } from '../../lib/yargsUtils.js';
 
 const command = 'add [name]';
-const describe = i18n(`commands.secret.subcommands.add.describe`);
+const describe = commands.secret.subcommands.add.describe;
 
 type AddSecretArgs = CommonArgs &
   ConfigArgs &
@@ -45,11 +43,8 @@ async function handler(args: ArgumentsCamelCase<AddSecretArgs>): Promise<void> {
     } = await fetchSecrets(derivedAccountId);
 
     if (secrets.includes(secretName)) {
-      logger.error(
-        i18n(`commands.secret.subcommands.add.errors.alreadyExists`, {
-          secretName,
-          command: uiCommandReference('hs secret update'),
-        })
+      uiLogger.error(
+        commands.secret.subcommands.add.errors.alreadyExists(secretName)
       );
       process.exit(EXIT_CODES.ERROR);
     }
@@ -57,17 +52,12 @@ async function handler(args: ArgumentsCamelCase<AddSecretArgs>): Promise<void> {
     const { secretValue } = await secretValuePrompt();
 
     await addSecret(derivedAccountId, secretName, secretValue);
-    logger.success(
-      i18n(`commands.secret.subcommands.add.success.add`, {
-        accountIdentifier: uiAccountDescription(derivedAccountId),
-        secretName,
-      })
+    uiLogger.success(
+      commands.secret.subcommands.add.success.add(secretName, derivedAccountId)
     );
   } catch (err) {
-    logger.error(
-      i18n(`commands.secret.subcommands.add.errors.add`, {
-        secretName: secretName || '',
-      })
+    uiLogger.error(
+      commands.secret.subcommands.add.errors.add(secretName || '')
     );
     logError(
       err,
@@ -81,7 +71,7 @@ async function handler(args: ArgumentsCamelCase<AddSecretArgs>): Promise<void> {
 
 function addSecretBuilder(yargs: Argv): Argv<AddSecretArgs> {
   yargs.positional('name', {
-    describe: i18n(`commands.secret.subcommands.add.positionals.name.describe`),
+    describe: commands.secret.subcommands.add.positionals.name.describe,
     type: 'string',
   });
 

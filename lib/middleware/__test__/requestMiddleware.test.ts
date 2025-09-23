@@ -1,9 +1,9 @@
 import { addUserAgentHeader } from '@hubspot/local-dev-lib/http';
-import { setRequestHeaders } from '../requestMiddleware';
-import pkg from '../../../package.json';
+import { setRequestHeaders } from '../requestMiddleware.js';
+import pkg from '../../../package.json' with { type: 'json' };
 
-jest.mock('@hubspot/local-dev-lib/http', () => ({
-  addUserAgentHeader: jest.fn(),
+vi.mock('@hubspot/local-dev-lib/http', () => ({
+  addUserAgentHeader: vi.fn(),
 }));
 
 describe('lib/middleware/requestMiddleware', () => {

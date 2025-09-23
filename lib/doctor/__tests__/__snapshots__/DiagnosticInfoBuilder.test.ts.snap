@@ -1,6 +1,6 @@
-// Jest Snapshot v1, https://goo.gl/fbAQLP
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`lib/doctor/DiagnosticInfo generateDiagnosticInfo should gather the required data and generate the diagnostic 1`] = `
+exports[`lib/doctor/DiagnosticInfo > generateDiagnosticInfo > should gather the required data and generate the diagnostic 1`] = `
 {
   "account": {
     "accountId": 898989,

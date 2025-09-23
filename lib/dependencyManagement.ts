@@ -1,17 +1,17 @@
 import fs from 'fs';
 import util from 'util';
 import path from 'path';
-import { exec as execAsync } from 'child_process';
+import { exec as execAsync } from 'node:child_process';
 import { walk } from '@hubspot/local-dev-lib/fs';
-import { getProjectConfig } from './projects/config';
-import { uiLink } from './ui';
-import { i18n } from './lang';
-import SpinniesManager from './ui/SpinniesManager';
+import { getProjectConfig } from './projects/config.js';
+import { uiLink } from './ui/index.js';
+import { i18n } from './lang.js';
+import SpinniesManager from './ui/SpinniesManager.js';
 import {
   isGloballyInstalled,
   executeInstall,
   DEFAULT_PACKAGE_MANAGER,
-} from './npm';
+} from './npm.js';
 class NoPackageJsonFilesError extends Error {
   constructor(projectName: string) {
     super(
@@ -100,8 +100,10 @@ async function installPackagesInDirectory(
   }
 }
 
-export async function getProjectPackageJsonLocations(): Promise<string[]> {
-  const projectConfig = await getProjectConfig();
+export async function getProjectPackageJsonLocations(
+  dir?: string
+): Promise<string[]> {
+  const projectConfig = await getProjectConfig(dir);
 
   if (
     !projectConfig ||

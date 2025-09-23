@@ -1,5 +1,5 @@
 import { cloneGithubRepo } from '@hubspot/local-dev-lib/github';
-import { CreatableCmsAsset } from '../../types/Cms';
+import { CreatableCmsAsset } from '../../types/Cms.js';
 
 const appAssetType: CreatableCmsAsset = {
   hidden: true,

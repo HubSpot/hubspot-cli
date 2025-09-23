@@ -1,14 +1,15 @@
 import { Argv } from 'yargs';
-import createCommand from './hubdb/create';
-import fetchCommand from './hubdb/fetch';
-import deleteCommand from './hubdb/delete';
-import clearCommand from './hubdb/clear';
-import { i18n } from '../lib/lang';
-import { YargsCommandModuleBucket } from '../types/Yargs';
-import { makeYargsBuilder } from '../lib/yargsUtils';
+import createCommand from './hubdb/create.js';
+import fetchCommand from './hubdb/fetch.js';
+import deleteCommand from './hubdb/delete.js';
+import clearCommand from './hubdb/clear.js';
+import listCommand from './hubdb/list.js';
+import { commands } from '../lang/en.js';
+import { YargsCommandModuleBucket } from '../types/Yargs.js';
+import { makeYargsBuilder } from '../lib/yargsUtils.js';
 
 export const command = 'hubdb';
-export const describe = i18n('commands.hubdb.describe');
+export const describe = commands.hubdb.describe;
 
 function hubdbBuilder(yargs: Argv): Argv {
   yargs
@@ -16,6 +17,7 @@ function hubdbBuilder(yargs: Argv): Argv {
     .command(createCommand)
     .command(fetchCommand)
     .command(deleteCommand)
+    .command(listCommand)
     .demandCommand(1, '');
 
   return yargs;
@@ -31,6 +33,3 @@ const hubdbCommand: YargsCommandModuleBucket = {
 };
 
 export default hubdbCommand;
-
-// TODO Remove this legacy export once we've migrated all commands to TS
-module.exports = hubdbCommand;

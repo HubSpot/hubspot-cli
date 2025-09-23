@@ -1,4 +1,4 @@
-defaultPortal: DEV
+defaultPortal: PROD
 
 # Optionally set the default mode for all accounts
 defaultMode: publish
@@ -11,15 +11,12 @@ allowUsageTracking: false
 
 # List of accounts that are intended to be used
 portals:
-  # Account set up to use OAuth2
+  # Account set up to use Personal Access Key authentication
   - name: PROD
     portalId: 456
-    authType: oauth2
+    authType: personalaccesskey
     auth:
-      clientId: d996372f-2b53-30d3-9c3b-4fdde4bce3a2
-      clientSecret: f90a6248-fbc0-3b03-b0db-ec58c95e791
-      scopes:
-        - content
+      personalAccessKey: 1234567890
       tokenInfo:
         expiresAt: '2019-05-02T02:52:05.233Z'
         refreshToken: 84d22710-4cb7-5581-ba05-35f9945e5e8e

@@ -1,25 +1,25 @@
 import { Argv, ArgumentsCamelCase } from 'yargs';
-import { logger } from '@hubspot/local-dev-lib/logger';
+import { uiLogger } from '../../lib/ui/logger.js';
 import { batchCreateObjects } from '@hubspot/local-dev-lib/api/customObjects';
-import { inputPrompt } from '../../lib/prompts/promptUtils';
-import { logError } from '../../lib/errorHandlers/index';
+import { inputPrompt } from '../../lib/prompts/promptUtils.js';
+import { logError } from '../../lib/errorHandlers/index.js';
 import { getAbsoluteFilePath } from '@hubspot/local-dev-lib/path';
-import { checkAndConvertToJson } from '../../lib/validation';
-import { trackCommandUsage } from '../../lib/usageTracking';
-import { i18n } from '../../lib/lang';
-import { EXIT_CODES } from '../../lib/enums/exitCodes';
-import { isObjectDefinition } from '../../lib/customObject';
+import { checkAndConvertToJson } from '../../lib/validation.js';
+import { trackCommandUsage } from '../../lib/usageTracking.js';
+import { commands } from '../../lang/en.js';
+import { EXIT_CODES } from '../../lib/enums/exitCodes.js';
+import { isObjectDefinition } from '../../lib/customObject.js';
 import {
   CommonArgs,
   ConfigArgs,
   AccountArgs,
   EnvironmentArgs,
   YargsCommandModule,
-} from '../../types/Yargs';
-import { makeYargsBuilder } from '../../lib/yargsUtils';
+} from '../../types/Yargs.js';
+import { makeYargsBuilder } from '../../lib/yargsUtils.js';
 
 const command = 'create [name]';
-const describe = i18n(`commands.customObject.subcommands.create.describe`);
+const describe = commands.customObject.subcommands.create.describe;
 
 type CustomObjectCreateArgs = CommonArgs &
   ConfigArgs &
@@ -37,13 +37,13 @@ async function handler(
 
   if (!name) {
     name = await inputPrompt(
-      i18n(`commands.customObject.subcommands.create.inputName`)
+      commands.customObject.subcommands.create.inputName
     );
   }
 
   if (!definitionPath) {
     definitionPath = await inputPrompt(
-      i18n(`commands.customObject.subcommands.create.inputPath`)
+      commands.customObject.subcommands.create.inputPath
     );
   }
 
@@ -51,25 +51,23 @@ async function handler(
   const objectJson = checkAndConvertToJson(filePath);
 
   if (!isObjectDefinition(objectJson)) {
-    logger.error(
-      i18n(
-        `commands.customObject.subcommands.create.errors.invalidObjectDefinition`
-      )
+    uiLogger.error(
+      commands.customObject.subcommands.create.errors.invalidObjectDefinition
     );
     process.exit(EXIT_CODES.ERROR);
   }
 
   try {
     await batchCreateObjects(derivedAccountId, name, objectJson);
-    logger.success(
-      i18n(`commands.customObject.subcommands.create.success.objectsCreated`)
+    uiLogger.success(
+      commands.customObject.subcommands.create.success.objectsCreated
     );
   } catch (e) {
     logError(e, { accountId: derivedAccountId });
-    logger.error(
-      i18n(`commands.customObject.subcommands.create.errors.creationFailed`, {
-        definition: definitionPath,
-      })
+    uiLogger.error(
+      commands.customObject.subcommands.create.errors.creationFailed(
+        definitionPath
+      )
     );
   }
 }
@@ -77,15 +75,12 @@ async function handler(
 function customObjectCreateBuilder(yargs: Argv): Argv<CustomObjectCreateArgs> {
   yargs
     .positional('name', {
-      describe: i18n(
-        `commands.customObject.subcommands.create.positionals.name.describe`
-      ),
+      describe:
+        commands.customObject.subcommands.create.positionals.name.describe,
       type: 'string',
     })
     .option('path', {
-      describe: i18n(
-        `commands.customObject.subcommands.create.options.path.describe`
-      ),
+      describe: commands.customObject.subcommands.create.options.path.describe,
       type: 'string',
     });
 

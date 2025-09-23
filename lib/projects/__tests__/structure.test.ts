@@ -11,15 +11,16 @@ import {
   getProjectComponentTypes,
   getComponentUid,
   componentIsPublicApp,
-} from '../structure';
-import { ComponentTypes, Component } from '../../../types/Projects';
+} from '../structure.js';
+import { ComponentTypes, Component } from '../../../types/Projects.js';
+import { Mock } from 'vitest';
 
-jest.mock('fs');
-jest.mock('@hubspot/local-dev-lib/fs');
-jest.mock('@hubspot/local-dev-lib/logger');
+vi.mock('fs');
+vi.mock('@hubspot/local-dev-lib/fs');
+vi.mock('@hubspot/local-dev-lib/logger');
 
-const mockedReadFileSync = fs.readFileSync as jest.Mock;
-const mockedWalk = HSfs.walk as jest.Mock;
+const mockedReadFileSync = fs.readFileSync as Mock;
+const mockedWalk = HSfs.walk as Mock;
 
 const getMockPrivateAppConfig = (cards: Array<{ file: string }> = []) => ({
   name: 'test-app',

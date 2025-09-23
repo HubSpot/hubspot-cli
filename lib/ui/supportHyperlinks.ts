@@ -1,4 +1,4 @@
-import { hasFlag } from '../yargsUtils';
+import { hasFlag } from '../utils/hasFlag.js';
 
 //See https://github.com/jamestalmage/supports-hyperlinks (License: https://github.com/jamestalmage/supports-hyperlinks/blob/master/license)
 

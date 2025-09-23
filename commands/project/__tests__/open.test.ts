@@ -4,11 +4,10 @@ import {
   addConfigOptions,
   addUseEnvironmentOptions,
   addTestingOptions,
-} from '../../../lib/commonOpts';
-import projectOpenCommand from '../open';
+} from '../../../lib/commonOpts.js';
+import projectOpenCommand from '../open.js';
 
-jest.mock('yargs');
-jest.mock('../../../lib/commonOpts');
+vi.mock('../../../lib/commonOpts');
 
 describe('commands/project/open', () => {
   const yargsMock = yargs as Argv;
@@ -43,8 +42,8 @@ describe('commands/project/open', () => {
     });
 
     it('should define project option', () => {
-      const optionsSpy = jest.spyOn(yargsMock, 'options');
-      const exampleSpy = jest.spyOn(yargsMock, 'example');
+      const optionsSpy = vi.spyOn(yargsMock, 'options');
+      const exampleSpy = vi.spyOn(yargsMock, 'example');
 
       projectOpenCommand.builder(yargsMock);
 

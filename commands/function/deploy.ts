@@ -1,26 +1,26 @@
 import { Argv, ArgumentsCamelCase } from 'yargs';
-import { logger } from '@hubspot/local-dev-lib/logger';
+import { uiLogger } from '../../lib/ui/logger.js';
 import {
   buildPackage,
   getBuildStatus,
 } from '@hubspot/local-dev-lib/api/functions';
 import { isHubSpotHttpError } from '@hubspot/local-dev-lib/errors/index';
 
-import SpinniesManager from '../../lib/ui/SpinniesManager';
-import { trackCommandUsage } from '../../lib/usageTracking';
-import { logError, ApiErrorContext } from '../../lib/errorHandlers/index';
-import { uiAccountDescription } from '../../lib/ui';
-import { poll } from '../../lib/polling';
-import { outputBuildLog } from '../../lib/serverlessLogs';
-import { i18n } from '../../lib/lang';
+import SpinniesManager from '../../lib/ui/SpinniesManager.js';
+import { trackCommandUsage } from '../../lib/usageTracking.js';
+import { logError, ApiErrorContext } from '../../lib/errorHandlers/index.js';
+import { uiAccountDescription } from '../../lib/ui/index.js';
+import { poll } from '../../lib/polling.js';
+import { outputBuildLog } from '../../lib/serverlessLogs.js';
+import { commands } from '../../lang/en.js';
 import {
   CommonArgs,
   ConfigArgs,
   AccountArgs,
   EnvironmentArgs,
   YargsCommandModule,
-} from '../../types/Yargs';
-import { makeYargsBuilder } from '../../lib/yargsUtils';
+} from '../../types/Yargs.js';
+import { makeYargsBuilder } from '../../lib/yargsUtils.js';
 
 type FunctionBuildError = {
   status: 'ERROR';
@@ -54,27 +54,27 @@ async function handler(
     !splitFunctionPath.length ||
     splitFunctionPath[splitFunctionPath.length - 1] !== 'functions'
   ) {
-    logger.error(
-      i18n('commands.function.subcommands.deploy.errors.notFunctionsFolder', {
-        functionPath,
-      })
+    uiLogger.error(
+      commands.function.subcommands.deploy.errors.notFunctionsFolder(
+        functionPath
+      )
     );
     return;
   }
 
-  logger.debug(
-    i18n('commands.function.subcommands.deploy.debug.startingBuildAndDeploy', {
-      functionPath,
-    })
+  uiLogger.debug(
+    commands.function.subcommands.deploy.debug.startingBuildAndDeploy(
+      functionPath
+    )
   );
 
   SpinniesManager.init();
 
   SpinniesManager.add('loading', {
-    text: i18n('commands.function.subcommands.deploy.loading', {
-      account: uiAccountDescription(derivedAccountId),
+    text: commands.function.subcommands.deploy.loading(
       functionPath,
-    }),
+      uiAccountDescription(derivedAccountId)
+    ),
   });
 
   try {
@@ -95,34 +95,32 @@ async function handler(
       if (successResp.cdnUrl) {
         await outputBuildLog(successResp.cdnUrl);
       }
-      logger.success(
-        i18n('commands.function.subcommands.deploy.success.deployed', {
-          accountId: derivedAccountId,
-          buildTimeSeconds,
+      uiLogger.success(
+        commands.function.subcommands.deploy.success.deployed(
           functionPath,
-        })
+          derivedAccountId,
+          buildTimeSeconds
+        )
       );
     }
   } catch (e: unknown) {
     SpinniesManager.fail('loading', {
-      text: i18n('commands.function.subcommands.deploy.loadingFailed', {
-        account: uiAccountDescription(derivedAccountId),
+      text: commands.function.subcommands.deploy.loadingFailed(
         functionPath,
-      }),
+        uiAccountDescription(derivedAccountId)
+      ),
     });
 
     if (isHubSpotHttpError(e) && e.status === 404) {
-      logger.error(
-        i18n('commands.function.subcommands.deploy.errors.noPackageJson', {
-          functionPath,
-        })
+      uiLogger.error(
+        commands.function.subcommands.deploy.errors.noPackageJson(functionPath)
       );
     } else if (isFunctionBuildError(e)) {
       await outputBuildLog(e.cdnUrl);
-      logger.error(
-        i18n('commands.function.subcommands.deploy.errors.buildError', {
-          details: String(e.errorReason),
-        })
+      uiLogger.error(
+        commands.function.subcommands.deploy.errors.buildError(
+          String(e.errorReason)
+        )
       );
     } else {
       logError(
@@ -138,16 +136,14 @@ async function handler(
 
 function functionDeployBuilder(yargs: Argv): Argv<FunctionDeployArgs> {
   yargs.positional('path', {
-    describe: i18n(
-      'commands.function.subcommands.deploy.positionals.path.describe'
-    ),
+    describe: commands.function.subcommands.deploy.positionals.path.describe,
     type: 'string',
   });
 
   yargs.example([
     [
       '$0 functions deploy myFunctionFolder.functions',
-      i18n('commands.function.subcommands.deploy.examples.default'),
+      commands.function.subcommands.deploy.examples.default,
     ],
   ]);
 

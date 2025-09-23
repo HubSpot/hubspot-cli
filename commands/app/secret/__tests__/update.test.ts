@@ -1,8 +1,7 @@
 import yargs, { Argv } from 'yargs';
-import updateAppSecretCommand from '../update';
+import updateAppSecretCommand from '../update.js';
 
-jest.mock('yargs');
-jest.mock('../../../../lib/commonOpts');
+vi.mock('../../../../lib/commonOpts');
 
 describe('commands/app/secret/update', () => {
   const yargsMock = yargs as Argv;

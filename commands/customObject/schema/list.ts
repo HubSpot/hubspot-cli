@@ -1,22 +1,21 @@
 import { Argv, ArgumentsCamelCase } from 'yargs';
-import { logger } from '@hubspot/local-dev-lib/logger';
-import { logError } from '../../../lib/errorHandlers/index';
-import { trackCommandUsage } from '../../../lib/usageTracking';
-import { listSchemas } from '../../../lib/schema';
-import { i18n } from '../../../lib/lang';
+import { uiLogger } from '../../../lib/ui/logger.js';
+import { logError } from '../../../lib/errorHandlers/index.js';
+import { trackCommandUsage } from '../../../lib/usageTracking.js';
+import { listSchemas } from '../../../lib/schema.js';
+import { commands } from '../../../lang/en.js';
 import {
   CommonArgs,
   ConfigArgs,
   AccountArgs,
   EnvironmentArgs,
   YargsCommandModule,
-} from '../../../types/Yargs';
-import { makeYargsBuilder } from '../../../lib/yargsUtils';
+} from '../../../types/Yargs.js';
+import { makeYargsBuilder } from '../../../lib/yargsUtils.js';
 
 const command = 'list';
-const describe = i18n(
-  `commands.customObject.subcommands.schema.subcommands.list.describe`
-);
+const describe =
+  commands.customObject.subcommands.schema.subcommands.list.describe;
 
 type SchemaListArgs = CommonArgs & ConfigArgs & AccountArgs & EnvironmentArgs;
 
@@ -31,10 +30,8 @@ async function handler(
     await listSchemas(derivedAccountId);
   } catch (e) {
     logError(e);
-    logger.error(
-      i18n(
-        `commands.customObject.subcommands.schema.subcommands.list.errors.list`
-      )
+    uiLogger.error(
+      commands.customObject.subcommands.schema.subcommands.list.errors.list
     );
   }
 }

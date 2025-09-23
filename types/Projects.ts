@@ -1,17 +1,33 @@
 import { Build, SubbuildStatus } from '@hubspot/local-dev-lib/types/Build';
 import { Deploy, SubdeployStatus } from '@hubspot/local-dev-lib/types/Deploy';
+import {
+  appComponent,
+  marketplaceDistribution,
+  oAuth,
+  privateDistribution,
+  staticAuth,
+} from '../lib/constants.js';
 
 export type ProjectTemplate = {
   name: string;
   label: string;
   path: string;
-  insertPath: string;
 };
 
 export type ComponentTemplate = {
   path: string;
   label: string;
-  insertPath: string;
+  type: string;
+  cliSelector?: string;
+  parentComponent?: string;
+  supportedAuthTypes?: string[];
+  supportedDistributions?: string[];
+};
+
+export type ComponentTemplateChoice = {
+  name: string;
+  value: ComponentTemplate;
+  disabled?: string | boolean;
 };
 
 export type ProjectConfig = {
@@ -39,9 +55,19 @@ export type ProjectPollStatusFunctionText = {
   SUBTASK_NAME_KEY: string;
 };
 
+export type ParentComponent = {
+  label: string;
+  type: typeof appComponent;
+  authType: typeof staticAuth | typeof oAuth;
+  distribution: typeof privateDistribution | typeof marketplaceDistribution;
+  path: string;
+};
+
 export type ProjectTemplateRepoConfig = {
   projects?: ProjectTemplate[];
   components?: ComponentTemplate[];
+  defaultFiles?: string;
+  parentComponents?: ParentComponent[];
 };
 
 export type ProjectPollResult = {
