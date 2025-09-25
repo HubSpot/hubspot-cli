@@ -273,19 +273,32 @@ export async function isDeployedProjectUpToDateWithLocal(
       deployedBuildId
     );
 
-    const extractedProjectPath = path.join(
-      tempDir,
-      sanitizeFileName(projectConfig.name)
-    );
+    const sanitizedName = sanitizeFileName(projectConfig.name);
+    
     await extractZipArchive(
       zippedProject,
-      sanitizeFileName(projectConfig.name),
+      sanitizedName,
       tempDir,
       { includesRootDir: false, hideLogs: true }
     );
 
+    // Find the actual extracted directory name instead of assuming it matches sanitized name
+    const tempContents = await fs.readdir(tempDir!);
+    const actualExtractedDirs: string[] = [];
+    for (const item of tempContents) {
+      const itemPath = path.join(tempDir!, item);
+      const stat = await fs.stat(itemPath);
+      if (stat.isDirectory()) {
+        actualExtractedDirs.push(item);
+      }
+    }
+    
+    // Use the first (and likely only) directory found, fallback to sanitized name
+    const actualProjectDir = actualExtractedDirs.length > 0 ? actualExtractedDirs[0] : sanitizedName;
+    const actualExtractedPath = path.join(tempDir!, actualProjectDir);
+
     const deployedProjectSourceDir = path.join(
-      extractedProjectPath,
+      actualExtractedPath,
       projectConfig.srcDir
     );
 
