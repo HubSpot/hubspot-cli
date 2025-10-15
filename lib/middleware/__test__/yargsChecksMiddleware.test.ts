@@ -1,18 +1,16 @@
 import { Arguments } from 'yargs';
-import { logger } from '@hubspot/local-dev-lib/logger';
 import { EXIT_CODES } from '../../enums/exitCodes.js';
 import * as projectsConfig from '../../projects/config.js';
 import { performChecks } from '../yargsChecksMiddleware.js';
+import { uiLogger } from '../../ui/logger.js';
+import { commands } from '../../../lang/en.js';
 
-vi.mock('@hubspot/local-dev-lib/logger', () => ({
-  logger: {
+vi.mock('../../ui/logger', () => ({
+  uiLogger: {
     error: vi.fn(),
   },
 }));
 vi.mock('../../projects/config');
-vi.mock('../../lang', () => ({
-  i18n: vi.fn(key => key),
-}));
 
 const getIsInProjectSpy = vi.spyOn(projectsConfig, 'getIsInProject');
 const processExitSpy = vi.spyOn(process, 'exit');
@@ -36,8 +34,8 @@ describe('lib/middleware/yargsChecksMiddleware', () => {
 
       expect(() => performChecks(argv)).toThrow();
       expect(processExitSpy).toHaveBeenCalledWith(EXIT_CODES.ERROR);
-      expect(logger.error).toHaveBeenCalledWith(
-        'commands.generalErrors.srcIsProject'
+      expect(uiLogger.error).toHaveBeenCalledWith(
+        commands.generalErrors.srcIsProject(argv.src!, argv._.toString())
       );
     });
 
@@ -52,7 +50,7 @@ describe('lib/middleware/yargsChecksMiddleware', () => {
 
       expect(performChecks(argv)).toBe(true);
       expect(processExitSpy).not.toHaveBeenCalled();
-      expect(logger.error).not.toHaveBeenCalled();
+      expect(uiLogger.error).not.toHaveBeenCalled();
     });
   });
 });

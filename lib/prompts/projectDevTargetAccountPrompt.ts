@@ -5,7 +5,6 @@ import {
   HUBSPOT_ACCOUNT_TYPE_STRINGS,
 } from '@hubspot/local-dev-lib/constants/config';
 import { getAccountIdentifier } from '@hubspot/local-dev-lib/config/getAccountIdentifier';
-import { logger } from '@hubspot/local-dev-lib/logger';
 import { fetchDeveloperTestAccounts } from '@hubspot/local-dev-lib/api/developerTestAccounts';
 import { CLIAccount } from '@hubspot/local-dev-lib/types/Accounts';
 import { Usage } from '@hubspot/local-dev-lib/types/Sandbox';
@@ -14,8 +13,9 @@ import {
   FetchDeveloperTestAccountsResponse,
 } from '@hubspot/local-dev-lib/types/developerTestAccounts.js';
 import { promptUser } from './promptUtils.js';
-import { i18n } from '../lang.js';
-import { uiAccountDescription, uiCommandReference } from '../ui/index.js';
+import { lib } from '../../lang/en.js';
+import { uiLogger } from '../ui/logger.js';
+import { uiAccountDescription } from '../ui/index.js';
 import { isSandbox } from '../accountTypes.js';
 import { PromptChoices } from '../../types/Prompts.js';
 import { EXIT_CODES } from '../enums/exitCodes.js';
@@ -69,13 +69,11 @@ export async function selectSandboxTargetAccountPrompt(
       const { data } = await getSandboxUsageLimits(defaultAccountId);
       sandboxUsage = data.usage;
     } else {
-      logger.error(
-        i18n(`lib.prompts.projectDevTargetAccountPrompt.noAccountId`)
-      );
+      uiLogger.error(lib.prompts.projectDevTargetAccountPrompt.noAccountId);
       process.exit(EXIT_CODES.ERROR);
     }
   } catch (err) {
-    logger.debug('Unable to fetch sandbox usage limits: ', err);
+    uiLogger.debug('Unable to fetch sandbox usage limits: ', err);
   }
 
   const sandboxAccounts = accounts
@@ -87,19 +85,13 @@ export async function selectSandboxTargetAccountPrompt(
 
   if (sandboxUsage['DEVELOPER'] && sandboxUsage['DEVELOPER'].available === 0) {
     if (sandboxAccounts.length < sandboxUsage['DEVELOPER'].limit) {
-      disabledMessage = i18n(
-        `lib.prompts.projectDevTargetAccountPrompt.sandboxLimitWithSuggestion`,
-        {
-          authCommand: uiCommandReference('hs auth'),
-          limit: sandboxUsage['DEVELOPER'].limit,
-        }
-      );
+      disabledMessage =
+        lib.prompts.projectDevTargetAccountPrompt.sandboxLimitWithSuggestion(
+          sandboxUsage['DEVELOPER'].limit
+        );
     } else {
-      disabledMessage = i18n(
-        `lib.prompts.projectDevTargetAccountPrompt.sandboxLimit`,
-        {
-          limit: sandboxUsage['DEVELOPER'].limit,
-        }
+      disabledMessage = lib.prompts.projectDevTargetAccountPrompt.sandboxLimit(
+        sandboxUsage['DEVELOPER'].limit
       );
     }
   }
@@ -112,9 +104,7 @@ export async function selectSandboxTargetAccountPrompt(
       .filter(a => a.accountType === HUBSPOT_ACCOUNT_TYPES.STANDARD_SANDBOX)
       .map(mapNestedAccount),
     {
-      name: i18n(
-        `lib.prompts.projectDevTargetAccountPrompt.createNewSandboxOption`
-      ),
+      name: lib.prompts.projectDevTargetAccountPrompt.createNewSandboxOption,
       value: {
         targetAccountId: null,
         createNestedAccount: true,
@@ -122,9 +112,8 @@ export async function selectSandboxTargetAccountPrompt(
       disabled: disabledMessage,
     },
     {
-      name: i18n(
-        `lib.prompts.projectDevTargetAccountPrompt.chooseDefaultAccountOption`
-      ),
+      name: lib.prompts.projectDevTargetAccountPrompt
+        .chooseDefaultAccountOption,
       value: {
         targetAccountId: defaultAccountId,
         createNestedAccount: false,
@@ -150,13 +139,14 @@ export async function selectDeveloperTestTargetAccountPrompt(
       const { data } = await fetchDeveloperTestAccounts(defaultAccountId);
       devTestAccountsResponse = data;
     } else {
-      logger.error(
-        i18n(`lib.prompts.projectDevTargetAccountPrompt.noAccountId`)
-      );
+      uiLogger.error(lib.prompts.projectDevTargetAccountPrompt.noAccountId);
       process.exit(EXIT_CODES.ERROR);
     }
   } catch (err) {
-    logger.debug('Unable to fetch developer test account usage limits: ', err);
+    uiLogger.debug(
+      'Unable to fetch developer test account usage limits: ',
+      err
+    );
   }
 
   let disabledMessage: string | boolean = false;
@@ -165,13 +155,10 @@ export async function selectDeveloperTestTargetAccountPrompt(
     devTestAccountsResponse.results.length >=
       devTestAccountsResponse.maxTestPortals
   ) {
-    disabledMessage = i18n(
-      `lib.prompts.projectDevTargetAccountPrompt.developerTestAccountLimit`,
-      {
-        authCommand: uiCommandReference('hs auth'),
-        limit: devTestAccountsResponse.maxTestPortals,
-      }
-    );
+    disabledMessage =
+      lib.prompts.projectDevTargetAccountPrompt.developerTestAccountLimit(
+        devTestAccountsResponse.maxTestPortals
+      );
   }
 
   const devTestAccounts: PromptChoices = [];
@@ -195,9 +182,8 @@ export async function selectDeveloperTestTargetAccountPrompt(
   const choices = [
     ...devTestAccounts,
     {
-      name: i18n(
-        `lib.prompts.projectDevTargetAccountPrompt.createNewDeveloperTestAccountOption`
-      ),
+      name: lib.prompts.projectDevTargetAccountPrompt
+        .createNewDeveloperTestAccountOption,
       value: {
         targetAccountId: null,
         createNestedAccount: true,
@@ -225,10 +211,10 @@ async function selectTargetAccountPrompt(
     {
       name: 'targetAccountInfo',
       type: 'list',
-      message: i18n(`lib.prompts.projectDevTargetAccountPrompt.promptMessage`, {
-        accountIdentifier: uiAccountDescription(accountId),
+      message: lib.prompts.projectDevTargetAccountPrompt.promptMessage(
         accountType,
-      }),
+        uiAccountDescription(accountId)
+      ),
       choices,
       loop: false,
     },
@@ -247,12 +233,9 @@ export async function confirmDefaultAccountPrompt(
     {
       name: 'useDefaultAccount',
       type: 'confirm',
-      message: i18n(
-        `lib.prompts.projectDevTargetAccountPrompt.confirmDefaultAccount`,
-        {
-          accountName,
-          accountType,
-        }
+      message: lib.prompts.projectDevTargetAccountPrompt.confirmDefaultAccount(
+        accountName,
+        accountType
       ),
     },
   ]);
@@ -268,12 +251,10 @@ export async function confirmUseExistingDeveloperTestAccountPrompt(
     {
       name: 'confirmUseExistingDeveloperTestAccount',
       type: 'confirm',
-      message: i18n(
-        `lib.prompts.projectDevTargetAccountPrompt.confirmUseExistingDeveloperTestAccount`,
-        {
-          accountName: getNonConfigDeveloperTestAccountName(account),
-        }
-      ),
+      message:
+        lib.prompts.projectDevTargetAccountPrompt.confirmUseExistingDeveloperTestAccount(
+          getNonConfigDeveloperTestAccountName(account)
+        ),
     },
   ]);
   return confirmUseExistingDeveloperTestAccount;

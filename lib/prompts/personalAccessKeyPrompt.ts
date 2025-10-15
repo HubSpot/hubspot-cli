@@ -5,7 +5,7 @@ import {
 } from '@hubspot/local-dev-lib/constants/auth';
 import { deleteEmptyConfigFile } from '@hubspot/local-dev-lib/config';
 import { getHubSpotWebsiteOrigin } from '@hubspot/local-dev-lib/urls';
-import { logger } from '@hubspot/local-dev-lib/logger';
+import { uiLogger } from '../ui/logger.js';
 import { promptUser } from './promptUtils.js';
 import {
   AccountNamePromptResponse,
@@ -64,7 +64,7 @@ export async function personalAccessKeyPrompt({
     uiInfoSection(
       lib.prompts.personalAccessKeyPrompt.personalAccessKeySetupTitle,
       () => {
-        logger.log(
+        uiLogger.log(
           lib.prompts.personalAccessKeyPrompt.personalAccessKeyBrowserOpenPrep
         );
       }
@@ -88,7 +88,7 @@ export async function personalAccessKeyPrompt({
         .OPEN_BROWSER
     ) {
       open(url, { url: true });
-      logger.log(
+      uiLogger.log(
         lib.prompts.personalAccessKeyPrompt.logs.openingWebBrowser(url)
       );
     }

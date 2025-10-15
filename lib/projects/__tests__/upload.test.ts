@@ -49,7 +49,7 @@ describe('lib/projects/upload', () => {
       expect(walk).toHaveBeenCalledWith(srcDir, ['node_modules']);
     });
 
-    it('should warn about legacy files in V3 projects', async () => {
+    it('should warn about legacy files in V2 projects', async () => {
       vi.mocked(isV2Project).mockReturnValue(true);
       const legacyFilePath = path.join(srcDir, 'app', 'serverless.json');
       vi.mocked(walk).mockResolvedValue([legacyFilePath]);
@@ -109,7 +109,7 @@ describe('lib/projects/upload', () => {
       expect(uiLogger.warn).not.toHaveBeenCalled();
     });
 
-    it('should not warn about legacy files in non-V3 projects', async () => {
+    it('should not warn about legacy files in non-V2 projects', async () => {
       vi.mocked(isV2Project).mockReturnValue(false);
       projectConfig.platformVersion = '2025.1';
       const filePaths = [

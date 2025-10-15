@@ -1,5 +1,5 @@
 import yargs, { Argv, ArgumentsCamelCase } from 'yargs';
-import { logger } from '@hubspot/local-dev-lib/logger';
+import { uiLogger } from '../../../lib/ui/logger.js';
 import { PLATFORM_VERSIONS } from '@hubspot/local-dev-lib/constants/projects';
 import { ProjectMigrateArgs } from '../migrate.js';
 import migrateCommand from '../migrate.js';
@@ -9,10 +9,11 @@ import { commands } from '../../../lang/en.js';
 import { uiBetaTag, uiCommandReference } from '../../../lib/ui/index.js';
 import { Mock } from 'vitest';
 
-vi.mock('@hubspot/local-dev-lib/logger');
+vi.mock('../../../lib/ui/logger.js');
 vi.mock('../../../lib/app/migrate');
 vi.mock('../../../lib/projects/config');
 vi.mock('../../../lib/ui');
+vi.mock('../../../lib/usageTracking.js');
 
 const { v2025_2 } = PLATFORM_VERSIONS;
 
@@ -31,8 +32,8 @@ describe('commands/project/migrate', () => {
 
   beforeEach(() => {
     // Mock logger methods
-    vi.spyOn(logger, 'log').mockImplementation(() => {});
-    vi.spyOn(logger, 'error').mockImplementation(() => {});
+    vi.spyOn(uiLogger, 'log').mockImplementation(() => {});
+    vi.spyOn(uiLogger, 'error').mockImplementation(() => {});
     migrateApp2025_2Mock.mockResolvedValue(undefined);
     getProjectConfigMock.mockResolvedValue({
       projectConfig: { name: 'test-project' },
@@ -92,7 +93,7 @@ describe('commands/project/migrate', () => {
 
       await migrateCommand.handler(options);
 
-      expect(logger.error).toHaveBeenCalledWith(
+      expect(uiLogger.error).toHaveBeenCalledWith(
         commands.project.migrate.errors.noProjectConfig('command reference')
       );
       expect(mockExit).toHaveBeenCalledWith(1);

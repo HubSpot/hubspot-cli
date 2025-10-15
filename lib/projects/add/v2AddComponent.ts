@@ -4,13 +4,13 @@ import { getConfigForPlatformVersion } from '../create/legacy.js';
 
 import {
   calculateComponentTemplateChoices,
-  createV3App,
-} from '../create/v3.js';
+  createV2App,
+} from '../create/v2.js';
 import { PROJECT_WITH_APP } from '../../constants.js';
 
 import path from 'path';
 import fs from 'fs';
-import { projectAddPromptV3 } from '../../prompts/projectAddPrompt.js';
+import { projectAddPromptV2 } from '../../prompts/projectAddPrompt.js';
 import {
   HUBSPOT_PROJECT_COMPONENTS_GITHUB_PATH,
   DEFAULT_PROJECT_TEMPLATE_BRANCH,
@@ -30,7 +30,7 @@ import { debugError } from '../../errorHandlers/index.js';
 import { uiLogger } from '../../ui/logger.js';
 import { trackCommandUsage } from '../../usageTracking.js';
 
-export async function v3AddComponent(
+export async function v2AddComponent(
   args: {
     name?: string;
     type?: string;
@@ -67,7 +67,7 @@ export async function v3AddComponent(
   const shouldCreateApp = appsMetadata.count === 0;
 
   if (shouldCreateApp) {
-    const { authType, distribution } = await createV3App(
+    const { authType, distribution } = await createV2App(
       args.auth,
       args.distribution
     );
@@ -100,7 +100,7 @@ export async function v3AddComponent(
     currentProjectMetadata
   );
 
-  const projectAddPromptResponse = await projectAddPromptV3(
+  const projectAddPromptResponse = await projectAddPromptV2(
     componentTemplateChoices,
     args.features
   );

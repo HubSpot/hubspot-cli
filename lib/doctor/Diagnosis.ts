@@ -4,7 +4,7 @@ import { helpers } from '../interpolation.js';
 import { DiagnosticInfo } from './DiagnosticInfoBuilder.js';
 import { uiAccountDescription } from '../ui/index.js';
 import { indent } from '../ui/index.js';
-import { i18n } from '../lang.js';
+import { lib } from '../../lang/en.js';
 
 interface DiagnosisOptions {
   diagnosticInfo: DiagnosticInfo;
@@ -51,26 +51,26 @@ export class Diagnosis {
 
     this.diagnosis = {
       cli: {
-        header: i18n(`lib.doctor.diagnosis.cli.header`),
+        header: lib.doctor.diagnosis.cli.header,
         sections: [],
       },
       cliConfig: {
-        header: i18n(`lib.doctor.diagnosis.cliConfig.header`),
+        header: lib.doctor.diagnosis.cliConfig.header,
         sections: [],
       },
       defaultAccountOverrideFile: {
-        header: i18n(`lib.doctor.diagnosis.defaultAccountOverrideFile.header`),
+        header: lib.doctor.diagnosis.defaultAccountOverrideFile.header,
         sections: [],
       },
       project: {
-        header: i18n(`lib.doctor.diagnosis.projectConfig.header`),
+        header: lib.doctor.diagnosis.projectConfig.header,
         subheaders: [
-          i18n(`lib.doctor.diagnosis.projectConfig.projectDirSubHeader`, {
-            projectDir: diagnosticInfo.project?.config?.projectDir,
-          }),
-          i18n(`lib.doctor.diagnosis.projectConfig.projectNameSubHeader`, {
-            projectName: diagnosticInfo.project?.config?.projectConfig?.name,
-          }),
+          lib.doctor.diagnosis.projectConfig.projectDirSubHeader(
+            diagnosticInfo.project?.config?.projectDir || ''
+          ),
+          lib.doctor.diagnosis.projectConfig.projectNameSubHeader(
+            diagnosticInfo.project?.config?.projectConfig?.name || ''
+          ),
         ],
         sections: [],
       },
@@ -78,12 +78,12 @@ export class Diagnosis {
 
     if (diagnosticInfo.config) {
       this.diagnosis.cliConfig.subheaders = [
-        i18n(`lib.doctor.diagnosis.cliConfig.configFileSubHeader`, {
-          filename: diagnosticInfo.config,
-        }),
-        i18n(`lib.doctor.diagnosis.cliConfig.defaultAccountSubHeader`, {
-          accountDetails: uiAccountDescription(accountId!),
-        }),
+        lib.doctor.diagnosis.cliConfig.configFileSubHeader(
+          diagnosticInfo.config
+        ),
+        lib.doctor.diagnosis.cliConfig.defaultAccountSubHeader(
+          uiAccountDescription(accountId!)
+        ),
       ];
     }
   }
@@ -126,16 +126,8 @@ export class Diagnosis {
     }
 
     output.push('');
-    output.push(
-      i18n(`lib.doctor.diagnosis.counts.errors`, {
-        count: this.errorCount,
-      })
-    );
-    output.push(
-      i18n(`lib.doctor.diagnosis.counts.warnings`, {
-        count: this.warningCount,
-      })
-    );
+    output.push(lib.doctor.diagnosis.counts.errors(this.errorCount));
+    output.push(lib.doctor.diagnosis.counts.warnings(this.warningCount));
     output.push('');
 
     return output.join('\n');

@@ -12,7 +12,7 @@ import open from 'open';
 import { ProjectConfig, ProjectPollResult } from '../../../types/Projects.js';
 import LocalDevState from './LocalDevState.js';
 import LocalDevLogger from './LocalDevLogger.js';
-import DevServerManagerV2 from './DevServerManagerV2.js';
+import DevServerManager from './DevServerManager.js';
 import { EXIT_CODES } from '../../enums/exitCodes.js';
 import { getProjectConfig } from '../config.js';
 import { handleProjectUpload } from '../upload.js';
@@ -38,12 +38,12 @@ import { debugError } from '../../errorHandlers/index.js';
 class LocalDevProcess {
   private state: LocalDevState;
   private _logger: LocalDevLogger;
-  private devServerManager: DevServerManagerV2;
+  private devServerManager: DevServerManager;
   constructor(options: LocalDevStateConstructorOptions) {
     this.state = new LocalDevState(options);
 
     this._logger = new LocalDevLogger(this.state);
-    this.devServerManager = new DevServerManagerV2({
+    this.devServerManager = new DevServerManager({
       localDevState: this.state,
       logger: this._logger,
     });
@@ -212,6 +212,7 @@ class LocalDevProcess {
 
     await this.startDevServers();
 
+    this.state.devServersStarted = true;
     this.logger.monitorConsoleOutput();
   }
 

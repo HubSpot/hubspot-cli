@@ -14,7 +14,8 @@ import { HubSpotHttpError } from '@hubspot/local-dev-lib/models/HubSpotHttpError
 import { AxiosError } from 'axios';
 import { isSpecifiedError as _isSpecifiedError } from '@hubspot/local-dev-lib/errors/index';
 import { promisify as _promisify } from 'util';
-vi.mock('@hubspot/local-dev-lib/logger');
+
+vi.mock('../../ui/logger.js');
 vi.mock('../Diagnosis');
 vi.mock('../../ui/SpinniesManager');
 vi.mock('../DiagnosticInfoBuilder');
@@ -421,7 +422,7 @@ describe('lib/doctor/Doctor', () => {
         // @ts-expect-error Testing private method
         expect(doctor.diagnosis.addProjectSection).toHaveBeenCalledWith({
           type: 'error',
-          message: expect.stringMatching(/invalid JSON in/),
+          message: expect.stringMatching(/Invalid JSON in/),
         });
       });
 
@@ -451,7 +452,7 @@ describe('lib/doctor/Doctor', () => {
           type: 'warning',
           message: 'Port 8080 is in use',
           secondaryMessaging: expect.stringMatching(
-            /Make sure it is available if before running/
+            /Make sure it is available before running `hs project dev`/
           ),
         });
       });
@@ -491,7 +492,7 @@ describe('lib/doctor/Doctor', () => {
         // @ts-expect-error Testing private method
         expect(doctor.diagnosis.addProjectSection).toHaveBeenCalledWith({
           type: 'error',
-          message: expect.stringMatching(/invalid JSON in/),
+          message: expect.stringMatching(/Invalid JSON in/),
         });
       });
     });

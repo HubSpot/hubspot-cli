@@ -3,7 +3,7 @@ import {
   isPortManagerServerRunning,
   requestPorts,
 } from '@hubspot/local-dev-lib/portManager';
-import { logger } from '@hubspot/local-dev-lib/logger';
+import { uiLogger } from '../../ui/logger.js';
 import {
   LOCAL_DEV_UI_MESSAGE_RECEIVE_TYPES,
   LOCAL_DEV_UI_MESSAGE_SEND_TYPES,
@@ -18,7 +18,7 @@ import { IntermediateRepresentationNodeLocalDev } from '@hubspot/project-parsing
 
 vi.mock('ws');
 vi.mock('@hubspot/local-dev-lib/portManager');
-vi.mock('@hubspot/local-dev-lib/logger');
+vi.mock('../../ui/logger.js');
 
 describe('LocalDevWebsocketServer', () => {
   let mockLocalDevProcess: Mocked<LocalDevProcess>;
@@ -88,7 +88,7 @@ describe('LocalDevWebsocketServer', () => {
         'connection',
         expect.any(Function)
       );
-      expect(logger.log).toHaveBeenCalled();
+      expect(uiLogger.log).toHaveBeenCalled();
     });
 
     describe('valid origins', () => {
@@ -268,7 +268,7 @@ describe('LocalDevWebsocketServer', () => {
 
       messageCallback(JSON.stringify(message));
 
-      expect(logger.error).toHaveBeenCalled();
+      expect(uiLogger.error).toHaveBeenCalled();
     });
 
     it('should log error for unknown message type', () => {
@@ -281,7 +281,7 @@ describe('LocalDevWebsocketServer', () => {
 
       messageCallback(JSON.stringify(message));
 
-      expect(logger.error).toHaveBeenCalled();
+      expect(uiLogger.error).toHaveBeenCalled();
     });
 
     it('should log error for invalid JSON', () => {
@@ -292,7 +292,7 @@ describe('LocalDevWebsocketServer', () => {
 
       messageCallback(invalidJson);
 
-      expect(logger.error).toHaveBeenCalled();
+      expect(uiLogger.error).toHaveBeenCalled();
     });
   });
 
@@ -380,7 +380,7 @@ describe('LocalDevWebsocketServer', () => {
       );
 
       // Each connection should trigger state listener setup
-      expect(mockLocalDevProcess.addStateListener).toHaveBeenCalledTimes(9); // 3 listeners per connection * 3 connections
+      expect(mockLocalDevProcess.addStateListener).toHaveBeenCalledTimes(12); // 4 listeners per connection * 3 connections
 
       // Each connection should trigger dev server message
       expect(mockLocalDevProcess.sendDevServerMessage).toHaveBeenCalledTimes(3);
@@ -450,20 +450,20 @@ describe('LocalDevWebsocketServer', () => {
         .filter(call => call[0] === 'close')
         .map(call => call[1] as () => void);
 
-      expect(closeCallbacks1).toHaveLength(3); // projectNodes, appData, and uploadWarnings listeners
-      expect(closeCallbacks2).toHaveLength(3); // projectNodes, appData, and uploadWarnings listeners
+      expect(closeCallbacks1).toHaveLength(4); // projectNodes, appData, devServersStarted, and uploadWarnings listeners
+      expect(closeCallbacks2).toHaveLength(4); // projectNodes, appData, devServersStarted, and uploadWarnings listeners
 
       // Simulate first connection closing (call all close callbacks)
       closeCallbacks1.forEach(callback => callback());
 
-      // Should have removed listeners for first connection (3 listeners: projectNodes, appData, and uploadWarnings)
-      expect(mockLocalDevProcess.removeStateListener).toHaveBeenCalledTimes(3);
+      // Should have removed listeners for first connection (4 listeners: projectNodes, appData, devServersStarted, and uploadWarnings)
+      expect(mockLocalDevProcess.removeStateListener).toHaveBeenCalledTimes(4);
 
       // Simulate second connection closing
       closeCallbacks2.forEach(callback => callback());
 
       // Should have removed listeners for second connection as well
-      expect(mockLocalDevProcess.removeStateListener).toHaveBeenCalledTimes(6);
+      expect(mockLocalDevProcess.removeStateListener).toHaveBeenCalledTimes(8);
     });
 
     it('should broadcast state changes to all connected clients', () => {

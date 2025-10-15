@@ -1,163 +1,83 @@
 import { Environment } from '@hubspot/local-dev-lib/types/Config';
 import { logger } from '@hubspot/local-dev-lib/logger';
-
-import { DevModeInterface as UIEDevModeInterface } from '@hubspot/ui-extensions-dev-server';
-import {
-  startPortManagerServer,
-  stopPortManagerServer,
-  requestPorts,
-} from '@hubspot/local-dev-lib/portManager';
 import {
   getHubSpotApiOrigin,
   getHubSpotWebsiteOrigin,
 } from '@hubspot/local-dev-lib/urls';
 import { getAccountConfig } from '@hubspot/local-dev-lib/config';
-import {
-  ProjectConfig,
-  ComponentTypes,
-  Component,
-} from '../../../types/Projects.js';
+import AppDevModeInterface from './AppDevModeInterface.js';
 import { lib } from '../../../lang/en.js';
-import { uiLogger } from '../../ui/logger.js';
-
-const SERVER_KEYS = {
-  privateApp: 'privateApp',
-  publicApp: 'publicApp',
-} as const;
-
-type ServerKey = keyof typeof SERVER_KEYS;
+import LocalDevState from './LocalDevState.js';
+import LocalDevLogger from './LocalDevLogger.js';
 
 type DevServerInterface = {
   // eslint-disable-next-line @typescript-eslint/no-unsafe-function-type
   setup?: Function;
-  start?: (options: object) => Promise<void>;
+  start?: () => Promise<void>;
   fileChange?: (filePath: string, event: string) => Promise<void>;
   cleanup?: () => Promise<void>;
 };
 
-type DevServer = {
-  componentType: ComponentTypes;
-  serverInterface: DevServerInterface;
-};
-
-type ComponentsByType = {
-  [key in ComponentTypes]?: { [key: string]: Component };
+type DevServerManagerConstructorOptions = {
+  localDevState: LocalDevState;
+  logger: LocalDevLogger;
 };
 
 class DevServerManager {
   private initialized: boolean;
   private started: boolean;
-  private componentsByType: ComponentsByType;
-  private devServers: { [key in ServerKey]: DevServer };
+  private devServers: DevServerInterface[];
+  private localDevState: LocalDevState;
 
-  constructor() {
+  constructor(options: DevServerManagerConstructorOptions) {
     this.initialized = false;
     this.started = false;
-    this.componentsByType = {};
-    this.devServers = {
-      [SERVER_KEYS.privateApp]: {
-        componentType: ComponentTypes.PrivateApp,
-        serverInterface: UIEDevModeInterface,
-      },
-      [SERVER_KEYS.publicApp]: {
-        componentType: ComponentTypes.PublicApp,
-        serverInterface: UIEDevModeInterface,
-      },
-    };
+    this.localDevState = options.localDevState;
+
+    const AppsDevServer = new AppDevModeInterface({
+      localDevState: options.localDevState,
+      localDevLogger: options.logger,
+    });
+    this.devServers = [AppsDevServer];
   }
 
-  async iterateDevServers(
-    callback: (
-      serverInterface: DevServerInterface,
-      compatibleComponents: {
-        [key: string]: Component;
-      }
-    ) => Promise<void>
+  private async iterateDevServers(
+    callback: (serverInterface: DevServerInterface) => Promise<void>
   ): Promise<void> {
-    const serverKeys: ServerKey[] = Object.keys(this.devServers) as ServerKey[];
-
-    for (let i = 0; i < serverKeys.length; i++) {
-      const serverKey = serverKeys[i];
-      const devServer = this.devServers[serverKey];
-
-      const compatibleComponents =
-        this.componentsByType[devServer.componentType] || {};
-
-      if (Object.keys(compatibleComponents).length) {
-        await callback(devServer.serverInterface, compatibleComponents);
-      } else {
-        uiLogger.debug(lib.DevServerManager.noCompatibleComponents(serverKey));
-      }
-    }
+    await Promise.all(this.devServers.map(devServer => callback(devServer)));
   }
 
-  arrangeComponentsByType(components: Component[]): ComponentsByType {
-    return components.reduce<ComponentsByType>((acc, component) => {
-      if (!acc[component.type]) {
-        acc[component.type] = {};
-      }
-
-      if ('name' in component.config && component.config.name) {
-        acc[component.type]![component.config.name] = component;
-      }
-
-      return acc;
-    }, {});
-  }
-
-  async setup({
-    components,
-    onUploadRequired,
-    accountId,
-    setActiveApp,
-  }: {
-    components: Component[];
-    onUploadRequired: () => void;
-    accountId: number;
-    setActiveApp: (appUid: string | undefined) => Promise<void>;
-  }): Promise<void> {
-    this.componentsByType = this.arrangeComponentsByType(components);
+  async setup(): Promise<void> {
     let env: Environment;
-    const accountConfig = getAccountConfig(accountId);
+    const accountConfig = getAccountConfig(
+      this.localDevState.targetTestingAccountId
+    );
     if (accountConfig) {
       env = accountConfig.env;
     }
-    await startPortManagerServer();
-    await this.iterateDevServers(
-      async (serverInterface, compatibleComponents) => {
-        if (serverInterface.setup) {
-          await serverInterface.setup({
-            components: compatibleComponents,
-            onUploadRequired,
-            logger,
-            urls: {
-              api: getHubSpotApiOrigin(env),
-              web: getHubSpotWebsiteOrigin(env),
-            },
-            setActiveApp,
-          });
-        }
+    await this.iterateDevServers(async serverInterface => {
+      if (serverInterface.setup) {
+        // @TODO: In the future, update UIE Dev Server to use LocalDevState
+        await serverInterface.setup({
+          components: this.localDevState.projectNodes,
+          profileData: this.localDevState.projectProfileData,
+          logger,
+          urls: {
+            api: getHubSpotApiOrigin(env),
+            web: getHubSpotWebsiteOrigin(env),
+          },
+        });
       }
-    );
+    });
 
     this.initialized = true;
   }
 
-  async start({
-    accountId,
-    projectConfig,
-  }: {
-    accountId: number;
-    projectConfig: ProjectConfig;
-  }): Promise<void> {
+  async start(): Promise<void> {
     if (this.initialized) {
       await this.iterateDevServers(async serverInterface => {
         if (serverInterface.start) {
-          await serverInterface.start({
-            accountId,
-            projectConfig,
-            requestPorts,
-          });
+          await serverInterface.start();
         }
       });
     } else {
@@ -190,12 +110,8 @@ class DevServerManager {
           await serverInterface.cleanup();
         }
       });
-
-      await stopPortManagerServer();
     }
   }
 }
 
-const Manager = new DevServerManager();
-
-export default Manager;
+export default DevServerManager;

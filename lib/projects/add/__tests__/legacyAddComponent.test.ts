@@ -2,7 +2,7 @@ import { legacyAddComponent } from '../legacyAddComponent.js';
 import { findProjectComponents } from '../../structure.js';
 import { getProjectComponentListFromRepo } from '../../create/legacy.js';
 import { projectAddPrompt } from '../../../prompts/projectAddPrompt.js';
-import { logger } from '@hubspot/local-dev-lib/logger';
+import { uiLogger } from '../../../ui/logger.js';
 import { cloneGithubRepo } from '@hubspot/local-dev-lib/github';
 import { trackCommandUsage } from '../../../usageTracking.js';
 import {
@@ -16,7 +16,7 @@ import { commands } from '../../../../lang/en.js';
 vi.mock('../../structure');
 vi.mock('../../create/legacy');
 vi.mock('../../../prompts/projectAddPrompt');
-vi.mock('@hubspot/local-dev-lib/logger');
+vi.mock('../../../ui/logger.js');
 vi.mock('@hubspot/local-dev-lib/github');
 vi.mock('../../../usageTracking.js');
 
@@ -25,7 +25,7 @@ const mockedGetProjectComponentListFromRepo = vi.mocked(
   getProjectComponentListFromRepo
 );
 const mockedProjectAddPrompt = vi.mocked(projectAddPrompt);
-const mockedLogger = vi.mocked(logger);
+const mockedUiLogger = vi.mocked(uiLogger);
 const mockedCloneGithubRepo = vi.mocked(cloneGithubRepo);
 const mockedTrackCommandUsage = vi.mocked(trackCommandUsage);
 
@@ -110,10 +110,10 @@ describe('lib/projects/add/legacyAddComponent', () => {
         },
         accountId
       );
-      expect(mockedLogger.log).toHaveBeenCalledWith(
+      expect(mockedUiLogger.log).toHaveBeenCalledWith(
         commands.project.add.creatingComponent('test-project')
       );
-      expect(mockedLogger.success).toHaveBeenCalledWith(
+      expect(mockedUiLogger.success).toHaveBeenCalledWith(
         commands.project.add.success('new-component')
       );
     });
@@ -287,7 +287,7 @@ describe('lib/projects/add/legacyAddComponent', () => {
       ).rejects.toThrow(commands.project.add.error.failedToDownloadComponent);
 
       expect(mockedCloneGithubRepo).toHaveBeenCalled();
-      expect(mockedLogger.success).not.toHaveBeenCalled();
+      expect(mockedUiLogger.success).not.toHaveBeenCalled();
     });
 
     it('calls trackCommandUsage with correct component type', async () => {

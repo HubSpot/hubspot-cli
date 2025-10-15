@@ -89,7 +89,6 @@ export const APP_AUTH_TYPES = {
 } as const;
 
 export const FEATURES = {
-  UNIFIED_THEME_PREVIEW: 'cms:react:unifiedThemePreview',
   UNIFIED_APPS: 'Developers:UnifiedApps:PrivateBeta',
   SANDBOXES_V2: 'sandboxes:v2:enabled',
   SANDBOXES_V2_CLI: 'sandboxes:v2:cliEnabled',
@@ -110,18 +109,23 @@ export const LOCAL_DEV_UI_MESSAGE_SEND_TYPES = {
   UPDATE_PROJECT_DATA: 'server:updateProjectData',
   UPDATE_UPLOAD_WARNINGS: 'server:updateUploadWarnings',
   CLI_METADATA: 'server:cliMetadata',
+  DEV_SERVERS_STARTED: 'server:devServersStarted',
 };
 
 export const LOCAL_DEV_UI_MESSAGE_RECEIVE_TYPES = {
   UPLOAD: 'client:upload',
   DEPLOY: 'client:deploy',
   VIEWED_WELCOME_SCREEN: 'client:viewedWelcomeScreen',
+  APP_INSTALL_SUCCESS: 'client:installSuccess',
+  APP_INSTALL_INITIATED: 'client:installInitiated',
+  APP_INSTALL_FAILURE: 'client:installFailure',
 };
 
 export const APP_INSTALLATION_STATES = {
   NOT_INSTALLED: 'NOT_INSTALLED',
   INSTALLED: 'INSTALLED',
   INSTALLED_WITH_OUTDATED_SCOPES: 'INSTALLED_WITH_OUTDATED_SCOPES',
+  UNKNOWN: 'UNKNOWN',
 } as const;
 
 export const staticAuth = 'static';
@@ -138,6 +142,9 @@ export const GET_STARTED_OPTIONS = {
 export const LOCAL_DEV_SERVER_MESSAGE_TYPES = {
   INITIAL: 'INITIAL',
   WEBSOCKET_SERVER_CONNECTED: 'WEBSOCKET_SERVER_CONNECTED',
+  STATIC_AUTH_APP_INSTALL_SUCCESS: 'APP_INSTALL_SUCCESS',
+  STATIC_AUTH_APP_INSTALL_FAILURE: 'APP_INSTALL_FAILURE',
+  OAUTH_APP_INSTALL_INITIATED: 'APP_INSTALL_INITIATED',
 } as const;
 
 export const CONFIG_LOCAL_STATE_FLAGS = {

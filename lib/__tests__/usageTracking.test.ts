@@ -4,7 +4,7 @@ import {
   getAccountConfig,
 } from '@hubspot/local-dev-lib/config';
 import { API_KEY_AUTH_METHOD } from '@hubspot/local-dev-lib/constants/auth';
-import { logger } from '@hubspot/local-dev-lib/logger';
+import { uiLogger } from '../ui/logger.js';
 import {
   trackCommandUsage,
   trackHelpUsage,
@@ -18,12 +18,12 @@ import { Mock, Mocked } from 'vitest';
 
 vi.mock('@hubspot/local-dev-lib/trackUsage');
 vi.mock('@hubspot/local-dev-lib/config');
-vi.mock('@hubspot/local-dev-lib/logger');
+vi.mock('../ui/logger.js');
 
 const mockedTrackUsage = trackUsage as Mock;
 const mockedIsTrackingAllowed = isTrackingAllowed as Mock;
 const mockedGetAccountConfig = getAccountConfig as Mock;
-const mockedLogger = logger as Mocked<typeof logger>;
+const mockedUiLogger = uiLogger as Mocked<typeof uiLogger>;
 
 describe('lib/usageTracking', () => {
   const mockPlatform = 'darwin';
@@ -89,7 +89,7 @@ describe('lib/usageTracking', () => {
 
       await trackCommandUsage(mockCommand);
 
-      expect(mockedLogger.debug).toHaveBeenCalledWith(
+      expect(mockedUiLogger.debug).toHaveBeenCalledWith(
         expect.stringContaining(error.message)
       );
     });
@@ -127,7 +127,7 @@ describe('lib/usageTracking', () => {
     it('should track main help usage without command', async () => {
       await trackHelpUsage('');
 
-      expect(mockedLogger.debug).toHaveBeenCalledWith(
+      expect(mockedUiLogger.debug).toHaveBeenCalledWith(
         expect.stringContaining('main command')
       );
     });

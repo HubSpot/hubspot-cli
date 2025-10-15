@@ -12,6 +12,7 @@ vi.mock('@hubspot/local-dev-lib/api/projects', () => ({
 }));
 vi.mock('@hubspot/local-dev-lib/config', () => ({
   getAccountId: vi.fn().mockImplementation(() => 123456789),
+  configFileExists: vi.fn().mockImplementation(() => true),
 }));
 
 describe('lib/prompts/downloadProjectPrompt', () => {

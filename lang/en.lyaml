@@ -2,7 +2,7 @@ en:
   commands:
     generalErrors:
       updateNotify:
-        notifyTitle: "Update available"
+        notifyTitle: "CLI update available"
         cmsUpdateNotification: "{{#bold}}The CMS CLI is now the HubSpot CLI{{/bold}}\n\nTo upgrade, uninstall {{#bold}}{{ packageName }}{{/bold}}\nand then run {{ updateCommand }}"
         cliUpdateNotification: "HubSpot CLI version {{#cyan}}{{#bold}}{currentVersion}{{/bold}}{{/cyan}} is outdated.\nRun {{ updateCommand }} to upgrade to version {{#cyan}}{{#bold}}{latestVersion}{{/bold}}{{/cyan}}"
       srcIsProject: "\"{{ src }}\" is in a project folder. Did you mean \"hs project {{command}}\"?"
@@ -801,7 +801,7 @@ en:
             uploadFailed: "Failed to upload file \"{{ filePath }}\" to \"{{ remotePath }}\""
             deleteFileFailed: "Failed to delete file \"{{ remotePath }}\""
             deleteFolderFailed: "Failed to delete folder \"{{ remotePath }}\""
-            v3ApiError: "{{ command }} is not supported for platform version '{{ platformVersion}}', use {{ newCommand }} instead to develop locally. {{ linkToDocs }}"
+            v2ApiError: "{{ command }} is not supported for platform version '{{ platformVersion}}', use {{ newCommand }} instead to develop locally. {{ linkToDocs }}"
         download:
           describe: "Download your project files from HubSpot."
           examples:
@@ -1162,7 +1162,7 @@ en:
         createNewSandboxOption: "<Test on a new development sandbox>"
         createNewDeveloperTestAccountOption: "<Test on a new developer test account>"
         chooseDefaultAccountOption: "<{{#bold}}\U00002757{{/bold}} Test on this production account {{#bold}}\U00002757{{/bold}}>"
-        promptMessage: "[--account] Choose a {{ accountType }} under {{ accountIdentifier }} to test with:"
+        promptMessage: "Choose a {{ accountType }} under {{ accountIdentifier }} to test with:"
         sandboxLimit: "Your account reached the limit of {{ limit }} development sandboxes"
         sandboxLimitWithSuggestion: "Your account reached the limit of {{ limit }} development sandboxes. Run {{ authCommand }} to add an existing one to the config."
         developerTestAccountLimit: "Your account reached the limit of {{ limit }} developer test accounts."

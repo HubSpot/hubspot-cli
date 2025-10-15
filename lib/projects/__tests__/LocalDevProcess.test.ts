@@ -7,7 +7,7 @@ import { fetchProject } from '@hubspot/local-dev-lib/api/projects';
 import { isHubSpotHttpError } from '@hubspot/local-dev-lib/errors/index';
 import LocalDevProcess from '../localDev/LocalDevProcess.js';
 import LocalDevLogger from '../localDev/LocalDevLogger.js';
-import DevServerManagerV2 from '../localDev/DevServerManagerV2.js';
+import DevServerManager from '../localDev/DevServerManager.js';
 import { LocalDevStateConstructorOptions } from '../../../types/LocalDev.js';
 import { ProjectConfig } from '../../../types/Projects.js';
 import { ENVIRONMENTS } from '@hubspot/local-dev-lib/constants/environments';
@@ -31,12 +31,12 @@ vi.mock('../config');
 vi.mock('@hubspot/local-dev-lib/api/projects');
 vi.mock('@hubspot/local-dev-lib/errors/index');
 vi.mock('../localDev/LocalDevLogger');
-vi.mock('../localDev/DevServerManagerV2');
+vi.mock('../localDev/DevServerManager');
 
 // Tests for LocalDevProcess and LocalDevState
 describe('LocalDevProcess', () => {
   let mockLocalDevLogger: Mocked<LocalDevLogger>;
-  let mockDevServerManager: Mocked<DevServerManagerV2>;
+  let mockDevServerManager: Mocked<DevServerManager>;
   let process: LocalDevProcess;
 
   const mockProjectConfig: ProjectConfig = {
@@ -74,6 +74,7 @@ describe('LocalDevProcess', () => {
         subbuildStatuses: [],
         uploadMessage: 'Build completed',
         autoDeployId: 0,
+        platformVersion: '2025.2',
       },
     },
     initialProjectNodes: {},
@@ -111,11 +112,11 @@ describe('LocalDevProcess', () => {
       start: vi.fn().mockResolvedValue(undefined),
       cleanup: vi.fn().mockResolvedValue(undefined),
       fileChange: vi.fn().mockResolvedValue(undefined),
-    } as unknown as Mocked<DevServerManagerV2>;
+    } as unknown as Mocked<DevServerManager>;
 
     // Mock constructors
     (LocalDevLogger as Mock).mockImplementation(() => mockLocalDevLogger);
-    (DevServerManagerV2 as Mock).mockImplementation(() => mockDevServerManager);
+    (DevServerManager as Mock).mockImplementation(() => mockDevServerManager);
 
     // Mock external functions
     (isHubSpotHttpError as unknown as Mock).mockReturnValue(false);
@@ -502,7 +503,7 @@ describe('LocalDevProcess', () => {
         123, // targetProjectAccountId
         'test-project', // projectName
         123, // buildId
-        true, // useV3Api
+        true, // useV2Api
         false // force
       );
       expect(mockLocalDevLogger.deploySuccess).toHaveBeenCalled();
@@ -535,7 +536,7 @@ describe('LocalDevProcess', () => {
         123, // targetProjectAccountId
         'test-project', // projectName
         123, // buildId
-        true, // useV3Api
+        true, // useV2Api
         true // force
       );
       expect(result).toEqual({

@@ -178,7 +178,7 @@ describe('lib/projects/deploy', () => {
     const targetAccountId = 12345;
     const projectName = 'test-project';
     const buildId = 5;
-    const useV3Api = true;
+    const useV2Api = true;
     const force = false;
 
     it('successfully deploys and returns deploy result', async () => {
@@ -212,7 +212,7 @@ describe('lib/projects/deploy', () => {
         targetAccountId,
         projectName,
         buildId,
-        useV3Api,
+        useV2Api,
         force
       );
 
@@ -220,7 +220,7 @@ describe('lib/projects/deploy', () => {
         targetAccountId,
         projectName,
         buildId,
-        useV3Api,
+        useV2Api,
         force
       );
       expect(deploy).toEqual(mockDeployResult);
@@ -252,7 +252,7 @@ describe('lib/projects/deploy', () => {
         targetAccountId,
         projectName,
         buildId,
-        useV3Api,
+        useV2Api,
         force
       );
 
@@ -287,7 +287,7 @@ describe('lib/projects/deploy', () => {
         targetAccountId,
         projectName,
         buildId,
-        useV3Api,
+        useV2Api,
         force
       );
 
@@ -324,7 +324,7 @@ describe('lib/projects/deploy', () => {
         targetAccountId,
         projectName,
         buildId,
-        useV3Api,
+        useV2Api,
         force
       );
 
@@ -346,7 +346,7 @@ describe('lib/projects/deploy', () => {
         targetAccountId,
         projectName,
         buildId,
-        useV3Api,
+        useV2Api,
         force
       );
 
@@ -363,7 +363,7 @@ describe('lib/projects/deploy', () => {
         targetAccountId,
         projectName,
         buildId,
-        useV3Api,
+        useV2Api,
         force
       );
 
@@ -399,7 +399,7 @@ describe('lib/projects/deploy', () => {
         targetAccountId,
         projectName,
         buildId,
-        false, // useV3Api
+        false, // useV2Api
         true // force
       );
     });

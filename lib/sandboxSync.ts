@@ -1,14 +1,13 @@
 import SpinniesManager from './ui/SpinniesManager.js';
 import { getHubSpotWebsiteOrigin } from '@hubspot/local-dev-lib/urls';
-import { logger } from '@hubspot/local-dev-lib/logger';
+import { uiLogger } from './ui/logger.js';
 import { initiateSync } from '@hubspot/local-dev-lib/api/sandboxSync';
 import { isSpecifiedError } from '@hubspot/local-dev-lib/errors/index';
 import { getAccountId } from '@hubspot/local-dev-lib/config';
 import { getAccountIdentifier } from '@hubspot/local-dev-lib/config/getAccountIdentifier';
 import { CLIAccount } from '@hubspot/local-dev-lib/types/Accounts';
 import { Environment } from '@hubspot/local-dev-lib/types/Config';
-
-import { i18n } from './lang.js';
+import { lib } from '../lang/en.js';
 import { getAvailableSyncTypes, getSandboxTypeAsString } from './sandboxes.js';
 import {
   debugError,
@@ -18,7 +17,6 @@ import {
 import {
   uiAccountDescription,
   uiLine,
-  uiLink,
   uiCommandDisabledBanner,
 } from './ui/index.js';
 import { isDevelopmentSandbox } from './accountTypes.js';
@@ -39,14 +37,12 @@ export async function syncSandbox(
 
   if (!accountId || !parentAccountId) {
     throw new Error(
-      i18n(`lib.sandbox.sync.failure.invalidUser`, {
-        accountName: accountId
-          ? uiAccountDescription(accountId)
-          : id!.toString(),
-        parentAccountName: parentAccountId
+      lib.sandbox.sync.failure.invalidUser(
+        accountId ? uiAccountDescription(accountId) : id!.toString(),
+        parentAccountId
           ? uiAccountDescription(parentAccountId)
-          : parentId!.toString(),
-      })
+          : parentId!.toString()
+      )
     );
   }
 
@@ -74,7 +70,7 @@ export async function syncSandbox(
     }
 
     SpinniesManager.add('sandboxSync', {
-      text: i18n(`lib.sandbox.sync.loading.startSync`),
+      text: lib.sandbox.sync.loading.startSync,
     });
 
     await initiateSync(
@@ -84,30 +80,21 @@ export async function syncSandbox(
       accountId
     );
     const spinniesText = isDevSandbox
-      ? `lib.sandbox.sync.loading.succeedDevSb`
-      : `lib.sandbox.sync.loading.succeed`;
+      ? lib.sandbox.sync.loading.succeedDevSb(accountId)
+      : lib.sandbox.sync.loading.succeed(accountId);
     SpinniesManager.succeed('sandboxSync', {
-      text: i18n(
-        slimInfoMessage
-          ? `lib.sandbox.sync.loading.successDevSbInfo`
-          : spinniesText,
-        {
-          accountName: uiAccountDescription(accountId),
-          url: uiLink(
-            i18n(`lib.sandbox.sync.info.syncStatusDetailsLinkText`),
-            syncStatusUrl
-          ),
-        }
-      ),
+      text: slimInfoMessage
+        ? lib.sandbox.sync.loading.successDevSbInfo(accountId, syncStatusUrl)
+        : spinniesText,
     });
   } catch (err) {
     debugError(err);
 
     SpinniesManager.fail('sandboxSync', {
-      text: i18n(`lib.sandbox.sync.loading.fail`),
+      text: lib.sandbox.sync.loading.fail(accountId),
     });
 
-    logger.log('');
+    uiLogger.log('');
     if (
       isSpecifiedError(err, {
         statusCode: 403,
@@ -115,11 +102,11 @@ export async function syncSandbox(
         subCategory: 'sandboxes-sync-api.SYNC_NOT_ALLOWED_INVALID_USER',
       })
     ) {
-      logger.error(
-        i18n(`lib.sandbox.sync.failure.invalidUser`, {
-          accountName: uiAccountDescription(accountId),
-          parentAccountName: uiAccountDescription(parentAccountId),
-        })
+      uiLogger.error(
+        lib.sandbox.sync.failure.invalidUser(
+          uiAccountDescription(accountId),
+          uiAccountDescription(parentAccountId)
+        )
       );
     } else if (
       isSpecifiedError(err, {
@@ -128,10 +115,10 @@ export async function syncSandbox(
         subCategory: 'sandboxes-sync-api.SYNC_IN_PROGRESS',
       })
     ) {
-      logger.error(
-        i18n(`lib.sandbox.sync.failure.syncInProgress`, {
-          url: `${baseUrl}/sandboxes-developer/${parentAccountId}/syncactivitylog`,
-        })
+      uiLogger.error(
+        lib.sandbox.sync.failure.syncInProgress(
+          `${baseUrl}/sandboxes-developer/${parentAccountId}/syncactivitylog`
+        )
       );
     } else if (
       isSpecifiedError(err, {
@@ -141,11 +128,7 @@ export async function syncSandbox(
       })
     ) {
       // This will only trigger if a user is not a super admin of the target account.
-      logger.error(
-        i18n(`lib.sandbox.sync.failure.notSuperAdmin`, {
-          account: uiAccountDescription(accountId),
-        })
-      );
+      uiLogger.error(lib.sandbox.sync.failure.notSuperAdmin(accountId));
     } else if (
       isSpecifiedError(err, {
         statusCode: 404,
@@ -153,11 +136,7 @@ export async function syncSandbox(
         subCategory: 'SandboxErrors.SANDBOX_NOT_FOUND',
       })
     ) {
-      logger.error(
-        i18n(`lib.sandbox.sync.failure.objectNotFound`, {
-          account: uiAccountDescription(accountId),
-        })
-      );
+      uiLogger.error(lib.sandbox.sync.failure.objectNotFound(accountId));
     } else if (
       isSpecifiedError(err, {
         statusCode: 404,
@@ -176,25 +155,19 @@ export async function syncSandbox(
         })
       );
     }
-    logger.log('');
+    uiLogger.log('');
     throw err;
   }
 
   if (!slimInfoMessage) {
-    logger.log();
+    uiLogger.log('');
     uiLine();
-    logger.info(
-      i18n(
-        `lib.sandbox.sync.info.${isDevSandbox ? 'syncMessageDevSb' : 'syncMessage'}`,
-        {
-          url: uiLink(
-            i18n(`lib.sandbox.sync.info.syncStatusDetailsLinkText`),
-            syncStatusUrl
-          ),
-        }
-      )
+    uiLogger.info(
+      isDevSandbox
+        ? lib.sandbox.sync.info.syncMessageDevSb(syncStatusUrl)
+        : lib.sandbox.sync.info.syncMessage(syncStatusUrl)
     );
     uiLine();
-    logger.log();
+    uiLogger.log('');
   }
 }

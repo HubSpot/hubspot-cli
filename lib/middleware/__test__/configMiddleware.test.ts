@@ -1,5 +1,5 @@
 import { Arguments } from 'yargs';
-import { logger } from '@hubspot/local-dev-lib/logger';
+import { uiLogger } from '../../ui/logger.js';
 import { CLIConfig } from '@hubspot/local-dev-lib/types/Config';
 import * as cliConfig from '@hubspot/local-dev-lib/config';
 import * as validation from '../../validation.js';
@@ -7,12 +7,12 @@ import { EXIT_CODES } from '../../enums/exitCodes.js';
 import {
   handleDeprecatedEnvVariables,
   injectAccountIdMiddleware,
-  loadConfigMiddleware,
+  loadAndValidateConfigMiddleware,
   validateAccountOptions,
 } from '../configMiddleware.js';
 
-vi.mock('@hubspot/local-dev-lib/logger', () => ({
-  logger: {
+vi.mock('../../ui/logger.js', () => ({
+  uiLogger: {
     error: vi.fn(),
     log: vi.fn(),
   },
@@ -53,7 +53,7 @@ describe('lib/middleware/configMiddleware', () => {
 
       handleDeprecatedEnvVariables(argv);
 
-      expect(logger.log).toHaveBeenCalledWith(
+      expect(uiLogger.log).toHaveBeenCalledWith(
         expect.stringContaining(
           'The HUBSPOT_PORTAL_ID environment variable is deprecated. Please use HUBSPOT_ACCOUNT_ID instead.'
         )
@@ -78,7 +78,7 @@ describe('lib/middleware/configMiddleware', () => {
 
       handleDeprecatedEnvVariables(argv);
 
-      expect(logger.log).not.toHaveBeenCalled();
+      expect(uiLogger.log).not.toHaveBeenCalled();
       expect(process.env.HUBSPOT_ACCOUNT_ID).toBe('456');
 
       process.env = originalEnv;
@@ -126,7 +126,7 @@ describe('lib/middleware/configMiddleware', () => {
     });
   });
 
-  describe('loadConfigMiddleware()', () => {
+  describe('loadAndValidateConfigMiddleware()', () => {
     it('should exit with error when config file exists and --config flag is used', async () => {
       configFileExistsSpy.mockReturnValue(true);
 
@@ -136,9 +136,9 @@ describe('lib/middleware/configMiddleware', () => {
         $0: 'hs',
       };
 
-      await expect(loadConfigMiddleware(argv)).rejects.toThrow();
+      await expect(loadAndValidateConfigMiddleware(argv)).rejects.toThrow();
       expect(processExitSpy).toHaveBeenCalledWith(EXIT_CODES.ERROR);
-      expect(logger.error).toHaveBeenCalledWith(
+      expect(uiLogger.error).toHaveBeenCalledWith(
         'A configuration file already exists at /path/to/config. To specify a new configuration file, delete the existing one and try again.'
       );
     });
@@ -153,7 +153,7 @@ describe('lib/middleware/configMiddleware', () => {
         $0: 'hs',
       };
 
-      await loadConfigMiddleware(argv);
+      await loadAndValidateConfigMiddleware(argv);
 
       expect(loadConfigSpy).toHaveBeenCalled();
       expect(validateConfigSpy).toHaveBeenCalled();
@@ -167,7 +167,7 @@ describe('lib/middleware/configMiddleware', () => {
         $0: 'hs',
       };
 
-      await loadConfigMiddleware(argv);
+      await loadAndValidateConfigMiddleware(argv);
 
       expect(loadConfigSpy).not.toHaveBeenCalled();
       expect(validateConfigSpy).not.toHaveBeenCalled();

@@ -1,7 +1,7 @@
 import path from 'path';
 import fs from 'fs';
 import { promptUser } from './promptUtils.js';
-import { i18n } from '../lang.js';
+import { lib } from '../../lang/en.js';
 import { escapeRegExp } from '@hubspot/local-dev-lib/escapeRegExp';
 
 const FIELDS_FILES = ['fields.json', 'fields.js', 'fields.cjs', 'fields.mjs'];
@@ -35,7 +35,7 @@ export async function fieldsJsPrompt(
 
   const promptVal = await promptUser<{ filePathChoice: string }>([
     {
-      message: i18n(`lib.prompts.uploadPrompt.fieldsPrompt`, { dir: fileDir }),
+      message: lib.prompts.uploadPrompt.fieldsPrompt(fileDir),
       type: 'list',
       name: 'filePathChoice',
       choices: selection,

@@ -20,14 +20,12 @@ import { handleExit, handleKeypress } from '../../lib/process.js';
 import { getProjectConfig } from '../../lib/projects/config.js';
 import { findProjectComponents } from '../../lib/projects/structure.js';
 import { ComponentTypes } from '../../types/Projects.js';
-import { hasFeature } from '../../lib/hasFeature.js';
 import {
   CommonArgs,
   ConfigArgs,
   AccountArgs,
   YargsCommandModule,
 } from '../../types/Yargs.js';
-import { FEATURES } from '../../lib/constants.js';
 import { makeYargsBuilder } from '../../lib/yargsUtils.js';
 import { uiLogger } from '../../lib/ui/logger.js';
 
@@ -220,11 +218,7 @@ async function handler(
     );
   }
 
-  const isUngatedForUnified = await hasFeature(
-    derivedAccountId,
-    FEATURES.UNIFIED_THEME_PREVIEW
-  );
-  if (isUngatedForUnified && createUnifiedDevServer) {
+  if (createUnifiedDevServer) {
     if (port) {
       process.env['PORT'] = port.toString();
     }

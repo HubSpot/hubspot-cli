@@ -22,7 +22,7 @@ import { MockedFunction } from 'vitest';
 
 // Mock all external dependencies
 vi.mock('@hubspot/local-dev-lib/api/appsDev');
-vi.mock('@hubspot/local-dev-lib/logger');
+vi.mock('../../ui/logger.js');
 vi.mock('@hubspot/local-dev-lib/api/projects');
 vi.mock('@hubspot/local-dev-lib/path');
 vi.mock('@hubspot/local-dev-lib/urls');

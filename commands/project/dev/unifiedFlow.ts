@@ -2,6 +2,10 @@ import path from 'path';
 import util from 'util';
 import { ArgumentsCamelCase } from 'yargs';
 import { HUBSPOT_ACCOUNT_TYPES } from '@hubspot/local-dev-lib/constants/config';
+import {
+  startPortManagerServer,
+  stopPortManagerServer,
+} from '@hubspot/local-dev-lib/portManager';
 import { isTranslationError } from '@hubspot/project-parsing-lib/src/lib/errors.js';
 import { translateForLocalDev } from '@hubspot/project-parsing-lib';
 import {
@@ -23,6 +27,7 @@ import {
   createInitialBuildForNewProject,
   createNewProjectForLocalDev,
   compareLocalProjectToDeployed,
+  checkAndInstallDependencies,
 } from '../../../lib/projects/localDev/helpers/project.js';
 import {
   useExistingDevTestAccount,
@@ -44,7 +49,6 @@ import {
 } from '../../../lib/accountTypes.js';
 import { uiLogger } from '../../../lib/ui/logger.js';
 import { commands } from '../../../lang/en.js';
-
 import LocalDevWebsocketServer from '../../../lib/projects/localDev/LocalDevWebsocketServer.js';
 
 type UnifiedProjectDevFlowArgs = {
@@ -235,7 +239,12 @@ export async function unifiedProjectDevFlow({
     );
   }
 
+  // Check for missing/outdated dependencies
+  await checkAndInstallDependencies();
+
   // End setup, start local dev process
+  await startPortManagerServer();
+
   const localDevProcess = new LocalDevProcess({
     initialProjectNodes: projectNodes,
     initialProjectProfileData: projectProfileData,
@@ -249,16 +258,15 @@ export async function unifiedProjectDevFlow({
     env,
   });
 
-  await localDevProcess.start();
-
-  const watcher = new LocalDevWatcher(localDevProcess);
-  watcher.start();
-
   const websocketServer = new LocalDevWebsocketServer(
     localDevProcess,
     args.debug
   );
+  const watcher = new LocalDevWatcher(localDevProcess);
+
   await websocketServer.start();
+  await localDevProcess.start();
+  watcher.start();
 
   handleKeypress(async key => {
     if ((key.ctrl && key.name === 'c') || key.name === 'q') {
@@ -274,5 +282,6 @@ export async function unifiedProjectDevFlow({
     localDevProcess.stop(!isSIGHUP);
     watcher.stop();
     websocketServer.shutdown();
+    stopPortManagerServer();
   });
 }

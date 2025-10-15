@@ -30,7 +30,8 @@ vi.mock('@hubspot/local-dev-lib/personalAccessKey');
 vi.mock('@hubspot/local-dev-lib/config');
 vi.mock('@hubspot/local-dev-lib/api/developerTestAccounts');
 vi.mock('@hubspot/local-dev-lib/api/sandboxHubs');
-vi.mock('@hubspot/local-dev-lib/logger');
+vi.mock('../ui/logger.js');
+vi.mock('../errorHandlers/index.js');
 vi.mock('../prompts/personalAccessKeyPrompt');
 vi.mock('../prompts/accountNamePrompt');
 vi.mock('../ui/SpinniesManager', () => ({
@@ -160,7 +161,7 @@ describe('lib/buildAccount', () => {
     });
   });
 
-  describe('createDeveloperTestAccountV3()', () => {
+  describe('createDeveloperTestAccountV2()', () => {
     const parentAccountId = 123456;
     const mockDeveoperTestAccountConfig = {
       accountName: 'Developer Test Account',
@@ -180,7 +181,7 @@ describe('lib/buildAccount', () => {
     });
 
     it('should create a developer test account successfully', async () => {
-      const result = await buildAccount.createDeveloperTestAccountV3(
+      const result = await buildAccount.createDeveloperTestAccountV2(
         parentAccountId,
         mockDeveoperTestAccountConfig
       );

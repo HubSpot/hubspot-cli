@@ -6,7 +6,8 @@ import { Arguments } from 'yargs';
 import { Mock } from 'vitest';
 
 vi.mock('@hubspot/local-dev-lib/config');
-vi.mock('@hubspot/local-dev-lib/logger');
+vi.mock('../../lib/ui/logger.js');
+vi.mock('../errorHandlers/index.js');
 vi.mock('@hubspot/local-dev-lib/oauth');
 vi.mock('@hubspot/local-dev-lib/personalAccessKey');
 vi.mock('../commonOpts');

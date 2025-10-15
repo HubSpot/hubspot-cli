@@ -12,7 +12,7 @@ import {
   EMPTY_PROJECT,
 } from '../../constants.js';
 import { isV2Project } from '../platformVersion.js';
-import { v3ComponentFlow } from './v3.js';
+import { v2ComponentFlow } from './v2.js';
 import { getProjectTemplateListFromRepo } from './legacy.js';
 import { uiLogger } from '../../ui/logger.js';
 import { commands } from '../../../lang/en.js';
@@ -67,7 +67,7 @@ export async function handleProjectCreationFlow(
       distribution,
       repoConfig,
       projectContents,
-    } = await v3ComponentFlow(
+    } = await v2ComponentFlow(
       platformVersion,
       projectBase,
       providedAuth,

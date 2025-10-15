@@ -7,7 +7,7 @@ import {
 import pkg from '../../package.json' with { type: 'json' };
 import { Mock } from 'vitest';
 
-vi.mock('@hubspot/local-dev-lib/logger');
+vi.mock('../../ui/logger.js');
 vi.mock('../ui/SpinniesManager');
 
 describe('lib/npm', () => {

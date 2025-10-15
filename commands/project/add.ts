@@ -3,12 +3,16 @@ import { Argv, ArgumentsCamelCase } from 'yargs';
 import { logError } from '../../lib/errorHandlers/index.js';
 import { getProjectConfig } from '../../lib/projects/config.js';
 import { EXIT_CODES } from '../../lib/enums/exitCodes.js';
-import { YargsCommandModule, CommonArgs } from '../../types/Yargs.js';
+import {
+  YargsCommandModule,
+  CommonArgs,
+  ConfigArgs,
+} from '../../types/Yargs.js';
 import { makeYargsBuilder } from '../../lib/yargsUtils.js';
 import { commands } from '../../lang/en.js';
 import { isV2Project } from '../../lib/projects/platformVersion.js';
 import { legacyAddComponent } from '../../lib/projects/add/legacyAddComponent.js';
-import { v3AddComponent } from '../../lib/projects/add/v3AddComponent.js';
+import { v2AddComponent } from '../../lib/projects/add/v2AddComponent.js';
 import {
   marketplaceDistribution,
   oAuth,
@@ -20,13 +24,14 @@ import { uiLogger } from '../../lib/ui/logger.js';
 const command = 'add';
 const describe = commands.project.add.describe;
 
-export type ProjectAddArgs = CommonArgs & {
-  type?: string;
-  name?: string;
-  features?: string[];
-  distribution?: string;
-  auth?: string;
-};
+export type ProjectAddArgs = CommonArgs &
+  ConfigArgs & {
+    type?: string;
+    name?: string;
+    features?: string[];
+    distribution?: string;
+    auth?: string;
+  };
 
 async function handler(
   args: ArgumentsCamelCase<ProjectAddArgs>
@@ -44,7 +49,7 @@ async function handler(
     const isV2ProjectCreate = isV2Project(projectConfig.platformVersion);
 
     if (isV2ProjectCreate) {
-      await v3AddComponent(args, projectDir, projectConfig, derivedAccountId);
+      await v2AddComponent(args, projectDir, projectConfig, derivedAccountId);
     } else {
       await legacyAddComponent(
         args,
@@ -103,6 +108,7 @@ const builder = makeYargsBuilder<ProjectAddArgs>(
   describe,
   {
     useGlobalOptions: true,
+    useConfigOptions: true,
   }
 );
 

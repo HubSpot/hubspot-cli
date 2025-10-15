@@ -12,7 +12,7 @@ type ProjectAddPromptResponse = {
   name: string;
 };
 
-type ProjectAddPromptResponseV3 = {
+type ProjectAddPromptResponseV2 = {
   componentTemplate: ComponentTemplate[];
 };
 
@@ -77,10 +77,10 @@ export async function projectAddPrompt(
   return result;
 }
 
-export async function projectAddPromptV3(
+export async function projectAddPromptV2(
   components: (ComponentTemplateChoice | Separator)[],
   selectedFeatures: string[] | undefined
-): Promise<ProjectAddPromptResponseV3> {
+): Promise<ProjectAddPromptResponseV2> {
   const selectedComponents: ComponentTemplate[] = [];
 
   if (selectedFeatures) {
@@ -113,7 +113,7 @@ export async function projectAddPromptV3(
     return { componentTemplate: [] };
   }
 
-  const result = await promptUser<ProjectAddPromptResponseV3>([
+  const result = await promptUser<ProjectAddPromptResponseV2>([
     {
       name: 'componentTemplate',
       message: lib.prompts.projectAddPrompt.selectFeatures,

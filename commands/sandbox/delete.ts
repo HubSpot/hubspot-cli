@@ -19,7 +19,7 @@ import { deleteSandboxPrompt } from '../../lib/prompts/sandboxesPrompt.js';
 import { selectAccountFromConfig } from '../../lib/prompts/accountsPrompt.js';
 import { EXIT_CODES } from '../../lib/enums/exitCodes.js';
 import { promptUser } from '../../lib/prompts/promptUtils.js';
-import { uiBetaTag } from '../../lib/ui/index.js';
+import { uiAuthCommandReference, uiBetaTag } from '../../lib/ui/index.js';
 import {
   CommonArgs,
   ConfigArgs,
@@ -108,9 +108,10 @@ async function handler(
   }
 
   const url = `${baseUrl}/sandboxes/${parentAccountId}`;
-  const command = `hs auth ${
-    getEnv(sandboxAccountId) === 'qa' ? '--qa' : ''
-  } --account=${parentAccountId}`;
+  const command = uiAuthCommandReference({
+    accountId: parentAccountId || undefined,
+    qa: getEnv(sandboxAccountId) === 'qa',
+  });
 
   if (parentAccountId && !getAccountId(parentAccountId)) {
     uiLogger.log('');

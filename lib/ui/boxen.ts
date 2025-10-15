@@ -1,7 +1,6 @@
 import { Options } from 'boxen';
 import { uiLogger } from './logger.js';
 import { UI_COLORS } from './index.js';
-import { logger } from '@hubspot/local-dev-lib/logger';
 import { lib } from '../../lang/en.js';
 
 const defaultOptions: Options = {
@@ -25,7 +24,7 @@ export async function logInBox({
     uiLogger.log(boxen(contents, { ...defaultOptions, ...options }));
     return;
   } catch (error) {
-    logger.debug(lib.boxen.failedToLoad);
+    uiLogger.debug(lib.boxen.failedToLoad);
 
     if (options?.title) {
       uiLogger.log(options.title);

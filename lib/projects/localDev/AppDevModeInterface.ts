@@ -1,12 +1,12 @@
 import { fetchAppInstallationData } from '@hubspot/local-dev-lib/api/localDevAuth';
 import {
-  fetchPublicAppsForPortal,
+  fetchAppMetadataByUid,
   fetchPublicAppProductionInstallCounts,
-  // installStaticAuthAppOnTestAccount,
+  installStaticAuthAppOnTestAccount,
 } from '@hubspot/local-dev-lib/api/appsDev';
 import { DevModeUnifiedInterface as UIEDevModeInterface } from '@hubspot/ui-extensions-dev-server';
 import { requestPorts } from '@hubspot/local-dev-lib/portManager';
-// import { getAccountConfig } from '@hubspot/local-dev-lib/config';
+import { getAccountConfig } from '@hubspot/local-dev-lib/config';
 import { PublicApp } from '@hubspot/local-dev-lib/types/Apps';
 
 import {
@@ -20,7 +20,7 @@ import { isAppIRNode } from '../../projects/structure.js';
 import { uiLine } from '../../ui/index.js';
 import { logError } from '../../errorHandlers/index.js';
 import {
-  // installAppAutoPrompt,
+  installAppAutoPrompt,
   installAppBrowserPrompt,
 } from '../../prompts/installAppPrompt.js';
 import { confirmPrompt } from '../../prompts/promptUtils.js';
@@ -34,7 +34,7 @@ import {
   getStaticAuthAppInstallUrl,
 } from '../../app/urls.js';
 import { AppLocalDevData } from '../../../types/LocalDev.js';
-// import { isDeveloperTestAccount, isSandbox } from '../../accountTypes.js';
+import { isDeveloperTestAccount, isSandbox } from '../../accountTypes.js';
 import { IntermediateRepresentationNodeLocalDev } from '@hubspot/project-parsing-lib';
 import SpinniesManager from '../../ui/SpinniesManager.js';
 
@@ -48,6 +48,7 @@ class AppDevModeInterface {
   localDevLogger: LocalDevLogger;
   _appNode?: AppIRNode | null;
   marketplaceAppInstalls?: number;
+  private appInstallResolve?: () => void;
 
   constructor(options: AppDevModeInterfaceConstructorOptions) {
     this.localDevState = options.localDevState;
@@ -105,30 +106,25 @@ class AppDevModeInterface {
     );
   }
 
-  // @TODO: Restore test account auto install functionality
-  // private isAutomaticallyInstallable(): boolean {
-  //   const targetTestingAccount = getAccountConfig(
-  //     this.localDevState.targetTestingAccountId
-  //   );
+  private isAutomaticallyInstallable(): boolean {
+    const targetTestingAccount = getAccountConfig(
+      this.localDevState.targetTestingAccountId
+    );
 
-  //   if (!targetTestingAccount) {
-  //     return false;
-  //   }
+    if (!targetTestingAccount) {
+      return false;
+    }
 
-  //   const isTestAccount =
-  //     isDeveloperTestAccount(targetTestingAccount) ||
-  //     isSandbox(targetTestingAccount);
+    const isTestAccount =
+      isDeveloperTestAccount(targetTestingAccount) ||
+      isSandbox(targetTestingAccount);
 
-  //   const hasCorrectParent =
-  //     targetTestingAccount.parentAccountId ===
-  //     this.localDevState.targetProjectAccountId;
+    const hasCorrectParent =
+      targetTestingAccount.parentAccountId ===
+      this.localDevState.targetProjectAccountId;
 
-  //   return (
-  //     isTestAccount &&
-  //     hasCorrectParent &&
-  //     this.isStaticAuthApp()
-  //   );
-  // }
+    return isTestAccount && hasCorrectParent && this.isStaticAuthApp();
+  }
 
   private async getAppInstallUrl(): Promise<string> {
     if (this.appNode && this.isOAuthApp()) {
@@ -141,27 +137,10 @@ class AppDevModeInterface {
       });
     }
 
-    const {
-      data: { results },
-    } = await fetchPublicAppsForPortal(
-      this.localDevState.targetProjectAccountId
-    );
-    const app = results.find(app => app.sourceId === this.appNode?.uid);
-
-    if (!app) {
-      uiLogger.error(
-        lib.LocalDevManager.appNotFound(
-          this.localDevState.targetProjectAccountId,
-          this.appNode?.uid
-        )
-      );
-      process.exit(EXIT_CODES.ERROR);
-    }
-
     return getStaticAuthAppInstallUrl({
       targetAccountId: this.localDevState.targetTestingAccountId,
       env: this.localDevState.env,
-      appId: app.id,
+      appId: this.appData!.id,
     });
   }
 
@@ -172,16 +151,14 @@ class AppDevModeInterface {
       ),
     });
 
-    let portalApps: PublicApp[] = [];
+    let appData: PublicApp;
 
     try {
-      const {
-        data: { results },
-      } = await fetchPublicAppsForPortal(
+      const { data } = await fetchAppMetadataByUid(
+        this.appNode!.uid,
         this.localDevState.targetProjectAccountId
       );
-
-      portalApps = results;
+      appData = data;
     } catch (e) {
       SpinniesManager.fail('fetchAppData', {
         text: lib.AppDevModeInterface.fetchAppData.error,
@@ -189,10 +166,6 @@ class AppDevModeInterface {
       logError(e);
       process.exit(EXIT_CODES.ERROR);
     }
-
-    const appData = portalApps.find(
-      ({ sourceId }) => sourceId === this.appNode?.uid
-    );
 
     if (!appData) {
       return;
@@ -209,7 +182,7 @@ class AppDevModeInterface {
       id: appData.id,
       clientId: appData.clientId,
       name: appData.name,
-      installationState: APP_INSTALLATION_STATES.NOT_INSTALLED,
+      installationState: APP_INSTALLATION_STATES.UNKNOWN,
       scopeGroupIds: appData.scopeGroupIds,
     };
     this.marketplaceAppInstalls = uniquePortalInstallCount;
@@ -248,61 +221,87 @@ class AppDevModeInterface {
     );
   }
 
-  // @TODO: Restore test account auto install functionality
-  // private async autoInstallStaticAuthApp(): Promise<void> {
-  //   const shouldInstall = await installAppAutoPrompt();
+  private async waitUntilAppIsInstalled(installUrl: string): Promise<void> {
+    uiLogger.log(
+      lib.AppDevModeInterface.waitUntilAppIsInstalled.link(installUrl)
+    );
 
-  //   if (!shouldInstall) {
-  //     uiLogger.log(lib.AppDevModeInterface.autoInstallDeclined);
-  //     process.exit(EXIT_CODES.SUCCESS);
-  //   }
+    SpinniesManager.add('waitUntilAppIsInstalled', {
+      text: lib.AppDevModeInterface.waitUntilAppIsInstalled.waiting,
+    });
 
-  //   await installStaticAuthAppOnTestAccount(
-  //     this.appData!.id,
-  //     this.localDevState.targetTestingAccountId,
-  //     this.appData!.scopeGroupIds
-  //   );
-  // }
+    await new Promise<void>(resolve => {
+      this.appInstallResolve = resolve;
+    });
+
+    SpinniesManager.succeed('waitUntilAppIsInstalled', {
+      text: lib.AppDevModeInterface.waitUntilAppIsInstalled.success(
+        this.appNode?.config.name || '',
+        this.localDevState.targetTestingAccountId
+      ),
+    });
+  }
+
+  private async autoInstallStaticAuthApp(): Promise<boolean> {
+    const shouldInstall = await installAppAutoPrompt();
+
+    if (!shouldInstall) {
+      uiLogger.log(lib.AppDevModeInterface.autoInstallDeclined);
+      process.exit(EXIT_CODES.SUCCESS);
+    }
+
+    uiLogger.log('');
+
+    SpinniesManager.add('autoInstallStaticAuthApp', {
+      text: lib.AppDevModeInterface.autoInstallStaticAuthApp.installing(
+        this.appData!.name,
+        this.localDevState.targetTestingAccountId
+      ),
+    });
+
+    try {
+      await installStaticAuthAppOnTestAccount(
+        this.appData!.id,
+        this.localDevState.targetTestingAccountId,
+        this.appData!.scopeGroupIds
+      );
+
+      SpinniesManager.succeed('autoInstallStaticAuthApp', {
+        text: lib.AppDevModeInterface.autoInstallStaticAuthApp.success(
+          this.appData!.name,
+          this.localDevState.targetTestingAccountId
+        ),
+      });
+      return true;
+    } catch (e) {
+      SpinniesManager.fail('autoInstallStaticAuthApp', {
+        text: lib.AppDevModeInterface.autoInstallStaticAuthApp.error(
+          this.appData!.name,
+          this.localDevState.targetTestingAccountId
+        ),
+        failColor: 'white',
+      });
+      return false;
+    }
+  }
 
   private async installAppOrOpenInstallUrl(
     isReinstall: boolean
   ): Promise<void> {
-    // @TODO: Restore test account auto install functionality
-    // if (this.isAutomaticallyInstallable()) {
-    //   try {
-    //     await this.autoInstallStaticAuthApp();
-    //     uiLogger.success(
-    //       lib.AppDevModeInterface.autoInstallSuccess(
-    //         this.appData!.name,
-    //         this.localDevState.targetTestingAccountId
-    //       )
-    //     );
-    //     return;
-    //   } catch (e) {
-    //     uiLogger.error(
-    //       lib.AppDevModeInterface.autoInstallError(
-    //         this.appData!.name,
-    //         this.localDevState.targetTestingAccountId
-    //       )
-    //     );
-    //   }
-    // }
+    if (this.isAutomaticallyInstallable()) {
+      const installSuccess = await this.autoInstallStaticAuthApp();
 
-    const staticAuthInstallOptions = this.isStaticAuthApp()
-      ? {
-          testingAccountId: this.localDevState.targetTestingAccountId,
-          projectAccountId: this.localDevState.targetProjectAccountId,
-          projectName: this.localDevState.projectConfig.name,
-          appUid: this.appNode!.uid,
-        }
-      : undefined;
+      if (installSuccess) {
+        return;
+      }
+    }
 
     const installUrl = await this.getAppInstallUrl();
-    await installAppBrowserPrompt(
-      installUrl,
-      isReinstall,
-      staticAuthInstallOptions
-    );
+    await installAppBrowserPrompt(installUrl, isReinstall);
+
+    if (!isReinstall) {
+      await this.waitUntilAppIsInstalled(installUrl);
+    }
   }
 
   private async checkTestAccountAppInstallation(): Promise<{
@@ -336,14 +335,56 @@ class AppDevModeInterface {
         installationState:
           APP_INSTALLATION_STATES.INSTALLED_WITH_OUTDATED_SCOPES,
       };
+    } else {
+      this.appData = {
+        ...this.appData,
+        installationState: APP_INSTALLATION_STATES.NOT_INSTALLED,
+      };
     }
 
     return { needsInstall: !isInstalledWithScopeGroups, isReinstall };
   }
 
-  private onDevServerMessage = (message: string) => {
+  private resolveAppInstallPromise(): void {
+    if (this.appInstallResolve) {
+      this.appInstallResolve();
+      this.appInstallResolve = undefined;
+    }
+  }
+
+  private handleAppInstallSuccessDevServerMessage(): void {
+    this.resolveAppInstallPromise();
+
+    this.appData = {
+      ...this.appData!,
+      installationState: APP_INSTALLATION_STATES.INSTALLED,
+    };
+  }
+
+  private handleAppInstallInitiatedDevServerMessage(): void {
+    this.resolveAppInstallPromise();
+  }
+
+  private handleAppInstallFailureDevServerMessage(): void {
+    uiLogger.error(lib.AppDevModeInterface.installationFailed);
+    process.exit(EXIT_CODES.ERROR);
+  }
+
+  private onDevServerMessage = async (message: string) => {
     if (message === LOCAL_DEV_SERVER_MESSAGE_TYPES.WEBSOCKET_SERVER_CONNECTED) {
-      this.checkTestAccountAppInstallation();
+      await this.checkTestAccountAppInstallation();
+    } else if (
+      message === LOCAL_DEV_SERVER_MESSAGE_TYPES.STATIC_AUTH_APP_INSTALL_SUCCESS
+    ) {
+      this.handleAppInstallSuccessDevServerMessage();
+    } else if (
+      message === LOCAL_DEV_SERVER_MESSAGE_TYPES.STATIC_AUTH_APP_INSTALL_FAILURE
+    ) {
+      this.handleAppInstallFailureDevServerMessage();
+    } else if (
+      message === LOCAL_DEV_SERVER_MESSAGE_TYPES.OAUTH_APP_INSTALL_INITIATED
+    ) {
+      this.handleAppInstallInitiatedDevServerMessage();
     }
   };
 
@@ -374,11 +415,6 @@ class AppDevModeInterface {
       );
     }
   };
-
-  private setUpStateListeners() {
-    this.localDevState.addListener('devServerMessage', this.onDevServerMessage);
-    this.localDevState.addListener('projectNodes', this.onChangeProjectNodes);
-  }
 
   private removeStateListeners() {
     this.localDevState.removeListener(
@@ -420,6 +456,11 @@ class AppDevModeInterface {
             failColor: 'white',
           });
         }
+
+        this.localDevState.addListener(
+          'devServerMessage',
+          this.onDevServerMessage
+        );
         await this.installAppOrOpenInstallUrl(isReinstall || false);
       } else {
         if (SpinniesManager.pick('fetchAppData')) {
@@ -436,7 +477,7 @@ class AppDevModeInterface {
       logError(e);
     }
 
-    this.setUpStateListeners();
+    this.localDevState.addListener('projectNodes', this.onChangeProjectNodes);
 
     return UIEDevModeInterface.setup(args);
   }

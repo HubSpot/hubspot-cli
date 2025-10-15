@@ -16,6 +16,7 @@ import cloneApp from './project/cloneApp.js';
 import installDeps from './project/installDeps.js';
 import profile from './project/profile.js';
 import projectValidate from './project/validate.js';
+import list from './project/list.js';
 import { makeYargsBuilder } from '../lib/yargsUtils.js';
 import { YargsCommandModuleBucket } from '../types/Yargs.js';
 
@@ -27,6 +28,7 @@ function projectBuilder(yargs: Argv): Argv {
     .command(create)
     .command(add)
     .command(watch)
+    .command(list)
     .command(dev)
     .command(upload)
     .command(deploy)

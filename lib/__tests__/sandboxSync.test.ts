@@ -1,4 +1,4 @@
-import { logger } from '@hubspot/local-dev-lib/logger';
+import { uiLogger } from '../ui/logger.js';
 import { initiateSync } from '@hubspot/local-dev-lib/api/sandboxSync';
 import { getAccountId } from '@hubspot/local-dev-lib/config';
 import { HUBSPOT_ACCOUNT_TYPES } from '@hubspot/local-dev-lib/constants/config';
@@ -9,13 +9,13 @@ import { syncSandbox } from '../sandboxSync.js';
 import SpinniesManager from '../ui/SpinniesManager.js';
 import { Mock, Mocked } from 'vitest';
 
-vi.mock('@hubspot/local-dev-lib/logger');
+vi.mock('../ui/logger.js');
 vi.mock('@hubspot/local-dev-lib/api/sandboxSync');
 vi.mock('@hubspot/local-dev-lib/config');
 vi.mock('../sandboxes');
 vi.mock('../ui/SpinniesManager');
 
-const mockedLogger = logger as Mocked<typeof logger>;
+const mockedUiLogger = uiLogger as Mocked<typeof uiLogger>;
 const mockedInitiateSync = initiateSync as Mock;
 const mockedGetAccountId = getAccountId as Mock;
 const mockedGetAvailableSyncTypes = getAvailableSyncTypes as Mock;
@@ -114,7 +114,7 @@ describe('lib/sandboxSync', () => {
       ).rejects.toEqual(error);
 
       expect(mockedSpinniesFail).toHaveBeenCalled();
-      expect(mockedLogger.error).toHaveBeenCalledWith(
+      expect(mockedUiLogger.error).toHaveBeenCalledWith(
         expect.stringMatching(
           /Couldn't run the sync because there's another sync in progress/
         )
@@ -136,7 +136,7 @@ describe('lib/sandboxSync', () => {
       ).rejects.toEqual(error);
 
       expect(mockedSpinniesFail).toHaveBeenCalled();
-      expect(mockedLogger.error).toHaveBeenCalledWith(
+      expect(mockedUiLogger.error).toHaveBeenCalledWith(
         expect.stringMatching(/because your account has been removed from/)
       );
     });
@@ -156,7 +156,7 @@ describe('lib/sandboxSync', () => {
       ).rejects.toEqual(error);
 
       expect(mockedSpinniesFail).toHaveBeenCalled();
-      expect(mockedLogger.error).toHaveBeenCalledWith(
+      expect(mockedUiLogger.error).toHaveBeenCalledWith(
         expect.stringMatching(
           /Couldn't run the sync because you are not a super admin in/
         )
@@ -178,7 +178,7 @@ describe('lib/sandboxSync', () => {
       ).rejects.toEqual(error);
 
       expect(mockedSpinniesFail).toHaveBeenCalled();
-      expect(mockedLogger.error).toHaveBeenCalledWith(
+      expect(mockedUiLogger.error).toHaveBeenCalledWith(
         expect.stringMatching(/may have been deleted through the UI/)
       );
     });
@@ -194,7 +194,7 @@ describe('lib/sandboxSync', () => {
         true
       );
 
-      expect(mockedLogger.info).not.toHaveBeenCalled();
+      expect(mockedUiLogger.info).not.toHaveBeenCalled();
       expect(mockedSpinniesSucceed).toHaveBeenCalledWith(
         'sandboxSync',
         expect.objectContaining({

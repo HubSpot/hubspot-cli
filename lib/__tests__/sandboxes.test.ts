@@ -1,4 +1,4 @@
-import { logger } from '@hubspot/local-dev-lib/logger';
+import { uiLogger } from '../ui/logger.js';
 import { getSandboxUsageLimits } from '@hubspot/local-dev-lib/api/sandboxHubs';
 import { fetchTypes } from '@hubspot/local-dev-lib/api/sandboxSync';
 import { getAccountId, getConfigAccounts } from '@hubspot/local-dev-lib/config';
@@ -14,7 +14,7 @@ import {
 } from '../sandboxes.js';
 import { Mock, Mocked } from 'vitest';
 
-vi.mock('@hubspot/local-dev-lib/logger');
+vi.mock('../ui/logger.js');
 vi.mock('@hubspot/local-dev-lib/api/sandboxHubs');
 vi.mock('@hubspot/local-dev-lib/api/sandboxSync');
 vi.mock('@hubspot/local-dev-lib/config');
@@ -23,7 +23,7 @@ const mockedGetAccountId = getAccountId as Mock;
 const mockedGetSandboxUsageLimits = getSandboxUsageLimits as Mock;
 const mockedFetchTypes = fetchTypes as Mock;
 const mockedGetConfigAccounts = getConfigAccounts as Mock;
-const mockedLogger = logger as Mocked<typeof logger>;
+const mockedUiLogger = uiLogger as Mocked<typeof uiLogger>;
 
 describe('lib/sandboxes', () => {
   describe('getSandboxTypeAsString()', () => {
@@ -162,7 +162,7 @@ describe('lib/sandboxes', () => {
           HUBSPOT_ACCOUNT_TYPES.DEVELOPMENT_SANDBOX,
           'qa'
         )
-      ).rejects.toThrow(/reached the limit of 1 development sandbox/);
+      ).rejects.toThrow(/reached the limit of 1 developer sandboxes/);
     });
   });
 
@@ -183,12 +183,12 @@ describe('lib/sandboxes', () => {
       expect(() =>
         handleSandboxCreateError(error, mockEnv, mockName, mockAccountId)
       ).toThrow(error);
-      expect(mockedLogger.error).toHaveBeenCalledWith(
+      expect(mockedUiLogger.error).toHaveBeenCalledWith(
         expect.stringMatching(
           /The personal access key you provided doesn't include sandbox permissions/
         )
       );
-      expect(mockedLogger.info).toHaveBeenCalledWith(
+      expect(mockedUiLogger.info).toHaveBeenCalledWith(
         expect.stringMatching(/To update CLI permissions for/)
       );
     });
@@ -205,7 +205,7 @@ describe('lib/sandboxes', () => {
       expect(() =>
         handleSandboxCreateError(error, mockEnv, mockName, mockAccountId)
       ).toThrow(error);
-      expect(mockedLogger.error).toHaveBeenCalledWith(
+      expect(mockedUiLogger.error).toHaveBeenCalledWith(
         expect.stringMatching(
           /your permission set doesn't allow you to create the sandbox/
         )
@@ -224,7 +224,7 @@ describe('lib/sandboxes', () => {
       expect(() =>
         handleSandboxCreateError(error, mockEnv, mockName, mockAccountId)
       ).toThrow(error);
-      expect(mockedLogger.error).toHaveBeenCalledWith(
+      expect(mockedUiLogger.error).toHaveBeenCalledWith(
         expect.stringMatching(/does not have access to development sandboxes/)
       );
     });

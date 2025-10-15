@@ -1,6 +1,6 @@
 import { fetchPublicAppMetadata } from '@hubspot/local-dev-lib/api/appsDev';
 import { CLIAccount } from '@hubspot/local-dev-lib/types/Accounts';
-import { logger } from '@hubspot/local-dev-lib/logger';
+import { uiLogger } from '../ui/logger.js';
 import {
   checkMigrationStatus,
   downloadProject,
@@ -15,7 +15,7 @@ import { promptUser } from '../prompts/promptUtils.js';
 import { ApiErrorContext, logError } from '../errorHandlers/index.js';
 import { EXIT_CODES } from '../enums/exitCodes.js';
 import { uiAccountDescription, uiLine, uiLink } from '../ui/index.js';
-import { i18n } from '../lang.js';
+import { commands } from '../../lang/en.js';
 import { isAppDeveloperAccount, isUnifiedAccount } from '../accountTypes.js';
 import { selectPublicAppForMigrationPrompt } from '../prompts/selectPublicAppForMigrationPrompt.js';
 import { projectNameAndDestPrompt } from '../prompts/projectNameAndDestPrompt.js';
@@ -61,11 +61,7 @@ export async function migrateApp2023_2(
     const preventProjectMigrations = selectedApp.preventProjectMigrations;
     const listingInfo = selectedApp.listingInfo;
     if (preventProjectMigrations && listingInfo) {
-      logger.error(
-        i18n(`commands.project.subcommands.migrateApp.errors.invalidApp`, {
-          appId,
-        })
-      );
+      uiLogger.error(commands.project.migrateApp.errors.invalidApp(appId));
       return process.exit(EXIT_CODES.ERROR);
     }
   } catch (error) {
@@ -87,12 +83,7 @@ export async function migrateApp2023_2(
 
   if (projectExists) {
     throw new Error(
-      i18n(
-        `commands.project.subcommands.migrateApp.errors.projectAlreadyExists`,
-        {
-          projectName,
-        }
-      )
+      commands.project.migrateApp.errors.projectAlreadyExists(projectName)
     );
   }
 
@@ -102,30 +93,20 @@ export async function migrateApp2023_2(
     derivedAccountId
   );
 
-  logger.log('');
+  uiLogger.log('');
   uiLine();
-  logger.warn(
-    `${i18n(`commands.project.subcommands.migrateApp.warning.title`)}\n`
-  );
-  logger.log(
-    i18n(`commands.project.subcommands.migrateApp.warning.projectConversion`)
-  );
-  logger.log(
-    `${i18n(`commands.project.subcommands.migrateApp.warning.appConfig`)}\n`
-  );
-  logger.log(
-    `${i18n(`commands.project.subcommands.migrateApp.warning.buildAndDeploy`)}\n`
-  );
-  logger.log(
-    `${i18n(`commands.project.subcommands.migrateApp.warning.existingApps`)}\n`
-  );
-  logger.log(i18n(`commands.project.subcommands.migrateApp.warning.copyApp`));
+  uiLogger.warn(commands.project.migrateApp.warning.title);
+  uiLogger.log(commands.project.migrateApp.warning.projectConversion);
+  uiLogger.log(commands.project.migrateApp.warning.appConfig);
+  uiLogger.log(commands.project.migrateApp.warning.buildAndDeploy);
+  uiLogger.log(commands.project.migrateApp.warning.existingApps);
+  uiLogger.log(commands.project.migrateApp.warning.copyApp);
   uiLine();
 
   const { shouldCreateApp } = await promptUser({
     name: 'shouldCreateApp',
     type: 'confirm',
-    message: i18n(`commands.project.subcommands.migrateApp.createAppPrompt`),
+    message: commands.project.migrateApp.createAppPrompt,
   });
   process.stdin.resume();
 
@@ -137,17 +118,13 @@ export async function migrateApp2023_2(
     SpinniesManager.init();
 
     SpinniesManager.add('migrateApp', {
-      text: i18n(
-        `commands.project.subcommands.migrateApp.migrationStatus.inProgress`
-      ),
+      text: commands.project.migrateApp.migrationStatus.inProgress(),
     });
 
     handleKeypress(async key => {
       if ((key.ctrl && key.name === 'c') || key.name === 'q') {
         SpinniesManager.remove('migrateApp');
-        logger.log(
-          i18n(`commands.project.subcommands.migrateApp.migrationInterrupted`)
-        );
+        uiLogger.log(commands.project.migrateApp.migrationInterrupted);
         return process.exit(EXIT_CODES.SUCCESS);
       }
     });
@@ -181,20 +158,16 @@ export async function migrateApp2023_2(
       );
 
       SpinniesManager.succeed('migrateApp', {
-        text: i18n(
-          `commands.project.subcommands.migrateApp.migrationStatus.done`
-        ),
+        text: commands.project.migrateApp.migrationStatus.done(),
         succeedColor: 'white',
       });
-      logger.log('');
+      uiLogger.log('');
       uiLine();
-      logger.success(
-        i18n(`commands.project.subcommands.migrateApp.migrationStatus.success`)
-      );
-      logger.log('');
-      logger.log(
+      uiLogger.success(commands.project.migrateApp.migrationStatus.success());
+      uiLogger.log('');
+      uiLogger.log(
         uiLink(
-          i18n(`commands.project.subcommands.migrateApp.projectDetailsLink`),
+          commands.project.migrateApp.projectDetailsLink,
           `${baseUrl}/developer-projects/${derivedAccountId}/project/${encodeURIComponent(
             project!.name
           )}`
@@ -204,9 +177,7 @@ export async function migrateApp2023_2(
     }
   } catch (error) {
     SpinniesManager.fail('migrateApp', {
-      text: i18n(
-        `commands.project.subcommands.migrateApp.migrationStatus.failure`
-      ),
+      text: commands.project.migrateApp.migrationStatus.failure(),
       failColor: 'white',
     });
     throw error;

@@ -15,6 +15,7 @@ const PUBLIC_REPO_NAME = 'hubspot-cli';
 const SYNC_BRANCH_PREFIX = 'sync-from-internal';
 const TEMP_SYNC_DIR = 'temp-repo-sync';
 const PUBLIC_README_PATH = 'PUBLIC_README.md';
+const ISSUE_TEMPLATE_PATH = '.github/ISSUE_TEMPLATE.md';
 
 // Files and directories to exclude from sync
 const EXCLUDE_PATTERNS = [
@@ -119,6 +120,15 @@ async function copyFiles(sourcePath: string, destPath: string): Promise<void> {
   // Use manual copy which has better pattern matching
   logger.log('Using manual copy with exclude patterns...');
   await manualCopy(sourcePath, destPath);
+
+  // Allow the issue template to be included
+  const issueTemplatePath = path.join(sourcePath, ISSUE_TEMPLATE_PATH);
+  if (await fs.exists(issueTemplatePath)) {
+    const destIssueTemplatePath = path.join(destPath, ISSUE_TEMPLATE_PATH);
+    // Ensure the .github directory exists
+    await fs.ensureDir(path.dirname(destIssueTemplatePath));
+    await fs.copyFile(issueTemplatePath, destIssueTemplatePath);
+  }
 }
 
 async function manualCopy(sourcePath: string, destPath: string): Promise<void> {
@@ -235,10 +245,17 @@ export async function syncToPublicRepo({
     // Validate we're on the master branch
     const currentBranch = await getGitBranch();
     if (currentBranch !== 'master') {
-      logger.error(
-        'Sync to public repo can only be run from the master branch'
-      );
-      process.exit(EXIT_CODES.ERROR);
+      if (dryRun) {
+        logger.log();
+        logger.log(
+          'DRY RUN: Would exit with error because this is not the master branch'
+        );
+      } else {
+        logger.error(
+          'Sync to public repo can only be run from the master branch'
+        );
+        process.exit(EXIT_CODES.ERROR);
+      }
     }
 
     // Create temporary directory
@@ -275,7 +292,7 @@ export async function syncToPublicRepo({
     process.exit(EXIT_CODES.ERROR);
   } finally {
     // Cleanup
-    if (tempDir) {
+    if (tempDir && !dryRun) {
       await cleanup(tempDir);
     }
     process.chdir(originalCwd);

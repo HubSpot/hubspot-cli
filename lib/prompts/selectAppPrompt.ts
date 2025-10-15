@@ -1,4 +1,4 @@
-import { logger } from '@hubspot/local-dev-lib/logger';
+import { uiLogger } from '../ui/logger.js';
 import { fetchPublicAppsForPortal } from '@hubspot/local-dev-lib/api/appsDev';
 import { PublicApp } from '@hubspot/local-dev-lib/types/Apps';
 import { debugError } from '../errorHandlers/index.js';
@@ -21,7 +21,7 @@ export async function selectAppPrompt(
   }
 
   if (availableApps.length === 0) {
-    logger.error(lib.prompts.selectAppPrompt.errors.noApps);
+    uiLogger.error(lib.prompts.selectAppPrompt.errors.noApps);
     return null;
   }
 
@@ -30,7 +30,7 @@ export async function selectAppPrompt(
     if (targetApp) {
       return targetApp;
     } else {
-      logger.error(lib.prompts.selectAppPrompt.errors.invalidAppId);
+      uiLogger.error(lib.prompts.selectAppPrompt.errors.invalidAppId);
     }
   }
 

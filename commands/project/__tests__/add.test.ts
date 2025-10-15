@@ -6,23 +6,25 @@ import {
   privateDistribution,
   staticAuth,
 } from '../../../lib/constants.js';
-import { v3AddComponent } from '../../../lib/projects/add/v3AddComponent.js';
+import { v2AddComponent } from '../../../lib/projects/add/v2AddComponent.js';
 import { legacyAddComponent } from '../../../lib/projects/add/legacyAddComponent.js';
 import { getProjectConfig } from '../../../lib/projects/config.js';
 import { isV2Project } from '../../../lib/projects/platformVersion.js';
 import { trackCommandUsage } from '../../../lib/usageTracking.js';
 
 vi.mock('../../../lib/commonOpts');
-vi.mock('../../../lib/projects/add/v3AddComponent');
+vi.mock('../../../lib/ui/logger.js');
+vi.mock('../../../lib/errorHandlers/index.js');
+vi.mock('../../../lib/projects/add/v2AddComponent');
 vi.mock('../../../lib/projects/add/legacyAddComponent');
 vi.mock('../../../lib/projects/config');
 vi.mock('../../../lib/projects/platformVersion');
 vi.mock('../../../lib/usageTracking');
 
-const mockedV3AddComponent = vi.mocked(v3AddComponent);
+const mockedV2AddComponent = vi.mocked(v2AddComponent);
 const mockedLegacyAddComponent = vi.mocked(legacyAddComponent);
 const mockedGetProjectConfig = vi.mocked(getProjectConfig);
-const mockedUseV3Api = vi.mocked(isV2Project);
+const mockedUseV2Api = vi.mocked(isV2Project);
 const mockedTrackCommandUsage = vi.mocked(trackCommandUsage);
 
 describe('commands/project/add', () => {
@@ -72,7 +74,7 @@ describe('commands/project/add', () => {
     const mockProjectConfig = {
       name: 'test-project',
       srcDir: 'src',
-      platformVersion: 'v3',
+      platformVersion: '2025.2',
     };
     const mockProjectDir = '/path/to/project';
     const mockArgs = {
@@ -87,21 +89,21 @@ describe('commands/project/add', () => {
         projectDir: mockProjectDir,
       });
       mockedTrackCommandUsage.mockResolvedValue();
-      mockedV3AddComponent.mockResolvedValue();
+      mockedV2AddComponent.mockResolvedValue();
       mockedLegacyAddComponent.mockResolvedValue();
       vi.spyOn(process, 'exit').mockImplementation(() => {
         throw new Error('process.exit called');
       });
     });
 
-    it('should call v3AddComponent with accountId for v3 projects', async () => {
-      mockedUseV3Api.mockReturnValue(true);
+    it('should call v2AddComponent with accountId for v2 projects', async () => {
+      mockedUseV2Api.mockReturnValue(true);
 
       await expect(projectAddCommand.handler(mockArgs)).rejects.toThrow(
         'process.exit called'
       );
 
-      expect(mockedV3AddComponent).toHaveBeenCalledWith(
+      expect(mockedV2AddComponent).toHaveBeenCalledWith(
         mockArgs,
         mockProjectDir,
         mockProjectConfig,
@@ -110,8 +112,8 @@ describe('commands/project/add', () => {
       expect(mockedLegacyAddComponent).not.toHaveBeenCalled();
     });
 
-    it('should call legacyAddComponent for non-v3 projects', async () => {
-      mockedUseV3Api.mockReturnValue(false);
+    it('should call legacyAddComponent for non-v2 projects', async () => {
+      mockedUseV2Api.mockReturnValue(false);
 
       await expect(projectAddCommand.handler(mockArgs)).rejects.toThrow(
         'process.exit called'
@@ -123,7 +125,7 @@ describe('commands/project/add', () => {
         mockProjectConfig,
         123
       );
-      expect(mockedV3AddComponent).not.toHaveBeenCalled();
+      expect(mockedV2AddComponent).not.toHaveBeenCalled();
     });
 
     it('should exit with error when project config is not found', async () => {

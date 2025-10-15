@@ -32,7 +32,7 @@ function buildArguments(
 }
 
 vi.mock('@hubspot/local-dev-lib/config');
-vi.mock('@hubspot/local-dev-lib/logger');
+vi.mock('../../ui/logger.js');
 
 describe('lib/commonOpts', () => {
   describe('getCmsPublishMode()', () => {

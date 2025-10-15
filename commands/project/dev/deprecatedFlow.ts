@@ -15,7 +15,7 @@ import { commands } from '../../../lang/en.js';
 import { uiLogger } from '../../../lib/ui/logger.js';
 import { EXIT_CODES } from '../../../lib/enums/exitCodes.js';
 import SpinniesManager from '../../../lib/ui/SpinniesManager.js';
-import LocalDevManager from '../../../lib/projects/localDev/LocalDevManager.js';
+import LocalDevManager_DEPRECATED from '../../../lib/projects/localDev/LocalDevManager_DEPRECATED.js';
 import {
   confirmDefaultAccountIsTarget,
   suggestRecommendedNestedAccount,
@@ -212,7 +212,7 @@ export async function deprecatedProjectDevFlow({
     );
   }
 
-  const LocalDev = new LocalDevManager({
+  const LocalDev = new LocalDevManager_DEPRECATED({
     runnableComponents,
     debug: args.debug,
     deployedBuild,

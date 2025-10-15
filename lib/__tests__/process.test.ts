@@ -1,13 +1,18 @@
 import readline from 'readline';
-import { logger, setLogLevel, LOG_LEVEL } from '@hubspot/local-dev-lib/logger';
+import { uiLogger } from '../ui/logger.js';
+import { setLogLevel, LOG_LEVEL } from '@hubspot/local-dev-lib/logger';
 import { handleExit, handleKeypress, TERMINATION_SIGNALS } from '../process.js';
 import { Mock, Mocked } from 'vitest';
 
 vi.mock('readline');
-vi.mock('@hubspot/local-dev-lib/logger');
+vi.mock('../ui/logger.js');
+vi.mock('@hubspot/local-dev-lib/logger', async () => {
+  const logger = await vi.importActual('@hubspot/local-dev-lib/logger');
 
+  return { ...logger, setLogLevel: vi.fn() };
+});
 const mockedReadline = readline as Mocked<typeof readline>;
-const mockedLogger = logger as Mocked<typeof logger>;
+const mockedUiLogger = uiLogger as Mocked<typeof uiLogger>;
 const mockedSetLogLevel = setLogLevel as Mock;
 const processRemoveListenerSpy = vi.spyOn(process, 'removeAllListeners');
 const processOnSpy = vi.spyOn(process, 'on');
@@ -39,7 +44,7 @@ describe('lib/process', () => {
 
       expect(mockedSetLogLevel).toHaveBeenCalledWith(LOG_LEVEL.NONE);
       expect(mockCallback).toHaveBeenCalledWith({ isSIGHUP: true });
-      expect(mockedLogger.debug).toHaveBeenCalledWith(
+      expect(mockedUiLogger.debug).toHaveBeenCalledWith(
         expect.stringContaining('SIGHUP')
       );
     });
@@ -58,7 +63,7 @@ describe('lib/process', () => {
 
       expect(mockedSetLogLevel).not.toHaveBeenCalled();
       expect(mockCallback).toHaveBeenCalledWith({ isSIGHUP: false });
-      expect(mockedLogger.debug).toHaveBeenCalledWith(
+      expect(mockedUiLogger.debug).toHaveBeenCalledWith(
         expect.stringContaining('SIGINT')
       );
     });

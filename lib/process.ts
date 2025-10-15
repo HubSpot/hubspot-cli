@@ -1,6 +1,7 @@
 import readline from 'readline';
-import { logger, setLogLevel, LOG_LEVEL } from '@hubspot/local-dev-lib/logger';
-import { i18n } from './lang.js';
+import { setLogLevel, LOG_LEVEL } from '@hubspot/local-dev-lib/logger';
+import { uiLogger } from './ui/logger.js';
+import { lib } from '../lang/en.js';
 import { logError } from './errorHandlers/index.js';
 
 interface KeyPress {
@@ -43,13 +44,13 @@ export function handleExit(
           setLogLevel(LOG_LEVEL.NONE);
         }
 
-        logger.debug(i18n(`lib.process.exitDebug`, { signal }));
+        uiLogger.debug(lib.process.exitDebug(signal));
 
         if (signal === uncaughtException && args && args.length > 0) {
           try {
             logError(args[0]);
           } catch (e) {
-            logger.error(args[0]);
+            uiLogger.error(String(args[0]));
           }
         }
 

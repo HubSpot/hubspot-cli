@@ -1,4 +1,4 @@
-import { logger } from '@hubspot/local-dev-lib/logger';
+import { uiLogger } from '../../../ui/logger.js';
 import * as github from '@hubspot/local-dev-lib/api/github';
 import { EXIT_CODES } from '../../../enums/exitCodes.js';
 import {
@@ -13,7 +13,7 @@ import {
 import { AxiosResponse } from 'axios';
 import { Mock } from 'vitest';
 
-vi.mock('@hubspot/local-dev-lib/logger');
+vi.mock('../../../ui/logger.js');
 vi.mock('@hubspot/local-dev-lib/api/github');
 
 const mockedFetchRepoFile = vi.mocked(github.fetchRepoFile);
@@ -90,7 +90,7 @@ describe('lib/projects/create/legacy', () => {
         HUBSPOT_PROJECT_COMPONENTS_GITHUB_PATH,
         'gh-ref'
       );
-      expect(logger.error).toHaveBeenCalledWith(
+      expect(uiLogger.error).toHaveBeenCalledWith(
         expect.stringMatching(
           /Failed to fetch the config.json file from the target repository/
         )
@@ -105,7 +105,7 @@ describe('lib/projects/create/legacy', () => {
         HUBSPOT_PROJECT_COMPONENTS_GITHUB_PATH,
         'gh-ref'
       );
-      expect(logger.error).toHaveBeenCalledWith(
+      expect(uiLogger.error).toHaveBeenCalledWith(
         expect.stringMatching(
           /Unable to find any projects in the target repository's config.json file/
         )
@@ -130,7 +130,7 @@ describe('lib/projects/create/legacy', () => {
         HUBSPOT_PROJECT_COMPONENTS_GITHUB_PATH,
         'gh-ref'
       );
-      expect(logger.error).toHaveBeenCalledWith(
+      expect(uiLogger.error).toHaveBeenCalledWith(
         expect.stringMatching(
           /Found misconfigured projects in the target repository's config.json file/
         )

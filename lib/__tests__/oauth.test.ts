@@ -3,7 +3,7 @@ import open from 'open';
 import { OAuth2Manager } from '@hubspot/local-dev-lib/models/OAuth2Manager';
 import { getAccountConfig } from '@hubspot/local-dev-lib/config';
 import { addOauthToAccountConfig } from '@hubspot/local-dev-lib/oauth';
-import { logger } from '@hubspot/local-dev-lib/logger';
+import { uiLogger } from '../ui/logger.js';
 import { ENVIRONMENTS } from '@hubspot/local-dev-lib/constants/environments';
 import { DEFAULT_OAUTH_SCOPES } from '@hubspot/local-dev-lib/constants/auth';
 import { authenticateWithOauth } from '../oauth.js';
@@ -14,7 +14,7 @@ vi.mock('open');
 vi.mock('@hubspot/local-dev-lib/models/OAuth2Manager');
 vi.mock('@hubspot/local-dev-lib/config');
 vi.mock('@hubspot/local-dev-lib/oauth');
-vi.mock('@hubspot/local-dev-lib/logger');
+vi.mock('../ui/logger.js');
 
 const mockedExpress = express as unknown as Mock;
 const mockedOAuth2Manager = OAuth2Manager as unknown as Mock;
@@ -71,7 +71,7 @@ describe('lib/oauth', () => {
       });
 
       // Verify logger was called
-      expect(logger.log).toHaveBeenCalledWith('Authorizing');
+      expect(uiLogger.log).toHaveBeenCalledWith('Authorizing');
 
       // Verify OAuth tokens were added to config
       expect(addOauthToAccountConfig).toHaveBeenCalledWith(mockOAuth2Manager);
@@ -94,7 +94,7 @@ describe('lib/oauth', () => {
       await expect(authenticateWithOauth(invalidConfig)).rejects.toThrow(
         'exit'
       );
-      expect(logger.error).toHaveBeenCalled();
+      expect(uiLogger.error).toHaveBeenCalled();
       expect(exitSpy).toHaveBeenCalled();
       exitSpy.mockRestore();
     });

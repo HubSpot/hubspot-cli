@@ -1,5 +1,5 @@
 import { Separator } from '@inquirer/prompts';
-import { projectAddPromptV3 } from '../projectAddPrompt.js';
+import { projectAddPromptV2 } from '../projectAddPrompt.js';
 import { promptUser } from '../promptUtils.js';
 import {
   ComponentTemplate,
@@ -28,7 +28,7 @@ describe('lib/prompts/projectAddPrompt', () => {
     supportedDistributions: ['private'],
   };
 
-  describe('projectAddPromptV3()', () => {
+  describe('projectAddPromptV2()', () => {
     beforeEach(() => {
       // Mock returns empty result, logic will use selectedComponents when selectedFeatures provided
       mockedPromptUser.mockResolvedValue({});
@@ -43,7 +43,7 @@ describe('lib/prompts/projectAddPrompt', () => {
       const components = [templateChoice];
       const selectedFeatures = ['workflow-action-tool'];
 
-      const result = await projectAddPromptV3(components, selectedFeatures);
+      const result = await projectAddPromptV2(components, selectedFeatures);
 
       expect(result.componentTemplate).toEqual([
         mockComponentTemplateWithCliSelector,
@@ -65,7 +65,7 @@ describe('lib/prompts/projectAddPrompt', () => {
       const components = [templateChoice];
       const selectedFeatures = ['module'];
 
-      const result = await projectAddPromptV3(components, selectedFeatures);
+      const result = await projectAddPromptV2(components, selectedFeatures);
 
       expect(result.componentTemplate).toEqual([mockComponentTemplate]);
       expect(mockedPromptUser).toHaveBeenCalledWith([
@@ -85,7 +85,7 @@ describe('lib/prompts/projectAddPrompt', () => {
       const components = [templateChoice];
       const selectedFeatures = ['workflow-action-tool']; // matches cliSelector
 
-      const result = await projectAddPromptV3(components, selectedFeatures);
+      const result = await projectAddPromptV2(components, selectedFeatures);
 
       expect(result.componentTemplate).toEqual([
         mockComponentTemplateWithCliSelector,
@@ -103,7 +103,7 @@ describe('lib/prompts/projectAddPrompt', () => {
 
       mockedPromptUser.mockResolvedValue({ componentTemplate: [] });
 
-      const result = await projectAddPromptV3(components, selectedFeatures);
+      const result = await projectAddPromptV2(components, selectedFeatures);
 
       expect(result.componentTemplate).toEqual([]);
     });
@@ -119,7 +119,7 @@ describe('lib/prompts/projectAddPrompt', () => {
       const selectedFeatures = ['workflow-action-tool'];
 
       await expect(
-        projectAddPromptV3(components, selectedFeatures)
+        projectAddPromptV2(components, selectedFeatures)
       ).rejects.toThrow(/Cannot.*feature.*workflow-action/);
     });
 
@@ -137,7 +137,7 @@ describe('lib/prompts/projectAddPrompt', () => {
       const components = [choice1, choice2];
       const selectedFeatures = ['module', 'workflow-action-tool'];
 
-      const result = await projectAddPromptV3(components, selectedFeatures);
+      const result = await projectAddPromptV2(components, selectedFeatures);
 
       expect(result.componentTemplate).toEqual([
         mockComponentTemplate,
@@ -155,7 +155,7 @@ describe('lib/prompts/projectAddPrompt', () => {
       const components = [separator, templateChoice];
       const selectedFeatures = ['module'];
 
-      const result = await projectAddPromptV3(components, selectedFeatures);
+      const result = await projectAddPromptV2(components, selectedFeatures);
 
       expect(result.componentTemplate).toEqual([mockComponentTemplate]);
     });
@@ -173,7 +173,7 @@ describe('lib/prompts/projectAddPrompt', () => {
         componentTemplate: [mockComponentTemplate],
       });
 
-      const result = await projectAddPromptV3(components, selectedFeatures);
+      const result = await projectAddPromptV2(components, selectedFeatures);
 
       expect(mockedPromptUser).toHaveBeenCalledWith([
         expect.objectContaining({

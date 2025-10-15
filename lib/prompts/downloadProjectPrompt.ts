@@ -2,9 +2,9 @@ import { promptUser } from './promptUtils.js';
 import { getAccountId } from '@hubspot/local-dev-lib/config';
 import { fetchProjects } from '@hubspot/local-dev-lib/api/projects';
 import { logError, ApiErrorContext } from '../errorHandlers/index.js';
-import { logger } from '@hubspot/local-dev-lib/logger';
+import { uiLogger } from '../ui/logger.js';
 import { EXIT_CODES } from '../enums/exitCodes.js';
-import { i18n } from '../lang.js';
+import { lib } from '../../lang/en.js';
 import { Project } from '@hubspot/local-dev-lib/types/Project';
 
 type DownloadProjectPromptResponse = {
@@ -19,9 +19,7 @@ async function createProjectsList(
       const { data: projects } = await fetchProjects(accountId);
       return projects.results;
     }
-    logger.error(
-      i18n(`lib.prompts.downloadProjectPrompt.errors.accountIdRequired`)
-    );
+    uiLogger.error(lib.prompts.downloadProjectPrompt.errors.accountIdRequired);
     process.exit(EXIT_CODES.ERROR);
   } catch (e) {
     logError(e, accountId ? new ApiErrorContext({ accountId }) : undefined);
@@ -43,11 +41,11 @@ export async function downloadProjectPrompt(promptOptions: {
       message: () => {
         return promptOptions.project &&
           !projectsList.find(p => p.name === promptOptions.name)
-          ? i18n(`lib.prompts.downloadProjectPrompt.errors.projectNotFound`, {
-              projectName: promptOptions.project,
-              accountId: accountId || '',
-            })
-          : i18n(`lib.prompts.downloadProjectPrompt.selectProject`);
+          ? lib.prompts.downloadProjectPrompt.errors.projectNotFound(
+              promptOptions.project,
+              accountId || 0
+            )
+          : lib.prompts.downloadProjectPrompt.selectProject;
       },
       when:
         !promptOptions.project ||

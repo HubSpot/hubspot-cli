@@ -1,7 +1,7 @@
 import { PromptConfig } from '../../types/Prompts.js';
 
 import { promptUser } from './promptUtils.js';
-import { i18n } from '../lang.js';
+import { lib } from '../../lang/en.js';
 import { CreateArgs } from '../../types/Cms.js';
 
 type CreateModulePromptResponse = {
@@ -14,12 +14,12 @@ type CreateModulePromptResponse = {
 
 const MODULE_LABEL_PROMPT: PromptConfig<CreateModulePromptResponse> = {
   name: 'moduleLabel',
-  message: i18n(`lib.prompts.createModulePrompt.enterLabel`),
+  message: lib.prompts.createModulePrompt.enterLabel,
   validate(val?: string): boolean | string {
     if (typeof val !== 'string') {
-      return i18n(`lib.prompts.createModulePrompt.errors.invalidLabel`);
+      return lib.prompts.createModulePrompt.errors.invalidLabel;
     } else if (!val.length) {
-      return i18n(`lib.prompts.createModulePrompt.errors.labelRequired`);
+      return lib.prompts.createModulePrompt.errors.labelRequired;
     }
     return true;
   },
@@ -28,14 +28,14 @@ const MODULE_LABEL_PROMPT: PromptConfig<CreateModulePromptResponse> = {
 const REACT_TYPE_PROMPT: PromptConfig<CreateModulePromptResponse> = {
   type: 'confirm',
   name: 'reactType',
-  message: i18n(`lib.prompts.createModulePrompt.selectReactType`),
+  message: lib.prompts.createModulePrompt.selectReactType,
   default: false,
 };
 
 const CONTENT_TYPES_PROMPT: PromptConfig<CreateModulePromptResponse> = {
   type: 'checkbox',
   name: 'contentTypes',
-  message: i18n(`lib.prompts.createModulePrompt.selectContentType`),
+  message: lib.prompts.createModulePrompt.selectContentType,
   choices: [
     { name: 'Any', value: 'ANY', checked: true },
     { name: 'Landing page', value: 'LANDING_PAGE' },
@@ -55,7 +55,7 @@ const CONTENT_TYPES_PROMPT: PromptConfig<CreateModulePromptResponse> = {
       if (input.length > 0) {
         resolve(true);
       }
-      reject(i18n(`lib.prompts.createModulePrompt.errors.contentTypeRequired`));
+      reject(lib.prompts.createModulePrompt.errors.contentTypeRequired);
     });
   },
 };
@@ -63,14 +63,14 @@ const CONTENT_TYPES_PROMPT: PromptConfig<CreateModulePromptResponse> = {
 const GLOBAL_PROMPT: PromptConfig<CreateModulePromptResponse> = {
   type: 'confirm',
   name: 'global',
-  message: i18n(`lib.prompts.createModulePrompt.confirmGlobal`),
+  message: lib.prompts.createModulePrompt.confirmGlobal,
   default: false,
 };
 
 const AVAILABLE_FOR_NEW_CONTENT: PromptConfig<CreateModulePromptResponse> = {
   type: 'confirm',
   name: 'availableForNewContent',
-  message: i18n(`lib.prompts.createModulePrompt.availableForNewContent`),
+  message: lib.prompts.createModulePrompt.availableForNewContent,
   default: true,
 };
 

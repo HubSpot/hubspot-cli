@@ -1,6 +1,5 @@
 import { getAccountId, hasLocalStateFlag } from '@hubspot/local-dev-lib/config';
 import { getConfigDefaultAccount } from '@hubspot/local-dev-lib/config';
-import { logger } from '@hubspot/local-dev-lib/logger';
 
 import { uiLogger } from '../../ui/logger.js';
 import {
@@ -45,7 +44,7 @@ class LocalDevLogger {
     langFunction: (message: string) => string
   ): void {
     if (this.state.debug) {
-      logger.error(e);
+      uiLogger.error(e instanceof Error ? e.message : String(e));
     }
     uiLogger.error(langFunction(e instanceof Error ? e.message : ''));
   }
@@ -191,41 +190,41 @@ class LocalDevLogger {
   }
 
   uploadError(error: unknown): void {
-    logger.log('');
+    uiLogger.log('');
     logError(error);
     uiLogger.log(lib.LocalDevProcess.uploadFailed);
-    logger.log('');
+    uiLogger.log('');
   }
 
   uploadSuccess(): void {
-    logger.log('');
+    uiLogger.log('');
     uiLogger.log(lib.LocalDevProcess.uploadSuccess);
     uiLine();
-    logger.log('');
+    uiLogger.log('');
   }
 
   uploadSuccessAutoDeployDisabled(): void {
     uiLogger.warn(lib.LocalDevProcess.uploadSuccessAutoDeployDisabled);
     uiLine();
-    logger.log('');
+    uiLogger.log('');
   }
 
   deployError(error?: unknown): void {
-    logger.log('');
+    uiLogger.log('');
 
     if (error) {
       logError(error);
     }
 
     uiLogger.log(lib.LocalDevProcess.deployFailed);
-    logger.log('');
+    uiLogger.log('');
   }
 
   deploySuccess(): void {
-    logger.log('');
+    uiLogger.log('');
     uiLogger.log(lib.LocalDevProcess.deploySuccess);
     uiLine();
-    logger.log('');
+    uiLogger.log('');
   }
 
   monitorConsoleOutput(): void {

@@ -11,6 +11,8 @@ import { ValidateProjectTool } from './project/ValidateProjectTool.js';
 import { GetConfigValuesTool } from './project/GetConfigValuesTool.js';
 import { DocsSearchTool } from './project/DocsSearchTool.js';
 import { DocFetchTool } from './project/DocFetchTool.js';
+import { GetApiUsagePatternsByAppIdTool } from './project/GetApiUsagePatternsByAppIdTool.js';
+import { GetApplicationInfoTool } from './project/GetApplicationInfoTool.js';
 import { HsListTool } from './cms/HsListTool.js';
 import { HsCreateModuleTool } from './cms/HsCreateModuleTool.js';
 import { HsCreateTemplateTool } from './cms/HsCreateTemplateTool.js';
@@ -29,6 +31,8 @@ export function registerProjectTools(mcpServer: McpServer): RegisteredTool[] {
     new GetConfigValuesTool(mcpServer).register(),
     new DocsSearchTool(mcpServer).register(),
     new DocFetchTool(mcpServer).register(),
+    new GetApiUsagePatternsByAppIdTool(mcpServer).register(),
+    new GetApplicationInfoTool(mcpServer).register(),
   ];
 }
 

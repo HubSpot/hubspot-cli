@@ -1,7 +1,7 @@
 import * as fs from 'fs';
 import * as path from 'path';
 import { Arguments } from 'yargs';
-import { logger } from '@hubspot/local-dev-lib/logger';
+import { uiLogger } from '../lib/ui/logger.js';
 import { CMS_PUBLISH_MODE } from '@hubspot/local-dev-lib/constants/files';
 import { CmsPublishMode } from '@hubspot/local-dev-lib/types/Files';
 import {
@@ -26,6 +26,7 @@ import {
 
 import { getCmsPublishMode } from './commonOpts.js';
 import { logError } from './errorHandlers/index.js';
+import { lib } from '../lang/en.js';
 
 export async function validateAccount(
   options: Arguments<{
@@ -40,58 +41,54 @@ export async function validateAccount(
 
   if (!accountId) {
     if (userProvidedAccount) {
-      logger.error(
-        `The account "${userProvidedAccount}" could not be found in the config`
+      uiLogger.error(
+        lib.validation.accountNotFoundInConfig(userProvidedAccount)
       );
     } else {
-      logger.error(
-        'An account needs to be supplied either via "--account" or through setting a "defaultPortal"'
-      );
+      uiLogger.error(lib.validation.accountRequired);
     }
     return false;
   }
 
   if (userProvidedAccount && loadConfigFromEnvironment()) {
-    throw new Error(
-      'Cannot specify an account when environment variables are supplied. Please unset the environment variables or do not use the "--account" flag.'
-    );
+    throw new Error(lib.validation.userProvidedAccount);
   }
 
   const accountConfig = getAccountConfig(accountId);
   if (!accountConfig) {
-    logger.error(`The account ${accountId} has not been configured`);
+    uiLogger.error(lib.validation.accountNotConfigured(accountId));
     return false;
   }
 
   const { authType, auth, apiKey, personalAccessKey } = accountConfig;
 
   if (typeof authType === 'string' && authType !== authType.toLowerCase()) {
-    logger.error(
-      `Invalid "authType" value "${authType}" for account "${accountId}" in config file: ${getConfigPath()}. Valid values are ${commaSeparatedValues(
-        [
-          PERSONAL_ACCESS_KEY_AUTH_METHOD,
-          OAUTH_AUTH_METHOD,
-          API_KEY_AUTH_METHOD,
-        ].map(method => method.value)
-      )}.`
+    uiLogger.error(
+      lib.validation.invalidAuthType(
+        authType,
+        accountId,
+        getConfigPath() || '',
+        commaSeparatedValues(
+          [
+            PERSONAL_ACCESS_KEY_AUTH_METHOD,
+            OAUTH_AUTH_METHOD,
+            API_KEY_AUTH_METHOD,
+          ].map(method => method.value)
+        )
+      )
     );
   }
 
   if (authType === 'oauth2') {
     if (typeof auth !== 'object') {
-      logger.error(
-        `The OAuth2 auth configuration for account ${accountId} is missing`
-      );
+      uiLogger.error(lib.validation.oauth2ConfigMissing(accountId));
       return false;
     }
 
     const { clientId, clientSecret, tokenInfo } = auth;
 
     if (!clientId || !clientSecret || !tokenInfo || !tokenInfo.refreshToken) {
-      logger.error(
-        `The OAuth2 configuration for account ${accountId} is incorrect`
-      );
-      logger.error('Run "hs auth --type=oauth2" to reauthenticate');
+      uiLogger.error(lib.validation.oauth2ConfigIncorrect(accountId));
       return false;
     }
 
@@ -103,9 +100,7 @@ export async function validateAccount(
         accessToken = await oauth.accessToken();
       }
       if (!accessToken) {
-        logger.error(
-          `The OAuth2 access token could not be found for accountId ${accountId}`
-        );
+        uiLogger.error(lib.validation.oauth2AccessTokenNotFound(accountId));
         return false;
       }
     } catch (e) {
@@ -114,17 +109,15 @@ export async function validateAccount(
     }
   } else if (authType === 'personalaccesskey') {
     if (!personalAccessKey) {
-      logger.error(
-        `The account "${accountId}" is configured to use a access key for authentication and is missing a "personalAccessKey" in the configuration file`
-      );
+      uiLogger.error(lib.validation.personalAccessKeyMissing(accountId));
       return false;
     }
 
     try {
       const accessToken = await accessTokenForPersonalAccessKey(accountId);
       if (!accessToken) {
-        logger.error(
-          `An OAuth2 access token for account "${accountId} could not be retrieved using the "personalAccessKey" provided`
+        uiLogger.error(
+          lib.validation.personalAccessKeyTokenRetrievalFailed(accountId)
         );
         return false;
       }
@@ -133,9 +126,7 @@ export async function validateAccount(
       return false;
     }
   } else if (!apiKey) {
-    logger.error(
-      `The accountId ${accountId} is missing authentication configuration`
-    );
+    uiLogger.error(lib.validation.authConfigurationMissing(accountId));
     return false;
   }
 
@@ -149,20 +140,15 @@ export function validateCmsPublishMode(
   if (CMS_PUBLISH_MODE[cmsPublishMode]) {
     return true;
   }
-  const modesMessage = `Available CMS publish modes are: ${Object.values(
-    CMS_PUBLISH_MODE
-  ).join(', ')}.`;
+  const modesMessage = lib.validation.availableCMSModes(
+    Object.values(CMS_PUBLISH_MODE).join(', ')
+  );
   if (cmsPublishMode != null) {
-    logger.error(
-      [
-        `The CMS publish mode "${cmsPublishMode}" is invalid.`,
-        modesMessage,
-      ].join(' ')
+    uiLogger.error(
+      lib.validation.invalidCmsPublishMode(cmsPublishMode, modesMessage)
     );
   } else {
-    logger.error(
-      ['The CMS publish mode option is missing.', modesMessage].join(' ')
-    );
+    uiLogger.error(lib.validation.missingCmsPublishMode(modesMessage));
   }
   return false;
 }
@@ -188,12 +174,12 @@ export function fileExists(_path: string): boolean {
 export function checkAndConvertToJson(_path: string): unknown | null {
   const filePath = getAbsoluteFilePath(_path);
   if (!fileExists(filePath)) {
-    logger.error(`The path "${_path}" is not a path to a file`);
+    uiLogger.error(lib.validation.pathNotFile(_path));
     return null;
   }
 
   if (getExt(_path) !== 'json') {
-    logger.error(`The file "${_path}" must be a valid JSON file`);
+    uiLogger.error(lib.validation.fileNotJson(_path));
     return null;
   }
 
@@ -202,7 +188,7 @@ export function checkAndConvertToJson(_path: string): unknown | null {
   try {
     result = JSON.parse(fs.readFileSync(filePath, 'utf-8'));
   } catch (e) {
-    logger.error(`The file "${_path}" contains invalid JSON`);
+    uiLogger.error(lib.validation.fileInvalidJson(_path));
     result = null;
   }
 

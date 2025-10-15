@@ -1,14 +1,14 @@
 import { ComponentTemplate } from '../../../../types/Projects.js';
-import { calculateComponentTemplateChoices } from '../v3.js';
+import { calculateComponentTemplateChoices } from '../v2.js';
 import { hasFeature } from '../../../hasFeature.js';
 
-vi.mock('@hubspot/local-dev-lib/logger');
+vi.mock('../../ui/logger.js');
 vi.mock('@hubspot/local-dev-lib/api/github');
 vi.mock('../../../hasFeature.js');
 
 const mockHasFeature = vi.mocked(hasFeature);
 
-describe('lib/projects/create/v3', () => {
+describe('lib/projects/create/v2', () => {
   beforeEach(() => {
     mockHasFeature.mockResolvedValue(true);
   });

@@ -1,8 +1,8 @@
 import { promptUser } from './promptUtils.js';
-import { i18n } from '../lang.js';
+import { lib } from '../../lang/en.js';
 import { uiLine } from '../ui/index.js';
 import { logError } from '../errorHandlers/index.js';
-import { logger } from '@hubspot/local-dev-lib/logger';
+import { uiLogger } from '../ui/logger.js';
 import { fetchPublicAppsForPortal } from '@hubspot/local-dev-lib/api/appsDev';
 import { EXIT_CODES } from '../enums/exitCodes.js';
 import { PublicApp } from '@hubspot/local-dev-lib/types/Apps';
@@ -18,8 +18,8 @@ async function fetchPublicAppOptions(
 ): Promise<PublicApp[]> {
   try {
     if (!accountId) {
-      logger.error(
-        i18n(`lib.prompts.selectPublicAppForMigrationPrompt.errors.noAccountId`)
+      uiLogger.error(
+        lib.prompts.selectPublicAppForMigrationPrompt.errors.noAccountId
       );
       process.exit(EXIT_CODES.ERROR);
     }
@@ -39,34 +39,24 @@ async function fetchPublicAppOptions(
           app => !app.preventProjectMigrations || !app.listingInfo
         ))
     ) {
-      const headerTranslationKey = isMigratingApp
-        ? 'noAppsMigration'
-        : 'noAppsClone';
-      const messageTranslationKey = isMigratingApp
-        ? 'noAppsMigrationMessage'
-        : 'noAppsCloneMessage';
       uiLine();
-      logger.error(
-        i18n(
-          `lib.prompts.selectPublicAppForMigrationPrompt.errors.${headerTranslationKey}`
-        )
-      );
-      logger.log(
-        i18n(
-          `lib.prompts.selectPublicAppForMigrationPrompt.errors.${messageTranslationKey}`,
-          { accountName }
-        )
-      );
+      if (isMigratingApp) {
+        uiLogger.error(
+          `${lib.prompts.selectPublicAppForMigrationPrompt.errors.noAppsMigration}\n${lib.prompts.selectPublicAppForMigrationPrompt.errors.noAppsMigrationMessage(accountName)}`
+        );
+      } else {
+        uiLogger.error(
+          `${lib.prompts.selectPublicAppForMigrationPrompt.errors.noAppsClone}\n${lib.prompts.selectPublicAppForMigrationPrompt.errors.noAppsCloneMessage(accountName)}`
+        );
+      }
       uiLine();
       process.exit(EXIT_CODES.SUCCESS);
     }
     return filteredPublicApps;
   } catch (error) {
     logError(error, accountId ? { accountId } : undefined);
-    logger.error(
-      i18n(
-        `lib.prompts.selectPublicAppForMigrationPrompt.errors.errorFetchingApps`
-      )
+    uiLogger.error(
+      lib.prompts.selectPublicAppForMigrationPrompt.errors.errorFetchingApps
     );
     process.exit(EXIT_CODES.ERROR);
   }
@@ -86,28 +76,25 @@ export async function selectPublicAppForMigrationPrompt({
     accountName,
     isMigratingApp
   );
-  const translationKey = isMigratingApp
-    ? 'selectAppIdMigrate'
-    : 'selectAppIdClone';
-
   return promptUser<PublicAppPromptResponse>([
     {
       name: 'appId',
-      message: i18n(
-        `lib.prompts.selectPublicAppForMigrationPrompt.${translationKey}`,
-        {
-          accountName,
-        }
-      ),
+      message: isMigratingApp
+        ? lib.prompts.selectPublicAppForMigrationPrompt.selectAppIdMigrate(
+            accountName
+          )
+        : lib.prompts.selectPublicAppForMigrationPrompt.selectAppIdClone(
+            accountName
+          ),
       type: 'list',
       choices: publicApps.map(app => {
         const { preventProjectMigrations, listingInfo } = app;
         if (isMigratingApp && preventProjectMigrations && listingInfo) {
           return {
             name: `${app.name} (${app.id})`,
-            disabled: i18n(
-              `lib.prompts.selectPublicAppForMigrationPrompt.errors.cannotBeMigrated`
-            ),
+            disabled:
+              lib.prompts.selectPublicAppForMigrationPrompt.errors
+                .cannotBeMigrated,
           };
         }
         return {

@@ -1,5 +1,5 @@
 import { getAccountId, getConfigAccounts } from '@hubspot/local-dev-lib/config';
-import { logger } from '@hubspot/local-dev-lib/logger';
+import { uiLogger } from '../ui/logger.js';
 import { CLIAccount } from '@hubspot/local-dev-lib/types/Accounts';
 import { HUBSPOT_ACCOUNT_TYPES } from '@hubspot/local-dev-lib/constants/config';
 import { fetchDeveloperTestAccounts } from '@hubspot/local-dev-lib/api/developerTestAccounts';
@@ -14,7 +14,7 @@ import { Mock } from 'vitest';
 import { logError } from '../errorHandlers/index.js';
 
 vi.mock('@hubspot/local-dev-lib/config');
-vi.mock('@hubspot/local-dev-lib/logger');
+vi.mock('../ui/logger.js');
 vi.mock('@hubspot/local-dev-lib/api/developerTestAccounts');
 vi.mock('../errorHandlers');
 
@@ -134,11 +134,13 @@ describe('lib/developerTestAccounts', () => {
   });
 
   describe('handleDeveloperTestAccountCreateError()', () => {
-    let loggerErrorSpy: Mock<typeof logger.error>;
+    let loggerErrorSpy: Mock<typeof uiLogger.error>;
     let logErrorSpy: Mock<typeof logError>;
 
     beforeEach(() => {
-      loggerErrorSpy = vi.spyOn(logger, 'error') as Mock<typeof logger.error>;
+      loggerErrorSpy = vi.spyOn(uiLogger, 'error') as Mock<
+        typeof uiLogger.error
+      >;
       logErrorSpy = vi.spyOn(errorHandlers, 'logError') as Mock<
         typeof logError
       >;

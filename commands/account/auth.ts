@@ -226,6 +226,7 @@ async function handler(
   }
 
   uiFeatureHighlight([
+    'getStartedCommand',
     'helpCommand',
     'accountAuthCommand',
     'accountsListCommand',

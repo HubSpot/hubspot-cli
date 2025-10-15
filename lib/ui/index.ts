@@ -1,9 +1,12 @@
 import chalk from 'chalk';
-import { getAccountConfig } from '@hubspot/local-dev-lib/config';
-import { logger } from '@hubspot/local-dev-lib/logger';
+import {
+  getAccountConfig,
+  configFileExists,
+} from '@hubspot/local-dev-lib/config';
+import { uiLogger } from './logger.js';
 import { supportsHyperlinkModule } from './supportHyperlinks.js';
 import { supportsColor } from './supportsColor.js';
-import { i18n } from '../lang.js';
+import { uiMessages } from './uiMessages.js';
 
 import { HUBSPOT_ACCOUNT_TYPE_STRINGS } from '@hubspot/local-dev-lib/constants/config';
 
@@ -19,7 +22,7 @@ export const UI_COLORS = {
 };
 
 export function uiLine(): void {
-  logger.log('-'.repeat(50));
+  uiLogger.log('-'.repeat(50));
 }
 
 export function getTerminalUISupport(): TerminalSupport {
@@ -70,10 +73,10 @@ export function uiAccountDescription(
 
 export function uiInfoSection(title: string, logContent: () => void): void {
   uiLine();
-  logger.log(chalk.bold(title));
-  logger.log('');
+  uiLogger.log(chalk.bold(title));
+  uiLogger.log('');
   logContent();
-  logger.log('');
+  uiLogger.log('');
   uiLine();
 }
 
@@ -89,20 +92,58 @@ export function uiCommandReference(command: string, withQuotes = true): string {
   );
 }
 
+export function uiAuthCommandReference({
+  accountId,
+  qa,
+}: {
+  accountId?: number | string;
+  qa?: boolean;
+} = {}) {
+  const userIsUsingGlobalConfig = configFileExists(true);
+  let command = 'hs auth';
+
+  if (userIsUsingGlobalConfig) {
+    command = 'hs account auth';
+  }
+  return uiCommandReference(
+    `${command}${accountId ? ` --account=${accountId}` : ''}${
+      qa ? ' --qa' : ''
+    }`
+  );
+}
+
 export function uiFeatureHighlight(features: string[], title?: string): void {
   uiInfoSection(
-    title ? title : i18n(`lib.ui.featureHighlight.defaultTitle`),
+    title ? title : uiMessages.featureHighlight.defaultTitle,
     () => {
       features.forEach(feature => {
-        const featureKey = `lib.ui.featureHighlight.featureKeys.${feature}`;
-        const message = i18n(`${featureKey}.message`, {
-          command: uiCommandReference(i18n(`${featureKey}.command`)),
-          link: uiLink(
-            i18n(`${featureKey}.linkText`),
-            i18n(`${featureKey}.url`)
-          ),
-        });
-        logger.log(`  - ${message}`);
+        const featureConfig =
+          uiMessages.featureHighlight.featureKeys[
+            feature as keyof typeof uiMessages.featureHighlight.featureKeys
+          ];
+
+        if (!featureConfig) {
+          uiLogger.debug(`Feature config not found for: ${feature}`);
+          return;
+        }
+
+        let message: string;
+        if ('linkText' in featureConfig && 'url' in featureConfig) {
+          // linkText + url (for sampleProjects)
+          message = featureConfig.message(
+            uiLink(featureConfig.linkText, featureConfig.url)
+          );
+        } else if ('command' in featureConfig && 'message' in featureConfig) {
+          // Command + Message function (most cases)
+          message = featureConfig.message(
+            uiCommandReference(featureConfig.command)
+          );
+        } else {
+          // Message only (for projectCommandTip)
+          message = featureConfig.message;
+        }
+
+        uiLogger.log(`  - ${message}`);
       });
     }
   );
@@ -129,12 +170,12 @@ export function uiFeatureHighlight(features: string[], title?: string): void {
 export function uiBetaTag(message: string, log?: true): undefined;
 export function uiBetaTag(message: string, log: false): string;
 export function uiBetaTag(message: string, log = true): string | undefined {
-  const tag = i18n(`lib.ui.betaTag`);
+  const tag = uiMessages.betaTag;
 
   const result = `${tag} ${message}`;
 
   if (log) {
-    logger.log(result);
+    uiLogger.log(result);
     return;
   }
   return result;
@@ -167,12 +208,12 @@ export function uiDeprecatedTag(
   message: string,
   log = true
 ): string | undefined {
-  const tag = i18n(`lib.ui.deprecatedTag`);
+  const tag = uiMessages.deprecatedTag;
 
   const result = `${tag} ${message}`;
 
   if (log) {
-    logger.log(result);
+    uiLogger.log(result);
     return;
   }
   return result;
@@ -185,17 +226,13 @@ export function uiCommandDisabledBanner(
 ): void {
   const tag =
     message ||
-    i18n(`lib.ui.disabledMessage`, {
-      command: uiCommandReference(command),
-      url: url ? uiLink(i18n(`lib.ui.disabledUrlText`), url) : '',
-      npmCommand: uiCommandReference('npm i -g @hubspot/cli@latest'),
-    });
+    `The ${uiCommandReference(command)} command is disabled. Run ${uiCommandReference('npm i -g @hubspot/cli@latest')} to update to the latest HubSpot CLI version. ${url ? uiLink('See all HubSpot CLI commands here.', url) : ''}`;
 
-  logger.log();
+  uiLogger.log('');
   uiLine();
-  logger.error(tag);
+  uiLogger.error(tag);
   uiLine();
-  logger.log();
+  uiLogger.log('');
 }
 
 export function uiDeprecatedDescription(
@@ -203,11 +240,8 @@ export function uiDeprecatedDescription(
   command: string,
   url?: string
 ) {
-  const tag = i18n(`lib.ui.deprecatedDescription`, {
-    message,
-    command: uiCommandReference(command),
-    url: url ? uiLink(i18n(`lib.ui.deprecatedUrlText`), url) : '',
-  });
+  const tag = message || uiMessages.disabledMessage(command, url);
+
   return uiDeprecatedTag(tag);
 }
 
@@ -216,16 +250,11 @@ export function uiDeprecatedMessage(
   url?: string,
   message?: string
 ): void {
-  const tag =
-    message ||
-    i18n(`lib.ui.deprecatedMessage`, {
-      command: uiCommandReference(command),
-      url: url ? uiLink(i18n(`lib.ui.deprecatedUrlText`), url) : '',
-    });
+  const tag = uiMessages.deprecatedDescription(message || '', command, url);
 
-  logger.log();
+  uiLogger.log('');
   uiDeprecatedTag(tag);
-  logger.log();
+  uiLogger.log('');
 }
 
 export function indent(level: number): string {

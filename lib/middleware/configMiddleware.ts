@@ -1,5 +1,4 @@
 import { Arguments } from 'yargs';
-import { logger } from '@hubspot/local-dev-lib/logger';
 import { CLIOptions } from '@hubspot/local-dev-lib/types/CLIOptions';
 import {
   loadConfig,
@@ -10,9 +9,14 @@ import {
 } from '@hubspot/local-dev-lib/config';
 import { validateAccount } from '../validation.js';
 import { EXIT_CODES } from '../enums/exitCodes.js';
-import { i18n } from '../lang.js';
+import { commands } from '../../lang/en.js';
 import { uiDeprecatedTag } from '../ui/index.js';
-import { isTargetedCommand } from './utils.js';
+import {
+  isTargetedCommand,
+  shouldLoadConfigForCommand,
+  shouldRunAccountValidationForCommand,
+  shouldRunConfigValidationForCommand,
+} from './commandTargetingUtils.js';
 import { parseStringToNumber } from '../parsing.js';
 import { uiLogger } from '../ui/logger.js';
 import { lib } from '../../lang/en.js';
@@ -28,12 +32,7 @@ export function handleDeprecatedEnvVariables(
     !process.env.HUBSPOT_ACCOUNT_ID
   ) {
     uiDeprecatedTag(
-      i18n(
-        `commands.generalErrors.handleDeprecatedEnvVariables.portalEnvVarDeprecated`,
-        {
-          configPath: getConfigPath()!,
-        }
-      )
+      commands.generalErrors.handleDeprecatedEnvVariables.portalEnvVarDeprecated
     );
     process.env.HUBSPOT_ACCOUNT_ID = process.env.HUBSPOT_PORTAL_ID;
   }
@@ -63,19 +62,7 @@ export async function injectAccountIdMiddleware(
   }
 }
 
-const SKIP_CONFIG_VALIDATION = {
-  init: { target: true },
-  auth: { target: true },
-  mcp: {
-    target: false,
-    subCommands: {
-      setup: { target: true },
-      start: { target: true },
-    },
-  },
-};
-
-export async function loadConfigMiddleware(
+export async function loadAndValidateConfigMiddleware(
   argv: Arguments<CLIOptions>
 ): Promise<void> {
   // Skip this when no command is provided
@@ -83,99 +70,49 @@ export async function loadConfigMiddleware(
     return;
   }
 
-  const maybeValidateConfig = () => {
-    if (
-      !isTargetedCommand(argv._, SKIP_CONFIG_VALIDATION) &&
-      !validateConfig()
-    ) {
-      process.exit(EXIT_CODES.ERROR);
-    }
-  };
-
-  if (
-    !configFileExists(true) &&
-    isTargetedCommand(argv._, {
-      account: { target: false, subCommands: { auth: { target: true } } },
-      config: { target: false, subCommands: { migrate: { target: true } } },
-    })
-  ) {
+  // Do not load or validate the config for the commands that do not require it
+  if (!shouldLoadConfigForCommand(argv._)) {
     return;
   }
 
+  // If the config file exists and the --config flag is used, exit with an error
   if (
     configFileExists(true) &&
     argv.config &&
-    !isTargetedCommand(argv._, {
-      config: { target: false, subCommands: { migrate: { target: true } } },
-    })
+    !isTargetedCommand(argv._, { config: { migrate: true } })
   ) {
-    logger.error(
-      i18n(`commands.generalErrors.loadConfigMiddleware.configFileExists`, {
-        configPath: getConfigPath()!,
-      })
+    uiLogger.error(
+      commands.generalErrors.loadConfigMiddleware.configFileExists(
+        getConfigPath()!
+      )
     );
     process.exit(EXIT_CODES.ERROR);
-  } else if (!isTargetedCommand(argv._, { init: { target: true } })) {
-    const config = loadConfig(argv.config as string, argv);
+  }
 
-    // We don't run validateConfig() for auth because users should be able to run it when
-    // no accounts are configured, but we still want to exit if the config file is not found
-    if (isTargetedCommand(argv._, { auth: { target: true } }) && !config) {
+  const config = loadConfig(argv.config as string, argv);
+
+  // We don't run validation for auth because users should be able to run it when
+  // no accounts are configured, but we still want to exit if the config file is not found
+  if (isTargetedCommand(argv._, { auth: true }) && !config) {
+    process.exit(EXIT_CODES.ERROR);
+  }
+
+  // Only validate the config if the command requires it
+  if (shouldRunConfigValidationForCommand(argv._)) {
+    const configIsValid = validateConfig();
+    if (!configIsValid) {
       process.exit(EXIT_CODES.ERROR);
     }
   }
-
-  maybeValidateConfig();
 }
-
-const accountsSubCommands = {
-  target: false,
-  subCommands: {
-    auth: { target: true },
-    clean: { target: true },
-    list: { target: true },
-    ls: { target: true },
-    remove: { target: true },
-    use: { target: true },
-  },
-};
-
-const sandboxesSubCommands = {
-  target: false,
-  subCommands: {
-    delete: { target: true },
-  },
-};
-
-const configSubCommands = {
-  target: false,
-  subCommands: {
-    migrate: { target: true },
-  },
-};
-
-const SKIP_ACCOUNT_VALIDATION = {
-  init: { target: true },
-  auth: { target: true },
-  mcp: {
-    target: false,
-    subCommands: {
-      setup: { target: true },
-      start: { target: true },
-    },
-  },
-  account: accountsSubCommands,
-  accounts: accountsSubCommands,
-  sandbox: sandboxesSubCommands,
-  sandboxes: sandboxesSubCommands,
-  config: configSubCommands,
-};
 
 export async function validateAccountOptions(argv: Arguments): Promise<void> {
   // Skip this when no command is provided
   if (argv._.length && !argv.help) {
     let validAccount = true;
-    if (!isTargetedCommand(argv._, SKIP_ACCOUNT_VALIDATION)) {
+
+    // Only validate the account if the command requires it
+    if (shouldRunAccountValidationForCommand(argv._)) {
       validAccount = await validateAccount(argv);
     }
 

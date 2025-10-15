@@ -1,5 +1,5 @@
 import { promptUser } from './promptUtils.js';
-import { i18n } from '../lang.js';
+import { lib } from '../../lang/en.js';
 import { uiAccountDescription } from '../ui/index.js';
 import { HUBSPOT_ACCOUNT_TYPES } from '@hubspot/local-dev-lib/constants/config';
 import { getAccountIdentifier } from '@hubspot/local-dev-lib/config/getAccountIdentifier';
@@ -50,15 +50,15 @@ export async function sandboxTypePrompt(): Promise<SandboxTypePromptResponse> {
   return promptUser<SandboxTypePromptResponse>([
     {
       name: 'type',
-      message: i18n(`lib.prompts.sandboxesPrompt.type.message`),
+      message: lib.prompts.sandboxesPrompt.type.message,
       type: 'list',
       choices: [
         {
-          name: i18n(`lib.prompts.sandboxesPrompt.type.developer`),
+          name: lib.prompts.sandboxesPrompt.type.developer,
           value: HUBSPOT_ACCOUNT_TYPES.DEVELOPMENT_SANDBOX,
         },
         {
-          name: i18n(`lib.prompts.sandboxesPrompt.type.standard`),
+          name: lib.prompts.sandboxesPrompt.type.standard,
           value: HUBSPOT_ACCOUNT_TYPES.STANDARD_SANDBOX,
         },
       ],
@@ -80,11 +80,9 @@ export function deleteSandboxPrompt(
   return promptUser<DeleteSandboxPromptResponse>([
     {
       name: 'account',
-      message: i18n(
-        promptParentAccount
-          ? `lib.prompts.sandboxesPrompt.selectParentAccountName`
-          : `lib.prompts.sandboxesPrompt.selectAccountName`
-      ),
+      message: promptParentAccount
+        ? lib.prompts.sandboxesPrompt.selectParentAccountName
+        : lib.prompts.sandboxesPrompt.selectAccountName,
       type: 'list',
       pageSize: 20,
       choices,

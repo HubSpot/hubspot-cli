@@ -1,7 +1,7 @@
 import * as fs from 'fs';
 import * as path from 'path';
 import { walk } from '@hubspot/local-dev-lib/fs';
-import { logger } from '@hubspot/local-dev-lib/logger';
+import { uiLogger } from '../ui/logger.js';
 import { logError } from '../errorHandlers/index.js';
 import {
   ComponentTypes,
@@ -49,7 +49,7 @@ export function loadConfigFile(
       const parsedConfig = JSON.parse(source.toString());
       return parsedConfig;
     } catch (e) {
-      logger.debug(e);
+      uiLogger.debug(e);
     }
   }
   return null;

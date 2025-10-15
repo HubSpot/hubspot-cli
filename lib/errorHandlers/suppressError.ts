@@ -2,15 +2,10 @@ import {
   isSpecifiedError,
   isMissingScopeError,
 } from '@hubspot/local-dev-lib/errors/index';
-import { logger } from '@hubspot/local-dev-lib/logger';
+import { uiLogger } from '../ui/logger.js';
 import { PLATFORM_VERSION_ERROR_TYPES } from '../constants.js';
-import { i18n } from '../lang.js';
-import {
-  uiAccountDescription,
-  uiLine,
-  uiLink,
-  uiCommandReference,
-} from '../ui/index.js';
+import { lib } from '../../lang/en.js';
+import { uiAccountDescription, uiLine, uiLink } from '../ui/index.js';
 import { ApiErrorContext } from './index.js';
 import { HubSpotHttpError } from '@hubspot/local-dev-lib/models/HubSpotHttpError';
 
@@ -34,27 +29,26 @@ function createPlatformVersionError(
   }
 
   uiLine();
-  logger.error(
-    i18n(`lib.errorHandlers.suppressErrors.platformVersionErrors.header`)
+  uiLogger.error(lib.errorHandlers.suppressErrors.platformVersionErrors.header);
+  const errorMessage =
+    lib.errorHandlers.suppressErrors.platformVersionErrors[
+      translationKey as keyof typeof lib.errorHandlers.suppressErrors.platformVersionErrors
+    ];
+  uiLogger.log(
+    typeof errorMessage === 'function'
+      ? errorMessage(platformVersion)
+      : errorMessage
   );
-  logger.log(
-    i18n(
-      `lib.errorHandlers.suppressErrors.platformVersionErrors.${translationKey}`,
-      {
-        platformVersion,
-      }
-    )
+  uiLogger.log(
+    lib.errorHandlers.suppressErrors.platformVersionErrors.updateProject
   );
-  logger.log(
-    i18n(`lib.errorHandlers.suppressErrors.platformVersionErrors.updateProject`)
-  );
-  logger.log(
-    i18n(`lib.errorHandlers.suppressErrors.platformVersionErrors.betaLink`, {
-      docsLink: uiLink(
-        i18n(`lib.errorHandlers.suppressErrors.platformVersionErrors.docsLink`),
+  uiLogger.log(
+    lib.errorHandlers.suppressErrors.platformVersionErrors.betaLink(
+      uiLink(
+        lib.errorHandlers.suppressErrors.platformVersionErrors.docsLink,
         'https://developers.hubspot.com/docs/developer-tooling/platform/versioning'
-      ),
-    })
+      )
+    )
   );
   uiLine();
 }
@@ -64,14 +58,11 @@ export function shouldSuppressError(
   context?: ApiErrorContext
 ): boolean {
   if (isMissingScopeError(err)) {
-    logger.error(
-      i18n(`lib.errorHandlers.suppressErrors.missingScopeError`, {
-        accountName: context?.accountId
-          ? uiAccountDescription(context.accountId)
-          : '',
-        request: context?.request || 'request',
-        authCommand: uiCommandReference('hs auth'),
-      })
+    uiLogger.error(
+      lib.errorHandlers.suppressErrors.missingScopeError(
+        context?.request || 'request',
+        context?.accountId ? uiAccountDescription(context.accountId) : ''
+      )
     );
     return true;
   }

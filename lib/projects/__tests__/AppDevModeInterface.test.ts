@@ -14,7 +14,7 @@ vi.mock('@hubspot/ui-extensions-dev-server', () => {
 
 import { fetchAppInstallationData } from '@hubspot/local-dev-lib/api/localDevAuth';
 import {
-  fetchPublicAppsForPortal,
+  fetchAppMetadataByUid,
   fetchPublicAppProductionInstallCounts,
   installStaticAuthAppOnTestAccount,
 } from '@hubspot/local-dev-lib/api/appsDev';
@@ -141,8 +141,8 @@ describe('AppDevModeInterface', () => {
     (LocalDevLogger as Mock).mockImplementation(() => mockLocalDevLogger);
 
     // Mock external dependencies
-    (fetchPublicAppsForPortal as Mock).mockResolvedValue({
-      data: { results: [mockPublicApp] },
+    (fetchAppMetadataByUid as Mock).mockResolvedValue({
+      data: mockPublicApp,
     });
 
     (fetchPublicAppProductionInstallCounts as Mock).mockResolvedValue({
@@ -167,7 +167,20 @@ describe('AppDevModeInterface', () => {
       'http://static-install-url'
     );
     (installAppAutoPrompt as Mock).mockResolvedValue(true);
-    (installAppBrowserPrompt as Mock).mockResolvedValue(undefined);
+    (installAppBrowserPrompt as Mock).mockImplementation(async () => {
+      setTimeout(() => {
+        const addListenerCall = (
+          mockLocalDevState.addListener as Mock
+        ).mock.calls.find(call => call[0] === 'devServerMessage');
+        if (addListenerCall) {
+          const callback = addListenerCall[1];
+          callback(
+            LOCAL_DEV_SERVER_MESSAGE_TYPES.STATIC_AUTH_APP_INSTALL_SUCCESS
+          );
+        }
+      }, 0);
+      return undefined;
+    });
     (confirmPrompt as Mock).mockResolvedValue(true);
     (installStaticAuthAppOnTestAccount as Mock).mockResolvedValue(undefined);
 
@@ -244,14 +257,14 @@ describe('AppDevModeInterface', () => {
 
       await appDevModeInterface.setup({});
 
-      expect(fetchPublicAppsForPortal).not.toHaveBeenCalled();
+      expect(fetchAppMetadataByUid).not.toHaveBeenCalled();
       expect(UIEDevModeInterface.setup).not.toHaveBeenCalled();
     });
 
     it('should setup successfully with private app', async () => {
       await appDevModeInterface.setup({});
 
-      expect(fetchPublicAppsForPortal).toHaveBeenCalledWith(12345);
+      expect(fetchAppMetadataByUid).toHaveBeenCalledWith('test-app-uid', 12345);
       expect(fetchPublicAppProductionInstallCounts).toHaveBeenCalledWith(
         123,
         12345
@@ -315,23 +328,22 @@ describe('AppDevModeInterface', () => {
       expect(process.exit).toHaveBeenCalledWith(0);
     });
 
-    // @TODO: Restore test account auto install functionality
-    // it('should auto-install static auth app on test account', async () => {
-    //   (fetchAppInstallationData as Mock).mockResolvedValue({
-    //     data: {
-    //       isInstalledWithScopeGroups: false,
-    //       previouslyAuthorizedScopeGroups: [],
-    //     },
-    //   });
+    it('should auto-install static auth app on test account', async () => {
+      (fetchAppInstallationData as Mock).mockResolvedValue({
+        data: {
+          isInstalledWithScopeGroups: false,
+          previouslyAuthorizedScopeGroups: [],
+        },
+      });
 
-    //   await appDevModeInterface.setup({});
+      await appDevModeInterface.setup({});
 
-    //   expect(installStaticAuthAppOnTestAccount).toHaveBeenCalledWith(
-    //     123,
-    //     67890,
-    //     [1, 2, 3]
-    //   );
-    // });
+      expect(installStaticAuthAppOnTestAccount).toHaveBeenCalledWith(
+        123,
+        67890,
+        [1, 2, 3]
+      );
+    });
 
     it('should open browser for OAuth app installation', async () => {
       const oauthAppNode = {
@@ -379,38 +391,25 @@ describe('AppDevModeInterface', () => {
 
       expect(installAppBrowserPrompt).toHaveBeenCalledWith(
         'http://static-install-url',
-        true,
-        {
-          appUid: 'test-app-uid',
-          projectAccountId: 12345,
-          projectName: 'test-project',
-          testingAccountId: 67890,
-        }
+        true
       );
     });
 
     it('should handle errors during setup', async () => {
       const error = new Error('Setup failed');
-      (fetchPublicAppsForPortal as Mock).mockRejectedValue(error);
+      (fetchAppMetadataByUid as Mock).mockRejectedValue(error);
 
       await appDevModeInterface.setup({});
 
       expect(logError).toHaveBeenCalledWith(error);
     });
 
-    it('should exit if app not found in portal', async () => {
-      // Set up conditions for non-automatic installation to force getAppInstallUrl call
-      (getAccountConfig as Mock).mockReturnValue(null);
-
-      // First call for fetchAppData succeeds
-      (fetchPublicAppsForPortal as Mock)
-        .mockResolvedValueOnce({
-          data: { results: [mockPublicApp] },
-        })
-        // Second call for getAppInstallUrl fails (app not found)
-        .mockResolvedValueOnce({
-          data: { results: [] },
-        });
+    it('should exit if user declines auto-install', async () => {
+      // Set up conditions for automatic installation
+      (getAccountConfig as Mock).mockReturnValue({
+        parentAccountId: 12345, // matches targetProjectAccountId
+      });
+      (isDeveloperTestAccount as Mock).mockReturnValue(true);
 
       (fetchAppInstallationData as Mock).mockResolvedValue({
         data: {
@@ -418,60 +417,38 @@ describe('AppDevModeInterface', () => {
           previouslyAuthorizedScopeGroups: [],
         },
       });
+      (installAppAutoPrompt as Mock).mockResolvedValue(false);
+
+      // Create a new instance to trigger the exit during setup
+      const newAppDevModeInterface = new AppDevModeInterface({
+        localDevState: mockLocalDevState,
+        localDevLogger: mockLocalDevLogger,
+      });
 
       // The setup method catches the error, so we check that process.exit was called
-      await appDevModeInterface.setup({});
+      await newAppDevModeInterface.setup({});
 
-      expect(process.exit).toHaveBeenCalledWith(1);
+      expect(process.exit).toHaveBeenCalledWith(0);
     });
 
-    // @TODO: Restore test account auto install functionality
-    // it('should exit if user declines auto-install', async () => {
-    //   // Set up conditions for automatic installation
-    //   (getAccountConfig as Mock).mockReturnValue({
-    //     parentAccountId: 12345, // matches targetProjectAccountId
-    //   });
-    //   (isDeveloperTestAccount as Mock).mockReturnValue(true);
+    it('should fallback to browser install if auto-install fails', async () => {
+      (fetchAppInstallationData as Mock).mockResolvedValue({
+        data: {
+          isInstalledWithScopeGroups: false,
+          previouslyAuthorizedScopeGroups: [],
+        },
+      });
+      (installStaticAuthAppOnTestAccount as Mock).mockRejectedValue(
+        new Error('Install failed')
+      );
 
-    //   (fetchAppInstallationData as Mock).mockResolvedValue({
-    //     data: {
-    //       isInstalledWithScopeGroups: false,
-    //       previouslyAuthorizedScopeGroups: [],
-    //     },
-    //   });
-    //   (installAppAutoPrompt as Mock).mockResolvedValue(false);
+      await appDevModeInterface.setup({});
 
-    //   // Create a new instance to trigger the exit during setup
-    //   const newAppDevModeInterface = new AppDevModeInterface({
-    //     localDevState: mockLocalDevState,
-    //     localDevLogger: mockLocalDevLogger,
-    //   });
-
-    //   // The setup method catches the error, so we check that process.exit was called
-    //   await newAppDevModeInterface.setup({});
-
-    //   expect(process.exit).toHaveBeenCalledWith(0);
-    // });
-
-    // @TODO: Restore test account auto install functionality
-    // it('should fallback to browser install if auto-install fails', async () => {
-    //   (fetchAppInstallationData as Mock).mockResolvedValue({
-    //     data: {
-    //       isInstalledWithScopeGroups: false,
-    //       previouslyAuthorizedScopeGroups: [],
-    //     },
-    //   });
-    //   (installStaticAuthAppOnTestAccount as Mock).mockRejectedValue(
-    //     new Error('Install failed')
-    //   );
-
-    //   await appDevModeInterface.setup({});
-
-    //   expect(installAppBrowserPrompt).toHaveBeenCalledWith(
-    //     'http://static-install-url',
-    //     false
-    //   );
-    // });
+      expect(installAppBrowserPrompt).toHaveBeenCalledWith(
+        'http://static-install-url',
+        false
+      );
+    });
   });
 
   describe('start()', () => {
@@ -555,8 +532,8 @@ describe('AppDevModeInterface', () => {
       vi.clearAllMocks();
 
       // Set up basic mocks
-      (fetchPublicAppsForPortal as Mock).mockResolvedValue({
-        data: { results: [mockPublicApp] },
+      (fetchAppMetadataByUid as Mock).mockResolvedValue({
+        data: mockPublicApp,
       });
       (fetchPublicAppProductionInstallCounts as Mock).mockResolvedValue({
         data: { uniquePortalInstallCount: 5 },
@@ -564,7 +541,19 @@ describe('AppDevModeInterface', () => {
       (getStaticAuthAppInstallUrl as Mock).mockReturnValue(
         'http://static-install-url'
       );
-      (installAppBrowserPrompt as Mock).mockResolvedValue(undefined);
+      (installAppBrowserPrompt as Mock).mockImplementation(async () => {
+        const addListenerCall = (
+          mockLocalDevState.addListener as Mock
+        ).mock.calls.find(call => call[0] === 'devServerMessage');
+        if (addListenerCall) {
+          const callback = addListenerCall[1];
+          callback(
+            LOCAL_DEV_SERVER_MESSAGE_TYPES.STATIC_AUTH_APP_INSTALL_SUCCESS
+          );
+        }
+
+        return undefined;
+      });
 
       // Reset the mock LocalDevState
       mockLocalDevState.getAppDataByUid = vi.fn().mockReturnValue(mockAppData);
@@ -598,8 +587,8 @@ describe('AppDevModeInterface', () => {
       vi.clearAllMocks();
 
       // Set up basic mocks
-      (fetchPublicAppsForPortal as Mock).mockResolvedValue({
-        data: { results: [mockPublicApp] },
+      (fetchAppMetadataByUid as Mock).mockResolvedValue({
+        data: mockPublicApp,
       });
       (fetchPublicAppProductionInstallCounts as Mock).mockResolvedValue({
         data: { uniquePortalInstallCount: 5 },
@@ -607,7 +596,20 @@ describe('AppDevModeInterface', () => {
       (getOauthAppInstallUrl as Mock).mockReturnValue(
         'http://oauth-install-url'
       );
-      (installAppBrowserPrompt as Mock).mockResolvedValue(undefined);
+      (installAppBrowserPrompt as Mock).mockImplementation(async () => {
+        setTimeout(() => {
+          const addListenerCall = (
+            mockLocalDevState.addListener as Mock
+          ).mock.calls.find(call => call[0] === 'devServerMessage');
+          if (addListenerCall) {
+            const callback = addListenerCall[1];
+            callback(
+              LOCAL_DEV_SERVER_MESSAGE_TYPES.STATIC_AUTH_APP_INSTALL_SUCCESS
+            );
+          }
+        }, 0);
+        return undefined;
+      });
 
       // Reset the mock LocalDevState
       mockLocalDevState.getAppDataByUid = vi.fn().mockReturnValue(mockAppData);
@@ -652,8 +654,8 @@ describe('AppDevModeInterface', () => {
       vi.clearAllMocks();
 
       // Set up basic mocks
-      (fetchPublicAppsForPortal as Mock).mockResolvedValue({
-        data: { results: [mockPublicApp] },
+      (fetchAppMetadataByUid as Mock).mockResolvedValue({
+        data: mockPublicApp,
       });
       (fetchPublicAppProductionInstallCounts as Mock).mockResolvedValue({
         data: { uniquePortalInstallCount: 5 },
@@ -661,7 +663,20 @@ describe('AppDevModeInterface', () => {
       (getStaticAuthAppInstallUrl as Mock).mockReturnValue(
         'http://static-install-url'
       );
-      (installAppBrowserPrompt as Mock).mockResolvedValue(undefined);
+      (installAppBrowserPrompt as Mock).mockImplementation(async () => {
+        setTimeout(() => {
+          const addListenerCall = (
+            mockLocalDevState.addListener as Mock
+          ).mock.calls.find(call => call[0] === 'devServerMessage');
+          if (addListenerCall) {
+            const callback = addListenerCall[1];
+            callback(
+              LOCAL_DEV_SERVER_MESSAGE_TYPES.STATIC_AUTH_APP_INSTALL_SUCCESS
+            );
+          }
+        }, 0);
+        return undefined;
+      });
 
       // Reset the mock LocalDevState
       mockLocalDevState.getAppDataByUid = vi.fn().mockReturnValue(mockAppData);

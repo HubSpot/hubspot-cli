@@ -2,7 +2,7 @@ import open from 'open';
 import { getEnv } from '@hubspot/local-dev-lib/config';
 import { ENVIRONMENTS } from '@hubspot/local-dev-lib/constants/environments';
 import { getHubSpotWebsiteOrigin } from '@hubspot/local-dev-lib/urls';
-import { logger } from '@hubspot/local-dev-lib/logger';
+import { uiLogger } from './ui/logger.js';
 import { getTableContents, getTableHeader } from './ui/table.js';
 
 type SiteLink = {
@@ -114,7 +114,7 @@ export function logSiteLinks(accountId: number): void {
 
   linksAsArray.unshift(getTableHeader(['Shortcut', '', 'Url']));
 
-  logger.log(getTableContents(linksAsArray));
+  uiLogger.log(getTableContents(linksAsArray));
 }
 
 export function openLink(accountId: number, shortcut: string): void {
@@ -123,7 +123,7 @@ export function openLink(accountId: number, shortcut: string): void {
   );
 
   if (!match) {
-    logger.error(
+    uiLogger.error(
       `We couldn't find a shortcut matching ${shortcut}.  Type 'hs open list' to see a list of available shortcuts`
     );
     return;
@@ -134,7 +134,7 @@ export function openLink(accountId: number, shortcut: string): void {
   );
 
   open(match.getUrl(accountId, baseUrl), { url: true });
-  logger.success(
+  uiLogger.success(
     `We opened ${match.getUrl(accountId, baseUrl)} in your browser`
   );
 }

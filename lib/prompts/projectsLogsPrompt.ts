@@ -1,4 +1,4 @@
-import { i18n } from '../lang.js';
+import { lib } from '../../lang/en.js';
 import { promptUser } from './promptUtils.js';
 
 type ProjectLogsPromptOptions = {
@@ -27,9 +27,7 @@ export async function projectLogsPrompt({
     {
       name: 'functionName',
       type: 'list',
-      message: i18n(`lib.prompts.projectLogsPrompt.functionName`, {
-        projectName,
-      }),
+      message: lib.prompts.projectLogsPrompt.functionName(projectName),
       when: () =>
         (!promptOptions || !promptOptions.function) &&
         functionChoices.length > 0,

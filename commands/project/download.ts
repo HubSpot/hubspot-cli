@@ -68,7 +68,11 @@ async function handler(
       process.exit(EXIT_CODES.ERROR);
     }
 
-    const absoluteDestPath = dest ? path.resolve(getCwd(), dest) : getCwd();
+    const sanitizedProjectName = sanitizeFileName(projectName);
+
+    const absoluteDestPath = dest
+      ? path.resolve(getCwd(), dest, sanitizedProjectName)
+      : path.resolve(getCwd(), sanitizedProjectName);
 
     const { data: zippedProject } = await downloadProject(
       derivedAccountId,
@@ -79,8 +83,7 @@ async function handler(
     await extractZipArchive(
       zippedProject,
       sanitizeFileName(projectName),
-      path.resolve(absoluteDestPath),
-      { includesRootDir: false }
+      path.resolve(absoluteDestPath)
     );
 
     uiLogger.log(

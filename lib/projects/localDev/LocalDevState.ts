@@ -35,6 +35,7 @@ class LocalDevState {
   private _appData: Record<string, AppLocalDevData>;
   private _devServerMessage: LocalDevServerMessage;
   private _uploadWarnings: Set<string>;
+  private _devServersStarted: boolean;
 
   constructor({
     targetProjectAccountId,
@@ -62,6 +63,7 @@ class LocalDevState {
     this._appData = {};
     this._devServerMessage = LOCAL_DEV_SERVER_MESSAGE_TYPES.INITIAL;
     this._uploadWarnings = new Set();
+    this._devServersStarted = false;
 
     this._listeners = {};
   }
@@ -169,6 +171,15 @@ class LocalDevState {
 
   get uploadWarnings(): Set<string> {
     return this._uploadWarnings;
+  }
+
+  get devServersStarted(): boolean {
+    return this._devServersStarted;
+  }
+
+  set devServersStarted(started: boolean) {
+    this._devServersStarted = started;
+    this.runListeners('devServersStarted');
   }
 
   addUploadWarning(warning: string): void {

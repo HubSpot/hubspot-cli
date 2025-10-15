@@ -10,16 +10,21 @@ import path from 'path';
 import { commands } from '../../lang/en.js';
 import { uiLogger } from '../../lib/ui/logger.js';
 import { trackCommandUsage } from '../../lib/usageTracking.js';
-import { CommonArgs, YargsCommandModule } from '../../types/Yargs.js';
+import {
+  CommonArgs,
+  ConfigArgs,
+  YargsCommandModule,
+} from '../../types/Yargs.js';
 import { logError } from '../../lib/errorHandlers/index.js';
 import { makeYargsBuilder } from '../../lib/yargsUtils.js';
 
 const command = 'install-deps [packages..]';
 const describe = commands.project.installDeps.help.describe;
 
-export type ProjectInstallDepsArgs = CommonArgs & {
-  packages?: string[];
-};
+export type ProjectInstallDepsArgs = CommonArgs &
+  ConfigArgs & {
+    packages?: string[];
+  };
 
 async function handler(
   args: ArgumentsCamelCase<ProjectInstallDepsArgs>
@@ -92,6 +97,7 @@ const builder = makeYargsBuilder<ProjectInstallDepsArgs>(
   describe,
   {
     useGlobalOptions: true,
+    useConfigOptions: true,
   }
 );
 
