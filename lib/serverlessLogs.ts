@@ -1,6 +1,6 @@
 import https from 'https';
 import chalk from 'chalk';
-import { logger } from '@hubspot/local-dev-lib/logger';
+import { uiLogger } from './ui/logger.js';
 import {
   isHubSpotHttpError,
   isMissingScopeError,
@@ -17,7 +17,7 @@ import { logError, ApiErrorContext } from './errorHandlers/index.js';
 import SpinniesManager from './ui/SpinniesManager.js';
 import { handleExit, handleKeypress } from './process.js';
 import { EXIT_CODES } from './enums/exitCodes.js';
-import { i18n } from './lang.js';
+import { lib } from '../lang/en.js';
 import { HubSpotPromise } from '@hubspot/local-dev-lib/types/Http';
 import {
   FunctionLog,
@@ -70,30 +70,30 @@ async function verifyAccessKeyAndUserAccess(
     const resp = await fetchScopeData(accountId, scopeGroup);
     scopesData = resp.data;
   } catch (e) {
-    logger.debug(
-      i18n(`lib.serverless.verifyAccessKeyAndUserAccess.fetchScopeDataError`, {
-        scopeGroup,
-      })
+    uiLogger.debug(
+      lib.serverless.verifyAccessKeyAndUserAccess.fetchScopeDataError(
+        scopeGroup
+      )
     );
-    logger.debug(e);
+    uiLogger.debug(e);
     return;
   }
   const { portalScopesInGroup, userScopesInGroup } = scopesData;
 
   if (!portalScopesInGroup.length) {
-    logger.error(
-      i18n(`lib.serverless.verifyAccessKeyAndUserAccess.portalMissingScope`)
+    uiLogger.error(
+      lib.serverless.verifyAccessKeyAndUserAccess.portalMissingScope
     );
     return;
   }
 
   if (!portalScopesInGroup.every(s => userScopesInGroup.includes(s))) {
-    logger.error(
-      i18n(`lib.serverless.verifyAccessKeyAndUserAccess.userMissingScope`)
+    uiLogger.error(
+      lib.serverless.verifyAccessKeyAndUserAccess.userMissingScope
     );
   } else {
-    logger.error(
-      i18n(`lib.serverless.verifyAccessKeyAndUserAccess.genericMissingScope`)
+    uiLogger.error(
+      lib.serverless.verifyAccessKeyAndUserAccess.genericMissingScope
     );
   }
 }
@@ -171,7 +171,7 @@ export async function tailLogs(
 
 export async function outputBuildLog(buildLogUrl: string): Promise<string> {
   if (!buildLogUrl) {
-    logger.debug(
+    uiLogger.debug(
       'Unable to display build output. No build log URL was provided.'
     );
     return '';
@@ -190,15 +190,15 @@ export async function outputBuildLog(buildLogUrl: string): Promise<string> {
             data += chunk;
           });
           response.on('end', () => {
-            logger.log(data);
+            uiLogger.log(data);
             resolve(data);
           });
         })
         .on('error', () => {
-          logger.error('The build log could not be retrieved.');
+          uiLogger.error('The build log could not be retrieved.');
         });
     } catch (e) {
-      logger.error('The build log could not be retrieved.');
+      uiLogger.error('The build log could not be retrieved.');
       resolve('');
     }
   });

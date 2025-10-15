@@ -1,6 +1,6 @@
 import { accountNameExistsInConfig } from '@hubspot/local-dev-lib/config';
 import { promptUser } from './promptUtils.js';
-import { i18n } from '../lang.js';
+import { lib } from '../../lang/en.js';
 import { PromptConfig } from '../../types/Prompts.js';
 import { HUBSPOT_ACCOUNT_TYPES } from '@hubspot/local-dev-lib/constants/config';
 import { AccountType } from '@hubspot/local-dev-lib/types/Accounts';
@@ -14,20 +14,18 @@ export function getCliAccountNamePromptConfig(
 ): PromptConfig<AccountNamePromptResponse> {
   return {
     name: 'name',
-    message: i18n(`lib.prompts.accountNamePrompt.enterAccountName`),
+    message: lib.prompts.accountNamePrompt.enterAccountName,
     default: defaultName,
     validate(val?: string) {
       if (typeof val !== 'string') {
-        return i18n(`lib.prompts.accountNamePrompt.errors.invalidName`);
+        return lib.prompts.accountNamePrompt.errors.invalidName;
       } else if (!val.length) {
-        return i18n(`lib.prompts.accountNamePrompt.errors.nameRequired`);
+        return lib.prompts.accountNamePrompt.errors.nameRequired;
       } else if (val.indexOf(' ') >= 0) {
-        return i18n(`lib.prompts.accountNamePrompt.errors.spacesInName`);
+        return lib.prompts.accountNamePrompt.errors.spacesInName;
       }
       return accountNameExistsInConfig(val)
-        ? i18n(`lib.prompts.accountNamePrompt.errors.accountNameExists`, {
-            name: val,
-          })
+        ? lib.prompts.accountNamePrompt.errors.accountNameExists(val)
         : true;
     },
   };
@@ -60,17 +58,13 @@ export function hubspotAccountNamePrompt({
   let defaultName: string | undefined;
   if (isSandbox) {
     promptMessageString = isDevelopmentSandbox
-      ? i18n(`lib.prompts.accountNamePrompt.enterDevelopmentSandboxName`)
-      : i18n(`lib.prompts.accountNamePrompt.enterStandardSandboxName`);
+      ? lib.prompts.accountNamePrompt.enterDevelopmentSandboxName
+      : lib.prompts.accountNamePrompt.enterStandardSandboxName;
   } else if (isDeveloperTestAccount) {
-    promptMessageString = i18n(
-      `lib.prompts.accountNamePrompt.enterDeveloperTestAccountName`
-    );
-    defaultName = i18n(
-      `lib.prompts.accountNamePrompt.developerTestAccountDefaultName`,
-      {
-        count: currentPortalCount + 1,
-      }
+    promptMessageString =
+      lib.prompts.accountNamePrompt.enterDeveloperTestAccountName;
+    defaultName = lib.prompts.accountNamePrompt.developerTestAccountDefaultName(
+      currentPortalCount + 1
     );
   }
 
@@ -80,14 +74,12 @@ export function hubspotAccountNamePrompt({
       message: promptMessageString,
       validate(val?: string) {
         if (typeof val !== 'string') {
-          return i18n(`lib.prompts.accountNamePrompt.errors.invalidName`);
+          return lib.prompts.accountNamePrompt.errors.invalidName;
         } else if (!val.trim().length) {
-          return i18n(`lib.prompts.accountNamePrompt.errors.nameRequired`);
+          return lib.prompts.accountNamePrompt.errors.nameRequired;
         }
         return accountNameExistsInConfig(val)
-          ? i18n(`lib.prompts.accountNamePrompt.errors.accountNameExists`, {
-              name: val,
-            })
+          ? lib.prompts.accountNamePrompt.errors.accountNameExists(val)
           : true;
       },
       default: defaultName,

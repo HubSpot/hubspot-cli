@@ -24,6 +24,10 @@ import {
 } from '../../lib/theme/migrate.js';
 import { hasFeature } from '../../lib/hasFeature.js';
 import { FEATURES } from '../../lib/constants.js';
+import {
+  trackCommandMetadataUsage,
+  trackCommandUsage,
+} from '../../lib/usageTracking.js';
 
 export type ProjectMigrateArgs = CommonArgs &
   AccountArgs &
@@ -41,7 +45,9 @@ const describe = commands.project.migrate.describe;
 async function handler(
   args: ArgumentsCamelCase<ProjectMigrateArgs>
 ): Promise<void> {
-  const { platformVersion, unstable } = args;
+  const { platformVersion, unstable, derivedAccountId } = args;
+
+  await trackCommandUsage('project-migrate', {}, derivedAccountId);
   const projectConfig = await getProjectConfig();
 
   if (!projectConfig.projectConfig) {
@@ -69,7 +75,6 @@ async function handler(
     }
   }
 
-  const { derivedAccountId } = args;
   try {
     const { hasMigratableThemes, migratableThemesCount } =
       await getHasMigratableThemes(projectConfig);
@@ -113,9 +118,19 @@ async function handler(
       );
     }
   } catch (error) {
+    await trackCommandMetadataUsage(
+      'project-migrate',
+      { successful: false },
+      derivedAccountId
+    );
     logError(error);
     return process.exit(EXIT_CODES.ERROR);
   }
+  await trackCommandMetadataUsage(
+    'project-migrate',
+    { successful: true },
+    derivedAccountId
+  );
   return process.exit(EXIT_CODES.SUCCESS);
 }
 

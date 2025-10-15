@@ -4,7 +4,7 @@ import {
   getAccountConfig,
 } from '@hubspot/local-dev-lib/config';
 import { API_KEY_AUTH_METHOD } from '@hubspot/local-dev-lib/constants/auth';
-import { logger } from '@hubspot/local-dev-lib/logger';
+import { uiLogger } from './ui/logger.js';
 import packageJson from '../package.json' with { type: 'json' };
 const version = packageJson.version;
 import { debugError } from './errorHandlers/index.js';
@@ -62,7 +62,7 @@ export async function trackCommandUsage(
     return;
   }
 
-  logger.debug('Attempting to track usage of "%s" command', command);
+  uiLogger.debug(`Attempting to track usage of "${command}" command`);
   let authType = 'unknown';
 
   if (accountId) {
@@ -87,9 +87,9 @@ export async function trackHelpUsage(command: string): Promise<void> {
     return;
   }
   if (command) {
-    logger.debug('Tracking help usage of "%s" sub-command', command);
+    uiLogger.debug(`Tracking help usage of "${command}" sub-command`);
   } else {
-    logger.debug('Tracking help usage of main command');
+    uiLogger.debug('Tracking help usage of main command');
   }
 
   return trackCliInteraction({
@@ -130,7 +130,7 @@ export async function trackCommandMetadataUsage(
   if (!isTrackingAllowed()) {
     return;
   }
-  logger.debug('Attempting to track metadata usage of "%s" command', command);
+  uiLogger.debug(`Attempting to track metadata usage of "${command}" command`);
   let authType = 'unknown';
   if (accountId) {
     const accountConfig = getAccountConfig(accountId);
@@ -189,7 +189,7 @@ async function trackCliInteraction({
           },
           accountId
         );
-        logger.debug('Sent AI usage tracking command event: %o', {
+        uiLogger.debug('Sent AI usage tracking command event:', {
           ...usageTrackingEvent,
           action: 'cli-mcp-server',
           type: process.env.HUBSPOT_MCP_AI_AGENT,
@@ -200,7 +200,7 @@ async function trackCliInteraction({
     }
 
     try {
-      logger.debug('Sent usage tracking command event: %o', usageTrackingEvent);
+      uiLogger.debug('Sent usage tracking command event:', usageTrackingEvent);
       return trackUsage(
         'cli-interaction',
         EventClass.INTERACTION,

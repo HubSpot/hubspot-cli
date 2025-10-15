@@ -30,7 +30,7 @@ import {
 } from '@hubspot/project-parsing-lib/src/lib/constants.js';
 import { ValueOf } from '@hubspot/local-dev-lib/types/Utils';
 
-export async function createV3App(
+export async function createV2App(
   providedAuth: string | undefined,
   providedDistribution: string | undefined
 ): Promise<{
@@ -182,7 +182,7 @@ export async function calculateComponentTemplateChoices(
     : [...enabledComponents];
 }
 
-type V3ComponentInfo = {
+type V2ComponentInfo = {
   authType?: string;
   distribution?: string;
   repoConfig?: ProjectTemplateRepoConfig;
@@ -190,13 +190,13 @@ type V3ComponentInfo = {
   componentTemplateChoices?: (ComponentTemplateChoice | Separator)[];
 };
 
-export async function v3ComponentFlow(
+export async function v2ComponentFlow(
   platformVersion: string,
   projectBase: string | undefined,
   providedAuth: string | undefined,
   providedDistribution: string | undefined,
   accountId: number
-): Promise<V3ComponentInfo> {
+): Promise<V2ComponentInfo> {
   let repoConfig: ProjectTemplateRepoConfig | undefined = undefined;
   let authType: string | undefined;
   let distribution: string | undefined;
@@ -222,7 +222,7 @@ export async function v3ComponentFlow(
 
   if (projectContentsChoice === PROJECT_WITH_APP) {
     const { authType: selectedAuthType, distribution: selectedDistribution } =
-      await createV3App(providedAuth, providedDistribution);
+      await createV2App(providedAuth, providedDistribution);
     authType = selectedAuthType;
     distribution = selectedDistribution;
   }

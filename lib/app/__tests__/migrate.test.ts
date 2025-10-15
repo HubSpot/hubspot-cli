@@ -1,4 +1,4 @@
-import { logger } from '@hubspot/local-dev-lib/logger';
+import { uiLogger } from '../../ui/logger.js';
 import { getCwd, sanitizeFileName } from '@hubspot/local-dev-lib/path';
 import { extractZipArchive } from '@hubspot/local-dev-lib/archive';
 import { ArgumentsCamelCase } from 'yargs';
@@ -46,7 +46,7 @@ import {
   validateMigrationApps,
 } from '../migrate.js';
 
-vi.mock('@hubspot/local-dev-lib/logger');
+vi.mock('../../ui/logger.js');
 vi.mock('@hubspot/local-dev-lib/path');
 vi.mock('@hubspot/local-dev-lib/archive');
 vi.mock('@hubspot/project-parsing-lib');
@@ -62,7 +62,7 @@ vi.mock('../../hasFeature');
 vi.mock('../../projects/urls');
 vi.mock('fs');
 
-const mockedLogger = logger as Mocked<typeof logger>;
+const mockedUiLogger = uiLogger as Mocked<typeof uiLogger>;
 const mockedGetCwd = getCwd as MockedFunction<typeof getCwd>;
 const mockedSanitizeFileName = sanitizeFileName as MockedFunction<
   typeof sanitizeFileName
@@ -780,11 +780,11 @@ describe('lib/app/migrate', () => {
     it('should log the invalid account error message', () => {
       logInvalidAccountError();
 
-      expect(mockedLogger.error).toHaveBeenCalledWith(
+      expect(mockedUiLogger.error).toHaveBeenCalledWith(
         lib.migrate.errors.invalidAccountTypeTitle
       );
 
-      expect(mockedLogger.log).toHaveBeenCalledWith(
+      expect(mockedUiLogger.log).toHaveBeenCalledWith(
         expect.stringContaining(
           'Only public apps created in a developer account can be converted to a project component'
         )

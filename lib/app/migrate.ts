@@ -680,8 +680,7 @@ export function logInvalidAccountError(): void {
   uiLogger.error(lib.migrate.errors.invalidAccountTypeTitle);
   uiLogger.log(
     lib.migrate.errors.invalidAccountTypeDescription(
-      uiCommandReference('hs account use'),
-      uiCommandReference('hs auth')
+      uiCommandReference('hs account use')
     )
   );
   uiLine();

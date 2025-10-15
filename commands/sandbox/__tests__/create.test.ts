@@ -16,12 +16,12 @@ import { HUBSPOT_ACCOUNT_TYPES } from '@hubspot/local-dev-lib/constants/config';
 import * as buildAccount from '../../../lib/buildAccount.js';
 import { Sandbox, V2Sandbox } from '@hubspot/local-dev-lib/types/Sandbox';
 import { EXIT_CODES } from '../../../lib/enums/exitCodes.js';
-import { logger } from '@hubspot/local-dev-lib/logger';
+import { uiLogger } from '../../../lib/ui/logger.js';
 import * as sandboxesLib from '../../../lib/sandboxes.js';
 import * as sandboxSync from '../../../lib/sandboxSync.js';
 import { Mock, vi } from 'vitest';
 
-vi.mock('@hubspot/local-dev-lib/logger');
+vi.mock('../../../lib/ui/logger.js');
 vi.mock('@hubspot/local-dev-lib/config');
 vi.mock('../../../lib/commonOpts');
 vi.mock('../../../lib/hasFeature');
@@ -275,7 +275,7 @@ describe('commands/sandbox/create', () => {
         type: 'invalid',
         force: true,
       });
-      expect(logger.error).toHaveBeenCalledTimes(1);
+      expect(uiLogger.error).toHaveBeenCalledTimes(1);
       expect(processExitSpy).toHaveBeenCalled();
       expect(processExitSpy).toHaveBeenCalledWith(EXIT_CODES.ERROR);
     });
@@ -286,7 +286,7 @@ describe('commands/sandbox/create', () => {
         type: 'standard',
         force: true,
       });
-      expect(logger.error).toHaveBeenCalled();
+      expect(uiLogger.error).toHaveBeenCalled();
       expect(processExitSpy).toHaveBeenCalled();
       expect(processExitSpy).toHaveBeenCalledWith(EXIT_CODES.ERROR);
     });
@@ -300,7 +300,7 @@ describe('commands/sandbox/create', () => {
         ...args,
         type: 'developer',
       });
-      expect(logger.error).toHaveBeenCalled();
+      expect(uiLogger.error).toHaveBeenCalled();
       expect(processExitSpy).toHaveBeenCalled();
       expect(processExitSpy).toHaveBeenCalledWith(EXIT_CODES.ERROR);
     });

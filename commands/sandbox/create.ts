@@ -107,14 +107,23 @@ async function handler(
     await validateSandboxUsageLimits(accountConfig, sandboxType, env);
   } catch (err) {
     if (isMissingScopeError(err)) {
-      uiLogger.error(lib.sandbox.create.developer.failure.scopes.message);
+      uiLogger.error(
+        sandboxType === 'DEVELOPMENT_SANDBOX'
+          ? lib.sandbox.create.developer.failure.scopes.message
+          : lib.sandbox.create.standard.failure.scopes.message
+      );
       const websiteOrigin = getHubSpotWebsiteOrigin(env);
       const url = `${websiteOrigin}/personal-access-key/${derivedAccountId}`;
       uiLogger.info(
-        lib.sandbox.create.developer.failure.scopes.instructions(
-          accountConfig.name || derivedAccountId,
-          url
-        )
+        sandboxType === 'DEVELOPMENT_SANDBOX'
+          ? lib.sandbox.create.developer.failure.scopes.instructions(
+              accountConfig.name || derivedAccountId,
+              url
+            )
+          : lib.sandbox.create.standard.failure.scopes.instructions(
+              accountConfig.name || derivedAccountId,
+              url
+            )
       );
     } else {
       logError(err);

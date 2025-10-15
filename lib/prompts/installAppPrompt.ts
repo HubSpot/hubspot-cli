@@ -6,33 +6,13 @@ import { uiLogger } from '../ui/logger.js';
 
 export async function installAppBrowserPrompt(
   installUrl: string,
-  isReinstall = false,
-  staticAuthInstallOptions?: {
-    testingAccountId: number;
-    projectAccountId: number;
-    projectName: string;
-    appUid: string;
-  }
+  isReinstall = false
 ): Promise<void> {
   uiLogger.log('');
   if (isReinstall) {
     uiLogger.log(lib.prompts.installAppPrompt.reinstallExplanation);
   } else {
     uiLogger.log(lib.prompts.installAppPrompt.explanation);
-  }
-
-  if (staticAuthInstallOptions) {
-    const { testingAccountId, projectAccountId, projectName, appUid } =
-      staticAuthInstallOptions;
-    uiLogger.log(
-      lib.prompts.installAppPrompt.staticAuthExplanation(
-        projectAccountId,
-        testingAccountId,
-        projectName,
-        appUid
-      )
-    );
-    uiLogger.log('');
   }
 
   const { shouldOpenBrowser } = await promptUser<{

@@ -1,6 +1,6 @@
 import { exec as execAsync } from 'node:child_process';
 import util from 'util';
-import { logger } from '@hubspot/local-dev-lib/logger';
+import { uiLogger } from './ui/logger.js';
 import pkg from '../package.json' with { type: 'json' };
 
 export const DEFAULT_PACKAGE_MANAGER = 'npm';
@@ -33,7 +33,7 @@ export async function executeInstall(
   options?: { cwd?: string }
 ): Promise<void> {
   const installCommand = `${DEFAULT_PACKAGE_MANAGER} install${flags ? ` ${flags}` : ''} ${packages.join(' ')}`;
-  logger.debug('Running ', installCommand);
+  uiLogger.debug('Running', installCommand);
 
   const exec = util.promisify(execAsync);
   await exec(installCommand, options);

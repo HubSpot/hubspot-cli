@@ -82,11 +82,3 @@ export function getAccountHomeUrl(accountId: number): string {
   );
   return `${baseUrl}/home?portalId=${accountId}`;
 }
-
-export function getAppAllowlistUrl(
-  accountId: number,
-  projectName: string,
-  appUid: string
-): string {
-  return `${getProjectHomeUrl(accountId)}/project/${projectName}/component/${appUid}/distribution?panel=static-token-allowlist`;
-}

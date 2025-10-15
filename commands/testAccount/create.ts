@@ -25,7 +25,7 @@ import { createDeveloperTestAccountConfigPrompt } from '../../lib/prompts/create
 import { debugError, logError } from '../../lib/errorHandlers/index.js';
 import SpinniesManager from '../../lib/ui/SpinniesManager.js';
 import {
-  createDeveloperTestAccountV3,
+  createDeveloperTestAccountV2,
   saveAccountToConfig,
 } from '../../lib/buildAccount.js';
 
@@ -125,7 +125,7 @@ async function handler(
   });
 
   try {
-    const createResult = await createDeveloperTestAccountV3(
+    const createResult = await createDeveloperTestAccountV2(
       derivedAccountId,
       testAccountConfig
     );

@@ -19,7 +19,7 @@ vi.mock('@modelcontextprotocol/sdk/server/mcp.js');
 vi.mock('../../../utils/project');
 vi.mock('../../../utils/command');
 vi.mock('../../../../lib/constants');
-vi.mock('../../../../lib/projects/create/v3');
+vi.mock('../../../../lib/projects/create/v2');
 vi.mock('../../../utils/toolUsageTracking');
 
 const mockRunCommandInDir = runCommandInDir as MockedFunction<

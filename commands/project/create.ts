@@ -9,7 +9,7 @@ import {
   getProjectConfig,
 } from '../../lib/projects/config.js';
 import { EMPTY_PROJECT_TEMPLATE_NAME } from '../../lib/projects/create/legacy.js';
-import { generateComponentPaths } from '../../lib/projects/create/v3.js';
+import { generateComponentPaths } from '../../lib/projects/create/v2.js';
 import { PROJECT_WITH_APP, EMPTY_PROJECT } from '../../lib/constants.js';
 import { uiFeatureHighlight } from '../../lib/ui/index.js';
 import { debugError, logError } from '../../lib/errorHandlers/index.js';
@@ -177,7 +177,6 @@ async function handler(
     'projectInstallDepsCommand',
     'projectHelpCommand',
     'feedbackCommand',
-    'sampleProjects',
   ]);
   process.exit(EXIT_CODES.SUCCESS);
 }

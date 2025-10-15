@@ -1,8 +1,8 @@
 import fs from 'fs';
 import { promptUser } from './promptUtils.js';
-import { i18n } from '../lang.js';
+import { lib } from '../../lang/en.js';
 import { debugError } from '../errorHandlers/index.js';
-import { logger } from '@hubspot/local-dev-lib/logger';
+import { uiLogger } from '../ui/logger.js';
 import { fetchTables } from '@hubspot/local-dev-lib/api/hubdb';
 import { EXIT_CODES } from '../enums/exitCodes.js';
 import { Table } from '@hubspot/local-dev-lib/types/Hubdb';
@@ -14,20 +14,18 @@ async function fetchHubDBOptions(accountId: number) {
       data: { results: tables },
     } = await fetchTables(accountId);
     if (tables.length === 0) {
-      logger.log(
-        i18n(`lib.prompts.selectHubDBTablePrompt.errors.noTables`, {
-          accountId,
-        })
+      uiLogger.log(
+        lib.prompts.selectHubDBTablePrompt.errors.noTables(accountId.toString())
       );
       process.exit(EXIT_CODES.SUCCESS);
     }
     return tables;
   } catch (error) {
     debugError(error, { accountId });
-    logger.error(
-      i18n(`lib.prompts.selectHubDBTablePrompt.errors.errorFetchingTables`, {
-        accountId,
-      })
+    uiLogger.error(
+      lib.prompts.selectHubDBTablePrompt.errors.errorFetchingTables(
+        accountId.toString()
+      )
     );
     process.exit(EXIT_CODES.ERROR);
   }
@@ -53,7 +51,7 @@ export async function selectHubDBTablePrompt({
   return promptUser([
     {
       name: 'tableId',
-      message: i18n(`lib.prompts.selectHubDBTablePrompt.selectTable`),
+      message: lib.prompts.selectHubDBTablePrompt.selectTable,
       when: !id && !isValidTable,
       type: 'list',
       choices: hubdbTables.map(table => {
@@ -65,19 +63,17 @@ export async function selectHubDBTablePrompt({
     },
     {
       name: 'dest',
-      message: i18n(`lib.prompts.selectHubDBTablePrompt.enterDest`),
+      message: lib.prompts.selectHubDBTablePrompt.enterDest,
       when: !options.dest && !skipDestPrompt,
       validate: (input?: string) => {
         if (!input) {
-          return i18n(`lib.prompts.selectHubDBTablePrompt.errors.destRequired`);
+          return lib.prompts.selectHubDBTablePrompt.errors.destRequired;
         }
         if (fs.existsSync(input)) {
-          return i18n(`lib.prompts.selectHubDBTablePrompt.errors.invalidDest`);
+          return lib.prompts.selectHubDBTablePrompt.errors.invalidDest;
         }
         if (!isValidPath(input)) {
-          return i18n(
-            `lib.prompts.selectHubDBTablePrompt.errors.invalidCharacters`
-          );
+          return lib.prompts.selectHubDBTablePrompt.errors.invalidCharacters;
         }
         return true;
       },

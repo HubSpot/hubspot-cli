@@ -4,7 +4,7 @@ import {
 } from '@hubspot/local-dev-lib/config';
 import { getAccountIdentifier } from '@hubspot/local-dev-lib/config/getAccountIdentifier';
 import { promptUser } from './promptUtils.js';
-import { i18n } from '../lang.js';
+import { commands } from '../../lang/en.js';
 import { uiAccountDescription } from '../ui/index.js';
 import { CLIAccount } from '@hubspot/local-dev-lib/types/Accounts';
 import { PromptChoices } from '../../types/Prompts.js';
@@ -29,7 +29,7 @@ export async function selectAccountFromConfig(prompt = ''): Promise<string> {
       type: 'list',
       name: 'default',
       pageSize: 20,
-      message: prompt || i18n(`commands.account.subcommands.use.promptMessage`),
+      message: prompt || commands.account.subcommands.use.promptMessage,
       choices: mapAccountChoices(accountsList),
       default: defaultAccount ?? undefined,
     },

@@ -13,11 +13,10 @@ import {
 import { Build } from '@hubspot/local-dev-lib/types/Build';
 import { PublicApp } from '@hubspot/local-dev-lib/types/Apps';
 import { Environment } from '@hubspot/local-dev-lib/types/Config';
-import { logger } from '@hubspot/local-dev-lib/logger';
 
 import { PROJECT_CONFIG_FILE } from '../../constants.js';
 import SpinniesManager from '../../ui/SpinniesManager.js';
-import DevServerManager from './DevServerManager.js';
+import DevServerManager_DEPRECATED from './DevServerManager_DEPRECATED.js';
 import { EXIT_CODES } from '../../enums/exitCodes.js';
 import { getAccountHomeUrl } from '../urls.js';
 import {
@@ -26,7 +25,7 @@ import {
   CONFIG_FILES,
   getAppCardConfigs,
   getComponentUid,
-} from '../../projects/structure.js';
+} from '../structure.js';
 import {
   Component,
   ComponentTypes,
@@ -520,7 +519,7 @@ class LocalDevManager {
 
   async devServerSetup(): Promise<boolean> {
     try {
-      await DevServerManager.setup({
+      await DevServerManager_DEPRECATED.setup({
         components: this.runnableComponents,
         onUploadRequired: this.logUploadWarning.bind(this),
         accountId: this.targetAccountId,
@@ -529,7 +528,7 @@ class LocalDevManager {
       return true;
     } catch (e) {
       if (this.debug) {
-        logger.error(e);
+        uiLogger.error(e instanceof Error ? e.message : String(e));
       }
       uiLogger.error(
         lib.LocalDevManager.devServer.setupError(
@@ -542,13 +541,13 @@ class LocalDevManager {
 
   async devServerStart(): Promise<void> {
     try {
-      await DevServerManager.start({
+      await DevServerManager_DEPRECATED.start({
         accountId: this.targetAccountId,
         projectConfig: this.projectConfig,
       });
     } catch (e) {
       if (this.debug) {
-        logger.error(e);
+        uiLogger.error(e instanceof Error ? e.message : String(e));
       }
       uiLogger.error(
         lib.LocalDevManager.devServer.startError(
@@ -561,10 +560,10 @@ class LocalDevManager {
 
   devServerFileChange(filePath: string, event: string): void {
     try {
-      DevServerManager.fileChange({ filePath, event });
+      DevServerManager_DEPRECATED.fileChange({ filePath, event });
     } catch (e) {
       if (this.debug) {
-        logger.error(e);
+        uiLogger.error(e instanceof Error ? e.message : String(e));
       }
       uiLogger.error(
         lib.LocalDevManager.devServer.fileChangeError(
@@ -576,11 +575,11 @@ class LocalDevManager {
 
   async devServerCleanup(): Promise<boolean> {
     try {
-      await DevServerManager.cleanup();
+      await DevServerManager_DEPRECATED.cleanup();
       return true;
     } catch (e) {
       if (this.debug) {
-        logger.error(e);
+        uiLogger.error(e instanceof Error ? e.message : String(e));
       }
       uiLogger.error(
         lib.LocalDevManager.devServer.cleanupError(

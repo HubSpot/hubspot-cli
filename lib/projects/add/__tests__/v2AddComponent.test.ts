@@ -1,11 +1,11 @@
 import fs from 'fs';
-import { v3AddComponent } from '../v3AddComponent.js';
+import { v2AddComponent } from '../v2AddComponent.js';
 import { getConfigForPlatformVersion } from '../../create/legacy.js';
-import { createV3App } from '../../create/v3.js';
+import { createV2App } from '../../create/v2.js';
 import { confirmPrompt } from '../../../prompts/promptUtils.js';
-import { projectAddPromptV3 } from '../../../prompts/projectAddPrompt.js';
+import { projectAddPromptV2 } from '../../../prompts/projectAddPrompt.js';
 import { cloneGithubRepo } from '@hubspot/local-dev-lib/github';
-import { logger } from '@hubspot/local-dev-lib/logger';
+import { uiLogger } from '../../../ui/logger.js';
 import { getProjectMetadata } from '@hubspot/project-parsing-lib/src/lib/project.js';
 import { trackCommandUsage } from '../../../usageTracking.js';
 import {
@@ -18,10 +18,10 @@ import { commands } from '../../../../lang/en.js';
 vi.mock('fs');
 vi.mock('../../../prompts/promptUtils');
 vi.mock('../../create/legacy');
-vi.mock('../../create/v3');
+vi.mock('../../create/v2');
 vi.mock('../../../prompts/projectAddPrompt');
 vi.mock('@hubspot/local-dev-lib/github');
-vi.mock('@hubspot/local-dev-lib/logger');
+vi.mock('../../../ui/logger.js');
 vi.mock('@hubspot/project-parsing-lib/src/lib/project');
 vi.mock('../../../usageTracking');
 
@@ -30,18 +30,18 @@ const mockedGetConfigForPlatformVersion = vi.mocked(
   getConfigForPlatformVersion
 );
 const mockedConfirmPrompt = vi.mocked(confirmPrompt);
-const mockedCreateV3App = vi.mocked(createV3App);
-const mockedProjectAddPromptV3 = vi.mocked(projectAddPromptV3);
+const mockedCreateV2App = vi.mocked(createV2App);
+const mockedProjectAddPromptV2 = vi.mocked(projectAddPromptV2);
 const mockedCloneGithubRepo = vi.mocked(cloneGithubRepo);
-const mockedLogger = vi.mocked(logger);
+const mockedUiLogger = vi.mocked(uiLogger);
 const mockedGetProjectMetadata = vi.mocked(getProjectMetadata);
 const mockedTrackCommandUsage = vi.mocked(trackCommandUsage);
 
-describe('lib/projects/add/v3AddComponent', () => {
+describe('lib/projects/add/v2AddComponent', () => {
   const mockProjectConfig: ProjectConfig = {
     name: 'test-project',
     srcDir: 'src',
-    platformVersion: 'v3',
+    platformVersion: '2025.2',
   };
 
   const mockArgs = {
@@ -82,14 +82,14 @@ describe('lib/projects/add/v3AddComponent', () => {
   };
 
   beforeEach(() => {
-    mockedCreateV3App.mockResolvedValue({
+    mockedCreateV2App.mockResolvedValue({
       authType: 'oauth',
       distribution: 'private',
     });
     mockedTrackCommandUsage.mockResolvedValue();
   });
 
-  describe('v3AddComponent()', () => {
+  describe('v2AddComponent()', () => {
     it('successfully adds a component when app already exists', async () => {
       const mockAppMeta = {
         config: {
@@ -105,21 +105,21 @@ describe('lib/projects/add/v3AddComponent', () => {
       mockedGetConfigForPlatformVersion.mockResolvedValue(mockConfig);
       mockedGetProjectMetadata.mockResolvedValue(mockProjectMetadata);
       mockedFs.readFileSync.mockReturnValue(JSON.stringify(mockAppMeta));
-      mockedProjectAddPromptV3.mockResolvedValue(mockPromptResponse);
+      mockedProjectAddPromptV2.mockResolvedValue(mockPromptResponse);
       mockedCloneGithubRepo.mockResolvedValue(true);
 
-      await v3AddComponent(
+      await v2AddComponent(
         mockArgs,
         projectDir,
         mockProjectConfig,
         mockAccountId
       );
 
-      expect(mockedGetConfigForPlatformVersion).toHaveBeenCalledWith('v3');
+      expect(mockedGetConfigForPlatformVersion).toHaveBeenCalledWith('2025.2');
       expect(mockedGetProjectMetadata).toHaveBeenCalledWith(
         '/path/to/project/src'
       );
-      expect(mockedProjectAddPromptV3).toHaveBeenCalled();
+      expect(mockedProjectAddPromptV2).toHaveBeenCalled();
       expect(mockedTrackCommandUsage).toHaveBeenCalledWith(
         'project-add',
         {
@@ -131,12 +131,12 @@ describe('lib/projects/add/v3AddComponent', () => {
         expect.any(String),
         projectDir,
         expect.objectContaining({
-          sourceDir: ['v3/test-component'],
+          sourceDir: ['2025.2/test-component'],
           hideLogs: true,
           branch: 'main',
         })
       );
-      expect(mockedLogger.success).toHaveBeenCalled();
+      expect(mockedUiLogger.success).toHaveBeenCalled();
     });
 
     it('creates an app when no app exists and user confirms', async () => {
@@ -156,17 +156,17 @@ describe('lib/projects/add/v3AddComponent', () => {
       mockedGetProjectMetadata.mockResolvedValue(mockProjectMetadataNoApps);
       mockedConfirmPrompt.mockResolvedValue(true);
 
-      mockedProjectAddPromptV3.mockResolvedValue(mockPromptResponse);
+      mockedProjectAddPromptV2.mockResolvedValue(mockPromptResponse);
       mockedCloneGithubRepo.mockResolvedValue(true);
 
-      await v3AddComponent(
+      await v2AddComponent(
         mockArgs,
         projectDir,
         mockProjectConfig,
         mockAccountId
       );
 
-      expect(mockedCreateV3App).toHaveBeenCalled();
+      expect(mockedCreateV2App).toHaveBeenCalled();
       expect(mockedTrackCommandUsage).toHaveBeenCalledWith(
         'project-add',
         {
@@ -178,7 +178,7 @@ describe('lib/projects/add/v3AddComponent', () => {
         expect.any(String),
         projectDir,
         expect.objectContaining({
-          sourceDir: ['v3/test-component', 'v3/app-template'],
+          sourceDir: ['2025.2/test-component', '2025.2/app-template'],
         })
       );
     });
@@ -204,17 +204,17 @@ describe('lib/projects/add/v3AddComponent', () => {
       mockedGetProjectMetadata.mockResolvedValue(mockProjectMetadataNoApps);
       mockedConfirmPrompt.mockResolvedValue(true);
 
-      mockedProjectAddPromptV3.mockResolvedValue(mockPromptResponse);
+      mockedProjectAddPromptV2.mockResolvedValue(mockPromptResponse);
       mockedCloneGithubRepo.mockResolvedValue(true);
 
-      await v3AddComponent(
+      await v2AddComponent(
         mockArgs,
         projectDir,
         mockProjectConfig,
         mockAccountId
       );
 
-      expect(mockedCreateV3App).not.toHaveBeenCalled();
+      expect(mockedCreateV2App).not.toHaveBeenCalled();
       expect(mockedTrackCommandUsage).toHaveBeenCalledWith(
         'project-add',
         {
@@ -238,7 +238,7 @@ describe('lib/projects/add/v3AddComponent', () => {
       mockedGetProjectMetadata.mockResolvedValue(mockProjectMetadataMaxApps);
 
       await expect(
-        v3AddComponent(mockArgs, projectDir, mockProjectConfig, mockAccountId)
+        v2AddComponent(mockArgs, projectDir, mockProjectConfig, mockAccountId)
       ).rejects.toThrow(
         'This project currently has the maximum number of apps: 1'
       );
@@ -253,7 +253,7 @@ describe('lib/projects/add/v3AddComponent', () => {
       mockedGetConfigForPlatformVersion.mockResolvedValue(mockEmptyConfig);
 
       await expect(
-        v3AddComponent(mockArgs, projectDir, mockProjectConfig, mockAccountId)
+        v2AddComponent(mockArgs, projectDir, mockProjectConfig, mockAccountId)
       ).rejects.toThrow(commands.project.add.error.failedToFetchComponentList);
     });
 
@@ -265,7 +265,7 @@ describe('lib/projects/add/v3AddComponent', () => {
       });
 
       await expect(
-        v3AddComponent(mockArgs, projectDir, mockProjectConfig, mockAccountId)
+        v2AddComponent(mockArgs, projectDir, mockProjectConfig, mockAccountId)
       ).rejects.toThrow('Unable to parse app file');
     });
 
@@ -284,11 +284,11 @@ describe('lib/projects/add/v3AddComponent', () => {
       mockedGetConfigForPlatformVersion.mockResolvedValue(mockConfig);
       mockedGetProjectMetadata.mockResolvedValue(mockProjectMetadata);
       mockedFs.readFileSync.mockReturnValue(JSON.stringify(mockAppMeta));
-      mockedProjectAddPromptV3.mockResolvedValue(mockPromptResponse);
+      mockedProjectAddPromptV2.mockResolvedValue(mockPromptResponse);
       mockedCloneGithubRepo.mockRejectedValue(new Error('Clone failed'));
 
       await expect(
-        v3AddComponent(mockArgs, projectDir, mockProjectConfig, mockAccountId)
+        v2AddComponent(mockArgs, projectDir, mockProjectConfig, mockAccountId)
       ).rejects.toThrow(commands.project.add.error.failedToDownloadComponent);
     });
 
@@ -315,10 +315,10 @@ describe('lib/projects/add/v3AddComponent', () => {
       mockedGetConfigForPlatformVersion.mockResolvedValue(mockConfig);
       mockedGetProjectMetadata.mockResolvedValue(mockProjectMetadata);
       mockedFs.readFileSync.mockReturnValue(JSON.stringify(mockAppMeta));
-      mockedProjectAddPromptV3.mockResolvedValue(mockPromptResponse);
+      mockedProjectAddPromptV2.mockResolvedValue(mockPromptResponse);
       mockedCloneGithubRepo.mockResolvedValue(true);
 
-      await v3AddComponent(
+      await v2AddComponent(
         mockArgs,
         projectDir,
         mockProjectConfig,
@@ -353,9 +353,9 @@ describe('lib/projects/add/v3AddComponent', () => {
 
       mockedGetConfigForPlatformVersion.mockResolvedValue(mockConfig);
       mockedGetProjectMetadata.mockResolvedValue(mockProjectMetadataNoApps);
-      mockedProjectAddPromptV3.mockResolvedValue(mockPromptResponse);
+      mockedProjectAddPromptV2.mockResolvedValue(mockPromptResponse);
 
-      await v3AddComponent(
+      await v2AddComponent(
         mockArgs,
         projectDir,
         mockProjectConfig,
@@ -395,10 +395,10 @@ describe('lib/projects/add/v3AddComponent', () => {
       mockedGetConfigForPlatformVersion.mockResolvedValue(mockConfig);
       mockedGetProjectMetadata.mockResolvedValue(mockProjectMetadata);
       mockedFs.readFileSync.mockReturnValue(JSON.stringify(mockAppMeta));
-      mockedProjectAddPromptV3.mockResolvedValue(mockPromptResponse);
+      mockedProjectAddPromptV2.mockResolvedValue(mockPromptResponse);
       mockedCloneGithubRepo.mockResolvedValue(true);
 
-      await v3AddComponent(
+      await v2AddComponent(
         mockArgs,
         projectDir,
         mockProjectConfig,
@@ -449,10 +449,10 @@ describe('lib/projects/add/v3AddComponent', () => {
       mockedGetConfigForPlatformVersion.mockResolvedValue(mockConfig);
       mockedGetProjectMetadata.mockResolvedValue(mockProjectMetadata);
       mockedFs.readFileSync.mockReturnValue(JSON.stringify(mockAppMeta));
-      mockedProjectAddPromptV3.mockResolvedValue(mockPromptResponse);
+      mockedProjectAddPromptV2.mockResolvedValue(mockPromptResponse);
       mockedCloneGithubRepo.mockResolvedValue(true);
 
-      await v3AddComponent(
+      await v2AddComponent(
         mockArgs,
         projectDir,
         mockProjectConfig,

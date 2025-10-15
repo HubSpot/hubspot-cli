@@ -2,7 +2,7 @@ import { getProjectConfig } from '../projects/config.js';
 import { fetchProject } from '@hubspot/local-dev-lib/api/projects';
 import path from 'path';
 import pkg from '../../package.json' with { type: 'json' };
-import { logger } from '@hubspot/local-dev-lib/logger';
+import { uiLogger } from '../ui/logger.js';
 import { Environment } from '@hubspot/local-dev-lib/types/Config';
 import {
   AccessToken,
@@ -161,7 +161,7 @@ export class DiagnosticInfoBuilder {
       );
       this.projectDetails = data;
     } catch (e) {
-      logger.debug(e);
+      uiLogger.debug(e);
     }
   }
 
@@ -173,7 +173,7 @@ export class DiagnosticInfoBuilder {
         this.accountId!
       );
     } catch (e) {
-      logger.debug(e);
+      uiLogger.debug(e);
     }
 
     return this.accessToken;
@@ -188,7 +188,7 @@ export class DiagnosticInfoBuilder {
           path.relative(this._projectConfig!.projectDir!, filename)
         );
     } catch (e) {
-      logger.debug(e);
+      uiLogger.debug(e);
     }
   }
 
@@ -198,7 +198,7 @@ export class DiagnosticInfoBuilder {
       const { stdout } = await exec('npm --version');
       return stdout.toString().trim();
     } catch (e) {
-      logger.debug(e);
+      uiLogger.debug(e);
       return null;
     }
   }

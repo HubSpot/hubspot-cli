@@ -1,11 +1,11 @@
 import { trackUsage } from '@hubspot/local-dev-lib/trackUsage';
-import { logger } from '@hubspot/local-dev-lib/logger';
 import {
   EventClass,
   getNodeVersionData,
   getPlatform,
 } from '../../lib/usageTracking.js';
 import { getAccountId, isTrackingAllowed } from '@hubspot/local-dev-lib/config';
+import { uiLogger } from '../../lib/ui/logger.js';
 
 export async function trackToolUsage(
   toolName: string,
@@ -28,7 +28,7 @@ export async function trackToolUsage(
 
   const accountId = getAccountId() || undefined;
   try {
-    logger.info('Tracking tool usage');
+    uiLogger.info('Tracking tool usage');
     await trackUsage(
       'cli-interaction',
       EventClass.INTERACTION,

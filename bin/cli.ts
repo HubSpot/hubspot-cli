@@ -9,7 +9,7 @@ import {
 } from '../lib/usageTracking.js';
 import { EXIT_CODES } from '../lib/enums/exitCodes.js';
 import {
-  loadConfigMiddleware,
+  loadAndValidateConfigMiddleware,
   injectAccountIdMiddleware,
   validateAccountOptions,
   handleDeprecatedEnvVariables,
@@ -83,7 +83,7 @@ const argv = yargs(process.argv.slice(2))
     setCLILogLevel,
     setRequestHeaders,
     handleDeprecatedEnvVariables,
-    loadConfigMiddleware,
+    loadAndValidateConfigMiddleware,
     injectAccountIdMiddleware,
     autoUpdateCLI,
     checkAndWarnGitInclusionMiddleware,

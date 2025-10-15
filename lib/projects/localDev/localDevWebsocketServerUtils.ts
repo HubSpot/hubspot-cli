@@ -21,3 +21,27 @@ export function isViewedWelcomeScreenWebsocketMessage(
     message.type === LOCAL_DEV_UI_MESSAGE_RECEIVE_TYPES.VIEWED_WELCOME_SCREEN
   );
 }
+
+export function isAppInstallSuccessWebsocketMessage(
+  message: LocalDevWebsocketMessage
+) {
+  return (
+    message.type === LOCAL_DEV_UI_MESSAGE_RECEIVE_TYPES.APP_INSTALL_SUCCESS
+  );
+}
+
+export function isAppInstallInitiatedWebsocketMessage(
+  message: LocalDevWebsocketMessage
+) {
+  return (
+    message.type === LOCAL_DEV_UI_MESSAGE_RECEIVE_TYPES.APP_INSTALL_INITIATED
+  );
+}
+
+export function isAppInstallFailureWebsocketMessage(
+  message: LocalDevWebsocketMessage
+) {
+  return (
+    message.type === LOCAL_DEV_UI_MESSAGE_RECEIVE_TYPES.APP_INSTALL_FAILURE
+  );
+}

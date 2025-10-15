@@ -13,12 +13,12 @@ import {
   uiCommandReference,
   uiLink,
   UI_COLORS,
+  uiAuthCommandReference,
 } from '../lib/ui/index.js';
 import {
   getProjectDetailUrl,
   getProjectSettingsUrl,
   getLocalDevUiUrl,
-  getAppAllowlistUrl,
 } from '../lib/projects/urls.js';
 import { getProductUpdatesUrl } from '../lib/links.js';
 import {
@@ -129,7 +129,7 @@ export const commands = {
           invalidAccountIdProvided: `--account must be a number.`,
           failedToUpdateConfig:
             'Failed to update the configuration file. Please try again.',
-          migrationNotConfirmed: `Did not migrate your configuration file. Run ${uiCommandReference('hs auth')} to update your existing config, or use ${uiCommandReference('hs config migrate')} to switch to the new global configuration.`,
+          migrationNotConfirmed: `Did not migrate your configuration file. Run ${uiAuthCommandReference()} to update your existing config, or use ${uiCommandReference('hs config migrate')} to switch to the new global configuration.`,
           mergeNotConfirmed: `Did not merge configuration files. When you are ready to merge the deprecated config file with the global config file, run ${uiCommandReference('hs config migrate')}.`,
         },
         success: {
@@ -1076,8 +1076,7 @@ export const commands = {
         `Connected account "${account}" using "${authType}" and set it as the default account`,
     },
     logs: {
-      updateConfig:
-        'To update an existing config file, use the "hs auth" command.',
+      updateConfig: `To update an existing config file, use the ${uiAuthCommandReference()} command.`,
     },
     errors: {
       invalidAccountIdProvided: `--account must be a number.`,
@@ -1341,13 +1340,13 @@ export const commands = {
           'Using default account as target account (for now)',
         accountTypeInformation:
           'Testing in a developer test account is strongly recommended, but you can use a sandbox account if your plan allows you to create one.',
-        learnMoreMessageV3: `Learn more about ${uiLink(
+        learnMoreMessageV2: `Learn more about ${uiLink(
           'HubSpot projects local dev',
           'https://developers.hubspot.com/docs/developer-tooling/local-development/hubspot-cli/project-commands#start-a-local-development-server'
         )} | ${uiLink('HubSpot account types', 'https://developers.hubspot.com/docs/getting-started/account-types')}`,
         learnMoreMessageLegacy: uiLink(
           'Learn more about the projects local dev server',
-          'https://developers.hubspot.com/docs/platform/project-cli-commands#start-a-local-development-server'
+          'https://developers.hubspot.com/docs/developer-tooling/local-development/hubspot-cli/project-commands#start-a-local-development-server'
         ),
         profileProjectAccountExplanation: (
           accountId: number,
@@ -1369,15 +1368,15 @@ export const commands = {
         noProjectConfig:
           'No project detected. Please run this command again from a project directory.',
         noAccount: (accountId: number) =>
-          `An error occurred while reading account ${uiAccountDescription(accountId)} from your config. Run ${uiCommandReference('hs auth')} to re-auth this account.`,
-        noAccountsInConfig: `No accounts found in your config. Run ${uiCommandReference('hs auth')} to configure a HubSpot account with the CLI.`,
+          `An error occurred while reading account ${uiAccountDescription(accountId)} from your config. Run ${uiAuthCommandReference()} to re-auth this account.`,
+        noAccountsInConfig: `No accounts found in your config. Run ${uiAuthCommandReference()} to configure a HubSpot account with the CLI.`,
         invalidProjectComponents:
           'Projects cannot contain both private and public apps. Move your apps to separate projects before attempting local development.',
         noRunnableComponents: `No supported components were found in this project. Run ${uiCommandReference('hs project add')} to see a list of available components and add one to your project.`,
         accountNotCombined: `\nLocal development of unified apps is currently only compatible with accounts that are opted into the unified apps beta. Make sure that this account is opted in or switch accounts using ${uiCommandReference('hs account use')}.`,
         unsupportedAccountFlagLegacy:
           'The --project-account and --testing-account flags are not supported for projects with platform versions earlier than 2025.2.',
-        unsupportedAccountFlagV3:
+        unsupportedAccountFlagV2:
           'The --account flag is is not supported supported for projects with platform versions 2025.2 and newer. Use --testing-account and --project-account flags to specify accounts to use for local dev',
       },
       examples: {
@@ -1386,9 +1385,11 @@ export const commands = {
       options: {
         profile: 'The profile to target during local dev',
         projectAccount:
-          'The id of the account to upload your project to. Only compatible with platform versions 2025.2 and above.',
+          'The id of the account to upload your project to. Must be used with --testing-account. Supported on platform versions 2025.2 and newer.',
         testingAccount:
-          'The id of the account to install apps and test on. Only compatible with platform versions 2025.2 and above.',
+          'The id of the account to install apps and test on. Must be used with --project-account. Supported on platform versions 2025.2 and newer.',
+        account:
+          'The id of the account to upload your project to. Unsupported on platform versions 2025.2 and newer.',
       },
     },
     create: {
@@ -1482,16 +1483,12 @@ export const commands = {
           `Converting app configuration to ${LEGACY_PUBLIC_APP_FILE} component definition ... FAILED`,
       },
       warning: {
-        title: () =>
-          `${chalk.bold('You are about to migrate an app to the projects framework')}`,
-        projectConversion: () =>
-          `${chalk.bold('The selected app will be converted to a project component.')}`,
-        appConfig: () =>
-          `All supported app configuration will be moved to the ${chalk.bold(LEGACY_PUBLIC_APP_FILE)} component definition file. Future updates to those features must be made through the project build and deploy pipeline, not the developer account UI.`,
+        title: `${chalk.bold('You are about to migrate an app to the projects framework')}\n`,
+        projectConversion: `${chalk.bold('The selected app will be converted to a project component.')}\n`,
+        appConfig: `All supported app configuration will be moved to the ${chalk.bold(LEGACY_PUBLIC_APP_FILE)} component definition file. Future updates to those features must be made through the project build and deploy pipeline, not the developer account UI.\n`,
         buildAndDeploy:
-          'This will create a new project with a single app component and immediately build and deploy it to your developer account (build #1).',
-        existingApps: () =>
-          `${chalk.bold('This will not affect existing app users or installs.')}`,
+          'This will create a new project with a single app component and immediately build and deploy it to your developer account (build #1).\n',
+        existingApps: `${chalk.bold('This will not affect existing app users or installs.')}`,
         copyApp:
           'We strongly recommend making a copy of your app to test this process in a development app before replacing production.',
       },
@@ -1833,7 +1830,7 @@ export const commands = {
           `Failed to delete file "${remotePath}"`,
         deleteFolderFailed: (remotePath: string) =>
           `Failed to delete folder "${remotePath}"`,
-        v3ApiError: (platformVersion: string) =>
+        v2ApiError: (platformVersion: string) =>
           `${uiCommandReference('hs project watch')} is not supported for platform version '${platformVersion}' use ${uiCommandReference('hs project dev')} instead to develop locally. ${uiLink('How to develop locally', 'https://developers.hubspot.com/docs/guides/crm/ui-extensions/local-development')}`,
       },
     },
@@ -1911,10 +1908,10 @@ export const commands = {
         `Installing dependencies for ${directory} failed`,
       noProjectConfig:
         'No project detected. Run this command from a project directory.',
-      noPackageJsonInProject: (projectName: string, link: string) =>
-        `No dependencies to install. The project ${projectName} folder might be missing component or subcomponent files. ${link}`,
-      packageManagerNotInstalled: (packageManager: string, link: string) =>
-        `This command depends on ${packageManager}, install ${chalk.bold(link)}`,
+      noPackageJsonInProject: (projectName: string) =>
+        `No dependencies to install. The project ${projectName} folder might be missing component or subcomponent files. ${uiLink('Learn how to create a project from scratch', 'https://developers.hubspot.com/docs/apps/developer-platform/build-apps/create-an-app#customize-a-new-project-using-the-cli')}`,
+      packageManagerNotInstalled: (packageManager: string) =>
+        `This command depends on ${packageManager}, install ${uiLink(packageManager, 'https://docs.npmjs.com/downloading-and-installing-node-js-and-npm')}`,
     },
     validate: {
       describe: 'Validate the project before uploading',
@@ -1932,6 +1929,19 @@ export const commands = {
         profile: {
           describe: 'The profile to target for this validation',
         },
+      },
+    },
+    list: {
+      describe:
+        'List uploaded projects that exist in the current target account',
+      projects: `${chalk.bold('Projects')}:`,
+      labels: {
+        name: 'Name',
+        platformVersion: 'Platform Version',
+      },
+      errors: {
+        noProjectsFound: (accountId: number) =>
+          `No projects found for account ${uiAccountDescription(accountId)}`,
       },
     },
   },
@@ -1954,11 +1964,11 @@ export const commands = {
         describe: 'Create a sandbox account.',
         failure: {
           noAccountConfig: (accountId: number) =>
-            `No account config found for ${uiAccountDescription(accountId)}. Run ${uiCommandReference('hs auth')} to add it.`,
+            `No account config found for ${uiAccountDescription(accountId)}. Run ${uiAuthCommandReference()} to add it.`,
           invalidAccountType: (accountType: string, accountName: string) =>
-            `Account ${accountName} is a ${accountType} account. Sandboxes can only be created from standard accounts.`,
+            `Sandboxes must be created from a production account. Your current default account ${chalk.bold(accountName)} is a ${chalk.bold(accountType)}. \n- Run ${uiCommandReference('hs account use')} to switch to your default account to your production account. \n- Run ${uiAuthCommandReference()} to connect a production account to the HubSpot CLI.\n`,
           noSandboxAccountConfig: (accountId: number) =>
-            `No account config found for ${uiAccountDescription(accountId)}. Run ${uiCommandReference('hs auth')} to add the sandbox account.`,
+            `No account config found for ${uiAccountDescription(accountId)}. Run ${uiAuthCommandReference()} to add the sandbox account.`,
           optionMissing: {
             type: 'Type is required when using --force. Use --type=developer or --type=standard.',
             name: 'Name is required when using --force. Use --name=YourSandboxName.',
@@ -1995,14 +2005,14 @@ export const commands = {
             invalidUser: (accountName: string, parentAccountName: string) =>
               `Couldn't create ${chalk.bold(accountName)} because your account has been removed from ${chalk.bold(parentAccountName)} or your permission set doesn't allow you to create the sandbox. To update your permissions, contact a super admin in ${chalk.bold(parentAccountName)}.`,
             limit: (accountName: string, limit: string) =>
-              `${chalk.bold(accountName)} reached the limit of ${limit} developer sandboxes. \n- To connect a developer sandbox to your HubSpot CLI, run ${chalk.bold('hs auth')} and follow the prompts.`,
+              `${chalk.bold(accountName)} reached the limit of ${limit} developer sandboxes. \n- To connect a developer sandbox to your HubSpot CLI, run ${uiAuthCommandReference()} and follow the prompts.`,
             alreadyInConfig: (accountName: string, limit: string) =>
-              `${chalk.bold(accountName)} reached the limit of ${limit} developer sandboxes. \n- To use an existing developer sandbox, run ${chalk.bold('hs accounts use')}.`,
+              `${chalk.bold(accountName)} reached the limit of ${limit} developer sandboxes. \n- To use an existing developer sandbox, run ${chalk.bold('hs account use')}.`,
             scopes: {
               message:
                 "The personal access key you provided doesn't include developer sandbox permissions.",
               instructions: (accountName: string, url: string) =>
-                `To update CLI permissions for "${accountName}": \n- Go to ${url}, deactivate the existing personal access key, and create a new one that includes developer sandbox permissions. \n- Update the CLI config for this account by running ${chalk.bold('hs auth')} and entering the new key.\n`,
+                `To update CLI permissions for "${accountName}": \n- Go to ${url}, deactivate the existing personal access key, and create a new one that includes developer sandbox permissions. \n- Update the CLI config for this account by running ${uiAuthCommandReference()} and entering the new key.\n`,
             },
           },
         },
@@ -2023,14 +2033,14 @@ export const commands = {
             invalidUser: (accountName: string, parentAccountName: string) =>
               `Couldn't create ${chalk.bold(accountName)} because your account has been removed from ${chalk.bold(parentAccountName)} or your permission set doesn't allow you to create the sandbox. To update your permissions, contact a super admin in ${chalk.bold(parentAccountName)}.`,
             limit: (accountName: string, limit: string) =>
-              `${chalk.bold(accountName)} reached the limit of ${limit} standard sandboxes. \n- To connect a standard sandbox to your HubSpot CLI, run ${chalk.bold('hs auth')} and follow the prompts.`,
+              `${chalk.bold(accountName)} reached the limit of ${limit} standard sandboxes. \n- To connect a standard sandbox to your HubSpot CLI, run ${uiAuthCommandReference()} and follow the prompts.`,
             alreadyInConfig: (accountName: string, limit: string) =>
-              `${chalk.bold(accountName)} reached the limit of ${limit} standard sandboxes. \n- To use an existing standard sandbox, run ${chalk.bold('hs accounts use')}.`,
+              `${chalk.bold(accountName)} reached the limit of ${limit} standard sandboxes. \n- To use an existing standard sandbox, run ${chalk.bold('hs account use')}.`,
             scopes: {
               message:
                 "The personal access key you provided doesn't include standard sandbox permissions.",
               instructions: (accountName: string, url: string) =>
-                `To update CLI permissions for "${accountName}": \n- Go to ${url}, deactivate the existing personal access key, and create a new one that includes standard sandbox permissions. \n- Update the CLI config for this account by running ${chalk.bold('hs auth')} and entering the new key.\n`,
+                `To update CLI permissions for "${accountName}": \n- Go to ${url}, deactivate the existing personal access key, and create a new one that includes standard sandbox permissions. \n- Update the CLI config for this account by running ${uiAuthCommandReference()} and entering the new key.\n`,
             },
           },
         },
@@ -2062,16 +2072,16 @@ export const commands = {
             `Couldn't delete ${uiAccountDescription(account)} because your account has been removed from ${uiAccountDescription(parentAccount)} or your permission set doesn't allow you to delete the sandbox. To update your permissions, contact a super admin in ${uiAccountDescription(parentAccount)}.`,
           noAccount:
             'No account specified. Specify an account by using the --account flag.',
-          noSandboxAccounts: `There are no sandboxes connected to the CLI. To add a sandbox, run ${uiCommandReference('hs auth')}.`,
+          noSandboxAccounts: `There are no sandboxes connected to the CLI. To add a sandbox, run ${uiAuthCommandReference()}.`,
           noSandboxAccountId:
             "This sandbox can't be deleted from the CLI because we could not find the associated sandbox account.",
-          noParentAccount: `This sandbox can't be deleted from the CLI because you haven't given the CLI access to its parent account. To do this, run ${uiCommandReference('hs auth')} and add the parent account.`,
+          noParentAccount: `This sandbox can't be deleted from the CLI because you haven't given the CLI access to its parent account. To do this, run ${uiAuthCommandReference()} and add the parent account.`,
           objectNotFound: (account: number) =>
             `Sandbox ${uiAccountDescription(account)} may have been deleted through the UI. The account has been removed from the config.`,
           noParentPortalAvailable: (command: string, url: string) =>
             `This sandbox can't be deleted from the CLI because you haven't given the CLI access to its parent account. To do this, run ${uiCommandReference(command)}. You can also delete the sandbox from the HubSpot management tool: ${chalk.bold(url)}.`,
           invalidKey: (account: number | null | undefined) =>
-            `Your personal access key for account ${uiAccountDescription(account)} is inactive. To re-authenticate, please run ${uiCommandReference('hs auth')}.`,
+            `Your personal access key for account ${uiAccountDescription(account)} is inactive. To re-authenticate, please run ${uiAuthCommandReference()}.`,
         },
         options: {
           force: {
@@ -2104,7 +2114,7 @@ export const commands = {
           message:
             "The personal access key you provided doesn't include sandbox sync permissions.",
           instructions: (accountName: string, url: string) =>
-            `To update CLI permissions for "${accountName}": \n- Go to ${url}, deactivate the existing personal access key, and create a new one that includes sandbox sync permissions. \n- Update the CLI config for this account by running ${chalk.bold('hs auth')} and entering the new key.\n`,
+            `To update CLI permissions for "${accountName}": \n- Go to ${url}, deactivate the existing personal access key, and create a new one that includes sandbox sync permissions. \n- Update the CLI config for this account by running ${uiAuthCommandReference()} and entering the new key.\n`,
         },
       },
       confirm: {
@@ -2617,7 +2627,7 @@ export const commands = {
           message:
             "The personal access key you provided doesn't include secrets permissions.",
           instructions: (secretName: string, url: string) =>
-            `To update CLI permissions for "${secretName}": \n- Go to ${url}, deactivate the existing personal access key, and create a new one that includes secrets permissions. \n- Update the CLI config for this account by running ${chalk.bold('hs auth')} and entering the new key.\n`,
+            `To update CLI permissions for "${secretName}": \n- Go to ${url}, deactivate the existing personal access key, and create a new one that includes secrets permissions. \n- Update the CLI config for this account by running ${uiAuthCommandReference()} and entering the new key.\n`,
         },
       },
     },
@@ -2641,7 +2651,7 @@ export const commands = {
           message:
             "The personal access key you provided doesn't include secrets permissions.",
           instructions: (secretName: string, url: string) =>
-            `To update CLI permissions for "${secretName}": \n- Go to ${url}, deactivate the existing personal access key, and create a new one that includes secrets permissions. \n- Update the CLI config for this account by running ${chalk.bold('hs auth')} and entering the new key.\n`,
+            `To update CLI permissions for "${secretName}": \n- Go to ${url}, deactivate the existing personal access key, and create a new one that includes secrets permissions. \n- Update the CLI config for this account by running ${uiAuthCommandReference()} and entering the new key.\n`,
         },
       },
     },
@@ -2662,7 +2672,7 @@ export const commands = {
           message:
             "The personal access key you provided doesn't include secrets permissions.",
           instructions: (url: string) =>
-            `To update CLI permissions: \n- Go to ${url}, deactivate the existing personal access key, and create a new one that includes secrets permissions. \n- Update the CLI config for this account by running ${chalk.bold('hs auth')} and entering the new key.\n`,
+            `To update CLI permissions: \n- Go to ${url}, deactivate the existing personal access key, and create a new one that includes secrets permissions. \n- Update the CLI config for this account by running ${uiAuthCommandReference()} and entering the new key.\n`,
         },
       },
     },
@@ -2688,7 +2698,7 @@ export const commands = {
           message:
             "The personal access key you provided doesn't include serverless function permissions.",
           instructions: (functionName: string, url: string) =>
-            `To update CLI permissions for "${functionName}": \n- Go to ${url}, deactivate the existing personal access key, and create a new one that includes serverless function permissions. \n- Update the CLI config for this account by running ${chalk.bold('hs auth')} and entering the new key.\n`,
+            `To update CLI permissions for "${functionName}": \n- Go to ${url}, deactivate the existing personal access key, and create a new one that includes serverless function permissions. \n- Update the CLI config for this account by running ${uiAuthCommandReference()} and entering the new key.\n`,
         },
       },
     },
@@ -2712,7 +2722,7 @@ export const commands = {
           message:
             "The personal access key you provided doesn't include serverless function permissions.",
           instructions: (functionName: string, url: string) =>
-            `To update CLI permissions for "${functionName}": \n- Go to ${url}, deactivate the existing personal access key, and create a new one that includes serverless function permissions. \n- Update the CLI config for this account by running ${chalk.bold('hs auth')} and entering the new key.\n`,
+            `To update CLI permissions for "${functionName}": \n- Go to ${url}, deactivate the existing personal access key, and create a new one that includes serverless function permissions. \n- Update the CLI config for this account by running ${uiAuthCommandReference()} and entering the new key.\n`,
         },
       },
     },
@@ -2733,7 +2743,7 @@ export const commands = {
           message:
             "The personal access key you provided doesn't include serverless function permissions.",
           instructions: (url: string) =>
-            `To update CLI permissions: \n- Go to ${url}, deactivate the existing personal access key, and create a new one that includes serverless function permissions. \n- Update the CLI config for this account by running ${chalk.bold('hs auth')} and entering the new key.\n`,
+            `To update CLI permissions: \n- Go to ${url}, deactivate the existing personal access key, and create a new one that includes serverless function permissions. \n- Update the CLI config for this account by running ${uiAuthCommandReference()} and entering the new key.\n`,
         },
       },
     },
@@ -2759,7 +2769,7 @@ export const commands = {
           message:
             "The personal access key you provided doesn't include serverless function log permissions.",
           instructions: (functionName: string, url: string) =>
-            `To update CLI permissions for "${functionName}": \n- Go to ${url}, deactivate the existing personal access key, and create a new one that includes serverless function log permissions. \n- Update the CLI config for this account by running ${chalk.bold('hs auth')} and entering the new key.\n`,
+            `To update CLI permissions for "${functionName}": \n- Go to ${url}, deactivate the existing personal access key, and create a new one that includes serverless function log permissions. \n- Update the CLI config for this account by running ${uiAuthCommandReference()} and entering the new key.\n`,
         },
       },
     },
@@ -2783,7 +2793,7 @@ export const commands = {
           message:
             "The personal access key you provided doesn't include serverless function log permissions.",
           instructions: (functionName: string, url: string) =>
-            `To update CLI permissions for "${functionName}": \n- Go to ${url}, deactivate the existing personal access key, and create a new one that includes serverless function log permissions. \n- Update the CLI config for this account by running ${chalk.bold('hs auth')} and entering the new key.\n`,
+            `To update CLI permissions for "${functionName}": \n- Go to ${url}, deactivate the existing personal access key, and create a new one that includes serverless function log permissions. \n- Update the CLI config for this account by running ${uiAuthCommandReference()} and entering the new key.\n`,
         },
       },
     },
@@ -2804,7 +2814,7 @@ export const commands = {
           message:
             "The personal access key you provided doesn't include serverless function log permissions.",
           instructions: (url: string) =>
-            `To update CLI permissions: \n- Go to ${url}, deactivate the existing personal access key, and create a new one that includes serverless function log permissions. \n- Update the CLI config for this account by running ${chalk.bold('hs auth')} and entering the new key.\n`,
+            `To update CLI permissions: \n- Go to ${url}, deactivate the existing personal access key, and create a new one that includes serverless function log permissions. \n- Update the CLI config for this account by running ${uiAuthCommandReference()} and entering the new key.\n`,
         },
       },
     },
@@ -2830,7 +2840,7 @@ export const commands = {
           message:
             "The personal access key you provided doesn't include serverless function metric permissions.",
           instructions: (functionName: string, url: string) =>
-            `To update CLI permissions for "${functionName}": \n- Go to ${url}, deactivate the existing personal access key, and create a new one that includes serverless function metric permissions. \n- Update the CLI config for this account by running ${chalk.bold('hs auth')} and entering the new key.\n`,
+            `To update CLI permissions for "${functionName}": \n- Go to ${url}, deactivate the existing personal access key, and create a new one that includes serverless function metric permissions. \n- Update the CLI config for this account by running ${uiAuthCommandReference()} and entering the new key.\n`,
         },
       },
     },
@@ -2854,7 +2864,7 @@ export const commands = {
           message:
             "The personal access key you provided doesn't include serverless function metric permissions.",
           instructions: (functionName: string, url: string) =>
-            `To update CLI permissions for "${functionName}": \n- Go to ${url}, deactivate the existing personal access key, and create a new one that includes serverless function metric permissions. \n- Update the CLI config for this account by running ${chalk.bold('hs auth')} and entering the new key.\n`,
+            `To update CLI permissions for "${functionName}": \n- Go to ${url}, deactivate the existing personal access key, and create a new one that includes serverless function metric permissions. \n- Update the CLI config for this account by running ${uiAuthCommandReference()} and entering the new key.\n`,
         },
       },
     },
@@ -2875,7 +2885,7 @@ export const commands = {
           message:
             "The personal access key you provided doesn't include serverless function metric permissions.",
           instructions: (url: string) =>
-            `To update CLI permissions: \n- Go to ${url}, deactivate the existing personal access key, and create a new one that includes serverless function metric permissions. \n- Update the CLI config for this account by running ${chalk.bold('hs auth')} and entering the new key.\n`,
+            `To update CLI permissions: \n- Go to ${url}, deactivate the existing personal access key, and create a new one that includes serverless function metric permissions. \n- Update the CLI config for this account by running ${uiAuthCommandReference()} and entering the new key.\n`,
         },
       },
     },
@@ -2901,7 +2911,7 @@ export const commands = {
           message:
             "The personal access key you provided doesn't include serverless function setting permissions.",
           instructions: (functionName: string, url: string) =>
-            `To update CLI permissions for "${functionName}": \n- Go to ${url}, deactivate the existing personal access key, and create a new one that includes serverless function setting permissions. \n- Update the CLI config for this account by running ${chalk.bold('hs auth')} and entering the new key.\n`,
+            `To update CLI permissions for "${functionName}": \n- Go to ${url}, deactivate the existing personal access key, and create a new one that includes serverless function setting permissions. \n- Update the CLI config for this account by running ${uiAuthCommandReference()} and entering the new key.\n`,
         },
       },
     },
@@ -2925,7 +2935,7 @@ export const commands = {
           message:
             "The personal access key you provided doesn't include serverless function setting permissions.",
           instructions: (functionName: string, url: string) =>
-            `To update CLI permissions for "${functionName}": \n- Go to ${url}, deactivate the existing personal access key, and create a new one that includes serverless function setting permissions. \n- Update the CLI config for this account by running ${chalk.bold('hs auth')} and entering the new key.\n`,
+            `To update CLI permissions for "${functionName}": \n- Go to ${url}, deactivate the existing personal access key, and create a new one that includes serverless function setting permissions. \n- Update the CLI config for this account by running ${uiAuthCommandReference()} and entering the new key.\n`,
         },
       },
     },
@@ -2946,7 +2956,7 @@ export const commands = {
           message:
             "The personal access key you provided doesn't include serverless function setting permissions.",
           instructions: (url: string) =>
-            `To update CLI permissions: \n- Go to ${url}, deactivate the existing personal access key, and create a new one that includes serverless function setting permissions. \n- Update the CLI config for this account by running ${chalk.bold('hs auth')} and entering the new key.\n`,
+            `To update CLI permissions: \n- Go to ${url}, deactivate the existing personal access key, and create a new one that includes serverless function setting permissions. \n- Update the CLI config for this account by running ${uiAuthCommandReference()} and entering the new key.\n`,
         },
       },
     },
@@ -2972,7 +2982,7 @@ export const commands = {
           message:
             "The personal access key you provided doesn't include serverless function version permissions.",
           instructions: (functionName: string, url: string) =>
-            `To update CLI permissions for "${functionName}": \n- Go to ${url}, deactivate the existing personal access key, and create a new one that includes serverless function version permissions. \n- Update the CLI config for this account by running ${chalk.bold('hs auth')} and entering the new key.\n`,
+            `To update CLI permissions for "${functionName}": \n- Go to ${url}, deactivate the existing personal access key, and create a new one that includes serverless function version permissions. \n- Update the CLI config for this account by running ${uiAuthCommandReference()} and entering the new key.\n`,
         },
       },
     },
@@ -2996,7 +3006,7 @@ export const commands = {
           message:
             "The personal access key you provided doesn't include serverless function version permissions.",
           instructions: (functionName: string, url: string) =>
-            `To update CLI permissions for "${functionName}": \n- Go to ${url}, deactivate the existing personal access key, and create a new one that includes serverless function version permissions. \n- Update the CLI config for this account by running ${chalk.bold('hs auth')} and entering the new key.\n`,
+            `To update CLI permissions for "${functionName}": \n- Go to ${url}, deactivate the existing personal access key, and create a new one that includes serverless function version permissions. \n- Update the CLI config for this account by running ${uiAuthCommandReference()} and entering the new key.\n`,
         },
       },
     },
@@ -3017,7 +3027,7 @@ export const commands = {
           message:
             "The personal access key you provided doesn't include serverless function version permissions.",
           instructions: (url: string) =>
-            `To update CLI permissions: \n- Go to ${url}, deactivate the existing personal access key, and create a new one that includes serverless function version permissions. \n- Update the CLI config for this account by running ${chalk.bold('hs auth')} and entering the new key.\n`,
+            `To update CLI permissions: \n- Go to ${url}, deactivate the existing personal access key, and create a new one that includes serverless function version permissions. \n- Update the CLI config for this account by running ${uiAuthCommandReference()} and entering the new key.\n`,
         },
       },
     },
@@ -3043,7 +3053,7 @@ export const commands = {
           message:
             "The personal access key you provided doesn't include serverless function webhook permissions.",
           instructions: (functionName: string, url: string) =>
-            `To update CLI permissions for "${functionName}": \n- Go to ${url}, deactivate the existing personal access key, and create a new one that includes serverless function webhook permissions. \n- Update the CLI config for this account by running ${chalk.bold('hs auth')} and entering the new key.\n`,
+            `To update CLI permissions for "${functionName}": \n- Go to ${url}, deactivate the existing personal access key, and create a new one that includes serverless function webhook permissions. \n- Update the CLI config for this account by running ${uiAuthCommandReference()} and entering the new key.\n`,
         },
       },
     },
@@ -3067,7 +3077,7 @@ export const commands = {
           message:
             "The personal access key you provided doesn't include serverless function webhook permissions.",
           instructions: (functionName: string, url: string) =>
-            `To update CLI permissions for "${functionName}": \n- Go to ${url}, deactivate the existing personal access key, and create a new one that includes serverless function webhook permissions. \n- Update the CLI config for this account by running ${chalk.bold('hs auth')} and entering the new key.\n`,
+            `To update CLI permissions for "${functionName}": \n- Go to ${url}, deactivate the existing personal access key, and create a new one that includes serverless function webhook permissions. \n- Update the CLI config for this account by running ${uiAuthCommandReference()} and entering the new key.\n`,
         },
       },
     },
@@ -3088,7 +3098,7 @@ export const commands = {
           message:
             "The personal access key you provided doesn't include serverless function webhook permissions.",
           instructions: (url: string) =>
-            `To update CLI permissions: \n- Go to ${url}, deactivate the existing personal access key, and create a new one that includes serverless function webhook permissions. \n- Update the CLI config for this account by running ${chalk.bold('hs auth')} and entering the new key.\n`,
+            `To update CLI permissions: \n- Go to ${url}, deactivate the existing personal access key, and create a new one that includes serverless function webhook permissions. \n- Update the CLI config for this account by running ${uiAuthCommandReference()} and entering the new key.\n`,
         },
       },
     },
@@ -3114,7 +3124,7 @@ export const commands = {
           message:
             "The personal access key you provided doesn't include serverless function webhook subscription permissions.",
           instructions: (functionName: string, url: string) =>
-            `To update CLI permissions for "${functionName}": \n- Go to ${url}, deactivate the existing personal access key, and create a new one that includes serverless function webhook subscription permissions. \n- Update the CLI config for this account by running ${chalk.bold('hs auth')} and entering the new key.\n`,
+            `To update CLI permissions for "${functionName}": \n- Go to ${url}, deactivate the existing personal access key, and create a new one that includes serverless function webhook subscription permissions. \n- Update the CLI config for this account by running ${uiAuthCommandReference()} and entering the new key.\n`,
         },
       },
     },
@@ -3138,7 +3148,7 @@ export const commands = {
           message:
             "The personal access key you provided doesn't include serverless function webhook subscription permissions.",
           instructions: (functionName: string, url: string) =>
-            `To update CLI permissions for "${functionName}": \n- Go to ${url}, deactivate the existing personal access key, and create a new one that includes serverless function webhook subscription permissions. \n- Update the CLI config for this account by running ${chalk.bold('hs auth')} and entering the new key.\n`,
+            `To update CLI permissions for "${functionName}": \n- Go to ${url}, deactivate the existing personal access key, and create a new one that includes serverless function webhook subscription permissions. \n- Update the CLI config for this account by running ${uiAuthCommandReference()} and entering the new key.\n`,
         },
       },
     },
@@ -3160,7 +3170,7 @@ export const commands = {
           message:
             "The personal access key you provided doesn't include serverless function webhook subscription permissions.",
           instructions: (url: string) =>
-            `To update CLI permissions: \n- Go to ${url}, deactivate the existing personal access key, and create a new one that includes serverless function webhook subscription permissions. \n- Update the CLI config for this account by running ${chalk.bold('hs auth')} and entering the new key.\n`,
+            `To update CLI permissions: \n- Go to ${url}, deactivate the existing personal access key, and create a new one that includes serverless function webhook subscription permissions. \n- Update the CLI config for this account by running ${uiAuthCommandReference()} and entering the new key.\n`,
         },
       },
     },
@@ -3186,7 +3196,7 @@ export const commands = {
           message:
             "The personal access key you provided doesn't include serverless function webhook subscription event permissions.",
           instructions: (functionName: string, url: string) =>
-            `To update CLI permissions for "${functionName}": \n- Go to ${url}, deactivate the existing personal access key, and create a new one that includes serverless function webhook subscription event permissions. \n- Update the CLI config for this account by running ${chalk.bold('hs auth')} and entering the new key.\n`,
+            `To update CLI permissions for "${functionName}": \n- Go to ${url}, deactivate the existing personal access key, and create a new one that includes serverless function webhook subscription event permissions. \n- Update the CLI config for this account by running ${uiAuthCommandReference()} and entering the new key.\n`,
         },
       },
     },
@@ -3210,7 +3220,7 @@ export const commands = {
           message:
             "The personal access key you provided doesn't include serverless function webhook subscription event permissions.",
           instructions: (functionName: string, url: string) =>
-            `To update CLI permissions for "${functionName}": \n- Go to ${url}, deactivate the existing personal access key, and create a new one that includes serverless function webhook subscription event permissions. \n- Update the CLI config for this account by running ${chalk.bold('hs auth')} and entering the new key.\n`,
+            `To update CLI permissions for "${functionName}": \n- Go to ${url}, deactivate the existing personal access key, and create a new one that includes serverless function webhook subscription event permissions. \n- Update the CLI config for this account by running ${uiAuthCommandReference()} and entering the new key.\n`,
         },
       },
     },
@@ -3233,7 +3243,7 @@ export const commands = {
           message:
             "The personal access key you provided doesn't include serverless function webhook subscription event permissions.",
           instructions: (url: string) =>
-            `To update CLI permissions: \n- Go to ${url}, deactivate the existing personal access key, and create a new one that includes serverless function webhook subscription event permissions. \n- Update the CLI config for this account by running ${chalk.bold('hs auth')} and entering the new key.\n`,
+            `To update CLI permissions: \n- Go to ${url}, deactivate the existing personal access key, and create a new one that includes serverless function webhook subscription event permissions. \n- Update the CLI config for this account by running ${uiAuthCommandReference()} and entering the new key.\n`,
         },
       },
     },
@@ -3259,7 +3269,7 @@ export const commands = {
           message:
             "The personal access key you provided doesn't include serverless function webhook subscription event type permissions.",
           instructions: (functionName: string, url: string) =>
-            `To update CLI permissions for "${functionName}": \n- Go to ${url}, deactivate the existing personal access key, and create a new one that includes serverless function webhook subscription event type permissions. \n- Update the CLI config for this account by running ${chalk.bold('hs auth')} and entering the new key.\n`,
+            `To update CLI permissions for "${functionName}": \n- Go to ${url}, deactivate the existing personal access key, and create a new one that includes serverless function webhook subscription event type permissions. \n- Update the CLI config for this account by running ${uiAuthCommandReference()} and entering the new key.\n`,
         },
       },
     },
@@ -3283,7 +3293,7 @@ export const commands = {
           message:
             "The personal access key you provided doesn't include serverless function webhook subscription event type permissions.",
           instructions: (functionName: string, url: string) =>
-            `To update CLI permissions for "${functionName}": \n- Go to ${url}, deactivate the existing personal access key, and create a new one that includes serverless function webhook subscription event type permissions. \n- Update the CLI config for this account by running ${chalk.bold('hs auth')} and entering the new key.\n`,
+            `To update CLI permissions for "${functionName}": \n- Go to ${url}, deactivate the existing personal access key, and create a new one that includes serverless function webhook subscription event type permissions. \n- Update the CLI config for this account by running ${uiAuthCommandReference()} and entering the new key.\n`,
         },
       },
     },
@@ -3307,7 +3317,7 @@ export const commands = {
           message:
             "The personal access key you provided doesn't include serverless function webhook subscription event type permissions.",
           instructions: (url: string) =>
-            `To update CLI permissions: \n- Go to ${url}, deactivate the existing personal access key, and create a new one that includes serverless function webhook subscription event type permissions. \n- Update the CLI config for this account by running ${chalk.bold('hs auth')} and entering the new key.\n`,
+            `To update CLI permissions: \n- Go to ${url}, deactivate the existing personal access key, and create a new one that includes serverless function webhook subscription event type permissions. \n- Update the CLI config for this account by running ${uiAuthCommandReference()} and entering the new key.\n`,
         },
       },
     },
@@ -3333,7 +3343,7 @@ export const commands = {
           message:
             "The personal access key you provided doesn't include serverless function webhook subscription event type option permissions.",
           instructions: (functionName: string, url: string) =>
-            `To update CLI permissions for "${functionName}": \n- Go to ${url}, deactivate the existing personal access key, and create a new one that includes serverless function webhook subscription event type option permissions. \n- Update the CLI config for this account by running ${chalk.bold('hs auth')} and entering the new key.\n`,
+            `To update CLI permissions for "${functionName}": \n- Go to ${url}, deactivate the existing personal access key, and create a new one that includes serverless function webhook subscription event type option permissions. \n- Update the CLI config for this account by running ${uiAuthCommandReference()} and entering the new key.\n`,
         },
       },
     },
@@ -3357,7 +3367,7 @@ export const commands = {
           message:
             "The personal access key you provided doesn't include serverless function webhook subscription event type option permissions.",
           instructions: (functionName: string, url: string) =>
-            `To update CLI permissions for "${functionName}": \n- Go to ${url}, deactivate the existing personal access key, and create a new one that includes serverless function webhook subscription event type option permissions. \n- Update the CLI config for this account by running ${chalk.bold('hs auth')} and entering the new key.\n`,
+            `To update CLI permissions for "${functionName}": \n- Go to ${url}, deactivate the existing personal access key, and create a new one that includes serverless function webhook subscription event type option permissions. \n- Update the CLI config for this account by running ${uiAuthCommandReference()} and entering the new key.\n`,
         },
       },
     },
@@ -3381,7 +3391,7 @@ export const commands = {
           message:
             "The personal access key you provided doesn't include serverless function webhook subscription event type option permissions.",
           instructions: (url: string) =>
-            `To update CLI permissions: \n- Go to ${url}, deactivate the existing personal access key, and create a new one that includes serverless function webhook subscription event type option permissions. \n- Update the CLI config for this account by running ${chalk.bold('hs auth')} and entering the new key.\n`,
+            `To update CLI permissions: \n- Go to ${url}, deactivate the existing personal access key, and create a new one that includes serverless function webhook subscription event type option permissions. \n- Update the CLI config for this account by running ${uiAuthCommandReference()} and entering the new key.\n`,
         },
       },
     },
@@ -3491,14 +3501,20 @@ export const lib = {
     },
   },
   AppDevModeInterface: {
+    autoInstallStaticAuthApp: {
+      installing: (appName: string, targetTestAccountId: number) =>
+        `Installing ${chalk.bold(appName)} on account ${uiAccountDescription(targetTestAccountId)}...`,
+      success: (appName: string, targetTestAccountId: number) =>
+        `Successfully installed ${chalk.bold(appName)} on account ${uiAccountDescription(targetTestAccountId)}\n`,
+      error: (appName: string, targetTestAccountId: number) =>
+        `Error installing ${chalk.bold(appName)} on account ${uiAccountDescription(targetTestAccountId)}. You may still be able to install your app in your browser.`,
+    },
     defaultMarketplaceAppWarning: (installCount: number) =>
       `Your marketplace app is currently installed in ${chalk.bold(`${installCount} ${installCount === 1 ? 'account' : 'accounts'}`)}. Any uploaded changes will impact your app's users. We strongly recommend creating a copy of this app to test your changes before proceeding.`,
     autoInstallDeclined:
       'You must install your app on your target test account to proceed with local development.',
     autoInstallSuccess: (appName: string, targetTestAccountId: number) =>
       `Successfully installed app ${appName} on account ${uiAccountDescription(targetTestAccountId)}\n`,
-    autoInstallError: (appName: string, targetTestAccountId: number) =>
-      `Error installing app ${appName} on account ${uiAccountDescription(targetTestAccountId)}. You may still be able to install your app in your browser.`,
     fetchAppData: {
       checking: (appName: string) =>
         `Checking installations for your app ${chalk.bold(appName)}...`,
@@ -3512,6 +3528,15 @@ export const lib = {
     },
     distributionChanged: `Your app's distribution type has been changed from ${APP_DISTRIBUTION_TYPES.PRIVATE} to ${APP_DISTRIBUTION_TYPES.MARKETPLACE}. Once uploaded, this change cannot be reversed. Before uploading your project, confirm that you want to ${chalk.bold('permanantly')} change your app's distribution type. This will uninstall your app from all accounts.`,
     authTypeChanged: `Your app's auth type has been changed from ${APP_AUTH_TYPES.STATIC} to ${APP_AUTH_TYPES.OAUTH}. Once uploaded, this change cannot be reversed. Before uploading your project, confirm that you want to ${chalk.bold('permanantly')} change your app's auth type. This will uninstall your app from all accounts.`,
+    installationFailed:
+      'An error occured while installing your app. Your app must be installed in your target test account to proceed with local development.',
+    waitUntilAppIsInstalled: {
+      link: (installUrl: string) =>
+        `${uiLink('Install your app', installUrl)} to proceed with local development\n`,
+      waiting: 'Waiting for your app to be installed...',
+      success: (appName: string, accountId: number) =>
+        `Your app ${chalk.bold(appName)} has been installed successfully on account ${uiAccountDescription(accountId)}\n`,
+    },
   },
   LocalDevWebsocketServer: {
     errors: {
@@ -3558,7 +3583,7 @@ export const lib = {
         upToDate: 'Deployed build is up to date.',
         notUpToDate: `Your project contains undeployed local changes.`,
         notUpToDateExplanation: (profile?: string) =>
-          `Run ${uiCommandReference(`hs project upload ${profile ? `--profile ${profile}` : ''}`)} to upload these changes to HubSpot, then re-run ${uiCommandReference(`hs project dev ${profile ? `--profile ${profile}` : ''}`)} to continue local development.`,
+          `Run ${uiCommandReference(`hs project upload${profile ? ` --profile ${profile}` : ''}`)} to upload these changes to HubSpot, then re-run ${uiCommandReference(`hs project dev${profile ? ` --profile ${profile}` : ''}`)} to continue local development.`,
       },
       createNewProjectForLocalDev: {
         projectMustExistExplanation: (projectName: string, accountId: number) =>
@@ -3589,16 +3614,21 @@ export const lib = {
           'Your project is locked. This may mean that another user is running the `hs project watch` command for this project. If this is you, unlock the project in Projects UI.',
         genericError: `An error occurred while creating the initial build for this project. Run ${uiCommandReference('hs project upload')} to try again.`,
       },
+      checkAndInstallDependencies: {
+        checkingDependencies: 'Checking for missing or updated dependencies...',
+        dependenciesUpToDate: 'All dependencies are up to date',
+        dependenciesFailure: 'Failed to check or install dependencies',
+      },
     },
     account: {
       checkIfDefaultAccountIsSupported: {
-        publicApp: `This project contains a public app. Local development of public apps is only supported on developer accounts and developer test accounts. Change your default account using ${uiCommandReference('hs accounts use')}, or link a new account with ${uiCommandReference('hs auth')}.`,
-        privateApp: `This project contains a private app. Local development of private apps is not supported in developer accounts. Change your default account using ${uiCommandReference('hs accounts use')}, or link a new account with ${uiCommandReference('hs auth')}.`,
+        publicApp: `This project contains a public app. Local development of public apps is only supported on developer accounts and developer test accounts. Change your default account using ${uiCommandReference('hs account use')}, or link a new account with ${uiAuthCommandReference()}.`,
+        privateApp: `This project contains a private app. Local development of private apps is not supported in developer accounts. Change your default account using ${uiCommandReference('hs account use')}, or link a new account with ${uiAuthCommandReference()}.`,
       },
       validateAccountOption: {
-        invalidPublicAppAccount: `This project contains a public app. The "--account" flag must point to a developer test account to develop this project locally. Alternatively, change your default account to an App Developer Account using ${uiCommandReference('hs accounts use')} and run ${uiCommandReference('hs project dev')} to set up a new Developer Test Account.`,
-        invalidPrivateAppAccount: `This project contains a private app. The account specified with the "--account" flag points to a developer account, which do not support the local development of private apps. Update the "--account" flag to point to a standard, sandbox, or developer test account, or change your default account by running ${uiCommandReference('hs accounts use')}.`,
-        nonSandboxWarning: `Testing in a sandbox is strongly recommended. To switch the target account, select an option below or run ${uiCommandReference('hs accounts use')} before running the command again.`,
+        invalidPublicAppAccount: `This project contains a public app. The "--account" flag must point to a developer test account to develop this project locally. Alternatively, change your default account to an App Developer Account using ${uiCommandReference('hs account use')} and run ${uiCommandReference('hs project dev')} to set up a new Developer Test Account.`,
+        invalidPrivateAppAccount: `This project contains a private app. The account specified with the "--account" flag points to a developer account, which do not support the local development of private apps. Update the "--account" flag to point to a standard, sandbox, or developer test account, or change your default account by running ${uiCommandReference('hs account use')}.`,
+        nonSandboxWarning: `Testing in a sandbox is strongly recommended. To switch the target account, select an option below or run ${uiCommandReference('hs account use')} before running the command again.`,
         publicAppNonDeveloperTestAccountWarning: `Local development of public apps is only supported in ${chalk.bold('developer test accounts')}.`,
       },
       checkIfParentAccountIsAuthed: {
@@ -3606,12 +3636,10 @@ export const lib = {
           parentAccountId: number | string,
           accountIdentifier: string
         ) =>
-          `To develop this project locally, run ${uiCommandReference(
-            `hs auth --account=${parentAccountId}`
-          )} to authenticate the App Developer Account ${parentAccountId} associated with ${accountIdentifier}.`,
+          `To develop this project locally, run ${uiAuthCommandReference({ accountId: parentAccountId })} to authenticate the App Developer Account ${parentAccountId} associated with ${accountIdentifier}.`,
       },
       selectAccountTypePrompt: {
-        message: '[--testing-account] Choose the type of account to test on',
+        message: 'Choose the type of account to test on',
         developerTestAccountOption:
           'Test on a developer test account (recommended)',
         sandboxAccountOption: 'Test on a sandbox account',
@@ -3624,14 +3652,14 @@ export const lib = {
           )} ${chalk.red('!')}>`,
       },
       confirmDefaultAccountIsTarget: {
-        configError: `An error occurred while reading the default account from your config. Run ${uiCommandReference('hs auth')} to re-auth this account`,
-        declineDefaultAccountExplanation: `To develop on a different account, run ${uiCommandReference('hs accounts use')} to change your default account, then re-run ${uiCommandReference('hs project dev')}.`,
+        configError: `An error occurred while reading the default account from your config. Run ${uiAuthCommandReference()} to re-auth this account`,
+        declineDefaultAccountExplanation: `To develop on a different account, run ${uiCommandReference('hs account use')} to change your default account, then re-run ${uiCommandReference('hs project dev')}.`,
       },
     },
   },
   middleware: {
     updateNotification: {
-      notifyTitle: chalk.bold('Update available'),
+      notifyTitle: chalk.bold('CLI update available'),
       cmsUpdateNotification: (packageName: string) =>
         `${chalk.bold('The CMS CLI is now the HubSpot CLI')}\n\nTo upgrade, uninstall ${chalk.bold(packageName)}\nand then run ${uiCommandReference('{updateCommand}')}`,
       cliUpdateNotification: `HubSpot CLI version ${chalk.cyan(chalk.bold('{currentVersion}'))} is outdated.\nRun ${uiCommandReference('{updateCommand}')} to upgrade to version ${chalk.cyan(chalk.bold('{latestVersion}'))}`,
@@ -3815,7 +3843,8 @@ export const lib = {
       )}`,
   },
   ui: {
-    betaTag: chalk.bold('[BETA]'),
+    betaTag: '[BETA]',
+    betaTagWithStyle: chalk.bold('[BETA]'),
     betaWarning: {
       header: chalk.yellow(
         '***************************** WARNING ****************************'
@@ -3825,7 +3854,8 @@ export const lib = {
       ),
     },
     infoTag: chalk.bold('[INFO]'),
-    deprecatedTag: chalk.bold('[DEPRECATED]'),
+    deprecatedTag: '[DEPRECATED]',
+    deprecatedTagWithStyle: chalk.bold('[DEPRECATED]'),
     errorTag: chalk.bold('[ERROR]'),
     deprecatedMessage: (command: string, url: string) =>
       `The ${command} command is deprecated and will be disabled soon. ${url}`,
@@ -3849,7 +3879,7 @@ export const lib = {
             `${command} - See a list of configured HubSpot accounts`,
         },
         accountsUseCommand: {
-          command: 'hs accounts use',
+          command: 'hs account use',
           message: (command: string) =>
             `${command} - Set the Hubspot account that the CLI will target by default`,
         },
@@ -3897,6 +3927,10 @@ export const lib = {
           message: (command: string) =>
             `${command} - Install all project dependencies`,
         },
+        projectCommandTip: {
+          message:
+            'Tip: All project commands must be run from within a project directory',
+        },
         sampleProjects: {
           linkText: "HubSpot's sample projects",
           url: 'https://developers.hubspot.com/docs/platform/sample-projects?utm_source=cli&utm_content=project_create_whats_next',
@@ -3924,7 +3958,7 @@ export const lib = {
     },
   },
   buildAccount: {
-    createDeveloperTestAccountV3: {
+    createDeveloperTestAccountV2: {
       syncFailure: 'Failed to sync developer test account',
       pakFailure:
         'Failed to generate personal access key for developer test account',
@@ -4003,6 +4037,28 @@ export const lib = {
         oldValue: string
       ) => `Change ${property} from ${newValue} to ${oldValue}?`,
     },
+    handleAccountNameConflicts: {
+      warnings: {
+        accountNameConflictMessage: (count: number) =>
+          `${count} account name conflict${count > 1 ? 's' : ''} detected.`,
+        forceFlagDetected: (count: number, renameDetails: string) =>
+          `Force flag detected. Automatically renaming ${count} account${count > 1 ? 's' : ''} with duplicate name${count > 1 ? 's' : ''}:\n${renameDetails}`,
+      },
+      prompts: {
+        renameOrOmitAccountPrompt: (accountName: string, accountId: number) =>
+          `Local account name="${accountName}" (ID: ${accountId}) conflicts with an existing global account.\nRename the local account to include it in the merge? If not, it will be skipped.`,
+        newAccountNamePrompt: (accountName: string, portalId: number) =>
+          `Enter a new name for the local account [ID: ${portalId}] (currently named "${accountName}"):`,
+      },
+      errors: {
+        nameRequired:
+          'The name may not be blank. Please add a name for the config.',
+        sameName:
+          'The new account name must be different from the current name.',
+        nameAlreadyInConfig: (name: string) =>
+          `The name "${name}" is already used by another account.`,
+      },
+    },
     handleMerge: {
       description: (archivedConfigName: string) =>
         `We will automatically merge the contents of your deprecated config file into your global configuration file. This will merge the configured accounts and settings into the global config. Then it will archive the deprecated config as ${archivedConfigName} for you to manually cleanup at your convenience.`,
@@ -4042,15 +4098,14 @@ export const lib = {
       createNewSandboxOption: '<Test on a new development sandbox>',
       createNewDeveloperTestAccountOption:
         '<Test on a new developer test account>',
-      chooseDefaultAccountOption: () =>
-        `<${chalk.bold('❗')} Test on this production account ${chalk.bold('❗')}>`,
+      chooseDefaultAccountOption: `<${chalk.bold('❗')} Test on this production account ${chalk.bold('❗')}>`,
       promptMessage: (accountType: string, accountIdentifier: string) =>
-        `[--account] Choose a ${accountType} under ${accountIdentifier} to test with:`,
-      sandboxLimit: (limit: string) =>
+        `Choose a ${accountType} under ${accountIdentifier} to test with:`,
+      sandboxLimit: (limit: number) =>
         `Your account reached the limit of ${limit} development sandboxes`,
-      sandboxLimitWithSuggestion: (limit: string, authCommand: string) =>
-        `Your account reached the limit of ${limit} development sandboxes. Run ${authCommand} to add an existing one to the config.`,
-      developerTestAccountLimit: (limit: string) =>
+      sandboxLimitWithSuggestion: (limit: number) =>
+        `Your account reached the limit of ${limit} development sandboxes. Run ${uiAuthCommandReference()} to add an existing one to the config.`,
+      developerTestAccountLimit: (limit: number) =>
         `Your account reached the limit of ${limit} developer test accounts.`,
       confirmDefaultAccount: (accountName: string, accountType: string) =>
         `Continue testing on ${chalk.bold(`${accountName} (${accountType})`)}? (Y/n)`,
@@ -4067,7 +4122,7 @@ export const lib = {
       setAsDefaultAccountMessage: 'Set this account as the default?',
       setAsDefaultAccount: (accountName: string) =>
         `Account "${accountName}" set as the default account`,
-      keepingCurrentDefault: (accountName: string) =>
+      keepingCurrentDefault: (accountName: string | number) =>
         `Account "${accountName}" will continue to be the default account`,
     },
     createDeveloperTestAccountConfigPrompt: {
@@ -4104,7 +4159,7 @@ export const lib = {
       enterStandardSandboxName: 'Name your standard sandbox:',
       enterDevelopmentSandboxName: 'Name your development sandbox:',
       sandboxDefaultName: (sandboxType: string) => `New ${sandboxType} sandbox`,
-      developerTestAccountDefaultName: (count: string) =>
+      developerTestAccountDefaultName: (count: number) =>
         `Developer test account ${count}`,
       errors: {
         invalidName: 'You entered an invalid name. Please try again.',
@@ -4225,8 +4280,8 @@ export const lib = {
         `[--appId] Choose an app under ${accountName} to clone:`,
       errors: {
         noAccountId: 'An account ID is required to select an app.',
-        noAppsMigration: () => `${chalk.bold('No apps to migrate')}`,
-        noAppsClone: () => `${chalk.bold('No apps to clone')}`,
+        noAppsMigration: `${chalk.bold('No apps to migrate')}`,
+        noAppsClone: `${chalk.bold('No apps to clone')}`,
         noAppsMigrationMessage: (accountName: string) =>
           `The selected developer account ${chalk.bold(accountName)} doesn't have any apps that can be migrated to the projects framework.`,
         noAppsCloneMessage: (accountName: string) =>
@@ -4238,7 +4293,7 @@ export const lib = {
     downloadProjectPrompt: {
       selectProject: 'Select a project to download:',
       errors: {
-        projectNotFound: (projectName: string, accountId: string) =>
+        projectNotFound: (projectName: string, accountId: number) =>
           `Your project ${projectName} could not be found in ${accountId}. Please select a valid project:`,
         accountIdRequired: 'An account ID is required to download a project.',
       },
@@ -4292,8 +4347,8 @@ export const lib = {
       enterName: '[--project] Enter project name:',
       errors: {
         invalidName: 'You entered an invalid name. Please try again.',
-        projectDoesNotExist: (projectName: string, accountIdentifier: string) =>
-          `Project ${chalk.bold(projectName)} could not be found in "${accountIdentifier}"`,
+        projectDoesNotExist: (projectName: string, accountId: number) =>
+          `Project ${chalk.bold(projectName)} could not be found in "${uiAccountDescription(accountId)}"`,
       },
     },
     previewPrompt: {
@@ -4311,13 +4366,6 @@ export const lib = {
         'Local development requires this app to be installed in the target test account.',
       reinstallExplanation:
         "This app's required scopes have been updated since it was last installed on the target test account. To avoid issues with local development, we recommend reinstalling the app with the updated scopes.",
-      staticAuthExplanation: (
-        projectAccountId: number,
-        testingAccountId: number,
-        projectName: string,
-        appUid: string
-      ) =>
-        `To install this static auth app, your testing account ${uiAccountDescription(testingAccountId)} must be on ${uiLink("this app's allowlist", getAppAllowlistUrl(projectAccountId, projectName, appUid))}.`,
       prompt: 'Open HubSpot to install this app?',
       autoPrompt: 'Install this app in your target test account?',
       reinstallPrompt: 'Open HubSpot to reinstall this app?',
@@ -4373,15 +4421,15 @@ export const lib = {
       failure: {
         invalidUser: (accountName: string, parentAccountName: string) =>
           `Couldn't create ${chalk.bold(accountName)} because your account has been removed from ${chalk.bold(parentAccountName)} or your permission set doesn't allow you to create the sandbox. To update your permissions, contact a super admin in ${chalk.bold(parentAccountName)}.`,
-        limit: (accountName: string, limit: string) =>
-          `${chalk.bold(accountName)} reached the limit of ${limit} developer test accounts. \n- To connect a developer test account to your HubSpot CLI, run ${chalk.bold('hs auth')} and follow the prompts.`,
-        alreadyInConfig: (accountName: string, limit: string) =>
-          `${chalk.bold(accountName)} reached the limit of ${limit} developer test accounts. \n- To use an existing developer test account, run ${chalk.bold('hs accounts use')}.`,
+        limit: (accountName: string | number, limit: number) =>
+          `${chalk.bold(accountName)} reached the limit of ${limit} developer test accounts. \n- To connect a developer test account to your HubSpot CLI, run ${uiAuthCommandReference()} and follow the prompts.`,
+        alreadyInConfig: (accountName: string | number, limit: number) =>
+          `${chalk.bold(accountName)} reached the limit of ${limit} developer test accounts. \n- To use an existing developer test account, run ${uiCommandReference('hs account use')}.`,
         scopes: {
           message:
             "The personal access key you provided doesn't include developer test account permissions.",
           instructions: (accountName: string | number, url: string) =>
-            `To update CLI permissions for "${accountName}": \n- Go to ${url}, deactivate the existing personal access key, and create a new one that includes developer test account permissions. \n- Update the CLI config for this account by running ${chalk.bold('hs auth')} and entering the new key.\n`,
+            `To update CLI permissions for "${accountName}": \n- Go to ${url}, deactivate the existing personal access key, and create a new one that includes developer test account permissions. \n- Update the CLI config for this account by running ${uiAuthCommandReference()} and entering the new key.\n`,
         },
       },
     },
@@ -4402,19 +4450,17 @@ export const lib = {
             `Account "${accountName}" updated using "${authType}"`,
         },
         failure: {
-          invalidUser: (accountName: string, parentAccountName: string) =>
-            `Couldn't create ${chalk.bold(accountName)} because your account has been removed from ${chalk.bold(parentAccountName)} or your permission set doesn't allow you to create the sandbox. To update your permissions, contact a super admin in ${chalk.bold(parentAccountName)}.`,
-          limit: (accountName: string, limit: string) =>
-            `${chalk.bold(accountName)} reached the limit of ${limit} developer sandboxes. \n- To connect a developer sandbox to your HubSpot CLI, run ${uiCommandReference('hs auth')} and follow the prompts.`,
-          alreadyInConfig: (accountName: string, limit: string) =>
-            `${chalk.bold(accountName)} reached the limit of ${limit} developer sandboxes. \n- To use an existing developer sandbox, run ${uiCommandReference('hs accounts use')}.`,
+          limit: (accountId: number, limit: number, link: string) =>
+            `${uiAccountDescription(accountId)} reached the limit of ${limit} developer sandboxes. \n- View sandbox details at ${uiLink('View sandbox details at', link)} \n- To connect a developer sandbox to your HubSpot CLI, run ${uiAuthCommandReference()} and follow the prompts.`,
+          alreadyInConfig: (accountId: number, limit: number) =>
+            `${uiAccountDescription(accountId)} reached the limit of ${limit} developer sandboxes. \n- To use an existing developer sandbox, run ${uiCommandReference('hs account use')}. \n- To delete an existing sandbox, run ${uiCommandReference('hs sandbox delete')}.`,
+          generic: 'An error occurred while creating a developer sandbox',
           scopes: {
             message:
               "The personal access key you provided doesn't include developer sandbox permissions.",
-            instructions: (accountName: string | number, url: string) =>
-              `To update CLI permissions for "${accountName}": \n- Go to ${url}, deactivate the existing personal access key, and create a new one that includes developer sandbox permissions. \n- Update the CLI config for this account by running ${uiCommandReference('hs auth')} and entering the new key.\n`,
+            instructions: (account: string | number, url: string) =>
+              `To update CLI permissions for "${chalk.bold(account)}": \n- ${uiLink('Go to', url)}, deactivate the existing personal access key, and create a new one that includes developer sandbox permissions. \n- Update the CLI config for this account by running ${uiAuthCommandReference()} and entering the new key.\n`,
           },
-          generic: 'An error occurred while creating a developer sandbox',
         },
       },
       standard: {
@@ -4431,22 +4477,40 @@ export const lib = {
             `Account "${accountName}" updated using "${authType}"`,
         },
         failure: {
-          invalidUser: (accountName: string, parentAccountName: string) =>
-            `Couldn't create ${chalk.bold(accountName)} because your account has been removed from ${chalk.bold(parentAccountName)} or your permission set doesn't allow you to create the sandbox. To update your permissions, contact a super admin in ${chalk.bold(parentAccountName)}.`,
-          limit: (accountName: string, limit: string) =>
-            `${chalk.bold(accountName)} reached the limit of ${limit} standard sandboxes. \n- To connect a standard sandbox to your HubSpot CLI, run ${chalk.bold('hs auth')} and follow the prompts.`,
-          alreadyInConfig: (accountName: string, limit: string) =>
-            `${chalk.bold(accountName)} reached the limit of ${limit} standard sandboxes. \n- To use an existing standard sandbox, run ${chalk.bold('hs accounts use')}.`,
+          limit: (accountId: number, limit: number, link: string) =>
+            `${uiAccountDescription(accountId)} reached the limit of ${limit} standard sandboxes.\n- View sandbox details at ${uiLink('View sandbox details at', link)} \n- To connect a standard sandbox to your HubSpot CLI, run ${uiAuthCommandReference()} and follow the prompts.`,
+          alreadyInConfig: (accountId: number, limit: number) =>
+            `${uiAccountDescription(accountId)} reached the limit of ${limit} standard sandboxes. \n- To use an existing standard sandbox, run ${uiCommandReference('hs account use')}. \n- To delete an existing sandbox, run ${uiCommandReference('hs sandbox delete')}.`,
           scopes: {
             message:
               "The personal access key you provided doesn't include standard sandbox permissions.",
-            instructions: (accountName: string, url: string) =>
-              `To update CLI permissions for "${accountName}": \n- Go to ${url}, deactivate the existing personal access key, and create a new one that includes standard sandbox permissions. \n- Update the CLI config for this account by running ${chalk.bold('hs auth')} and entering the new key.\n`,
+            instructions: (account: string | number, url: string) =>
+              `To update CLI permissions for "${chalk.bold(account)}": \n- ${uiLink('Go to', url)}, deactivate the existing personal access key, and create a new one that includes standard sandbox permissions. \n- Update the CLI config for this account by running ${uiAuthCommandReference()} and entering the new key.\n`,
           },
         },
       },
+      failure: {
+        usageLimitsFetch:
+          'Unable to fetch sandbox usage limits. Please try again.',
+        scopes: {
+          message:
+            "The personal access key you provided doesn't include sandbox permissions.",
+          instructions: (account: string | number, url: string) =>
+            `To update CLI permissions for "${chalk.bold(account)}": \n- Go to ${url}, deactivate the existing personal access key, and create a new one that includes Sandbox permissions. \n- Update the CLI config for this account by running ${uiAuthCommandReference()} and entering the new key.\n`,
+        },
+        invalidUser: (accountName: string, parentAccountId: number) =>
+          `Couldn't create ${chalk.bold(accountName)} because your account has been removed from ${uiAccountDescription(parentAccountId)} or your permission set doesn't allow you to create the sandbox. To update your permissions, contact a super admin in ${uiAccountDescription(parentAccountId)}.`,
+        '403Gating': (accountName: string, parentAccountId: number) =>
+          `We couldn't create ${chalk.bold(accountName)} because ${uiAccountDescription(parentAccountId)} is a developer account and does not have access to development sandboxes. To gain access to developer sandboxes, you can ${uiLink('convert your account', 'https://developers.hubspot.com/docs/getting-started/convert-your-account-into-a-developer-crm-account')}.`,
+      },
     },
     sync: {
+      info: {
+        syncMessage: (url: string) =>
+          `Asset sync from production to the sandbox is in progress and is running in the background. It may take some time. ${uiLink('View sync status details here', url)}`,
+        syncMessageDevSb: (url: string) =>
+          `Sync of object definitions from production to the sandbox is in progress and is running in the background. It may take some time. ${url}`,
+      },
       confirm: {
         syncContactRecords: {
           standard:
@@ -4456,23 +4520,36 @@ export const lib = {
       loading: {
         add: (accountName: string) =>
           `Syncing sandbox ${chalk.bold(accountName)}`,
-        fail: (accountName: string) =>
-          `Failed to sync sandbox ${chalk.bold(accountName)}.`,
-        succeed: (accountName: string) =>
-          `Successfully synced sandbox ${chalk.bold(accountName)}.`,
+        fail: (accountId: number) =>
+          `Failed to sync sandbox ${uiAccountDescription(accountId)}.`,
+        succeed: (accountId: number) =>
+          `Successfully synced sandbox ${uiAccountDescription(accountId)}.`,
+        startSync: 'Initiating sync...',
+        succeedDevSb: (accountId: number) =>
+          `Initiated sync of object definitions from production to ${uiAccountDescription(accountId)}`,
+        successDevSbInfo: (accountId: number, url: string) =>
+          `Initiated sync of object definitions from production to ${uiAccountDescription(accountId)}. It may take some time. ${url}`,
       },
       success: {
         configFileUpdated: (accountName: string, authType: string) =>
           `Account "${accountName}" updated using "${authType}"`,
       },
       failure: {
+        syncTypeFetch:
+          'Unable to fetch available sandbox sync types. Please try again.',
         invalidUser: (accountName: string, parentAccountName: string) =>
           `Couldn't sync ${chalk.bold(accountName)} because your account has been removed from ${chalk.bold(parentAccountName)} or your permission set doesn't allow you to sync the sandbox. To update your permissions, contact a super admin in ${chalk.bold(parentAccountName)}.`,
+        syncInProgress: (url: string) =>
+          `Couldn't run the sync because there's another sync in progress. Wait for the current sync to finish and then try again. To check the sync status, visit the sync activity log: ${url}.`,
+        notSuperAdmin: (accountId: number) =>
+          `Couldn't run the sync because you are not a super admin in ${uiAccountDescription(accountId)}. Ask the account owner for super admin access to the sandbox.`,
+        objectNotFound: (accountId: number) =>
+          `Couldn't sync the sandbox because ${uiAccountDescription(accountId)} may have been deleted through the UI. Run ${uiCommandReference('hs sandbox delete')} to remove this account from the config.`,
         scopes: {
           message:
             "The personal access key you provided doesn't include sandbox sync permissions.",
           instructions: (accountName: string, url: string) =>
-            `To update CLI permissions for "${accountName}": \n- Go to ${url}, deactivate the existing personal access key, and create a new one that includes sandbox sync permissions. \n- Update the CLI config for this account by running ${chalk.bold('hs auth')} and entering the new key.\n`,
+            `To update CLI permissions for "${accountName}": \n- ${uiLink('Go to', url)}, deactivate the existing personal access key, and create a new one that includes sandbox sync permissions. \n- Update the CLI config for this account by running ${uiAuthCommandReference()} and entering the new key.\n`,
         },
       },
     },
@@ -4483,6 +4560,10 @@ export const lib = {
       errorContext: (context: string) => `Context: ${context}`,
       errorCause: (cause: string) => `Cause: ${cause}`,
       unknownErrorOccurred: 'An unknown error has occurred.',
+      configTimeoutErrorOccurred: (timeout: number, configSetCommand: string) =>
+        `This error occurred because a request exceeded the default HTTP timeout of ${timeout}ms. To increase the default HTTP timeout, run ${uiCommandReference(configSetCommand)}.`,
+      genericTimeoutErrorOccurred:
+        'This error occurred because an HTTP request timed out. Re-running the command may resolve this issue.',
     },
     suppressErrors: {
       platformVersionErrors: {
@@ -4498,12 +4579,8 @@ export const lib = {
         docsLink: 'Projects platform versioning (BETA)',
         betaLink: (docsLink: string) => `For more info, see ${docsLink}.`,
       },
-      missingScopeError: (
-        request: string,
-        accountName: string,
-        authCommand: string
-      ) =>
-        `Couldn't execute the ${request} because the access key for ${accountName} is missing required scopes. To update scopes, run ${authCommand}. Then deactivate the existing key and generate a new one that includes the missing scopes.`,
+      missingScopeError: (request: string, accountName: string) =>
+        `Couldn't execute the ${request} because the access key for ${accountName} is missing required scopes. To update scopes, run ${uiAuthCommandReference()}. Then deactivate the existing key and generate a new one that includes the missing scopes.`,
     },
   },
   serverless: {
@@ -4514,8 +4591,7 @@ export const lib = {
         'Your account does not have access to this action. Talk to an account admin to request it.',
       userMissingScope:
         "You don't have access to this action. Ask an account admin to change your permissions in Users & Teams settings.",
-      genericMissingScope:
-        'Your access key does not allow this action. Please generate a new access key by running `hs auth personalaccesskey`.',
+      genericMissingScope: `Your access key does not allow this action. Please generate a new access key by running ${uiAuthCommandReference()}.`,
     },
   },
   doctor: {
@@ -4525,16 +4601,15 @@ export const lib = {
       active: 'Default account active',
       inactive: "Default account isn't active",
       inactiveSecondary: (command: string) =>
-        `Run ${command} to remove inactive accounts from your CLI config`,
+        `Run ${uiCommandReference(command)} to remove inactive accounts from your CLI config`,
       unableToDetermine: 'Unable to determine if the portal is active',
       pak: {
         incomplete:
           'Personal access key is valid, but there are more scopes available to your user that are not included in your key.',
-        incompleteSecondary: (command: string, link: string) =>
-          `To add the available scopes, run ${command} and re-authenticate your account with a new key that has those scopes. Visit HubSpot to view selected and available scopes for your personal access key. ${link}`,
+        incompleteSecondary: (link: string) =>
+          `To add the available scopes, run ${uiAuthCommandReference()} and re-authenticate your account with a new key that has those scopes. Visit HubSpot to view selected and available scopes for your personal access key. ${link}`,
         invalid: 'Personal access key is invalid',
-        invalidSecondary: (command: string) =>
-          `To get a new key, run ${command}, deactivate your access key, and generate a new one. Then use that new key to authenticate your account.`,
+        invalidSecondary: `To get a new key, run ${uiAuthCommandReference()}, deactivate your access key, and generate a new one. Then use that new key to authenticate your account.`,
         valid: (link: string) => `Personal Access Key is valid. ${link}`,
         viewScopes: 'View selected scopes',
       },
@@ -4554,32 +4629,31 @@ export const lib = {
     hsChecks: {
       notLatest: (hsVersion: string) => `Version ${hsVersion} outdated`,
       notLatestSecondary: (command: string, hsVersion: string) =>
-        `Run ${command} to upgrade to the latest version ${hsVersion}`,
+        `Run ${uiCommandReference(command)} to upgrade to the latest version ${hsVersion}`,
       latest: (hsVersion: string) => `HubSpot CLI v${hsVersion} up to date`,
       unableToDetermine: 'Unable to determine if HubSpot CLI is up to date.',
       unableToDetermineSecondary: (command: string, link: string) =>
-        `Run ${command} to check your installed version; then visit the ${link} to validate whether you have the latest version`,
-      unableToDetermineSecondaryLink: 'npm HubSpot CLI version history',
+        `Run ${uiCommandReference(command)} to check your installed version; then visit the ${uiLink('npm HubSpot CLI version history', link)} to validate whether you have the latest version`,
     },
     projectDependenciesChecks: {
       missingDependencies: (dir: string) =>
         `missing dependencies in ${chalk.bold(dir)}`,
       missingDependenciesSecondary: (command: string) =>
-        `Run ${command} to install all project dependencies locally`,
+        `Run ${uiCommandReference(command)} to install all project dependencies locally`,
       unableToDetermine: (dir: string) =>
         `Unable to determine if dependencies are installed ${dir}`,
       success: 'App dependencies are installed and up to date',
     },
     files: {
       invalidJson: (filename: string) =>
-        `invalid JSON in ${chalk.bold(filename)}`,
+        `Invalid JSON in ${chalk.bold(filename)}`,
       validJson: 'JSON files valid',
     },
     port: {
-      inUse: (port: string) => `Port ${port} is in use`,
+      inUse: (port: number) => `Port ${port} is in use`,
       inUseSecondary: (command: string) =>
-        `Make sure it is available before running ${command}`,
-      available: (port: string) =>
+        `Make sure it is available before running ${uiCommandReference(command)}`,
+      available: (port: number) =>
         `Port ${port} available for local development`,
     },
     diagnosis: {
@@ -4594,7 +4668,12 @@ export const lib = {
           `Default Account: ${accountDetails}`,
         noConfigFile: 'CLI configuration not found',
         noConfigFileSecondary: (command: string) =>
-          `Run ${command} and follow the prompts to create your CLI configuration file and connect it to your HubSpot account`,
+          `Run ${uiCommandReference(command)} and follow the prompts to create your CLI configuration file and connect it to your HubSpot account`,
+        settings: {
+          httpUseLocalhost: `The setting ${chalk.bold('httpUseLocalhost')} is enabled`,
+          httpUseLocalhostSecondary:
+            'This setting causes all CLI requests to route to localhost',
+        },
       },
       projectConfig: {
         header: 'Project configuration',
@@ -4603,14 +4682,63 @@ export const lib = {
         projectNameSubHeader: (projectName: string) =>
           `Project name: ${chalk.bold(projectName)}`,
       },
-      counts: {
-        errors: (count: string) => `${chalk.bold('Errors:')} ${count}`,
-        warnings: (count: string) => `${chalk.bold('Warning:')} ${count}`,
+      defaultAccountOverrideFile: {
+        header: 'Default account override file path:',
       },
+      counts: {
+        errors: (count: number) => `${chalk.bold('Errors:')} ${count}`,
+        warnings: (count: number) => `${chalk.bold('Warning:')} ${count}`,
+      },
+    },
+    defaultAccountOverrideFileChecks: {
+      overrideActive: (defaultAccountOverrideFile: string) =>
+        `Default account override file is active: ${defaultAccountOverrideFile}`,
+      overrideAccountId: (overrideAccountId: number | string) =>
+        `Active account ID: ${overrideAccountId}`,
     },
   },
   oauth: {
     missingClientId: 'Error building oauth URL: missing client ID.',
+  },
+  validation: {
+    accountNotFoundInConfig: (userProvidedAccount: string) =>
+      `The account "${userProvidedAccount}" could not be found in the config`,
+    accountRequired:
+      'An account needs to be supplied either via "--account" or through setting a "defaultPortal"',
+    userProvidedAccount:
+      'Cannot specify an account when environment variables are supplied. Please unset the environment variables or do not use the "--account" flag.',
+    accountNotConfigured: (accountId: number) =>
+      `The account ${uiAccountDescription(accountId)} has not been configured`,
+    invalidAuthType: (
+      authType: string,
+      accountId: number,
+      configPath: string,
+      validValues: string
+    ) =>
+      `Invalid "authType" value "${authType}" for account "${uiAccountDescription(accountId)}" in config file: ${configPath}. Valid values are ${validValues}.`,
+    oauth2ConfigMissing: (accountId: number) =>
+      `The OAuth2 auth configuration for account ${uiAccountDescription(accountId)} is missing`,
+    oauth2ConfigIncorrect: (accountId: number) =>
+      `The OAuth2 configuration for account ${uiAccountDescription(accountId)} is incorrect \n Run ${uiCommandReference('hs auth --auth-type=oauth2')} to reauthenticate`,
+    oauth2AccessTokenNotFound: (accountId: number) =>
+      `The OAuth2 access token could not be found for accountId ${uiAccountDescription(accountId)}`,
+    personalAccessKeyMissing: (accountId: number) =>
+      `The account "${uiAccountDescription(accountId)}" is configured to use a access key for authentication and is missing a "personalAccessKey" in the configuration file`,
+    personalAccessKeyTokenRetrievalFailed: (accountId: number) =>
+      `An OAuth2 access token for account "${uiAccountDescription(accountId)} could not be retrieved using the "personalAccessKey" provided`,
+    authConfigurationMissing: (accountId: number) =>
+      `The accountId ${uiAccountDescription(accountId)} is missing authentication configuration`,
+    availableCMSModes: (modes: string) =>
+      `Available CMS publish modes are: ${modes}`,
+    invalidCmsPublishMode: (cmsPublishMode: string, modesMessage: string) =>
+      `The CMS publish mode "${cmsPublishMode}" is invalid. ${modesMessage}`,
+    missingCmsPublishMode: (modesMessage: string) =>
+      `The CMS publish mode option is missing. ${modesMessage}`,
+    pathNotFile: (path: string) => `The path "${path}" is not a path to a file`,
+    fileNotJson: (path: string) =>
+      `The file "${path}" must be a valid JSON file`,
+    fileInvalidJson: (path: string) =>
+      `The file "${path}" contains invalid JSON`,
   },
   migrate: {
     componentsToBeMigrated: (components: string) =>
@@ -4668,11 +4796,8 @@ export const lib = {
       noAppsEligible: (accountId: string, reasons: string[]) =>
         `No apps in account ${accountId} are currently migratable${reasons.length ? `\n  - ${reasons.join('\n  - ')}` : ''}`,
       invalidAccountTypeTitle: `${chalk.bold('Developer account not targeted')}`,
-      invalidAccountTypeDescription: (
-        useCommand: string,
-        authCommand: string
-      ) =>
-        `Only public apps created in a developer account can be converted to a project component. Select a connected developer account with ${useCommand} or ${authCommand} and try again.`,
+      invalidAccountTypeDescription: (useCommand: string) =>
+        `Only public apps created in a developer account can be converted to a project component. Select a connected developer account with ${useCommand} or ${uiAuthCommandReference()} and try again.`,
       appWithAppIdNotFound: (appId: number) =>
         `Could not find an app with the id ${appId} `,
       noAppsForProject: (projectName: string) =>

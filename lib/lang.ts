@@ -2,7 +2,7 @@ import util from 'util';
 import path, { dirname } from 'path';
 import fs from 'fs-extra';
 import yaml from 'js-yaml';
-import { logger } from '@hubspot/local-dev-lib/logger';
+import { uiLogger } from './ui/logger.js';
 import { interpolate, InterpolationData } from './interpolation.js';
 import { fileURLToPath } from 'url';
 
@@ -34,12 +34,14 @@ function loadLanguageFromYaml(): void {
       fs.readFileSync(path.join(__dirname, `../lang/${locale}.lyaml`), 'utf8')
     ) as LanguageObject;
 
-    logger.debug(
-      'Loaded language data: ',
-      util.inspect(languageObj, true, 999, true)
+    uiLogger.debug(
+      'Loaded language data: ' + util.inspect(languageObj, true, 999, true)
     );
   } catch (e) {
-    logger.error('Error loading language data: ', e);
+    uiLogger.error(
+      'Error loading language data: ' +
+        (e instanceof Error ? e.message : String(e))
+    );
   }
 }
 
@@ -59,12 +61,12 @@ function getTextValue(lookupDotNotation: string): string {
       previouslyCheckedProp = prop;
     });
   } catch (e) {
-    logger.debug(
+    uiLogger.debug(
       `Unable to access language property: ${lookupProps.join(
         '.'
       )}. Failed to access prop "${previouslyCheckedProp}".`
     );
-    logger.error('Unable to access language property.');
+    uiLogger.error('Unable to access language property.');
     return missingTextData;
   }
 

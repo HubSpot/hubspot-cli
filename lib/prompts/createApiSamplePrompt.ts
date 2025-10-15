@@ -1,5 +1,5 @@
 import { promptUser } from './promptUtils.js';
-import { i18n } from '../lang.js';
+import { lib } from '../../lang/en.js';
 import { PromptConfig } from '../../types/Prompts.js';
 import { ApiSampleChoice, ApiSampleConfig } from '../../types/Cms.js';
 
@@ -20,7 +20,7 @@ function getSampleTypesPrompt(
   return {
     type: 'rawlist',
     name: 'sampleType',
-    message: i18n(`lib.prompts.createApiSamplePrompt.selectApiSampleApp`),
+    message: lib.prompts.createApiSamplePrompt.selectApiSampleApp,
     choices: choices.map(choice => ({
       name: `${choice.name} - ${choice.description}`,
       value: choice.id,
@@ -30,11 +30,7 @@ function getSampleTypesPrompt(
         if (input && input.length > 0) {
           resolve(true);
         } else {
-          reject(
-            i18n(
-              `lib.prompts.createApiSamplePrompt.errors.apiSampleAppRequired`
-            )
-          );
+          reject(lib.prompts.createApiSamplePrompt.errors.apiSampleAppRequired);
         }
       });
     },
@@ -47,7 +43,7 @@ function getLanguagesPrompt(
   return {
     type: 'rawlist',
     name: 'sampleLanguage',
-    message: i18n(`lib.prompts.createApiSamplePrompt.selectLanguage`),
+    message: lib.prompts.createApiSamplePrompt.selectLanguage,
     choices: choices.map(choice => ({
       name: choice,
       value: choice,
@@ -57,9 +53,7 @@ function getLanguagesPrompt(
         if (input && input.length > 0) {
           resolve(true);
         }
-        reject(
-          i18n(`lib.prompts.createApiSamplePrompt.errors.languageRequired`)
-        );
+        reject(lib.prompts.createApiSamplePrompt.errors.languageRequired);
       });
     },
   };

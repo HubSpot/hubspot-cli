@@ -1,6 +1,6 @@
 import yargs, { ArgumentsCamelCase, Argv } from 'yargs';
 import { PLATFORM_VERSIONS } from '@hubspot/local-dev-lib/constants/projects';
-import { logger } from '@hubspot/local-dev-lib/logger';
+import { uiLogger } from '../../../lib/ui/logger.js';
 import { getAccountConfig } from '@hubspot/local-dev-lib/config';
 import { migrateApp2025_2, MigrateAppArgs } from '../../../lib/app/migrate.js';
 import { migrateApp2023_2 } from '../../../lib/app/migrate_legacy.js';
@@ -9,7 +9,7 @@ import migrateCommand from '../migrate.js';
 import { Mock, Mocked } from 'vitest';
 
 vi.mock('@hubspot/local-dev-lib/config');
-vi.mock('@hubspot/local-dev-lib/logger');
+vi.mock('../../../lib/ui/logger.js');
 vi.mock('../../../lib/app/migrate');
 vi.mock('../../../lib/app/migrate_legacy');
 vi.mock('../../../lib/projects/config.js');
@@ -18,7 +18,7 @@ const mockYargs = yargs as Argv;
 const mockedGetAccountConfig = getAccountConfig as Mock;
 const mockedMigrateApp2023_2 = migrateApp2023_2 as Mock;
 const mockedMigrateApp2025_2 = migrateApp2025_2 as Mock;
-const mockedLogger = logger as Mocked<typeof logger>;
+const mockedUiLogger = uiLogger as Mocked<typeof uiLogger>;
 const optionsSpy = vi.spyOn(mockYargs, 'options');
 const exampleSpy = vi.spyOn(mockYargs, 'example');
 
@@ -50,7 +50,7 @@ describe('commands/app/migrate', () => {
         derivedAccountId: mockAccountId,
       } as ArgumentsCamelCase<MigrateAppArgs>);
 
-      expect(mockedLogger.error).toHaveBeenCalled();
+      expect(mockedUiLogger.error).toHaveBeenCalled();
       expect(exitSpy).toHaveBeenCalledWith(EXIT_CODES.ERROR);
     });
 
@@ -112,7 +112,7 @@ describe('commands/app/migrate', () => {
         platformVersion: PLATFORM_VERSIONS.v2023_2,
       } as ArgumentsCamelCase<MigrateAppArgs>);
 
-      expect(mockedLogger.error).toHaveBeenCalled();
+      expect(mockedUiLogger.error).toHaveBeenCalled();
       expect(exitSpy).toHaveBeenCalledWith(EXIT_CODES.ERROR);
     });
   });

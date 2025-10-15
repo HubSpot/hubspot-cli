@@ -1,5 +1,4 @@
 import yargs, { Argv, ArgumentsCamelCase } from 'yargs';
-import { i18n } from '../../../lib/lang.js';
 import { uiCommandReference, uiDeprecatedTag } from '../../../lib/ui/index.js';
 import { handlerGenerator } from '../../app/migrate.js';
 import { PLATFORM_VERSIONS } from '@hubspot/local-dev-lib/constants/projects';
@@ -7,8 +6,8 @@ import { MigrateAppArgs } from '../../../lib/app/migrate.js';
 import migrateAppCommand from '../migrateApp.js';
 import { Mock } from 'vitest';
 
-vi.mock('@hubspot/local-dev-lib/logger');
-vi.mock('../../../lib/lang');
+vi.mock('../../ui/logger.js');
+vi.mock('../../../lang/en.js');
 vi.mock('../../../lib/ui');
 vi.mock('../../app/migrate');
 
@@ -20,14 +19,13 @@ describe('commands/project/migrateApp', () => {
   const exampleSpy = vi.spyOn(yargsMock, 'example').mockReturnValue(yargsMock);
 
   // Mock the imported functions
-  const i18nMock = i18n as Mock;
   const uiDeprecatedTagMock = uiDeprecatedTag as Mock;
   const uiCommandReferenceMock = uiCommandReference as Mock;
   const handlerGeneratorMock = handlerGenerator as Mock;
 
   beforeEach(() => {
     vi.clearAllMocks();
-    i18nMock.mockReturnValue('test description');
+
     uiDeprecatedTagMock.mockReturnValue('deprecated test description');
     uiCommandReferenceMock.mockReturnValue('command reference');
     handlerGeneratorMock.mockReturnValue(vi.fn().mockResolvedValue(undefined));

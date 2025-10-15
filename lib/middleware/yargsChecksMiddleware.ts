@@ -1,13 +1,13 @@
 import { Arguments } from 'yargs';
-import { logger } from '@hubspot/local-dev-lib/logger';
+import { uiLogger } from '../ui/logger.js';
 import { EXIT_CODES } from '../enums/exitCodes.js';
-import { i18n } from '../lang.js';
+import { commands } from '../../lang/en.js';
 import { getIsInProject } from '../projects/config.js';
-import { isTargetedCommand } from './utils.js';
+import { isTargetedCommand } from './commandTargetingUtils.js';
 
 const UPLOAD_AND_WATCH_COMMANDS = {
-  upload: { target: true },
-  watch: { target: true },
+  upload: true,
+  watch: true,
 };
 
 export function performChecks(argv: Arguments<{ src?: string }>): boolean {
@@ -16,11 +16,8 @@ export function performChecks(argv: Arguments<{ src?: string }>): boolean {
     isTargetedCommand(argv._, UPLOAD_AND_WATCH_COMMANDS) &&
     getIsInProject(argv.src)
   ) {
-    logger.error(
-      i18n(`commands.generalErrors.srcIsProject`, {
-        src: argv.src || './',
-        command: argv._.join(' '),
-      })
+    uiLogger.error(
+      commands.generalErrors.srcIsProject(argv.src || './', argv._.join(' '))
     );
     process.exit(EXIT_CODES.ERROR);
   }

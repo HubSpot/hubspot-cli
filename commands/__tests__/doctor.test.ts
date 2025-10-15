@@ -4,14 +4,14 @@ import yargs, { ArgumentsCamelCase, Argv } from 'yargs';
 import doctorCommand, { DoctorArgs } from '../doctor.js';
 import { trackCommandUsage } from '../../lib/usageTracking.js';
 import { Doctor } from '../../lib/doctor/Doctor.js';
-import { logger } from '@hubspot/local-dev-lib/logger';
+import { uiLogger } from '../../lib/ui/logger.js';
 import fs from 'fs';
 import { getCwd as __getCwd } from '@hubspot/local-dev-lib/path';
 import { Mock } from 'vitest';
 
 vi.mock('../../lib/usageTracking');
 vi.mock('../../lib/doctor/Doctor');
-vi.mock('@hubspot/local-dev-lib/logger');
+vi.mock('../../lib/ui/logger.js');
 vi.mock('@hubspot/local-dev-lib/path');
 vi.mock('fs');
 
@@ -87,8 +87,8 @@ describe('doctor', () => {
 
     it('should log the diagnosis if it is defined', async () => {
       await doctorCommand.handler({} as ArgumentsCamelCase<DoctorArgs>);
-      expect(logger.log).toHaveBeenCalledTimes(1);
-      expect(logger.log).toHaveBeenCalledWith(diagnosis);
+      expect(uiLogger.log).toHaveBeenCalledTimes(1);
+      expect(uiLogger.log).toHaveBeenCalledWith(diagnosis);
 
       expect(processExitSpy).toHaveBeenCalledTimes(1);
       expect(processExitSpy).toHaveBeenCalledWith(EXIT_CODES.SUCCESS);
@@ -103,8 +103,8 @@ describe('doctor', () => {
       });
       await doctorCommand.handler({} as ArgumentsCamelCase<DoctorArgs>);
 
-      expect(logger.error).toHaveBeenCalledTimes(1);
-      expect(logger.error).toHaveBeenCalledWith('Error generating diagnosis');
+      expect(uiLogger.error).toHaveBeenCalledTimes(1);
+      expect(uiLogger.error).toHaveBeenCalledWith('Error generating diagnosis');
 
       expect(processExitSpy).toHaveBeenCalledTimes(1);
       expect(processExitSpy).toHaveBeenCalledWith(EXIT_CODES.ERROR);
@@ -117,8 +117,8 @@ describe('doctor', () => {
         outputDir: '/foo',
       } as ArgumentsCamelCase<DoctorArgs>);
 
-      expect(logger.log).not.toHaveBeenCalled();
-      expect(logger.error).not.toHaveBeenCalled();
+      expect(uiLogger.log).not.toHaveBeenCalled();
+      expect(uiLogger.error).not.toHaveBeenCalled();
 
       expect(mockedFs.writeFileSync).toHaveBeenCalledTimes(1);
       expect(mockedFs.writeFileSync).toHaveBeenCalledWith(
@@ -126,8 +126,8 @@ describe('doctor', () => {
         expect.stringContaining(diagnosis)
       );
 
-      expect(logger.success).toHaveBeenCalledTimes(1);
-      expect(logger.success).toHaveBeenCalledWith(
+      expect(uiLogger.success).toHaveBeenCalledTimes(1);
+      expect(uiLogger.success).toHaveBeenCalledWith(
         expect.stringMatching(/Output written to /)
       );
 
@@ -145,8 +145,8 @@ describe('doctor', () => {
         outputDir: './foo',
       } as ArgumentsCamelCase<DoctorArgs>);
 
-      expect(logger.log).not.toHaveBeenCalled();
-      expect(logger.error).not.toHaveBeenCalled();
+      expect(uiLogger.log).not.toHaveBeenCalled();
+      expect(uiLogger.error).not.toHaveBeenCalled();
 
       expect(mockedFs.writeFileSync).toHaveBeenCalledTimes(1);
       expect(mockedFs.writeFileSync).toHaveBeenCalledWith(
@@ -154,8 +154,8 @@ describe('doctor', () => {
         expect.stringContaining(diagnosis)
       );
 
-      expect(logger.success).toHaveBeenCalledTimes(1);
-      expect(logger.success).toHaveBeenCalledWith(
+      expect(uiLogger.success).toHaveBeenCalledTimes(1);
+      expect(uiLogger.success).toHaveBeenCalledWith(
         expect.stringMatching(/Output written to /)
       );
 
@@ -173,8 +173,8 @@ describe('doctor', () => {
         outputDir: '/foo',
       } as ArgumentsCamelCase<DoctorArgs>);
 
-      expect(logger.error).toHaveBeenCalledTimes(1);
-      expect(logger.error).toHaveBeenCalledWith(
+      expect(uiLogger.error).toHaveBeenCalledTimes(1);
+      expect(uiLogger.error).toHaveBeenCalledWith(
         expect.stringMatching(/Unable to write output to/)
       );
 

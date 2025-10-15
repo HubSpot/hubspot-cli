@@ -1,4 +1,4 @@
-import { logger } from '@hubspot/local-dev-lib/logger';
+import { uiLogger } from '../ui/logger.js';
 import {
   isHubSpotHttpError,
   isValidationError,
@@ -6,16 +6,15 @@ import {
 import { getConfig } from '@hubspot/local-dev-lib/config';
 
 import { shouldSuppressError } from './suppressError.js';
-import { i18n } from '../lang.js';
+import { lib } from '../../lang/en.js';
 import util from 'util';
-import { uiCommandReference } from '../ui/index.js';
 import { isProjectValidationError } from '../errors/ProjectValidationError.js';
 
 export function logError(error: unknown, context?: ApiErrorContext): void {
   debugError(error, context);
 
   if (isProjectValidationError(error)) {
-    logger.error(error.message);
+    uiLogger.error(error.message);
     return;
   }
 
@@ -34,7 +33,7 @@ export function logError(error: unknown, context?: ApiErrorContext): void {
   }
 
   if (isHubSpotHttpError(error) && isValidationError(error)) {
-    logger.error(error.formattedValidationErrors());
+    uiLogger.error(error.formattedValidationErrors());
   } else if (isErrorWithMessageOrReason(error)) {
     const message: string[] = [];
 
@@ -43,10 +42,10 @@ export function logError(error: unknown, context?: ApiErrorContext): void {
         message.push(msg);
       }
     });
-    logger.error(message.join(' '));
+    uiLogger.error(message.join(' '));
   } else {
     // Unknown errors
-    logger.error(i18n(`lib.errorHandlers.index.unknownErrorOccurred`));
+    uiLogger.error(lib.errorHandlers.index.unknownErrorOccurred);
   }
 
   if (isHubSpotHttpError(error) && error.code === 'ETIMEDOUT') {
@@ -55,41 +54,39 @@ export function logError(error: unknown, context?: ApiErrorContext): void {
 
     // Timeout was caused by the default timeout
     if (error.timeout && defaultTimeout === error.timeout) {
-      logger.error(
-        i18n(`lib.errorHandlers.index.configTimeoutErrorOccurred`, {
-          timeout: error.timeout,
-          configSetCommand: uiCommandReference('hs config set'),
-        })
+      uiLogger.error(
+        lib.errorHandlers.index.configTimeoutErrorOccurred(
+          error.timeout,
+          'hs config set'
+        )
       );
     }
     // Timeout was caused by a custom timeout set by the CLI or LDL
     else {
-      logger.error(i18n(`lib.errorHandlers.index.genericTimeoutErrorOccurred`));
+      uiLogger.error(lib.errorHandlers.index.genericTimeoutErrorOccurred);
     }
   }
 }
 
 export function debugError(error: unknown, context?: ApiErrorContext): void {
   if (isHubSpotHttpError(error)) {
-    logger.debug(error.toString());
+    uiLogger.debug(error.toString());
   } else {
-    logger.debug(
-      i18n(`lib.errorHandlers.index.errorOccurred`, { error: String(error) })
-    );
+    uiLogger.debug(lib.errorHandlers.index.errorOccurred(String(error)));
   }
 
   if (error instanceof Error && error.cause && !isHubSpotHttpError(error)) {
-    logger.debug(
-      i18n(`lib.errorHandlers.index.errorCause`, {
-        cause: util.inspect(error.cause, false, null, true),
-      })
+    uiLogger.debug(
+      lib.errorHandlers.index.errorCause(
+        util.inspect(error.cause, false, null, true)
+      )
     );
   }
   if (context) {
-    logger.debug(
-      i18n(`lib.errorHandlers.index.errorContext`, {
-        context: util.inspect(context, false, null, true),
-      })
+    uiLogger.debug(
+      lib.errorHandlers.index.errorContext(
+        util.inspect(context, false, null, true)
+      )
     );
   }
 }

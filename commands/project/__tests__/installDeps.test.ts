@@ -1,6 +1,6 @@
 import yargs, { Argv, ArgumentsCamelCase } from 'yargs';
 import path from 'path';
-import { logger } from '@hubspot/local-dev-lib/logger';
+import { uiLogger } from '../../../lib/ui/logger.js';
 import * as projectUtils from '../../../lib/projects/config.js';
 import { EXIT_CODES } from '../../../lib/enums/exitCodes.js';
 import { trackCommandUsage } from '../../../lib/usageTracking.js';
@@ -10,7 +10,7 @@ import projectInstallDepsCommand, {
   ProjectInstallDepsArgs,
 } from '../installDeps.js';
 
-vi.mock('@hubspot/local-dev-lib/logger');
+vi.mock('../../../lib/ui/logger.js');
 vi.mock('../../../lib/projects/config');
 vi.mock('../../../lib/dependencyManagement');
 vi.mock('../../../lib/prompts/promptUtils');
@@ -83,8 +83,8 @@ describe('commands/project/installDeps', () => {
 
       await projectInstallDepsCommand.handler(args);
 
-      expect(logger.error).toHaveBeenCalledTimes(1);
-      expect(logger.error).toHaveBeenCalledWith(error.message);
+      expect(uiLogger.error).toHaveBeenCalledTimes(1);
+      expect(uiLogger.error).toHaveBeenCalledWith(error.message);
 
       expect(processExitSpy).toHaveBeenCalledTimes(1);
       expect(processExitSpy).toHaveBeenCalledWith(EXIT_CODES.ERROR);
@@ -97,8 +97,8 @@ describe('commands/project/installDeps', () => {
       });
       await projectInstallDepsCommand.handler(args);
 
-      expect(logger.error).toHaveBeenCalledTimes(1);
-      expect(logger.error).toHaveBeenCalledWith(
+      expect(uiLogger.error).toHaveBeenCalledTimes(1);
+      expect(uiLogger.error).toHaveBeenCalledWith(
         'No project detected. Run this command from a project directory.'
       );
       expect(processExitSpy).toHaveBeenCalledTimes(1);
@@ -112,8 +112,8 @@ describe('commands/project/installDeps', () => {
       });
       await projectInstallDepsCommand.handler(args);
 
-      expect(logger.error).toHaveBeenCalledTimes(1);
-      expect(logger.error).toHaveBeenCalledWith(
+      expect(uiLogger.error).toHaveBeenCalledTimes(1);
+      expect(uiLogger.error).toHaveBeenCalledWith(
         'No project detected. Run this command from a project directory.'
       );
       expect(processExitSpy).toHaveBeenCalledTimes(1);

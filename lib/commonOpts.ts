@@ -1,7 +1,8 @@
 import chalk from 'chalk';
 import yargsParser from 'yargs-parser';
 import { Argv, Arguments } from 'yargs';
-import { LOG_LEVEL, logger, setLogLevel } from '@hubspot/local-dev-lib/logger';
+import { LOG_LEVEL, setLogLevel } from '@hubspot/local-dev-lib/logger';
+import { uiLogger } from './ui/logger.js';
 import {
   DEFAULT_CMS_PUBLISH_MODE,
   CMS_PUBLISH_MODE,
@@ -15,7 +16,7 @@ import { ConfigArgs, StringArgType } from '../types/Yargs.js';
 import { debugError } from './errorHandlers/index.js';
 import { EXIT_CODES } from './enums/exitCodes.js';
 import { uiCommandReference } from './ui/index.js';
-import { i18n } from './lang.js';
+import { lib } from '../lang/en.js';
 import { getTerminalUISupport, UI_COLORS } from './ui/index.js';
 import SpinniesManager from './ui/SpinniesManager.js';
 
@@ -24,7 +25,7 @@ export function addGlobalOptions(yargs: Argv) {
   yargs.option('debug', {
     alias: 'd',
     default: false,
-    describe: i18n('lib.commonOpts.options.debug.describe'),
+    describe: lib.commonOpts.options.debug,
     type: 'boolean',
   });
   yargs.option('network-debug', {
@@ -38,7 +39,7 @@ export function addGlobalOptions(yargs: Argv) {
 export function addAccountOptions(yargs: Argv): Argv {
   return yargs.option('account', {
     alias: 'a',
-    describe: i18n('lib.commonOpts.options.account.describe'),
+    describe: lib.commonOpts.options.account,
     type: 'string',
   });
 }
@@ -46,7 +47,7 @@ export function addAccountOptions(yargs: Argv): Argv {
 export function addConfigOptions(yargs: Argv): Argv<ConfigArgs> {
   return yargs.option<keyof ConfigArgs, StringArgType>('config', {
     alias: 'c',
-    describe: i18n('lib.commonOpts.options.config.describe'),
+    describe: lib.commonOpts.options.config,
     type: 'string',
   });
 }
@@ -54,7 +55,7 @@ export function addConfigOptions(yargs: Argv): Argv<ConfigArgs> {
 export function addOverwriteOptions(yargs: Argv): Argv {
   return yargs.option('overwrite', {
     alias: 'o',
-    describe: i18n('lib.commonOpts.options.overwrite.describe'),
+    describe: lib.commonOpts.options.overwrite,
     type: 'boolean',
     default: false,
   });
@@ -68,19 +69,17 @@ export function addCmsPublishModeOptions(
 
   return yargs.option('cms-publish-mode', {
     alias: 'm',
-    describe: i18n(
-      `lib.commonOpts.options.modes.describe.${
-        read ? 'read' : write ? 'write' : 'default'
-      }`,
-      { modes: cmsPublishModes }
-    ),
+    describe:
+      lib.commonOpts.options.modes[read ? 'read' : write ? 'write' : 'default'](
+        cmsPublishModes
+      ),
     type: 'string',
   });
 }
 
 export function addTestingOptions(yargs: Argv): Argv {
   return yargs.option('qa', {
-    describe: i18n('lib.commonOpts.options.qa.describe'),
+    describe: lib.commonOpts.options.qa,
     type: 'boolean',
     default: false,
     hidden: true,
@@ -89,7 +88,7 @@ export function addTestingOptions(yargs: Argv): Argv {
 
 export function addUseEnvironmentOptions(yargs: Argv): Argv {
   yargs.option('use-env', {
-    describe: i18n('lib.commonOpts.options.useEnv.describe'),
+    describe: lib.commonOpts.options.useEnv,
     type: 'boolean',
   });
   yargs.conflicts('use-env', 'account');
@@ -99,7 +98,7 @@ export function addUseEnvironmentOptions(yargs: Argv): Argv {
 export function addJSONOutputOptions(yargs: Argv): Argv {
   return yargs.option('json', {
     alias: 'format-output-as-json',
-    describe: i18n('lib.commonOpts.options.jsonOutput.describe'),
+    describe: lib.commonOpts.options.jsonOutput,
     type: 'boolean',
     hidden: true,
   });
@@ -108,7 +107,7 @@ export function addJSONOutputOptions(yargs: Argv): Argv {
 // Remove this once we've upgraded to yargs 18.0.0
 function uiBetaTagWithColor(message: string): string {
   const terminalUISupport = getTerminalUISupport();
-  const tag = i18n(`lib.ui.betaTagWithStyle`);
+  const tag = lib.ui.betaTagWithStyle;
 
   const result = `${
     terminalUISupport.color ? chalk.hex(UI_COLORS.SORBET)(tag) : tag
@@ -120,7 +119,7 @@ function uiBetaTagWithColor(message: string): string {
 // Remove this once we've upgraded to yargs 18.0.0
 function uiDeprecatedTagWithColor(message: string): string {
   const terminalUISupport = getTerminalUISupport();
-  const tag = i18n(`lib.ui.deprecatedTagWithStyle`);
+  const tag = lib.ui.deprecatedTagWithStyle;
 
   const result = `${
     terminalUISupport.color ? chalk.yellow(tag) : tag
@@ -136,13 +135,13 @@ export async function addCustomHelpOutput(
 ): Promise<void> {
   try {
     // Remove this once we've upgraded to yargs 18.0.0
-    if (describe && describe.includes(i18n(`lib.ui.betaTag`))) {
-      describe = describe.replace(i18n(`lib.ui.betaTag`) + ' ', '');
+    if (describe && describe.includes(lib.ui.betaTag)) {
+      describe = describe.replace(lib.ui.betaTag + ' ', '');
       describe = uiBetaTagWithColor(describe);
     }
     // Remove this once we've upgraded to yargs 18.0.0
-    if (describe && describe.includes(i18n(`lib.ui.deprecatedTag`))) {
-      describe = describe.replace(i18n(`lib.ui.deprecatedTag`) + ' ', '');
+    if (describe && describe.includes(lib.ui.deprecatedTag)) {
+      describe = describe.replace(lib.ui.deprecatedTag + ' ', '');
       describe = uiDeprecatedTagWithColor(describe);
     }
 
@@ -184,7 +183,7 @@ export async function addCustomHelpOutput(
         commandHelp = commandHelp.slice(1);
       }
 
-      logger.log(
+      uiLogger.log(
         `${uiCommandReference(fullCommand, false)}\n\n${
           describe ? `${describe}\n\n` : ''
         }${commandHelp}`

@@ -6,11 +6,11 @@ import {
   isMissingScopeError,
   isSpecifiedError,
 } from '@hubspot/local-dev-lib/errors/index';
-import { logger } from '@hubspot/local-dev-lib/logger';
+import { uiLogger } from './ui/logger.js';
 import { getHubSpotWebsiteOrigin } from '@hubspot/local-dev-lib/urls';
 import { CLIAccount } from '@hubspot/local-dev-lib/types/Accounts';
 
-import { i18n } from './lang.js';
+import { lib } from '../lang/en.js';
 import { uiAccountDescription } from './ui/index.js';
 import { logError } from './errorHandlers/index.js';
 import { FetchDeveloperTestAccountsResponse } from '@hubspot/local-dev-lib/types/developerTestAccounts.js';
@@ -61,17 +61,17 @@ export async function validateDevTestAccountUsageLimits(
     const hasDevTestAccounts = getHasDevTestAccounts(accountConfig);
     if (hasDevTestAccounts) {
       throw new Error(
-        i18n('lib.developerTestAccount.create.failure.alreadyInConfig', {
-          accountName: accountConfig.name || accountId,
-          limit,
-        })
+        lib.developerTestAccount.create.failure.alreadyInConfig(
+          accountConfig.name || accountId,
+          limit
+        )
       );
     } else {
       throw new Error(
-        i18n('lib.developerTestAccount.create.failure.limit', {
-          accountName: accountConfig.name || accountId,
-          limit,
-        })
+        lib.developerTestAccount.create.failure.limit(
+          accountConfig.name || accountId,
+          limit
+        )
       );
     }
   }
@@ -85,18 +85,14 @@ export function handleDeveloperTestAccountCreateError(
   portalLimit: number
 ): never {
   if (isMissingScopeError(err)) {
-    logger.error(
-      i18n('lib.developerTestAccount.create.failure.scopes.message', {
-        accountName: uiAccountDescription(accountId),
-      })
-    );
+    uiLogger.error(lib.developerTestAccount.create.failure.scopes.message);
     const websiteOrigin = getHubSpotWebsiteOrigin(env);
     const url = `${websiteOrigin}/personal-access-key/${accountId}`;
-    logger.info(
-      i18n('lib.developerTestAccount.create.failure.scopes.instructions', {
-        accountName: uiAccountDescription(accountId),
-        url,
-      })
+    uiLogger.info(
+      lib.developerTestAccount.create.failure.scopes.instructions(
+        uiAccountDescription(accountId),
+        url
+      )
     );
   } else if (
     isSpecifiedError(err, {
@@ -104,14 +100,14 @@ export function handleDeveloperTestAccountCreateError(
       errorType: 'TEST_PORTAL_LIMIT_REACHED',
     })
   ) {
-    logger.log('');
-    logger.error(
-      i18n('lib.developerTestAccount.create.failure.limit', {
-        accountName: uiAccountDescription(accountId),
-        limit: portalLimit,
-      })
+    uiLogger.log('');
+    uiLogger.error(
+      lib.developerTestAccount.create.failure.limit(
+        uiAccountDescription(accountId),
+        portalLimit
+      )
     );
-    logger.log('');
+    uiLogger.log('');
   } else {
     logError(err);
   }

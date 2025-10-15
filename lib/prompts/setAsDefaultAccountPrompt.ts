@@ -3,7 +3,7 @@ import {
   getConfigDefaultAccount,
 } from '@hubspot/local-dev-lib/config';
 import { promptUser } from './promptUtils.js';
-import { i18n } from '../lang.js';
+import { lib } from '../../lang/en.js';
 import { uiLogger } from '../ui/logger.js';
 
 export async function setAsDefaultAccountPrompt(
@@ -17,9 +17,7 @@ export async function setAsDefaultAccountPrompt(
       name: 'setAsDefault',
       type: 'confirm',
       when: defaultAccount !== accountName,
-      message: i18n(
-        `lib.prompts.setAsDefaultAccountPrompt.setAsDefaultAccountMessage`
-      ),
+      message: lib.prompts.setAsDefaultAccountPrompt.setAsDefaultAccountMessage,
     },
   ]);
 
@@ -28,15 +26,13 @@ export async function setAsDefaultAccountPrompt(
     updateDefaultAccount(accountName);
 
     uiLogger.success(
-      i18n('lib.prompts.setAsDefaultAccountPrompt.setAsDefaultAccount', {
-        accountName,
-      })
+      lib.prompts.setAsDefaultAccountPrompt.setAsDefaultAccount(accountName)
     );
   } else {
     uiLogger.log(
-      i18n('lib.prompts.setAsDefaultAccountPrompt.keepingCurrentDefault', {
-        accountName: getConfigDefaultAccount()!,
-      })
+      lib.prompts.setAsDefaultAccountPrompt.keepingCurrentDefault(
+        getConfigDefaultAccount()!
+      )
     );
   }
 

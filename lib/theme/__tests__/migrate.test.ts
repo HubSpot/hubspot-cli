@@ -21,7 +21,7 @@ import {
 } from '../migrate.js';
 import { lib } from '../../../lang/en.js';
 
-vi.mock('@hubspot/local-dev-lib/logger');
+vi.mock('../../ui/logger.js');
 vi.mock('@hubspot/project-parsing-lib');
 vi.mock('../../prompts/promptUtils');
 vi.mock('../../projects/config');
@@ -44,7 +44,7 @@ const mockedWriteProjectConfig = writeProjectConfig as MockedFunction<
 const mockedEnsureProjectExists = ensureProjectExists as MockedFunction<
   typeof ensureProjectExists
 >;
-const mockedUseV3Api = isV2Project as MockedFunction<typeof isV2Project>;
+const mockedUseV2Api = isV2Project as MockedFunction<typeof isV2Project>;
 const mockedFetchMigrationApps = fetchMigrationApps as MockedFunction<
   typeof fetchMigrationApps
 >;
@@ -62,7 +62,7 @@ const createLoadedProjectConfig = (name: string): LoadedProjectConfig =>
 
 describe('lib/theme/migrate', () => {
   beforeEach(() => {
-    mockedUseV3Api.mockReturnValue(false);
+    mockedUseV2Api.mockReturnValue(false);
   });
 
   describe('getHasMigratableThemes', () => {
@@ -160,8 +160,8 @@ describe('lib/theme/migrate', () => {
   });
 
   describe('validateMigrationAppsAndThemes', () => {
-    it('should throw an error when themes are already migrated (v3 API)', async () => {
-      mockedUseV3Api.mockReturnValue(true);
+    it('should throw an error when themes are already migrated (v2 API)', async () => {
+      mockedUseV2Api.mockReturnValue(true);
       const projectConfig = createLoadedProjectConfig(PROJECT_NAME);
 
       await expect(

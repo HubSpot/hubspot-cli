@@ -27,16 +27,16 @@ function validateAccountFlags(
   testingAccount: string | number | undefined,
   projectAccount: string | number | undefined,
   userProvidedAccount: string | number | undefined,
-  useV3: boolean
+  useV2: boolean
 ) {
   // Legacy projects do not support targetTestingAccount and targetProjectAccount
-  if (testingAccount && projectAccount && !useV3) {
+  if (testingAccount && projectAccount && !useV2) {
     uiLogger.error(commands.project.dev.errors.unsupportedAccountFlagLegacy);
     process.exit(EXIT_CODES.ERROR);
   }
 
-  if (userProvidedAccount && useV3) {
-    uiLogger.error(commands.project.dev.errors.unsupportedAccountFlagV3);
+  if (userProvidedAccount && useV2) {
+    uiLogger.error(commands.project.dev.errors.unsupportedAccountFlagV2);
     process.exit(EXIT_CODES.ERROR);
   }
 }
@@ -70,7 +70,7 @@ async function handler(
 
   uiLogger.log(commands.project.dev.logs.header);
   if (useV2Projects) {
-    uiLogger.log(commands.project.dev.logs.learnMoreMessageV3);
+    uiLogger.log(commands.project.dev.logs.learnMoreMessageV2);
   } else {
     uiLogger.log(commands.project.dev.logs.learnMoreMessageLegacy);
   }
@@ -167,15 +167,20 @@ function projectDevBuilder(yargs: Argv): Argv<ProjectDevArgs> {
   yargs.options('testing-account', {
     type: 'string',
     description: commands.project.dev.options.testingAccount,
-    hidden: true,
     implies: ['project-account'],
   });
 
   yargs.options('project-account', {
     type: 'string',
     description: commands.project.dev.options.projectAccount,
-    hidden: true,
     implies: ['testingAccount'],
+  });
+
+  yargs.option('account', {
+    alias: 'a',
+    describe: '',
+    type: 'string',
+    description: commands.project.dev.options.account,
   });
 
   yargs.example([['$0 project dev', commands.project.dev.examples.default]]);
@@ -193,7 +198,6 @@ export const builder = makeYargsBuilder<ProjectDevArgs>(
   describe,
   {
     useGlobalOptions: true,
-    useAccountOptions: true,
     useConfigOptions: true,
     useEnvironmentOptions: true,
   }

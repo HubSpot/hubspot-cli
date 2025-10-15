@@ -3,10 +3,10 @@ import os from 'os';
 import path from 'path';
 import { EXIT_CODES } from '../../enums/exitCodes.js';
 import { validateProjectConfig } from '../../projects/config.js';
-import { logger } from '@hubspot/local-dev-lib/logger';
+import { uiLogger } from '../../ui/logger.js';
 import { Mock } from 'vitest';
 
-vi.mock('@hubspot/local-dev-lib/logger');
+vi.mock('../../ui/logger.js');
 
 describe('lib/projects', () => {
   describe('validateProjectConfig()', () => {
@@ -34,7 +34,7 @@ describe('lib/projects', () => {
       validateProjectConfig(null, projectDir);
 
       expect(exitMock).toHaveBeenCalledWith(EXIT_CODES.ERROR);
-      expect(logger.error).toHaveBeenCalledWith(
+      expect(uiLogger.error).toHaveBeenCalledWith(
         expect.stringMatching(
           /.*Unable to locate a project configuration file. Try running again from a project directory, or run*/
         )
@@ -46,7 +46,7 @@ describe('lib/projects', () => {
       validateProjectConfig({ srcDir: '.' }, projectDir);
 
       expect(exitMock).toHaveBeenCalledWith(EXIT_CODES.ERROR);
-      expect(logger.error).toHaveBeenCalledWith(
+      expect(uiLogger.error).toHaveBeenCalledWith(
         expect.stringMatching(/.*missing required fields*/)
       );
     });
@@ -56,7 +56,7 @@ describe('lib/projects', () => {
       validateProjectConfig({ name: 'hello' }, projectDir);
 
       expect(exitMock).toHaveBeenCalledWith(EXIT_CODES.ERROR);
-      expect(logger.error).toHaveBeenCalledWith(
+      expect(uiLogger.error).toHaveBeenCalledWith(
         expect.stringMatching(/.*missing required fields.*/)
       );
     });
@@ -69,7 +69,7 @@ describe('lib/projects', () => {
         );
 
         expect(exitMock).toHaveBeenCalledWith(EXIT_CODES.ERROR);
-        expect(logger.error).toHaveBeenCalledWith(
+        expect(uiLogger.error).toHaveBeenCalledWith(
           expect.stringContaining('srcDir: ".."')
         );
       });
@@ -81,7 +81,7 @@ describe('lib/projects', () => {
         );
 
         expect(exitMock).toHaveBeenCalledWith(EXIT_CODES.ERROR);
-        expect(logger.error).toHaveBeenCalledWith(
+        expect(uiLogger.error).toHaveBeenCalledWith(
           expect.stringContaining('srcDir: "/"')
         );
       });
@@ -95,7 +95,7 @@ describe('lib/projects', () => {
         );
 
         expect(exitMock).toHaveBeenCalledWith(EXIT_CODES.ERROR);
-        expect(logger.error).toHaveBeenCalledWith(
+        expect(uiLogger.error).toHaveBeenCalledWith(
           expect.stringContaining(`srcDir: "${srcDir}"`)
         );
       });
@@ -108,7 +108,7 @@ describe('lib/projects', () => {
       );
 
       expect(exitMock).toHaveBeenCalledWith(EXIT_CODES.ERROR);
-      expect(logger.error).toHaveBeenCalledWith(
+      expect(uiLogger.error).toHaveBeenCalledWith(
         expect.stringMatching(/.*could not be found in.*/)
       );
     });
@@ -121,7 +121,7 @@ describe('lib/projects', () => {
         );
 
         expect(exitMock).not.toHaveBeenCalled();
-        expect(logger.error).not.toHaveBeenCalled();
+        expect(uiLogger.error).not.toHaveBeenCalled();
       });
 
       it('for relative directory', () => {
@@ -131,7 +131,7 @@ describe('lib/projects', () => {
         );
 
         expect(exitMock).not.toHaveBeenCalled();
-        expect(logger.error).not.toHaveBeenCalled();
+        expect(uiLogger.error).not.toHaveBeenCalled();
       });
 
       it('for implied relative directory', () => {
@@ -141,7 +141,7 @@ describe('lib/projects', () => {
         );
 
         expect(exitMock).not.toHaveBeenCalled();
-        expect(logger.error).not.toHaveBeenCalled();
+        expect(uiLogger.error).not.toHaveBeenCalled();
       });
     });
   });

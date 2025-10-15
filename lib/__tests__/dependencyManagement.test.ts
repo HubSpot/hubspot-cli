@@ -11,7 +11,7 @@ import fs from 'fs';
 import { Mock } from 'vitest';
 
 vi.mock('../projects/config');
-vi.mock('@hubspot/local-dev-lib/logger');
+vi.mock('../../ui/logger.js');
 vi.mock('@hubspot/local-dev-lib/fs');
 vi.mock('fs');
 vi.mock('../ui/SpinniesManager', () => ({

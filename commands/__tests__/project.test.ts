@@ -15,6 +15,7 @@ import cloneApp from '../project/cloneApp.js';
 import installDeps from '../project/installDeps.js';
 import validate from '../project/validate.js';
 import profileCommands from '../project/profile.js';
+import list from '../project/list.js';
 import projectCommand from '../project.js';
 
 vi.mock('../project/deploy');
@@ -78,6 +79,7 @@ describe('commands/project', () => {
       installDeps,
       profileCommands,
       validate,
+      list,
     ];
 
     it('should demand the command takes one positional argument', () => {

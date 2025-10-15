@@ -236,7 +236,7 @@ export async function createDeveloperTestAccountForLocalDev(
   accountId: number,
   accountConfig: CLIAccount,
   env: Environment,
-  useV3 = false
+  useV2 = false
 ): Promise<number> {
   let currentPortalCount = 0;
   let maxTestPortals = 10;
@@ -282,7 +282,7 @@ export async function createDeveloperTestAccountForLocalDev(
       accountConfig,
       env,
       maxTestPortals,
-      useV3
+      useV2
     );
 
     return result;

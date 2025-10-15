@@ -1,4 +1,4 @@
-import { logger } from '@hubspot/local-dev-lib/logger';
+import { uiLogger } from '../ui/logger.js';
 import {
   getAccountId,
   getCWDAccountOverride,
@@ -26,10 +26,9 @@ import {
 import { ScopeGroupAuthorization } from '@hubspot/local-dev-lib/types/Accounts';
 import { isSpecifiedError } from '@hubspot/local-dev-lib/errors/index';
 import { getHubSpotWebsiteOrigin } from '@hubspot/local-dev-lib/urls';
-import { uiCommandReference } from '../ui/index.js';
 import pkg from '../../package.json' with { type: 'json' };
 
-import { i18n } from '../lang.js';
+import { lib } from '../../lang/en.js';
 import { uiLink } from '../ui/index.js';
 const minMajorNodeVersion = 18;
 
@@ -52,7 +51,7 @@ export class Doctor {
 
   async diagnose(): Promise<DiagnosticInfo> {
     SpinniesManager.add('runningDiagnostics', {
-      text: i18n(`lib.doctor.runningDiagnostics`),
+      text: lib.doctor.runningDiagnostics,
     });
 
     this.diagnosticInfo =
@@ -75,7 +74,7 @@ export class Doctor {
     this.performCliConfigSettingsChecks();
 
     SpinniesManager.succeed('runningDiagnostics', {
-      text: i18n(`lib.doctor.diagnosticsComplete`),
+      text: lib.doctor.diagnosticsComplete,
       succeedColor: 'white',
     });
 
@@ -106,13 +105,9 @@ export class Doctor {
     if (!this.diagnosticInfo?.config) {
       this.diagnosis?.addCLIConfigSection({
         type: 'error',
-        message: i18n(`lib.doctor.diagnosis.cliConfig.noConfigFile`),
-        secondaryMessaging: i18n(
-          `lib.doctor.diagnosis.cliConfig.noConfigFileSecondary`,
-          {
-            command: uiCommandReference('hs init'),
-          }
-        ),
+        message: lib.doctor.diagnosis.cliConfig.noConfigFile,
+        secondaryMessaging:
+          lib.doctor.diagnosis.cliConfig.noConfigFileSecondary('hs init'),
       });
       return [];
     }
@@ -124,21 +119,14 @@ export class Doctor {
     if (this.diagnosticInfo?.defaultAccountOverrideFile) {
       this.diagnosis?.addDefaultAccountOverrideFileSection({
         type: 'warning',
-        message: i18n(
-          `lib.doctor.defaultAccountOverrideFileChecks.overrideActive`,
-          {
-            defaultAccountOverrideFile:
-              this.diagnosticInfo.defaultAccountOverrideFile,
-          }
+        message: lib.doctor.defaultAccountOverrideFileChecks.overrideActive(
+          this.diagnosticInfo.defaultAccountOverrideFile
         ),
       });
       this.diagnosis?.addDefaultAccountOverrideFileSection({
         type: 'warning',
-        message: i18n(
-          `lib.doctor.defaultAccountOverrideFileChecks.overrideAccountId`,
-          {
-            overrideAccountId: getCWDAccountOverride(),
-          }
+        message: lib.doctor.defaultAccountOverrideFileChecks.overrideAccountId(
+          getCWDAccountOverride()!
         ),
       });
     }
@@ -148,12 +136,9 @@ export class Doctor {
     if (this.diagnosticInfo?.configSettings.httpUseLocalhost) {
       this.diagnosis?.addCLIConfigSection({
         type: 'warning',
-        message: i18n(
-          `lib.doctor.diagnosis.cliConfig.settings.httpUseLocalhost`
-        ),
-        secondaryMessaging: i18n(
-          `lib.doctor.diagnosis.cliConfig.settings.httpUseLocalhostSecondary`
-        ),
+        message: lib.doctor.diagnosis.cliConfig.settings.httpUseLocalhost,
+        secondaryMessaging:
+          lib.doctor.diagnosis.cliConfig.settings.httpUseLocalhostSecondary,
       });
     }
   }
@@ -172,11 +157,11 @@ export class Doctor {
 
       this.diagnosis?.addCLIConfigSection({
         type: 'success',
-        message: i18n(`lib.doctor.accountChecks.active`),
+        message: lib.doctor.accountChecks.active,
       });
 
       const linkToPakUI = uiLink(
-        i18n(`lib.doctor.accountChecks.pak.viewScopes`),
+        lib.doctor.accountChecks.pak.viewScopes,
         `${getHubSpotWebsiteOrigin(
           this.diagnosticInfoBuilder?.env || 'PROD'
         )}/personal-access-key/${this.diagnosticInfo?.account.accountId}`
@@ -185,21 +170,14 @@ export class Doctor {
       if (missingScopes.length > 0) {
         this.diagnosis?.addCLIConfigSection({
           type: 'warning',
-          message: i18n(`lib.doctor.accountChecks.pak.incomplete`),
-          secondaryMessaging: i18n(
-            `lib.doctor.accountChecks.pak.incompleteSecondary`,
-            {
-              command: uiCommandReference(`hs auth`),
-              link: linkToPakUI,
-            }
-          ),
+          message: lib.doctor.accountChecks.pak.incomplete,
+          secondaryMessaging:
+            lib.doctor.accountChecks.pak.incompleteSecondary(linkToPakUI),
         });
       } else {
         this.diagnosis?.addCLIConfigSection({
           type: 'success',
-          message: i18n(`lib.doctor.accountChecks.pak.valid`, {
-            link: linkToPakUI,
-          }),
+          message: lib.doctor.accountChecks.pak.valid(linkToPakUI),
         });
       }
     } catch (error) {
@@ -217,13 +195,9 @@ export class Doctor {
       if (portalNotActive) {
         this.diagnosis?.addCLIConfigSection({
           type: 'error',
-          message: i18n(`lib.doctor.accountChecks.inactive`),
-          secondaryMessaging: i18n(
-            `lib.doctor.accountChecks.inactiveSecondary`,
-            {
-              command: uiCommandReference(`hs accounts clean`),
-            }
-          ),
+          message: lib.doctor.accountChecks.inactive,
+          secondaryMessaging:
+            lib.doctor.accountChecks.inactiveSecondary('hs accounts clean'),
         });
       } else if (
         isSpecifiedError(error, {
@@ -235,22 +209,17 @@ export class Doctor {
       ) {
         this.diagnosis?.addCLIConfigSection({
           type: 'success',
-          message: i18n(`lib.doctor.accountChecks.active`),
+          message: lib.doctor.accountChecks.active,
         });
         this.diagnosis?.addCLIConfigSection({
           type: 'error',
-          message: i18n(`lib.doctor.accountChecks.pak.invalid`),
-          secondaryMessaging: i18n(
-            `lib.doctor.accountChecks.pak.invalidSecondary`,
-            {
-              command: uiCommandReference(`hs auth`),
-            }
-          ),
+          message: lib.doctor.accountChecks.pak.invalid,
+          secondaryMessaging: lib.doctor.accountChecks.pak.invalidSecondary,
         });
       } else {
         this.diagnosis?.addCLIConfigSection({
           type: 'error',
-          message: i18n(`lib.doctor.accountChecks.unableToDetermine`),
+          message: lib.doctor.accountChecks.unableToDetermine,
         });
       }
     }
@@ -260,7 +229,7 @@ export class Doctor {
     if (!this.diagnosticInfo?.versions.node) {
       return this.diagnosis?.addCliSection({
         type: 'error',
-        message: i18n(`lib.doctor.nodeChecks.unableToDetermine`),
+        message: lib.doctor.nodeChecks.unableToDetermine,
       });
     }
 
@@ -270,16 +239,16 @@ export class Doctor {
     if (!currentNodeMajor || parseInt(currentNodeMajor) < minMajorNodeVersion) {
       return this.diagnosis?.addCliSection({
         type: 'warning',
-        message: i18n(`lib.doctor.nodeChecks.minimumNotMet`, {
-          nodeVersion: this.diagnosticInfo?.versions.node,
-        }),
+        message: lib.doctor.nodeChecks.minimumNotMet(
+          this.diagnosticInfo?.versions.node
+        ),
       });
     }
     this.diagnosis?.addCliSection({
       type: 'success',
-      message: i18n(`lib.doctor.nodeChecks.success`, {
-        nodeVersion: this.diagnosticInfo?.versions.node,
-      }),
+      message: lib.doctor.nodeChecks.success(
+        this.diagnosticInfo?.versions.node
+      ),
     });
   }
 
@@ -288,15 +257,13 @@ export class Doctor {
     if (!npmVersion) {
       return this.diagnosis?.addCliSection({
         type: 'error',
-        message: i18n(`lib.doctor.npmChecks.notInstalled`),
+        message: lib.doctor.npmChecks.notInstalled,
       });
     }
 
     this.diagnosis?.addCliSection({
       type: 'success',
-      message: i18n(`lib.doctor.npmChecks.installed`, {
-        npmVersion,
-      }),
+      message: lib.doctor.npmChecks.installed(npmVersion),
     });
   }
 
@@ -311,16 +278,10 @@ export class Doctor {
     } catch (e) {
       return this.diagnosis?.addCliSection({
         type: 'error',
-        message: i18n(`lib.doctor.hsChecks.unableToDetermine`),
-        secondaryMessaging: i18n(
-          `lib.doctor.hsChecks.unableToDetermineSecondary`,
-          {
-            command: uiCommandReference(`hs --version`),
-            link: uiLink(
-              i18n(`lib.doctor.hsChecks.unableToDetermineSecondaryLink`),
-              `https://www.npmjs.com/package/${pkg.name}?activeTab=versions`
-            ),
-          }
+        message: lib.doctor.hsChecks.unableToDetermine,
+        secondaryMessaging: lib.doctor.hsChecks.unableToDetermineSecondary(
+          'hs --version',
+          `https://www.npmjs.com/package/${pkg.name}?activeTab=versions`
         ),
       });
     }
@@ -329,20 +290,16 @@ export class Doctor {
       const onNextTag = pkg.version.includes('beta');
       this.diagnosis?.addCliSection({
         type: 'warning',
-        message: i18n(`lib.doctor.hsChecks.notLatest`, {
-          hsVersion: pkg.version,
-        }),
-        secondaryMessaging: i18n(`lib.doctor.hsChecks.notLatestSecondary`, {
-          hsVersion: onNextTag ? nextCliVersion : latestCLIVersion,
-          command: uiCommandReference(`npm install -g ${pkg.name}`),
-        }),
+        message: lib.doctor.hsChecks.notLatest(pkg.version),
+        secondaryMessaging: lib.doctor.hsChecks.notLatestSecondary(
+          `npm install -g ${pkg.name}`,
+          onNextTag ? nextCliVersion : latestCLIVersion
+        ),
       });
     } else {
       this.diagnosis?.addCliSection({
         type: 'success',
-        message: i18n(`lib.doctor.hsChecks.latest`, {
-          hsVersion: pkg.version,
-        }),
+        message: lib.doctor.hsChecks.latest(pkg.version),
       });
     }
   }
@@ -362,18 +319,14 @@ export class Doctor {
 
           this.diagnosis?.addProjectSection({
             type: 'warning',
-            message: i18n(
-              `lib.doctor.projectDependenciesChecks.missingDependencies`,
-              {
-                dir: packageDirName,
-              }
-            ),
-            secondaryMessaging: i18n(
-              `lib.doctor.projectDependenciesChecks.missingDependenciesSecondary`,
-              {
-                command: uiCommandReference('hs project install-deps'),
-              }
-            ),
+            message:
+              lib.doctor.projectDependenciesChecks.missingDependencies(
+                packageDirName
+              ),
+            secondaryMessaging:
+              lib.doctor.projectDependenciesChecks.missingDependenciesSecondary(
+                'hs project install-deps'
+              ),
           });
         }
       } catch (e) {
@@ -382,30 +335,26 @@ export class Doctor {
         if (!(await this.isValidJsonFile(packageFile))) {
           this.diagnosis?.addProjectSection({
             type: 'error',
-            message: i18n(`lib.doctor.files.invalidJson`, {
-              filename: packageFile,
-            }),
+            message: lib.doctor.files.invalidJson(packageFile),
           });
         } else {
           this.diagnosis?.addProjectSection({
             type: 'error',
-            message: i18n(
-              `lib.doctor.projectDependenciesChecks.unableToDetermine`,
-              {
-                dir: packageDirName,
-              }
-            ),
+            message:
+              lib.doctor.projectDependenciesChecks.unableToDetermine(
+                packageDirName
+              ),
           });
         }
 
-        logger.debug(e);
+        uiLogger.debug(e instanceof Error ? e.message : String(e));
       }
     }
 
     if (!foundError) {
       this.diagnosis?.addProjectSection({
         type: 'success',
-        message: i18n(`lib.doctor.projectDependenciesChecks.success`),
+        message: lib.doctor.projectDependenciesChecks.success,
       });
     }
   }
@@ -432,9 +381,7 @@ export class Doctor {
         foundError = true;
         this.diagnosis?.addProjectSection({
           type: 'error',
-          message: i18n(`lib.doctor.files.invalidJson`, {
-            filename: jsonFile,
-          }),
+          message: lib.doctor.files.invalidJson(jsonFile),
         });
       }
     }
@@ -442,7 +389,7 @@ export class Doctor {
     if (!foundError) {
       this.diagnosis?.addProjectSection({
         type: 'success',
-        message: i18n(`lib.doctor.files.validJson`),
+        message: lib.doctor.files.validJson,
       });
     }
   }
@@ -451,21 +398,15 @@ export class Doctor {
     if (await isPortManagerPortAvailable()) {
       this.diagnosis?.addProjectSection({
         type: 'success',
-        message: i18n(`lib.doctor.port.available`, {
-          port: PORT_MANAGER_SERVER_PORT,
-        }),
+        message: lib.doctor.port.available(PORT_MANAGER_SERVER_PORT),
       });
       return;
     }
 
     this.diagnosis?.addProjectSection({
       type: 'warning',
-      message: i18n(`lib.doctor.port.inUse`, {
-        port: PORT_MANAGER_SERVER_PORT,
-      }),
-      secondaryMessaging: i18n(`lib.doctor.port.inUseSecondary`, {
-        command: uiCommandReference('hs project dev'),
-      }),
+      message: lib.doctor.port.inUse(PORT_MANAGER_SERVER_PORT),
+      secondaryMessaging: lib.doctor.port.inUseSecondary('hs project dev'),
     });
   }
 }

@@ -1,7 +1,6 @@
 import { HttpStatusCode } from 'axios';
 import yargs, { Argv, ArgumentsCamelCase } from 'yargs';
 import chalk from 'chalk';
-import { logger } from '@hubspot/local-dev-lib/logger';
 import * as configUtils from '@hubspot/local-dev-lib/config';
 import { Project } from '@hubspot/local-dev-lib/types/Project';
 import * as projectApiUtils from '@hubspot/local-dev-lib/api/projects';
@@ -40,7 +39,7 @@ vi.mock('../../../lib/prompts/projectNamePrompt');
 vi.mock('../../../lib/prompts/promptUtils');
 vi.mock('../../../lib/usageTracking');
 vi.mock('../../../lib/ui/logger');
-vi.mock('@hubspot/local-dev-lib/logger');
+vi.mock('../../ui/logger.js');
 
 vi.spyOn(ui, 'uiLine');
 
@@ -397,8 +396,8 @@ describe('commands/project/deploy', () => {
       });
       await projectDeployCommand.handler(args);
 
-      expect(logger.error).toHaveBeenCalledTimes(1);
-      expect(logger.error).toHaveBeenCalledWith(
+      expect(uiLogger.error).toHaveBeenCalledTimes(1);
+      expect(uiLogger.error).toHaveBeenCalledWith(
         `The request for 'project deploy' in account ${args.derivedAccountId} failed due to a client error.`
       );
       expect(processExitSpy).toHaveBeenCalledTimes(1);

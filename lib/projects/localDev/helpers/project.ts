@@ -33,6 +33,11 @@ import { ApiErrorContext } from '../../../errorHandlers/index.js';
 import { ProjectConfig } from '../../../../types/Projects.js';
 import { ProjectPollResult } from '../../../../types/Projects.js';
 import { ProjectSubtask } from '../../../../types/Projects.js';
+import {
+  getProjectPackageJsonLocations,
+  hasMissingPackages,
+  installPackages,
+} from '../../../dependencyManagement.js';
 
 // Prompt the user to create a new project if one doesn't exist on their target account
 export async function createNewProjectForLocalDev(
@@ -273,21 +278,14 @@ export async function isDeployedProjectUpToDateWithLocal(
       deployedBuildId
     );
 
-    const extractedProjectPath = path.join(
-      tempDir,
-      sanitizeFileName(projectConfig.name)
-    );
     await extractZipArchive(
       zippedProject,
       sanitizeFileName(projectConfig.name),
       tempDir,
-      { includesRootDir: false, hideLogs: true }
+      { hideLogs: true }
     );
 
-    const deployedProjectSourceDir = path.join(
-      extractedProjectPath,
-      projectConfig.srcDir
-    );
+    const deployedProjectSourceDir = path.join(tempDir, projectConfig.srcDir);
 
     const { intermediateNodesIndexedByUid: deployedProjectNodes } =
       await translate(
@@ -308,5 +306,44 @@ export async function isDeployedProjectUpToDateWithLocal(
     if (tempDir && (await fs.pathExists(tempDir))) {
       await fs.remove(tempDir);
     }
+  }
+}
+
+export async function checkAndInstallDependencies(): Promise<void> {
+  SpinniesManager.init();
+
+  uiLogger.log('');
+  SpinniesManager.add('checkingDependencies', {
+    text: lib.localDevHelpers.project.checkAndInstallDependencies
+      .checkingDependencies,
+  });
+
+  try {
+    const installLocations = await getProjectPackageJsonLocations();
+
+    const locationsToInstall: string[] = [];
+    for (const location of installLocations) {
+      if (await hasMissingPackages(location)) {
+        locationsToInstall.push(location);
+      }
+    }
+
+    if (locationsToInstall.length > 0) {
+      SpinniesManager.remove('checkingDependencies');
+      await installPackages({ installLocations: locationsToInstall });
+    } else {
+      SpinniesManager.succeed('checkingDependencies', {
+        text: lib.localDevHelpers.project.checkAndInstallDependencies
+          .dependenciesUpToDate,
+      });
+    }
+    uiLogger.log('');
+  } catch (e) {
+    logError(e);
+    SpinniesManager.fail('checkingDependencies', {
+      text: lib.localDevHelpers.project.checkAndInstallDependencies
+        .dependenciesFailure,
+    });
+    process.exit(EXIT_CODES.ERROR);
   }
 }

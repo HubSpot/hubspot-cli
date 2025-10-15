@@ -5,14 +5,14 @@ import { getAccountConfig } from '@hubspot/local-dev-lib/config';
 import { getAccountIdentifier } from '@hubspot/local-dev-lib/config/getAccountIdentifier';
 import { addOauthToAccountConfig } from '@hubspot/local-dev-lib/oauth';
 import { getHubSpotWebsiteOrigin } from '@hubspot/local-dev-lib/urls';
-import { logger } from '@hubspot/local-dev-lib/logger';
+import { uiLogger } from './ui/logger.js';
 import { ENVIRONMENTS } from '@hubspot/local-dev-lib/constants/environments';
 import { DEFAULT_OAUTH_SCOPES } from '@hubspot/local-dev-lib/constants/auth';
 import { OAuth2ManagerAccountConfig } from '@hubspot/local-dev-lib/types/Accounts';
 import { Server } from 'http';
 
 import { handleExit } from './process.js';
-import { i18n } from './lang.js';
+import { lib } from '../lang/en.js';
 import { EXIT_CODES } from './enums/exitCodes.js';
 
 const PORT = 3000;
@@ -29,7 +29,7 @@ function buildAuthUrl(oauthManager: OAuth2Manager): string {
   const scopes = accountScopes || DEFAULT_OAUTH_SCOPES;
 
   if (!clientId) {
-    logger.error(i18n(`lib.oauth.missingClientId`));
+    uiLogger.error(lib.oauth.missingClientId);
     process.exit(EXIT_CODES.ERROR);
   }
 
@@ -96,7 +96,9 @@ async function authorize(oauthManager: OAuth2Manager): Promise<void> {
       }
     });
 
-    server = app.listen(PORT, () => logger.log(`Waiting for authorization...`));
+    server = app.listen(PORT, () =>
+      uiLogger.log(`Waiting for authorization...`)
+    );
 
     handleServerOnProcessEnd(server);
   });
@@ -115,7 +117,7 @@ export async function authenticateWithOauth(
   accountConfig: OAuth2ManagerAccountConfig
 ): Promise<void> {
   const oauthManager = setupOauth(accountConfig);
-  logger.log('Authorizing');
+  uiLogger.log('Authorizing');
   await authorize(oauthManager);
   addOauthToAccountConfig(oauthManager);
 }

@@ -19,7 +19,7 @@ async function handler() {
 
   if (!shouldOpen) {
     uiLogger.log(commands.project.feedback.error(FEEDBACK_URL));
-    process.exit(EXIT_CODES.ERROR);
+    process.exit(EXIT_CODES.SUCCESS);
   }
 
   open(FEEDBACK_URL, { url: true });

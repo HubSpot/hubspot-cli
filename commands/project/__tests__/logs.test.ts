@@ -9,7 +9,7 @@ import { EXIT_CODES } from '../../../lib/enums/exitCodes.js';
 import { logError } from '../../../lib/errorHandlers/index.js';
 import projectLogsCommand, { ProjectLogsArgs } from '../logs.js';
 
-vi.mock('@hubspot/local-dev-lib/logger');
+vi.mock('../../ui/logger.js');
 vi.mock('../../../lib/commonOpts');
 vi.mock('../../../lib/usageTracking');
 vi.mock('../../../lib/validation');

@@ -98,14 +98,14 @@ export async function handleProjectDeploy(
   targetAccountId: number,
   projectName: string,
   buildId: number,
-  useV3Api: boolean,
+  isV2Project: boolean,
   force: boolean
 ): Promise<Deploy | undefined> {
   const { data: deployResp } = await deployProject(
     targetAccountId,
     projectName,
     buildId,
-    useV3Api,
+    isV2Project,
     force
   );
 

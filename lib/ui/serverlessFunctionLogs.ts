@@ -1,7 +1,8 @@
 import moment from 'moment';
 import chalk from 'chalk';
-import { logger, Styles } from '@hubspot/local-dev-lib/logger';
-import { i18n } from '../lang.js';
+import { Styles } from '@hubspot/local-dev-lib/logger';
+import { uiLogger } from './logger.js';
+import { lib } from '../../lang/en.js';
 import {
   FunctionLog,
   GetFunctionLogsResponse,
@@ -86,10 +87,8 @@ function processLog(log: FunctionLog, options: Options): string | void {
   try {
     return logHandler[log.status](log, options);
   } catch (e) {
-    logger.error(
-      i18n(`lib.ui.serverlessFunctionLogs.unableToProcessLog`, {
-        log: JSON.stringify(log),
-      })
+    uiLogger.error(
+      lib.ui.serverlessFunctionLogs.unableToProcessLog(JSON.stringify(log))
     );
   }
 }
@@ -112,7 +111,7 @@ function processLogs(
   const isLogsResp = isLogsResponse(logsResp);
 
   if (!logsResp || (isLogsResp && logsResp.results!.length === 0)) {
-    return i18n(`lib.ui.serverlessFunctionLogs.noLogsFound`);
+    return lib.ui.serverlessFunctionLogs.noLogsFound;
   } else if (isLogsResp) {
     return logsResp
       .results!.map(log => {
@@ -127,5 +126,8 @@ export function outputLogs(
   logsResp: GetFunctionLogsResponse | FunctionLog,
   options: Options
 ): void {
-  logger.log(processLogs(logsResp, options));
+  const result = processLogs(logsResp, options);
+  if (result) {
+    uiLogger.log(result);
+  }
 }

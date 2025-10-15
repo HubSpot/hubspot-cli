@@ -215,6 +215,7 @@ async function handler(args: ArgumentsCamelCase<AuthArgs>): Promise<void> {
     )
   );
   uiFeatureHighlight([
+    'getStartedCommand',
     'accountsUseCommand',
     'accountOption',
     'accountsListCommand',

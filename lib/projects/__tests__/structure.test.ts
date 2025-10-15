@@ -1,6 +1,6 @@
 import fs from 'fs';
 import * as HSfs from '@hubspot/local-dev-lib/fs';
-import { logger } from '@hubspot/local-dev-lib/logger';
+import { uiLogger } from '../../ui/logger.js';
 import {
   getComponentTypeFromConfigFile,
   loadConfigFile,
@@ -17,7 +17,7 @@ import { Mock } from 'vitest';
 
 vi.mock('fs');
 vi.mock('@hubspot/local-dev-lib/fs');
-vi.mock('@hubspot/local-dev-lib/logger');
+vi.mock('../../ui/logger.js');
 
 const mockedReadFileSync = fs.readFileSync as Mock;
 const mockedWalk = HSfs.walk as Mock;
@@ -74,7 +74,7 @@ describe('lib/projects/structure', () => {
       });
 
       expect(loadConfigFile('nonexistent/path/app.json')).toBeNull();
-      expect(logger.debug).toHaveBeenCalled();
+      expect(uiLogger.debug).toHaveBeenCalled();
     });
   });
 

@@ -9,7 +9,7 @@ import {
   getAccountId,
 } from '@hubspot/local-dev-lib/config';
 import { getAccountIdentifier } from '@hubspot/local-dev-lib/config/getAccountIdentifier';
-import { logger } from '@hubspot/local-dev-lib/logger';
+import { uiLogger } from './ui/logger.js';
 import {
   createDeveloperTestAccount,
   fetchDeveloperTestAccountGateSyncStatus,
@@ -26,7 +26,6 @@ import { Environment } from '@hubspot/local-dev-lib/types/Config';
 
 import { personalAccessKeyPrompt } from './prompts/personalAccessKeyPrompt.js';
 import { createDeveloperTestAccountConfigPrompt } from './prompts/createDeveloperTestAccountConfigPrompt.js';
-import { i18n } from './lang.js';
 import { cliAccountNamePrompt } from './prompts/accountNamePrompt.js';
 import SpinniesManager from './ui/SpinniesManager.js';
 import { debugError, logError } from './errorHandlers/index.js';
@@ -74,11 +73,9 @@ export async function saveAccountToConfig(
     const invalidAccountName = accountNameExistsInConfig(nameForConfig);
     if (invalidAccountName) {
       if (!force) {
-        logger.log('');
-        logger.warn(
-          i18n(`lib.prompts.accountNamePrompt.errors.accountNameExists`, {
-            name: nameForConfig,
-          })
+        uiLogger.log('');
+        uiLogger.warn(
+          lib.prompts.accountNamePrompt.errors.accountNameExists(nameForConfig)
         );
         const { name: promptName } = await cliAccountNamePrompt(
           nameForConfig + `_${accountId}`
@@ -99,11 +96,11 @@ export async function saveAccountToConfig(
   });
   writeConfig();
 
-  logger.log('');
+  uiLogger.log('');
   return validName;
 }
 
-export async function createDeveloperTestAccountV3(
+export async function createDeveloperTestAccountV2(
   parentAccountId: number,
   testAccountConfig: DeveloperTestAccountConfig
 ): Promise<{
@@ -140,7 +137,7 @@ export async function createDeveloperTestAccountV3(
     );
   } catch (err) {
     debugError(err);
-    throw new Error(lib.buildAccount.createDeveloperTestAccountV3.syncFailure);
+    throw new Error(lib.buildAccount.createDeveloperTestAccountV2.syncFailure);
   }
 
   // HACK: The status endpoint sometimes returns an early success status.
@@ -157,7 +154,7 @@ export async function createDeveloperTestAccountV3(
     result.personalAccessKey = data.personalAccessKey;
   } catch (err) {
     debugError(err);
-    throw new Error(lib.buildAccount.createDeveloperTestAccountV3.pakFailure);
+    throw new Error(lib.buildAccount.createDeveloperTestAccountV2.pakFailure);
   }
 
   return result;
@@ -168,7 +165,7 @@ export async function buildDeveloperTestAccount(
   parentAccountConfig: CLIAccount,
   env: Environment,
   portalLimit: number,
-  useV3 = false
+  useV2 = false
 ): Promise<number> {
   const id = getAccountIdentifier(parentAccountConfig);
   const parentAccountId = getAccountId(id);
@@ -177,10 +174,10 @@ export async function buildDeveloperTestAccount(
   };
 
   if (!parentAccountId) {
-    throw new Error(i18n(`lib.developerTestAccount.create.loading.fail`));
+    throw new Error(lib.developerTestAccount.create.loading.fail(''));
   }
 
-  if (useV3) {
+  if (useV2) {
     testAccountConfig = await createDeveloperTestAccountConfigPrompt(
       {
         name: testAccountConfig.accountName,
@@ -194,19 +191,17 @@ export async function buildDeveloperTestAccount(
     succeedColor: 'white',
   });
 
-  logger.log('');
+  uiLogger.log('');
   SpinniesManager.add('buildDeveloperTestAccount', {
-    text: i18n(`lib.developerTestAccount.create.loading.add`, {
-      accountName: testAccountName,
-    }),
+    text: lib.developerTestAccount.create.loading.add(testAccountName),
   });
 
   let developerTestAccountId: number;
   let developerTestAccountPersonalAccessKey: string;
 
   try {
-    if (useV3) {
-      const result = await createDeveloperTestAccountV3(
+    if (useV2) {
+      const result = await createDeveloperTestAccountV2(
         parentAccountId,
         testAccountConfig
       );
@@ -224,18 +219,16 @@ export async function buildDeveloperTestAccount(
     }
 
     SpinniesManager.succeed('buildDeveloperTestAccount', {
-      text: i18n(`lib.developerTestAccount.create.loading.succeed`, {
-        accountName: testAccountName,
-        accountId: developerTestAccountId,
-      }),
+      text: lib.developerTestAccount.create.loading.succeed(
+        testAccountName,
+        developerTestAccountId.toString()
+      ),
     });
   } catch (e) {
     debugError(e);
 
     SpinniesManager.fail('buildDeveloperTestAccount', {
-      text: i18n(`lib.developerTestAccount.create.loading.fail`, {
-        accountName: testAccountName,
-      }),
+      text: lib.developerTestAccount.create.loading.fail(testAccountName),
     });
 
     handleDeveloperTestAccountCreateError(e, parentAccountId, env, portalLimit);
@@ -267,29 +260,25 @@ export async function buildSandbox(
   env: Environment,
   force = false
 ): Promise<SandboxAccount> {
-  let i18nKey: string;
-  if (sandboxType === HUBSPOT_ACCOUNT_TYPES.STANDARD_SANDBOX) {
-    i18nKey = 'lib.sandbox.create.loading.standard';
-  } else {
-    i18nKey = 'lib.sandbox.create.loading.developer';
-  }
+  const sandboxTypeKey =
+    sandboxType === HUBSPOT_ACCOUNT_TYPES.STANDARD_SANDBOX
+      ? 'standard'
+      : 'developer';
 
   const id = getAccountIdentifier(parentAccountConfig);
   const parentAccountId = getAccountId(id);
 
   if (!parentAccountId) {
-    throw new Error(i18n(`${i18nKey}.fail`));
+    throw new Error(lib.sandbox.create[sandboxTypeKey].loading.fail(''));
   }
 
   SpinniesManager.init({
     succeedColor: 'white',
   });
 
-  logger.log('');
+  uiLogger.log('');
   SpinniesManager.add('buildSandbox', {
-    text: i18n(`${i18nKey}.add`, {
-      accountName: sandboxName,
-    }),
+    text: lib.sandbox.create[sandboxTypeKey].loading.add(sandboxName),
   });
 
   let sandbox: SandboxAccount;
@@ -305,18 +294,16 @@ export async function buildSandbox(
     sandbox = { name: sandboxName, ...data };
 
     SpinniesManager.succeed('buildSandbox', {
-      text: i18n(`${i18nKey}.succeed`, {
-        accountName: sandboxName,
-        accountId: sandbox.sandbox.sandboxHubId,
-      }),
+      text: lib.sandbox.create[sandboxTypeKey].loading.succeed(
+        sandboxName,
+        sandbox.sandbox.sandboxHubId.toString()
+      ),
     });
   } catch (e) {
     debugError(e);
 
     SpinniesManager.fail('buildSandbox', {
-      text: i18n(`${i18nKey}.fail`, {
-        accountName: sandboxName,
-      }),
+      text: lib.sandbox.create[sandboxTypeKey].loading.fail(sandboxName),
     });
 
     handleSandboxCreateError(e, env, sandboxName, parentAccountId);
@@ -346,28 +333,24 @@ export async function buildV2Sandbox(
   env: Environment,
   force = false
 ) {
-  let i18nKey: string;
-  if (sandboxType === HUBSPOT_ACCOUNT_TYPES.STANDARD_SANDBOX) {
-    i18nKey = 'lib.sandbox.create.loading.standard';
-  } else {
-    i18nKey = 'lib.sandbox.create.loading.developer';
-  }
+  const sandboxTypeKey =
+    sandboxType === HUBSPOT_ACCOUNT_TYPES.STANDARD_SANDBOX
+      ? 'standard'
+      : 'developer';
   const id = getAccountIdentifier(parentAccountConfig);
   const parentAccountId = getAccountId(id);
 
   if (!parentAccountId) {
-    throw new Error(i18n(`${i18nKey}.fail`));
+    throw new Error(lib.sandbox.create[sandboxTypeKey].loading.fail(''));
   }
 
   SpinniesManager.init({
     succeedColor: 'white',
   });
 
-  logger.log('');
+  uiLogger.log('');
   SpinniesManager.add('buildV2Sandbox', {
-    text: i18n(`${i18nKey}.add`, {
-      accountName: sandboxName,
-    }),
+    text: lib.sandbox.create[sandboxTypeKey].loading.add(sandboxName),
   });
 
   let sandbox: V2Sandbox;
@@ -392,17 +375,15 @@ export async function buildV2Sandbox(
     pak = personalAccessKey.encodedOAuthRefreshToken;
 
     SpinniesManager.succeed('buildV2Sandbox', {
-      text: i18n(`${i18nKey}.succeed`, {
-        accountName: sandboxName,
-        accountId: sandbox.sandboxHubId,
-      }),
+      text: lib.sandbox.create[sandboxTypeKey].loading.succeed(
+        sandboxName,
+        sandbox.sandboxHubId.toString()
+      ),
     });
   } catch (e) {
     debugError(e);
     SpinniesManager.fail('buildV2Sandbox', {
-      text: i18n(`${i18nKey}.fail`, {
-        accountName: sandboxName,
-      }),
+      text: lib.sandbox.create[sandboxTypeKey].loading.fail(sandboxName),
     });
 
     handleSandboxCreateError(e, env, sandboxName, parentAccountId);

@@ -3,7 +3,7 @@ import { outputLogs } from '../ui/serverlessFunctionLogs.js';
 import { tailLogs } from '../serverlessLogs.js';
 
 vi.mock('../ui/serverlessFunctionLogs');
-vi.mock('@hubspot/local-dev-lib/logger');
+vi.mock('../../ui/logger.js');
 vi.mock('../ui/SpinniesManager', () => ({
   default: {
     init: vi.fn(),
