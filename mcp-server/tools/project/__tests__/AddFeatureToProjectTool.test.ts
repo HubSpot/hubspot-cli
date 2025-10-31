@@ -13,12 +13,18 @@ import {
   APP_AUTH_TYPES,
   APP_DISTRIBUTION_TYPES,
 } from '../../../../lib/constants.js';
+import { mcpFeedbackRequest } from '../../../utils/feedbackTracking.js';
 
 vi.mock('@modelcontextprotocol/sdk/server/mcp.js');
 vi.mock('../../../utils/project');
 vi.mock('../../../utils/command');
 vi.mock('../../../../lib/constants');
 vi.mock('../../../utils/toolUsageTracking');
+vi.mock('../../../utils/feedbackTracking');
+
+const mockMcpFeedbackRequest = mcpFeedbackRequest as MockedFunction<
+  typeof mcpFeedbackRequest
+>;
 
 const mockRunCommandInDir = runCommandInDir as MockedFunction<
   typeof runCommandInDir
@@ -40,6 +46,7 @@ describe('mcp-server/tools/project/AddFeatureToProject', () => {
 
     mockRegisteredTool = {} as RegisteredTool;
     mockMcpServer.registerTool.mockReturnValue(mockRegisteredTool);
+    mockMcpFeedbackRequest.mockResolvedValue('');
 
     tool = new AddFeatureToProjectTool(mockMcpServer);
 
@@ -62,15 +69,15 @@ describe('mcp-server/tools/project/AddFeatureToProject', () => {
           ),
           inputSchema: expect.any(Object),
         }),
-        tool.handler
+        expect.any(Function)
       );
-
       expect(result).toBe(mockRegisteredTool);
     });
   });
 
   describe('handler', () => {
     const baseInput: AddFeatureInputSchema = {
+      absoluteCurrentWorkingDirectory: '/test/dir',
       absoluteProjectPath: '/test/project',
       addApp: false,
     };

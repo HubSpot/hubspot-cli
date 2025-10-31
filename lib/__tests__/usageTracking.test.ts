@@ -12,9 +12,10 @@ import {
   trackAuthAction,
   trackCommandMetadataUsage,
 } from '../usageTracking.js';
-import packageJson from '../../package.json' with { type: 'json' };
-const version = packageJson.version;
+import { pkg } from '../jsonLoader.js';
 import { Mock, Mocked } from 'vitest';
+
+const version = pkg.version;
 
 vi.mock('@hubspot/local-dev-lib/trackUsage');
 vi.mock('@hubspot/local-dev-lib/config');

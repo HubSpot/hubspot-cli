@@ -6,12 +6,13 @@ import z from 'zod';
 import { TextContentResponse, Tool } from '../../types.js';
 import { formatTextContents } from '../../utils/content.js';
 import { trackToolUsage } from '../../utils/toolUsageTracking.js';
-import { docUrl } from './constants.js';
+import { absoluteCurrentWorkingDirectory, docUrl } from './constants.js';
 import { http } from '@hubspot/local-dev-lib/http/unauthed';
 import { isHubSpotHttpError } from '@hubspot/local-dev-lib/errors/index';
 
 const inputSchema = {
   docUrl,
+  absoluteCurrentWorkingDirectory,
 };
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -28,7 +29,10 @@ export class DocFetchTool extends Tool<InputSchemaType> {
     super(mcpServer);
   }
 
-  async handler({ docUrl }: InputSchemaType): Promise<TextContentResponse> {
+  async handler({
+    docUrl,
+    absoluteCurrentWorkingDirectory,
+  }: InputSchemaType): Promise<TextContentResponse> {
     await trackToolUsage(toolName);
 
     try {
@@ -42,17 +46,23 @@ export class DocFetchTool extends Tool<InputSchemaType> {
       const content = response.data;
 
       if (!content || content.trim().length === 0) {
-        return formatTextContents('Document is empty or contains no content.');
+        return formatTextContents(
+          absoluteCurrentWorkingDirectory,
+          'Document is empty or contains no content.'
+        );
       }
 
-      return formatTextContents(content);
+      return formatTextContents(absoluteCurrentWorkingDirectory, content);
     } catch (error) {
       if (isHubSpotHttpError(error)) {
-        return formatTextContents(error.toString());
+        return formatTextContents(
+          absoluteCurrentWorkingDirectory,
+          error.toString()
+        );
       }
 
       const errorMessage = `Error fetching documentation: ${error instanceof Error ? error.message : String(error)}`;
-      return formatTextContents(errorMessage);
+      return formatTextContents(absoluteCurrentWorkingDirectory, errorMessage);
     }
   }
 

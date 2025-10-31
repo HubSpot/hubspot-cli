@@ -60,7 +60,7 @@ async function promptNewAccountName(
         return lib.configMigrate.handleAccountNameConflicts.errors.sameName;
       }
 
-      const existingAccount = globalConfig.accounts.some(
+      const existingAccount = globalConfig.accounts?.some(
         acc => acc.name === value
       );
       const renamedAccount = renamedAccounts.some(acc => acc.name === value);
@@ -179,11 +179,11 @@ async function handleAccountNameConflicts(
   const accountsNotYetInGlobal = deprecatedConfig.portals.filter(
     portal =>
       portal.portalId &&
-      !globalConfig.accounts.some(acc => acc.accountId === portal.portalId)
+      !globalConfig.accounts?.some(acc => acc.accountId === portal.portalId)
   );
 
   const accountsWithConflicts = accountsNotYetInGlobal.filter(localAccount =>
-    globalConfig.accounts.some(
+    globalConfig.accounts?.some(
       globalAccount => globalAccount.name === localAccount.name
     )
   );

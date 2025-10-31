@@ -9,13 +9,18 @@ import {
   APP_DISTRIBUTION_TYPES,
 } from '../../../lib/constants.js';
 import { addFlag } from '../../utils/command.js';
-import { absoluteProjectPath, features } from './constants.js';
+import {
+  absoluteCurrentWorkingDirectory,
+  absoluteProjectPath,
+  features,
+} from './constants.js';
 import { runCommandInDir } from '../../utils/project.js';
 import { formatTextContents, formatTextContent } from '../../utils/content.js';
 import { trackToolUsage } from '../../utils/toolUsageTracking.js';
 
 const inputSchema = {
   absoluteProjectPath,
+  absoluteCurrentWorkingDirectory,
   addApp: z
     .boolean()
     .describe(
@@ -59,6 +64,7 @@ export class AddFeatureToProjectTool extends Tool<AddFeatureInputSchema> {
 
   async handler({
     absoluteProjectPath,
+    absoluteCurrentWorkingDirectory,
     distribution,
     auth,
     features,
@@ -104,9 +110,14 @@ export class AddFeatureToProjectTool extends Tool<AddFeatureInputSchema> {
         command
       );
 
-      return formatTextContents(stdout, stderr);
+      return formatTextContents(
+        absoluteCurrentWorkingDirectory,
+        stdout,
+        stderr
+      );
     } catch (error) {
       return formatTextContents(
+        absoluteCurrentWorkingDirectory,
         error instanceof Error ? error.message : `${error}`
       );
     }
@@ -117,7 +128,7 @@ export class AddFeatureToProjectTool extends Tool<AddFeatureInputSchema> {
       toolName,
       {
         title: 'Add feature to HubSpot Project',
-        description: `Adds a feature to an existing HubSpot project. 
+        description: `Adds a feature to an existing HubSpot project.
           Only works for projects with platformVersion '2025.2' and beyond`,
         inputSchema,
       },

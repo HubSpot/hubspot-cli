@@ -1,49 +1,35 @@
 import { Argv, ArgumentsCamelCase } from 'yargs';
-import { uiLogger } from '../../../lib/ui/logger.js';
-import { logError } from '../../../lib/errorHandlers/index.js';
-import { trackCommandUsage } from '../../../lib/usageTracking.js';
-import { listSchemas } from '../../../lib/schema.js';
-import { commands } from '../../../lang/en.js';
 import {
-  CommonArgs,
-  ConfigArgs,
-  AccountArgs,
-  EnvironmentArgs,
-  YargsCommandModule,
-} from '../../../types/Yargs.js';
+  uiCommandRelocatedMessage,
+  uiCommandRenamedDescription,
+  uiDeprecatedTag,
+} from '../../../lib/ui/index.js';
+import { YargsCommandModule } from '../../../types/Yargs.js';
+import listSchemaCommand, { SchemaListArgs } from '../listSchemas.js';
 import { makeYargsBuilder } from '../../../lib/yargsUtils.js';
 
 const command = 'list';
-const describe =
-  commands.customObject.subcommands.schema.subcommands.list.describe;
+const describe = uiDeprecatedTag(listSchemaCommand.describe as string, false);
 
-type SchemaListArgs = CommonArgs & ConfigArgs & AccountArgs & EnvironmentArgs;
+async function handler(args: ArgumentsCamelCase<SchemaListArgs>) {
+  uiCommandRelocatedMessage('hs custom-object list-schemas');
 
-async function handler(
-  args: ArgumentsCamelCase<SchemaListArgs>
-): Promise<void> {
-  const { derivedAccountId } = args;
-
-  trackCommandUsage('custom-object-schema-list', {}, derivedAccountId);
-
-  try {
-    await listSchemas(derivedAccountId);
-  } catch (e) {
-    logError(e);
-    uiLogger.error(
-      commands.customObject.subcommands.schema.subcommands.list.errors.list
-    );
-  }
+  await listSchemaCommand.handler(args);
 }
 
-function schemaListBuilder(yargs: Argv): Argv<SchemaListArgs> {
+function deprecatedListSchemaBuilder(yargs: Argv): Argv<SchemaListArgs> {
   return yargs as Argv<SchemaListArgs>;
 }
 
+const verboseDescribe = uiCommandRenamedDescription(
+  listSchemaCommand.describe,
+  'hs custom-object list-schemas'
+);
+
 const builder = makeYargsBuilder<SchemaListArgs>(
-  schemaListBuilder,
+  deprecatedListSchemaBuilder,
   command,
-  describe,
+  verboseDescribe,
   {
     useGlobalOptions: true,
     useConfigOptions: true,
@@ -52,11 +38,12 @@ const builder = makeYargsBuilder<SchemaListArgs>(
   }
 );
 
-const schemaListCommand: YargsCommandModule<unknown, SchemaListArgs> = {
-  command,
-  describe,
-  handler,
-  builder,
-};
+const deprecatedListSchemaCommand: YargsCommandModule<unknown, SchemaListArgs> =
+  {
+    command,
+    describe,
+    handler,
+    builder,
+  };
 
-export default schemaListCommand;
+export default deprecatedListSchemaCommand;

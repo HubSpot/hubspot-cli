@@ -1,187 +1,86 @@
 import { Argv, ArgumentsCamelCase } from 'yargs';
-import { trackCommandUsage } from '../lib/usageTracking.js';
-import { outputLogs } from '../lib/ui/serverlessFunctionLogs.js';
 import {
-  getFunctionLogs,
-  getLatestFunctionLog,
-} from '@hubspot/local-dev-lib/api/functions';
-import { tailLogs } from '../lib/serverlessLogs.js';
-import { promptUser } from '../lib/prompts/promptUtils.js';
-import { EXIT_CODES } from '../lib/enums/exitCodes.js';
-import { isHubSpotHttpError } from '@hubspot/local-dev-lib/errors/index';
-import {
-  CommonArgs,
-  ConfigArgs,
-  AccountArgs,
-  YargsCommandModule,
-  EnvironmentArgs,
-} from '../types/Yargs.js';
+  uiCommandRelocatedMessage,
+  uiCommandRenamedDescription,
+  uiDeprecatedTag,
+} from '../lib/ui/index.js';
+import { YargsCommandModule } from '../types/Yargs.js';
+import functionLogsCommand, { LogsArgs } from './cms/function/logs.js';
 import { makeYargsBuilder } from '../lib/yargsUtils.js';
-import {
-  GetFunctionLogsResponse,
-  FunctionLog,
-} from '@hubspot/local-dev-lib/types/Functions';
-import { QueryParams } from '@hubspot/local-dev-lib/types/Http';
-import { uiLogger } from '../lib/ui/logger.js';
 import { commands } from '../lang/en.js';
 
-type LogsArgs = CommonArgs &
-  ConfigArgs &
-  AccountArgs &
-  EnvironmentArgs & {
-    endpoint?: string;
-    latest?: boolean;
-    compact?: boolean;
-    follow?: boolean;
-    limit?: number;
-  };
-
-const handleLogsError = (
-  e: unknown,
-  accountId: number,
-  functionPath: string
-): void => {
-  if (isHubSpotHttpError(e) && (e.status === 404 || e.status == 400)) {
-    uiLogger.error(commands.logs.errors.noLogsFound(functionPath, accountId));
-  }
-};
-
-const endpointLog = async (
-  accountId: number,
-  functionPath: string,
-  options: LogsArgs
-): Promise<void> => {
-  const { limit, latest, follow, compact } = options;
-
-  const requestParams: QueryParams = {
-    limit,
-    latest,
-    follow,
-    endpoint: functionPath,
-  };
-
-  uiLogger.debug(commands.logs.gettingLogs(latest, functionPath));
-
-  let logsResp: GetFunctionLogsResponse | FunctionLog | undefined;
-
-  if (follow) {
-    const tailCall = (after?: string) =>
-      getFunctionLogs(accountId, functionPath, { after });
-    const fetchLatest = () => {
-      try {
-        return getLatestFunctionLog(accountId, functionPath);
-      } catch (e) {
-        handleLogsError(e, accountId, functionPath);
-        return Promise.reject(e);
-      }
-    };
-
-    await tailLogs(accountId, functionPath, fetchLatest, tailCall, compact);
-  } else if (latest) {
-    try {
-      const { data } = await getLatestFunctionLog(accountId, functionPath);
-      logsResp = data;
-    } catch (e) {
-      handleLogsError(e, accountId, functionPath);
-      process.exit(EXIT_CODES.ERROR);
-    }
-  } else {
-    try {
-      const { data } = await getFunctionLogs(
-        accountId,
-        functionPath,
-        requestParams
-      );
-      logsResp = data;
-    } catch (e) {
-      handleLogsError(e, accountId, functionPath);
-      process.exit(EXIT_CODES.ERROR);
-    }
-  }
-
-  if (logsResp) {
-    return outputLogs(logsResp, { compact });
-  }
-};
-
 const command = 'logs [endpoint]';
-const describe = commands.logs.describe;
+const describe = uiDeprecatedTag(functionLogsCommand.describe as string, false);
 
-const handler = async (
-  options: ArgumentsCamelCase<LogsArgs>
-): Promise<void> => {
-  const { endpoint: endpointArgValue, latest, derivedAccountId } = options;
+async function handler(args: ArgumentsCamelCase<LogsArgs>) {
+  uiCommandRelocatedMessage('hs cms function logs');
 
-  trackCommandUsage(
-    'logs',
-    latest ? { action: 'latest' } : {},
-    derivedAccountId
-  );
+  await functionLogsCommand.handler(args);
+}
 
-  const { endpointPromptValue } = await promptUser<{
-    endpointPromptValue: string;
-  }>({
-    name: 'endpointPromptValue',
-    message: commands.logs.endpointPrompt,
-    when: !endpointArgValue,
-  });
-
-  await endpointLog(
-    derivedAccountId,
-    endpointArgValue || endpointPromptValue,
-    options
-  );
-};
-
-function logsBuilder(yargs: Argv): Argv<LogsArgs> {
+function deprecatedLogsBuilder(yargs: Argv): Argv<LogsArgs> {
   yargs.positional('endpoint', {
-    describe: commands.logs.positionals.endpoint.describe,
+    describe:
+      commands.cms.subcommands.function.subcommands.logs.positionals.endpoint
+        .describe,
     type: 'string',
   });
   yargs
     .options({
       latest: {
         alias: 'l',
-        describe: commands.logs.options.latest.describe,
+        describe:
+          commands.cms.subcommands.function.subcommands.logs.options.latest
+            .describe,
         type: 'boolean',
       },
       compact: {
-        describe: commands.logs.options.compact.describe,
+        describe:
+          commands.cms.subcommands.function.subcommands.logs.options.compact
+            .describe,
         type: 'boolean',
       },
       follow: {
         alias: ['f'],
-        describe: commands.logs.options.follow.describe,
+        describe:
+          commands.cms.subcommands.function.subcommands.logs.options.follow
+            .describe,
         type: 'boolean',
       },
       limit: {
-        describe: commands.logs.options.limit.describe,
+        describe:
+          commands.cms.subcommands.function.subcommands.logs.options.limit
+            .describe,
         type: 'number',
       },
     })
     .conflicts('follow', 'limit');
 
-  yargs.example([
-    ['$0 logs my-endpoint', commands.logs.examples.default],
-    ['$0 logs my-endpoint --limit=10', commands.logs.examples.limit],
-    ['$0 logs my-endpoint --follow', commands.logs.examples.follow],
-  ]);
-
   return yargs as Argv<LogsArgs>;
 }
 
-const builder = makeYargsBuilder<LogsArgs>(logsBuilder, command, describe, {
-  useGlobalOptions: true,
-  useConfigOptions: true,
-  useAccountOptions: true,
-  useEnvironmentOptions: true,
-});
+const verboseDescribe = uiCommandRenamedDescription(
+  functionLogsCommand.describe,
+  'hs cms function logs'
+);
 
-const logsCommand: YargsCommandModule<unknown, LogsArgs> = {
+const builder = makeYargsBuilder<LogsArgs>(
+  deprecatedLogsBuilder,
   command,
+  verboseDescribe,
+  {
+    useGlobalOptions: true,
+    useConfigOptions: true,
+    useAccountOptions: true,
+    useEnvironmentOptions: true,
+  }
+);
+
+const deprecatedLogsCommand: YargsCommandModule<unknown, LogsArgs> = {
+  ...functionLogsCommand,
   describe,
-  builder,
   handler,
+  builder,
 };
 
-export default logsCommand;
+export default deprecatedLogsCommand;

@@ -9,8 +9,10 @@ import { http } from '@hubspot/local-dev-lib/http';
 import { formatTextContents } from '../../utils/content.js';
 import { isHubSpotHttpError } from '@hubspot/local-dev-lib/errors/index';
 import { getAccountId } from '@hubspot/local-dev-lib/config';
+import { absoluteCurrentWorkingDirectory } from './constants.js';
 
 const inputSchema = {
+  absoluteCurrentWorkingDirectory,
   appId: z
     .string()
     .regex(/^\d+$/, 'App ID must be a numeric string')
@@ -57,6 +59,7 @@ export class GetApiUsagePatternsByAppIdTool extends Tool<GetApiUsagePatternsByAp
   }
 
   async handler({
+    absoluteCurrentWorkingDirectory,
     appId,
     startDate,
     endDate,
@@ -69,7 +72,10 @@ export class GetApiUsagePatternsByAppIdTool extends Tool<GetApiUsagePatternsByAp
 
       if (!accountId) {
         const authErrorMessage = `No account ID found. Please run \`hs account auth\` to configure an account, or set a default account with \`hs account use <account>\``;
-        return formatTextContents(authErrorMessage);
+        return formatTextContents(
+          absoluteCurrentWorkingDirectory,
+          authErrorMessage
+        );
       }
 
       const response = await http.get<GetApiUsagePatternsByAppIdResponse>(
@@ -86,15 +92,21 @@ export class GetApiUsagePatternsByAppIdTool extends Tool<GetApiUsagePatternsByAp
       // Format the response for display
       const { data } = response;
       const formattedResult = JSON.stringify(data, null, 2);
-      return formatTextContents(formattedResult);
+      return formatTextContents(
+        absoluteCurrentWorkingDirectory,
+        formattedResult
+      );
     } catch (error) {
       if (isHubSpotHttpError(error)) {
         // Handle HubSpot-specific HTTP errors
-        return formatTextContents(error.toString());
+        return formatTextContents(
+          absoluteCurrentWorkingDirectory,
+          error.toString()
+        );
       }
 
       const errorMessage = `${error instanceof Error ? error.message : String(error)}`;
-      return formatTextContents(errorMessage);
+      return formatTextContents(absoluteCurrentWorkingDirectory, errorMessage);
     }
   }
 

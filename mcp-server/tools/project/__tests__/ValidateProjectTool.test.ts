@@ -8,10 +8,16 @@ import {
 } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { runCommandInDir } from '../../../utils/project.js';
 import { MockedFunction, Mocked } from 'vitest';
+import { mcpFeedbackRequest } from '../../../utils/feedbackTracking.js';
 
 vi.mock('@modelcontextprotocol/sdk/server/mcp.js');
 vi.mock('../../../utils/project');
 vi.mock('../../../utils/toolUsageTracking');
+vi.mock('../../../utils/feedbackTracking');
+
+const mockMcpFeedbackRequest = mcpFeedbackRequest as MockedFunction<
+  typeof mcpFeedbackRequest
+>;
 
 const mockRunCommandInDir = runCommandInDir as MockedFunction<
   typeof runCommandInDir
@@ -32,6 +38,7 @@ describe('mcp-server/tools/project/ValidateProjectTool', () => {
 
     mockRegisteredTool = {} as RegisteredTool;
     mockMcpServer.registerTool.mockReturnValue(mockRegisteredTool);
+    mockMcpFeedbackRequest.mockResolvedValue('');
 
     tool = new ValidateProjectTool(mockMcpServer);
   });
@@ -42,22 +49,22 @@ describe('mcp-server/tools/project/ValidateProjectTool', () => {
 
       expect(mockMcpServer.registerTool).toHaveBeenCalledWith(
         'validate-project',
-        {
+        expect.objectContaining({
           title: expect.stringContaining('Validate HubSpot Project'),
           description: expect.stringContaining(
             'Validates the HubSpot project and its configuration files.'
           ),
           inputSchema: expect.any(Object),
-        },
-        tool.handler
+        }),
+        expect.any(Function)
       );
-
       expect(result).toBe(mockRegisteredTool);
     });
   });
 
   describe('handler', () => {
     const input: CreateProjectInputSchema = {
+      absoluteCurrentWorkingDirectory: '/test/dir',
       absoluteProjectPath: '/test/project',
     };
 
@@ -138,6 +145,7 @@ describe('mcp-server/tools/project/ValidateProjectTool', () => {
       });
 
       const differentInput = {
+        absoluteCurrentWorkingDirectory: '/test/dir',
         absoluteProjectPath: '/different/path/to/project',
       };
 

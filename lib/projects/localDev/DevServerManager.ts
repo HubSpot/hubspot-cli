@@ -1,18 +1,11 @@
-import { Environment } from '@hubspot/local-dev-lib/types/Config';
-import { logger } from '@hubspot/local-dev-lib/logger';
-import {
-  getHubSpotApiOrigin,
-  getHubSpotWebsiteOrigin,
-} from '@hubspot/local-dev-lib/urls';
-import { getAccountConfig } from '@hubspot/local-dev-lib/config';
 import AppDevModeInterface from './AppDevModeInterface.js';
 import { lib } from '../../../lang/en.js';
 import LocalDevState from './LocalDevState.js';
 import LocalDevLogger from './LocalDevLogger.js';
+import UIExtensionsDevModeInterface from './UIExtensionsDevModeInterface.js';
 
 type DevServerInterface = {
-  // eslint-disable-next-line @typescript-eslint/no-unsafe-function-type
-  setup?: Function;
+  setup?: () => Promise<void>;
   start?: () => Promise<void>;
   fileChange?: (filePath: string, event: string) => Promise<void>;
   cleanup?: () => Promise<void>;
@@ -27,18 +20,21 @@ class DevServerManager {
   private initialized: boolean;
   private started: boolean;
   private devServers: DevServerInterface[];
-  private localDevState: LocalDevState;
 
   constructor(options: DevServerManagerConstructorOptions) {
     this.initialized = false;
     this.started = false;
-    this.localDevState = options.localDevState;
 
     const AppsDevServer = new AppDevModeInterface({
       localDevState: options.localDevState,
       localDevLogger: options.logger,
     });
-    this.devServers = [AppsDevServer];
+
+    const UIExtensionsDevServer = new UIExtensionsDevModeInterface({
+      localDevState: options.localDevState,
+    });
+
+    this.devServers = [AppsDevServer, UIExtensionsDevServer];
   }
 
   private async iterateDevServers(
@@ -48,27 +44,12 @@ class DevServerManager {
   }
 
   async setup(): Promise<void> {
-    let env: Environment;
-    const accountConfig = getAccountConfig(
-      this.localDevState.targetTestingAccountId
-    );
-    if (accountConfig) {
-      env = accountConfig.env;
-    }
-    await this.iterateDevServers(async serverInterface => {
-      if (serverInterface.setup) {
-        // @TODO: In the future, update UIE Dev Server to use LocalDevState
-        await serverInterface.setup({
-          components: this.localDevState.projectNodes,
-          profileData: this.localDevState.projectProfileData,
-          logger,
-          urls: {
-            api: getHubSpotApiOrigin(env),
-            web: getHubSpotWebsiteOrigin(env),
-          },
-        });
+    for (const devServer of this.devServers) {
+      if (devServer.setup) {
+        // Run setup functions in order
+        await devServer.setup();
       }
-    });
+    }
 
     this.initialized = true;
   }

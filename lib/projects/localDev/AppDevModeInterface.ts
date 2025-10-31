@@ -4,8 +4,6 @@ import {
   fetchPublicAppProductionInstallCounts,
   installStaticAuthAppOnTestAccount,
 } from '@hubspot/local-dev-lib/api/appsDev';
-import { DevModeUnifiedInterface as UIEDevModeInterface } from '@hubspot/ui-extensions-dev-server';
-import { requestPorts } from '@hubspot/local-dev-lib/portManager';
 import { getAccountConfig } from '@hubspot/local-dev-lib/config';
 import { PublicApp } from '@hubspot/local-dev-lib/types/Apps';
 
@@ -37,6 +35,7 @@ import { AppLocalDevData } from '../../../types/LocalDev.js';
 import { isDeveloperTestAccount, isSandbox } from '../../accountTypes.js';
 import { IntermediateRepresentationNodeLocalDev } from '@hubspot/project-parsing-lib';
 import SpinniesManager from '../../ui/SpinniesManager.js';
+import { isServerRunningAtUrl } from '../../http.js';
 
 type AppDevModeInterfaceConstructorOptions = {
   localDevState: LocalDevState;
@@ -80,11 +79,20 @@ class AppDevModeInterface {
     return this._appNode;
   }
 
-  private get appData(): AppLocalDevData | undefined {
+  private get appData(): AppLocalDevData {
+    // These checks are primarily for type safety
+    // App data will never be accessed before being set
     if (!this.appNode) {
-      return undefined;
+      uiLogger.log(lib.AppDevModeInterface.appDataNotFound);
+      process.exit(EXIT_CODES.ERROR);
     }
-    return this.localDevState.getAppDataByUid(this.appNode.uid);
+
+    const data = this.localDevState.getAppDataByUid(this.appNode.uid);
+    if (!data) {
+      uiLogger.log(lib.AppDevModeInterface.appDataNotFound);
+      process.exit(EXIT_CODES.ERROR);
+    }
+    return data;
   }
 
   private set appData(appData: AppLocalDevData) {
@@ -131,7 +139,7 @@ class AppDevModeInterface {
       return getOauthAppInstallUrl({
         targetAccountId: this.localDevState.targetTestingAccountId,
         env: this.localDevState.env,
-        clientId: this.appData!.clientId, // This is only called after checking that appData exists
+        clientId: this.appData.clientId,
         scopes: this.appNode.config.auth.requiredScopes,
         redirectUrls: this.appNode.config.auth.redirectUrls,
       });
@@ -140,7 +148,7 @@ class AppDevModeInterface {
     return getStaticAuthAppInstallUrl({
       targetAccountId: this.localDevState.targetTestingAccountId,
       env: this.localDevState.env,
-      appId: this.appData!.id,
+      appId: this.appData.id,
     });
   }
 
@@ -189,7 +197,7 @@ class AppDevModeInterface {
   }
 
   private async checkMarketplaceAppInstalls(): Promise<void> {
-    if (!this.appData || !this.marketplaceAppInstalls) {
+    if (!this.marketplaceAppInstalls) {
       return;
     }
 
@@ -254,21 +262,21 @@ class AppDevModeInterface {
 
     SpinniesManager.add('autoInstallStaticAuthApp', {
       text: lib.AppDevModeInterface.autoInstallStaticAuthApp.installing(
-        this.appData!.name,
+        this.appData.name,
         this.localDevState.targetTestingAccountId
       ),
     });
 
     try {
       await installStaticAuthAppOnTestAccount(
-        this.appData!.id,
+        this.appData.id,
         this.localDevState.targetTestingAccountId,
-        this.appData!.scopeGroupIds
+        this.appData.scopeGroupIds
       );
 
       SpinniesManager.succeed('autoInstallStaticAuthApp', {
         text: lib.AppDevModeInterface.autoInstallStaticAuthApp.success(
-          this.appData!.name,
+          this.appData.name,
           this.localDevState.targetTestingAccountId
         ),
       });
@@ -276,7 +284,7 @@ class AppDevModeInterface {
     } catch (e) {
       SpinniesManager.fail('autoInstallStaticAuthApp', {
         text: lib.AppDevModeInterface.autoInstallStaticAuthApp.error(
-          this.appData!.name,
+          this.appData.name,
           this.localDevState.targetTestingAccountId
         ),
         failColor: 'white',
@@ -308,7 +316,7 @@ class AppDevModeInterface {
     needsInstall?: boolean;
     isReinstall?: boolean;
   }> {
-    if (!this.appNode || !this.appData) {
+    if (!this.appNode) {
       return {};
     }
 
@@ -345,6 +353,25 @@ class AppDevModeInterface {
     return { needsInstall: !isInstalledWithScopeGroups, isReinstall };
   }
 
+  private async validateOauthAppRedirectUrl(): Promise<void> {
+    const redirectUrl = this.appNode?.config.auth.redirectUrls[0];
+
+    if (!redirectUrl) {
+      return;
+    }
+
+    const serverIsRunningAtRedirectUrl =
+      await isServerRunningAtUrl(redirectUrl);
+
+    if (!serverIsRunningAtRedirectUrl) {
+      uiLogger.log('');
+      uiLogger.error(
+        lib.AppDevModeInterface.oauthAppRedirectUrlError(redirectUrl)
+      );
+      process.exit(EXIT_CODES.ERROR);
+    }
+  }
+
   private resolveAppInstallPromise(): void {
     if (this.appInstallResolve) {
       this.appInstallResolve();
@@ -356,7 +383,7 @@ class AppDevModeInterface {
     this.resolveAppInstallPromise();
 
     this.appData = {
-      ...this.appData!,
+      ...this.appData,
       installationState: APP_INSTALLATION_STATES.INSTALLED,
     };
   }
@@ -427,9 +454,7 @@ class AppDevModeInterface {
     );
   }
 
-  // @ts-expect-error TODO: reconcile types between CLI and UIE Dev Server
-  // In the future, update UIE Dev Server to use LocalDevState
-  async setup(args): Promise<void> {
+  async setup(): Promise<void> {
     if (!this.appNode) {
       return;
     }
@@ -457,6 +482,10 @@ class AppDevModeInterface {
           });
         }
 
+        if (this.isOAuthApp()) {
+          await this.validateOauthAppRedirectUrl();
+        }
+
         this.localDevState.addListener(
           'devServerMessage',
           this.onDevServerMessage
@@ -476,39 +505,14 @@ class AppDevModeInterface {
     } catch (e) {
       logError(e);
     }
-
-    this.localDevState.addListener('projectNodes', this.onChangeProjectNodes);
-
-    return UIEDevModeInterface.setup(args);
   }
 
   async start() {
-    if (!this.appNode) {
-      return;
-    }
-
-    return UIEDevModeInterface.start({
-      accountId: this.localDevState.targetTestingAccountId,
-      // @ts-expect-error TODO: reconcile types between CLI and UIE Dev Server
-      projectConfig: this.localDevState.projectConfig,
-      requestPorts,
-    });
+    this.localDevState.addListener('projectNodes', this.onChangeProjectNodes);
   }
-  async fileChange(filePath: string, event: string) {
-    if (!this.appNode) {
-      return;
-    }
 
-    return UIEDevModeInterface.fileChange(filePath, event);
-  }
   async cleanup() {
-    if (!this.appNode) {
-      return;
-    }
-
     this.removeStateListeners();
-
-    return UIEDevModeInterface.cleanup();
   }
 }
 

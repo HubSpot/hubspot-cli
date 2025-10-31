@@ -245,6 +245,16 @@ export function uiDeprecatedDescription(
   return uiDeprecatedTag(tag);
 }
 
+export function uiCommandRenamedDescription(
+  describe: string | false | undefined,
+  newCommand: string
+): string | undefined {
+  return uiDeprecatedTag(
+    `${describe} ${uiMessages.commandRenamedMessage(newCommand)}`,
+    false
+  );
+}
+
 export function uiDeprecatedMessage(
   command: string,
   url?: string,
@@ -254,6 +264,12 @@ export function uiDeprecatedMessage(
 
   uiLogger.log('');
   uiDeprecatedTag(tag);
+  uiLogger.log('');
+}
+
+export function uiCommandRelocatedMessage(newCommand: string): void {
+  uiLogger.log('');
+  uiDeprecatedTag(uiMessages.commandRenamedMessage(newCommand));
   uiLogger.log('');
 }
 

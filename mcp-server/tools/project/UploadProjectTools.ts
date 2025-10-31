@@ -4,13 +4,17 @@ import {
   RegisteredTool,
 } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { runCommandInDir } from '../../utils/project.js';
-import { absoluteProjectPath } from './constants.js';
+import {
+  absoluteCurrentWorkingDirectory,
+  absoluteProjectPath,
+} from './constants.js';
 import z from 'zod';
 import { formatTextContents } from '../../utils/content.js';
 import { trackToolUsage } from '../../utils/toolUsageTracking.js';
 
 const inputSchema = {
   absoluteProjectPath,
+  absoluteCurrentWorkingDirectory,
 };
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -27,6 +31,7 @@ export class UploadProjectTools extends Tool<InputSchemaType> {
   }
   async handler({
     absoluteProjectPath,
+    absoluteCurrentWorkingDirectory,
   }: InputSchemaType): Promise<TextContentResponse> {
     await trackToolUsage(toolName);
     const { stdout, stderr } = await runCommandInDir(
@@ -34,7 +39,7 @@ export class UploadProjectTools extends Tool<InputSchemaType> {
       `hs project upload --force-create`
     );
 
-    return formatTextContents(stdout, stderr);
+    return formatTextContents(absoluteCurrentWorkingDirectory, stdout, stderr);
   }
   register(): RegisteredTool {
     return this.mcpServer.registerTool(

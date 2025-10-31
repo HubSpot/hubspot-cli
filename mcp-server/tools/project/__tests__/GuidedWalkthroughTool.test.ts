@@ -5,12 +5,17 @@ import {
 } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { execAsync } from '../../../utils/command.js';
 import { MockedFunction, Mocked } from 'vitest';
+import { mcpFeedbackRequest } from '../../../utils/feedbackTracking.js';
 
 vi.mock('@modelcontextprotocol/sdk/server/mcp.js');
 vi.mock('../../../utils/command');
 vi.mock('../../../utils/toolUsageTracking');
+vi.mock('../../../utils/feedbackTracking');
 
 const mockExecAsync = execAsync as unknown as MockedFunction<typeof execAsync>;
+const mockMcpFeedbackRequest = mcpFeedbackRequest as MockedFunction<
+  typeof mcpFeedbackRequest
+>;
 
 describe('mcp-server/tools/project/GuidedWalkthroughTool', () => {
   let mockMcpServer: Mocked<McpServer>;
@@ -27,24 +32,26 @@ describe('mcp-server/tools/project/GuidedWalkthroughTool', () => {
 
     mockRegisteredTool = {} as RegisteredTool;
     mockMcpServer.registerTool.mockReturnValue(mockRegisteredTool);
+    mockMcpFeedbackRequest.mockResolvedValue('');
 
     tool = new GuidedWalkthroughTool(mockMcpServer);
   });
 
   describe('register', () => {
-    it('should register tool with correct parameters', () => {
+    it('should register tool with correct parameters and enhanced description', () => {
       const result = tool.register();
 
       expect(mockMcpServer.registerTool).toHaveBeenCalledWith(
         'guided-walkthrough-cli',
-        {
+        expect.objectContaining({
           title: 'Guided walkthrough of the CLI',
-          description: 'Give the user a guided walkthrough of the HubSpot CLI.',
+          description: expect.stringContaining(
+            'Give the user a guided walkthrough of the HubSpot CLI'
+          ),
           inputSchema: expect.any(Object),
-        },
-        tool.handler
+        }),
+        expect.any(Function)
       );
-
       expect(result).toBe(mockRegisteredTool);
     });
   });
@@ -57,7 +64,10 @@ describe('mcp-server/tools/project/GuidedWalkthroughTool', () => {
         stderr: '',
       });
 
-      const result = await tool.handler({ command: 'hs init' });
+      const result = await tool.handler({
+        absoluteCurrentWorkingDirectory: '/test/dir',
+        command: 'hs init',
+      });
 
       expect(mockExecAsync).toHaveBeenCalledWith('hs init --help');
       expect(result.content).toHaveLength(1);
@@ -72,7 +82,10 @@ describe('mcp-server/tools/project/GuidedWalkthroughTool', () => {
         stderr: '',
       });
 
-      const result = await tool.handler({ command: 'hs auth' });
+      const result = await tool.handler({
+        absoluteCurrentWorkingDirectory: '/test/dir',
+        command: 'hs auth',
+      });
 
       expect(mockExecAsync).toHaveBeenCalledWith('hs auth --help');
       expect(result.content[0].text).toContain(helpOutput);
@@ -87,7 +100,10 @@ describe('mcp-server/tools/project/GuidedWalkthroughTool', () => {
         stderr: '',
       });
 
-      const result = await tool.handler({ command: 'hs project create' });
+      const result = await tool.handler({
+        absoluteCurrentWorkingDirectory: '/test/dir',
+        command: 'hs project create',
+      });
 
       expect(mockExecAsync).toHaveBeenCalledWith('hs project create --help');
       expect(result.content[0].text).toContain(helpOutput);
@@ -102,7 +118,10 @@ describe('mcp-server/tools/project/GuidedWalkthroughTool', () => {
         stderr: '',
       });
 
-      const result = await tool.handler({ command: 'hs project upload' });
+      const result = await tool.handler({
+        absoluteCurrentWorkingDirectory: '/test/dir',
+        command: 'hs project upload',
+      });
 
       expect(mockExecAsync).toHaveBeenCalledWith('hs project upload --help');
       expect(result.content[0].text).toContain(helpOutput);
@@ -118,14 +137,19 @@ describe('mcp-server/tools/project/GuidedWalkthroughTool', () => {
       });
 
       // Test with a command that doesn't have a next command
-      const result = await tool.handler({ command: 'hs project upload' });
+      const result = await tool.handler({
+        absoluteCurrentWorkingDirectory: '/test/dir',
+        command: 'hs project upload',
+      });
 
       expect(result.content[0].text).toContain(helpOutput);
       expect(result.content[0].text).toContain('hs project dev');
     });
 
     it('should handle no command provided', async () => {
-      const result = await tool.handler({});
+      const result = await tool.handler({
+        absoluteCurrentWorkingDirectory: '/test/dir',
+      });
 
       expect(mockExecAsync).not.toHaveBeenCalled();
       expect(result.content).toEqual([
@@ -137,7 +161,10 @@ describe('mcp-server/tools/project/GuidedWalkthroughTool', () => {
     });
 
     it('should handle undefined command', async () => {
-      const result = await tool.handler({ command: undefined });
+      const result = await tool.handler({
+        absoluteCurrentWorkingDirectory: '/test/dir',
+        command: undefined,
+      });
 
       expect(mockExecAsync).not.toHaveBeenCalled();
       expect(result.content).toEqual([
@@ -152,9 +179,12 @@ describe('mcp-server/tools/project/GuidedWalkthroughTool', () => {
       const error = new Error('Command not found');
       mockExecAsync.mockRejectedValue(error);
 
-      await expect(tool.handler({ command: 'hs init' })).rejects.toThrow(
-        'Command not found'
-      );
+      await expect(
+        tool.handler({
+          absoluteCurrentWorkingDirectory: '/test/dir',
+          command: 'hs init',
+        })
+      ).rejects.toThrow('Command not found');
     });
 
     it('should format help text with proper instructions', async () => {
@@ -164,7 +194,10 @@ describe('mcp-server/tools/project/GuidedWalkthroughTool', () => {
         stderr: '',
       });
 
-      const result = await tool.handler({ command: 'hs init' });
+      const result = await tool.handler({
+        absoluteCurrentWorkingDirectory: '/test/dir',
+        command: 'hs init',
+      });
 
       expect(result.content[0].text).toContain(
         'Display this help output for the user amd wait for them to acknowledge:'

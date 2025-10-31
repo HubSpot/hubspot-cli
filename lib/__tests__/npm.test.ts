@@ -4,7 +4,7 @@ import {
   getLatestCliVersion,
   DEFAULT_PACKAGE_MANAGER,
 } from '../npm.js';
-import pkg from '../../package.json' with { type: 'json' };
+import { pkg } from '../jsonLoader.js';
 import { Mock } from 'vitest';
 
 vi.mock('../../ui/logger.js');

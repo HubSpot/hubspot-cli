@@ -61,7 +61,11 @@ export class HsListFunctionsTool extends Tool<HsListFunctionsInputSchema> {
         command
       );
 
-      return formatTextContents(stdout, stderr);
+      return formatTextContents(
+        absoluteCurrentWorkingDirectory,
+        stdout,
+        stderr
+      );
     } catch (error) {
       const errorMessage =
         error instanceof Error ? error.message : String(error);

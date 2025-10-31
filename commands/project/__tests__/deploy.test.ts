@@ -19,11 +19,16 @@ import * as promptUtils from '../../../lib/prompts/promptUtils.js';
 import { trackCommandUsage } from '../../../lib/usageTracking.js';
 import { EXIT_CODES } from '../../../lib/enums/exitCodes.js';
 import { ProjectConfig } from '../../../types/Projects.js';
-import exampleProject from './fixtures/exampleProject.json' with { type: 'json' };
+import { loadJson } from '../../../lib/jsonLoader.js';
 import {
   mockHubSpotHttpResponse,
   mockHubSpotHttpError,
 } from '../../../lib/testUtils.js';
+
+const exampleProject = loadJson<Project>(
+  import.meta.url,
+  './fixtures/exampleProject.json'
+);
 import projectDeployCommand, { ProjectDeployArgs } from '../deploy.js';
 import { uiLogger } from '../../../lib/ui/logger.js';
 
@@ -263,7 +268,7 @@ describe('commands/project/deploy', () => {
     });
 
     it('should log an error and exit when buildId option is not a valid build', async () => {
-      args.buildId = exampleProject.latestBuild.buildId + 1;
+      args.buildId = (exampleProject.latestBuild?.buildId ?? 0) + 1;
       await projectDeployCommand.handler(args);
       expect(uiLogger.error).toHaveBeenCalledTimes(1);
       expect(uiLogger.error).toHaveBeenCalledWith(
@@ -291,7 +296,7 @@ describe('commands/project/deploy', () => {
     it('should prompt for build id if no option is provided', async () => {
       delete args.buildId;
       promptUserSpy.mockResolvedValue({
-        buildId: exampleProject.latestBuild.buildId,
+        buildId: exampleProject.latestBuild?.buildId ?? 0,
       });
       await projectDeployCommand.handler(args);
       expect(promptUserSpy).toHaveBeenCalledTimes(1);

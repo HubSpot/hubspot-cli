@@ -9,6 +9,7 @@ import {
   LOCAL_DEV_UI_MESSAGE_SEND_TYPES,
   LOCAL_DEV_SERVER_MESSAGE_TYPES,
   CONFIG_LOCAL_STATE_FLAGS,
+  LOCAL_DEV_WEBSOCKET_SERVER_INSTANCE_ID,
 } from '../../constants.js';
 import {
   AppLocalDevData,
@@ -26,9 +27,8 @@ import {
   isAppInstallSuccessWebsocketMessage,
   isAppInstallInitiatedWebsocketMessage,
 } from './localDevWebsocketServerUtils.js';
-import pkg from '../../../package.json' with { type: 'json' };
+import { pkg } from '../../jsonLoader.js';
 
-const SERVER_INSTANCE_ID = 'local-dev-ui-websocket-server';
 const LOCAL_DEV_WEBSOCKET_SERVER_VERSION = 2;
 
 const LOG_PREFIX = '[LocalDevWebsocketServer]';
@@ -265,8 +265,10 @@ class LocalDevWebsocketServer {
       );
     }
 
-    const portData = await requestPorts([{ instanceId: SERVER_INSTANCE_ID }]);
-    const port = portData[SERVER_INSTANCE_ID];
+    const portData = await requestPorts([
+      { instanceId: LOCAL_DEV_WEBSOCKET_SERVER_INSTANCE_ID },
+    ]);
+    const port = portData[LOCAL_DEV_WEBSOCKET_SERVER_INSTANCE_ID];
 
     this.server = new WebSocketServer({ port });
 

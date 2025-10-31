@@ -1,7 +1,7 @@
 import { getProjectConfig } from '../projects/config.js';
 import { fetchProject } from '@hubspot/local-dev-lib/api/projects';
 import path from 'path';
-import pkg from '../../package.json' with { type: 'json' };
+import { pkg } from '../jsonLoader.js';
 import { uiLogger } from '../ui/logger.js';
 import { Environment } from '@hubspot/local-dev-lib/types/Config';
 import {

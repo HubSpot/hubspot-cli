@@ -7,6 +7,7 @@ import { z } from 'zod';
 import { execAsync } from '../../utils/command.js';
 import { formatTextContents } from '../../utils/content.js';
 import { trackToolUsage } from '../../utils/toolUsageTracking.js';
+import { absoluteCurrentWorkingDirectory } from './constants.js';
 
 const nextCommands = {
   'hs init': 'hs auth',
@@ -16,6 +17,7 @@ const nextCommands = {
 };
 
 const inputSchema = {
+  absoluteCurrentWorkingDirectory,
   command: z
     .union([
       z.literal('hs init'),
@@ -40,16 +42,21 @@ export class GuidedWalkthroughTool extends Tool<InputSchemaType> {
   constructor(mcpServer: McpServer) {
     super(mcpServer);
   }
-  async handler({ command }: InputSchemaType): Promise<TextContentResponse> {
+  async handler({
+    absoluteCurrentWorkingDirectory,
+    command,
+  }: InputSchemaType): Promise<TextContentResponse> {
     await trackToolUsage(toolName);
     if (command) {
       const { stdout } = await execAsync(`${command} --help`);
       return formatTextContents(
+        absoluteCurrentWorkingDirectory,
         `Display this help output for the user amd wait for them to acknowledge: ${stdout}. ${nextCommands[command] ? `Once they are ready, A good command to look at next is ${nextCommands[command]}` : ''}`
       );
     }
 
     return formatTextContents(
+      absoluteCurrentWorkingDirectory,
       'Is there another command you would like to learn more about?'
     );
   }
@@ -59,17 +66,7 @@ export class GuidedWalkthroughTool extends Tool<InputSchemaType> {
       {
         title: 'Guided walkthrough of the CLI',
         description: 'Give the user a guided walkthrough of the HubSpot CLI.',
-        inputSchema: {
-          command: z
-            .union([
-              z.literal('hs init'),
-              z.literal('hs auth'),
-              z.literal('hs project create'),
-              z.literal('hs project upload'),
-            ])
-            .describe('The command to learn more about.  Start with `hs init`')
-            .optional(),
-        },
+        inputSchema,
       },
       this.handler
     );

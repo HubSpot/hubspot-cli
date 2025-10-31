@@ -1,7 +1,7 @@
 import { exec as execAsync } from 'node:child_process';
 import util from 'util';
 import { uiLogger } from './ui/logger.js';
-import pkg from '../package.json' with { type: 'json' };
+import { pkg } from './jsonLoader.js';
 
 export const DEFAULT_PACKAGE_MANAGER = 'npm';
 

@@ -1,7 +1,7 @@
+import { Arguments } from 'yargs';
 import updateNotifier from 'update-notifier';
-
 import { isConfigFlagEnabled } from '@hubspot/local-dev-lib/config';
-import pkg from '../../package.json' with { type: 'json' };
+import { pkg } from '../jsonLoader.js';
 import { UI_COLORS } from '../ui/index.js';
 import SpinniesManager from '../ui/SpinniesManager.js';
 import { lib } from '../../lang/en.js';
@@ -12,6 +12,7 @@ import {
 } from '../npm.js';
 import { debugError } from '../errorHandlers/index.js';
 import { uiLogger } from '../ui/logger.js';
+import { isTargetedCommand } from './commandTargetingUtils.js';
 
 // Default behavior is to check for notifications at most once per day
 // update-notifier stores the last checked date in the user's home directory
@@ -46,7 +47,17 @@ function updateNotification(): void {
   });
 }
 
-export async function autoUpdateCLI() {
+const SKIP_AUTO_UPDATE_COMMANDS = {
+  config: {
+    set: true,
+  },
+};
+
+const preventAutoUpdateForCommand = (commandParts: (string | number)[]) => {
+  return isTargetedCommand(commandParts, SKIP_AUTO_UPDATE_COMMANDS);
+};
+
+export async function autoUpdateCLI(argv: Arguments) {
   // This lets us back to default update-notifier behavior
   let showManualInstallHelp = true;
 
@@ -54,7 +65,8 @@ export async function autoUpdateCLI() {
     notifier &&
     notifier.update &&
     !process.env.SKIP_HUBSPOT_CLI_AUTO_UPDATES &&
-    isConfigFlagEnabled('allowAutoUpdates')
+    isConfigFlagEnabled('allowAutoUpdates') &&
+    !preventAutoUpdateForCommand(argv._)
   ) {
     // Ignore all update notifications if the current version is a pre-release
     if (!notifier.update.current.includes('-')) {

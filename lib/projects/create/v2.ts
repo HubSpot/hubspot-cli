@@ -16,7 +16,6 @@ import {
   ProjectTemplateRepoConfig,
 } from '../../../types/Projects.js';
 import { ProjectMetadata } from '@hubspot/project-parsing-lib/src/lib/project.js';
-import chalk from 'chalk';
 import { SelectProjectTemplatePromptResponse } from '../../prompts/selectProjectTemplatePrompt.js';
 import { isV2Project } from '../platformVersion.js';
 import path from 'path';
@@ -130,8 +129,9 @@ export async function calculateComponentTemplateChoices(
       authType &&
       !supportedAuthTypes.includes(authType.toLowerCase())
     ) {
+      const supportedAuthTypesString = supportedAuthTypes.join(', ');
       disabledReasons.push(
-        commands.project.add.error.authTypeNotAllowed(authType)
+        commands.project.add.error.authTypeNotAllowed(supportedAuthTypesString)
       );
     }
 
@@ -140,8 +140,11 @@ export async function calculateComponentTemplateChoices(
       distribution &&
       !supportedDistributions.includes(distribution.toLowerCase())
     ) {
+      const supportedDistributionsString = supportedDistributions.join(', ');
       disabledReasons.push(
-        commands.project.add.error.distributionNotAllowed(distribution)
+        commands.project.add.error.distributionNotAllowed(
+          supportedDistributionsString
+        )
       );
     }
 
@@ -151,18 +154,16 @@ export async function calculateComponentTemplateChoices(
       const isUngated = await hasFeature(accountId, templateGate);
       if (!isUngated) {
         disabledReasons.unshift(
-          commands.project.add.error.portalDoesNotHaveAccessToThisFeature(
-            accountId
-          )
+          commands.project.add.error.portalDoesNotHaveAccessToThisFeature()
         );
       }
     }
 
     if (disabledReasons.length > 0) {
       disabledComponents.push({
-        name: `[${chalk.yellow('DISABLED')}] ${template.label} -`,
+        name: `${template.label} [${template.cliSelector || template.type}]`,
         value: template,
-        disabled: disabledReasons.join(' '),
+        disabled: `– ${disabledReasons.join(' ')}`,
       });
     } else {
       enabledComponents.push({
@@ -173,12 +174,7 @@ export async function calculateComponentTemplateChoices(
   }
 
   return disabledComponents.length
-    ? [
-        ...enabledComponents,
-        new Separator(),
-        ...disabledComponents,
-        new Separator(),
-      ]
+    ? [...enabledComponents, ...disabledComponents]
     : [...enabledComponents];
 }
 

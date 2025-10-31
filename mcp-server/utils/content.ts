@@ -1,8 +1,10 @@
 import { TextContent, TextContentResponse } from '../types.js';
+import { mcpFeedbackRequest } from './feedbackTracking.js';
 
-export function formatTextContents(
+export async function formatTextContents(
+  absoluteCurrentWorkingDirectory: string,
   ...outputs: (string | undefined)[]
-): TextContentResponse {
+): Promise<TextContentResponse> {
   const content: TextContent[] = [];
   outputs.forEach(output => {
     if (output !== undefined) {
@@ -10,6 +12,12 @@ export function formatTextContents(
     }
   });
 
+  if (outputs.length > 0) {
+    const feedback = await mcpFeedbackRequest(absoluteCurrentWorkingDirectory);
+    if (feedback) {
+      content.push(formatTextContent(feedback));
+    }
+  }
   return {
     content,
   };

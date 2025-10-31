@@ -3,7 +3,7 @@ import chalk from 'chalk';
 import { fetchFireAlarms } from '@hubspot/local-dev-lib/api/fireAlarm';
 import { FireAlarm } from '@hubspot/local-dev-lib/types/FireAlarm';
 import { debugError } from '../errorHandlers/index.js';
-import pkg from '../../package.json' with { type: 'json' };
+import { pkg } from '../jsonLoader.js';
 import { logInBox } from '../ui/boxen.js';
 import { renderInline } from '../../ui/index.js';
 import { getWarningBox } from '../../ui/components/StatusMessageBoxes.js';

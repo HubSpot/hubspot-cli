@@ -1,6 +1,6 @@
 import { addUserAgentHeader } from '@hubspot/local-dev-lib/http';
 import { setRequestHeaders } from '../requestMiddleware.js';
-import pkg from '../../../package.json' with { type: 'json' };
+import { pkg } from '../../jsonLoader.js';
 
 vi.mock('@hubspot/local-dev-lib/http', () => ({
   addUserAgentHeader: vi.fn(),

@@ -240,7 +240,9 @@ export async function syncToPublicRepo({
     logger.log();
     logger.log('Starting sync to public repository...');
     logger.log(`Version: ${version}`);
-    logger.log(`Dry run: ${dryRun}`);
+    if (dryRun) {
+      logger.log('DRY RUN: Will not commit and push changes');
+    }
 
     // Validate we're on the master branch
     const currentBranch = await getGitBranch();

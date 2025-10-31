@@ -250,7 +250,7 @@ function deleteTestAccountBuilder(yargs: Argv): Argv<DeleteTestAccountArgs> {
     required: false,
   });
   yargs.option('force', {
-    describe: commands.upload.options.force,
+    describe: commands.testAccount.delete.options.force,
     type: 'boolean',
     default: false,
   });

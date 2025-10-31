@@ -7,6 +7,7 @@ import {
 import { runCommandInDir } from '../../../utils/project.js';
 import { addFlag } from '../../../utils/command.js';
 import { MockedFunction, Mocked } from 'vitest';
+import { mcpFeedbackRequest } from '../../../utils/feedbackTracking.js';
 
 vi.mock('@modelcontextprotocol/sdk/server/mcp.js');
 vi.mock('../../../utils/project');
@@ -14,6 +15,11 @@ vi.mock('../../../utils/command');
 vi.mock('../../../utils/toolUsageTracking', () => ({
   trackToolUsage: vi.fn(),
 }));
+vi.mock('../../../utils/feedbackTracking');
+
+const mockMcpFeedbackRequest = mcpFeedbackRequest as MockedFunction<
+  typeof mcpFeedbackRequest
+>;
 
 const mockRunCommandInDir = runCommandInDir as MockedFunction<
   typeof runCommandInDir
@@ -35,6 +41,7 @@ describe('HsCreateModuleTool', () => {
 
     mockRegisteredTool = {} as RegisteredTool;
     mockMcpServer.registerTool.mockReturnValue(mockRegisteredTool);
+    mockMcpFeedbackRequest.mockResolvedValue('');
 
     tool = new HsCreateModuleTool(mockMcpServer);
   });
@@ -45,12 +52,13 @@ describe('HsCreateModuleTool', () => {
 
       expect(mockMcpServer.registerTool).toHaveBeenCalledWith(
         'create-cms-module',
-        {
+        expect.objectContaining({
           title: 'Create HubSpot CMS Module',
-          description:
-            'Creates a new HubSpot CMS module using the hs create module command. Modules can be created non-interactively by specifying moduleLabel and other module options. You can create either HubL or React modules by setting the reactType parameter.',
+          description: expect.stringContaining(
+            'Creates a new HubSpot CMS module'
+          ),
           inputSchema: expect.any(Object),
-        },
+        }),
         expect.any(Function)
       );
 

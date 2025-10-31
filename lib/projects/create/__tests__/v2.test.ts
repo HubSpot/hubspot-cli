@@ -52,12 +52,12 @@ describe('lib/projects/create/v2', () => {
         mockProjectMetadataForChoices
       );
 
-      expect(choices).toHaveLength(4); // includes separator
+      expect(choices).toHaveLength(2);
       expect(choices[0]).toEqual({
         name: 'Module Component [module]',
         value: mockComponents[0],
       });
-      expect(choices[2]).toEqual({
+      expect(choices[1]).toEqual({
         name: expect.stringContaining('Card Component'),
         value: mockComponents[1],
         disabled: expect.stringContaining('maximum'),
@@ -73,11 +73,11 @@ describe('lib/projects/create/v2', () => {
         mockProjectMetadataForChoices
       );
 
-      // All components should be disabled, so they come after the separator
-      expect(choices[1]).toEqual({
+      // All components should be disabled
+      expect(choices[0]).toEqual({
         name: expect.stringContaining('Module Component'),
         value: mockComponents[0],
-        disabled: expect.stringContaining('privatekey'),
+        disabled: expect.stringContaining('oauth'),
       });
     });
 
@@ -90,11 +90,11 @@ describe('lib/projects/create/v2', () => {
         mockProjectMetadataForChoices
       );
 
-      // All components should be disabled, so they come after the separator
-      expect(choices[1]).toEqual({
+      // All components should be disabled
+      expect(choices[0]).toEqual({
         name: expect.stringContaining('Module Component'),
         value: mockComponents[0],
-        disabled: expect.stringContaining('enterprise'),
+        disabled: expect.stringContaining('private'),
       });
     });
 
@@ -185,8 +185,8 @@ describe('lib/projects/create/v2', () => {
         projectMetadataAtMaxWorkflowAction
       );
 
-      expect(choices).toHaveLength(3); // includes separators
-      expect(choices[1]).toEqual({
+      expect(choices).toHaveLength(1);
+      expect(choices[0]).toEqual({
         name: expect.stringContaining('Workflow Action Tool'),
         value: componentWithCliSelector[0],
         disabled: expect.stringContaining('maximum'),
@@ -265,20 +265,27 @@ describe('lib/projects/create/v2', () => {
         },
       ];
 
+      const projectMetadataWithWorkflowAction = {
+        hsMetaFiles: [],
+        components: {
+          'workflow-action': { count: 0, maxCount: 3, hsMetaFiles: [] },
+        },
+      };
+
       const choices = await calculateComponentTemplateChoices(
         gatedComponent,
         'oauth',
         'private',
         123,
-        mockProjectMetadataForChoices
+        projectMetadataWithWorkflowAction
       );
 
-      expect(choices).toHaveLength(3); // includes separators
-      expect(choices[1]).toEqual({
+      expect(choices).toHaveLength(1);
+      expect(choices[0]).toEqual({
         name: expect.stringContaining('Workflow Action Tool'),
         value: gatedComponent[0],
         disabled: expect.stringContaining(
-          'does not have access to this feature'
+          "doesn't have access to this feature"
         ),
       });
       expect(mockHasFeature).toHaveBeenCalledWith(123, expect.any(String));

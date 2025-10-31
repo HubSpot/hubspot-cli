@@ -5,9 +5,10 @@ import {
 } from '@hubspot/local-dev-lib/config';
 import { API_KEY_AUTH_METHOD } from '@hubspot/local-dev-lib/constants/auth';
 import { uiLogger } from './ui/logger.js';
-import packageJson from '../package.json' with { type: 'json' };
-const version = packageJson.version;
+import { pkg } from './jsonLoader.js';
 import { debugError } from './errorHandlers/index.js';
+
+const version = pkg.version;
 
 type Meta = {
   action?: string; // "The specific action taken in the CLI"

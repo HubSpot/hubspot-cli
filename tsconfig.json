@@ -26,6 +26,7 @@
     "lang",
     "mcp-server",
     "vitest.d.ts",
-    "@types"
+    "@types",
+    "./package.json"
   ]
 }

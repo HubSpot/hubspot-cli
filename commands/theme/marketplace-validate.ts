@@ -1,77 +1,33 @@
 import { Argv, ArgumentsCamelCase } from 'yargs';
-
-import SpinniesManager from '../../lib/ui/SpinniesManager.js';
-import { trackCommandUsage } from '../../lib/usageTracking.js';
 import {
-  kickOffValidation,
-  pollForValidationFinish,
-  fetchValidationResults,
-  processValidationErrors,
-  displayValidationResults,
-} from '../../lib/marketplaceValidate.js';
-import { commands } from '../../lang/en.js';
-import {
-  CommonArgs,
-  ConfigArgs,
-  AccountArgs,
-  EnvironmentArgs,
-  YargsCommandModule,
-} from '../../types/Yargs.js';
+  uiCommandRelocatedMessage,
+  uiCommandRenamedDescription,
+  uiDeprecatedTag,
+} from '../../lib/ui/index.js';
+import { YargsCommandModule } from '../../types/Yargs.js';
+import marketplaceValidateCommand, {
+  ThemeValidateArgs,
+} from '../cms/theme/marketplace-validate.js';
 import { makeYargsBuilder } from '../../lib/yargsUtils.js';
+import { commands } from '../../lang/en.js';
 
 const command = 'marketplace-validate <path>';
-const describe = commands.theme.subcommands.marketplaceValidate.describe;
+const describe = uiDeprecatedTag(
+  marketplaceValidateCommand.describe as string,
+  false
+);
 
-type ThemeValidateArgs = CommonArgs &
-  ConfigArgs &
-  AccountArgs &
-  EnvironmentArgs & { path: string };
+async function handler(args: ArgumentsCamelCase<ThemeValidateArgs>) {
+  uiCommandRelocatedMessage('hs cms theme marketplace-validate');
 
-async function handler(
-  args: ArgumentsCamelCase<ThemeValidateArgs>
-): Promise<void> {
-  const { path, derivedAccountId } = args;
-
-  trackCommandUsage('validate', {}, derivedAccountId);
-
-  SpinniesManager.init();
-
-  SpinniesManager.add('marketplaceValidation', {
-    text: commands.theme.subcommands.marketplaceValidate.logs.validatingTheme(
-      path
-    ),
-  });
-
-  const assetType = 'THEME';
-  const validationId = await kickOffValidation(
-    derivedAccountId,
-    assetType,
-    path
-  );
-  await pollForValidationFinish(derivedAccountId, validationId);
-
-  SpinniesManager.remove('marketplaceValidation');
-
-  const validationResults = await fetchValidationResults(
-    derivedAccountId,
-    validationId
-  );
-  processValidationErrors(
-    commands.theme.subcommands.marketplaceValidate.errors.invalidPath,
-    validationResults
-  );
-  displayValidationResults(
-    commands.theme.subcommands.marketplaceValidate.results,
-    validationResults
-  );
-
-  process.exit();
+  await marketplaceValidateCommand.handler(args);
 }
 
-function themeValidateBuilder(yargs: Argv): Argv<ThemeValidateArgs> {
+function deprecatedThemeValidateBuilder(yargs: Argv): Argv<ThemeValidateArgs> {
   yargs.positional('path', {
     describe:
-      commands.theme.subcommands.marketplaceValidate.positionals.path.describe,
+      commands.cms.subcommands.theme.subcommands.marketplaceValidate.positionals
+        .path.describe,
     type: 'string',
     required: true,
   });
@@ -79,10 +35,15 @@ function themeValidateBuilder(yargs: Argv): Argv<ThemeValidateArgs> {
   return yargs as Argv<ThemeValidateArgs>;
 }
 
+const verboseDescribe = uiCommandRenamedDescription(
+  marketplaceValidateCommand.describe,
+  'hs cms theme marketplace-validate'
+);
+
 const builder = makeYargsBuilder<ThemeValidateArgs>(
-  themeValidateBuilder,
+  deprecatedThemeValidateBuilder,
   command,
-  describe,
+  verboseDescribe,
   {
     useGlobalOptions: true,
     useConfigOptions: true,
@@ -91,11 +52,14 @@ const builder = makeYargsBuilder<ThemeValidateArgs>(
   }
 );
 
-const themeValidateCommand: YargsCommandModule<unknown, ThemeValidateArgs> = {
-  command,
+const deprecatedMarketplaceValidateCommand: YargsCommandModule<
+  unknown,
+  ThemeValidateArgs
+> = {
+  ...marketplaceValidateCommand,
   describe,
   handler,
   builder,
 };
 
-export default themeValidateCommand;
+export default deprecatedMarketplaceValidateCommand;

@@ -59,6 +59,7 @@ export function shouldLoadConfigForCommand(commandParts: (string | number)[]) {
 
 const SKIP_CONFIG_VALIDATION_COMMANDS = {
   auth: true,
+  account: { auth: true },
   mcp: {
     setup: true,
     start: true,

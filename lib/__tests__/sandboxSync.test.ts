@@ -91,7 +91,7 @@ describe('lib/sandboxSync', () => {
       mockedGetAccountId.mockReturnValue(null);
 
       const errorRegex = new RegExp(
-        `Couldn't sync ${mockChildAccount.portalId} because your account has been removed from`
+        `because your account has been removed from`
       );
 
       await expect(

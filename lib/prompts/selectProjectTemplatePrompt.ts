@@ -6,6 +6,7 @@ import {
   ProjectTemplate,
 } from '../../types/Projects.js';
 import { lib } from '../../lang/en.js';
+import { uiLogger } from '../ui/logger.js';
 
 function findTemplateByNameOrLabel(
   projectTemplates: ProjectTemplate[],
@@ -126,6 +127,10 @@ export async function selectProjectTemplatePrompt(
       pageSize: componentTemplates?.length,
     },
   ]);
+
+  if (result.componentTemplates?.length === 0) {
+    uiLogger.log(lib.projects.add.nothingAdded);
+  }
 
   if (!result.componentTemplates) {
     result.componentTemplates = selectedComponents;

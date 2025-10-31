@@ -147,6 +147,9 @@ export const LOCAL_DEV_SERVER_MESSAGE_TYPES = {
   OAUTH_APP_INSTALL_INITIATED: 'APP_INSTALL_INITIATED',
 } as const;
 
+export const LOCAL_DEV_WEBSOCKET_SERVER_INSTANCE_ID =
+  'local-dev-ui-websocket-server';
+
 export const CONFIG_LOCAL_STATE_FLAGS = {
   LOCAL_DEV_UI_WELCOME: 'LOCAL_DEV_UI_WELCOME',
 } as const;

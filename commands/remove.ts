@@ -1,61 +1,41 @@
 import { Argv, ArgumentsCamelCase } from 'yargs';
-import { deleteFile } from '@hubspot/local-dev-lib/api/fileMapper';
-import { logError, ApiErrorContext } from '../lib/errorHandlers/index.js';
-import { trackCommandUsage } from '../lib/usageTracking.js';
-import { commands } from '../lang/en.js';
 import {
-  AccountArgs,
-  CommonArgs,
-  ConfigArgs,
-  EnvironmentArgs,
-  YargsCommandModule,
-} from '../types/Yargs.js';
+  uiCommandRelocatedMessage,
+  uiCommandRenamedDescription,
+  uiDeprecatedTag,
+} from '../lib/ui/index.js';
+import { YargsCommandModule } from '../types/Yargs.js';
+import cmsDeleteCommand, { DeleteArgs } from './cms/delete.js';
 import { makeYargsBuilder } from '../lib/yargsUtils.js';
-import { uiLogger } from '../lib/ui/logger.js';
+import { commands } from '../lang/en.js';
 
 const command = 'remove <path>';
-const describe = commands.remove.describe;
+const describe = uiDeprecatedTag(cmsDeleteCommand.describe as string, false);
 
-type RemoveArgs = CommonArgs &
-  ConfigArgs &
-  EnvironmentArgs &
-  AccountArgs & { path: string };
+async function handler(args: ArgumentsCamelCase<DeleteArgs>) {
+  uiCommandRelocatedMessage('hs cms delete');
 
-async function handler(args: ArgumentsCamelCase<RemoveArgs>): Promise<void> {
-  const { path: hsPath, derivedAccountId } = args;
-
-  trackCommandUsage('remove', undefined, derivedAccountId);
-
-  try {
-    await deleteFile(derivedAccountId, hsPath);
-    uiLogger.log(commands.remove.deleted(hsPath, derivedAccountId));
-  } catch (error) {
-    uiLogger.error(
-      commands.remove.errors.deleteFailed(hsPath, derivedAccountId)
-    );
-    logError(
-      error,
-      new ApiErrorContext({
-        accountId: derivedAccountId,
-        request: hsPath,
-      })
-    );
-  }
+  await cmsDeleteCommand.handler(args);
 }
 
-function cmsRemoveBuilder(yargs: Argv): Argv<RemoveArgs> {
+function deprecatedCmsRemoveBuilder(yargs: Argv): Argv<DeleteArgs> {
   yargs.positional('path', {
-    describe: commands.remove.positionals.path,
+    describe: commands.cms.subcommands.delete.positionals.path,
     type: 'string',
   });
 
-  return yargs as Argv<RemoveArgs>;
+  return yargs as Argv<DeleteArgs>;
 }
 
-const builder = makeYargsBuilder<RemoveArgs>(
-  cmsRemoveBuilder,
+const verboseDescribe = uiCommandRenamedDescription(
+  cmsDeleteCommand.describe,
+  'hs cms delete'
+);
+
+const builder = makeYargsBuilder<DeleteArgs>(
+  deprecatedCmsRemoveBuilder,
   command,
-  describe,
+  verboseDescribe,
   {
     useGlobalOptions: true,
     useConfigOptions: true,
@@ -64,11 +44,11 @@ const builder = makeYargsBuilder<RemoveArgs>(
   }
 );
 
-const cmsRemoveCommand: YargsCommandModule<unknown, RemoveArgs> = {
+const deprecatedCmsRemoveCommand: YargsCommandModule<unknown, DeleteArgs> = {
   command,
   describe,
   handler,
   builder,
 };
 
-export default cmsRemoveCommand;
+export default deprecatedCmsRemoveCommand;

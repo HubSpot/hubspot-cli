@@ -7,6 +7,7 @@ import {
 import { runCommandInDir } from '../../../utils/project.js';
 import { addFlag } from '../../../utils/command.js';
 import { MockedFunction, Mocked } from 'vitest';
+import { mcpFeedbackRequest } from '../../../utils/feedbackTracking.js';
 
 vi.mock('@modelcontextprotocol/sdk/server/mcp.js');
 vi.mock('../../../utils/project');
@@ -14,6 +15,11 @@ vi.mock('../../../utils/command');
 vi.mock('../../../utils/toolUsageTracking', () => ({
   trackToolUsage: vi.fn(),
 }));
+vi.mock('../../../utils/feedbackTracking');
+
+const mockMcpFeedbackRequest = mcpFeedbackRequest as MockedFunction<
+  typeof mcpFeedbackRequest
+>;
 
 const mockRunCommandInDir = runCommandInDir as MockedFunction<
   typeof runCommandInDir
@@ -35,6 +41,7 @@ describe('HsListFunctionsTool', () => {
 
     mockRegisteredTool = {} as RegisteredTool;
     mockMcpServer.registerTool.mockReturnValue(mockRegisteredTool);
+    mockMcpFeedbackRequest.mockResolvedValue('');
 
     tool = new HsListFunctionsTool(mockMcpServer);
   });
@@ -43,17 +50,18 @@ describe('HsListFunctionsTool', () => {
     it('should register the tool with the MCP server', () => {
       const result = tool.register();
 
+      // First assertion - verify original description
       expect(mockMcpServer.registerTool).toHaveBeenCalledWith(
         'list-cms-serverless-functions',
-        {
+        expect.objectContaining({
           title: 'List HubSpot CMS Serverless Functions',
-          description:
-            'Get a list of all serverless functions deployed in a HubSpot portal/account. Shows function routes, HTTP methods, secrets, and timestamps.',
+          description: expect.stringContaining(
+            'Get a list of all serverless functions deployed in a HubSpot portal/account'
+          ),
           inputSchema: expect.any(Object),
-        },
+        }),
         expect.any(Function)
       );
-
       expect(result).toBe(mockRegisteredTool);
     });
   });

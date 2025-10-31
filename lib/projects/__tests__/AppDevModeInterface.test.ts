@@ -18,8 +18,6 @@ import {
   fetchPublicAppProductionInstallCounts,
   installStaticAuthAppOnTestAccount,
 } from '@hubspot/local-dev-lib/api/appsDev';
-import { DevModeUnifiedInterface as UIEDevModeInterface } from '@hubspot/ui-extensions-dev-server';
-import { requestPorts } from '@hubspot/local-dev-lib/portManager';
 import { getAccountConfig } from '@hubspot/local-dev-lib/config';
 
 import AppDevModeInterface from '../localDev/AppDevModeInterface.js';
@@ -36,6 +34,7 @@ import {
 } from '../../app/urls.js';
 import { isDeveloperTestAccount, isSandbox } from '../../accountTypes.js';
 import { logError } from '../../errorHandlers/index.js';
+import { isServerRunningAtUrl } from '../../http.js';
 import {
   APP_AUTH_TYPES,
   APP_DISTRIBUTION_TYPES,
@@ -60,6 +59,7 @@ vi.mock('../../errorHandlers/index');
 vi.mock('../localDev/LocalDevState');
 vi.mock('../localDev/LocalDevLogger');
 vi.mock('../../ui/SpinniesManager');
+vi.mock('../../http');
 
 describe('AppDevModeInterface', () => {
   let appDevModeInterface: AppDevModeInterface;
@@ -183,6 +183,7 @@ describe('AppDevModeInterface', () => {
     });
     (confirmPrompt as Mock).mockResolvedValue(true);
     (installStaticAuthAppOnTestAccount as Mock).mockResolvedValue(undefined);
+    (isServerRunningAtUrl as Mock).mockResolvedValue(true);
 
     // Mock process.exit
     vi.spyOn(global.process, 'exit').mockImplementation(
@@ -255,14 +256,13 @@ describe('AppDevModeInterface', () => {
     it('should return early if no app node exists', async () => {
       mockLocalDevState.projectNodes = {};
 
-      await appDevModeInterface.setup({});
+      await appDevModeInterface.setup();
 
       expect(fetchAppMetadataByUid).not.toHaveBeenCalled();
-      expect(UIEDevModeInterface.setup).not.toHaveBeenCalled();
     });
 
     it('should setup successfully with private app', async () => {
-      await appDevModeInterface.setup({});
+      await appDevModeInterface.setup();
 
       expect(fetchAppMetadataByUid).toHaveBeenCalledWith('test-app-uid', 12345);
       expect(fetchPublicAppProductionInstallCounts).toHaveBeenCalledWith(
@@ -276,7 +276,6 @@ describe('AppDevModeInterface', () => {
         ['test-scope'],
         []
       );
-      expect(UIEDevModeInterface.setup).toHaveBeenCalled();
     });
 
     it('should show marketplace warning for marketplace apps', async () => {
@@ -291,7 +290,7 @@ describe('AppDevModeInterface', () => {
         [marketplaceAppNode.uid]: marketplaceAppNode,
       };
 
-      await appDevModeInterface.setup({});
+      await appDevModeInterface.setup();
 
       expect(confirmPrompt).toHaveBeenCalled();
       expect(mockLocalDevState.addUploadWarning).toHaveBeenCalled();
@@ -323,7 +322,7 @@ describe('AppDevModeInterface', () => {
       });
 
       // The setup method catches the error, so we check that process.exit was called
-      await newAppDevModeInterface.setup({});
+      await newAppDevModeInterface.setup();
 
       expect(process.exit).toHaveBeenCalledWith(0);
     });
@@ -336,7 +335,7 @@ describe('AppDevModeInterface', () => {
         },
       });
 
-      await appDevModeInterface.setup({});
+      await appDevModeInterface.setup();
 
       expect(installStaticAuthAppOnTestAccount).toHaveBeenCalledWith(
         123,
@@ -365,7 +364,7 @@ describe('AppDevModeInterface', () => {
         },
       });
 
-      await appDevModeInterface.setup({});
+      await appDevModeInterface.setup();
 
       expect(getOauthAppInstallUrl).toHaveBeenCalledWith({
         targetAccountId: 67890,
@@ -387,7 +386,7 @@ describe('AppDevModeInterface', () => {
         },
       });
 
-      await appDevModeInterface.setup({});
+      await appDevModeInterface.setup();
 
       expect(installAppBrowserPrompt).toHaveBeenCalledWith(
         'http://static-install-url',
@@ -399,7 +398,7 @@ describe('AppDevModeInterface', () => {
       const error = new Error('Setup failed');
       (fetchAppMetadataByUid as Mock).mockRejectedValue(error);
 
-      await appDevModeInterface.setup({});
+      await appDevModeInterface.setup();
 
       expect(logError).toHaveBeenCalledWith(error);
     });
@@ -426,7 +425,7 @@ describe('AppDevModeInterface', () => {
       });
 
       // The setup method catches the error, so we check that process.exit was called
-      await newAppDevModeInterface.setup({});
+      await newAppDevModeInterface.setup();
 
       expect(process.exit).toHaveBeenCalledWith(0);
     });
@@ -442,7 +441,7 @@ describe('AppDevModeInterface', () => {
         new Error('Install failed')
       );
 
-      await appDevModeInterface.setup({});
+      await appDevModeInterface.setup();
 
       expect(installAppBrowserPrompt).toHaveBeenCalledWith(
         'http://static-install-url',
@@ -452,59 +451,18 @@ describe('AppDevModeInterface', () => {
   });
 
   describe('start()', () => {
-    it('should return early if no app node exists', async () => {
-      mockLocalDevState.projectNodes = {};
-
+    it('should add state listeners', async () => {
       await appDevModeInterface.start();
 
-      expect(UIEDevModeInterface.start).not.toHaveBeenCalled();
-    });
-
-    it('should start UIE dev mode interface', async () => {
-      await appDevModeInterface.start();
-
-      expect(UIEDevModeInterface.start).toHaveBeenCalledWith({
-        accountId: 67890,
-        projectConfig: mockProjectConfig,
-        requestPorts,
-      });
-    });
-  });
-
-  describe('fileChange()', () => {
-    it('should return early if no app node exists', async () => {
-      mockLocalDevState.projectNodes = {};
-
-      await appDevModeInterface.fileChange('test.js', 'change');
-
-      expect(UIEDevModeInterface.fileChange).not.toHaveBeenCalled();
-    });
-
-    it('should forward file change to UIE dev mode interface', async () => {
-      await appDevModeInterface.fileChange('test.js', 'change');
-
-      expect(UIEDevModeInterface.fileChange).toHaveBeenCalledWith(
-        'test.js',
-        'change'
+      expect(mockLocalDevState.addListener).toHaveBeenCalledWith(
+        'projectNodes',
+        // @ts-expect-error access private method for testing
+        appDevModeInterface.onChangeProjectNodes
       );
     });
   });
 
   describe('cleanup()', () => {
-    it('should return early if no app node exists', async () => {
-      mockLocalDevState.projectNodes = {};
-
-      await appDevModeInterface.cleanup();
-
-      expect(UIEDevModeInterface.cleanup).not.toHaveBeenCalled();
-    });
-
-    it('should cleanup UIE dev mode interface', async () => {
-      await appDevModeInterface.cleanup();
-
-      expect(UIEDevModeInterface.cleanup).toHaveBeenCalled();
-    });
-
     it('should remove state listeners', async () => {
       await appDevModeInterface.cleanup();
 
@@ -577,7 +535,7 @@ describe('AppDevModeInterface', () => {
         localDevLogger: mockLocalDevLogger,
       });
 
-      await newAppDevModeInterface.setup({});
+      await newAppDevModeInterface.setup();
 
       expect(installAppBrowserPrompt).toHaveBeenCalled();
     });
@@ -642,7 +600,7 @@ describe('AppDevModeInterface', () => {
         localDevLogger: mockLocalDevLogger,
       });
 
-      await newAppDevModeInterface.setup({});
+      await newAppDevModeInterface.setup();
 
       expect(installAppBrowserPrompt).toHaveBeenCalled();
     });
@@ -697,7 +655,7 @@ describe('AppDevModeInterface', () => {
         localDevLogger: mockLocalDevLogger,
       });
 
-      await newAppDevModeInterface.setup({});
+      await newAppDevModeInterface.setup();
 
       // Simulate websocket server connection
       const addListenerCall = (mockLocalDevState.addListener as Mock).mock

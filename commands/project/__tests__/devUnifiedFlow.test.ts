@@ -7,6 +7,7 @@ import {
   getAccountConfig,
 } from '@hubspot/local-dev-lib/config';
 import { getValidEnv } from '@hubspot/local-dev-lib/environment';
+import { getServerPortByInstanceId } from '@hubspot/local-dev-lib/portManager';
 import { ProjectDevArgs } from '../../../types/Yargs.js';
 import { ProjectConfig } from '../../../types/Projects.js';
 import { logError } from '../../../lib/errorHandlers/index.js';
@@ -54,6 +55,7 @@ vi.mock('@hubspot/ui-extensions-dev-server', () => ({
 vi.mock('@hubspot/project-parsing-lib');
 vi.mock('@hubspot/local-dev-lib/config');
 vi.mock('@hubspot/local-dev-lib/environment');
+vi.mock('@hubspot/local-dev-lib/portManager');
 vi.mock('../../../lib/errorHandlers');
 vi.mock('../../../lib/projects/ensureProjectExists');
 vi.mock('../../../lib/projects/localDev/helpers/project');
@@ -173,6 +175,9 @@ describe('unifiedProjectDevFlow', () => {
     (uiLogger.error as Mock).mockImplementation(() => {});
     (uiLogger.log as Mock).mockImplementation(() => {});
     (uiLine as Mock).mockImplementation(() => {});
+    (getServerPortByInstanceId as Mock).mockRejectedValue(
+      new Error('No server running')
+    );
   });
 
   describe('successful flow', () => {
@@ -548,6 +553,45 @@ describe('unifiedProjectDevFlow', () => {
           providedTestingAccountId
         )
       );
+    });
+  });
+
+  describe('confirmLocalDevIsNotRunning', () => {
+    it('should exit with error when local dev is already running', async () => {
+      (getServerPortByInstanceId as Mock).mockResolvedValue(3000);
+      const mockExit = vi.spyOn(process, 'exit').mockImplementation(() => {
+        throw new Error('Process.exit called');
+      });
+
+      await unifiedProjectDevFlow({
+        args: mockArgs,
+        targetProjectAccountId: mockTargetProjectAccountId,
+        providedTargetTestingAccountId: mockProvidedTargetTestingAccountId,
+        projectConfig: mockProjectConfig,
+        projectDir: mockProjectDir,
+      });
+
+      expect(uiLogger.error).toHaveBeenCalledWith(
+        commands.project.dev.errors.localDevAlreadyRunning
+      );
+      expect(mockExit).toHaveBeenCalledWith(1);
+      mockExit.mockRestore();
+    });
+
+    it('should continue when local dev is not running', async () => {
+      (getServerPortByInstanceId as Mock).mockRejectedValue(
+        new Error('No server running')
+      );
+
+      await unifiedProjectDevFlow({
+        args: mockArgs,
+        targetProjectAccountId: mockTargetProjectAccountId,
+        providedTargetTestingAccountId: mockProvidedTargetTestingAccountId,
+        projectConfig: mockProjectConfig,
+        projectDir: mockProjectDir,
+      });
+
+      expect(mockLocalDevProcess.start).toHaveBeenCalled();
     });
   });
 });

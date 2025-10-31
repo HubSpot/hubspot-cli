@@ -133,9 +133,14 @@ export class CreateProjectTool extends Tool<CreateProjectInputSchema> {
         command
       );
 
-      return formatTextContents(stdout, stderr);
+      return formatTextContents(
+        absoluteCurrentWorkingDirectory,
+        stdout,
+        stderr
+      );
     } catch (error) {
       return formatTextContents(
+        absoluteCurrentWorkingDirectory,
         error instanceof Error ? error.message : `${error}`
       );
     }

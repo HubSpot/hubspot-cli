@@ -8,12 +8,18 @@ import { getAccountId } from '@hubspot/local-dev-lib/config';
 import { http } from '@hubspot/local-dev-lib/http';
 import { isHubSpotHttpError } from '@hubspot/local-dev-lib/errors/index';
 import { MockedFunction, Mocked } from 'vitest';
+import { mcpFeedbackRequest } from '../../../utils/feedbackTracking.js';
 
 vi.mock('@modelcontextprotocol/sdk/server/mcp.js');
 vi.mock('../../../utils/toolUsageTracking');
 vi.mock('@hubspot/local-dev-lib/http');
 vi.mock('@hubspot/local-dev-lib/errors/index');
 vi.mock('@hubspot/local-dev-lib/config');
+vi.mock('../../../utils/feedbackTracking');
+
+const mockMcpFeedbackRequest = mcpFeedbackRequest as MockedFunction<
+  typeof mcpFeedbackRequest
+>;
 
 const mockGetAccountId = getAccountId as MockedFunction<typeof getAccountId>;
 const mockHttp = http as Mocked<typeof http>;
@@ -36,6 +42,7 @@ describe('mcp-server/tools/project/GetApiUsagePatternsByAppIdTool', () => {
 
     mockRegisteredTool = {} as RegisteredTool;
     mockMcpServer.registerTool.mockReturnValue(mockRegisteredTool);
+    mockMcpFeedbackRequest.mockResolvedValue('');
 
     tool = new GetApiUsagePatternsByAppIdTool(mockMcpServer);
   });
@@ -46,10 +53,11 @@ describe('mcp-server/tools/project/GetApiUsagePatternsByAppIdTool', () => {
 
       expect(mockMcpServer.registerTool).toHaveBeenCalledWith(
         'get-api-usage-patterns-by-app-id',
-        {
+        expect.objectContaining({
           title: 'Get API Usage Patterns by App ID',
-          description:
-            'Retrieves detailed API usage pattern analytics for a specific HubSpot application. Requires an appId (string) to identify the target application. Optionally accepts startDate and endDate parameters in YYYY-MM-DD format to filter results within a specific time range. Returns patternSummaries object containing usage statistics including portalPercentage (percentage of portals using this pattern) and numOfPortals (total count of portals) for different usage patterns. This data helps analyze how the application is being used across different HubSpot portals and can inform optimization decisions.',
+          description: expect.stringContaining(
+            'Retrieves detailed API usage pattern analytics for a specific HubSpot application'
+          ),
           inputSchema: expect.objectContaining({
             appId: expect.objectContaining({
               describe: expect.any(Function),
@@ -61,10 +69,9 @@ describe('mcp-server/tools/project/GetApiUsagePatternsByAppIdTool', () => {
               optional: expect.any(Function),
             }),
           }),
-        },
-        tool.handler
+        }),
+        expect.any(Function)
       );
-
       expect(result).toBe(mockRegisteredTool);
     });
   });
@@ -110,6 +117,7 @@ describe('mcp-server/tools/project/GetApiUsagePatternsByAppIdTool', () => {
 
   describe('handler', () => {
     const input = {
+      absoluteCurrentWorkingDirectory: '/test/dir',
       appId: '12345',
       startDate: '2025-01-01',
       endDate: '2025-12-31',

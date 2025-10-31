@@ -48,6 +48,7 @@ export class GetConfigValuesTool extends Tool<InputSchemaType> {
     try {
       if (!isV2Project(platformVersion)) {
         return formatTextContents(
+          absoluteCurrentWorkingDirectory,
           `Can only be used on projects with a minimum platformVersion of 2025.2`
         );
       }
@@ -58,7 +59,10 @@ export class GetConfigValuesTool extends Tool<InputSchemaType> {
 
       if (!accountId) {
         const authErrorMessage = `No account ID found. Please run \`hs account auth\` to configure an account, or set a default account with \`hs account use <account>\``;
-        return formatTextContents(authErrorMessage);
+        return formatTextContents(
+          absoluteCurrentWorkingDirectory,
+          authErrorMessage
+        );
       }
 
       const schema = await getIntermediateRepresentationSchema({
@@ -71,12 +75,14 @@ export class GetConfigValuesTool extends Tool<InputSchemaType> {
 
       if (schema[internalComponentType]) {
         return formatTextContents(
+          absoluteCurrentWorkingDirectory,
           JSON.stringify({ config: schema[internalComponentType] })
         );
       }
     } catch (error) {}
 
     return formatTextContents(
+      absoluteCurrentWorkingDirectory,
       `Unable to locate JSON schema for type ${featureType}`
     );
   }

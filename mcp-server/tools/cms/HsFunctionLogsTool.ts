@@ -84,18 +84,18 @@ export class HsFunctionLogsTool extends Tool<HsFunctionLogsInputSchema> {
         command
       );
 
-      return formatTextContents(stdout, stderr);
+      return formatTextContents(
+        absoluteCurrentWorkingDirectory,
+        stdout,
+        stderr
+      );
     } catch (error) {
       const errorMessage =
         error instanceof Error ? error.message : String(error);
-      return {
-        content: [
-          {
-            type: 'text',
-            text: `Error executing hs logs command: ${errorMessage}`,
-          },
-        ],
-      };
+      return formatTextContents(
+        absoluteCurrentWorkingDirectory,
+        `Error executing hs logs command: ${errorMessage}`
+      );
     }
   }
 
