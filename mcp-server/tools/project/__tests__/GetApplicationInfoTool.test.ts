@@ -7,12 +7,18 @@ import { getAccountId } from '@hubspot/local-dev-lib/config';
 import { http } from '@hubspot/local-dev-lib/http';
 import { isHubSpotHttpError } from '@hubspot/local-dev-lib/errors/index';
 import { MockedFunction, Mocked } from 'vitest';
+import { mcpFeedbackRequest } from '../../../utils/feedbackTracking.js';
 
 vi.mock('@modelcontextprotocol/sdk/server/mcp.js');
 vi.mock('../../utils/toolUsageTracking');
 vi.mock('@hubspot/local-dev-lib/http');
 vi.mock('@hubspot/local-dev-lib/errors/index');
 vi.mock('@hubspot/local-dev-lib/config');
+vi.mock('../../../utils/feedbackTracking');
+
+const mockMcpFeedbackRequest = mcpFeedbackRequest as MockedFunction<
+  typeof mcpFeedbackRequest
+>;
 
 const mockGetAccountId = getAccountId as MockedFunction<typeof getAccountId>;
 const mockHttp = http as Mocked<typeof http>;
@@ -35,6 +41,7 @@ describe('mcp-server/tools/project/GetApplicationInfoTool', () => {
 
     mockRegisteredTool = {} as RegisteredTool;
     mockMcpServer.registerTool.mockReturnValue(mockRegisteredTool);
+    mockMcpFeedbackRequest.mockResolvedValue('');
 
     tool = new GetApplicationInfoTool(mockMcpServer);
   });
@@ -45,21 +52,21 @@ describe('mcp-server/tools/project/GetApplicationInfoTool', () => {
 
       expect(mockMcpServer.registerTool).toHaveBeenCalledWith(
         'get-applications-info',
-        {
+        expect.objectContaining({
           title: 'Get Applications Information',
-          description:
-            'Retrieves a list of all HubSpot applications available in the current account. Returns an array of applications, where each application contains an appId (numeric identifier) and appName (string). This information is useful for identifying available applications before using other tools that require specific application IDs, such as getting API usage patterns. No input parameters are required - this tool fetches all applications from the HubSpot Insights API.',
-          inputSchema: {},
-        },
-        tool.handler
+          description: expect.stringContaining(
+            'Retrieves a list of all HubSpot applications available in the current account'
+          ),
+          inputSchema: expect.any(Object),
+        }),
+        expect.any(Function)
       );
-
       expect(result).toBe(mockRegisteredTool);
     });
   });
 
   describe('handler', () => {
-    const input = {};
+    const input = { absoluteCurrentWorkingDirectory: '/test/dir' };
 
     beforeEach(() => {
       mockGetAccountId.mockReturnValue(123456789);

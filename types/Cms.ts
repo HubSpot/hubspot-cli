@@ -37,9 +37,9 @@ export type ContentType = (typeof CONTENT_TYPES)[number];
 export type CreateArgs = CommonArgs &
   ConfigArgs & {
     branch?: string;
-    type: string;
-    dest: string;
-    name: string;
+    type?: string;
+    dest?: string;
+    name?: string;
     internal?: boolean;
     templateType?: TemplateType;
     moduleLabel?: string;
@@ -55,9 +55,9 @@ export type CreateArgs = CommonArgs &
 
 export type CmsAssetOperationArgs = {
   assetType: string;
-  name: string;
-  dest: string;
-  getInternalVersion: boolean;
+  name?: string;
+  dest?: string;
+  getInternalVersion?: boolean;
   commandArgs: CreateArgs;
 };
 

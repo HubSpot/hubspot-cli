@@ -1,0 +1,320 @@
+import fs from 'fs';
+import path from 'path';
+import { Argv, ArgumentsCamelCase } from 'yargs';
+import cliProgress from 'cli-progress';
+import { commands } from '../../../lang/en.js';
+import { getCwd } from '@hubspot/local-dev-lib/path';
+import { FILE_UPLOAD_RESULT_TYPES } from '@hubspot/local-dev-lib/constants/files';
+import { getThemeJSONPath } from '@hubspot/local-dev-lib/cms/themes';
+import { preview } from '@hubspot/theme-preview-dev-server';
+import { UploadFolderResults } from '@hubspot/local-dev-lib/types/Files';
+import { getUploadableFileList } from '../../../lib/upload.js';
+import { trackCommandUsage } from '../../../lib/usageTracking.js';
+import {
+  previewPrompt,
+  previewProjectPrompt,
+} from '../../../lib/prompts/previewPrompt.js';
+import { EXIT_CODES } from '../../../lib/enums/exitCodes.js';
+import { ApiErrorContext, logError } from '../../../lib/errorHandlers/index.js';
+import { handleExit, handleKeypress } from '../../../lib/process.js';
+import { getProjectConfig } from '../../../lib/projects/config.js';
+import { findProjectComponents } from '../../../lib/projects/structure.js';
+import { ComponentTypes } from '../../../types/Projects.js';
+import {
+  CommonArgs,
+  ConfigArgs,
+  AccountArgs,
+  YargsCommandModule,
+} from '../../../types/Yargs.js';
+import { makeYargsBuilder } from '../../../lib/yargsUtils.js';
+import { uiLogger } from '../../../lib/ui/logger.js';
+
+const command = 'preview [--src] [--dest]';
+const describe = commands.cms.subcommands.theme.subcommands.preview.describe;
+
+export type ThemePreviewArgs = CommonArgs &
+  ConfigArgs &
+  AccountArgs & {
+    src: string;
+    dest: string;
+    notify: string;
+    'no-ssl'?: boolean;
+    port?: number;
+    resetSession?: boolean;
+    generateFieldsTypes?: boolean;
+  };
+
+function validateSrcPath(src: string): boolean {
+  const logInvalidPath = () => {
+    uiLogger.error(
+      commands.cms.subcommands.theme.subcommands.preview.errors.invalidPath(src)
+    );
+  };
+  try {
+    const stats = fs.statSync(src);
+    if (!stats.isDirectory()) {
+      logInvalidPath();
+      return false;
+    }
+  } catch (e) {
+    logInvalidPath();
+    return false;
+  }
+  return true;
+}
+
+function handleUserInput(): void {
+  const onTerminate = () => {
+    uiLogger.log(
+      commands.cms.subcommands.theme.subcommands.preview.logs.processExited
+    );
+    process.exit(EXIT_CODES.SUCCESS);
+  };
+
+  handleExit(onTerminate);
+  handleKeypress(key => {
+    if ((key.ctrl && key.name === 'c') || key.name === 'q') {
+      onTerminate();
+    }
+  });
+}
+
+async function determineSrcAndDest(args: ThemePreviewArgs): Promise<{
+  absoluteSrc: string;
+  dest: string;
+}> {
+  let absoluteSrc;
+  let dest;
+  const { projectDir, projectConfig } = await getProjectConfig();
+  if (!(projectDir && projectConfig)) {
+    // Not in a project, prompt for src and dest of traditional theme
+    const previewPromptAnswers = await previewPrompt(args);
+    const src = args.src || previewPromptAnswers.src;
+    dest = args.dest || previewPromptAnswers.dest;
+    absoluteSrc = path.resolve(getCwd(), src);
+    if (!dest || !validateSrcPath(absoluteSrc)) {
+      process.exit(EXIT_CODES.ERROR);
+    }
+  } else {
+    // In a project
+    let themeJsonPath = getThemeJSONPath(getCwd());
+    if (!themeJsonPath) {
+      const projectComponents = await findProjectComponents(projectDir);
+      const themeComponents = projectComponents.filter(
+        c => c.type === ComponentTypes.HublTheme
+      );
+      if (themeComponents.length === 0) {
+        uiLogger.error(
+          commands.cms.subcommands.theme.subcommands.preview.errors
+            .noThemeComponents
+        );
+        process.exit(EXIT_CODES.ERROR);
+      }
+      const answer = await previewProjectPrompt(themeComponents);
+      themeJsonPath = `${answer.themeComponentPath}/theme.json`;
+    }
+    const { dir: themeDir } = path.parse(themeJsonPath);
+    absoluteSrc = themeDir;
+    const { base: themeName } = path.parse(themeDir);
+    dest = `@projects/${projectConfig.name}/${themeName}`;
+  }
+  return { absoluteSrc, dest };
+}
+
+async function handler(
+  args: ArgumentsCamelCase<ThemePreviewArgs>
+): Promise<void> {
+  const {
+    derivedAccountId,
+    notify,
+    noSsl,
+    resetSession,
+    port,
+    generateFieldsTypes,
+  } = args;
+
+  const { absoluteSrc, dest } = await determineSrcAndDest(args);
+
+  const filePaths = await getUploadableFileList(absoluteSrc, false);
+
+  function startProgressBar(numFiles: number): {
+    onAttemptCallback: () => void;
+    onSuccessCallback: () => void;
+    onFirstErrorCallback: () => void;
+    onRetryCallback: () => void;
+    onFinalErrorCallback: () => void;
+    onFinishCallback: (results: UploadFolderResults[]) => void;
+  } {
+    const initialUploadProgressBar = new cliProgress.SingleBar(
+      {
+        gracefulExit: true,
+        format: '[{bar}] {percentage}% | {value}/{total} | {label}',
+        hideCursor: true,
+      },
+      cliProgress.Presets.rect
+    );
+    initialUploadProgressBar.start(numFiles, 0, {
+      label:
+        commands.cms.subcommands.theme.subcommands.preview
+          .initialUploadProgressBar.start,
+    });
+    let uploadsHaveStarted = false;
+    const uploadOptions = {
+      onAttemptCallback: () => {
+        /* Intentionally blank */
+      },
+      onSuccessCallback: () => {
+        initialUploadProgressBar.increment();
+        if (!uploadsHaveStarted) {
+          uploadsHaveStarted = true;
+          initialUploadProgressBar.update(0, {
+            label:
+              commands.cms.subcommands.theme.subcommands.preview
+                .initialUploadProgressBar.uploading,
+          });
+        }
+      },
+      onFirstErrorCallback: () => {
+        /* Intentionally blank */
+      },
+      onRetryCallback: () => {
+        /* Intentionally blank */
+      },
+      onFinalErrorCallback: () => initialUploadProgressBar.increment(),
+      onFinishCallback: (results: UploadFolderResults[]) => {
+        initialUploadProgressBar.update(numFiles, {
+          label:
+            commands.cms.subcommands.theme.subcommands.preview
+              .initialUploadProgressBar.finish,
+        });
+        initialUploadProgressBar.stop();
+        results.forEach(result => {
+          if (result.resultType == FILE_UPLOAD_RESULT_TYPES.FAILURE) {
+            uiLogger.error(
+              commands.cms.subcommands.theme.subcommands.preview.errors.uploadFailed(
+                result.file,
+                dest
+              )
+            );
+            logError(
+              result.error,
+              new ApiErrorContext({
+                accountId: derivedAccountId,
+                request: dest,
+                payload: result.file,
+              })
+            );
+          }
+        });
+      },
+    };
+    return uploadOptions;
+  }
+
+  trackCommandUsage('preview', {}, derivedAccountId);
+
+  let createUnifiedDevServer;
+  try {
+    // @ts-ignore TODO: Remove when we deprecate Node 18
+    require.resolve('@hubspot/cms-dev-server');
+    // @ts-ignore TODO: Remove when we deprecate Node 18
+    const { createDevServer } = await import('@hubspot/cms-dev-server');
+    createUnifiedDevServer = createDevServer;
+  } catch (e) {
+    uiLogger.warn(
+      'Unified dev server requires node 20 to run. Defaulting to legacy preview.'
+    );
+  }
+
+  if (createUnifiedDevServer) {
+    if (port) {
+      process.env['PORT'] = port.toString();
+    }
+    createUnifiedDevServer(
+      absoluteSrc,
+      false,
+      '',
+      '',
+      !noSsl,
+      generateFieldsTypes,
+      {
+        filePaths,
+        resetSession: resetSession || false,
+        startProgressBar,
+        dest,
+      }
+    );
+  } else {
+    preview(derivedAccountId, absoluteSrc, dest, {
+      notify,
+      filePaths,
+      noSsl,
+      port,
+      resetSession: resetSession || false,
+      startProgressBar,
+      handleUserInput,
+    });
+  }
+}
+
+function themePreviewBuilder(yargs: Argv): Argv<ThemePreviewArgs> {
+  yargs
+    .option('src', {
+      describe:
+        commands.cms.subcommands.theme.subcommands.preview.positionals.src,
+      type: 'string',
+      requiresArg: true,
+    })
+    .option('dest', {
+      describe:
+        commands.cms.subcommands.theme.subcommands.preview.positionals.dest,
+      type: 'string',
+      requiresArg: true,
+    })
+    .option('notify', {
+      alias: 'n',
+      describe:
+        commands.cms.subcommands.theme.subcommands.preview.options.notify,
+      type: 'string',
+      requiresArg: true,
+    })
+    .option('no-ssl', {
+      describe:
+        commands.cms.subcommands.theme.subcommands.preview.options.noSsl,
+      type: 'boolean',
+    })
+    .option('port', {
+      describe: commands.cms.subcommands.theme.subcommands.preview.options.port,
+      type: 'number',
+    })
+    .option('resetSession', {
+      hidden: true,
+      type: 'boolean',
+    })
+    .option('generateFieldsTypes', {
+      hidden: true,
+      type: 'boolean',
+    });
+
+  return yargs as Argv<ThemePreviewArgs>;
+}
+
+const builder = makeYargsBuilder<ThemePreviewArgs>(
+  themePreviewBuilder,
+  command,
+  describe,
+  {
+    useGlobalOptions: true,
+    useConfigOptions: true,
+    useAccountOptions: true,
+  }
+);
+
+const themePreviewCommand: YargsCommandModule<unknown, ThemePreviewArgs> = {
+  command,
+  describe,
+  handler,
+  builder,
+};
+
+export default themePreviewCommand;

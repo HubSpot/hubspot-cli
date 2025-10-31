@@ -1,28 +1,51 @@
-import { Argv } from 'yargs';
-import list from './function/list.js';
-import deploy from './function/deploy.js';
-import server from './function/server.js';
-import { commands } from '../lang/en.js';
-import { makeYargsBuilder } from '../lib/yargsUtils.js';
+import { Argv, ArgumentsCamelCase } from 'yargs';
 import { YargsCommandModuleBucket } from '../types/Yargs.js';
+import {
+  uiCommandRelocatedMessage,
+  uiCommandRenamedDescription,
+  uiDeprecatedTag,
+} from '../lib/ui/index.js';
+import { uiLogger } from '../lib/ui/logger.js';
+import cmsFunctionCommand from './cms/function.js';
+import listCommand from './function/list.js';
+import deployCommand from './function/deploy.js';
+import serverCommand from './function/server.js';
+import { makeYargsBuilder } from '../lib/yargsUtils.js';
 
-export const command = ['function', 'functions'];
-export const describe = commands.function.describe;
+const command = ['function', 'functions'];
+const describe = uiDeprecatedTag(cmsFunctionCommand.describe as string, false);
 
+// We cannot use the builder from cmsFunctionCommand because it includes the create and logs commands
 function functionBuilder(yargs: Argv): Argv {
-  yargs.command(list).command(deploy).command(server).demandCommand(1, '');
+  yargs
+    .command(listCommand)
+    .command(deployCommand)
+    .command(serverCommand)
+    .demandCommand(1, '');
+
   return yargs;
 }
 
-const builder = makeYargsBuilder(functionBuilder, command, describe, {
-  useGlobalOptions: true,
-});
+const verboseDescribe = uiCommandRenamedDescription(
+  cmsFunctionCommand.describe,
+  'hs cms function'
+);
 
-const functionCommand: YargsCommandModuleBucket = {
-  command,
+const builder = makeYargsBuilder(functionBuilder, command, verboseDescribe);
+
+async function handler(args: ArgumentsCamelCase<unknown>) {
+  uiCommandRelocatedMessage('hs cms function');
+
+  uiLogger.log('');
+
+  await cmsFunctionCommand.handler(args);
+}
+
+const deprecatedFunctionCommand: YargsCommandModuleBucket = {
+  ...cmsFunctionCommand,
   describe,
   builder,
-  handler: () => {},
+  handler,
 };
 
-export default functionCommand;
+export default deprecatedFunctionCommand;

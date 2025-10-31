@@ -1,10 +1,22 @@
 import yargs, { Argv } from 'yargs';
 import create from '../customObject/create.js';
 import schema from '../customObject/schema.js';
+import createSchema from '../customObject/createSchema.js';
+import updateSchema from '../customObject/updateSchema.js';
+import listSchemas from '../customObject/listSchemas.js';
+import deleteSchema from '../customObject/deleteSchema.js';
+import fetchSchema from '../customObject/fetchSchema.js';
+import fetchAllSchemas from '../customObject/fetchAllSchemas.js';
 import customObjectCommands from '../customObject.js';
 
 vi.mock('../customObject/create');
 vi.mock('../customObject/schema');
+vi.mock('../customObject/createSchema');
+vi.mock('../customObject/updateSchema');
+vi.mock('../customObject/listSchemas');
+vi.mock('../customObject/deleteSchema');
+vi.mock('../customObject/fetchSchema');
+vi.mock('../customObject/fetchAllSchemas');
 vi.mock('../../lib/commonOpts');
 
 const commandSpy = vi
@@ -37,7 +49,16 @@ describe('commands/customObject', () => {
       demandCommandSpy.mockClear();
     });
 
-    const subcommands = [create, schema];
+    const subcommands = [
+      create,
+      schema,
+      createSchema,
+      updateSchema,
+      listSchemas,
+      deleteSchema,
+      fetchSchema,
+      fetchAllSchemas,
+    ];
 
     it('should demand the command takes one positional argument', () => {
       customObjectCommands.builder(yargs as Argv);

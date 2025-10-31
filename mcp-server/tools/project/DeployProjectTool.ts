@@ -6,13 +6,17 @@ import {
 import { z } from 'zod';
 import { addFlag } from '../../utils/command.js';
 
-import { absoluteProjectPath } from './constants.js';
+import {
+  absoluteCurrentWorkingDirectory,
+  absoluteProjectPath,
+} from './constants.js';
 import { runCommandInDir } from '../../utils/project.js';
 import { formatTextContents, formatTextContent } from '../../utils/content.js';
 import { trackToolUsage } from '../../utils/toolUsageTracking.js';
 
 const inputSchema = {
   absoluteProjectPath,
+  absoluteCurrentWorkingDirectory,
   buildNumber: z
     .optional(z.number())
     .describe(
@@ -35,6 +39,7 @@ export class DeployProjectTool extends Tool<InputSchemaType> {
   }
   async handler({
     absoluteProjectPath,
+    absoluteCurrentWorkingDirectory,
     buildNumber,
   }: InputSchemaType): Promise<TextContentResponse> {
     await trackToolUsage(toolName);
@@ -66,7 +71,7 @@ export class DeployProjectTool extends Tool<InputSchemaType> {
       command
     );
 
-    return formatTextContents(stdout, stderr);
+    return formatTextContents(absoluteCurrentWorkingDirectory, stdout, stderr);
   }
 
   register(): RegisteredTool {

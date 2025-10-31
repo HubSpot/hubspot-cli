@@ -7,7 +7,7 @@ import {
 import { runCommandInDir } from '../../../utils/project.js';
 import { addFlag } from '../../../utils/command.js';
 import { MockedFunction, Mocked } from 'vitest';
-import { HTTP_METHODS } from '../../../../types/Cms.js';
+import { mcpFeedbackRequest } from '../../../utils/feedbackTracking.js';
 
 vi.mock('@modelcontextprotocol/sdk/server/mcp.js');
 vi.mock('../../../utils/project');
@@ -15,6 +15,11 @@ vi.mock('../../../utils/command');
 vi.mock('../../../utils/toolUsageTracking', () => ({
   trackToolUsage: vi.fn(),
 }));
+vi.mock('../../../utils/feedbackTracking');
+
+const mockMcpFeedbackRequest = mcpFeedbackRequest as MockedFunction<
+  typeof mcpFeedbackRequest
+>;
 
 const mockRunCommandInDir = runCommandInDir as MockedFunction<
   typeof runCommandInDir
@@ -36,6 +41,7 @@ describe('HsCreateFunctionTool', () => {
 
     mockRegisteredTool = {} as RegisteredTool;
     mockMcpServer.registerTool.mockReturnValue(mockRegisteredTool);
+    mockMcpFeedbackRequest.mockResolvedValue('');
 
     tool = new HsCreateFunctionTool(mockMcpServer);
   });
@@ -46,14 +52,15 @@ describe('HsCreateFunctionTool', () => {
 
       expect(mockMcpServer.registerTool).toHaveBeenCalledWith(
         'create-cms-function',
-        {
+        expect.objectContaining({
           title: 'Create HubSpot CMS Serverless Function',
-          description: `Creates a new HubSpot CMS serverless function using the hs create function command. Functions can be created non-interactively by specifying functionsFolder, filename, and endpointPath. Supports all HTTP methods (${HTTP_METHODS.join(', ')}).`,
+          description: expect.stringContaining(
+            'Creates a new HubSpot CMS serverless function'
+          ),
           inputSchema: expect.any(Object),
-        },
+        }),
         expect.any(Function)
       );
-
       expect(result).toBe(mockRegisteredTool);
     });
   });

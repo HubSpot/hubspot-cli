@@ -7,12 +7,18 @@ import { http } from '@hubspot/local-dev-lib/http';
 import { isHubSpotHttpError } from '@hubspot/local-dev-lib/errors/index';
 import { getAccountIdFromCliConfig } from '../../../utils/cliConfig.js';
 import { MockedFunction, Mocked } from 'vitest';
+import { mcpFeedbackRequest } from '../../../utils/feedbackTracking.js';
 
 vi.mock('@modelcontextprotocol/sdk/server/mcp.js');
 vi.mock('@hubspot/local-dev-lib/http');
 vi.mock('@hubspot/local-dev-lib/errors/index');
 vi.mock('../../../utils/toolUsageTracking');
 vi.mock('../../../utils/cliConfig.js');
+vi.mock('../../../utils/feedbackTracking');
+
+const mockMcpFeedbackRequest = mcpFeedbackRequest as MockedFunction<
+  typeof mcpFeedbackRequest
+>;
 
 const mockHttp = http as unknown as { post: MockedFunction<typeof http.post> };
 const mockGetAccountIdFromCliConfig =
@@ -35,11 +41,13 @@ describe('mcp-server/tools/project/DocsSearchTool', () => {
     mockRegisteredTool = {} as RegisteredTool;
     mockMcpServer.registerTool.mockReturnValue(mockRegisteredTool);
 
+    mockMcpFeedbackRequest.mockResolvedValue('');
+
     tool = new DocsSearchTool(mockMcpServer);
   });
 
   describe('register', () => {
-    it('should register tool with correct parameters', () => {
+    it('should register tool with correct parameters and enhanced description', () => {
       const result = tool.register();
 
       expect(mockMcpServer.registerTool).toHaveBeenCalledWith(
@@ -50,7 +58,7 @@ describe('mcp-server/tools/project/DocsSearchTool', () => {
             'Use this first whenever you need details about HubSpot APIs, SDKs, integrations, or developer platform features. This searches the official HubSpot Developer Documentation and returns the most relevant pages, each with a URL for use in `fetch-doc`. Always follow this with a fetch to get the full, authoritative content before making plans or writing answers.',
           inputSchema: expect.any(Object),
         },
-        tool.handler
+        expect.any(Function)
       );
 
       expect(result).toBe(mockRegisteredTool);

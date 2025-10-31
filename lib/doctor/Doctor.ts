@@ -26,8 +26,7 @@ import {
 import { ScopeGroupAuthorization } from '@hubspot/local-dev-lib/types/Accounts';
 import { isSpecifiedError } from '@hubspot/local-dev-lib/errors/index';
 import { getHubSpotWebsiteOrigin } from '@hubspot/local-dev-lib/urls';
-import pkg from '../../package.json' with { type: 'json' };
-
+import { pkg } from '../jsonLoader.js';
 import { lib } from '../../lang/en.js';
 import { uiLink } from '../ui/index.js';
 const minMajorNodeVersion = 18;

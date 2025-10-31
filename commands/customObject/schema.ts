@@ -8,9 +8,16 @@ import updateSchema from './schema/update.js';
 import { commands } from '../../lang/en.js';
 import { YargsCommandModuleBucket } from '../../types/Yargs.js';
 import { makeYargsBuilder } from '../../lib/yargsUtils.js';
+import {
+  uiDeprecatedTag,
+  uiCommandRenamedDescription,
+} from '../../lib/ui/index.js';
 
 const command = ['schema', 'schemas'];
-const describe = commands.customObject.subcommands.schema.describe;
+const describe = uiDeprecatedTag(
+  commands.customObject.subcommands.schema.describe as string,
+  false
+);
 
 function customObjectSchemaBuilder(yargs: Argv): Argv {
   yargs
@@ -25,7 +32,16 @@ function customObjectSchemaBuilder(yargs: Argv): Argv {
   return yargs;
 }
 
-const builder = makeYargsBuilder(customObjectSchemaBuilder, command, describe);
+const verboseDescribe = uiCommandRenamedDescription(
+  commands.customObject.subcommands.schema.describe,
+  'hs custom-object'
+);
+
+const builder = makeYargsBuilder(
+  customObjectSchemaBuilder,
+  command,
+  verboseDescribe
+);
 
 const customObjectSchemaCommand: YargsCommandModuleBucket = {
   command,

@@ -9,8 +9,9 @@ import { http } from '@hubspot/local-dev-lib/http';
 import { formatTextContents } from '../../utils/content.js';
 import { isHubSpotHttpError } from '@hubspot/local-dev-lib/errors/index';
 import { getAccountId } from '@hubspot/local-dev-lib/config';
+import { absoluteCurrentWorkingDirectory } from './constants.js';
 
-const inputSchema = {};
+const inputSchema = { absoluteCurrentWorkingDirectory };
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 const inputSchemaZodObject = z.object({ ...inputSchema });
@@ -35,7 +36,9 @@ export class GetApplicationInfoTool extends Tool<GetApplicationInfoInputSchema> 
     super(mcpServer);
   }
 
-  async handler({}: GetApplicationInfoInputSchema): Promise<TextContentResponse> {
+  async handler({
+    absoluteCurrentWorkingDirectory,
+  }: GetApplicationInfoInputSchema): Promise<TextContentResponse> {
     await trackToolUsage(toolName);
 
     try {
@@ -44,7 +47,10 @@ export class GetApplicationInfoTool extends Tool<GetApplicationInfoInputSchema> 
 
       if (!accountId) {
         const authErrorMessage = `No account ID found. Please run \`hs account auth\` to configure an account, or set a default account with \`hs account use <account>\``;
-        return formatTextContents(authErrorMessage);
+        return formatTextContents(
+          absoluteCurrentWorkingDirectory,
+          authErrorMessage
+        );
       }
 
       const response = await http.get<GetApplicationInfoResponse>(accountId, {
@@ -54,15 +60,21 @@ export class GetApplicationInfoTool extends Tool<GetApplicationInfoInputSchema> 
       // Format the response for display
       const { data } = response;
       const formattedResult = JSON.stringify(data, null, 2);
-      return formatTextContents(formattedResult);
+      return formatTextContents(
+        absoluteCurrentWorkingDirectory,
+        formattedResult
+      );
     } catch (error) {
       if (isHubSpotHttpError(error)) {
         // Handle HubSpot-specific HTTP errors
-        return formatTextContents(error.toString());
+        return formatTextContents(
+          absoluteCurrentWorkingDirectory,
+          error.toString()
+        );
       }
 
       const errorMessage = `${error instanceof Error ? error.message : String(error)}`;
-      return formatTextContents(errorMessage);
+      return formatTextContents(absoluteCurrentWorkingDirectory, errorMessage);
     }
   }
 

@@ -9,11 +9,17 @@ import {
 } from '@hubspot/project-parsing-lib';
 import { getAccountIdFromCliConfig } from '../../../utils/cliConfig.js';
 import { MockedFunction, Mocked } from 'vitest';
+import { mcpFeedbackRequest } from '../../../utils/feedbackTracking.js';
 
 vi.mock('@modelcontextprotocol/sdk/server/mcp.js');
 vi.mock('@hubspot/project-parsing-lib');
 vi.mock('../../../utils/cliConfig.js');
 vi.mock('../../../utils/toolUsageTracking');
+vi.mock('../../../utils/feedbackTracking');
+
+const mockMcpFeedbackRequest = mcpFeedbackRequest as MockedFunction<
+  typeof mcpFeedbackRequest
+>;
 
 const mockGetIntermediateRepresentationSchema =
   getIntermediateRepresentationSchema as MockedFunction<
@@ -41,6 +47,8 @@ describe('mcp-server/tools/project/GetConfigValuesTool', () => {
     mockRegisteredTool = {} as RegisteredTool;
     mockMcpServer.registerTool.mockReturnValue(mockRegisteredTool);
 
+    mockMcpFeedbackRequest.mockResolvedValue('');
+
     tool = new GetConfigValuesTool(mockMcpServer);
   });
 
@@ -50,7 +58,7 @@ describe('mcp-server/tools/project/GetConfigValuesTool', () => {
 
       expect(mockMcpServer.registerTool).toHaveBeenCalledWith(
         'get-feature-config-schema',
-        {
+        expect.objectContaining({
           title: 'Fetch the JSON Schema for component',
           description: expect.stringContaining(
             'Fetches and returns the JSON schema for the provided feature'
@@ -63,10 +71,9 @@ describe('mcp-server/tools/project/GetConfigValuesTool', () => {
               describe: expect.any(Function),
             }),
           }),
-        },
-        tool.handler
+        }),
+        expect.any(Function)
       );
-
       expect(result).toBe(mockRegisteredTool);
     });
   });

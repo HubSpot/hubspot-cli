@@ -11,6 +11,8 @@ export const uiMessages = {
   disabledMessage: (command: string, url?: string) =>
     `The ${uiCommandReference(command)} command is disabled. Run ${uiCommandReference('npm i -g @hubspot/cli@latest')} to update to the latest HubSpot CLI version. ${url ? uiLink('Learn more', url) : ''}`,
   disabledUrlText: 'See all HubSpot CLI commands here.',
+  commandRenamedMessage: (newCommand: string) =>
+    `This command has been deprecated. Please use ${uiCommandReference(newCommand)} instead.`,
   featureHighlight: {
     defaultTitle: "What's next?",
     featureKeys: {

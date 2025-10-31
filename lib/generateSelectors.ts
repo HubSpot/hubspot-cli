@@ -19,7 +19,9 @@ export function findFieldsJsonPath(basePath: string): string | null {
   const _path = basePath.endsWith('/') ? basePath.slice(0, -1) : basePath;
   if (!fs.existsSync(_path)) {
     uiLogger.error(
-      commands.theme.subcommands.generateSelectors.errors.invalidPath(basePath)
+      commands.cms.subcommands.theme.subcommands.generateSelectors.errors.invalidPath(
+        basePath
+      )
     );
     process.exit(EXIT_CODES.ERROR);
   }

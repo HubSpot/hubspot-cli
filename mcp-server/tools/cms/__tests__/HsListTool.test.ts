@@ -7,6 +7,7 @@ import {
 import { runCommandInDir } from '../../../utils/project.js';
 import { addFlag } from '../../../utils/command.js';
 import { MockedFunction, Mocked } from 'vitest';
+import { mcpFeedbackRequest } from '../../../utils/feedbackTracking.js';
 
 vi.mock('@modelcontextprotocol/sdk/server/mcp.js');
 vi.mock('../../../utils/project');
@@ -14,6 +15,11 @@ vi.mock('../../../utils/command');
 vi.mock('../../../utils/toolUsageTracking', () => ({
   trackToolUsage: vi.fn(),
 }));
+vi.mock('../../../utils/feedbackTracking');
+
+const mockMcpFeedbackRequest = mcpFeedbackRequest as MockedFunction<
+  typeof mcpFeedbackRequest
+>;
 
 const mockRunCommandInDir = runCommandInDir as MockedFunction<
   typeof runCommandInDir
@@ -35,6 +41,7 @@ describe('HsListTool', () => {
 
     mockRegisteredTool = {} as RegisteredTool;
     mockMcpServer.registerTool.mockReturnValue(mockRegisteredTool);
+    mockMcpFeedbackRequest.mockResolvedValue('');
 
     tool = new HsListTool(mockMcpServer);
   });
@@ -43,16 +50,18 @@ describe('HsListTool', () => {
     it('should register the tool with the MCP server', () => {
       const result = tool.register();
 
+      // First assertion - verify original description
       expect(mockMcpServer.registerTool).toHaveBeenCalledWith(
         'list-cms-remote-contents',
-        {
+        expect.objectContaining({
           title: 'List HubSpot CMS Directory Contents',
-          description: 'List remote contents of a HubSpot CMS directory.',
+          description: expect.stringContaining(
+            'List remote contents of a HubSpot CMS directory'
+          ),
           inputSchema: expect.any(Object),
-        },
+        }),
         expect.any(Function)
       );
-
       expect(result).toBe(mockRegisteredTool);
     });
   });

@@ -21,6 +21,12 @@ import { uiLogger } from '../ui/logger.js';
 
 export const Separator = new _Separator();
 export const PROMPT_THEME = { prefix: { idle: chalk.green('?') } };
+export const CHECKBOX_PROMPT_THEME = {
+  prefix: { idle: chalk.green('?') },
+  style: {
+    disabledChoice: (text: string) => chalk.dim(` ◯ ${text}`),
+  },
+};
 
 function isUserCancellationError(error: unknown): boolean {
   return error instanceof Error && error.name === 'ExitPromptError';
@@ -214,7 +220,7 @@ function handleCheckboxPrompt<T extends GenericPromptResponse>(
       choices: readonly Choice<T>[]
     ) => boolean | string | Promise<boolean | string>,
     loop: config.loop,
-    theme: PROMPT_THEME,
+    theme: CHECKBOX_PROMPT_THEME,
     shortcuts: {
       invert: null,
     },

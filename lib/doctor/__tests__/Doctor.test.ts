@@ -452,7 +452,7 @@ describe('lib/doctor/Doctor', () => {
           type: 'warning',
           message: 'Port 8080 is in use',
           secondaryMessaging: expect.stringMatching(
-            /Make sure it is available before running `hs project dev`/
+            /Make sure it is available before running/
           ),
         });
       });

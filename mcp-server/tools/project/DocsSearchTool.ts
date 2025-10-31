@@ -54,7 +54,10 @@ export class DocsSearchTool extends Tool<InputSchemaType> {
 
     if (!accountId) {
       const authErrorMessage = `No account ID found. Please run \`hs account auth\` to configure an account, or set a default account with \`hs account use <account>\``;
-      return formatTextContents(authErrorMessage);
+      return formatTextContents(
+        absoluteCurrentWorkingDirectory,
+        authErrorMessage
+      );
     }
 
     try {
@@ -67,7 +70,10 @@ export class DocsSearchTool extends Tool<InputSchemaType> {
 
       const results = response.data.results;
       if (!results || results.length === 0) {
-        return formatTextContents('No documentation found for your query.');
+        return formatTextContents(
+          absoluteCurrentWorkingDirectory,
+          'No documentation found for your query.'
+        );
       }
 
       const formattedResults = results
@@ -78,15 +84,21 @@ export class DocsSearchTool extends Tool<InputSchemaType> {
         .join('\n');
 
       const successMessage = `Found ${results.length} documentation results:\n\n${formattedResults}`;
-      return formatTextContents(successMessage);
+      return formatTextContents(
+        absoluteCurrentWorkingDirectory,
+        successMessage
+      );
     } catch (error) {
       if (isHubSpotHttpError(error)) {
         // Handle different status codes
-        return formatTextContents(error.toString());
+        return formatTextContents(
+          absoluteCurrentWorkingDirectory,
+          error.toString()
+        );
       }
 
       const errorMessage = `Error searching documentation: ${error instanceof Error ? error.message : String(error)}`;
-      return formatTextContents(errorMessage);
+      return formatTextContents(absoluteCurrentWorkingDirectory, errorMessage);
     }
   }
 

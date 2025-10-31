@@ -1,31 +1,51 @@
-import { Argv } from 'yargs';
-import marketplaceValidate from './theme/marketplace-validate.js';
-import generateSelectors from './theme/generate-selectors.js';
-import previewCommand from './theme/preview.js';
-import { commands } from '../lang/en.js';
+import { Argv, ArgumentsCamelCase } from 'yargs';
+import {
+  uiCommandRelocatedMessage,
+  uiCommandRenamedDescription,
+  uiDeprecatedTag,
+} from '../lib/ui/index.js';
 import { YargsCommandModuleBucket } from '../types/Yargs.js';
+import cmsThemeCommand from './cms/theme.js';
+import generateSelectorsCommand from './theme/generate-selectors.js';
+import marketplaceValidateCommand from './theme/marketplace-validate.js';
+import previewCommand from './theme/preview.js';
 import { makeYargsBuilder } from '../lib/yargsUtils.js';
 
-const command = ['theme', 'themes'];
-const describe = commands.theme.describe;
+const command = ['theme'];
+const describe = uiDeprecatedTag(cmsThemeCommand.describe as string, false);
 
-function themeBuilder(yargs: Argv): Argv {
+async function handler(args: ArgumentsCamelCase<unknown>) {
+  uiCommandRelocatedMessage('hs cms theme');
+
+  await cmsThemeCommand.handler(args);
+}
+
+function deprecatedCmsThemeBuilder(yargs: Argv): Argv {
   yargs
+    .command(generateSelectorsCommand)
+    .command(marketplaceValidateCommand)
     .command(previewCommand)
-    .command(marketplaceValidate)
-    .command(generateSelectors)
     .demandCommand(1, '');
 
   return yargs;
 }
 
-const builder = makeYargsBuilder(themeBuilder, command, describe);
+const verboseDescribe = uiCommandRenamedDescription(
+  cmsThemeCommand.describe,
+  'hs cms theme'
+);
 
-const themeCommand: YargsCommandModuleBucket = {
+const builder = makeYargsBuilder(
+  deprecatedCmsThemeBuilder,
   command,
+  verboseDescribe
+);
+
+const deprecatedCmsThemeCommand: YargsCommandModuleBucket = {
+  ...cmsThemeCommand,
   describe,
+  handler,
   builder,
-  handler: () => {},
 };
 
-export default themeCommand;
+export default deprecatedCmsThemeCommand;

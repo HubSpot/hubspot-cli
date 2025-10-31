@@ -35,7 +35,6 @@ import {
   UI_COLORS,
   uiCommandReference,
   uiAccountDescription,
-  uiBetaTag,
   uiLink,
   uiLine,
 } from '../../ui/index.js';
@@ -220,12 +219,12 @@ class LocalDevManager {
       console.clear();
     }
 
-    uiBetaTag(lib.LocalDevManager.betaMessage);
+    uiLogger.log(lib.LocalDevManager.headerMessage);
 
     uiLogger.log(
       uiLink(
         lib.LocalDevManager.learnMoreLocalDevServer,
-        'https://developers.hubspot.com/docs/platform/project-cli-commands#start-a-local-development-server'
+        'https://developers.hubspot.com/docs/developer-tooling/local-development/hubspot-cli/project-commands'
       )
     );
 

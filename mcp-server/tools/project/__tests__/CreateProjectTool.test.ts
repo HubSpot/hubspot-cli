@@ -14,6 +14,7 @@ import {
   PROJECT_WITH_APP,
 } from '../../../../lib/constants.js';
 import { MockedFunction, Mocked } from 'vitest';
+import { mcpFeedbackRequest } from '../../../utils/feedbackTracking.js';
 
 vi.mock('@modelcontextprotocol/sdk/server/mcp.js');
 vi.mock('../../../utils/project');
@@ -21,6 +22,11 @@ vi.mock('../../../utils/command');
 vi.mock('../../../../lib/constants');
 vi.mock('../../../../lib/projects/create/v2');
 vi.mock('../../../utils/toolUsageTracking');
+vi.mock('../../../utils/feedbackTracking');
+
+const mockMcpFeedbackRequest = mcpFeedbackRequest as MockedFunction<
+  typeof mcpFeedbackRequest
+>;
 
 const mockRunCommandInDir = runCommandInDir as MockedFunction<
   typeof runCommandInDir
@@ -42,6 +48,7 @@ describe('mcp-server/tools/project/CreateProjectTool', () => {
 
     mockRegisteredTool = {} as RegisteredTool;
     mockMcpServer.registerTool.mockReturnValue(mockRegisteredTool);
+    mockMcpFeedbackRequest.mockResolvedValue('');
 
     tool = new CreateProjectTool(mockMcpServer);
 
@@ -57,15 +64,15 @@ describe('mcp-server/tools/project/CreateProjectTool', () => {
 
       expect(mockMcpServer.registerTool).toHaveBeenCalledWith(
         'create-project',
-        {
+        expect.objectContaining({
           title: 'Create HubSpot Project',
-          description:
-            'Creates a HubSpot project with the provided name and outputs it in the provided destination',
+          description: expect.stringContaining(
+            'Creates a HubSpot project with the provided name'
+          ),
           inputSchema: expect.any(Object),
-        },
-        tool.handler
+        }),
+        expect.any(Function)
       );
-
       expect(result).toBe(mockRegisteredTool);
     });
   });

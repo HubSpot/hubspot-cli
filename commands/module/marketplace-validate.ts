@@ -1,90 +1,50 @@
 import { Argv, ArgumentsCamelCase } from 'yargs';
-import SpinniesManager from '../../lib/ui/SpinniesManager.js';
-import { trackCommandUsage } from '../../lib/usageTracking.js';
 import {
-  kickOffValidation,
-  pollForValidationFinish,
-  fetchValidationResults,
-  processValidationErrors,
-  displayValidationResults,
-} from '../../lib/marketplaceValidate.js';
-import { commands } from '../../lang/en.js';
-import {
-  CommonArgs,
-  ConfigArgs,
-  AccountArgs,
-  EnvironmentArgs,
-  YargsCommandModule,
-} from '../../types/Yargs.js';
-import { EXIT_CODES } from '../../lib/enums/exitCodes.js';
+  uiCommandRelocatedMessage,
+  uiCommandRenamedDescription,
+  uiDeprecatedTag,
+} from '../../lib/ui/index.js';
+import { YargsCommandModule } from '../../types/Yargs.js';
+import marketplaceValidateCommand, {
+  MarketplaceValidateArgs,
+} from '../cms/module/marketplace-validate.js';
 import { makeYargsBuilder } from '../../lib/yargsUtils.js';
+import { commands } from '../../lang/en.js';
 
-const command = 'marketplace-validate <src>';
-const describe = commands.module.subcommands.marketplaceValidate.describe;
+const command = 'marketplace-validate [src]';
+const describe = uiDeprecatedTag(
+  marketplaceValidateCommand.describe as string,
+  false
+);
 
-type MarketplaceValidateArgs = CommonArgs &
-  ConfigArgs &
-  AccountArgs &
-  EnvironmentArgs & {
-    src: string;
-  };
+async function handler(args: ArgumentsCamelCase<MarketplaceValidateArgs>) {
+  uiCommandRelocatedMessage('hs cms module marketplace-validate');
 
-async function handler(
-  args: ArgumentsCamelCase<MarketplaceValidateArgs>
-): Promise<void> {
-  const { src, derivedAccountId } = args;
-
-  trackCommandUsage('validate', undefined, derivedAccountId);
-
-  SpinniesManager.init();
-
-  SpinniesManager.add('marketplaceValidation', {
-    text: commands.module.subcommands.marketplaceValidate.logs.validatingModule(
-      src
-    ),
-  });
-
-  const assetType = 'MODULE';
-  const validationId = await kickOffValidation(
-    derivedAccountId,
-    assetType,
-    src
-  );
-  await pollForValidationFinish(derivedAccountId, validationId);
-
-  SpinniesManager.remove('marketplaceValidation');
-
-  const validationResults = await fetchValidationResults(
-    derivedAccountId,
-    validationId
-  );
-  processValidationErrors(
-    commands.module.subcommands.marketplaceValidate.errors.invalidPath,
-    validationResults
-  );
-  displayValidationResults(
-    commands.module.subcommands.marketplaceValidate.results,
-    validationResults
-  );
-
-  process.exit(EXIT_CODES.SUCCESS);
+  await marketplaceValidateCommand.handler(args);
 }
 
-function marketplaceValidateBuilder(
+function deprecatedMarketplaceValidateBuilder(
   yargs: Argv
 ): Argv<MarketplaceValidateArgs> {
   yargs.positional('src', {
-    describe: commands.module.subcommands.marketplaceValidate.positionals.src,
+    describe:
+      commands.cms.subcommands.module.subcommands.marketplaceValidate
+        .positionals.src,
     type: 'string',
   });
 
   return yargs as Argv<MarketplaceValidateArgs>;
 }
 
+const verboseDescribe = uiCommandRenamedDescription(
+  marketplaceValidateCommand.describe,
+  'hs cms module marketplace-validate'
+);
+
 const builder = makeYargsBuilder<MarketplaceValidateArgs>(
-  marketplaceValidateBuilder,
+  deprecatedMarketplaceValidateBuilder,
   command,
-  describe,
+  verboseDescribe,
   {
     useConfigOptions: true,
     useAccountOptions: true,
@@ -92,14 +52,14 @@ const builder = makeYargsBuilder<MarketplaceValidateArgs>(
   }
 );
 
-const marketplaceValidateCommand: YargsCommandModule<
+const deprecatedMarketplaceValidateCommand: YargsCommandModule<
   unknown,
   MarketplaceValidateArgs
 > = {
-  command,
+  ...marketplaceValidateCommand,
   describe,
   handler,
   builder,
 };
 
-export default marketplaceValidateCommand;
+export default deprecatedMarketplaceValidateCommand;

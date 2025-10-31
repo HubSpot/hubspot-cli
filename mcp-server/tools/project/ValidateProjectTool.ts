@@ -4,13 +4,17 @@ import {
   RegisteredTool,
 } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { z } from 'zod';
-import { absoluteProjectPath } from './constants.js';
+import {
+  absoluteCurrentWorkingDirectory,
+  absoluteProjectPath,
+} from './constants.js';
 import { runCommandInDir } from '../../utils/project.js';
 import { formatTextContents } from '../../utils/content.js';
 import { trackToolUsage } from '../../utils/toolUsageTracking.js';
 
 const inputSchema = {
   absoluteProjectPath,
+  absoluteCurrentWorkingDirectory,
 };
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -26,6 +30,7 @@ export class ValidateProjectTool extends Tool<CreateProjectInputSchema> {
 
   async handler({
     absoluteProjectPath,
+    absoluteCurrentWorkingDirectory,
   }: CreateProjectInputSchema): Promise<TextContentResponse> {
     await trackToolUsage(toolName);
     try {
@@ -34,9 +39,14 @@ export class ValidateProjectTool extends Tool<CreateProjectInputSchema> {
         'hs project validate'
       );
 
-      return formatTextContents(stdout, stderr);
+      return formatTextContents(
+        absoluteCurrentWorkingDirectory,
+        stdout,
+        stderr
+      );
     } catch (error) {
       return formatTextContents(
+        absoluteCurrentWorkingDirectory,
         error instanceof Error ? error.message : `${error}`
       );
     }

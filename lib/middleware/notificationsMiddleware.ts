@@ -1,5 +1,5 @@
 import updateNotifier from 'update-notifier';
-import pkg from '../../package.json' with { type: 'json' };
+import { pkg } from '../jsonLoader.js';
 import { UI_COLORS } from '../ui/index.js';
 import { lib } from '../../lang/en.js';
 

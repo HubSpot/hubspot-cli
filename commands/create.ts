@@ -3,7 +3,7 @@ import { logError } from '../lib/errorHandlers/index.js';
 import { setCLILogLevel } from '../lib/commonOpts.js';
 import { resolveLocalPath } from '../lib/filesystem.js';
 import { trackCommandUsage } from '../lib/usageTracking.js';
-import assets from './create/index.js';
+import assets from '../lib/cmsAssets/index.js';
 import { commands } from '../lang/en.js';
 import { uiLogger } from '../lib/ui/logger.js';
 import { CreateArgs } from '../types/Cms.js';
@@ -12,20 +12,25 @@ import { makeYargsBuilder } from '../lib/yargsUtils.js';
 import { YargsCommandModule } from '../types/Yargs.js';
 import { EXIT_CODES } from '../lib/enums/exitCodes.js';
 import { TEMPLATE_TYPES, HTTP_METHODS, CONTENT_TYPES } from '../types/Cms.js';
+import { uiDeprecatedTag } from '../lib/ui/index.js';
 
 const SUPPORTED_ASSET_TYPES = Object.keys(assets)
   .filter(t => !assets[t].hidden)
   .join(', ');
 
 const command = 'create <type> [name] [dest]';
-const describe = commands.create.describe(SUPPORTED_ASSET_TYPES);
+const describe = uiDeprecatedTag(
+  commands.create.describe(SUPPORTED_ASSET_TYPES) +
+    ' Please use the create commands in `hs cms` instead.',
+  false
+);
 
 async function handler(args: ArgumentsCamelCase<CreateArgs>): Promise<void> {
   const { name, internal: getInternalVersion, type } = args;
   let { dest } = args;
 
   setCLILogLevel(args);
-  const assetType = type.toLowerCase();
+  const assetType = type!.toLowerCase();
 
   if (assetType === 'global-partial') {
     uiLogger.error(

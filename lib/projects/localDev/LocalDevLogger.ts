@@ -3,7 +3,6 @@ import { getConfigDefaultAccount } from '@hubspot/local-dev-lib/config';
 
 import { uiLogger } from '../../ui/logger.js';
 import {
-  uiBetaTag,
   uiLine,
   uiAccountDescription,
   uiCommandReference,
@@ -114,7 +113,7 @@ class LocalDevLogger {
       console.clear();
     }
 
-    uiBetaTag(lib.LocalDevManager.betaMessage);
+    uiLogger.log(lib.LocalDevManager.headerMessage);
 
     uiLogger.log(lib.LocalDevManager.learnMoreLocalDevServer);
 

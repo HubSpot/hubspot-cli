@@ -7,7 +7,7 @@ import {
 import { runCommandInDir } from '../../../utils/project.js';
 import { addFlag } from '../../../utils/command.js';
 import { MockedFunction, Mocked } from 'vitest';
-import { TEMPLATE_TYPES } from '../../../../types/Cms.js';
+import { mcpFeedbackRequest } from '../../../utils/feedbackTracking.js';
 
 vi.mock('@modelcontextprotocol/sdk/server/mcp.js');
 vi.mock('../../../utils/project');
@@ -15,6 +15,11 @@ vi.mock('../../../utils/command');
 vi.mock('../../../utils/toolUsageTracking', () => ({
   trackToolUsage: vi.fn(),
 }));
+vi.mock('../../../utils/feedbackTracking');
+
+const mockMcpFeedbackRequest = mcpFeedbackRequest as MockedFunction<
+  typeof mcpFeedbackRequest
+>;
 
 const mockRunCommandInDir = runCommandInDir as MockedFunction<
   typeof runCommandInDir
@@ -36,6 +41,7 @@ describe('HsCreateTemplateTool', () => {
 
     mockRegisteredTool = {} as RegisteredTool;
     mockMcpServer.registerTool.mockReturnValue(mockRegisteredTool);
+    mockMcpFeedbackRequest.mockResolvedValue('');
 
     tool = new HsCreateTemplateTool(mockMcpServer);
   });
@@ -46,14 +52,15 @@ describe('HsCreateTemplateTool', () => {
 
       expect(mockMcpServer.registerTool).toHaveBeenCalledWith(
         'create-cms-template',
-        {
+        expect.objectContaining({
           title: 'Create HubSpot CMS Template',
-          description: `Creates a new HubSpot CMS template using the hs create template command. Templates can be created non-interactively by specifying templateType. Supports all template types including: ${TEMPLATE_TYPES.join(', ')}.`,
+          description: expect.stringContaining(
+            'Creates a new HubSpot CMS template'
+          ),
           inputSchema: expect.any(Object),
-        },
+        }),
         expect.any(Function)
       );
-
       expect(result).toBe(mockRegisteredTool);
     });
   });

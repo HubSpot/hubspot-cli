@@ -5,10 +5,16 @@ import {
 } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { runCommandInDir } from '../../../utils/project.js';
 import { MockedFunction, Mocked } from 'vitest';
+import { mcpFeedbackRequest } from '../../../utils/feedbackTracking.js';
 
 vi.mock('@modelcontextprotocol/sdk/server/mcp.js');
 vi.mock('../../../utils/project');
 vi.mock('../../../utils/toolUsageTracking');
+vi.mock('../../../utils/feedbackTracking');
+
+const mockMcpFeedbackRequest = mcpFeedbackRequest as MockedFunction<
+  typeof mcpFeedbackRequest
+>;
 
 const mockRunCommandInDir = runCommandInDir as MockedFunction<
   typeof runCommandInDir
@@ -29,6 +35,7 @@ describe('mcp-server/tools/project/UploadProjectTools', () => {
 
     mockRegisteredTool = {} as RegisteredTool;
     mockMcpServer.registerTool.mockReturnValue(mockRegisteredTool);
+    mockMcpFeedbackRequest.mockResolvedValue('');
 
     tool = new UploadProjectTools(mockMcpServer);
   });
@@ -39,22 +46,22 @@ describe('mcp-server/tools/project/UploadProjectTools', () => {
 
       expect(mockMcpServer.registerTool).toHaveBeenCalledWith(
         'upload-project',
-        {
+        expect.objectContaining({
           title: 'Upload HubSpot Project',
           description: expect.stringContaining(
             'Uploads the HubSpot project in current working directory.'
           ),
           inputSchema: expect.any(Object),
-        },
-        tool.handler
+        }),
+        expect.any(Function)
       );
-
       expect(result).toBe(mockRegisteredTool);
     });
   });
 
   describe('handler', () => {
     const input = {
+      absoluteCurrentWorkingDirectory: '/test/dir',
       absoluteProjectPath: '/test/project',
     };
 
@@ -135,6 +142,7 @@ describe('mcp-server/tools/project/UploadProjectTools', () => {
       });
 
       const differentInput = {
+        absoluteCurrentWorkingDirectory: '/test/dir',
         absoluteProjectPath: '/different/path/to/project',
       };
 

@@ -6,11 +6,17 @@ import {
 import { http } from '@hubspot/local-dev-lib/http/unauthed';
 import { isHubSpotHttpError } from '@hubspot/local-dev-lib/errors/index';
 import { MockedFunction, Mocked } from 'vitest';
+import { mcpFeedbackRequest } from '../../../utils/feedbackTracking.js';
 
 vi.mock('@modelcontextprotocol/sdk/server/mcp.js');
 vi.mock('@hubspot/local-dev-lib/http/unauthed');
 vi.mock('@hubspot/local-dev-lib/errors/index');
 vi.mock('../../utils/toolUsageTracking');
+vi.mock('../../../utils/feedbackTracking');
+
+const mockMcpFeedbackRequest = mcpFeedbackRequest as MockedFunction<
+  typeof mcpFeedbackRequest
+>;
 
 const mockHttp = http as unknown as { get: MockedFunction<typeof http.get> };
 const mockIsHubSpotHttpError = vi.mocked(isHubSpotHttpError);
@@ -30,6 +36,7 @@ describe('mcp-server/tools/project/DocFetchTool', () => {
 
     mockRegisteredTool = {} as RegisteredTool;
     mockMcpServer.registerTool.mockReturnValue(mockRegisteredTool);
+    mockMcpFeedbackRequest.mockResolvedValue('');
 
     tool = new DocFetchTool(mockMcpServer);
   });
@@ -40,21 +47,22 @@ describe('mcp-server/tools/project/DocFetchTool', () => {
 
       expect(mockMcpServer.registerTool).toHaveBeenCalledWith(
         'fetch-doc',
-        {
+        expect.objectContaining({
           title: 'Fetch HubSpot Developer Documentation (single file)',
-          description:
-            'Always use this immediately after `search-docs` and before creating a plan, writing code, or answering technical questions. This tool retrieves the full, authoritative content of a HubSpot Developer Documentation page from its URL, ensuring responses are accurate, up-to-date, and grounded in the official docs.',
+          description: expect.stringContaining(
+            'Always use this immediately after `search-docs`'
+          ),
           inputSchema: expect.any(Object),
-        },
-        tool.handler
+        }),
+        expect.any(Function)
       );
-
       expect(result).toBe(mockRegisteredTool);
     });
   });
 
   describe('handler', () => {
     const mockInput = {
+      absoluteCurrentWorkingDirectory: '/test/dir',
       docUrl: 'https://example.com/docs/test-doc',
     };
 

@@ -7,6 +7,7 @@ import {
 import { runCommandInDir } from '../../../utils/project.js';
 import { addFlag } from '../../../utils/command.js';
 import { MockedFunction, Mocked } from 'vitest';
+import { mcpFeedbackRequest } from '../../../utils/feedbackTracking.js';
 
 vi.mock('@modelcontextprotocol/sdk/server/mcp.js');
 vi.mock('../../../utils/project');
@@ -14,6 +15,11 @@ vi.mock('../../../utils/command');
 vi.mock('../../../utils/toolUsageTracking', () => ({
   trackToolUsage: vi.fn(),
 }));
+vi.mock('../../../utils/feedbackTracking');
+
+const mockMcpFeedbackRequest = mcpFeedbackRequest as MockedFunction<
+  typeof mcpFeedbackRequest
+>;
 
 const mockRunCommandInDir = runCommandInDir as MockedFunction<
   typeof runCommandInDir
@@ -36,6 +42,8 @@ describe('HsFunctionLogsTool', () => {
     mockRegisteredTool = {} as RegisteredTool;
     mockMcpServer.registerTool.mockReturnValue(mockRegisteredTool);
 
+    mockMcpFeedbackRequest.mockResolvedValue('');
+
     tool = new HsFunctionLogsTool(mockMcpServer);
   });
 
@@ -47,13 +55,13 @@ describe('HsFunctionLogsTool', () => {
         'get-cms-serverless-function-logs',
         expect.objectContaining({
           title: 'Get HubSpot CMS serverless function logs for an endpoint',
-          description:
-            'Retrieve logs for HubSpot CMS serverless functions. Use this tool to help debug issues with serverless functions by reading the production logs. Supports various options like latest, compact, and limiting results. Use after listing functions with list-cms-serverless-functions to get the endpoint path.',
+          description: expect.stringContaining(
+            'Retrieve logs for HubSpot CMS serverless functions'
+          ),
           inputSchema: expect.any(Object),
         }),
         expect.any(Function)
       );
-
       expect(result).toBe(mockRegisteredTool);
     });
   });

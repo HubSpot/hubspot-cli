@@ -421,8 +421,358 @@ export const commands = {
     },
   },
   cms: {
-    describe: 'Commands for working with the CMS.',
+    describe: 'Commands for managing CMS assets.',
     subcommands: {
+      template: {
+        describe: 'Commands for managing templates.',
+        subcommands: {
+          create: {
+            describe: 'Create a new CMS template.',
+            errors: {
+              unusablePath: (path: string) =>
+                `The "${path}" is not a usable path to a directory.`,
+            },
+            positionals: {
+              name: 'Name of the new template.',
+              dest: 'Destination folder for the new template.',
+            },
+            options: {
+              templateType: 'Template type for template creation.',
+            },
+          },
+        },
+      },
+      webpack: {
+        describe: 'Commands for managing webpack.',
+        subcommands: {
+          create: {
+            describe: 'Create a new webpack bundle.',
+            errors: {
+              unusablePath: (path: string) =>
+                `The "${path}" is not a usable path to a directory.`,
+            },
+            positionals: {
+              dest: 'Destination folder for the new webpack bundle.',
+            },
+          },
+        },
+      },
+      theme: {
+        describe: 'Commands for managing themes.',
+        subcommands: {
+          create: {
+            describe: 'Create a new theme.',
+            errors: {
+              unusablePath: (path: string) =>
+                `The "${path}" is not a usable path to a directory.`,
+            },
+            positionals: {
+              dest: 'Destination folder for the new theme.',
+            },
+          },
+          generateSelectors: {
+            describe:
+              'Automatically generates an editor-preview.json file for the given theme. The selectors this command generates are not perfect, so please edit editor-preview.json after running.',
+            errors: {
+              invalidPath: (themePath: string) =>
+                `Could not find directory "${themePath}"`,
+              fieldsNotFound: "Unable to find theme's fields.json.",
+              noSelectorsFound: 'No selectors found.',
+            },
+            success: (themePath: string, selectorsPath: string) =>
+              `Selectors generated for ${themePath}, please double check the selectors generated at ${selectorsPath} before uploading the theme.`,
+            positionals: {
+              path: "The path of the theme you'd like to generate an editor-preview.json for.",
+            },
+          },
+          marketplaceValidate: {
+            describe: 'Validate a theme for the marketplace.',
+            errors: {
+              invalidPath: (path: string) =>
+                `The path "${path}" is not a path to a folder in the Design Manager`,
+            },
+            logs: {
+              validatingTheme: (path: string) =>
+                `Validating theme "${path}" \n`,
+            },
+            results: {
+              required: 'Required validation results:',
+              recommended: 'Recommended validation results:',
+              warnings: {
+                file: (file: string) => `File: ${file}`,
+                lineNumber: (line: string) => `Line number: ${line}`,
+              },
+              noErrors: 'No errors',
+            },
+            positionals: {
+              path: {
+                describe: 'Path to the theme within the Design Manager.',
+              },
+            },
+          },
+          preview: {
+            describe:
+              'Upload and watch a theme directory on your computer for changes and start a local development server to preview theme changes on a site.',
+            errors: {
+              invalidPath: (path: string) =>
+                `The path "${path}" is not a path to a directory`,
+              noThemeComponents:
+                'Your project has no theme components available to preview.',
+              uploadFailed: (src: string, dest: string) =>
+                `Uploading file "${src}" to "${dest}" failed`,
+            },
+            positionals: {
+              src: 'Path to the local directory your theme is in, relative to your current working directory',
+              dest: 'Path in HubSpot Design Tools. Can be a net new path. If you wish to preview a site page using your theme changes it must match the path of the theme used by the site.',
+            },
+            options: {
+              notify:
+                'Log to specified file when a watch task is triggered and after workers have gone idle. Ex. --notify path/to/file',
+              noSsl: 'Disable HTTPS',
+              port: 'The port on which to start the local server',
+            },
+            initialUploadProgressBar: {
+              start: 'Starting...',
+              uploading: 'Uploading...',
+              finish: 'Complete!',
+            },
+            logs: {
+              processExited: 'Stopping dev server...',
+            },
+          },
+        },
+      },
+      app: {
+        describe: 'Commands for managing CMS apps.',
+        subcommands: {
+          create: {
+            describe: 'Create a new CMS app.',
+            errors: {
+              unsupportedAssetType: (
+                assetType: string,
+                supportedAssetTypes: string
+              ) =>
+                `The asset type ${assetType} is not supported. Supported asset types are ${supportedAssetTypes}.`,
+              unusablePath: (path: string) =>
+                `The "${path}" is not a usable path to a directory.`,
+            },
+            positionals: {
+              type: 'Type of the new app.',
+              name: 'Name of the new app.',
+              dest: 'Destination folder for the new app.',
+            },
+          },
+        },
+      },
+      list: {
+        describe: 'List remote contents of a directory in the HubSpot CMS.',
+        gettingPathContents: (path: string) => `Getting contents of ${path}.`,
+        noFilesFoundAtPath: (path: string) => `No files found in ${path}.`,
+        positionals: {
+          path: {
+            describe: 'Remote directory to list contents',
+          },
+        },
+      },
+      module: {
+        describe:
+          'Commands for working with modules, including marketplace validation with the marketplace-validate subcommand.',
+        subcommands: {
+          create: {
+            describe: 'Create a new CMS module.',
+            errors: {
+              unusablePath: (path: string) =>
+                `The "${path}" is not a usable path to a directory.`,
+            },
+            positionals: {
+              name: 'Name of the new module.',
+              dest: 'Destination folder for the new module.',
+            },
+            options: {
+              moduleLabel: 'Label for the new module.',
+              reactType: 'Whether to create a React module.',
+              contentTypes: (contentTypes: readonly string[]) =>
+                `Content types where the module can be used (${contentTypes.join(', ')}).`,
+              global: 'Whether to create a global module.',
+              availableForNewContent:
+                'Whether to create a module available for new content.',
+            },
+          },
+          marketplaceValidate: {
+            describe:
+              'Validate a module for the marketplace. Make sure to include the suffix .module in the path to the module within the Design Manager.',
+            errors: {
+              invalidPath: (path: string) =>
+                `The path "${path}" is not a path to a module within the Design Manager.`,
+            },
+            logs: {
+              validatingModule: (path: string) =>
+                `Validating module "${path}" \n`,
+            },
+            results: {
+              required: 'Required validation results:',
+              recommended: 'Recommended validation results:',
+              warnings: {
+                file: (file: string) => `File: ${file}`,
+                lineNumber: (line: string) => `Line number: ${line}`,
+              },
+              noErrors: 'No errors',
+            },
+            positionals: {
+              src: 'Path to the module within the Design Manager.',
+            },
+          },
+        },
+      },
+      upload: {
+        describe:
+          'Upload a folder or file from your computer to the HubSpot CMS.',
+        errors: {
+          destinationRequired: 'A destination path needs to be passed',
+          fileIgnored: (path: string) =>
+            `The file "${path}" is being ignored via an .hsignore rule`,
+          invalidPath: (path: string) =>
+            `The path "${path}" is not a path to a file or folder`,
+          uploadFailed: (src: string, dest: string) =>
+            `Uploading file "${src}" to "${dest}" failed`,
+          someFilesFailed: (dest: string) =>
+            `One or more files failed to upload to "${dest}" in the Design Manager`,
+          deleteFailed: (path: string, accountId: number) =>
+            `Deleting "${path}" from account ${uiAccountDescription(accountId)} failed`,
+        },
+        options: {
+          options: 'Options to pass to javascript fields files',
+          saveOutput:
+            "If true, saves all output from javascript fields files as 'fields.output.json'.",
+          convertFields:
+            'If true, converts any javascript fields files contained in module folder or project root.',
+          clean:
+            'Will delete the destination directory and its contents before uploading. This will also clear the global content associated with any global partial templates and modules.',
+          force: 'Skips confirmation prompts when doing a clean upload.',
+        },
+        previewUrl: (previewUrl: string) =>
+          `To preview this theme, visit: ${previewUrl}`,
+        positionals: {
+          src: 'Path to the local file, relative to your current working directory.',
+          dest: 'Path in HubSpot Design Tools, can be a net new path.',
+        },
+        success: {
+          fileUploaded: (src: string, dest: string, accountId: number) =>
+            `Uploaded file from "${src}" to "${dest}" in the Design Manager of account ${uiAccountDescription(accountId)}`,
+          uploadComplete: (dest: string) =>
+            `Uploading files to "${dest}" in the Design Manager is complete`,
+        },
+        uploading: (src: string, dest: string, accountId: number) =>
+          `Uploading files from "${src}" to "${dest}" in the Design Manager of account ${uiAccountDescription(accountId)}`,
+        notUploaded: (src: string) =>
+          `There was an error processing "${src}". The file has not been uploaded.`,
+        cleaning: (filePath: string, accountId: number) =>
+          `Removing "${filePath}" from account ${uiAccountDescription(accountId)} and uploading local...`,
+        confirmCleanUpload: (filePath: string, accountId: number) =>
+          `You are about to delete the directory "${filePath}" and its contents on HubSpot account ${uiAccountDescription(accountId)} before uploading. This will also clear the global content associated with any global partial templates and modules. Are you sure you want to do this?`,
+      },
+      delete: {
+        describe: 'Delete a file or folder from the HubSpot CMS.',
+        deleted: (path: string, accountId: number) =>
+          `Deleted "${path}" from account ${uiAccountDescription(accountId)}`,
+        errors: {
+          deleteFailed: (path: string, accountId: number) =>
+            `Deleting "${path}" from account ${uiAccountDescription(accountId)} failed`,
+        },
+        positionals: {
+          path: 'Remote hubspot path',
+        },
+      },
+      watch: {
+        describe:
+          'Watch a directory on your computer for changes and upload the changed files to the HubSpot CMS.',
+        errors: {
+          folderFailed: (src: string, dest: string, accountId: number) =>
+            `Initial uploading of folder "${src}" to "${dest}" in account ${uiAccountDescription(accountId)} had failures`,
+          fileFailed: (file: string, dest: string, accountId: number) =>
+            `Upload of file "${file}" to "${dest}" in account ${uiAccountDescription(accountId)} failed`,
+          destinationRequired: 'A destination directory needs to be passed',
+          invalidPath: (path: string) =>
+            `The "${path}" is not a path to a directory`,
+        },
+        options: {
+          disableInitial:
+            'Disable the initial upload when watching a directory (default)',
+          initialUpload: 'Upload directory before watching for updates',
+          notify:
+            'Log to specified file when a watch task is triggered and after workers have gone idle. Ex. --notify path/to/file',
+          remove:
+            'Will cause watch to delete files in your HubSpot account that are not found locally.',
+          convertFields:
+            'If true, converts any javascript fields files contained in module folder or project root.',
+          saveOutput:
+            "If true, saves all output from javascript fields files as 'fields.output.json'.",
+          options: 'Options to pass to javascript fields files',
+        },
+        positionals: {
+          src: 'Path to the local directory your files are in, relative to your current working directory',
+          dest: 'Path in HubSpot Design Tools. Can be a net new path',
+        },
+        warnings: {
+          disableInitial: `Passing the "${chalk.bold('--disable-initial')}" option is no longer necessary. Running "${uiCommandReference('hs watch')}" no longer uploads the watched directory by default.`,
+          initialUpload: `To upload the directory run "${uiCommandReference('hs upload')}" beforehand or add the "${chalk.bold('--initial-upload')}" option when running "${uiCommandReference('hs watch')}".`,
+          notUploaded: (path: string) =>
+            `The "${uiCommandReference('hs watch')}" command no longer uploads the watched directory when started. The directory "${path}" was not uploaded.`,
+        },
+      },
+      fetch: {
+        describe:
+          'Fetch a file, directory or module from HubSpot and write to a path on your computer.',
+        errors: {
+          sourceRequired: 'A source to fetch is required.',
+        },
+        options: {
+          staging: {
+            describe: 'Retrieve staged changes for project',
+          },
+          assetVersion: {
+            describe: 'Specify what version of a default asset to fetch',
+          },
+        },
+        positionals: {
+          dest: {
+            describe:
+              'Local directory you would like the files to be placed in, relative to your current working directory',
+          },
+          src: {
+            describe: 'Path in HubSpot Design Tools',
+          },
+        },
+      },
+      lint: {
+        issuesFound: (count: number) => `${count} issues found.`,
+        groupName: (path: string) => `Linting ${path}`,
+        positionals: {
+          path: {
+            describe: 'Local folder to lint',
+          },
+        },
+      },
+      mv: {
+        describe:
+          'Move a remote file or folder in HubSpot. This feature is currently in beta and the CLI contract is subject to change.',
+        errors: {
+          sourcePathExists: (srcPath: string, destPath: string) =>
+            `The folder "${srcPath}" already exists in "${destPath}".`,
+          moveFailed: (srcPath: string, destPath: string, accountId: number) =>
+            `Moving "${srcPath}" to "${destPath}" in account ${accountId} failed`,
+        },
+        move: (srcPath: string, destPath: string, accountId: number) =>
+          `Moved "${srcPath}" to "${destPath}" in account ${accountId}`,
+        positionals: {
+          srcPath: {
+            describe: 'Remote hubspot path',
+          },
+          destPath: {
+            describe: 'Remote hubspot path',
+          },
+        },
+      },
       lighthouseScore: {
         describe: 'Score a theme using Google lighthouse.',
         examples: {
@@ -490,6 +840,145 @@ export const commands = {
           pathExists: (path: string) => `Folder already exists at "${path}"`,
           invalidName:
             'Module not found with that name, please check the spelling of the module you are trying to download.',
+        },
+      },
+      function: {
+        describe: 'Commands for managing CMS serverless functions.',
+        subcommands: {
+          create: {
+            describe: 'Create a new CMS serverless function.',
+            errors: {
+              unusablePath: (path: string) =>
+                `The "${path}" is not a usable path to a directory.`,
+            },
+            positionals: {
+              name: 'Name of the function',
+              dest: 'Destination folder for the function',
+            },
+            options: {
+              functionsFolder: 'Folder to create functions in',
+              filename: 'Filename for the function',
+              endpointMethod: 'HTTP method for the function endpoint',
+              endpointPath: 'API endpoint path for the function',
+            },
+          },
+          logs: {
+            describe: 'View logs for a CMS serverless function.',
+            errors: {
+              noLogsFound: (functionPath: string, accountId: number) =>
+                `No logs were found for the function path "${functionPath}" in account "${accountId}".`,
+            },
+            examples: {
+              default:
+                'Get 5 most recent logs for function residing at /_hcms/api/my-endpoint',
+              follow:
+                'Poll for and output logs for function residing at /_hcms/api/my-endpoint immediately upon new execution',
+              limit:
+                'Get 10 most recent logs for function residing at /_hcms/api/my-endpoint',
+            },
+            endpointPrompt: 'Enter a serverless function endpoint:',
+            gettingLogs: (latest: boolean | undefined, functionPath: string) =>
+              `Getting ${latest ? 'latest ' : ''}logs for function with path: ${functionPath}.`,
+            options: {
+              compact: {
+                describe: 'output compact logs',
+              },
+              follow: {
+                describe: 'follow logs',
+              },
+              latest: {
+                describe: 'retrieve most recent log only',
+              },
+              limit: {
+                describe: 'limit the number of logs to output',
+              },
+            },
+            positionals: {
+              endpoint: {
+                describe: 'Serverless function endpoint',
+              },
+            },
+            tailLogs: (functionPath: string, accountId: string) =>
+              `Waiting for log entries for "${functionPath}" on account "${accountId}".\n`,
+          },
+          deploy: {
+            debug: {
+              startingBuildAndDeploy: (functionPath: string) =>
+                `Starting build and deploy for .functions folder with path: ${functionPath}`,
+            },
+            errors: {
+              buildError: (details: string) => `Build error: ${details}`,
+              noPackageJson: (functionPath: string) =>
+                `Unable to find package.json for function ${functionPath}.`,
+              notFunctionsFolder: (functionPath: string) =>
+                `Specified path ${functionPath} is not a .functions folder.`,
+            },
+            examples: {
+              default:
+                'Build and deploy a new bundle for all functions within the myFunctionFolder.functions folder',
+            },
+            loading: (functionPath: string, account: string) =>
+              `Building and deploying bundle for "${functionPath}" on ${account}`,
+            loadingFailed: (functionPath: string, account: string) =>
+              `Failed to build and deploy bundle for "${functionPath}" on ${account}`,
+            positionals: {
+              path: {
+                describe: 'Path to the ".functions" folder',
+              },
+            },
+            success: {
+              deployed: (
+                functionPath: string,
+                accountId: number,
+                buildTimeSeconds: string | 0
+              ) =>
+                `Built and deployed bundle from package.json for ${functionPath} on account ${accountId} in ${buildTimeSeconds}s.`,
+            },
+          },
+          list: {
+            debug: {
+              gettingFunctions: 'Getting currently deployed functions',
+            },
+            describe: 'List the currently deployed CMS serverless functions.',
+            info: {
+              noFunctions: 'No functions found',
+            },
+            options: {
+              json: {
+                describe: 'output raw json data',
+              },
+            },
+          },
+          server: {
+            debug: {
+              startingServer: (functionPath: string) =>
+                `Starting local test server for .functions folder with path: ${functionPath}`,
+            },
+            examples: {
+              default: 'Run a local function test server.',
+            },
+            options: {
+              contact: {
+                describe: 'Pass contact data to the test function',
+              },
+              logOutput: {
+                describe:
+                  'Output the response body from the serverless function execution (It is suggested not to use this in production environments as it can reveal any secure data returned by the function in logs)',
+              },
+              port: {
+                describe: 'Port to run the test server on',
+              },
+              watch: {
+                describe:
+                  'Watch the specified .functions folder for changes and restart the server',
+              },
+            },
+            positionals: {
+              path: {
+                describe: 'Path to local .functions folder',
+              },
+            },
+          },
         },
       },
     },
@@ -599,6 +1088,9 @@ export const commands = {
     describe: 'Commands for managing custom objects.',
     seeMoreLink: `${uiLink('View our docs to find out more', 'https://developers.hubspot.com/docs/api-reference/crm-custom-objects-v3/guide#custom-objects-api-guide')}`,
     subcommands: {
+      schema: {
+        describe: 'Commands for managing custom object schemas.',
+      },
       create: {
         describe: 'Create custom object instances.',
         errors: {
@@ -626,138 +1118,133 @@ export const commands = {
         inputPath:
           '[--path] Enter the path to the JSON file containing the object definitions:',
       },
-      schema: {
-        describe: 'Commands for managing custom object schemas.',
-        subcommands: {
-          create: {
-            describe: 'Create a custom object schema.',
-            errors: {
-              invalidSchema:
-                'The schema definition is invalid. Please check the schema and try again.',
-              creationFailed: (definition: string) =>
-                `Schema creation from ${definition} failed`,
-            },
-            options: {
-              definition: {
-                describe:
-                  'Local path to the JSON file containing the schema definition',
-              },
-            },
-            success: {
-              schemaCreated: (accountId: string) =>
-                `Your schema has been created in account "${accountId}"`,
-              schemaViewable: (url: string) => `Schema can be viewed at ${url}`,
-            },
-          },
-          delete: {
-            describe: 'Delete a custom object schema.',
-            errors: {
-              delete: (name: string) => `Unable to delete ${name}`,
-            },
-            examples: {
-              default: 'Delete "schemaName" schema',
-            },
-            positionals: {
-              name: {
-                describe: 'Name of the target schema',
-              },
-            },
-            options: {
-              force: {
-                describe: 'Force the deletion of the schema.',
-              },
-            },
-            success: {
-              delete: (name: string) =>
-                `Successfully initiated deletion of ${name}`,
-            },
-            confirmDelete: (name: string) =>
-              `Are you sure you want to delete the schema "${name}"?`,
-            deleteCancelled: (name: string) =>
-              `Deletion of schema "${name}" cancelled.`,
-            selectSchema: 'Which schema would you like to delete?',
-          },
-          fetchAll: {
-            describe: 'Fetch all custom object schemas for an account.',
-            errors: {
-              fetch: 'Unable to fetch schemas',
-            },
-            examples: {
-              default:
-                'Fetch all schemas for an account and put them in the current working directory',
-              specifyPath:
-                'Fetch all schemas for an account and put them in a directory named my/folder',
-            },
-            positionals: {
-              dest: {
-                describe: 'Local folder where schemas will be written',
-              },
-            },
-            success: {
-              fetch: (path: string) => `Saved schemas to ${path}`,
-            },
-            inputDest: 'Where would you like to save the schemas?',
-          },
-          fetch: {
-            describe: 'Fetch a custom object schema.',
-            errors: {
-              fetch: (name: string) => `Unable to fetch ${name}`,
-            },
-            examples: {
-              default:
-                'Fetch "schemaId" schema and put it in the current working directory',
-              specifyPath:
-                'Fetch "schemaId" schema and put it in a directory named my/folder',
-            },
-            positionals: {
-              dest: {
-                describe: 'Local folder where schema will be written',
-              },
-              name: {
-                describe: 'Name of the target schema',
-              },
-            },
-            selectSchema: 'Which schema would you like to fetch?',
-            inputDest: 'What would you like to name the destination file?',
-            success: {
-              save: (name: string, path: string) =>
-                `The schema "${name}" has been saved to "${path}"`,
-              savedToPath: (path: string) => `Saved schema to ${path}`,
-            },
-          },
-          list: {
-            describe: 'List custom object schemas.',
-            errors: {
-              list: 'Unable to list schemas',
-            },
-          },
-          update: {
-            describe: 'Update an existing custom object schema.',
-            errors: {
-              invalidSchema:
-                'The schema definition is invalid. Please check the schema and try again.',
-              update: (definition: string) =>
-                `Schema update from ${definition} failed`,
-            },
-            options: {
-              path: {
-                describe:
-                  'Local path to the JSON file containing the schema definition',
-              },
-            },
-            positionals: {
-              name: {
-                describe: 'Name of the target schema',
-              },
-            },
-            success: {
-              update: (accountId: string) =>
-                `Your schema has been updated in account "${accountId}"`,
-              viewAtUrl: (url: string) => `Schema can be viewed at ${url}`,
-            },
-            selectSchema: 'Which schema would you like to update?',
+      createSchema: {
+        describe: 'Create a custom object schema.',
+        errors: {
+          invalidSchema:
+            'The schema definition is invalid. Please check the schema and try again.',
+          creationFailed: (definition: string) =>
+            `Schema creation from ${definition} failed`,
+        },
+        options: {
+          definition: {
+            describe:
+              'Local path to the JSON file containing the schema definition',
           },
         },
+        success: {
+          schemaCreated: (accountId: string) =>
+            `Your schema has been created in account "${accountId}"`,
+          schemaViewable: (url: string) => `Schema can be viewed at ${url}`,
+        },
+      },
+      deleteSchema: {
+        describe: 'Delete a custom object schema.',
+        errors: {
+          delete: (name: string) => `Unable to delete ${name}`,
+        },
+        examples: {
+          default: 'Delete "schemaName" schema',
+        },
+        positionals: {
+          name: {
+            describe: 'Name of the target schema',
+          },
+        },
+        options: {
+          force: {
+            describe: 'Force the deletion of the schema.',
+          },
+        },
+        success: {
+          delete: (name: string) =>
+            `Successfully initiated deletion of ${name}`,
+        },
+        confirmDelete: (name: string) =>
+          `Are you sure you want to delete the schema "${name}"?`,
+        deleteCancelled: (name: string) =>
+          `Deletion of schema "${name}" cancelled.`,
+        selectSchema: 'Which schema would you like to delete?',
+      },
+      fetchAllSchemas: {
+        describe: 'Fetch all custom object schemas for an account.',
+        errors: {
+          fetch: 'Unable to fetch schemas',
+        },
+        examples: {
+          default:
+            'Fetch all schemas for an account and put them in the current working directory',
+          specifyPath:
+            'Fetch all schemas for an account and put them in a directory named my/folder',
+        },
+        positionals: {
+          dest: {
+            describe: 'Local folder where schemas will be written',
+          },
+        },
+        success: {
+          fetch: (path: string) => `Saved schemas to ${path}`,
+        },
+        inputDest: 'Where would you like to save the schemas?',
+      },
+      fetchSchema: {
+        describe: 'Fetch a custom object schema.',
+        errors: {
+          fetch: (name: string) => `Unable to fetch ${name}`,
+        },
+        examples: {
+          default:
+            'Fetch "schemaId" schema and put it in the current working directory',
+          specifyPath:
+            'Fetch "schemaId" schema and put it in a directory named my/folder',
+        },
+        positionals: {
+          dest: {
+            describe: 'Local folder where schema will be written',
+          },
+          name: {
+            describe: 'Name of the target schema',
+          },
+        },
+        selectSchema: 'Which schema would you like to fetch?',
+        inputDest: 'What would you like to name the destination file?',
+        success: {
+          save: (name: string, path: string) =>
+            `The schema "${name}" has been saved to "${path}"`,
+          savedToPath: (path: string) => `Saved schema to ${path}`,
+        },
+      },
+      listSchemas: {
+        describe: 'List custom object schemas.',
+        errors: {
+          list: 'Unable to list schemas',
+        },
+      },
+      updateSchema: {
+        describe: 'Update an existing custom object schema.',
+        errors: {
+          invalidSchema:
+            'The schema definition is invalid. Please check the schema and try again.',
+          update: (definition: string) =>
+            `Schema update from ${definition} failed`,
+        },
+        options: {
+          path: {
+            describe:
+              'Local path to the JSON file containing the schema definition',
+          },
+        },
+        positionals: {
+          name: {
+            describe: 'Name of the target schema',
+          },
+        },
+        success: {
+          update: (accountId: string) =>
+            `Your schema has been updated in account "${accountId}"`,
+          viewAtUrl: (url: string) => `Schema can be viewed at ${url}`,
+        },
+        selectSchema: 'Which schema would you like to update?',
       },
     },
   },
@@ -774,30 +1261,6 @@ export const commands = {
     },
     outputWritten: (filename: string) =>
       `Output written to ${chalk.bold(filename)}`,
-  },
-  fetch: {
-    describe:
-      'Fetch a file, directory or module from HubSpot and write to a path on your computer.',
-    errors: {
-      sourceRequired: 'A source to fetch is required.',
-    },
-    options: {
-      staging: {
-        describe: 'Retrieve staged changes for project',
-      },
-      assetVersion: {
-        describe: 'Specify what version of a default asset to fetch',
-      },
-    },
-    positionals: {
-      dest: {
-        describe:
-          'Local directory you would like the files to be placed in, relative to your current working directory',
-      },
-      src: {
-        describe: 'Path in HubSpot Design Tools',
-      },
-    },
   },
   filemanager: {
     describe: 'Commands for managing files in the File Manager.',
@@ -852,89 +1315,6 @@ export const commands = {
             `Uploaded file from "${src}" to "${dest}" in the File Manager of account ${accountId}`,
           uploadComplete: (dest: string) =>
             `Uploading files to "${dest}" in the File Manager is complete`,
-        },
-      },
-    },
-  },
-  function: {
-    describe: 'Commands for managing CMS serverless functions.',
-    subcommands: {
-      deploy: {
-        debug: {
-          startingBuildAndDeploy: (functionPath: string) =>
-            `Starting build and deploy for .functions folder with path: ${functionPath}`,
-        },
-        errors: {
-          buildError: (details: string) => `Build error: ${details}`,
-          noPackageJson: (functionPath: string) =>
-            `Unable to find package.json for function ${functionPath}.`,
-          notFunctionsFolder: (functionPath: string) =>
-            `Specified path ${functionPath} is not a .functions folder.`,
-        },
-        examples: {
-          default:
-            'Build and deploy a new bundle for all functions within the myFunctionFolder.functions folder',
-        },
-        loading: (functionPath: string, account: string) =>
-          `Building and deploying bundle for "${functionPath}" on ${account}`,
-        loadingFailed: (functionPath: string, account: string) =>
-          `Failed to build and deploy bundle for "${functionPath}" on ${account}`,
-        positionals: {
-          path: {
-            describe: 'Path to the ".functions" folder',
-          },
-        },
-        success: {
-          deployed: (
-            functionPath: string,
-            accountId: number,
-            buildTimeSeconds: string | 0
-          ) =>
-            `Built and deployed bundle from package.json for ${functionPath} on account ${accountId} in ${buildTimeSeconds}s.`,
-        },
-      },
-      list: {
-        debug: {
-          gettingFunctions: 'Getting currently deployed functions',
-        },
-        describe: 'List the currently deployed CMS serverless functions.',
-        info: {
-          noFunctions: 'No functions found',
-        },
-        options: {
-          json: {
-            describe: 'output raw json data',
-          },
-        },
-      },
-      server: {
-        debug: {
-          startingServer: (functionPath: string) =>
-            `Starting local test server for .functions folder with path: ${functionPath}`,
-        },
-        examples: {
-          default: 'Run a local function test server.',
-        },
-        options: {
-          contact: {
-            describe: 'Pass contact data to the test function',
-          },
-          logOutput: {
-            describe:
-              'Output the response body from the serverless function execution (It is suggested not to use this in production environments as it can reveal any secure data returned by the function in logs)',
-          },
-          port: {
-            describe: 'Port to run the test server on',
-          },
-          watch: {
-            describe:
-              'Watch the specified .functions folder for changes and restart the server',
-          },
-        },
-        positionals: {
-          path: {
-            describe: 'Path to local .functions folder',
-          },
         },
       },
     },
@@ -1087,64 +1467,6 @@ export const commands = {
       globalConfigFileExists: `You are using our new global configuration for account management, which is not compatible with this command. Please use ${uiCommandReference('hs account auth')} instead.`,
     },
   },
-  lint: {
-    issuesFound: (count: number) => `${count} issues found.`,
-    groupName: (path: string) => `Linting ${path}`,
-    positionals: {
-      path: {
-        describe: 'Local folder to lint',
-      },
-    },
-  },
-  list: {
-    describe: 'List remote contents of a directory.',
-    gettingPathContents: (path: string) => `Getting contents of ${path}.`,
-    noFilesFoundAtPath: (path: string) => `No files found in ${path}.`,
-    positionals: {
-      path: {
-        describe: 'Remote directory to list contents',
-      },
-    },
-  },
-  logs: {
-    describe: 'View logs for a CMS serverless function.',
-    errors: {
-      noLogsFound: (functionPath: string, accountId: number) =>
-        `No logs were found for the function path "${functionPath}" in account "${accountId}".`,
-    },
-    examples: {
-      default:
-        'Get 5 most recent logs for function residing at /_hcms/api/my-endpoint',
-      follow:
-        'Poll for and output logs for function residing at /_hcms/api/my-endpoint immediately upon new execution',
-      limit:
-        'Get 10 most recent logs for function residing at /_hcms/api/my-endpoint',
-    },
-    endpointPrompt: 'Enter a serverless function endpoint:',
-    gettingLogs: (latest: boolean | undefined, functionPath: string) =>
-      `Getting ${latest ? 'latest ' : ''}logs for function with path: ${functionPath}.`,
-    options: {
-      compact: {
-        describe: 'output compact logs',
-      },
-      follow: {
-        describe: 'follow logs',
-      },
-      latest: {
-        describe: 'retrieve most recent log only',
-      },
-      limit: {
-        describe: 'limit the number of logs to output',
-      },
-    },
-    positionals: {
-      endpoint: {
-        describe: 'Serverless function endpoint',
-      },
-    },
-    tailLogs: (functionPath: string, accountId: string) =>
-      `Waiting for log entries for "${functionPath}" on account "${accountId}".\n`,
-  },
   mcp: {
     describe: 'Commands for managing HubSpot MCP servers.',
     setup: {
@@ -1210,18 +1532,6 @@ export const commands = {
       stoppedSuccessfully: 'Stopped successfully.',
       shuttingDown: 'Shutting down MCP server...',
     },
-  },
-  mv: {
-    describe:
-      'Move a remote file or folder in HubSpot. This feature is currently in beta and the CLI contract is subject to change.',
-    errors: {
-      sourcePathExists: (srcPath: string, destPath: string) =>
-        `The folder "${srcPath}" already exists in "${destPath}".`,
-      moveFailed: (srcPath: string, destPath: string, accountId: number) =>
-        `Moving "${srcPath}" to "${destPath}" in account ${accountId} failed`,
-    },
-    move: (srcPath: string, destPath: string, accountId: number) =>
-      `Moved "${srcPath}" to "${destPath}" in account ${accountId}`,
   },
   open: {
     describe: 'Open a HubSpot page in your browser.',
@@ -1378,6 +1688,7 @@ export const commands = {
           'The --project-account and --testing-account flags are not supported for projects with platform versions earlier than 2025.2.',
         unsupportedAccountFlagV2:
           'The --account flag is is not supported supported for projects with platform versions 2025.2 and newer. Use --testing-account and --project-account flags to specify accounts to use for local dev',
+        localDevAlreadyRunning: `Another ${uiCommandReference('hs project dev')} process is already running. To proceed with local development of this project, stop the existing process and re-run ${uiCommandReference('hs project dev')}.`,
       },
       examples: {
         default: 'Start local dev for the current project',
@@ -1411,7 +1722,7 @@ export const commands = {
       },
       prompts: {
         parentComponents:
-          '[--project-base] What would you like in your project?',
+          '[--project-base] Choose what to include in your project:',
         emptyProject: 'Empty Project',
         app: 'App',
       },
@@ -1591,11 +1902,11 @@ export const commands = {
         maxExceeded: (maxCount: number) =>
           `This project has the maximum allowed(${maxCount})`,
         authTypeNotAllowed: (authType: string) =>
-          `Auth type '${authType}' not allowed.`,
+          `Requires auth type '${authType}'.`,
         distributionNotAllowed: (dist: string) =>
-          `Distribution '${dist}' not allowed.`,
-        portalDoesNotHaveAccessToThisFeature: (accountId: number) =>
-          `The account ${uiAccountDescription(accountId)} does not have access to this feature.`,
+          `Requires distribution '${dist}'.`,
+        portalDoesNotHaveAccessToThisFeature: () =>
+          "This account doesn't have access to this feature.",
         locationInProject:
           'This command must be run from within a project directory.',
         failedToFetchComponentList:
@@ -1945,18 +2256,6 @@ export const commands = {
       },
     },
   },
-  remove: {
-    describe: 'Delete a file or folder from the HubSpot CMS.',
-    deleted: (path: string, accountId: number) =>
-      `Deleted "${path}" from account ${uiAccountDescription(accountId)}`,
-    errors: {
-      deleteFailed: (path: string, accountId: number) =>
-        `Deleting "${path}" from account ${uiAccountDescription(accountId)} failed`,
-    },
-    positionals: {
-      path: 'Remote hubspot path',
-    },
-  },
   sandbox: {
     describe: 'Commands for managing sandboxes.',
     subcommands: {
@@ -2276,192 +2575,6 @@ export const commands = {
       },
     },
   },
-  theme: {
-    describe: 'Commands for managing themes.',
-    subcommands: {
-      generateSelectors: {
-        describe:
-          'Automatically generates an editor-preview.json file for the given theme. The selectors this command generates are not perfect, so please edit editor-preview.json after running.',
-        errors: {
-          invalidPath: (themePath: string) =>
-            `Could not find directory "${themePath}"`,
-          fieldsNotFound: "Unable to find theme's fields.json.",
-          noSelectorsFound: 'No selectors found.',
-        },
-        success: (themePath: string, selectorsPath: string) =>
-          `Selectors generated for ${themePath}, please double check the selectors generated at ${selectorsPath} before uploading the theme.`,
-        positionals: {
-          path: "The path of the theme you'd like to generate an editor-preview.json for.",
-        },
-      },
-      marketplaceValidate: {
-        describe: 'Validate a theme for the marketplace.',
-        errors: {
-          invalidPath: (path: string) =>
-            `The path "${path}" is not a path to a folder in the Design Manager`,
-        },
-        logs: {
-          validatingTheme: (path: string) => `Validating theme "${path}" \n`,
-        },
-        results: {
-          required: 'Required validation results:',
-          recommended: 'Recommended validation results:',
-          warnings: {
-            file: (file: string) => `File: ${file}`,
-            lineNumber: (line: string) => `Line number: ${line}`,
-          },
-          noErrors: 'No errors',
-        },
-        positionals: {
-          path: {
-            describe: 'Path to the theme within the Design Manager.',
-          },
-        },
-      },
-      preview: {
-        describe:
-          'Upload and watch a theme directory on your computer for changes and start a local development server to preview theme changes on a site.',
-        errors: {
-          invalidPath: (path: string) =>
-            `The path "${path}" is not a path to a directory`,
-          noThemeComponents:
-            'Your project has no theme components available to preview.',
-          uploadFailed: (src: string, dest: string) =>
-            `Uploading file "${src}" to "${dest}" failed`,
-        },
-        positionals: {
-          src: 'Path to the local directory your theme is in, relative to your current working directory',
-          dest: 'Path in HubSpot Design Tools. Can be a net new path. If you wish to preview a site page using your theme changes it must match the path of the theme used by the site.',
-        },
-        options: {
-          notify:
-            'Log to specified file when a watch task is triggered and after workers have gone idle. Ex. --notify path/to/file',
-          noSsl: 'Disable HTTPS',
-          port: 'The port on which to start the local server',
-        },
-        initialUploadProgressBar: {
-          start: 'Starting...',
-          uploading: 'Uploading...',
-          finish: 'Complete!',
-        },
-        logs: {
-          processExited: 'Stopping dev server...',
-        },
-      },
-    },
-  },
-  module: {
-    describe:
-      'Commands for working with modules, including marketplace validation with the marketplace-validate subcommand.',
-    subcommands: {
-      marketplaceValidate: {
-        describe:
-          'Validate a module for the marketplace. Make sure to include the suffix .module in the path to the module within the Design Manager.',
-        errors: {
-          invalidPath: (path: string) =>
-            `The path "${path}" is not a path to a module within the Design Manager.`,
-        },
-        logs: {
-          validatingModule: (path: string) => `Validating module "${path}" \n`,
-        },
-        results: {
-          required: 'Required validation results:',
-          recommended: 'Recommended validation results:',
-          warnings: {
-            file: (file: string) => `File: ${file}`,
-            lineNumber: (line: string) => `Line number: ${line}`,
-          },
-          noErrors: 'No errors',
-        },
-        positionals: {
-          src: 'Path to the module within the Design Manager.',
-        },
-      },
-    },
-  },
-  upload: {
-    describe: 'Upload a folder or file from your computer to the HubSpot CMS.',
-    errors: {
-      destinationRequired: 'A destination path needs to be passed',
-      fileIgnored: (path: string) =>
-        `The file "${path}" is being ignored via an .hsignore rule`,
-      invalidPath: (path: string) =>
-        `The path "${path}" is not a path to a file or folder`,
-      uploadFailed: (src: string, dest: string) =>
-        `Uploading file "${src}" to "${dest}" failed`,
-      someFilesFailed: (dest: string) =>
-        `One or more files failed to upload to "${dest}" in the Design Manager`,
-      deleteFailed: (path: string, accountId: number) =>
-        `Deleting "${path}" from account ${uiAccountDescription(accountId)} failed`,
-    },
-    options: {
-      options: 'Options to pass to javascript fields files',
-      saveOutput:
-        "If true, saves all output from javascript fields files as 'fields.output.json'.",
-      convertFields:
-        'If true, converts any javascript fields files contained in module folder or project root.',
-      clean:
-        'Will delete the destination directory and its contents before uploading. This will also clear the global content associated with any global partial templates and modules.',
-      force: 'Skips confirmation prompts when doing a clean upload.',
-    },
-    previewUrl: (previewUrl: string) =>
-      `To preview this theme, visit: ${previewUrl}`,
-    positionals: {
-      src: 'Path to the local file, relative to your current working directory.',
-      dest: 'Path in HubSpot Design Tools, can be a net new path.',
-    },
-    success: {
-      fileUploaded: (src: string, dest: string, accountId: number) =>
-        `Uploaded file from "${src}" to "${dest}" in the Design Manager of account ${uiAccountDescription(accountId)}`,
-      uploadComplete: (dest: string) =>
-        `Uploading files to "${dest}" in the Design Manager is complete`,
-    },
-    uploading: (src: string, dest: string, accountId: number) =>
-      `Uploading files from "${src}" to "${dest}" in the Design Manager of account ${uiAccountDescription(accountId)}`,
-    notUploaded: (src: string) =>
-      `There was an error processing "${src}". The file has not been uploaded.`,
-    cleaning: (filePath: string, accountId: number) =>
-      `Removing "${filePath}" from account ${uiAccountDescription(accountId)} and uploading local...`,
-    confirmCleanUpload: (filePath: string, accountId: number) =>
-      `You are about to delete the directory "${filePath}" and its contents on HubSpot account ${uiAccountDescription(accountId)} before uploading. This will also clear the global content associated with any global partial templates and modules. Are you sure you want to do this?`,
-  },
-  watch: {
-    describe:
-      'Watch a directory on your computer for changes and upload the changed files to the HubSpot CMS.',
-    errors: {
-      folderFailed: (src: string, dest: string, accountId: number) =>
-        `Initial uploading of folder "${src}" to "${dest}" in account ${uiAccountDescription(accountId)} had failures`,
-      fileFailed: (file: string, dest: string, accountId: number) =>
-        `Upload of file "${file}" to "${dest}" in account ${uiAccountDescription(accountId)} failed`,
-      destinationRequired: 'A destination directory needs to be passed',
-      invalidPath: (path: string) =>
-        `The "${path}" is not a path to a directory`,
-    },
-    options: {
-      disableInitial:
-        'Disable the initial upload when watching a directory (default)',
-      initialUpload: 'Upload directory before watching for updates',
-      notify:
-        'Log to specified file when a watch task is triggered and after workers have gone idle. Ex. --notify path/to/file',
-      remove:
-        'Will cause watch to delete files in your HubSpot account that are not found locally.',
-      convertFields:
-        'If true, converts any javascript fields files contained in module folder or project root.',
-      saveOutput:
-        "If true, saves all output from javascript fields files as 'fields.output.json'.",
-      options: 'Options to pass to javascript fields files',
-    },
-    positionals: {
-      src: 'Path to the local directory your files are in, relative to your current working directory',
-      dest: 'Path in HubSpot Design Tools. Can be a net new path',
-    },
-    warnings: {
-      disableInitial: `Passing the "${chalk.bold('--disable-initial')}" option is no longer necessary. Running "${uiCommandReference('hs watch')}" no longer uploads the watched directory by default.`,
-      initialUpload: `To upload the directory run "${uiCommandReference('hs upload')}" beforehand or add the "${chalk.bold('--initial-upload')}" option when running "${uiCommandReference('hs watch')}".`,
-      notUploaded: (path: string) =>
-        `The "${uiCommandReference('hs watch')}" command no longer uploads the watched directory when started. The directory "${path}" was not uploaded.`,
-    },
-  },
   convertFields: {
     describe:
       'Converts a specific JavaScript fields file of a module or theme to JSON.',
@@ -2593,6 +2706,7 @@ export const commands = {
       options: {
         name: 'The name of the test account (in your CLI config) to delete',
         id: 'The id of the test account',
+        force: 'Skips all confirmation prompts when deleting a test account.',
       },
       examples: {
         withPositionalID: (testAccountToDelete: number) =>
@@ -3428,10 +3542,10 @@ export const lib = {
     ) =>
       `Your project ${chalk.bold(projectName)} exists in ${accountIdentifier}, but has no deployed build. Projects must be successfully deployed to be developed locally. Address any build and deploy errors your project may have, then run ${uploadCommand} to upload and deploy your project.`,
     noComponents: 'There are no components in this project.',
-    betaMessage: 'HubSpot projects local development',
+    headerMessage: 'HubSpot projects local development',
     learnMoreLocalDevServer: uiLink(
       'Learn more about the projects local dev server',
-      'https://developers.hubspot.com/docs/platform/project-cli-commands#start-a-local-development-server'
+      'https://developers.hubspot.com/docs/developer-tooling/local-development/hubspot-cli/project-commands'
     ),
     running: (projectName: string, accountIdentifier: string) =>
       chalk.hex(UI_COLORS.SORBET)(
@@ -3537,6 +3651,9 @@ export const lib = {
       success: (appName: string, accountId: number) =>
         `Your app ${chalk.bold(appName)} has been installed successfully on account ${uiAccountDescription(accountId)}\n`,
     },
+    appDataNotFound: 'An error occurred while fetching data for your app.',
+    oauthAppRedirectUrlError: (redirectUrl: string) =>
+      `${chalk.bold('No reponse from your OAuth service:')} ${redirectUrl}\nYour app needs a valid OAuth2 service to be installed for local dev. ${uiLink('Learn more', 'https://developers.hubspot.com/docs/apps/developer-platform/build-apps/authentication/oauth/working-with-oauth')}`,
   },
   LocalDevWebsocketServer: {
     errors: {
@@ -3707,8 +3824,8 @@ export const lib = {
         marketPlaceDistribution: 'On the HubSpot marketplace',
         privateDistribution: 'Privately',
         distribution:
-          '[--distribution] How would you like to distribute your application?',
-        auth: '[--auth] What type of authentication would you like your application to use',
+          '[--distribution] Choose how to distribute your application:',
+        auth: '[--auth] Choose your authentication type:',
         staticAuth: 'Static Auth',
         oauth: 'OAuth',
       },
@@ -4244,8 +4361,8 @@ export const lib = {
       },
     },
     projectNameAndDestPrompt: {
-      enterName: '[--name] Give your project a name: ',
-      enterDest: '[--dest] Enter the folder to create the project in:',
+      enterName: '[--name] Enter your project name:',
+      enterDest: '[--dest] Choose where to create the project:',
       errors: {
         nameRequired: 'A project name is required',
         destRequired: 'A project dest is required',
@@ -4257,8 +4374,7 @@ export const lib = {
     },
     selectProjectTemplatePrompt: {
       selectTemplate: '[--template] Choose a project template: ',
-      features:
-        '[--features] Which features would you like your app to include?',
+      features: '[--features] Choose which features to add:',
       errors: {
         invalidTemplate: (template: string) =>
           `[--template] Could not find template "${template}". Please choose an available template:`,
@@ -4299,8 +4415,8 @@ export const lib = {
       },
     },
     projectAddPrompt: {
-      selectType: '[--type] Select an app feature to add: ',
-      selectFeatures: '[--features] Select an app feature to add: ',
+      selectType: '[--type] Choose which features to add: ',
+      selectFeatures: '[--features] Choose which features to add: ',
       enterName: '[--name] Give your component a name: ',
       errors: {
         nameRequired: 'A component name is required',

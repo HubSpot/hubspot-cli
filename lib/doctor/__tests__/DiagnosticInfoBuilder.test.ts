@@ -8,11 +8,13 @@ vi.mock('../../projects/config');
 vi.mock('@hubspot/local-dev-lib/api/projects');
 vi.mock('util');
 
-vi.mock('../../../package.json', () => {
+vi.mock('../../jsonLoader.js', () => {
   return {
-    default: {
+    pkg: {
+      name: '@hubspot/cli',
       version: '1.0.0',
     },
+    loadJson: vi.fn(),
   };
 });
 

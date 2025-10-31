@@ -50,6 +50,7 @@ import {
 import { uiLogger } from '../../../lib/ui/logger.js';
 import { commands } from '../../../lang/en.js';
 import LocalDevWebsocketServer from '../../../lib/projects/localDev/LocalDevWebsocketServer.js';
+import { confirmLocalDevIsNotRunning } from '../../../lib/projects/localDev/helpers/process.js';
 
 type UnifiedProjectDevFlowArgs = {
   args: ArgumentsCamelCase<ProjectDevArgs>;
@@ -67,6 +68,8 @@ export async function unifiedProjectDevFlow({
   projectConfig,
   projectDir,
 }: UnifiedProjectDevFlowArgs): Promise<void> {
+  await confirmLocalDevIsNotRunning();
+
   const env = getValidEnv(getEnv(targetProjectAccountId));
 
   let projectNodes;

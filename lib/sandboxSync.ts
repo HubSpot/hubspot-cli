@@ -144,7 +144,7 @@ export async function syncSandbox(
     ) {
       uiCommandDisabledBanner(
         'hs sandbox sync',
-        'https://app.hubspot.com/l/docs/guides/crm/project-cli-commands#developer-projects-cli-commands-beta'
+        'https://developers.hubspot.com/docs/developer-tooling/local-development/hubspot-cli/project-commands'
       );
     } else {
       logError(
