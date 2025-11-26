@@ -29,7 +29,6 @@ export async function build(): Promise<void> {
     });
     // Copy remaining files
     await Promise.all([
-      cp('lang/en.lyaml', 'dist/lang/en.lyaml'),
       cp('bin/hs', 'dist/bin/hs'),
       cp('bin/hscms', 'dist/bin/hscms'),
       cp('README.md', 'dist/README.md'),

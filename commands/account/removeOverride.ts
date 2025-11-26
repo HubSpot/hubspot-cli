@@ -8,7 +8,7 @@ import {
 import { DEFAULT_ACCOUNT_OVERRIDE_FILE_NAME } from '@hubspot/local-dev-lib/constants/config';
 import { getGlobalConfig } from '@hubspot/local-dev-lib/config/migrate';
 import { promptUser } from '../../lib/prompts/promptUtils.js';
-import { trackCommandMetadataUsage } from '../../lib/usageTracking.js';
+import { trackCommandUsage } from '../../lib/usageTracking.js';
 import { EXIT_CODES } from '../../lib/enums/exitCodes.js';
 import { logError } from '../../lib/errorHandlers/index.js';
 import { CommonArgs, YargsCommandModule } from '../../types/Yargs.js';
@@ -41,6 +41,8 @@ async function handler(
   if (accountOverride && overrideFilePath) {
     const accountId = getAccountId(accountOverride) || undefined;
 
+    trackCommandUsage('account-removeOverride', undefined, accountId!);
+
     if (!force) {
       uiLogger.log(
         commands.account.subcommands.removeOverride.accountOverride(
@@ -59,14 +61,6 @@ async function handler(
       uiLogger.log('');
 
       if (!deleteOverrideFile) {
-        trackCommandMetadataUsage(
-          'account-removeOverride',
-          {
-            command: 'hs account remove-override',
-            step: 'Reject removing override via prompt',
-          },
-          accountId
-        );
         process.exit(EXIT_CODES.SUCCESS);
       }
     }
@@ -74,15 +68,6 @@ async function handler(
     try {
       fs.unlinkSync(overrideFilePath);
       uiLogger.success(commands.account.subcommands.removeOverride.success);
-      trackCommandMetadataUsage(
-        'account-removeOverride',
-        {
-          command: 'hs account remove-override',
-          step: 'Confirm removing override file (via prompt/force)',
-          successful: true,
-        },
-        accountId
-      );
       process.exit(EXIT_CODES.SUCCESS);
     } catch (error) {
       logError(error);

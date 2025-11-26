@@ -10,7 +10,7 @@ const exec = promisify(_exec);
 
 // Configuration
 const PRIVATE_REPO_PATH = process.cwd();
-const PUBLIC_REPO_URL = 'https://github.com/HubSpot/hubspot-cli.git';
+const PUBLIC_REPO_URL = 'git@github.com:HubSpot/hubspot-cli.git';
 const PUBLIC_REPO_NAME = 'hubspot-cli';
 const SYNC_BRANCH_PREFIX = 'sync-from-internal';
 const TEMP_SYNC_DIR = 'temp-repo-sync';

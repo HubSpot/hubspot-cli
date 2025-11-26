@@ -6,9 +6,11 @@ import {
 } from '../components.js';
 import { uiLogger } from '../../ui/logger.js';
 import { coerceToValidUid } from '@hubspot/project-parsing-lib';
+import { fileExists } from '../../validation.js';
 
 vi.mock('fs');
 vi.mock('../../ui/logger.js');
+vi.mock('../../validation.js');
 vi.mock('@hubspot/project-parsing-lib', () => ({
   coerceToValidUid: vi.fn(),
   metafileExtension: '.module.meta.json',
@@ -26,12 +28,17 @@ vi.mock('../../../lang/en.js', () => ({
         componentLog: (type: string, uid: string) =>
           `Updated ${type} component with uid: ${uid}`,
       },
+      generateSafeFilenameDifferentiator: {
+        failedToCheckFiles:
+          'Failed to check files for filename differentiator. Falling back to timestamp.',
+      },
     },
   },
 }));
 
 const mockedFs = vi.mocked(fs);
 const mockCoerceToValidUid = vi.mocked(coerceToValidUid);
+const mockedFileExists = vi.mocked(fileExists);
 
 describe('lib/projects/components', () => {
   describe('handleComponentCollision()', () => {
@@ -43,16 +50,15 @@ describe('lib/projects/components', () => {
 
     beforeEach(() => {
       vi.resetAllMocks();
-
-      // Mock Date.now to return consistent values for testing
-      vi.spyOn(Date, 'now').mockReturnValue(1234567890);
+      // Default: fileExists returns false (file doesn't exist)
+      mockedFileExists.mockReturnValue(false);
     });
 
     afterEach(() => {
       vi.restoreAllMocks();
     });
 
-    it('handles source file collisions by renaming them with timestamps', () => {
+    it('handles source file collisions by renaming them with sequential numbers', () => {
       const collision: Collision = {
         ...mockCollision,
         collisions: ['component.js', 'utils.ts'],
@@ -65,11 +71,11 @@ describe('lib/projects/components', () => {
       expect(mockedFs.copyFileSync).toHaveBeenCalledTimes(2);
       expect(mockedFs.copyFileSync).toHaveBeenCalledWith(
         '/src/path/component.js',
-        '/dest/path/component-1234567890.js'
+        '/dest/path/component-2.js'
       );
       expect(mockedFs.copyFileSync).toHaveBeenCalledWith(
         '/src/path/utils.ts',
-        '/dest/path/utils-1234567890.ts'
+        '/dest/path/utils-2.ts'
       );
     });
 
@@ -105,12 +111,12 @@ describe('lib/projects/components', () => {
         'utf-8'
       );
       expect(mockedFs.writeFileSync).toHaveBeenCalledWith(
-        '/dest/path/component-1234567890.module.meta.json',
-        expect.stringContaining('source-1234567890.js')
+        '/dest/path/component-2.module.meta.json',
+        expect.stringContaining('source-2.js')
       );
       expect(mockedFs.copyFileSync).toHaveBeenCalledWith(
         '/src/path/source.js',
-        '/dest/path/source-1234567890.js'
+        '/dest/path/source-2.js'
       );
     });
 
@@ -219,17 +225,17 @@ describe('lib/projects/components', () => {
       // Verify source files are copied with new names
       expect(mockedFs.copyFileSync).toHaveBeenCalledWith(
         '/src/path/component.js',
-        '/dest/path/component-1234567890.js'
+        '/dest/path/component-2.js'
       );
       expect(mockedFs.copyFileSync).toHaveBeenCalledWith(
         '/src/path/utils.ts',
-        '/dest/path/utils-1234567890.ts'
+        '/dest/path/utils-2.ts'
       );
 
       // Verify metafile is updated and written with new name
       expect(mockedFs.writeFileSync).toHaveBeenCalledWith(
-        '/dest/path/component-1234567890.module.meta.json',
-        expect.stringContaining('component-1234567890.js')
+        '/dest/path/component-2.module.meta.json',
+        expect.stringContaining('component-2.js')
       );
 
       // Verify package.json is merged
@@ -303,6 +309,70 @@ describe('lib/projects/components', () => {
 
       consoleSpy.mockRestore();
     });
+
+    it('falls back to timestamp when maxAttempts is exhausted', () => {
+      const collision: Collision = {
+        ...mockCollision,
+        collisions: ['component.js'],
+      };
+
+      // Mock Date.now to return a consistent timestamp
+      const mockTimestamp = 1234567890;
+      vi.spyOn(Date, 'now').mockReturnValue(mockTimestamp);
+
+      // Mock fileExists to return true 10 times (exhausting maxAttempts)
+      // The function starts with differentiator = 1, then increments to 2, 3, etc.
+      // It will try 10 times (differentiators 2-11), and if all return true,
+      // maxAttempts will be 0 and it will fall back to timestamp
+      mockedFileExists.mockReturnValue(true);
+
+      mockedFs.copyFileSync.mockImplementation(() => {});
+
+      handleComponentCollision(collision);
+
+      // Should use timestamp as differentiator
+      expect(mockedFs.copyFileSync).toHaveBeenCalledWith(
+        '/src/path/component.js',
+        `/dest/path/component-${mockTimestamp}.js`
+      );
+
+      vi.restoreAllMocks();
+    });
+
+    it('falls back to timestamp when fileExists throws an error', () => {
+      const collision: Collision = {
+        ...mockCollision,
+        collisions: ['component.js'],
+      };
+
+      // Mock Date.now to return a consistent timestamp
+      const mockTimestamp = 9876543210;
+      vi.spyOn(Date, 'now').mockReturnValue(mockTimestamp);
+
+      // Mock fileExists to throw an error
+      const mockError = new Error('File system error');
+      mockedFileExists.mockImplementation(() => {
+        throw mockError;
+      });
+
+      mockedFs.copyFileSync.mockImplementation(() => {});
+      const mockUiLogger = vi.mocked(uiLogger);
+
+      handleComponentCollision(collision);
+
+      // Should log debug message about the error
+      expect(mockUiLogger.debug).toHaveBeenCalledWith(
+        'Failed to check files for filename differentiator. Falling back to timestamp.'
+      );
+
+      // Should use timestamp as differentiator
+      expect(mockedFs.copyFileSync).toHaveBeenCalledWith(
+        '/src/path/component.js',
+        `/dest/path/component-${mockTimestamp}.js`
+      );
+
+      vi.restoreAllMocks();
+    });
   });
 
   describe('updateHsMetaFilesWithAutoGeneratedFields()', () => {
@@ -349,12 +419,15 @@ describe('lib/projects/components', () => {
 
       updateHsMetaFilesWithAutoGeneratedFields(projectName, hsMetaFilePaths);
 
+      expect(mockCoerceToValidUid).toHaveBeenCalledWith('my-project_card');
+      expect(mockCoerceToValidUid).toHaveBeenCalledWith('my-project_function');
+
       expect(mockedFs.writeFileSync).toHaveBeenCalledWith(
         '/path/to/component1.meta.json',
         JSON.stringify(
           {
             type: 'card',
-            uid: 'card-my-project',
+            uid: 'card_my_project',
             config: {
               name: 'Old Name',
             },
@@ -369,7 +442,7 @@ describe('lib/projects/components', () => {
         JSON.stringify(
           {
             type: 'function',
-            uid: 'function-my-project',
+            uid: 'function_my_project',
           },
           null,
           2
@@ -380,10 +453,10 @@ describe('lib/projects/components', () => {
         'Updating component metadata files...'
       );
       expect(mockUiLogger.log).toHaveBeenCalledWith(
-        'Updated card component with uid: card-my-project'
+        'Updated card component with uid: card_my_project'
       );
       expect(mockUiLogger.log).toHaveBeenCalledWith(
-        'Updated function component with uid: function-my-project'
+        'Updated function component with uid: function_my_project'
       );
     });
 
@@ -406,12 +479,14 @@ describe('lib/projects/components', () => {
 
       updateHsMetaFilesWithAutoGeneratedFields(projectName, hsMetaFilePaths);
 
+      expect(mockCoerceToValidUid).toHaveBeenCalledWith('test-app_app');
+
       expect(mockedFs.writeFileSync).toHaveBeenCalledWith(
         '/path/to/app.meta.json',
         JSON.stringify(
           {
             type: 'app',
-            uid: 'app-test-app',
+            uid: 'app_test_app',
             config: {
               name: 'test-app-Application',
               other: 'property',
@@ -423,26 +498,24 @@ describe('lib/projects/components', () => {
       );
 
       expect(mockUiLogger.log).toHaveBeenCalledWith(
-        'Updated app component with uid: app-test-app and name: test-app-Application'
+        'Updated app component with uid: app_test_app and name: test-app-Application'
       );
     });
 
-    it('handles UID collisions by using timestamps', () => {
+    it('handles UID collisions by using differentiators', () => {
       const projectName = 'collision-project';
       const hsMetaFilePaths = ['/path/to/component1.meta.json'];
-      const existingUids = ['card-collision-project'];
+      const existingUids = ['card_collision_project'];
 
       const component1 = { type: 'card', uid: 'old-uid-1' };
 
       mockedFs.readFileSync.mockReturnValue(JSON.stringify(component1));
       mockedFs.writeFileSync.mockImplementation(() => {});
 
-      // Mock Date.now to return consistent value for testing
-      vi.spyOn(Date, 'now').mockReturnValue(1234567890);
-
+      // First call for getBaseUid() check, second call when adding differentiator
       mockCoerceToValidUid
         .mockReturnValueOnce('card-collision-project')
-        .mockReturnValueOnce('card-1234567890-collision-project');
+        .mockReturnValueOnce('card-collision-project');
 
       updateHsMetaFilesWithAutoGeneratedFields(
         projectName,
@@ -450,12 +523,19 @@ describe('lib/projects/components', () => {
         existingUids
       );
 
+      expect(mockCoerceToValidUid).toHaveBeenCalledWith(
+        'collision-project_card'
+      );
+      // getBaseUid() is called twice - once for initial check, once when adding differentiator
+      expect(mockCoerceToValidUid).toHaveBeenCalledTimes(2);
+
+      // The differentiator is appended with a hyphen, so the final UID has a hyphen before the number
       expect(mockedFs.writeFileSync).toHaveBeenCalledWith(
         '/path/to/component1.meta.json',
         JSON.stringify(
           {
             type: 'card',
-            uid: 'card-1234567890-collision-project',
+            uid: 'card_collision_project_2',
           },
           null,
           2
@@ -521,12 +601,16 @@ describe('lib/projects/components', () => {
 
       updateHsMetaFilesWithAutoGeneratedFields(projectName, hsMetaFilePaths);
 
+      expect(mockCoerceToValidUid).toHaveBeenCalledWith(
+        'no-config-project_app'
+      );
+
       expect(mockedFs.writeFileSync).toHaveBeenCalledWith(
         '/path/to/app.meta.json',
         JSON.stringify(
           {
             type: 'app',
-            uid: 'app-no-config-project',
+            uid: 'app_no_config_project',
           },
           null,
           2
@@ -534,7 +618,133 @@ describe('lib/projects/components', () => {
       );
 
       expect(mockUiLogger.log).toHaveBeenCalledWith(
-        'Updated app component with uid: app-no-config-project'
+        'Updated app component with uid: app_no_config_project'
+      );
+    });
+
+    it('replaces hyphens with underscores in coerced UIDs', () => {
+      const projectName = 'my-project';
+      const hsMetaFilePaths = ['/path/to/component.meta.json'];
+
+      const component = {
+        type: 'card',
+        uid: 'old-uid',
+      };
+
+      mockedFs.readFileSync.mockReturnValue(JSON.stringify(component));
+      mockedFs.writeFileSync.mockImplementation(() => {});
+      // coerceToValidUid returns a value with hyphens that should be converted to underscores
+      mockCoerceToValidUid.mockReturnValue('my-project-card-with-hyphens');
+
+      updateHsMetaFilesWithAutoGeneratedFields(projectName, hsMetaFilePaths);
+
+      expect(mockCoerceToValidUid).toHaveBeenCalledWith('my-project_card');
+
+      expect(mockedFs.writeFileSync).toHaveBeenCalledWith(
+        '/path/to/component.meta.json',
+        JSON.stringify(
+          {
+            type: 'card',
+            uid: 'my_project_card_with_hyphens',
+          },
+          null,
+          2
+        )
+      );
+    });
+
+    it('handles UIDs with multiple hyphens correctly', () => {
+      const projectName = 'test-project';
+      const hsMetaFilePaths = ['/path/to/component.meta.json'];
+
+      const component = {
+        type: 'custom-object',
+        uid: 'old-uid',
+      };
+
+      mockedFs.readFileSync.mockReturnValue(JSON.stringify(component));
+      mockedFs.writeFileSync.mockImplementation(() => {});
+      mockCoerceToValidUid.mockReturnValue('test-project-custom-object-type');
+
+      updateHsMetaFilesWithAutoGeneratedFields(projectName, hsMetaFilePaths);
+
+      expect(mockCoerceToValidUid).toHaveBeenCalledWith(
+        'test-project_custom-object'
+      );
+
+      expect(mockedFs.writeFileSync).toHaveBeenCalledWith(
+        '/path/to/component.meta.json',
+        JSON.stringify(
+          {
+            type: 'custom-object',
+            uid: 'test_project_custom_object_type',
+          },
+          null,
+          2
+        )
+      );
+    });
+
+    it('preserves UIDs without hyphens unchanged', () => {
+      const projectName = 'simpleproject';
+      const hsMetaFilePaths = ['/path/to/component.meta.json'];
+
+      const component = {
+        type: 'card',
+        uid: 'old-uid',
+      };
+
+      mockedFs.readFileSync.mockReturnValue(JSON.stringify(component));
+      mockedFs.writeFileSync.mockImplementation(() => {});
+      // coerceToValidUid returns a value without hyphens
+      mockCoerceToValidUid.mockReturnValue('simpleprojectcard');
+
+      updateHsMetaFilesWithAutoGeneratedFields(projectName, hsMetaFilePaths);
+
+      expect(mockCoerceToValidUid).toHaveBeenCalledWith('simpleproject_card');
+
+      expect(mockedFs.writeFileSync).toHaveBeenCalledWith(
+        '/path/to/component.meta.json',
+        JSON.stringify(
+          {
+            type: 'card',
+            uid: 'simpleprojectcard',
+          },
+          null,
+          2
+        )
+      );
+    });
+
+    it('handles project names with hyphens in UID generation', () => {
+      const projectName = 'my-super-project';
+      const hsMetaFilePaths = ['/path/to/component.meta.json'];
+
+      const component = {
+        type: 'function',
+        uid: 'old-uid',
+      };
+
+      mockedFs.readFileSync.mockReturnValue(JSON.stringify(component));
+      mockedFs.writeFileSync.mockImplementation(() => {});
+      mockCoerceToValidUid.mockReturnValue('my-super-project-function');
+
+      updateHsMetaFilesWithAutoGeneratedFields(projectName, hsMetaFilePaths);
+
+      expect(mockCoerceToValidUid).toHaveBeenCalledWith(
+        'my-super-project_function'
+      );
+
+      expect(mockedFs.writeFileSync).toHaveBeenCalledWith(
+        '/path/to/component.meta.json',
+        JSON.stringify(
+          {
+            type: 'function',
+            uid: 'my_super_project_function',
+          },
+          null,
+          2
+        )
       );
     });
   });

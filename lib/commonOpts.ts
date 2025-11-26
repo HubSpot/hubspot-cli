@@ -207,15 +207,11 @@ export function setCLILogLevel(
   if (json) {
     setLogLevel(LOG_LEVEL.ERROR);
     SpinniesManager.setDisableOutput(true);
-  } else if (debug) {
+  } else if (debug || networkDebug) {
     setLogLevel(LOG_LEVEL.DEBUG);
+    process.env.HUBSPOT_NETWORK_LOGGING = 'true';
   } else {
     setLogLevel(LOG_LEVEL.LOG);
-  }
-
-  if (networkDebug) {
-    process.env.HUBSPOT_NETWORK_LOGGING = 'true';
-    setLogLevel(LOG_LEVEL.DEBUG);
   }
 }
 

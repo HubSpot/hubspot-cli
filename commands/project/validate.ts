@@ -46,7 +46,12 @@ async function handler(
     process.exit(EXIT_CODES.ERROR);
   }
 
-  validateProjectConfig(projectConfig, projectDir);
+  try {
+    validateProjectConfig(projectConfig, projectDir);
+  } catch (error) {
+    logError(error);
+    process.exit(EXIT_CODES.ERROR);
+  }
 
   let targetAccountId = await loadAndValidateProfile(
     projectConfig,

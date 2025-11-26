@@ -11,11 +11,12 @@ import {
 import { logError } from '../../lib/errorHandlers/index.js';
 import { EXIT_CODES } from '../../lib/enums/exitCodes.js';
 import { makeYargsBuilder } from '../../lib/yargsUtils.js';
+import { toKebabCase } from '@hubspot/local-dev-lib/text';
 
 const command = 'rename <account-name> <new-name>';
 const describe = commands.account.subcommands.rename.describe;
 
-type AccountRenameArgs = CommonArgs &
+export type AccountRenameArgs = CommonArgs &
   ConfigArgs & {
     accountName: string;
     newName: string;
@@ -28,15 +29,21 @@ async function handler(
 
   trackCommandUsage('accounts-rename', undefined, derivedAccountId);
 
+  const newNameKebabCase = toKebabCase(newName);
+  const nameWasSanitized = newNameKebabCase !== newName;
   try {
-    await renameAccount(accountName, newName);
+    await renameAccount(accountName, newNameKebabCase);
   } catch (error) {
     logError(error);
     process.exit(EXIT_CODES.ERROR);
   }
 
-  uiLogger.log(
-    commands.account.subcommands.rename.success.renamed(accountName, newName)
+  uiLogger.success(
+    commands.account.subcommands.rename.success.renamed(
+      accountName,
+      newNameKebabCase,
+      nameWasSanitized
+    )
   );
   process.exit(EXIT_CODES.SUCCESS);
 }

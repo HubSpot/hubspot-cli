@@ -11,11 +11,15 @@ describe('platformVersion', () => {
     });
 
     it('returns true if platform version is greater than the minimum', () => {
-      expect(isV2Project('2026.2')).toBe(true);
+      expect(isV2Project('2025.3')).toBe(true);
+      expect(isV2Project('2026.03')).toBe(true);
+      expect(isV2Project('2026.03-beta')).toBe(true);
     });
 
     it('returns false if platform version is less than the minimum', () => {
       expect(isV2Project('2025.0')).toBe(false);
+      expect(isV2Project('2025.01')).toBe(false);
+      expect(isV2Project('2025.01-beta')).toBe(false);
     });
 
     it('returns false if platform version is invalid', () => {

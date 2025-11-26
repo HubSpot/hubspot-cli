@@ -215,14 +215,11 @@ async function handler(
 
   let createUnifiedDevServer;
   try {
-    // @ts-ignore TODO: Remove when we deprecate Node 18
-    require.resolve('@hubspot/cms-dev-server');
-    // @ts-ignore TODO: Remove when we deprecate Node 18
     const { createDevServer } = await import('@hubspot/cms-dev-server');
     createUnifiedDevServer = createDevServer;
   } catch (e) {
     uiLogger.warn(
-      'Unified dev server requires node 20 to run. Defaulting to legacy preview.'
+      'Error loading unified dev server. Defaulting to legacy preview.'
     );
   }
 

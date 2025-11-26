@@ -57,13 +57,14 @@ const preventAutoUpdateForCommand = (commandParts: (string | number)[]) => {
   return isTargetedCommand(commandParts, SKIP_AUTO_UPDATE_COMMANDS);
 };
 
-export async function autoUpdateCLI(argv: Arguments) {
+export async function autoUpdateCLI(argv: Arguments<{ useEnv?: boolean }>) {
   // This lets us back to default update-notifier behavior
   let showManualInstallHelp = true;
 
   if (
     notifier &&
     notifier.update &&
+    !argv.useEnv &&
     !process.env.SKIP_HUBSPOT_CLI_AUTO_UPDATES &&
     isConfigFlagEnabled('allowAutoUpdates') &&
     !preventAutoUpdateForCommand(argv._)

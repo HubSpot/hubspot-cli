@@ -153,6 +153,12 @@ export class CreateProjectTool extends Tool<CreateProjectInputSchema> {
         description:
           'Creates a HubSpot project with the provided name and outputs it in the provided destination',
         inputSchema,
+        annotations: {
+          readOnlyHint: false,
+          destructiveHint: false,
+          idempotentHint: false,
+          openWorldHint: false,
+        },
       },
       this.handler
     );
