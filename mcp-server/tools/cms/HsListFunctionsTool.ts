@@ -88,6 +88,10 @@ export class HsListFunctionsTool extends Tool<HsListFunctionsInputSchema> {
         description:
           'Get a list of all serverless functions deployed in a HubSpot portal/account. Shows function routes, HTTP methods, secrets, and timestamps.',
         inputSchema,
+        annotations: {
+          readOnlyHint: true,
+          openWorldHint: true,
+        },
       },
       this.handler
     );

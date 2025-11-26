@@ -122,7 +122,13 @@ async function handler(
 
   if (!projectName) {
     const { projectConfig, projectDir } = await getProjectConfig();
-    validateProjectConfig(projectConfig, projectDir);
+
+    try {
+      validateProjectConfig(projectConfig, projectDir);
+    } catch (error) {
+      logError(error);
+      process.exit(EXIT_CODES.ERROR);
+    }
     projectName = projectConfig.name;
   }
 

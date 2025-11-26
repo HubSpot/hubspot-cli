@@ -14,6 +14,7 @@ import migrate from './project/migrate.js';
 import migrateApp from './project/migrateApp.js';
 import cloneApp from './project/cloneApp.js';
 import installDeps from './project/installDeps.js';
+import updateDeps from './project/updateDeps.js';
 import profile from './project/profile.js';
 import projectValidate from './project/validate.js';
 import list from './project/list.js';
@@ -40,6 +41,7 @@ function projectBuilder(yargs: Argv): Argv {
     .command(migrate)
     .command(cloneApp)
     .command(installDeps)
+    .command(updateDeps)
     .command(profile)
     .command(projectValidate)
     .demandCommand(1, '');

@@ -16,12 +16,14 @@ const claudeCode = 'claude';
 const windsurf = 'windsurf';
 const cursor = 'cursor';
 const vscode = 'vscode';
+const codex = 'codex';
 
 export const supportedTools = [
+  { name: commands.mcp.setup.codex, value: codex },
   { name: commands.mcp.setup.claudeCode, value: claudeCode },
   { name: commands.mcp.setup.cursor, value: cursor },
-  { name: commands.mcp.setup.windsurf, value: windsurf },
   { name: commands.mcp.setup.vsCode, value: vscode },
+  { name: commands.mcp.setup.windsurf, value: windsurf },
 ];
 
 interface McpCommand {
@@ -60,15 +62,21 @@ export async function addMcpServerToConfig(
     if (derivedTargets.includes(claudeCode)) {
       await runSetupFunction(setupClaudeCode);
     }
+
     if (derivedTargets.includes(cursor)) {
       await runSetupFunction(setupCursor);
     }
+
     if (derivedTargets.includes(windsurf)) {
       await runSetupFunction(setupWindsurf);
     }
 
     if (derivedTargets.includes(vscode)) {
       await runSetupFunction(setupVsCode);
+    }
+
+    if (derivedTargets.includes(codex)) {
+      await runSetupFunction(setupCodex);
     }
 
     uiLogger.info(commands.mcp.setup.success(derivedTargets));
@@ -293,6 +301,39 @@ export function setupWindsurf(
     failedMessage: commands.mcp.setup.spinners.failedToConfigureWindsurf,
     mcpCommand: buildCommandWithAgentString(mcpCommand, windsurf),
   });
+}
+
+export async function setupCodex(
+  mcpCommand: McpCommand = defaultMcpCommand
+): Promise<boolean> {
+  try {
+    SpinniesManager.add('codexSpinner', {
+      text: commands.mcp.setup.spinners.configuringCodex,
+    });
+    // Check if codex command is available
+    await execAsync('codex --version');
+
+    await execAsync(
+      `codex mcp add "${mcpServerName}" -- ${mcpCommand.command} ${mcpCommand.args.join(' ')} --ai-agent codex`
+    );
+
+    SpinniesManager.succeed('codexSpinner', {
+      text: commands.mcp.setup.spinners.configuredCodex,
+    });
+    return true;
+  } catch (error) {
+    if (error instanceof Error && error.message.includes('codex')) {
+      SpinniesManager.fail('codexSpinner', {
+        text: commands.mcp.setup.spinners.codexNotFound,
+      });
+    } else {
+      SpinniesManager.fail('codexSpinner', {
+        text: commands.mcp.setup.spinners.codexInstallFailed,
+      });
+      logError(error);
+    }
+    return false;
+  }
 }
 
 function buildCommandWithAgentString(

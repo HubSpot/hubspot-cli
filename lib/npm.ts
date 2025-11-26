@@ -38,3 +38,15 @@ export async function executeInstall(
   const exec = util.promisify(execAsync);
   await exec(installCommand, options);
 }
+
+export async function executeUpdate(
+  packages: string[] = [],
+  flags?: string | null,
+  options?: { cwd?: string }
+): Promise<void> {
+  const updateCommand = `${DEFAULT_PACKAGE_MANAGER} update${flags ? ` ${flags}` : ''} ${packages.join(' ')}`;
+  uiLogger.debug('Running', updateCommand);
+
+  const exec = util.promisify(execAsync);
+  await exec(updateCommand, options);
+}

@@ -59,6 +59,10 @@ export class ValidateProjectTool extends Tool<CreateProjectInputSchema> {
         description:
           'Validates the HubSpot project and its configuration files.  This tool does not need to be ran before uploading the project',
         inputSchema,
+        annotations: {
+          readOnlyHint: true,
+          openWorldHint: false,
+        },
       },
       this.handler
     );

@@ -7,6 +7,7 @@ import {
   addJSONOutputOptions,
 } from '../../../lib/commonOpts.js';
 import testAccountCreateCommand from '../create.js';
+import { ACCOUNT_LEVEL_CHOICES } from '../../../lib/constants.js';
 
 vi.mock('../../../lib/commonOpts');
 
@@ -45,6 +46,90 @@ describe('commands/testAccount/create', () => {
 
       expect(addJSONOutputOptions).toHaveBeenCalledTimes(1);
       expect(addJSONOutputOptions).toHaveBeenCalledWith(yargsMock);
+    });
+
+    it('should add account-name option', () => {
+      testAccountCreateCommand.builder(yargsMock);
+
+      expect(yargsMock.option).toHaveBeenCalledWith('name', {
+        type: 'string',
+        description: 'Name for the test account',
+      });
+    });
+
+    it('should add description option', () => {
+      testAccountCreateCommand.builder(yargsMock);
+
+      expect(yargsMock.option).toHaveBeenCalledWith('description', {
+        type: 'string',
+        description: 'Description for the test account',
+      });
+    });
+
+    it('should add hub level options', () => {
+      testAccountCreateCommand.builder(yargsMock);
+
+      expect(yargsMock.option).toHaveBeenCalledWith('marketing-level', {
+        type: 'string',
+        description:
+          'Marketing Hub tier. Options: FREE, STARTER, PROFESSIONAL, ENTERPRISE',
+        choices: ACCOUNT_LEVEL_CHOICES,
+      });
+
+      expect(yargsMock.option).toHaveBeenCalledWith('ops-level', {
+        type: 'string',
+        description:
+          'Operations Hub tier. Options: FREE, STARTER, PROFESSIONAL, ENTERPRISE',
+        choices: ACCOUNT_LEVEL_CHOICES,
+      });
+
+      expect(yargsMock.option).toHaveBeenCalledWith('service-level', {
+        type: 'string',
+        description:
+          'Service Hub tier. Options: FREE, STARTER, PROFESSIONAL, ENTERPRISE',
+        choices: ACCOUNT_LEVEL_CHOICES,
+      });
+
+      expect(yargsMock.option).toHaveBeenCalledWith('sales-level', {
+        type: 'string',
+        description:
+          'Sales Hub tier. Options: FREE, STARTER, PROFESSIONAL, ENTERPRISE',
+        choices: ACCOUNT_LEVEL_CHOICES,
+      });
+
+      expect(yargsMock.option).toHaveBeenCalledWith('content-level', {
+        type: 'string',
+        description:
+          'CMS Hub tier. Options: FREE, STARTER, PROFESSIONAL, ENTERPRISE',
+        choices: ACCOUNT_LEVEL_CHOICES,
+      });
+    });
+
+    it('should add examples for all usage scenarios', () => {
+      testAccountCreateCommand.builder(yargsMock);
+
+      expect(yargsMock.example).toHaveBeenCalledWith([
+        [
+          '$0 test-account create',
+          'Interactive mode - prompts for all options',
+        ],
+        [
+          '$0 test-account create --name "MyTestAccount"',
+          'Provide name via flag, prompt for description and tier selection',
+        ],
+        [
+          '$0 test-account create --name "MyTestAccount" --description "Test account"',
+          'Provide name and description, prompt for tier selection',
+        ],
+        [
+          '$0 test-account create --name "MyTestAccount" --marketing-level PROFESSIONAL',
+          'Specify marketing tier, other tiers default to ENTERPRISE',
+        ],
+        [
+          '$0 test-account create --config-path ./test-account-config.json',
+          'Create from config file (mutually exclusive with other flags)',
+        ],
+      ]);
     });
   });
 });

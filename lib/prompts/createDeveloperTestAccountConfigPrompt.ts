@@ -75,23 +75,34 @@ export async function createDeveloperTestAccountConfigPrompt(
   args: {
     name?: string;
     description?: string;
+    marketingLevel?: AccountLevel;
+    opsLevel?: AccountLevel;
+    serviceLevel?: AccountLevel;
+    salesLevel?: AccountLevel;
+    contentLevel?: AccountLevel;
   } = {},
   supportFlags: boolean = true
 ): Promise<DeveloperTestAccountConfig> {
-  const { name, description } = args;
+  const hasAnyTierLevels = !!(
+    args.marketingLevel ||
+    args.opsLevel ||
+    args.serviceLevel ||
+    args.salesLevel ||
+    args.contentLevel
+  );
 
-  let accountName = name;
-  let accountDescription = description;
-  let accountLevelsArray: HubConfig[] = [];
-
-  if (!accountName) {
-    const namePromptResult = await promptUser<{ accountName: string }>({
+  const result = await promptUser<{
+    accountName?: string;
+    description?: string;
+  }>([
+    {
       name: 'accountName',
       message:
         lib.prompts.createDeveloperTestAccountConfigPrompt.namePrompt(
           supportFlags
         ),
       type: 'input',
+      when: !args.name,
       validate: value => {
         if (!value) {
           return lib.prompts.createDeveloperTestAccountConfigPrompt.errors
@@ -99,67 +110,75 @@ export async function createDeveloperTestAccountConfigPrompt(
         }
         return true;
       },
-    });
-    accountName = namePromptResult.accountName;
-  }
-
-  if (!accountDescription) {
-    const descriptionPromptResult = await promptUser<{ description: string }>({
+    },
+    {
       name: 'description',
       message:
         lib.prompts.createDeveloperTestAccountConfigPrompt.descriptionPrompt(
           supportFlags
         ),
       type: 'input',
-    });
-    accountDescription = descriptionPromptResult.description;
-  }
+      when: !args.description,
+    },
+  ]);
 
-  const useDefaultAccountLevelsPromptResult = await promptUser<{
-    useDefaultAccountLevels: 'default' | 'manual';
-  }>({
-    name: 'useDefaultAccountLevels',
-    message:
-      lib.prompts.createDeveloperTestAccountConfigPrompt
-        .useDefaultAccountLevelsPrompt.message,
-    type: 'list',
-    choices: [
-      {
-        name: lib.prompts.createDeveloperTestAccountConfigPrompt
-          .useDefaultAccountLevelsPrompt.default,
-        value: 'default',
-      },
-      {
-        name: lib.prompts.createDeveloperTestAccountConfigPrompt
-          .useDefaultAccountLevelsPrompt.manual,
-        value: 'manual',
-      },
-    ],
-  });
+  const accountName = args.name || result.accountName!;
+  const description = args.description || result.description;
 
-  if (
-    useDefaultAccountLevelsPromptResult.useDefaultAccountLevels === 'default'
-  ) {
-    accountLevelsArray = [
-      { hub: 'MARKETING', tier: AccountTiers.ENTERPRISE },
-      { hub: 'OPS', tier: AccountTiers.ENTERPRISE },
-      { hub: 'SERVICE', tier: AccountTiers.ENTERPRISE },
-      { hub: 'SALES', tier: AccountTiers.ENTERPRISE },
-      { hub: 'CONTENT', tier: AccountTiers.ENTERPRISE },
-    ];
+  let accountLevels: { [key in HubLevelKey]?: AccountLevel } = {};
+
+  if (hasAnyTierLevels) {
+    accountLevels = {
+      marketingLevel: args.marketingLevel || 'ENTERPRISE',
+      opsLevel: args.opsLevel || 'ENTERPRISE',
+      serviceLevel: args.serviceLevel || 'ENTERPRISE',
+      salesLevel: args.salesLevel || 'ENTERPRISE',
+      contentLevel: args.contentLevel || 'ENTERPRISE',
+    };
   } else {
-    const accountLevelsPromptResult = await promptUser({
-      name: 'testAccountLevels',
-      message: lib.prompts.createDeveloperTestAccountConfigPrompt.tiersPrompt,
-      type: 'checkbox',
-      pageSize: 13,
-      choices: TEST_ACCOUNT_TIERS,
-      loop: false,
-      validate: choices => {
-        if (choices?.length < Object.keys(hubs).length) {
-          return lib.prompts.createDeveloperTestAccountConfigPrompt.errors
-            .allHubsRequired;
-        } else {
+    const tierChoiceResult = await promptUser<{
+      useDefaultAccountLevels: 'default' | 'manual';
+    }>({
+      name: 'useDefaultAccountLevels',
+      message:
+        lib.prompts.createDeveloperTestAccountConfigPrompt
+          .useDefaultAccountLevelsPrompt.message,
+      type: 'list',
+      choices: [
+        {
+          name: lib.prompts.createDeveloperTestAccountConfigPrompt
+            .useDefaultAccountLevelsPrompt.default,
+          value: 'default',
+        },
+        {
+          name: lib.prompts.createDeveloperTestAccountConfigPrompt
+            .useDefaultAccountLevelsPrompt.manual,
+          value: 'manual',
+        },
+      ],
+    });
+
+    if (tierChoiceResult.useDefaultAccountLevels === 'default') {
+      accountLevels = {
+        marketingLevel: 'ENTERPRISE',
+        opsLevel: 'ENTERPRISE',
+        serviceLevel: 'ENTERPRISE',
+        salesLevel: 'ENTERPRISE',
+        contentLevel: 'ENTERPRISE',
+      };
+    } else {
+      const tierResult = await promptUser<{ testAccountLevels: HubConfig[] }>({
+        name: 'testAccountLevels',
+        message: lib.prompts.createDeveloperTestAccountConfigPrompt.tiersPrompt,
+        type: 'checkbox',
+        pageSize: 13,
+        choices: TEST_ACCOUNT_TIERS,
+        loop: false,
+        validate: choices => {
+          if (choices?.length < Object.keys(hubs).length) {
+            return lib.prompts.createDeveloperTestAccountConfigPrompt.errors
+              .allHubsRequired;
+          }
           const hubMap: Record<string, boolean> = {};
           for (const choice of choices) {
             const { hub } = choice.value;
@@ -169,26 +188,24 @@ export async function createDeveloperTestAccountConfigPrompt(
             }
             hubMap[hub] = true;
           }
-        }
-        return true;
-      },
-    });
-    accountLevelsArray = accountLevelsPromptResult.testAccountLevels;
+          return true;
+        },
+      });
+
+      accountLevels = tierResult.testAccountLevels.reduce<{
+        [key in HubLevelKey]?: AccountLevel;
+      }>((acc, level) => {
+        const { hub: hubName, tier: hubTier } = level;
+        const hubLevel = hubs[hubName];
+        acc[hubLevel] = hubTier;
+        return acc;
+      }, {});
+    }
   }
 
-  const accountLevels = accountLevelsArray.reduce<{
-    [key in HubLevelKey]?: AccountLevel;
-  }>((acc, level) => {
-    const { hub: hubName, tier: hubTier } = level;
-    const hubLevel = hubs[hubName];
-
-    acc[hubLevel] = hubTier;
-    return acc;
-  }, {});
-
   return {
-    accountName: accountName!,
-    description: accountDescription,
+    accountName,
+    description,
     ...accountLevels,
   };
 }

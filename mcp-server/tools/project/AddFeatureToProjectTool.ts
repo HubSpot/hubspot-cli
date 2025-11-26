@@ -131,6 +131,12 @@ export class AddFeatureToProjectTool extends Tool<AddFeatureInputSchema> {
         description: `Adds a feature to an existing HubSpot project.
           Only works for projects with platformVersion '2025.2' and beyond`,
         inputSchema,
+        annotations: {
+          readOnlyHint: false,
+          destructiveHint: false,
+          idempotentHint: false,
+          openWorldHint: false,
+        },
       },
       this.handler
     );

@@ -122,6 +122,12 @@ export class HsCreateTemplateTool extends Tool<HsCreateTemplateInputSchema> {
         title: 'Create HubSpot CMS Template',
         description: `Creates a new HubSpot CMS template using the hs create template command. Templates can be created non-interactively by specifying templateType. Supports all template types including: ${TEMPLATE_TYPES.join(', ')}.`,
         inputSchema,
+        annotations: {
+          readOnlyHint: false,
+          destructiveHint: false,
+          idempotentHint: false,
+          openWorldHint: false,
+        },
       },
       this.handler
     );

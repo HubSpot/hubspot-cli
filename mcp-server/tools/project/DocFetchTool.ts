@@ -74,6 +74,10 @@ export class DocFetchTool extends Tool<InputSchemaType> {
         description:
           'Always use this immediately after `search-docs` and before creating a plan, writing code, or answering technical questions. This tool retrieves the full, authoritative content of a HubSpot Developer Documentation page from its URL, ensuring responses are accurate, up-to-date, and grounded in the official docs.',
         inputSchema,
+        annotations: {
+          readOnlyHint: true,
+          openWorldHint: true,
+        },
       },
       this.handler
     );

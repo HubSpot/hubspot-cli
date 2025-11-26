@@ -87,6 +87,10 @@ export class HsListTool extends Tool<HsListInputSchema> {
         title: 'List HubSpot CMS Directory Contents',
         description: 'List remote contents of a HubSpot CMS directory.',
         inputSchema,
+        annotations: {
+          readOnlyHint: true,
+          openWorldHint: true,
+        },
       },
       this.handler
     );

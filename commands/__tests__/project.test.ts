@@ -13,6 +13,7 @@ import migrateApp from '../project/migrateApp.js';
 import migrate from '../project/migrate.js';
 import cloneApp from '../project/cloneApp.js';
 import installDeps from '../project/installDeps.js';
+import updateDeps from '../project/updateDeps.js';
 import validate from '../project/validate.js';
 import profileCommands from '../project/profile.js';
 import list from '../project/list.js';
@@ -77,6 +78,7 @@ describe('commands/project', () => {
       migrate,
       cloneApp,
       installDeps,
+      updateDeps,
       profileCommands,
       validate,
       list,

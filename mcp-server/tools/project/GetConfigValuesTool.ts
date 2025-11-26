@@ -96,6 +96,10 @@ export class GetConfigValuesTool extends Tool<InputSchemaType> {
         This should be called before editing a '-hsmeta.json' file to get the list of possible values and restrictions on those values.
         This will only work for projects with platformVersion 2025.2 and beyond`,
         inputSchema,
+        annotations: {
+          readOnlyHint: true,
+          openWorldHint: false,
+        },
       },
       this.handler
     );

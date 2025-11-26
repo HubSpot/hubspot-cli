@@ -107,6 +107,10 @@ export class HsFunctionLogsTool extends Tool<HsFunctionLogsInputSchema> {
         description:
           'Retrieve logs for HubSpot CMS serverless functions. Use this tool to help debug issues with serverless functions by reading the production logs. Supports various options like latest, compact, and limiting results. Use after listing functions with list-cms-serverless-functions to get the endpoint path.',
         inputSchema,
+        annotations: {
+          readOnlyHint: true,
+          openWorldHint: true,
+        },
       },
       this.handler
     );

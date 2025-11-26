@@ -40,10 +40,6 @@ import {
   getProjectConfig,
   validateProjectConfig,
 } from '../lib/projects/config.js';
-import {
-  getProjectPackageJsonLocations,
-  installPackages,
-} from '../lib/dependencyManagement.js';
 
 import { pollProjectBuildAndDeploy } from '../lib/projects/pollProjectBuildAndDeploy.js';
 import { isV2Project } from '../lib/projects/platformVersion.js';
@@ -234,24 +230,7 @@ async function handler(
       derivedAccountId
     );
 
-    // 5. Install dependencies
-    const installLocations = await getProjectPackageJsonLocations(projectDest);
-
-    try {
-      await installPackages({
-        installLocations: installLocations,
-      });
-      uiLogger.log(' ');
-      uiLogger.success(commands.getStarted.logs.dependenciesInstalled);
-      uiLogger.log(' ');
-    } catch (err) {
-      uiLogger.log(' ');
-      uiLogger.error(commands.getStarted.errors.installDepsFailed);
-      logError(err);
-      uiLogger.log(' ');
-    }
-
-    // 6. Ask user if they want to upload the project
+    // 5. Ask user if they want to upload the project
     const { shouldUpload } = await promptUser<{ shouldUpload: boolean }>([
       {
         type: 'confirm',
@@ -293,7 +272,12 @@ async function handler(
           process.exit(EXIT_CODES.ERROR);
         }
 
-        validateProjectConfig(newProjectConfig, newProjectDir);
+        try {
+          validateProjectConfig(newProjectConfig, newProjectDir);
+        } catch (error) {
+          logError(error);
+          process.exit(EXIT_CODES.ERROR);
+        }
 
         uiLogger.log(' ');
         uiLogger.log(commands.getStarted.logs.uploadingProject);
@@ -405,6 +389,10 @@ async function handler(
         debugError(err);
         process.exit(EXIT_CODES.ERROR);
       }
+    } else {
+      uiLogger.log(' ');
+      uiFeatureHighlight(['projectUploadCommand', 'projectDevCommand']);
+      process.exit(EXIT_CODES.SUCCESS);
     }
   }
 

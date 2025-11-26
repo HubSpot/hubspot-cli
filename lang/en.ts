@@ -31,12 +31,6 @@ import {
 import { CLIAccount } from '@hubspot/local-dev-lib/types/Accounts';
 import { getAccountIdentifier } from '@hubspot/local-dev-lib/config/getAccountIdentifier';
 
-type LangFunction = (...args: never[]) => string;
-
-type LangObject = {
-  [key: string]: string | LangFunction | LangObject;
-};
-
 export const commands = {
   generalErrors: {
     srcIsProject: (src: string, command: string) =>
@@ -91,12 +85,11 @@ export const commands = {
         `Would you like to upload this project to account "${accountName}" now?`,
       projectCreated: {
         title: chalk.bold('Next steps:'),
-        description: `Let's prepare and upload your project to HubSpot.\nYou can use ${uiCommandReference('hs project install-deps')} to ${chalk.bold('install dependencies')} and ${uiCommandReference('hs project upload')} to ${chalk.bold('upload')} your project.`,
+        description: `Let's prepare and upload your project to HubSpot.\nYou can use ${uiCommandReference('hs project upload')} to ${chalk.bold('upload')} your project.`,
       },
     },
     logs: {
       appSelected: `We'll create a new project with a sample app for you.\nProjects are what you can use to create apps with HubSpot.\nUsually you'll use the ${uiCommandReference('hs project create')} command, but we'll go ahead and make one now.`,
-      dependenciesInstalled: 'Dependencies installed successfully.',
       uploadingProject: 'Uploading your project to HubSpot...',
       uploadSuccess: 'Project uploaded successfully!',
       developerOverviewLink:
@@ -105,7 +98,6 @@ export const commands = {
     errors: {
       uploadFailed: 'Failed to upload project to HubSpot.',
       configFileNotFound: 'Could not find project configuration for upload.',
-      installDepsFailed: 'Failed to install dependencies.',
     },
   },
   completion: {
@@ -166,8 +158,8 @@ export const commands = {
           },
         },
         success: {
-          renamed: (name: string, newName: string) =>
-            `Account "${name}" renamed to "${newName}"`,
+          renamed: (name: string, newName: string, nameWasSanitized: boolean) =>
+            `Account "${chalk.bold(name)}" successfully renamed to "${chalk.bold(newName)}"${nameWasSanitized ? ' (Sanitized to remove invalid characters)' : ''}.`,
         },
       },
       use: {
@@ -1472,6 +1464,7 @@ export const commands = {
     setup: {
       describe: 'Setup the HubSpot development MCP servers.',
       installingDocSearch: 'Adding the docs-search mcp server',
+      codex: 'Codex CLI',
       claudeCode: 'Claude Code',
       cursor: 'Cursor',
       windsurf: 'Windsurf',
@@ -1497,7 +1490,11 @@ export const commands = {
         claudeCodeNotFound: 'Claude Code not found - skipping configuration',
         claudeCodeInstallFailed:
           'Claude Code CLI not working - skipping configuration',
-        failedToConfigureClaudeDesktop: 'Failed to configure Claude Desktop',
+        // Codex
+        configuringCodex: 'Configuring Codex...',
+        configuredCodex: 'Configured Codex',
+        codexNotFound: 'Codex command not found - skipping configuration',
+        codexInstallFailed: 'Failed to configure Codex',
         // Cursor
         configuringCursor: 'Configuring Cursor...',
         failedToConfigureCursor: 'Failed to configure Cursor',
@@ -2224,6 +2221,35 @@ export const commands = {
       packageManagerNotInstalled: (packageManager: string) =>
         `This command depends on ${packageManager}, install ${uiLink(packageManager, 'https://docs.npmjs.com/downloading-and-installing-node-js-and-npm')}`,
     },
+    updateDeps: {
+      help: {
+        describe:
+          'Update the npm dependencies for your project, or update specific dependencies in a subcomponent of a project.',
+        updateAppDepsExample: 'Update the dependencies for the project',
+        updateDepToSubComponentExample:
+          'Update the npm dependencies in one or more project subcomponents',
+      },
+      installLocationPrompt:
+        'Choose which project components you would like to update the dependencies for:',
+      installLocationPromptRequired:
+        'You must choose at least one subcomponent',
+      updatingDependencies: (directory: string) =>
+        `Updating dependencies in ${directory}`,
+      updateSuccessful: (directory: string) =>
+        `Updated dependencies in ${directory}`,
+      updatingDependenciesToLocation: (
+        dependencies: string,
+        directory: string
+      ) => `Updating ${dependencies} in ${directory}`,
+      updatingDependenciesFailed: (directory: string) =>
+        `Updating dependencies for ${directory} failed`,
+      noProjectConfig:
+        'No project detected. Run this command from a project directory.',
+      noPackageJsonInProject: (projectName: string) =>
+        `No dependencies to update. The project ${projectName} folder might be missing component or subcomponent files. ${uiLink('Learn how to create a project from scratch', 'https://developers.hubspot.com/docs/apps/developer-platform/build-apps/create-an-app#customize-a-new-project-using-the-cli')}`,
+      packageManagerNotInstalled: (packageManager: string) =>
+        `This command depends on ${packageManager}, install ${uiLink(packageManager, 'https://docs.npmjs.com/downloading-and-installing-node-js-and-npm')}`,
+    },
     validate: {
       describe: 'Validate the project before uploading',
       mustBeRanWithinAProject:
@@ -2612,7 +2638,7 @@ export const commands = {
       },
     },
     create: {
-      describe: 'Create a test account from a config file',
+      describe: `Create a test account from scratch or from a config file. Use ${uiCommandReference('hs test-account create-config')} to generate a config file. \n${uiLink('Learn more', 'https://developers.hubspot.com/docs/developer-tooling/local-development/configurable-test-accounts')}`,
       configPathPrompt:
         '[--config-path] Enter the path to the test account config: ',
       createTestAccountFromConfigPrompt:
@@ -2637,10 +2663,29 @@ export const commands = {
         createFailure: 'Failed to create test account.',
       },
       options: {
-        configPath: 'The path to the test account config',
+        configPath: 'Path to config file (mutually exclusive with other flags)',
+        accountName: 'Name for the test account',
+        description: 'Description for the test account',
+        marketingLevel:
+          'Marketing Hub tier. Options: FREE, STARTER, PROFESSIONAL, ENTERPRISE',
+        opsLevel:
+          'Operations Hub tier. Options: FREE, STARTER, PROFESSIONAL, ENTERPRISE',
+        serviceLevel:
+          'Service Hub tier. Options: FREE, STARTER, PROFESSIONAL, ENTERPRISE',
+        salesLevel:
+          'Sales Hub tier. Options: FREE, STARTER, PROFESSIONAL, ENTERPRISE',
+        contentLevel:
+          'CMS Hub tier. Options: FREE, STARTER, PROFESSIONAL, ENTERPRISE',
       },
       example: (configPath: string) =>
         `Create a test account from the config file at ${configPath}`,
+      examples: {
+        withAllHubsEnterprise:
+          'Create a test account with all hubs at ENTERPRISE level',
+        withSpecificHubLevels: 'Create a test account with specific hub levels',
+      },
+      savedAccountNameDiffers: (originalName: string, savedName: string) =>
+        `Account name "${chalk.bold(originalName)}" was saved as "${chalk.bold(savedName)}" in config.`,
     },
     createConfig: {
       describe: 'Create a test account config file.',
@@ -3510,7 +3555,7 @@ export const commands = {
       },
     },
   },
-} as const satisfies LangObject;
+};
 
 export const lib = {
   parsing: {
@@ -3845,7 +3890,8 @@ export const lib = {
       },
     },
     add: {
-      nothingAdded: 'No features added.',
+      nothingAdded:
+        'No features were added to the project. Use the space bar to select features from the list.',
     },
     updateHsMetaFilesWithAutoGeneratedFields: {
       header: 'Created the following components and features:',
@@ -3853,6 +3899,12 @@ export const lib = {
         `  - Created ${chalk.bold(componentType)} with uid ${chalk.bold(uid)} and name ${chalk.bold(name)}`,
       componentLog: (componentType: string, uid: string) =>
         `  - Created ${chalk.bold(componentType)} feature with uid ${chalk.bold(uid)}`,
+      failedToUpdate: (hsMetaFile: string) =>
+        `Failed to update the uid in ${chalk.bold(hsMetaFile)}`,
+    },
+    generateSafeFilenameDifferentiator: {
+      failedToCheckFiles:
+        'Failed to check files for filename differentiator. Falling back to timestamp.',
     },
     validateProjectConfig: {
       configNotFound: `Unable to locate a project configuration file. Try running again from a project directory, or run ${uiCommandReference('hs project create')} to create a new project.`,
@@ -4949,4 +5001,4 @@ export const lib = {
       copyingProjectFilesFailed: 'Unable to copy migrated project files',
     },
   },
-} as const satisfies LangObject;
+};

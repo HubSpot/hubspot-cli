@@ -54,7 +54,13 @@ async function handler(
   const jsonOutput: { buildId?: number; deployId?: number } = {};
 
   const { projectConfig, projectDir } = await getProjectConfig();
-  validateProjectConfig(projectConfig, projectDir);
+
+  try {
+    validateProjectConfig(projectConfig, projectDir);
+  } catch (error) {
+    logError(error);
+    process.exit(EXIT_CODES.ERROR);
+  }
 
   let targetAccountId;
 

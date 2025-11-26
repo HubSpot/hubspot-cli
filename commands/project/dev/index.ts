@@ -19,6 +19,7 @@ import {
 } from '../../../lib/projectProfiles.js';
 import { commands } from '../../../lang/en.js';
 import { uiLogger } from '../../../lib/ui/logger.js';
+import { logError } from '../../../lib/errorHandlers/index.js';
 
 const command = 'dev';
 const describe = commands.project.dev.describe;
@@ -52,7 +53,13 @@ async function handler(
   } = args;
 
   const { projectConfig, projectDir } = await getProjectConfig();
-  validateProjectConfig(projectConfig, projectDir);
+
+  try {
+    validateProjectConfig(projectConfig, projectDir);
+  } catch (error) {
+    logError(error);
+    process.exit(EXIT_CODES.ERROR);
+  }
 
   const useV2Projects = isV2Project(projectConfig.platformVersion);
 

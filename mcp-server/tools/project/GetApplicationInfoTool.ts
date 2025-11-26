@@ -86,6 +86,10 @@ export class GetApplicationInfoTool extends Tool<GetApplicationInfoInputSchema> 
         description:
           'Retrieves a list of all HubSpot applications available in the current account. Returns an array of applications, where each application contains an appId (numeric identifier) and appName (string). This information is useful for identifying available applications before using other tools that require specific application IDs, such as getting API usage patterns. No input parameters are required - this tool fetches all applications from the HubSpot Insights API.',
         inputSchema,
+        annotations: {
+          readOnlyHint: true,
+          openWorldHint: true,
+        },
       },
       this.handler
     );

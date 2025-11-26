@@ -174,7 +174,6 @@ async function handler(
     'projectCommandTip',
     'projectUploadCommand',
     'projectDevCommand',
-    'projectInstallDepsCommand',
     'projectHelpCommand',
     'feedbackCommand',
   ]);

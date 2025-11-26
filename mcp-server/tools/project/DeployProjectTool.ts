@@ -82,6 +82,12 @@ export class DeployProjectTool extends Tool<InputSchemaType> {
         description:
           'Takes a build number and a project name and deploys that build of the project. DO NOT run this tool unless the user specifies they would like to deploy the project.',
         inputSchema,
+        annotations: {
+          readOnlyHint: false,
+          destructiveHint: true,
+          idempotentHint: true,
+          openWorldHint: true,
+        },
       },
       this.handler
     );

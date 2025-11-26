@@ -1,13 +1,17 @@
+import { MockedFunction, Mocked } from 'vitest';
 import { UploadProjectTools } from '../UploadProjectTools.js';
 import {
   McpServer,
   RegisteredTool,
 } from '@modelcontextprotocol/sdk/server/mcp.js';
+import { getAllHsProfiles } from '@hubspot/project-parsing-lib';
+import { getProjectConfig } from '../../../../lib/projects/config.js';
 import { runCommandInDir } from '../../../utils/project.js';
-import { MockedFunction, Mocked } from 'vitest';
 import { mcpFeedbackRequest } from '../../../utils/feedbackTracking.js';
 
 vi.mock('@modelcontextprotocol/sdk/server/mcp.js');
+vi.mock('@hubspot/project-parsing-lib');
+vi.mock('../../../../lib/projects/config.js');
 vi.mock('../../../utils/project');
 vi.mock('../../../utils/toolUsageTracking');
 vi.mock('../../../utils/feedbackTracking');
@@ -18,6 +22,14 @@ const mockMcpFeedbackRequest = mcpFeedbackRequest as MockedFunction<
 
 const mockRunCommandInDir = runCommandInDir as MockedFunction<
   typeof runCommandInDir
+>;
+
+const mockGetProjectConfig = getProjectConfig as MockedFunction<
+  typeof getProjectConfig
+>;
+
+const mockGetAllHsProfiles = getAllHsProfiles as MockedFunction<
+  typeof getAllHsProfiles
 >;
 
 describe('mcp-server/tools/project/UploadProjectTools', () => {
@@ -36,6 +48,15 @@ describe('mcp-server/tools/project/UploadProjectTools', () => {
     mockRegisteredTool = {} as RegisteredTool;
     mockMcpServer.registerTool.mockReturnValue(mockRegisteredTool);
     mockMcpFeedbackRequest.mockResolvedValue('');
+    mockGetProjectConfig.mockResolvedValue({
+      projectConfig: {
+        srcDir: 'src',
+        name: 'test-project',
+        platformVersion: '2025.2',
+      },
+      projectDir: '/test/project',
+    });
+    mockGetAllHsProfiles.mockResolvedValue([]);
 
     tool = new UploadProjectTools(mockMcpServer);
   });
@@ -63,6 +84,7 @@ describe('mcp-server/tools/project/UploadProjectTools', () => {
     const input = {
       absoluteCurrentWorkingDirectory: '/test/dir',
       absoluteProjectPath: '/test/project',
+      uploadMessage: 'Test upload message',
     };
 
     it('should upload project successfully', async () => {
@@ -75,7 +97,15 @@ describe('mcp-server/tools/project/UploadProjectTools', () => {
 
       expect(mockRunCommandInDir).toHaveBeenCalledWith(
         '/test/project',
-        'hs project upload --force-create'
+        expect.stringContaining('hs project upload')
+      );
+      expect(mockRunCommandInDir).toHaveBeenCalledWith(
+        '/test/project',
+        expect.stringContaining('--force-create')
+      );
+      expect(mockRunCommandInDir).toHaveBeenCalledWith(
+        '/test/project',
+        expect.stringContaining('--message "Test upload message"')
       );
 
       expect(result).toEqual({
@@ -107,7 +137,7 @@ describe('mcp-server/tools/project/UploadProjectTools', () => {
       await expect(tool.handler(input)).rejects.toThrow('Upload failed');
     });
 
-    it('should use force-create flag', async () => {
+    it('should use force-create and message flags', async () => {
       mockRunCommandInDir.mockResolvedValue({
         stdout: 'Project created and uploaded',
         stderr: '',
@@ -117,8 +147,64 @@ describe('mcp-server/tools/project/UploadProjectTools', () => {
 
       expect(mockRunCommandInDir).toHaveBeenCalledWith(
         '/test/project',
-        'hs project upload --force-create'
+        expect.stringContaining('hs project upload')
       );
+      expect(mockRunCommandInDir).toHaveBeenCalledWith(
+        '/test/project',
+        expect.stringContaining('--force-create')
+      );
+      expect(mockRunCommandInDir).toHaveBeenCalledWith(
+        '/test/project',
+        expect.stringContaining('--message "Test upload message"')
+      );
+    });
+
+    it('should use profiles', async () => {
+      mockRunCommandInDir.mockResolvedValue({
+        stdout: 'Project created and uploaded',
+        stderr: '',
+      });
+
+      await tool.handler({
+        ...input,
+        profile: 'dev',
+      });
+
+      expect(mockRunCommandInDir).toHaveBeenCalledWith(
+        '/test/project',
+        expect.stringContaining('hs project upload')
+      );
+      expect(mockRunCommandInDir).toHaveBeenCalledWith(
+        '/test/project',
+        expect.stringContaining('--force-create')
+      );
+      expect(mockRunCommandInDir).toHaveBeenCalledWith(
+        '/test/project',
+        expect.stringContaining('--message "Test upload message"')
+      );
+      expect(mockRunCommandInDir).toHaveBeenCalledWith(
+        '/test/project',
+        expect.stringContaining('--profile "dev"')
+      );
+    });
+
+    it('should prompt for profile if not specified and the project requires them', async () => {
+      mockGetAllHsProfiles.mockResolvedValue(['prod', 'dev']);
+
+      mockRunCommandInDir.mockResolvedValue({
+        stdout: 'Project created and uploaded',
+        stderr: '',
+      });
+
+      const result = await tool.handler(input);
+
+      expect(mockRunCommandInDir).not.toHaveBeenCalled();
+      expect(result.content).toEqual([
+        {
+          type: 'text',
+          text: 'Ask the user which profile they would like to use for the upload.',
+        },
+      ]);
     });
 
     it('should handle empty stdout and stderr', async () => {
@@ -144,13 +230,22 @@ describe('mcp-server/tools/project/UploadProjectTools', () => {
       const differentInput = {
         absoluteCurrentWorkingDirectory: '/test/dir',
         absoluteProjectPath: '/different/path/to/project',
+        uploadMessage: 'Different test upload message',
       };
 
       await tool.handler(differentInput);
 
       expect(mockRunCommandInDir).toHaveBeenCalledWith(
         '/different/path/to/project',
-        'hs project upload --force-create'
+        expect.stringContaining('hs project upload')
+      );
+      expect(mockRunCommandInDir).toHaveBeenCalledWith(
+        '/different/path/to/project',
+        expect.stringContaining('--force-create')
+      );
+      expect(mockRunCommandInDir).toHaveBeenCalledWith(
+        '/different/path/to/project',
+        expect.stringContaining('--message "Different test upload message"')
       );
     });
 

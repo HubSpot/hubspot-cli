@@ -51,7 +51,7 @@ async function selectOptions(): Promise<ConfigSetArgs> {
         },
         { name: 'Allow usage tracking', value: { allowUsageTracking: '' } },
         { name: 'HTTP timeout', value: { httpTimeout: '' } },
-        // TODO enable when we unhide this option { name: 'Allow auto updates', value: { allowAutoUpdates: '' } },
+        { name: 'Allow auto updates', value: { allowAutoUpdates: '' } },
       ],
     },
   ]);
@@ -155,7 +155,6 @@ function configSetBuilder(yargs: Argv): Argv<ConfigSetArgs> {
         describe:
           commands.config.subcommands.set.options.allowAutoUpdates.describe,
         type: 'boolean',
-        hidden: true,
       },
       'auto-open-browser': {
         describe:

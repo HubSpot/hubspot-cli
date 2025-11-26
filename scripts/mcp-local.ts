@@ -1,5 +1,6 @@
 import {
   setupClaudeCode,
+  setupCodex,
   setupCursor,
   setupVsCode,
   setupWindsurf,
@@ -23,4 +24,5 @@ const __dirname = path.dirname(__filename);
   setupWindsurf(localMcpCommand);
   setupCursor(localMcpCommand);
   await setupVsCode(localMcpCommand);
+  await setupCodex(localMcpCommand);
 })();

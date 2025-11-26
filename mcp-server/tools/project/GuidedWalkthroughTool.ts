@@ -67,6 +67,10 @@ export class GuidedWalkthroughTool extends Tool<InputSchemaType> {
         title: 'Guided walkthrough of the CLI',
         description: 'Give the user a guided walkthrough of the HubSpot CLI.',
         inputSchema,
+        annotations: {
+          readOnlyHint: true,
+          openWorldHint: false,
+        },
       },
       this.handler
     );

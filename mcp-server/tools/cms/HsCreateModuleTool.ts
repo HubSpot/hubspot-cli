@@ -190,6 +190,12 @@ export class HsCreateModuleTool extends Tool<HsCreateModuleInputSchema> {
         description:
           'Creates a new HubSpot CMS module using the hs create module command. Modules can be created non-interactively by specifying moduleLabel and other module options. You can create either HubL or React modules by setting the reactType parameter.',
         inputSchema,
+        annotations: {
+          readOnlyHint: false,
+          destructiveHint: false,
+          idempotentHint: false,
+          openWorldHint: false,
+        },
       },
       this.handler
     );

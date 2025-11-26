@@ -19,12 +19,14 @@ import { HsCreateTemplateTool } from './cms/HsCreateTemplateTool.js';
 import { HsCreateFunctionTool } from './cms/HsCreateFunctionTool.js';
 import { HsListFunctionsTool } from './cms/HsListFunctionsTool.js';
 import { HsFunctionLogsTool } from './cms/HsFunctionLogsTool.js';
+import { CreateTestAccountTool } from './project/CreateTestAccountTool.js';
 
 export function registerProjectTools(mcpServer: McpServer): RegisteredTool[] {
   return [
     new UploadProjectTools(mcpServer).register(),
     new CreateProjectTool(mcpServer).register(),
     new GuidedWalkthroughTool(mcpServer).register(),
+    new CreateTestAccountTool(mcpServer).register(),
     new DeployProjectTool(mcpServer).register(),
     new AddFeatureToProjectTool(mcpServer).register(),
     new ValidateProjectTool(mcpServer).register(),

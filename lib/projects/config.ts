@@ -6,8 +6,8 @@ import { getAbsoluteFilePath, getCwd } from '@hubspot/local-dev-lib/path';
 import { ProjectConfig } from '../../types/Projects.js';
 import { PROJECT_CONFIG_FILE } from '../constants.js';
 import { lib } from '../../lang/en.js';
-import { EXIT_CODES } from '../enums/exitCodes.js';
 import { uiLogger } from '../ui/logger.js';
+import ProjectValidationError from '../errors/ProjectValidationError.js';
 
 export function writeProjectConfig(
   configPath: string,
@@ -71,13 +71,15 @@ export function validateProjectConfig(
   projectDir: string | null
 ): asserts projectConfig is ProjectConfig {
   if (!projectConfig || !projectDir) {
-    uiLogger.error(lib.projects.validateProjectConfig.configNotFound);
-    return process.exit(EXIT_CODES.ERROR);
+    throw new ProjectValidationError(
+      lib.projects.validateProjectConfig.configNotFound
+    );
   }
 
   if (!projectConfig.name || !projectConfig.srcDir) {
-    uiLogger.error(lib.projects.validateProjectConfig.configMissingFields);
-    return process.exit(EXIT_CODES.ERROR);
+    throw new ProjectValidationError(
+      lib.projects.validateProjectConfig.configMissingFields
+    );
   }
 
   const resolvedPath = path.resolve(projectDir, projectConfig.srcDir);
@@ -86,23 +88,20 @@ export function validateProjectConfig(
       '.',
       path.join(projectDir, PROJECT_CONFIG_FILE)
     );
-    uiLogger.error(
+    throw new ProjectValidationError(
       lib.projects.validateProjectConfig.srcOutsideProjectDir(
         projectConfigFile,
         projectConfig.srcDir
       )
     );
-    return process.exit(EXIT_CODES.ERROR);
   }
 
   if (!fs.existsSync(resolvedPath)) {
-    uiLogger.error(
+    throw new ProjectValidationError(
       lib.projects.validateProjectConfig.srcDirNotFound(
         projectConfig.srcDir,
         projectDir
       )
     );
-
-    return process.exit(EXIT_CODES.ERROR);
   }
 }

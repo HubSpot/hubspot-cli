@@ -13,7 +13,7 @@ import { getGlobalConfig } from '@hubspot/local-dev-lib/config/migrate';
 
 import { promptUser } from '../../lib/prompts/promptUtils.js';
 import { EXIT_CODES } from '../../lib/enums/exitCodes.js';
-import { trackCommandMetadataUsage } from '../../lib/usageTracking.js';
+import { trackCommandUsage } from '../../lib/usageTracking.js';
 import { selectAccountFromConfig } from '../../lib/prompts/accountsPrompt.js';
 import { logError } from '../../lib/errorHandlers/index.js';
 import { CommonArgs, YargsCommandModule } from '../../types/Yargs.js';
@@ -62,15 +62,6 @@ async function handler(
     uiLogger.log('');
 
     if (!replaceOverrideFile) {
-      const accountId = getAccountId(accountOverride) || undefined;
-      trackCommandMetadataUsage(
-        'account-createOverride',
-        {
-          command: 'hs account create-override',
-          step: 'Reject overwriting an override via prompt',
-        },
-        accountId
-      );
       process.exit(EXIT_CODES.SUCCESS);
     }
   }
@@ -87,6 +78,8 @@ async function handler(
   }
   const accountId = getAccountId(overrideDefaultAccount);
 
+  trackCommandUsage('account-createOverride', undefined, accountId!);
+
   try {
     const overrideFilePath = path.join(
       getCwd(),
@@ -95,16 +88,6 @@ async function handler(
     await fs.writeFile(overrideFilePath, accountId!.toString(), 'utf8');
     uiLogger.success(
       commands.account.subcommands.createOverride.success(overrideFilePath)
-    );
-    const trackingId = accountId || undefined;
-    trackCommandMetadataUsage(
-      'config-migrate',
-      {
-        command: 'hs config migrate',
-        step: 'Confirm overwriting an override via prompt',
-        successful: true,
-      },
-      trackingId
     );
     process.exit(EXIT_CODES.SUCCESS);
   } catch (e: unknown) {

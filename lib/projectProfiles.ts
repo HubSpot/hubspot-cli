@@ -95,6 +95,7 @@ export async function exitIfUsingProfiles(
     }
   }
 }
+
 export async function loadAndValidateProfile(
   projectConfig: ProjectConfig | null,
   projectDir: string | null,
