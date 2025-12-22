@@ -1,10 +1,9 @@
 import { ArgumentsCamelCase } from 'yargs';
 import {
-  getAccountConfig,
-  getConfigAccounts,
-  getEnv,
+  getConfigAccountById,
+  getAllConfigAccounts,
+  getConfigAccountEnvironment,
 } from '@hubspot/local-dev-lib/config';
-import { getValidEnv } from '@hubspot/local-dev-lib/environment';
 
 import {
   findProjectComponents,
@@ -53,7 +52,7 @@ export async function deprecatedProjectDevFlow({
   projectDir,
 }: DeprecatedProjectDevFlowArgs): Promise<void> {
   const { userProvidedAccount, derivedAccountId } = args;
-  const env = getValidEnv(getEnv(derivedAccountId));
+  const env = getConfigAccountEnvironment(derivedAccountId);
 
   const components = await findProjectComponents(projectDir);
   const runnableComponents = components.filter(component => component.runnable);
@@ -61,7 +60,7 @@ export async function deprecatedProjectDevFlow({
   const hasPrivateApps = !!componentTypes[ComponentTypes.PrivateApp];
   const hasPublicApps = !!componentTypes[ComponentTypes.PublicApp];
 
-  const accountConfig = getAccountConfig(accountId);
+  const accountConfig = getConfigAccountById(accountId);
   if (!accountConfig) {
     uiLogger.error(commands.project.dev.errors.noAccount(accountId));
     process.exit(EXIT_CODES.ERROR);
@@ -75,7 +74,7 @@ export async function deprecatedProjectDevFlow({
     process.exit(EXIT_CODES.SUCCESS);
   }
 
-  const accounts = getConfigAccounts();
+  const accounts = getAllConfigAccounts();
 
   if (!accounts) {
     uiLogger.error(commands.project.dev.errors.noAccountsInConfig);

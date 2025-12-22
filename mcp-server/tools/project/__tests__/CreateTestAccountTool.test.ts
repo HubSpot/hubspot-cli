@@ -11,6 +11,7 @@ import { addFlag } from '../../../utils/command.js';
 import { MockedFunction, Mocked } from 'vitest';
 import { mcpFeedbackRequest } from '../../../utils/feedbackTracking.js';
 import fs from 'fs';
+import * as config from '@hubspot/local-dev-lib/config';
 
 vi.mock('@modelcontextprotocol/sdk/server/mcp.js');
 vi.mock('../../../utils/project');
@@ -18,6 +19,7 @@ vi.mock('../../../utils/command');
 vi.mock('../../../utils/toolUsageTracking');
 vi.mock('../../../utils/feedbackTracking');
 vi.mock('fs');
+vi.mock('@hubspot/local-dev-lib/config');
 
 const mockMcpFeedbackRequest = mcpFeedbackRequest as MockedFunction<
   typeof mcpFeedbackRequest
@@ -30,6 +32,7 @@ const mockAddFlag = addFlag as MockedFunction<typeof addFlag>;
 const mockReadFileSync = fs.readFileSync as MockedFunction<
   typeof fs.readFileSync
 >;
+const mockGetConfigAccountByName = vi.spyOn(config, 'getConfigAccountByName');
 
 describe('mcp-server/tools/project/CreateTestAccountTool', () => {
   let mockMcpServer: Mocked<McpServer>;
@@ -63,6 +66,9 @@ describe('mcp-server/tools/project/CreateTestAccountTool', () => {
         marketingLevel: 'PROFESSIONAL',
       })
     );
+
+    // @ts-expect-error breaking things
+    mockGetConfigAccountByName.mockReturnValue(undefined);
   });
 
   describe('register', () => {
@@ -81,22 +87,6 @@ describe('mcp-server/tools/project/CreateTestAccountTool', () => {
         expect.any(Function)
       );
       expect(result).toBe(mockRegisteredTool);
-    });
-
-    it('should include all key information in description', () => {
-      tool.register();
-
-      const registerCall = mockMcpServer.registerTool.mock.calls[0];
-      const config = registerCall[1];
-
-      expect(config.description).toContain('test account');
-      expect(config.description).toContain('WORKFLOW');
-      expect(config.description).toContain('config file');
-      expect(config.description).toContain('ALL account details');
-      expect(config.description).toContain('non-interactive execution');
-      expect(config.description).toContain(
-        'FREE, STARTER, PROFESSIONAL, ENTERPRISE'
-      );
     });
   });
 
@@ -134,6 +124,7 @@ describe('mcp-server/tools/project/CreateTestAccountTool', () => {
 
         expect(result).toEqual({
           content: [
+            { type: 'text', text: '/test/workspace' },
             {
               type: 'text',
               text: 'Test account created successfully\nAccount ID: 12345678',
@@ -601,7 +592,7 @@ describe('mcp-server/tools/project/CreateTestAccountTool', () => {
 
         expect(mockRunCommandInDir).toHaveBeenCalled();
         expect(mockAddFlag).toHaveBeenCalledTimes(7);
-        expect(result.content[0]).toEqual({
+        expect(result.content[1]).toEqual({
           type: 'text',
           text: 'Test account created with defaults',
         });
@@ -680,6 +671,7 @@ describe('mcp-server/tools/project/CreateTestAccountTool', () => {
 
         expect(result).toEqual({
           content: [
+            { type: 'text', text: '/test/workspace' },
             { type: 'text', text: 'Test account created successfully' },
             {
               type: 'text',
@@ -707,7 +699,10 @@ describe('mcp-server/tools/project/CreateTestAccountTool', () => {
         const result = await tool.handler(input);
 
         expect(result).toEqual({
-          content: [{ type: 'text', text: 'Failed to create test account' }],
+          content: [
+            { type: 'text', text: '/test/workspace' },
+            { type: 'text', text: 'Failed to create test account' },
+          ],
         });
       });
     });

@@ -3,9 +3,7 @@ import { getHubSpotWebsiteOrigin } from '@hubspot/local-dev-lib/urls';
 import { uiLogger } from './ui/logger.js';
 import { initiateSync } from '@hubspot/local-dev-lib/api/sandboxSync';
 import { isSpecifiedError } from '@hubspot/local-dev-lib/errors/index';
-import { getAccountId } from '@hubspot/local-dev-lib/config';
-import { getAccountIdentifier } from '@hubspot/local-dev-lib/config/getAccountIdentifier';
-import { CLIAccount } from '@hubspot/local-dev-lib/types/Accounts';
+import { HubSpotConfigAccount } from '@hubspot/local-dev-lib/types/Accounts';
 import { Environment } from '@hubspot/local-dev-lib/types/Config';
 import { lib } from '../lang/en.js';
 import { getAvailableSyncTypes, getSandboxTypeAsString } from './sandboxes.js';
@@ -23,25 +21,21 @@ import { isDevelopmentSandbox } from './accountTypes.js';
 import { SandboxSyncTask } from '../types/Sandboxes.js';
 
 export async function syncSandbox(
-  accountConfig: CLIAccount,
-  parentAccountConfig: CLIAccount,
+  accountConfig: HubSpotConfigAccount,
+  parentAccountConfig: HubSpotConfigAccount,
   env: Environment,
   syncTasks: Array<SandboxSyncTask>,
   slimInfoMessage = false
 ) {
-  const id = getAccountIdentifier(accountConfig);
-  const accountId = getAccountId(id);
-  const parentId = getAccountIdentifier(parentAccountConfig);
-  const parentAccountId = getAccountId(parentId);
+  const accountId = accountConfig.accountId;
+  const parentAccountId = parentAccountConfig.accountId;
   const isDevSandbox = isDevelopmentSandbox(accountConfig);
 
   if (!accountId || !parentAccountId) {
     throw new Error(
       lib.sandbox.sync.failure.invalidUser(
-        accountId ? uiAccountDescription(accountId) : id!.toString(),
-        parentAccountId
-          ? uiAccountDescription(parentAccountId)
-          : parentId!.toString()
+        uiAccountDescription(accountId),
+        uiAccountDescription(parentAccountId)
       )
     );
   }

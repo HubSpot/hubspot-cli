@@ -16,6 +16,7 @@ vi.mock('../../../utils/toolUsageTracking', () => ({
   trackToolUsage: vi.fn(),
 }));
 vi.mock('../../../utils/feedbackTracking');
+vi.mock('@hubspot/local-dev-lib/config');
 
 const mockMcpFeedbackRequest = mcpFeedbackRequest as MockedFunction<
   typeof mcpFeedbackRequest

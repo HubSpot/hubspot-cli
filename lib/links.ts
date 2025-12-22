@@ -1,7 +1,7 @@
 import open from 'open';
-import { getEnv } from '@hubspot/local-dev-lib/config';
-import { ENVIRONMENTS } from '@hubspot/local-dev-lib/constants/environments';
+import { getConfigAccountEnvironment } from '@hubspot/local-dev-lib/config';
 import { getHubSpotWebsiteOrigin } from '@hubspot/local-dev-lib/urls';
+import { ENVIRONMENTS } from '@hubspot/local-dev-lib/constants/environments';
 import { uiLogger } from './ui/logger.js';
 import { getTableContents, getTableHeader } from './ui/table.js';
 
@@ -97,7 +97,7 @@ const COMMON_SITE_LINKS: { [key: string]: SiteLink } = {
 
 export function getSiteLinksAsArray(accountId: number): SiteLink[] {
   const baseUrl = getHubSpotWebsiteOrigin(
-    getEnv() === 'qa' ? ENVIRONMENTS.QA : ENVIRONMENTS.PROD
+    getConfigAccountEnvironment(accountId)
   );
 
   return Object.values(COMMON_SITE_LINKS)
@@ -130,7 +130,7 @@ export function openLink(accountId: number, shortcut: string): void {
   }
 
   const baseUrl = getHubSpotWebsiteOrigin(
-    getEnv() === 'qa' ? ENVIRONMENTS.QA : ENVIRONMENTS.PROD
+    getConfigAccountEnvironment(accountId)
   );
 
   open(match.getUrl(accountId, baseUrl), { url: true });
@@ -144,7 +144,7 @@ export function getProductUpdatesUrl(
   accountId?: number
 ): string {
   const baseUrl = getHubSpotWebsiteOrigin(
-    getEnv() === 'qa' ? ENVIRONMENTS.QA : ENVIRONMENTS.PROD
+    accountId ? getConfigAccountEnvironment(accountId) : ENVIRONMENTS.PROD
   );
 
   if (accountId) {

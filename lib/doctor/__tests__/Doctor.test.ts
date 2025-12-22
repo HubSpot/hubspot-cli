@@ -14,6 +14,11 @@ import { HubSpotHttpError } from '@hubspot/local-dev-lib/models/HubSpotHttpError
 import { AxiosError } from 'axios';
 import { isSpecifiedError as _isSpecifiedError } from '@hubspot/local-dev-lib/errors/index';
 import { promisify as _promisify } from 'util';
+import {
+  getConfigDefaultAccount as _getConfigDefaultAccount,
+  getConfigDefaultAccountIfExists as _getConfigDefaultAccountIfExists,
+} from '@hubspot/local-dev-lib/config';
+import { HubSpotConfigAccount } from '@hubspot/local-dev-lib/types/Accounts';
 
 vi.mock('../../ui/logger.js');
 vi.mock('../Diagnosis');
@@ -24,6 +29,7 @@ vi.mock('../../npm');
 vi.mock('@hubspot/local-dev-lib/portManager');
 vi.mock('@hubspot/local-dev-lib/personalAccessKey');
 vi.mock('@hubspot/local-dev-lib/errors/index');
+vi.mock('@hubspot/local-dev-lib/config');
 vi.mock('util');
 
 const hasMissingPackages = vi.mocked(_hasMissingPackages);
@@ -37,6 +43,10 @@ const authorizedScopesForPortalAndUser = vi.mocked(
 );
 const scopesOnAccessToken = vi.mocked(_scopesOnAccessToken);
 const isSpecifiedError = vi.mocked(_isSpecifiedError);
+const getConfigDefaultAccount = vi.mocked(_getConfigDefaultAccount);
+const getConfigDefaultAccountIfExists = vi.mocked(
+  _getConfigDefaultAccountIfExists
+);
 
 describe('lib/doctor/Doctor', () => {
   let doctor: Doctor;
@@ -74,6 +84,17 @@ describe('lib/doctor/Doctor', () => {
   };
 
   beforeEach(() => {
+    // Mock config functions
+    const mockAccount = {
+      accountId: 123456,
+      accountType: 'STANDARD',
+      name: 'Test Account',
+      authType: 'personalaccesskey',
+      personalAccessKey: 'test-key',
+    } as unknown as HubSpotConfigAccount;
+    getConfigDefaultAccount.mockReturnValue(mockAccount);
+    getConfigDefaultAccountIfExists.mockReturnValue(mockAccount);
+
     doctor = new Doctor({
       generateDiagnosticInfo: vi.fn().mockResolvedValue({
         ...diagnosticInfo,

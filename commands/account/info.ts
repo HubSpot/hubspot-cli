@@ -1,11 +1,10 @@
 import { Argv, ArgumentsCamelCase } from 'yargs';
 import {
-  getAccountConfig,
-  getDisplayDefaultAccount,
+  getConfigAccountById,
   getConfigDefaultAccount,
-  getDefaultAccountOverrideFilePath,
-  getConfigPath,
+  getConfigFilePath,
 } from '@hubspot/local-dev-lib/config';
+import { getDefaultAccountOverrideFilePath } from '@hubspot/local-dev-lib/config/defaultAccountOverride';
 import { getAccessToken } from '@hubspot/local-dev-lib/personalAccessKey';
 import { makeYargsBuilder } from '../../lib/yargsUtils.js';
 import { indent } from '../../lib/ui/index.js';
@@ -27,7 +26,7 @@ async function handler(
   args: ArgumentsCamelCase<AccountInfoArgs>
 ): Promise<void> {
   const { derivedAccountId } = args;
-  const config = getAccountConfig(derivedAccountId);
+  const config = getConfigAccountById(derivedAccountId);
   // check if the provided account is using a personal access key, if not, show an error
   if (config && config.authType === 'personalaccesskey') {
     const { name, personalAccessKey, env } = config;
@@ -42,7 +41,7 @@ async function handler(
     scopeGroups = response.scopeGroups.map(s => [s]);
 
     // If a default account is present in the config, display it
-    const configPath = getConfigPath();
+    const configPath = getConfigFilePath();
     if (configPath) {
       uiLogger.log(commands.account.subcommands.info.defaultAccountTitle);
       uiLogger.log(
@@ -50,9 +49,10 @@ async function handler(
           configPath
         )}`
       );
+      const defaultAccount = getConfigDefaultAccount();
       uiLogger.log(
         `${indent(1)}${commands.account.subcommands.info.defaultAccount(
-          getDisplayDefaultAccount()!.toString()
+          defaultAccount.name
         )}`
       );
     }
@@ -65,9 +65,10 @@ async function handler(
       uiLogger.log(
         `${indent(1)}${commands.account.subcommands.info.overrideFilePath(overrideFilePath)}`
       );
+      const defaultAccount = getConfigDefaultAccount();
       uiLogger.log(
         `${indent(1)}${commands.account.subcommands.info.overrideAccount(
-          getConfigDefaultAccount()!.toString()
+          defaultAccount.name
         )}`
       );
     }

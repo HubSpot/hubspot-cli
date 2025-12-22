@@ -7,15 +7,20 @@ import { http } from '@hubspot/local-dev-lib/http/unauthed';
 import { isHubSpotHttpError } from '@hubspot/local-dev-lib/errors/index';
 import { MockedFunction, Mocked } from 'vitest';
 import { mcpFeedbackRequest } from '../../../utils/feedbackTracking.js';
+import { trackToolUsage } from '../../../utils/toolUsageTracking.js';
 
 vi.mock('@modelcontextprotocol/sdk/server/mcp.js');
 vi.mock('@hubspot/local-dev-lib/http/unauthed');
 vi.mock('@hubspot/local-dev-lib/errors/index');
-vi.mock('../../utils/toolUsageTracking');
+vi.mock('@hubspot/local-dev-lib/config');
+vi.mock('../../../utils/toolUsageTracking');
 vi.mock('../../../utils/feedbackTracking');
 
 const mockMcpFeedbackRequest = mcpFeedbackRequest as MockedFunction<
   typeof mcpFeedbackRequest
+>;
+const mockTrackToolUsage = trackToolUsage as MockedFunction<
+  typeof trackToolUsage
 >;
 
 const mockHttp = http as unknown as { get: MockedFunction<typeof http.get> };
@@ -37,6 +42,7 @@ describe('mcp-server/tools/project/DocFetchTool', () => {
     mockRegisteredTool = {} as RegisteredTool;
     mockMcpServer.registerTool.mockReturnValue(mockRegisteredTool);
     mockMcpFeedbackRequest.mockResolvedValue('');
+    mockTrackToolUsage.mockResolvedValue(undefined);
 
     tool = new DocFetchTool(mockMcpServer);
   });

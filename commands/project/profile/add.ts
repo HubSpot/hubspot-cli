@@ -1,9 +1,11 @@
 import path from 'path';
 import fs from 'fs';
 import { Argv, ArgumentsCamelCase } from 'yargs';
-import { getAccountId, getConfigAccounts } from '@hubspot/local-dev-lib/config';
+import {
+  getConfigAccountIfExists,
+  getAllConfigAccounts,
+} from '@hubspot/local-dev-lib/config';
 import { HsProfileFile } from '@hubspot/project-parsing-lib/src/lib/types.js';
-import { getAccountIdentifier } from '@hubspot/local-dev-lib/config/getAccountIdentifier';
 import {
   getAllHsProfiles,
   getHsProfileFilename,
@@ -154,9 +156,9 @@ async function handler(
   }
 
   if (targetAccountId) {
-    const accountId = getAccountId(targetAccountId);
-    if (accountId) {
-      targetAccountId = accountId;
+    const account = getConfigAccountIfExists(targetAccountId);
+    if (account) {
+      targetAccountId = account.accountId;
     } else {
       uiLogger.error(commands.project.profile.add.errors.invalidTargetAccount);
       uiLogger.log('');
@@ -165,7 +167,7 @@ async function handler(
   }
 
   if (!targetAccountId) {
-    const configuredAccounts = getConfigAccounts();
+    const configuredAccounts = getAllConfigAccounts();
 
     if (!configuredAccounts || !configuredAccounts.length) {
       uiLogger.error(commands.project.profile.add.errors.noAccountsConfigured);
@@ -176,7 +178,7 @@ async function handler(
       commands.project.profile.add.prompts.targetAccountPrompt,
       {
         choices: configuredAccounts.map(account => {
-          const accountId = getAccountIdentifier(account);
+          const accountId = account.accountId;
           return {
             name: uiAccountDescription(accountId),
             value: accountId,

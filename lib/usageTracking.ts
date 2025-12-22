@@ -1,8 +1,5 @@
 import { trackUsage } from '@hubspot/local-dev-lib/trackUsage';
-import {
-  isTrackingAllowed,
-  getAccountConfig,
-} from '@hubspot/local-dev-lib/config';
+import { getConfigAccountById, getConfig } from '@hubspot/local-dev-lib/config';
 import { API_KEY_AUTH_METHOD } from '@hubspot/local-dev-lib/constants/auth';
 import { uiLogger } from './ui/logger.js';
 import { pkg } from './jsonLoader.js';
@@ -59,15 +56,18 @@ export async function trackCommandUsage(
   meta: Meta = {},
   accountId?: number
 ): Promise<void> {
-  if (!isTrackingAllowed()) {
-    return;
-  }
+  try {
+    const config = getConfig();
+    if (config?.allowUsageTracking === false) {
+      return;
+    }
+  } catch (e) {}
 
   uiLogger.debug(`Attempting to track usage of "${command}" command`);
   let authType = 'unknown';
 
   if (accountId) {
-    const accountConfig = getAccountConfig(accountId);
+    const accountConfig = getConfigAccountById(accountId);
     authType =
       accountConfig && accountConfig.authType
         ? accountConfig.authType
@@ -84,7 +84,8 @@ export async function trackCommandUsage(
 }
 
 export async function trackHelpUsage(command: string): Promise<void> {
-  if (!isTrackingAllowed()) {
+  const config = getConfig();
+  if (config?.allowUsageTracking === false) {
     return;
   }
   if (command) {
@@ -128,13 +129,14 @@ export async function trackCommandMetadataUsage(
   meta: Meta = {},
   accountId?: number
 ): Promise<void> {
-  if (!isTrackingAllowed()) {
+  const config = getConfig();
+  if (config?.allowUsageTracking === false) {
     return;
   }
   uiLogger.debug(`Attempting to track metadata usage of "${command}" command`);
   let authType = 'unknown';
   if (accountId) {
-    const accountConfig = getAccountConfig(accountId);
+    const accountConfig = getConfigAccountById(accountId);
     authType =
       accountConfig && accountConfig.authType
         ? accountConfig.authType
@@ -164,7 +166,8 @@ async function trackCliInteraction({
   meta?: Meta;
 }): Promise<void> {
   try {
-    if (!isTrackingAllowed()) {
+    const config = getConfig();
+    if (config?.allowUsageTracking === false) {
       return;
     }
 

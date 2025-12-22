@@ -4,7 +4,10 @@ import {
   getNodeVersionData,
   getPlatform,
 } from '../../lib/usageTracking.js';
-import { getAccountId, isTrackingAllowed } from '@hubspot/local-dev-lib/config';
+import {
+  getConfig,
+  getConfigDefaultAccountIfExists,
+} from '@hubspot/local-dev-lib/config';
 import { uiLogger } from '../../lib/ui/logger.js';
 
 export async function trackToolUsage(
@@ -13,7 +16,8 @@ export async function trackToolUsage(
     [key: string]: string;
   }
 ): Promise<void> {
-  if (!isTrackingAllowed()) {
+  const config = getConfig();
+  if (config?.allowUsageTracking === false) {
     return;
   }
 
@@ -26,7 +30,7 @@ export async function trackToolUsage(
     ...meta,
   };
 
-  const accountId = getAccountId() || undefined;
+  const accountId = getConfigDefaultAccountIfExists()?.accountId || undefined;
   try {
     uiLogger.info('Tracking tool usage');
     await trackUsage(

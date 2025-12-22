@@ -1,16 +1,12 @@
 import { Argv, ArgumentsCamelCase } from 'yargs';
 import {
-  loadConfig,
-  updateAccountConfig,
-  writeConfig,
+  updateConfigAccount,
   createEmptyConfigFile,
-  deleteEmptyConfigFile,
+  deleteConfigFileIfEmpty,
+  getConfigFilePath,
+  localConfigFileExists,
+  globalConfigFileExists,
 } from '@hubspot/local-dev-lib/config';
-import {
-  configFileExists,
-  getConfigPath,
-} from '@hubspot/local-dev-lib/config/migrate';
-import { getAccountIdentifier } from '@hubspot/local-dev-lib/config/getAccountIdentifier';
 import {
   getAccessToken,
   updateConfigWithAccessToken,
@@ -18,7 +14,7 @@ import {
 import { ENVIRONMENTS } from '@hubspot/local-dev-lib/constants/environments';
 import { toKebabCase } from '@hubspot/local-dev-lib/text';
 import { Environment } from '@hubspot/local-dev-lib/types/Config';
-import { CLIAccount } from '@hubspot/local-dev-lib/types/Accounts';
+import { HubSpotConfigAccount } from '@hubspot/local-dev-lib/types/Accounts';
 import { PERSONAL_ACCESS_KEY_AUTH_METHOD } from '@hubspot/local-dev-lib/constants/auth';
 import { handleMerge, handleMigration } from '../../lib/configMigrate.js';
 import { handleExit } from '../../lib/process.js';
@@ -52,7 +48,7 @@ async function updateConfigWithNewAccount(
   configAlreadyExists: boolean,
   providedPersonalAccessKey?: string,
   accountId?: number
-): Promise<CLIAccount | null> {
+): Promise<HubSpotConfigAccount | null> {
   try {
     const { personalAccessKey } = providedPersonalAccessKey
       ? { personalAccessKey: providedPersonalAccessKey }
@@ -84,10 +80,9 @@ async function updateConfigWithNewAccount(
       updatedConfig.name = (
         await cliAccountNamePrompt(defaultAccountName)
       ).name;
-      updateAccountConfig({
+      updateConfigAccount({
         ...updatedConfig,
       });
-      writeConfig();
     }
 
     return updatedConfig;
@@ -98,8 +93,8 @@ async function updateConfigWithNewAccount(
 }
 
 async function handleConfigMigration(): Promise<boolean> {
-  const deprecatedConfigExists = configFileExists(false);
-  const globalConfigExists = configFileExists(true);
+  const deprecatedConfigExists = localConfigFileExists();
+  const globalConfigExists = globalConfigFileExists();
 
   // No deprecated config exists, so no migration is needed
   if (!deprecatedConfigExists) {
@@ -181,15 +176,13 @@ async function handler(
     process.exit(EXIT_CODES.ERROR);
   }
 
-  const configAlreadyExists = configFileExists(true);
+  const configAlreadyExists = globalConfigFileExists();
 
   if (!configAlreadyExists) {
-    createEmptyConfigFile({}, true);
+    createEmptyConfigFile(true);
   }
 
-  loadConfig('');
-
-  handleExit(deleteEmptyConfigFile);
+  handleExit(deleteConfigFileIfEmpty);
 
   const updatedConfig = await updateConfigWithNewAccount(
     args.qa ? ENVIRONMENTS.QA : ENVIRONMENTS.PROD,
@@ -209,20 +202,20 @@ async function handler(
     process.exit(EXIT_CODES.ERROR);
   }
 
-  const accountId = getAccountIdentifier(updatedConfig);
+  const { accountId, name } = updatedConfig;
 
   if (!configAlreadyExists) {
     uiLogger.log('');
     uiLogger.success(
       commands.account.subcommands.auth.success.configFileCreated(
-        getConfigPath('', true)!
+        getConfigFilePath()
       )
     );
     uiLogger.success(
-      commands.account.subcommands.auth.success.configFileUpdated(accountId!)
+      commands.account.subcommands.auth.success.configFileUpdated(accountId)
     );
   } else {
-    await setAsDefaultAccountPrompt(updatedConfig.name!);
+    await setAsDefaultAccountPrompt(name);
   }
 
   uiFeatureHighlight([

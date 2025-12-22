@@ -15,6 +15,7 @@ import { absoluteCurrentWorkingDirectory, features } from './constants.js';
 import { runCommandInDir } from '../../utils/project.js';
 import { formatTextContents, formatTextContent } from '../../utils/content.js';
 import { trackToolUsage } from '../../utils/toolUsageTracking.js';
+import { setupHubSpotConfig } from '../../utils/config.js';
 
 const inputSchema = {
   absoluteCurrentWorkingDirectory,
@@ -77,6 +78,7 @@ export class CreateProjectTool extends Tool<CreateProjectInputSchema> {
     features,
     absoluteCurrentWorkingDirectory,
   }: CreateProjectInputSchema): Promise<TextContentResponse> {
+    setupHubSpotConfig(absoluteCurrentWorkingDirectory);
     await trackToolUsage(toolName);
     let command = addFlag('hs project create', 'platform-version', '2025.2');
 
@@ -133,14 +135,9 @@ export class CreateProjectTool extends Tool<CreateProjectInputSchema> {
         command
       );
 
-      return formatTextContents(
-        absoluteCurrentWorkingDirectory,
-        stdout,
-        stderr
-      );
+      return formatTextContents(stdout, stderr);
     } catch (error) {
       return formatTextContents(
-        absoluteCurrentWorkingDirectory,
         error instanceof Error ? error.message : `${error}`
       );
     }

@@ -1,17 +1,22 @@
 import { Argv, ArgumentsCamelCase } from 'yargs';
 import {
-  getConfigPath,
-  updateDefaultAccount,
-  getAccountId,
-  getCWDAccountOverride,
-  getDefaultAccountOverrideFilePath,
+  getConfigFilePath,
+  setConfigAccountAsDefault,
+  getConfigAccountIfExists,
+  getConfigAccountByName,
+  getConfigAccountById,
 } from '@hubspot/local-dev-lib/config';
+import {
+  getDefaultAccountOverrideAccountId,
+  getDefaultAccountOverrideFilePath,
+} from '@hubspot/local-dev-lib/config/defaultAccountOverride';
 import { trackCommandUsage } from '../../lib/usageTracking.js';
 import { commands } from '../../lang/en.js';
 import { uiLogger } from '../../lib/ui/logger.js';
 import { selectAccountFromConfig } from '../../lib/prompts/accountsPrompt.js';
 import { CommonArgs, YargsCommandModule } from '../../types/Yargs.js';
 import { makeYargsBuilder } from '../../lib/yargsUtils.js';
+import { HubSpotConfigAccount } from '@hubspot/local-dev-lib/types/Accounts';
 
 const command = 'use [account]';
 const describe = commands.account.subcommands.use.describe;
@@ -23,27 +28,34 @@ type AccountUseArgs = CommonArgs & {
 async function handler(
   args: ArgumentsCamelCase<AccountUseArgs>
 ): Promise<void> {
-  let newDefaultAccount = args.account;
+  let newDefaultAccount: string | number | undefined = args.account;
 
   if (!newDefaultAccount) {
     newDefaultAccount = await selectAccountFromConfig();
-  } else if (!getAccountId(newDefaultAccount)) {
-    uiLogger.error(
-      commands.account.subcommands.use.errors.accountNotFound(
-        newDefaultAccount,
-        getConfigPath()!
-      )
-    );
-    newDefaultAccount = await selectAccountFromConfig();
+  } else {
+    const account = getConfigAccountIfExists(newDefaultAccount);
+    if (!account) {
+      uiLogger.error(
+        commands.account.subcommands.use.errors.accountNotFound(
+          newDefaultAccount,
+          getConfigFilePath()
+        )
+      );
+      newDefaultAccount = await selectAccountFromConfig();
+    }
   }
 
-  trackCommandUsage(
-    'accounts-use',
-    undefined,
-    getAccountId(newDefaultAccount)!
-  );
+  let account: HubSpotConfigAccount;
 
-  const accountOverride = getCWDAccountOverride();
+  if (!isNaN(Number(newDefaultAccount))) {
+    account = getConfigAccountById(Number(newDefaultAccount));
+  } else {
+    account = getConfigAccountByName(String(newDefaultAccount));
+  }
+
+  trackCommandUsage('accounts-use', undefined, account?.accountId);
+
+  const accountOverride = getDefaultAccountOverrideAccountId();
   const overrideFilePath = getDefaultAccountOverrideFilePath();
   if (accountOverride && overrideFilePath) {
     uiLogger.warn(
@@ -55,12 +67,10 @@ async function handler(
     uiLogger.log('');
   }
 
-  updateDefaultAccount(newDefaultAccount);
+  setConfigAccountAsDefault(newDefaultAccount);
 
   return uiLogger.success(
-    commands.account.subcommands.use.success.defaultAccountUpdated(
-      newDefaultAccount
-    )
+    commands.account.subcommands.use.success.defaultAccountUpdated(account.name)
   );
 }
 

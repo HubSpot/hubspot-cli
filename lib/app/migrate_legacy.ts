@@ -1,5 +1,5 @@
 import { fetchPublicAppMetadata } from '@hubspot/local-dev-lib/api/appsDev';
-import { CLIAccount } from '@hubspot/local-dev-lib/types/Accounts';
+import { HubSpotConfigAccount } from '@hubspot/local-dev-lib/types/Accounts';
 import { uiLogger } from '../ui/logger.js';
 import {
   checkMigrationStatus,
@@ -29,7 +29,7 @@ import { logInvalidAccountError, MigrateAppArgs } from './migrate.js';
 export async function migrateApp2023_2(
   derivedAccountId: number,
   options: ArgumentsCamelCase<MigrateAppArgs>,
-  accountConfig: CLIAccount
+  accountConfig: HubSpotConfigAccount
 ): Promise<void> {
   const accountName = uiAccountDescription(derivedAccountId);
 

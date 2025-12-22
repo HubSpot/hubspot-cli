@@ -169,10 +169,22 @@ export async function handleProjectUpload<T>({
         }
       }
 
-      await ensureProjectExists(accountId, projectConfig.name, {
-        forceCreate,
-        uploadCommand: isUploadCommand,
-      });
+      const { projectExists } = await ensureProjectExists(
+        accountId,
+        projectConfig.name,
+        {
+          forceCreate,
+          uploadCommand: isUploadCommand,
+          noLogs: true,
+        }
+      );
+
+      if (!projectExists) {
+        uiLogger.log(
+          lib.projectUpload.handleProjectUpload.projectDoesNotExist(accountId)
+        );
+        process.exit(EXIT_CODES.SUCCESS);
+      }
 
       const { buildId, error } = await uploadProjectFiles(
         accountId,

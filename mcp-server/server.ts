@@ -6,10 +6,6 @@ const server = new McpServer({
   name: 'HubSpot CLI MCP Server',
   version: '0.0.1',
   description: 'Helps perform tasks for local development of HubSpot projects.',
-  capabilities: {
-    tools: {},
-    prompts: {},
-  },
 });
 
 registerProjectTools(server);

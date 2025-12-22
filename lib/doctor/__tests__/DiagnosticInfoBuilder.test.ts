@@ -3,6 +3,7 @@ import { MockedFunction, vi } from 'vitest';
 
 vi.mock('@hubspot/local-dev-lib/fs');
 vi.mock('@hubspot/local-dev-lib/config');
+vi.mock('@hubspot/local-dev-lib/config/defaultAccountOverride');
 vi.mock('@hubspot/local-dev-lib/personalAccessKey');
 vi.mock('../../projects/config');
 vi.mock('@hubspot/local-dev-lib/api/projects');
@@ -23,15 +24,20 @@ import {
   ProjectConfig,
 } from '../DiagnosticInfoBuilder.js';
 import {
-  getAccountId as _getAccountId,
-  getAccountConfig as _getAccountConfig,
-  getConfigPath as _getConfigPath,
-  getDefaultAccountOverrideFilePath as _getDefaultAccountOverrideFilePath,
+  getConfigAccountIfExists as _getConfigAccountIfExists,
+  getConfigAccountById as _getConfigAccountById,
+  getConfigFilePath as _getConfigFilePath,
   isConfigFlagEnabled as _isConfigFlagEnabled,
+  getConfigDefaultAccountIfExists as _getConfigDefaultAccountIfExists,
 } from '@hubspot/local-dev-lib/config';
+import { getDefaultAccountOverrideFilePath as _getDefaultAccountOverrideFilePath } from '@hubspot/local-dev-lib/config/defaultAccountOverride';
 import { getAccessToken as _getAccessToken } from '@hubspot/local-dev-lib/personalAccessKey';
 import { walk as _walk } from '@hubspot/local-dev-lib/fs';
-import { AccessToken, CLIAccount } from '@hubspot/local-dev-lib/types/Accounts';
+import {
+  AccessToken,
+  HubSpotConfigAccount,
+  PersonalAccessKeyConfigAccount,
+} from '@hubspot/local-dev-lib/types/Accounts';
 import { getProjectConfig as _getProjectConfig } from '../../projects/config.js';
 import { fetchProject as _fetchProject } from '@hubspot/local-dev-lib/api/projects';
 import { Project } from '@hubspot/local-dev-lib/types/Project';
@@ -42,15 +48,23 @@ const walk = _walk as MockedFunction<typeof _walk>;
 const getAccessToken = _getAccessToken as MockedFunction<
   typeof _getAccessToken
 >;
-const getAccountConfig = _getAccountConfig as MockedFunction<
-  typeof _getAccountConfig
+const getConfigAccountById = _getConfigAccountById as MockedFunction<
+  typeof _getConfigAccountById
 >;
-const getConfigPath = _getConfigPath as MockedFunction<typeof _getConfigPath>;
+const getConfigAccountIfExists = _getConfigAccountIfExists as MockedFunction<
+  typeof _getConfigAccountIfExists
+>;
+const getConfigDefaultAccountIfExists =
+  _getConfigDefaultAccountIfExists as MockedFunction<
+    typeof _getConfigDefaultAccountIfExists
+  >;
+const getConfigFilePath = _getConfigFilePath as MockedFunction<
+  typeof _getConfigFilePath
+>;
 const getDefaultAccountOverrideFilePath =
   _getDefaultAccountOverrideFilePath as MockedFunction<
     typeof _getDefaultAccountOverrideFilePath
   >;
-const getAccountId = _getAccountId as MockedFunction<typeof _getAccountId>;
 const getProjectConfig = _getProjectConfig as MockedFunction<
   typeof _getProjectConfig
 >;
@@ -67,12 +81,14 @@ util.promisify = utilPromisify;
 
 describe('lib/doctor/DiagnosticInfo', () => {
   const accountId = 898989;
-  const accountConfig: CLIAccount = {
+  const accountConfig = {
+    name: 'test-account',
+    accountId: accountId,
     env: 'prod',
     authType: 'personalaccesskey',
     accountType: 'STANDARD',
     personalAccessKey: 'super-secret-key',
-  };
+  } as HubSpotConfigAccount;
   const nodeVersion = 'v18.17.0';
   const processInfo = {
     platform: 'darwin',
@@ -109,8 +125,12 @@ describe('lib/doctor/DiagnosticInfo', () => {
     'path/to/default/account/override/.hsaccount';
 
   beforeEach(() => {
-    getAccountId.mockReturnValue(accountId);
-    getAccountConfig.mockReturnValue(accountConfig);
+    getConfigAccountIfExists.mockReturnValue({
+      accountId,
+      name: 'test',
+    } as HubSpotConfigAccount);
+    getConfigAccountById.mockReturnValue(accountConfig);
+    getConfigDefaultAccountIfExists.mockReturnValue(accountConfig);
     walk.mockResolvedValue(projectFiles);
     isConfigFlagEnabled.mockReturnValue(false);
     mockPromisifyImpl.mockResolvedValue(npmVersion);
@@ -119,15 +139,16 @@ describe('lib/doctor/DiagnosticInfo', () => {
   it('should initialize the required state on creation', () => {
     const builder = new DiagnosticInfoBuilder(processInfo);
 
-    expect(getAccountId).toHaveBeenCalledTimes(1);
-    expect(getAccountConfig).toHaveBeenCalledTimes(1);
+    expect(getConfigDefaultAccountIfExists).toHaveBeenCalledTimes(1);
 
     expect(builder.accountId).toEqual(accountId);
 
     expect(builder.env).toEqual(accountConfig.env);
     expect(builder.authType).toEqual(accountConfig.authType);
     expect(builder.accountType).toEqual(accountConfig.accountType);
-    expect(builder.personalAccessKey).toEqual(accountConfig.personalAccessKey);
+    expect(builder.personalAccessKey).toEqual(
+      (accountConfig as PersonalAccessKeyConfigAccount).personalAccessKey
+    );
     expect(builder.processInfo).toEqual(processInfo);
   });
 
@@ -177,7 +198,7 @@ describe('lib/doctor/DiagnosticInfo', () => {
         data: projectDetails,
       } as unknown as AxiosResponse<Project>);
       getAccessToken.mockResolvedValue(accessToken);
-      getConfigPath.mockReturnValue(configPath);
+      getConfigFilePath.mockReturnValue(configPath);
       getDefaultAccountOverrideFilePath.mockReturnValue(
         defaultAccountOverrideFile
       );
@@ -196,7 +217,7 @@ describe('lib/doctor/DiagnosticInfo', () => {
 
       expect(getAccessToken).toHaveBeenCalledTimes(1);
       expect(getAccessToken).toHaveBeenCalledWith(
-        accountConfig.personalAccessKey,
+        (accountConfig as PersonalAccessKeyConfigAccount).personalAccessKey,
         accountConfig.env,
         accountId
       );

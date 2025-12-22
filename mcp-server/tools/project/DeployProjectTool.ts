@@ -13,6 +13,7 @@ import {
 import { runCommandInDir } from '../../utils/project.js';
 import { formatTextContents, formatTextContent } from '../../utils/content.js';
 import { trackToolUsage } from '../../utils/toolUsageTracking.js';
+import { setupHubSpotConfig } from '../../utils/config.js';
 
 const inputSchema = {
   absoluteProjectPath,
@@ -42,6 +43,7 @@ export class DeployProjectTool extends Tool<InputSchemaType> {
     absoluteCurrentWorkingDirectory,
     buildNumber,
   }: InputSchemaType): Promise<TextContentResponse> {
+    setupHubSpotConfig(absoluteCurrentWorkingDirectory);
     await trackToolUsage(toolName);
     let command = `hs project deploy`;
     const content: TextContent[] = [];
@@ -71,7 +73,7 @@ export class DeployProjectTool extends Tool<InputSchemaType> {
       command
     );
 
-    return formatTextContents(absoluteCurrentWorkingDirectory, stdout, stderr);
+    return formatTextContents(stdout, stderr);
   }
 
   register(): RegisteredTool {

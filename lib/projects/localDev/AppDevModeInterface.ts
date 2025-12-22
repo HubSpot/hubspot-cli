@@ -4,7 +4,7 @@ import {
   fetchPublicAppProductionInstallCounts,
   installStaticAuthAppOnTestAccount,
 } from '@hubspot/local-dev-lib/api/appsDev';
-import { getAccountConfig } from '@hubspot/local-dev-lib/config';
+import { getConfigAccountById } from '@hubspot/local-dev-lib/config';
 import { PublicApp } from '@hubspot/local-dev-lib/types/Apps';
 
 import {
@@ -115,7 +115,7 @@ class AppDevModeInterface {
   }
 
   private isAutomaticallyInstallable(): boolean {
-    const targetTestingAccount = getAccountConfig(
+    const targetTestingAccount = getConfigAccountById(
       this.localDevState.targetTestingAccountId
     );
 

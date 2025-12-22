@@ -1,5 +1,5 @@
-import { getAccountId, hasLocalStateFlag } from '@hubspot/local-dev-lib/config';
-import { getConfigDefaultAccount } from '@hubspot/local-dev-lib/config';
+import { hasLocalStateFlag } from '@hubspot/local-dev-lib/config';
+import { getConfigDefaultAccountIfExists } from '@hubspot/local-dev-lib/config';
 
 import { uiLogger } from '../../ui/logger.js';
 import {
@@ -49,10 +49,10 @@ class LocalDevLogger {
   }
 
   getUploadCommand(): string {
-    const currentDefaultAccount = getConfigDefaultAccount() || undefined;
+    const currentDefaultAccount = getConfigDefaultAccountIfExists();
 
     return this.state.targetProjectAccountId !==
-      getAccountId(currentDefaultAccount)
+      currentDefaultAccount?.accountId
       ? uiCommandReference(
           `hs project upload --account=${this.state.targetProjectAccountId}`
         )

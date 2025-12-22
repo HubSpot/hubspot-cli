@@ -4,7 +4,6 @@ import { fetchFireAlarms } from '@hubspot/local-dev-lib/api/fireAlarm';
 import { FireAlarm } from '@hubspot/local-dev-lib/types/FireAlarm';
 import { debugError } from '../errorHandlers/index.js';
 import { pkg } from '../jsonLoader.js';
-import { logInBox } from '../ui/boxen.js';
 import { renderInline } from '../../ui/index.js';
 import { getWarningBox } from '../../ui/components/StatusMessageBoxes.js';
 
@@ -158,21 +157,12 @@ async function logFireAlarms(
       return acc;
     }, '');
 
-    if (!process.env.HUBSPOT_ENABLE_INK) {
-      await logInBox({
-        contents: notifications,
-        options: {
-          title: 'Notifications',
-        },
-      });
-    } else {
-      await renderInline(
-        getWarningBox({
-          title: 'Notifications',
-          message: notifications,
-        })
-      );
-    }
+    await renderInline(
+      getWarningBox({
+        title: 'Notifications',
+        message: notifications,
+      })
+    );
   }
 }
 

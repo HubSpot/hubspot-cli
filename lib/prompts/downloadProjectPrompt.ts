@@ -1,5 +1,5 @@
 import { promptUser } from './promptUtils.js';
-import { getAccountId } from '@hubspot/local-dev-lib/config';
+import { getConfigAccountIfExists } from '@hubspot/local-dev-lib/config';
 import { fetchProjects } from '@hubspot/local-dev-lib/api/projects';
 import { logError, ApiErrorContext } from '../errorHandlers/index.js';
 import { uiLogger } from '../ui/logger.js';
@@ -29,10 +29,15 @@ async function createProjectsList(
 
 export async function downloadProjectPrompt(promptOptions: {
   account?: string;
+  derivedAccountId?: number;
   project?: string;
   name?: string;
 }): Promise<DownloadProjectPromptResponse> {
-  const accountId = getAccountId(promptOptions.account);
+  const account = promptOptions.account
+    ? getConfigAccountIfExists(promptOptions.account)
+    : undefined;
+  const accountId =
+    account?.accountId || promptOptions.derivedAccountId || null;
   const projectsList = await createProjectsList(accountId);
 
   const response = await promptUser<DownloadProjectPromptResponse>([

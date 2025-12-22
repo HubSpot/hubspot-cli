@@ -17,6 +17,7 @@ import {
 import { runCommandInDir } from '../../utils/project.js';
 import { formatTextContents, formatTextContent } from '../../utils/content.js';
 import { trackToolUsage } from '../../utils/toolUsageTracking.js';
+import { setupHubSpotConfig } from '../../utils/config.js';
 
 const inputSchema = {
   absoluteProjectPath,
@@ -70,6 +71,7 @@ export class AddFeatureToProjectTool extends Tool<AddFeatureInputSchema> {
     features,
     addApp,
   }: AddFeatureInputSchema): Promise<TextContentResponse> {
+    setupHubSpotConfig(absoluteCurrentWorkingDirectory);
     try {
       await trackToolUsage(toolName);
       let command = `hs project add`;
@@ -110,14 +112,9 @@ export class AddFeatureToProjectTool extends Tool<AddFeatureInputSchema> {
         command
       );
 
-      return formatTextContents(
-        absoluteCurrentWorkingDirectory,
-        stdout,
-        stderr
-      );
+      return formatTextContents(stdout, stderr);
     } catch (error) {
       return formatTextContents(
-        absoluteCurrentWorkingDirectory,
         error instanceof Error ? error.message : `${error}`
       );
     }

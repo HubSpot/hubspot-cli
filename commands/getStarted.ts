@@ -46,8 +46,7 @@ import { isV2Project } from '../lib/projects/platformVersion.js';
 
 import { openLink } from '../lib/links.js';
 import { getStaticAuthAppInstallUrl } from '../lib/app/urls.js';
-import { getEnv } from '@hubspot/local-dev-lib/config';
-import { ENVIRONMENTS } from '@hubspot/local-dev-lib/constants/environments';
+import { getConfigAccountEnvironment } from '@hubspot/local-dev-lib/config';
 import { fetchPublicAppsForPortal } from '@hubspot/local-dev-lib/api/appsDev';
 
 const command = 'get-started';
@@ -65,8 +64,7 @@ async function handler(
   args: ArgumentsCamelCase<GetStartedArgs>
 ): Promise<void> {
   const { derivedAccountId } = args;
-  const env =
-    getEnv(derivedAccountId) === 'qa' ? ENVIRONMENTS.QA : ENVIRONMENTS.PROD;
+  const env = getConfigAccountEnvironment(derivedAccountId);
 
   await trackCommandUsage('get-started', {}, derivedAccountId);
 

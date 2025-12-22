@@ -1,14 +1,16 @@
-import { CLIAccount } from '@hubspot/local-dev-lib/types/Accounts';
+import { HubSpotConfigAccount } from '@hubspot/local-dev-lib/types/Accounts';
 
 vi.mock('@hubspot/local-dev-lib/config');
 
 import { Diagnosis } from '../Diagnosis.js';
 import { DiagnosticInfo } from '../DiagnosticInfoBuilder.js';
-import { getAccountConfig as __getAccountConfig } from '@hubspot/local-dev-lib/config';
+import { getConfigAccountIfExists as __getConfigAccountIfExists } from '@hubspot/local-dev-lib/config';
 import stripAnsi from 'strip-ansi';
 import { Mock } from 'vitest';
 
-const getAccountConfig = __getAccountConfig as Mock<typeof __getAccountConfig>;
+const getConfigAccountIfExists = __getConfigAccountIfExists as Mock<
+  typeof __getConfigAccountIfExists
+>;
 
 describe('lib/doctor/Diagnosis', () => {
   const diagnosticInfo: DiagnosticInfo = {
@@ -40,10 +42,11 @@ describe('lib/doctor/Diagnosis', () => {
   const accountId = 123456;
 
   beforeEach(() => {
-    getAccountConfig.mockReturnValue({
+    getConfigAccountIfExists.mockReturnValue({
+      accountId,
       accountType: 'STANDARD',
       name: 'Standard Account',
-    } as CLIAccount);
+    } as HubSpotConfigAccount);
   });
 
   describe('toString', () => {

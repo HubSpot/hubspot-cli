@@ -1,12 +1,10 @@
-import { getAccountId } from '@hubspot/local-dev-lib/config';
 import { getSandboxUsageLimits } from '@hubspot/local-dev-lib/api/sandboxHubs';
 import {
   HUBSPOT_ACCOUNT_TYPES,
   HUBSPOT_ACCOUNT_TYPE_STRINGS,
 } from '@hubspot/local-dev-lib/constants/config';
-import { getAccountIdentifier } from '@hubspot/local-dev-lib/config/getAccountIdentifier';
 import { fetchDeveloperTestAccounts } from '@hubspot/local-dev-lib/api/developerTestAccounts';
-import { CLIAccount } from '@hubspot/local-dev-lib/types/Accounts';
+import { HubSpotConfigAccount } from '@hubspot/local-dev-lib/types/Accounts';
 import { Usage } from '@hubspot/local-dev-lib/types/Sandbox';
 import {
   DeveloperTestAccount,
@@ -20,7 +18,7 @@ import { isSandbox } from '../accountTypes.js';
 import { PromptChoices } from '../../types/Prompts.js';
 import { EXIT_CODES } from '../enums/exitCodes.js';
 
-function mapNestedAccount(accountConfig: CLIAccount): {
+function mapNestedAccount(accountConfig: HubSpotConfigAccount): {
   name: string;
   value: {
     targetAccountId: number | null;
@@ -30,9 +28,9 @@ function mapNestedAccount(accountConfig: CLIAccount): {
 } {
   const parentAccountId = accountConfig.parentAccountId ?? null;
   return {
-    name: uiAccountDescription(getAccountIdentifier(accountConfig), false),
+    name: uiAccountDescription(accountConfig.accountId, false),
     value: {
-      targetAccountId: getAccountId(accountConfig.name),
+      targetAccountId: accountConfig.accountId,
       createNestedAccount: false,
       parentAccountId,
     },
@@ -55,10 +53,10 @@ export type ProjectDevTargetAccountPromptResponse = {
 };
 
 export async function selectSandboxTargetAccountPrompt(
-  accounts: CLIAccount[],
-  defaultAccountConfig: CLIAccount
+  accounts: HubSpotConfigAccount[],
+  defaultAccountConfig: HubSpotConfigAccount
 ): Promise<ProjectDevTargetAccountPromptResponse> {
-  const defaultAccountId = getAccountId(defaultAccountConfig.name);
+  const defaultAccountId = defaultAccountConfig.accountId;
   let choices = [];
   let sandboxUsage: Usage = {
     STANDARD: { used: 0, available: 0, limit: 0 },
@@ -129,10 +127,10 @@ export async function selectSandboxTargetAccountPrompt(
 }
 
 export async function selectDeveloperTestTargetAccountPrompt(
-  accounts: CLIAccount[],
-  defaultAccountConfig: CLIAccount
+  accounts: HubSpotConfigAccount[],
+  defaultAccountConfig: HubSpotConfigAccount
 ): Promise<ProjectDevTargetAccountPromptResponse> {
-  const defaultAccountId = getAccountId(defaultAccountConfig.name);
+  const defaultAccountId = defaultAccountConfig.accountId;
   let devTestAccountsResponse: FetchDeveloperTestAccountsResponse | undefined;
   try {
     if (defaultAccountId) {
@@ -163,7 +161,7 @@ export async function selectDeveloperTestTargetAccountPrompt(
 
   const devTestAccounts: PromptChoices = [];
   if (devTestAccountsResponse && devTestAccountsResponse.results) {
-    const accountIds = accounts.map(account => getAccountIdentifier(account));
+    const accountIds = accounts.map(account => account.accountId);
 
     devTestAccountsResponse.results.forEach(acct => {
       const inConfig = accountIds.includes(acct.id);

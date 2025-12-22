@@ -114,7 +114,7 @@ describe('lib/projects/add/legacyAddComponent', () => {
         commands.project.add.creatingComponent('test-project')
       );
       expect(mockedUiLogger.success).toHaveBeenCalledWith(
-        commands.project.add.success('new-component')
+        commands.project.add.success('test-project')
       );
     });
 

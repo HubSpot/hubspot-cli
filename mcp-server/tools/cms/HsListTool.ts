@@ -9,6 +9,7 @@ import { absoluteCurrentWorkingDirectory } from '../project/constants.js';
 import { runCommandInDir } from '../../utils/project.js';
 import { formatTextContents } from '../../utils/content.js';
 import { trackToolUsage } from '../../utils/toolUsageTracking.js';
+import { setupHubSpotConfig } from '../../utils/config.js';
 
 const inputSchema = {
   absoluteCurrentWorkingDirectory,
@@ -43,6 +44,7 @@ export class HsListTool extends Tool<HsListInputSchema> {
     account,
     absoluteCurrentWorkingDirectory,
   }: HsListInputSchema): Promise<TextContentResponse> {
+    setupHubSpotConfig(absoluteCurrentWorkingDirectory);
     await trackToolUsage(toolName);
 
     let command = 'hs list';
@@ -61,11 +63,7 @@ export class HsListTool extends Tool<HsListInputSchema> {
         command
       );
 
-      return formatTextContents(
-        absoluteCurrentWorkingDirectory,
-        stdout,
-        stderr
-      );
+      return formatTextContents(stdout, stderr);
     } catch (error) {
       const errorMessage =
         error instanceof Error ? error.message : String(error);

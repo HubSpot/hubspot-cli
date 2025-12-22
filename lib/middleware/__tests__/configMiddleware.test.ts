@@ -1,13 +1,13 @@
 import { Arguments } from 'yargs';
 import { uiLogger } from '../../ui/logger.js';
-import { CLIConfig } from '@hubspot/local-dev-lib/types/Config';
+import { HubSpotConfigAccount } from '@hubspot/local-dev-lib/types/Accounts';
 import * as cliConfig from '@hubspot/local-dev-lib/config';
 import * as validation from '../../validation.js';
 import { EXIT_CODES } from '../../enums/exitCodes.js';
 import {
   handleDeprecatedEnvVariables,
   injectAccountIdMiddleware,
-  loadAndValidateConfigMiddleware,
+  validateConfigMiddleware,
   validateAccountOptions,
 } from '../configMiddleware.js';
 
@@ -21,10 +21,13 @@ vi.mock('@hubspot/local-dev-lib/config');
 vi.mock('../../validation');
 
 const validateAccountSpy = vi.spyOn(validation, 'validateAccount');
-const loadConfigSpy = vi.spyOn(cliConfig, 'loadConfig');
-const getAccountIdSpy = vi.spyOn(cliConfig, 'getAccountId');
+const getConfigAccountIfExistsSpy = vi.spyOn(
+  cliConfig,
+  'getConfigAccountIfExists'
+);
+const globalConfigFileExistsSpy = vi.spyOn(cliConfig, 'globalConfigFileExists');
 const configFileExistsSpy = vi.spyOn(cliConfig, 'configFileExists');
-const getConfigPathSpy = vi.spyOn(cliConfig, 'getConfigPath');
+const getConfigFilePathSpy = vi.spyOn(cliConfig, 'getConfigFilePath');
 const validateConfigSpy = vi.spyOn(cliConfig, 'validateConfig');
 const processExitSpy = vi.spyOn(process, 'exit');
 
@@ -33,7 +36,7 @@ describe('lib/middleware/configMiddleware', () => {
     processExitSpy.mockImplementation(code => {
       throw new Error(`Process.exit called with code ${code}`);
     });
-    getConfigPathSpy.mockReturnValue('/path/to/config');
+    getConfigFilePathSpy.mockReturnValue('/path/to/config');
   });
 
   describe('handleDeprecatedEnvVariables()', () => {
@@ -103,13 +106,15 @@ describe('lib/middleware/configMiddleware', () => {
 
       expect(argv.userProvidedAccount).toBeUndefined();
       expect(argv.derivedAccountId).toBe(123);
-      expect(getAccountIdSpy).not.toHaveBeenCalled();
+      expect(getConfigAccountIfExistsSpy).not.toHaveBeenCalled();
 
       process.env = originalEnv;
     });
 
     it('should use getAccountId when useEnv is false', async () => {
-      getAccountIdSpy.mockReturnValue(456);
+      getConfigAccountIfExistsSpy.mockReturnValue({
+        accountId: 456,
+      } as HubSpotConfigAccount);
 
       const argv: Arguments<{ account?: string }> = {
         _: ['some-command'],
@@ -122,13 +127,14 @@ describe('lib/middleware/configMiddleware', () => {
 
       expect(argv.userProvidedAccount).toBe('test-account');
       expect(argv.derivedAccountId).toBe(456);
-      expect(getAccountIdSpy).toHaveBeenCalledWith('test-account');
+      expect(getConfigAccountIfExistsSpy).toHaveBeenCalledWith('test-account');
     });
   });
 
-  describe('loadAndValidateConfigMiddleware()', () => {
-    it('should exit with error when config file exists and --config flag is used', async () => {
+  describe('validateConfigMiddleware()', () => {
+    it('should allow using --config flag', async () => {
       configFileExistsSpy.mockReturnValue(true);
+      validateConfigSpy.mockReturnValue({ isValid: true, errors: [] });
 
       const argv: Arguments = {
         _: ['some-command'],
@@ -136,40 +142,37 @@ describe('lib/middleware/configMiddleware', () => {
         $0: 'hs',
       };
 
-      await expect(loadAndValidateConfigMiddleware(argv)).rejects.toThrow();
-      expect(processExitSpy).toHaveBeenCalledWith(EXIT_CODES.ERROR);
-      expect(uiLogger.error).toHaveBeenCalledWith(
-        'A configuration file already exists at /path/to/config. To specify a new configuration file, delete the existing one and try again.'
-      );
+      await validateConfigMiddleware(argv);
+
+      // Should not throw or exit - this is now allowed
+      expect(processExitSpy).not.toHaveBeenCalled();
+      expect(uiLogger.error).not.toHaveBeenCalled();
     });
 
-    it('should load config and validate for non-init commands', async () => {
-      configFileExistsSpy.mockReturnValue(false);
-      loadConfigSpy.mockReturnValue({} as CLIConfig);
-      validateConfigSpy.mockReturnValue(true);
+    it('should validate config for non-init commands', async () => {
+      globalConfigFileExistsSpy.mockReturnValue(true);
+      validateConfigSpy.mockReturnValue({ isValid: true, errors: [] });
 
       const argv: Arguments = {
         _: ['some-command'],
         $0: 'hs',
       };
 
-      await loadAndValidateConfigMiddleware(argv);
+      await validateConfigMiddleware(argv);
 
-      expect(loadConfigSpy).toHaveBeenCalled();
       expect(validateConfigSpy).toHaveBeenCalled();
     });
 
     it('should skip validation for init command', async () => {
-      configFileExistsSpy.mockReturnValue(false);
+      globalConfigFileExistsSpy.mockReturnValue(false);
 
       const argv: Arguments = {
         _: ['init'],
         $0: 'hs',
       };
 
-      await loadAndValidateConfigMiddleware(argv);
+      await validateConfigMiddleware(argv);
 
-      expect(loadConfigSpy).not.toHaveBeenCalled();
       expect(validateConfigSpy).not.toHaveBeenCalled();
     });
   });

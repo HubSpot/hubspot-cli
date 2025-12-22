@@ -1,7 +1,7 @@
 import {
-  getAccountConfig,
-  getAccountId,
-  getEnv,
+  getConfigAccountById,
+  getConfigAccountEnvironment,
+  getConfigAccountIfExists,
 } from '@hubspot/local-dev-lib/config';
 import { createImport } from '@hubspot/local-dev-lib/api/crm';
 import { ImportRequest } from '@hubspot/local-dev-lib/types/Crm';
@@ -15,6 +15,7 @@ import {
   isStandardAccount,
 } from './accountTypes.js';
 import { uiLogger } from './ui/logger.js';
+import { HubSpotConfigAccount } from '@hubspot/local-dev-lib/types/Accounts';
 
 export async function handleImportData(
   targetAccountId: number,
@@ -22,7 +23,9 @@ export async function handleImportData(
   importRequest: ImportRequest
 ) {
   try {
-    const baseUrl = getHubSpotWebsiteOrigin(getEnv());
+    const baseUrl = getHubSpotWebsiteOrigin(
+      getConfigAccountEnvironment(targetAccountId)
+    );
     const response = await createImport(
       targetAccountId,
       importRequest,
@@ -42,21 +45,21 @@ export async function handleTargetTestAccountSelectionFlow(
   derivedAccountId: number,
   userProvidedAccount: string | number | undefined
 ): Promise<number> {
-  let targetAccountId: number | null = null;
+  let targetAccountId: number | undefined;
+  let testAccount: HubSpotConfigAccount | undefined;
 
   if (userProvidedAccount) {
-    targetAccountId = getAccountId(userProvidedAccount);
+    testAccount = getConfigAccountIfExists(userProvidedAccount);
+    targetAccountId = testAccount?.accountId;
   }
 
   // Only allow users to pass in test accounts
   if (targetAccountId) {
-    const testAccount = getAccountConfig(targetAccountId!);
-
-    if (!testAccount || !isDeveloperTestAccount(testAccount)) {
+    if (testAccount && !isDeveloperTestAccount(testAccount)) {
       throw new Error(lib.importData.errors.notDeveloperTestAccount);
     }
   } else {
-    const targetProjectAccountConfig = getAccountConfig(derivedAccountId);
+    const targetProjectAccountConfig = getConfigAccountById(derivedAccountId);
 
     if (!targetProjectAccountConfig) {
       throw new Error(lib.importData.errors.noAccountConfig(derivedAccountId));

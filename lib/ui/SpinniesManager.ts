@@ -16,15 +16,17 @@ import {
   cleanStream,
   colorOptions,
   getLinesLength,
+  prefixOptions,
   purgeSpinnerOptions,
   purgeSpinnersOptions,
+  SpinnerOptions as BaseSpinnerOptions,
   SPINNERS,
   terminalSupportsUnicode,
-  writeStream,
-  SpinnerOptions as BaseSpinnerOptions,
   VALID_STATUSES,
-  prefixOptions,
+  writeStream,
 } from './spinniesUtils.js';
+
+import { uiLogger } from './logger.js';
 
 interface SpinnerState extends BaseSpinnerOptions {
   name?: string;
@@ -96,10 +98,7 @@ class SpinniesManager {
     return this.spinners?.[name];
   }
 
-  add(
-    name: string,
-    options: Partial<SpinnerState> = {}
-  ): SpinnerState & { name: string } {
+  add(name: string, options: Partial<SpinnerState> = {}): void {
     // Support adding generic spinnies lines without specifying a name
     const resolvedName = name || `${Date.now()}-${Math.random()}`;
 
@@ -107,7 +106,7 @@ class SpinniesManager {
       options.text = resolvedName;
     }
 
-    const spinnerProperties: SpinnerState = {
+    this.spinners[resolvedName] = {
       ...colorOptions(this.options),
       succeedPrefix: this.options.succeedPrefix,
       failPrefix: this.options.failPrefix,
@@ -115,42 +114,32 @@ class SpinniesManager {
       ...purgeSpinnerOptions(options),
     };
 
-    this.spinners[resolvedName] = spinnerProperties;
     this.updateSpinnerState();
-
-    return { name: resolvedName, ...spinnerProperties };
   }
 
-  update(name: string, options: Partial<SpinnerState> = {}): SpinnerState {
+  update(name: string, options: Partial<SpinnerState> = {}): void {
     const { status } = options;
     this.setSpinnerProperties(name, options, status);
     this.updateSpinnerState();
-
-    return this.spinners[name];
   }
 
-  succeed(name: string, options: Partial<SpinnerState> = {}): SpinnerState {
+  succeed(name: string, options: Partial<SpinnerState> = {}): void {
     this.setSpinnerProperties(name, options, 'succeed');
     this.updateSpinnerState();
-
-    return this.spinners[name];
   }
 
-  fail(name: string, options: Partial<SpinnerState> = {}): SpinnerState {
+  fail(name: string, options: Partial<SpinnerState> = {}): void {
     this.setSpinnerProperties(name, options, 'fail');
     this.updateSpinnerState();
-
-    return this.spinners[name];
   }
 
-  remove(name: string): SpinnerState {
+  remove(name: string): void {
     if (typeof name !== 'string') {
-      throw Error('A spinner reference name must be specified');
+      uiLogger.debug('A spinner reference name must be specified');
+      return;
     }
 
-    const spinner = this.spinners[name];
     delete this.spinners[name];
-    return spinner;
   }
 
   stopAll(newStatus: (typeof VALID_STATUSES)[number] = 'stopped'): {
@@ -188,16 +177,20 @@ class SpinniesManager {
   }
 
   private setSpinnerProperties(
-    name: string,
+    name: unknown,
     options: Partial<SpinnerState>,
     status?: (typeof VALID_STATUSES)[number]
   ): void {
     if (typeof name !== 'string') {
-      throw Error('A spinner reference name must be specified');
+      uiLogger.debug('A spinner reference name must be specified');
+      return;
     }
+
     if (!this.spinners[name]) {
-      throw Error(`No spinner initialized with name ${name}`);
+      uiLogger.debug(`No spinner initialized with name ${name}`);
+      return;
     }
+
     options = purgeSpinnerOptions(options);
     status = status || 'spinning';
 

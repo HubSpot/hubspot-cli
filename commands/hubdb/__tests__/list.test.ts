@@ -20,6 +20,7 @@ import {
 
 vi.mock('../../../lib/commonOpts');
 vi.mock('@hubspot/local-dev-lib/api/hubdb');
+vi.mock('@hubspot/local-dev-lib/config');
 vi.mock('../../../lib/ui/logger', () => ({
   uiLogger: {
     success: vi.fn(),

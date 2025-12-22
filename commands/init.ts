@@ -1,13 +1,12 @@
 import path from 'path';
+import { existsSync } from 'fs';
 import { ArgumentsCamelCase, Argv } from 'yargs';
-import fs from 'fs-extra';
 import {
-  loadConfig,
-  getConfigPath,
+  getConfigFilePath,
   createEmptyConfigFile,
-  deleteEmptyConfigFile,
-  updateDefaultAccount,
-  configFileExists,
+  deleteConfigFileIfEmpty,
+  setConfigAccountAsDefault,
+  globalConfigFileExists,
 } from '@hubspot/local-dev-lib/config';
 import { Environment } from '@hubspot/local-dev-lib/types/Config';
 import {
@@ -23,12 +22,10 @@ import {
 import { getCwd } from '@hubspot/local-dev-lib/path';
 import { toKebabCase } from '@hubspot/local-dev-lib/text';
 import {
-  CLIAccount,
-  OAuth2ManagerAccountConfig,
+  HubSpotConfigAccount,
+  OAuthConfigAccount,
 } from '@hubspot/local-dev-lib/types/Accounts';
 import { ENVIRONMENTS } from '@hubspot/local-dev-lib/constants/environments';
-import { getAccountIdentifier } from '@hubspot/local-dev-lib/config/getAccountIdentifier';
-import { CLIOptions } from '@hubspot/local-dev-lib/types/CLIOptions';
 import { setCLILogLevel } from '../lib/commonOpts.js';
 import { makeYargsBuilder } from '../lib/yargsUtils.js';
 import { handleExit } from '../lib/process.js';
@@ -64,9 +61,9 @@ const TRACKING_STATUS = {
 async function personalAccessKeyConfigCreationFlow(
   env: Environment,
   account?: number
-): Promise<CLIAccount | null> {
+): Promise<HubSpotConfigAccount> {
   const { personalAccessKey } = await personalAccessKeyPrompt({ env, account });
-  let updatedConfig: CLIAccount | null;
+  let updatedConfig: HubSpotConfigAccount;
 
   try {
     const token = await getAccessToken(personalAccessKey, env);
@@ -89,15 +86,26 @@ async function personalAccessKeyConfigCreationFlow(
 
 async function oauthConfigCreationFlow(
   env: Environment
-): Promise<OAuth2ManagerAccountConfig> {
+): Promise<OAuthConfigAccount> {
   const configData = await promptUser<OauthPromptResponse>(OAUTH_FLOW);
-  const accountConfig: OAuth2ManagerAccountConfig = {
-    ...configData,
+
+  const oauthAccount: OAuthConfigAccount = {
+    name: configData.name,
+    accountId: configData.accountId,
+    authType: OAUTH_AUTH_METHOD.value,
     env,
+    auth: {
+      clientId: configData.clientId,
+      clientSecret: configData.clientSecret,
+      scopes: configData.scopes,
+      tokenInfo: {},
+    },
   };
-  await authenticateWithOauth(accountConfig);
-  updateDefaultAccount(accountConfig.name!);
-  return accountConfig;
+
+  await authenticateWithOauth(oauthAccount);
+  setConfigAccountAsDefault(configData.accountId);
+
+  return oauthAccount;
 }
 
 const AUTH_TYPE_NAMES = {
@@ -122,7 +130,6 @@ async function handler(args: ArgumentsCamelCase<InitArgs>): Promise<void> {
     authType: authTypeFlagValue,
     c: configFlagValue,
     disableTracking,
-    useHiddenConfig,
     userProvidedAccount,
   } = args;
 
@@ -141,9 +148,14 @@ async function handler(args: ArgumentsCamelCase<InitArgs>): Promise<void> {
     (authTypeFlagValue && authTypeFlagValue.toLowerCase()) ||
     PERSONAL_ACCESS_KEY_AUTH_METHOD.value;
 
-  const configPath =
-    (configFlagValue && path.join(getCwd(), configFlagValue)) ||
-    getConfigPath('', useHiddenConfig);
+  let existingConfigPath: string | undefined;
+
+  try {
+    existingConfigPath =
+      (configFlagValue && path.join(getCwd(), configFlagValue)) ||
+      getConfigFilePath();
+  } catch (err) {}
+
   setCLILogLevel(args);
 
   if (!disableTracking) {
@@ -154,13 +166,15 @@ async function handler(args: ArgumentsCamelCase<InitArgs>): Promise<void> {
 
   const env = args.qa ? ENVIRONMENTS.QA : ENVIRONMENTS.PROD;
 
-  if (configFileExists(true)) {
+  // Only check for global config if user is not providing a custom config path
+  if (!configFlagValue && globalConfigFileExists()) {
     uiLogger.error(commands.init.errors.globalConfigFileExists);
     process.exit(EXIT_CODES.ERROR);
   }
 
-  if (fs.existsSync(configPath!)) {
-    uiLogger.error(commands.init.errors.configFileExists(configPath!));
+  // Check if the specific config file path already exists
+  if (existingConfigPath && existsSync(existingConfigPath)) {
+    uiLogger.error(commands.init.errors.configFileExists(existingConfigPath));
     uiLogger.info(commands.init.logs.updateConfig);
     process.exit(EXIT_CODES.ERROR);
   }
@@ -174,18 +188,9 @@ async function handler(args: ArgumentsCamelCase<InitArgs>): Promise<void> {
     );
   }
 
-  const doesOtherConfigFileExist = configFileExists(!useHiddenConfig);
-  if (doesOtherConfigFileExist) {
-    const path = getConfigPath('', !useHiddenConfig);
-    uiLogger.error(commands.init.errors.bothConfigFilesNotAllowed(path!));
-    process.exit(EXIT_CODES.ERROR);
-  }
+  createEmptyConfigFile(false);
 
-  createEmptyConfigFile({ path: configPath! }, useHiddenConfig);
-  //Needed to load deprecated config
-  loadConfig(configPath!, args as CLIOptions);
-
-  handleExit(deleteEmptyConfigFile);
+  handleExit(deleteConfigFileIfEmpty);
 
   try {
     let accountId: number;
@@ -195,25 +200,24 @@ async function handler(args: ArgumentsCamelCase<InitArgs>): Promise<void> {
         env,
         parsedUserProvidedAccountId
       );
-      if (personalAccessKeyResult) {
-        accountId = getAccountIdentifier(personalAccessKeyResult)!;
-        name = personalAccessKeyResult.name;
-      }
+      accountId = personalAccessKeyResult.accountId;
+      name = personalAccessKeyResult.name;
     } else {
-      const oauthResult = await oauthConfigCreationFlow(env);
-      accountId = oauthResult.accountId!;
-      name = oauthResult.name;
+      const oauthAccount = await oauthConfigCreationFlow(env);
+      accountId = oauthAccount.accountId;
+      name = oauthAccount.name;
     }
-    const configPath = getConfigPath();
+
+    const configPath = getConfigFilePath();
 
     try {
-      checkAndAddConfigToGitignore(configPath!);
+      checkAndAddConfigToGitignore(configPath);
     } catch (e) {
       debugError(e);
     }
 
     uiLogger.log('');
-    uiLogger.success(commands.init.success.configFileCreated(configPath!));
+    uiLogger.success(commands.init.success.configFileCreated(configPath));
     uiLogger.success(
       commands.init.success.configFileUpdated(
         AUTH_TYPE_NAMES[authType as keyof typeof AUTH_TYPE_NAMES],

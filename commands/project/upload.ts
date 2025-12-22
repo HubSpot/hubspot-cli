@@ -1,7 +1,7 @@
 import { Argv, ArgumentsCamelCase } from 'yargs';
 import chalk from 'chalk';
 import { uiLogger } from '../../lib/ui/logger.js';
-import { getAccountConfig } from '@hubspot/local-dev-lib/config';
+import { getConfigAccountById } from '@hubspot/local-dev-lib/config';
 import { isSpecifiedError } from '@hubspot/local-dev-lib/errors/index';
 import { isV2Project } from '../../lib/projects/platformVersion.js';
 import { trackCommandUsage } from '../../lib/usageTracking.js';
@@ -74,7 +74,7 @@ async function handler(
 
   targetAccountId = targetAccountId || derivedAccountId;
 
-  const accountConfig = getAccountConfig(targetAccountId!);
+  const accountConfig = getConfigAccountById(targetAccountId!);
   const accountType = accountConfig && accountConfig.accountType;
 
   trackCommandUsage(

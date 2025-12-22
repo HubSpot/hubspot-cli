@@ -1,21 +1,32 @@
 import {
-  getDeprecatedConfig,
-  getGlobalConfig,
-  getConfigPath,
-  migrateConfig,
+  getConfigAtPath,
+  migrateConfigAtPath,
   mergeConfigProperties,
-  mergeExistingConfigs,
+  mergeConfigAccounts,
   ConflictProperty,
+  archiveConfigAtPath,
 } from '@hubspot/local-dev-lib/config/migrate';
 import { ARCHIVED_HUBSPOT_CONFIG_YAML_FILE_NAME } from '@hubspot/local-dev-lib/constants/config';
 import {
-  CLIConfig_NEW,
-  CLIConfig_DEPRECATED,
+  HubSpotConfig,
+  DeprecatedHubSpotConfigFields,
 } from '@hubspot/local-dev-lib/types/Config';
 import { promptUser } from './prompts/promptUtils.js';
 import { lib } from '../lang/en.js';
 import { uiLogger } from './ui/logger.js';
-import { CLIAccount_DEPRECATED } from '@hubspot/local-dev-lib/types/Accounts';
+import {
+  HubSpotConfigAccount,
+  DeprecatedHubSpotConfigAccountFields,
+} from '@hubspot/local-dev-lib/types/Accounts';
+import {
+  getConfig,
+  getLocalConfigFilePathIfExists,
+} from '@hubspot/local-dev-lib/config';
+import { debugError } from './errorHandlers/index.js';
+
+type DeprecatedHubspotConfig = HubSpotConfig & DeprecatedHubSpotConfigFields;
+type DeprecatedHubspotConfigAccount = HubSpotConfigAccount &
+  DeprecatedHubSpotConfigAccountFields;
 
 async function promptRenameOrOmitAccount(
   accountName: string,
@@ -37,9 +48,9 @@ async function promptRenameOrOmitAccount(
 }
 
 async function promptNewAccountName(
-  account: CLIAccount_DEPRECATED,
-  globalConfig: CLIConfig_NEW,
-  renamedAccounts: Array<CLIAccount_DEPRECATED>
+  account: DeprecatedHubspotConfigAccount,
+  globalConfig: HubSpotConfig,
+  renamedAccounts: Array<DeprecatedHubspotConfigAccount>
 ): Promise<string> {
   const { newAccountName } = await promptUser<{
     newAccountName: string;
@@ -49,19 +60,19 @@ async function promptNewAccountName(
     default: `${account.name}_${account.portalId}`,
     message:
       lib.configMigrate.handleAccountNameConflicts.prompts.newAccountNamePrompt(
-        account.name!,
+        account.name,
         account.portalId!
       ),
     validate: value => {
       if (!value) {
         return lib.configMigrate.handleAccountNameConflicts.errors.nameRequired;
       }
-      if (value === account.name!) {
+      if (value === account.name) {
         return lib.configMigrate.handleAccountNameConflicts.errors.sameName;
       }
 
-      const existingAccount = globalConfig.accounts?.some(
-        acc => acc.name === value
+      const existingAccount = globalConfig.accounts.some(
+        (acc: HubSpotConfigAccount) => acc.name === value
       );
       const renamedAccount = renamedAccounts.some(acc => acc.name === value);
 
@@ -78,15 +89,13 @@ async function promptNewAccountName(
   return newAccountName;
 }
 
-export async function handleMigration(
-  deprecatedConfigPath?: string,
-  hideWarning?: boolean
-): Promise<boolean> {
+export async function handleMigration(hideWarning?: boolean): Promise<boolean> {
+  const deprecatedConfigPath =
+    process.env.HUBSPOT_CONFIG_PATH || getLocalConfigFilePathIfExists()!;
+
   if (!hideWarning) {
     uiLogger.warn(
-      lib.configMigrate.deprecatedConfigWarning(
-        deprecatedConfigPath || getConfigPath(undefined, false)!
-      )
+      lib.configMigrate.deprecatedConfigWarning(deprecatedConfigPath || '')
     );
     uiLogger.log('');
   }
@@ -107,8 +116,15 @@ export async function handleMigration(
     return false;
   }
 
-  const deprecatedConfig = getDeprecatedConfig(deprecatedConfigPath);
-  migrateConfig(deprecatedConfig);
+  migrateConfigAtPath(deprecatedConfigPath || '');
+
+  try {
+    archiveConfigAtPath(deprecatedConfigPath);
+  } catch (error) {
+    debugError(error);
+    uiLogger.error(lib.configMigrate.errors.archive(deprecatedConfigPath));
+    return true;
+  }
 
   uiLogger.success(lib.configMigrate.handleMigration.success);
 
@@ -116,15 +132,17 @@ export async function handleMigration(
 }
 
 async function handleMergeConfigProperties(
-  globalConfig: CLIConfig_NEW,
-  deprecatedConfig: CLIConfig_DEPRECATED,
+  globalConfig: HubSpotConfig,
+  deprecatedConfig: DeprecatedHubspotConfig,
   force?: boolean
-): Promise<CLIConfig_NEW> {
+): Promise<HubSpotConfig> {
   const {
-    initialConfig,
+    configWithMergedProperties,
     conflicts,
-  }: { initialConfig: CLIConfig_NEW; conflicts: ConflictProperty[] } =
-    mergeConfigProperties(globalConfig, deprecatedConfig, force);
+  }: {
+    configWithMergedProperties: HubSpotConfig;
+    conflicts: ConflictProperty[];
+  } = mergeConfigProperties(globalConfig, deprecatedConfig, force);
 
   if (conflicts.length > 0) {
     const properties = conflicts.map(c => c.property);
@@ -151,32 +169,36 @@ async function handleMergeConfigProperties(
           lib.configMigrate.handleMergeConfigProperties.mergeConfigConflictPrompt(
             property,
             newValue.toString(),
-            oldValue.toString()
+            oldValue?.toString() || ''
           ),
       });
 
       if (shouldOverwrite) {
         // @ts-expect-error Cannot reconcile CLIConfig_NEW and CLIConfig_DEPRECATED
-        initialConfig[property] = oldValue;
+        configWithMergedProperties[property] = oldValue;
       }
     }
   }
-  return initialConfig;
+  return configWithMergedProperties;
 }
 
 async function handleAccountNameConflicts(
-  globalConfig: CLIConfig_NEW,
-  deprecatedConfig: CLIConfig_DEPRECATED,
+  globalConfig: HubSpotConfig,
+  deprecatedConfig: DeprecatedHubspotConfig,
   force?: boolean
-): Promise<CLIConfig_DEPRECATED> {
+): Promise<DeprecatedHubspotConfig> {
   if (!deprecatedConfig.portals?.length || !globalConfig.accounts?.length) {
     return deprecatedConfig;
   }
 
-  const accountsWithConflictsToRemove = new Set<CLIAccount_DEPRECATED>();
-  const renamedAccounts: Array<CLIAccount_DEPRECATED> = [];
+  const accountsWithConflictsToRemove = new Set<
+    HubSpotConfigAccount & DeprecatedHubSpotConfigAccountFields
+  >();
+  const renamedAccounts: Array<
+    HubSpotConfigAccount & DeprecatedHubSpotConfigAccountFields
+  > = [];
 
-  const accountsNotYetInGlobal = deprecatedConfig.portals.filter(
+  const accountsNotYetInGlobal = (deprecatedConfig.portals || []).filter(
     portal =>
       portal.portalId &&
       !globalConfig.accounts?.some(acc => acc.accountId === portal.portalId)
@@ -243,24 +265,23 @@ async function handleAccountNameConflicts(
     deprecatedConfig.portals.push(...renamedAccounts);
   }
 
-  const cleanedPortals: Array<CLIAccount_DEPRECATED> =
-    deprecatedConfig.portals.filter(
-      portal => !accountsWithConflictsToRemove.has(portal)
-    );
+  const cleanedPortals: Array<DeprecatedHubspotConfigAccount> = (
+    deprecatedConfig.portals || []
+  ).filter(portal => !accountsWithConflictsToRemove.has(portal));
 
   return { ...deprecatedConfig, portals: cleanedPortals };
 }
 
 export async function handleMerge(
-  deprecatedConfigPath?: string,
   force?: boolean,
   hideWarning?: boolean
 ): Promise<boolean> {
+  const deprecatedConfigPath =
+    process.env.HUBSPOT_CONFIG_PATH || getLocalConfigFilePathIfExists()!;
+
   if (!hideWarning) {
     uiLogger.warn(
-      lib.configMigrate.deprecatedConfigWarning(
-        deprecatedConfigPath || getConfigPath(undefined, false)!
-      )
+      lib.configMigrate.deprecatedConfigWarning(deprecatedConfigPath || '')
     );
     uiLogger.log('');
   }
@@ -285,10 +306,14 @@ export async function handleMerge(
     }
   }
 
-  const deprecatedConfig = getDeprecatedConfig(deprecatedConfigPath);
-  const globalConfig = getGlobalConfig();
+  let deprecatedConfig: DeprecatedHubspotConfig;
+  let globalConfig: HubSpotConfig;
 
-  if (!deprecatedConfig || !globalConfig) {
+  try {
+    deprecatedConfig = getConfigAtPath(deprecatedConfigPath || '');
+    globalConfig = getConfig();
+  } catch (error) {
+    debugError(error);
     return true;
   }
 
@@ -304,7 +329,7 @@ export async function handleMerge(
     force
   );
 
-  const { skippedAccountIds } = mergeExistingConfigs(
+  const { skippedAccountIds } = mergeConfigAccounts(
     mergedConfig,
     cleanedDeprecatedConfig
   );
@@ -315,6 +340,14 @@ export async function handleMerge(
       lib.configMigrate.handleMerge.skippedExistingAccounts(skippedAccountIds)
     );
     uiLogger.log('');
+  }
+
+  try {
+    archiveConfigAtPath(deprecatedConfigPath);
+  } catch (error) {
+    debugError(error);
+    uiLogger.error(lib.configMigrate.errors.archive(deprecatedConfigPath));
+    return true;
   }
 
   uiLogger.success(lib.configMigrate.handleMerge.success);

@@ -8,6 +8,8 @@ import * as ui from '../../../lib/ui/index.js';
 import { EXIT_CODES } from '../../../lib/enums/exitCodes.js';
 import { logError } from '../../../lib/errorHandlers/index.js';
 import projectLogsCommand, { ProjectLogsArgs } from '../logs.js';
+import * as config from '@hubspot/local-dev-lib/config';
+import { ENVIRONMENTS } from '@hubspot/local-dev-lib/constants/environments';
 
 vi.mock('../../ui/logger.js');
 vi.mock('../../../lib/commonOpts');
@@ -35,6 +37,11 @@ const projectLogsManagerInitSpy = vi.spyOn(ProjectLogsManager, 'init');
 const getTableHeaderSpy = vi.spyOn(table, 'getTableHeader');
 const getTableContentsSpy = vi.spyOn(table, 'getTableContents');
 
+const getConfigAccountEnvironmentSpy = vi.spyOn(
+  config,
+  'getConfigAccountEnvironment'
+);
+
 const optionsSpy = vi
   .spyOn(yargs as Argv, 'options')
   .mockReturnValue(yargs as Argv);
@@ -46,6 +53,8 @@ const conflictsSpy = vi
 const exampleSpy = vi
   .spyOn(yargs as Argv, 'example')
   .mockReturnValue(yargs as Argv);
+
+getConfigAccountEnvironmentSpy.mockReturnValue(ENVIRONMENTS.PROD);
 
 describe('commands/project/logs', () => {
   beforeEach(() => {

@@ -9,8 +9,6 @@ const mockMcpFeedbackRequest = mcpFeedbackRequest as MockedFunction<
 >;
 
 describe('mcp-server/utils/content', () => {
-  const mockWorkingDirectory = '/test/working/directory';
-
   beforeEach(() => {
     vi.clearAllMocks();
   });
@@ -49,12 +47,9 @@ describe('mcp-server/utils/content', () => {
     it('should format single output without feedback', async () => {
       mockMcpFeedbackRequest.mockResolvedValue('');
 
-      const result = await formatTextContents(
-        mockWorkingDirectory,
-        'Test output'
-      );
+      const result = await formatTextContents('Test output');
 
-      expect(mockMcpFeedbackRequest).toHaveBeenCalledWith(mockWorkingDirectory);
+      expect(mockMcpFeedbackRequest).toHaveBeenCalled();
       expect(result).toEqual({
         content: [
           {
@@ -69,7 +64,6 @@ describe('mcp-server/utils/content', () => {
       mockMcpFeedbackRequest.mockResolvedValue('');
 
       const result = await formatTextContents(
-        mockWorkingDirectory,
         'First output',
         'Second output',
         'Third output'
@@ -88,12 +82,9 @@ describe('mcp-server/utils/content', () => {
       const feedbackMessage = 'Please share your feedback!';
       mockMcpFeedbackRequest.mockResolvedValue(feedbackMessage);
 
-      const result = await formatTextContents(
-        mockWorkingDirectory,
-        'Command output'
-      );
+      const result = await formatTextContents('Command output');
 
-      expect(mockMcpFeedbackRequest).toHaveBeenCalledWith(mockWorkingDirectory);
+      expect(mockMcpFeedbackRequest).toHaveBeenCalled();
       expect(result).toEqual({
         content: [
           { type: 'text', text: 'Command output' },
@@ -106,11 +97,7 @@ describe('mcp-server/utils/content', () => {
       const feedbackMessage = 'Feedback request message';
       mockMcpFeedbackRequest.mockResolvedValue(feedbackMessage);
 
-      const result = await formatTextContents(
-        mockWorkingDirectory,
-        'First output',
-        'Second output'
-      );
+      const result = await formatTextContents('First output', 'Second output');
 
       expect(result).toEqual({
         content: [
@@ -125,7 +112,6 @@ describe('mcp-server/utils/content', () => {
       mockMcpFeedbackRequest.mockResolvedValue('');
 
       const result = await formatTextContents(
-        mockWorkingDirectory,
         'First output',
         undefined,
         'Third output',
@@ -143,7 +129,7 @@ describe('mcp-server/utils/content', () => {
     it('should not call mcpFeedbackRequest when no outputs provided', async () => {
       mockMcpFeedbackRequest.mockResolvedValue('Feedback message');
 
-      const result = await formatTextContents(mockWorkingDirectory);
+      const result = await formatTextContents();
 
       expect(mockMcpFeedbackRequest).not.toHaveBeenCalled();
       expect(result).toEqual({
@@ -154,14 +140,10 @@ describe('mcp-server/utils/content', () => {
     it('should call mcpFeedbackRequest but not add feedback when all outputs are undefined and feedback is empty', async () => {
       mockMcpFeedbackRequest.mockResolvedValue('');
 
-      const result = await formatTextContents(
-        mockWorkingDirectory,
-        undefined,
-        undefined
-      );
+      const result = await formatTextContents(undefined, undefined);
 
       // mcpFeedbackRequest is still called because outputs.length > 0, but content is empty
-      expect(mockMcpFeedbackRequest).toHaveBeenCalledWith(mockWorkingDirectory);
+      expect(mockMcpFeedbackRequest).toHaveBeenCalled();
       expect(result).toEqual({
         content: [],
       });
@@ -170,9 +152,9 @@ describe('mcp-server/utils/content', () => {
     it('should handle empty string outputs and still request feedback', async () => {
       mockMcpFeedbackRequest.mockResolvedValue('');
 
-      const result = await formatTextContents(mockWorkingDirectory, '');
+      const result = await formatTextContents('');
 
-      expect(mockMcpFeedbackRequest).toHaveBeenCalledWith(mockWorkingDirectory);
+      expect(mockMcpFeedbackRequest).toHaveBeenCalled();
       expect(result).toEqual({
         content: [{ type: 'text', text: '' }],
       });
@@ -181,11 +163,7 @@ describe('mcp-server/utils/content', () => {
     it('should not add feedback when empty string is returned from mcpFeedbackRequest', async () => {
       mockMcpFeedbackRequest.mockResolvedValue('');
 
-      const result = await formatTextContents(
-        mockWorkingDirectory,
-        'Output 1',
-        'Output 2'
-      );
+      const result = await formatTextContents('Output 1', 'Output 2');
 
       // Should not have a third content item with empty feedback
       expect(result.content).toHaveLength(2);
@@ -209,10 +187,7 @@ describe('mcp-server/utils/content', () => {
 
       mockMcpFeedbackRequest.mockResolvedValue(realisticFeedback);
 
-      const result = await formatTextContents(
-        mockWorkingDirectory,
-        'Project created successfully'
-      );
+      const result = await formatTextContents('Project created successfully');
 
       expect(result.content).toHaveLength(2);
       expect(result.content[0]).toEqual({
@@ -226,20 +201,22 @@ describe('mcp-server/utils/content', () => {
       expect(result.content[1].text).toContain('FEEDBACK REQUEST');
     });
 
-    it('should correctly use absoluteCurrentWorkingDirectory parameter', async () => {
-      const customDirectory = '/custom/working/directory';
+    it('should not require absoluteCurrentWorkingDirectory parameter', async () => {
       mockMcpFeedbackRequest.mockResolvedValue('');
 
-      await formatTextContents(customDirectory, 'Test output');
+      const result = await formatTextContents('Test output');
 
-      expect(mockMcpFeedbackRequest).toHaveBeenCalledWith(customDirectory);
+      expect(mockMcpFeedbackRequest).toHaveBeenCalled();
+      expect(result).toEqual({
+        content: [{ type: 'text', text: 'Test output' }],
+      });
     });
 
     it('should await mcpFeedbackRequest and handle async properly', async () => {
       const feedbackPromise = Promise.resolve('Async feedback message');
       mockMcpFeedbackRequest.mockReturnValue(feedbackPromise);
 
-      const result = await formatTextContents(mockWorkingDirectory, 'Output');
+      const result = await formatTextContents('Output');
 
       expect(result.content).toHaveLength(2);
       expect(result.content[1].text).toBe('Async feedback message');

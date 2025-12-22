@@ -13,6 +13,8 @@ import { DocsSearchTool } from './project/DocsSearchTool.js';
 import { DocFetchTool } from './project/DocFetchTool.js';
 import { GetApiUsagePatternsByAppIdTool } from './project/GetApiUsagePatternsByAppIdTool.js';
 import { GetApplicationInfoTool } from './project/GetApplicationInfoTool.js';
+import { GetBuildLogsTool } from './project/GetBuildLogsTool.js';
+import { GetBuildStatusTool } from './project/GetBuildStatusTool.js';
 import { HsListTool } from './cms/HsListTool.js';
 import { HsCreateModuleTool } from './cms/HsCreateModuleTool.js';
 import { HsCreateTemplateTool } from './cms/HsCreateTemplateTool.js';
@@ -35,6 +37,8 @@ export function registerProjectTools(mcpServer: McpServer): RegisteredTool[] {
     new DocFetchTool(mcpServer).register(),
     new GetApiUsagePatternsByAppIdTool(mcpServer).register(),
     new GetApplicationInfoTool(mcpServer).register(),
+    new GetBuildLogsTool(mcpServer).register(),
+    new GetBuildStatusTool(mcpServer).register(),
   ];
 }
 

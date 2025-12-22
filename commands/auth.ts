@@ -6,18 +6,19 @@ import {
 } from '@hubspot/local-dev-lib/constants/auth';
 import { ENVIRONMENTS } from '@hubspot/local-dev-lib/constants/environments';
 import { DEFAULT_HUBSPOT_CONFIG_YAML_FILE_NAME } from '@hubspot/local-dev-lib/constants/config';
-import { AccessToken, CLIAccount } from '@hubspot/local-dev-lib/types/Accounts';
+import {
+  AccessToken,
+  HubSpotConfigAccount,
+  OAuthConfigAccount,
+} from '@hubspot/local-dev-lib/types/Accounts';
 import {
   getAccessToken,
   updateConfigWithAccessToken,
 } from '@hubspot/local-dev-lib/personalAccessKey';
 import {
-  updateAccountConfig,
-  writeConfig,
-  getConfigPath,
-  loadConfig,
-  getAccountId,
-  configFileExists,
+  updateConfigAccount,
+  getConfigFilePath,
+  globalConfigFileExists,
 } from '@hubspot/local-dev-lib/config';
 import { commaSeparatedValues, toKebabCase } from '@hubspot/local-dev-lib/text';
 import { promptUser } from '../lib/prompts/promptUtils.js';
@@ -97,14 +98,13 @@ async function handler(args: ArgumentsCamelCase<AuthArgs>): Promise<void> {
   setCLILogLevel(args);
 
   const env = qa ? ENVIRONMENTS.QA : ENVIRONMENTS.PROD;
-  // Needed to load deprecated config
-  loadConfig(configFlagValue!);
-  const configPath = getConfigPath();
+
+  const configPath = getConfigFilePath();
   if (configPath) {
     checkAndWarnGitInclusion(configPath);
   }
 
-  if (configFileExists(true)) {
+  if (!configFlagValue && globalConfigFileExists()) {
     uiLogger.error(
       commands.auth.errors.globalConfigFileExists('hs account auth')
     );
@@ -122,7 +122,7 @@ async function handler(args: ArgumentsCamelCase<AuthArgs>): Promise<void> {
   }
 
   let configData: OauthPromptResponse | undefined;
-  let updatedConfig: CLIAccount | null | undefined;
+  let updatedConfig: HubSpotConfigAccount | undefined = undefined;
   let validName: string | undefined;
   let successAuthMethod: string | undefined;
   let token: AccessToken | undefined;
@@ -131,10 +131,22 @@ async function handler(args: ArgumentsCamelCase<AuthArgs>): Promise<void> {
   switch (authType) {
     case OAUTH_AUTH_METHOD.value:
       configData = await promptUser<OauthPromptResponse>(OAUTH_FLOW);
-      await authenticateWithOauth({
-        ...configData,
+
+      const oauthAccount: OAuthConfigAccount = {
+        name: configData.name,
+        accountId: configData.accountId,
+        authType: OAUTH_AUTH_METHOD.value,
         env,
-      });
+        auth: {
+          clientId: configData.clientId,
+          clientSecret: configData.clientSecret,
+          scopes: configData.scopes,
+          tokenInfo: {},
+        },
+      };
+
+      await authenticateWithOauth(oauthAccount);
+
       successAuthMethod = OAUTH_AUTH_METHOD.name;
       break;
     case PERSONAL_ACCESS_KEY_AUTH_METHOD.value:
@@ -169,13 +181,10 @@ async function handler(args: ArgumentsCamelCase<AuthArgs>): Promise<void> {
         validName = namePrompt;
       }
 
-      updateAccountConfig({
+      updateConfigAccount({
         ...updatedConfig,
-        env: updatedConfig.env,
-        tokenInfo: updatedConfig.auth!.tokenInfo,
         name: validName,
       });
-      writeConfig();
 
       successAuthMethod = PERSONAL_ACCESS_KEY_AUTH_METHOD.name;
       break;
@@ -221,7 +230,7 @@ async function handler(args: ArgumentsCamelCase<AuthArgs>): Promise<void> {
     'accountsListCommand',
   ]);
 
-  const accountId = getAccountId(accountName) || undefined;
+  const accountId = updatedConfig?.accountId;
 
   if (!disableTracking) {
     await trackAuthAction(

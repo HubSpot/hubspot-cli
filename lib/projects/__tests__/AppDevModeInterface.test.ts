@@ -18,7 +18,7 @@ import {
   fetchPublicAppProductionInstallCounts,
   installStaticAuthAppOnTestAccount,
 } from '@hubspot/local-dev-lib/api/appsDev';
-import { getAccountConfig } from '@hubspot/local-dev-lib/config';
+import { getConfigAccountById } from '@hubspot/local-dev-lib/config';
 
 import AppDevModeInterface from '../localDev/AppDevModeInterface.js';
 import LocalDevState from '../localDev/LocalDevState.js';
@@ -156,7 +156,7 @@ describe('AppDevModeInterface', () => {
       },
     });
 
-    (getAccountConfig as Mock).mockReturnValue({
+    (getConfigAccountById as Mock).mockReturnValue({
       parentAccountId: 12345,
     });
 
@@ -378,13 +378,15 @@ describe('AppDevModeInterface', () => {
 
     it('should handle app reinstallation', async () => {
       // Set up conditions for non-automatic installation
-      (getAccountConfig as Mock).mockReturnValue(null);
       (fetchAppInstallationData as Mock).mockResolvedValue({
         data: {
           isInstalledWithScopeGroups: false,
           previouslyAuthorizedScopeGroups: ['old-scope'],
         },
       });
+
+      // Make it not automatically installable by making it not a test account
+      (isDeveloperTestAccount as Mock).mockReturnValue(false);
 
       await appDevModeInterface.setup();
 
@@ -405,7 +407,7 @@ describe('AppDevModeInterface', () => {
 
     it('should exit if user declines auto-install', async () => {
       // Set up conditions for automatic installation
-      (getAccountConfig as Mock).mockReturnValue({
+      (getConfigAccountById as Mock).mockReturnValue({
         parentAccountId: 12345, // matches targetProjectAccountId
       });
       (isDeveloperTestAccount as Mock).mockReturnValue(true);
@@ -499,6 +501,15 @@ describe('AppDevModeInterface', () => {
       (getStaticAuthAppInstallUrl as Mock).mockReturnValue(
         'http://static-install-url'
       );
+      (getConfigAccountById as Mock).mockReturnValue({
+        parentAccountId: 12345,
+      });
+      (isDeveloperTestAccount as Mock).mockReturnValue(true);
+      (isSandbox as Mock).mockReturnValue(false);
+      (installAppAutoPrompt as Mock).mockResolvedValue(true);
+      (confirmPrompt as Mock).mockResolvedValue(true);
+      (installStaticAuthAppOnTestAccount as Mock).mockResolvedValue(undefined);
+      (isServerRunningAtUrl as Mock).mockResolvedValue(true);
       (installAppBrowserPrompt as Mock).mockImplementation(async () => {
         const addListenerCall = (
           mockLocalDevState.addListener as Mock
@@ -518,8 +529,8 @@ describe('AppDevModeInterface', () => {
       mockLocalDevState.setAppDataForUid = vi.fn();
       mockLocalDevState.addListener = vi.fn();
 
-      // Target account config is missing
-      (getAccountConfig as Mock).mockReturnValue(null);
+      // Target account config is missing - make it not a test account so isAutomaticallyInstallable returns false
+      (isDeveloperTestAccount as Mock).mockReturnValue(false);
 
       // App is not installed
       (fetchAppInstallationData as Mock).mockResolvedValue({
@@ -534,6 +545,8 @@ describe('AppDevModeInterface', () => {
         localDevState: mockLocalDevState,
         localDevLogger: mockLocalDevLogger,
       });
+
+      // Remove the spy to see if that's causing the timeout
 
       await newAppDevModeInterface.setup();
 

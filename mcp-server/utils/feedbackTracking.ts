@@ -2,7 +2,7 @@ import {
   getStateValue,
   setStateValue,
 } from '@hubspot/local-dev-lib/config/state';
-import { getAccountIdFromCliConfig } from './cliConfig.js';
+import { getConfigDefaultAccountIfExists } from '@hubspot/local-dev-lib/config';
 import { hasFeature } from '../../lib/hasFeature.js';
 import { FEATURES } from '../../lib/constants.js';
 import { logger } from '@hubspot/local-dev-lib/logger';
@@ -10,9 +10,7 @@ import { MCP_TOTAL_TOOL_CALLS_STATE } from '@hubspot/local-dev-lib/constants/con
 
 const FEEDBACK_THRESHOLDS = [50, 250, 550, 1050];
 
-export async function mcpFeedbackRequest(
-  absoluteCurrentWorkingDirectory: string
-): Promise<string | undefined> {
+export async function mcpFeedbackRequest(): Promise<string | undefined> {
   let feedbackUrl =
     'https://app.hubspot.com/l/product-updates/in-beta?rollout=239890';
   try {
@@ -24,9 +22,7 @@ export async function mcpFeedbackRequest(
       return;
     }
 
-    const accountId = getAccountIdFromCliConfig(
-      absoluteCurrentWorkingDirectory
-    );
+    const accountId = getConfigDefaultAccountIfExists()?.accountId;
 
     if (accountId) {
       try {

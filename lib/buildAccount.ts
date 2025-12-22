@@ -3,12 +3,9 @@ import {
   updateConfigWithAccessToken,
 } from '@hubspot/local-dev-lib/personalAccessKey';
 import {
-  accountNameExistsInConfig,
-  updateAccountConfig,
-  writeConfig,
-  getAccountId,
+  getConfigAccountIfExists,
+  updateConfigAccount,
 } from '@hubspot/local-dev-lib/config';
-import { getAccountIdentifier } from '@hubspot/local-dev-lib/config/getAccountIdentifier';
 import { uiLogger } from './ui/logger.js';
 import {
   createDeveloperTestAccount,
@@ -35,7 +32,7 @@ import {
   handleSandboxCreateError,
 } from './sandboxes.js';
 import { handleDeveloperTestAccountCreateError } from './developerTestAccounts.js';
-import { CLIAccount } from '@hubspot/local-dev-lib/types/Accounts';
+import { HubSpotConfigAccount } from '@hubspot/local-dev-lib/types/Accounts';
 import {
   SandboxResponse,
   V2Sandbox,
@@ -70,8 +67,8 @@ export async function saveAccountToConfig(
   if (!updatedConfig?.name) {
     const nameForConfig = accountName.toLowerCase().split(' ').join('-');
     validName = nameForConfig;
-    const invalidAccountName = accountNameExistsInConfig(nameForConfig);
-    if (invalidAccountName) {
+    const existingAccount = getConfigAccountIfExists(nameForConfig);
+    if (existingAccount) {
       if (!force) {
         uiLogger.log('');
         uiLogger.warn(
@@ -88,13 +85,10 @@ export async function saveAccountToConfig(
     }
   }
 
-  updateAccountConfig({
+  updateConfigAccount({
     ...updatedConfig,
-    env: updatedConfig?.env,
-    tokenInfo: updatedConfig?.auth?.tokenInfo,
     name: validName,
   });
-  writeConfig();
 
   uiLogger.log('');
   return validName;
@@ -162,13 +156,12 @@ export async function createDeveloperTestAccountV2(
 
 export async function buildDeveloperTestAccount(
   testAccountName: string,
-  parentAccountConfig: CLIAccount,
+  parentAccountConfig: HubSpotConfigAccount,
   env: Environment,
   portalLimit: number,
   useV2 = false
 ): Promise<number> {
-  const id = getAccountIdentifier(parentAccountConfig);
-  const parentAccountId = getAccountId(id);
+  const parentAccountId = parentAccountConfig.accountId;
   let testAccountConfig: DeveloperTestAccountConfig = {
     accountName: testAccountName,
   };
@@ -255,7 +248,7 @@ type SandboxAccount = SandboxResponse & {
 
 export async function buildSandbox(
   sandboxName: string,
-  parentAccountConfig: CLIAccount,
+  parentAccountConfig: HubSpotConfigAccount,
   sandboxType: SandboxAccountType,
   env: Environment,
   force = false
@@ -265,8 +258,7 @@ export async function buildSandbox(
       ? 'standard'
       : 'developer';
 
-  const id = getAccountIdentifier(parentAccountConfig);
-  const parentAccountId = getAccountId(id);
+  const parentAccountId = parentAccountConfig.accountId;
 
   if (!parentAccountId) {
     throw new Error(lib.sandbox.create[sandboxTypeKey].loading.fail(''));
@@ -327,7 +319,7 @@ export async function buildSandbox(
 
 export async function buildV2Sandbox(
   sandboxName: string,
-  parentAccountConfig: CLIAccount,
+  parentAccountConfig: HubSpotConfigAccount,
   sandboxType: SandboxAccountType,
   syncObjectRecords: boolean,
   env: Environment,
@@ -337,8 +329,7 @@ export async function buildV2Sandbox(
     sandboxType === HUBSPOT_ACCOUNT_TYPES.STANDARD_SANDBOX
       ? 'standard'
       : 'developer';
-  const id = getAccountIdentifier(parentAccountConfig);
-  const parentAccountId = getAccountId(id);
+  const parentAccountId = parentAccountConfig.accountId;
 
   if (!parentAccountId) {
     throw new Error(lib.sandbox.create[sandboxTypeKey].loading.fail(''));

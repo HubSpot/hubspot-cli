@@ -7,7 +7,10 @@ import {
 import { uiLogger } from '../../ui/logger.js';
 import { commands } from '../../../lang/en.js';
 import { PROJECT_ERROR_TYPES } from '../../constants.js';
-import { deployProject } from '@hubspot/local-dev-lib/api/projects';
+import {
+  deployProjectV1,
+  deployProjectV2,
+} from '@hubspot/local-dev-lib/api/projects';
 import { pollDeployStatus } from '../pollProjectBuildAndDeploy.js';
 import {
   Deploy,
@@ -18,10 +21,12 @@ import {
 // Mock external dependencies
 vi.mock('../../ui/logger.js');
 vi.mock('@hubspot/local-dev-lib/api/projects');
+vi.mock('@hubspot/local-dev-lib/config');
 vi.mock('../pollProjectBuildAndDeploy.js');
 
 const mockUiLogger = vi.mocked(uiLogger);
-const mockDeployProject = vi.mocked(deployProject);
+const mockDeployProjectV1 = vi.mocked(deployProjectV1);
+const mockDeployProjectV2 = vi.mocked(deployProjectV2);
 const mockPollDeployStatus = vi.mocked(pollDeployStatus);
 
 describe('lib/projects/deploy', () => {
@@ -203,7 +208,7 @@ describe('lib/projects/deploy', () => {
         subdeployStatuses: [],
       };
 
-      mockDeployProject.mockResolvedValue({
+      mockDeployProjectV2.mockResolvedValue({
         data: mockDeployResponseData,
       } as never);
       mockPollDeployStatus.mockResolvedValue(mockDeployResult);
@@ -216,11 +221,10 @@ describe('lib/projects/deploy', () => {
         force
       );
 
-      expect(mockDeployProject).toHaveBeenCalledWith(
+      expect(mockDeployProjectV2).toHaveBeenCalledWith(
         targetAccountId,
         projectName,
         buildId,
-        useV2Api,
         force
       );
       expect(deploy).toEqual(mockDeployResult);
@@ -244,7 +248,7 @@ describe('lib/projects/deploy', () => {
         ],
       };
 
-      mockDeployProject.mockResolvedValue({
+      mockDeployProjectV2.mockResolvedValue({
         data: mockBlockedResponse,
       } as never);
 
@@ -279,7 +283,7 @@ describe('lib/projects/deploy', () => {
         ],
       };
 
-      mockDeployProject.mockResolvedValue({
+      mockDeployProjectV2.mockResolvedValue({
         data: mockBlockedResponse,
       } as never);
 
@@ -316,7 +320,7 @@ describe('lib/projects/deploy', () => {
         ],
       };
 
-      mockDeployProject.mockResolvedValue({
+      mockDeployProjectV2.mockResolvedValue({
         data: mockBlockedResponse,
       } as never);
 
@@ -340,7 +344,7 @@ describe('lib/projects/deploy', () => {
     });
 
     it('handles general deploy failure', async () => {
-      mockDeployProject.mockResolvedValue({ data: null } as never);
+      mockDeployProjectV2.mockResolvedValue({ data: null } as never);
 
       const deploy = await handleProjectDeploy(
         targetAccountId,
@@ -357,7 +361,7 @@ describe('lib/projects/deploy', () => {
     });
 
     it('handles undefined deploy response', async () => {
-      mockDeployProject.mockResolvedValue({ data: undefined } as never);
+      mockDeployProjectV2.mockResolvedValue({ data: undefined } as never);
 
       const deploy = await handleProjectDeploy(
         targetAccountId,
@@ -373,7 +377,7 @@ describe('lib/projects/deploy', () => {
       expect(deploy).toBeUndefined();
     });
 
-    it('passes correct parameters to deployProject', async () => {
+    it('passes correct parameters to deployProjectV1', async () => {
       const mockDeployResponseData: ProjectDeployResponseQueued = {
         id: 'deploy-123',
         buildResultType: 'DEPLOY_QUEUED',
@@ -382,7 +386,7 @@ describe('lib/projects/deploy', () => {
         },
       };
 
-      mockDeployProject.mockResolvedValue({
+      mockDeployProjectV1.mockResolvedValue({
         data: mockDeployResponseData,
       } as never);
       mockPollDeployStatus.mockResolvedValue({} as Deploy);
@@ -391,15 +395,14 @@ describe('lib/projects/deploy', () => {
         targetAccountId,
         projectName,
         buildId,
-        false,
-        true
+        false, // isV2Project
+        true // force
       );
 
-      expect(mockDeployProject).toHaveBeenCalledWith(
+      expect(mockDeployProjectV1).toHaveBeenCalledWith(
         targetAccountId,
         projectName,
         buildId,
-        false, // useV2Api
         true // force
       );
     });

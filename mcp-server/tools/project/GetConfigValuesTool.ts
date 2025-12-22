@@ -11,7 +11,8 @@ import {
   mapToInternalType,
 } from '@hubspot/project-parsing-lib';
 import { isV2Project } from '../../../lib/projects/platformVersion.js';
-import { getAccountIdFromCliConfig } from '../../utils/cliConfig.js';
+import { getConfigDefaultAccountIfExists } from '@hubspot/local-dev-lib/config';
+import { setupHubSpotConfig } from '../../utils/config.js';
 
 const inputSchema = {
   absoluteCurrentWorkingDirectory,
@@ -41,28 +42,23 @@ export class GetConfigValuesTool extends Tool<InputSchemaType> {
     super(mcpServer);
   }
   async handler({
-    absoluteCurrentWorkingDirectory,
     platformVersion,
     featureType,
+    absoluteCurrentWorkingDirectory,
   }: InputSchemaType): Promise<TextContentResponse> {
+    setupHubSpotConfig(absoluteCurrentWorkingDirectory);
     try {
       if (!isV2Project(platformVersion)) {
         return formatTextContents(
-          absoluteCurrentWorkingDirectory,
           `Can only be used on projects with a minimum platformVersion of 2025.2`
         );
       }
 
-      const accountId = getAccountIdFromCliConfig(
-        absoluteCurrentWorkingDirectory
-      );
+      const accountId = getConfigDefaultAccountIfExists()?.accountId;
 
       if (!accountId) {
         const authErrorMessage = `No account ID found. Please run \`hs account auth\` to configure an account, or set a default account with \`hs account use <account>\``;
-        return formatTextContents(
-          absoluteCurrentWorkingDirectory,
-          authErrorMessage
-        );
+        return formatTextContents(authErrorMessage);
       }
 
       const schema = await getIntermediateRepresentationSchema({
@@ -75,14 +71,12 @@ export class GetConfigValuesTool extends Tool<InputSchemaType> {
 
       if (schema[internalComponentType]) {
         return formatTextContents(
-          absoluteCurrentWorkingDirectory,
           JSON.stringify({ config: schema[internalComponentType] })
         );
       }
     } catch (error) {}
 
     return formatTextContents(
-      absoluteCurrentWorkingDirectory,
       `Unable to locate JSON schema for type ${featureType}`
     );
   }

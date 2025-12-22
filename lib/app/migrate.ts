@@ -556,7 +556,13 @@ export async function downloadProjectFiles(
       absoluteDestPath = projectDir;
       const { srcDir } = projectConfig.projectConfig;
 
-      const archiveDest = path.join(projectDir, 'archive');
+      const archiveDest =
+        srcDir === '.'
+          ? path.join(
+              path.dirname(projectDir),
+              `${path.basename(projectDir)}-archive`
+            )
+          : path.join(projectDir, 'archive');
 
       // Move the existing source directory to archive
       fs.renameSync(path.join(projectDir, srcDir), archiveDest);

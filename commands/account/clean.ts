@@ -2,19 +2,16 @@ import fs from 'fs';
 import { Argv, ArgumentsCamelCase } from 'yargs';
 import { accessTokenForPersonalAccessKey } from '@hubspot/local-dev-lib/personalAccessKey';
 import {
-  loadConfig,
-  getConfigPath,
-  deleteAccount,
-  getConfigAccounts,
-  getConfigDefaultAccount,
-  updateDefaultAccount,
+  removeAccountFromConfig,
+  getAllConfigAccounts,
+  getConfigDefaultAccountIfExists,
+  setConfigAccountAsDefault,
 } from '@hubspot/local-dev-lib/config';
-import { getAccountIdentifier } from '@hubspot/local-dev-lib/config/getAccountIdentifier';
-import { isSpecifiedError } from '@hubspot/local-dev-lib/errors/index';
 import {
-  getCWDAccountOverride,
+  getDefaultAccountOverrideAccountId,
   getDefaultAccountOverrideFilePath,
-} from '@hubspot/local-dev-lib/config';
+} from '@hubspot/local-dev-lib/config/defaultAccountOverride';
+import { isSpecifiedError } from '@hubspot/local-dev-lib/errors/index';
 import { trackCommandUsage } from '../../lib/usageTracking.js';
 import { EXIT_CODES } from '../../lib/enums/exitCodes.js';
 import { promptUser } from '../../lib/prompts/promptUtils.js';
@@ -47,7 +44,7 @@ async function handler(
 
   trackCommandUsage('accounts-clean');
 
-  const accountsList = getConfigAccounts() || [];
+  const accountsList = getAllConfigAccounts();
   const filteredTestAccounts = accountsList.filter(p =>
     qa ? p.env === 'qa' : p.env !== 'qa'
   );
@@ -67,8 +64,7 @@ async function handler(
 
   for (const account of filteredTestAccounts) {
     try {
-      const accountId = getAccountIdentifier(account);
-      await accessTokenForPersonalAccessKey(accountId!, true);
+      await accessTokenForPersonalAccessKey(account.accountId, true);
     } catch (error) {
       if (
         isSpecifiedError(error, {
@@ -98,9 +94,7 @@ async function handler(
     });
     uiLogger.log(
       getTableContents(
-        accountsToRemove.map(p => [
-          uiAccountDescription(getAccountIdentifier(p)),
-        ]),
+        accountsToRemove.map(p => [uiAccountDescription(p.accountId)]),
         { border: { bodyLeft: '  ' } }
       )
     );
@@ -111,13 +105,10 @@ async function handler(
           accountsToRemove.length
         );
 
-    const accountOverride = getCWDAccountOverride();
+    const accountOverride = getDefaultAccountOverrideAccountId();
     const overrideFilePath = getDefaultAccountOverrideFilePath();
     const accountOverrideMatches = accountsToRemove.some(
-      account =>
-        account.name === accountOverride ||
-        // @ts-expect-error: Default account override files can only exist with global config
-        account.accountId === accountOverride
+      account => account.accountId === accountOverride
     );
     if (overrideFilePath && accountOverride && accountOverrideMatches) {
       promptMessage = `${promptMessage}${commands.account.subcommands.clean.defaultAccountOverride(
@@ -143,7 +134,7 @@ async function handler(
       }
 
       for (const accountToRemove of accountsToRemove) {
-        await deleteAccount(accountToRemove.name!);
+        removeAccountFromConfig(accountToRemove.accountId);
         uiLogger.log(
           commands.account.subcommands.clean.removeSuccess(
             accountToRemove.name!
@@ -151,17 +142,15 @@ async function handler(
         );
       }
 
-      // Get updated version of the config
-      loadConfig(getConfigPath()!);
-      const defaultAccount = getConfigDefaultAccount();
+      const defaultAccount = getConfigDefaultAccountIfExists();
 
       if (
         defaultAccount &&
-        accountsToRemove.some(p => p.name === defaultAccount)
+        accountsToRemove.some(p => p.name === defaultAccount.name)
       ) {
         uiLogger.log(commands.account.subcommands.clean.replaceDefaultAccount);
         const newDefaultAccount = await selectAccountFromConfig();
-        updateDefaultAccount(newDefaultAccount);
+        setConfigAccountAsDefault(newDefaultAccount);
       }
     }
   } else {

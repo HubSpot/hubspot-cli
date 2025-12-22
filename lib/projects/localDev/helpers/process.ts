@@ -6,11 +6,14 @@ import { commands } from '../../../../lang/en.js';
 
 export async function confirmLocalDevIsNotRunning(): Promise<void> {
   try {
-    await getServerPortByInstanceId(LOCAL_DEV_WEBSOCKET_SERVER_INSTANCE_ID);
+    const existingPortInUse = await getServerPortByInstanceId(
+      LOCAL_DEV_WEBSOCKET_SERVER_INSTANCE_ID
+    );
 
-    uiLogger.error(commands.project.dev.errors.localDevAlreadyRunning);
-
-    process.exit(EXIT_CODES.ERROR);
+    if (existingPortInUse) {
+      uiLogger.error(commands.project.dev.errors.localDevAlreadyRunning);
+      process.exit(EXIT_CODES.ERROR);
+    }
   } catch (error) {
     return;
   }

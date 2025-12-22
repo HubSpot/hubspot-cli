@@ -3,8 +3,9 @@ import { ArgumentsCamelCase } from 'yargs';
 import { HUBSPOT_ACCOUNT_TYPES } from '@hubspot/local-dev-lib/constants/config';
 import { translateForLocalDev } from '@hubspot/project-parsing-lib';
 import {
-  getConfigAccounts,
-  getAccountConfig,
+  getAllConfigAccounts,
+  getConfigAccountById,
+  getConfigAccountEnvironment,
 } from '@hubspot/local-dev-lib/config';
 import { getValidEnv } from '@hubspot/local-dev-lib/environment';
 import { getServerPortByInstanceId } from '@hubspot/local-dev-lib/portManager';
@@ -101,6 +102,7 @@ describe('unifiedProjectDevFlow', () => {
     accountId: 123,
     name: 'test-account',
     accountType: HUBSPOT_ACCOUNT_TYPES.STANDARD,
+    env: ENVIRONMENTS.PROD,
   };
 
   const mockProject = {
@@ -155,8 +157,9 @@ describe('unifiedProjectDevFlow', () => {
     (translateForLocalDev as Mock).mockResolvedValue({
       intermediateNodesIndexedByUid: mockProjectNodes,
     });
-    (getAccountConfig as Mock).mockReturnValue(mockAccountConfig);
-    (getConfigAccounts as Mock).mockReturnValue([mockAccountConfig]);
+    (getConfigAccountById as Mock).mockReturnValue(mockAccountConfig);
+    (getConfigAccountEnvironment as Mock).mockReturnValue(ENVIRONMENTS.PROD);
+    (getAllConfigAccounts as Mock).mockReturnValue([mockAccountConfig]);
     (isUnifiedAccount as Mock).mockResolvedValue(true);
     (isTestAccountOrSandbox as Mock).mockReturnValue(false);
     (ensureProjectExists as Mock).mockResolvedValue({
@@ -277,7 +280,7 @@ describe('unifiedProjectDevFlow', () => {
     });
 
     it('should exit with error when account config not found', async () => {
-      (getAccountConfig as Mock).mockReturnValue(null);
+      (getConfigAccountById as Mock).mockReturnValue(null);
 
       await expect(
         unifiedProjectDevFlow({

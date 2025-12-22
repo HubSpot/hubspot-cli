@@ -1,6 +1,7 @@
 import { uiLogger } from '../../ui/logger.js';
 import { getCwd, sanitizeFileName } from '@hubspot/local-dev-lib/path';
 import { extractZipArchive } from '@hubspot/local-dev-lib/archive';
+import { getConfigAccountById } from '@hubspot/local-dev-lib/config';
 import { ArgumentsCamelCase } from 'yargs';
 import { validateUid } from '@hubspot/project-parsing-lib';
 import { UNMIGRATABLE_REASONS } from '@hubspot/local-dev-lib/constants/projects';
@@ -45,6 +46,7 @@ import {
   MigrateAppArgs,
   validateMigrationApps,
 } from '../migrate.js';
+import { HubSpotConfigAccount } from '@hubspot/local-dev-lib/types/Accounts';
 
 vi.mock('../../ui/logger.js');
 vi.mock('@hubspot/local-dev-lib/path');
@@ -59,6 +61,7 @@ vi.mock('../../ui/SpinniesManager');
 vi.mock('../../polling');
 vi.mock('../../../api/migrate');
 vi.mock('../../hasFeature');
+vi.mock('@hubspot/local-dev-lib/config');
 vi.mock('../../projects/urls');
 vi.mock('fs');
 
@@ -73,6 +76,9 @@ const mockedExtractZipArchive = extractZipArchive as MockedFunction<
 const mockedValidateUid = validateUid as MockedFunction<typeof validateUid>;
 const mockedDownloadProject = downloadProject as MockedFunction<
   typeof downloadProject
+>;
+const mockedGetConfigAccountById = getConfigAccountById as MockedFunction<
+  typeof getConfigAccountById
 >;
 const mockedConfirmPrompt = confirmPrompt as MockedFunction<
   typeof confirmPrompt
@@ -151,6 +157,19 @@ describe('lib/app/migrate', () => {
     mockedValidateUid.mockReturnValue(undefined);
     mockedHasUnfiedAppsAccess.mockResolvedValue(true);
     mockedFs.renameSync.mockImplementation(() => {});
+
+    // Mock account config for the test account ID
+    mockedGetConfigAccountById.mockReturnValue({
+      accountId: ACCOUNT_ID,
+      name: 'Test Account',
+      authType: 'personalaccesskey',
+      auth: {
+        tokenInfo: {
+          accessToken: 'test-token',
+        },
+      },
+      env: 'prod',
+    } as HubSpotConfigAccount);
   });
 
   describe('getUnmigratableReason', () => {

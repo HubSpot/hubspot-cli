@@ -2,8 +2,10 @@ import { MockedFunction } from 'vitest';
 import getStartedCommand from '../getStarted.js';
 import { trackCommandUsage } from '../../lib/usageTracking.js';
 import { promptUser } from '../../lib/prompts/promptUtils.js';
+import { getConfigAccountById } from '@hubspot/local-dev-lib/config';
 import { projectNameAndDestPrompt } from '../../lib/prompts/projectNameAndDestPrompt.js';
 import { cloneGithubRepo } from '@hubspot/local-dev-lib/github';
+import { HubSpotConfigAccount } from '@hubspot/local-dev-lib/types/Accounts';
 import {
   getProjectConfig,
   writeProjectConfig,
@@ -24,6 +26,7 @@ vi.mock('../../lib/ui/logger');
 vi.mock('../../lib/errorHandlers');
 vi.mock('@hubspot/local-dev-lib/github');
 vi.mock('../../lib/dependencyManagement');
+vi.mock('@hubspot/local-dev-lib/config');
 
 vi.mock('open');
 vi.mock('fs-extra', () => ({
@@ -37,6 +40,17 @@ vi.mock('fs-extra', () => ({
 describe('commands/get-started', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+
+    // @TODO Revisit config mocking in tests
+    (
+      getConfigAccountById as MockedFunction<typeof getConfigAccountById>
+    ).mockReturnValue({
+      accountId: 12345,
+      name: 'Test Account',
+      authType: 'personalaccesskey',
+      personalAccessKey: 'test-key',
+      env: 'prod',
+    } as HubSpotConfigAccount);
   });
 
   describe('command', () => {

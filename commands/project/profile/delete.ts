@@ -10,7 +10,7 @@ import {
   fetchProject,
   deleteProject,
 } from '@hubspot/local-dev-lib/api/projects';
-import { getAccountConfig } from '@hubspot/local-dev-lib/config';
+import { getConfigAccountById } from '@hubspot/local-dev-lib/config';
 import { trackCommandUsage } from '../../../lib/usageTracking.js';
 import { getProjectConfig } from '../../../lib/projects/config.js';
 import { uiLogger } from '../../../lib/ui/logger.js';
@@ -130,7 +130,7 @@ async function handler(
       debugError(err);
     }
 
-    const targetAccountConfig = getAccountConfig(targetAccountId);
+    const targetAccountConfig = getConfigAccountById(targetAccountId);
 
     if (
       projectExists &&

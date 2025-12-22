@@ -1,7 +1,6 @@
 import { Argv, ArgumentsCamelCase } from 'yargs';
-import { getEnv } from '@hubspot/local-dev-lib/config';
+import { getConfigAccountEnvironment } from '@hubspot/local-dev-lib/config';
 import { getHubSpotWebsiteOrigin } from '@hubspot/local-dev-lib/urls';
-import { ENVIRONMENTS } from '@hubspot/local-dev-lib/constants/environments';
 import { trackCommandUsage } from '../../lib/usageTracking.js';
 import { getTableContents, getTableHeader } from '../../lib/ui/table.js';
 import { logError } from '../../lib/errorHandlers/index.js';
@@ -16,7 +15,7 @@ import { makeYargsBuilder } from '../../lib/yargsUtils.js';
 
 function getPrivateAppsUrl(accountId: number): string {
   const baseUrl = getHubSpotWebsiteOrigin(
-    getEnv(accountId) === 'qa' ? ENVIRONMENTS.QA : ENVIRONMENTS.PROD
+    getConfigAccountEnvironment(accountId)
   );
 
   return `${baseUrl}/private-apps/${accountId}`;

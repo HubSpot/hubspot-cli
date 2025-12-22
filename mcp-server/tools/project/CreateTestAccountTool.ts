@@ -10,9 +10,10 @@ import { formatTextContents, formatTextContent } from '../../utils/content.js';
 import { addFlag } from '../../utils/command.js';
 import { runCommandInDir } from '../../utils/project.js';
 import { ACCOUNT_LEVEL_CHOICES } from '../../../lib/constants.js';
-import { getAccountIdFromCliConfig } from '../../utils/cliConfig.js';
 import fs from 'fs';
 import { DeveloperTestAccountConfig } from '@hubspot/local-dev-lib/types/developerTestAccounts.js';
+import { getConfigAccountByName } from '@hubspot/local-dev-lib/config';
+import { setupHubSpotConfig } from '../../utils/config.js';
 
 const inputSchema = {
   absoluteCurrentWorkingDirectory,
@@ -98,6 +99,7 @@ export class CreateTestAccountTool extends Tool<CreateTestAccountInputSchema> {
     contentLevel,
     configPath,
   }: CreateTestAccountInputSchema): Promise<TextContentResponse> {
+    setupHubSpotConfig(absoluteCurrentWorkingDirectory);
     await trackToolUsage(toolName);
 
     let command = 'hs test-account create';
@@ -123,16 +125,16 @@ export class CreateTestAccountTool extends Tool<CreateTestAccountInputSchema> {
       }
 
       if (configJson.accountName) {
-        const nameInConfig = getAccountIdFromCliConfig(
-          absoluteCurrentWorkingDirectory,
-          configJson.accountName
-        );
-        if (nameInConfig) {
-          content.push(
-            formatTextContent(
-              `The account name "${configJson.accountName}" already exists in the CLI config. Please use a different name.`
-            )
-          );
+        try {
+          if (getConfigAccountByName(configJson.accountName)) {
+            content.push(
+              formatTextContent(
+                `The account name "${configJson.accountName}" already exists in the CLI config. Please use a different name.`
+              )
+            );
+          }
+        } catch (error) {
+          // nothing to do here
         }
       }
 
@@ -140,17 +142,18 @@ export class CreateTestAccountTool extends Tool<CreateTestAccountInputSchema> {
     }
     // Use flags if name is provided (when no config used)
     else if (name) {
-      const nameInConfig = getAccountIdFromCliConfig(
-        absoluteCurrentWorkingDirectory,
-        name
-      );
-      if (nameInConfig) {
-        content.push(
-          formatTextContent(
-            `The account name "${name}" already exists in the CLI config. Please use a different name.`
-          )
-        );
+      try {
+        if (getConfigAccountByName(name)) {
+          content.push(
+            formatTextContent(
+              `The account name "${name}" already exists in the CLI config. Please use a different name.`
+            )
+          );
+        }
+      } catch (e) {
+        // nothing to do here
       }
+
       command = addFlag(command, 'name', name);
       command = addFlag(command, 'description', description || name);
       command = addFlag(

@@ -1,14 +1,16 @@
 import { getSandboxUsageLimits } from '@hubspot/local-dev-lib/api/sandboxHubs';
 import { fetchTypes } from '@hubspot/local-dev-lib/api/sandboxSync';
-import { getAccountId, getConfigAccounts } from '@hubspot/local-dev-lib/config';
+import { getAllConfigAccounts } from '@hubspot/local-dev-lib/config';
 import { getHubSpotWebsiteOrigin } from '@hubspot/local-dev-lib/urls';
 import { HUBSPOT_ACCOUNT_TYPES } from '@hubspot/local-dev-lib/constants/config';
-import { getAccountIdentifier } from '@hubspot/local-dev-lib/config/getAccountIdentifier';
 import {
   isMissingScopeError,
   isSpecifiedError,
 } from '@hubspot/local-dev-lib/errors/index';
-import { AccountType, CLIAccount } from '@hubspot/local-dev-lib/types/Accounts';
+import {
+  AccountType,
+  HubSpotConfigAccount,
+} from '@hubspot/local-dev-lib/types/Accounts';
 import { Environment } from '@hubspot/local-dev-lib/types/Config';
 
 import { uiLogger } from './ui/logger.js';
@@ -46,12 +48,11 @@ export function getSandboxTypeAsString(accountType?: AccountType): string {
 }
 
 export function getHasSandboxesByType(
-  parentAccountConfig: CLIAccount,
+  parentAccountConfig: HubSpotConfigAccount,
   type: AccountType
 ): boolean {
-  const id = getAccountIdentifier(parentAccountConfig);
-  const parentPortalId = getAccountId(id);
-  const accountsList = getConfigAccounts() || [];
+  const parentPortalId = parentAccountConfig.accountId;
+  const accountsList = getAllConfigAccounts();
 
   for (const portal of accountsList) {
     if (
@@ -69,13 +70,11 @@ export function getHasSandboxesByType(
 
 // Fetches available sync types for a given sandbox portal
 export async function getAvailableSyncTypes(
-  parentAccountConfig: CLIAccount,
-  config: CLIAccount
+  parentAccountConfig: HubSpotConfigAccount,
+  config: HubSpotConfigAccount
 ): Promise<Array<SandboxSyncTask>> {
-  const parentId = getAccountIdentifier(parentAccountConfig);
-  const parentPortalId = getAccountId(parentId);
-  const id = getAccountIdentifier(config);
-  const portalId = getAccountId(id);
+  const parentPortalId = parentAccountConfig.accountId;
+  const portalId = config.accountId;
 
   if (!parentPortalId || !portalId) {
     throw new Error(lib.sandbox.sync.failure.syncTypeFetch);
@@ -91,12 +90,11 @@ export async function getAvailableSyncTypes(
 }
 
 export async function validateSandboxUsageLimits(
-  accountConfig: CLIAccount,
+  accountConfig: HubSpotConfigAccount,
   sandboxType: AccountType,
   env: Environment
 ): Promise<void> {
-  const id = getAccountIdentifier(accountConfig);
-  const accountId = getAccountId(id);
+  const accountId = accountConfig.accountId;
 
   if (!accountId) {
     throw new Error(lib.sandbox.create.failure.usageLimitsFetch);

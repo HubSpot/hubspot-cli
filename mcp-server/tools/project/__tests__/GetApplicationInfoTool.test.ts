@@ -3,10 +3,11 @@ import {
   McpServer,
   RegisteredTool,
 } from '@modelcontextprotocol/sdk/server/mcp.js';
-import { getAccountId } from '@hubspot/local-dev-lib/config';
+import { getConfigDefaultAccountIfExists } from '@hubspot/local-dev-lib/config';
 import { http } from '@hubspot/local-dev-lib/http';
 import { isHubSpotHttpError } from '@hubspot/local-dev-lib/errors/index';
 import { MockedFunction, Mocked } from 'vitest';
+import { HubSpotConfigAccount } from '@hubspot/local-dev-lib/types/Accounts';
 import { mcpFeedbackRequest } from '../../../utils/feedbackTracking.js';
 
 vi.mock('@modelcontextprotocol/sdk/server/mcp.js');
@@ -20,7 +21,10 @@ const mockMcpFeedbackRequest = mcpFeedbackRequest as MockedFunction<
   typeof mcpFeedbackRequest
 >;
 
-const mockGetAccountId = getAccountId as MockedFunction<typeof getAccountId>;
+const mockGetConfigDefaultAccountIfExists =
+  getConfigDefaultAccountIfExists as MockedFunction<
+    typeof getConfigDefaultAccountIfExists
+  >;
 const mockHttp = http as Mocked<typeof http>;
 const mockIsHubSpotHttpError = isHubSpotHttpError as unknown as MockedFunction<
   typeof isHubSpotHttpError
@@ -69,7 +73,9 @@ describe('mcp-server/tools/project/GetApplicationInfoTool', () => {
     const input = { absoluteCurrentWorkingDirectory: '/test/dir' };
 
     beforeEach(() => {
-      mockGetAccountId.mockReturnValue(123456789);
+      mockGetConfigDefaultAccountIfExists.mockReturnValue({
+        accountId: 123456789,
+      } as HubSpotConfigAccount);
       mockIsHubSpotHttpError.mockReturnValue(false);
     });
 
@@ -98,7 +104,7 @@ describe('mcp-server/tools/project/GetApplicationInfoTool', () => {
 
       const result = await tool.handler(input);
 
-      expect(mockGetAccountId).toHaveBeenCalledWith();
+      expect(mockGetConfigDefaultAccountIfExists).toHaveBeenCalledWith();
       expect(mockHttp.get).toHaveBeenCalledWith(123456789, {
         url: 'app/feature/utilization/public/v3/insights/apps',
       });
@@ -114,7 +120,7 @@ describe('mcp-server/tools/project/GetApplicationInfoTool', () => {
     });
 
     it('should return error when account ID cannot be determined', async () => {
-      mockGetAccountId.mockReturnValue(null);
+      mockGetConfigDefaultAccountIfExists.mockReturnValue(undefined);
 
       const result = await tool.handler(input);
 

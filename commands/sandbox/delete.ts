@@ -3,13 +3,13 @@ import { uiLogger } from '../../lib/ui/logger.js';
 import { isSpecifiedError } from '@hubspot/local-dev-lib/errors/index';
 import { deleteSandbox } from '@hubspot/local-dev-lib/api/sandboxHubs';
 import {
-  getEnv,
-  removeSandboxAccountFromConfig,
-  updateDefaultAccount,
-  getAccountId,
-  getConfigAccounts,
+  getConfigAccountEnvironment,
+  removeAccountFromConfig,
+  setConfigAccountAsDefault,
+  getAllConfigAccounts,
+  getConfigAccountIfExists,
+  getConfigDefaultAccountIfExists,
 } from '@hubspot/local-dev-lib/config';
-import { getAccountIdentifier } from '@hubspot/local-dev-lib/config/getAccountIdentifier';
 import { getHubSpotWebsiteOrigin } from '@hubspot/local-dev-lib/urls';
 import { getValidEnv } from '@hubspot/local-dev-lib/environment';
 import { trackCommandUsage } from '../../lib/usageTracking.js';
@@ -65,28 +65,29 @@ async function handler(
     }
   }
 
-  const sandboxAccountId = getAccountId(
-    userProvidedAccount || accountPrompt!.account
-  );
+  const accountIdentifier = userProvidedAccount || accountPrompt!.account;
+  const sandboxAccount = getConfigAccountIfExists(accountIdentifier);
 
-  if (!sandboxAccountId) {
+  if (!sandboxAccount) {
     uiLogger.error(
       commands.sandbox.subcommands.delete.failure.noSandboxAccountId
     );
     process.exit(EXIT_CODES.ERROR);
   }
 
-  const isDefaultAccount = sandboxAccountId === getAccountId();
+  const sandboxAccountId = sandboxAccount.accountId;
+  const defaultAccount = getConfigDefaultAccountIfExists();
+  const isDefaultAccount = sandboxAccountId === defaultAccount?.accountId;
 
   const baseUrl = getHubSpotWebsiteOrigin(
-    getValidEnv(getEnv(sandboxAccountId))
+    getValidEnv(getConfigAccountEnvironment(sandboxAccountId))
   );
 
   let parentAccountId;
-  const accountsList = getConfigAccounts() || [];
+  const accountsList = getAllConfigAccounts() || [];
 
   for (const portal of accountsList) {
-    if (getAccountIdentifier(portal) === sandboxAccountId) {
+    if (portal.accountId === sandboxAccountId) {
       if (portal.parentAccountId) {
         parentAccountId = portal.parentAccountId;
       } else if (!force) {
@@ -97,7 +98,10 @@ async function handler(
           );
           process.exit(EXIT_CODES.ERROR);
         }
-        parentAccountId = getAccountId(parentAccountPrompt.account);
+        const parentAccount = getConfigAccountIfExists(
+          parentAccountPrompt.account
+        );
+        parentAccountId = parentAccount?.accountId;
       } else {
         uiLogger.error(
           commands.sandbox.subcommands.delete.failure.noParentAccount
@@ -110,10 +114,10 @@ async function handler(
   const url = `${baseUrl}/sandboxes/${parentAccountId}`;
   const command = uiAuthCommandReference({
     accountId: parentAccountId || undefined,
-    qa: getEnv(sandboxAccountId) === 'qa',
+    qa: getConfigAccountEnvironment(sandboxAccountId) === 'qa',
   });
 
-  if (parentAccountId && !getAccountId(parentAccountId)) {
+  if (parentAccountId && !getConfigAccountIfExists(parentAccountId)) {
     uiLogger.log('');
     uiLogger.error(
       commands.sandbox.subcommands.delete.failure.noParentPortalAvailable(
@@ -169,14 +173,14 @@ async function handler(
     );
     uiLogger.log('');
 
-    const promptDefaultAccount =
-      removeSandboxAccountFromConfig(sandboxAccountId);
-    if (promptDefaultAccount && !force) {
+    removeAccountFromConfig(sandboxAccountId);
+
+    if (isDefaultAccount && !force) {
       const newDefaultAccount = await selectAccountFromConfig();
-      updateDefaultAccount(newDefaultAccount);
+      setConfigAccountAsDefault(newDefaultAccount);
     } else if (isDefaultAccount && force) {
       // If force is specified, skip prompt and set the parent account id as the default account
-      updateDefaultAccount(parentAccountId!);
+      setConfigAccountAsDefault(parentAccountId!);
     }
     process.exit(EXIT_CODES.SUCCESS);
   } catch (err) {
@@ -219,14 +223,14 @@ async function handler(
       );
       uiLogger.log('');
 
-      const promptDefaultAccount =
-        removeSandboxAccountFromConfig(sandboxAccountId);
-      if (promptDefaultAccount && !force) {
+      removeAccountFromConfig(sandboxAccountId);
+
+      if (isDefaultAccount && !force) {
         const newDefaultAccount = await selectAccountFromConfig();
-        updateDefaultAccount(newDefaultAccount);
-      } else {
+        setConfigAccountAsDefault(newDefaultAccount);
+      } else if (isDefaultAccount) {
         // If force is specified, skip prompt and set the parent account id as the default account
-        updateDefaultAccount(parentAccountId!);
+        setConfigAccountAsDefault(parentAccountId!);
       }
       process.exit(EXIT_CODES.SUCCESS);
     } else {

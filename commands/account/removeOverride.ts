@@ -1,12 +1,11 @@
 import fs from 'fs-extra';
 import { Argv, ArgumentsCamelCase } from 'yargs';
+import { globalConfigFileExists } from '@hubspot/local-dev-lib/config';
 import {
-  getCWDAccountOverride,
+  getDefaultAccountOverrideAccountId,
   getDefaultAccountOverrideFilePath,
-  getAccountId,
-} from '@hubspot/local-dev-lib/config';
+} from '@hubspot/local-dev-lib/config/defaultAccountOverride';
 import { DEFAULT_ACCOUNT_OVERRIDE_FILE_NAME } from '@hubspot/local-dev-lib/constants/config';
-import { getGlobalConfig } from '@hubspot/local-dev-lib/config/migrate';
 import { promptUser } from '../../lib/prompts/promptUtils.js';
 import { trackCommandUsage } from '../../lib/usageTracking.js';
 import { EXIT_CODES } from '../../lib/enums/exitCodes.js';
@@ -28,18 +27,18 @@ async function handler(
 ): Promise<void> {
   const { force } = args;
 
-  const globalConfig = getGlobalConfig();
-  if (!globalConfig) {
+  const globalConfigExists = globalConfigFileExists();
+  if (!globalConfigExists) {
     uiLogger.error(
       commands.account.subcommands.removeOverride.errors.globalConfigNotFound
     );
     process.exit(EXIT_CODES.ERROR);
   }
 
-  const accountOverride = getCWDAccountOverride();
+  const accountOverride = getDefaultAccountOverrideAccountId();
   const overrideFilePath = getDefaultAccountOverrideFilePath();
   if (accountOverride && overrideFilePath) {
-    const accountId = getAccountId(accountOverride) || undefined;
+    const accountId = accountOverride;
 
     trackCommandUsage('account-removeOverride', undefined, accountId!);
 

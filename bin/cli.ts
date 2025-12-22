@@ -9,10 +9,11 @@ import {
 } from '../lib/usageTracking.js';
 import { EXIT_CODES } from '../lib/enums/exitCodes.js';
 import {
-  loadAndValidateConfigMiddleware,
+  validateConfigMiddleware,
   injectAccountIdMiddleware,
   validateAccountOptions,
   handleDeprecatedEnvVariables,
+  handleCustomConfigLocationMiddleware,
 } from '../lib/middleware/configMiddleware.js';
 import { autoUpdateCLI } from '../lib/middleware/autoUpdateMiddleware.js';
 import { checkAndWarnGitInclusionMiddleware } from '../lib/middleware/gitMiddleware.js';
@@ -68,7 +69,8 @@ function handleFailure(msg: string, err: Error, yargs: Argv): void {
     logError(err);
   }
 
-  if (msg === null) {
+  if (msg === null && !err) {
+    // Required so running `hs` without a command shows the help
     yargs.showHelp('log');
     process.exit(EXIT_CODES.SUCCESS);
   } else {
@@ -78,13 +80,13 @@ function handleFailure(msg: string, err: Error, yargs: Argv): void {
 
 const argv = yargs(process.argv.slice(2))
   .usage('The command line interface to interact with HubSpot.')
-  // loadConfigMiddleware loads the new hidden config for all commands
   .middleware([
     setCLILogLevel,
     setRequestHeaders,
     handleDeprecatedEnvVariables,
-    loadAndValidateConfigMiddleware,
+    handleCustomConfigLocationMiddleware,
     injectAccountIdMiddleware,
+    validateConfigMiddleware,
     autoUpdateCLI,
     checkAndWarnGitInclusionMiddleware,
     validateAccountOptions,

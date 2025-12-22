@@ -5,7 +5,10 @@ import {
   Deploy,
   ProjectDeployResponseBlocked,
 } from '@hubspot/local-dev-lib/types/Deploy';
-import { deployProject } from '@hubspot/local-dev-lib/api/projects';
+import {
+  deployProjectV1,
+  deployProjectV2,
+} from '@hubspot/local-dev-lib/api/projects';
 import { pollDeployStatus } from './pollProjectBuildAndDeploy.js';
 
 export function validateBuildIdForDeploy(
@@ -101,27 +104,47 @@ export async function handleProjectDeploy(
   isV2Project: boolean,
   force: boolean
 ): Promise<Deploy | undefined> {
-  const { data: deployResp } = await deployProject(
-    targetAccountId,
-    projectName,
-    buildId,
-    isV2Project,
-    force
-  );
+  let deployId: string;
 
-  if (!deployResp || deployResp.buildResultType !== 'DEPLOY_QUEUED') {
-    if (deployResp?.buildResultType === 'DEPLOY_BLOCKED') {
-      handleBlockedDeploy(deployResp);
-    } else {
-      uiLogger.error(commands.project.deploy.errors.deploy);
+  if (isV2Project) {
+    const { data: deployResp } = await deployProjectV2(
+      targetAccountId,
+      projectName,
+      buildId,
+      force
+    );
+
+    if (!deployResp || deployResp.buildResultType !== 'DEPLOY_QUEUED') {
+      if (deployResp?.buildResultType === 'DEPLOY_BLOCKED') {
+        handleBlockedDeploy(deployResp);
+      } else {
+        uiLogger.error(commands.project.deploy.errors.deploy);
+      }
+      return;
     }
-    return;
+
+    deployId = deployResp.id;
+  } else {
+    const response = await deployProjectV1(
+      targetAccountId,
+      projectName,
+      buildId,
+      force
+    );
+    const { data: deployResp } = response;
+
+    if (!deployResp) {
+      uiLogger.error(commands.project.deploy.errors.deploy);
+      return;
+    }
+
+    deployId = deployResp.id;
   }
 
   const deployResult = await pollDeployStatus(
     targetAccountId,
     projectName,
-    Number(deployResp.id),
+    Number(deployId),
     buildId
   );
 

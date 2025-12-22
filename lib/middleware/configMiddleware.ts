@@ -1,18 +1,18 @@
+import path from 'path';
 import { Arguments } from 'yargs';
 import { CLIOptions } from '@hubspot/local-dev-lib/types/CLIOptions';
 import {
-  loadConfig,
-  getAccountId,
-  configFileExists,
-  getConfigPath,
+  getConfigAccountIfExists,
   validateConfig,
+  getConfigDefaultAccountIfExists,
+  configFileExists,
 } from '@hubspot/local-dev-lib/config';
+import { getCwd } from '@hubspot/local-dev-lib/path';
 import { validateAccount } from '../validation.js';
 import { EXIT_CODES } from '../enums/exitCodes.js';
 import { commands } from '../../lang/en.js';
 import { uiDeprecatedTag } from '../ui/index.js';
 import {
-  isTargetedCommand,
   shouldLoadConfigForCommand,
   shouldRunAccountValidationForCommand,
   shouldRunConfigValidationForCommand,
@@ -38,11 +38,25 @@ export function handleDeprecatedEnvVariables(
   }
 }
 
+export function handleCustomConfigLocationMiddleware(
+  argv: Arguments<{ useEnv?: boolean; config?: string }>
+): void {
+  const { useEnv, config } = argv;
+  if (useEnv) {
+    process.env.USE_ENVIRONMENT_HUBSPOT_CONFIG = 'true';
+  } else if (config && typeof config === 'string') {
+    const absoluteConfigPath = path.isAbsolute(config)
+      ? config
+      : path.join(getCwd(), config);
+    process.env.HUBSPOT_CONFIG_PATH = absoluteConfigPath;
+  }
+}
+
 /**
  * Auto-injects the derivedAccountId flag into all commands
  */
 export async function injectAccountIdMiddleware(
-  argv: Arguments<{ account?: string }>
+  argv: Arguments<{ account?: string; config?: string }>
 ): Promise<void> {
   const { account } = argv;
 
@@ -58,11 +72,25 @@ export async function injectAccountIdMiddleware(
       uiLogger.error(lib.configMiddleWare.invalidAccountIdEnvironmentVariable);
     }
   } else {
-    argv.derivedAccountId = getAccountId(account);
+    // Wrap in try-catch to handle cases where config file doesn't exist yet (e.g., during hs init)
+    try {
+      let accountInConfig = account
+        ? getConfigAccountIfExists(account)
+        : undefined;
+
+      if (!accountInConfig) {
+        accountInConfig = getConfigDefaultAccountIfExists();
+      }
+
+      argv.derivedAccountId = accountInConfig?.accountId;
+    } catch (err) {
+      // Config file doesn't exist yet, which is fine for commands like hs init
+      argv.derivedAccountId = undefined;
+    }
   }
 }
 
-export async function loadAndValidateConfigMiddleware(
+export async function validateConfigMiddleware(
   argv: Arguments<CLIOptions>
 ): Promise<void> {
   // Skip this when no command is provided
@@ -75,32 +103,24 @@ export async function loadAndValidateConfigMiddleware(
     return;
   }
 
-  // If the config file exists and the --config flag is used, exit with an error
-  if (
-    configFileExists(true) &&
-    argv.config &&
-    !isTargetedCommand(argv._, { config: { migrate: true } })
-  ) {
-    uiLogger.error(
-      commands.generalErrors.loadConfigMiddleware.configFileExists(
-        getConfigPath()!
-      )
-    );
-    process.exit(EXIT_CODES.ERROR);
-  }
-
-  const config = loadConfig(argv.config as string, argv);
-
   // We don't run validation for auth because users should be able to run it when
   // no accounts are configured, but we still want to exit if the config file is not found
-  if (isTargetedCommand(argv._, { auth: true }) && !config) {
+  if (!process.env.USE_ENVIRONMENT_HUBSPOT_CONFIG && !configFileExists()) {
+    console.error(
+      'Config file not found, run hs account auth to configure your account'
+    );
     process.exit(EXIT_CODES.ERROR);
   }
 
   // Only validate the config if the command requires it
   if (shouldRunConfigValidationForCommand(argv._)) {
-    const configIsValid = validateConfig();
-    if (!configIsValid) {
+    const { isValid, errors } = validateConfig();
+    if (!isValid) {
+      uiLogger.error(
+        commands.generalErrors.validateConfigMiddleware.configValidationFailed(
+          errors
+        )
+      );
       process.exit(EXIT_CODES.ERROR);
     }
   }

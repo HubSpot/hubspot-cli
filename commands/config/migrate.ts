@@ -1,6 +1,9 @@
 import { Argv, ArgumentsCamelCase } from 'yargs';
 import fs from 'fs';
-import { configFileExists } from '@hubspot/local-dev-lib/config/migrate';
+import {
+  localConfigFileExists,
+  globalConfigFileExists,
+} from '@hubspot/local-dev-lib/config';
 import { handleMigration, handleMerge } from '../../lib/configMigrate.js';
 import {
   CommonArgs,
@@ -33,8 +36,8 @@ async function handler(
     process.exit(EXIT_CODES.ERROR);
   }
 
-  const deprecatedConfigExists = configFileExists(false, configPath);
-  const globalConfigExists = configFileExists(true);
+  const deprecatedConfigExists = localConfigFileExists();
+  const globalConfigExists = globalConfigFileExists();
 
   if (!deprecatedConfigExists) {
     uiLogger.error(
@@ -46,9 +49,9 @@ async function handler(
   let success = false;
   try {
     if (!globalConfigExists) {
-      success = await handleMigration(configPath, true);
+      success = await handleMigration(true);
     } else {
-      success = await handleMerge(configPath, force, true);
+      success = await handleMerge(force, true);
     }
   } catch (error) {
     logError(error);

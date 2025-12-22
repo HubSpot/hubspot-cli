@@ -1,6 +1,6 @@
 import { Argv, ArgumentsCamelCase } from 'yargs';
 import { fetchProject } from '@hubspot/local-dev-lib/api/projects';
-import { getAccountConfig } from '@hubspot/local-dev-lib/config';
+import { getConfigAccountById } from '@hubspot/local-dev-lib/config';
 import { isHubSpotHttpError } from '@hubspot/local-dev-lib/errors/index';
 import { isV2Project } from '../../lib/projects/platformVersion.js';
 import { trackCommandUsage } from '../../lib/usageTracking.js';
@@ -62,7 +62,7 @@ async function handler(
     deployLatestBuild: deployLatestBuildOption,
     json: formatOutputAsJson,
   } = args;
-  const accountConfig = getAccountConfig(derivedAccountId);
+  const accountConfig = getConfigAccountById(derivedAccountId);
   const accountType = accountConfig && accountConfig.accountType;
   let targetAccountId: number | undefined;
   const jsonOutput: { deployId?: number } = {};

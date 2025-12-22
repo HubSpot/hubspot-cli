@@ -1,14 +1,13 @@
 import express from 'express';
 import open from 'open';
 import { OAuth2Manager } from '@hubspot/local-dev-lib/models/OAuth2Manager';
-import { getAccountConfig } from '@hubspot/local-dev-lib/config';
-import { getAccountIdentifier } from '@hubspot/local-dev-lib/config/getAccountIdentifier';
+import { getConfigAccountById } from '@hubspot/local-dev-lib/config';
 import { addOauthToAccountConfig } from '@hubspot/local-dev-lib/oauth';
 import { getHubSpotWebsiteOrigin } from '@hubspot/local-dev-lib/urls';
 import { uiLogger } from './ui/logger.js';
 import { ENVIRONMENTS } from '@hubspot/local-dev-lib/constants/environments';
 import { DEFAULT_OAUTH_SCOPES } from '@hubspot/local-dev-lib/constants/auth';
-import { OAuth2ManagerAccountConfig } from '@hubspot/local-dev-lib/types/Accounts';
+import { OAuthConfigAccount } from '@hubspot/local-dev-lib/types/Accounts';
 import { Server } from 'http';
 
 import { handleExit } from './process.js';
@@ -19,16 +18,12 @@ const PORT = 3000;
 const redirectUri = `http://localhost:${PORT}/oauth-callback`;
 
 function buildAuthUrl(oauthManager: OAuth2Manager): string {
-  const {
-    env: accountEnv,
-    clientId,
-    scopes: accountScopes,
-  } = oauthManager.account;
+  const { env: accountEnv, auth } = oauthManager.account;
 
   const env = accountEnv || ENVIRONMENTS.PROD;
-  const scopes = accountScopes || DEFAULT_OAUTH_SCOPES;
+  const scopes = auth.scopes.length > 0 ? auth.scopes : DEFAULT_OAUTH_SCOPES;
 
-  if (!clientId) {
+  if (!auth.clientId) {
     uiLogger.error(lib.oauth.missingClientId);
     process.exit(EXIT_CODES.ERROR);
   }
@@ -37,7 +32,7 @@ function buildAuthUrl(oauthManager: OAuth2Manager): string {
     `${getHubSpotWebsiteOrigin(env)}/oauth/${
       oauthManager.account.accountId
     }/authorize` +
-    `?client_id=${encodeURIComponent(clientId)}` + // app's client ID
+    `?client_id=${encodeURIComponent(auth.clientId)}` + // app's client ID
     `&scope=${encodeURIComponent(scopes.join(' '))}` + // scopes being requested by the app
     `&redirect_uri=${encodeURIComponent(redirectUri)}` // where to send the user after the consent page
   );
@@ -65,8 +60,8 @@ async function authorize(oauthManager: OAuth2Manager): Promise<void> {
       if (req.query.code) {
         const authCodeProof = {
           grant_type: 'authorization_code',
-          client_id: oauthManager.account.clientId,
-          client_secret: oauthManager.account.clientSecret,
+          client_id: oauthManager.account.auth.clientId,
+          client_secret: oauthManager.account.auth.clientSecret,
           redirect_uri: redirectUri,
           code: req.query.code,
         };
@@ -104,9 +99,8 @@ async function authorize(oauthManager: OAuth2Manager): Promise<void> {
   });
 }
 
-function setupOauth(accountConfig: OAuth2ManagerAccountConfig): OAuth2Manager {
-  const accountId = getAccountIdentifier(accountConfig);
-  const config = getAccountConfig(accountId);
+function setupOauth(accountConfig: OAuthConfigAccount): OAuth2Manager {
+  const config = getConfigAccountById(accountConfig.accountId);
   return new OAuth2Manager({
     ...accountConfig,
     env: accountConfig.env || config?.env || ENVIRONMENTS.PROD,
@@ -114,7 +108,7 @@ function setupOauth(accountConfig: OAuth2ManagerAccountConfig): OAuth2Manager {
 }
 
 export async function authenticateWithOauth(
-  accountConfig: OAuth2ManagerAccountConfig
+  accountConfig: OAuthConfigAccount
 ): Promise<void> {
   const oauthManager = setupOauth(accountConfig);
   uiLogger.log('Authorizing');

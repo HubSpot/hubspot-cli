@@ -1,5 +1,5 @@
 import { Argv, ArgumentsCamelCase } from 'yargs';
-import { renameAccount } from '@hubspot/local-dev-lib/config';
+import { renameConfigAccount } from '@hubspot/local-dev-lib/config';
 import { trackCommandUsage } from '../../lib/usageTracking.js';
 import { commands } from '../../lang/en.js';
 import { uiLogger } from '../../lib/ui/logger.js';
@@ -32,7 +32,7 @@ async function handler(
   const newNameKebabCase = toKebabCase(newName);
   const nameWasSanitized = newNameKebabCase !== newName;
   try {
-    await renameAccount(accountName, newNameKebabCase);
+    renameConfigAccount(accountName, newNameKebabCase);
   } catch (error) {
     logError(error);
     process.exit(EXIT_CODES.ERROR);

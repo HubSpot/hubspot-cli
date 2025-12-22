@@ -6,14 +6,14 @@ import { checkAndWarnGitInclusionMiddleware } from '../gitMiddleware.js';
 vi.mock('@hubspot/local-dev-lib/config');
 vi.mock('../../ui/git');
 
-const getConfigPathSpy = vi.spyOn(config, 'getConfigPath');
+const getConfigFilePathSpy = vi.spyOn(config, 'getConfigFilePath');
 const checkAndWarnGitInclusionSpy = vi.spyOn(gitUI, 'checkAndWarnGitInclusion');
 
 describe('lib/middleware/gitMiddleware', () => {
   describe('checkAndWarnGitInclusionMiddleware()', () => {
     it('should call checkAndWarnGitInclusion when command is provided and config path exists', () => {
       const mockConfigPath = '/path/to/config.js';
-      getConfigPathSpy.mockReturnValue(mockConfigPath);
+      getConfigFilePathSpy.mockReturnValue(mockConfigPath);
 
       const argv: Arguments = {
         _: ['some-command'],
@@ -22,7 +22,7 @@ describe('lib/middleware/gitMiddleware', () => {
 
       checkAndWarnGitInclusionMiddleware(argv);
 
-      expect(getConfigPathSpy).toHaveBeenCalledTimes(1);
+      expect(getConfigFilePathSpy).toHaveBeenCalledTimes(1);
       expect(checkAndWarnGitInclusionSpy).toHaveBeenCalledWith(mockConfigPath);
     });
 
@@ -34,12 +34,14 @@ describe('lib/middleware/gitMiddleware', () => {
 
       checkAndWarnGitInclusionMiddleware(argv);
 
-      expect(getConfigPathSpy).not.toHaveBeenCalled();
+      expect(getConfigFilePathSpy).not.toHaveBeenCalled();
       expect(checkAndWarnGitInclusionSpy).not.toHaveBeenCalled();
     });
 
-    it('should not call checkAndWarnGitInclusion when config path is null', () => {
-      getConfigPathSpy.mockReturnValue(null);
+    it('should not call checkAndWarnGitInclusion when config path does not exist', () => {
+      getConfigFilePathSpy.mockImplementation(() => {
+        throw new Error('Config path does not exist');
+      });
 
       const argv: Arguments = {
         _: ['some-command'],
@@ -48,7 +50,7 @@ describe('lib/middleware/gitMiddleware', () => {
 
       checkAndWarnGitInclusionMiddleware(argv);
 
-      expect(getConfigPathSpy).toHaveBeenCalledTimes(1);
+      expect(getConfigFilePathSpy).toHaveBeenCalledTimes(1);
       expect(checkAndWarnGitInclusionSpy).not.toHaveBeenCalled();
     });
   });

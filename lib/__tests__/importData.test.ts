@@ -1,14 +1,17 @@
 import { uiLogger } from '../ui/logger.js';
 import { createImport } from '@hubspot/local-dev-lib/api/crm';
 import { ImportRequest } from '@hubspot/local-dev-lib/types/Crm';
-import { getAccountConfig, getAccountId } from '@hubspot/local-dev-lib/config';
+import {
+  getConfigAccountById,
+  getConfigAccountIfExists,
+} from '@hubspot/local-dev-lib/config';
 import {
   handleImportData,
   handleTargetTestAccountSelectionFlow,
 } from '../importData.js';
 import { HubSpotPromise } from '@hubspot/local-dev-lib/types/Http';
 import { lib } from '../../lang/en.js';
-import { CLIAccount } from '@hubspot/local-dev-lib/types/Accounts';
+import { HubSpotConfigAccount } from '@hubspot/local-dev-lib/types/Accounts';
 import {
   isDeveloperTestAccount,
   isStandardAccount,
@@ -25,8 +28,8 @@ vi.mock('../prompts/importDataTestAccountSelectPrompt');
 describe('lib/importData', () => {
   const mockUiLogger = vi.mocked(uiLogger);
   const mockCreateImport = vi.mocked(createImport);
-  const mockGetAccountConfig = vi.mocked(getAccountConfig);
-  const mockGetAccountId = vi.mocked(getAccountId);
+  const mockGetConfigAccountById = vi.mocked(getConfigAccountById);
+  const mockGetConfigAccountIfExists = vi.mocked(getConfigAccountIfExists);
   const mockIsDeveloperTestAccount = vi.mocked(isDeveloperTestAccount);
   const mockIsStandardAccount = vi.mocked(isStandardAccount);
   const mockIsAppDeveloperAccount = vi.mocked(isAppDeveloperAccount);
@@ -39,8 +42,8 @@ describe('lib/importData', () => {
     mockUiLogger.success.mockReset();
     mockUiLogger.error.mockReset();
     mockCreateImport.mockReset();
-    mockGetAccountConfig.mockReset();
-    mockGetAccountId.mockReset();
+    mockGetConfigAccountById.mockReset();
+    mockGetConfigAccountIfExists.mockReset();
     mockIsDeveloperTestAccount.mockReset();
     mockIsStandardAccount.mockReset();
     mockIsAppDeveloperAccount.mockReset();
@@ -89,8 +92,9 @@ describe('lib/importData', () => {
     const derivedAccountId = 123456789;
 
     it('should error if the userProvidedAccountId is not the right account type', async () => {
-      mockGetAccountConfig.mockReturnValue({} as CLIAccount);
-      mockGetAccountId.mockReturnValue(1234);
+      mockGetConfigAccountIfExists.mockReturnValue({
+        accountId: 1234,
+      } as HubSpotConfigAccount);
       mockIsDeveloperTestAccount.mockReturnValue(false);
 
       await expect(
@@ -102,7 +106,12 @@ describe('lib/importData', () => {
     });
 
     it('should error if the derivedAccountId belongs to the wrong account type', async () => {
-      mockGetAccountConfig.mockReturnValue({} as CLIAccount);
+      mockGetConfigAccountIfExists.mockReturnValue({
+        accountId: derivedAccountId,
+      } as HubSpotConfigAccount);
+      mockGetConfigAccountById.mockReturnValue({
+        accountId: derivedAccountId,
+      } as HubSpotConfigAccount);
       mockIsDeveloperTestAccount.mockReturnValue(false);
       mockIsStandardAccount.mockReturnValue(false);
       mockIsAppDeveloperAccount.mockReturnValue(false);
@@ -115,8 +124,10 @@ describe('lib/importData', () => {
     });
 
     it('should return the derivedAccountId if it is a developer test account', async () => {
-      mockGetAccountConfig.mockReturnValue({} as CLIAccount);
       mockIsDeveloperTestAccount.mockReturnValue(true);
+      mockGetConfigAccountById.mockReturnValue({
+        accountId: derivedAccountId,
+      } as HubSpotConfigAccount);
 
       const result = await handleTargetTestAccountSelectionFlow(
         derivedAccountId,
@@ -126,13 +137,15 @@ describe('lib/importData', () => {
     });
 
     it('should return the result of the importDataTestAccountSelectPrompt if the derivedAccountId is a standard or app developer account', async () => {
-      mockGetAccountConfig.mockReturnValue({} as CLIAccount);
       mockIsDeveloperTestAccount.mockReturnValue(false);
       mockIsStandardAccount.mockReturnValue(true);
       mockIsAppDeveloperAccount.mockReturnValue(true);
       mockImportDataTestAccountSelectPrompt.mockResolvedValue({
         selectedAccountId: 890223,
       });
+      mockGetConfigAccountById.mockReturnValue({
+        accountId: derivedAccountId,
+      } as HubSpotConfigAccount);
 
       const result = await handleTargetTestAccountSelectionFlow(
         derivedAccountId,
