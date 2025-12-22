@@ -1,7 +1,7 @@
 import { Argv, ArgumentsCamelCase } from 'yargs';
 import path from 'path';
 
-import { getAccountConfig } from '@hubspot/local-dev-lib/config';
+import { getConfigAccountById } from '@hubspot/local-dev-lib/config';
 
 import { isV2Project } from '../../lib/projects/platformVersion.js';
 import { trackCommandUsage } from '../../lib/usageTracking.js';
@@ -61,7 +61,7 @@ async function handler(
 
   targetAccountId = targetAccountId || derivedAccountId;
 
-  const accountConfig = getAccountConfig(targetAccountId!);
+  const accountConfig = getConfigAccountById(targetAccountId!);
   const accountType = accountConfig && accountConfig.accountType;
 
   trackCommandUsage(

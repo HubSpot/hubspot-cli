@@ -9,6 +9,7 @@ import { trackToolUsage } from '../../utils/toolUsageTracking.js';
 import { absoluteCurrentWorkingDirectory, docUrl } from './constants.js';
 import { http } from '@hubspot/local-dev-lib/http/unauthed';
 import { isHubSpotHttpError } from '@hubspot/local-dev-lib/errors/index';
+import { setupHubSpotConfig } from '../../utils/config.js';
 
 const inputSchema = {
   docUrl,
@@ -33,6 +34,7 @@ export class DocFetchTool extends Tool<InputSchemaType> {
     docUrl,
     absoluteCurrentWorkingDirectory,
   }: InputSchemaType): Promise<TextContentResponse> {
+    setupHubSpotConfig(absoluteCurrentWorkingDirectory);
     await trackToolUsage(toolName);
 
     try {
@@ -46,23 +48,17 @@ export class DocFetchTool extends Tool<InputSchemaType> {
       const content = response.data;
 
       if (!content || content.trim().length === 0) {
-        return formatTextContents(
-          absoluteCurrentWorkingDirectory,
-          'Document is empty or contains no content.'
-        );
+        return formatTextContents('Document is empty or contains no content.');
       }
 
-      return formatTextContents(absoluteCurrentWorkingDirectory, content);
+      return formatTextContents(content);
     } catch (error) {
       if (isHubSpotHttpError(error)) {
-        return formatTextContents(
-          absoluteCurrentWorkingDirectory,
-          error.toString()
-        );
+        return formatTextContents(error.toString());
       }
 
       const errorMessage = `Error fetching documentation: ${error instanceof Error ? error.message : String(error)}`;
-      return formatTextContents(absoluteCurrentWorkingDirectory, errorMessage);
+      return formatTextContents(errorMessage);
     }
   }
 

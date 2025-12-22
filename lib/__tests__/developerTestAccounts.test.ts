@@ -1,6 +1,10 @@
-import { getAccountId, getConfigAccounts } from '@hubspot/local-dev-lib/config';
+import {
+  getAllConfigAccounts,
+  getConfigAccountIfExists,
+  getConfigAccountById,
+} from '@hubspot/local-dev-lib/config';
 import { uiLogger } from '../ui/logger.js';
-import { CLIAccount } from '@hubspot/local-dev-lib/types/Accounts';
+import { HubSpotConfigAccount } from '@hubspot/local-dev-lib/types/Accounts';
 import { HUBSPOT_ACCOUNT_TYPES } from '@hubspot/local-dev-lib/constants/config';
 import { fetchDeveloperTestAccounts } from '@hubspot/local-dev-lib/api/developerTestAccounts';
 import { mockHubSpotHttpError } from '../testUtils.js';
@@ -18,25 +22,26 @@ vi.mock('../ui/logger.js');
 vi.mock('@hubspot/local-dev-lib/api/developerTestAccounts');
 vi.mock('../errorHandlers');
 
-const mockedGetAccountId = getAccountId as Mock;
-const mockedGetConfigAccounts = getConfigAccounts as Mock;
+const mockedGetConfigAccountIfExists = getConfigAccountIfExists as Mock;
+const mockedGetAllConfigAccounts = getAllConfigAccounts as Mock;
+const mockedGetConfigAccountById = getConfigAccountById as Mock;
 const mockedFetchDeveloperTestAccounts = fetchDeveloperTestAccounts as Mock;
 
-const APP_DEVELOPER_ACCOUNT_1: CLIAccount = {
+const APP_DEVELOPER_ACCOUNT_1: HubSpotConfigAccount = {
   name: 'app-developer-1',
   accountId: 123,
   accountType: HUBSPOT_ACCOUNT_TYPES.APP_DEVELOPER,
   env: 'prod',
-};
+} as HubSpotConfigAccount;
 
-const APP_DEVELOPER_ACCOUNT_2: CLIAccount = {
+const APP_DEVELOPER_ACCOUNT_2: HubSpotConfigAccount = {
   name: 'app-developer-2',
   accountId: 456,
   accountType: HUBSPOT_ACCOUNT_TYPES.APP_DEVELOPER,
   env: 'prod',
-};
+} as HubSpotConfigAccount;
 
-const accounts: CLIAccount[] = [
+const accounts: HubSpotConfigAccount[] = [
   APP_DEVELOPER_ACCOUNT_1,
   APP_DEVELOPER_ACCOUNT_2,
   {
@@ -45,30 +50,34 @@ const accounts: CLIAccount[] = [
     parentAccountId: APP_DEVELOPER_ACCOUNT_1.accountId,
     accountType: HUBSPOT_ACCOUNT_TYPES.DEVELOPER_TEST,
     env: 'prod',
-  },
+    authType: 'personalaccesskey' as const,
+  } as HubSpotConfigAccount,
 ];
 
 describe('lib/developerTestAccounts', () => {
   describe('getHasDevTestAccounts()', () => {
     it('should return true if there are developer test accounts associated with the account', () => {
-      mockedGetAccountId.mockReturnValueOnce(APP_DEVELOPER_ACCOUNT_1.accountId);
-      mockedGetConfigAccounts.mockReturnValueOnce(accounts);
+      mockedGetAllConfigAccounts.mockReturnValueOnce(accounts);
 
       const result = getHasDevTestAccounts(APP_DEVELOPER_ACCOUNT_1);
       expect(result).toBe(true);
     });
 
     it('should return false if there are no developer test accounts associated with the account', () => {
-      mockedGetAccountId.mockReturnValueOnce(APP_DEVELOPER_ACCOUNT_2.accountId);
-      mockedGetConfigAccounts.mockReturnValueOnce(accounts);
+      mockedGetConfigAccountIfExists.mockReturnValueOnce(
+        APP_DEVELOPER_ACCOUNT_2
+      );
+      mockedGetAllConfigAccounts.mockReturnValueOnce(accounts);
 
       const result = getHasDevTestAccounts(APP_DEVELOPER_ACCOUNT_2);
       expect(result).toBe(false);
     });
 
     it('should return false if there are no accounts configured', () => {
-      mockedGetAccountId.mockReturnValueOnce(APP_DEVELOPER_ACCOUNT_1.accountId);
-      mockedGetConfigAccounts.mockReturnValueOnce(undefined);
+      mockedGetConfigAccountIfExists.mockReturnValueOnce(
+        APP_DEVELOPER_ACCOUNT_1
+      );
+      mockedGetAllConfigAccounts.mockReturnValueOnce(undefined);
 
       const result = getHasDevTestAccounts(APP_DEVELOPER_ACCOUNT_1);
       expect(result).toBe(false);
@@ -77,12 +86,14 @@ describe('lib/developerTestAccounts', () => {
 
   describe('validateDevTestAccountUsageLimits()', () => {
     afterEach(() => {
-      mockedGetAccountId.mockRestore();
+      mockedGetConfigAccountIfExists.mockRestore();
       mockedFetchDeveloperTestAccounts.mockRestore();
     });
 
     it('should return null if the account id is not found', async () => {
-      mockedGetAccountId.mockReturnValueOnce(undefined);
+      mockedFetchDeveloperTestAccounts.mockResolvedValueOnce({
+        data: null,
+      });
 
       const result = await validateDevTestAccountUsageLimits(
         APP_DEVELOPER_ACCOUNT_1
@@ -91,7 +102,9 @@ describe('lib/developerTestAccounts', () => {
     });
 
     it('should return null if there is no developer test account data', async () => {
-      mockedGetAccountId.mockReturnValueOnce(APP_DEVELOPER_ACCOUNT_1.accountId);
+      mockedGetConfigAccountIfExists.mockReturnValueOnce(
+        APP_DEVELOPER_ACCOUNT_1
+      );
       mockedFetchDeveloperTestAccounts.mockResolvedValueOnce({
         data: null,
       });
@@ -103,7 +116,9 @@ describe('lib/developerTestAccounts', () => {
     });
 
     it('should return the test account data if the account has not reached the limit', async () => {
-      mockedGetAccountId.mockReturnValueOnce(APP_DEVELOPER_ACCOUNT_1.accountId);
+      mockedGetConfigAccountIfExists.mockReturnValueOnce(
+        APP_DEVELOPER_ACCOUNT_1
+      );
       const testAccountData = {
         maxTestPortals: 10,
         results: [],
@@ -119,7 +134,9 @@ describe('lib/developerTestAccounts', () => {
     });
 
     it('should throw an error if the account has reached the limit', async () => {
-      mockedGetAccountId.mockReturnValueOnce(APP_DEVELOPER_ACCOUNT_1.accountId);
+      mockedGetConfigAccountIfExists.mockReturnValueOnce(
+        APP_DEVELOPER_ACCOUNT_1
+      );
       mockedFetchDeveloperTestAccounts.mockResolvedValueOnce({
         data: {
           maxTestPortals: 0,
@@ -144,6 +161,15 @@ describe('lib/developerTestAccounts', () => {
       logErrorSpy = vi.spyOn(errorHandlers, 'logError') as Mock<
         typeof logError
       >;
+
+      // Mock account config for uiAccountDescription calls
+      mockedGetConfigAccountById.mockReturnValue({
+        accountId: APP_DEVELOPER_ACCOUNT_1.accountId,
+        name: 'Test Account',
+        authType: 'personalaccesskey',
+        personalAccessKey: 'test-key',
+        env: 'prod',
+      });
     });
 
     afterEach(() => {
@@ -168,7 +194,7 @@ describe('lib/developerTestAccounts', () => {
           10
         )
       ).toThrow('Missing scopes error');
-      expect(loggerErrorSpy).toHaveBeenCalled();
+      expect(uiLogger.error).toHaveBeenCalled();
     });
 
     it('should log and throw an error if the account is missing the required scopes', () => {
@@ -191,7 +217,7 @@ describe('lib/developerTestAccounts', () => {
           10
         )
       ).toThrow('Portal limit reached error');
-      expect(loggerErrorSpy).toHaveBeenCalled();
+      expect(uiLogger.error).toHaveBeenCalled();
     });
 
     it('should log a generic error message for an unknown error type', () => {
@@ -211,7 +237,7 @@ describe('lib/developerTestAccounts', () => {
           10
         )
       ).toThrow('Some unknown error');
-      expect(logErrorSpy).toHaveBeenCalled();
+      expect(logError).toHaveBeenCalled();
     });
   });
 });

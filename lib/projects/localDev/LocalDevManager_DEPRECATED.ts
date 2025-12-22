@@ -6,10 +6,7 @@ import {
   fetchPublicAppsForPortal,
   fetchPublicAppProductionInstallCounts,
 } from '@hubspot/local-dev-lib/api/appsDev';
-import {
-  getAccountId,
-  getConfigDefaultAccount,
-} from '@hubspot/local-dev-lib/config';
+import { getConfigDefaultAccountIfExists } from '@hubspot/local-dev-lib/config';
 import { Build } from '@hubspot/local-dev-lib/types/Build';
 import { PublicApp } from '@hubspot/local-dev-lib/types/Apps';
 import { Environment } from '@hubspot/local-dev-lib/types/Config';
@@ -336,9 +333,9 @@ class LocalDevManager {
   }
 
   getUploadCommand(): string {
-    const currentDefaultAccount = getConfigDefaultAccount() || undefined;
+    const currentDefaultAccount = getConfigDefaultAccountIfExists();
 
-    return this.targetProjectAccountId !== getAccountId(currentDefaultAccount)
+    return this.targetProjectAccountId !== currentDefaultAccount?.accountId
       ? uiCommandReference(
           `hs project upload --account=${this.targetProjectAccountId}`
         )

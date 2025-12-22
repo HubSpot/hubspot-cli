@@ -15,7 +15,6 @@ import { makeYargsBuilder } from '../../lib/yargsUtils.js';
 import { uiCommandReference } from '../../lib/ui/index.js';
 import { commands, lib } from '../../lang/en.js';
 import { uiLogger } from '../../lib/ui/logger.js';
-import { logInBox } from '../../lib/ui/boxen.js';
 import { renderInline } from '../../ui/index.js';
 import { getWarningBox } from '../../ui/components/StatusMessageBoxes.js';
 import {
@@ -60,19 +59,12 @@ async function handler(
   }
 
   if (projectConfig?.projectConfig) {
-    if (!process.env.HUBSPOT_ENABLE_INK) {
-      await logInBox({
-        contents: lib.migrate.projectMigrationWarning,
-        options: { title: lib.migrate.projectMigrationWarningTitle },
-      });
-    } else {
-      await renderInline(
-        getWarningBox({
-          title: lib.migrate.projectMigrationWarningTitle,
-          message: lib.migrate.projectMigrationWarning,
-        })
-      );
-    }
+    await renderInline(
+      getWarningBox({
+        title: lib.migrate.projectMigrationWarningTitle,
+        message: lib.migrate.projectMigrationWarning,
+      })
+    );
   }
 
   try {

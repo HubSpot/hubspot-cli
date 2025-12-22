@@ -1,11 +1,8 @@
 import { getHubSpotWebsiteOrigin } from '@hubspot/local-dev-lib/urls';
-import { getEnv } from '@hubspot/local-dev-lib/config';
-import { ENVIRONMENTS } from '@hubspot/local-dev-lib/constants/environments';
+import { getConfigAccountEnvironment } from '@hubspot/local-dev-lib/config';
 
 function getBaseUrl(accountId: number): string {
-  return getHubSpotWebsiteOrigin(
-    getEnv(accountId) === 'qa' ? ENVIRONMENTS.QA : ENVIRONMENTS.PROD
-  );
+  return getHubSpotWebsiteOrigin(getConfigAccountEnvironment(accountId));
 }
 
 function getProjectHomeUrl(accountId: number): string {
@@ -18,14 +15,14 @@ export function getProjectComponentDistributionUrl(
   accountId: number
 ): string {
   const baseUrl = getHubSpotWebsiteOrigin(
-    getEnv(accountId) === 'qa' ? ENVIRONMENTS.QA : ENVIRONMENTS.PROD
+    getConfigAccountEnvironment(accountId)
   );
   return `${baseUrl}/developer-projects/${accountId}/project/${projectName}/component/${componentName}/distribution`;
 }
 
 export function getDeveloperOverviewUrl(accountId: number): string {
   const baseUrl = getHubSpotWebsiteOrigin(
-    getEnv(accountId) === 'qa' ? ENVIRONMENTS.QA : ENVIRONMENTS.PROD
+    getConfigAccountEnvironment(accountId)
   );
   return `${baseUrl}/developer-overview/${accountId}`;
 }
@@ -78,7 +75,7 @@ export function getLocalDevUiUrl(
 
 export function getAccountHomeUrl(accountId: number): string {
   const baseUrl = getHubSpotWebsiteOrigin(
-    getEnv(accountId) === 'qa' ? ENVIRONMENTS.QA : ENVIRONMENTS.PROD
+    getConfigAccountEnvironment(accountId)
   );
   return `${baseUrl}/home?portalId=${accountId}`;
 }

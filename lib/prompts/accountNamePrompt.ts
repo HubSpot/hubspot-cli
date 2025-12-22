@@ -1,4 +1,4 @@
-import { accountNameExistsInConfig } from '@hubspot/local-dev-lib/config';
+import { getConfigAccountIfExists } from '@hubspot/local-dev-lib/config';
 import { promptUser } from './promptUtils.js';
 import { lib } from '../../lang/en.js';
 import { PromptConfig } from '../../types/Prompts.js';
@@ -24,7 +24,7 @@ export function getCliAccountNamePromptConfig(
       } else if (val.indexOf(' ') >= 0) {
         return lib.prompts.accountNamePrompt.errors.spacesInName;
       }
-      return accountNameExistsInConfig(val)
+      return getConfigAccountIfExists(val)
         ? lib.prompts.accountNamePrompt.errors.accountNameExists(val)
         : true;
     },
@@ -78,7 +78,7 @@ export function hubspotAccountNamePrompt({
         } else if (!val.trim().length) {
           return lib.prompts.accountNamePrompt.errors.nameRequired;
         }
-        return accountNameExistsInConfig(val)
+        return getConfigAccountIfExists(val)
           ? lib.prompts.accountNamePrompt.errors.accountNameExists(val)
           : true;
       },

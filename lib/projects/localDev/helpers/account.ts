@@ -1,7 +1,9 @@
-import { CLIAccount } from '@hubspot/local-dev-lib/types/Accounts';
+import { HubSpotConfigAccount } from '@hubspot/local-dev-lib/types/Accounts';
 import { HUBSPOT_ACCOUNT_TYPE_STRINGS } from '@hubspot/local-dev-lib/constants/config';
-import { getAccountConfig } from '@hubspot/local-dev-lib/config';
-import { getAccountIdentifier } from '@hubspot/local-dev-lib/config/getAccountIdentifier';
+import {
+  getConfigAccountById,
+  getConfigAccountIfExists,
+} from '@hubspot/local-dev-lib/config';
 import { HUBSPOT_ACCOUNT_TYPES } from '@hubspot/local-dev-lib/constants/config';
 import { getHubSpotWebsiteOrigin } from '@hubspot/local-dev-lib/urls';
 import { Environment } from '@hubspot/local-dev-lib/types/Config';
@@ -41,7 +43,7 @@ import { confirmUseExistingDeveloperTestAccountPrompt } from '../../../prompts/p
 // If the user passed in the --account flag, confirm they want to use that account as
 // their target account, otherwise exit
 export async function confirmDefaultAccountIsTarget(
-  accountConfig: CLIAccount
+  accountConfig: HubSpotConfigAccount
 ): Promise<void> {
   if (!accountConfig.name || !accountConfig.accountType) {
     uiLogger.error(
@@ -67,7 +69,7 @@ export async function confirmDefaultAccountIsTarget(
 
 // Confirm the default account is supported for the type of apps being developed
 export async function checkIfDefaultAccountIsSupported(
-  accountConfig: CLIAccount,
+  accountConfig: HubSpotConfigAccount,
   hasPublicApps: boolean
 ): Promise<void> {
   const defaultAccountIsUnified = await isUnifiedAccount(accountConfig);
@@ -92,15 +94,17 @@ export async function checkIfDefaultAccountIsSupported(
   }
 }
 
-export function checkIfParentAccountIsAuthed(accountConfig: CLIAccount): void {
+export function checkIfParentAccountIsAuthed(
+  accountConfig: HubSpotConfigAccount
+): void {
   if (
     !accountConfig.parentAccountId ||
-    !getAccountConfig(accountConfig.parentAccountId)
+    !getConfigAccountIfExists(accountConfig.parentAccountId)?.accountId
   ) {
     uiLogger.error(
       lib.localDevHelpers.account.checkIfParentAccountIsAuthed.notAuthedError(
         accountConfig.parentAccountId || '',
-        uiAccountDescription(getAccountIdentifier(accountConfig))
+        uiAccountDescription(accountConfig.accountId)
       )
     );
     process.exit(EXIT_CODES.SUCCESS);
@@ -109,7 +113,7 @@ export function checkIfParentAccountIsAuthed(accountConfig: CLIAccount): void {
 
 // Confirm the default account is a developer account if developing public apps
 export function checkIfAccountFlagIsSupported(
-  accountConfig: CLIAccount,
+  accountConfig: HubSpotConfigAccount,
   hasPublicApps: boolean
 ): void {
   if (hasPublicApps) {
@@ -131,8 +135,8 @@ export function checkIfAccountFlagIsSupported(
 
 // If the user isn't using the recommended account type, prompt them to use or create one
 export async function suggestRecommendedNestedAccount(
-  accounts: CLIAccount[],
-  accountConfig: CLIAccount,
+  accounts: HubSpotConfigAccount[],
+  accountConfig: HubSpotConfigAccount,
   hasPublicApps: boolean
 ): Promise<ProjectDevTargetAccountPromptResponse> {
   uiLogger.log('');
@@ -160,7 +164,7 @@ export async function suggestRecommendedNestedAccount(
 // Create a new sandbox and return its accountId
 export async function createSandboxForLocalDev(
   accountId: number,
-  accountConfig: CLIAccount,
+  accountConfig: HubSpotConfigAccount,
   env: Environment
 ): Promise<number> {
   try {
@@ -205,12 +209,9 @@ export async function createSandboxForLocalDev(
 
     const targetAccountId = result.sandbox.sandboxHubId;
 
-    const sandboxAccountConfig = getAccountConfig(result.sandbox.sandboxHubId);
-
-    if (!sandboxAccountConfig) {
-      uiLogger.error(lib.sandbox.create.developer.failure.generic);
-      process.exit(EXIT_CODES.ERROR);
-    }
+    const sandboxAccountConfig = getConfigAccountById(
+      result.sandbox.sandboxHubId
+    );
 
     const syncTasks = await getAvailableSyncTypes(
       accountConfig,
@@ -234,7 +235,7 @@ export async function createSandboxForLocalDev(
 // Create a developer test account and return its accountId
 export async function createDeveloperTestAccountForLocalDev(
   accountId: number,
-  accountConfig: CLIAccount,
+  accountConfig: HubSpotConfigAccount,
   env: Environment,
   useV2 = false
 ): Promise<number> {
@@ -321,8 +322,10 @@ export async function useExistingDevTestAccount(
   );
 }
 
-export async function hasSandboxes(account: CLIAccount): Promise<boolean> {
-  const accountId = getAccountIdentifier(account);
+export async function hasSandboxes(
+  account: HubSpotConfigAccount
+): Promise<boolean> {
+  const accountId = account.accountId;
   if (!accountId) {
     return false;
   }
@@ -341,10 +344,10 @@ export async function hasSandboxes(account: CLIAccount): Promise<boolean> {
 
 // Top level prompt to choose the type of account to test on
 export async function selectAccountTypePrompt(
-  accountConfig: CLIAccount
+  accountConfig: HubSpotConfigAccount
 ): Promise<string | null> {
   const hasAccessToSandboxes = await hasSandboxes(accountConfig);
-  const accountId = getAccountIdentifier(accountConfig);
+  const accountId = accountConfig.accountId;
 
   const result = await listPrompt(
     lib.localDevHelpers.account.selectAccountTypePrompt.message,

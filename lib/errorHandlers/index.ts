@@ -22,14 +22,15 @@ export function logError(error: unknown, context?: ApiErrorContext): void {
     return;
   }
 
-  if (isHubSpotHttpError(error) && 'context' in error) {
+  if (isHubSpotHttpError(error)) {
     if (shouldSuppressError(error, error.context)) {
       return;
     }
-  }
 
-  if (isHubSpotHttpError(error) && context) {
-    error.updateContext(context);
+    error.updateContext(
+      context || {},
+      lib.errorHandlers.index.additionalDebugContext
+    );
   }
 
   if (isHubSpotHttpError(error) && isValidationError(error)) {
@@ -73,15 +74,20 @@ export function debugError(error: unknown, context?: ApiErrorContext): void {
     uiLogger.debug(error.toString());
   } else {
     uiLogger.debug(lib.errorHandlers.index.errorOccurred(String(error)));
+
+    if (error instanceof Error && error.cause) {
+      if (isHubSpotHttpError(error.cause)) {
+        uiLogger.debug(error.cause.toString());
+      } else {
+        uiLogger.debug(
+          lib.errorHandlers.index.errorCause(
+            util.inspect(error.cause, false, null, true)
+          )
+        );
+      }
+    }
   }
 
-  if (error instanceof Error && error.cause && !isHubSpotHttpError(error)) {
-    uiLogger.debug(
-      lib.errorHandlers.index.errorCause(
-        util.inspect(error.cause, false, null, true)
-      )
-    );
-  }
   if (context) {
     uiLogger.debug(
       lib.errorHandlers.index.errorContext(

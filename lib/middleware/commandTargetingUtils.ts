@@ -1,4 +1,4 @@
-import { configFileExists } from '@hubspot/local-dev-lib/config';
+import { globalConfigFileExists } from '@hubspot/local-dev-lib/config';
 
 type TargetCommandMap = {
   [key: string]: boolean | TargetCommandMap;
@@ -37,11 +37,12 @@ export function isTargetedCommand(
 const SKIP_CONFIG_LOADING_COMMANDS = {
   init: true,
   feedback: true,
+  mcp: { start: true },
 };
 
 // Returns true if the command requires a config file to be present
 export function shouldLoadConfigForCommand(commandParts: (string | number)[]) {
-  const globalConfigExists = configFileExists(true);
+  const globalConfigExists = globalConfigFileExists();
 
   // the user is trying to migrate the global config
   const isGlobalConfigMigration =

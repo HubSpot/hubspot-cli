@@ -1,16 +1,30 @@
 import { ComponentTemplate } from '../../../../types/Projects.js';
 import { calculateComponentTemplateChoices } from '../v2.js';
 import { hasFeature } from '../../../hasFeature.js';
+import { getConfigAccountById as __getConfigAccountById } from '@hubspot/local-dev-lib/config';
+import { HubSpotConfigAccount } from '@hubspot/local-dev-lib/types/Accounts';
+import { Mock } from 'vitest';
 
+const getConfigAccountById = __getConfigAccountById as Mock;
 vi.mock('../../ui/logger.js');
 vi.mock('@hubspot/local-dev-lib/api/github');
 vi.mock('../../../hasFeature.js');
+vi.mock('@hubspot/local-dev-lib/config');
 
 const mockHasFeature = vi.mocked(hasFeature);
 
 describe('lib/projects/create/v2', () => {
   beforeEach(() => {
     mockHasFeature.mockResolvedValue(true);
+
+    // Mock account config
+    getConfigAccountById.mockReturnValue({
+      accountId: 123,
+      name: 'Test Account',
+      authType: 'personalaccesskey',
+      personalAccessKey: 'test-key',
+      env: 'prod',
+    } as HubSpotConfigAccount);
   });
 
   describe('calculateComponentTemplateChoices()', () => {

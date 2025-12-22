@@ -15,6 +15,7 @@ import {
 import { formatTextContent, formatTextContents } from '../../utils/content.js';
 import { trackToolUsage } from '../../utils/toolUsageTracking.js';
 import { addFlag } from '../../utils/command.js';
+import { setupHubSpotConfig } from '../../utils/config.js';
 
 const inputSchema = {
   absoluteProjectPath,
@@ -49,6 +50,7 @@ export class UploadProjectTools extends Tool<InputSchemaType> {
     profile,
     uploadMessage,
   }: InputSchemaType): Promise<TextContentResponse> {
+    setupHubSpotConfig(absoluteCurrentWorkingDirectory);
     await trackToolUsage(toolName);
 
     let command = addFlag('hs project upload', 'force-create', true);
@@ -97,7 +99,7 @@ export class UploadProjectTools extends Tool<InputSchemaType> {
       command
     );
 
-    return formatTextContents(absoluteCurrentWorkingDirectory, stdout, stderr);
+    return formatTextContents(stdout, stderr);
   }
   register(): RegisteredTool {
     return this.mcpServer.registerTool(

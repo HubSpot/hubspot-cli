@@ -28,8 +28,7 @@ import {
   PROJECT_WITH_APP,
   LEGACY_PUBLIC_APP_FILE,
 } from '../lib/constants.js';
-import { CLIAccount } from '@hubspot/local-dev-lib/types/Accounts';
-import { getAccountIdentifier } from '@hubspot/local-dev-lib/config/getAccountIdentifier';
+import { HubSpotConfigAccount } from '@hubspot/local-dev-lib/types/Accounts';
 
 export const commands = {
   generalErrors: {
@@ -39,9 +38,10 @@ export const commands = {
       portalEnvVarDeprecated:
         'The HUBSPOT_PORTAL_ID environment variable is deprecated. Please use HUBSPOT_ACCOUNT_ID instead.',
     },
-    loadConfigMiddleware: {
-      configFileExists: (configPath: string) =>
-        `A configuration file already exists at ${configPath}. To specify a new configuration file, delete the existing one and try again.`,
+    validateConfigMiddleware: {
+      missingConfigFile: `A HubSpot config file is required to run this command, but none was found. To create a new config file and authenticate a HubSpot account, run ${uiCommandReference('hs account auth')}`,
+      configValidationFailed: (errors: string[]) =>
+        `Your HubSpot config file is invalid. Please fix the following errors:\n - ${errors.join('\n- ')}`,
     },
   },
   getStarted: {
@@ -134,13 +134,13 @@ export const commands = {
       list: {
         accounts: `${chalk.bold('Accounts')}:`,
         defaultAccountTitle: `${chalk.bold('Default Account')}`,
-        defaultAccount: (account: string) => `Account: ${account}`,
+        currentResolvedDefaultAccount: (accountId: number) =>
+          `Account: ${uiAccountDescription(accountId)}`,
         describe: 'List names of accounts defined in config.',
         configPath: (configPath: string) => `Source: ${configPath}`,
         overrideFilePathTitle: `${chalk.bold('Default Account Override')}`,
         overrideFilePath: (overrideFilePath: string) =>
           `Source: ${overrideFilePath}`,
-        overrideAccount: (account: string) => `Account: ${account}`,
         labels: {
           accountId: 'Account ID',
           authType: 'Auth Type',
@@ -1715,8 +1715,13 @@ export const commands = {
       logs: {
         success: (projectName: string, projectDest: string) =>
           `Project ${chalk.bold(projectName)} was successfully created in ${projectDest}`,
-        welcomeMessage: `\n${chalk.bold('Welcome to HubSpot Developer Projects!')}`,
       },
+      creatingComponent: (isProjectEmpty: boolean, projectName: string) =>
+        `${isProjectEmpty ? `Creating empty project [${chalk.bold(projectName)}]` : `Adding feature(s) to app [${chalk.bold(projectName)}]`}\n`,
+      success: (isProjectEmpty: boolean, projectName: string) =>
+        `${isProjectEmpty ? `Created empty project [${chalk.bold(projectName)}]` : `Added feature(s) to app [${chalk.bold(projectName)}]`}\n`,
+      failure: (isProjectEmpty: boolean, projectName: string) =>
+        `${isProjectEmpty ? `Failed to create project [${chalk.bold(projectName)}]` : `Failed to add feature(s) to app [${chalk.bold(projectName)}]`}\n`,
       prompts: {
         parentComponents:
           '[--project-base] Choose what to include in your project:',
@@ -1888,9 +1893,11 @@ export const commands = {
         },
       },
       creatingComponent: (projectName: string) =>
-        `\nAdding a new app feature to ${chalk.bold(projectName)}\n`,
-      success: (componentName: string, multiple: boolean = false) =>
-        `${componentName || 'An app'} ${multiple ? 'were' : 'was'} successfully added to your ${componentName ? 'app' : 'project'}.`,
+        `Adding feature(s) to app [${chalk.bold(projectName)}]\n`,
+      success: (projectName: string) =>
+        `Added feature(s) to app [${chalk.bold(projectName)}]\n`,
+      failure: (projectName: string) =>
+        `Failed to add feature(s) to app [${chalk.bold(projectName)}]\n`,
       error: {
         failedToDownloadComponent:
           'Failed to download project. Please try again later.',
@@ -1933,10 +1940,7 @@ export const commands = {
           buildId: number,
           projectName: string
         ) =>
-          `Build ${buildId} does not exist for project ${chalk.bold(projectName)}. ${uiLink(
-            'View project builds in HubSpot',
-            getProjectDetailUrl(projectName, accountId)!
-          )}`,
+          `Build ${buildId} does not exist for project ${chalk.bold(projectName)}. Run ${uiCommandReference('hs project list-builds')} to view existing builds for this project.`,
         buildAlreadyDeployed: (
           accountId: number,
           buildId: number,
@@ -2220,6 +2224,55 @@ export const commands = {
         `No dependencies to install. The project ${projectName} folder might be missing component or subcomponent files. ${uiLink('Learn how to create a project from scratch', 'https://developers.hubspot.com/docs/apps/developer-platform/build-apps/create-an-app#customize-a-new-project-using-the-cli')}`,
       packageManagerNotInstalled: (packageManager: string) =>
         `This command depends on ${packageManager}, install ${uiLink(packageManager, 'https://docs.npmjs.com/downloading-and-installing-node-js-and-npm')}`,
+    },
+    lint: {
+      help: {
+        describe: 'Lint the UI Extensions components in your project.',
+        lintProjectExample:
+          'Lint the UI Extensions components in your project.',
+        lintProjectWithInstallExample:
+          'Lint the UI Extensions components in the project and automatically install missing dependencies.',
+        lintProjectWithoutInstallExample:
+          'Lint the UI Extensions components in the project without installing missing dependencies.',
+        installMissingDeps:
+          'Automatically install missing linting dependencies for the UI Extensions components in the project without prompting.',
+      },
+      loading: {
+        checking: 'Checking lint packages and configuration…',
+        creatingConfig: 'Creating ESLint configuration files…',
+        linting: 'Linting…',
+      },
+      noProjectConfig:
+        'No project detected. Run this command from a project directory.',
+      failedToReadPackageJson: (packageJsonPath: string) =>
+        `Failed to read package.json at ${packageJsonPath}`,
+      installLintPackagesPrompt: (
+        directories: string[],
+        missingPackages: string[]
+      ) => {
+        const uniquePackages = Array.from(new Set(missingPackages)).sort();
+        return `The dependencies required for linting are missing or outdated.\n\nDependencies:\n${uniquePackages.map(p => `  - ${p}`).join('\n')}\n\n${directories.length === 1 ? 'Directory' : 'Directories'}:\n${directories.map(d => `  - ${d}`).join('\n')}\n\nWould you like to install the required dependencies?`;
+      },
+      skippingDirectoriesWarning: (directories: string[]) =>
+        `Skipping linting for the following ${directories.length === 1 ? 'directory' : 'directories'}:\n${directories.map(d => `  - ${d}`).join('\n')}`,
+      deprecatedEslintConfigWarning: (
+        details: { path: string; files: string[] }[]
+      ) => {
+        const dirCount = details.length;
+        const header = `Deprecated ESLint configuration file${dirCount === 1 ? '' : 's'} detected in the following ${dirCount === 1 ? 'directory' : 'directories'}:`;
+        const dirList = details
+          .map(d => `  - ${d.path}: ${d.files.join(', ')}`)
+          .join('\n');
+        return `${header}\n${dirList}\n`;
+      },
+      createEslintConfigPrompt: (directories: string[]) =>
+        `ESLint configuration file not found in the following ${directories.length === 1 ? 'directory' : 'directories'}:\n${directories.map(d => `  - ${d}`).join('\n')}\n\nWould you like to set up the required ESLint configuration?`,
+      eslintConfigCreated: (configPath: string) =>
+        `ESLint configuration created at ${configPath}`,
+      failedToCreateEslintConfig: (configPath: string) =>
+        `Failed to create ESLint configuration at ${configPath}`,
+      eslintConfigRequired:
+        'ESLint configuration is required to run the lint command. Run the command again to create the configuration.',
     },
     updateDeps: {
       help: {
@@ -3824,7 +3877,12 @@ export const lib = {
       notifyTitle: chalk.bold('CLI update available'),
       cmsUpdateNotification: (packageName: string) =>
         `${chalk.bold('The CMS CLI is now the HubSpot CLI')}\n\nTo upgrade, uninstall ${chalk.bold(packageName)}\nand then run ${uiCommandReference('{updateCommand}')}`,
-      cliUpdateNotification: `HubSpot CLI version ${chalk.cyan(chalk.bold('{currentVersion}'))} is outdated.\nRun ${uiCommandReference('{updateCommand}')} to upgrade to version ${chalk.cyan(chalk.bold('{latestVersion}'))}`,
+      cliUpdateNotification: (
+        currentVersion: string,
+        updateCommand: string,
+        latestVersion: string
+      ) =>
+        `HubSpot CLI version ${chalk.cyan(chalk.bold(`${currentVersion}`))} is outdated.\nRun ${uiCommandReference(`${updateCommand}`)} to upgrade to version ${chalk.cyan(chalk.bold(`${latestVersion}`))}`,
     },
     autoUpdateCLI: {
       updateAvailable: (latestVersion: string) =>
@@ -3936,6 +3994,22 @@ export const lib = {
       feedbackHeader: "We'd love to hear your feedback!",
       feedbackMessage: `How are you liking the new projects and developer tools? \n > Run ${uiCommandReference('hs feedback')} to let us know what you think!\n`,
     },
+    components: {
+      unableToGetUidFromHsmeta: 'Unable to get UID from hsmeta',
+      buildSuccessMessage: {
+        seeOurDocs: 'See our docs',
+        docsUrl:
+          'https://developers.hubspot.com/docs/apps/developer-platform/build-apps/overview',
+        headerCreated: (projectName: string, projectDest: string) =>
+          `${chalk.bold(projectName)} was successfully created in ${projectDest}`,
+        headerAdded: (featureText: string, uid: string, plural: boolean) =>
+          `${featureText} ${plural ? 'were' : 'was'} successfully added to ${uid}:`,
+        docsDetails: (docsLink: string) =>
+          `📖 ${docsLink} for more details about building and testing these features.`,
+        uploadPrompt: `🚀 Run ${uiCommandReference('hs project upload')} when you're ready to deploy.`,
+        devPrompt: `🧪 Run ${uiCommandReference('hs project dev')} to start local development.`,
+      },
+    },
   },
   projectBuildAndDeploy: {
     makePollTaskStatusFunc: {
@@ -3987,11 +4061,11 @@ export const lib = {
         `Ignore rule triggered for "${filename}"`,
       legacyFileDetected: (filename: string, platformVersion: string) =>
         `The ${chalk.bold(filename)} file is not supported on platform version ${chalk.bold(platformVersion)} and will be ignored.`,
+      projectDoesNotExist: (accountId: number) =>
+        `Upload cancelled. Run ${uiCommandReference('hs project upload')} again to create the project in ${uiAccountDescription(accountId)}.`,
     },
   },
-  boxen: {
-    failedToLoad: 'Failed to load boxen util.',
-  },
+
   importData: {
     errors: {
       incorrectAccountType: (derivedAccountId: number) =>
@@ -4237,6 +4311,10 @@ export const lib = {
       success:
         'Your deprecated config file has been successfully merged with the global config file.',
     },
+    errors: {
+      archive: (deprecatedConfigPath: string) =>
+        `The config migration was successful, but an error occurred when archiving config file at ${deprecatedConfigPath}. You may need to manually delete or rename this config file.`,
+    },
   },
   prompts: {
     promptUtils: {
@@ -4251,10 +4329,11 @@ export const lib = {
         '[--file-path] Select the JSON file that will be used to import your data.',
     },
     confirmImportDataPrompt: {
-      message: (dataFileNames: string[], cliAccount: CLIAccount | null) =>
-        `You are importing [${dataFileNames.join(
-          ', '
-        )}] into ${uiAccountDescription(getAccountIdentifier(cliAccount))}. Continue?`,
+      message: (
+        dataFileNames: string[],
+        cliAccount: HubSpotConfigAccount | null
+      ) =>
+        `You are importing [${dataFileNames.join(', ')}] into ${uiAccountDescription(cliAccount?.accountId)}. Continue?`,
     },
     importDataTestAccountSelectPrompt: {
       errors: {
@@ -4706,7 +4785,7 @@ export const lib = {
         syncTypeFetch:
           'Unable to fetch available sandbox sync types. Please try again.',
         invalidUser: (accountName: string, parentAccountName: string) =>
-          `Couldn't sync ${chalk.bold(accountName)} because your account has been removed from ${chalk.bold(parentAccountName)} or your permission set doesn't allow you to sync the sandbox. To update your permissions, contact a super admin in ${chalk.bold(parentAccountName)}.`,
+          `Couldn't sync sandbox ${chalk.bold(accountName)} because your account has been removed from parent account${chalk.bold(parentAccountName)} or your permission set doesn't allow you to sync the sandbox. To update your permissions, contact a super admin in ${chalk.bold(parentAccountName)}.`,
         syncInProgress: (url: string) =>
           `Couldn't run the sync because there's another sync in progress. Wait for the current sync to finish and then try again. To check the sync status, visit the sync activity log: ${url}.`,
         notSuperAdmin: (accountId: number) =>
@@ -4732,6 +4811,9 @@ export const lib = {
         `This error occurred because a request exceeded the default HTTP timeout of ${timeout}ms. To increase the default HTTP timeout, run ${uiCommandReference(configSetCommand)}.`,
       genericTimeoutErrorOccurred:
         'This error occurred because an HTTP request timed out. Re-running the command may resolve this issue.',
+      additionalDebugContext: chalk.bold(
+        `For more information, run the command again with the ${uiCommandReference('--debug')} flag.`
+      ),
     },
     suppressErrors: {
       platformVersionErrors: {
@@ -4872,7 +4954,7 @@ export const lib = {
     accountNotFoundInConfig: (userProvidedAccount: string) =>
       `The account "${userProvidedAccount}" could not be found in the config`,
     accountRequired:
-      'An account needs to be supplied either via "--account" or through setting a "defaultPortal"',
+      'An account needs to be supplied either via "--account" or through setting a "defaultAccount"',
     userProvidedAccount:
       'Cannot specify an account when environment variables are supplied. Please unset the environment variables or do not use the "--account" flag.',
     accountNotConfigured: (accountId: number) =>

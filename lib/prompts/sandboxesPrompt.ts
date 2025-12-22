@@ -2,13 +2,12 @@ import { promptUser } from './promptUtils.js';
 import { lib } from '../../lang/en.js';
 import { uiAccountDescription } from '../ui/index.js';
 import { HUBSPOT_ACCOUNT_TYPES } from '@hubspot/local-dev-lib/constants/config';
-import { getAccountIdentifier } from '@hubspot/local-dev-lib/config/getAccountIdentifier';
 import { isSandbox } from '../accountTypes.js';
 import {
-  getConfigDefaultAccount,
-  getConfigAccounts,
+  getConfigDefaultAccountIfExists,
+  getAllConfigAccounts,
 } from '@hubspot/local-dev-lib/config';
-import { CLIAccount } from '@hubspot/local-dev-lib/types/Accounts';
+import { HubSpotConfigAccount } from '@hubspot/local-dev-lib/types/Accounts';
 import { PromptChoices } from '../../types/Prompts.js';
 import { SandboxAccountType } from '../../types/Sandboxes.js';
 
@@ -21,27 +20,27 @@ type DeleteSandboxPromptResponse = {
 };
 
 function mapSandboxAccountChoices(
-  portals: CLIAccount[] | null | undefined
+  portals: HubSpotConfigAccount[] | null | undefined
 ): PromptChoices {
   return (
     portals
       ?.filter(p => isSandbox(p))
       .map(p => ({
-        name: uiAccountDescription(getAccountIdentifier(p), false),
-        value: p.name || getAccountIdentifier(p),
+        name: uiAccountDescription(p.accountId, false),
+        value: p.accountId,
       })) || []
   );
 }
 
 function mapNonSandboxAccountChoices(
-  portals: CLIAccount[] | null | undefined
+  portals: HubSpotConfigAccount[] | null | undefined
 ): PromptChoices {
   return (
     portals
       ?.filter(p => !isSandbox(p))
       .map(p => ({
-        name: `${p.name} (${getAccountIdentifier(p)})`,
-        value: p.name || getAccountIdentifier(p),
+        name: `${p.name} (${p.accountId})`,
+        value: p.accountId,
       })) || []
   );
 }
@@ -70,7 +69,7 @@ export async function sandboxTypePrompt(): Promise<SandboxTypePromptResponse> {
 export function deleteSandboxPrompt(
   promptParentAccount = false
 ): Promise<DeleteSandboxPromptResponse | undefined> {
-  const accountsList = getConfigAccounts();
+  const accountsList = getAllConfigAccounts();
   const choices = promptParentAccount
     ? mapNonSandboxAccountChoices(accountsList)
     : mapSandboxAccountChoices(accountsList);
@@ -86,7 +85,7 @@ export function deleteSandboxPrompt(
       type: 'list',
       pageSize: 20,
       choices,
-      default: getConfigDefaultAccount(),
+      default: getConfigDefaultAccountIfExists()?.accountId,
     },
   ]);
 }

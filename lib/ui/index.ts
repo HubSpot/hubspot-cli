@@ -1,7 +1,7 @@
 import chalk from 'chalk';
 import {
-  getAccountConfig,
-  configFileExists,
+  getConfigAccountIfExists,
+  globalConfigFileExists,
 } from '@hubspot/local-dev-lib/config';
 import { uiLogger } from './logger.js';
 import { supportsHyperlinkModule } from './supportHyperlinks.js';
@@ -59,7 +59,7 @@ export function uiAccountDescription(
   accountId?: number | null,
   bold = true
 ): string {
-  const account = getAccountConfig(accountId || undefined);
+  const account = accountId ? getConfigAccountIfExists(accountId) : undefined;
   let message;
   if (account && account.accountType) {
     message = `${account.name ? `${account.name} ` : ''}[${
@@ -68,6 +68,11 @@ export function uiAccountDescription(
   } else {
     message = accountId ? accountId.toString() : '';
   }
+
+  if (message.trim().length === 0) {
+    return 'unknown account';
+  }
+
   return bold ? chalk.bold(message) : message;
 }
 
@@ -99,7 +104,7 @@ export function uiAuthCommandReference({
   accountId?: number | string;
   qa?: boolean;
 } = {}) {
-  const userIsUsingGlobalConfig = configFileExists(true);
+  const userIsUsingGlobalConfig = globalConfigFileExists();
   let command = 'hs auth';
 
   if (userIsUsingGlobalConfig) {

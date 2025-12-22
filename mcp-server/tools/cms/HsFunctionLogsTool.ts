@@ -9,6 +9,7 @@ import { absoluteCurrentWorkingDirectory } from '../project/constants.js';
 import { runCommandInDir } from '../../utils/project.js';
 import { formatTextContents } from '../../utils/content.js';
 import { trackToolUsage } from '../../utils/toolUsageTracking.js';
+import { setupHubSpotConfig } from '../../utils/config.js';
 
 const inputSchema = {
   absoluteCurrentWorkingDirectory,
@@ -54,6 +55,7 @@ export class HsFunctionLogsTool extends Tool<HsFunctionLogsInputSchema> {
     limit,
     absoluteCurrentWorkingDirectory,
   }: HsFunctionLogsInputSchema): Promise<TextContentResponse> {
+    setupHubSpotConfig(absoluteCurrentWorkingDirectory);
     await trackToolUsage(toolName);
 
     // Ensure endpoint doesn't start with '/'
@@ -84,16 +86,11 @@ export class HsFunctionLogsTool extends Tool<HsFunctionLogsInputSchema> {
         command
       );
 
-      return formatTextContents(
-        absoluteCurrentWorkingDirectory,
-        stdout,
-        stderr
-      );
+      return formatTextContents(stdout, stderr);
     } catch (error) {
       const errorMessage =
         error instanceof Error ? error.message : String(error);
       return formatTextContents(
-        absoluteCurrentWorkingDirectory,
         `Error executing hs logs command: ${errorMessage}`
       );
     }

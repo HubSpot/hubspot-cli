@@ -1,8 +1,6 @@
 import { uiLogger } from '../ui/logger.js';
-import {
-  getAccountId,
-  getCWDAccountOverride,
-} from '@hubspot/local-dev-lib/config';
+import { getConfigDefaultAccountIfExists } from '@hubspot/local-dev-lib/config';
+import { getDefaultAccountOverrideAccountId } from '@hubspot/local-dev-lib/config/defaultAccountOverride';
 
 import SpinniesManager from '../ui/SpinniesManager.js';
 import { hasMissingPackages } from '../dependencyManagement.js';
@@ -44,7 +42,7 @@ export class Doctor {
     )
   ) {
     SpinniesManager.init();
-    this.accountId = getAccountId();
+    this.accountId = getConfigDefaultAccountIfExists()?.accountId ?? null;
     this.diagnosticInfoBuilder = diagnosticInfoBuilder;
   }
 
@@ -125,7 +123,7 @@ export class Doctor {
       this.diagnosis?.addDefaultAccountOverrideFileSection({
         type: 'warning',
         message: lib.doctor.defaultAccountOverrideFileChecks.overrideAccountId(
-          getCWDAccountOverride()!
+          getDefaultAccountOverrideAccountId()!
         ),
       });
     }

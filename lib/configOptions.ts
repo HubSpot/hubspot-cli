@@ -3,8 +3,8 @@ import {
   updateAllowAutoUpdates,
   updateDefaultCmsPublishMode,
   updateHttpTimeout,
-  isConfigFlagEnabled,
   updateAutoOpenBrowser,
+  getConfig,
 } from '@hubspot/local-dev-lib/config';
 import { CmsPublishMode } from '@hubspot/local-dev-lib/types/Files';
 import { CMS_PUBLISH_MODE } from '@hubspot/local-dev-lib/constants/files';
@@ -200,5 +200,6 @@ export async function setAutoOpenBrowser({
 }
 
 export function isAutoOpenBrowserEnabled(): boolean {
-  return isConfigFlagEnabled('autoOpenBrowser', true);
+  const config = getConfig();
+  return config?.autoOpenBrowser !== false; // Default to true
 }

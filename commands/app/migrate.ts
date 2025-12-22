@@ -1,4 +1,4 @@
-import { getAccountConfig } from '@hubspot/local-dev-lib/config';
+import { getConfigAccountById } from '@hubspot/local-dev-lib/config';
 import { PLATFORM_VERSIONS } from '@hubspot/local-dev-lib/constants/projects';
 import { ArgumentsCamelCase, Argv } from 'yargs';
 import { YargsCommandModule } from '../../types/Yargs.js';
@@ -28,7 +28,7 @@ export function handlerGenerator(
   ): Promise<void> {
     const { derivedAccountId, platformVersion, unstable } = args;
     await trackCommandUsage(commandTrackingName, {}, derivedAccountId);
-    const accountConfig = getAccountConfig(derivedAccountId);
+    const accountConfig = getConfigAccountById(derivedAccountId);
 
     if (!accountConfig) {
       uiLogger.error(commands.project.migrateApp.errors.noAccountConfig);

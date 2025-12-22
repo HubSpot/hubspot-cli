@@ -10,7 +10,7 @@ import {
   getHubSpotApiOrigin,
   getHubSpotWebsiteOrigin,
 } from '@hubspot/local-dev-lib/urls';
-import { getAccountConfig } from '@hubspot/local-dev-lib/config';
+import { getConfigAccountById } from '@hubspot/local-dev-lib/config';
 import {
   ProjectConfig,
   ComponentTypes,
@@ -18,6 +18,8 @@ import {
 } from '../../../types/Projects.js';
 import { lib } from '../../../lang/en.js';
 import { uiLogger } from '../../ui/logger.js';
+import { logError } from '../../errorHandlers/index.js';
+import { EXIT_CODES } from '../../enums/exitCodes.js';
 
 const SERVER_KEYS = {
   privateApp: 'privateApp',
@@ -117,11 +119,18 @@ class DevServerManager_DEPRECATED {
   }): Promise<void> {
     this.componentsByType = this.arrangeComponentsByType(components);
     let env: Environment;
-    const accountConfig = getAccountConfig(accountId);
+    const accountConfig = getConfigAccountById(accountId);
     if (accountConfig) {
       env = accountConfig.env;
     }
-    await startPortManagerServer();
+
+    try {
+      await startPortManagerServer();
+    } catch (e) {
+      logError(e);
+      process.exit(EXIT_CODES.ERROR);
+    }
+
     await this.iterateDevServers(
       async (serverInterface, compatibleComponents) => {
         if (serverInterface.setup) {

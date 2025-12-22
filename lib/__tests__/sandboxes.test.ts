@@ -1,7 +1,10 @@
 import { uiLogger } from '../ui/logger.js';
 import { getSandboxUsageLimits } from '@hubspot/local-dev-lib/api/sandboxHubs';
 import { fetchTypes } from '@hubspot/local-dev-lib/api/sandboxSync';
-import { getAccountId, getConfigAccounts } from '@hubspot/local-dev-lib/config';
+import {
+  getAllConfigAccounts,
+  getConfigAccountIfExists,
+} from '@hubspot/local-dev-lib/config';
 import { HUBSPOT_ACCOUNT_TYPES } from '@hubspot/local-dev-lib/constants/config';
 import { Environment } from '@hubspot/local-dev-lib/types/Config';
 import { mockHubSpotHttpError } from '../testUtils.js';
@@ -12,18 +15,29 @@ import {
   validateSandboxUsageLimits,
   handleSandboxCreateError,
 } from '../sandboxes.js';
-import { Mock, Mocked } from 'vitest';
+import {
+  isMissingScopeError,
+  isSpecifiedError,
+} from '@hubspot/local-dev-lib/errors/index';
+import { Mock, Mocked, MockedFunction } from 'vitest';
+import { HubSpotConfigAccount } from '@hubspot/local-dev-lib/types/Accounts';
 
 vi.mock('../ui/logger.js');
 vi.mock('@hubspot/local-dev-lib/api/sandboxHubs');
 vi.mock('@hubspot/local-dev-lib/api/sandboxSync');
 vi.mock('@hubspot/local-dev-lib/config');
+vi.mock('@hubspot/local-dev-lib/errors/index');
 
-const mockedGetAccountId = getAccountId as Mock;
+const mockedGetConfigAccountIfExists = getConfigAccountIfExists as Mock;
 const mockedGetSandboxUsageLimits = getSandboxUsageLimits as Mock;
 const mockedFetchTypes = fetchTypes as Mock;
-const mockedGetConfigAccounts = getConfigAccounts as Mock;
+const mockedGetAllConfigAccounts = getAllConfigAccounts as Mock;
 const mockedUiLogger = uiLogger as Mocked<typeof uiLogger>;
+const mockedIsMissingScopeError =
+  isMissingScopeError as unknown as MockedFunction<typeof isMissingScopeError>;
+const mockedIsSpecifiedError = isSpecifiedError as unknown as MockedFunction<
+  typeof isSpecifiedError
+>;
 
 describe('lib/sandboxes', () => {
   describe('getSandboxTypeAsString()', () => {
@@ -47,15 +61,14 @@ describe('lib/sandboxes', () => {
   describe('getHasSandboxesByType()', () => {
     const mockParentAccount = {
       name: 'Parent Account',
-      portalId: 123,
-      authType: undefined,
+      accountId: 123,
       accountType: HUBSPOT_ACCOUNT_TYPES.STANDARD_SANDBOX,
       env: 'qa' as Environment,
-    };
+    } as HubSpotConfigAccount;
 
     it('returns true when sandbox of specified type exists', () => {
-      mockedGetAccountId.mockReturnValue(mockParentAccount.portalId);
-      mockedGetConfigAccounts.mockReturnValue([
+      mockedGetConfigAccountIfExists.mockReturnValue(mockParentAccount);
+      mockedGetAllConfigAccounts.mockReturnValue([
         mockParentAccount,
         {
           ...mockParentAccount,
@@ -73,7 +86,7 @@ describe('lib/sandboxes', () => {
     });
 
     it('returns false when no sandbox of specified type exists', () => {
-      mockedGetConfigAccounts.mockReturnValue([mockParentAccount]);
+      mockedGetAllConfigAccounts.mockReturnValue([mockParentAccount]);
 
       expect(
         getHasSandboxesByType(
@@ -87,20 +100,20 @@ describe('lib/sandboxes', () => {
   describe('getAvailableSyncTypes()', () => {
     const mockParentAccount = {
       name: 'Parent Account',
-      portalId: 123,
+      accountId: 123,
       env: 'qa' as Environment,
-    };
+    } as HubSpotConfigAccount;
 
     const mockChildAccount = {
       ...mockParentAccount,
-      portalId: 456,
-    };
+      accountId: 456,
+    } as HubSpotConfigAccount;
 
     it('returns available sync types when fetch is successful', async () => {
       const mockSyncTypes = [{ name: 'type1' }, { name: 'type2' }];
-      mockedGetAccountId
-        .mockReturnValue(mockParentAccount.portalId)
-        .mockReturnValue(mockChildAccount.portalId);
+      mockedGetConfigAccountIfExists
+        .mockReturnValue(mockParentAccount.accountId)
+        .mockReturnValue(mockChildAccount.accountId);
       mockedFetchTypes.mockResolvedValue({
         data: { results: mockSyncTypes },
       });
@@ -125,13 +138,12 @@ describe('lib/sandboxes', () => {
   describe('validateSandboxUsageLimits()', () => {
     const mockAccount = {
       name: 'Test Account',
-      portalId: 123,
-      authType: undefined,
+      accountId: 123,
       env: 'qa' as Environment,
-    };
+    } as HubSpotConfigAccount;
 
     it('validates successfully when limits are not reached', async () => {
-      mockedGetAccountId.mockReturnValue(mockAccount.portalId);
+      mockedGetConfigAccountIfExists.mockReturnValue(mockAccount.accountId);
       mockedGetSandboxUsageLimits.mockResolvedValue({
         data: {
           usage: { DEVELOPER: { available: 1, limit: 3 } },
@@ -148,8 +160,8 @@ describe('lib/sandboxes', () => {
     });
 
     it('throws error when development sandbox limit is reached', async () => {
-      mockedGetAccountId.mockReturnValue(mockAccount.portalId);
-      mockedGetConfigAccounts.mockReturnValue([]);
+      mockedGetConfigAccountIfExists.mockReturnValue(mockAccount.accountId);
+      mockedGetAllConfigAccounts.mockReturnValue([]);
       mockedGetSandboxUsageLimits.mockResolvedValue({
         data: {
           usage: { DEVELOPER: { available: 0, limit: 1 } },
@@ -180,6 +192,10 @@ describe('lib/sandboxes', () => {
         },
       });
 
+      // Mock the error checking function to return true for missing scope error
+      mockedIsMissingScopeError.mockReturnValue(true);
+      mockedIsSpecifiedError.mockReturnValue(false);
+
       expect(() =>
         handleSandboxCreateError(error, mockEnv, mockName, mockAccountId)
       ).toThrow(error);
@@ -202,6 +218,10 @@ describe('lib/sandboxes', () => {
         },
       });
 
+      // Mock the error checking function to return true for this error type
+      mockedIsMissingScopeError.mockReturnValue(false);
+      mockedIsSpecifiedError.mockReturnValue(true);
+
       expect(() =>
         handleSandboxCreateError(error, mockEnv, mockName, mockAccountId)
       ).toThrow(error);
@@ -221,11 +241,17 @@ describe('lib/sandboxes', () => {
         },
       });
 
+      // Mock the error checking function to return true for this error type
+      mockedIsMissingScopeError.mockReturnValue(false);
+      mockedIsSpecifiedError.mockReturnValue(true);
+
       expect(() =>
         handleSandboxCreateError(error, mockEnv, mockName, mockAccountId)
       ).toThrow(error);
       expect(mockedUiLogger.error).toHaveBeenCalledWith(
-        expect.stringMatching(/does not have access to development sandboxes/)
+        expect.stringMatching(
+          /Couldn't create.*because your account has been removed from.*or your permission set doesn't allow you to create/
+        )
       );
     });
   });

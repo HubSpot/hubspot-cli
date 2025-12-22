@@ -10,6 +10,7 @@ import { formatTextContents, formatTextContent } from '../../utils/content.js';
 import { trackToolUsage } from '../../utils/toolUsageTracking.js';
 import { addFlag } from '../../utils/command.js';
 import { CONTENT_TYPES } from '../../../types/Cms.js';
+import { setupHubSpotConfig } from '../../utils/config.js';
 
 const inputSchema = {
   absoluteCurrentWorkingDirectory,
@@ -89,6 +90,7 @@ export class HsCreateModuleTool extends Tool<HsCreateModuleInputSchema> {
     availableForNewContent,
     absoluteCurrentWorkingDirectory,
   }: HsCreateModuleInputSchema): Promise<TextContentResponse> {
+    setupHubSpotConfig(absoluteCurrentWorkingDirectory);
     await trackToolUsage(toolName);
 
     const content: TextContent[] = [];
@@ -169,14 +171,9 @@ export class HsCreateModuleTool extends Tool<HsCreateModuleInputSchema> {
         command
       );
 
-      return formatTextContents(
-        absoluteCurrentWorkingDirectory,
-        stdout,
-        stderr
-      );
+      return formatTextContents(stdout, stderr);
     } catch (error) {
       return formatTextContents(
-        absoluteCurrentWorkingDirectory,
         error instanceof Error ? error.message : `${error}`
       );
     }

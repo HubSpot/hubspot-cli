@@ -1,8 +1,5 @@
 import { trackUsage } from '@hubspot/local-dev-lib/trackUsage';
-import {
-  isTrackingAllowed,
-  getAccountConfig,
-} from '@hubspot/local-dev-lib/config';
+import { getConfig, getConfigAccountById } from '@hubspot/local-dev-lib/config';
 import { API_KEY_AUTH_METHOD } from '@hubspot/local-dev-lib/constants/auth';
 import { uiLogger } from '../ui/logger.js';
 import {
@@ -22,8 +19,8 @@ vi.mock('@hubspot/local-dev-lib/config');
 vi.mock('../ui/logger.js');
 
 const mockedTrackUsage = trackUsage as Mock;
-const mockedIsTrackingAllowed = isTrackingAllowed as Mock;
-const mockedGetAccountConfig = getAccountConfig as Mock;
+const mockedGetConfig = getConfig as Mock;
+const mockedGetConfigAccountById = getConfigAccountById as Mock;
 const mockedUiLogger = uiLogger as Mocked<typeof uiLogger>;
 
 describe('lib/usageTracking', () => {
@@ -31,7 +28,7 @@ describe('lib/usageTracking', () => {
   const mockNodeVersion = 'v16.14.0';
 
   beforeEach(() => {
-    mockedIsTrackingAllowed.mockReturnValue(true);
+    mockedGetConfig.mockReturnValue({ allowUsageTracking: true });
     Object.defineProperty(process, 'platform', { value: mockPlatform });
     Object.defineProperty(process, 'version', { value: mockNodeVersion });
   });
@@ -41,7 +38,7 @@ describe('lib/usageTracking', () => {
     const mockAccountId = 123;
 
     it('should not track when tracking is disabled', async () => {
-      mockedIsTrackingAllowed.mockReturnValue(false);
+      mockedGetConfig.mockReturnValue({ allowUsageTracking: false });
 
       await trackCommandUsage(mockCommand);
 
@@ -68,7 +65,7 @@ describe('lib/usageTracking', () => {
     });
 
     it('should track command usage with custom auth type', async () => {
-      mockedGetAccountConfig.mockReturnValue({ authType: 'oauth2' });
+      mockedGetConfigAccountById.mockReturnValue({ authType: 'oauth2' });
 
       await trackCommandUsage(mockCommand, {}, mockAccountId);
 
@@ -100,7 +97,7 @@ describe('lib/usageTracking', () => {
     const mockCommand = 'help-command';
 
     it('should not track when tracking is disabled', async () => {
-      mockedIsTrackingAllowed.mockReturnValue(false);
+      mockedGetConfig.mockReturnValue({ allowUsageTracking: false });
 
       await trackHelpUsage(mockCommand);
 
@@ -138,7 +135,7 @@ describe('lib/usageTracking', () => {
     const mockCommand = 'convert-fields-command';
 
     it('should not track when tracking is disabled', async () => {
-      mockedIsTrackingAllowed.mockReturnValue(false);
+      mockedGetConfig.mockReturnValue({ allowUsageTracking: false });
 
       await trackConvertFieldsUsage(mockCommand);
 
@@ -171,7 +168,7 @@ describe('lib/usageTracking', () => {
     const mockAccountId = 123;
 
     it('should not track when tracking is disabled', async () => {
-      mockedIsTrackingAllowed.mockReturnValue(false);
+      mockedGetConfig.mockReturnValue({ allowUsageTracking: false });
 
       await trackAuthAction(mockCommand, mockAuthType, mockStep, mockAccountId);
 
@@ -205,7 +202,7 @@ describe('lib/usageTracking', () => {
     const mockAccountId = 123;
 
     it('should not track when tracking is disabled', async () => {
-      mockedIsTrackingAllowed.mockReturnValue(false);
+      mockedGetConfig.mockReturnValue({ allowUsageTracking: false });
 
       await trackCommandMetadataUsage(mockCommand, mockMeta, mockAccountId);
 

@@ -7,13 +7,14 @@ import {
   getIntermediateRepresentationSchema,
   mapToInternalType,
 } from '@hubspot/project-parsing-lib';
-import { getAccountIdFromCliConfig } from '../../../utils/cliConfig.js';
 import { MockedFunction, Mocked } from 'vitest';
+import { getConfigDefaultAccountIfExists } from '@hubspot/local-dev-lib/config';
 import { mcpFeedbackRequest } from '../../../utils/feedbackTracking.js';
+import { HubSpotConfigAccount } from '@hubspot/local-dev-lib/types/Accounts';
 
 vi.mock('@modelcontextprotocol/sdk/server/mcp.js');
 vi.mock('@hubspot/project-parsing-lib');
-vi.mock('../../../utils/cliConfig.js');
+vi.mock('@hubspot/local-dev-lib/config');
 vi.mock('../../../utils/toolUsageTracking');
 vi.mock('../../../utils/feedbackTracking');
 
@@ -28,8 +29,10 @@ const mockGetIntermediateRepresentationSchema =
 const mockMapToInternalType = mapToInternalType as MockedFunction<
   typeof mapToInternalType
 >;
-const mockGetAccountIdFromCliConfig =
-  getAccountIdFromCliConfig as MockedFunction<typeof getAccountIdFromCliConfig>;
+const mockGetConfigDefaultAccountIfExists =
+  getConfigDefaultAccountIfExists as MockedFunction<
+    typeof getConfigDefaultAccountIfExists
+  >;
 
 describe('mcp-server/tools/project/GetConfigValuesTool', () => {
   let mockMcpServer: Mocked<McpServer>;
@@ -86,7 +89,9 @@ describe('mcp-server/tools/project/GetConfigValuesTool', () => {
     };
 
     beforeEach(() => {
-      mockGetAccountIdFromCliConfig.mockReturnValue(123456789);
+      mockGetConfigDefaultAccountIfExists.mockReturnValue({
+        accountId: 123456789,
+      } as HubSpotConfigAccount);
     });
 
     it('should return config schema when component type exists', async () => {
@@ -105,7 +110,7 @@ describe('mcp-server/tools/project/GetConfigValuesTool', () => {
 
       const result = await tool.handler(input);
 
-      expect(mockGetAccountIdFromCliConfig).toHaveBeenCalledWith('/foo');
+      expect(mockGetConfigDefaultAccountIfExists).toHaveBeenCalled();
       expect(mockGetIntermediateRepresentationSchema).toHaveBeenCalledWith({
         platformVersion: '2025.2',
         projectSourceDir: '',
@@ -193,7 +198,7 @@ describe('mcp-server/tools/project/GetConfigValuesTool', () => {
     });
 
     it('should handle null account id', async () => {
-      mockGetAccountIdFromCliConfig.mockReturnValue(null);
+      mockGetConfigDefaultAccountIfExists.mockReturnValue(undefined);
 
       const result = await tool.handler(input);
 

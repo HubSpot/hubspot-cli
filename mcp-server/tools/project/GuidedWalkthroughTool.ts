@@ -8,6 +8,7 @@ import { execAsync } from '../../utils/command.js';
 import { formatTextContents } from '../../utils/content.js';
 import { trackToolUsage } from '../../utils/toolUsageTracking.js';
 import { absoluteCurrentWorkingDirectory } from './constants.js';
+import { setupHubSpotConfig } from '../../utils/config.js';
 
 const nextCommands = {
   'hs init': 'hs auth',
@@ -43,20 +44,19 @@ export class GuidedWalkthroughTool extends Tool<InputSchemaType> {
     super(mcpServer);
   }
   async handler({
-    absoluteCurrentWorkingDirectory,
     command,
+    absoluteCurrentWorkingDirectory,
   }: InputSchemaType): Promise<TextContentResponse> {
+    setupHubSpotConfig(absoluteCurrentWorkingDirectory);
     await trackToolUsage(toolName);
     if (command) {
       const { stdout } = await execAsync(`${command} --help`);
       return formatTextContents(
-        absoluteCurrentWorkingDirectory,
         `Display this help output for the user amd wait for them to acknowledge: ${stdout}. ${nextCommands[command] ? `Once they are ready, A good command to look at next is ${nextCommands[command]}` : ''}`
       );
     }
 
     return formatTextContents(
-      absoluteCurrentWorkingDirectory,
       'Is there another command you would like to learn more about?'
     );
   }

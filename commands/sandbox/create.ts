@@ -1,5 +1,8 @@
 import { Argv, ArgumentsCamelCase } from 'yargs';
-import { getAccountConfig, getEnv } from '@hubspot/local-dev-lib/config';
+import {
+  getConfigAccountById,
+  getConfigAccountEnvironment,
+} from '@hubspot/local-dev-lib/config';
 import { uiLogger } from '../../lib/ui/logger.js';
 import { isMissingScopeError } from '@hubspot/local-dev-lib/errors/index';
 import { getHubSpotWebsiteOrigin } from '@hubspot/local-dev-lib/urls';
@@ -7,7 +10,6 @@ import {
   HUBSPOT_ACCOUNT_TYPES,
   HUBSPOT_ACCOUNT_TYPE_STRINGS,
 } from '@hubspot/local-dev-lib/constants/config';
-import { getValidEnv } from '@hubspot/local-dev-lib/environment';
 import { commands, lib } from '../../lang/en.js';
 import { EXIT_CODES } from '../../lib/enums/exitCodes.js';
 import { uiFeatureHighlight, uiBetaTag } from '../../lib/ui/index.js';
@@ -53,8 +55,8 @@ async function handler(
   args: ArgumentsCamelCase<SandboxCreateArgs>
 ): Promise<void> {
   const { name, type, force, derivedAccountId } = args;
-  const accountConfig = getAccountConfig(derivedAccountId);
-  const env = getValidEnv(getEnv(derivedAccountId));
+  const accountConfig = getConfigAccountById(derivedAccountId);
+  const env = getConfigAccountEnvironment(derivedAccountId);
 
   trackCommandUsage('sandbox-create', {}, derivedAccountId);
 
@@ -199,7 +201,9 @@ async function handler(
       );
     }
 
-    const sandboxAccountConfig = getAccountConfig(result.sandbox.sandboxHubId);
+    const sandboxAccountConfig = getConfigAccountById(
+      result.sandbox.sandboxHubId
+    );
     // Check if sandbox account config exists
     if (!sandboxAccountConfig) {
       uiLogger.error(

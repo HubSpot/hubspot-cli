@@ -2,19 +2,14 @@ import {
   CMS_PUBLISH_MODE,
   DEFAULT_CMS_PUBLISH_MODE,
 } from '@hubspot/local-dev-lib/constants/files';
-import {
-  getAndLoadConfigIfNeeded,
-  getAccountConfig,
-  loadConfigFromEnvironment,
-} from '@hubspot/local-dev-lib/config';
+import { getConfig, getConfigAccountById } from '@hubspot/local-dev-lib/config';
 import { getCmsPublishMode } from '../commonOpts.js';
 import { CmsPublishMode } from '@hubspot/local-dev-lib/types/Files';
 import { Arguments } from 'yargs';
 import { Mock } from 'vitest';
 
-const mockedGetAccountConfig = getAccountConfig as Mock;
-const mockedGetAndLoadConfigIfNeeded = getAndLoadConfigIfNeeded as Mock;
-const mockedLoadConfigFromEnvironment = loadConfigFromEnvironment as Mock;
+const mockedGetConfigAccountById = getConfigAccountById as Mock;
+const mockedGetConfig = getConfig as Mock;
 
 type CmsPublishModeArgs = {
   cmsPublishMode?: CmsPublishMode;
@@ -65,10 +60,8 @@ describe('lib/commonOpts', () => {
     describe('cms publish mode option precedence', () => {
       describe('1. --cmsPublishMode', () => {
         it('should return the cms publish mode specified by the command option if present.', () => {
-          mockedGetAndLoadConfigIfNeeded.mockReturnValue(
-            configWithDefaultCmsPublishMode
-          );
-          mockedGetAccountConfig.mockReturnValue(devAccountConfig);
+          mockedGetConfig.mockReturnValue(configWithDefaultCmsPublishMode);
+          mockedGetConfigAccountById.mockReturnValue(devAccountConfig);
           expect(
             getCmsPublishMode(
               buildArguments({
@@ -87,11 +80,8 @@ describe('lib/commonOpts', () => {
       });
       describe('2. hubspot.config.yml -> config.accounts[x].defaultCmsPublishMode', () => {
         it('should return the defaultCmsPublishMode specified by the account specific config if present.', () => {
-          mockedGetAndLoadConfigIfNeeded.mockReturnValue(
-            configWithDefaultCmsPublishMode
-          );
-          mockedGetAccountConfig.mockReturnValue(devAccountConfig);
-          mockedLoadConfigFromEnvironment.mockReturnValue(undefined);
+          mockedGetConfig.mockReturnValue(configWithDefaultCmsPublishMode);
+          mockedGetConfigAccountById.mockReturnValue(devAccountConfig);
           expect(
             getCmsPublishMode(
               buildArguments({
@@ -103,11 +93,8 @@ describe('lib/commonOpts', () => {
       });
       describe('3. hubspot.config.yml -> config.defaultCmsPublishMode', () => {
         it('should return the defaultCmsPublishMode specified by the config if present.', () => {
-          mockedGetAndLoadConfigIfNeeded.mockReturnValue(
-            configWithDefaultCmsPublishMode
-          );
-          mockedGetAccountConfig.mockReturnValue(prodAccountConfig);
-          mockedLoadConfigFromEnvironment.mockReturnValue(undefined);
+          mockedGetConfig.mockReturnValue(configWithDefaultCmsPublishMode);
+          mockedGetConfigAccountById.mockReturnValue(prodAccountConfig);
           expect(
             getCmsPublishMode(
               buildArguments({
@@ -119,7 +106,6 @@ describe('lib/commonOpts', () => {
       });
       describe('4. DEFAULT_CMS_PUBLISH_MODE', () => {
         it('should return the defaultCmsPubishMode specified by the config if present.', () => {
-          mockedLoadConfigFromEnvironment.mockReturnValue(undefined);
           expect(
             getCmsPublishMode(
               buildArguments({

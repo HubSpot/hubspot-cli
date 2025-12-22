@@ -4,12 +4,14 @@ import { Argv, ArgumentsCamelCase } from 'yargs';
 import { getCwd } from '@hubspot/local-dev-lib/path';
 import { DEFAULT_ACCOUNT_OVERRIDE_FILE_NAME } from '@hubspot/local-dev-lib/constants/config';
 import {
-  getCWDAccountOverride,
-  getDefaultAccountOverrideFilePath,
-  getConfigPath,
-  getAccountId,
+  getConfigFilePath,
+  getConfigAccountIfExists,
+  globalConfigFileExists,
 } from '@hubspot/local-dev-lib/config';
-import { getGlobalConfig } from '@hubspot/local-dev-lib/config/migrate';
+import {
+  getDefaultAccountOverrideAccountId,
+  getDefaultAccountOverrideFilePath,
+} from '@hubspot/local-dev-lib/config/defaultAccountOverride';
 
 import { promptUser } from '../../lib/prompts/promptUtils.js';
 import { EXIT_CODES } from '../../lib/enums/exitCodes.js';
@@ -35,21 +37,21 @@ async function handler(
 ): Promise<void> {
   let overrideDefaultAccount = args.account;
 
-  const globalConfig = getGlobalConfig();
-  if (!globalConfig) {
+  const globalConfigExists = globalConfigFileExists();
+  if (!globalConfigExists) {
     uiLogger.error(
       commands.account.subcommands.createOverride.errors.globalConfigNotFound
     );
     process.exit(EXIT_CODES.ERROR);
   }
 
-  const accountOverride = getCWDAccountOverride();
+  const accountOverrideId = getDefaultAccountOverrideAccountId();
   const overrideFilePath = getDefaultAccountOverrideFilePath();
-  if (accountOverride && overrideFilePath) {
+  if (accountOverrideId && overrideFilePath) {
     uiLogger.log(
       commands.account.subcommands.createOverride.accountOverride(
         overrideFilePath,
-        accountOverride.toString()
+        accountOverrideId.toString()
       )
     );
 
@@ -68,15 +70,19 @@ async function handler(
 
   if (!overrideDefaultAccount) {
     overrideDefaultAccount = await selectAccountFromConfig();
-  } else if (!getAccountId(overrideDefaultAccount)) {
-    uiLogger.error(
-      commands.account.subcommands.createOverride.errors.accountNotFound(
-        getConfigPath() || ''
-      )
-    );
-    overrideDefaultAccount = await selectAccountFromConfig();
+  } else {
+    const account = getConfigAccountIfExists(overrideDefaultAccount);
+    if (!account) {
+      uiLogger.error(
+        commands.account.subcommands.createOverride.errors.accountNotFound(
+          getConfigFilePath() || ''
+        )
+      );
+      overrideDefaultAccount = await selectAccountFromConfig();
+    }
   }
-  const accountId = getAccountId(overrideDefaultAccount);
+  const account = getConfigAccountIfExists(overrideDefaultAccount);
+  const accountId = account?.accountId;
 
   trackCommandUsage('account-createOverride', undefined, accountId!);
 

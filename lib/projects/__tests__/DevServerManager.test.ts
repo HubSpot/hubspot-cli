@@ -33,6 +33,7 @@ vi.mock('@hubspot/local-dev-lib/config', () => ({
   getAccountId: vi.fn().mockReturnValue(123),
   hasLocalStateFlag: vi.fn().mockReturnValue(false),
   getConfigDefaultAccount: vi.fn().mockReturnValue({ accountId: 123 }),
+  globalConfigFileExists: vi.fn().mockReturnValue(true),
 }));
 
 vi.mock('@hubspot/local-dev-lib/urls', () => ({
@@ -111,9 +112,8 @@ describe('DevServerManager', () => {
     it('should call setup on dev servers sequentially', async () => {
       const executionOrder: string[] = [];
 
-      const { DevModeUnifiedInterface } = await import(
-        '@hubspot/ui-extensions-dev-server'
-      );
+      const { DevModeUnifiedInterface } =
+        await import('@hubspot/ui-extensions-dev-server');
       const originalSetup = DevModeUnifiedInterface.setup;
 
       DevModeUnifiedInterface.setup = vi.fn().mockImplementation(async () => {

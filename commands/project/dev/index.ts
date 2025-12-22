@@ -1,6 +1,6 @@
 import { ArgumentsCamelCase, Argv, CommandModule } from 'yargs';
 import { trackCommandUsage } from '../../../lib/usageTracking.js';
-import { getAccountId } from '@hubspot/local-dev-lib/config';
+import { getConfigAccountIfExists } from '@hubspot/local-dev-lib/config';
 import { HsProfileFile } from '@hubspot/project-parsing-lib/src/lib/types.js';
 import {
   getProjectConfig,
@@ -87,7 +87,8 @@ async function handler(
 
   // Using the new --projectAccount flag
   if (projectAccount) {
-    targetProjectAccountId = getAccountId(projectAccount);
+    targetProjectAccountId =
+      getConfigAccountIfExists(projectAccount)?.accountId;
     if (targetProjectAccountId) {
       uiLogger.log('');
       uiLogger.log(
@@ -142,8 +143,9 @@ async function handler(
   trackCommandUsage('project-dev', {}, targetProjectAccountId);
 
   if (isV2Project(projectConfig.platformVersion)) {
-    const targetTestingAccountId =
-      (testingAccount && getAccountId(testingAccount)) || undefined;
+    const targetTestingAccountId = testingAccount
+      ? getConfigAccountIfExists(testingAccount)?.accountId
+      : undefined;
 
     await unifiedProjectDevFlow({
       args,

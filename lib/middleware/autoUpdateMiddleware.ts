@@ -1,8 +1,7 @@
 import { Arguments } from 'yargs';
 import updateNotifier from 'update-notifier';
-import { isConfigFlagEnabled } from '@hubspot/local-dev-lib/config';
+import { getConfig } from '@hubspot/local-dev-lib/config';
 import { pkg } from '../jsonLoader.js';
-import { UI_COLORS } from '../ui/index.js';
 import SpinniesManager from '../ui/SpinniesManager.js';
 import { lib } from '../../lang/en.js';
 import {
@@ -13,6 +12,8 @@ import {
 import { debugError } from '../errorHandlers/index.js';
 import { uiLogger } from '../ui/logger.js';
 import { isTargetedCommand } from './commandTargetingUtils.js';
+import { renderInline } from '../../ui/index.js';
+import { getWarningBox } from '../../ui/components/StatusMessageBoxes.js';
 
 // Default behavior is to check for notifications at most once per day
 // update-notifier stores the last checked date in the user's home directory
@@ -24,27 +25,30 @@ const notifier = updateNotifier({
 
 const CMS_CLI_PACKAGE_NAME = '@hubspot/cms-cli';
 
-function updateNotification(): void {
-  notifier.notify({
-    message:
-      pkg.name === CMS_CLI_PACKAGE_NAME
-        ? lib.middleware.updateNotification.cmsUpdateNotification(
-            CMS_CLI_PACKAGE_NAME
-          )
-        : lib.middleware.updateNotification.cliUpdateNotification,
-    defer: false,
-    boxenOptions: {
-      borderColor: UI_COLORS.MARIGOLD_DARK,
-      margin: 1,
-      padding: 1,
-      textAlignment: 'center',
-      borderStyle: 'round',
+async function updateNotification(
+  currentVersion: string,
+  latestVersion: string,
+  updateCommand: string
+): Promise<void> {
+  await renderInline(
+    getWarningBox({
       title:
         pkg.name === CMS_CLI_PACKAGE_NAME
-          ? undefined
+          ? ''
           : lib.middleware.updateNotification.notifyTitle,
-    },
-  });
+      message:
+        pkg.name === CMS_CLI_PACKAGE_NAME
+          ? lib.middleware.updateNotification.cmsUpdateNotification(
+              CMS_CLI_PACKAGE_NAME
+            )
+          : lib.middleware.updateNotification.cliUpdateNotification(
+              currentVersion,
+              updateCommand,
+              latestVersion
+            ),
+      textCentered: true,
+    })
+  );
 }
 
 const SKIP_AUTO_UPDATE_COMMANDS = {
@@ -58,15 +62,32 @@ const preventAutoUpdateForCommand = (commandParts: (string | number)[]) => {
 };
 
 export async function autoUpdateCLI(argv: Arguments<{ useEnv?: boolean }>) {
-  // This lets us back to default update-notifier behavior
   let showManualInstallHelp = true;
+
+  let isGlobalInstall: boolean | null = null;
+  const checkGlobalInstall = async () => {
+    if (isGlobalInstall === null) {
+      isGlobalInstall =
+        (await isGloballyInstalled(DEFAULT_PACKAGE_MANAGER)) &&
+        (await isGloballyInstalled('hs'));
+    }
+    return isGlobalInstall;
+  };
+
+  let config;
+
+  try {
+    config = getConfig();
+  } catch (e) {
+    debugError(e);
+  }
 
   if (
     notifier &&
     notifier.update &&
     !argv.useEnv &&
     !process.env.SKIP_HUBSPOT_CLI_AUTO_UPDATES &&
-    isConfigFlagEnabled('allowAutoUpdates') &&
+    config?.allowAutoUpdates === true &&
     !preventAutoUpdateForCommand(argv._)
   ) {
     // Ignore all update notifications if the current version is a pre-release
@@ -84,10 +105,7 @@ export async function autoUpdateCLI(argv: Arguments<{ useEnv?: boolean }>) {
         });
 
         try {
-          if (
-            (await isGloballyInstalled(DEFAULT_PACKAGE_MANAGER)) &&
-            (await isGloballyInstalled('hs'))
-          ) {
+          if (await checkGlobalInstall()) {
             await executeInstall(['@hubspot/cli@latest'], '-g');
             showManualInstallHelp = false;
 
@@ -114,7 +132,16 @@ export async function autoUpdateCLI(argv: Arguments<{ useEnv?: boolean }>) {
     }
   }
 
-  if (showManualInstallHelp) {
-    updateNotification();
+  if (
+    showManualInstallHelp &&
+    notifier.update &&
+    process.stdout.isTTY &&
+    !notifier.update.current.includes('-')
+  ) {
+    await updateNotification(
+      notifier.update.current,
+      notifier.update.latest,
+      `npm i ${(await checkGlobalInstall()) ? '-g' : ''} @hubspot/cli`
+    );
   }
 }

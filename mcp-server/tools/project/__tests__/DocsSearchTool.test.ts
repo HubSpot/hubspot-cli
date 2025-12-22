@@ -5,15 +5,16 @@ import {
 } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { http } from '@hubspot/local-dev-lib/http';
 import { isHubSpotHttpError } from '@hubspot/local-dev-lib/errors/index';
-import { getAccountIdFromCliConfig } from '../../../utils/cliConfig.js';
 import { MockedFunction, Mocked } from 'vitest';
+import { getConfigDefaultAccountIfExists } from '@hubspot/local-dev-lib/config';
+import { HubSpotConfigAccount } from '@hubspot/local-dev-lib/types/Accounts';
 import { mcpFeedbackRequest } from '../../../utils/feedbackTracking.js';
 
 vi.mock('@modelcontextprotocol/sdk/server/mcp.js');
 vi.mock('@hubspot/local-dev-lib/http');
 vi.mock('@hubspot/local-dev-lib/errors/index');
+vi.mock('@hubspot/local-dev-lib/config');
 vi.mock('../../../utils/toolUsageTracking');
-vi.mock('../../../utils/cliConfig.js');
 vi.mock('../../../utils/feedbackTracking');
 
 const mockMcpFeedbackRequest = mcpFeedbackRequest as MockedFunction<
@@ -21,9 +22,11 @@ const mockMcpFeedbackRequest = mcpFeedbackRequest as MockedFunction<
 >;
 
 const mockHttp = http as unknown as { post: MockedFunction<typeof http.post> };
-const mockGetAccountIdFromCliConfig =
-  getAccountIdFromCliConfig as MockedFunction<typeof getAccountIdFromCliConfig>;
 const mockIsHubSpotHttpError = vi.mocked(isHubSpotHttpError);
+const mockGetConfigDefaultAccountIfExists =
+  getConfigDefaultAccountIfExists as MockedFunction<
+    typeof getConfigDefaultAccountIfExists
+  >;
 
 describe('mcp-server/tools/project/DocsSearchTool', () => {
   let mockMcpServer: Mocked<McpServer>;
@@ -72,7 +75,7 @@ describe('mcp-server/tools/project/DocsSearchTool', () => {
     };
 
     it('should return auth error message when no account ID is found', async () => {
-      mockGetAccountIdFromCliConfig.mockReturnValue(null);
+      mockGetConfigDefaultAccountIfExists.mockReturnValue(undefined);
 
       const result = await tool.handler(mockInput);
 
@@ -87,7 +90,9 @@ describe('mcp-server/tools/project/DocsSearchTool', () => {
     });
 
     it('should return successful results when docs are found', async () => {
-      mockGetAccountIdFromCliConfig.mockReturnValue(12345);
+      mockGetConfigDefaultAccountIfExists.mockReturnValue({
+        accountId: 12345,
+      } as HubSpotConfigAccount);
 
       const mockResponse: DocsSearchResponse = {
         results: [
@@ -115,7 +120,7 @@ describe('mcp-server/tools/project/DocsSearchTool', () => {
 
       const result = await tool.handler(mockInput);
 
-      expect(mockGetAccountIdFromCliConfig).toHaveBeenCalledWith('/foo');
+      expect(mockGetConfigDefaultAccountIfExists).toHaveBeenCalled();
       expect(mockHttp.post).toHaveBeenCalledWith(12345, {
         url: 'dev/docs/llms/v1/docs-search',
         data: {
@@ -146,7 +151,9 @@ describe('mcp-server/tools/project/DocsSearchTool', () => {
     });
 
     it('should return no results message when no documentation is found', async () => {
-      mockGetAccountIdFromCliConfig.mockReturnValue(12345);
+      mockGetConfigDefaultAccountIfExists.mockReturnValue({
+        accountId: 12345,
+      } as HubSpotConfigAccount);
 
       const mockResponse: DocsSearchResponse = {
         results: [],
@@ -170,7 +177,9 @@ describe('mcp-server/tools/project/DocsSearchTool', () => {
     });
 
     it('should return no results message when results is null', async () => {
-      mockGetAccountIdFromCliConfig.mockReturnValue(12345);
+      mockGetConfigDefaultAccountIfExists.mockReturnValue({
+        accountId: 12345,
+      } as HubSpotConfigAccount);
 
       const mockResponse = {
         results: null,
@@ -194,7 +203,9 @@ describe('mcp-server/tools/project/DocsSearchTool', () => {
     });
 
     it('should handle HubSpot HTTP errors', async () => {
-      mockGetAccountIdFromCliConfig.mockReturnValue(12345);
+      mockGetConfigDefaultAccountIfExists.mockReturnValue({
+        accountId: 12345,
+      } as HubSpotConfigAccount);
 
       const mockError = {
         toString: () => 'HubSpot API Error: 404 Not Found',
@@ -216,7 +227,9 @@ describe('mcp-server/tools/project/DocsSearchTool', () => {
     });
 
     it('should handle generic errors', async () => {
-      mockGetAccountIdFromCliConfig.mockReturnValue(12345);
+      mockGetConfigDefaultAccountIfExists.mockReturnValue({
+        accountId: 12345,
+      } as HubSpotConfigAccount);
 
       const mockError = new Error('Network error');
 
@@ -236,7 +249,9 @@ describe('mcp-server/tools/project/DocsSearchTool', () => {
     });
 
     it('should handle non-Error rejections', async () => {
-      mockGetAccountIdFromCliConfig.mockReturnValue(12345);
+      mockGetConfigDefaultAccountIfExists.mockReturnValue({
+        accountId: 12345,
+      } as HubSpotConfigAccount);
 
       mockHttp.post.mockRejectedValue('String error');
       mockIsHubSpotHttpError.mockReturnValue(false);

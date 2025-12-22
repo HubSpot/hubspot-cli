@@ -25,7 +25,7 @@ import {
 import { getCwd, sanitizeFileName } from '@hubspot/local-dev-lib/path';
 import { uiLogger } from '../../lib/ui/logger.js';
 import { extractZipArchive } from '@hubspot/local-dev-lib/archive';
-import { getAccountConfig } from '@hubspot/local-dev-lib/config';
+import { getConfigAccountById } from '@hubspot/local-dev-lib/config';
 import SpinniesManager from '../../lib/ui/SpinniesManager.js';
 import {
   AccountArgs,
@@ -58,7 +58,7 @@ async function handler(args: ArgumentsCamelCase<CloneAppArgs>): Promise<void> {
   const { derivedAccountId } = args;
   await trackCommandUsage('clone-app', {}, derivedAccountId);
 
-  const accountConfig = getAccountConfig(derivedAccountId);
+  const accountConfig = getConfigAccountById(derivedAccountId);
   const accountName = uiAccountDescription(derivedAccountId);
 
   if (!accountConfig) {

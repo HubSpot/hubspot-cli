@@ -1,6 +1,5 @@
 import { HUBSPOT_ACCOUNT_TYPES } from '@hubspot/local-dev-lib/constants/config';
-import { getAccountId, getConfigAccounts } from '@hubspot/local-dev-lib/config';
-import { getAccountIdentifier } from '@hubspot/local-dev-lib/config/getAccountIdentifier';
+import { getAllConfigAccounts } from '@hubspot/local-dev-lib/config';
 import { fetchDeveloperTestAccounts } from '@hubspot/local-dev-lib/api/developerTestAccounts';
 import {
   isMissingScopeError,
@@ -8,7 +7,7 @@ import {
 } from '@hubspot/local-dev-lib/errors/index';
 import { uiLogger } from './ui/logger.js';
 import { getHubSpotWebsiteOrigin } from '@hubspot/local-dev-lib/urls';
-import { CLIAccount } from '@hubspot/local-dev-lib/types/Accounts';
+import { HubSpotConfigAccount } from '@hubspot/local-dev-lib/types/Accounts';
 
 import { lib } from '../lang/en.js';
 import { uiAccountDescription } from './ui/index.js';
@@ -17,11 +16,10 @@ import { FetchDeveloperTestAccountsResponse } from '@hubspot/local-dev-lib/types
 import { Environment } from '@hubspot/local-dev-lib/types/Config';
 
 export function getHasDevTestAccounts(
-  appDeveloperAccountConfig: CLIAccount
+  appDeveloperAccountConfig: HubSpotConfigAccount
 ): boolean {
-  const id = getAccountIdentifier(appDeveloperAccountConfig);
-  const parentPortalId = getAccountId(id);
-  const accountsList = getConfigAccounts();
+  const parentPortalId = appDeveloperAccountConfig.accountId;
+  const accountsList = getAllConfigAccounts();
 
   if (!accountsList) {
     return false;
@@ -40,10 +38,9 @@ export function getHasDevTestAccounts(
 }
 
 export async function validateDevTestAccountUsageLimits(
-  accountConfig: CLIAccount
+  accountConfig: HubSpotConfigAccount
 ): Promise<FetchDeveloperTestAccountsResponse | null> {
-  const id = getAccountIdentifier(accountConfig);
-  const accountId = getAccountId(id);
+  const accountId = accountConfig.accountId;
 
   if (!accountId) {
     return null;

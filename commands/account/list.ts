@@ -1,13 +1,11 @@
 import { Argv, ArgumentsCamelCase } from 'yargs';
 import {
-  getConfigPath,
-  getConfigAccounts,
-  getDefaultAccountOverrideFilePath,
-  getDisplayDefaultAccount,
-  getConfigDefaultAccount,
+  getConfigFilePath,
+  getAllConfigAccounts,
+  getConfigDefaultAccountIfExists,
 } from '@hubspot/local-dev-lib/config';
-import { getAccountIdentifier } from '@hubspot/local-dev-lib/config/getAccountIdentifier';
-import { CLIAccount } from '@hubspot/local-dev-lib/types/Accounts';
+import { getDefaultAccountOverrideFilePath } from '@hubspot/local-dev-lib/config/defaultAccountOverride';
+import { HubSpotConfigAccount } from '@hubspot/local-dev-lib/types/Accounts';
 import { indent } from '../../lib/ui/index.js';
 import { getTableContents, getTableHeader } from '../../lib/ui/table.js';
 import { trackCommandUsage } from '../../lib/usageTracking.js';
@@ -30,10 +28,10 @@ const describe = commands.account.subcommands.list.describe;
 
 type AccountListArgs = CommonArgs & ConfigArgs;
 
-function sortAndMapAccounts(accounts: CLIAccount[]): {
-  [key: string]: CLIAccount[];
+function sortAndMapAccounts(accounts: HubSpotConfigAccount[]): {
+  [key: string]: HubSpotConfigAccount[];
 } {
-  const mappedAccountData: { [key: string]: CLIAccount[] } = {};
+  const mappedAccountData: { [key: string]: HubSpotConfigAccount[] } = {};
   // Standard and app developer accounts
   accounts
     .filter(
@@ -43,10 +41,7 @@ function sortAndMapAccounts(accounts: CLIAccount[]): {
           p.accountType === HUBSPOT_ACCOUNT_TYPES.APP_DEVELOPER)
     )
     .forEach(account => {
-      const accountId = getAccountIdentifier(account);
-      if (accountId) {
-        mappedAccountData[accountId] = [account];
-      }
+      mappedAccountData[account.accountId] = [account];
     });
   // Non-standard accounts (sandbox, developer test account)
   accounts
@@ -58,10 +53,7 @@ function sortAndMapAccounts(accounts: CLIAccount[]): {
           p,
         ];
       } else {
-        const accountId = getAccountIdentifier(p);
-        if (accountId) {
-          mappedAccountData[accountId] = [p];
-        }
+        mappedAccountData[p.accountId] = [p];
       }
     });
 
@@ -69,14 +61,14 @@ function sortAndMapAccounts(accounts: CLIAccount[]): {
 }
 
 function getAccountData(mappedAccountData: {
-  [key: string]: CLIAccount[];
+  [key: string]: HubSpotConfigAccount[];
 }): string[][] {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const accountData: any[][] = [];
 
   Object.entries(mappedAccountData).forEach(([key, set]) => {
     const hasParentAccount = set.filter(
-      p => getAccountIdentifier(p) === parseInt(key, 10)
+      p => p.accountId === parseInt(key, 10)
     )[0];
     set.forEach(account => {
       let name = `${account.name} [${
@@ -91,7 +83,7 @@ function getAccountData(mappedAccountData: {
           name = `↳ ${name}`;
         }
       }
-      accountData.push([name, getAccountIdentifier(account), account.authType]);
+      accountData.push([name, account.accountId, account.authType]);
     });
   });
 
@@ -105,8 +97,8 @@ async function handler(
 
   trackCommandUsage('accounts-list', undefined, derivedAccountId);
 
-  const configPath = getConfigPath();
-  const accountsList = getConfigAccounts() || [];
+  const configPath = getConfigFilePath();
+  const accountsList = getAllConfigAccounts();
   const mappedAccountData = sortAndMapAccounts(accountsList);
 
   const accountData = getAccountData(mappedAccountData);
@@ -119,34 +111,35 @@ async function handler(
     ])
   );
 
+  const defaultAccount = getConfigDefaultAccountIfExists();
+  const accountId = defaultAccount?.accountId;
+  const overrideFilePath = getDefaultAccountOverrideFilePath();
+
   // If a default account is present in the config, display it
-  if (configPath) {
+  if (configPath && accountId) {
     uiLogger.log(commands.account.subcommands.list.defaultAccountTitle);
     uiLogger.log(
       `${indent(1)}${commands.account.subcommands.list.configPath(configPath)}`
     );
+
     uiLogger.log(
-      `${indent(1)}${commands.account.subcommands.list.defaultAccount(
-        getDisplayDefaultAccount()!.toString()
-      )}`
+      `${indent(1)}${commands.account.subcommands.list.currentResolvedDefaultAccount(accountId)}`
     );
     uiLogger.log('');
   }
 
   // If a default account override is present, display it
-  const overrideFilePath = getDefaultAccountOverrideFilePath();
-  if (overrideFilePath) {
+  if (overrideFilePath && accountId) {
     uiLogger.log(commands.account.subcommands.list.overrideFilePathTitle);
     uiLogger.log(
       `${indent(1)}${commands.account.subcommands.list.overrideFilePath(overrideFilePath)}`
     );
     uiLogger.log(
-      `${indent(1)}${commands.account.subcommands.list.overrideAccount(
-        getConfigDefaultAccount()!.toString()
-      )}`
+      `${indent(1)}${commands.account.subcommands.list.currentResolvedDefaultAccount(accountId)}`
     );
     uiLogger.log('');
   }
+
   uiLogger.log(commands.account.subcommands.list.accounts);
   uiLogger.log(getTableContents(accountData, { border: { bodyLeft: '  ' } }));
 }

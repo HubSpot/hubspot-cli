@@ -11,10 +11,10 @@ import { commands } from '../../../lang/en.js';
 import { isV2Project } from '../../../lib/projects/platformVersion.js';
 import { loadAndValidateProfile } from '../../../lib/projectProfiles.js';
 import { trackCommandUsage } from '../../../lib/usageTracking.js';
-import { getAccountConfig } from '@hubspot/local-dev-lib/config';
+import { getConfigAccountById } from '@hubspot/local-dev-lib/config';
 import { handleTranslate } from '../../../lib/projects/upload.js';
 import { CommonArgs } from '../../../types/Yargs.js';
-import { CLIAccount } from '@hubspot/local-dev-lib/types/Accounts';
+import { HubSpotConfigAccount } from '@hubspot/local-dev-lib/types/Accounts';
 import projectValidateCommand from '../validate.js';
 
 type ProjectValidateArgs = CommonArgs & {
@@ -108,11 +108,11 @@ describe('commands/project/validate', () => {
     vi.mocked(isV2Project).mockReturnValue(true);
     vi.mocked(validateProjectConfig).mockReturnValue(undefined);
     vi.mocked(loadAndValidateProfile).mockResolvedValue(123);
-    vi.mocked(getAccountConfig).mockReturnValue({
+    vi.mocked(getConfigAccountById).mockReturnValue({
       accountType: 'STANDARD',
       accountId: 123,
       env: 'prod',
-    } as CLIAccount);
+    } as HubSpotConfigAccount);
     vi.mocked(trackCommandUsage);
     vi.mocked(validateSourceDirectory).mockResolvedValue(undefined);
     vi.mocked(handleTranslate).mockResolvedValue(undefined);

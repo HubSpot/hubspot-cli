@@ -2,7 +2,7 @@ import { Argv, ArgumentsCamelCase } from 'yargs';
 
 import { fetchTables } from '@hubspot/local-dev-lib/api/hubdb';
 import { Table, FetchTablesResponse } from '@hubspot/local-dev-lib/types/Hubdb';
-import { getEnv } from '@hubspot/local-dev-lib/config';
+import { getConfigAccountEnvironment } from '@hubspot/local-dev-lib/config';
 import { getHubSpotWebsiteOrigin } from '@hubspot/local-dev-lib/urls';
 
 import {
@@ -66,7 +66,9 @@ async function handler(args: ArgumentsCamelCase<HubdbListArgs>): Promise<void> {
   uiLogger.log(' ');
   // link devs to the hubdb page in hubspot for easy access
   // TODO: This is hacky, we should make a util like getBaseUrl()
-  const baseUrl = getHubSpotWebsiteOrigin(getEnv());
+  const baseUrl = getHubSpotWebsiteOrigin(
+    getConfigAccountEnvironment(derivedAccountId)
+  );
   uiLogger.log(
     commands.hubdb.subcommands.list.viewTablesLink(baseUrl, derivedAccountId)
   );

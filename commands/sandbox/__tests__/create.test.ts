@@ -20,6 +20,8 @@ import { uiLogger } from '../../../lib/ui/logger.js';
 import * as sandboxesLib from '../../../lib/sandboxes.js';
 import * as sandboxSync from '../../../lib/sandboxSync.js';
 import { Mock, vi } from 'vitest';
+import { HubSpotConfigAccount } from '@hubspot/local-dev-lib/types/Accounts';
+import { ENVIRONMENTS } from '@hubspot/local-dev-lib/constants/environments';
 
 vi.mock('../../../lib/ui/logger.js');
 vi.mock('@hubspot/local-dev-lib/config');
@@ -34,12 +36,16 @@ vi.mock('../../../lib/buildAccount');
 vi.mock('../../../lib/sandboxes');
 vi.mock('../../../lib/commonOpts');
 
-const getAccountConfigSpy = vi.spyOn(configUtils, 'getAccountConfig');
+const getConfigAccountByIdSpy = vi.spyOn(configUtils, 'getConfigAccountById');
 const promptUserSpy = vi.spyOn(promptUtils, 'promptUser');
 const sandboxTypePromptSpy = vi.spyOn(sandboxPrompts, 'sandboxTypePrompt');
 const processExitSpy = vi.spyOn(process, 'exit');
 const buildSandboxSpy = vi.spyOn(buildAccount, 'buildSandbox');
 const buildV2SandboxSpy = vi.spyOn(buildAccount, 'buildV2Sandbox');
+const getConfigAccountEnvironmentSpy = vi.spyOn(
+  configUtils,
+  'getConfigAccountEnvironment'
+);
 const getAvailableSyncTypesSpy = vi.spyOn(
   sandboxesLib,
   'getAvailableSyncTypes'
@@ -117,10 +123,11 @@ describe('commands/sandbox/create', () => {
       args = {
         derivedAccountId: 1234567890,
       } as ArgumentsCamelCase<SandboxCreateArgs>;
-      getAccountConfigSpy.mockReturnValue({
+      getConfigAccountByIdSpy.mockReturnValue({
+        accountId: 1234567890,
         accountType: HUBSPOT_ACCOUNT_TYPES.STANDARD,
         env: 'prod',
-      });
+      } as HubSpotConfigAccount);
       hubspotAccountNamePromptSpy.mockResolvedValue({
         name: sandboxNameFromPrompt,
       });
@@ -135,6 +142,7 @@ describe('commands/sandbox/create', () => {
       validateSandboxUsageLimitsSpy.mockResolvedValue(undefined);
       mockedHasFeatureV2Sandboxes.mockResolvedValue(false);
       mockedHasFeatureV2Cli.mockResolvedValue(false);
+      getConfigAccountEnvironmentSpy.mockReturnValue(ENVIRONMENTS.PROD);
 
       buildSandboxSpy.mockResolvedValue({
         sandbox: mockSandbox as Sandbox,
@@ -156,8 +164,10 @@ describe('commands/sandbox/create', () => {
     });
     it('should load the account config for the correct account id', async () => {
       await sandboxCreateCommand.handler(args);
-      expect(getAccountConfigSpy).toHaveBeenCalledTimes(2); // 1st is for parent account, 2nd is for sandbox account
-      expect(getAccountConfigSpy).toHaveBeenCalledWith(args.derivedAccountId);
+      expect(getConfigAccountByIdSpy).toHaveBeenCalledTimes(2); // 1st is for parent account, 2nd is for sandbox account
+      expect(getConfigAccountByIdSpy).toHaveBeenCalledWith(
+        args.derivedAccountId
+      );
     });
 
     it('should track the command usage', async () => {
@@ -175,6 +185,7 @@ describe('commands/sandbox/create', () => {
       expect(validateSandboxUsageLimitsSpy).toHaveBeenCalledTimes(1);
       expect(validateSandboxUsageLimitsSpy).toHaveBeenCalledWith(
         {
+          accountId: 1234567890,
           accountType: HUBSPOT_ACCOUNT_TYPES.STANDARD,
           env: 'prod',
         },
@@ -218,6 +229,7 @@ describe('commands/sandbox/create', () => {
       expect(buildSandboxSpy).toHaveBeenCalledWith(
         sandboxNameFromPrompt,
         {
+          accountId: 1234567890,
           accountType: HUBSPOT_ACCOUNT_TYPES.STANDARD,
           env: 'prod',
         },
@@ -238,6 +250,7 @@ describe('commands/sandbox/create', () => {
       expect(buildSandboxSpy).toHaveBeenCalledWith(
         sandboxNameFromPrompt,
         {
+          accountId: 1234567890,
           accountType: HUBSPOT_ACCOUNT_TYPES.STANDARD,
           env: 'prod',
         },
@@ -258,6 +271,7 @@ describe('commands/sandbox/create', () => {
       expect(buildV2SandboxSpy).toHaveBeenCalledWith(
         sandboxNameFromPrompt,
         {
+          accountId: 1234567890,
           accountType: HUBSPOT_ACCOUNT_TYPES.STANDARD,
           env: 'prod',
         },
@@ -292,10 +306,11 @@ describe('commands/sandbox/create', () => {
     });
 
     it('should error out if the default account type is not standard', async () => {
-      getAccountConfigSpy.mockReturnValue({
+      getConfigAccountByIdSpy.mockReturnValue({
+        accountId: 1234567890,
         accountType: HUBSPOT_ACCOUNT_TYPES.DEVELOPMENT_SANDBOX,
         env: 'prod',
-      });
+      } as HubSpotConfigAccount);
       await sandboxCreateCommand.handler({
         ...args,
         type: 'developer',

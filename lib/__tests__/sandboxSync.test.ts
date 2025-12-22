@@ -1,6 +1,9 @@
 import { uiLogger } from '../ui/logger.js';
 import { initiateSync } from '@hubspot/local-dev-lib/api/sandboxSync';
-import { getAccountId } from '@hubspot/local-dev-lib/config';
+import {
+  getConfigAccountIfExists,
+  getConfigAccountById,
+} from '@hubspot/local-dev-lib/config';
 import { HUBSPOT_ACCOUNT_TYPES } from '@hubspot/local-dev-lib/constants/config';
 import { Environment } from '@hubspot/local-dev-lib/types/Config';
 import { mockHubSpotHttpError } from '../testUtils.js';
@@ -8,6 +11,7 @@ import { getAvailableSyncTypes } from '../sandboxes.js';
 import { syncSandbox } from '../sandboxSync.js';
 import SpinniesManager from '../ui/SpinniesManager.js';
 import { Mock, Mocked } from 'vitest';
+import { HubSpotConfigAccount } from '@hubspot/local-dev-lib/types/Accounts';
 
 vi.mock('../ui/logger.js');
 vi.mock('@hubspot/local-dev-lib/api/sandboxSync');
@@ -17,7 +21,8 @@ vi.mock('../ui/SpinniesManager');
 
 const mockedUiLogger = uiLogger as Mocked<typeof uiLogger>;
 const mockedInitiateSync = initiateSync as Mock;
-const mockedGetAccountId = getAccountId as Mock;
+const mockedGetConfigAccountIfExists = getConfigAccountIfExists as Mock;
+const mockedGetConfigAccountById = getConfigAccountById as Mock;
 const mockedGetAvailableSyncTypes = getAvailableSyncTypes as Mock;
 const mockedSpinniesInit = SpinniesManager.init as Mock;
 const mockedSpinniesAdd = SpinniesManager.add as Mock;
@@ -28,23 +33,48 @@ describe('lib/sandboxSync', () => {
   const mockEnv = 'qa' as Environment;
   const mockParentAccount = {
     name: 'Parent Account',
-    portalId: 123,
+    accountId: 123,
     accountType: HUBSPOT_ACCOUNT_TYPES.STANDARD_SANDBOX,
     env: mockEnv,
-  };
+    authType: 'personalaccesskey' as const,
+  } as HubSpotConfigAccount;
   const mockChildAccount = {
     name: 'Child Account',
-    portalId: 456,
+    accountId: 456,
     accountType: HUBSPOT_ACCOUNT_TYPES.DEVELOPMENT_SANDBOX,
     env: mockEnv,
-  };
+    authType: 'personalaccesskey' as const,
+  } as HubSpotConfigAccount;
+  const mockChildAccountWithMissingId = {
+    name: 'Child Account',
+    accountType: HUBSPOT_ACCOUNT_TYPES.DEVELOPMENT_SANDBOX,
+    env: mockEnv,
+    authType: 'personalaccesskey' as const,
+  } as HubSpotConfigAccount;
   const mockSyncTasks = [{ type: 'mock-sync-type' }];
 
   beforeEach(() => {
-    mockedGetAccountId
-      .mockReturnValueOnce(mockChildAccount.portalId)
-      .mockReturnValueOnce(mockParentAccount.portalId);
+    mockedGetConfigAccountIfExists
+      .mockReturnValueOnce(mockChildAccount)
+      .mockReturnValueOnce(mockParentAccount);
     mockedGetAvailableSyncTypes.mockResolvedValue(mockSyncTasks);
+
+    // Mock SpinniesManager methods to prevent spinner errors
+    mockedSpinniesInit.mockImplementation(() => {});
+    mockedSpinniesAdd.mockImplementation(() => {});
+    mockedSpinniesSucceed.mockImplementation(() => {});
+    mockedSpinniesFail.mockImplementation(() => {});
+
+    // Mock account config for uiAccountDescription calls
+    mockedGetConfigAccountById.mockImplementation(accountId => {
+      if (accountId === mockChildAccount.accountId) {
+        return mockChildAccount;
+      }
+      if (accountId === mockParentAccount.accountId) {
+        return mockParentAccount;
+      }
+      return undefined; // Don't throw, just return undefined for unknown accounts
+    });
   });
 
   describe('syncSandbox()', () => {
@@ -61,10 +91,10 @@ describe('lib/sandboxSync', () => {
       expect(mockedSpinniesInit).toHaveBeenCalled();
       expect(mockedSpinniesAdd).toHaveBeenCalled();
       expect(mockedInitiateSync).toHaveBeenCalledWith(
-        mockParentAccount.portalId,
-        mockChildAccount.portalId,
+        mockParentAccount.accountId,
+        mockChildAccount.accountId,
         mockSyncTasks,
-        mockChildAccount.portalId
+        mockChildAccount.accountId
       );
       expect(mockedSpinniesSucceed).toHaveBeenCalled();
     });
@@ -87,15 +117,16 @@ describe('lib/sandboxSync', () => {
     });
 
     it('throws error when account IDs are missing', async () => {
-      mockedGetAccountId.mockReset();
-      mockedGetAccountId.mockReturnValue(null);
-
       const errorRegex = new RegExp(
         `because your account has been removed from`
       );
-
       await expect(
-        syncSandbox(mockChildAccount, mockParentAccount, mockEnv, mockSyncTasks)
+        syncSandbox(
+          mockChildAccountWithMissingId,
+          mockParentAccount,
+          mockEnv,
+          mockSyncTasks
+        )
       ).rejects.toThrow(errorRegex);
     });
 
@@ -107,6 +138,7 @@ describe('lib/sandboxSync', () => {
           subCategory: 'sandboxes-sync-api.SYNC_IN_PROGRESS',
         },
       });
+
       mockedInitiateSync.mockRejectedValue(error);
 
       await expect(
@@ -129,6 +161,7 @@ describe('lib/sandboxSync', () => {
           subCategory: 'sandboxes-sync-api.SYNC_NOT_ALLOWED_INVALID_USER',
         },
       });
+
       mockedInitiateSync.mockRejectedValue(error);
 
       await expect(
@@ -149,6 +182,7 @@ describe('lib/sandboxSync', () => {
           subCategory: 'sandboxes-sync-api.SYNC_NOT_ALLOWED_INVALID_USERID',
         },
       });
+
       mockedInitiateSync.mockRejectedValue(error);
 
       await expect(
@@ -171,6 +205,7 @@ describe('lib/sandboxSync', () => {
           subCategory: 'SandboxErrors.SANDBOX_NOT_FOUND',
         },
       });
+
       mockedInitiateSync.mockRejectedValue(error);
 
       await expect(

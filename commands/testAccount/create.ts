@@ -6,7 +6,7 @@ import {
   DeveloperTestAccountConfig,
 } from '@hubspot/local-dev-lib/types/developerTestAccounts.js';
 import { getValidEnv } from '@hubspot/local-dev-lib/environment';
-import { getEnv } from '@hubspot/local-dev-lib/config';
+import { getConfigAccountEnvironment } from '@hubspot/local-dev-lib/config';
 import { getCwd } from '@hubspot/local-dev-lib/path';
 import {
   CommonArgs,
@@ -172,7 +172,7 @@ async function handler(
 
   trackCommandUsage('test-account-create', {}, derivedAccountId);
 
-  const env = getValidEnv(getEnv(derivedAccountId));
+  const env = getValidEnv(getConfigAccountEnvironment(derivedAccountId));
 
   const testAccountConfig = await buildTestAccountConfig(args);
 

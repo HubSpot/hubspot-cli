@@ -13,11 +13,10 @@ import {
   HSProfileVariables,
 } from '@hubspot/project-parsing-lib/src/lib/types.js';
 import {
-  getEnv,
-  getConfigAccounts,
-  getAccountConfig,
+  getConfigAccountEnvironment,
+  getAllConfigAccounts,
+  getConfigAccountById,
 } from '@hubspot/local-dev-lib/config';
-import { getValidEnv } from '@hubspot/local-dev-lib/environment';
 import { ProjectDevArgs } from '../../../types/Yargs.js';
 import { ProjectConfig } from '../../../types/Projects.js';
 import { logError } from '../../../lib/errorHandlers/index.js';
@@ -70,7 +69,7 @@ export async function unifiedProjectDevFlow({
 }: UnifiedProjectDevFlowArgs): Promise<void> {
   await confirmLocalDevIsNotRunning();
 
-  const env = getValidEnv(getEnv(targetProjectAccountId));
+  const env = getConfigAccountEnvironment(targetProjectAccountId);
 
   let projectNodes;
   let projectProfileData: HSProfileVariables | undefined;
@@ -104,7 +103,9 @@ export async function unifiedProjectDevFlow({
     process.exit(EXIT_CODES.SUCCESS);
   }
 
-  const targetProjectAccountConfig = getAccountConfig(targetProjectAccountId);
+  const targetProjectAccountConfig = getConfigAccountById(
+    targetProjectAccountId
+  );
   if (!targetProjectAccountConfig) {
     uiLogger.error(
       commands.project.dev.errors.noAccount(targetProjectAccountId)
@@ -112,7 +113,7 @@ export async function unifiedProjectDevFlow({
     process.exit(EXIT_CODES.ERROR);
   }
 
-  const accounts = getConfigAccounts();
+  const accounts = getAllConfigAccounts();
   const accountIsCombined = await isUnifiedAccount(targetProjectAccountConfig);
   const targetProjectAccountIsTestAccountOrSandbox = isTestAccountOrSandbox(
     targetProjectAccountConfig
@@ -246,7 +247,12 @@ export async function unifiedProjectDevFlow({
   await checkAndInstallDependencies();
 
   // End setup, start local dev process
-  await startPortManagerServer();
+  try {
+    await startPortManagerServer();
+  } catch (e) {
+    logError(e);
+    process.exit(EXIT_CODES.ERROR);
+  }
 
   const localDevProcess = new LocalDevProcess({
     initialProjectNodes: projectNodes,

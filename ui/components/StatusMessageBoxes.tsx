@@ -3,6 +3,7 @@ import { BoxWithTitle } from './BoxWithTitle.js';
 export interface StatusMessageBoxProps {
   title: string;
   message: string;
+  textCentered?: boolean;
 }
 
 export function getWarningBox(props: StatusMessageBoxProps): React.ReactNode {
@@ -12,6 +13,7 @@ export function getWarningBox(props: StatusMessageBoxProps): React.ReactNode {
 export function WarningBox({
   title,
   message,
+  textCentered,
 }: StatusMessageBoxProps): React.ReactNode {
   const color = INK_COLORS.WARNING_YELLOW;
   return (
@@ -20,6 +22,7 @@ export function WarningBox({
       message={message}
       titleBackgroundColor={color}
       borderColor={color}
+      textCentered={textCentered}
     />
   );
 }
@@ -31,6 +34,7 @@ export function getAlertBox(props: StatusMessageBoxProps): React.ReactNode {
 export function AlertBox({
   title,
   message,
+  textCentered,
 }: StatusMessageBoxProps): React.ReactNode {
   const color = INK_COLORS.ALERT_RED;
   return (
@@ -39,6 +43,7 @@ export function AlertBox({
       message={message}
       titleBackgroundColor={color}
       borderColor={color}
+      textCentered={textCentered}
     />
   );
 }
@@ -50,6 +55,7 @@ export function getSuccessBox(props: StatusMessageBoxProps): React.ReactNode {
 export function SuccessBox({
   title,
   message,
+  textCentered,
 }: StatusMessageBoxProps): React.ReactNode {
   const color = INK_COLORS.SUCCESS_GREEN;
   return (
@@ -58,6 +64,7 @@ export function SuccessBox({
       message={message}
       titleBackgroundColor={color}
       borderColor={color}
+      textCentered={textCentered}
     />
   );
 }
@@ -69,6 +76,7 @@ export function getInfoBox(props: StatusMessageBoxProps): React.ReactNode {
 export function InfoBox({
   title,
   message,
+  textCentered,
 }: StatusMessageBoxProps): React.ReactNode {
   const color = INK_COLORS.INFO_BLUE;
   return (
@@ -77,6 +85,7 @@ export function InfoBox({
       message={message}
       titleBackgroundColor={color}
       borderColor={color}
+      textCentered={textCentered}
     />
   );
 }

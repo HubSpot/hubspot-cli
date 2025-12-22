@@ -12,7 +12,8 @@ import {
   docsSearchQuery,
 } from './constants.js';
 import { isHubSpotHttpError } from '@hubspot/local-dev-lib/errors/index';
-import { getAccountIdFromCliConfig } from '../../utils/cliConfig.js';
+import { getConfigDefaultAccountIfExists } from '@hubspot/local-dev-lib/config';
+import { setupHubSpotConfig } from '../../utils/config.js';
 
 const inputSchema = {
   absoluteCurrentWorkingDirectory,
@@ -43,21 +44,17 @@ export class DocsSearchTool extends Tool<InputSchemaType> {
   }
 
   async handler({
-    absoluteCurrentWorkingDirectory,
     docsSearchQuery,
+    absoluteCurrentWorkingDirectory,
   }: InputSchemaType): Promise<TextContentResponse> {
+    setupHubSpotConfig(absoluteCurrentWorkingDirectory);
     await trackToolUsage(toolName, { mode: docsSearchQuery });
 
-    const accountId = getAccountIdFromCliConfig(
-      absoluteCurrentWorkingDirectory
-    );
+    const accountId = getConfigDefaultAccountIfExists()?.accountId;
 
     if (!accountId) {
       const authErrorMessage = `No account ID found. Please run \`hs account auth\` to configure an account, or set a default account with \`hs account use <account>\``;
-      return formatTextContents(
-        absoluteCurrentWorkingDirectory,
-        authErrorMessage
-      );
+      return formatTextContents(authErrorMessage);
     }
 
     try {
@@ -70,10 +67,7 @@ export class DocsSearchTool extends Tool<InputSchemaType> {
 
       const results = response.data.results;
       if (!results || results.length === 0) {
-        return formatTextContents(
-          absoluteCurrentWorkingDirectory,
-          'No documentation found for your query.'
-        );
+        return formatTextContents('No documentation found for your query.');
       }
 
       const formattedResults = results
@@ -84,21 +78,15 @@ export class DocsSearchTool extends Tool<InputSchemaType> {
         .join('\n');
 
       const successMessage = `Found ${results.length} documentation results:\n\n${formattedResults}`;
-      return formatTextContents(
-        absoluteCurrentWorkingDirectory,
-        successMessage
-      );
+      return formatTextContents(successMessage);
     } catch (error) {
       if (isHubSpotHttpError(error)) {
         // Handle different status codes
-        return formatTextContents(
-          absoluteCurrentWorkingDirectory,
-          error.toString()
-        );
+        return formatTextContents(error.toString());
       }
 
       const errorMessage = `Error searching documentation: ${error instanceof Error ? error.message : String(error)}`;
-      return formatTextContents(absoluteCurrentWorkingDirectory, errorMessage);
+      return formatTextContents(errorMessage);
     }
   }
 

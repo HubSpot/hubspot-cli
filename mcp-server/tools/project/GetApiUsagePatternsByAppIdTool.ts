@@ -8,8 +8,9 @@ import { trackToolUsage } from '../../utils/toolUsageTracking.js';
 import { http } from '@hubspot/local-dev-lib/http';
 import { formatTextContents } from '../../utils/content.js';
 import { isHubSpotHttpError } from '@hubspot/local-dev-lib/errors/index';
-import { getAccountId } from '@hubspot/local-dev-lib/config';
+import { getConfigDefaultAccountIfExists } from '@hubspot/local-dev-lib/config';
 import { absoluteCurrentWorkingDirectory } from './constants.js';
+import { setupHubSpotConfig } from '../../utils/config.js';
 
 const inputSchema = {
   absoluteCurrentWorkingDirectory,
@@ -59,23 +60,21 @@ export class GetApiUsagePatternsByAppIdTool extends Tool<GetApiUsagePatternsByAp
   }
 
   async handler({
-    absoluteCurrentWorkingDirectory,
     appId,
     startDate,
     endDate,
+    absoluteCurrentWorkingDirectory,
   }: GetApiUsagePatternsByAppIdInputSchema): Promise<TextContentResponse> {
+    setupHubSpotConfig(absoluteCurrentWorkingDirectory);
     await trackToolUsage(toolName);
 
     try {
       // Get account ID from CLI config
-      const accountId = getAccountId();
+      const accountId = getConfigDefaultAccountIfExists()?.accountId;
 
       if (!accountId) {
         const authErrorMessage = `No account ID found. Please run \`hs account auth\` to configure an account, or set a default account with \`hs account use <account>\``;
-        return formatTextContents(
-          absoluteCurrentWorkingDirectory,
-          authErrorMessage
-        );
+        return formatTextContents(authErrorMessage);
       }
 
       const response = await http.get<GetApiUsagePatternsByAppIdResponse>(
@@ -92,21 +91,15 @@ export class GetApiUsagePatternsByAppIdTool extends Tool<GetApiUsagePatternsByAp
       // Format the response for display
       const { data } = response;
       const formattedResult = JSON.stringify(data, null, 2);
-      return formatTextContents(
-        absoluteCurrentWorkingDirectory,
-        formattedResult
-      );
+      return formatTextContents(formattedResult);
     } catch (error) {
       if (isHubSpotHttpError(error)) {
         // Handle HubSpot-specific HTTP errors
-        return formatTextContents(
-          absoluteCurrentWorkingDirectory,
-          error.toString()
-        );
+        return formatTextContents(error.toString());
       }
 
       const errorMessage = `${error instanceof Error ? error.message : String(error)}`;
-      return formatTextContents(absoluteCurrentWorkingDirectory, errorMessage);
+      return formatTextContents(errorMessage);
     }
   }
 

@@ -30,6 +30,7 @@ vi.mock('../deploy');
 vi.mock('../config');
 vi.mock('@hubspot/local-dev-lib/api/projects');
 vi.mock('@hubspot/local-dev-lib/errors/index');
+vi.mock('@hubspot/local-dev-lib/config');
 vi.mock('../localDev/LocalDevLogger');
 vi.mock('../localDev/DevServerManager');
 

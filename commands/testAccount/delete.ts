@@ -16,17 +16,16 @@ import { uiLogger } from '../../lib/ui/logger.js';
 import { trackCommandUsage } from '../../lib/usageTracking.js';
 import { commands } from '../../lang/en.js';
 import {
-  deleteAccount,
-  getAccountConfig,
-  getAccountId,
-  getConfigPath,
-  loadConfig,
-  updateDefaultAccount,
+  removeAccountFromConfig,
+  getConfigAccountById,
+  getConfigAccountIfExists,
+  setConfigAccountAsDefault,
+  getConfigDefaultAccountIfExists,
 } from '@hubspot/local-dev-lib/config';
 import { promptUser } from '../../lib/prompts/promptUtils.js';
 import { PromptChoices } from '../../types/Prompts.js';
 import { debugError } from '../../lib/errorHandlers/index.js';
-import { CLIAccount } from '@hubspot/local-dev-lib/types/Accounts';
+import { HubSpotConfigAccount } from '@hubspot/local-dev-lib/types/Accounts';
 
 const command = 'delete [test-account]';
 const describe = commands.testAccount.delete.describe;
@@ -116,16 +115,16 @@ async function deleteTestAccountInHubSpot(
 async function deleteTestAccountFromConfig(
   testAccountId: number,
   parentAccountName: string,
-  account: CLIAccount | null
+  account: HubSpotConfigAccount | null
 ): Promise<void> {
   try {
     // If the account isn't in the local config then it wasn't auth'd on the local machine
     if (account && account.name && account.accountType) {
       // If the deleted test account was the default account, replace the default account with the parent account
-      loadConfig(getConfigPath()!); // Get updated version of the config
-      const defaultAccountId = getAccountId(); // We need to get the current default accountId before delete the test account
+      const defaultAccount = getConfigDefaultAccountIfExists();
+      const defaultAccountId = defaultAccount?.accountId;
 
-      await deleteAccount(account.name);
+      removeAccountFromConfig(account.accountId);
 
       uiLogger.success(
         commands.testAccount.delete.success.testAccountDeletedFromConfig(
@@ -134,7 +133,7 @@ async function deleteTestAccountFromConfig(
       );
 
       if (testAccountId === defaultAccountId) {
-        updateDefaultAccount(parentAccountName);
+        setConfigAccountAsDefault(parentAccountName);
         uiLogger.info(
           commands.testAccount.delete.info.replaceDefaultAccount(
             testAccountId,
@@ -153,14 +152,17 @@ async function deleteTestAccountFromConfig(
 
 async function validateTestAccountConfigs(
   testAccountId: number | null
-): Promise<{ testAccountConfig: CLIAccount; parentAccountName: string }> {
+): Promise<{
+  testAccountConfig: HubSpotConfigAccount;
+  parentAccountName: string;
+}> {
   if (!testAccountId) {
     uiLogger.error(
       commands.testAccount.delete.errors.testAccountNotFound(testAccountId)
     );
     process.exit(EXIT_CODES.ERROR);
   }
-  const testAccountConfig = getAccountConfig(testAccountId);
+  const testAccountConfig = getConfigAccountById(testAccountId);
 
   if (!testAccountConfig) {
     uiLogger.error(
@@ -169,7 +171,7 @@ async function validateTestAccountConfigs(
     process.exit(EXIT_CODES.ERROR);
   }
 
-  const parentAccountConfig = getAccountConfig(
+  const parentAccountConfig = getConfigAccountById(
     testAccountConfig.parentAccountId!
   );
 
@@ -195,7 +197,8 @@ async function handler(
 
   // See if the account exists
   if (testAccount) {
-    const accountId = getAccountId(testAccount);
+    const account = getConfigAccountIfExists(testAccount);
+    const accountId = account?.accountId || null;
     await validateTestAccountConfigs(accountId);
 
     if (accountId) {

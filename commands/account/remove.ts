@@ -1,15 +1,17 @@
 import fs from 'fs';
 import { Argv, ArgumentsCamelCase } from 'yargs';
 import {
-  loadConfig,
-  getConfigPath,
-  deleteAccount,
-  getConfigDefaultAccount,
-  getAccountId,
-  updateDefaultAccount,
-  getCWDAccountOverride,
-  getDefaultAccountOverrideFilePath,
+  getConfigFilePath,
+  removeAccountFromConfig,
+  getConfigDefaultAccountIfExists,
+  getConfigAccountIfExists,
+  getConfigAccountById,
+  setConfigAccountAsDefault,
 } from '@hubspot/local-dev-lib/config';
+import {
+  getDefaultAccountOverrideAccountId,
+  getDefaultAccountOverrideFilePath,
+} from '@hubspot/local-dev-lib/config/defaultAccountOverride';
 import { trackCommandUsage } from '../../lib/usageTracking.js';
 import { promptUser } from '../../lib/prompts/promptUtils.js';
 import { logError } from '../../lib/errorHandlers/index.js';
@@ -34,45 +36,47 @@ type AccountRemoveArgs = CommonArgs &
 async function handler(
   args: ArgumentsCamelCase<AccountRemoveArgs>
 ): Promise<void> {
-  const { account } = args;
-  let accountToRemove = account;
+  const { account: accountFlag } = args;
 
-  if (accountToRemove && !getAccountId(accountToRemove)) {
+  let accountToRemoveConfig = accountFlag
+    ? getConfigAccountIfExists(accountFlag)
+    : undefined;
+
+  let accountToRemoveId = accountToRemoveConfig?.accountId;
+
+  if (accountFlag && !accountToRemoveConfig) {
     uiLogger.error(
       commands.account.subcommands.remove.errors.accountNotFound(
-        accountToRemove,
-        getConfigPath()!
+        accountFlag,
+        getConfigFilePath()
       )
     );
   }
 
-  if (!accountToRemove || !getAccountId(accountToRemove)) {
-    accountToRemove = await selectAccountFromConfig(
+  if (!accountToRemoveId) {
+    accountToRemoveId = await selectAccountFromConfig(
       commands.account.subcommands.remove.prompts.selectAccountToRemove
     );
   }
 
-  trackCommandUsage(
-    'accounts-remove',
-    undefined,
-    getAccountId(accountToRemove)!
-  );
+  accountToRemoveConfig = getConfigAccountById(accountToRemoveId);
+  trackCommandUsage('accounts-remove', undefined, accountToRemoveId);
 
-  const currentDefaultAccount = getConfigDefaultAccount();
+  const currentDefaultAccount = getConfigDefaultAccountIfExists();
 
-  const accountOverride = getCWDAccountOverride();
+  const accountOverride = getDefaultAccountOverrideAccountId();
   const overrideFilePath = getDefaultAccountOverrideFilePath();
   if (
     overrideFilePath &&
     accountOverride &&
-    accountOverride === accountToRemove
+    accountOverride === accountToRemoveConfig?.accountId
   ) {
     const { deleteOverrideFile } = await promptUser({
       type: 'confirm',
       name: 'deleteOverrideFile',
       message: commands.account.subcommands.remove.prompts.deleteOverrideFile(
         overrideFilePath,
-        accountToRemove
+        accountToRemoveConfig.name
       ),
     });
     try {
@@ -84,26 +88,25 @@ async function handler(
     }
   }
 
-  await deleteAccount(accountToRemove);
+  if (accountToRemoveConfig) {
+    removeAccountFromConfig(accountToRemoveConfig.accountId);
+  }
   uiLogger.success(
-    commands.account.subcommands.remove.success.accountRemoved(accountToRemove)
+    commands.account.subcommands.remove.success.accountRemoved(
+      accountToRemoveConfig.name
+    )
   );
 
-  // Get updated version of the config
-  loadConfig(getConfigPath()!);
-
-  const accountToRemoveId = getAccountId(accountToRemove);
-  let defaultAccountId;
-  if (currentDefaultAccount) {
-    defaultAccountId = getAccountId(currentDefaultAccount);
-  }
-  if (accountToRemoveId === defaultAccountId) {
+  if (
+    currentDefaultAccount &&
+    accountToRemoveConfig?.accountId === currentDefaultAccount.accountId
+  ) {
     uiLogger.log('');
     uiLogger.log(
       commands.account.subcommands.remove.logs.replaceDefaultAccount
     );
     const newDefaultAccount = await selectAccountFromConfig();
-    updateDefaultAccount(newDefaultAccount);
+    setConfigAccountAsDefault(newDefaultAccount);
   }
 }
 

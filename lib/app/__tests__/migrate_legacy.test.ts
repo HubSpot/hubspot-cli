@@ -1,5 +1,5 @@
 import { fetchPublicAppMetadata as _fetchPublicAppMetadata } from '@hubspot/local-dev-lib/api/appsDev';
-import { CLIAccount } from '@hubspot/local-dev-lib/types/Accounts';
+import { HubSpotConfigAccount } from '@hubspot/local-dev-lib/types/Accounts';
 import {
   downloadProject as _downloadProject,
   migrateApp as _migrateNonProjectApp_v2023_2,
@@ -18,6 +18,7 @@ import { ensureProjectExists as _ensureProjectExists } from '../../projects/ensu
 import { poll as _poll } from '../../polling.js';
 import { migrateApp2023_2 } from '../migrate_legacy.js';
 import { MigrateAppArgs } from '../migrate.js';
+import { getConfigAccountById } from '@hubspot/local-dev-lib/config';
 import { MockedFunction } from 'vitest';
 
 // Mock all external dependencies
@@ -37,6 +38,7 @@ vi.mock('../../usageTracking');
 vi.mock('../../ui/SpinniesManager');
 vi.mock('../../process');
 vi.mock('../../polling');
+vi.mock('@hubspot/local-dev-lib/config');
 
 const isAppDeveloperAccount = _isAppDeveloperAccount as MockedFunction<
   typeof _isAppDeveloperAccount
@@ -85,17 +87,28 @@ describe('migrateApp2023_2', () => {
     platformVersion: '2023.2',
     unstable: false,
   };
-  const mockAccountConfig: CLIAccount = {
+  const mockAccountConfig = {
     accountId: 123,
     name: 'Test Account',
     env: 'prod',
-  };
+  } as HubSpotConfigAccount;
   const appId = 12345;
   const projectName = 'test-project';
 
   beforeEach(() => {
     // @ts-expect-error function mismatch
     vi.spyOn(process, 'exit').mockImplementation(() => {});
+
+    (
+      getConfigAccountById as MockedFunction<typeof getConfigAccountById>
+    ).mockReturnValue({
+      accountId: mockDerivedAccountId,
+      name: 'Test Account',
+      authType: 'personalaccesskey',
+      personalAccessKey: 'test-key',
+      env: 'prod',
+    } as HubSpotConfigAccount);
+
     selectPublicAppForMigrationPrompt.mockResolvedValue({
       appId,
     });

@@ -13,6 +13,7 @@ import migrateApp from '../project/migrateApp.js';
 import migrate from '../project/migrate.js';
 import cloneApp from '../project/cloneApp.js';
 import installDeps from '../project/installDeps.js';
+import lint from '../project/lint.js';
 import updateDeps from '../project/updateDeps.js';
 import validate from '../project/validate.js';
 import profileCommands from '../project/profile.js';
@@ -39,6 +40,7 @@ vi.mock('../project/migrate', () => ({
   default: {},
 }));
 vi.mock('../project/installDeps');
+vi.mock('../project/lint');
 vi.mock('../project/profile');
 vi.mock('../../lib/commonOpts');
 
@@ -78,6 +80,7 @@ describe('commands/project', () => {
       migrate,
       cloneApp,
       installDeps,
+      lint,
       updateDeps,
       profileCommands,
       validate,

@@ -1,9 +1,9 @@
 import { HttpStatusCode } from 'axios';
 import yargs, { Argv, ArgumentsCamelCase } from 'yargs';
-import chalk from 'chalk';
 import * as configUtils from '@hubspot/local-dev-lib/config';
 import { Project } from '@hubspot/local-dev-lib/types/Project';
 import * as projectApiUtils from '@hubspot/local-dev-lib/api/projects';
+import { HubSpotConfigAccount } from '@hubspot/local-dev-lib/types/Accounts';
 import * as ui from '../../../lib/ui/index.js';
 import {
   addAccountOptions,
@@ -31,6 +31,7 @@ const exampleProject = loadJson<Project>(
 );
 import projectDeployCommand, { ProjectDeployArgs } from '../deploy.js';
 import { uiLogger } from '../../../lib/ui/logger.js';
+import chalk from 'chalk';
 
 vi.mock('@hubspot/local-dev-lib/api/projects');
 vi.mock('@hubspot/local-dev-lib/config');
@@ -54,8 +55,8 @@ const getProjectConfigSpy = vi.spyOn(projectUtils, 'getProjectConfig');
 const projectNamePromptSpy = vi.spyOn(projectNamePrompt, 'projectNamePrompt');
 const getProjectDetailUrlSpy = vi.spyOn(projectUrlUtils, 'getProjectDetailUrl');
 const fetchProjectSpy = vi.spyOn(projectApiUtils, 'fetchProject');
-const deployProjectSpy = vi.spyOn(projectApiUtils, 'deployProject');
-const getAccountConfigSpy = vi.spyOn(configUtils, 'getAccountConfig');
+const deployProjectV1Spy = vi.spyOn(projectApiUtils, 'deployProjectV1');
+const getConfigAccountByIdSpy = vi.spyOn(configUtils, 'getConfigAccountById');
 const promptUserSpy = vi.spyOn(promptUtils, 'promptUser');
 const processExitSpy = vi.spyOn(process, 'exit');
 
@@ -170,11 +171,18 @@ describe('commands/project/deploy', () => {
         projectName: projectNameFromPrompt,
       });
       getProjectDetailUrlSpy.mockReturnValue(projectDetailUrl);
-      getAccountConfigSpy.mockReturnValue({ accountType, env: 'qa' });
+      getConfigAccountByIdSpy.mockReturnValue({
+        accountId: 123,
+        name: 'SuperCoolTestAccount',
+        accountType,
+        env: 'qa',
+      } as HubSpotConfigAccount);
       fetchProjectSpy.mockReturnValue(
         mockHubSpotHttpResponse<Project>(exampleProject)
       );
-      deployProjectSpy.mockReturnValue(mockHubSpotHttpResponse(deployDetails));
+      deployProjectV1Spy.mockReturnValue(
+        mockHubSpotHttpResponse(deployDetails)
+      );
 
       // Spy on process.exit so our tests don't close when it's called
       // @ts-expect-error Doesn't match the actual signature because then the linter complains about unused variables
@@ -183,8 +191,10 @@ describe('commands/project/deploy', () => {
 
     it('should load the account config for the correct account id', async () => {
       await projectDeployCommand.handler(args);
-      expect(getAccountConfigSpy).toHaveBeenCalledTimes(1);
-      expect(getAccountConfigSpy).toHaveBeenCalledWith(args.derivedAccountId);
+      expect(getConfigAccountByIdSpy).toHaveBeenCalledTimes(1);
+      expect(getConfigAccountByIdSpy).toHaveBeenCalledWith(
+        args.derivedAccountId
+      );
     });
 
     it('should track the command usage', async () => {
@@ -318,19 +328,18 @@ describe('commands/project/deploy', () => {
 
     it('should deploy the project', async () => {
       await projectDeployCommand.handler(args);
-      expect(deployProjectSpy).toHaveBeenCalledTimes(1);
-      expect(deployProjectSpy).toHaveBeenCalledWith(
+      expect(deployProjectV1Spy).toHaveBeenCalledTimes(1);
+      expect(deployProjectV1Spy).toHaveBeenCalledWith(
         args.derivedAccountId,
         projectNameFromPrompt,
         args.buildId,
-        undefined,
         undefined
       );
     });
 
     it('should log an error and exit when the deploy fails', async () => {
       // @ts-expect-error Testing an edge case where the response is empty
-      deployProjectSpy.mockResolvedValue({});
+      deployProjectV1Spy.mockResolvedValue({});
 
       await projectDeployCommand.handler(args);
       expect(uiLogger.error).toHaveBeenCalledTimes(1);
@@ -403,7 +412,9 @@ describe('commands/project/deploy', () => {
 
       expect(uiLogger.error).toHaveBeenCalledTimes(1);
       expect(uiLogger.error).toHaveBeenCalledWith(
-        `The request for 'project deploy' in account ${args.derivedAccountId} failed due to a client error.`
+        expect.stringContaining(
+          `The request for 'project deploy' in account ${args.derivedAccountId} failed due to a client error.`
+        )
       );
       expect(processExitSpy).toHaveBeenCalledTimes(1);
       expect(processExitSpy).toHaveBeenCalledWith(EXIT_CODES.ERROR);

@@ -11,11 +11,11 @@ import {
 } from '@hubspot/local-dev-lib/types/Accounts';
 import { Project } from '@hubspot/local-dev-lib/types/Project';
 import {
-  getAccountId,
-  getDefaultAccountOverrideFilePath,
   isConfigFlagEnabled,
+  getConfigFilePath,
+  getConfigDefaultAccountIfExists,
 } from '@hubspot/local-dev-lib/config';
-import { getAccountConfig, getConfigPath } from '@hubspot/local-dev-lib/config';
+import { getDefaultAccountOverrideFilePath } from '@hubspot/local-dev-lib/config/defaultAccountOverride';
 import { getAccessToken } from '@hubspot/local-dev-lib/personalAccessKey';
 import { walk } from '@hubspot/local-dev-lib/fs';
 import util from 'util';
@@ -79,7 +79,7 @@ const configFiles = [
 ];
 
 export class DiagnosticInfoBuilder {
-  accountId: number | null;
+  accountId: number | undefined;
   readonly configSettings: { [key: string]: unknown };
   readonly env?: Environment;
   readonly authType?: AuthType;
@@ -92,15 +92,18 @@ export class DiagnosticInfoBuilder {
   readonly processInfo: NodeJS.Process;
 
   constructor(processInfo: NodeJS.Process) {
-    this.accountId = getAccountId();
-    const accountConfig = getAccountConfig(this.accountId!);
+    const accountConfig = getConfigDefaultAccountIfExists();
+    this.accountId = accountConfig?.accountId;
     this.configSettings = {
       httpUseLocalhost: isConfigFlagEnabled('httpUseLocalhost'),
     };
     this.env = accountConfig?.env;
     this.authType = accountConfig?.authType;
     this.accountType = accountConfig?.accountType;
-    this.personalAccessKey = accountConfig?.personalAccessKey;
+    this.personalAccessKey =
+      accountConfig && 'personalAccessKey' in accountConfig
+        ? accountConfig.personalAccessKey
+        : undefined;
     this.processInfo = processInfo;
   }
 
@@ -127,7 +130,7 @@ export class DiagnosticInfoBuilder {
       platform,
       arch,
       path: mainModule?.path,
-      config: getConfigPath(),
+      config: getConfigFilePath(),
       defaultAccountOverrideFile: getDefaultAccountOverrideFilePath(),
       configSettings: this.configSettings,
       versions: {

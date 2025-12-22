@@ -1,18 +1,17 @@
 {
   "name": "@hubspot/cli",
-  "version": "7.10.0",
+  "version": "7.11.1",
   "description": "The official CLI for developing on HubSpot",
   "license": "Apache-2.0",
   "repository": "https://github.com/HubSpot/hubspot-cli",
   "type": "module",
   "dependencies": {
-    "@hubspot/local-dev-lib": "3.21.2",
-    "@hubspot/project-parsing-lib": "0.10.1",
-    "@hubspot/serverless-dev-runtime": "7.0.6",
-    "@hubspot/theme-preview-dev-server": "0.0.10",
-    "@hubspot/ui-extensions-dev-server": "0.10.2",
+    "@hubspot/local-dev-lib": "4.0.3",
+    "@hubspot/project-parsing-lib": "0.10.2",
+    "@hubspot/serverless-dev-runtime": "7.0.7",
+    "@hubspot/theme-preview-dev-server": "0.0.12",
+    "@hubspot/ui-extensions-dev-server": "1.0.1",
     "archiver": "7.0.1",
-    "boxen": "8.0.1",
     "chalk": "5.4.1",
     "chokidar": "3.6.0",
     "cli-cursor": "3.1.0",
@@ -36,7 +35,7 @@
     "yargs-parser": "21.1.1"
   },
   "devDependencies": {
-    "@hubspot/npm-scripts": "0.0.5",
+    "@hubspot/npm-scripts": "0.1.0",
     "@types/archiver": "^6.0.3",
     "@types/cli-progress": "^3.11.6",
     "@types/express": "^5.0.0",
@@ -68,8 +67,8 @@
     "vitest": "^2.1.9"
   },
   "optionalDependencies": {
-    "@hubspot/cms-dev-server": "^1.0.9",
-    "@modelcontextprotocol/sdk": "1.13.3"
+    "@hubspot/cms-dev-server": "^1.2.1",
+    "@modelcontextprotocol/sdk": "1.25.0"
   },
   "scripts": {
     "build": "tsx ./scripts/build.ts",
@@ -85,6 +84,7 @@
     "mcp-local": "yarn tsx ./scripts/mcp-local.ts",
     "prettier:write": "prettier --write './**/*.{ts,js,json}'",
     "release": "yarn tsx ./scripts/release.ts release",
+    "sync-to-public": "yarn tsx ./scripts/sync-to-public.ts repo-sync",
     "view-ui": "yarn build && yarn tsx ./scripts/view-ui.ts",
     "test": "vitest run",
     "test-dev": "vitest",
@@ -92,6 +92,7 @@
     "test-cli-debug": "yarn build && yarn --cwd 'acceptance-tests' test-debug",
     "test-cli-latest": "yarn build && yarn build-docker && docker container run -it --rm --name=hs-cli-container hs-cli-image yarn --cwd 'acceptance-tests' test-latest",
     "test-cli-qa": "yarn build && yarn --cwd 'acceptance-tests' test-qa",
+    "test-cli-qa-debug": "yarn build && yarn --cwd 'acceptance-tests' test-qa-debug",
     "update-ldl": "yarn add --exact @hubspot/local-dev-lib@latest",
     "view-unreleased-changes": "node ./scripts/unreleasedChanges.js"
   },

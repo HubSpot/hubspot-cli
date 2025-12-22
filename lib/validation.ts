@@ -11,10 +11,8 @@ import {
 } from '@hubspot/local-dev-lib/constants/auth';
 import { commaSeparatedValues } from '@hubspot/local-dev-lib/text';
 import {
-  getConfigPath,
-  getAccountConfig,
-  getAccountId,
-  loadConfigFromEnvironment,
+  getConfigFilePath,
+  getConfigAccountById,
 } from '@hubspot/local-dev-lib/config';
 import { getOauthManager } from '@hubspot/local-dev-lib/oauth';
 import { accessTokenForPersonalAccessKey } from '@hubspot/local-dev-lib/personalAccessKey';
@@ -23,6 +21,7 @@ import {
   getCwd,
   getExt,
 } from '@hubspot/local-dev-lib/path';
+import { ENVIRONMENT_VARIABLES } from '@hubspot/local-dev-lib/constants/config';
 
 import { getCmsPublishMode } from './commonOpts.js';
 import { logError } from './errorHandlers/index.js';
@@ -37,7 +36,7 @@ export async function validateAccount(
   }>
 ): Promise<boolean> {
   const { derivedAccountId, userProvidedAccount } = options;
-  const accountId = getAccountId(derivedAccountId);
+  const accountId = derivedAccountId;
 
   if (!accountId) {
     if (userProvidedAccount) {
@@ -50,24 +49,27 @@ export async function validateAccount(
     return false;
   }
 
-  if (userProvidedAccount && loadConfigFromEnvironment()) {
+  if (
+    userProvidedAccount &&
+    process.env[ENVIRONMENT_VARIABLES.USE_ENVIRONMENT_HUBSPOT_CONFIG]
+  ) {
     throw new Error(lib.validation.userProvidedAccount);
   }
 
-  const accountConfig = getAccountConfig(accountId);
+  const accountConfig = getConfigAccountById(accountId);
   if (!accountConfig) {
     uiLogger.error(lib.validation.accountNotConfigured(accountId));
     return false;
   }
 
-  const { authType, auth, apiKey, personalAccessKey } = accountConfig;
+  const { authType } = accountConfig;
 
   if (typeof authType === 'string' && authType !== authType.toLowerCase()) {
     uiLogger.error(
       lib.validation.invalidAuthType(
         authType,
         accountId,
-        getConfigPath() || '',
+        getConfigFilePath(),
         commaSeparatedValues(
           [
             PERSONAL_ACCESS_KEY_AUTH_METHOD,
@@ -80,19 +82,19 @@ export async function validateAccount(
   }
 
   if (authType === 'oauth2') {
-    if (typeof auth !== 'object') {
+    if (typeof accountConfig.auth !== 'object') {
       uiLogger.error(lib.validation.oauth2ConfigMissing(accountId));
       return false;
     }
 
-    const { clientId, clientSecret, tokenInfo } = auth;
+    const { clientId, clientSecret, tokenInfo } = accountConfig.auth;
 
     if (!clientId || !clientSecret || !tokenInfo || !tokenInfo.refreshToken) {
       uiLogger.error(lib.validation.oauth2ConfigIncorrect(accountId));
       return false;
     }
 
-    const oauth = getOauthManager(accountId, accountConfig);
+    const oauth = getOauthManager(accountConfig);
     try {
       let accessToken: string | undefined;
 
@@ -108,7 +110,7 @@ export async function validateAccount(
       return false;
     }
   } else if (authType === 'personalaccesskey') {
-    if (!personalAccessKey) {
+    if (!accountConfig.personalAccessKey) {
       uiLogger.error(lib.validation.personalAccessKeyMissing(accountId));
       return false;
     }
@@ -125,7 +127,7 @@ export async function validateAccount(
       logError(e);
       return false;
     }
-  } else if (!apiKey) {
+  } else if (!accountConfig.apiKey) {
     uiLogger.error(lib.validation.authConfigurationMissing(accountId));
     return false;
   }

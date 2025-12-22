@@ -8,7 +8,7 @@ import {
 
 vi.mock('@hubspot/local-dev-lib/config');
 
-const configFileExistsSpy = vi.spyOn(cliConfig, 'configFileExists');
+const globalConfigFileExistsSpy = vi.spyOn(cliConfig, 'globalConfigFileExists');
 
 const targetCommandMap = {
   init: true,
@@ -78,14 +78,14 @@ describe('lib/middleware/commandTargetingUtils', () => {
     });
 
     it('should return false when the user is trying to migrate the global config', () => {
-      configFileExistsSpy.mockReturnValue(false);
+      globalConfigFileExistsSpy.mockReturnValue(false);
 
       const result = shouldLoadConfigForCommand(['config', 'migrate']);
       expect(result).toBe(false);
     });
 
     it('should return true when the global config file does exist', () => {
-      configFileExistsSpy.mockReturnValue(true);
+      globalConfigFileExistsSpy.mockReturnValue(true);
 
       const result = shouldLoadConfigForCommand(['account', 'use']);
       expect(result).toBe(true);

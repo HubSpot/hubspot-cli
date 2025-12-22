@@ -3,6 +3,7 @@ import {
   getProjectThemeDetails,
   migrateThemes,
 } from '@hubspot/project-parsing-lib';
+import { getConfigAccountById } from '@hubspot/local-dev-lib/config';
 import { MockedFunction } from 'vitest';
 import { confirmPrompt } from '../../prompts/promptUtils.js';
 import {
@@ -20,6 +21,7 @@ import {
   MigrateThemesArgs,
 } from '../migrate.js';
 import { lib } from '../../../lang/en.js';
+import { HubSpotConfigAccount } from '@hubspot/local-dev-lib/types/Accounts';
 
 vi.mock('../../ui/logger.js');
 vi.mock('@hubspot/project-parsing-lib');
@@ -28,6 +30,7 @@ vi.mock('../../projects/config');
 vi.mock('../../projects/ensureProjectExists');
 vi.mock('../../projects/platformVersion');
 vi.mock('../../app/migrate');
+vi.mock('@hubspot/local-dev-lib/config');
 
 const mockedGetProjectThemeDetails = getProjectThemeDetails as MockedFunction<
   typeof getProjectThemeDetails
@@ -48,6 +51,9 @@ const mockedUseV2Api = isV2Project as MockedFunction<typeof isV2Project>;
 const mockedFetchMigrationApps = fetchMigrationApps as MockedFunction<
   typeof fetchMigrationApps
 >;
+const mockedGetConfigAccountById = getConfigAccountById as MockedFunction<
+  typeof getConfigAccountById
+>;
 
 const ACCOUNT_ID = 123;
 const PROJECT_NAME = 'Test Project';
@@ -63,6 +69,19 @@ const createLoadedProjectConfig = (name: string): LoadedProjectConfig =>
 describe('lib/theme/migrate', () => {
   beforeEach(() => {
     mockedUseV2Api.mockReturnValue(false);
+
+    // Mock account config for the test account ID
+    mockedGetConfigAccountById.mockReturnValue({
+      accountId: ACCOUNT_ID,
+      name: 'Test Account',
+      authType: 'personalaccesskey',
+      auth: {
+        tokenInfo: {
+          accessToken: 'test-token',
+        },
+      },
+      env: 'prod',
+    } as HubSpotConfigAccount);
   });
 
   describe('getHasMigratableThemes', () => {

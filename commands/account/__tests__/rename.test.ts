@@ -7,10 +7,12 @@ import accountRenameCommand, { AccountRenameArgs } from '../rename.js';
 import * as config from '@hubspot/local-dev-lib/config';
 import { logError } from '../../../lib/errorHandlers/index.js';
 import { EXIT_CODES } from '../../../lib/enums/exitCodes.js';
+import * as usageTracking from '../../../lib/usageTracking.js';
 
 vi.mock('../../../lib/commonOpts');
 vi.mock('@hubspot/local-dev-lib/config');
 vi.mock('../../../lib/errorHandlers/index.js');
+vi.mock('../../../lib/usageTracking.js');
 
 const positionalSpy = vi
   .spyOn(yargs as Argv, 'positional')
@@ -19,8 +21,9 @@ const exampleSpy = vi
   .spyOn(yargs as Argv, 'example')
   .mockReturnValue(yargs as Argv);
 
-const renameAccountSpy = vi.spyOn(config, 'renameAccount');
+const renameAccountSpy = vi.spyOn(config, 'renameConfigAccount');
 const processExitSpy = vi.spyOn(process, 'exit');
+const trackCommandUsageSpy = vi.spyOn(usageTracking, 'trackCommandUsage');
 
 describe('commands/account/rename', () => {
   const yargsMock = yargs as Argv;
@@ -44,7 +47,7 @@ describe('commands/account/rename', () => {
 
     beforeEach(() => {
       vi.clearAllMocks();
-      renameAccountSpy.mockResolvedValue(undefined);
+      renameAccountSpy.mockReturnValue(undefined);
       processExitSpy.mockImplementation(() => {
         throw new Error('process.exit called');
       });
@@ -58,6 +61,11 @@ describe('commands/account/rename', () => {
       await expect(accountRenameCommand.handler(args)).rejects.toThrow(
         'process.exit called'
       );
+      expect(trackCommandUsageSpy).toHaveBeenCalledWith(
+        'accounts-rename',
+        undefined,
+        undefined
+      );
       expect(renameAccountSpy).toHaveBeenCalledWith(
         'myExistingAccountName',
         'my-new-account-name'
@@ -67,12 +75,19 @@ describe('commands/account/rename', () => {
 
     it('should handle errors when renameAccount throws', async () => {
       const error = new Error('Failed to rename account');
-      renameAccountSpy.mockRejectedValue(error);
+      renameAccountSpy.mockImplementation(() => {
+        throw error;
+      });
 
       await expect(accountRenameCommand.handler(args)).rejects.toThrow(
         'process.exit called'
       );
 
+      expect(trackCommandUsageSpy).toHaveBeenCalledWith(
+        'accounts-rename',
+        undefined,
+        undefined
+      );
       expect(renameAccountSpy).toHaveBeenCalledWith(
         'myExistingAccountName',
         'my-new-account-name'

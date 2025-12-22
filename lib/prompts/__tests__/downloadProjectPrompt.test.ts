@@ -1,4 +1,4 @@
-import { getAccountId } from '@hubspot/local-dev-lib/config';
+import { getConfigAccountIfExists } from '@hubspot/local-dev-lib/config';
 import { fetchProjects } from '@hubspot/local-dev-lib/api/projects';
 import { downloadProjectPrompt } from '../downloadProjectPrompt.js';
 
@@ -11,16 +11,18 @@ vi.mock('@hubspot/local-dev-lib/api/projects', () => ({
   }),
 }));
 vi.mock('@hubspot/local-dev-lib/config', () => ({
-  getAccountId: vi.fn().mockImplementation(() => 123456789),
-  configFileExists: vi.fn().mockImplementation(() => true),
+  getConfigAccountIfExists: vi
+    .fn()
+    .mockImplementation(() => ({ accountId: 123456789 })),
+  globalConfigFileExists: vi.fn().mockReturnValue(true),
 }));
 
 describe('lib/prompts/downloadProjectPrompt', () => {
   it('should honor the account passed as an option', async () => {
     const account = 'Prod';
     await downloadProjectPrompt({ account });
-    expect(getAccountId).toHaveBeenCalledTimes(1);
-    expect(getAccountId).toHaveBeenCalledWith(account);
+    expect(getConfigAccountIfExists).toHaveBeenCalledTimes(1);
+    expect(getConfigAccountIfExists).toHaveBeenCalledWith(account);
   });
 
   it('should fetch the projects for the correct accountId', async () => {

@@ -11,6 +11,7 @@ import {
 import { runCommandInDir } from '../../utils/project.js';
 import { formatTextContents } from '../../utils/content.js';
 import { trackToolUsage } from '../../utils/toolUsageTracking.js';
+import { setupHubSpotConfig } from '../../utils/config.js';
 
 const inputSchema = {
   absoluteProjectPath,
@@ -32,6 +33,7 @@ export class ValidateProjectTool extends Tool<CreateProjectInputSchema> {
     absoluteProjectPath,
     absoluteCurrentWorkingDirectory,
   }: CreateProjectInputSchema): Promise<TextContentResponse> {
+    setupHubSpotConfig(absoluteCurrentWorkingDirectory);
     await trackToolUsage(toolName);
     try {
       const { stdout, stderr } = await runCommandInDir(
@@ -39,14 +41,9 @@ export class ValidateProjectTool extends Tool<CreateProjectInputSchema> {
         'hs project validate'
       );
 
-      return formatTextContents(
-        absoluteCurrentWorkingDirectory,
-        stdout,
-        stderr
-      );
+      return formatTextContents(stdout, stderr);
     } catch (error) {
       return formatTextContents(
-        absoluteCurrentWorkingDirectory,
         error instanceof Error ? error.message : `${error}`
       );
     }

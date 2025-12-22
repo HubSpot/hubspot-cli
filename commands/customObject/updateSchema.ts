@@ -5,8 +5,7 @@ import {
 } from '@hubspot/local-dev-lib/api/customObjects';
 import { uiLogger } from '../../lib/ui/logger.js';
 import { getAbsoluteFilePath } from '@hubspot/local-dev-lib/path';
-import { ENVIRONMENTS } from '@hubspot/local-dev-lib/constants/environments';
-import { getEnv } from '@hubspot/local-dev-lib/config';
+import { getConfigAccountEnvironment } from '@hubspot/local-dev-lib/config';
 import { getHubSpotWebsiteOrigin } from '@hubspot/local-dev-lib/urls';
 
 import { listPrompt } from '../../lib/prompts/promptUtils.js';
@@ -76,7 +75,7 @@ async function handler(
     uiLogger.success(
       commands.customObject.subcommands.updateSchema.success.viewAtUrl(
         `${getHubSpotWebsiteOrigin(
-          getEnv() === 'qa' ? ENVIRONMENTS.QA : ENVIRONMENTS.PROD
+          getConfigAccountEnvironment(derivedAccountId)
         )}/contacts/${derivedAccountId}/objects/${data.objectTypeId}`
       )
     );

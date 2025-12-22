@@ -9,7 +9,7 @@ import {
   SCOPE_GROUPS,
   PERSONAL_ACCESS_KEY_AUTH_METHOD,
 } from '@hubspot/local-dev-lib/constants/auth';
-import { getAccountConfig } from '@hubspot/local-dev-lib/config';
+import { getConfigAccountById } from '@hubspot/local-dev-lib/config';
 import { fetchScopeData } from '@hubspot/local-dev-lib/api/localDevAuth';
 
 import { outputLogs } from './ui/serverlessFunctionLogs.js';
@@ -54,7 +54,7 @@ async function verifyAccessKeyAndUserAccess(
   accountId: number,
   scopeGroup: string
 ): Promise<void> {
-  const accountConfig = getAccountConfig(accountId);
+  const accountConfig = getConfigAccountById(accountId);
 
   if (!accountConfig) {
     return;

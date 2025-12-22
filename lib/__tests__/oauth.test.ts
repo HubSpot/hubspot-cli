@@ -1,13 +1,14 @@
 import express, { Request, Response } from 'express';
 import open from 'open';
 import { OAuth2Manager } from '@hubspot/local-dev-lib/models/OAuth2Manager';
-import { getAccountConfig } from '@hubspot/local-dev-lib/config';
+import { getConfigAccountById } from '@hubspot/local-dev-lib/config';
 import { addOauthToAccountConfig } from '@hubspot/local-dev-lib/oauth';
 import { uiLogger } from '../ui/logger.js';
 import { ENVIRONMENTS } from '@hubspot/local-dev-lib/constants/environments';
 import { DEFAULT_OAUTH_SCOPES } from '@hubspot/local-dev-lib/constants/auth';
 import { authenticateWithOauth } from '../oauth.js';
 import { Mock } from 'vitest';
+import { OAuthConfigAccount } from '@hubspot/local-dev-lib/types/Accounts';
 
 vi.mock('express');
 vi.mock('open');
@@ -18,7 +19,7 @@ vi.mock('../ui/logger.js');
 
 const mockedExpress = express as unknown as Mock;
 const mockedOAuth2Manager = OAuth2Manager as unknown as Mock;
-const mockedGetAccountConfig = getAccountConfig as Mock;
+const mockedGetConfigAccountById = getConfigAccountById as Mock;
 
 describe('lib/oauth', () => {
   const mockExpressReq = {
@@ -27,12 +28,16 @@ describe('lib/oauth', () => {
   const mockExpressResp = { send: vi.fn() } as unknown as Response;
 
   const mockAccountConfig = {
+    name: 'test-account',
     accountId: 123,
-    clientId: 'test-client-id',
-    clientSecret: 'test-client-secret',
-    scopes: ['test-scope'],
+    authType: 'oauth2',
     env: ENVIRONMENTS.PROD,
-  };
+    auth: {
+      clientId: 'test-client-id',
+      clientSecret: 'test-client-secret',
+      scopes: ['test-scope'],
+    },
+  } as OAuthConfigAccount;
 
   beforeEach(() => {
     mockedExpress.mockReturnValue({
@@ -58,7 +63,7 @@ describe('lib/oauth', () => {
       };
 
       mockedOAuth2Manager.mockImplementation(() => mockOAuth2Manager);
-      mockedGetAccountConfig.mockReturnValue({
+      mockedGetConfigAccountById.mockReturnValue({
         env: ENVIRONMENTS.PROD,
       });
 
@@ -80,7 +85,10 @@ describe('lib/oauth', () => {
     it('should handle missing clientId', async () => {
       const invalidConfig = {
         ...mockAccountConfig,
-        clientId: undefined,
+        auth: {
+          ...mockAccountConfig.auth,
+          clientId: undefined,
+        },
       };
 
       mockedOAuth2Manager.mockImplementation(() => ({
@@ -91,6 +99,7 @@ describe('lib/oauth', () => {
         throw new Error('exit');
       });
 
+      // @ts-expect-error Testing invalid config
       await expect(authenticateWithOauth(invalidConfig)).rejects.toThrow(
         'exit'
       );
@@ -102,7 +111,10 @@ describe('lib/oauth', () => {
     it('should use default scopes when none provided', async () => {
       const configWithoutScopes = {
         ...mockAccountConfig,
-        scopes: undefined,
+        auth: {
+          ...mockAccountConfig.auth,
+          scopes: [],
+        },
       };
 
       const mockOAuth2Manager = {

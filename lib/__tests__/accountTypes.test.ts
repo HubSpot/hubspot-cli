@@ -1,4 +1,4 @@
-import { CLIAccount } from '@hubspot/local-dev-lib/types/Accounts';
+import { HubSpotConfigAccount } from '@hubspot/local-dev-lib/types/Accounts';
 import { HUBSPOT_ACCOUNT_TYPES } from '@hubspot/local-dev-lib/constants/config';
 import {
   isStandardAccount,
@@ -9,40 +9,40 @@ import {
   isAppDeveloperAccount,
 } from '../accountTypes.js';
 
-const STANDARD_ACCOUNT: CLIAccount = {
+const STANDARD_ACCOUNT = {
   name: 'standard-account',
   accountId: 123,
   accountType: HUBSPOT_ACCOUNT_TYPES.STANDARD,
   env: 'prod',
-};
+} as HubSpotConfigAccount;
 
-const DEVELOPMENT_SANDBOX_ACCOUNT: CLIAccount = {
+const DEVELOPMENT_SANDBOX_ACCOUNT = {
   name: 'development-sandbox-account',
   accountId: 456,
   accountType: HUBSPOT_ACCOUNT_TYPES.DEVELOPMENT_SANDBOX,
   env: 'prod',
-};
+} as HubSpotConfigAccount;
 
-const STANDARD_SANDBOX_ACCOUNT: CLIAccount = {
+const STANDARD_SANDBOX_ACCOUNT = {
   name: 'sandbox-account',
   accountId: 456,
   accountType: HUBSPOT_ACCOUNT_TYPES.STANDARD_SANDBOX,
   env: 'prod',
-};
+} as HubSpotConfigAccount;
 
-const DEVELOPER_TEST_ACCOUNT: CLIAccount = {
+const DEVELOPER_TEST_ACCOUNT = {
   name: 'developer-test-account',
   accountId: 789,
   accountType: HUBSPOT_ACCOUNT_TYPES.DEVELOPER_TEST,
   env: 'prod',
-};
+} as HubSpotConfigAccount;
 
-const APP_DEVELOPER_ACCOUNT: CLIAccount = {
+const APP_DEVELOPER_ACCOUNT = {
   name: 'app-developer-account',
   accountId: 1011,
   accountType: HUBSPOT_ACCOUNT_TYPES.APP_DEVELOPER,
   env: 'prod',
-};
+} as HubSpotConfigAccount;
 
 describe('lib/accountTypes', () => {
   describe('isStandardAccount()', () => {

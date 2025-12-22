@@ -72,9 +72,7 @@ export async function legacyAddComponent(
       }
     );
 
-    uiLogger.success(
-      commands.project.add.success(projectAddPromptResponse.name)
-    );
+    uiLogger.success(commands.project.add.success(projectConfig.name));
   } catch (error) {
     throw new Error(commands.project.add.error.failedToDownloadComponent);
   }

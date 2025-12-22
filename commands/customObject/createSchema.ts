@@ -1,7 +1,6 @@
 import { Argv, ArgumentsCamelCase } from 'yargs';
 import { uiLogger } from '../../lib/ui/logger.js';
-import { getEnv } from '@hubspot/local-dev-lib/config';
-import { ENVIRONMENTS } from '@hubspot/local-dev-lib/constants/environments';
+import { getConfigAccountEnvironment } from '@hubspot/local-dev-lib/config';
 import { getAbsoluteFilePath } from '@hubspot/local-dev-lib/path';
 import { createObjectSchema } from '@hubspot/local-dev-lib/api/customObjects';
 import { getHubSpotWebsiteOrigin } from '@hubspot/local-dev-lib/urls';
@@ -52,7 +51,7 @@ async function handler(
     uiLogger.success(
       commands.customObject.subcommands.createSchema.success.schemaViewable(
         `${getHubSpotWebsiteOrigin(
-          getEnv() === 'qa' ? ENVIRONMENTS.QA : ENVIRONMENTS.PROD
+          getConfigAccountEnvironment(derivedAccountId)
         )}/contacts/${derivedAccountId}/objects/${data.objectTypeId}`
       )
     );
