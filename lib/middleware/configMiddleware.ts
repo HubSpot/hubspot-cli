@@ -7,6 +7,7 @@ import {
   getConfigDefaultAccountIfExists,
   configFileExists,
 } from '@hubspot/local-dev-lib/config';
+import { ENVIRONMENT_VARIABLES } from '@hubspot/local-dev-lib/constants/config';
 import { getCwd } from '@hubspot/local-dev-lib/path';
 import { validateAccount } from '../validation.js';
 import { EXIT_CODES } from '../enums/exitCodes.js';
@@ -43,7 +44,7 @@ export function handleCustomConfigLocationMiddleware(
 ): void {
   const { useEnv, config } = argv;
   if (useEnv) {
-    process.env.USE_ENVIRONMENT_HUBSPOT_CONFIG = 'true';
+    process.env[ENVIRONMENT_VARIABLES.USE_ENVIRONMENT_HUBSPOT_CONFIG] = 'true';
   } else if (config && typeof config === 'string') {
     const absoluteConfigPath = path.isAbsolute(config)
       ? config
@@ -105,7 +106,10 @@ export async function validateConfigMiddleware(
 
   // We don't run validation for auth because users should be able to run it when
   // no accounts are configured, but we still want to exit if the config file is not found
-  if (!process.env.USE_ENVIRONMENT_HUBSPOT_CONFIG && !configFileExists()) {
+  if (
+    !process.env[ENVIRONMENT_VARIABLES.USE_ENVIRONMENT_HUBSPOT_CONFIG] &&
+    !configFileExists()
+  ) {
     console.error(
       'Config file not found, run hs account auth to configure your account'
     );
