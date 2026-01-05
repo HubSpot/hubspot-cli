@@ -47,6 +47,13 @@ function deprecatedLogsBuilder(yargs: Argv): Argv<LogsArgs> {
             .describe,
         type: 'boolean',
       },
+      'no-spinner': {
+        alias: ['no-animate'],
+        describe:
+          commands.cms.subcommands.function.subcommands.logs.options.noSpinner
+            .describe,
+        type: 'boolean',
+      },
       limit: {
         describe:
           commands.cms.subcommands.function.subcommands.logs.options.limit

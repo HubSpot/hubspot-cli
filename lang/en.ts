@@ -878,6 +878,9 @@ export const commands = {
               follow: {
                 describe: 'follow logs',
               },
+              noSpinner: {
+                describe: 'disable spinner animation when following logs',
+              },
               latest: {
                 describe: 'retrieve most recent log only',
               },
