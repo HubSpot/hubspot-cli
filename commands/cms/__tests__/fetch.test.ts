@@ -61,6 +61,10 @@ describe('commands/cms/fetch', () => {
       });
       expect(optionsSpy).toHaveBeenCalledWith({
         assetVersion: expect.objectContaining({ type: 'number' }),
+        quiet: expect.objectContaining({
+          type: 'boolean',
+          default: false,
+        }),
       });
 
       expect(addConfigOptions).toHaveBeenCalledTimes(1);
