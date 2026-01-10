@@ -34,7 +34,6 @@ export type LogsArgs = CommonArgs &
     compact?: boolean;
     follow?: boolean;
     limit?: number;
-    'no-spinner'?: boolean;
   };
 
 const handleLogsError = (
@@ -55,9 +54,9 @@ const handleLogsError = (
 const endpointLog = async (
   accountId: number,
   functionPath: string,
-  options: ArgumentsCamelCase<LogsArgs>
+  options: LogsArgs
 ): Promise<void> => {
-  const { limit, latest, follow, compact, noSpinner } = options;
+  const { limit, latest, follow, compact } = options;
 
   const requestParams: QueryParams = {
     limit,
@@ -87,14 +86,7 @@ const endpointLog = async (
       }
     };
 
-    await tailLogs(
-      accountId,
-      functionPath,
-      fetchLatest,
-      tailCall,
-      compact,
-      noSpinner
-    );
+    await tailLogs(accountId, functionPath, fetchLatest, tailCall, compact);
   } else if (latest) {
     try {
       const { data } = await getLatestFunctionLog(accountId, functionPath);
@@ -177,13 +169,6 @@ function logsBuilder(yargs: Argv): Argv<LogsArgs> {
         alias: ['f'],
         describe:
           commands.cms.subcommands.function.subcommands.logs.options.follow
-            .describe,
-        type: 'boolean',
-      },
-      'no-spinner': {
-        alias: ['no-animate'],
-        describe:
-          commands.cms.subcommands.function.subcommands.logs.options.noSpinner
             .describe,
         type: 'boolean',
       },
