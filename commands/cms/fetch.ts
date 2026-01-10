@@ -6,6 +6,7 @@ import {
   addOverwriteOptions,
   getCmsPublishMode,
 } from '../../lib/commonOpts.js';
+import { LOG_LEVEL, setLogLevel } from '@hubspot/local-dev-lib/logger';
 import { resolveLocalPath } from '../../lib/filesystem.js';
 import { validateCmsPublishMode } from '../../lib/validation.js';
 import { trackCommandUsage } from '../../lib/usageTracking.js';
@@ -30,6 +31,7 @@ export type FetchCommandArgs = {
   staging?: boolean;
   assetVersion?: number;
   overwrite?: boolean;
+  quiet?: boolean;
 } & ConfigArgs &
   AccountArgs &
   EnvironmentArgs &
@@ -54,6 +56,14 @@ async function handler(
 
   const { derivedAccountId } = options;
   const cmsPublishMode = getCmsPublishMode(options);
+  const shouldQuiet = options.quiet;
+  const shouldDebug =
+    Boolean((options as { debug?: boolean }).debug) ||
+    Boolean((options as { networkDebug?: boolean }).networkDebug);
+  const logLevelToRestore = shouldDebug ? LOG_LEVEL.DEBUG : LOG_LEVEL.LOG;
+  if (shouldQuiet) {
+    setLogLevel(LOG_LEVEL.ERROR);
+  }
 
   trackCommandUsage('fetch', { mode: cmsPublishMode }, derivedAccountId);
 
@@ -72,6 +82,15 @@ async function handler(
         overwrite,
       }
     );
+    if (shouldQuiet) {
+      setLogLevel(logLevelToRestore);
+      uiLogger.success(
+        commands.cms.subcommands.fetch.success.completed(
+          src,
+          resolveLocalPath(dest)
+        )
+      );
+    }
   } catch (err) {
     logError(err);
     process.exit(EXIT_CODES.ERROR);
@@ -102,6 +121,11 @@ const fetchBuilder = (yargs: Argv): Argv<FetchCommandArgs> => {
     assetVersion: {
       type: 'number',
       describe: commands.cms.subcommands.fetch.options.assetVersion.describe,
+    },
+    quiet: {
+      type: 'boolean',
+      describe: commands.cms.subcommands.fetch.options.quiet.describe,
+      default: false,
     },
   });
 

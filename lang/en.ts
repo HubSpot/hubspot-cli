@@ -718,12 +718,19 @@ export const commands = {
         errors: {
           sourceRequired: 'A source to fetch is required.',
         },
+        success: {
+          completed: (src: string, dest: string) =>
+            `Completed fetch of "${src}" to "${dest}" from the Design Manager`,
+        },
         options: {
           staging: {
             describe: 'Retrieve staged changes for project',
           },
           assetVersion: {
             describe: 'Specify what version of a default asset to fetch',
+          },
+          quiet: {
+            describe: 'reduce fetch output to errors only',
           },
         },
         positionals: {
@@ -877,9 +884,6 @@ export const commands = {
               },
               follow: {
                 describe: 'follow logs',
-              },
-              noSpinner: {
-                describe: 'disable spinner animation when following logs',
               },
               latest: {
                 describe: 'retrieve most recent log only',

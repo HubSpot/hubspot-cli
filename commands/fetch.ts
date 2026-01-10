@@ -47,6 +47,11 @@ function deprecatedCmsFetchBuilder(yargs: Argv): Argv<FetchCommandArgs> {
       type: 'number',
       describe: commands.cms.subcommands.fetch.options.assetVersion.describe,
     },
+    quiet: {
+      type: 'boolean',
+      describe: commands.cms.subcommands.fetch.options.quiet.describe,
+      default: false,
+    },
   });
 
   addCmsPublishModeOptions(yargs, { read: true });
