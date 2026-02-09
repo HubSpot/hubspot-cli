@@ -1,4 +1,4 @@
-import { Environment } from '@hubspot/local-dev-lib/types/Config';
+import { Environment } from '@hubspot/local-dev-lib/types/Accounts';
 import { logger } from '@hubspot/local-dev-lib/logger';
 import { DevModeInterface as UIEDevModeInterface } from '@hubspot/ui-extensions-dev-server';
 import {

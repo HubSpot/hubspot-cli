@@ -12,7 +12,6 @@ import { Server } from 'http';
 
 import { handleExit } from './process.js';
 import { lib } from '../lang/en.js';
-import { EXIT_CODES } from './enums/exitCodes.js';
 
 const PORT = 3000;
 const redirectUri = `http://localhost:${PORT}/oauth-callback`;
@@ -24,8 +23,7 @@ function buildAuthUrl(oauthManager: OAuth2Manager): string {
   const scopes = auth.scopes.length > 0 ? auth.scopes : DEFAULT_OAUTH_SCOPES;
 
   if (!auth.clientId) {
-    uiLogger.error(lib.oauth.missingClientId);
-    process.exit(EXIT_CODES.ERROR);
+    throw new Error(lib.oauth.missingClientId);
   }
 
   return (

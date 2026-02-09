@@ -10,12 +10,11 @@ import { commands } from '../../lang/en.js';
 import { uiLogger } from '../../lib/ui/logger.js';
 import { ApiErrorContext, logError } from '../../lib/errorHandlers/index.js';
 import { EXIT_CODES } from '../../lib/enums/exitCodes.js';
-import { migrateApp2025_2, MigrateAppArgs } from '../../lib/app/migrate.js';
-import { migrateApp2023_2 } from '../../lib/app/migrate_legacy.js';
+import { migrateApp, MigrateAppArgs } from '../../lib/app/migrate.js';
 import { getIsInProject } from '../../lib/projects/config.js';
 import { makeYargsBuilder } from '../../lib/yargsUtils.js';
 
-const { v2023_2, v2025_2 } = PLATFORM_VERSIONS;
+const { v2025_2 } = PLATFORM_VERSIONS;
 
 const command = 'migrate';
 const describe = commands.project.migrateApp.describe;
@@ -40,22 +39,18 @@ export function handlerGenerator(
     uiLogger.log('');
 
     try {
-      if (platformVersion === v2025_2 || unstable) {
-        if (getIsInProject()) {
-          uiLogger.error(
-            commands.project.migrateApp.errors.notAllowedWithinProject
-          );
-          return process.exit(EXIT_CODES.ERROR);
-        }
-
-        args.platformVersion = unstable
-          ? PLATFORM_VERSIONS.unstable
-          : platformVersion;
-
-        await migrateApp2025_2(derivedAccountId, args);
-      } else {
-        await migrateApp2023_2(derivedAccountId, args, accountConfig);
+      if (getIsInProject()) {
+        uiLogger.error(
+          commands.project.migrateApp.errors.notAllowedWithinProject
+        );
+        return process.exit(EXIT_CODES.ERROR);
       }
+
+      args.platformVersion = unstable
+        ? PLATFORM_VERSIONS.unstable
+        : platformVersion;
+
+      await migrateApp(derivedAccountId, args);
     } catch (error) {
       if (
         error &&
@@ -102,7 +97,7 @@ function appMigrateBuilder(yargs: Argv): Argv<MigrateAppArgs> {
     },
     'platform-version': {
       type: 'string',
-      choices: [v2023_2, v2025_2],
+      choices: [v2025_2],
       default: v2025_2,
     },
     unstable: {

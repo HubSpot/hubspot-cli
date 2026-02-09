@@ -13,7 +13,6 @@ import { ComponentTypes, ProjectConfig } from '../../../types/Projects.js';
 import { commands } from '../../../lang/en.js';
 import { uiLogger } from '../../../lib/ui/logger.js';
 import { EXIT_CODES } from '../../../lib/enums/exitCodes.js';
-import SpinniesManager from '../../../lib/ui/SpinniesManager.js';
 import LocalDevManager_DEPRECATED from '../../../lib/projects/localDev/LocalDevManager_DEPRECATED.js';
 import {
   confirmDefaultAccountIsTarget,
@@ -188,8 +187,6 @@ export async function deprecatedProjectDevFlow({
 
   let deployedBuild;
   let isGithubLinked = false;
-
-  SpinniesManager.init();
 
   if (projectExists && project) {
     deployedBuild = project.deployedBuild;

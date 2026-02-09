@@ -5,7 +5,7 @@ import {
   getAllHsProfiles,
   getHsProfileFilename,
   loadHsProfileFile,
-} from '@hubspot/project-parsing-lib';
+} from '@hubspot/project-parsing-lib/profiles';
 import {
   fetchProject,
   deleteProject,

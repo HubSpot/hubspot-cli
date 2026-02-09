@@ -11,7 +11,9 @@ import { getCwd } from '@hubspot/local-dev-lib/path';
 import { CommonArgs, YargsCommandModule } from '../types/Yargs.js';
 import { makeYargsBuilder } from '../lib/yargsUtils.js';
 import { uiLogger } from '../lib/ui/logger.js';
+import { removeAnsiCodes } from '../lib/ui/removeAnsiCodes.js';
 import { commands } from '../lang/en.js';
+import { getErrorMessage } from '../lib/errorHandlers/index.js';
 
 export type DoctorArgs = CommonArgs & {
   outputDir?: string;
@@ -60,13 +62,19 @@ const handler = async (args: ArgumentsCamelCase<DoctorArgs>) => {
   );
 
   try {
-    fs.writeFileSync(outputFile, JSON.stringify(output, null, 4));
+    const cleanedOutput = {
+      ...output,
+      diagnosis: output?.diagnosis
+        ? removeAnsiCodes(output.diagnosis)
+        : undefined,
+    };
+    fs.writeFileSync(outputFile, JSON.stringify(cleanedOutput, null, 4));
     uiLogger.success(commands.doctor.outputWritten(outputFile));
   } catch (e) {
     uiLogger.error(
       commands.doctor.errors.unableToWriteOutputFile(
         outputFile,
-        e instanceof Error ? e.message : (e as string)
+        getErrorMessage(e)
       )
     );
     return process.exit(EXIT_CODES.ERROR);

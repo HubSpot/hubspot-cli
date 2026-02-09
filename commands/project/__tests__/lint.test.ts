@@ -10,13 +10,11 @@ import * as linting from '../../../lib/projects/uieLinting.js';
 import { REQUIRED_PACKAGES_AND_MIN_VERSIONS } from '../../../lib/projects/uieLinting.js';
 import projectLintCommand, { ProjectLintArgs } from '../lint.js';
 
-vi.mock('../../../lib/ui/logger.js');
 vi.mock('../../../lib/ui/SpinniesManager.js');
 vi.mock('../../../lib/projects/config');
 vi.mock('../../../lib/dependencyManagement');
 vi.mock('../../../lib/prompts/promptUtils');
 vi.mock('../../../lib/projects/uieLinting');
-vi.mock('../../../lib/usageTracking');
 vi.mock('../../../lib/commonOpts');
 
 const exampleSpy = vi.spyOn(yargs as Argv, 'example');
@@ -85,10 +83,6 @@ describe('commands/project/lint', () => {
       // Default to linting succeeding unless overridden
       lintPackagesSpy.mockResolvedValue({ success: true, results: [] });
       displayLintResultsSpy.mockImplementation(() => {});
-    });
-
-    afterEach(() => {
-      vi.clearAllMocks();
     });
 
     it('should track the command usage', async () => {

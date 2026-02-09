@@ -9,6 +9,7 @@ import {
 } from '../dependencyManagement.js';
 import { commands } from '../../lang/en.js';
 import { uiLogger } from '../ui/logger.js';
+import { safeGetPackageJsonCached } from '../npm/packageJson.js';
 
 export const REQUIRED_PACKAGES_AND_MIN_VERSIONS = {
   eslint: '9.0.0',
@@ -64,18 +65,16 @@ function getPackageVersionFromPackageJson(
   packageName: string
 ): string | null {
   const packageJsonPath = path.join(directory, 'package.json');
-  try {
-    const packageJsonContent = fs.readFileSync(packageJsonPath, 'utf-8');
-    const packageJson = JSON.parse(packageJsonContent);
-
-    const version =
-      packageJson.dependencies?.[packageName] ||
-      packageJson.devDependencies?.[packageName];
-
-    return version || null;
-  } catch (error) {
+  const packageJson = safeGetPackageJsonCached(packageJsonPath);
+  if (!packageJson) {
     return null;
   }
+
+  const version =
+    packageJson.dependencies?.[packageName] ||
+    packageJson.devDependencies?.[packageName];
+
+  return version || null;
 }
 
 function isPackageVersionValid(

@@ -9,6 +9,7 @@ import { shouldSuppressError } from './suppressError.js';
 import { lib } from '../../lang/en.js';
 import util from 'util';
 import { isProjectValidationError } from '../errors/ProjectValidationError.js';
+import { HubSpotHttpError } from '@hubspot/local-dev-lib/models/HubSpotHttpError';
 
 export function logError(error: unknown, context?: ApiErrorContext): void {
   debugError(error, context);
@@ -49,15 +50,27 @@ export function logError(error: unknown, context?: ApiErrorContext): void {
     uiLogger.error(lib.errorHandlers.index.unknownErrorOccurred);
   }
 
+  let timeoutError: HubSpotHttpError | null = null;
+
   if (isHubSpotHttpError(error) && error.code === 'ETIMEDOUT') {
+    timeoutError = error;
+  } else if (
+    error instanceof Error &&
+    isHubSpotHttpError(error.cause) &&
+    error.cause.code === 'ETIMEDOUT'
+  ) {
+    timeoutError = error.cause;
+  }
+
+  if (timeoutError) {
     const config = getConfig();
     const defaultTimeout = config?.httpTimeout;
 
     // Timeout was caused by the default timeout
-    if (error.timeout && defaultTimeout === error.timeout) {
+    if (timeoutError.timeout && defaultTimeout === timeoutError.timeout) {
       uiLogger.error(
         lib.errorHandlers.index.configTimeoutErrorOccurred(
-          error.timeout,
+          timeoutError.timeout,
           'hs config set'
         )
       );
@@ -126,4 +139,8 @@ export function isErrorWithMessageOrReason(
     error !== null &&
     ('message' in error || 'reason' in error)
   );
+}
+
+export function getErrorMessage(error: unknown): string {
+  return error instanceof Error ? error.message : `${error}`;
 }

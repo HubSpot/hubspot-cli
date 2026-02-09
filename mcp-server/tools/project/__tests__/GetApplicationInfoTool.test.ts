@@ -9,13 +9,19 @@ import { isHubSpotHttpError } from '@hubspot/local-dev-lib/errors/index';
 import { MockedFunction, Mocked } from 'vitest';
 import { HubSpotConfigAccount } from '@hubspot/local-dev-lib/types/Accounts';
 import { mcpFeedbackRequest } from '../../../utils/feedbackTracking.js';
+import { trackToolUsage } from '../../../utils/toolUsageTracking.js';
 
 vi.mock('@modelcontextprotocol/sdk/server/mcp.js');
-vi.mock('../../utils/toolUsageTracking');
+vi.mock('../../../utils/toolUsageTracking');
 vi.mock('@hubspot/local-dev-lib/http');
 vi.mock('@hubspot/local-dev-lib/errors/index');
 vi.mock('@hubspot/local-dev-lib/config');
 vi.mock('../../../utils/feedbackTracking');
+vi.mock('../../../utils/config');
+
+const mockTrackToolUsage = trackToolUsage as MockedFunction<
+  typeof trackToolUsage
+>;
 
 const mockMcpFeedbackRequest = mcpFeedbackRequest as MockedFunction<
   typeof mcpFeedbackRequest
@@ -36,8 +42,6 @@ describe('mcp-server/tools/project/GetApplicationInfoTool', () => {
   let mockRegisteredTool: RegisteredTool;
 
   beforeEach(() => {
-    vi.clearAllMocks();
-
     // @ts-expect-error Not mocking the whole thing
     mockMcpServer = {
       registerTool: vi.fn(),
@@ -46,6 +50,7 @@ describe('mcp-server/tools/project/GetApplicationInfoTool', () => {
     mockRegisteredTool = {} as RegisteredTool;
     mockMcpServer.registerTool.mockReturnValue(mockRegisteredTool);
     mockMcpFeedbackRequest.mockResolvedValue('');
+    mockTrackToolUsage.mockResolvedValue(undefined);
 
     tool = new GetApplicationInfoTool(mockMcpServer);
   });
@@ -55,11 +60,11 @@ describe('mcp-server/tools/project/GetApplicationInfoTool', () => {
       const result = tool.register();
 
       expect(mockMcpServer.registerTool).toHaveBeenCalledWith(
-        'get-applications-info',
+        'get-apps-info',
         expect.objectContaining({
-          title: 'Get Applications Information',
+          title: 'Get Apps Information',
           description: expect.stringContaining(
-            'Retrieves a list of all HubSpot applications available in the current account'
+            'Retrieves a list of all HubSpot apps available in the current account'
           ),
           inputSchema: expect.any(Object),
         }),

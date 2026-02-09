@@ -3,11 +3,14 @@ import { getCwd, sanitizeFileName } from '@hubspot/local-dev-lib/path';
 import { extractZipArchive } from '@hubspot/local-dev-lib/archive';
 import { ArgumentsCamelCase } from 'yargs';
 import chalk from 'chalk';
-import { validateUid } from '@hubspot/project-parsing-lib';
+import { validateUid } from '@hubspot/project-parsing-lib/uid';
 import { UNMIGRATABLE_REASONS } from '@hubspot/local-dev-lib/constants/projects';
-import { mapToUserFacingType } from '@hubspot/project-parsing-lib/src/lib/transform.js';
+import { mapToUserFacingType } from '@hubspot/project-parsing-lib/transform';
 import { MIGRATION_STATUS } from '@hubspot/local-dev-lib/types/Migration';
-import { downloadProject } from '@hubspot/local-dev-lib/api/projects';
+import {
+  downloadProject,
+  fetchProjectComponentsMetadata,
+} from '@hubspot/local-dev-lib/api/projects';
 import { Separator } from '@inquirer/prompts';
 import {
   confirmPrompt,
@@ -51,6 +54,7 @@ import {
   getProjectDetailUrl,
 } from '../projects/urls.js';
 import { uiLogger } from '../ui/logger.js';
+import { TopLevelComponents } from '@hubspot/local-dev-lib/types/ComponentStructure';
 
 export type MigrateAppArgs = CommonArgs &
   AccountArgs &
@@ -121,21 +125,28 @@ export function buildErrorMessageFromMigrationStatus(
 export async function fetchMigrationApps(
   derivedAccountId: number,
   platformVersion: string,
-  projectConfig?: LoadedProjectConfig
+  options: {
+    appId?: MigrateAppArgs['appId'];
+    projectConfig?: LoadedProjectConfig;
+  }
 ): Promise<{
   migratableApps: MigratableApp[];
   unmigratableApps: UnmigratableApp[];
 }> {
   const {
     data: { migratableApps, unmigratableApps },
-  } = await listAppsForMigration(derivedAccountId, platformVersion);
+  } = await listAppsForMigration(
+    derivedAccountId,
+    platformVersion,
+    options.appId
+  );
 
   const filteredMigratableApps = migratableApps.filter(
-    generateFilterAppsByProjectNameFunction(projectConfig)
+    generateFilterAppsByProjectNameFunction(options.projectConfig)
   );
 
   const filteredUnmigratableApps = unmigratableApps.filter(
-    generateFilterAppsByProjectNameFunction(projectConfig)
+    generateFilterAppsByProjectNameFunction(options.projectConfig)
   );
 
   return {
@@ -307,7 +318,7 @@ export async function handleMigrationSetup(
   const { migratableApps, unmigratableApps } = await fetchMigrationApps(
     derivedAccountId,
     options.platformVersion,
-    projectConfig
+    { appId, projectConfig }
   );
 
   SpinniesManager.remove('checkingForMigratableComponents');
@@ -599,13 +610,34 @@ export async function downloadProjectFiles(
   }
 }
 
-export async function migrateApp2025_2(
+function getAppIdFromComponents(
+  topLevelComponentMetadata: TopLevelComponents[]
+): number | undefined {
+  const appComponent = topLevelComponentMetadata.find(
+    c => (c.type && c.type.name === 'PUBLIC_APP') || 'APP'
+  );
+
+  if (!appComponent) {
+    return undefined;
+  }
+
+  const { deployOutput } = appComponent;
+  if (
+    deployOutput &&
+    typeof deployOutput === 'object' &&
+    'appId' in deployOutput
+  ) {
+    return (deployOutput as { appId: number }).appId;
+  }
+
+  return undefined;
+}
+
+export async function migrateApp(
   derivedAccountId: number,
   options: ArgumentsCamelCase<MigrateAppArgs>,
   projectConfig?: LoadedProjectConfig
 ): Promise<void> {
-  SpinniesManager.init();
-
   const ungatedForUnifiedApps = await hasUnfiedAppsAccess(derivedAccountId);
 
   if (!ungatedForUnifiedApps) {
@@ -620,11 +652,23 @@ export async function migrateApp2025_2(
     if (!projectConfig?.projectConfig || !projectConfig?.projectDir) {
       throw new Error(lib.migrate.errors.project.invalidConfig);
     }
-    const { projectExists } = await ensureProjectExists(
+    const { projectExists, project } = await ensureProjectExists(
       derivedAccountId,
       projectConfig.projectConfig.name,
       { allowCreate: false, noLogs: true }
     );
+
+    if (projectExists && project) {
+      const {
+        data: { topLevelComponentMetadata },
+      } = await fetchProjectComponentsMetadata(derivedAccountId, project.id);
+
+      const appId = getAppIdFromComponents(topLevelComponentMetadata);
+
+      if (appId) {
+        options.appId = appId;
+      }
+    }
 
     if (!projectExists) {
       throw new Error(

@@ -26,7 +26,6 @@ import { confirmImportDataPrompt } from '../../../lib/prompts/confirmImportDataP
 
 vi.mock('../../../lib/commonOpts');
 vi.mock('../../../lib/importData');
-vi.mock('../../../lib/usageTracking');
 vi.mock('@hubspot/local-dev-lib/crm');
 vi.mock('../../../lib/errorHandlers/index');
 vi.mock('../../../lib/prompts/importDataFilePathPrompt');

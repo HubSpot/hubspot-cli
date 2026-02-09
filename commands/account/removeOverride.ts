@@ -1,6 +1,9 @@
 import fs from 'fs-extra';
 import { Argv, ArgumentsCamelCase } from 'yargs';
-import { globalConfigFileExists } from '@hubspot/local-dev-lib/config';
+import {
+  globalConfigFileExists,
+  getAllConfigAccounts,
+} from '@hubspot/local-dev-lib/config';
 import {
   getDefaultAccountOverrideAccountId,
   getDefaultAccountOverrideFilePath,
@@ -35,7 +38,8 @@ async function handler(
     process.exit(EXIT_CODES.ERROR);
   }
 
-  const accountOverride = getDefaultAccountOverrideAccountId();
+  const accounts = getAllConfigAccounts();
+  const accountOverride = getDefaultAccountOverrideAccountId(accounts);
   const overrideFilePath = getDefaultAccountOverrideFilePath();
   if (accountOverride && overrideFilePath) {
     const accountId = accountOverride;

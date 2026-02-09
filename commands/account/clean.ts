@@ -16,7 +16,6 @@ import { trackCommandUsage } from '../../lib/usageTracking.js';
 import { EXIT_CODES } from '../../lib/enums/exitCodes.js';
 import { promptUser } from '../../lib/prompts/promptUtils.js';
 import { selectAccountFromConfig } from '../../lib/prompts/accountsPrompt.js';
-import { getTableContents } from '../../lib/ui/table.js';
 import SpinniesManager from '../../lib/ui/SpinniesManager.js';
 import { uiAccountDescription } from '../../lib/ui/index.js';
 import {
@@ -28,6 +27,7 @@ import { logError } from '../../lib/errorHandlers/index.js';
 import { makeYargsBuilder } from '../../lib/yargsUtils.js';
 import { commands } from '../../lang/en.js';
 import { uiLogger } from '../../lib/ui/logger.js';
+import { renderList } from '../../ui/render.js';
 
 const command = 'clean';
 const describe = commands.account.subcommands.clean.describe;
@@ -92,12 +92,9 @@ async function handler(
             accountsToRemove.length
           ),
     });
-    uiLogger.log(
-      getTableContents(
-        accountsToRemove.map(p => [uiAccountDescription(p.accountId)]),
-        { border: { bodyLeft: '  ' } }
-      )
-    );
+
+    renderList(accountsToRemove.map(p => [uiAccountDescription(p.accountId)]));
+    uiLogger.log('');
 
     let promptMessage = oneAccountFound
       ? commands.account.subcommands.clean.confirm.one
@@ -105,7 +102,7 @@ async function handler(
           accountsToRemove.length
         );
 
-    const accountOverride = getDefaultAccountOverrideAccountId();
+    const accountOverride = getDefaultAccountOverrideAccountId(accountsList);
     const overrideFilePath = getDefaultAccountOverrideFilePath();
     const accountOverrideMatches = accountsToRemove.some(
       account => account.accountId === accountOverride

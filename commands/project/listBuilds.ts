@@ -5,7 +5,6 @@ import {
   fetchProject,
   fetchProjectBuilds,
 } from '@hubspot/local-dev-lib/api/projects';
-import { getTableContents, getTableHeader } from '../../lib/ui/table.js';
 import { uiLink } from '../../lib/ui/index.js';
 import {
   getProjectConfig,
@@ -27,6 +26,7 @@ import {
 import { EXIT_CODES } from '../../lib/enums/exitCodes.js';
 import { makeYargsBuilder } from '../../lib/yargsUtils.js';
 import { commands } from '../../lang/en.js';
+import { renderTable } from '../../ui/render.js';
 
 const command = 'list-builds';
 const describe = commands.project.listBuilds.describe;
@@ -88,15 +88,9 @@ async function fetchAndDisplayBuilds(
           .join(', '),
       ];
     });
-    builds.unshift(
-      getTableHeader(['Build ID', 'Status', 'Completed', 'Duration', 'Details'])
-    );
-    uiLogger.log(
-      getTableContents(builds, {
-        columnDefault: {
-          paddingLeft: 3,
-        },
-      })
+    renderTable(
+      ['Build ID', 'Status', 'Completed', 'Duration', 'Details'],
+      builds
     );
   }
   if (paging && paging.next) {

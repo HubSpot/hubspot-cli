@@ -1,6 +1,5 @@
-import { TextContent, TextContentResponse, Tool } from '../../types.js';
-import { absoluteCurrentWorkingDirectory } from './constants.js';
 import { z } from 'zod';
+import fs from 'fs';
 import {
   McpServer,
   RegisteredTool,
@@ -9,11 +8,22 @@ import { trackToolUsage } from '../../utils/toolUsageTracking.js';
 import { formatTextContents, formatTextContent } from '../../utils/content.js';
 import { addFlag } from '../../utils/command.js';
 import { runCommandInDir } from '../../utils/project.js';
-import { ACCOUNT_LEVEL_CHOICES } from '../../../lib/constants.js';
-import fs from 'fs';
+import {
+  ACCOUNT_LEVELS,
+  ACCOUNT_LEVEL_CHOICES,
+} from '../../../lib/constants.js';
+import { TextContent, TextContentResponse, Tool } from '../../types.js';
+import { absoluteCurrentWorkingDirectory } from './constants.js';
 import { DeveloperTestAccountConfig } from '@hubspot/local-dev-lib/types/developerTestAccounts.js';
 import { getConfigAccountByName } from '@hubspot/local-dev-lib/config';
 import { setupHubSpotConfig } from '../../utils/config.js';
+import { getErrorMessage } from '../../../lib/errorHandlers/index.js';
+
+const ACCOUNT_LEVEL_CHOICES_WITHOUT_STARTER = [
+  ACCOUNT_LEVELS.FREE,
+  ACCOUNT_LEVELS.PROFESSIONAL,
+  ACCOUNT_LEVELS.ENTERPRISE,
+] as const;
 
 const inputSchema = {
   absoluteCurrentWorkingDirectory,
@@ -73,6 +83,12 @@ const inputSchema = {
     .describe(
       `CMS Hub tier level. Options: ${ACCOUNT_LEVEL_CHOICES.join(', ')}. Defaults to ENTERPRISE if not specified.`
     ),
+  commerceLevel: z
+    .enum(ACCOUNT_LEVEL_CHOICES_WITHOUT_STARTER)
+    .optional()
+    .describe(
+      `Commerce Hub tier level. Options: ${ACCOUNT_LEVEL_CHOICES_WITHOUT_STARTER.join(', ')}. Defaults to ENTERPRISE if not specified.`
+    ),
 };
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -97,6 +113,7 @@ export class CreateTestAccountTool extends Tool<CreateTestAccountInputSchema> {
     serviceLevel,
     salesLevel,
     contentLevel,
+    commerceLevel,
     configPath,
   }: CreateTestAccountInputSchema): Promise<TextContentResponse> {
     setupHubSpotConfig(absoluteCurrentWorkingDirectory);
@@ -113,12 +130,10 @@ export class CreateTestAccountTool extends Tool<CreateTestAccountInputSchema> {
         const config = fs.readFileSync(configPath, 'utf8');
         configJson = JSON.parse(config) as DeveloperTestAccountConfig;
       } catch (error) {
-        const errorMessage =
-          error instanceof Error ? error.message : String(error);
         return {
           content: [
             formatTextContent(
-              `Failed to read or parse config file at "${configPath}": ${errorMessage}. Please ensure the file exists and contains valid JSON.`
+              `Failed to read or parse config file at "${configPath}": ${getErrorMessage(error)}. Please ensure the file exists and contains valid JSON.`
             ),
           ],
         };
@@ -165,6 +180,11 @@ export class CreateTestAccountTool extends Tool<CreateTestAccountInputSchema> {
       command = addFlag(command, 'service-level', serviceLevel || 'ENTERPRISE');
       command = addFlag(command, 'sales-level', salesLevel || 'ENTERPRISE');
       command = addFlag(command, 'content-level', contentLevel || 'ENTERPRISE');
+      command = addFlag(
+        command,
+        'commerce-level',
+        commerceLevel || 'ENTERPRISE'
+      );
     } else {
       content.push(
         formatTextContent(
@@ -195,7 +215,7 @@ export class CreateTestAccountTool extends Tool<CreateTestAccountInputSchema> {
     } catch (error) {
       return formatTextContents(
         absoluteCurrentWorkingDirectory,
-        error instanceof Error ? error.message : `${error}`
+        getErrorMessage(error)
       );
     }
   }
@@ -222,7 +242,7 @@ export class CreateTestAccountTool extends Tool<CreateTestAccountInputSchema> {
           '   - Call this tool with name, description, and all tier level parameters\n' +
           '   - IMPORTANT: Always provide all parameters to ensure non-interactive execution\n\n' +
           'Available Hub Tier Levels: FREE, STARTER, PROFESSIONAL, ENTERPRISE\n' +
-          'Available Hubs: Marketing (marketingLevel), Sales (salesLevel), Service (serviceLevel), Operations (opsLevel), CMS (contentLevel)',
+          'Available Hubs: Marketing (marketingLevel), Sales (salesLevel), Service (serviceLevel), Operations (opsLevel), CMS (contentLevel), Commerce (commerceLevel)',
         inputSchema,
         annotations: {
           readOnlyHint: false,

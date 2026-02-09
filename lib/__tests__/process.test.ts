@@ -5,7 +5,6 @@ import { handleExit, handleKeypress, TERMINATION_SIGNALS } from '../process.js';
 import { Mock, Mocked } from 'vitest';
 
 vi.mock('readline');
-vi.mock('../ui/logger.js');
 vi.mock('@hubspot/local-dev-lib/logger', async () => {
   const logger = await vi.importActual('@hubspot/local-dev-lib/logger');
 

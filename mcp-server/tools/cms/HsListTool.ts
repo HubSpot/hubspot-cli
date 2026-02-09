@@ -10,6 +10,7 @@ import { runCommandInDir } from '../../utils/project.js';
 import { formatTextContents } from '../../utils/content.js';
 import { trackToolUsage } from '../../utils/toolUsageTracking.js';
 import { setupHubSpotConfig } from '../../utils/config.js';
+import { getErrorMessage } from '../../../lib/errorHandlers/index.js';
 
 const inputSchema = {
   absoluteCurrentWorkingDirectory,
@@ -65,13 +66,11 @@ export class HsListTool extends Tool<HsListInputSchema> {
 
       return formatTextContents(stdout, stderr);
     } catch (error) {
-      const errorMessage =
-        error instanceof Error ? error.message : String(error);
       return {
         content: [
           {
             type: 'text',
-            text: `Error executing hs list command: ${errorMessage}`,
+            text: `Error executing hs list command: ${getErrorMessage(error)}`,
           },
         ],
       };

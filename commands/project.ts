@@ -11,8 +11,6 @@ import open from './project/open.js';
 import dev from './project/dev/index.js';
 import add from './project/add.js';
 import migrate from './project/migrate.js';
-import migrateApp from './project/migrateApp.js';
-import cloneApp from './project/cloneApp.js';
 import installDeps from './project/installDeps.js';
 import lint from './project/lint.js';
 import updateDeps from './project/updateDeps.js';
@@ -38,9 +36,7 @@ function projectBuilder(yargs: Argv): Argv {
     .command(listBuilds)
     .command(download)
     .command(open)
-    .command(migrateApp)
     .command(migrate)
-    .command(cloneApp)
     .command(installDeps)
     .command(lint)
     .command(updateDeps)

@@ -145,9 +145,14 @@ async function handler(args: ArgumentsCamelCase<AuthArgs>): Promise<void> {
         },
       };
 
-      await authenticateWithOauth(oauthAccount);
+      try {
+        await authenticateWithOauth(oauthAccount);
+        successAuthMethod = OAUTH_AUTH_METHOD.name;
+      } catch (e) {
+        logError(e);
+        process.exit(EXIT_CODES.ERROR);
+      }
 
-      successAuthMethod = OAUTH_AUTH_METHOD.name;
       break;
     case PERSONAL_ACCESS_KEY_AUTH_METHOD.value:
       const { personalAccessKey } = providedPersonalAccessKey

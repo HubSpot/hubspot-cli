@@ -4,17 +4,22 @@ import {
   McpServer,
   RegisteredTool,
 } from '@modelcontextprotocol/sdk/server/mcp.js';
-import { getAllHsProfiles } from '@hubspot/project-parsing-lib';
+import { getAllHsProfiles } from '@hubspot/project-parsing-lib/profiles';
 import { getProjectConfig } from '../../../../lib/projects/config.js';
 import { runCommandInDir } from '../../../utils/project.js';
 import { mcpFeedbackRequest } from '../../../utils/feedbackTracking.js';
+import { trackToolUsage } from '../../../utils/toolUsageTracking.js';
 
 vi.mock('@modelcontextprotocol/sdk/server/mcp.js');
-vi.mock('@hubspot/project-parsing-lib');
+vi.mock('@hubspot/project-parsing-lib/profiles');
 vi.mock('../../../../lib/projects/config.js');
 vi.mock('../../../utils/project');
 vi.mock('../../../utils/toolUsageTracking');
 vi.mock('../../../utils/feedbackTracking');
+
+const mockTrackToolUsage = trackToolUsage as MockedFunction<
+  typeof trackToolUsage
+>;
 
 const mockMcpFeedbackRequest = mcpFeedbackRequest as MockedFunction<
   typeof mcpFeedbackRequest
@@ -38,8 +43,6 @@ describe('mcp-server/tools/project/UploadProjectTools', () => {
   let mockRegisteredTool: RegisteredTool;
 
   beforeEach(() => {
-    vi.clearAllMocks();
-
     // @ts-expect-error noy mocking whole server
     mockMcpServer = {
       registerTool: vi.fn(),
@@ -48,6 +51,7 @@ describe('mcp-server/tools/project/UploadProjectTools', () => {
     mockRegisteredTool = {} as RegisteredTool;
     mockMcpServer.registerTool.mockReturnValue(mockRegisteredTool);
     mockMcpFeedbackRequest.mockResolvedValue('');
+    mockTrackToolUsage.mockResolvedValue(undefined);
     mockGetProjectConfig.mockResolvedValue({
       projectConfig: {
         srcDir: 'src',
@@ -112,6 +116,10 @@ describe('mcp-server/tools/project/UploadProjectTools', () => {
         content: [
           { type: 'text', text: 'Project uploaded successfully' },
           { type: 'text', text: '' },
+          {
+            type: 'text',
+            text: '\nIMPORTANT: If this project contains cards, remember that uploading does NOT make them live automatically. Cards must be manually added to a view in HubSpot to become visible to users.',
+          },
         ],
       });
     });
@@ -127,6 +135,10 @@ describe('mcp-server/tools/project/UploadProjectTools', () => {
       expect(result.content).toEqual([
         { type: 'text', text: 'Project uploaded with warnings' },
         { type: 'text', text: 'Warning: some files were ignored' },
+        {
+          type: 'text',
+          text: '\nIMPORTANT: If this project contains cards, remember that uploading does NOT make them live automatically. Cards must be manually added to a view in HubSpot to become visible to users.',
+        },
       ]);
     });
 
@@ -218,6 +230,10 @@ describe('mcp-server/tools/project/UploadProjectTools', () => {
       expect(result.content).toEqual([
         { type: 'text', text: '' },
         { type: 'text', text: '' },
+        {
+          type: 'text',
+          text: '\nIMPORTANT: If this project contains cards, remember that uploading does NOT make them live automatically. Cards must be manually added to a view in HubSpot to become visible to users.',
+        },
       ]);
     });
 

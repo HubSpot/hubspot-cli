@@ -31,7 +31,6 @@ describe('SpinniesManager', () => {
 
   beforeEach(async () => {
     // Reset the singleton instance before each test
-    vi.clearAllMocks();
 
     // Get the mocked logger
     const loggerModule = await import('../logger.js');

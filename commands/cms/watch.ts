@@ -159,7 +159,7 @@ function watchBuilder(yargs: Argv): Argv<WatchCommandArgs> {
     describe: commands.cms.subcommands.watch.positionals.dest,
     type: 'string',
   });
-  yargs.option('fieldOptions', {
+  yargs.option('field-options', {
     describe: commands.cms.subcommands.watch.options.options,
     type: 'array',
     default: [''],
@@ -186,12 +186,12 @@ function watchBuilder(yargs: Argv): Argv<WatchCommandArgs> {
     type: 'string',
     requiresArg: true,
   });
-  yargs.option('convertFields', {
+  yargs.option('convert-fields', {
     describe: commands.cms.subcommands.watch.options.convertFields,
     type: 'boolean',
     default: false,
   });
-  yargs.option('saveOutput', {
+  yargs.option('save-output', {
     describe: commands.cms.subcommands.watch.options.saveOutput,
     type: 'boolean',
     default: false,

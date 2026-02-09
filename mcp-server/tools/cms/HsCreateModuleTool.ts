@@ -11,6 +11,7 @@ import { trackToolUsage } from '../../utils/toolUsageTracking.js';
 import { addFlag } from '../../utils/command.js';
 import { CONTENT_TYPES } from '../../../types/Cms.js';
 import { setupHubSpotConfig } from '../../utils/config.js';
+import { getErrorMessage } from '../../../lib/errorHandlers/index.js';
 
 const inputSchema = {
   absoluteCurrentWorkingDirectory,
@@ -173,9 +174,7 @@ export class HsCreateModuleTool extends Tool<HsCreateModuleInputSchema> {
 
       return formatTextContents(stdout, stderr);
     } catch (error) {
-      return formatTextContents(
-        error instanceof Error ? error.message : `${error}`
-      );
+      return formatTextContents(getErrorMessage(error));
     }
   }
 

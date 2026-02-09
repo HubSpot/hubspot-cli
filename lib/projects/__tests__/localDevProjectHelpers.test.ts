@@ -5,18 +5,19 @@ import { Mock } from 'vitest';
 import { downloadProject } from '@hubspot/local-dev-lib/api/projects';
 import { extractZipArchive } from '@hubspot/local-dev-lib/archive';
 import { isDeepEqual } from '@hubspot/local-dev-lib/isDeepEqual';
-import { translate } from '@hubspot/project-parsing-lib';
-import { IntermediateRepresentationNodeLocalDev } from '@hubspot/project-parsing-lib/src/lib/types.js';
+import {
+  translate,
+  type IntermediateRepresentationNodeLocalDev,
+} from '@hubspot/project-parsing-lib/translate';
 import { ProjectConfig } from '../../../types/Projects.js';
 import { isDeployedProjectUpToDateWithLocal } from '../localDev/helpers/project.js';
 
 // Mock all external dependencies
 vi.mock('@hubspot/local-dev-lib/api/projects');
 vi.mock('@hubspot/local-dev-lib/archive');
-vi.mock('@hubspot/project-parsing-lib');
+vi.mock('@hubspot/project-parsing-lib/translate');
 vi.mock('@hubspot/local-dev-lib/isDeepEqual');
 vi.mock('fs-extra');
-vi.mock('os');
 vi.mock('../../utils/isDeepEqual.js');
 
 describe('isDeployedProjectUpToDateWithLocal', () => {
@@ -53,8 +54,6 @@ describe('isDeployedProjectUpToDateWithLocal', () => {
   const mockZippedProject = Buffer.from('fake-zip-data');
 
   beforeEach(() => {
-    vi.clearAllMocks();
-
     // Mock fs.mkdtemp
     (fs.mkdtemp as unknown as Mock).mockResolvedValue(mockTempDir);
 
@@ -65,7 +64,7 @@ describe('isDeployedProjectUpToDateWithLocal', () => {
     (fs.remove as Mock).mockResolvedValue(undefined);
 
     // Mock os.tmpdir
-    (os.tmpdir as Mock).mockReturnValue('/tmp');
+    vi.spyOn(os, 'tmpdir').mockReturnValue('/tmp');
   });
 
   afterEach(() => {

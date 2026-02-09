@@ -7,8 +7,8 @@ import { shouldIgnoreFile } from '@hubspot/local-dev-lib/ignoreRules';
 import {
   isTranslationError,
   translate,
-  projectContainsHsMetaFiles,
-} from '@hubspot/project-parsing-lib';
+} from '@hubspot/project-parsing-lib/translate';
+import { projectContainsHsMetaFiles } from '@hubspot/project-parsing-lib/projects';
 
 import SpinniesManager from '../ui/SpinniesManager.js';
 import { uiAccountDescription } from '../ui/index.js';
@@ -33,7 +33,6 @@ async function uploadProjectFiles(
   platformVersion: string,
   intermediateRepresentation?: unknown
 ): Promise<{ buildId?: number; error: unknown }> {
-  SpinniesManager.init({});
   const accountIdentifier = uiAccountDescription(accountId) || `${accountId}`;
 
   SpinniesManager.add('upload', {
@@ -157,13 +156,13 @@ export async function handleProjectUpload<T>({
 
       if (sendIR) {
         try {
-          intermediateRepresentation = await handleTranslate(
+          intermediateRepresentation = await handleTranslate({
             projectDir,
             projectConfig,
             accountId,
             skipValidation,
-            profile
-          );
+            profile,
+          });
         } catch (e) {
           resolve({ uploadError: e });
         }
@@ -275,13 +274,23 @@ export async function validateNoHSMetaMismatch(
   }
 }
 
-export async function handleTranslate(
-  projectDir: string,
-  projectConfig: ProjectConfig,
-  accountId: number,
-  skipValidation: boolean,
-  profile: string | undefined
-): Promise<unknown> {
+type HandleTranslateArg = {
+  projectDir: string;
+  projectConfig: ProjectConfig;
+  accountId: number;
+  skipValidation: boolean;
+  profile?: string;
+  includeTranslationErrorMessage?: boolean;
+};
+
+export async function handleTranslate({
+  projectDir,
+  projectConfig,
+  accountId,
+  skipValidation,
+  profile,
+  includeTranslationErrorMessage = true,
+}: HandleTranslateArg): Promise<unknown> {
   try {
     const intermediateRepresentation = await translate(
       {
@@ -295,7 +304,10 @@ export async function handleTranslate(
     return intermediateRepresentation;
   } catch (e) {
     if (isTranslationError(e)) {
-      throw new ProjectValidationError(e.toString(), { cause: e });
+      throw new ProjectValidationError(
+        e.toString(includeTranslationErrorMessage),
+        { cause: e }
+      );
     }
     throw e;
   }

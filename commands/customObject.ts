@@ -1,5 +1,4 @@
 import { Argv } from 'yargs';
-import schemaCommand from './customObject/schema.js';
 import createCommand from './customObject/create.js';
 import createSchemaCommand from './customObject/createSchema.js';
 import deleteSchemaCommand from './customObject/deleteSchema.js';
@@ -25,7 +24,6 @@ function customObjectBuilder(yargs: Argv): Argv {
   yargs.middleware([logBetaMessage]);
 
   yargs
-    .command(schemaCommand)
     .command(createCommand)
     .command(createSchemaCommand)
     .command(deleteSchemaCommand)

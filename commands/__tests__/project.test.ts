@@ -9,9 +9,7 @@ import download from '../project/download.js';
 import open from '../project/open.js';
 import dev from '../project/dev/index.js';
 import add from '../project/add.js';
-import migrateApp from '../project/migrateApp.js';
 import migrate from '../project/migrate.js';
-import cloneApp from '../project/cloneApp.js';
 import installDeps from '../project/installDeps.js';
 import lint from '../project/lint.js';
 import updateDeps from '../project/updateDeps.js';
@@ -76,9 +74,7 @@ describe('commands/project', () => {
       listBuilds,
       download,
       open,
-      migrateApp,
       migrate,
-      cloneApp,
       installDeps,
       lint,
       updateDeps,

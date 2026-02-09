@@ -1,14 +1,10 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect, vi } from 'vitest';
 import { createDeveloperTestAccountConfigPrompt } from '../createDeveloperTestAccountConfigPrompt.js';
 import * as promptUtils from '../promptUtils.js';
 
 vi.mock('../promptUtils.js');
 
 describe('createDeveloperTestAccountConfigPrompt', () => {
-  beforeEach(() => {
-    vi.clearAllMocks();
-  });
-
   describe('with name and description provided via args', () => {
     it('should skip name and description prompts when provided', async () => {
       const mockPromptUser = vi.mocked(promptUtils.promptUser);
@@ -30,6 +26,7 @@ describe('createDeveloperTestAccountConfigPrompt', () => {
         serviceLevel: 'ENTERPRISE',
         salesLevel: 'ENTERPRISE',
         contentLevel: 'ENTERPRISE',
+        commerceLevel: 'ENTERPRISE',
       });
 
       expect(mockPromptUser).toHaveBeenCalledTimes(2);
@@ -56,6 +53,7 @@ describe('createDeveloperTestAccountConfigPrompt', () => {
         serviceLevel: 'ENTERPRISE',
         salesLevel: 'STARTER',
         contentLevel: 'ENTERPRISE',
+        commerceLevel: 'ENTERPRISE',
       });
 
       // Should only call promptUser once (for name/description which are skipped)
@@ -81,6 +79,7 @@ describe('createDeveloperTestAccountConfigPrompt', () => {
         serviceLevel: 'ENTERPRISE',
         salesLevel: 'ENTERPRISE',
         contentLevel: 'FREE',
+        commerceLevel: 'ENTERPRISE',
       });
     });
   });
@@ -108,6 +107,7 @@ describe('createDeveloperTestAccountConfigPrompt', () => {
         serviceLevel: 'ENTERPRISE',
         salesLevel: 'ENTERPRISE',
         contentLevel: 'ENTERPRISE',
+        commerceLevel: 'ENTERPRISE',
       });
 
       expect(mockPromptUser).toHaveBeenCalledTimes(2);
@@ -129,6 +129,7 @@ describe('createDeveloperTestAccountConfigPrompt', () => {
           { hub: 'SERVICE', tier: 'ENTERPRISE' },
           { hub: 'SALES', tier: 'FREE' },
           { hub: 'CONTENT', tier: 'ENTERPRISE' },
+          { hub: 'COMMERCE', tier: 'STARTER' },
         ],
       }); // manual tier selection
 
@@ -142,6 +143,7 @@ describe('createDeveloperTestAccountConfigPrompt', () => {
         serviceLevel: 'ENTERPRISE',
         salesLevel: 'FREE',
         contentLevel: 'ENTERPRISE',
+        commerceLevel: 'STARTER',
       });
 
       expect(mockPromptUser).toHaveBeenCalledTimes(3);
@@ -170,6 +172,7 @@ describe('createDeveloperTestAccountConfigPrompt', () => {
         serviceLevel: 'ENTERPRISE',
         salesLevel: 'ENTERPRISE',
         contentLevel: 'ENTERPRISE',
+        commerceLevel: 'ENTERPRISE',
       });
 
       expect(mockPromptUser).toHaveBeenCalledTimes(2);

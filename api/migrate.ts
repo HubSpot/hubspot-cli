@@ -113,12 +113,14 @@ export function isMigrationStatus(error: unknown): error is MigrationStatus {
 
 export async function listAppsForMigration(
   accountId: number,
-  platformVersion: string
+  platformVersion: string,
+  appId: number | undefined
 ): HubSpotPromise<ListAppsResponse> {
   return http.get<ListAppsResponse>(accountId, {
     url: `${MIGRATIONS_API_PATH_V2}/list-apps`,
     params: {
       platformVersion: mapPlatformVersionToEnum(platformVersion),
+      appId,
     },
   });
 }

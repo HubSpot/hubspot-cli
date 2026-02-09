@@ -22,9 +22,9 @@ import {
 
 import {
   getProjectMetadata,
-  ProjectMetadata,
-} from '@hubspot/project-parsing-lib/src/lib/project.js';
-import { AppKey } from '@hubspot/project-parsing-lib/src/lib/constants.js';
+  type ProjectMetadata,
+} from '@hubspot/project-parsing-lib/projects';
+import { APP_KEY as AppKey } from '@hubspot/project-parsing-lib/constants';
 import { cloneGithubRepo } from '@hubspot/local-dev-lib/github';
 import { debugError } from '../../errorHandlers/index.js';
 import { uiLogger } from '../../ui/logger.js';
@@ -116,7 +116,6 @@ export async function v2AddComponent(
     accountId
   );
 
-  SpinniesManager.init();
   SpinniesManager.add('project-add', {
     text: commands.project.add.creatingComponent(projectConfig.name),
   });

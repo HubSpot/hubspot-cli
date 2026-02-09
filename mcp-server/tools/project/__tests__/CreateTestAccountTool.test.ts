@@ -10,6 +10,7 @@ import { runCommandInDir } from '../../../utils/project.js';
 import { addFlag } from '../../../utils/command.js';
 import { MockedFunction, Mocked } from 'vitest';
 import { mcpFeedbackRequest } from '../../../utils/feedbackTracking.js';
+import { trackToolUsage } from '../../../utils/toolUsageTracking.js';
 import fs from 'fs';
 import * as config from '@hubspot/local-dev-lib/config';
 
@@ -20,6 +21,10 @@ vi.mock('../../../utils/toolUsageTracking');
 vi.mock('../../../utils/feedbackTracking');
 vi.mock('fs');
 vi.mock('@hubspot/local-dev-lib/config');
+
+const mockTrackToolUsage = trackToolUsage as MockedFunction<
+  typeof trackToolUsage
+>;
 
 const mockMcpFeedbackRequest = mcpFeedbackRequest as MockedFunction<
   typeof mcpFeedbackRequest
@@ -40,8 +45,6 @@ describe('mcp-server/tools/project/CreateTestAccountTool', () => {
   let mockRegisteredTool: RegisteredTool;
 
   beforeEach(() => {
-    vi.clearAllMocks();
-
     // @ts-expect-error Not mocking the whole server
     mockMcpServer = {
       registerTool: vi.fn(),
@@ -50,6 +53,7 @@ describe('mcp-server/tools/project/CreateTestAccountTool', () => {
     mockRegisteredTool = {} as RegisteredTool;
     mockMcpServer.registerTool.mockReturnValue(mockRegisteredTool);
     mockMcpFeedbackRequest.mockResolvedValue('');
+    mockTrackToolUsage.mockResolvedValue(undefined);
 
     tool = new CreateTestAccountTool(mockMcpServer);
 
@@ -101,6 +105,7 @@ describe('mcp-server/tools/project/CreateTestAccountTool', () => {
         serviceLevel: 'ENTERPRISE',
         salesLevel: 'ENTERPRISE',
         contentLevel: 'ENTERPRISE',
+        commerceLevel: 'ENTERPRISE',
       };
 
       it('should create test account with config path', async () => {
@@ -149,6 +154,7 @@ describe('mcp-server/tools/project/CreateTestAccountTool', () => {
           serviceLevel: 'ENTERPRISE',
           salesLevel: 'ENTERPRISE',
           contentLevel: 'ENTERPRISE',
+          commerceLevel: 'ENTERPRISE',
         };
 
         await tool.handler(input);
@@ -181,6 +187,7 @@ describe('mcp-server/tools/project/CreateTestAccountTool', () => {
           serviceLevel: 'ENTERPRISE',
           salesLevel: 'ENTERPRISE',
           contentLevel: 'ENTERPRISE',
+          commerceLevel: 'ENTERPRISE',
         };
 
         await tool.handler(input);
@@ -272,6 +279,7 @@ describe('mcp-server/tools/project/CreateTestAccountTool', () => {
           serviceLevel: 'ENTERPRISE',
           salesLevel: 'ENTERPRISE',
           contentLevel: 'ENTERPRISE',
+          commerceLevel: 'ENTERPRISE',
         };
 
         await tool.handler(input);
@@ -302,7 +310,7 @@ describe('mcp-server/tools/project/CreateTestAccountTool', () => {
           'MyTestAccount'
         );
         // Implementation uses name as fallback for description, and adds all hub levels with ENTERPRISE defaults
-        expect(mockAddFlag).toHaveBeenCalledTimes(7);
+        expect(mockAddFlag).toHaveBeenCalledTimes(8);
 
         expect(mockRunCommandInDir).toHaveBeenCalled();
       });
@@ -322,6 +330,7 @@ describe('mcp-server/tools/project/CreateTestAccountTool', () => {
           serviceLevel: 'ENTERPRISE',
           salesLevel: 'ENTERPRISE',
           contentLevel: 'ENTERPRISE',
+          commerceLevel: 'ENTERPRISE',
         };
 
         await tool.handler(input);
@@ -351,6 +360,7 @@ describe('mcp-server/tools/project/CreateTestAccountTool', () => {
           marketingLevel: 'PROFESSIONAL',
           salesLevel: 'STARTER',
           contentLevel: 'FREE',
+          commerceLevel: 'FREE',
           serviceLevel: 'ENTERPRISE',
           opsLevel: 'ENTERPRISE',
         };
@@ -394,6 +404,7 @@ describe('mcp-server/tools/project/CreateTestAccountTool', () => {
           serviceLevel: 'STARTER',
           salesLevel: 'ENTERPRISE',
           contentLevel: 'PROFESSIONAL',
+          commerceLevel: 'FREE',
         };
 
         await tool.handler(input);
@@ -433,6 +444,11 @@ describe('mcp-server/tools/project/CreateTestAccountTool', () => {
           'content-level',
           'PROFESSIONAL'
         );
+        expect(mockAddFlag).toHaveBeenCalledWith(
+          expect.any(String),
+          'commerce-level',
+          'FREE'
+        );
       });
     });
 
@@ -452,6 +468,7 @@ describe('mcp-server/tools/project/CreateTestAccountTool', () => {
           serviceLevel: 'ENTERPRISE',
           salesLevel: 'ENTERPRISE',
           contentLevel: 'ENTERPRISE',
+          commerceLevel: 'ENTERPRISE',
         };
 
         await tool.handler(input);
@@ -486,6 +503,11 @@ describe('mcp-server/tools/project/CreateTestAccountTool', () => {
           'content-level',
           'ENTERPRISE'
         );
+        expect(mockAddFlag).toHaveBeenCalledWith(
+          expect.any(String),
+          'commerce-level',
+          'ENTERPRISE'
+        );
       });
 
       it('should use name as fallback for description when description is empty', async () => {
@@ -503,6 +525,7 @@ describe('mcp-server/tools/project/CreateTestAccountTool', () => {
           serviceLevel: 'ENTERPRISE',
           salesLevel: 'ENTERPRISE',
           contentLevel: 'ENTERPRISE',
+          commerceLevel: 'ENTERPRISE',
         };
 
         await tool.handler(input);
@@ -535,6 +558,7 @@ describe('mcp-server/tools/project/CreateTestAccountTool', () => {
           opsLevel: 'ENTERPRISE',
           serviceLevel: 'ENTERPRISE',
           contentLevel: 'ENTERPRISE',
+          commerceLevel: 'ENTERPRISE',
         };
 
         await tool.handler(input);
@@ -569,6 +593,11 @@ describe('mcp-server/tools/project/CreateTestAccountTool', () => {
           'content-level',
           'ENTERPRISE'
         );
+        expect(mockAddFlag).toHaveBeenCalledWith(
+          expect.any(String),
+          'commerce-level',
+          'ENTERPRISE'
+        );
       });
 
       it('should add all hub level flags when defaults are applied', async () => {
@@ -586,12 +615,13 @@ describe('mcp-server/tools/project/CreateTestAccountTool', () => {
           serviceLevel: 'ENTERPRISE',
           salesLevel: 'ENTERPRISE',
           contentLevel: 'ENTERPRISE',
+          commerceLevel: 'ENTERPRISE',
         };
 
         const result = await tool.handler(input);
 
         expect(mockRunCommandInDir).toHaveBeenCalled();
-        expect(mockAddFlag).toHaveBeenCalledTimes(7);
+        expect(mockAddFlag).toHaveBeenCalledTimes(8);
         expect(result.content[1]).toEqual({
           type: 'text',
           text: 'Test account created with defaults',
@@ -616,7 +646,7 @@ describe('mcp-server/tools/project/CreateTestAccountTool', () => {
           'name',
           'BypassedDefaultsAccount'
         );
-        expect(mockAddFlag).toHaveBeenCalledTimes(7);
+        expect(mockAddFlag).toHaveBeenCalledTimes(8);
       });
     });
 
@@ -630,6 +660,7 @@ describe('mcp-server/tools/project/CreateTestAccountTool', () => {
           serviceLevel: 'ENTERPRISE',
           salesLevel: 'ENTERPRISE',
           contentLevel: 'ENTERPRISE',
+          commerceLevel: 'ENTERPRISE',
         };
 
         const result = await tool.handler(input);
@@ -665,6 +696,7 @@ describe('mcp-server/tools/project/CreateTestAccountTool', () => {
           serviceLevel: 'ENTERPRISE',
           salesLevel: 'ENTERPRISE',
           contentLevel: 'ENTERPRISE',
+          commerceLevel: 'ENTERPRISE',
         };
 
         const result = await tool.handler(input);
@@ -694,6 +726,7 @@ describe('mcp-server/tools/project/CreateTestAccountTool', () => {
           serviceLevel: 'ENTERPRISE',
           salesLevel: 'ENTERPRISE',
           contentLevel: 'ENTERPRISE',
+          commerceLevel: 'ENTERPRISE',
         };
 
         const result = await tool.handler(input);

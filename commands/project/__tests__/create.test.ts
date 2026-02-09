@@ -71,7 +71,7 @@ describe('commands/project/create', () => {
         expect.objectContaining({
           describe: 'The target platform version for the new project.',
           type: 'string',
-          choices: ['2023.2', '2025.1', '2025.2'],
+          choices: ['2025.1', '2025.2'],
           default: '2025.2',
         })
       );
@@ -112,7 +112,7 @@ describe('commands/project/create', () => {
       const optionsCall = optionsSpy.mock.calls[0][0];
       expect(optionsCall.auth).toEqual(
         expect.objectContaining({
-          describe: 'Authentication model for the application.',
+          describe: 'Authentication model for the app.',
           type: 'string',
           choices: ['oauth', 'static'],
         })

@@ -14,6 +14,7 @@ import {
 import { isHubSpotHttpError } from '@hubspot/local-dev-lib/errors/index';
 import { getConfigDefaultAccountIfExists } from '@hubspot/local-dev-lib/config';
 import { setupHubSpotConfig } from '../../utils/config.js';
+import { getErrorMessage } from '../../../lib/errorHandlers/index.js';
 
 const inputSchema = {
   absoluteCurrentWorkingDirectory,
@@ -85,7 +86,7 @@ export class DocsSearchTool extends Tool<InputSchemaType> {
         return formatTextContents(error.toString());
       }
 
-      const errorMessage = `Error searching documentation: ${error instanceof Error ? error.message : String(error)}`;
+      const errorMessage = `Error searching documentation: ${getErrorMessage(error)}`;
       return formatTextContents(errorMessage);
     }
   }

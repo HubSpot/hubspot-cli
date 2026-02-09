@@ -33,8 +33,6 @@ describe('UIExtensionsDevModeInterface', () => {
   let mockLocalDevState: LocalDevState;
 
   beforeEach(() => {
-    vi.clearAllMocks();
-
     vi.mocked(DevModeUnifiedInterface.setup).mockResolvedValue(undefined);
     vi.mocked(DevModeUnifiedInterface.start).mockResolvedValue(undefined);
     vi.mocked(DevModeUnifiedInterface.fileChange).mockResolvedValue(undefined);

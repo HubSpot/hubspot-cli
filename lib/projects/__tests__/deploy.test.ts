@@ -19,7 +19,6 @@ import {
 } from '@hubspot/local-dev-lib/types/Deploy';
 
 // Mock external dependencies
-vi.mock('../../ui/logger.js');
 vi.mock('@hubspot/local-dev-lib/api/projects');
 vi.mock('@hubspot/local-dev-lib/config');
 vi.mock('../pollProjectBuildAndDeploy.js');

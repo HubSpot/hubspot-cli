@@ -5,6 +5,7 @@ import {
   getConfigAccountIfExists,
   getConfigAccountByName,
   getConfigAccountById,
+  getAllConfigAccounts,
 } from '@hubspot/local-dev-lib/config';
 import {
   getDefaultAccountOverrideAccountId,
@@ -55,7 +56,8 @@ async function handler(
 
   trackCommandUsage('accounts-use', undefined, account?.accountId);
 
-  const accountOverride = getDefaultAccountOverrideAccountId();
+  const accounts = getAllConfigAccounts();
+  const accountOverride = getDefaultAccountOverrideAccountId(accounts);
   const overrideFilePath = getDefaultAccountOverrideFilePath();
   if (accountOverride && overrideFilePath) {
     uiLogger.warn(
@@ -67,7 +69,7 @@ async function handler(
     uiLogger.log('');
   }
 
-  setConfigAccountAsDefault(newDefaultAccount);
+  setConfigAccountAsDefault(String(newDefaultAccount));
 
   return uiLogger.success(
     commands.account.subcommands.use.success.defaultAccountUpdated(account.name)

@@ -46,7 +46,7 @@ async function handler(args: ArgumentsCamelCase<AddSecretArgs>): Promise<void> {
       uiLogger.error(
         commands.secret.subcommands.add.errors.alreadyExists(secretName)
       );
-      process.exit(EXIT_CODES.ERROR);
+      return process.exit(EXIT_CODES.ERROR);
     }
 
     const { secretValue } = await secretValuePrompt();
@@ -66,7 +66,10 @@ async function handler(args: ArgumentsCamelCase<AddSecretArgs>): Promise<void> {
         accountId: derivedAccountId,
       })
     );
+    return process.exit(EXIT_CODES.ERROR);
   }
+
+  process.exit(EXIT_CODES.SUCCESS);
 }
 
 function addSecretBuilder(yargs: Argv): Argv<AddSecretArgs> {

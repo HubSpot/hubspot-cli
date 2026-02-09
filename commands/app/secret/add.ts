@@ -38,24 +38,26 @@ async function handler(
 
   trackCommandUsage('app-secret-add', {}, derivedAccountId);
 
-  const appSecretApp = await selectAppPrompt(derivedAccountId, args.app);
-
-  if (!appSecretApp) {
-    uiLogger.log('');
-    uiLogger.log(commands.app.subcommands.secret.subcommands.add.errors.noApps);
-    process.exit(EXIT_CODES.ERROR);
-  }
-
-  let appSecretName = args.name;
-
-  if (!appSecretName) {
-    const { secretName: name } = await secretNamePrompt();
-    appSecretName = name;
-  }
-
-  const { secretValue } = await secretValuePrompt();
-
   try {
+    const appSecretApp = await selectAppPrompt(derivedAccountId, args.app);
+
+    if (!appSecretApp) {
+      uiLogger.log('');
+      uiLogger.log(
+        commands.app.subcommands.secret.subcommands.add.errors.noApps
+      );
+      return process.exit(EXIT_CODES.ERROR);
+    }
+
+    let appSecretName = args.name;
+
+    if (!appSecretName) {
+      const { secretName: name } = await secretNamePrompt();
+      appSecretName = name;
+    }
+
+    const { secretValue } = await secretValuePrompt();
+
     await addAppSecret(
       derivedAccountId,
       appSecretApp.id,
@@ -72,7 +74,7 @@ async function handler(
     );
   } catch (err) {
     logError(err);
-    process.exit(EXIT_CODES.ERROR);
+    return process.exit(EXIT_CODES.ERROR);
   }
 
   process.exit(EXIT_CODES.SUCCESS);

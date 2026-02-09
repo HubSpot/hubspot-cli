@@ -105,7 +105,7 @@ function convertFieldsBuilder(yargs: Argv): Argv<ConvertFieldsArgs> {
     required: true,
     demandOption: commands.convertFields.errors.missingSrc,
   });
-  yargs.option('fieldOptions', {
+  yargs.option('field-options', {
     describe: commands.convertFields.options.options.describe,
     type: 'array',
     default: [''],

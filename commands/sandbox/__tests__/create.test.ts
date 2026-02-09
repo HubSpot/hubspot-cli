@@ -23,7 +23,6 @@ import { Mock, vi } from 'vitest';
 import { HubSpotConfigAccount } from '@hubspot/local-dev-lib/types/Accounts';
 import { ENVIRONMENTS } from '@hubspot/local-dev-lib/constants/environments';
 
-vi.mock('../../../lib/ui/logger.js');
 vi.mock('@hubspot/local-dev-lib/config');
 vi.mock('../../../lib/commonOpts');
 vi.mock('../../../lib/hasFeature');
@@ -31,7 +30,6 @@ vi.mock('../../../lib/prompts/sandboxesPrompt');
 vi.mock('../../../lib/prompts/promptUtils');
 vi.mock('../../../lib/prompts/accountNamePrompt');
 vi.mock('../../../lib/sandboxes');
-vi.mock('../../../lib/usageTracking');
 vi.mock('../../../lib/buildAccount');
 vi.mock('../../../lib/sandboxes');
 vi.mock('../../../lib/commonOpts');

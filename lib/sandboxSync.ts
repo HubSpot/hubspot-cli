@@ -4,7 +4,7 @@ import { uiLogger } from './ui/logger.js';
 import { initiateSync } from '@hubspot/local-dev-lib/api/sandboxSync';
 import { isSpecifiedError } from '@hubspot/local-dev-lib/errors/index';
 import { HubSpotConfigAccount } from '@hubspot/local-dev-lib/types/Accounts';
-import { Environment } from '@hubspot/local-dev-lib/types/Config';
+import { Environment } from '@hubspot/local-dev-lib/types/Accounts';
 import { lib } from '../lang/en.js';
 import { getAvailableSyncTypes, getSandboxTypeAsString } from './sandboxes.js';
 import {

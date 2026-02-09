@@ -8,7 +8,6 @@ import { logError, ApiErrorContext } from '../../lib/errorHandlers/index.js';
 import { getProjectConfig } from '../../lib/projects/config.js';
 import { projectNamePrompt } from '../../lib/prompts/projectNamePrompt.js';
 import { promptUser } from '../../lib/prompts/promptUtils.js';
-import { uiLine } from '../../lib/ui/index.js';
 import { EXIT_CODES } from '../../lib/enums/exitCodes.js';
 import { uiLogger } from '../../lib/ui/logger.js';
 
@@ -25,8 +24,8 @@ import {
   loadProfile,
   logProfileFooter,
   logProfileHeader,
-  exitIfUsingProfiles,
-} from '../../lib/projectProfiles.js';
+  enforceProfileUsage,
+} from '../../lib/projects/projectProfiles.js';
 import { PROJECT_DEPLOY_TEXT } from '../../lib/constants.js';
 import { commands } from '../../lang/en.js';
 import {
@@ -73,18 +72,25 @@ async function handler(
     if (args.profile) {
       logProfileHeader(args.profile);
 
-      const profile = loadProfile(projectConfig, projectDir, args.profile);
-
-      if (!profile) {
-        uiLine();
+      let profile;
+      try {
+        profile = loadProfile(projectConfig, projectDir, args.profile);
+      } catch (error) {
+        logError(error);
         process.exit(EXIT_CODES.ERROR);
       }
+
       targetAccountId = profile.accountId;
 
       logProfileFooter(profile);
     } else {
       // A profile must be specified if this project has profiles configured
-      await exitIfUsingProfiles(projectConfig, projectDir);
+      try {
+        await enforceProfileUsage(projectConfig, projectDir);
+      } catch (error) {
+        logError(error);
+        process.exit(EXIT_CODES.ERROR);
+      }
     }
   }
 
@@ -238,7 +244,6 @@ function projectDeployBuilder(yargs: Argv): Argv<ProjectDeployArgs> {
       alias: ['p'],
       describe: commands.project.deploy.options.profile,
       type: 'string',
-      hidden: true,
     },
     force: {
       alias: ['f'],
@@ -256,6 +261,10 @@ function projectDeployBuilder(yargs: Argv): Argv<ProjectDeployArgs> {
     [
       '$0 project deploy --project="my-project" --build=5',
       commands.project.deploy.examples.withOptions,
+    ],
+    [
+      '$0 project deploy --profile=profileName',
+      commands.project.deploy.examples.withProfile,
     ],
   ]);
 

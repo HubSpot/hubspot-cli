@@ -14,11 +14,12 @@ vi.mock('@hubspot/ui-extensions-dev-server', () => {
 
 import { fetchAppInstallationData } from '@hubspot/local-dev-lib/api/localDevAuth';
 import {
-  fetchAppMetadataByUid,
+  fetchAppMetadataBySourceId,
   fetchPublicAppProductionInstallCounts,
   installStaticAuthAppOnTestAccount,
 } from '@hubspot/local-dev-lib/api/appsDev';
 import { getConfigAccountById } from '@hubspot/local-dev-lib/config';
+import { Project } from '@hubspot/local-dev-lib/types/Project';
 
 import AppDevModeInterface from '../localDev/AppDevModeInterface.js';
 import LocalDevState from '../localDev/LocalDevState.js';
@@ -54,7 +55,6 @@ vi.mock('../../prompts/installAppPrompt');
 vi.mock('../../prompts/promptUtils');
 vi.mock('../../app/urls');
 vi.mock('../../accountTypes');
-vi.mock('../../ui/logger');
 vi.mock('../../errorHandlers/index');
 vi.mock('../localDev/LocalDevState');
 vi.mock('../localDev/LocalDevLogger');
@@ -70,6 +70,16 @@ describe('AppDevModeInterface', () => {
     name: 'test-project',
     srcDir: 'src',
     platformVersion: '1.0.0',
+  };
+
+  const mockProjectData: Project = {
+    createdAt: 123,
+    deletedAt: 123,
+    id: 123,
+    isLocked: false,
+    name: 'my-project',
+    portalId: 123,
+    updatedAt: 123,
   };
 
   const mockAppNode: AppIRNode = {
@@ -117,13 +127,12 @@ describe('AppDevModeInterface', () => {
   };
 
   beforeEach(() => {
-    vi.clearAllMocks();
-
     mockLocalDevState = {
       targetProjectAccountId: 12345,
       targetTestingAccountId: 67890,
       projectConfig: mockProjectConfig,
       projectDir: '/test/project',
+      projectData: mockProjectData,
       projectId: 999,
       env: ENVIRONMENTS.PROD,
       projectNodes: { [mockAppNode.uid]: mockAppNode },
@@ -141,7 +150,7 @@ describe('AppDevModeInterface', () => {
     (LocalDevLogger as Mock).mockImplementation(() => mockLocalDevLogger);
 
     // Mock external dependencies
-    (fetchAppMetadataByUid as Mock).mockResolvedValue({
+    (fetchAppMetadataBySourceId as Mock).mockResolvedValue({
       data: mockPublicApp,
     });
 
@@ -258,13 +267,17 @@ describe('AppDevModeInterface', () => {
 
       await appDevModeInterface.setup();
 
-      expect(fetchAppMetadataByUid).not.toHaveBeenCalled();
+      expect(fetchAppMetadataBySourceId).not.toHaveBeenCalled();
     });
 
     it('should setup successfully with private app', async () => {
       await appDevModeInterface.setup();
 
-      expect(fetchAppMetadataByUid).toHaveBeenCalledWith('test-app-uid', 12345);
+      expect(fetchAppMetadataBySourceId).toHaveBeenCalledWith(
+        123,
+        'test-app-uid',
+        12345
+      );
       expect(fetchPublicAppProductionInstallCounts).toHaveBeenCalledWith(
         123,
         12345
@@ -321,8 +334,12 @@ describe('AppDevModeInterface', () => {
         localDevLogger: mockLocalDevLogger,
       });
 
-      // The setup method catches the error, so we check that process.exit was called
-      await newAppDevModeInterface.setup();
+      // process.exit throws in tests, so we need to catch the error
+      try {
+        await newAppDevModeInterface.setup();
+      } catch {
+        // Expected - process.exit throws in tests
+      }
 
       expect(process.exit).toHaveBeenCalledWith(0);
     });
@@ -398,11 +415,17 @@ describe('AppDevModeInterface', () => {
 
     it('should handle errors during setup', async () => {
       const error = new Error('Setup failed');
-      (fetchAppMetadataByUid as Mock).mockRejectedValue(error);
+      (fetchAppMetadataBySourceId as Mock).mockRejectedValue(error);
 
-      await appDevModeInterface.setup();
+      // process.exit throws in tests, so we need to catch the error
+      try {
+        await appDevModeInterface.setup();
+      } catch {
+        // Expected - process.exit throws in tests
+      }
 
       expect(logError).toHaveBeenCalledWith(error);
+      expect(process.exit).toHaveBeenCalledWith(1);
     });
 
     it('should exit if user declines auto-install', async () => {
@@ -426,8 +449,12 @@ describe('AppDevModeInterface', () => {
         localDevLogger: mockLocalDevLogger,
       });
 
-      // The setup method catches the error, so we check that process.exit was called
-      await newAppDevModeInterface.setup();
+      // process.exit throws in tests, so we need to catch the error
+      try {
+        await newAppDevModeInterface.setup();
+      } catch {
+        // Expected - process.exit throws in tests
+      }
 
       expect(process.exit).toHaveBeenCalledWith(0);
     });
@@ -489,10 +516,9 @@ describe('AppDevModeInterface', () => {
 
     it('should return false if target account config is missing', async () => {
       // Reset mocks to ensure clean state
-      vi.clearAllMocks();
 
       // Set up basic mocks
-      (fetchAppMetadataByUid as Mock).mockResolvedValue({
+      (fetchAppMetadataBySourceId as Mock).mockResolvedValue({
         data: mockPublicApp,
       });
       (fetchPublicAppProductionInstallCounts as Mock).mockResolvedValue({
@@ -555,10 +581,9 @@ describe('AppDevModeInterface', () => {
 
     it('should return false for OAuth app', async () => {
       // Reset mocks to ensure clean state
-      vi.clearAllMocks();
 
       // Set up basic mocks
-      (fetchAppMetadataByUid as Mock).mockResolvedValue({
+      (fetchAppMetadataBySourceId as Mock).mockResolvedValue({
         data: mockPublicApp,
       });
       (fetchPublicAppProductionInstallCounts as Mock).mockResolvedValue({
@@ -622,10 +647,9 @@ describe('AppDevModeInterface', () => {
   describe('websocket server message handling', () => {
     it('should check app installation when websocket server connects', async () => {
       // Reset mocks to ensure clean state
-      vi.clearAllMocks();
 
       // Set up basic mocks
-      (fetchAppMetadataByUid as Mock).mockResolvedValue({
+      (fetchAppMetadataBySourceId as Mock).mockResolvedValue({
         data: mockPublicApp,
       });
       (fetchPublicAppProductionInstallCounts as Mock).mockResolvedValue({

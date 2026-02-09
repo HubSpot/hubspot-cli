@@ -7,6 +7,7 @@ import {
   getConfigFilePath,
   getConfigAccountIfExists,
   globalConfigFileExists,
+  getAllConfigAccounts,
 } from '@hubspot/local-dev-lib/config';
 import {
   getDefaultAccountOverrideAccountId,
@@ -45,7 +46,8 @@ async function handler(
     process.exit(EXIT_CODES.ERROR);
   }
 
-  const accountOverrideId = getDefaultAccountOverrideAccountId();
+  const accounts = getAllConfigAccounts();
+  const accountOverrideId = getDefaultAccountOverrideAccountId(accounts);
   const overrideFilePath = getDefaultAccountOverrideFilePath();
   if (accountOverrideId && overrideFilePath) {
     uiLogger.log(

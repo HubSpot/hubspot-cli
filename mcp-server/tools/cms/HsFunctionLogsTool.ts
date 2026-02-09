@@ -10,6 +10,7 @@ import { runCommandInDir } from '../../utils/project.js';
 import { formatTextContents } from '../../utils/content.js';
 import { trackToolUsage } from '../../utils/toolUsageTracking.js';
 import { setupHubSpotConfig } from '../../utils/config.js';
+import { getErrorMessage } from '../../../lib/errorHandlers/index.js';
 
 const inputSchema = {
   absoluteCurrentWorkingDirectory,
@@ -88,10 +89,8 @@ export class HsFunctionLogsTool extends Tool<HsFunctionLogsInputSchema> {
 
       return formatTextContents(stdout, stderr);
     } catch (error) {
-      const errorMessage =
-        error instanceof Error ? error.message : String(error);
       return formatTextContents(
-        `Error executing hs logs command: ${errorMessage}`
+        `Error executing hs logs command: ${getErrorMessage(error)}`
       );
     }
   }

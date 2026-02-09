@@ -8,7 +8,6 @@ import { getDefaultAccountOverrideFilePath } from '@hubspot/local-dev-lib/config
 import { getAccessToken } from '@hubspot/local-dev-lib/personalAccessKey';
 import { makeYargsBuilder } from '../../lib/yargsUtils.js';
 import { indent } from '../../lib/ui/index.js';
-import { getTableContents } from '../../lib/ui/table.js';
 import {
   CommonArgs,
   ConfigArgs,
@@ -16,6 +15,7 @@ import {
 } from '../../types/Yargs.js';
 import { commands } from '../../lang/en.js';
 import { uiLogger } from '../../lib/ui/logger.js';
+import { renderList } from '../../ui/render.js';
 
 const describe = commands.account.subcommands.info.describe;
 const command = 'info [account]';
@@ -77,7 +77,7 @@ async function handler(
     uiLogger.log(commands.account.subcommands.info.name(name!));
     uiLogger.log(commands.account.subcommands.info.accountId(derivedAccountId));
     uiLogger.log(commands.account.subcommands.info.scopeGroups);
-    uiLogger.log(getTableContents(scopeGroups, { border: { bodyLeft: '  ' } }));
+    renderList(scopeGroups);
   } else {
     uiLogger.log(
       commands.account.subcommands.info.errors.notUsingPersonalAccessKey

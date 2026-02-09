@@ -18,11 +18,9 @@ import { GET_STARTED_OPTIONS } from '../../lib/constants.js';
 import { EXIT_CODES } from '../../lib/enums/exitCodes.js';
 import open from 'open';
 
-vi.mock('../../lib/usageTracking');
 vi.mock('../../lib/prompts/promptUtils');
 vi.mock('../../lib/prompts/projectNameAndDestPrompt');
 vi.mock('../../lib/projects/config');
-vi.mock('../../lib/ui/logger');
 vi.mock('../../lib/errorHandlers');
 vi.mock('@hubspot/local-dev-lib/github');
 vi.mock('../../lib/dependencyManagement');
@@ -39,8 +37,6 @@ vi.mock('fs-extra', () => ({
 
 describe('commands/get-started', () => {
   beforeEach(() => {
-    vi.clearAllMocks();
-
     // @TODO Revisit config mocking in tests
     (
       getConfigAccountById as MockedFunction<typeof getConfigAccountById>
@@ -96,7 +92,6 @@ describe('commands/get-started', () => {
     };
 
     beforeEach(() => {
-      vi.clearAllMocks();
       (
         trackCommandUsage as MockedFunction<typeof trackCommandUsage>
       ).mockResolvedValue(undefined);

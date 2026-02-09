@@ -8,11 +8,13 @@ import { downloadProject } from '@hubspot/local-dev-lib/api/projects';
 import { extractZipArchive } from '@hubspot/local-dev-lib/archive';
 import { sanitizeFileName } from '@hubspot/local-dev-lib/path';
 import { isDeepEqual } from '@hubspot/local-dev-lib/isDeepEqual';
-import { translate } from '@hubspot/project-parsing-lib';
+import {
+  translate,
+  type IntermediateRepresentationNodeLocalDev,
+} from '@hubspot/project-parsing-lib/translate';
 import { isSpecifiedError } from '@hubspot/local-dev-lib/errors/index';
 import { Build } from '@hubspot/local-dev-lib/types/Build';
 import { Project } from '@hubspot/local-dev-lib/types/Project';
-import { IntermediateRepresentationNodeLocalDev } from '@hubspot/project-parsing-lib/src/lib/types.js';
 
 import {
   PROJECT_ERROR_TYPES,
@@ -310,8 +312,6 @@ export async function isDeployedProjectUpToDateWithLocal(
 }
 
 export async function checkAndInstallDependencies(): Promise<void> {
-  SpinniesManager.init();
-
   uiLogger.log('');
   SpinniesManager.add('checkingDependencies', {
     text: lib.localDevHelpers.project.checkAndInstallDependencies

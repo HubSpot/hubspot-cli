@@ -13,7 +13,7 @@ import { lib } from '../lang/en.js';
 import { uiAccountDescription } from './ui/index.js';
 import { logError } from './errorHandlers/index.js';
 import { FetchDeveloperTestAccountsResponse } from '@hubspot/local-dev-lib/types/developerTestAccounts.js';
-import { Environment } from '@hubspot/local-dev-lib/types/Config';
+import { Environment } from '@hubspot/local-dev-lib/types/Accounts';
 
 export function getHasDevTestAccounts(
   appDeveloperAccountConfig: HubSpotConfigAccount

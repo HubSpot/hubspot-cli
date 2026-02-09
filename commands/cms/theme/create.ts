@@ -14,7 +14,7 @@ import {
 import { EXIT_CODES } from '../../../lib/enums/exitCodes.js';
 import assets from '../../../lib/cmsAssets/index.js';
 
-const command = 'create';
+const command = 'create [dest]';
 const describe = commands.cms.subcommands.theme.subcommands.create.describe;
 
 type ThemeCreateArgs = CommonArgs &

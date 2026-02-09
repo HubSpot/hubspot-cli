@@ -40,13 +40,6 @@ describe('commands/theme/preview', () => {
         requiresArg: true,
       });
 
-      expect(optionSpy).toHaveBeenCalledWith('notify', {
-        describe: expect.any(String),
-        alias: 'n',
-        type: 'string',
-        requiresArg: true,
-      });
-
       expect(optionSpy).toHaveBeenCalledWith('no-ssl', {
         describe: expect.any(String),
         type: 'boolean',
@@ -57,12 +50,12 @@ describe('commands/theme/preview', () => {
         type: 'number',
       });
 
-      expect(optionSpy).toHaveBeenCalledWith('resetSession', {
+      expect(optionSpy).toHaveBeenCalledWith('reset-session', {
         hidden: true,
         type: 'boolean',
       });
 
-      expect(optionSpy).toHaveBeenCalledWith('generateFieldsTypes', {
+      expect(optionSpy).toHaveBeenCalledWith('generate-fields-types', {
         hidden: true,
         type: 'boolean',
       });

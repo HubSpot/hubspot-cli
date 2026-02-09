@@ -59,7 +59,7 @@ async function handler(
 
   const { assetVersion, staging, overwrite } = options;
   try {
-    // Fetch and write file/folder.
+    // Fetch and write file/folder with increased timeout for large themes.
     await downloadFileOrFolder(
       derivedAccountId,
       src,
@@ -70,7 +70,8 @@ async function handler(
           assetVersion !== undefined ? `${assetVersion}` : assetVersion,
         staging,
         overwrite,
-      }
+        timeout: 60_000,
+      } as Parameters<typeof downloadFileOrFolder>[4]
     );
   } catch (err) {
     logError(err);
@@ -99,7 +100,7 @@ const fetchBuilder = (yargs: Argv): Argv<FetchCommandArgs> => {
   });
 
   yargs.options({
-    assetVersion: {
+    'asset-version': {
       type: 'number',
       describe: commands.cms.subcommands.fetch.options.assetVersion.describe,
     },

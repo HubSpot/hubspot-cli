@@ -10,6 +10,7 @@ import { absoluteCurrentWorkingDirectory, docUrl } from './constants.js';
 import { http } from '@hubspot/local-dev-lib/http/unauthed';
 import { isHubSpotHttpError } from '@hubspot/local-dev-lib/errors/index';
 import { setupHubSpotConfig } from '../../utils/config.js';
+import { getErrorMessage } from '../../../lib/errorHandlers/index.js';
 
 const inputSchema = {
   docUrl,
@@ -57,7 +58,7 @@ export class DocFetchTool extends Tool<InputSchemaType> {
         return formatTextContents(error.toString());
       }
 
-      const errorMessage = `Error fetching documentation: ${error instanceof Error ? error.message : String(error)}`;
+      const errorMessage = `Error fetching documentation: ${getErrorMessage(error)}`;
       return formatTextContents(errorMessage);
     }
   }

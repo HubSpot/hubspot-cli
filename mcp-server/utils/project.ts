@@ -1,4 +1,4 @@
-import { execAsync } from './command.js';
+import { addFlag, execAsync } from './command.js';
 import path from 'path';
 import fs from 'fs';
 
@@ -14,7 +14,14 @@ export async function runCommandInDir(
   if (!fs.existsSync(directory)) {
     fs.mkdirSync(directory);
   }
-  return execAsync(command, {
+
+  let finalCommand = command;
+
+  if (command.startsWith('hs ')) {
+    finalCommand = addFlag(finalCommand, 'disable-usage-tracking', true);
+  }
+
+  return execAsync(finalCommand, {
     cwd: path.resolve(directory),
     env: {
       ...process.env,

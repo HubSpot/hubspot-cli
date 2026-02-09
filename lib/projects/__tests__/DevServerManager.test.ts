@@ -19,6 +19,7 @@ vi.mock('@hubspot/local-dev-lib/portManager', () => ({
 
 vi.mock('@hubspot/local-dev-lib/api/localDevAuth', () => ({
   fetchAppInstallationData: vi.fn().mockResolvedValue({}),
+  LOCALDEVAUTH_ACCESS_TOKEN_PATH: '/localdevauth/v1/auth/accessToken',
 }));
 
 vi.mock('@hubspot/local-dev-lib/api/appsDev', () => ({

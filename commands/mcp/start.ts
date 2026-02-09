@@ -16,20 +16,13 @@ const command = 'start';
 const describe = undefined; // Leave hidden for now
 
 interface McpStartArgs extends CommonArgs {
-  aiAgent: string;
+  aiAgent?: string;
 }
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 async function handler(args: ArgumentsCamelCase<McpStartArgs>): Promise<void> {
-  try {
-    await import('@modelcontextprotocol/sdk/server/mcp.js');
-  } catch (e) {
-    uiLogger.error(commands.mcp.start.errors.needsNode20);
-    process.exit(EXIT_CODES.ERROR);
-  }
-
   trackCommandUsage('mcp-start', {}, args.derivedAccountId);
 
   await startMcpServer(args.aiAgent);

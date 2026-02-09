@@ -39,7 +39,7 @@ export function BoxWithTitle({
           {` ${title} `}
         </Text>
       </Box>
-      <Box flexDirection="column" width="100%" rowGap={1}>
+      <Box flexDirection="column" rowGap={1}>
         {/* Split on \n\n for sections with gaps, \n for lines without gaps */}
         {message?.split('\n\n').map((section, sectionIndex) => (
           <Box

@@ -32,8 +32,6 @@ describe('mcp-server/tools/project/DocFetchTool', () => {
   let mockRegisteredTool: RegisteredTool;
 
   beforeEach(() => {
-    vi.clearAllMocks();
-
     // @ts-expect-error Not mocking whole server
     mockMcpServer = {
       registerTool: vi.fn(),

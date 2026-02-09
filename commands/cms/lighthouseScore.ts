@@ -1,6 +1,5 @@
 import { Argv, ArgumentsCamelCase } from 'yargs';
 import SpinniesManager from '../../lib/ui/SpinniesManager.js';
-import { getTableContents, getTableHeader } from '../../lib/ui/table.js';
 import { promptUser } from '../../lib/prompts/promptUtils.js';
 import { commands } from '../../lang/en.js';
 import { uiLogger } from '../../lib/ui/logger.js';
@@ -24,6 +23,7 @@ import {
   YargsCommandModule,
 } from '../../types/Yargs.js';
 import { makeYargsBuilder } from '../../lib/yargsUtils.js';
+import { renderTable } from '../../ui/render.js';
 
 const DEFAULT_TABLE_HEADER = [
   'Accessibility',
@@ -96,12 +96,14 @@ async function handler(args: ArgumentsCamelCase<LighthouseScoreArgs>) {
   let themeToCheck = theme;
 
   if (themeToCheck) {
-    let isValidTheme = true;
+    let isValidTheme = false;
     try {
-      const { data: result } = await fetchThemes(derivedAccountId, {
-        name: encodeURIComponent(themeToCheck),
-      });
-      isValidTheme = result && !!result.total;
+      const { data: result } = await fetchThemes(derivedAccountId);
+      if (result && result.objects) {
+        isValidTheme = result.objects.some(
+          ({ theme }) => theme.path === themeToCheck
+        );
+      }
     } catch (err) {
       isValidTheme = false;
     }
@@ -139,8 +141,6 @@ async function handler(args: ArgumentsCamelCase<LighthouseScoreArgs>) {
 
   // Poll till scoring is finished
   try {
-    SpinniesManager.init();
-
     SpinniesManager.add('lighthouseScore', {
       text: commands.cms.subcommands.lighthouseScore.info.generatingScore(
         themeToCheck
@@ -239,33 +239,25 @@ async function handler(args: ArgumentsCamelCase<LighthouseScoreArgs>) {
       )
     );
 
-    const tableHeader = getTableHeader(DEFAULT_TABLE_HEADER);
-
     const scores = verboseViewAverageScoreResult.scores
       ? verboseViewAverageScoreResult.scores[0]
       : EMPTY_SCORE;
 
     const averageTableData = [
-      scores.accessibilityScore,
-      scores.bestPracticesScore,
-      scores.performanceScore,
-      scores.pwaScore,
-      scores.seoScore,
+      [
+        scores.accessibilityScore,
+        scores.bestPracticesScore,
+        scores.performanceScore,
+        scores.pwaScore,
+        scores.seoScore,
+      ],
     ];
+    renderTable(DEFAULT_TABLE_HEADER, averageTableData);
+    uiLogger.log('');
 
-    uiLogger.log(
-      getTableContents([tableHeader, averageTableData], {
-        border: { bodyLeft: '  ' },
-      })
-    );
     uiLogger.log(
       commands.cms.subcommands.lighthouseScore.info.pageTemplateScoreTitle
     );
-
-    const table2Header = getTableHeader([
-      'Template path',
-      ...DEFAULT_TABLE_HEADER,
-    ]);
 
     const templateTableData = scoreResult.scores.map(score => {
       return [
@@ -278,11 +270,8 @@ async function handler(args: ArgumentsCamelCase<LighthouseScoreArgs>) {
       ];
     });
 
-    uiLogger.log(
-      getTableContents([table2Header, ...templateTableData], {
-        border: { bodyLeft: '  ' },
-      })
-    );
+    renderTable(['Template path', ...DEFAULT_TABLE_HEADER], templateTableData);
+    uiLogger.log('');
 
     uiLogger.log(
       commands.cms.subcommands.lighthouseScore.info.lighthouseLinksTitle
@@ -312,12 +301,11 @@ async function handler(args: ArgumentsCamelCase<LighthouseScoreArgs>) {
     uiLogger.log(
       commands.cms.subcommands.lighthouseScore.info.themeTitle(themeToCheck)
     );
-    const tableHeader = getTableHeader(['Target', ...DEFAULT_TABLE_HEADER]);
 
     const getTableData = (
       target: string,
       scoreResult?: GetLighthouseScoreResponse
-    ): [string, number, number, number, number, number] => {
+    ) => {
       const scores = scoreResult?.scores ? scoreResult.scores[0] : EMPTY_SCORE;
       return [
         target,
@@ -334,11 +322,8 @@ async function handler(args: ArgumentsCamelCase<LighthouseScoreArgs>) {
       getTableData('mobile', mobileScoreResult),
     ];
 
-    uiLogger.log(
-      getTableContents([tableHeader, ...tableData], {
-        border: { bodyLeft: '  ' },
-      })
-    );
+    renderTable(['Target', ...DEFAULT_TABLE_HEADER], tableData);
+    uiLogger.log('');
 
     uiLogger.info(
       commands.cms.subcommands.lighthouseScore.info.verboseOptionNote

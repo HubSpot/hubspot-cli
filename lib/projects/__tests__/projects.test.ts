@@ -4,8 +4,6 @@ import path from 'path';
 import { validateProjectConfig } from '../../projects/config.js';
 import ProjectValidationError from '../../errors/ProjectValidationError.js';
 
-vi.mock('../../ui/logger.js');
-
 describe('lib/projects', () => {
   describe('validateProjectConfig()', () => {
     let projectDir: string;

@@ -43,9 +43,6 @@ vi.mock('../../../lib/projects/pollProjectBuildAndDeploy');
 vi.mock('../../../lib/projects/platformVersion');
 vi.mock('../../../lib/prompts/projectNamePrompt');
 vi.mock('../../../lib/prompts/promptUtils');
-vi.mock('../../../lib/usageTracking');
-vi.mock('../../../lib/ui/logger');
-vi.mock('../../ui/logger.js');
 
 vi.spyOn(ui, 'uiLine');
 
@@ -114,7 +111,6 @@ describe('commands/project/deploy', () => {
         [profileFlag]: expect.objectContaining({
           type: 'string',
           alias: ['p'],
-          hidden: true,
         }),
         [forceFlag]: expect.objectContaining({
           type: 'boolean',

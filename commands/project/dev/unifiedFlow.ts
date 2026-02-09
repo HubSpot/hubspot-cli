@@ -6,12 +6,14 @@ import {
   startPortManagerServer,
   stopPortManagerServer,
 } from '@hubspot/local-dev-lib/portManager';
-import { isTranslationError } from '@hubspot/project-parsing-lib/src/lib/errors.js';
-import { translateForLocalDev } from '@hubspot/project-parsing-lib';
 import {
+  isTranslationError,
+  translateForLocalDev,
+} from '@hubspot/project-parsing-lib/translate';
+import type {
   HsProfileFile,
   HSProfileVariables,
-} from '@hubspot/project-parsing-lib/src/lib/types.js';
+} from '@hubspot/project-parsing-lib/profiles';
 import {
   getConfigAccountEnvironment,
   getAllConfigAccounts,
@@ -38,7 +40,6 @@ import {
   selectDeveloperTestTargetAccountPrompt,
   selectSandboxTargetAccountPrompt,
 } from '../../../lib/prompts/projectDevTargetAccountPrompt.js';
-import SpinniesManager from '../../../lib/ui/SpinniesManager.js';
 import LocalDevProcess from '../../../lib/projects/localDev/LocalDevProcess.js';
 import LocalDevWatcher from '../../../lib/projects/localDev/LocalDevWatcher.js';
 import { handleExit, handleKeypress } from '../../../lib/process.js';
@@ -215,8 +216,6 @@ export async function unifiedProjectDevFlow({
   );
 
   let project = uploadedProject;
-
-  SpinniesManager.init();
 
   if (projectExists && project) {
     await compareLocalProjectToDeployed(

@@ -24,10 +24,6 @@ const mockGetConfigDefaultAccountIfExists =
 const mockHasFeature = hasFeature as MockedFunction<typeof hasFeature>;
 
 describe('mcp-server/utils/feedbackTracking', () => {
-  beforeEach(() => {
-    vi.clearAllMocks();
-  });
-
   describe('mcpFeedbackRequest', () => {
     it('should return empty string when not at a threshold', async () => {
       mockGetStateValue.mockReturnValue(10);

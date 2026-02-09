@@ -9,9 +9,7 @@ import fs from 'fs';
 import { getCwd as __getCwd } from '@hubspot/local-dev-lib/path';
 import { Mock } from 'vitest';
 
-vi.mock('../../lib/usageTracking');
 vi.mock('../../lib/doctor/Doctor');
-vi.mock('../../lib/ui/logger.js');
 vi.mock('@hubspot/local-dev-lib/path');
 vi.mock('fs');
 

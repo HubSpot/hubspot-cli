@@ -5,18 +5,11 @@ import * as cliConfig from '@hubspot/local-dev-lib/config';
 import * as validation from '../../validation.js';
 import { EXIT_CODES } from '../../enums/exitCodes.js';
 import {
-  handleDeprecatedEnvVariables,
   injectAccountIdMiddleware,
   validateConfigMiddleware,
   validateAccountOptions,
 } from '../configMiddleware.js';
 
-vi.mock('../../ui/logger.js', () => ({
-  uiLogger: {
-    error: vi.fn(),
-    log: vi.fn(),
-  },
-}));
 vi.mock('@hubspot/local-dev-lib/config');
 vi.mock('../../validation');
 
@@ -37,55 +30,6 @@ describe('lib/middleware/configMiddleware', () => {
       throw new Error(`Process.exit called with code ${code}`);
     });
     getConfigFilePathSpy.mockReturnValue('/path/to/config');
-  });
-
-  describe('handleDeprecatedEnvVariables()', () => {
-    it('should handle deprecated HUBSPOT_PORTAL_ID environment variable', () => {
-      const originalEnv = process.env;
-      process.env = {
-        ...originalEnv,
-        HUBSPOT_PORTAL_ID: '123',
-        HUBSPOT_ACCOUNT_ID: undefined,
-      };
-
-      const argv: Arguments<{ useEnv?: boolean }> = {
-        _: ['some-command'],
-        useEnv: true,
-        $0: 'hs',
-      };
-
-      handleDeprecatedEnvVariables(argv);
-
-      expect(uiLogger.log).toHaveBeenCalledWith(
-        expect.stringContaining(
-          'The HUBSPOT_PORTAL_ID environment variable is deprecated. Please use HUBSPOT_ACCOUNT_ID instead.'
-        )
-      );
-      expect(process.env.HUBSPOT_ACCOUNT_ID).toBe('123');
-      process.env = originalEnv;
-    });
-
-    it('should not handle HUBSPOT_PORTAL_ID if HUBSPOT_ACCOUNT_ID is set', () => {
-      const originalEnv = process.env;
-      process.env = {
-        ...originalEnv,
-        HUBSPOT_PORTAL_ID: '123',
-        HUBSPOT_ACCOUNT_ID: '456',
-      };
-
-      const argv: Arguments<{ useEnv?: boolean }> = {
-        _: ['some-command'],
-        useEnv: true,
-        $0: 'hs',
-      };
-
-      handleDeprecatedEnvVariables(argv);
-
-      expect(uiLogger.log).not.toHaveBeenCalled();
-      expect(process.env.HUBSPOT_ACCOUNT_ID).toBe('456');
-
-      process.env = originalEnv;
-    });
   });
 
   describe('injectAccountIdMiddleware()', () => {

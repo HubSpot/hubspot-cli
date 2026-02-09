@@ -8,7 +8,7 @@ import {
   setConfigAccountAsDefault,
   globalConfigFileExists,
 } from '@hubspot/local-dev-lib/config';
-import { Environment } from '@hubspot/local-dev-lib/types/Config';
+import { Environment } from '@hubspot/local-dev-lib/types/Accounts';
 import {
   OAUTH_AUTH_METHOD,
   PERSONAL_ACCESS_KEY_AUTH_METHOD,
@@ -102,8 +102,13 @@ async function oauthConfigCreationFlow(
     },
   };
 
-  await authenticateWithOauth(oauthAccount);
-  setConfigAccountAsDefault(configData.accountId);
+  try {
+    await authenticateWithOauth(oauthAccount);
+    setConfigAccountAsDefault(configData.accountId);
+  } catch (e) {
+    logError(e);
+    process.exit(EXIT_CODES.ERROR);
+  }
 
   return oauthAccount;
 }

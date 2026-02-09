@@ -4,7 +4,7 @@ import { fetchFireAlarms } from '@hubspot/local-dev-lib/api/fireAlarm';
 import { FireAlarm } from '@hubspot/local-dev-lib/types/FireAlarm';
 import { debugError } from '../errorHandlers/index.js';
 import { pkg } from '../jsonLoader.js';
-import { renderInline } from '../../ui/index.js';
+import { renderInline } from '../../ui/render.js';
 import { getWarningBox } from '../../ui/components/StatusMessageBoxes.js';
 
 /*

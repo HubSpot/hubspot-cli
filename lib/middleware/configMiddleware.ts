@@ -12,7 +12,6 @@ import { getCwd } from '@hubspot/local-dev-lib/path';
 import { validateAccount } from '../validation.js';
 import { EXIT_CODES } from '../enums/exitCodes.js';
 import { commands } from '../../lang/en.js';
-import { uiDeprecatedTag } from '../ui/index.js';
 import {
   shouldLoadConfigForCommand,
   shouldRunAccountValidationForCommand,
@@ -21,23 +20,6 @@ import {
 import { parseStringToNumber } from '../parsing.js';
 import { uiLogger } from '../ui/logger.js';
 import { lib } from '../../lang/en.js';
-
-export function handleDeprecatedEnvVariables(
-  argv: Arguments<{ useEnv?: boolean }>
-): void {
-  // HUBSPOT_PORTAL_ID is deprecated, but we'll still support it for now
-  // The HubSpot GH Deploy Action still uses HUBSPOT_PORTAL_ID
-  if (
-    argv.useEnv &&
-    process.env.HUBSPOT_PORTAL_ID &&
-    !process.env.HUBSPOT_ACCOUNT_ID
-  ) {
-    uiDeprecatedTag(
-      commands.generalErrors.handleDeprecatedEnvVariables.portalEnvVarDeprecated
-    );
-    process.env.HUBSPOT_ACCOUNT_ID = process.env.HUBSPOT_PORTAL_ID;
-  }
-}
 
 export function handleCustomConfigLocationMiddleware(
   argv: Arguments<{ useEnv?: boolean; config?: string }>

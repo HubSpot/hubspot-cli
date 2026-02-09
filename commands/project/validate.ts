@@ -19,8 +19,10 @@ import {
 } from '../../lib/projects/upload.js';
 
 import { commands } from '../../lang/en.js';
-import { loadAndValidateProfile } from '../../lib/projectProfiles.js';
+import { validateProjectForProfile } from '../../lib/projects/projectProfiles.js';
 import { logError } from '../../lib/errorHandlers/index.js';
+import { getAllHsProfiles } from '@hubspot/project-parsing-lib/profiles';
+import SpinniesManager from '../../lib/ui/SpinniesManager.js';
 
 const command = 'validate';
 const describe = commands.project.validate.describe;
@@ -35,6 +37,14 @@ async function handler(
   const { derivedAccountId, profile } = args;
 
   const { projectConfig, projectDir } = await getProjectConfig();
+
+  const accountConfig = getConfigAccountById(derivedAccountId!);
+  const accountType = accountConfig && accountConfig.accountType;
+  trackCommandUsage(
+    'project-validate',
+    { type: accountType! },
+    derivedAccountId
+  );
 
   if (!projectConfig || !projectDir) {
     uiLogger.error(commands.project.validate.mustBeRanWithinAProject);
@@ -53,43 +63,82 @@ async function handler(
     process.exit(EXIT_CODES.ERROR);
   }
 
-  let targetAccountId = await loadAndValidateProfile(
-    projectConfig,
-    projectDir,
-    profile
-  );
-
-  targetAccountId = targetAccountId || derivedAccountId;
-
-  const accountConfig = getConfigAccountById(targetAccountId!);
-  const accountType = accountConfig && accountConfig.accountType;
-
-  trackCommandUsage(
-    'project-validate',
-    { type: accountType! },
-    targetAccountId
-  );
-
+  let validationSucceeded = true;
   const srcDir = path.resolve(projectDir!, projectConfig.srcDir);
+
+  const profiles = await getAllHsProfiles(
+    path.join(projectDir, projectConfig.srcDir)
+  );
+
+  // If a profile is specified, only validate that profile
+  if (profile) {
+    const validationErrors = await validateProjectForProfile({
+      projectConfig,
+      projectDir,
+      profileName: profile,
+      derivedAccountId,
+    });
+    if (validationErrors.length) {
+      logValidationErrors(validationErrors);
+      validationSucceeded = false;
+    }
+  } else if (profiles.length > 0) {
+    // If no profile was specified and the project has profiles, validate all of them
+    SpinniesManager.add('validatingAllProfiles', {
+      text: commands.project.validate.spinners.validatingAllProfiles,
+    });
+    const errors: (string | Error)[] = [];
+
+    for (const profileName of profiles) {
+      const validationErrors = await validateProjectForProfile({
+        projectConfig,
+        projectDir,
+        profileName,
+        derivedAccountId,
+        indentSpinners: true,
+      });
+      if (validationErrors.length) {
+        errors.push(...validationErrors);
+        validationSucceeded = false;
+      }
+    }
+
+    if (validationSucceeded) {
+      SpinniesManager.succeed('validatingAllProfiles', {
+        text: commands.project.validate.spinners.allProfilesValidationSucceeded,
+      });
+    } else {
+      SpinniesManager.fail('validatingAllProfiles', {
+        text: commands.project.validate.spinners.allProfilesValidationFailed,
+      });
+    }
+
+    logValidationErrors(errors);
+  } else if (profiles.length === 0) {
+    // If the project has no profiles, validate the project without a profile
+    try {
+      await handleTranslate({
+        projectDir: projectDir!,
+        projectConfig,
+        accountId: derivedAccountId,
+        skipValidation: false,
+      });
+    } catch (e) {
+      uiLogger.error(commands.project.validate.failure(projectConfig.name));
+      logError(e);
+      validationSucceeded = false;
+      uiLogger.log('');
+    }
+  }
+
+  if (!validationSucceeded) {
+    process.exit(EXIT_CODES.ERROR);
+  }
 
   try {
     await validateSourceDirectory(srcDir, projectConfig, projectDir);
   } catch (e) {
     logError(e);
-    process.exit(EXIT_CODES.ERROR);
-  }
-
-  try {
-    await handleTranslate(
-      projectDir!,
-      projectConfig,
-      targetAccountId,
-      false,
-      profile
-    );
-  } catch (e) {
-    logError(e);
-    uiLogger.error(commands.project.validate.failure(projectConfig.name));
     process.exit(EXIT_CODES.ERROR);
   }
 
@@ -103,7 +152,6 @@ function projectValidateBuilder(yargs: Argv): Argv<ProjectValidateArgs> {
       type: 'string',
       alias: 'p',
       describe: commands.project.validate.options.profile.describe,
-      hidden: true,
     },
   });
 
@@ -111,8 +159,23 @@ function projectValidateBuilder(yargs: Argv): Argv<ProjectValidateArgs> {
 
   yargs.example([
     ['$0 project validate', commands.project.validate.examples.default],
+    [
+      '$0 project validate --profile=profileName',
+      commands.project.validate.examples.withProfile,
+    ],
   ]);
   return yargs as Argv<ProjectValidateArgs>;
+}
+
+function logValidationErrors(validationErrors: (string | Error)[]) {
+  uiLogger.log('');
+  validationErrors.forEach(error => {
+    if (error instanceof Error) {
+      logError(error);
+    } else {
+      uiLogger.log(error);
+    }
+  });
 }
 
 const builder = makeYargsBuilder<ProjectValidateArgs>(

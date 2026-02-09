@@ -27,7 +27,6 @@ function buildArguments(
 }
 
 vi.mock('@hubspot/local-dev-lib/config');
-vi.mock('../../ui/logger.js');
 
 describe('lib/commonOpts', () => {
   describe('getCmsPublishMode()', () => {

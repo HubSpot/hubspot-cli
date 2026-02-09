@@ -9,10 +9,6 @@ const mockMcpFeedbackRequest = mcpFeedbackRequest as MockedFunction<
 >;
 
 describe('mcp-server/utils/content', () => {
-  beforeEach(() => {
-    vi.clearAllMocks();
-  });
-
   describe('formatTextContent', () => {
     it('should format a single text string', () => {
       const result = formatTextContent('Test message');

@@ -154,8 +154,6 @@ export async function tailLogs(
     }, TAIL_DELAY);
   }
 
-  SpinniesManager.init();
-
   SpinniesManager.add('tailLogs', {
     text: `Following logs for ${name}`,
   });

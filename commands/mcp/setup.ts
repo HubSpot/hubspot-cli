@@ -27,13 +27,6 @@ async function handler(args: ArgumentsCamelCase<MCPSetupArgs>): Promise<void> {
     process.exit(EXIT_CODES.ERROR);
   }
 
-  try {
-    await import('@modelcontextprotocol/sdk/server/mcp.js');
-  } catch (e) {
-    uiLogger.error(commands.mcp.setup.errors.needsNode20);
-    process.exit(EXIT_CODES.ERROR);
-  }
-
   trackCommandUsage('mcp-setup', {}, args.derivedAccountId);
 
   try {
