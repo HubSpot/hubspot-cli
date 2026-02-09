@@ -1,6 +1,9 @@
 import { hasLocalStateFlag } from '@hubspot/local-dev-lib/config';
-import { getConfigDefaultAccountIfExists } from '@hubspot/local-dev-lib/config';
-
+import {
+  getConfigDefaultAccountIfExists,
+  isConfigFlagEnabled,
+} from '@hubspot/local-dev-lib/config';
+import { CONFIG_FLAGS } from '@hubspot/local-dev-lib/constants/config';
 import { uiLogger } from '../../ui/logger.js';
 import {
   uiLine,
@@ -10,8 +13,7 @@ import {
 import { lib } from '../../../lang/en.js';
 import LocalDevState from './LocalDevState.js';
 import SpinniesManager from '../../ui/SpinniesManager.js';
-import { logError } from '../../errorHandlers/index.js';
-import { isAutoOpenBrowserEnabled } from '../../configOptions.js';
+import { logError, getErrorMessage } from '../../errorHandlers/index.js';
 import { CONFIG_LOCAL_STATE_FLAGS } from '../../constants.js';
 
 class LocalDevLogger {
@@ -43,9 +45,9 @@ class LocalDevLogger {
     langFunction: (message: string) => string
   ): void {
     if (this.state.debug) {
-      uiLogger.error(e instanceof Error ? e.message : String(e));
+      uiLogger.error(getErrorMessage(e));
     }
-    uiLogger.error(langFunction(e instanceof Error ? e.message : ''));
+    uiLogger.error(langFunction(getErrorMessage(e)));
   }
 
   getUploadCommand(): string {
@@ -103,9 +105,24 @@ class LocalDevLogger {
     this.handleError(e, lib.LocalDevManager.devServer.cleanupError);
   }
 
+  devSessionRegistrationError(e: unknown): void {
+    this.handleError(e, lib.LocalDevManager.devSession.registrationError);
+  }
+
+  devSessionMissingSessionIdError(): void {
+    uiLogger.error(lib.LocalDevManager.devSession.missingSessionIdError);
+  }
+
+  devSessionHeartbeatError(e: unknown): void {
+    this.handleError(e, lib.LocalDevManager.devSession.heartbeatError);
+  }
+
+  devSessionDeletionError(e: unknown): void {
+    this.handleError(e, lib.LocalDevManager.devSession.deletionError);
+  }
+
   resetSpinnies(): void {
     SpinniesManager.stopAll();
-    SpinniesManager.init();
   }
 
   startupMessage(): void {
@@ -135,7 +152,7 @@ class LocalDevLogger {
       CONFIG_LOCAL_STATE_FLAGS.LOCAL_DEV_UI_WELCOME
     );
 
-    if (!isAutoOpenBrowserEnabled()) {
+    if (!isConfigFlagEnabled(CONFIG_FLAGS.AUTO_OPEN_BROWSER, true)) {
       uiLogger.log(
         lib.LocalDevManager.viewLocalDevUILink(
           this.state.targetTestingAccountId,

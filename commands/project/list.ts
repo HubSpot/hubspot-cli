@@ -11,9 +11,9 @@ import { Project } from '@hubspot/local-dev-lib/types/Project';
 import { fetchProjects } from '@hubspot/local-dev-lib/api/projects';
 import { logError } from '../../lib/errorHandlers/index.js';
 import { EXIT_CODES } from '../../lib/enums/exitCodes.js';
-import { getTableContents, getTableHeader } from '../../lib/ui/table.js';
 import { uiLogger } from '../../lib/ui/logger.js';
 import { commands } from '../../lang/en.js';
+import { renderTable } from '../../ui/render.js';
 
 const command = ['list', 'ls'];
 const describe = commands.project.list.describe;
@@ -58,17 +58,13 @@ async function handler(
   }
   const projectListData = formatProjectsAsTableRows(projectData);
 
-  projectListData.unshift(
-    getTableHeader([
-      commands.project.list.labels.name,
-      commands.project.list.labels.platformVersion,
-    ])
-  );
+  const tableHeader = [
+    commands.project.list.labels.name,
+    commands.project.list.labels.platformVersion,
+  ];
 
   uiLogger.log(commands.project.list.projects);
-  uiLogger.log(
-    getTableContents(projectListData, { border: { bodyLeft: '  ' } })
-  );
+  renderTable(tableHeader, projectListData);
 }
 
 function projectListBuilder(yargs: Argv): Argv<ProjectListArgs> {

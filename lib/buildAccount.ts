@@ -19,7 +19,7 @@ import {
   createV2Sandbox,
   getSandboxPersonalAccessKey,
 } from '@hubspot/local-dev-lib/api/sandboxHubs';
-import { Environment } from '@hubspot/local-dev-lib/types/Config';
+import { Environment } from '@hubspot/local-dev-lib/types/Accounts';
 
 import { personalAccessKeyPrompt } from './prompts/personalAccessKeyPrompt.js';
 import { createDeveloperTestAccountConfigPrompt } from './prompts/createDeveloperTestAccountConfigPrompt.js';

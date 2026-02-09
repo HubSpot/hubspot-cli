@@ -2,23 +2,18 @@ import yargs, { ArgumentsCamelCase, Argv } from 'yargs';
 import { PLATFORM_VERSIONS } from '@hubspot/local-dev-lib/constants/projects';
 import { uiLogger } from '../../../lib/ui/logger.js';
 import { getConfigAccountById } from '@hubspot/local-dev-lib/config';
-import { migrateApp2025_2, MigrateAppArgs } from '../../../lib/app/migrate.js';
-import { migrateApp2023_2 } from '../../../lib/app/migrate_legacy.js';
+import { migrateApp, MigrateAppArgs } from '../../../lib/app/migrate.js';
 import { EXIT_CODES } from '../../../lib/enums/exitCodes.js';
 import migrateCommand from '../migrate.js';
 import { Mock, Mocked } from 'vitest';
 
 vi.mock('@hubspot/local-dev-lib/config');
-vi.mock('../../../lib/ui/logger.js');
 vi.mock('../../../lib/app/migrate');
-vi.mock('../../../lib/app/migrate_legacy');
 vi.mock('../../../lib/projects/config.js');
-vi.mock('../../../lib/usageTracking.js');
 const mockYargs = yargs as Argv;
 
 const mockedGetConfigAccountById = getConfigAccountById as Mock;
-const mockedMigrateApp2023_2 = migrateApp2023_2 as Mock;
-const mockedMigrateApp2025_2 = migrateApp2025_2 as Mock;
+const mockedmigrateApp = migrateApp as Mock;
 const mockedUiLogger = uiLogger as Mocked<typeof uiLogger>;
 const optionsSpy = vi.spyOn(mockYargs, 'options');
 const exampleSpy = vi.spyOn(mockYargs, 'example');
@@ -58,7 +53,7 @@ describe('commands/app/migrate', () => {
       expect(exitSpy).toHaveBeenCalledWith(EXIT_CODES.ERROR);
     });
 
-    it('should call migrateApp2025_2 for platform version 2025.2', async () => {
+    it('should call migrateApp for platform version 2025.2', async () => {
       const options = {
         derivedAccountId: mockAccountId,
         platformVersion: PLATFORM_VERSIONS.v2025_2,
@@ -66,15 +61,11 @@ describe('commands/app/migrate', () => {
 
       await migrateCommand.handler(options);
 
-      expect(mockedMigrateApp2025_2).toHaveBeenCalledWith(
-        mockAccountId,
-        options
-      );
-      expect(mockedMigrateApp2023_2).not.toHaveBeenCalled();
+      expect(mockedmigrateApp).toHaveBeenCalledWith(mockAccountId, options);
       expect(exitSpy).toHaveBeenCalledWith(EXIT_CODES.SUCCESS);
     });
 
-    it('should call migrateApp2025_2 when unstable is true', async () => {
+    it('should call migrateApp when unstable is true', async () => {
       const options = {
         derivedAccountId: mockAccountId,
         unstable: true,
@@ -82,38 +73,17 @@ describe('commands/app/migrate', () => {
 
       await migrateCommand.handler(options);
 
-      expect(mockedMigrateApp2025_2).toHaveBeenCalledWith(
-        mockAccountId,
-        options
-      );
-      expect(mockedMigrateApp2023_2).not.toHaveBeenCalled();
-      expect(exitSpy).toHaveBeenCalledWith(EXIT_CODES.SUCCESS);
-    });
-
-    it('should call migrateApp2023_2 for platform version 2023.2', async () => {
-      const options = {
-        derivedAccountId: mockAccountId,
-        platformVersion: PLATFORM_VERSIONS.v2023_2,
-      } as ArgumentsCamelCase<MigrateAppArgs>;
-
-      await migrateCommand.handler(options);
-
-      expect(mockedMigrateApp2023_2).toHaveBeenCalledWith(
-        mockAccountId,
-        options,
-        mockAccountConfig
-      );
-      expect(mockedMigrateApp2025_2).not.toHaveBeenCalled();
+      expect(mockedmigrateApp).toHaveBeenCalledWith(mockAccountId, options);
       expect(exitSpy).toHaveBeenCalledWith(EXIT_CODES.SUCCESS);
     });
 
     it('should handle errors during migration', async () => {
       const mockError = new Error('Migration failed');
-      mockedMigrateApp2023_2.mockRejectedValue(mockError);
+      mockedmigrateApp.mockRejectedValue(mockError);
 
       await migrateCommand.handler({
         derivedAccountId: mockAccountId,
-        platformVersion: PLATFORM_VERSIONS.v2023_2,
+        platformVersion: PLATFORM_VERSIONS.v2025_2,
       } as ArgumentsCamelCase<MigrateAppArgs>);
 
       expect(mockedUiLogger.error).toHaveBeenCalled();

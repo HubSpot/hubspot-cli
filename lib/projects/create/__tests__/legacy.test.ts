@@ -13,7 +13,6 @@ import {
 import { AxiosResponse } from 'axios';
 import { Mock } from 'vitest';
 
-vi.mock('../../../ui/logger.js');
 vi.mock('@hubspot/local-dev-lib/api/github');
 
 const mockedFetchRepoFile = vi.mocked(github.fetchRepoFile);

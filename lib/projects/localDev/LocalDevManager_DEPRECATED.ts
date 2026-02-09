@@ -9,13 +9,15 @@ import {
 import { getConfigDefaultAccountIfExists } from '@hubspot/local-dev-lib/config';
 import { Build } from '@hubspot/local-dev-lib/types/Build';
 import { PublicApp } from '@hubspot/local-dev-lib/types/Apps';
-import { Environment } from '@hubspot/local-dev-lib/types/Config';
+import { Environment } from '@hubspot/local-dev-lib/types/Accounts';
 
 import { PROJECT_CONFIG_FILE } from '../../constants.js';
 import SpinniesManager from '../../ui/SpinniesManager.js';
 import DevServerManager_DEPRECATED from './DevServerManager_DEPRECATED.js';
+import DevSessionManager from './DevSessionManager.js';
 import { EXIT_CODES } from '../../enums/exitCodes.js';
 import { getAccountHomeUrl } from '../urls.js';
+import { getErrorMessage } from '../../errorHandlers/index.js';
 import {
   componentIsApp,
   componentIsPublicApp,
@@ -63,7 +65,7 @@ type LocalDevManagerConstructorOptions = {
   env: Environment;
 };
 
-class LocalDevManager {
+class LocalDevManager_DEPRECATED {
   targetAccountId: number;
   targetProjectAccountId: number;
   projectConfig: ProjectConfig;
@@ -81,6 +83,7 @@ class LocalDevManager {
   publicAppActiveInstalls: number | null;
   projectSourceDir: string;
   mostRecentUploadWarning: string | null;
+  private devSessionManager: DevSessionManager;
 
   constructor(options: LocalDevManagerConstructorOptions) {
     this.targetAccountId = options.targetAccountId;
@@ -111,6 +114,10 @@ class LocalDevManager {
       uiLogger.log(lib.LocalDevManager.failedToInitialize);
       process.exit(EXIT_CODES.ERROR);
     }
+
+    this.devSessionManager = new DevSessionManager({
+      targetTestingAccountId: this.targetAccountId,
+    });
   }
 
   async setActiveApp(appUid?: string): Promise<void> {
@@ -257,6 +264,12 @@ class LocalDevManager {
 
     await this.devServerStart();
 
+    const devSessionRegistered = await this.devSessionManager.registerSession();
+
+    if (!devSessionRegistered) {
+      process.exit(EXIT_CODES.ERROR);
+    }
+
     // Initialize project file watcher to detect configuration file changes
     this.startWatching();
 
@@ -277,9 +290,11 @@ class LocalDevManager {
     }
     await this.stopWatching();
 
-    const cleanupSucceeded = await this.devServerCleanup();
+    const cleanupServersSucceeded = await this.devServerCleanup();
+    const cleanupSessionSucceeded =
+      await this.devSessionManager.deleteDevSession();
 
-    if (!cleanupSucceeded) {
+    if (!cleanupServersSucceeded || !cleanupSessionSucceeded) {
       if (showProgress) {
         SpinniesManager.fail('cleanupMessage', {
           text: lib.LocalDevManager.exitingFail,
@@ -386,18 +401,18 @@ class LocalDevManager {
 
     // Need to provide both overloads for process.stdout.write to satisfy TS
     function customStdoutWrite(
-      this: LocalDevManager,
+      this: LocalDevManager_DEPRECATED,
       buffer: Uint8Array | string,
       cb?: StdoutCallback
     ): boolean;
     function customStdoutWrite(
-      this: LocalDevManager,
+      this: LocalDevManager_DEPRECATED,
       str: Uint8Array | string,
       encoding?: BufferEncoding,
       cb?: StdoutCallback
     ): boolean;
     function customStdoutWrite(
-      this: LocalDevManager,
+      this: LocalDevManager_DEPRECATED,
       chunk: Uint8Array | string,
       encoding?: BufferEncoding | StdoutCallback,
       callback?: StdoutCallback
@@ -524,12 +539,10 @@ class LocalDevManager {
       return true;
     } catch (e) {
       if (this.debug) {
-        uiLogger.error(e instanceof Error ? e.message : String(e));
+        uiLogger.error(getErrorMessage(e));
       }
       uiLogger.error(
-        lib.LocalDevManager.devServer.setupError(
-          e instanceof Error ? e.message : ''
-        )
+        lib.LocalDevManager.devServer.setupError(getErrorMessage(e))
       );
       return false;
     }
@@ -543,12 +556,10 @@ class LocalDevManager {
       });
     } catch (e) {
       if (this.debug) {
-        uiLogger.error(e instanceof Error ? e.message : String(e));
+        uiLogger.error(getErrorMessage(e));
       }
       uiLogger.error(
-        lib.LocalDevManager.devServer.startError(
-          e instanceof Error ? e.message : ''
-        )
+        lib.LocalDevManager.devServer.startError(getErrorMessage(e))
       );
       process.exit(EXIT_CODES.ERROR);
     }
@@ -559,12 +570,10 @@ class LocalDevManager {
       DevServerManager_DEPRECATED.fileChange({ filePath, event });
     } catch (e) {
       if (this.debug) {
-        uiLogger.error(e instanceof Error ? e.message : String(e));
+        uiLogger.error(getErrorMessage(e));
       }
       uiLogger.error(
-        lib.LocalDevManager.devServer.fileChangeError(
-          e instanceof Error ? e.message : ''
-        )
+        lib.LocalDevManager.devServer.fileChangeError(getErrorMessage(e))
       );
     }
   }
@@ -575,16 +584,14 @@ class LocalDevManager {
       return true;
     } catch (e) {
       if (this.debug) {
-        uiLogger.error(e instanceof Error ? e.message : String(e));
+        uiLogger.error(getErrorMessage(e));
       }
       uiLogger.error(
-        lib.LocalDevManager.devServer.cleanupError(
-          e instanceof Error ? e.message : ''
-        )
+        lib.LocalDevManager.devServer.cleanupError(getErrorMessage(e))
       );
       return false;
     }
   }
 }
 
-export default LocalDevManager;
+export default LocalDevManager_DEPRECATED;

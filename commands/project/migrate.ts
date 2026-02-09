@@ -6,7 +6,7 @@ import {
   EnvironmentArgs,
   YargsCommandModule,
 } from '../../types/Yargs.js';
-import { migrateApp2025_2 } from '../../lib/app/migrate.js';
+import { migrateApp } from '../../lib/app/migrate.js';
 import { getProjectConfig } from '../../lib/projects/config.js';
 import { PLATFORM_VERSIONS } from '@hubspot/local-dev-lib/constants/projects';
 import { logError } from '../../lib/errorHandlers/index.js';
@@ -15,7 +15,7 @@ import { makeYargsBuilder } from '../../lib/yargsUtils.js';
 import { uiCommandReference } from '../../lib/ui/index.js';
 import { commands, lib } from '../../lang/en.js';
 import { uiLogger } from '../../lib/ui/logger.js';
-import { renderInline } from '../../ui/index.js';
+import { renderInline } from '../../ui/render.js';
 import { getWarningBox } from '../../ui/components/StatusMessageBoxes.js';
 import {
   getHasMigratableThemes,
@@ -97,7 +97,7 @@ async function handler(
         projectConfig
       );
     } else {
-      await migrateApp2025_2(
+      await migrateApp(
         derivedAccountId,
         {
           ...args,

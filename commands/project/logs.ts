@@ -2,7 +2,6 @@ import { Argv, ArgumentsCamelCase } from 'yargs';
 import { getConfigAccountEnvironment } from '@hubspot/local-dev-lib/config';
 import { getHubSpotWebsiteOrigin } from '@hubspot/local-dev-lib/urls';
 import { trackCommandUsage } from '../../lib/usageTracking.js';
-import { getTableContents, getTableHeader } from '../../lib/ui/table.js';
 import { logError } from '../../lib/errorHandlers/index.js';
 import { uiLine } from '../../lib/ui/index.js';
 import { projectLogsPrompt } from '../../lib/prompts/projectsLogsPrompt.js';
@@ -12,6 +11,7 @@ import { EXIT_CODES } from '../../lib/enums/exitCodes.js';
 import { ProjectLogsManager } from '../../lib/projects/ProjectLogsManager.js';
 import { CommonArgs, YargsCommandModule } from '../../types/Yargs.js';
 import { makeYargsBuilder } from '../../lib/yargsUtils.js';
+import { renderTable } from '../../ui/render.js';
 
 function getPrivateAppsUrl(accountId: number): string {
   const baseUrl = getHubSpotWebsiteOrigin(
@@ -21,30 +21,24 @@ function getPrivateAppsUrl(accountId: number): string {
   return `${baseUrl}/private-apps/${accountId}`;
 }
 
-function logTable(
-  tableHeader: string[],
-  logsInfo: (string | number | undefined)[]
-): void {
-  uiLogger.log(commands.project.logs.logs.showingLogs);
-  uiLogger.log(
-    getTableContents([tableHeader, logsInfo], { border: { bodyLeft: '  ' } })
-  );
-}
-
 function logPreamble(): void {
   if (ProjectLogsManager.isPublicFunction) {
-    logTable(
-      getTableHeader([
+    uiLogger.log(commands.project.logs.logs.showingLogs);
+    renderTable(
+      [
         commands.project.logs.table.accountHeader,
         commands.project.logs.table.functionHeader,
         commands.project.logs.table.endpointHeader,
-      ]),
+      ],
       [
-        ProjectLogsManager.accountId,
-        ProjectLogsManager.functionName,
-        ProjectLogsManager.endpointName,
+        [
+          String(ProjectLogsManager.accountId),
+          String(ProjectLogsManager.functionName),
+          String(ProjectLogsManager.endpointName),
+        ],
       ]
     );
+    uiLogger.log('');
     uiLogger.log(
       commands.project.logs.logs.hubspotLogsDirectLink(
         `${getPrivateAppsUrl(ProjectLogsManager.accountId!)}/${
@@ -55,13 +49,20 @@ function logPreamble(): void {
       )
     );
   } else {
-    logTable(
-      getTableHeader([
+    uiLogger.log(commands.project.logs.logs.showingLogs);
+    renderTable(
+      [
         commands.project.logs.table.accountHeader,
         commands.project.logs.table.functionHeader,
-      ]),
-      [ProjectLogsManager.accountId, ProjectLogsManager.functionName]
+      ],
+      [
+        [
+          String(ProjectLogsManager.accountId),
+          String(ProjectLogsManager.functionName),
+        ],
+      ]
     );
+    uiLogger.log('');
     uiLogger.log(
       commands.project.logs.logs.hubspotLogsDirectLink(
         `${getPrivateAppsUrl(ProjectLogsManager.accountId!)}/${

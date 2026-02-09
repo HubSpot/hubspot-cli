@@ -15,6 +15,7 @@ import {
 } from '../../../../lib/constants.js';
 import { MockedFunction, Mocked } from 'vitest';
 import { mcpFeedbackRequest } from '../../../utils/feedbackTracking.js';
+import { trackToolUsage } from '../../../utils/toolUsageTracking.js';
 
 vi.mock('@modelcontextprotocol/sdk/server/mcp.js');
 vi.mock('../../../utils/project');
@@ -23,6 +24,10 @@ vi.mock('../../../../lib/constants');
 vi.mock('../../../../lib/projects/create/v2');
 vi.mock('../../../utils/toolUsageTracking');
 vi.mock('../../../utils/feedbackTracking');
+
+const mockTrackToolUsage = trackToolUsage as MockedFunction<
+  typeof trackToolUsage
+>;
 
 const mockMcpFeedbackRequest = mcpFeedbackRequest as MockedFunction<
   typeof mcpFeedbackRequest
@@ -39,8 +44,6 @@ describe('mcp-server/tools/project/CreateProjectTool', () => {
   let mockRegisteredTool: RegisteredTool;
 
   beforeEach(() => {
-    vi.clearAllMocks();
-
     // @ts-expect-error Not mocking the whole thing
     mockMcpServer = {
       registerTool: vi.fn(),
@@ -49,6 +52,7 @@ describe('mcp-server/tools/project/CreateProjectTool', () => {
     mockRegisteredTool = {} as RegisteredTool;
     mockMcpServer.registerTool.mockReturnValue(mockRegisteredTool);
     mockMcpFeedbackRequest.mockResolvedValue('');
+    mockTrackToolUsage.mockResolvedValue(undefined);
 
     tool = new CreateProjectTool(mockMcpServer);
 
@@ -150,7 +154,7 @@ describe('mcp-server/tools/project/CreateProjectTool', () => {
         {
           type: 'text',
           text: expect.stringContaining(
-            'Ask the user how they would you like to distribute the application?'
+            'Ask the user how they would you like to distribute the app?'
           ),
         },
         {

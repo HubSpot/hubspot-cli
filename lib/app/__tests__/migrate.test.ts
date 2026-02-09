@@ -3,10 +3,13 @@ import { getCwd, sanitizeFileName } from '@hubspot/local-dev-lib/path';
 import { extractZipArchive } from '@hubspot/local-dev-lib/archive';
 import { getConfigAccountById } from '@hubspot/local-dev-lib/config';
 import { ArgumentsCamelCase } from 'yargs';
-import { validateUid } from '@hubspot/project-parsing-lib';
+import { validateUid } from '@hubspot/project-parsing-lib/uid';
 import { UNMIGRATABLE_REASONS } from '@hubspot/local-dev-lib/constants/projects';
 import { MIGRATION_STATUS } from '@hubspot/local-dev-lib/types/Migration';
-import { downloadProject } from '@hubspot/local-dev-lib/api/projects';
+import {
+  downloadProject,
+  fetchProjectComponentsMetadata,
+} from '@hubspot/local-dev-lib/api/projects';
 import fs from 'fs';
 import { MockedFunction, Mocked } from 'vitest';
 import {
@@ -41,19 +44,17 @@ import {
   pollMigrationStatus,
   finalizeAppMigration,
   downloadProjectFiles,
-  migrateApp2025_2,
+  migrateApp,
   logInvalidAccountError,
   MigrateAppArgs,
   validateMigrationApps,
 } from '../migrate.js';
 import { HubSpotConfigAccount } from '@hubspot/local-dev-lib/types/Accounts';
 
-vi.mock('../../ui/logger.js');
 vi.mock('@hubspot/local-dev-lib/path');
 vi.mock('@hubspot/local-dev-lib/archive');
-vi.mock('@hubspot/project-parsing-lib');
+vi.mock('@hubspot/project-parsing-lib/uid');
 vi.mock('@hubspot/local-dev-lib/api/projects');
-vi.mock('inquirer');
 vi.mock('../../prompts/promptUtils');
 vi.mock('../../projects/config');
 vi.mock('../../projects/ensureProjectExists');
@@ -77,6 +78,10 @@ const mockedValidateUid = validateUid as MockedFunction<typeof validateUid>;
 const mockedDownloadProject = downloadProject as MockedFunction<
   typeof downloadProject
 >;
+const mockedFetchProjectComponentsMetadata =
+  fetchProjectComponentsMetadata as MockedFunction<
+    typeof fetchProjectComponentsMetadata
+  >;
 const mockedGetConfigAccountById = getConfigAccountById as MockedFunction<
   typeof getConfigAccountById
 >;
@@ -315,7 +320,7 @@ describe('lib/app/migrate', () => {
     it('should return all apps when no projectConfig is provided', async () => {
       setupMockApps([createMockMigratableApp(1, 'App 1')]);
 
-      const result = await fetchMigrationApps(ACCOUNT_ID, PLATFORM_VERSION);
+      const result = await fetchMigrationApps(ACCOUNT_ID, PLATFORM_VERSION, {});
       expect(result.migratableApps).toHaveLength(1);
       expect(result.migratableApps[0].appId).toBe(1);
       expect(result.unmigratableApps).toHaveLength(0);
@@ -325,13 +330,37 @@ describe('lib/app/migrate', () => {
       const projectConfig = createLoadedProjectConfig(PROJECT_NAME);
       setupMockApps([createMockMigratableApp(1, 'App 1', PROJECT_NAME)]);
 
-      const result = await fetchMigrationApps(
-        ACCOUNT_ID,
-        PLATFORM_VERSION,
-        projectConfig
-      );
+      const result = await fetchMigrationApps(ACCOUNT_ID, PLATFORM_VERSION, {
+        projectConfig,
+      });
       expect(result.migratableApps).toHaveLength(1);
       expect(result.migratableApps[0].projectName).toBe(PROJECT_NAME);
+    });
+
+    it('should pass appId to listAppsForMigration when provided', async () => {
+      setupMockApps([createMockMigratableApp(1, 'App 1')]);
+
+      await fetchMigrationApps(ACCOUNT_ID, PLATFORM_VERSION, {
+        appId: APP_ID,
+      });
+
+      expect(mockedListAppsForMigration).toHaveBeenCalledWith(
+        ACCOUNT_ID,
+        PLATFORM_VERSION,
+        APP_ID
+      );
+    });
+
+    it('should pass undefined appId to listAppsForMigration when not provided', async () => {
+      setupMockApps([createMockMigratableApp(1, 'App 1')]);
+
+      await fetchMigrationApps(ACCOUNT_ID, PLATFORM_VERSION, {});
+
+      expect(mockedListAppsForMigration).toHaveBeenCalledWith(
+        ACCOUNT_ID,
+        PLATFORM_VERSION,
+        undefined
+      );
     });
   });
 
@@ -750,7 +779,7 @@ describe('lib/app/migrate', () => {
     });
   });
 
-  describe('migrateApp2025_2', () => {
+  describe('migrateApp', () => {
     const options = {
       name: PROJECT_NAME,
       dest: PROJECT_DEST,
@@ -766,7 +795,7 @@ describe('lib/app/migrate', () => {
     it('should throw an error when account is not ungated for unified apps', async () => {
       mockedHasUnfiedAppsAccess.mockResolvedValueOnce(false);
 
-      await expect(migrateApp2025_2(ACCOUNT_ID, options)).rejects.toThrowError(
+      await expect(migrateApp(ACCOUNT_ID, options)).rejects.toThrowError(
         /isn't enrolled in the required product beta to access this command./
       );
     });
@@ -778,7 +807,7 @@ describe('lib/app/migrate', () => {
       } as unknown as LoadedProjectConfig;
 
       await expect(
-        migrateApp2025_2(ACCOUNT_ID, options, invalidProjectConfig)
+        migrateApp(ACCOUNT_ID, options, invalidProjectConfig)
       ).rejects.toThrow(/The project configuration file is invalid/);
     });
 
@@ -790,8 +819,162 @@ describe('lib/app/migrate', () => {
       });
 
       await expect(
-        migrateApp2025_2(ACCOUNT_ID, options, projectConfig)
+        migrateApp(ACCOUNT_ID, options, projectConfig)
       ).rejects.toThrow(/Migrations are only supported for existing projects/);
+    });
+
+    it('should extract appId from project components when project exists', async () => {
+      const projectConfig = createLoadedProjectConfig(PROJECT_NAME);
+      const extractedAppId = 27031427;
+
+      mockedEnsureProjectExists.mockResolvedValueOnce({
+        projectExists: true,
+        project: { id: 123, name: PROJECT_NAME },
+      } as never);
+
+      mockedFetchProjectComponentsMetadata.mockResolvedValueOnce({
+        data: {
+          topLevelComponentMetadata: [
+            {
+              componentName: 'My Public App',
+              type: { name: 'PUBLIC_APP' },
+              deployOutput: { appId: extractedAppId },
+              featureComponents: [],
+            },
+          ],
+        },
+      } as never);
+
+      // @ts-expect-error Mock
+      mockedListAppsForMigration.mockResolvedValueOnce({
+        data: {
+          migratableApps: [
+            createMockMigratableApp(extractedAppId, 'App 1', PROJECT_NAME),
+          ],
+          unmigratableApps: [],
+        },
+      });
+
+      mockedListPrompt.mockResolvedValue({ appId: extractedAppId });
+      mockedConfirmPrompt.mockResolvedValueOnce(false);
+
+      await migrateApp(ACCOUNT_ID, options, projectConfig);
+
+      expect(mockedFetchProjectComponentsMetadata).toHaveBeenCalledWith(
+        ACCOUNT_ID,
+        123
+      );
+      expect(mockedListAppsForMigration).toHaveBeenCalledWith(
+        ACCOUNT_ID,
+        PLATFORM_VERSION,
+        extractedAppId
+      );
+    });
+
+    it('should not set appId when project has no PUBLIC_APP component', async () => {
+      const projectConfig = createLoadedProjectConfig(PROJECT_NAME);
+      const optionsWithoutAppId = {
+        ...options,
+        appId: undefined,
+      } as ArgumentsCamelCase<MigrateAppArgs>;
+
+      mockedEnsureProjectExists.mockResolvedValueOnce({
+        projectExists: true,
+        project: { id: 123, name: PROJECT_NAME },
+      } as never);
+
+      mockedFetchProjectComponentsMetadata.mockResolvedValueOnce({
+        data: {
+          topLevelComponentMetadata: [
+            {
+              componentName: 'Some Other Component',
+              type: { name: 'THEME' },
+              deployOutput: {},
+              featureComponents: [],
+            },
+          ],
+        },
+      } as never);
+
+      // @ts-expect-error Mock
+      mockedListAppsForMigration.mockResolvedValueOnce({
+        data: {
+          migratableApps: [createMockMigratableApp(1, 'App 1', PROJECT_NAME)],
+          unmigratableApps: [],
+        },
+      });
+
+      mockedListPrompt.mockResolvedValue({ appId: 1 });
+      mockedConfirmPrompt.mockResolvedValueOnce(false);
+
+      await migrateApp(ACCOUNT_ID, optionsWithoutAppId, projectConfig);
+
+      expect(mockedListAppsForMigration).toHaveBeenCalledWith(
+        ACCOUNT_ID,
+        PLATFORM_VERSION,
+        undefined
+      );
+    });
+
+    it('should not set appId when deployOutput has no appId', async () => {
+      const projectConfig = createLoadedProjectConfig(PROJECT_NAME);
+      const optionsWithoutAppId = {
+        ...options,
+        appId: undefined,
+      } as ArgumentsCamelCase<MigrateAppArgs>;
+
+      mockedEnsureProjectExists.mockResolvedValueOnce({
+        projectExists: true,
+        project: { id: 123, name: PROJECT_NAME },
+      } as never);
+
+      mockedFetchProjectComponentsMetadata.mockResolvedValueOnce({
+        data: {
+          topLevelComponentMetadata: [
+            {
+              componentName: 'My Public App',
+              type: { name: 'PUBLIC_APP' },
+              deployOutput: null,
+              featureComponents: [],
+            },
+          ],
+        },
+      } as never);
+
+      // @ts-expect-error Mock
+      mockedListAppsForMigration.mockResolvedValueOnce({
+        data: {
+          migratableApps: [createMockMigratableApp(1, 'App 1', PROJECT_NAME)],
+          unmigratableApps: [],
+        },
+      });
+
+      mockedListPrompt.mockResolvedValue({ appId: 1 });
+      mockedConfirmPrompt.mockResolvedValueOnce(false);
+
+      await migrateApp(ACCOUNT_ID, optionsWithoutAppId, projectConfig);
+
+      expect(mockedListAppsForMigration).toHaveBeenCalledWith(
+        ACCOUNT_ID,
+        PLATFORM_VERSION,
+        undefined
+      );
+    });
+
+    it('should propagate error when fetchProjectComponentsMetadata fails', async () => {
+      const projectConfig = createLoadedProjectConfig(PROJECT_NAME);
+
+      mockedEnsureProjectExists.mockResolvedValueOnce({
+        projectExists: true,
+        project: { id: 123, name: PROJECT_NAME },
+      } as never);
+
+      const apiError = new Error('API request failed');
+      mockedFetchProjectComponentsMetadata.mockRejectedValueOnce(apiError);
+
+      await expect(
+        migrateApp(ACCOUNT_ID, options, projectConfig)
+      ).rejects.toThrow('API request failed');
     });
   });
 

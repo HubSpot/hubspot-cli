@@ -6,7 +6,7 @@ import { commands } from '../../../lang/en.js';
 import { getCwd } from '@hubspot/local-dev-lib/path';
 import { FILE_UPLOAD_RESULT_TYPES } from '@hubspot/local-dev-lib/constants/files';
 import { getThemeJSONPath } from '@hubspot/local-dev-lib/cms/themes';
-import { preview } from '@hubspot/theme-preview-dev-server';
+import { createDevServer } from '@hubspot/cms-dev-server';
 import { UploadFolderResults } from '@hubspot/local-dev-lib/types/Files';
 import { getUploadableFileList } from '../../../lib/upload.js';
 import { trackCommandUsage } from '../../../lib/usageTracking.js';
@@ -16,7 +16,6 @@ import {
 } from '../../../lib/prompts/previewPrompt.js';
 import { EXIT_CODES } from '../../../lib/enums/exitCodes.js';
 import { ApiErrorContext, logError } from '../../../lib/errorHandlers/index.js';
-import { handleExit, handleKeypress } from '../../../lib/process.js';
 import { getProjectConfig } from '../../../lib/projects/config.js';
 import { findProjectComponents } from '../../../lib/projects/structure.js';
 import { ComponentTypes } from '../../../types/Projects.js';
@@ -37,7 +36,6 @@ export type ThemePreviewArgs = CommonArgs &
   AccountArgs & {
     src: string;
     dest: string;
-    notify: string;
     'no-ssl'?: boolean;
     port?: number;
     resetSession?: boolean;
@@ -61,22 +59,6 @@ function validateSrcPath(src: string): boolean {
     return false;
   }
   return true;
-}
-
-function handleUserInput(): void {
-  const onTerminate = () => {
-    uiLogger.log(
-      commands.cms.subcommands.theme.subcommands.preview.logs.processExited
-    );
-    process.exit(EXIT_CODES.SUCCESS);
-  };
-
-  handleExit(onTerminate);
-  handleKeypress(key => {
-    if ((key.ctrl && key.name === 'c') || key.name === 'q') {
-      onTerminate();
-    }
-  });
 }
 
 async function determineSrcAndDest(args: ThemePreviewArgs): Promise<{
@@ -124,14 +106,8 @@ async function determineSrcAndDest(args: ThemePreviewArgs): Promise<{
 async function handler(
   args: ArgumentsCamelCase<ThemePreviewArgs>
 ): Promise<void> {
-  const {
-    derivedAccountId,
-    notify,
-    noSsl,
-    resetSession,
-    port,
-    generateFieldsTypes,
-  } = args;
+  const { derivedAccountId, noSsl, resetSession, port, generateFieldsTypes } =
+    args;
 
   const { absoluteSrc, dest } = await determineSrcAndDest(args);
 
@@ -213,45 +189,16 @@ async function handler(
 
   trackCommandUsage('preview', {}, derivedAccountId);
 
-  let createUnifiedDevServer;
-  try {
-    const { createDevServer } = await import('@hubspot/cms-dev-server');
-    createUnifiedDevServer = createDevServer;
-  } catch (e) {
-    uiLogger.warn(
-      'Error loading unified dev server. Defaulting to legacy preview.'
-    );
+  if (port) {
+    process.env['PORT'] = port.toString();
   }
 
-  if (createUnifiedDevServer) {
-    if (port) {
-      process.env['PORT'] = port.toString();
-    }
-    createUnifiedDevServer(
-      absoluteSrc,
-      false,
-      '',
-      '',
-      !noSsl,
-      generateFieldsTypes,
-      {
-        filePaths,
-        resetSession: resetSession || false,
-        startProgressBar,
-        dest,
-      }
-    );
-  } else {
-    preview(derivedAccountId, absoluteSrc, dest, {
-      notify,
-      filePaths,
-      noSsl,
-      port,
-      resetSession: resetSession || false,
-      startProgressBar,
-      handleUserInput,
-    });
-  }
+  createDevServer(absoluteSrc, false, '', '', !noSsl, generateFieldsTypes, {
+    filePaths,
+    resetSession: resetSession || false,
+    startProgressBar,
+    dest,
+  });
 }
 
 function themePreviewBuilder(yargs: Argv): Argv<ThemePreviewArgs> {
@@ -268,13 +215,6 @@ function themePreviewBuilder(yargs: Argv): Argv<ThemePreviewArgs> {
       type: 'string',
       requiresArg: true,
     })
-    .option('notify', {
-      alias: 'n',
-      describe:
-        commands.cms.subcommands.theme.subcommands.preview.options.notify,
-      type: 'string',
-      requiresArg: true,
-    })
     .option('no-ssl', {
       describe:
         commands.cms.subcommands.theme.subcommands.preview.options.noSsl,
@@ -284,11 +224,11 @@ function themePreviewBuilder(yargs: Argv): Argv<ThemePreviewArgs> {
       describe: commands.cms.subcommands.theme.subcommands.preview.options.port,
       type: 'number',
     })
-    .option('resetSession', {
+    .option('reset-session', {
       hidden: true,
       type: 'boolean',
     })
-    .option('generateFieldsTypes', {
+    .option('generate-fields-types', {
       hidden: true,
       type: 'boolean',
     });

@@ -3,17 +3,15 @@ import { uiLogger } from '../../../lib/ui/logger.js';
 import { PLATFORM_VERSIONS } from '@hubspot/local-dev-lib/constants/projects';
 import { ProjectMigrateArgs } from '../migrate.js';
 import migrateCommand from '../migrate.js';
-import { migrateApp2025_2 } from '../../../lib/app/migrate.js';
+import { migrateApp } from '../../../lib/app/migrate.js';
 import { getProjectConfig } from '../../../lib/projects/config.js';
 import { commands } from '../../../lang/en.js';
 import { uiBetaTag, uiCommandReference } from '../../../lib/ui/index.js';
 import { Mock } from 'vitest';
 
-vi.mock('../../../lib/ui/logger.js');
 vi.mock('../../../lib/app/migrate');
 vi.mock('../../../lib/projects/config');
 vi.mock('../../../lib/ui');
-vi.mock('../../../lib/usageTracking.js');
 
 const { v2025_2 } = PLATFORM_VERSIONS;
 
@@ -22,7 +20,7 @@ describe('commands/project/migrate', () => {
   const optionsSpy = vi.spyOn(yargsMock, 'option').mockReturnValue(yargsMock);
 
   // Mock the imported functions
-  const migrateApp2025_2Mock = migrateApp2025_2 as Mock;
+  const migrateAppMock = migrateApp as Mock;
   const getProjectConfigMock = getProjectConfig as Mock;
   const uiBetaTagMock = uiBetaTag as Mock;
   const uiCommandReferenceMock = uiCommandReference as Mock;
@@ -34,17 +32,13 @@ describe('commands/project/migrate', () => {
     // Mock logger methods
     vi.spyOn(uiLogger, 'log').mockImplementation(() => {});
     vi.spyOn(uiLogger, 'error').mockImplementation(() => {});
-    migrateApp2025_2Mock.mockResolvedValue(undefined);
+    migrateAppMock.mockResolvedValue(undefined);
     getProjectConfigMock.mockResolvedValue({
       projectConfig: { name: 'test-project' },
     });
     uiBetaTagMock.mockReturnValue('beta test description');
     uiCommandReferenceMock.mockReturnValue('command reference');
     mockExit.mockClear();
-  });
-
-  afterEach(() => {
-    vi.clearAllMocks();
   });
 
   describe('command', () => {
@@ -100,10 +94,10 @@ describe('commands/project/migrate', () => {
       expect(mockExit).toHaveBeenCalledTimes(1);
     });
 
-    it('should call migrateApp2025_2 with correct parameters', async () => {
+    it('should call migrateApp with correct parameters', async () => {
       await migrateCommand.handler(options);
 
-      expect(migrateApp2025_2Mock).toHaveBeenCalledWith(
+      expect(migrateAppMock).toHaveBeenCalledWith(
         123,
         {
           ...options,
@@ -121,7 +115,7 @@ describe('commands/project/migrate', () => {
 
       await migrateCommand.handler(options);
 
-      expect(migrateApp2025_2Mock).toHaveBeenCalledWith(
+      expect(migrateAppMock).toHaveBeenCalledWith(
         123,
         {
           ...options,
@@ -136,7 +130,7 @@ describe('commands/project/migrate', () => {
 
     it('should handle errors and exit with error code', async () => {
       const error = new Error('Test error');
-      migrateApp2025_2Mock.mockRejectedValue(error);
+      migrateAppMock.mockRejectedValue(error);
 
       await migrateCommand.handler(options);
 

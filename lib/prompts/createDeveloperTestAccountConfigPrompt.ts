@@ -13,6 +13,7 @@ const hubs = {
   SERVICE: 'serviceLevel',
   SALES: 'salesLevel',
   CONTENT: 'contentLevel',
+  COMMERCE: 'commerceLevel',
 };
 
 const AccountTiers: Record<string, AccountLevel> = {
@@ -33,11 +34,12 @@ type Tier = {
   value: HubConfig;
 };
 
-const makeHubTiers = (hubKey: HubName): Tier[] => {
+const makeHubTiers = (hubKey: HubName, omitTiers?: AccountLevel[]): Tier[] => {
   const hubTypeKey =
     hubKey.toLowerCase() as keyof typeof lib.prompts.createDeveloperTestAccountConfigPrompt.hubTypes;
   const hubName =
     lib.prompts.createDeveloperTestAccountConfigPrompt.hubTypes[hubTypeKey];
+
   return [
     {
       name: `${hubName} [${AccountTiers.FREE}]`,
@@ -55,7 +57,7 @@ const makeHubTiers = (hubKey: HubName): Tier[] => {
       name: `${hubName} [${AccountTiers.ENTERPRISE}]`,
       value: { hub: hubKey, tier: AccountTiers.ENTERPRISE },
     },
-  ];
+  ].filter(tier => !omitTiers || !omitTiers.includes(tier.value.tier));
 };
 
 const TEST_ACCOUNT_TIERS: (Tier | Separator)[] = [
@@ -69,6 +71,8 @@ const TEST_ACCOUNT_TIERS: (Tier | Separator)[] = [
   new Separator(),
   ...makeHubTiers('CONTENT'),
   new Separator(),
+  ...makeHubTiers('COMMERCE', [AccountTiers.STARTER]),
+  new Separator(),
 ];
 
 export async function createDeveloperTestAccountConfigPrompt(
@@ -80,6 +84,7 @@ export async function createDeveloperTestAccountConfigPrompt(
     serviceLevel?: AccountLevel;
     salesLevel?: AccountLevel;
     contentLevel?: AccountLevel;
+    commerceLevel?: AccountLevel;
   } = {},
   supportFlags: boolean = true
 ): Promise<DeveloperTestAccountConfig> {
@@ -88,7 +93,8 @@ export async function createDeveloperTestAccountConfigPrompt(
     args.opsLevel ||
     args.serviceLevel ||
     args.salesLevel ||
-    args.contentLevel
+    args.contentLevel ||
+    args.commerceLevel
   );
 
   const result = await promptUser<{
@@ -129,11 +135,12 @@ export async function createDeveloperTestAccountConfigPrompt(
 
   if (hasAnyTierLevels) {
     accountLevels = {
-      marketingLevel: args.marketingLevel || 'ENTERPRISE',
-      opsLevel: args.opsLevel || 'ENTERPRISE',
-      serviceLevel: args.serviceLevel || 'ENTERPRISE',
-      salesLevel: args.salesLevel || 'ENTERPRISE',
-      contentLevel: args.contentLevel || 'ENTERPRISE',
+      marketingLevel: args.marketingLevel || AccountTiers.ENTERPRISE,
+      opsLevel: args.opsLevel || AccountTiers.ENTERPRISE,
+      serviceLevel: args.serviceLevel || AccountTiers.ENTERPRISE,
+      salesLevel: args.salesLevel || AccountTiers.ENTERPRISE,
+      contentLevel: args.contentLevel || AccountTiers.ENTERPRISE,
+      commerceLevel: args.commerceLevel || AccountTiers.ENTERPRISE,
     };
   } else {
     const tierChoiceResult = await promptUser<{
@@ -160,11 +167,12 @@ export async function createDeveloperTestAccountConfigPrompt(
 
     if (tierChoiceResult.useDefaultAccountLevels === 'default') {
       accountLevels = {
-        marketingLevel: 'ENTERPRISE',
-        opsLevel: 'ENTERPRISE',
-        serviceLevel: 'ENTERPRISE',
-        salesLevel: 'ENTERPRISE',
-        contentLevel: 'ENTERPRISE',
+        marketingLevel: AccountTiers.ENTERPRISE,
+        opsLevel: AccountTiers.ENTERPRISE,
+        serviceLevel: AccountTiers.ENTERPRISE,
+        salesLevel: AccountTiers.ENTERPRISE,
+        contentLevel: AccountTiers.ENTERPRISE,
+        commerceLevel: AccountTiers.ENTERPRISE,
       };
     } else {
       const tierResult = await promptUser<{ testAccountLevels: HubConfig[] }>({

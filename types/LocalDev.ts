@@ -1,8 +1,6 @@
-import {
-  HSProfileVariables,
-  IntermediateRepresentationNodeLocalDev,
-} from '@hubspot/project-parsing-lib/src/lib/types.js';
-import { Environment } from '@hubspot/local-dev-lib/types/Config';
+import type { IntermediateRepresentationNodeLocalDev } from '@hubspot/project-parsing-lib/translate';
+import type { HSProfileVariables } from '@hubspot/project-parsing-lib/profiles';
+import { Environment } from '@hubspot/local-dev-lib/types/Accounts';
 import { ValueOf } from '@hubspot/local-dev-lib/types/Utils';
 import { Project } from '@hubspot/local-dev-lib/types/Project';
 import { ProjectConfig } from './Projects.js';

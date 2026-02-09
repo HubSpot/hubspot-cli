@@ -1,5 +1,5 @@
 import path from 'path';
-import { translateForLocalDev } from '@hubspot/project-parsing-lib';
+import { translateForLocalDev } from '@hubspot/project-parsing-lib/translate';
 import { handleProjectUpload } from '../upload.js';
 import { handleProjectDeploy } from '../deploy.js';
 import { getProjectConfig } from '../config.js';
@@ -8,6 +8,7 @@ import { isHubSpotHttpError } from '@hubspot/local-dev-lib/errors/index';
 import LocalDevProcess from '../localDev/LocalDevProcess.js';
 import LocalDevLogger from '../localDev/LocalDevLogger.js';
 import DevServerManager from '../localDev/DevServerManager.js';
+import DevSessionManager from '../localDev/DevSessionManager.js';
 import { LocalDevStateConstructorOptions } from '../../../types/LocalDev.js';
 import { ProjectConfig } from '../../../types/Projects.js';
 import { ENVIRONMENTS } from '@hubspot/local-dev-lib/constants/environments';
@@ -24,7 +25,7 @@ vi.mock('@hubspot/ui-extensions-dev-server', () => ({
 }));
 
 vi.mock('open');
-vi.mock('@hubspot/project-parsing-lib');
+vi.mock('@hubspot/project-parsing-lib/translate');
 vi.mock('../upload');
 vi.mock('../deploy');
 vi.mock('../config');
@@ -33,11 +34,13 @@ vi.mock('@hubspot/local-dev-lib/errors/index');
 vi.mock('@hubspot/local-dev-lib/config');
 vi.mock('../localDev/LocalDevLogger');
 vi.mock('../localDev/DevServerManager');
+vi.mock('../localDev/DevSessionManager');
 
 // Tests for LocalDevProcess and LocalDevState
 describe('LocalDevProcess', () => {
   let mockLocalDevLogger: Mocked<LocalDevLogger>;
   let mockDevServerManager: Mocked<DevServerManager>;
+  let mockDevSessionManager: Mocked<DevSessionManager>;
   let process: LocalDevProcess;
 
   const mockProjectConfig: ProjectConfig = {
@@ -84,8 +87,6 @@ describe('LocalDevProcess', () => {
   };
 
   beforeEach(() => {
-    vi.clearAllMocks();
-
     mockLocalDevLogger = {
       resetSpinnies: vi.fn(),
       devServerSetupError: vi.fn(),
@@ -115,9 +116,15 @@ describe('LocalDevProcess', () => {
       fileChange: vi.fn().mockResolvedValue(undefined),
     } as unknown as Mocked<DevServerManager>;
 
+    mockDevSessionManager = {
+      registerSession: vi.fn().mockResolvedValue(true),
+      deleteDevSession: vi.fn().mockResolvedValue(true),
+    } as unknown as Mocked<DevSessionManager>;
+
     // Mock constructors
     (LocalDevLogger as Mock).mockImplementation(() => mockLocalDevLogger);
     (DevServerManager as Mock).mockImplementation(() => mockDevServerManager);
+    (DevSessionManager as Mock).mockImplementation(() => mockDevSessionManager);
 
     // Mock external functions
     (isHubSpotHttpError as unknown as Mock).mockReturnValue(false);
@@ -143,11 +150,20 @@ describe('LocalDevProcess', () => {
       expect(mockLocalDevLogger.devServerSetupError).toHaveBeenCalled();
     });
 
+    it('should exit if dev session registration fails', async () => {
+      mockDevSessionManager.registerSession.mockResolvedValue(false);
+
+      await expect(process.start()).rejects.toThrow(
+        'Process.exit called with code 1'
+      );
+    });
+
     it('should start successfully and compare project nodes', async () => {
       await process.start();
 
       expect(mockLocalDevLogger.startupMessage).toHaveBeenCalled();
       expect(mockDevServerManager.start).toHaveBeenCalled();
+      expect(mockDevSessionManager.registerSession).toHaveBeenCalled();
       expect(mockLocalDevLogger.monitorConsoleOutput).toHaveBeenCalled();
       expect(
         mockLocalDevLogger.missingComponentsWarning
@@ -165,6 +181,14 @@ describe('LocalDevProcess', () => {
         'Process.exit called with code 1'
       );
       expect(mockLocalDevLogger.cleanupError).toHaveBeenCalled();
+    });
+
+    it('should exit with error if dev session deletion fails', async () => {
+      mockDevSessionManager.deleteDevSession.mockResolvedValue(false);
+
+      await expect(process.stop()).rejects.toThrow(
+        'Process.exit called with code 1'
+      );
     });
 
     it('should exit successfully after cleanup', async () => {
@@ -476,10 +500,6 @@ describe('LocalDevProcess', () => {
   });
 
   describe('deployLatestBuild()', () => {
-    beforeEach(() => {
-      vi.clearAllMocks();
-    });
-
     it('should successfully deploy latest build', async () => {
       const mockDeploy = {
         deployId: 456,

@@ -17,7 +17,6 @@ import { Mock } from 'vitest';
 
 vi.mock('fs');
 vi.mock('@hubspot/local-dev-lib/fs');
-vi.mock('../../ui/logger.js');
 
 const mockedReadFileSync = fs.readFileSync as Mock;
 const mockedWalk = HSfs.walk as Mock;

@@ -11,7 +11,7 @@ import {
 } from '../../lib/projects/config.js';
 import { logFeedbackMessage } from '../../lib/projects/ui.js';
 import { handleProjectUpload } from '../../lib/projects/upload.js';
-import { loadAndValidateProfile } from '../../lib/projectProfiles.js';
+import { loadAndValidateProfile } from '../../lib/projects/projectProfiles.js';
 import {
   displayWarnLogs,
   pollProjectBuildAndDeploy,
@@ -31,7 +31,7 @@ import { makeYargsBuilder } from '../../lib/yargsUtils.js';
 const command = 'upload';
 const describe = commands.project.upload.describe;
 
-type ProjectUploadArgs = CommonArgs &
+export type ProjectUploadArgs = CommonArgs &
   JSONOutputArgs & {
     forceCreate: boolean;
     message: string;
@@ -64,12 +64,17 @@ async function handler(
 
   let targetAccountId;
 
-  if (isV2Project(projectConfig.platformVersion)) {
-    targetAccountId = await loadAndValidateProfile(
-      projectConfig,
-      projectDir,
-      profile
-    );
+  try {
+    if (isV2Project(projectConfig.platformVersion)) {
+      targetAccountId = await loadAndValidateProfile(
+        projectConfig,
+        projectDir,
+        profile
+      );
+    }
+  } catch (err) {
+    logError(err);
+    process.exit(EXIT_CODES.ERROR);
   }
 
   targetAccountId = targetAccountId || derivedAccountId;
@@ -182,7 +187,6 @@ function projectUploadBuilder(yargs: Argv): Argv<ProjectUploadArgs> {
       type: 'string',
       alias: 'p',
       describe: commands.project.upload.options.profile.describe,
-      hidden: true,
     },
   });
 
@@ -190,6 +194,10 @@ function projectUploadBuilder(yargs: Argv): Argv<ProjectUploadArgs> {
 
   yargs.example([
     ['$0 project upload', commands.project.upload.examples.default],
+    [
+      '$0 project upload --profile=profileName',
+      commands.project.upload.examples.withProfile,
+    ],
   ]);
 
   return yargs as Argv<ProjectUploadArgs>;

@@ -3,20 +3,24 @@ import {
   McpServer,
   RegisteredTool,
 } from '@modelcontextprotocol/sdk/server/mcp.js';
-import {
-  getIntermediateRepresentationSchema,
-  mapToInternalType,
-} from '@hubspot/project-parsing-lib';
+import { getIntermediateRepresentationSchema } from '@hubspot/project-parsing-lib/schema';
+import { mapToInternalType } from '@hubspot/project-parsing-lib/transform';
 import { MockedFunction, Mocked } from 'vitest';
 import { getConfigDefaultAccountIfExists } from '@hubspot/local-dev-lib/config';
 import { mcpFeedbackRequest } from '../../../utils/feedbackTracking.js';
 import { HubSpotConfigAccount } from '@hubspot/local-dev-lib/types/Accounts';
+import { trackToolUsage } from '../../../utils/toolUsageTracking.js';
 
 vi.mock('@modelcontextprotocol/sdk/server/mcp.js');
-vi.mock('@hubspot/project-parsing-lib');
+vi.mock('@hubspot/project-parsing-lib/schema');
+vi.mock('@hubspot/project-parsing-lib/transform');
 vi.mock('@hubspot/local-dev-lib/config');
 vi.mock('../../../utils/toolUsageTracking');
 vi.mock('../../../utils/feedbackTracking');
+
+const mockTrackToolUsage = trackToolUsage as MockedFunction<
+  typeof trackToolUsage
+>;
 
 const mockMcpFeedbackRequest = mcpFeedbackRequest as MockedFunction<
   typeof mcpFeedbackRequest
@@ -40,8 +44,6 @@ describe('mcp-server/tools/project/GetConfigValuesTool', () => {
   let mockRegisteredTool: RegisteredTool;
 
   beforeEach(() => {
-    vi.clearAllMocks();
-
     // @ts-expect-error Not mocking the whole thing
     mockMcpServer = {
       registerTool: vi.fn(),
@@ -51,6 +53,7 @@ describe('mcp-server/tools/project/GetConfigValuesTool', () => {
     mockMcpServer.registerTool.mockReturnValue(mockRegisteredTool);
 
     mockMcpFeedbackRequest.mockResolvedValue('');
+    mockTrackToolUsage.mockResolvedValue(undefined);
 
     tool = new GetConfigValuesTool(mockMcpServer);
   });

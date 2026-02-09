@@ -17,7 +17,7 @@ import {
 } from '../../../types/LocalDev.js';
 import LocalDevProcess from './LocalDevProcess.js';
 import { lib } from '../../../lang/en.js';
-import { IntermediateRepresentationNodeLocalDev } from '@hubspot/project-parsing-lib';
+import type { IntermediateRepresentationNodeLocalDev } from '@hubspot/project-parsing-lib/translate';
 import { removeAnsiCodes } from '../../ui/removeAnsiCodes.js';
 import {
   isDeployWebsocketMessage,

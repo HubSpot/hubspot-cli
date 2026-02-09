@@ -5,7 +5,7 @@ import {
   getConfigAccountById,
 } from '@hubspot/local-dev-lib/config';
 import { HUBSPOT_ACCOUNT_TYPES } from '@hubspot/local-dev-lib/constants/config';
-import { Environment } from '@hubspot/local-dev-lib/types/Config';
+import { Environment } from '@hubspot/local-dev-lib/types/Accounts';
 import { mockHubSpotHttpError } from '../testUtils.js';
 import { getAvailableSyncTypes } from '../sandboxes.js';
 import { syncSandbox } from '../sandboxSync.js';
@@ -13,7 +13,6 @@ import SpinniesManager from '../ui/SpinniesManager.js';
 import { Mock, Mocked } from 'vitest';
 import { HubSpotConfigAccount } from '@hubspot/local-dev-lib/types/Accounts';
 
-vi.mock('../ui/logger.js');
 vi.mock('@hubspot/local-dev-lib/api/sandboxSync');
 vi.mock('@hubspot/local-dev-lib/config');
 vi.mock('../sandboxes');

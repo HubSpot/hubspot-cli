@@ -39,8 +39,8 @@ import {
 import { EXIT_CODES } from '../enums/exitCodes.js';
 import { lib } from '../../lang/en.js';
 import { uiLogger } from '../ui/logger.js';
-import { AppFunctionsPackageKey } from '@hubspot/project-parsing-lib/src/lib/constants.js';
-import { mapToInternalType } from '@hubspot/project-parsing-lib';
+import { APP_FUNCTIONS_PACKAGE_KEY as AppFunctionsPackageKey } from '@hubspot/project-parsing-lib/constants';
+import { mapToInternalType } from '@hubspot/project-parsing-lib/transform';
 
 const SPINNER_STATUS = {
   SPINNING: 'spinning',
@@ -136,8 +136,6 @@ function makePollTaskStatusFunc<T extends ProjectTask>({
         `\n${linkToHubSpot(accountId, taskName, taskId, deployedBuildId)}\n`
       );
     }
-
-    SpinniesManager.init();
 
     const overallTaskSpinniesKey = `overallTaskStatus-${statusText.STATUS_TEXT}`;
 
@@ -426,10 +424,13 @@ export const pollBuildStatus = makePollTaskStatusFunc<Build>({
   structureFn: getBuildStructure,
   statusText: PROJECT_BUILD_TEXT,
   statusStrings: {
-    INITIALIZE: (name, buildId) => `Building ${chalk.bold(name)} #${buildId}`,
-    SUCCESS: (name, buildId) => `Built ${chalk.bold(name)} #${buildId}`,
-    FAIL: (name, buildId) => `Failed to build ${chalk.bold(name)} #${buildId}`,
-    SUBTASK_FAIL: (buildId, name) =>
+    INITIALIZE: (name: string, buildId: number) =>
+      `Building ${chalk.bold(name)} #${buildId}`,
+    SUCCESS: (name: string, buildId: number) =>
+      `Built ${chalk.bold(name)} #${buildId}`,
+    FAIL: (name: string, buildId: number) =>
+      `Failed to build ${chalk.bold(name)} #${buildId}`,
+    SUBTASK_FAIL: (name: string, buildId: number) =>
       `Build #${buildId} failed because there was a problem\nbuilding ${chalk.bold(
         name
       )}`,
@@ -446,13 +447,13 @@ export const pollDeployStatus = makePollTaskStatusFunc<Deploy>({
   structureFn: getDeployStructure,
   statusText: PROJECT_DEPLOY_TEXT,
   statusStrings: {
-    INITIALIZE: (name, buildId) =>
+    INITIALIZE: (name: string, buildId: number) =>
       `Deploying build #${buildId} in ${chalk.bold(name)}`,
-    SUCCESS: (name, buildId) =>
+    SUCCESS: (name: string, buildId: number) =>
       `Deployed build #${buildId} in ${chalk.bold(name)}`,
-    FAIL: (name, buildId) =>
+    FAIL: (name: string, buildId: number) =>
       `Failed to deploy build #${buildId} in ${chalk.bold(name)}`,
-    SUBTASK_FAIL: (deployedBuildId, name) =>
+    SUBTASK_FAIL: (name: string, deployedBuildId: number) =>
       `Deploy for build #${deployedBuildId} failed because there was a\nproblem deploying ${chalk.bold(
         name
       )}`,

@@ -5,12 +5,12 @@ import {
   getConfigAccountIfExists,
   getAllConfigAccounts,
 } from '@hubspot/local-dev-lib/config';
-import { HsProfileFile } from '@hubspot/project-parsing-lib/src/lib/types.js';
 import {
   getAllHsProfiles,
   getHsProfileFilename,
   loadHsProfileFile,
-} from '@hubspot/project-parsing-lib';
+  type HsProfileFile,
+} from '@hubspot/project-parsing-lib/profiles';
 import { trackCommandUsage } from '../../../lib/usageTracking.js';
 import { getProjectConfig } from '../../../lib/projects/config.js';
 import { uiAccountDescription } from '../../../lib/ui/index.js';

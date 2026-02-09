@@ -2,7 +2,7 @@ import http from 'http';
 import https from 'https';
 
 const IS_SERVER_RUNNING_TIMEOUT = 2000;
-
+const NOT_RUNNING_ERROR_CODES = ['ECONNREFUSED', 'ENOTFOUND', 'ECONNRESET'];
 export function isServerRunningAtUrl(serverUrl: string): Promise<boolean> {
   return new Promise<boolean>(resolve => {
     try {
@@ -19,7 +19,8 @@ export function isServerRunningAtUrl(serverUrl: string): Promise<boolean> {
       });
 
       req.on('error', (err: NodeJS.ErrnoException) => {
-        resolve(err.code !== 'ECONNREFUSED');
+        const isServerDown = NOT_RUNNING_ERROR_CODES.includes(err.code || '');
+        resolve(!isServerDown);
       });
 
       req.end();

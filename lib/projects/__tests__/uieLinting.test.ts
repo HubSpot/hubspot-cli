@@ -15,8 +15,8 @@ import {
   getDeprecatedEslintConfigFiles,
   createEslintConfig,
 } from '../uieLinting.js';
+import { clearPackageJsonCache } from '../../npm/packageJson.js';
 
-vi.mock('../../ui/logger.js');
 vi.mock('fs');
 vi.mock('../../dependencyManagement.js', async () => {
   const actual = await vi.importActual<
@@ -45,7 +45,7 @@ vi.mocked(util.promisify).mockReturnValue(
 
 describe('lib/linting', () => {
   afterEach(() => {
-    vi.clearAllMocks();
+    clearPackageJsonCache();
   });
 
   describe('isEslintInstalled', () => {
@@ -134,10 +134,6 @@ describe('lib/linting', () => {
   });
 
   describe('areAllLintPackagesInstalled', () => {
-    beforeEach(() => {
-      vi.clearAllMocks();
-    });
-
     it('should return true if all packages are installed', () => {
       const directory = '/test/project/component1';
       const packageJson = JSON.stringify({
@@ -259,10 +255,6 @@ describe('lib/linting', () => {
   });
 
   describe('getMissingLintPackages', () => {
-    beforeEach(() => {
-      vi.clearAllMocks();
-    });
-
     it('should return empty array if all packages are installed with correct versions', () => {
       const directory = '/test/project/component1';
       const packageJson = JSON.stringify({
@@ -584,10 +576,6 @@ describe('lib/linting', () => {
 
   describe('createEslintConfig', () => {
     const writeFileSyncSpy = vi.spyOn(fs, 'writeFileSync');
-
-    afterEach(() => {
-      vi.clearAllMocks();
-    });
 
     it('should create eslint.config.mts with template content', () => {
       const directory = '/test/project/component1';

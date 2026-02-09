@@ -3,7 +3,7 @@ import { fetchProject } from '@hubspot/local-dev-lib/api/projects';
 import path from 'path';
 import { pkg } from '../jsonLoader.js';
 import { uiLogger } from '../ui/logger.js';
-import { Environment } from '@hubspot/local-dev-lib/types/Config';
+import { Environment } from '@hubspot/local-dev-lib/types/Accounts';
 import {
   AccessToken,
   AccountType,
@@ -15,6 +15,7 @@ import {
   getConfigFilePath,
   getConfigDefaultAccountIfExists,
 } from '@hubspot/local-dev-lib/config';
+import { CONFIG_FLAGS } from '@hubspot/local-dev-lib/constants/config';
 import { getDefaultAccountOverrideFilePath } from '@hubspot/local-dev-lib/config/defaultAccountOverride';
 import { getAccessToken } from '@hubspot/local-dev-lib/personalAccessKey';
 import { walk } from '@hubspot/local-dev-lib/fs';
@@ -29,6 +30,7 @@ import {
   PROJECT_CONFIG_FILE,
   THEME_FILE,
 } from '../constants.js';
+import { METAFILE_EXTENSION } from '@hubspot/project-parsing-lib/constants';
 
 export type ProjectConfig = Awaited<ReturnType<typeof getProjectConfig>>;
 
@@ -38,6 +40,7 @@ const hubspotCli = '@hubspot/cli';
 interface FilesInfo {
   files: string[];
   configFiles: string[];
+  hsMetaFiles: string[];
   packageFiles: string[];
   packageLockFiles: string[];
   envFiles: string[];
@@ -95,7 +98,7 @@ export class DiagnosticInfoBuilder {
     const accountConfig = getConfigDefaultAccountIfExists();
     this.accountId = accountConfig?.accountId;
     this.configSettings = {
-      httpUseLocalhost: isConfigFlagEnabled('httpUseLocalhost'),
+      httpUseLocalhost: isConfigFlagEnabled(CONFIG_FLAGS.HTTP_USE_LOCALHOST),
     };
     this.env = accountConfig?.env;
     this.authType = accountConfig?.authType;
@@ -185,11 +188,11 @@ export class DiagnosticInfoBuilder {
   private async fetchProjectFilenames(): Promise<void> {
     try {
       // We check that projectDir exists before running this function
-      this.files = (await walk(this._projectConfig!.projectDir!))
-        .filter(file => !path.dirname(file).includes('node_modules'))
-        .map(filename =>
-          path.relative(this._projectConfig!.projectDir!, filename)
-        );
+      this.files = (
+        await walk(this._projectConfig!.projectDir!, ['node_modules'])
+      ).map(filename =>
+        path.relative(this._projectConfig!.projectDir!, filename)
+      );
     } catch (e) {
       uiLogger.debug(e);
     }
@@ -210,6 +213,7 @@ export class DiagnosticInfoBuilder {
     const output: FilesInfo = {
       files: this.files || [],
       configFiles: [],
+      hsMetaFiles: [],
       packageFiles: [],
       packageLockFiles: [],
       envFiles: [],
@@ -225,6 +229,8 @@ export class DiagnosticInfoBuilder {
 
       if (base === 'package.json') {
         acc.packageFiles.push(file);
+      } else if (file.endsWith(METAFILE_EXTENSION)) {
+        acc.hsMetaFiles.push(file);
       } else if (configFiles.includes(base)) {
         acc.configFiles.push(file);
         if (file.endsWith('.json')) {

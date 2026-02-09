@@ -1,5 +1,5 @@
 import chalk from 'chalk';
-import { mapToUserFriendlyName } from '@hubspot/project-parsing-lib';
+import { mapToUserFriendlyName } from '@hubspot/project-parsing-lib/transform';
 import { PLATFORM_VERSIONS } from '@hubspot/local-dev-lib/constants/projects';
 import { PERSONAL_ACCESS_KEY_AUTH_METHOD } from '@hubspot/local-dev-lib/constants/auth';
 import {
@@ -34,10 +34,6 @@ export const commands = {
   generalErrors: {
     srcIsProject: (src: string, command: string) =>
       `"${src}" is in a project folder. Did you mean "hs project ${command}"?`,
-    handleDeprecatedEnvVariables: {
-      portalEnvVarDeprecated:
-        'The HUBSPOT_PORTAL_ID environment variable is deprecated. Please use HUBSPOT_ACCOUNT_ID instead.',
-    },
     validateConfigMiddleware: {
       missingConfigFile: `A HubSpot config file is required to run this command, but none was found. To create a new config file and authenticate a HubSpot account, run ${uiCommandReference('hs account auth')}`,
       configValidationFailed: (errors: string[]) =>
@@ -518,8 +514,6 @@ export const commands = {
               dest: 'Path in HubSpot Design Tools. Can be a net new path. If you wish to preview a site page using your theme changes it must match the path of the theme used by the site.',
             },
             options: {
-              notify:
-                'Log to specified file when a watch task is triggered and after workers have gone idle. Ex. --notify path/to/file',
               noSsl: 'Disable HTTPS',
               port: 'The port on which to start the local server',
             },
@@ -1254,6 +1248,35 @@ export const commands = {
     outputWritten: (filename: string) =>
       `Output written to ${chalk.bold(filename)}`,
   },
+  upgrade: {
+    describe:
+      'Install the latest version of the HubSpot CLI, or a specific version.',
+    options: {
+      version: 'Specific version to install (defaults to latest)',
+      force: 'Skip confirmation prompt and install immediately',
+      beta: 'Install the next version of the HubSpot CLI (beta)',
+    },
+    alreadyLatest: (version: string, beta?: boolean) =>
+      `You are already running the latest ${beta ? 'beta ' : ''}version (${chalk.bold(version)}).`,
+    alreadyOnVersion: (current: string) =>
+      `You are already running version ${chalk.bold(current)}`,
+    autoUpgradeNotAvailable: (version: string) =>
+      `Unable to auto-upgrade the HubSpot CLI. You can manually install ${chalk.bold(`@hubspot/cli@${version}`)}`,
+    confirmPrompt: (current: string, version: string) =>
+      `Upgrade from ${current} to version ${version}?`,
+    cancelled: 'Upgrade cancelled.',
+    installing: (version: string) => `Installing @hubspot/cli@${version}...`,
+    success: (version: string) =>
+      `Successfully installed @hubspot/cli@${version}`,
+    autoUpgradeMessage: `The HubSpot CLI supports automatic updates as an optional feature.\n\nWhen enabled, the CLI will automatically install non-breaking updates within the current major version. Major releases will always require manual upgrades.\n\nRun ${uiCommandReference('hs config set --allow-auto-updates=true')}\n\nYou can change this later at any time with ${uiCommandReference('hs config set')}`,
+    errors: {
+      unableToDetermineLatestVersion:
+        'Unable to determine the latest version of the HubSpot CLI. Please try again later.',
+      installFailed:
+        'Failed to install the CLI. Verify that the target version is available and try again.',
+      generic: 'An error occurred while upgrading the CLI.',
+    },
+  },
   filemanager: {
     describe: 'Commands for managing files in the File Manager.',
     subcommands: {
@@ -1467,10 +1490,11 @@ export const commands = {
       codex: 'Codex CLI',
       claudeCode: 'Claude Code',
       cursor: 'Cursor',
+      gemini: 'Gemini CLI',
       windsurf: 'Windsurf',
       vsCode: 'VSCode',
       args: {
-        client: 'Target applications to configure',
+        client: 'Target apps to configure',
         docsSearch: 'Should the docs search mcp server be installed',
       },
       success: (derivedTargets: string[]) =>
@@ -1478,7 +1502,6 @@ export const commands = {
       errors: {
         needsMcpAccess: (accountId?: number) =>
           `You must opt in to the developer MCP beta to use this feature on ${uiAccountDescription(accountId)}. Try again with a different account or ${uiLink('join the beta now', getProductUpdatesUrl('239890', accountId))}`,
-        needsNode20: `This feature requires node >=20`,
         errorParsingJsonFIle: (filename: string, errorMessage: string) =>
           `Unable to update ${chalk.bold(filename)} due to invalid JSON: ${errorMessage}`,
       },
@@ -1499,6 +1522,11 @@ export const commands = {
         configuringCursor: 'Configuring Cursor...',
         failedToConfigureCursor: 'Failed to configure Cursor',
         configuredCursor: 'Configured Cursor',
+        // Gemini
+        configuringGemini: 'Configuring Gemini CLI...',
+        configuredGemini: 'Configured Gemini CLI',
+        geminiNotFound: 'Gemini CLI not found - skipping configuration',
+        geminiInstallFailed: 'Failed to configure Gemini CLI',
         alreadyInstalled:
           'HubSpot CLI mcp server already installed, reinstalling',
         // Windsurf
@@ -1514,12 +1542,11 @@ export const commands = {
       prompts: {
         targets:
           '[--client] Which tools would you like to add the HubSpot CLI MCP server to?',
-        targetsRequired: 'Must choose at least one application to configure.',
+        targetsRequired: 'Must choose at least one app to configure.',
       },
     },
     start: {
       errors: {
-        needsNode20: `This feature requires node >=20`,
         serverFileNotFound: (serverPath: string) =>
           `MCP server file not found at ${serverPath}`,
         failedToStart: 'Failed to start MCP server',
@@ -1690,6 +1717,10 @@ export const commands = {
       examples: {
         default: 'Start local dev for the current project',
       },
+      prompts: {
+        selectProfile:
+          '[--profile] Select a profile to use for local development',
+      },
       options: {
         profile: 'The profile to target during local dev',
         projectAccount:
@@ -1758,7 +1789,7 @@ export const commands = {
           describe: 'How the app will be distributed.',
         },
         auth: {
-          describe: 'Authentication model for the application.',
+          describe: 'Authentication model for the app.',
         },
         features: {
           describe: `Features to include in the project. Only valid if project-base is ${PROJECT_WITH_APP}`,
@@ -1883,13 +1914,13 @@ export const commands = {
             "The path to the component type's location within the hubspot-project-components Github repo: https://github.com/HubSpot/hubspot-project-components",
         },
         distribution: {
-          describe: 'The distribution method for the application.',
+          describe: 'The distribution method for the app.',
         },
         auth: {
-          describe: 'The authentication type for the application.',
+          describe: 'The authentication type for the app.',
         },
         features: {
-          describe: 'Which features to include with the application.',
+          describe: 'Which features to include with the app.',
         },
       },
       creatingComponent: (projectName: string) =>
@@ -1967,6 +1998,7 @@ export const commands = {
       examples: {
         default: 'Deploy the latest build of the current project',
         withOptions: 'Deploy build 5 of the project my-project',
+        withProfile: 'Deploy using the provided profile',
       },
       options: {
         build: 'Project build ID to be deployed',
@@ -2068,6 +2100,8 @@ export const commands = {
       describe: 'Upload your project files and create a new build.',
       examples: {
         default: 'Upload a project into your HubSpot account',
+        withProfile:
+          'Upload a project into your HubSpot account when using profiles',
       },
       logs: {
         buildSucceeded: (buildId: number) => `Build #${buildId} succeeded\n`,
@@ -2311,13 +2345,31 @@ export const commands = {
         'This command is only available for projects 2025.2 and later.',
       examples: {
         default: 'Validate the project before uploading',
+        withProfile: 'Validate the project with a profile before uploading.',
       },
       success: (projectName: string) =>
         `Project ${projectName} is valid and ready to upload`,
-      failure: (projectName: string) => `Project ${projectName} is invalid`,
+      failure: (projectName: string, profileName?: string) =>
+        `Project ${projectName} is invalid${profileName ? ` with profile "${profileName}" applied` : ''}`,
+      failureWithProfile: (profileName: string) =>
+        chalk.bold(`With profile "${profileName}":`),
+      spinners: {
+        validatingProfile: (profileName: string) =>
+          `Validating project with profile "${profileName}"`,
+        profileValidationFailed: (profileName: string) =>
+          `Profile "${profileName}" failed validation`,
+        profileValidationSucceeded: (profileName: string) =>
+          `Project valid with profile "${profileName}" applied`,
+        invalidWithProfile: (profileName: string) =>
+          `Project is invalid with profile "${profileName}" applied`,
+        validatingAllProfiles: 'Validating the project with all profiles',
+        allProfilesValidationSucceeded: 'Project profile validation succeeded',
+        allProfilesValidationFailed: 'Project profile validation failed',
+      },
       options: {
         profile: {
-          describe: 'The profile to target for this validation',
+          describe:
+            'The profile to target for this validation.  If no profile is provided, all profiles will be validated.',
         },
       },
     },
@@ -2711,8 +2763,12 @@ export const commands = {
           `Creating test account "${chalk.bold(testAccountName)}"...`,
         syncing:
           'Test account created! Syncing account data... (may take a few minutes - you can exit and the sync will continue)',
-        success: (testAccountName: string, testAccountId: number) =>
-          `Test account "${chalk.bold(testAccountName)}" successfully created with id: ${chalk.bold(testAccountId)}`,
+        success: (
+          testAccountName: string,
+          testAccountId: number,
+          parentAccountId: number
+        ) =>
+          `Test account "${chalk.bold(testAccountName)}" successfully created with id ${chalk.bold(testAccountId)} under parent account ${uiAccountDescription(parentAccountId)}`,
         createFailure: 'Failed to create test account.',
       },
       options: {
@@ -2729,6 +2785,8 @@ export const commands = {
           'Sales Hub tier. Options: FREE, STARTER, PROFESSIONAL, ENTERPRISE',
         contentLevel:
           'CMS Hub tier. Options: FREE, STARTER, PROFESSIONAL, ENTERPRISE',
+        commerceLevel:
+          'Commerce Hub tier. Options: FREE, PROFESSIONAL, ENTERPRISE',
       },
       example: (configPath: string) =>
         `Create a test account from the config file at ${configPath}`,
@@ -2742,7 +2800,7 @@ export const commands = {
     },
     createConfig: {
       describe: 'Create a test account config file.',
-      pathPrompt: '[--path] Enter the name of the Test Account config file: ',
+      pathPrompt: '[--path] Enter the name of the test account config file: ',
       errors: {
         pathError: 'Path is required',
         pathFormatError: 'Path must end with .json',
@@ -3711,6 +3769,16 @@ export const lib = {
       fileChangeError: (message: string) =>
         `Failed to notify local dev server of file change: ${message}`,
     },
+    devSession: {
+      registrationError: (message: string) =>
+        `Failed to register dev session: ${message}`,
+      missingSessionIdError:
+        'Failed to connect to dev session: Missing session ID. Please try creating a new dev session.',
+      heartbeatError: (message: string) =>
+        `Failed to send dev session heartbeat: ${message}`,
+      deletionError: (message: string) =>
+        `Failed to delete dev session: ${message}`,
+    },
   },
   AppDevModeInterface: {
     autoInstallStaticAuthApp: {
@@ -3841,7 +3909,7 @@ export const lib = {
         privateApp: `This project contains a private app. Local development of private apps is not supported in developer accounts. Change your default account using ${uiCommandReference('hs account use')}, or link a new account with ${uiAuthCommandReference()}.`,
       },
       validateAccountOption: {
-        invalidPublicAppAccount: `This project contains a public app. The "--account" flag must point to a developer test account to develop this project locally. Alternatively, change your default account to an App Developer Account using ${uiCommandReference('hs account use')} and run ${uiCommandReference('hs project dev')} to set up a new Developer Test Account.`,
+        invalidPublicAppAccount: `This project contains a public app. The "--account" flag must point to a developer test account to develop this project locally. Alternatively, change your default account to an app developer account using ${uiCommandReference('hs account use')} and run ${uiCommandReference('hs project dev')} to set up a new developer test account.`,
         invalidPrivateAppAccount: `This project contains a private app. The account specified with the "--account" flag points to a developer account, which do not support the local development of private apps. Update the "--account" flag to point to a standard, sandbox, or developer test account, or change your default account by running ${uiCommandReference('hs account use')}.`,
         nonSandboxWarning: `Testing in a sandbox is strongly recommended. To switch the target account, select an option below or run ${uiCommandReference('hs account use')} before running the command again.`,
         publicAppNonDeveloperTestAccountWarning: `Local development of public apps is only supported in ${chalk.bold('developer test accounts')}.`,
@@ -3874,7 +3942,7 @@ export const lib = {
   },
   middleware: {
     updateNotification: {
-      notifyTitle: chalk.bold('CLI update available'),
+      notifyTitle: chalk.bold('Update available'),
       cmsUpdateNotification: (packageName: string) =>
         `${chalk.bold('The CMS CLI is now the HubSpot CLI')}\n\nTo upgrade, uninstall ${chalk.bold(packageName)}\nand then run ${uiCommandReference('{updateCommand}')}`,
       cliUpdateNotification: (
@@ -3893,6 +3961,7 @@ export const lib = {
         'Cannot auto-update the HubSpot CLI because NPM is not installed globally',
       updateFailed: (latestVersion: string) =>
         `Failed to update HubSpot CLI to version ${chalk.bold(latestVersion)}`,
+      enableAutoUpdatesMessage: `The HubSpot CLI can automatically keep itself up to date.\n\nThis helps ensure compatibility with the HubSpot platform. You can change this later at any time.\n\nRun${uiCommandReference('hs config set --allow-auto-updates=true')}`,
     },
   },
   projectProfiles: {
@@ -3916,8 +3985,12 @@ export const lib = {
           `Profile ${chalk.bold(profileName)} not found.`,
         missingAccountId: (profileName: string) =>
           `Profile ${chalk.bold(profileName)} is missing an account id.`,
+        listedAccountNotFound: (accountId: number, profileName: string) =>
+          `The account ${uiAccountDescription(accountId)} is defined in your profile ${chalk.bold(profileName)}, but is missing in your config file`,
         failedToLoadProfile: (profileName: string) =>
           `Failed to load profile ${chalk.bold(profileName)}.`,
+        profileNotValid: (profileName: string, errors: string[]) =>
+          `${chalk.bold(`With profile "${profileName}"`)}:\n\t- ${errors.join('\n\t- ')}`,
       },
     },
   },
@@ -3926,8 +3999,7 @@ export const lib = {
       prompt: {
         marketPlaceDistribution: 'On the HubSpot marketplace',
         privateDistribution: 'Privately',
-        distribution:
-          '[--distribution] Choose how to distribute your application:',
+        distribution: '[--distribution] Choose how to distribute your app:',
         auth: '[--auth] Choose your authentication type:',
         staticAuth: 'Static Auth',
         oauth: 'OAuth',
@@ -4375,12 +4447,12 @@ export const lib = {
     },
     createDeveloperTestAccountConfigPrompt: {
       namePrompt: (withFlag: boolean = true) =>
-        `${withFlag ? '[--name] ' : ''}Enter the name of the Test Account:`,
+        `${withFlag ? '[--name] ' : ''}Enter the name of the test account:`,
       descriptionPrompt: (withFlag: boolean = true) =>
-        `${withFlag ? '[--description] ' : ''}Enter the description of the Test Account:`,
+        `${withFlag ? '[--description] ' : ''}Enter the description of the test account:`,
       useDefaultAccountLevelsPrompt: {
         message:
-          'Would you like to create a default Test Account, or customize your own?',
+          'Would you like to create a default test account, or customize your own?',
         default: 'Default (All Hubs, ENTERPRISE)',
         manual: 'Customize my own',
       },
@@ -4392,12 +4464,13 @@ export const lib = {
         service: 'Service',
         sales: 'Sales',
         content: 'Content',
+        commerce: 'Commerce',
       },
       errors: {
         allHubsRequired: 'Select a tier for each hub',
         tiersError: 'Cannot have more than one tier per hub',
         nameRequired:
-          'The name may not be blank. Please add a name for the Test Account.',
+          'The name may not be blank. Please add a name for the test account.',
       },
     },
     accountNamePrompt: {
@@ -4882,8 +4955,8 @@ export const lib = {
         `Run ${uiCommandReference(command)} to upgrade to the latest version ${hsVersion}`,
       latest: (hsVersion: string) => `HubSpot CLI v${hsVersion} up to date`,
       unableToDetermine: 'Unable to determine if HubSpot CLI is up to date.',
-      unableToDetermineSecondary: (command: string, link: string) =>
-        `Run ${uiCommandReference(command)} to check your installed version; then visit the ${uiLink('npm HubSpot CLI version history', link)} to validate whether you have the latest version`,
+      unableToDetermineSecondary: (link: string) =>
+        `Run ${uiCommandReference('hs --version')} to check your installed version; then visit the ${uiLink('npm HubSpot CLI version history', link)} to validate whether you have the latest version`,
     },
     projectDependenciesChecks: {
       missingDependencies: (dir: string) =>
@@ -4901,10 +4974,19 @@ export const lib = {
     },
     port: {
       inUse: (port: number) => `Port ${port} is in use`,
-      inUseSecondary: (command: string) =>
-        `Make sure it is available before running ${uiCommandReference(command)}`,
+      inUseSecondary: `Make sure it is available before running ${uiCommandReference('hs project dev')}`,
       available: (port: number) =>
         `Port ${port} available for local development`,
+    },
+    projectValidation: {
+      valid: 'Project configuration and structure is valid',
+      configInvalid: 'Project configuration is invalid',
+      configMissing: 'Project configuration file not found',
+      sourceDirectoryInvalid: 'Project source directory validation failed',
+      translationFailed: 'Project validation failed',
+      profileValidationFailed: (profileName: string) =>
+        `Project validation failed with profile '${profileName}' applied`,
+      validationDetails: `Run ${uiCommandReference('hs project validate')} for more details.`,
     },
     diagnosis: {
       cli: {
@@ -4939,6 +5021,35 @@ export const lib = {
         errors: (count: number) => `${chalk.bold('Errors:')} ${count}`,
         warnings: (count: number) => `${chalk.bold('Warning:')} ${count}`,
       },
+    },
+    networkChecks: {
+      header: 'Network & API connectivity',
+      hubspotApiReachable: 'HubSpot API is reachable',
+      hubspotApiUnreachable: 'Unable to connect to HubSpot API',
+      hubspotApiUnreachableSecondary:
+        'Check your internet connection and firewall settings',
+      npmRegistryReachable: 'npm registry is reachable',
+      npmRegistryUnreachable: 'Unable to connect to npm registry',
+      npmRegistryUnreachableSecondary:
+        'Check your internet connection and npm configuration',
+    },
+    webhookChecks: {
+      header: 'Webhook endpoints',
+      endpointReachable: (url: string) => `Webhook endpoint reachable: ${url}`,
+      endpointUnreachable: (url: string) =>
+        `Webhook endpoint unreachable: ${url}`,
+      endpointUnreachableSecondary:
+        'Verify the URL is correct and the server is running',
+      checkType: 'Webhook',
+    },
+    appRedirectChecks: {
+      redirectUrlReachable: (url: string) =>
+        `App redirect URL reachable: ${url}`,
+      redirectUrlUnreachable: (url: string) =>
+        `App redirect URL unreachable: ${url}`,
+      redirectUrlUnreachableSecondary:
+        'Verify the URL is correct and the server is running',
+      checkType: 'App redirect URL',
     },
     defaultAccountOverrideFileChecks: {
       overrideActive: (defaultAccountOverrideFile: string) =>

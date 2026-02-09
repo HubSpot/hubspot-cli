@@ -6,7 +6,6 @@ import { HubSpotConfigAccount } from '@hubspot/local-dev-lib/types/Accounts';
 import { Mock } from 'vitest';
 
 const getConfigAccountById = __getConfigAccountById as Mock;
-vi.mock('../../ui/logger.js');
 vi.mock('@hubspot/local-dev-lib/api/github');
 vi.mock('../../../hasFeature.js');
 vi.mock('@hubspot/local-dev-lib/config');

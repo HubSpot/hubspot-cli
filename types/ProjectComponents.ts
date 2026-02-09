@@ -1,6 +1,6 @@
 // These types are for Unified Apps and projects on platform version 2025.1 and above
 
-import { IntermediateRepresentationNodeLocalDev } from '@hubspot/project-parsing-lib/src/lib/types.js';
+import type { IntermediateRepresentationNodeLocalDev } from '@hubspot/project-parsing-lib/translate';
 import {
   IR_COMPONENT_TYPES,
   APP_DISTRIBUTION_TYPES,

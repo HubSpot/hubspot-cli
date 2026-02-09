@@ -16,6 +16,7 @@ import { MockedFunction, Mocked } from 'vitest';
 import { mcpFeedbackRequest } from '../../../utils/feedbackTracking.js';
 import { getConfigDefaultAccountIfExists } from '@hubspot/local-dev-lib/config';
 import { HubSpotConfigAccount } from '@hubspot/local-dev-lib/types/Accounts';
+import { trackToolUsage } from '../../../utils/toolUsageTracking.js';
 
 vi.mock('@modelcontextprotocol/sdk/server/mcp.js');
 vi.mock('../../../utils/toolUsageTracking');
@@ -24,6 +25,10 @@ vi.mock('@hubspot/local-dev-lib/errors/index');
 vi.mock('../../../../lib/projects/config.js');
 vi.mock('../../../utils/feedbackTracking');
 vi.mock('@hubspot/local-dev-lib/config');
+
+const mockTrackToolUsage = trackToolUsage as MockedFunction<
+  typeof trackToolUsage
+>;
 
 const mockMcpFeedbackRequest = mcpFeedbackRequest as MockedFunction<
   typeof mcpFeedbackRequest
@@ -125,8 +130,6 @@ describe('mcp-server/tools/project/GetBuildStatusTool', () => {
   let mockRegisteredTool: RegisteredTool;
 
   beforeEach(() => {
-    vi.clearAllMocks();
-
     // @ts-expect-error Not mocking the whole thing
     mockMcpServer = {
       registerTool: vi.fn(),
@@ -135,6 +138,7 @@ describe('mcp-server/tools/project/GetBuildStatusTool', () => {
     mockRegisteredTool = {} as RegisteredTool;
     mockMcpServer.registerTool.mockReturnValue(mockRegisteredTool);
     mockMcpFeedbackRequest.mockResolvedValue('');
+    mockTrackToolUsage.mockResolvedValue(undefined);
 
     tool = new GetBuildStatusTool(mockMcpServer);
 

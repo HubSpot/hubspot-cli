@@ -6,7 +6,6 @@ import { cloneGithubRepo } from '@hubspot/local-dev-lib/github';
 import { createApiSamplePrompt } from '../../lib/prompts/createApiSamplePrompt.js';
 import { confirmPrompt } from '../../lib/prompts/promptUtils.js';
 import { debugError } from '../../lib/errorHandlers/index.js';
-import { EXIT_CODES } from '../../lib/enums/exitCodes.js';
 import { CreatableCmsAsset, ApiSampleConfig } from '../../types/Cms.js';
 import { commands } from '../../lang/en.js';
 import { uiLogger } from '../../lib/ui/logger.js';
@@ -49,16 +48,14 @@ const apiSampleAssetType: CreatableCmsAsset = {
     }
 
     if (!samplesConfig) {
-      uiLogger.error(commands.create.subcommands.apiSample.errors.noSamples);
-      process.exit(EXIT_CODES.ERROR);
+      throw new Error(commands.create.subcommands.apiSample.errors.noSamples);
     }
 
     const { sampleType, sampleLanguage } =
       await createApiSamplePrompt(samplesConfig);
 
     if (!sampleType || !sampleLanguage) {
-      uiLogger.error(commands.create.subcommands.apiSample.errors.noSamples);
-      process.exit(EXIT_CODES.ERROR);
+      throw new Error(commands.create.subcommands.apiSample.errors.noSamples);
     }
 
     uiLogger.info(

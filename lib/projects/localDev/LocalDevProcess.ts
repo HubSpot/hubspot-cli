@@ -1,18 +1,24 @@
-import {
-  IntermediateRepresentationLocalDev,
-  IntermediateRepresentationNodeLocalDev,
-} from '@hubspot/project-parsing-lib/src/lib/types.js';
-import { Project } from '@hubspot/local-dev-lib/types/Project';
-import { translateForLocalDev } from '@hubspot/project-parsing-lib';
-import { hasLocalStateFlag } from '@hubspot/local-dev-lib/config';
-import { fetchProject } from '@hubspot/local-dev-lib/api/projects';
 import path from 'path';
 import open from 'open';
+import {
+  translateForLocalDev,
+  type IntermediateRepresentationLocalDev,
+  type IntermediateRepresentationNodeLocalDev,
+} from '@hubspot/project-parsing-lib/translate';
+import { Project } from '@hubspot/local-dev-lib/types/Project';
+import {
+  hasLocalStateFlag,
+  isConfigFlagEnabled,
+} from '@hubspot/local-dev-lib/config';
+import { CONFIG_FLAGS } from '@hubspot/local-dev-lib/constants/config';
+import { fetchProject } from '@hubspot/local-dev-lib/api/projects';
+import { Deploy } from '@hubspot/local-dev-lib/types/Deploy';
 
 import { ProjectConfig, ProjectPollResult } from '../../../types/Projects.js';
 import LocalDevState from './LocalDevState.js';
 import LocalDevLogger from './LocalDevLogger.js';
 import DevServerManager from './DevServerManager.js';
+import DevSessionManager from './DevSessionManager.js';
 import { EXIT_CODES } from '../../enums/exitCodes.js';
 import { getProjectConfig } from '../config.js';
 import { handleProjectUpload } from '../upload.js';
@@ -30,15 +36,15 @@ import {
   CONFIG_LOCAL_STATE_FLAGS,
   PROJECT_DEPLOY_STATES,
 } from '../../constants.js';
-import { isAutoOpenBrowserEnabled } from '../../configOptions.js';
 import { lib } from '../../../lang/en.js';
-import { Deploy } from '@hubspot/local-dev-lib/types/Deploy';
 import { debugError } from '../../errorHandlers/index.js';
 
 class LocalDevProcess {
   private state: LocalDevState;
   private _logger: LocalDevLogger;
   private devServerManager: DevServerManager;
+  private devSessionManager: DevSessionManager;
+
   constructor(options: LocalDevStateConstructorOptions) {
     this.state = new LocalDevState(options);
 
@@ -46,6 +52,10 @@ class LocalDevProcess {
     this.devServerManager = new DevServerManager({
       localDevState: this.state,
       logger: this._logger,
+    });
+    this.devSessionManager = new DevSessionManager({
+      targetTestingAccountId: this.state.targetTestingAccountId,
+      localDevLogger: this._logger,
     });
   }
 
@@ -206,11 +216,17 @@ class LocalDevProcess {
 
     this.logger.startupMessage();
 
-    if (isAutoOpenBrowserEnabled()) {
+    if (isConfigFlagEnabled(CONFIG_FLAGS.AUTO_OPEN_BROWSER, true)) {
       this.openLocalDevUi();
     }
 
     await this.startDevServers();
+
+    const devSessionRegistered = await this.devSessionManager.registerSession();
+
+    if (!devSessionRegistered) {
+      process.exit(EXIT_CODES.ERROR);
+    }
 
     this.state.devServersStarted = true;
     this.logger.monitorConsoleOutput();
@@ -221,9 +237,11 @@ class LocalDevProcess {
       this.logger.cleanupStart();
     }
 
-    const cleanupSucceeded = await this.cleanupDevServers();
+    const cleanupServersSucceeded = await this.cleanupDevServers();
+    const cleanupSessionSucceeded =
+      await this.devSessionManager.deleteDevSession();
 
-    if (!cleanupSucceeded) {
+    if (!cleanupServersSucceeded || !cleanupSessionSucceeded) {
       if (showProgress) {
         this.logger.cleanupError();
       }

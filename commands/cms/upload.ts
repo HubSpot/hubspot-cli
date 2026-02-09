@@ -274,18 +274,18 @@ function uploadBuilder(yargs: Argv): Argv<UploadArgs> {
     describe: commands.cms.subcommands.upload.positionals.dest,
     type: 'string',
   });
-  yargs.option('fieldOptions', {
+  yargs.option('field-options', {
     describe: commands.cms.subcommands.upload.options.options,
     type: 'array',
     default: [''],
     hidden: true,
   });
-  yargs.option('saveOutput', {
+  yargs.option('save-output', {
     describe: commands.cms.subcommands.upload.options.saveOutput,
     type: 'boolean',
     default: false,
   });
-  yargs.option('convertFields', {
+  yargs.option('convert-fields', {
     describe: commands.cms.subcommands.upload.options.convertFields,
     type: 'boolean',
     default: false,

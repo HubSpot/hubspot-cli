@@ -2,23 +2,29 @@ import yargs, { Argv, ArgumentsCamelCase } from 'yargs';
 import { addUseEnvironmentOptions } from '../../../lib/commonOpts.js';
 import { ProjectLogsManager } from '../../../lib/projects/ProjectLogsManager.js';
 import * as projectLogsPrompt from '../../../lib/prompts/projectsLogsPrompt.js';
-import * as table from '../../../lib/ui/table.js';
 import { trackCommandUsage } from '../../../lib/usageTracking.js';
 import * as ui from '../../../lib/ui/index.js';
+import * as render from '../../../ui/render.js';
 import { EXIT_CODES } from '../../../lib/enums/exitCodes.js';
 import { logError } from '../../../lib/errorHandlers/index.js';
 import projectLogsCommand, { ProjectLogsArgs } from '../logs.js';
-import * as config from '@hubspot/local-dev-lib/config';
+import { getConfigAccountEnvironment } from '@hubspot/local-dev-lib/config';
 import { ENVIRONMENTS } from '@hubspot/local-dev-lib/constants/environments';
 
-vi.mock('../../ui/logger.js');
 vi.mock('../../../lib/commonOpts');
-vi.mock('../../../lib/usageTracking');
 vi.mock('../../../lib/validation');
 vi.mock('../../../lib/projects/ProjectLogsManager');
 vi.mock('../../../lib/prompts/projectsLogsPrompt');
-vi.mock('../../../lib/ui/table');
+vi.mock('../../../ui/render.js');
 vi.mock('../../../lib/errorHandlers');
+vi.mock('@hubspot/local-dev-lib/config', async importOriginal => {
+  const actual =
+    await importOriginal<typeof import('@hubspot/local-dev-lib/config')>();
+  return {
+    ...actual,
+    getConfigAccountEnvironment: vi.fn(),
+  };
+});
 
 const uiLinkSpy = vi.spyOn(ui, 'uiLink');
 const uiLineSpy = vi.spyOn(ui, 'uiLine');
@@ -34,13 +40,9 @@ const projectLogsManagerGetFunctionNamesSpy = vi.spyOn(
 );
 const projectLogsManagerInitSpy = vi.spyOn(ProjectLogsManager, 'init');
 
-const getTableHeaderSpy = vi.spyOn(table, 'getTableHeader');
-const getTableContentsSpy = vi.spyOn(table, 'getTableContents');
+const renderTableSpy = vi.spyOn(render, 'renderTable');
 
-const getConfigAccountEnvironmentSpy = vi.spyOn(
-  config,
-  'getConfigAccountEnvironment'
-);
+const getConfigAccountEnvironmentMock = vi.mocked(getConfigAccountEnvironment);
 
 const optionsSpy = vi
   .spyOn(yargs as Argv, 'options')
@@ -54,7 +56,7 @@ const exampleSpy = vi
   .spyOn(yargs as Argv, 'example')
   .mockReturnValue(yargs as Argv);
 
-getConfigAccountEnvironmentSpy.mockReturnValue(ENVIRONMENTS.PROD);
+getConfigAccountEnvironmentMock.mockReturnValue(ENVIRONMENTS.PROD);
 
 describe('commands/project/logs', () => {
   beforeEach(() => {
@@ -187,9 +189,6 @@ describe('commands/project/logs', () => {
         functionName: selectedFunction,
       });
 
-      const tableHeaders = ['Header 1', 'Header 2'];
-      getTableHeaderSpy.mockReturnValue(tableHeaders);
-
       ProjectLogsManager.isPublicFunction = true;
       ProjectLogsManager.accountId = options.derivedAccountId;
       ProjectLogsManager.functionName = selectedFunction;
@@ -198,24 +197,16 @@ describe('commands/project/logs', () => {
 
       await projectLogsCommand.handler(options);
 
-      expect(getTableHeaderSpy).toHaveBeenCalledTimes(1);
-      expect(getTableHeaderSpy).toHaveBeenCalledWith([
-        'Account',
-        'Function',
-        'Endpoint',
-      ]);
-
-      expect(getTableContentsSpy).toHaveBeenCalledTimes(1);
-      expect(getTableContentsSpy).toHaveBeenCalledWith(
+      expect(renderTableSpy).toHaveBeenCalledTimes(1);
+      expect(renderTableSpy).toHaveBeenCalledWith(
+        ['Account', 'Function', 'Endpoint'],
         [
-          tableHeaders,
           [
-            ProjectLogsManager.accountId,
+            String(ProjectLogsManager.accountId),
             ProjectLogsManager.functionName,
             ProjectLogsManager.endpointName,
           ],
-        ],
-        { border: { bodyLeft: '  ' } }
+        ]
       );
       expect(uiLinkSpy).toHaveBeenCalledTimes(1);
       expect(uiLinkSpy).toHaveBeenCalledWith(
@@ -234,9 +225,6 @@ describe('commands/project/logs', () => {
         functionName: selectedFunction,
       });
 
-      const tableHeaders = ['Header 1', 'Header 2'];
-      getTableHeaderSpy.mockReturnValue(tableHeaders);
-
       ProjectLogsManager.isPublicFunction = false;
       ProjectLogsManager.accountId = options.derivedAccountId;
       ProjectLogsManager.functionName = selectedFunction;
@@ -244,16 +232,16 @@ describe('commands/project/logs', () => {
 
       await projectLogsCommand.handler(options);
 
-      expect(getTableHeaderSpy).toHaveBeenCalledTimes(1);
-      expect(getTableHeaderSpy).toHaveBeenCalledWith(['Account', 'Function']);
+      expect(renderTableSpy).toHaveBeenCalledTimes(1);
 
-      expect(getTableContentsSpy).toHaveBeenCalledTimes(1);
-      expect(getTableContentsSpy).toHaveBeenCalledWith(
+      expect(renderTableSpy).toHaveBeenCalledWith(
+        ['Account', 'Function'],
         [
-          tableHeaders,
-          [ProjectLogsManager.accountId, ProjectLogsManager.functionName],
-        ],
-        { border: { bodyLeft: '  ' } }
+          [
+            String(ProjectLogsManager.accountId),
+            ProjectLogsManager.functionName,
+          ],
+        ]
       );
 
       expect(uiLinkSpy).toHaveBeenCalledWith(

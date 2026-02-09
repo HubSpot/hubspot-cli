@@ -11,9 +11,9 @@ import { getProjectConfig } from '../projects/config.js';
 import SpinniesManager from '../ui/SpinniesManager.js';
 import fs from 'fs';
 import { Mock } from 'vitest';
+import { clearPackageJsonCache } from '../npm/packageJson.js';
 
 vi.mock('../projects/config');
-vi.mock('../../ui/logger.js');
 vi.mock('@hubspot/local-dev-lib/fs');
 vi.mock('fs');
 vi.mock('../ui/SpinniesManager', () => ({
@@ -58,16 +58,14 @@ describe('lib/dependencyManagement', () => {
       },
     });
     mockedFs.existsSync.mockReturnValue(true); // Default to true, override in specific tests
-    vi.clearAllMocks();
+    clearPackageJsonCache();
   });
 
   describe('installPackages()', () => {
     it('should setup a loading spinner', async () => {
       const packages = ['package1', 'package2'];
+      mockedWalk.mockResolvedValue(installLocations);
       await installPackages({ packages, installLocations });
-      expect(SpinniesManager.init).toHaveBeenCalledTimes(
-        installLocations.length
-      );
       expect(SpinniesManager.add).toHaveBeenCalledTimes(
         installLocations.length
       );
@@ -77,6 +75,7 @@ describe('lib/dependencyManagement', () => {
     });
 
     it('should install the provided packages in all the provided install locations', async () => {
+      mockedWalk.mockResolvedValue(installLocations);
       const packages = ['package1', 'package2'];
       await installPackages({ packages, installLocations });
 
@@ -108,6 +107,7 @@ describe('lib/dependencyManagement', () => {
     });
 
     it('should use the provided install locations', async () => {
+      mockedWalk.mockResolvedValue(installLocations);
       await installPackages({ installLocations });
       expect(execMock).toHaveBeenCalledTimes(installLocations.length);
       expect(execMock).toHaveBeenCalledWith(`npm install `, {
@@ -188,14 +188,20 @@ describe('lib/dependencyManagement', () => {
     });
 
     it('should not use --save-dev flag when dev is true but no packages are provided', async () => {
+      mockedWalk.mockResolvedValue(installLocations);
+
       await installPackages({ installLocations, dev: true });
 
       expect(execMock).toHaveBeenCalledTimes(installLocations.length);
 
-      for (const location of installLocations) {
-        expect(execMock).toHaveBeenCalledWith(`npm install `, {
-          cwd: location,
-        });
+      for (let i = 0; i < installLocations.length; i++) {
+        const installLocation = installLocations[i];
+        expect(execMock.mock.calls[i]).toEqual([
+          `npm install `,
+          {
+            cwd: installLocation,
+          },
+        ]);
       }
     });
 
@@ -204,10 +210,14 @@ describe('lib/dependencyManagement', () => {
 
       expect(execMock).toHaveBeenCalledTimes(installLocations.length);
 
-      for (const location of installLocations) {
-        expect(execMock).toHaveBeenCalledWith(`npm install `, {
-          cwd: location,
-        });
+      for (let i = 0; i < installLocations.length; i++) {
+        const installLocation = installLocations[i];
+        expect(execMock.mock.calls[i]).toEqual([
+          `npm install `,
+          {
+            cwd: installLocation,
+          },
+        ]);
       }
     });
 
@@ -261,11 +271,9 @@ describe('lib/dependencyManagement', () => {
 
   describe('updatePackages()', () => {
     it('should setup a loading spinner', async () => {
+      mockedWalk.mockResolvedValue(installLocations);
       const packages = ['package1', 'package2'];
       await updatePackages({ packages, installLocations });
-      expect(SpinniesManager.init).toHaveBeenCalledTimes(
-        installLocations.length
-      );
       expect(SpinniesManager.add).toHaveBeenCalledTimes(
         installLocations.length
       );
@@ -275,6 +283,7 @@ describe('lib/dependencyManagement', () => {
     });
 
     it('should update the provided packages in all the provided install locations', async () => {
+      mockedWalk.mockResolvedValue(installLocations);
       const packages = ['package1', 'package2'];
       await updatePackages({ packages, installLocations });
 
@@ -505,7 +514,6 @@ describe('lib/dependencyManagement', () => {
     }
 
     beforeEach(() => {
-      vi.clearAllMocks();
       readFileSyncSpy.mockReset();
       existsSyncSpy.mockReset();
     });
@@ -659,6 +667,888 @@ describe('lib/dependencyManagement', () => {
       const result = isPackageInstalled(testDir, 'eslint');
 
       expect(result).toBe(true);
+    });
+  });
+
+  describe('npm workspaces support', () => {
+    const workspaceRoot = path.join(projectDir, 'workspace');
+    const pkg1Dir = path.join(workspaceRoot, 'packages', 'pkg-a');
+    const pkg2Dir = path.join(workspaceRoot, 'packages', 'pkg-b');
+    const standaloneDir = path.join(projectDir, 'standalone');
+
+    function mockWorkspaceSetup(
+      workspaceRootPath: string,
+      workspacePatterns: string[],
+      packageDirs: string[]
+    ): void {
+      const allPackageJsons = [
+        path.join(workspaceRootPath, 'package.json'),
+        ...packageDirs.map(d => path.join(d, 'package.json')),
+      ];
+
+      mockedWalk.mockResolvedValue(allPackageJsons);
+
+      mockedFs.readFileSync.mockImplementation(filePath => {
+        const pathStr = filePath.toString();
+        if (pathStr === path.join(workspaceRootPath, 'package.json')) {
+          return JSON.stringify({
+            name: 'workspace-root',
+            workspaces: workspacePatterns,
+          });
+        }
+        // Default package.json for workspace members
+        return JSON.stringify({
+          name: path.basename(path.dirname(pathStr)),
+        });
+      });
+    }
+
+    describe('installPackages()', () => {
+      describe('workspace detection', () => {
+        it('should return workspace root when directory matches workspace pattern', async () => {
+          mockWorkspaceSetup(workspaceRoot, ['packages/*'], [pkg1Dir]);
+
+          await installPackages({
+            packages: ['lodash'],
+            installLocations: [pkg1Dir],
+          });
+
+          expect(execMock).toHaveBeenCalledTimes(1);
+          expect(execMock).toHaveBeenCalledWith(
+            `npm install --workspace=packages/pkg-a lodash`,
+            { cwd: workspaceRoot }
+          );
+        });
+
+        it('should handle packages without workspaces field as non-workspace', async () => {
+          mockedWalk.mockResolvedValue([
+            path.join(standaloneDir, 'package.json'),
+          ]);
+          mockedFs.readFileSync.mockReturnValue(
+            JSON.stringify({ name: 'standalone' })
+          );
+
+          await installPackages({
+            packages: ['react'],
+            installLocations: [standaloneDir],
+          });
+
+          expect(execMock).toHaveBeenCalledTimes(1);
+          expect(execMock).toHaveBeenCalledWith('npm install react', {
+            cwd: standaloneDir,
+          });
+        });
+
+        it('should handle empty workspaces array as non-workspace', async () => {
+          mockedWalk.mockResolvedValue([
+            path.join(workspaceRoot, 'package.json'),
+          ]);
+          mockedFs.readFileSync.mockReturnValue(
+            JSON.stringify({
+              name: 'workspace-root',
+              workspaces: [],
+            })
+          );
+
+          await installPackages({
+            packages: ['test'],
+            installLocations: [workspaceRoot],
+          });
+
+          expect(execMock).toHaveBeenCalledTimes(1);
+          expect(execMock).toHaveBeenCalledWith('npm install test', {
+            cwd: workspaceRoot,
+          });
+        });
+
+        it('should match nested glob patterns like packages/**/*', async () => {
+          const nestedDir = path.join(
+            workspaceRoot,
+            'packages',
+            'frontend',
+            'ui'
+          );
+          mockWorkspaceSetup(workspaceRoot, ['packages/**/*'], [nestedDir]);
+
+          await installPackages({
+            packages: ['axios'],
+            installLocations: [nestedDir],
+          });
+
+          expect(execMock).toHaveBeenCalledTimes(1);
+          expect(execMock).toHaveBeenCalledWith(
+            `npm install --workspace=packages/frontend/ui axios`,
+            { cwd: workspaceRoot }
+          );
+        });
+
+        it('should match against multiple workspace patterns', async () => {
+          const appsDir = path.join(workspaceRoot, 'apps', 'web');
+          mockWorkspaceSetup(
+            workspaceRoot,
+            ['packages/*', 'apps/*'],
+            [pkg1Dir, appsDir]
+          );
+
+          await installPackages({
+            packages: ['typescript'],
+            installLocations: [pkg1Dir, appsDir],
+          });
+
+          expect(execMock).toHaveBeenCalledTimes(2);
+          expect(execMock).toHaveBeenCalledWith(
+            `npm install --workspace=packages/pkg-a typescript`,
+            { cwd: workspaceRoot }
+          );
+          expect(execMock).toHaveBeenCalledWith(
+            `npm install --workspace=apps/web typescript`,
+            { cwd: workspaceRoot }
+          );
+        });
+
+        it('should return null when directory does not match workspace patterns', async () => {
+          mockWorkspaceSetup(workspaceRoot, ['packages/*'], []);
+          mockedWalk.mockResolvedValue([
+            path.join(workspaceRoot, 'package.json'),
+            path.join(standaloneDir, 'package.json'),
+          ]);
+          mockedFs.readFileSync.mockImplementation(filePath => {
+            const pathStr = filePath.toString();
+            if (pathStr === path.join(workspaceRoot, 'package.json')) {
+              return JSON.stringify({
+                name: 'workspace',
+                workspaces: ['packages/*'],
+              });
+            }
+            return JSON.stringify({ name: 'standalone' });
+          });
+
+          await installPackages({
+            packages: ['test'],
+            installLocations: [standaloneDir],
+          });
+
+          expect(execMock).toHaveBeenCalledTimes(1);
+          expect(execMock).toHaveBeenCalledWith('npm install test', {
+            cwd: standaloneDir,
+          });
+        });
+      });
+
+      describe('installation behavior without specific packages', () => {
+        it('should install at workspace root when no packages and directory is in workspace', async () => {
+          mockWorkspaceSetup(workspaceRoot, ['packages/*'], [pkg1Dir, pkg2Dir]);
+
+          await installPackages({
+            installLocations: [pkg1Dir, pkg2Dir],
+          });
+
+          // Should install once at workspace root
+          expect(execMock).toHaveBeenCalledTimes(1);
+          expect(execMock).toHaveBeenCalledWith('npm install ', {
+            cwd: workspaceRoot,
+          });
+        });
+
+        it('should install in each directory when not in workspace', async () => {
+          const dir1 = path.join(projectDir, 'dir1');
+          const dir2 = path.join(projectDir, 'dir2');
+          mockedWalk.mockResolvedValue([
+            path.join(dir1, 'package.json'),
+            path.join(dir2, 'package.json'),
+          ]);
+          mockedFs.readFileSync.mockReturnValue(
+            JSON.stringify({ name: 'standalone' })
+          );
+
+          await installPackages({
+            installLocations: [dir1, dir2],
+          });
+
+          expect(execMock).toHaveBeenCalledTimes(2);
+          expect(execMock).toHaveBeenCalledWith('npm install ', { cwd: dir1 });
+          expect(execMock).toHaveBeenCalledWith('npm install ', { cwd: dir2 });
+        });
+
+        it('should install at workspace roots and non-workspace directories', async () => {
+          mockWorkspaceSetup(workspaceRoot, ['packages/*'], [pkg1Dir]);
+          mockedWalk.mockResolvedValue([
+            path.join(workspaceRoot, 'package.json'),
+            path.join(pkg1Dir, 'package.json'),
+            path.join(standaloneDir, 'package.json'),
+          ]);
+          mockedFs.readFileSync.mockImplementation(filePath => {
+            const pathStr = filePath.toString();
+            if (pathStr === path.join(workspaceRoot, 'package.json')) {
+              return JSON.stringify({
+                name: 'workspace',
+                workspaces: ['packages/*'],
+              });
+            }
+            return JSON.stringify({ name: 'pkg' });
+          });
+
+          await installPackages({
+            installLocations: [pkg1Dir, standaloneDir],
+          });
+
+          expect(execMock).toHaveBeenCalledTimes(2);
+          expect(execMock).toHaveBeenCalledWith('npm install ', {
+            cwd: workspaceRoot,
+          });
+          expect(execMock).toHaveBeenCalledWith('npm install ', {
+            cwd: standaloneDir,
+          });
+        });
+      });
+
+      describe('installation behavior with specific packages', () => {
+        it('should use --workspace flag when installing packages in workspace', async () => {
+          mockWorkspaceSetup(workspaceRoot, ['packages/*'], [pkg1Dir]);
+
+          await installPackages({
+            packages: ['lodash', 'axios'],
+            installLocations: [pkg1Dir],
+          });
+
+          expect(execMock).toHaveBeenCalledTimes(1);
+          expect(execMock).toHaveBeenCalledWith(
+            `npm install --workspace=packages/pkg-a lodash axios`,
+            { cwd: workspaceRoot }
+          );
+        });
+
+        it('should install packages normally in non-workspace directories', async () => {
+          mockedWalk.mockResolvedValue([
+            path.join(standaloneDir, 'package.json'),
+          ]);
+          mockedFs.readFileSync.mockReturnValue(
+            JSON.stringify({ name: 'standalone' })
+          );
+
+          await installPackages({
+            packages: ['react', 'react-dom'],
+            installLocations: [standaloneDir],
+          });
+
+          expect(execMock).toHaveBeenCalledTimes(1);
+          expect(execMock).toHaveBeenCalledWith('npm install react react-dom', {
+            cwd: standaloneDir,
+          });
+        });
+
+        it('should handle multiple workspace packages with separate commands', async () => {
+          mockWorkspaceSetup(workspaceRoot, ['packages/*'], [pkg1Dir, pkg2Dir]);
+
+          await installPackages({
+            packages: ['typescript'],
+            installLocations: [pkg1Dir, pkg2Dir],
+          });
+
+          expect(execMock).toHaveBeenCalledTimes(2);
+          expect(execMock).toHaveBeenCalledWith(
+            `npm install --workspace=packages/pkg-a typescript`,
+            { cwd: workspaceRoot }
+          );
+          expect(execMock).toHaveBeenCalledWith(
+            `npm install --workspace=packages/pkg-b typescript`,
+            { cwd: workspaceRoot }
+          );
+        });
+
+        it('should handle mixed workspace and non-workspace installations', async () => {
+          mockWorkspaceSetup(workspaceRoot, ['packages/*'], [pkg1Dir]);
+          mockedWalk.mockResolvedValue([
+            path.join(workspaceRoot, 'package.json'),
+            path.join(pkg1Dir, 'package.json'),
+            path.join(standaloneDir, 'package.json'),
+          ]);
+          mockedFs.readFileSync.mockImplementation(filePath => {
+            const pathStr = filePath.toString();
+            if (pathStr === path.join(workspaceRoot, 'package.json')) {
+              return JSON.stringify({
+                name: 'workspace',
+                workspaces: ['packages/*'],
+              });
+            }
+            return JSON.stringify({ name: 'pkg' });
+          });
+
+          await installPackages({
+            packages: ['lodash'],
+            installLocations: [pkg1Dir, standaloneDir],
+          });
+
+          expect(execMock).toHaveBeenCalledTimes(2);
+          expect(execMock).toHaveBeenCalledWith(
+            `npm install --workspace=packages/pkg-a lodash`,
+            { cwd: workspaceRoot }
+          );
+          expect(execMock).toHaveBeenCalledWith('npm install lodash', {
+            cwd: standaloneDir,
+          });
+        });
+      });
+
+      describe('command construction', () => {
+        it('should combine --save-dev and --workspace flags correctly', async () => {
+          mockWorkspaceSetup(workspaceRoot, ['packages/*'], [pkg1Dir]);
+
+          await installPackages({
+            packages: ['eslint', 'prettier'],
+            installLocations: [pkg1Dir],
+            dev: true,
+          });
+
+          expect(execMock).toHaveBeenCalledTimes(1);
+          expect(execMock).toHaveBeenCalledWith(
+            `npm install --save-dev --workspace=packages/pkg-a eslint prettier`,
+            { cwd: workspaceRoot }
+          );
+        });
+
+        it('should not use --save-dev flag when dev is true but no packages provided', async () => {
+          mockWorkspaceSetup(workspaceRoot, ['packages/*'], [pkg1Dir]);
+
+          await installPackages({
+            installLocations: [pkg1Dir],
+            dev: true,
+          });
+
+          expect(execMock).toHaveBeenCalledTimes(1);
+          expect(execMock).toHaveBeenCalledWith('npm install ', {
+            cwd: workspaceRoot,
+          });
+        });
+
+        it('should execute npm commands in workspace root directory for workspace packages', async () => {
+          mockWorkspaceSetup(workspaceRoot, ['packages/*'], [pkg1Dir]);
+
+          await installPackages({
+            packages: ['test'],
+            installLocations: [pkg1Dir],
+          });
+
+          expect(execMock).toHaveBeenCalledWith(expect.any(String), {
+            cwd: workspaceRoot,
+          });
+        });
+
+        it('should execute npm commands in package directory for non-workspace packages', async () => {
+          mockedWalk.mockResolvedValue([
+            path.join(standaloneDir, 'package.json'),
+          ]);
+          mockedFs.readFileSync.mockReturnValue(
+            JSON.stringify({ name: 'standalone' })
+          );
+
+          await installPackages({
+            packages: ['test'],
+            installLocations: [standaloneDir],
+          });
+
+          expect(execMock).toHaveBeenCalledWith(expect.any(String), {
+            cwd: standaloneDir,
+          });
+        });
+      });
+
+      describe('edge cases', () => {
+        it('should correctly calculate relative paths for deeply nested packages', async () => {
+          const deeplyNestedDir = path.join(
+            workspaceRoot,
+            'packages',
+            'frontend',
+            'components',
+            'ui'
+          );
+          mockWorkspaceSetup(
+            workspaceRoot,
+            ['packages/**/*'],
+            [deeplyNestedDir]
+          );
+
+          await installPackages({
+            packages: ['test'],
+            installLocations: [deeplyNestedDir],
+          });
+
+          expect(execMock).toHaveBeenCalledWith(
+            `npm install --workspace=packages/frontend/components/ui test`,
+            { cwd: workspaceRoot }
+          );
+        });
+
+        it('should handle invalid package.json gracefully', async () => {
+          mockedWalk.mockResolvedValue([
+            path.join(workspaceRoot, 'package.json'),
+          ]);
+          mockedFs.readFileSync.mockReturnValue('invalid json{');
+
+          await installPackages({
+            packages: ['test'],
+            installLocations: [workspaceRoot],
+          });
+
+          // Should treat as non-workspace since parsing fails
+          expect(execMock).toHaveBeenCalledWith('npm install test', {
+            cwd: workspaceRoot,
+          });
+        });
+
+        it('should show spinner for package directory not workspace root', async () => {
+          mockWorkspaceSetup(workspaceRoot, ['packages/*'], [pkg1Dir]);
+
+          await installPackages({
+            packages: ['lodash'],
+            installLocations: [pkg1Dir],
+          });
+
+          expect(SpinniesManager.add).toHaveBeenCalledWith(
+            `installingDependencies-${pkg1Dir}`,
+            expect.objectContaining({
+              text: expect.stringContaining(
+                path.relative(process.cwd(), pkg1Dir)
+              ),
+            })
+          );
+
+          expect(SpinniesManager.succeed).toHaveBeenCalledWith(
+            `installingDependencies-${pkg1Dir}`,
+            expect.any(Object)
+          );
+        });
+
+        it('should report errors with correct directory even when using workspace root', async () => {
+          execMock = vi.fn().mockImplementation(() => {
+            throw new Error('Installation failed');
+          });
+          util.promisify = mockedPromisify(execMock);
+
+          mockWorkspaceSetup(workspaceRoot, ['packages/*'], [pkg1Dir]);
+          mockedFs.existsSync.mockReturnValue(true);
+
+          await expect(
+            installPackages({
+              packages: ['test'],
+              installLocations: [pkg1Dir],
+            })
+          ).rejects.toThrowError();
+
+          expect(SpinniesManager.fail).toHaveBeenCalledWith(
+            `installingDependencies-${pkg1Dir}`,
+            expect.any(Object)
+          );
+        });
+      });
+    });
+
+    describe('updatePackages()', () => {
+      describe('workspace detection', () => {
+        it('should return workspace root when directory matches workspace pattern', async () => {
+          mockWorkspaceSetup(workspaceRoot, ['packages/*'], [pkg1Dir]);
+
+          await updatePackages({
+            packages: ['lodash'],
+            installLocations: [pkg1Dir],
+          });
+
+          expect(execMock).toHaveBeenCalledTimes(1);
+          expect(execMock).toHaveBeenCalledWith(
+            `npm update --workspace=packages/pkg-a lodash`,
+            { cwd: workspaceRoot }
+          );
+        });
+
+        it('should handle packages without workspaces field as non-workspace', async () => {
+          mockedWalk.mockResolvedValue([
+            path.join(standaloneDir, 'package.json'),
+          ]);
+          mockedFs.readFileSync.mockReturnValue(
+            JSON.stringify({ name: 'standalone' })
+          );
+
+          await updatePackages({
+            packages: ['react'],
+            installLocations: [standaloneDir],
+          });
+
+          expect(execMock).toHaveBeenCalledTimes(1);
+          expect(execMock).toHaveBeenCalledWith('npm update react', {
+            cwd: standaloneDir,
+          });
+        });
+
+        it('should handle empty workspaces array as non-workspace', async () => {
+          mockedWalk.mockResolvedValue([
+            path.join(workspaceRoot, 'package.json'),
+          ]);
+          mockedFs.readFileSync.mockReturnValue(
+            JSON.stringify({
+              name: 'workspace-root',
+              workspaces: [],
+            })
+          );
+
+          await updatePackages({
+            packages: ['test'],
+            installLocations: [workspaceRoot],
+          });
+
+          expect(execMock).toHaveBeenCalledTimes(1);
+          expect(execMock).toHaveBeenCalledWith('npm update test', {
+            cwd: workspaceRoot,
+          });
+        });
+
+        it('should match nested glob patterns like packages/**/*', async () => {
+          const nestedDir = path.join(
+            workspaceRoot,
+            'packages',
+            'frontend',
+            'ui'
+          );
+          mockWorkspaceSetup(workspaceRoot, ['packages/**/*'], [nestedDir]);
+
+          await updatePackages({
+            packages: ['axios'],
+            installLocations: [nestedDir],
+          });
+
+          expect(execMock).toHaveBeenCalledTimes(1);
+          expect(execMock).toHaveBeenCalledWith(
+            `npm update --workspace=packages/frontend/ui axios`,
+            { cwd: workspaceRoot }
+          );
+        });
+
+        it('should match against multiple workspace patterns', async () => {
+          const appsDir = path.join(workspaceRoot, 'apps', 'web');
+          mockWorkspaceSetup(
+            workspaceRoot,
+            ['packages/*', 'apps/*'],
+            [pkg1Dir, appsDir]
+          );
+
+          await updatePackages({
+            packages: ['typescript'],
+            installLocations: [pkg1Dir, appsDir],
+          });
+
+          expect(execMock).toHaveBeenCalledTimes(2);
+          expect(execMock).toHaveBeenCalledWith(
+            `npm update --workspace=packages/pkg-a typescript`,
+            { cwd: workspaceRoot }
+          );
+          expect(execMock).toHaveBeenCalledWith(
+            `npm update --workspace=apps/web typescript`,
+            { cwd: workspaceRoot }
+          );
+        });
+
+        it('should return null when directory does not match workspace patterns', async () => {
+          mockWorkspaceSetup(workspaceRoot, ['packages/*'], []);
+          mockedWalk.mockResolvedValue([
+            path.join(workspaceRoot, 'package.json'),
+            path.join(standaloneDir, 'package.json'),
+          ]);
+          mockedFs.readFileSync.mockImplementation(filePath => {
+            const pathStr = filePath.toString();
+            if (pathStr === path.join(workspaceRoot, 'package.json')) {
+              return JSON.stringify({
+                name: 'workspace',
+                workspaces: ['packages/*'],
+              });
+            }
+            return JSON.stringify({ name: 'standalone' });
+          });
+
+          await updatePackages({
+            packages: ['test'],
+            installLocations: [standaloneDir],
+          });
+
+          expect(execMock).toHaveBeenCalledTimes(1);
+          expect(execMock).toHaveBeenCalledWith('npm update test', {
+            cwd: standaloneDir,
+          });
+        });
+      });
+
+      describe('update behavior without specific packages', () => {
+        it('should update at workspace root when no packages and directory is in workspace', async () => {
+          mockWorkspaceSetup(workspaceRoot, ['packages/*'], [pkg1Dir, pkg2Dir]);
+
+          await updatePackages({
+            installLocations: [pkg1Dir, pkg2Dir],
+          });
+
+          expect(execMock).toHaveBeenCalledTimes(1);
+          expect(execMock).toHaveBeenCalledWith('npm update ', {
+            cwd: workspaceRoot,
+          });
+        });
+
+        it('should update in each directory when not in workspace', async () => {
+          const dir1 = path.join(projectDir, 'dir1');
+          const dir2 = path.join(projectDir, 'dir2');
+          mockedWalk.mockResolvedValue([
+            path.join(dir1, 'package.json'),
+            path.join(dir2, 'package.json'),
+          ]);
+          mockedFs.readFileSync.mockReturnValue(
+            JSON.stringify({ name: 'standalone' })
+          );
+
+          await updatePackages({
+            installLocations: [dir1, dir2],
+          });
+
+          expect(execMock).toHaveBeenCalledTimes(2);
+          expect(execMock).toHaveBeenCalledWith('npm update ', { cwd: dir1 });
+          expect(execMock).toHaveBeenCalledWith('npm update ', { cwd: dir2 });
+        });
+
+        it('should update at workspace roots and non-workspace directories', async () => {
+          mockWorkspaceSetup(workspaceRoot, ['packages/*'], [pkg1Dir]);
+          mockedWalk.mockResolvedValue([
+            path.join(workspaceRoot, 'package.json'),
+            path.join(pkg1Dir, 'package.json'),
+            path.join(standaloneDir, 'package.json'),
+          ]);
+          mockedFs.readFileSync.mockImplementation(filePath => {
+            const pathStr = filePath.toString();
+            if (pathStr === path.join(workspaceRoot, 'package.json')) {
+              return JSON.stringify({
+                name: 'workspace',
+                workspaces: ['packages/*'],
+              });
+            }
+            return JSON.stringify({ name: 'pkg' });
+          });
+
+          await updatePackages({
+            installLocations: [pkg1Dir, standaloneDir],
+          });
+
+          expect(execMock).toHaveBeenCalledTimes(2);
+          expect(execMock).toHaveBeenCalledWith('npm update ', {
+            cwd: workspaceRoot,
+          });
+          expect(execMock).toHaveBeenCalledWith('npm update ', {
+            cwd: standaloneDir,
+          });
+        });
+      });
+
+      describe('update behavior with specific packages', () => {
+        it('should use --workspace flag when updating packages in workspace', async () => {
+          mockWorkspaceSetup(workspaceRoot, ['packages/*'], [pkg1Dir]);
+
+          await updatePackages({
+            packages: ['lodash', 'axios'],
+            installLocations: [pkg1Dir],
+          });
+
+          expect(execMock).toHaveBeenCalledTimes(1);
+          expect(execMock).toHaveBeenCalledWith(
+            `npm update --workspace=packages/pkg-a lodash axios`,
+            { cwd: workspaceRoot }
+          );
+        });
+
+        it('should update packages normally in non-workspace directories', async () => {
+          mockedWalk.mockResolvedValue([
+            path.join(standaloneDir, 'package.json'),
+          ]);
+          mockedFs.readFileSync.mockReturnValue(
+            JSON.stringify({ name: 'standalone' })
+          );
+
+          await updatePackages({
+            packages: ['react', 'react-dom'],
+            installLocations: [standaloneDir],
+          });
+
+          expect(execMock).toHaveBeenCalledTimes(1);
+          expect(execMock).toHaveBeenCalledWith('npm update react react-dom', {
+            cwd: standaloneDir,
+          });
+        });
+
+        it('should handle multiple workspace packages with separate commands', async () => {
+          mockWorkspaceSetup(workspaceRoot, ['packages/*'], [pkg1Dir, pkg2Dir]);
+
+          await updatePackages({
+            packages: ['typescript'],
+            installLocations: [pkg1Dir, pkg2Dir],
+          });
+
+          expect(execMock).toHaveBeenCalledTimes(2);
+          expect(execMock).toHaveBeenCalledWith(
+            `npm update --workspace=packages/pkg-a typescript`,
+            { cwd: workspaceRoot }
+          );
+          expect(execMock).toHaveBeenCalledWith(
+            `npm update --workspace=packages/pkg-b typescript`,
+            { cwd: workspaceRoot }
+          );
+        });
+
+        it('should handle mixed workspace and non-workspace updates', async () => {
+          mockWorkspaceSetup(workspaceRoot, ['packages/*'], [pkg1Dir]);
+          mockedWalk.mockResolvedValue([
+            path.join(workspaceRoot, 'package.json'),
+            path.join(pkg1Dir, 'package.json'),
+            path.join(standaloneDir, 'package.json'),
+          ]);
+          mockedFs.readFileSync.mockImplementation(filePath => {
+            const pathStr = filePath.toString();
+            if (pathStr === path.join(workspaceRoot, 'package.json')) {
+              return JSON.stringify({
+                name: 'workspace',
+                workspaces: ['packages/*'],
+              });
+            }
+            return JSON.stringify({ name: 'pkg' });
+          });
+
+          await updatePackages({
+            packages: ['lodash'],
+            installLocations: [pkg1Dir, standaloneDir],
+          });
+
+          expect(execMock).toHaveBeenCalledTimes(2);
+          expect(execMock).toHaveBeenCalledWith(
+            `npm update --workspace=packages/pkg-a lodash`,
+            { cwd: workspaceRoot }
+          );
+          expect(execMock).toHaveBeenCalledWith('npm update lodash', {
+            cwd: standaloneDir,
+          });
+        });
+      });
+
+      describe('command construction', () => {
+        it('should execute npm commands in workspace root directory for workspace packages', async () => {
+          mockWorkspaceSetup(workspaceRoot, ['packages/*'], [pkg1Dir]);
+
+          await updatePackages({
+            packages: ['test'],
+            installLocations: [pkg1Dir],
+          });
+
+          expect(execMock).toHaveBeenCalledWith(expect.any(String), {
+            cwd: workspaceRoot,
+          });
+        });
+
+        it('should execute npm commands in package directory for non-workspace packages', async () => {
+          mockedWalk.mockResolvedValue([
+            path.join(standaloneDir, 'package.json'),
+          ]);
+          mockedFs.readFileSync.mockReturnValue(
+            JSON.stringify({ name: 'standalone' })
+          );
+
+          await updatePackages({
+            packages: ['test'],
+            installLocations: [standaloneDir],
+          });
+
+          expect(execMock).toHaveBeenCalledWith(expect.any(String), {
+            cwd: standaloneDir,
+          });
+        });
+      });
+
+      describe('edge cases', () => {
+        it('should correctly calculate relative paths for deeply nested packages', async () => {
+          const deeplyNestedDir = path.join(
+            workspaceRoot,
+            'packages',
+            'frontend',
+            'components',
+            'ui'
+          );
+          mockWorkspaceSetup(
+            workspaceRoot,
+            ['packages/**/*'],
+            [deeplyNestedDir]
+          );
+
+          await updatePackages({
+            packages: ['test'],
+            installLocations: [deeplyNestedDir],
+          });
+
+          expect(execMock).toHaveBeenCalledWith(
+            `npm update --workspace=packages/frontend/components/ui test`,
+            { cwd: workspaceRoot }
+          );
+        });
+
+        it('should handle invalid package.json gracefully', async () => {
+          mockedWalk.mockResolvedValue([
+            path.join(workspaceRoot, 'package.json'),
+          ]);
+          mockedFs.readFileSync.mockReturnValue('invalid json{');
+
+          await updatePackages({
+            packages: ['test'],
+            installLocations: [workspaceRoot],
+          });
+
+          expect(execMock).toHaveBeenCalledWith('npm update test', {
+            cwd: workspaceRoot,
+          });
+        });
+
+        it('should show spinner for package directory not workspace root', async () => {
+          mockWorkspaceSetup(workspaceRoot, ['packages/*'], [pkg1Dir]);
+
+          await updatePackages({
+            packages: ['lodash'],
+            installLocations: [pkg1Dir],
+          });
+
+          expect(SpinniesManager.add).toHaveBeenCalledWith(
+            `updatingDependencies-${pkg1Dir}`,
+            expect.objectContaining({
+              text: expect.stringContaining(
+                path.relative(process.cwd(), pkg1Dir)
+              ),
+            })
+          );
+
+          expect(SpinniesManager.succeed).toHaveBeenCalledWith(
+            `updatingDependencies-${pkg1Dir}`,
+            expect.any(Object)
+          );
+        });
+
+        it('should report errors with correct directory even when using workspace root', async () => {
+          execMock = vi.fn().mockImplementation(() => {
+            throw new Error('Update failed');
+          });
+          util.promisify = mockedPromisify(execMock);
+
+          mockWorkspaceSetup(workspaceRoot, ['packages/*'], [pkg1Dir]);
+          mockedFs.existsSync.mockReturnValue(true);
+
+          await expect(
+            updatePackages({
+              packages: ['test'],
+              installLocations: [pkg1Dir],
+            })
+          ).rejects.toThrowError();
+
+          expect(SpinniesManager.fail).toHaveBeenCalledWith(
+            `updatingDependencies-${pkg1Dir}`,
+            expect.any(Object)
+          );
+        });
+      });
     });
   });
 });

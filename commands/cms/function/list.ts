@@ -4,7 +4,6 @@ import { getRoutes } from '@hubspot/local-dev-lib/api/functions';
 import { uiLogger } from '../../../lib/ui/logger.js';
 
 import { logError, ApiErrorContext } from '../../../lib/errorHandlers/index.js';
-import { getTableContents, getTableHeader } from '../../../lib/ui/table.js';
 import { trackCommandUsage } from '../../../lib/usageTracking.js';
 import { commands } from '../../../lang/en.js';
 import { EXIT_CODES } from '../../../lib/enums/exitCodes.js';
@@ -16,6 +15,7 @@ import {
   YargsCommandModule,
 } from '../../../types/Yargs.js';
 import { makeYargsBuilder } from '../../../lib/yargsUtils.js';
+import { renderTable } from '../../../ui/render.js';
 
 const command = ['list', 'ls'];
 const describe = commands.cms.subcommands.function.subcommands.list.describe;
@@ -64,10 +64,10 @@ async function handler(
     ];
   });
 
-  functionsAsArrays.unshift(
-    getTableHeader(['Route', 'Method', 'Secrets', 'Created', 'Updated'])
+  renderTable(
+    ['Route', 'Method', 'Secrets', 'Created', 'Updated'],
+    functionsAsArrays
   );
-  return uiLogger.log(getTableContents(functionsAsArrays));
 }
 
 function functionListBuilder(yargs: Argv): Argv<FunctionListArgs> {

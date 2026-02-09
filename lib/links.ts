@@ -3,7 +3,7 @@ import { getConfigAccountEnvironment } from '@hubspot/local-dev-lib/config';
 import { getHubSpotWebsiteOrigin } from '@hubspot/local-dev-lib/urls';
 import { ENVIRONMENTS } from '@hubspot/local-dev-lib/constants/environments';
 import { uiLogger } from './ui/logger.js';
-import { getTableContents, getTableHeader } from './ui/table.js';
+import { renderTable } from '../ui/render.js';
 
 type SiteLink = {
   shortcut: string;
@@ -109,12 +109,10 @@ export function logSiteLinks(accountId: number): void {
   const linksAsArray = getSiteLinksAsArray(accountId).map(l => [
     `${l.shortcut}${l.alias ? ` [alias: ${l.alias}]` : ''}`,
     '=>',
-    l.url,
+    l.url!,
   ]);
 
-  linksAsArray.unshift(getTableHeader(['Shortcut', '', 'Url']));
-
-  uiLogger.log(getTableContents(linksAsArray));
+  renderTable(['Shortcut', '', 'Url'], linksAsArray);
 }
 
 export function openLink(accountId: number, shortcut: string): void {

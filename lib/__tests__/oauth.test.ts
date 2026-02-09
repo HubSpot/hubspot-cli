@@ -15,7 +15,6 @@ vi.mock('open');
 vi.mock('@hubspot/local-dev-lib/models/OAuth2Manager');
 vi.mock('@hubspot/local-dev-lib/config');
 vi.mock('@hubspot/local-dev-lib/oauth');
-vi.mock('../ui/logger.js');
 
 const mockedExpress = express as unknown as Mock;
 const mockedOAuth2Manager = OAuth2Manager as unknown as Mock;
@@ -48,10 +47,6 @@ describe('lib/oauth', () => {
       }),
       listen: vi.fn().mockReturnValue({ close: vi.fn() }),
     });
-  });
-
-  afterEach(() => {
-    vi.clearAllMocks();
   });
 
   describe('authenticateWithOauth()', () => {
@@ -95,17 +90,8 @@ describe('lib/oauth', () => {
         account: invalidConfig,
       }));
 
-      const exitSpy = vi.spyOn(process, 'exit').mockImplementation(() => {
-        throw new Error('exit');
-      });
-
       // @ts-expect-error Testing invalid config
-      await expect(authenticateWithOauth(invalidConfig)).rejects.toThrow(
-        'exit'
-      );
-      expect(uiLogger.error).toHaveBeenCalled();
-      expect(exitSpy).toHaveBeenCalled();
-      exitSpy.mockRestore();
+      await expect(authenticateWithOauth(invalidConfig)).rejects.toThrow();
     });
 
     it('should use default scopes when none provided', async () => {

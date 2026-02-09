@@ -5,11 +5,6 @@ import { performChecks } from '../yargsChecksMiddleware.js';
 import { uiLogger } from '../../ui/logger.js';
 import { commands } from '../../../lang/en.js';
 
-vi.mock('../../ui/logger', () => ({
-  uiLogger: {
-    error: vi.fn(),
-  },
-}));
 vi.mock('../../projects/config');
 
 const getIsInProjectSpy = vi.spyOn(projectsConfig, 'getIsInProject');

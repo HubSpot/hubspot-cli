@@ -13,7 +13,7 @@ import {
 } from '@hubspot/local-dev-lib/personalAccessKey';
 import { ENVIRONMENTS } from '@hubspot/local-dev-lib/constants/environments';
 import { toKebabCase } from '@hubspot/local-dev-lib/text';
-import { Environment } from '@hubspot/local-dev-lib/types/Config';
+import { Environment } from '@hubspot/local-dev-lib/types/Accounts';
 import { HubSpotConfigAccount } from '@hubspot/local-dev-lib/types/Accounts';
 import { PERSONAL_ACCESS_KEY_AUTH_METHOD } from '@hubspot/local-dev-lib/constants/auth';
 import { handleMerge, handleMigration } from '../../lib/configMigrate.js';
@@ -199,7 +199,7 @@ async function handler(
     uiLogger.error(
       commands.account.subcommands.auth.errors.failedToUpdateConfig
     );
-    process.exit(EXIT_CODES.ERROR);
+    return process.exit(EXIT_CODES.ERROR);
   }
 
   const { accountId, name } = updatedConfig;

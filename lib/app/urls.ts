@@ -1,5 +1,5 @@
 import { getHubSpotWebsiteOrigin } from '@hubspot/local-dev-lib/urls';
-import { Environment } from '@hubspot/local-dev-lib/types/Config';
+import { Environment } from '@hubspot/local-dev-lib/types/Accounts';
 
 type PrivateAppInstallUrlArgs = {
   targetAccountId: number;

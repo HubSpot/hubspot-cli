@@ -7,30 +7,50 @@ import {
 } from '../DiagnosticInfoBuilder.js';
 import {
   accessTokenForPersonalAccessKey as _accessTokenForPersonalAccessKey,
-  authorizedScopesForPortalAndUser as _authorizedScopesForPortalAndUser,
   scopesOnAccessToken as _scopesOnAccessToken,
 } from '@hubspot/local-dev-lib/personalAccessKey';
+import { fetchScopeAuthorizationData as _fetchScopeAuthorizationData } from '@hubspot/local-dev-lib/api/localDevAuth';
 import { HubSpotHttpError } from '@hubspot/local-dev-lib/models/HubSpotHttpError';
-import { AxiosError } from 'axios';
+import { AxiosError, AxiosHeaders } from 'axios';
 import { isSpecifiedError as _isSpecifiedError } from '@hubspot/local-dev-lib/errors/index';
 import { promisify as _promisify } from 'util';
 import {
   getConfigDefaultAccount as _getConfigDefaultAccount,
   getConfigDefaultAccountIfExists as _getConfigDefaultAccountIfExists,
 } from '@hubspot/local-dev-lib/config';
-import { HubSpotConfigAccount } from '@hubspot/local-dev-lib/types/Accounts';
+import {
+  HubSpotConfigAccount,
+  ScopeAuthorizationResponse,
+  ScopeGroupAuthorization,
+} from '@hubspot/local-dev-lib/types/Accounts';
+import { validateProjectConfig as _validateProjectConfig } from '../../projects/config.js';
+import { isV2Project as _isV2Project } from '../../projects/platformVersion.js';
+import {
+  validateSourceDirectory as _validateSourceDirectory,
+  handleTranslate as _handleTranslate,
+} from '../../projects/upload.js';
+import { validateProjectForProfile as _validateProjectForProfile } from '../../projects/projectProfiles.js';
+import { getAllHsProfiles as _getAllHsProfiles } from '@hubspot/project-parsing-lib/profiles';
+import { getLatestCliVersion as _getLatestCliVersion } from '../../cliUpgradeUtils.js';
 
-vi.mock('../../ui/logger.js');
 vi.mock('../Diagnosis');
 vi.mock('../../ui/SpinniesManager');
 vi.mock('../DiagnosticInfoBuilder');
 vi.mock('../../dependencyManagement');
-vi.mock('../../npm');
+vi.mock('../../npm/npmCli');
 vi.mock('@hubspot/local-dev-lib/portManager');
 vi.mock('@hubspot/local-dev-lib/personalAccessKey');
+vi.mock('@hubspot/local-dev-lib/api/localDevAuth');
 vi.mock('@hubspot/local-dev-lib/errors/index');
 vi.mock('@hubspot/local-dev-lib/config');
 vi.mock('util');
+vi.mock('../../projects/config.js');
+vi.mock('../../projects/platformVersion.js');
+vi.mock('../../projects/upload.js');
+vi.mock('../../projects/projectProfiles.js');
+vi.mock('@hubspot/project-parsing-lib/profiles');
+vi.mock('@hubspot/project-parsing-lib/constants');
+vi.mock('../../cliUpgradeUtils.js');
 
 const hasMissingPackages = vi.mocked(_hasMissingPackages);
 const isPortManagerPortAvailable = vi.mocked(_isPortManagerPortAvailable);
@@ -38,15 +58,32 @@ const utilPromisify = vi.mocked(_promisify);
 const accessTokenForPersonalAccessKey = vi.mocked(
   _accessTokenForPersonalAccessKey
 );
-const authorizedScopesForPortalAndUser = vi.mocked(
-  _authorizedScopesForPortalAndUser
-);
+const fetchScopeAuthorizationData = vi.mocked(_fetchScopeAuthorizationData);
 const scopesOnAccessToken = vi.mocked(_scopesOnAccessToken);
 const isSpecifiedError = vi.mocked(_isSpecifiedError);
 const getConfigDefaultAccount = vi.mocked(_getConfigDefaultAccount);
 const getConfigDefaultAccountIfExists = vi.mocked(
   _getConfigDefaultAccountIfExists
 );
+const validateProjectConfig = vi.mocked(_validateProjectConfig);
+const isV2Project = vi.mocked(_isV2Project);
+const validateSourceDirectory = vi.mocked(_validateSourceDirectory);
+const handleTranslate = vi.mocked(_handleTranslate);
+const validateProjectForProfile = vi.mocked(_validateProjectForProfile);
+const getAllHsProfiles = vi.mocked(_getAllHsProfiles);
+const getLatestCliVersion = vi.mocked(_getLatestCliVersion);
+
+function createMockScopeAuthorizationResponse(
+  results: ScopeGroupAuthorization[]
+) {
+  return {
+    data: { results } as ScopeAuthorizationResponse,
+    status: 200,
+    statusText: 'OK',
+    headers: {},
+    config: { headers: new AxiosHeaders() },
+  };
+}
 
 describe('lib/doctor/Doctor', () => {
   let doctor: Doctor;
@@ -77,7 +114,7 @@ describe('lib/doctor/Doctor', () => {
       },
     },
     versions: {
-      node: '18.1.2',
+      node: '20.1.2',
       '@hubspot/cli': '6.0.0',
       npm: '6.14.13',
     },
@@ -95,6 +132,12 @@ describe('lib/doctor/Doctor', () => {
     getConfigDefaultAccount.mockReturnValue(mockAccount);
     getConfigDefaultAccountIfExists.mockReturnValue(mockAccount);
 
+    // Mock getLatestCliVersion to return valid versions by default
+    getLatestCliVersion.mockResolvedValue({
+      latest: '7.12.0',
+      next: '7.12.0-beta.1',
+    });
+
     doctor = new Doctor({
       generateDiagnosticInfo: vi.fn().mockResolvedValue({
         ...diagnosticInfo,
@@ -109,10 +152,6 @@ describe('lib/doctor/Doctor', () => {
         return JSON.stringify({ valid: true });
       })
     );
-  });
-
-  afterEach(() => {
-    vi.clearAllMocks();
   });
 
   describe('CLI Checks', () => {
@@ -195,17 +234,19 @@ describe('lib/doctor/Doctor', () => {
     describe('Personal Access Key', () => {
       it('should add success sections if the access token is valid', async () => {
         scopesOnAccessToken.mockResolvedValueOnce(['scope1']);
-        authorizedScopesForPortalAndUser.mockResolvedValueOnce([
-          {
-            scopeGroup: {
-              name: 'scope1',
-              shortDescription: 'scope1',
-              longDescription: 'scope1',
+        fetchScopeAuthorizationData.mockResolvedValueOnce(
+          createMockScopeAuthorizationResponse([
+            {
+              scopeGroup: {
+                name: 'scope1',
+                shortDescription: 'scope1',
+                longDescription: 'scope1',
+              },
+              portalAuthorized: true,
+              userAuthorized: true,
             },
-            portalAuthorized: true,
-            userAuthorized: true,
-          },
-        ]);
+          ])
+        );
 
         await doctor.diagnose();
 
@@ -324,69 +365,74 @@ describe('lib/doctor/Doctor', () => {
         });
       });
 
-      it('should warn when there are missing authorized scopes', async () => {
-        scopesOnAccessToken.mockResolvedValueOnce(['scope1', 'scope2']);
-        authorizedScopesForPortalAndUser.mockResolvedValueOnce([
-          {
-            scopeGroup: {
-              name: 'scope1',
-              shortDescription: 'scope1',
-              longDescription: 'scope1',
-            },
-            portalAuthorized: true,
-            userAuthorized: true,
-          },
-          {
-            scopeGroup: {
-              name: 'scope2',
-              shortDescription: 'scope2',
-              longDescription: 'scope2',
-            },
-            portalAuthorized: true,
-            userAuthorized: true,
-          },
-          {
-            scopeGroup: {
-              name: 'scope3',
-              shortDescription: 'scope3',
-              longDescription: 'scope3',
-            },
-            portalAuthorized: true,
-            userAuthorized: true,
-          },
-        ]);
+      // @TODO Restore test once PAK scope check functionality is restored
+      // it('should warn when there are missing authorized scopes', async () => {
+      //   scopesOnAccessToken.mockResolvedValueOnce(['scope1', 'scope2']);
+      //   fetchScopeAuthorizationData.mockResolvedValueOnce(
+      //     createMockScopeAuthorizationResponse([
+      //       {
+      //         scopeGroup: {
+      //           name: 'scope1',
+      //           shortDescription: 'scope1',
+      //           longDescription: 'scope1',
+      //         },
+      //         portalAuthorized: true,
+      //         userAuthorized: true,
+      //       },
+      //       {
+      //         scopeGroup: {
+      //           name: 'scope2',
+      //           shortDescription: 'scope2',
+      //           longDescription: 'scope2',
+      //         },
+      //         portalAuthorized: true,
+      //         userAuthorized: true,
+      //       },
+      //       {
+      //         scopeGroup: {
+      //           name: 'scope3',
+      //           shortDescription: 'scope3',
+      //           longDescription: 'scope3',
+      //         },
+      //         portalAuthorized: true,
+      //         userAuthorized: true,
+      //       },
+      //     ])
+      //   );
 
-        await doctor.diagnose();
-        expect(doctor['diagnosis']?.addCLIConfigSection).toHaveBeenCalledWith({
-          type: 'warning',
-          message:
-            'Personal access key is valid, but there are more scopes available to your user that are not included in your key.',
-          secondaryMessaging: expect.any(String),
-        });
-      });
+      //   await doctor.diagnose();
+      //   expect(doctor['diagnosis']?.addCLIConfigSection).toHaveBeenCalledWith({
+      //     type: 'warning',
+      //     message:
+      //       'Personal access key is valid, but there are more scopes available to your user that are not included in your key.',
+      //     secondaryMessaging: expect.any(String),
+      //   });
+      // });
 
       it('should not warn when the missing scope is not authorized', async () => {
         scopesOnAccessToken.mockResolvedValueOnce(['scope1']);
-        authorizedScopesForPortalAndUser.mockResolvedValueOnce([
-          {
-            scopeGroup: {
-              name: 'scope1',
-              shortDescription: 'scope1',
-              longDescription: 'scope1',
+        fetchScopeAuthorizationData.mockResolvedValueOnce(
+          createMockScopeAuthorizationResponse([
+            {
+              scopeGroup: {
+                name: 'scope1',
+                shortDescription: 'scope1',
+                longDescription: 'scope1',
+              },
+              portalAuthorized: true,
+              userAuthorized: true,
             },
-            portalAuthorized: true,
-            userAuthorized: true,
-          },
-          {
-            scopeGroup: {
-              name: 'scope2',
-              shortDescription: 'scope2',
-              longDescription: 'scope2',
+            {
+              scopeGroup: {
+                name: 'scope2',
+                shortDescription: 'scope2',
+                longDescription: 'scope2',
+              },
+              portalAuthorized: true,
+              userAuthorized: false,
             },
-            portalAuthorized: true,
-            userAuthorized: false,
-          },
-        ]);
+          ])
+        );
 
         await doctor.diagnose();
         expect(doctor['diagnosis']?.addCLIConfigSection).toHaveBeenCalledWith({
@@ -515,6 +561,150 @@ describe('lib/doctor/Doctor', () => {
           type: 'error',
           message: expect.stringMatching(/Invalid JSON in/),
         });
+      });
+    });
+  });
+
+  describe('Networking Checks', () => {
+    it('should perform network connectivity check during diagnosis', async () => {
+      await doctor.diagnose();
+
+      // @ts-expect-error Testing private method
+      expect(doctor.diagnosis.addNetworkingSection).toHaveBeenCalled();
+    });
+  });
+
+  describe('Project Validation', () => {
+    it('should skip validation if no project config exists', async () => {
+      doctor = new Doctor({
+        generateDiagnosticInfo: vi.fn().mockResolvedValue({
+          ...diagnosticInfo,
+          project: { config: null },
+        }),
+      } as unknown as DiagnosticInfoBuilder);
+
+      await doctor.diagnose();
+
+      // @ts-expect-error Testing private method
+      const projectSections = doctor.diagnosis.project?.sections || [];
+      const validationSections = projectSections.filter(
+        (s: { message?: string }) => s.message?.includes('validation')
+      );
+      expect(validationSections.length).toBe(0);
+    });
+
+    it('should validate V1 projects successfully', async () => {
+      validateProjectConfig.mockReturnValue(undefined);
+      isV2Project.mockReturnValue(false);
+
+      await doctor.diagnose();
+
+      // @ts-expect-error Testing private method
+      expect(doctor.diagnosis.addProjectSection).toHaveBeenCalledWith({
+        type: 'success',
+        message: 'Project configuration and structure is valid',
+      });
+    });
+
+    it('should handle invalid project config', async () => {
+      validateProjectConfig.mockImplementation(() => {
+        throw new Error('Invalid config');
+      });
+
+      await doctor.diagnose();
+
+      // @ts-expect-error Testing private method
+      expect(doctor.diagnosis.addProjectSection).toHaveBeenCalledWith({
+        type: 'error',
+        message: 'Project configuration is invalid',
+        secondaryMessaging: 'Invalid config',
+      });
+    });
+
+    it('should validate V2 projects with profiles', async () => {
+      validateProjectConfig.mockReturnValue(undefined);
+      isV2Project.mockReturnValue(true);
+      validateSourceDirectory.mockResolvedValue(undefined);
+      getAllHsProfiles.mockResolvedValue(['dev', 'prod']);
+      validateProjectForProfile.mockResolvedValue([]);
+
+      await doctor.diagnose();
+
+      expect(validateProjectForProfile).toHaveBeenCalledTimes(2);
+      // @ts-expect-error Testing private method
+      expect(doctor.diagnosis.addProjectSection).toHaveBeenCalledWith({
+        type: 'success',
+        message: 'Project configuration and structure is valid',
+      });
+    });
+
+    it('should report profile validation errors', async () => {
+      validateProjectConfig.mockReturnValue(undefined);
+      isV2Project.mockReturnValue(true);
+      validateSourceDirectory.mockResolvedValue(undefined);
+      getAllHsProfiles.mockResolvedValue(['dev']);
+      validateProjectForProfile.mockResolvedValue([
+        new Error('Validation error'),
+      ]);
+
+      await doctor.diagnose();
+
+      // @ts-expect-error Testing private method
+      expect(doctor.diagnosis.addProjectSection).toHaveBeenCalledWith({
+        type: 'error',
+        message: "Project validation failed with profile 'dev' applied",
+        secondaryMessaging: expect.any(String),
+      });
+    });
+
+    it('should validate V2 projects without profiles', async () => {
+      validateProjectConfig.mockReturnValue(undefined);
+      isV2Project.mockReturnValue(true);
+      validateSourceDirectory.mockResolvedValue(undefined);
+      getAllHsProfiles.mockResolvedValue([]);
+      handleTranslate.mockResolvedValue(undefined);
+
+      await doctor.diagnose();
+
+      expect(handleTranslate).toHaveBeenCalled();
+      // @ts-expect-error Testing private method
+      expect(doctor.diagnosis.addProjectSection).toHaveBeenCalledWith({
+        type: 'success',
+        message: 'Project configuration and structure is valid',
+      });
+    });
+
+    it('should handle translation failures', async () => {
+      validateProjectConfig.mockReturnValue(undefined);
+      isV2Project.mockReturnValue(true);
+      validateSourceDirectory.mockResolvedValue(undefined);
+      getAllHsProfiles.mockResolvedValue([]);
+      handleTranslate.mockRejectedValue(new Error('Translation failed'));
+
+      await doctor.diagnose();
+
+      // @ts-expect-error Testing private method
+      expect(doctor.diagnosis.addProjectSection).toHaveBeenCalledWith({
+        type: 'warning',
+        message: 'Project validation failed',
+        secondaryMessaging: expect.any(String),
+      });
+    });
+
+    it('should handle source directory validation errors', async () => {
+      validateProjectConfig.mockReturnValue(undefined);
+      isV2Project.mockReturnValue(true);
+      validateSourceDirectory.mockRejectedValue(
+        new Error('Source directory invalid')
+      );
+
+      await doctor.diagnose();
+
+      // @ts-expect-error Testing private method
+      expect(doctor.diagnosis.addProjectSection).toHaveBeenCalledWith({
+        type: 'error',
+        message: 'Project source directory validation failed',
+        secondaryMessaging: 'Source directory invalid',
       });
     });
   });

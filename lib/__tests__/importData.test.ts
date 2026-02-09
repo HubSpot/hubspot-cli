@@ -19,7 +19,6 @@ import {
 } from '../accountTypes.js';
 import { importDataTestAccountSelectPrompt } from '../prompts/importDataTestAccountSelectPrompt.js';
 
-vi.mock('../ui/logger');
 vi.mock('@hubspot/local-dev-lib/api/crm');
 vi.mock('@hubspot/local-dev-lib/config');
 vi.mock('../accountTypes');

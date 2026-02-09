@@ -18,6 +18,7 @@ import { runCommandInDir } from '../../utils/project.js';
 import { formatTextContents, formatTextContent } from '../../utils/content.js';
 import { trackToolUsage } from '../../utils/toolUsageTracking.js';
 import { setupHubSpotConfig } from '../../utils/config.js';
+import { getErrorMessage } from '../../../lib/errorHandlers/index.js';
 
 const inputSchema = {
   absoluteProjectPath,
@@ -35,7 +36,7 @@ const inputSchema = {
       ])
     )
     .describe(
-      'If not specified by the user, DO NOT choose for them.  This cannot be changed after a project is uploaded. Private is used if you do not wish to distribute your application on the HubSpot marketplace. '
+      'If not specified by the user, DO NOT choose for them.  This cannot be changed after a project is uploaded. Private is used if you do not wish to distribute your app on the HubSpot marketplace. '
     ),
   auth: z
     .optional(
@@ -83,7 +84,7 @@ export class AddFeatureToProjectTool extends Tool<AddFeatureInputSchema> {
       } else if (addApp) {
         content.push(
           formatTextContent(
-            `Ask the user how they would you like to distribute the application. Options are ${APP_DISTRIBUTION_TYPES.MARKETPLACE} and ${APP_DISTRIBUTION_TYPES.PRIVATE}`
+            `Ask the user how they would you like to distribute the app. Options are ${APP_DISTRIBUTION_TYPES.MARKETPLACE} and ${APP_DISTRIBUTION_TYPES.PRIVATE}`
           )
         );
       }
@@ -114,9 +115,7 @@ export class AddFeatureToProjectTool extends Tool<AddFeatureInputSchema> {
 
       return formatTextContents(stdout, stderr);
     } catch (error) {
-      return formatTextContents(
-        error instanceof Error ? error.message : `${error}`
-      );
+      return formatTextContents(getErrorMessage(error));
     }
   }
 

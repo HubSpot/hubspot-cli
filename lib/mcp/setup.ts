@@ -2,7 +2,7 @@ import { uiLogger } from '../ui/logger.js';
 import { commands } from '../../lang/en.js';
 import { promptUser } from '../prompts/promptUtils.js';
 import SpinniesManager from '../ui/SpinniesManager.js';
-import { logError } from '../errorHandlers/index.js';
+import { logError, getErrorMessage } from '../errorHandlers/index.js';
 import { execAsync } from '../../mcp-server/utils/command.js';
 
 import path from 'path';
@@ -17,11 +17,13 @@ const windsurf = 'windsurf';
 const cursor = 'cursor';
 const vscode = 'vscode';
 const codex = 'codex';
+const gemini = 'gemini';
 
 export const supportedTools = [
   { name: commands.mcp.setup.codex, value: codex },
   { name: commands.mcp.setup.claudeCode, value: claudeCode },
   { name: commands.mcp.setup.cursor, value: cursor },
+  { name: commands.mcp.setup.gemini, value: gemini },
   { name: commands.mcp.setup.vsCode, value: vscode },
   { name: commands.mcp.setup.windsurf, value: windsurf },
 ];
@@ -57,8 +59,6 @@ export async function addMcpServerToConfig(
     } else {
       derivedTargets = targets;
     }
-    SpinniesManager.init();
-
     if (derivedTargets.includes(claudeCode)) {
       await runSetupFunction(setupClaudeCode);
     }
@@ -77,6 +77,10 @@ export async function addMcpServerToConfig(
 
     if (derivedTargets.includes(codex)) {
       await runSetupFunction(setupCodex);
+    }
+
+    if (derivedTargets.includes(gemini)) {
+      await runSetupFunction(setupGemini);
     }
 
     uiLogger.info(commands.mcp.setup.success(derivedTargets));
@@ -145,7 +149,7 @@ function setupMcpConfigFile(config: SetupConfig): boolean {
       uiLogger.error(
         commands.mcp.setup.errors.errorParsingJsonFIle(
           config.configPath,
-          error instanceof Error ? error.message : `${error}`
+          getErrorMessage(error)
         )
       );
       return false;
@@ -313,8 +317,10 @@ export async function setupCodex(
     // Check if codex command is available
     await execAsync('codex --version');
 
+    const mcpCommandWithAgent = buildCommandWithAgentString(mcpCommand, codex);
+
     await execAsync(
-      `codex mcp add "${mcpServerName}" -- ${mcpCommand.command} ${mcpCommand.args.join(' ')} --ai-agent codex`
+      `codex mcp add "${mcpServerName}" -- ${mcpCommandWithAgent.command} ${mcpCommandWithAgent.args.join(' ')}`
     );
 
     SpinniesManager.succeed('codexSpinner', {
@@ -329,6 +335,41 @@ export async function setupCodex(
     } else {
       SpinniesManager.fail('codexSpinner', {
         text: commands.mcp.setup.spinners.codexInstallFailed,
+      });
+      logError(error);
+    }
+    return false;
+  }
+}
+
+export async function setupGemini(
+  mcpCommand: McpCommand = defaultMcpCommand
+): Promise<boolean> {
+  try {
+    SpinniesManager.add('geminiSpinner', {
+      text: commands.mcp.setup.spinners.configuringGemini,
+    });
+
+    await execAsync('gemini --version');
+
+    const mcpCommandWithAgent = buildCommandWithAgentString(mcpCommand, gemini);
+
+    await execAsync(
+      `gemini mcp add -s user "${mcpServerName}" ${mcpCommandWithAgent.command} ${mcpCommandWithAgent.args.join(' ')}`
+    );
+
+    SpinniesManager.succeed('geminiSpinner', {
+      text: commands.mcp.setup.spinners.configuredGemini,
+    });
+    return true;
+  } catch (error) {
+    if (error instanceof Error && error.message.includes('gemini')) {
+      SpinniesManager.fail('geminiSpinner', {
+        text: commands.mcp.setup.spinners.geminiNotFound,
+      });
+    } else {
+      SpinniesManager.fail('geminiSpinner', {
+        text: commands.mcp.setup.spinners.geminiInstallFailed,
       });
       logError(error);
     }

@@ -4,7 +4,21 @@ import fs from 'fs';
 import path from 'path';
 import { MockedFunction } from 'vitest';
 
-vi.mock('../command');
+vi.mock('../command', () => ({
+  execAsync: vi.fn(),
+  addFlag: vi.fn(
+    (
+      command: string,
+      flagName: string,
+      value: string | number | boolean | string[]
+    ) => {
+      if (Array.isArray(value)) {
+        return `${command} --${flagName} ${value.map(item => `"${item}"`).join(' ')}`;
+      }
+      return `${command} --${flagName} "${value}"`;
+    }
+  ),
+}));
 vi.mock('fs');
 vi.mock('path');
 
@@ -14,10 +28,6 @@ const mockMkdirSync = fs.mkdirSync as MockedFunction<typeof fs.mkdirSync>;
 const mockResolve = path.resolve as MockedFunction<typeof path.resolve>;
 
 describe('mcp-server/utils/project', () => {
-  beforeEach(() => {
-    vi.clearAllMocks();
-  });
-
   describe('runCommandInDir', () => {
     const mockDirectory = '/test/directory';
     const mockCommand = 'npm install';
@@ -107,6 +117,90 @@ describe('mcp-server/utils/project', () => {
 
       expect(result.stdout).toBe('some output');
       expect(result.stderr).toBe('warning message');
+    });
+
+    it('should add --disable-usage-tracking flag to hs commands', async () => {
+      const hsCommand = 'hs project upload';
+      const expectedResult: CommandResults = {
+        stdout: 'success',
+        stderr: '',
+      };
+
+      mockExistsSync.mockReturnValue(true);
+      mockExecAsync.mockResolvedValue(expectedResult);
+
+      await runCommandInDir(mockDirectory, hsCommand);
+
+      expect(mockExecAsync).toHaveBeenCalledWith(
+        'hs project upload --disable-usage-tracking "true"',
+        expect.objectContaining({
+          cwd: mockResolvedPath,
+          env: expect.any(Object),
+        })
+      );
+    });
+
+    it('should not add --disable-usage-tracking flag to non-hs commands', async () => {
+      const nonHsCommand = 'npm install';
+      const expectedResult: CommandResults = {
+        stdout: 'success',
+        stderr: '',
+      };
+
+      mockExistsSync.mockReturnValue(true);
+      mockExecAsync.mockResolvedValue(expectedResult);
+
+      await runCommandInDir(mockDirectory, nonHsCommand);
+
+      expect(mockExecAsync).toHaveBeenCalledWith(
+        'npm install',
+        expect.objectContaining({
+          cwd: mockResolvedPath,
+          env: expect.any(Object),
+        })
+      );
+    });
+
+    it('should add --disable-usage-tracking flag to hs commands with existing flags', async () => {
+      const hsCommand = 'hs project upload --profile prod';
+      const expectedResult: CommandResults = {
+        stdout: 'success',
+        stderr: '',
+      };
+
+      mockExistsSync.mockReturnValue(true);
+      mockExecAsync.mockResolvedValue(expectedResult);
+
+      await runCommandInDir(mockDirectory, hsCommand);
+
+      expect(mockExecAsync).toHaveBeenCalledWith(
+        'hs project upload --profile prod --disable-usage-tracking "true"',
+        expect.objectContaining({
+          cwd: mockResolvedPath,
+          env: expect.any(Object),
+        })
+      );
+    });
+
+    it('should handle hs commands that start with whitespace', async () => {
+      const hsCommand = 'hs init';
+      const expectedResult: CommandResults = {
+        stdout: 'success',
+        stderr: '',
+      };
+
+      mockExistsSync.mockReturnValue(true);
+      mockExecAsync.mockResolvedValue(expectedResult);
+
+      await runCommandInDir(mockDirectory, hsCommand);
+
+      expect(mockExecAsync).toHaveBeenCalledWith(
+        'hs init --disable-usage-tracking "true"',
+        expect.objectContaining({
+          cwd: mockResolvedPath,
+          env: expect.any(Object),
+        })
+      );
     });
   });
 });

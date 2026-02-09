@@ -7,7 +7,6 @@ import {
 import { getDefaultAccountOverrideFilePath } from '@hubspot/local-dev-lib/config/defaultAccountOverride';
 import { HubSpotConfigAccount } from '@hubspot/local-dev-lib/types/Accounts';
 import { indent } from '../../lib/ui/index.js';
-import { getTableContents, getTableHeader } from '../../lib/ui/table.js';
 import { trackCommandUsage } from '../../lib/usageTracking.js';
 import { isSandbox, isDeveloperTestAccount } from '../../lib/accountTypes.js';
 import {
@@ -22,6 +21,7 @@ import {
 import { makeYargsBuilder } from '../../lib/yargsUtils.js';
 import { uiLogger } from '../../lib/ui/logger.js';
 import { commands } from '../../lang/en.js';
+import { renderTable } from '../../ui/render.js';
 
 const command = ['list', 'ls'];
 const describe = commands.account.subcommands.list.describe;
@@ -103,13 +103,11 @@ async function handler(
 
   const accountData = getAccountData(mappedAccountData);
 
-  accountData.unshift(
-    getTableHeader([
-      commands.account.subcommands.list.labels.name,
-      commands.account.subcommands.list.labels.accountId,
-      commands.account.subcommands.list.labels.authType,
-    ])
-  );
+  const tableHeader = [
+    commands.account.subcommands.list.labels.name,
+    commands.account.subcommands.list.labels.accountId,
+    commands.account.subcommands.list.labels.authType,
+  ];
 
   const defaultAccount = getConfigDefaultAccountIfExists();
   const accountId = defaultAccount?.accountId;
@@ -141,7 +139,7 @@ async function handler(
   }
 
   uiLogger.log(commands.account.subcommands.list.accounts);
-  uiLogger.log(getTableContents(accountData, { border: { bodyLeft: '  ' } }));
+  renderTable(tableHeader, accountData, true);
 }
 
 function accountListBuilder(yargs: Argv): Argv<AccountListArgs> {

@@ -2,7 +2,7 @@ import { ArgumentsCamelCase } from 'yargs';
 import {
   getProjectThemeDetails,
   migrateThemes,
-} from '@hubspot/project-parsing-lib';
+} from '@hubspot/project-parsing-lib/themes';
 import { getConfigAccountById } from '@hubspot/local-dev-lib/config';
 import { MockedFunction } from 'vitest';
 import { confirmPrompt } from '../../prompts/promptUtils.js';
@@ -23,14 +23,22 @@ import {
 import { lib } from '../../../lang/en.js';
 import { HubSpotConfigAccount } from '@hubspot/local-dev-lib/types/Accounts';
 
-vi.mock('../../ui/logger.js');
-vi.mock('@hubspot/project-parsing-lib');
+vi.mock('@hubspot/project-parsing-lib/themes');
 vi.mock('../../prompts/promptUtils');
 vi.mock('../../projects/config');
 vi.mock('../../projects/ensureProjectExists');
 vi.mock('../../projects/platformVersion');
 vi.mock('../../app/migrate');
 vi.mock('@hubspot/local-dev-lib/config');
+vi.mock('../../ui/SpinniesManager', () => ({
+  default: {
+    init: vi.fn(),
+    add: vi.fn(),
+    succeed: vi.fn(),
+    fail: vi.fn(),
+    remove: vi.fn(),
+  },
+}));
 
 const mockedGetProjectThemeDetails = getProjectThemeDetails as MockedFunction<
   typeof getProjectThemeDetails
@@ -334,7 +342,7 @@ describe('lib/theme/migrate', () => {
       expect(mockedFetchMigrationApps).toHaveBeenCalledWith(
         ACCOUNT_ID,
         PLATFORM_VERSION,
-        projectConfig
+        { projectConfig }
       );
 
       expect(mockedConfirmPrompt).toHaveBeenCalledWith(

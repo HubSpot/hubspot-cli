@@ -6,7 +6,7 @@ import {
 } from '@hubspot/local-dev-lib/config';
 import { HUBSPOT_ACCOUNT_TYPES } from '@hubspot/local-dev-lib/constants/config';
 import { getHubSpotWebsiteOrigin } from '@hubspot/local-dev-lib/urls';
-import { Environment } from '@hubspot/local-dev-lib/types/Config';
+import { Environment } from '@hubspot/local-dev-lib/types/Accounts';
 import { isMissingScopeError } from '@hubspot/local-dev-lib/errors/index';
 import { DeveloperTestAccount } from '@hubspot/local-dev-lib/types/developerTestAccounts.js';
 import { PERSONAL_ACCESS_KEY_AUTH_METHOD } from '@hubspot/local-dev-lib/constants/auth';

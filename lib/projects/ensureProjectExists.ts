@@ -22,7 +22,6 @@ async function pollFetchProject(
   // Temporary solution for gating slowness. Retry on 403 statusCode
   return new Promise((resolve, reject) => {
     let pollCount = 0;
-    SpinniesManager.init();
     SpinniesManager.add('pollFetchProject', {
       text: lib.projects.pollFetchProject.checkingProject(
         uiAccountDescription(accountId)

@@ -4,7 +4,6 @@ import {
   updateDefaultCmsPublishMode,
   updateHttpTimeout,
   updateAutoOpenBrowser,
-  getConfig,
 } from '@hubspot/local-dev-lib/config';
 import { CmsPublishMode } from '@hubspot/local-dev-lib/types/Files';
 import { CMS_PUBLISH_MODE } from '@hubspot/local-dev-lib/constants/files';
@@ -197,9 +196,4 @@ export async function setAutoOpenBrowser({
       ? lib.configOptions.setAutoOpenBrowser.enabled
       : lib.configOptions.setAutoOpenBrowser.disabled
   );
-}
-
-export function isAutoOpenBrowserEnabled(): boolean {
-  const config = getConfig();
-  return config?.autoOpenBrowser !== false; // Default to true
 }

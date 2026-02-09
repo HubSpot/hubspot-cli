@@ -10,11 +10,9 @@ import projectUpdateDepsCommand, {
   ProjectUpdateDepsArgs,
 } from '../updateDeps.js';
 
-vi.mock('../../../lib/ui/logger.js');
 vi.mock('../../../lib/projects/config');
 vi.mock('../../../lib/dependencyManagement');
 vi.mock('../../../lib/prompts/promptUtils');
-vi.mock('../../../lib/usageTracking');
 vi.mock('../../../lib/commonOpts');
 
 const exampleSpy = vi.spyOn(yargs as Argv, 'example');

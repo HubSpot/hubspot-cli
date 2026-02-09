@@ -68,8 +68,6 @@ async function handler(
     )
   );
 
-  SpinniesManager.init();
-
   SpinniesManager.add('loading', {
     text: commands.cms.subcommands.function.subcommands.deploy.loading(
       functionPath,
@@ -83,7 +81,7 @@ async function handler(
       functionPath
     );
     const successResp = await poll(() =>
-      getBuildStatus(derivedAccountId, Number(buildId))
+      getBuildStatus(derivedAccountId, buildId)
     );
     if (successResp) {
       const buildTimeSeconds = successResp.buildTime
@@ -159,6 +157,7 @@ const builder = makeYargsBuilder<FunctionDeployArgs>(
   command,
   describe,
   {
+    useGlobalOptions: true,
     useConfigOptions: true,
     useAccountOptions: true,
     useEnvironmentOptions: true,

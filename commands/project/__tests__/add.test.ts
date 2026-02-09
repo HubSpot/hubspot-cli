@@ -13,13 +13,11 @@ import { isV2Project } from '../../../lib/projects/platformVersion.js';
 import { trackCommandUsage } from '../../../lib/usageTracking.js';
 
 vi.mock('../../../lib/commonOpts');
-vi.mock('../../../lib/ui/logger.js');
 vi.mock('../../../lib/errorHandlers/index.js');
 vi.mock('../../../lib/projects/add/v2AddComponent');
 vi.mock('../../../lib/projects/add/legacyAddComponent');
 vi.mock('../../../lib/projects/config');
 vi.mock('../../../lib/projects/platformVersion');
-vi.mock('../../../lib/usageTracking');
 
 const mockedV2AddComponent = vi.mocked(v2AddComponent);
 const mockedLegacyAddComponent = vi.mocked(legacyAddComponent);

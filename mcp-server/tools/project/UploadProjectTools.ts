@@ -4,7 +4,7 @@ import {
   McpServer,
   RegisteredTool,
 } from '@modelcontextprotocol/sdk/server/mcp.js';
-import { getAllHsProfiles } from '@hubspot/project-parsing-lib';
+import { getAllHsProfiles } from '@hubspot/project-parsing-lib/profiles';
 import { getProjectConfig } from '../../../lib/projects/config.js';
 import { TextContent, TextContentResponse, Tool } from '../../types.js';
 import { runCommandInDir } from '../../utils/project.js';
@@ -99,7 +99,16 @@ export class UploadProjectTools extends Tool<InputSchemaType> {
       command
     );
 
-    return formatTextContents(stdout, stderr);
+    const response = await formatTextContents(stdout, stderr);
+
+    // Add reminder about cards needing to be added to views
+    response.content.push(
+      formatTextContent(
+        '\nIMPORTANT: If this project contains cards, remember that uploading does NOT make them live automatically. Cards must be manually added to a view in HubSpot to become visible to users.'
+      )
+    );
+
+    return response;
   }
   register(): RegisteredTool {
     return this.mcpServer.registerTool(
@@ -107,7 +116,7 @@ export class UploadProjectTools extends Tool<InputSchemaType> {
       {
         title: 'Upload HubSpot Project',
         description:
-          'DO NOT run this tool unless the user specifies they would like to upload the project, it is potentially destructive. Uploads the HubSpot project in current working directory.  If the project does not exist, it will be created. MUST be ran from within the project directory.',
+          'DO NOT run this tool unless the user specifies they would like to upload the project, it is potentially destructive. Uploads the HubSpot project in current working directory.  If the project does not exist, it will be created. MUST be ran from within the project directory. IMPORTANT: Uploading a project does NOT automatically make cards live or visible to users. Cards must be manually added to a view in HubSpot after upload to become visible.',
         inputSchema,
         annotations: {
           readOnlyHint: false,

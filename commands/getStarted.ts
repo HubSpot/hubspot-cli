@@ -28,7 +28,8 @@ import {
   uiInfoSection,
 } from '../lib/ui/index.js';
 import { uiLogger } from '../lib/ui/logger.js';
-import { debugError, logError } from '../lib/errorHandlers/index.js';
+import { debugError } from '../lib/errorHandlers/index.js';
+import ProjectValidationError from '../lib/errors/ProjectValidationError.js';
 import { handleProjectUpload } from '../lib/projects/upload.js';
 import {
   PROJECT_CONFIG_FILE,
@@ -273,8 +274,22 @@ async function handler(
         try {
           validateProjectConfig(newProjectConfig, newProjectDir);
         } catch (error) {
-          logError(error);
-          process.exit(EXIT_CODES.ERROR);
+          if (error instanceof ProjectValidationError) {
+            // Track validation error
+            await trackCommandMetadataUsage(
+              'get-started',
+              {
+                successful: false,
+                step: 'project-validation-failed',
+              },
+              derivedAccountId
+            );
+
+            uiLogger.log(' ');
+            uiLogger.error(error.message);
+            process.exit(EXIT_CODES.ERROR);
+          }
+          throw error;
         }
 
         uiLogger.log(' ');

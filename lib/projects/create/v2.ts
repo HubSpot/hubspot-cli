@@ -15,7 +15,11 @@ import {
   ComponentTemplateChoice,
   ProjectTemplateRepoConfig,
 } from '../../../types/Projects.js';
-import { ProjectMetadata } from '@hubspot/project-parsing-lib/src/lib/project.js';
+import type { ProjectMetadata } from '@hubspot/project-parsing-lib/projects';
+import {
+  APP_EVENTS_KEY as AppEventsKey,
+  PAGES_KEY as PagesKey,
+} from '@hubspot/project-parsing-lib/constants';
 import { SelectProjectTemplatePromptResponse } from '../../prompts/selectProjectTemplatePrompt.js';
 import { isV2Project } from '../platformVersion.js';
 import path from 'path';
@@ -23,10 +27,6 @@ import { getConfigForPlatformVersion } from './legacy.js';
 import { logError } from '../../errorHandlers/index.js';
 import { EXIT_CODES } from '../../enums/exitCodes.js';
 import { hasFeature } from '../../hasFeature.js';
-import {
-  AppEventsKey,
-  PagesKey,
-} from '@hubspot/project-parsing-lib/src/lib/constants.js';
 import { ValueOf } from '@hubspot/local-dev-lib/types/Utils';
 
 export async function createV2App(

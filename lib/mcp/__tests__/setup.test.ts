@@ -1,5 +1,5 @@
 import { execAsync } from '../../../mcp-server/utils/command.js';
-import { setupCodex, supportedTools } from '../setup.js';
+import { setupCodex, setupGemini, supportedTools } from '../setup.js';
 import SpinniesManager from '../../ui/SpinniesManager.js';
 import { logError } from '../../errorHandlers/index.js';
 import { commands } from '../../../lang/en.js';
@@ -7,7 +7,6 @@ import { commands } from '../../../lang/en.js';
 // Mock dependencies
 vi.mock('../../../mcp-server/utils/command.js');
 vi.mock('../../ui/SpinniesManager.js');
-vi.mock('../../ui/logger.js');
 vi.mock('../../errorHandlers/index.js');
 vi.mock('../../../lang/en.js', () => ({
   commands: {
@@ -16,6 +15,7 @@ vi.mock('../../../lang/en.js', () => ({
         codex: 'Codex CLI',
         claudeCode: 'Claude Code',
         cursor: 'Cursor',
+        gemini: 'Gemini CLI',
         vsCode: 'VS Code',
         windsurf: 'Windsurf',
         success: vi.fn(targets => `Success message for ${targets.join(', ')}`),
@@ -24,6 +24,10 @@ vi.mock('../../../lang/en.js', () => ({
           configuredCodex: 'Configured Codex',
           codexNotFound: 'Codex command not found - skipping configuration',
           codexInstallFailed: 'Failed to configure Codex',
+          configuringGemini: 'Configuring Gemini CLI...',
+          configuredGemini: 'Configured Gemini CLI',
+          geminiNotFound: 'Gemini CLI not found - skipping configuration',
+          geminiInstallFailed: 'Failed to configure Gemini CLI',
         },
       },
     },
@@ -56,8 +60,16 @@ describe('lib/mcp/setup', () => {
       expect(toolValues).toContain('codex');
       expect(toolValues).toContain('claude');
       expect(toolValues).toContain('cursor');
+      expect(toolValues).toContain('gemini');
       expect(toolValues).toContain('vscode');
       expect(toolValues).toContain('windsurf');
+    });
+
+    it('should include Gemini in the supported tools list', () => {
+      const geminiTool = supportedTools.find(tool => tool.value === 'gemini');
+      expect(geminiTool).toBeDefined();
+      expect(geminiTool?.name).toBe(commands.mcp.setup.gemini);
+      expect(geminiTool?.value).toBe('gemini');
     });
   });
 
@@ -147,6 +159,82 @@ describe('lib/mcp/setup', () => {
       expect(result).toBe(false);
       expect(mockedSpinniesManager.fail).toHaveBeenCalledWith('codexSpinner', {
         text: commands.mcp.setup.spinners.codexInstallFailed,
+      });
+      expect(mockedLogError).toHaveBeenCalledWith(error);
+    });
+  });
+
+  describe('setupGemini', () => {
+    const mockMcpCommand = {
+      command: 'test-command',
+      args: ['--arg1', '--arg2'],
+    };
+
+    it('should successfully configure Gemini CLI when command is available', async () => {
+      mockedExecAsync.mockResolvedValueOnce({
+        stdout: 'gemini version 1.0.0',
+        stderr: '',
+      });
+      mockedExecAsync.mockResolvedValueOnce({ stdout: '', stderr: '' });
+
+      const result = await setupGemini(mockMcpCommand);
+
+      expect(result).toBe(true);
+      expect(mockedSpinniesManager.add).toHaveBeenCalledWith('geminiSpinner', {
+        text: commands.mcp.setup.spinners.configuringGemini,
+      });
+      expect(mockedExecAsync).toHaveBeenCalledWith('gemini --version');
+      expect(mockedExecAsync).toHaveBeenCalledWith(
+        'gemini mcp add -s user "HubSpotDev" test-command --arg1 --arg2 --ai-agent gemini'
+      );
+      expect(mockedSpinniesManager.succeed).toHaveBeenCalledWith(
+        'geminiSpinner',
+        {
+          text: commands.mcp.setup.spinners.configuredGemini,
+        }
+      );
+    });
+
+    it('should use default mcp command when none provided', async () => {
+      mockedExecAsync.mockResolvedValueOnce({
+        stdout: 'gemini version 1.0.0',
+        stderr: '',
+      });
+      mockedExecAsync.mockResolvedValueOnce({ stdout: '', stderr: '' });
+
+      const result = await setupGemini();
+
+      expect(result).toBe(true);
+      expect(mockedExecAsync).toHaveBeenCalledWith(
+        'gemini mcp add -s user "HubSpotDev" hs mcp start --ai-agent gemini'
+      );
+    });
+
+    it('should handle gemini command not found', async () => {
+      const error = new Error('Command not found: gemini');
+      mockedExecAsync.mockRejectedValueOnce(error);
+
+      const result = await setupGemini(mockMcpCommand);
+
+      expect(result).toBe(false);
+      expect(mockedSpinniesManager.fail).toHaveBeenCalledWith('geminiSpinner', {
+        text: commands.mcp.setup.spinners.geminiNotFound,
+      });
+    });
+
+    it('should handle gemini installation failure', async () => {
+      const error = new Error('Some other error');
+      mockedExecAsync.mockResolvedValueOnce({
+        stdout: 'gemini version 1.0.0',
+        stderr: '',
+      });
+      mockedExecAsync.mockRejectedValueOnce(error);
+
+      const result = await setupGemini(mockMcpCommand);
+
+      expect(result).toBe(false);
+      expect(mockedSpinniesManager.fail).toHaveBeenCalledWith('geminiSpinner', {
+        text: commands.mcp.setup.spinners.geminiInstallFailed,
       });
       expect(mockedLogError).toHaveBeenCalledWith(error);
     });

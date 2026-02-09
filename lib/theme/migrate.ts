@@ -3,7 +3,7 @@ import { ArgumentsCamelCase } from 'yargs';
 import {
   migrateThemes,
   getProjectThemeDetails,
-} from '@hubspot/project-parsing-lib';
+} from '@hubspot/project-parsing-lib/themes';
 import { LoadedProjectConfig, writeProjectConfig } from '../projects/config.js';
 import { ensureProjectExists } from '../projects/ensureProjectExists.js';
 import SpinniesManager from '../ui/SpinniesManager.js';
@@ -124,8 +124,6 @@ export async function migrateThemes2025_2(
   themeCount: number,
   projectConfig: LoadedProjectConfig
 ): Promise<void> {
-  SpinniesManager.init();
-
   if (!projectConfig?.projectConfig || !projectConfig?.projectDir) {
     throw new Error(lib.migrate.errors.project.invalidConfig);
   }
@@ -146,7 +144,7 @@ export async function migrateThemes2025_2(
   const { migratableApps, unmigratableApps } = await fetchMigrationApps(
     derivedAccountId,
     options.platformVersion,
-    projectConfig
+    { projectConfig }
   );
   const hasApps = [...migratableApps, ...unmigratableApps].length;
 

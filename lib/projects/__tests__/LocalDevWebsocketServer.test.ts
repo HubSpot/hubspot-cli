@@ -13,12 +13,11 @@ import LocalDevWebsocketServer from '../localDev/LocalDevWebsocketServer.js';
 import LocalDevProcess from '../localDev/LocalDevProcess.js';
 import { lib } from '../../../lang/en.js';
 import { Mocked, Mock } from 'vitest';
-import { Dependencies } from '@hubspot/project-parsing-lib/src/lib/types.js';
-import { IntermediateRepresentationNodeLocalDev } from '@hubspot/project-parsing-lib';
+import type { Dependencies } from '@hubspot/project-parsing-lib/transform';
+import type { IntermediateRepresentationNodeLocalDev } from '@hubspot/project-parsing-lib/translate';
 
 vi.mock('ws');
 vi.mock('@hubspot/local-dev-lib/portManager');
-vi.mock('../../ui/logger.js');
 
 describe('LocalDevWebsocketServer', () => {
   let mockLocalDevProcess: Mocked<LocalDevProcess>;
@@ -28,7 +27,6 @@ describe('LocalDevWebsocketServer', () => {
 
   beforeEach(() => {
     // Reset all mocks
-    vi.clearAllMocks();
 
     // Setup mock WebSocket
     mockWebSocket = {

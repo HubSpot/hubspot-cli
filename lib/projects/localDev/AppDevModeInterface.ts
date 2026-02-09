@@ -1,6 +1,6 @@
 import { fetchAppInstallationData } from '@hubspot/local-dev-lib/api/localDevAuth';
 import {
-  fetchAppMetadataByUid,
+  fetchAppMetadataBySourceId,
   fetchPublicAppProductionInstallCounts,
   installStaticAuthAppOnTestAccount,
 } from '@hubspot/local-dev-lib/api/appsDev';
@@ -33,7 +33,7 @@ import {
 } from '../../app/urls.js';
 import { AppLocalDevData } from '../../../types/LocalDev.js';
 import { isDeveloperTestAccount, isSandbox } from '../../accountTypes.js';
-import { IntermediateRepresentationNodeLocalDev } from '@hubspot/project-parsing-lib';
+import type { IntermediateRepresentationNodeLocalDev } from '@hubspot/project-parsing-lib/translate';
 import SpinniesManager from '../../ui/SpinniesManager.js';
 import { isServerRunningAtUrl } from '../../http.js';
 
@@ -162,7 +162,8 @@ class AppDevModeInterface {
     let appData: PublicApp;
 
     try {
-      const { data } = await fetchAppMetadataByUid(
+      const { data } = await fetchAppMetadataBySourceId(
+        this.localDevState.projectData.id,
         this.appNode!.uid,
         this.localDevState.targetProjectAccountId
       );
@@ -503,7 +504,14 @@ class AppDevModeInterface {
         uiLogger.log('');
       }
     } catch (e) {
+      if (SpinniesManager.pick('fetchAppData')) {
+        SpinniesManager.fail('fetchAppData', {
+          text: lib.AppDevModeInterface.fetchAppData.error,
+          failColor: 'white',
+        });
+      }
       logError(e);
+      process.exit(EXIT_CODES.ERROR);
     }
   }
 

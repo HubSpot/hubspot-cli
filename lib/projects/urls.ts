@@ -1,12 +1,12 @@
 import { getHubSpotWebsiteOrigin } from '@hubspot/local-dev-lib/urls';
 import { getConfigAccountEnvironment } from '@hubspot/local-dev-lib/config';
 
-function getBaseUrl(accountId: number): string {
+export function getBaseHubSpotUrlForAccount(accountId: number): string {
   return getHubSpotWebsiteOrigin(getConfigAccountEnvironment(accountId));
 }
 
 function getProjectHomeUrl(accountId: number): string {
-  return `${getBaseUrl(accountId)}/developer-projects/${accountId}`;
+  return `${getBaseHubSpotUrlForAccount(accountId)}/developer-projects/${accountId}`;
 }
 
 export function getProjectComponentDistributionUrl(
@@ -70,7 +70,7 @@ export function getLocalDevUiUrl(
   accountId: number,
   showWelcomeScreen?: boolean
 ): string {
-  return `${getBaseUrl(accountId)}/developer-projects-local-dev/${accountId}${showWelcomeScreen ? '?welcome' : ''}`;
+  return `${getBaseHubSpotUrlForAccount(accountId)}/developer-projects-local-dev/${accountId}${showWelcomeScreen ? '?welcome' : ''}`;
 }
 
 export function getAccountHomeUrl(accountId: number): string {

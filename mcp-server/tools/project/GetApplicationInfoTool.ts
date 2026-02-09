@@ -11,6 +11,7 @@ import { isHubSpotHttpError } from '@hubspot/local-dev-lib/errors/index';
 import { getConfigDefaultAccountIfExists } from '@hubspot/local-dev-lib/config';
 import { absoluteCurrentWorkingDirectory } from './constants.js';
 import { setupHubSpotConfig } from '../../utils/config.js';
+import { getErrorMessage } from '../../../lib/errorHandlers/index.js';
 
 const inputSchema = { absoluteCurrentWorkingDirectory };
 
@@ -21,7 +22,7 @@ export type GetApplicationInfoInputSchema = z.infer<
   typeof inputSchemaZodObject
 >;
 
-const toolName: string = 'get-applications-info';
+const toolName: string = 'get-apps-info';
 
 interface ApplicationInfo {
   appId: number;
@@ -66,8 +67,7 @@ export class GetApplicationInfoTool extends Tool<GetApplicationInfoInputSchema> 
         return formatTextContents(error.toString());
       }
 
-      const errorMessage = `${error instanceof Error ? error.message : String(error)}`;
-      return formatTextContents(errorMessage);
+      return formatTextContents(getErrorMessage(error));
     }
   }
 
@@ -75,9 +75,9 @@ export class GetApplicationInfoTool extends Tool<GetApplicationInfoInputSchema> 
     return this.mcpServer.registerTool(
       toolName,
       {
-        title: 'Get Applications Information',
+        title: 'Get Apps Information',
         description:
-          'Retrieves a list of all HubSpot applications available in the current account. Returns an array of applications, where each application contains an appId (numeric identifier) and appName (string). This information is useful for identifying available applications before using other tools that require specific application IDs, such as getting API usage patterns. No input parameters are required - this tool fetches all applications from the HubSpot Insights API.',
+          'Retrieves a list of all HubSpot apps available in the current account. Returns an array of apps, where each app contains an appId (numeric identifier) and appName (string). This information is useful for identifying available apps before using other tools that require specific app IDs, such as getting API usage patterns. No input parameters are required - this tool fetches all apps from the HubSpot Insights API.',
         inputSchema,
         annotations: {
           readOnlyHint: true,

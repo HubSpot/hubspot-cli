@@ -35,8 +35,6 @@ async function handler(
 
   trackCommandUsage('validate', {}, derivedAccountId);
 
-  SpinniesManager.init();
-
   SpinniesManager.add('marketplaceValidation', {
     text: commands.cms.subcommands.theme.subcommands.marketplaceValidate.logs.validatingTheme(
       path

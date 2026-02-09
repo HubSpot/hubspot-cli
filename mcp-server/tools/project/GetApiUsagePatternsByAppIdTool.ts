@@ -11,6 +11,7 @@ import { isHubSpotHttpError } from '@hubspot/local-dev-lib/errors/index';
 import { getConfigDefaultAccountIfExists } from '@hubspot/local-dev-lib/config';
 import { absoluteCurrentWorkingDirectory } from './constants.js';
 import { setupHubSpotConfig } from '../../utils/config.js';
+import { getErrorMessage } from '../../../lib/errorHandlers/index.js';
 
 const inputSchema = {
   absoluteCurrentWorkingDirectory,
@@ -18,7 +19,7 @@ const inputSchema = {
     .string()
     .regex(/^\d+$/, 'App ID must be a numeric string')
     .describe(
-      'The numeric app ID as a string (e.g., "3003909"). Use get-applications-info to find available app IDs.'
+      'The numeric app ID as a string (e.g., "3003909"). Use get-apps-info to find available app IDs.'
     ),
   startDate: z
     .string()
@@ -98,8 +99,7 @@ export class GetApiUsagePatternsByAppIdTool extends Tool<GetApiUsagePatternsByAp
         return formatTextContents(error.toString());
       }
 
-      const errorMessage = `${error instanceof Error ? error.message : String(error)}`;
-      return formatTextContents(errorMessage);
+      return formatTextContents(getErrorMessage(error));
     }
   }
 
@@ -109,7 +109,7 @@ export class GetApiUsagePatternsByAppIdTool extends Tool<GetApiUsagePatternsByAp
       {
         title: 'Get API Usage Patterns by App ID',
         description:
-          'Retrieves detailed API usage pattern analytics for a specific HubSpot application. Requires an appId (string) to identify the target application. Optionally accepts startDate and endDate parameters in YYYY-MM-DD format to filter results within a specific time range. Returns patternSummaries object containing usage statistics including portalPercentage (percentage of portals using this pattern) and numOfPortals (total count of portals) for different usage patterns. This data helps analyze how the application is being used across different HubSpot portals and can inform optimization decisions.',
+          'Retrieves detailed API usage pattern analytics for a specific HubSpot app. Requires an appId (string) to identify the target app. Optionally accepts startDate and endDate parameters in YYYY-MM-DD format to filter results within a specific time range. Returns patternSummaries object containing usage statistics including portalPercentage (percentage of portals using this pattern) and numOfPortals (total count of portals) for different usage patterns. This data helps analyze how the app is being used across different HubSpot portals and can inform optimization decisions.',
         inputSchema,
         annotations: {
           readOnlyHint: true,

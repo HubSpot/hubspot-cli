@@ -20,6 +20,7 @@ describe('lib/doctor/Diagnosis', () => {
     defaultAccountOverrideFile: 'path/to/default/account/override/.hsaccount',
     configSettings: { httpUseLocalhost: false },
     configFiles: [],
+    hsMetaFiles: [],
     envFiles: [],
     files: [],
     jsonFiles: [],

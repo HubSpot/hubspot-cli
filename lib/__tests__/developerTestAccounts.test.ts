@@ -18,7 +18,6 @@ import { Mock } from 'vitest';
 import { logError } from '../errorHandlers/index.js';
 
 vi.mock('@hubspot/local-dev-lib/config');
-vi.mock('../ui/logger.js');
 vi.mock('@hubspot/local-dev-lib/api/developerTestAccounts');
 vi.mock('../errorHandlers');
 

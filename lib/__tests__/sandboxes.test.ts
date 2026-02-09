@@ -6,7 +6,7 @@ import {
   getConfigAccountIfExists,
 } from '@hubspot/local-dev-lib/config';
 import { HUBSPOT_ACCOUNT_TYPES } from '@hubspot/local-dev-lib/constants/config';
-import { Environment } from '@hubspot/local-dev-lib/types/Config';
+import { Environment } from '@hubspot/local-dev-lib/types/Accounts';
 import { mockHubSpotHttpError } from '../testUtils.js';
 import {
   getSandboxTypeAsString,
@@ -22,7 +22,6 @@ import {
 import { Mock, Mocked, MockedFunction } from 'vitest';
 import { HubSpotConfigAccount } from '@hubspot/local-dev-lib/types/Accounts';
 
-vi.mock('../ui/logger.js');
 vi.mock('@hubspot/local-dev-lib/api/sandboxHubs');
 vi.mock('@hubspot/local-dev-lib/api/sandboxSync');
 vi.mock('@hubspot/local-dev-lib/config');

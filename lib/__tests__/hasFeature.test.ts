@@ -14,10 +14,6 @@ describe('lib/hasFeature', () => {
   describe('hasFeature()', () => {
     const accountId = 123;
 
-    afterEach(() => {
-      vi.clearAllMocks();
-    });
-
     it('should return true if the feature is enabled', async () => {
       mockedFetchEnabledFeatures.mockResolvedValueOnce({
         data: {
@@ -158,10 +154,6 @@ describe('lib/hasFeature', () => {
 
   describe('hasUnfiedAppsAccess()', () => {
     const accountId = 123;
-
-    afterEach(() => {
-      vi.clearAllMocks();
-    });
 
     it('should return true when API returns true', async () => {
       // @ts-expect-error Don't want to mock the full response object

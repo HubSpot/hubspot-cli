@@ -108,13 +108,6 @@ async function handler(
 
   const { projectConfig, projectDir } = await getProjectConfig();
 
-  try {
-    validateProjectConfig(projectConfig, projectDir);
-  } catch (error) {
-    logError(error);
-    process.exit(EXIT_CODES.ERROR);
-  }
-
   if (!projectConfig || !projectDir) {
     uiLogger.error(commands.project.watch.errors.projectConfigNotFound);
     return process.exit(EXIT_CODES.ERROR);
@@ -123,6 +116,13 @@ async function handler(
   if (isV2Project(projectConfig.platformVersion)) {
     uiLogger.error(projectConfig.platformVersion);
     return process.exit(EXIT_CODES.ERROR);
+  }
+
+  try {
+    validateProjectConfig(projectConfig, projectDir);
+  } catch (error) {
+    logError(error);
+    process.exit(EXIT_CODES.ERROR);
   }
 
   try {

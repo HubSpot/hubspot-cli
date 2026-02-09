@@ -12,7 +12,6 @@ import {
   validateConfigMiddleware,
   injectAccountIdMiddleware,
   validateAccountOptions,
-  handleDeprecatedEnvVariables,
   handleCustomConfigLocationMiddleware,
 } from '../lib/middleware/configMiddleware.js';
 import { autoUpdateCLI } from '../lib/middleware/autoUpdateMiddleware.js';
@@ -20,27 +19,16 @@ import { checkAndWarnGitInclusionMiddleware } from '../lib/middleware/gitMiddlew
 import { performChecks } from '../lib/middleware/yargsChecksMiddleware.js';
 import { setRequestHeaders } from '../lib/middleware/requestMiddleware.js';
 import { checkFireAlarms } from '../lib/middleware/fireAlarmMiddleware.js';
+import { handleDisableUsageTracking } from '../lib/middleware/usageTrackingMiddleware.js';
 
-import removeCommand from '../commands/remove.js';
 import initCommand from '../commands/init.js';
-import logsCommand from '../commands/logs.js';
-import lintCommand from '../commands/lint.js';
 import hubdbCommand from '../commands/hubdb.js';
-import watchCommand from '../commands/watch.js';
 import authCommand from '../commands/auth.js';
-import uploadCommand from '../commands/upload.js';
-import createCommand from '../commands/create.js';
-import fetchCommand from '../commands/fetch.js';
 import filemanagerCommand from '../commands/filemanager.js';
 import secretCommands from '../commands/secret.js';
 import customObjectCommand from '../commands/customObject.js';
-import functionCommands from '../commands/function.js';
-import listCommand from '../commands/list.js';
 import openCommand from '../commands/open.js';
-import mvCommand from '../commands/mv.js';
 import projectCommands from '../commands/project.js';
-import themeCommand from '../commands/theme.js';
-import moduleCommand from '../commands/module.js';
 import configCommand from '../commands/config.js';
 import accountCommands from '../commands/account.js';
 import sandboxesCommand from '../commands/sandbox.js';
@@ -52,7 +40,9 @@ import appCommand from '../commands/app.js';
 import testAccountCommands from '../commands/testAccount.js';
 import getStartedCommand from '../commands/getStarted.js';
 import mcpCommand from '../commands/mcp.js';
+import upgradeCommand from '../commands/upgrade.js';
 import { uiLogger } from '../lib/ui/logger.js';
+import { initializeSpinniesManager } from '../lib/middleware/spinniesMiddleware.js';
 
 function getTerminalWidth(): number {
   const width = yargs().terminalWidth();
@@ -83,14 +73,15 @@ const argv = yargs(process.argv.slice(2))
   .middleware([
     setCLILogLevel,
     setRequestHeaders,
-    handleDeprecatedEnvVariables,
     handleCustomConfigLocationMiddleware,
+    handleDisableUsageTracking,
     injectAccountIdMiddleware,
     validateConfigMiddleware,
     autoUpdateCLI,
     checkAndWarnGitInclusionMiddleware,
     validateAccountOptions,
     checkFireAlarms,
+    initializeSpinniesManager,
   ])
   .exitProcess(false)
   .fail(handleFailure)
@@ -103,6 +94,11 @@ const argv = yargs(process.argv.slice(2))
   .option('noColor', {
     default: false,
     describe: 'prevent color from displaying in the ui',
+    hidden: true,
+    type: 'boolean',
+  })
+  .option('disable-usage-tracking', {
+    default: false,
     hidden: true,
     type: 'boolean',
   })
@@ -125,30 +121,17 @@ const argv = yargs(process.argv.slice(2))
   .command(projectCommands)
   .command(appCommand)
 
-  // CMS Design Manager
-  .command(watchCommand)
-  .command(listCommand)
-  .command(uploadCommand)
-  .command(fetchCommand)
-  .command(removeCommand)
-  .command(mvCommand)
-
   // CMS Commands
   .command(cmsCommand)
-  .command(logsCommand)
-  .command(lintCommand)
   .command(hubdbCommand)
-  .command(createCommand)
   .command(filemanagerCommand)
-  .command(functionCommands)
-  .command(themeCommand)
-  .command(moduleCommand)
 
   // Misc commands
   .command(customObjectCommand)
   .command(completionCommand)
   .command(doctorCommand)
   .command(mcpCommand)
+  .command(upgradeCommand)
 
   .help()
   .alias('h', 'help')

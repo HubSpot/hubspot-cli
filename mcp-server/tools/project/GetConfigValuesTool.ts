@@ -6,10 +6,8 @@ import {
 import { z } from 'zod';
 import { formatTextContents } from '../../utils/content.js';
 import { absoluteCurrentWorkingDirectory } from './constants.js';
-import {
-  getIntermediateRepresentationSchema,
-  mapToInternalType,
-} from '@hubspot/project-parsing-lib';
+import { getIntermediateRepresentationSchema } from '@hubspot/project-parsing-lib/schema';
+import { mapToInternalType } from '@hubspot/project-parsing-lib/transform';
 import { isV2Project } from '../../../lib/projects/platformVersion.js';
 import { getConfigDefaultAccountIfExists } from '@hubspot/local-dev-lib/config';
 import { setupHubSpotConfig } from '../../utils/config.js';

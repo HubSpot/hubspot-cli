@@ -24,3 +24,4 @@ acceptance-tests/test-output
 
 # Dir to sync to public repo
 hs-temp-repo-sync
+package-lock.json

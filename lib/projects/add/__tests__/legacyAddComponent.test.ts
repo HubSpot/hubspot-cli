@@ -16,9 +16,7 @@ import { commands } from '../../../../lang/en.js';
 vi.mock('../../structure');
 vi.mock('../../create/legacy');
 vi.mock('../../../prompts/projectAddPrompt');
-vi.mock('../../../ui/logger.js');
 vi.mock('@hubspot/local-dev-lib/github');
-vi.mock('../../../usageTracking.js');
 
 const mockedFindProjectComponents = vi.mocked(findProjectComponents);
 const mockedGetProjectComponentListFromRepo = vi.mocked(

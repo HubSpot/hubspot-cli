@@ -15,9 +15,6 @@ import { EXIT_CODES } from '../../../lib/enums/exitCodes.js';
 import assets from '../../../lib/cmsAssets/index.js';
 
 const APP_ASSET_TYPES = ['api-sample', 'app', 'react-app', 'vue-app'];
-const SUPPORTED_APP_TYPES = APP_ASSET_TYPES.filter(t => !assets[t].hidden).join(
-  ', '
-);
 
 const command = 'create <type> [name] [dest]';
 const describe = commands.cms.subcommands.app.subcommands.create.describe;
@@ -45,7 +42,7 @@ async function handler(args: ArgumentsCamelCase<AppCreateArgs>): Promise<void> {
     uiLogger.error(
       commands.cms.subcommands.app.subcommands.create.errors.unsupportedAssetType(
         assetType,
-        SUPPORTED_APP_TYPES
+        APP_ASSET_TYPES.filter(t => !assets[t].hidden).join(', ')
       )
     );
     return;
@@ -92,7 +89,7 @@ function appCreateBuilder(yargs: Argv): Argv<AppCreateArgs> {
   yargs.positional('type', {
     describe: commands.cms.subcommands.app.subcommands.create.positionals.type,
     type: 'string',
-    choices: APP_ASSET_TYPES.filter(t => !assets[t].hidden),
+    choices: APP_ASSET_TYPES,
   });
   yargs.positional('name', {
     describe: commands.cms.subcommands.app.subcommands.create.positionals.name,

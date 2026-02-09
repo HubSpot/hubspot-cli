@@ -21,16 +21,7 @@ import {
 vi.mock('../../../lib/commonOpts');
 vi.mock('@hubspot/local-dev-lib/api/hubdb');
 vi.mock('@hubspot/local-dev-lib/config');
-vi.mock('../../../lib/ui/logger', () => ({
-  uiLogger: {
-    success: vi.fn(),
-    log: vi.fn(),
-    error: vi.fn(),
-    exit: vi.fn(),
-  },
-}));
 vi.mock('../../../lib/errorHandlers');
-vi.mock('../../../lib/usageTracking');
 
 const mockExit = vi
   .spyOn(process, 'exit')

@@ -31,7 +31,7 @@ import {
   createDeveloperTestAccountV2,
   saveAccountToConfig,
 } from '../../lib/buildAccount.js';
-import { ACCOUNT_LEVEL_CHOICES } from '../../lib/constants.js';
+import { ACCOUNT_LEVEL_CHOICES, ACCOUNT_LEVELS } from '../../lib/constants.js';
 
 const command = 'create';
 const describe = commands.testAccount.create.describe;
@@ -50,6 +50,7 @@ type CreateTestAccountArgs = CommonArgs &
     serviceLevel?: AccountLevel;
     salesLevel?: AccountLevel;
     contentLevel?: AccountLevel;
+    commerceLevel?: AccountLevel;
   };
 
 function hasAnyFlags(args: ArgumentsCamelCase<CreateTestAccountArgs>): boolean {
@@ -61,6 +62,7 @@ function hasAnyFlags(args: ArgumentsCamelCase<CreateTestAccountArgs>): boolean {
     serviceLevel,
     salesLevel,
     contentLevel,
+    commerceLevel,
   } = args;
   return !!(
     name ||
@@ -69,7 +71,8 @@ function hasAnyFlags(args: ArgumentsCamelCase<CreateTestAccountArgs>): boolean {
     opsLevel ||
     serviceLevel ||
     salesLevel ||
-    contentLevel
+    contentLevel ||
+    commerceLevel
   );
 }
 
@@ -138,6 +141,7 @@ async function buildTestAccountConfig(
     serviceLevel,
     salesLevel,
     contentLevel,
+    commerceLevel,
   } = args;
 
   if (configPath) {
@@ -162,6 +166,7 @@ async function buildTestAccountConfig(
     serviceLevel,
     salesLevel,
     contentLevel,
+    commerceLevel,
   });
 }
 
@@ -212,7 +217,8 @@ async function handler(
   SpinniesManager.succeed('createTestAccount', {
     text: commands.testAccount.create.polling.success(
       testAccountConfig.accountName,
-      resultJson.accountId!
+      resultJson.accountId!,
+      derivedAccountId
     ),
   });
 
@@ -298,6 +304,14 @@ function createTestAccountBuilder(yargs: Argv): Argv<CreateTestAccountArgs> {
     choices: ACCOUNT_LEVEL_CHOICES,
   });
 
+  yargs.option('commerce-level', {
+    type: 'string',
+    description: commands.testAccount.create.options.commerceLevel,
+    choices: ACCOUNT_LEVEL_CHOICES.filter(
+      level => level !== ACCOUNT_LEVELS.STARTER
+    ),
+  });
+
   yargs.conflicts('config-path', [
     'name',
     'description',
@@ -306,6 +320,7 @@ function createTestAccountBuilder(yargs: Argv): Argv<CreateTestAccountArgs> {
     'service-level',
     'sales-level',
     'content-level',
+    'commerce-level',
   ]);
 
   yargs.example([

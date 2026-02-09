@@ -2,7 +2,7 @@ import {
   AccessToken,
   HubSpotConfigAccount,
 } from '@hubspot/local-dev-lib/types/Accounts';
-import { Environment } from '@hubspot/local-dev-lib/types/Config';
+import { Environment } from '@hubspot/local-dev-lib/types/Accounts';
 import {
   getAccessToken,
   updateConfigWithAccessToken,
@@ -32,7 +32,6 @@ vi.mock('@hubspot/local-dev-lib/personalAccessKey');
 vi.mock('@hubspot/local-dev-lib/config');
 vi.mock('@hubspot/local-dev-lib/api/developerTestAccounts');
 vi.mock('@hubspot/local-dev-lib/api/sandboxHubs');
-vi.mock('../ui/logger.js');
 vi.mock('../errorHandlers/index.js');
 vi.mock('../prompts/personalAccessKeyPrompt');
 vi.mock('../prompts/accountNamePrompt');
@@ -90,10 +89,6 @@ describe('lib/buildAccount', () => {
       mockedUpdateConfigWithAccessToken.mockResolvedValue(mockAccountConfig);
       mockedGetConfigAccountIfExists.mockResolvedValue(undefined);
       mockedUpdateConfigAccount.mockReturnValue(undefined);
-    });
-
-    afterEach(() => {
-      vi.clearAllMocks();
     });
 
     it('should save account with provided personal access key', async () => {
@@ -228,10 +223,6 @@ describe('lib/buildAccount', () => {
       });
     });
 
-    afterEach(() => {
-      vi.clearAllMocks();
-    });
-
     it('should create a developer test account successfully', async () => {
       const result = await buildAccount.buildDeveloperTestAccount(
         mockDeveloperTestAccount.accountName,
@@ -288,10 +279,6 @@ describe('lib/buildAccount', () => {
       mockedCreateSandbox.mockResolvedValue({
         data: { sandbox: mockSandbox, personalAccessKey: 'test-key' },
       });
-    });
-
-    afterEach(() => {
-      vi.clearAllMocks();
     });
 
     it('should create a standard sandbox successfully', async () => {
@@ -371,10 +358,6 @@ describe('lib/buildAccount', () => {
       mockedGetPersonalAccessKey.mockResolvedValue({
         data: { personalAccessKey: { encodedOAuthRefreshToken: 'test-key' } },
       });
-    });
-
-    afterEach(() => {
-      vi.clearAllMocks();
     });
 
     it('should create a v2 standard sandbox successfully and fetch a personal access key', async () => {

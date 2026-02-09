@@ -40,7 +40,9 @@ exports[`lib/doctor/DiagnosticInfo > generateDiagnosticInfo > should gather the 
     "src/app/extensions/extension.json",
     "src/app/extensions/package.json",
     "src/app/extension/package-lock.json",
+    "src/app/app.functions/node_modules/axios",
   ],
+  "hsMetaFiles": [],
   "jsonFiles": [
     "hsproject.json",
     "src/app/app.json",

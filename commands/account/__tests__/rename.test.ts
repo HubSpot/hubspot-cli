@@ -12,7 +12,6 @@ import * as usageTracking from '../../../lib/usageTracking.js';
 vi.mock('../../../lib/commonOpts');
 vi.mock('@hubspot/local-dev-lib/config');
 vi.mock('../../../lib/errorHandlers/index.js');
-vi.mock('../../../lib/usageTracking.js');
 
 const positionalSpy = vi
   .spyOn(yargs as Argv, 'positional')
@@ -46,7 +45,6 @@ describe('commands/account/rename', () => {
     let args: ArgumentsCamelCase<AccountRenameArgs>;
 
     beforeEach(() => {
-      vi.clearAllMocks();
       renameAccountSpy.mockReturnValue(undefined);
       processExitSpy.mockImplementation(() => {
         throw new Error('process.exit called');

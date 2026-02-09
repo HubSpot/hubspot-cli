@@ -31,6 +31,7 @@ interface DiagnosisCategories {
   cli: DiagnosisCategory;
   project: DiagnosisCategory;
   cliConfig: DiagnosisCategory;
+  networking: DiagnosisCategory;
   defaultAccountOverrideFile: DiagnosisCategory;
 }
 
@@ -56,6 +57,10 @@ export class Diagnosis {
       },
       cliConfig: {
         header: lib.doctor.diagnosis.cliConfig.header,
+        sections: [],
+      },
+      networking: {
+        header: lib.doctor.networkChecks.header,
         sections: [],
       },
       defaultAccountOverrideFile: {
@@ -106,6 +111,10 @@ export class Diagnosis {
 
   addCLIConfigSection(section: Section): void {
     this.diagnosis.cliConfig.sections.push(section);
+  }
+
+  addNetworkingSection(section: Section): void {
+    this.diagnosis.networking.sections.push(section);
   }
 
   addDefaultAccountOverrideFileSection(section: Section): void {

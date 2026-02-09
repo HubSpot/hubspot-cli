@@ -11,7 +11,7 @@ import {
   PrivateAppComponentConfig,
   AppCardComponentConfig,
 } from '../../types/Projects.js';
-import { IntermediateRepresentationNodeLocalDev } from '@hubspot/project-parsing-lib/src/lib/types.js';
+import type { IntermediateRepresentationNodeLocalDev } from '@hubspot/project-parsing-lib/translate';
 import { AppIRNode } from '../../types/ProjectComponents.js';
 import {
   IR_COMPONENT_TYPES,

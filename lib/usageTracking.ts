@@ -4,8 +4,11 @@ import { API_KEY_AUTH_METHOD } from '@hubspot/local-dev-lib/constants/auth';
 import { uiLogger } from './ui/logger.js';
 import { pkg } from './jsonLoader.js';
 import { debugError } from './errorHandlers/index.js';
+import { isUsageTrackingDisableFlagSet } from './middleware/usageTrackingMiddleware.js';
 
 const version = pkg.version;
+const usageTrackingDiabled =
+  'Usage tracking is disabled via the --disable-usage-tracking flag, not sending usage events';
 
 type Meta = {
   action?: string; // "The specific action taken in the CLI"
@@ -56,6 +59,11 @@ export async function trackCommandUsage(
   meta: Meta = {},
   accountId?: number
 ): Promise<void> {
+  if (isUsageTrackingDisableFlagSet()) {
+    uiLogger.debug(usageTrackingDiabled);
+    return;
+  }
+
   try {
     const config = getConfig();
     if (config?.allowUsageTracking === false) {
@@ -84,6 +92,11 @@ export async function trackCommandUsage(
 }
 
 export async function trackHelpUsage(command: string): Promise<void> {
+  if (isUsageTrackingDisableFlagSet()) {
+    uiLogger.debug(usageTrackingDiabled);
+    return;
+  }
+
   const config = getConfig();
   if (config?.allowUsageTracking === false) {
     return;
@@ -129,6 +142,11 @@ export async function trackCommandMetadataUsage(
   meta: Meta = {},
   accountId?: number
 ): Promise<void> {
+  if (isUsageTrackingDisableFlagSet()) {
+    uiLogger.debug(usageTrackingDiabled);
+    return;
+  }
+
   const config = getConfig();
   if (config?.allowUsageTracking === false) {
     return;
@@ -201,6 +219,11 @@ async function trackCliInteraction({
       } catch (error) {
         debugError(error);
       }
+    }
+
+    if (isUsageTrackingDisableFlagSet()) {
+      uiLogger.debug(usageTrackingDiabled);
+      return;
     }
 
     try {

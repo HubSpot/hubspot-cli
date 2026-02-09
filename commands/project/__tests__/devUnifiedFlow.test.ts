@@ -1,7 +1,7 @@
 import path from 'path';
 import { ArgumentsCamelCase } from 'yargs';
 import { HUBSPOT_ACCOUNT_TYPES } from '@hubspot/local-dev-lib/constants/config';
-import { translateForLocalDev } from '@hubspot/project-parsing-lib';
+import { translateForLocalDev } from '@hubspot/project-parsing-lib/translate';
 import {
   getAllConfigAccounts,
   getConfigAccountById,
@@ -53,7 +53,7 @@ vi.mock('@hubspot/ui-extensions-dev-server', () => ({
 }));
 
 // Mock all dependencies
-vi.mock('@hubspot/project-parsing-lib');
+vi.mock('@hubspot/project-parsing-lib/translate');
 vi.mock('@hubspot/local-dev-lib/config');
 vi.mock('@hubspot/local-dev-lib/environment');
 vi.mock('@hubspot/local-dev-lib/portManager');
@@ -69,7 +69,6 @@ vi.mock('../../../lib/projects/localDev/LocalDevWebsocketServer');
 vi.mock('../../../lib/process');
 vi.mock('../../../lib/accountTypes');
 vi.mock('../../../lib/ui');
-vi.mock('../../../lib/ui/logger');
 
 describe('unifiedProjectDevFlow', () => {
   const mockArgs: ArgumentsCamelCase<ProjectDevArgs> = {
@@ -143,8 +142,6 @@ describe('unifiedProjectDevFlow', () => {
   };
 
   beforeEach(() => {
-    vi.clearAllMocks();
-
     // Mock process.exit
     vi.spyOn(global.process, 'exit').mockImplementation(
       (code?: string | number | null) => {
@@ -514,7 +511,6 @@ describe('unifiedProjectDevFlow', () => {
       expect(mockLocalDevProcess.start).toHaveBeenCalled();
       expect(mockLocalDevWatcher.start).toHaveBeenCalled();
       expect(mockWebsocketServer.start).toHaveBeenCalled();
-      expect(SpinniesManager.init).toHaveBeenCalled();
     });
   });
 

@@ -1,7 +1,10 @@
 import { ArgumentsCamelCase, Argv, CommandModule } from 'yargs';
 import { trackCommandUsage } from '../../../lib/usageTracking.js';
 import { getConfigAccountIfExists } from '@hubspot/local-dev-lib/config';
-import { HsProfileFile } from '@hubspot/project-parsing-lib/src/lib/types.js';
+import {
+  getAllHsProfiles,
+  HsProfileFile,
+} from '@hubspot/project-parsing-lib/profiles';
 import {
   getProjectConfig,
   validateProjectConfig,
@@ -13,13 +16,12 @@ import { deprecatedProjectDevFlow } from './deprecatedFlow.js';
 import { unifiedProjectDevFlow } from './unifiedFlow.js';
 import { isV2Project } from '../../../lib/projects/platformVersion.js';
 import { makeYargsBuilder } from '../../../lib/yargsUtils.js';
-import {
-  loadProfile,
-  exitIfUsingProfiles,
-} from '../../../lib/projectProfiles.js';
+import { loadProfile } from '../../../lib/projects/projectProfiles.js';
 import { commands } from '../../../lang/en.js';
 import { uiLogger } from '../../../lib/ui/logger.js';
 import { logError } from '../../../lib/errorHandlers/index.js';
+import path from 'path';
+import { listPrompt } from '../../../lib/prompts/promptUtils.js';
 
 const command = 'dev';
 const describe = commands.project.dev.describe;
@@ -102,27 +104,42 @@ async function handler(
     targetProjectAccountId = derivedAccountId;
   }
 
+  // Determine profile name: from flag or prompt
   if (!targetProjectAccountId && isV2Project(projectConfig.platformVersion)) {
-    if (args.profile) {
-      profile = loadProfile(projectConfig, projectDir, args.profile);
+    let profileName = args.profile;
 
-      if (!profile) {
+    if (!profileName) {
+      const existingProfiles = await getAllHsProfiles(
+        path.join(projectDir, projectConfig.srcDir)
+      );
+
+      if (existingProfiles.length !== 0) {
+        profileName = await listPrompt<string>(
+          commands.project.dev.prompts.selectProfile,
+          {
+            choices: existingProfiles,
+          }
+        );
+      }
+    }
+
+    if (profileName) {
+      try {
+        profile = loadProfile(projectConfig, projectDir, profileName);
+        targetProjectAccountId = profile.accountId;
+
+        uiLogger.log('');
+        uiLogger.log(
+          commands.project.dev.logs.profileProjectAccountExplanation(
+            targetProjectAccountId,
+            profileName
+          )
+        );
+      } catch (error) {
+        logError(error);
         uiLine();
         process.exit(EXIT_CODES.ERROR);
       }
-
-      targetProjectAccountId = profile.accountId;
-
-      uiLogger.log('');
-      uiLogger.log(
-        commands.project.dev.logs.profileProjectAccountExplanation(
-          targetProjectAccountId,
-          args.profile
-        )
-      );
-    } else {
-      // A profile must be specified if this project has profiles configured
-      await exitIfUsingProfiles(projectConfig, projectDir);
     }
   }
 

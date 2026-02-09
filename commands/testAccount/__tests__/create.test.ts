@@ -7,7 +7,10 @@ import {
   addJSONOutputOptions,
 } from '../../../lib/commonOpts.js';
 import testAccountCreateCommand from '../create.js';
-import { ACCOUNT_LEVEL_CHOICES } from '../../../lib/constants.js';
+import {
+  ACCOUNT_LEVEL_CHOICES,
+  ACCOUNT_LEVELS,
+} from '../../../lib/constants.js';
 
 vi.mock('../../../lib/commonOpts');
 
@@ -102,6 +105,15 @@ describe('commands/testAccount/create', () => {
         description:
           'CMS Hub tier. Options: FREE, STARTER, PROFESSIONAL, ENTERPRISE',
         choices: ACCOUNT_LEVEL_CHOICES,
+      });
+
+      expect(yargsMock.option).toHaveBeenCalledWith('commerce-level', {
+        type: 'string',
+        description:
+          'Commerce Hub tier. Options: FREE, PROFESSIONAL, ENTERPRISE',
+        choices: ACCOUNT_LEVEL_CHOICES.filter(
+          level => level !== ACCOUNT_LEVELS.STARTER
+        ),
       });
     });
 

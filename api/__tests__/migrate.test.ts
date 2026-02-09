@@ -56,13 +56,40 @@ describe('api/migrate', () => {
 
       const result = await listAppsForMigration(
         mockAccountId,
-        mockPlatformVersion
+        mockPlatformVersion,
+        mockAppId
       );
 
       expect(http.get).toHaveBeenCalledWith(mockAccountId, {
         url: 'dfs/migrations/v2/list-apps',
         params: {
           platformVersion: convertedPlatformVersion,
+          appId: 67890,
+        },
+      });
+      expect(result).toEqual(mockResponse);
+    });
+
+    it('should call http.get with undefined appId when not provided', async () => {
+      const mockResponse: ListAppsResponse = {
+        migratableApps: [],
+        unmigratableApps: [],
+      };
+
+      // @ts-expect-error Mock
+      httpMock.get.mockResolvedValue(mockResponse);
+
+      const result = await listAppsForMigration(
+        mockAccountId,
+        mockPlatformVersion,
+        undefined
+      );
+
+      expect(http.get).toHaveBeenCalledWith(mockAccountId, {
+        url: 'dfs/migrations/v2/list-apps',
+        params: {
+          platformVersion: convertedPlatformVersion,
+          appId: undefined,
         },
       });
       expect(result).toEqual(mockResponse);

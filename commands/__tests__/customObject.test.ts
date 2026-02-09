@@ -1,6 +1,5 @@
 import yargs, { Argv } from 'yargs';
 import create from '../customObject/create.js';
-import schema from '../customObject/schema.js';
 import createSchema from '../customObject/createSchema.js';
 import updateSchema from '../customObject/updateSchema.js';
 import listSchemas from '../customObject/listSchemas.js';
@@ -51,7 +50,6 @@ describe('commands/customObject', () => {
 
     const subcommands = [
       create,
-      schema,
       createSchema,
       updateSchema,
       listSchemas,
