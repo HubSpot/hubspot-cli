@@ -6,6 +6,10 @@ import {
 } from '../components/StatusMessageBoxes.js';
 import { getBoxWithTitle } from '../components/BoxWithTitle.js';
 import { getTable } from '../components/Table.js';
+import { getActionSection } from '../components/ActionSection.js';
+import { getInputField } from '../components/InputField.js';
+import { getSelectInput } from '../components/SelectInput.js';
+import { getStatusIcon } from '../components/StatusIcon.js';
 import {
   SuccessBox,
   InfoBox,
@@ -13,6 +17,12 @@ import {
   AlertBox,
 } from '../components/StatusMessageBoxes.js';
 import { BoxWithTitle } from '../components/BoxWithTitle.js';
+import { ActionSection } from '../components/ActionSection.js';
+import { InputField } from '../components/InputField.js';
+import { SelectInput } from '../components/SelectInput.js';
+import { StatusIcon } from '../components/StatusIcon.js';
+import { ACTION_STATUSES } from '../constants.js';
+import { Text } from 'ink';
 
 export type ComponentPropPair = {
   component: React.ReactNode;
@@ -88,6 +98,42 @@ export const populatedComponents: Record<string, ComponentPropPair> = {
       ],
     }),
     signature: '',
+  },
+  ActionSection: {
+    component: getActionSection({
+      status: ACTION_STATUSES.DONE,
+      statusText: 'Action completed successfully',
+      children: <Text>This is an action section</Text>,
+    }),
+    signature: ActionSection.toString(),
+  },
+  InputField: {
+    component: getInputField({
+      flag: 'name',
+      prompt: 'Enter your name',
+      value: 'example',
+      isEditing: false,
+      onChange: () => {},
+      onSubmit: () => {},
+    }),
+    signature: InputField.toString(),
+  },
+  SelectInput: {
+    component: getSelectInput({
+      items: [
+        { label: 'Option 1', value: 'option1' },
+        { label: 'Option 2', value: 'option2' },
+        { label: 'Option 3', value: 'option3' },
+      ],
+      onSelect: () => {},
+    }),
+    signature: SelectInput.toString(),
+  },
+  StatusIcon: {
+    component: getStatusIcon({
+      status: ACTION_STATUSES.DONE,
+    }),
+    signature: StatusIcon.toString(),
   },
 };
 

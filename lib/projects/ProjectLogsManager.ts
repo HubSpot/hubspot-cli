@@ -1,16 +1,28 @@
 import { getProjectConfig } from './config.js';
 import { ensureProjectExists } from './ensureProjectExists.js';
 import { fetchProjectComponentsMetadata } from '@hubspot/local-dev-lib/api/projects';
+import { fetchAppMetadataBySourceId } from '@hubspot/local-dev-lib/api/appsDev';
 import { AppFunctionComponentMetadata } from '@hubspot/local-dev-lib/types/ComponentStructure';
 import { uiLogger } from '../ui/logger.js';
 import { commands } from '../../lang/en.js';
+import { isV2Project } from './platformVersion.js';
+import { getDeployedProjectNodes } from './localDev/helpers/project.js';
+import { ProjectConfig } from '../../types/Projects.js';
+import { debugError } from '../errorHandlers/index.js';
+
+type FunctionInfo = {
+  componentName: string;
+  appId: number;
+  endpoint?: { path: string };
+};
 
 class _ProjectLogsManager {
   projectName: string | undefined;
+  projectConfig: ProjectConfig | undefined;
   projectId: number | undefined;
   accountId: number | undefined;
-  functions: AppFunctionComponentMetadata[];
-  selectedFunction: AppFunctionComponentMetadata | undefined;
+  functions: FunctionInfo[];
+  selectedFunction: FunctionInfo | undefined;
   functionName: string | undefined;
   appId: number | undefined;
   isPublicFunction: boolean | undefined;
@@ -18,6 +30,7 @@ class _ProjectLogsManager {
 
   reset(): void {
     this.projectName = undefined;
+    this.projectConfig = undefined;
     this.projectId = undefined;
     this.accountId = undefined;
     this.functions = [];
@@ -39,9 +52,8 @@ class _ProjectLogsManager {
       throw new Error(commands.project.logs.errors.noProjectConfig);
     }
 
-    const { name: projectName } = projectConfig;
-
-    this.projectName = projectName;
+    this.projectConfig = projectConfig;
+    this.projectName = projectConfig.name;
     this.accountId = accountId;
     this.functions = [];
 
@@ -62,7 +74,16 @@ class _ProjectLogsManager {
     }
 
     this.projectId = project.id;
-    await this.fetchFunctionDetails();
+
+    if (isV2Project(projectConfig.platformVersion)) {
+      const deployedBuildId = project.deployedBuild.buildId;
+      if (!deployedBuildId) {
+        throw new Error(commands.project.logs.errors.noDeployedBuild);
+      }
+      await this.fetchFunctionDetailsV2(deployedBuildId);
+    } else {
+      await this.fetchFunctionDetails();
+    }
   }
 
   async fetchFunctionDetails(): Promise<void> {
@@ -87,13 +108,82 @@ class _ProjectLogsManager {
     });
 
     apps.forEach(app => {
-      this.functions.push(
-        // If component type is APP_FUNCTION, we can safely cast as AppFunctionComponentMetadata
-        ...(app.featureComponents.filter(
-          component => component.type.name === 'APP_FUNCTION'
-        ) as AppFunctionComponentMetadata[])
-      );
+      const appFunctions = app.featureComponents.filter(
+        component => component.type.name === 'APP_FUNCTION'
+      ) as AppFunctionComponentMetadata[];
+
+      appFunctions.forEach(fn => {
+        if (fn.deployOutput) {
+          this.functions.push({
+            componentName: fn.componentName,
+            appId: fn.deployOutput.appId,
+            endpoint: fn.deployOutput.endpoint,
+          });
+        }
+      });
     });
+
+    if (this.functions.length === 0) {
+      throw new Error(commands.project.logs.errors.noFunctionsInProject);
+    }
+  }
+
+  async fetchFunctionDetailsV2(deployedBuildId: number): Promise<void> {
+    if (!this.projectId || !this.accountId || !this.projectConfig) {
+      uiLogger.debug(
+        commands.project.logs.errors.projectLogsManagerNotInitialized
+      );
+      throw new Error(commands.project.logs.errors.generic);
+    }
+
+    let deployedNodes;
+    try {
+      deployedNodes = await getDeployedProjectNodes(
+        this.projectConfig,
+        this.accountId,
+        deployedBuildId
+      );
+    } catch (err) {
+      debugError(err);
+      throw new Error(commands.project.logs.errors.failedToFetchProjectDetails);
+    }
+
+    const appNode = Object.values(deployedNodes).find(
+      node => node.componentType === 'APPLICATION'
+    );
+
+    if (!appNode) {
+      throw new Error(commands.project.logs.errors.noFunctionsInProject);
+    }
+
+    let appId: number;
+    try {
+      const { data: appMetadata } = await fetchAppMetadataBySourceId(
+        this.projectId,
+        appNode.uid,
+        this.accountId
+      );
+      appId = appMetadata.id;
+    } catch (err) {
+      debugError(err);
+      throw new Error(commands.project.logs.errors.failedToFetchProjectDetails);
+    }
+
+    const functionNodes = Object.values(deployedNodes).filter(
+      node => node.componentType === 'APP_FUNCTION'
+    );
+
+    for (const fnNode of functionNodes) {
+      const config = fnNode.config as {
+        endpoint?: { path: string };
+      };
+
+      this.functions.push({
+        componentName: fnNode.uid,
+        appId,
+        endpoint: config.endpoint,
+      });
+    }
 
     if (this.functions.length === 0) {
       throw new Error(commands.project.logs.errors.noFunctionsInProject);
@@ -122,16 +212,10 @@ class _ProjectLogsManager {
     }
 
     this.functionName = functionName;
+    this.appId = this.selectedFunction.appId;
 
-    if (!this.selectedFunction.deployOutput) {
-      throw new Error(
-        commands.project.logs.errors.functionNotDeployed(functionName)
-      );
-    }
-    this.appId = this.selectedFunction.deployOutput.appId;
-
-    if (this.selectedFunction.deployOutput.endpoint) {
-      this.endpointName = this.selectedFunction.deployOutput.endpoint.path;
+    if (this.selectedFunction.endpoint) {
+      this.endpointName = this.selectedFunction.endpoint.path;
       this.isPublicFunction = true;
     } else {
       this.isPublicFunction = false;

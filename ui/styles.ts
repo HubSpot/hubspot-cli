@@ -15,5 +15,8 @@ export const INK_COLORS = {
   SUCCESS_GREEN: '#4deb7a',
   INFO_BLUE: '#4dcbeb',
   WARNING_YELLOW: '#EEB117',
+  HUBSPOT_ORANGE: '#FF7A59',
+  HUBSPOT_TEAL: '#00BDA5',
   WHITE: 'white',
+  GRAY: '#99ACC2',
 };

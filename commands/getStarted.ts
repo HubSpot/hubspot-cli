@@ -1,54 +1,55 @@
-import fs from 'fs-extra';
-import path from 'path';
-import { Argv, ArgumentsCamelCase } from 'yargs';
-import open from 'open';
-import { getCwd } from '@hubspot/local-dev-lib/path';
 import { cloneGithubRepo } from '@hubspot/local-dev-lib/github';
+import { getCwd } from '@hubspot/local-dev-lib/path';
+import fs from 'fs-extra';
+import open from 'open';
+import path from 'path';
+import { ArgumentsCamelCase, Argv } from 'yargs';
 
-import {
-  AccountArgs,
-  YargsCommandModule,
-  CommonArgs,
-  ConfigArgs,
-  EnvironmentArgs,
-} from '../types/Yargs.js';
-import { ProjectConfig, ProjectPollResult } from '../types/Projects.js';
 import { commands } from '../lang/en.js';
 import {
-  trackCommandMetadataUsage,
-  trackCommandUsage,
-} from '../lib/usageTracking.js';
+  GET_STARTED_OPTIONS,
+  HUBSPOT_PROJECT_COMPONENTS_GITHUB_PATH,
+  PROJECT_CONFIG_FILE,
+} from '../lib/constants.js';
 import { EXIT_CODES } from '../lib/enums/exitCodes.js';
-import { makeYargsBuilder } from '../lib/yargsUtils.js';
-import { promptUser } from '../lib/prompts/promptUtils.js';
+import { debugError, logError } from '../lib/errorHandlers/index.js';
+import {
+  getProjectConfig,
+  validateProjectConfig,
+  writeProjectConfig,
+} from '../lib/projects/config.js';
+import { handleProjectUpload } from '../lib/projects/upload.js';
 import { projectNameAndDestPrompt } from '../lib/prompts/projectNameAndDestPrompt.js';
+import { promptUser } from '../lib/prompts/promptUtils.js';
 import {
   uiAccountDescription,
   uiFeatureHighlight,
   uiInfoSection,
 } from '../lib/ui/index.js';
 import { uiLogger } from '../lib/ui/logger.js';
-import { debugError } from '../lib/errorHandlers/index.js';
-import ProjectValidationError from '../lib/errors/ProjectValidationError.js';
-import { handleProjectUpload } from '../lib/projects/upload.js';
 import {
-  PROJECT_CONFIG_FILE,
-  GET_STARTED_OPTIONS,
-  HUBSPOT_PROJECT_COMPONENTS_GITHUB_PATH,
-} from '../lib/constants.js';
+  trackCommandMetadataUsage,
+  trackCommandUsage,
+} from '../lib/usageTracking.js';
+import { makeYargsBuilder } from '../lib/yargsUtils.js';
+import { ProjectConfig, ProjectPollResult } from '../types/Projects.js';
 import {
-  writeProjectConfig,
-  getProjectConfig,
-  validateProjectConfig,
-} from '../lib/projects/config.js';
+  AccountArgs,
+  CommonArgs,
+  ConfigArgs,
+  EnvironmentArgs,
+  YargsCommandModule,
+} from '../types/Yargs.js';
 
-import { pollProjectBuildAndDeploy } from '../lib/projects/pollProjectBuildAndDeploy.js';
 import { isV2Project } from '../lib/projects/platformVersion.js';
+import { pollProjectBuildAndDeploy } from '../lib/projects/pollProjectBuildAndDeploy.js';
 
-import { openLink } from '../lib/links.js';
-import { getStaticAuthAppInstallUrl } from '../lib/app/urls.js';
-import { getConfigAccountEnvironment } from '@hubspot/local-dev-lib/config';
 import { fetchPublicAppsForPortal } from '@hubspot/local-dev-lib/api/appsDev';
+import { getConfigAccountEnvironment } from '@hubspot/local-dev-lib/config';
+import { getStaticAuthAppInstallUrl } from '../lib/app/urls.js';
+import ProjectValidationError from '../lib/errors/ProjectValidationError.js';
+import { openLink } from '../lib/links.js';
+import { runGetStartedV2 } from '../lib/getStarted/getStartedV2.js';
 
 const command = 'get-started';
 const describe = commands.getStarted.describe;
@@ -59,6 +60,7 @@ type GetStartedArgs = CommonArgs &
   EnvironmentArgs & {
     name?: string;
     dest?: string;
+    v2?: boolean;
   };
 
 async function handler(
@@ -70,6 +72,22 @@ async function handler(
   await trackCommandUsage('get-started', {}, derivedAccountId);
 
   const accountName = uiAccountDescription(derivedAccountId);
+
+  if (args.v2) {
+    try {
+      await runGetStartedV2({
+        ...args,
+        name: args.name,
+        dest: args.dest,
+      });
+      process.exit(EXIT_CODES.SUCCESS);
+      return;
+    } catch (error) {
+      logError(error);
+      process.exit(EXIT_CODES.ERROR);
+      return;
+    }
+  }
 
   uiInfoSection(commands.getStarted.startTitle, () => {
     uiLogger.log(commands.getStarted.startDescription);
@@ -431,6 +449,12 @@ function getStartedBuilder(yargs: Argv): Argv<GetStartedArgs> {
     dest: {
       describe: commands.getStarted.options.dest.describe,
       type: 'string',
+    },
+    v2: {
+      describe: commands.getStarted.options.v2.describe,
+      type: 'boolean',
+      default: false,
+      hidden: true,
     },
     'template-source': {
       describe: commands.getStarted.options.templateSource.describe,

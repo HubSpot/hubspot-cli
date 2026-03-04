@@ -76,9 +76,17 @@ export function validateProjectConfig(
     );
   }
 
-  if (!projectConfig.name || !projectConfig.srcDir) {
+  const missingFields: string[] = [];
+  if (!projectConfig.name) {
+    missingFields.push('name');
+  }
+  if (!projectConfig.srcDir) {
+    missingFields.push('srcDir');
+  }
+
+  if (missingFields.length > 0) {
     throw new ProjectValidationError(
-      lib.projects.validateProjectConfig.configMissingFields
+      lib.projects.validateProjectConfig.configMissingFields(missingFields)
     );
   }
 

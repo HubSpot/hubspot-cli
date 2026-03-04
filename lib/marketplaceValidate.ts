@@ -5,7 +5,6 @@ import {
   getValidationResults,
 } from '@hubspot/local-dev-lib/api/marketplaceValidation';
 import { uiLogger } from './ui/logger.js';
-import { EXIT_CODES } from './enums/exitCodes.js';
 import {
   Check,
   GetValidationResultsResponse,
@@ -19,60 +18,45 @@ export async function kickOffValidation(
   src: string
 ): Promise<number> {
   const requestGroup = 'EXTERNAL_DEVELOPER';
-  try {
-    const { data: requestResult } = await requestValidation(accountId, {
-      path: src,
-      assetType,
-      requestGroup,
-    });
-    return requestResult;
-  } catch (err) {
-    uiLogger.debug(err);
-    process.exit(EXIT_CODES.ERROR);
-  }
+  const { data: requestResult } = await requestValidation(accountId, {
+    path: src,
+    assetType,
+    requestGroup,
+  });
+  return requestResult;
 }
 
 export async function pollForValidationFinish(
   accountId: number,
   validationId: number
 ): Promise<void> {
-  try {
-    const checkValidationStatus = async () => {
-      const { data: validationStatus } = await getValidationStatus(accountId, {
-        validationId,
-      });
+  async function checkValidationStatus() {
+    const { data: validationStatus } = await getValidationStatus(accountId, {
+      validationId,
+    });
 
-      if (validationStatus === 'REQUESTED') {
-        await new Promise(resolve => setTimeout(resolve, SLEEP_TIME));
-        await checkValidationStatus();
-      }
-    };
-    await checkValidationStatus();
-  } catch (err) {
-    uiLogger.debug(err);
-    process.exit(EXIT_CODES.ERROR);
+    if (validationStatus === 'REQUESTED') {
+      await new Promise(resolve => setTimeout(resolve, SLEEP_TIME));
+      await checkValidationStatus();
+    }
   }
+  await checkValidationStatus();
 }
 
 export async function fetchValidationResults(
   accountId: number,
   validationId: number
 ): Promise<GetValidationResultsResponse> {
-  try {
-    const { data: validationResults } = await getValidationResults(accountId, {
-      validationId,
-    });
-    return validationResults;
-  } catch (err) {
-    uiLogger.debug(err);
-    process.exit(EXIT_CODES.ERROR);
-  }
+  const { data: validationResults } = await getValidationResults(accountId, {
+    validationId,
+  });
+  return validationResults;
 }
 
-export function processValidationErrors(
+export function hasProcessValidationErrors(
   invalidPathError: (path: string) => string,
   validationResults: GetValidationResultsResponse
-): void {
+): boolean {
   if (validationResults.errors.length) {
     const { assetPath, errors } = validationResults;
 
@@ -80,11 +64,12 @@ export function processValidationErrors(
       if (err.failureReasonType === 'DOWNLOAD_EMPTY') {
         uiLogger.error(invalidPathError(assetPath));
       } else {
-        uiLogger.error(`${err.context}`);
+        uiLogger.error(err.context);
       }
     });
-    process.exit(EXIT_CODES.ERROR);
+    return true;
   }
+  return false;
 }
 
 function displayFileInfo(

@@ -17,6 +17,8 @@ import {
 import { GET_STARTED_OPTIONS } from '../../lib/constants.js';
 import { EXIT_CODES } from '../../lib/enums/exitCodes.js';
 import open from 'open';
+import { renderInteractive } from '../../ui/render.js';
+import { getGetStartedFlow } from '../../ui/components/getStarted/GetStartedFlow.js';
 
 vi.mock('../../lib/prompts/promptUtils');
 vi.mock('../../lib/prompts/projectNameAndDestPrompt');
@@ -25,6 +27,8 @@ vi.mock('../../lib/errorHandlers');
 vi.mock('@hubspot/local-dev-lib/github');
 vi.mock('../../lib/dependencyManagement');
 vi.mock('@hubspot/local-dev-lib/config');
+vi.mock('../../ui/render');
+vi.mock('../../ui/components/getStarted/GetStartedFlow');
 
 vi.mock('open');
 vi.mock('fs-extra', () => ({
@@ -149,6 +153,21 @@ describe('commands/get-started', () => {
           expect.stringContaining('design-manager'),
           { url: true }
         );
+      });
+
+      it('should use Ink flow when v2 flag is enabled', async () => {
+        (
+          getGetStartedFlow as MockedFunction<typeof getGetStartedFlow>
+        ).mockImplementation(() => null);
+        (
+          renderInteractive as MockedFunction<typeof renderInteractive>
+        ).mockResolvedValue(undefined);
+
+        await getStartedCommand.handler({ ...mockArgs, v2: true });
+
+        expect(renderInteractive).toHaveBeenCalled();
+        expect(promptUser).not.toHaveBeenCalled();
+        expect(process.exit).toHaveBeenCalledWith(EXIT_CODES.SUCCESS);
       });
     });
 

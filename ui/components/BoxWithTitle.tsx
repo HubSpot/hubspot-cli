@@ -3,10 +3,12 @@ import { CONTAINER_STYLES } from '../styles.js';
 
 export interface BoxWithTitleProps {
   title: string;
-  message: string;
+  message?: string;
   titleBackgroundColor?: string;
   borderColor?: string;
   textCentered?: boolean;
+  children?: React.ReactNode;
+  flexGrow?: number;
 }
 
 export function getBoxWithTitle(props: BoxWithTitleProps): React.ReactNode {
@@ -19,13 +21,15 @@ export function BoxWithTitle({
   titleBackgroundColor,
   borderColor,
   textCentered,
+  children,
+  flexGrow,
 }: BoxWithTitleProps): React.ReactNode {
   return (
     <Box
       {...CONTAINER_STYLES}
+      flexGrow={flexGrow}
       borderStyle="round"
       borderColor={borderColor}
-      alignSelf="flex-start"
     >
       <Box
         position="absolute"
@@ -39,7 +43,7 @@ export function BoxWithTitle({
           {` ${title} `}
         </Text>
       </Box>
-      <Box flexDirection="column" rowGap={1}>
+      <Box flexDirection="column" width="100%" rowGap={1}>
         {/* Split on \n\n for sections with gaps, \n for lines without gaps */}
         {message?.split('\n\n').map((section, sectionIndex) => (
           <Box
@@ -52,6 +56,7 @@ export function BoxWithTitle({
             ))}
           </Box>
         ))}
+        {children}
       </Box>
     </Box>
   );

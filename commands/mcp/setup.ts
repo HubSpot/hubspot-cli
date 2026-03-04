@@ -8,10 +8,9 @@ import { addMcpServerToConfig, supportedTools } from '../../lib/mcp/setup.js';
 import { trackCommandUsage } from '../../lib/usageTracking.js';
 import { hasFeature } from '../../lib/hasFeature.js';
 import { FEATURES } from '../../lib/constants.js';
-import { uiBetaTag } from '../../lib/ui/index.js';
 
 const command = ['setup'];
-const describe = uiBetaTag(commands.mcp.setup.describe, false);
+const describe = commands.mcp.setup.describe;
 
 interface MCPSetupArgs extends CommonArgs {
   client?: string[];

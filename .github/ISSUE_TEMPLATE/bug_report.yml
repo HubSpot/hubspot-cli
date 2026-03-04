@@ -1,0 +1,76 @@
+name: Bug Report
+description: Report a problem with the HubSpot CLI
+labels: ['bug']
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time to report a bug. Please fill out the information below so we can investigate.
+
+  - type: input
+    id: cli-version
+    attributes:
+      label: CLI Version
+      description: 'Which version of the HubSpot CLI are you using? (Run `hs --version` to find out)'
+      placeholder: '6.2.0'
+    validations:
+      required: true
+
+  - type: input
+    id: node-version
+    attributes:
+      label: Node.js Version
+      description: 'Which version of Node.js are you running? (Run `node --version` to find out)'
+      placeholder: '20.11.0'
+    validations:
+      required: true
+
+  - type: input
+    id: os
+    attributes:
+      label: Operating System
+      description: 'Which OS are you on?'
+      placeholder: 'macOS 15.3, Windows 11, Ubuntu 24.04, etc.'
+    validations:
+      required: true
+
+  - type: textarea
+    id: description
+    attributes:
+      label: Description
+      description: A clear description of the bug.
+      placeholder: 'Describe what went wrong.'
+    validations:
+      required: true
+
+  - type: textarea
+    id: reproduce
+    attributes:
+      label: Steps to Reproduce
+      description: How can we reproduce this issue?
+      placeholder: |
+        1. Run `hs ...`
+        2. ...
+        3. See error
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected Behavior
+      description: What did you expect to happen?
+    validations:
+      required: true
+
+  - type: textarea
+    id: screenshots
+    attributes:
+      label: Screenshots
+      description: If applicable, add screenshots to help explain the problem.
+
+  - type: textarea
+    id: additional
+    attributes:
+      label: Additional Context
+      description: Any other context, error messages, or relevant log output.
