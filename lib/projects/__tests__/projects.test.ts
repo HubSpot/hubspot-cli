@@ -23,7 +23,7 @@ describe('lib/projects', () => {
     it('rejects configuration with missing name', () => {
       // @ts-ignore Testing invalid input
       expect(() => validateProjectConfig({ srcDir: '.' }, projectDir)).toThrow(
-        /.*missing required fields*/
+        /missing required field.*name/
       );
     });
 
@@ -31,7 +31,14 @@ describe('lib/projects', () => {
       expect(() =>
         // @ts-ignore Testing invalid input
         validateProjectConfig({ name: 'hello' }, projectDir)
-      ).toThrow(/.*missing required fields.*/);
+      ).toThrow(/missing required field.*srcDir/);
+    });
+
+    it('rejects configuration with both name and srcDir missing', () => {
+      // @ts-ignore Testing invalid input
+      expect(() => validateProjectConfig({}, projectDir)).toThrow(
+        /missing required fields:.*name.*srcDir/
+      );
     });
 
     describe('rejects configuration with srcDir outside project directory', () => {

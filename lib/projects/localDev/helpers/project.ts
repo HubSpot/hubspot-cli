@@ -10,6 +10,7 @@ import { sanitizeFileName } from '@hubspot/local-dev-lib/path';
 import { isDeepEqual } from '@hubspot/local-dev-lib/isDeepEqual';
 import {
   translate,
+  type IntermediateRepresentationNode,
   type IntermediateRepresentationNodeLocalDev,
 } from '@hubspot/project-parsing-lib/translate';
 import { isSpecifiedError } from '@hubspot/local-dev-lib/errors/index';
@@ -260,13 +261,12 @@ export async function compareLocalProjectToDeployed(
     process.exit(EXIT_CODES.SUCCESS);
   }
 }
-export async function isDeployedProjectUpToDateWithLocal(
+export async function getDeployedProjectNodes(
   projectConfig: ProjectConfig,
   accountId: number,
   deployedBuildId: number,
-  localProjectNodes: { [key: string]: IntermediateRepresentationNodeLocalDev },
   profile?: string
-): Promise<boolean> {
+): Promise<{ [key: string]: IntermediateRepresentationNode }> {
   let tempDir: string | null = null;
 
   try {
@@ -289,25 +289,42 @@ export async function isDeployedProjectUpToDateWithLocal(
 
     const deployedProjectSourceDir = path.join(tempDir, projectConfig.srcDir);
 
-    const { intermediateNodesIndexedByUid: deployedProjectNodes } =
-      await translate(
-        {
-          projectSourceDir: deployedProjectSourceDir,
-          platformVersion: projectConfig.platformVersion,
-          accountId: accountId,
-        },
-        { profile }
-      );
+    const { intermediateNodesIndexedByUid } = await translate(
+      {
+        projectSourceDir: deployedProjectSourceDir,
+        platformVersion: projectConfig.platformVersion,
+        accountId: accountId,
+      },
+      { profile }
+    );
+
+    return intermediateNodesIndexedByUid;
+  } finally {
+    if (tempDir && (await fs.pathExists(tempDir))) {
+      await fs.remove(tempDir);
+    }
+  }
+}
+
+export async function isDeployedProjectUpToDateWithLocal(
+  projectConfig: ProjectConfig,
+  accountId: number,
+  deployedBuildId: number,
+  localProjectNodes: { [key: string]: IntermediateRepresentationNodeLocalDev },
+  profile?: string
+): Promise<boolean> {
+  try {
+    const deployedProjectNodes = await getDeployedProjectNodes(
+      projectConfig,
+      accountId,
+      deployedBuildId,
+      profile
+    );
 
     return isDeepEqual(localProjectNodes, deployedProjectNodes, ['localDev']);
   } catch (err) {
     debugError(err);
     return false;
-  } finally {
-    // Clean up temporary directory
-    if (tempDir && (await fs.pathExists(tempDir))) {
-      await fs.remove(tempDir);
-    }
   }
 }
 

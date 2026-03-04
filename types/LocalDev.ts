@@ -26,11 +26,6 @@ export type LocalDevStateConstructorOptions = {
   env: Environment;
 };
 
-export type LocalDevWebsocketMessage = {
-  type: string;
-  data?: unknown;
-};
-
 export type LocalDevDeployWebsocketMessage = {
   type: typeof LOCAL_DEV_UI_MESSAGE_RECEIVE_TYPES.DEPLOY;
   data: {

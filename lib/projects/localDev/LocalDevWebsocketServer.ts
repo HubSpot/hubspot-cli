@@ -1,9 +1,4 @@
-import { WebSocketServer, WebSocket } from 'ws';
-import {
-  isPortManagerServerRunning,
-  requestPorts,
-} from '@hubspot/local-dev-lib/portManager';
-import { uiLogger } from '../../ui/logger.js';
+import { WebSocket } from 'ws';
 import { addLocalStateFlag } from '@hubspot/local-dev-lib/config';
 import {
   LOCAL_DEV_UI_MESSAGE_SEND_TYPES,
@@ -11,12 +6,8 @@ import {
   CONFIG_LOCAL_STATE_FLAGS,
   LOCAL_DEV_WEBSOCKET_SERVER_INSTANCE_ID,
 } from '../../constants.js';
-import {
-  AppLocalDevData,
-  LocalDevWebsocketMessage,
-} from '../../../types/LocalDev.js';
+import { AppLocalDevData } from '../../../types/LocalDev.js';
 import LocalDevProcess from './LocalDevProcess.js';
-import { lib } from '../../../lang/en.js';
 import type { IntermediateRepresentationNodeLocalDev } from '@hubspot/project-parsing-lib/translate';
 import { removeAnsiCodes } from '../../ui/removeAnsiCodes.js';
 import {
@@ -27,52 +18,31 @@ import {
   isAppInstallSuccessWebsocketMessage,
   isAppInstallInitiatedWebsocketMessage,
 } from './localDevWebsocketServerUtils.js';
-import { pkg } from '../../jsonLoader.js';
+import CLIWebSocketServer, {
+  CLIWebSocketMessage,
+} from '../../CLIWebSocketServer.js';
 
 const LOCAL_DEV_WEBSOCKET_SERVER_VERSION = 2;
-
 const LOG_PREFIX = '[LocalDevWebsocketServer]';
 
-const DOMAINS = ['hubspot.com', 'hubspotqa.com'];
-const SUBDOMAINS = ['local', 'app', 'app-na2', 'app-na3', 'app-ap1', 'app-eu1'];
-const ALLOWED_ORIGIN_REGEX = new RegExp(
-  `^https://(${SUBDOMAINS.join('|')})\\.(${DOMAINS.join('|')})$`
-);
-
 class LocalDevWebsocketServer {
-  private server?: WebSocketServer;
-  private debug?: boolean;
+  private cliWebSocketServer: CLIWebSocketServer;
   private localDevProcess: LocalDevProcess;
 
   constructor(localDevProcess: LocalDevProcess, debug?: boolean) {
     this.localDevProcess = localDevProcess;
-    this.debug = debug;
-  }
-
-  private log(message: string): void {
-    if (this.debug) {
-      uiLogger.log(`${LOG_PREFIX} ${message}`);
-    }
-  }
-
-  private logError(message: string): void {
-    if (this.debug) {
-      uiLogger.error(`${LOG_PREFIX} ${message}`);
-    }
-  }
-
-  private sendMessage(
-    websocket: WebSocket,
-    message: LocalDevWebsocketMessage
-  ): void {
-    websocket.send(JSON.stringify(message));
+    this.cliWebSocketServer = new CLIWebSocketServer({
+      instanceId: LOCAL_DEV_WEBSOCKET_SERVER_INSTANCE_ID,
+      logPrefix: LOG_PREFIX,
+      debug,
+    });
   }
 
   private async handleUpload(websocket: WebSocket): Promise<void> {
     const { uploadSuccess, buildSuccess, deploySuccess, deployId } =
       await this.localDevProcess.uploadProject();
 
-    this.sendMessage(websocket, {
+    this.cliWebSocketServer.sendMessage(websocket, {
       type: uploadSuccess
         ? LOCAL_DEV_UI_MESSAGE_SEND_TYPES.UPLOAD_SUCCESS
         : LOCAL_DEV_UI_MESSAGE_SEND_TYPES.UPLOAD_FAILURE,
@@ -93,7 +63,7 @@ class LocalDevWebsocketServer {
     const { success, deployId } =
       await this.localDevProcess.deployLatestBuild(force);
 
-    this.sendMessage(websocket, {
+    this.cliWebSocketServer.sendMessage(websocket, {
       type: success
         ? LOCAL_DEV_UI_MESSAGE_SEND_TYPES.DEPLOY_SUCCESS
         : LOCAL_DEV_UI_MESSAGE_SEND_TYPES.DEPLOY_FAILURE,
@@ -123,55 +93,35 @@ class LocalDevWebsocketServer {
     );
   }
 
-  private setupMessageHandlers(websocket: WebSocket): void {
-    websocket.on('message', data => {
-      try {
-        const message: LocalDevWebsocketMessage = JSON.parse(data.toString());
+  private handleMessage(
+    websocket: WebSocket,
+    message: CLIWebSocketMessage
+  ): boolean {
+    if (isUploadWebsocketMessage(message)) {
+      this.handleUpload(websocket);
+      return true;
+    } else if (isDeployWebsocketMessage(message)) {
+      this.handleDeploy(websocket, message.data.force);
+      return true;
+    } else if (isViewedWelcomeScreenWebsocketMessage(message)) {
+      addLocalStateFlag(CONFIG_LOCAL_STATE_FLAGS.LOCAL_DEV_UI_WELCOME);
+      return true;
+    } else if (isAppInstallSuccessWebsocketMessage(message)) {
+      this.handleAppInstallSuccess();
+      return true;
+    } else if (isAppInstallFailureWebsocketMessage(message)) {
+      this.handleAppInstallFailure();
+      return true;
+    } else if (isAppInstallInitiatedWebsocketMessage(message)) {
+      this.handleAppInstallInitiated();
+      return true;
+    }
 
-        if (!message.type) {
-          this.logError(
-            lib.LocalDevWebsocketServer.errors.missingTypeField(data.toString())
-          );
-          return;
-        }
-
-        if (isUploadWebsocketMessage(message)) {
-          this.handleUpload(websocket);
-        } else if (isDeployWebsocketMessage(message)) {
-          this.handleDeploy(websocket, message.data.force);
-        } else if (isViewedWelcomeScreenWebsocketMessage(message)) {
-          addLocalStateFlag(CONFIG_LOCAL_STATE_FLAGS.LOCAL_DEV_UI_WELCOME);
-        } else if (isAppInstallSuccessWebsocketMessage(message)) {
-          this.handleAppInstallSuccess();
-        } else if (isAppInstallFailureWebsocketMessage(message)) {
-          this.handleAppInstallFailure();
-        } else if (isAppInstallInitiatedWebsocketMessage(message)) {
-          this.handleAppInstallInitiated();
-        } else {
-          this.logError(
-            lib.LocalDevWebsocketServer.errors.unknownMessageType(message.type)
-          );
-        }
-      } catch (e) {
-        this.logError(
-          lib.LocalDevWebsocketServer.errors.invalidJSON(data.toString())
-        );
-      }
-    });
-  }
-
-  private sendCliMetadata(websocket: WebSocket): void {
-    this.sendMessage(websocket, {
-      type: LOCAL_DEV_UI_MESSAGE_SEND_TYPES.CLI_METADATA,
-      data: {
-        cliVersion: pkg.version,
-        localDevWebsocketServerVersion: LOCAL_DEV_WEBSOCKET_SERVER_VERSION,
-      },
-    });
+    return false;
   }
 
   private sendProjectData(websocket: WebSocket): void {
-    this.sendMessage(websocket, {
+    this.cliWebSocketServer.sendMessage(websocket, {
       type: LOCAL_DEV_UI_MESSAGE_SEND_TYPES.UPDATE_PROJECT_DATA,
       data: {
         projectName: this.localDevProcess.projectData.name,
@@ -188,7 +138,7 @@ class LocalDevWebsocketServer {
     const listener = (nodes: {
       [key: string]: IntermediateRepresentationNodeLocalDev;
     }) => {
-      this.sendMessage(websocket, {
+      this.cliWebSocketServer.sendMessage(websocket, {
         type: LOCAL_DEV_UI_MESSAGE_SEND_TYPES.UPDATE_PROJECT_NODES,
         data: nodes,
       });
@@ -203,7 +153,7 @@ class LocalDevWebsocketServer {
 
   private setupAppDataListener(websocket: WebSocket) {
     const listener = (appData: Record<string, AppLocalDevData>) => {
-      this.sendMessage(websocket, {
+      this.cliWebSocketServer.sendMessage(websocket, {
         type: LOCAL_DEV_UI_MESSAGE_SEND_TYPES.UPDATE_APP_DATA,
         data: appData,
       });
@@ -221,7 +171,7 @@ class LocalDevWebsocketServer {
       const formattedUploadWarnings =
         Array.from(uploadWarnings).map(removeAnsiCodes);
 
-      this.sendMessage(websocket, {
+      this.cliWebSocketServer.sendMessage(websocket, {
         type: LOCAL_DEV_UI_MESSAGE_SEND_TYPES.UPDATE_UPLOAD_WARNINGS,
         data: { uploadWarnings: formattedUploadWarnings },
       });
@@ -237,7 +187,7 @@ class LocalDevWebsocketServer {
   private setupDevServersStartedListener(websocket: WebSocket) {
     const listener = (devServersStarted: boolean) => {
       if (devServersStarted) {
-        this.sendMessage(websocket, {
+        this.cliWebSocketServer.sendMessage(websocket, {
           type: LOCAL_DEV_UI_MESSAGE_SEND_TYPES.DEV_SERVERS_STARTED,
         });
       }
@@ -257,49 +207,24 @@ class LocalDevWebsocketServer {
     this.setupDevServersStartedListener(websocket);
   }
 
-  async start() {
-    const portManagerIsRunning = await isPortManagerServerRunning();
-    if (!portManagerIsRunning) {
-      throw new Error(
-        lib.LocalDevWebsocketServer.errors.portManagerNotRunning(LOG_PREFIX)
-      );
-    }
-
-    const portData = await requestPorts([
-      { instanceId: LOCAL_DEV_WEBSOCKET_SERVER_INSTANCE_ID },
-    ]);
-    const port = portData[LOCAL_DEV_WEBSOCKET_SERVER_INSTANCE_ID];
-
-    this.server = new WebSocketServer({ port });
-
-    this.log(lib.LocalDevWebsocketServer.logs.startup(port));
-    this.server.on('connection', (ws, req) => {
-      const origin = req.headers.origin;
-      if (!origin || !ALLOWED_ORIGIN_REGEX.test(origin)) {
-        ws.close(
-          1008,
-          lib.LocalDevWebsocketServer.errors.originNotAllowed(origin)
+  async start(): Promise<void> {
+    return this.cliWebSocketServer.start({
+      metadata: {
+        localDevWebsocketServerVersion: LOCAL_DEV_WEBSOCKET_SERVER_VERSION,
+      },
+      onConnection: ws => {
+        this.sendProjectData(ws);
+        this.setupStateListeners(ws);
+        this.localDevProcess.sendDevServerMessage(
+          LOCAL_DEV_SERVER_MESSAGE_TYPES.WEBSOCKET_SERVER_CONNECTED
         );
-        return;
-      }
-
-      this.sendCliMetadata(ws);
-      this.sendProjectData(ws);
-
-      this.setupMessageHandlers(ws);
-      this.setupStateListeners(ws);
-
-      this.localDevProcess.sendDevServerMessage(
-        LOCAL_DEV_SERVER_MESSAGE_TYPES.WEBSOCKET_SERVER_CONNECTED
-      );
+      },
+      onMessage: (ws, message) => this.handleMessage(ws, message),
     });
-
-    this.server.on('close', () => {});
   }
 
   shutdown() {
-    this.server?.close();
-    this.server = undefined;
+    this.cliWebSocketServer.shutdown();
   }
 }
 

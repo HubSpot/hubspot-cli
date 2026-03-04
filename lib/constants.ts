@@ -108,7 +108,6 @@ export const LOCAL_DEV_UI_MESSAGE_SEND_TYPES = {
   UPDATE_APP_DATA: 'server:updateAppData',
   UPDATE_PROJECT_DATA: 'server:updateProjectData',
   UPDATE_UPLOAD_WARNINGS: 'server:updateUploadWarnings',
-  CLI_METADATA: 'server:cliMetadata',
   DEV_SERVERS_STARTED: 'server:devServersStarted',
 };
 

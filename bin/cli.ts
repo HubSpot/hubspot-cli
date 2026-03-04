@@ -43,6 +43,7 @@ import mcpCommand from '../commands/mcp.js';
 import upgradeCommand from '../commands/upgrade.js';
 import { uiLogger } from '../lib/ui/logger.js';
 import { initializeSpinniesManager } from '../lib/middleware/spinniesMiddleware.js';
+import { addCommandSuggestions } from '../lib/commandSuggestion.js';
 
 function getTerminalWidth(): number {
   const width = yargs().terminalWidth();
@@ -131,8 +132,9 @@ const argv = yargs(process.argv.slice(2))
   .command(completionCommand)
   .command(doctorCommand)
   .command(mcpCommand)
-  .command(upgradeCommand)
+  .command(upgradeCommand);
 
+const argvWithSuggestions = addCommandSuggestions(argv)
   .help()
   .alias('h', 'help')
   .recommendCommands()
@@ -140,14 +142,17 @@ const argv = yargs(process.argv.slice(2))
   .wrap(getTerminalWidth())
   .strict().argv;
 
-if ('help' in argv && argv.help !== undefined) {
+if ('help' in argvWithSuggestions && argvWithSuggestions.help !== undefined) {
   (async () => {
-    await trackHelpUsage(getCommandName(argv));
+    await trackHelpUsage(getCommandName(argvWithSuggestions));
   })();
 }
 
-if ('convertFields' in argv && argv.convertFields !== undefined) {
+if (
+  'convertFields' in argvWithSuggestions &&
+  argvWithSuggestions.convertFields !== undefined
+) {
   (async () => {
-    await trackConvertFieldsUsage(getCommandName(argv));
+    await trackConvertFieldsUsage(getCommandName(argvWithSuggestions));
   })();
 }

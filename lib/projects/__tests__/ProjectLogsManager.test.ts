@@ -2,6 +2,9 @@ import { ProjectLogsManager } from '../ProjectLogsManager.js';
 import { getProjectConfig } from '../config.js';
 import { ensureProjectExists } from '../ensureProjectExists.js';
 import { fetchProjectComponentsMetadata } from '@hubspot/local-dev-lib/api/projects';
+import { fetchAppMetadataBySourceId } from '@hubspot/local-dev-lib/api/appsDev';
+import { getDeployedProjectNodes } from '../localDev/helpers/project.js';
+import { isV2Project } from '../platformVersion.js';
 
 const SUBCOMPONENT_TYPES = {
   APP_ID: 'APP_ID',
@@ -21,12 +24,21 @@ import { Mock } from 'vitest';
 vi.mock('../../projects/config');
 vi.mock('../../projects/ensureProjectExists');
 vi.mock('@hubspot/local-dev-lib/api/projects');
+vi.mock('@hubspot/local-dev-lib/api/appsDev');
+vi.mock('../../projects/localDev/helpers/project');
+vi.mock('../../projects/platformVersion');
 
 describe('lib/projects/ProjectLogsManager', () => {
   const accountId = 12345678;
   const appId = 999999;
   const projectName = 'super cool test project';
-  const projectConfig = { projectConfig: { name: projectName } };
+  const projectConfig = {
+    projectConfig: {
+      name: projectName,
+      srcDir: 'src',
+      platformVersion: '2024.1',
+    },
+  };
   const projectId = 987654321;
   const projectDetails = {
     project: {
@@ -39,16 +51,27 @@ describe('lib/projects/ProjectLogsManager', () => {
 
   const function1 = {
     componentName: 'function1',
-    type: {
-      name: SUBCOMPONENT_TYPES.APP_FUNCTION,
-    },
-    deployOutput: {
-      appId,
-      appFunctionName: 'function1',
-    },
+    appId,
   };
   const functions = [
     function1,
+    {
+      componentName: 'function2',
+      appId,
+    },
+  ];
+
+  const legacyApiFunctions = [
+    {
+      componentName: 'function1',
+      type: {
+        name: SUBCOMPONENT_TYPES.APP_FUNCTION,
+      },
+      deployOutput: {
+        appId,
+        appFunctionName: 'function1',
+      },
+    },
     {
       componentName: 'function2',
       type: {
@@ -64,6 +87,7 @@ describe('lib/projects/ProjectLogsManager', () => {
   beforeEach(() => {
     ProjectLogsManager.reset();
 
+    (isV2Project as Mock).mockReturnValue(false);
     (getProjectConfig as Mock).mockResolvedValue(projectConfig);
     (ensureProjectExists as Mock).mockResolvedValue(projectDetails);
     (fetchProjectComponentsMetadata as Mock).mockResolvedValue({
@@ -77,7 +101,7 @@ describe('lib/projects/ProjectLogsManager', () => {
               appId,
             },
             featureComponents: [
-              ...functions,
+              ...legacyApiFunctions,
               {
                 type: {
                   name: 'NOT_AN_APP_FUNCTION',
@@ -158,6 +182,128 @@ describe('lib/projects/ProjectLogsManager', () => {
     });
   });
 
+  describe('v2 project init', () => {
+    const v2ProjectConfig = {
+      projectConfig: {
+        name: projectName,
+        srcDir: 'src',
+        platformVersion: '2025.2',
+      },
+    };
+    const deployedBuildId = 555;
+    const v2ProjectDetails = {
+      project: {
+        id: projectId,
+        deployedBuild: {
+          buildId: deployedBuildId,
+          subbuildStatuses: {},
+        },
+      },
+    };
+    const appUid = 'my-app';
+    const fnUid1 = 'my-app/app.functions/function1';
+    const fnUid2 = 'my-app/app.functions/function2';
+    const deployedNodes = {
+      [appUid]: {
+        componentType: 'APPLICATION',
+        componentDeps: {},
+        metaFilePath: 'src/app/app-hsmeta.json',
+        uid: appUid,
+        config: {},
+        files: {},
+      },
+      [fnUid1]: {
+        componentType: 'APP_FUNCTION',
+        componentDeps: { app: appUid },
+        metaFilePath:
+          'src/app/app.functions/function1.functions/function-hsmeta.json',
+        uid: fnUid1,
+        config: { endpoint: { path: '/my-endpoint' } },
+        files: {},
+      },
+      [fnUid2]: {
+        componentType: 'APP_FUNCTION',
+        componentDeps: { app: appUid },
+        metaFilePath:
+          'src/app/app.functions/function2.functions/function-hsmeta.json',
+        uid: fnUid2,
+        config: {},
+        files: {},
+      },
+    };
+
+    beforeEach(() => {
+      (getProjectConfig as Mock).mockResolvedValue(v2ProjectConfig);
+      (ensureProjectExists as Mock).mockResolvedValue(v2ProjectDetails);
+      (isV2Project as Mock).mockReturnValue(true);
+      (getDeployedProjectNodes as Mock).mockResolvedValue(deployedNodes);
+      (fetchAppMetadataBySourceId as Mock).mockResolvedValue({
+        data: { id: appId },
+      });
+    });
+
+    it('should populate functions correctly for v2 projects', async () => {
+      await ProjectLogsManager.init(accountId);
+      expect(getDeployedProjectNodes).toHaveBeenCalledWith(
+        v2ProjectConfig.projectConfig,
+        accountId,
+        deployedBuildId
+      );
+      expect(fetchAppMetadataBySourceId).toHaveBeenCalledWith(
+        projectId,
+        appUid,
+        accountId
+      );
+      expect(ProjectLogsManager.functions).toEqual([
+        {
+          componentName: fnUid1,
+          appId,
+          endpoint: { path: '/my-endpoint' },
+        },
+        {
+          componentName: fnUid2,
+          appId,
+          endpoint: undefined,
+        },
+      ]);
+    });
+
+    it('should throw noDeployedBuild when buildId is missing', async () => {
+      (ensureProjectExists as Mock).mockResolvedValue({
+        project: {
+          id: projectId,
+          deployedBuild: {
+            buildId: undefined,
+            subbuildStatuses: {},
+          },
+        },
+      });
+      await expect(async () =>
+        ProjectLogsManager.init(accountId)
+      ).rejects.toThrow(
+        'This project has not been deployed yet. Deploy the project first, then try again.'
+      );
+    });
+
+    it('should throw noFunctionsInProject when no function nodes exist', async () => {
+      (getDeployedProjectNodes as Mock).mockResolvedValue({
+        [appUid]: deployedNodes[appUid],
+      });
+      await expect(async () =>
+        ProjectLogsManager.init(accountId)
+      ).rejects.toThrow(/There aren't any functions in this project/);
+    });
+
+    it('should throw a user-friendly error when getDeployedProjectNodes fails', async () => {
+      (getDeployedProjectNodes as Mock).mockRejectedValue(
+        new Error('download failed')
+      );
+      await expect(async () =>
+        ProjectLogsManager.init(accountId)
+      ).rejects.toThrow(/There was an error fetching project details/);
+    });
+  });
+
   describe('getFunctionNames', () => {
     it('should return an empty array if functions is empty', async () => {
       ProjectLogsManager.functions = [];
@@ -192,14 +338,8 @@ describe('lib/projects/ProjectLogsManager', () => {
     it('should set the data correctly for public functions', async () => {
       const functionToChoose = {
         componentName: 'function1',
-        type: {
-          name: SUBCOMPONENT_TYPES.APP_FUNCTION,
-        },
-        deployOutput: {
-          appId: 123,
-          appFunctionName: 'function1',
-          endpoint: { path: 'yooooooo', methods: ['GET'] },
-        },
+        appId: 123,
+        endpoint: { path: 'yooooooo' },
       };
       ProjectLogsManager.functions = [functionToChoose];
       ProjectLogsManager.setFunction('function1');
@@ -209,7 +349,7 @@ describe('lib/projects/ProjectLogsManager', () => {
       expect(ProjectLogsManager.isPublicFunction).toEqual(true);
     });
 
-    it('should set the data correctly for public functions', async () => {
+    it('should set the data correctly for private functions', async () => {
       ProjectLogsManager.functions = functions;
       ProjectLogsManager.setFunction('function1');
       expect(ProjectLogsManager.selectedFunction).toEqual(function1);

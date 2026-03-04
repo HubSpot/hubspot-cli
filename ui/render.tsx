@@ -1,6 +1,9 @@
 import { render } from 'ink';
 import { getTable, Scalar } from './components/Table.js';
 import { mapTableDataToObjects } from './lib/table.js';
+import { ReactNode } from 'react';
+import { FullScreen } from './components/FullScreen.js';
+import SpinniesManager from '../lib/ui/SpinniesManager.js';
 
 // Ink 6 clips output when it exceeds stdout.rows — we can use a large row count to prevent this.
 // This value is arbitrary but large enough to prevent clipping for any realistic static output.
@@ -49,4 +52,38 @@ export async function renderTable(
  */
 export async function renderList(items: string[][]): Promise<void> {
   await renderTable([''], items, true);
+}
+
+export async function renderInteractive(
+  component: ReactNode,
+  options: {
+    fullScreen?: boolean;
+  } = {
+    fullScreen: false,
+  }
+): Promise<void> {
+  // Disable SpinniesManager output during Ink rendering to prevent spinner text
+  // from interfering with Ink's terminal control (especially when using fullScreen
+  // mode's alternative buffer). Re-enable after rendering completes.
+  SpinniesManager.setDisableOutput(true);
+
+  if (options.fullScreen) {
+    // Enter alternative buffer
+    process.stdout.write('\x1b[?1049h');
+
+    let instance;
+    try {
+      instance = render(<FullScreen>{component}</FullScreen>, {
+        patchConsole: true,
+      });
+      await instance.waitUntilExit();
+    } finally {
+      // Exit alternative buffer
+      process.stdout.write('\x1b[?1049l');
+    }
+  } else {
+    const instance = render(component);
+    await instance.waitUntilExit();
+  }
+  SpinniesManager.setDisableOutput(false);
 }

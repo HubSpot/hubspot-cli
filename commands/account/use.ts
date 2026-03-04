@@ -5,19 +5,26 @@ import {
   getConfigAccountIfExists,
   getConfigAccountByName,
   getConfigAccountById,
+  globalConfigFileExists,
   getAllConfigAccounts,
 } from '@hubspot/local-dev-lib/config';
 import {
   getDefaultAccountOverrideAccountId,
   getDefaultAccountOverrideFilePath,
 } from '@hubspot/local-dev-lib/config/defaultAccountOverride';
+import { ENVIRONMENTS } from '@hubspot/local-dev-lib/constants/environments';
 import { trackCommandUsage } from '../../lib/usageTracking.js';
 import { commands } from '../../lang/en.js';
 import { uiLogger } from '../../lib/ui/logger.js';
-import { selectAccountFromConfig } from '../../lib/prompts/accountsPrompt.js';
+import {
+  selectAccountFromConfig,
+  AUTHENTICATE_NEW_ACCOUNT_VALUE,
+} from '../../lib/prompts/accountsPrompt.js';
 import { CommonArgs, YargsCommandModule } from '../../types/Yargs.js';
 import { makeYargsBuilder } from '../../lib/yargsUtils.js';
 import { HubSpotConfigAccount } from '@hubspot/local-dev-lib/types/Accounts';
+import { authenticateNewAccount } from '../../lib/accountAuth.js';
+import { EXIT_CODES } from '../../lib/enums/exitCodes.js';
 
 const command = 'use [account]';
 const describe = commands.account.subcommands.use.describe;
@@ -30,9 +37,10 @@ async function handler(
   args: ArgumentsCamelCase<AccountUseArgs>
 ): Promise<void> {
   let newDefaultAccount: string | number | undefined = args.account;
+  const usingGlobalConfig = globalConfigFileExists();
 
   if (!newDefaultAccount) {
-    newDefaultAccount = await selectAccountFromConfig();
+    newDefaultAccount = await selectAccountFromConfig('', usingGlobalConfig);
   } else {
     const account = getConfigAccountIfExists(newDefaultAccount);
     if (!account) {
@@ -42,8 +50,22 @@ async function handler(
           getConfigFilePath()
         )
       );
-      newDefaultAccount = await selectAccountFromConfig();
+      newDefaultAccount = await selectAccountFromConfig('', usingGlobalConfig);
     }
+  }
+
+  if (newDefaultAccount === AUTHENTICATE_NEW_ACCOUNT_VALUE) {
+    const updatedConfig = await authenticateNewAccount({
+      env: args.qa ? ENVIRONMENTS.QA : ENVIRONMENTS.PROD,
+      setAsDefaultAccount: true,
+    });
+
+    if (!updatedConfig) {
+      process.exit(EXIT_CODES.ERROR);
+    }
+
+    trackCommandUsage('accounts-use', undefined, updatedConfig.accountId);
+    return;
   }
 
   let account: HubSpotConfigAccount;

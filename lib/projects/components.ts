@@ -19,14 +19,14 @@ import { getSuccessBox } from '../../ui/components/StatusMessageBoxes.js';
 // Prefix for the metafile extension
 const metafileExtensionPrefix = path.parse(metafileExtension).name;
 
-interface ComponentInfo {
+export interface ComponentInfo {
   filename?: string;
   isNew: boolean;
 }
 
-type ComponentsByType = Map<string, ComponentInfo[]>;
+export type ComponentsByType = Map<string, ComponentInfo[]>;
 
-function buildProjectTree(
+export function buildProjectTree(
   projectName: string,
   uids: string[],
   componentsByType: ComponentsByType,

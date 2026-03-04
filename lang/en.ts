@@ -50,9 +50,60 @@ export const commands = {
       name: {
         describe: 'Project name (cannot be changed)',
       },
+      v2: {
+        describe: 'Use the new v2 get-started experience',
+      },
       templateSource: {
         describe:
           'Path to custom GitHub repository from which to create project template',
+      },
+    },
+    v2: {
+      unknownError: 'An unknown error occurred',
+      startTitle: 'Welcome to the HubSpot Developer Platform!',
+      guideOverview: (accountName: string) =>
+        `This guide will walk you through deploying your first project to ${chalk.bold(accountName)}. To target a different account, exit this guide ${chalk.bold('(ctrl + c)')} and run ${uiCommandReference('hs account use')} before trying again.`,
+      projects: 'Projects are used to build a variety of components.',
+      runningProjectCreate: `Running \`${uiCommandReference('hs project create', false)}\` ...`,
+      templateSourceFlag: '--template-source=',
+      runningInstallDeps: `Running \`${uiCommandReference(
+        'hs project install-deps',
+        false
+      )}\` to initialize dependencies ...`,
+      installingDependenciesIn: (installPath: string) =>
+        `Installing dependencies in ${installPath}`,
+      createdProjectSuccess: (projectName: string, projectDest: string) =>
+        `[SUCCESS] Project ${chalk.bold(projectName)} was successfully created in ${projectDest}`,
+      pressEnterToContinueDeploy: (accountName: string) =>
+        `Press ${chalk.bold('<enter>')} to deploy this project to ${chalk.bold(accountName)} ...`,
+      uploadingProject: `Running \`${uiCommandReference('hs project upload', false)}\` to upload and deploy your project...`,
+      uploadSuccess: '✓ Upload and deploy complete!',
+      appDeployedReady:
+        '🚀 Your new app is now deployed on HubSpot and ready to install!',
+      appConfigDetails: 'App configuration details:',
+      distribution: 'distribution',
+      authType: 'auth type',
+      checkOutConfig: (configPath: string) =>
+        `Check out ${chalk.cyan(configPath)} for the full configuration.`,
+      pressEnterToInstall: (accountName: string) =>
+        `? Press ${chalk.bold('<enter>')} to continue installing and previewing this app in ${chalk.bold(accountName)}`,
+      pressKeyToExit: `Press any key to exit...`,
+      installingApp: (appName: string, accountName: string) =>
+        `Installing ${chalk.bold(appName)} in ${chalk.bold(accountName)}...`,
+      installInstructions: `We'll take you to your HubSpot account and walk you through installing your app.`,
+      browserFailedToOpen: (url: string) =>
+        `⚠️  Failed to open browser automatically. Please open this URL manually:\n${chalk.cyan(url)}`,
+      pollingTimeout: (minutes: number) =>
+        `⚠️  Installation polling timed out after ${minutes} minutes. The app may still be installing in the background.`,
+      pressEnterToContinueSetup: `Press ${chalk.bold('<enter>')} to continue with card setup...`,
+      prompts: {
+        selectOptionV2: 'Choose a component type to get started',
+        options: {
+          app: 'App',
+          cms: 'CMS assets',
+          cmsTheme: 'CMS theme (coming soon)',
+          cmsReactModule: 'CMS React module (coming soon)',
+        },
       },
     },
     startTitle: 'Welcome to HubSpot Development!',
@@ -73,9 +124,12 @@ export const commands = {
     openedDeveloperOverview: 'HubSpot opened!',
     prompts: {
       selectOption: 'Are you looking to build apps or CMS assets?',
+      selectOptionV2: 'Choose a component type to get started',
       options: {
         app: 'App',
         cms: 'CMS assets',
+        cmsTheme: 'CMS theme (coming soon)',
+        cmsReactModule: 'CMS React module (coming soon)',
       },
       uploadProject: (accountName: string) =>
         `Would you like to upload this project to account "${accountName}" now?`,
@@ -90,10 +144,15 @@ export const commands = {
       uploadSuccess: 'Project uploaded successfully!',
       developerOverviewLink:
         'Open this link to navigate to your HubSpot developer portal',
+      initialUploadMessage: 'Initial upload from get-started command',
     },
     errors: {
       uploadFailed: 'Failed to upload project to HubSpot.',
       configFileNotFound: 'Could not find project configuration for upload.',
+      noAppsFound: 'No apps found after deployment.',
+      uploadActionFailed: 'Upload failed',
+      buildOrDeployFailed: 'Build or deploy failed',
+      failedToUploadAndDeploy: 'Failed to upload and deploy project',
     },
   },
   completion: {
@@ -181,6 +240,7 @@ export const commands = {
           },
         },
         promptMessage: 'Select an account to use as the default',
+        authenticateNewAccount: '<Authenticate a new account>',
         success: {
           defaultAccountUpdated: (accountName: string) =>
             `Default account updated to "${accountName}"`,
@@ -1510,34 +1570,42 @@ export const commands = {
         // Claude
         configuringClaudeCode: 'Configuring Claude Code...',
         configuredClaudeCode: 'Configured Claude Code',
-        claudeCodeNotFound: 'Claude Code not found - skipping configuration',
+        claudeCodeNotFound:
+          "Claude Code is not installed (missing 'claude' command). Install it and re-run hs mcp setup.",
         claudeCodeInstallFailed:
           'Claude Code CLI not working - skipping configuration',
         // Codex
         configuringCodex: 'Configuring Codex...',
         configuredCodex: 'Configured Codex',
-        codexNotFound: 'Codex command not found - skipping configuration',
+        codexNotFound:
+          "Codex CLI is not installed (missing 'codex' command). Install it and re-run hs mcp setup.",
         codexInstallFailed: 'Failed to configure Codex',
         // Cursor
         configuringCursor: 'Configuring Cursor...',
+        cursorNotFound:
+          'Cursor is not installed. Install it and re-run hs mcp setup.',
         failedToConfigureCursor: 'Failed to configure Cursor',
         configuredCursor: 'Configured Cursor',
         // Gemini
         configuringGemini: 'Configuring Gemini CLI...',
         configuredGemini: 'Configured Gemini CLI',
-        geminiNotFound: 'Gemini CLI not found - skipping configuration',
+        geminiNotFound:
+          "Gemini CLI is not installed (missing 'gemini' command). Install it and re-run hs mcp setup.",
         geminiInstallFailed: 'Failed to configure Gemini CLI',
         alreadyInstalled:
           'HubSpot CLI mcp server already installed, reinstalling',
         // Windsurf
         configuringWindsurf: 'Configuring Windsurf...',
+        windsurfNotFound:
+          'Windsurf is not installed. Install it and re-run hs mcp setup.',
         failedToConfigureWindsurf: 'Failed to configure Windsurf',
         configuredWindsurf: 'Configured Windsurf',
         // VS Code
         configuringVsCode: 'Configuring VSCode...',
         failedToConfigureVsCode: 'Failed to configure VSCode',
         configuredVsCode: 'Configured VSCode',
-        vsCodeNotFound: 'VSCode not found - skipping configuration',
+        vsCodeNotFound:
+          "VSCode CLI is not installed (missing 'code' command). Install it and re-run hs mcp setup.",
       },
       prompts: {
         targets:
@@ -1777,7 +1845,7 @@ export const commands = {
         },
         templateSource: {
           describe:
-            'Path to custom GitHub repository from which to create project template',
+            'Path to custom GitHub repository from which to create project template. Only applies when platform version is less than 2025.2.',
         },
         platformVersion: {
           describe: 'The target platform version for the new project.',
@@ -2056,6 +2124,8 @@ export const commands = {
           `The function with name "${name}" is not deployed`,
         projectLogsManagerNotInitialized:
           'Function called on ProjectLogsManager before initialization',
+        noDeployedBuild:
+          'This project has not been deployed yet. Deploy the project first, then try again.',
         generic: 'Error fetching logs',
       },
       logs: {
@@ -3821,24 +3891,21 @@ export const lib = {
     oauthAppRedirectUrlError: (redirectUrl: string) =>
       `${chalk.bold('No reponse from your OAuth service:')} ${redirectUrl}\nYour app needs a valid OAuth2 service to be installed for local dev. ${uiLink('Learn more', 'https://developers.hubspot.com/docs/apps/developer-platform/build-apps/authentication/oauth/working-with-oauth')}`,
   },
-  LocalDevWebsocketServer: {
+  CLIWebsocketServer: {
     errors: {
-      notInitialized: (prefix: string) =>
-        `${prefix}Error: Attempted to access websocket before initialization`,
-      missingTypeField: (data: string) =>
-        `Unsupported message received. Missing type field: ${data}`,
-      unknownMessageType: (type: string) =>
-        `Unsupported message received. Unknown message type: ${type}`,
-      invalidJSON: (data: string) =>
-        `Unsupported message received. Invalid JSON: ${data}`,
-      portManagerNotRunning: (prefix: string) =>
-        `${prefix}Error: PortManagerServing must be running before starting LocalDevWebsocketServer.`,
+      portManagerNotRunning: (prefix?: string) =>
+        `${prefix ? `${prefix} ` : ''}PortManagerServing must be running before starting WebsocketServer.`,
       originNotAllowed: (origin?: string) =>
         `Connections from ${origin ? `origin ${origin}` : 'this origin'} are not allowed.`,
+      missingTypeField: (data: string) =>
+        `Unsupported message received. Missing type field: ${data}`,
+      invalidJSON: (data: string) =>
+        `Unsupported message received. Invalid JSON: ${data}`,
+      unknownMessageType: (type: string) =>
+        `Unsupported message received. Unknown message type: ${type}`,
     },
     logs: {
-      startup: (port: number) =>
-        `LocalDevWebsocketServer running on port ${port}`,
+      startup: (port: number) => `WebsocketServer running on port ${port}`,
     },
   },
   LocalDevProcess: {
@@ -4038,8 +4105,8 @@ export const lib = {
     },
     validateProjectConfig: {
       configNotFound: `Unable to locate a project configuration file. Try running again from a project directory, or run ${uiCommandReference('hs project create')} to create a new project.`,
-      configMissingFields:
-        'The project configuration file is missing required fields.',
+      configMissingFields: (missingFields: string[]) =>
+        `The project configuration file is missing required field${missingFields.length > 1 ? 's' : ''}: ${missingFields.map(f => chalk.bold(f)).join(', ')}`,
       srcDirNotFound: (srcDir: string, projectDir: string) =>
         `Project source directory ${chalk.bold(srcDir)} could not be found in ${chalk.bold(projectDir)}.`,
       srcOutsideProjectDir: (projectConfig: string, srcDir: string) =>
@@ -4047,6 +4114,14 @@ export const lib = {
     },
     getProjectConfig: {
       error: 'Could not read from project config',
+    },
+    platformVersion: {
+      unsupported: (
+        currentCliVersion: string,
+        latestSupported: string,
+        platformVersion?: string
+      ) =>
+        `Platform version${platformVersion ? ' ' + chalk.bold(platformVersion) : ''} is not officially supported by this version of the CLI (${chalk.bold(currentCliVersion)}).\n\nUpdate your CLI to the latest version with ${uiCommandReference('hs upgrade')} or use a compatible platform version (${chalk.bold(latestSupported)} or earlier).`,
     },
     ensureProjectExists: {
       createPrompt: (projectName: string, accountIdentifier: string) =>

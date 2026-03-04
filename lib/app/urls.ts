@@ -39,3 +39,12 @@ export function getStaticAuthAppInstallUrl({
   const websiteOrigin = getHubSpotWebsiteOrigin(env);
   return `${websiteOrigin}/static-token/${targetAccountId}/authorize?appId=${appId}`;
 }
+
+export function getAppCardSetupUrl({
+  targetAccountId,
+  env,
+  appId,
+}: PrivateAppInstallUrlArgs): string {
+  const websiteOrigin = getHubSpotWebsiteOrigin(env);
+  return `${websiteOrigin}/integrations-settings/${targetAccountId}/installed/framework/${appId}/app-cards?tourId=get-started`;
+}

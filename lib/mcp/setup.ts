@@ -228,43 +228,36 @@ export async function setupClaudeCode(
     try {
       // Check if claude command is available
       await execAsync('claude --version');
-
-      // Run claude mcp add command
-      const mcpConfig = JSON.stringify({
-        type: 'stdio',
-        ...buildCommandWithAgentString(mcpCommand, claudeCode),
+    } catch (e) {
+      SpinniesManager.fail('claudeCode', {
+        text: commands.mcp.setup.spinners.claudeCodeNotFound,
       });
-
-      const { stdout } = await execAsync('claude mcp list');
-
-      if (stdout.includes(mcpServerName)) {
-        SpinniesManager.update('claudeCode', {
-          text: commands.mcp.setup.spinners.alreadyInstalled,
-        });
-        await execAsync(`claude mcp remove "${mcpServerName}" --scope user`);
-      }
-
-      await execAsync(
-        `claude mcp add-json "${mcpServerName}" ${JSON.stringify(mcpConfig)} --scope user`
-      );
-
-      SpinniesManager.succeed('claudeCode', {
-        text: commands.mcp.setup.spinners.configuredClaudeCode,
-      });
-      return true;
-    } catch (error) {
-      if (error instanceof Error && error.message.includes('claude')) {
-        SpinniesManager.fail('claudeCode', {
-          text: commands.mcp.setup.spinners.claudeCodeNotFound,
-        });
-      } else {
-        SpinniesManager.fail('claudeCode', {
-          text: commands.mcp.setup.spinners.claudeCodeInstallFailed,
-        });
-        logError(error);
-      }
       return false;
     }
+
+    // Run claude mcp add command
+    const mcpConfig = JSON.stringify({
+      type: 'stdio',
+      ...buildCommandWithAgentString(mcpCommand, claudeCode),
+    });
+
+    const { stdout } = await execAsync('claude mcp list');
+
+    if (stdout.includes(mcpServerName)) {
+      SpinniesManager.update('claudeCode', {
+        text: commands.mcp.setup.spinners.alreadyInstalled,
+      });
+      await execAsync(`claude mcp remove "${mcpServerName}" --scope user`);
+    }
+
+    await execAsync(
+      `claude mcp add-json "${mcpServerName}" ${JSON.stringify(mcpConfig)} --scope user`
+    );
+
+    SpinniesManager.succeed('claudeCode', {
+      text: commands.mcp.setup.spinners.configuredClaudeCode,
+    });
+    return true;
   } catch (error) {
     SpinniesManager.fail('claudeCode', {
       text: commands.mcp.setup.spinners.claudeCodeInstallFailed,
@@ -314,8 +307,16 @@ export async function setupCodex(
     SpinniesManager.add('codexSpinner', {
       text: commands.mcp.setup.spinners.configuringCodex,
     });
-    // Check if codex command is available
-    await execAsync('codex --version');
+
+    try {
+      // Check if codex command is available
+      await execAsync('codex --version');
+    } catch (error) {
+      SpinniesManager.fail('codexSpinner', {
+        text: commands.mcp.setup.spinners.codexNotFound,
+      });
+      return false;
+    }
 
     const mcpCommandWithAgent = buildCommandWithAgentString(mcpCommand, codex);
 
@@ -328,16 +329,10 @@ export async function setupCodex(
     });
     return true;
   } catch (error) {
-    if (error instanceof Error && error.message.includes('codex')) {
-      SpinniesManager.fail('codexSpinner', {
-        text: commands.mcp.setup.spinners.codexNotFound,
-      });
-    } else {
-      SpinniesManager.fail('codexSpinner', {
-        text: commands.mcp.setup.spinners.codexInstallFailed,
-      });
-      logError(error);
-    }
+    SpinniesManager.fail('codexSpinner', {
+      text: commands.mcp.setup.spinners.codexInstallFailed,
+    });
+    logError(error);
     return false;
   }
 }
@@ -350,7 +345,14 @@ export async function setupGemini(
       text: commands.mcp.setup.spinners.configuringGemini,
     });
 
-    await execAsync('gemini --version');
+    try {
+      await execAsync('gemini --version');
+    } catch (e) {
+      SpinniesManager.fail('geminiSpinner', {
+        text: commands.mcp.setup.spinners.geminiNotFound,
+      });
+      return false;
+    }
 
     const mcpCommandWithAgent = buildCommandWithAgentString(mcpCommand, gemini);
 
@@ -363,16 +365,11 @@ export async function setupGemini(
     });
     return true;
   } catch (error) {
-    if (error instanceof Error && error.message.includes('gemini')) {
-      SpinniesManager.fail('geminiSpinner', {
-        text: commands.mcp.setup.spinners.geminiNotFound,
-      });
-    } else {
-      SpinniesManager.fail('geminiSpinner', {
-        text: commands.mcp.setup.spinners.geminiInstallFailed,
-      });
-      logError(error);
-    }
+    SpinniesManager.fail('geminiSpinner', {
+      text: commands.mcp.setup.spinners.geminiInstallFailed,
+    });
+    logError(error);
+
     return false;
   }
 }

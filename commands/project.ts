@@ -1,5 +1,6 @@
 import { Argv } from 'yargs';
-import { commands } from '../lang/en.js';
+import { pkg } from '../lib/jsonLoader.js';
+import { commands, lib } from '../lang/en.js';
 import deploy from './project/deploy.js';
 import create from './project/create.js';
 import upload from './project/upload.js';
@@ -19,11 +20,42 @@ import projectValidate from './project/validate.js';
 import list from './project/list.js';
 import { makeYargsBuilder } from '../lib/yargsUtils.js';
 import { YargsCommandModuleBucket } from '../types/Yargs.js';
+import { getProjectConfig } from '../lib/projects/config.js';
+import {
+  isUnsupportedPlatformVersion,
+  LATEST_SUPPORTED_PLATFORM_VERSION,
+} from '../lib/projects/platformVersion.js';
+import { uiLogger } from '../lib/ui/logger.js';
+import { debugError } from '../lib/errorHandlers/index.js';
 
 const command = ['project', 'projects'];
 const describe = commands.project.describe;
 
+// Warn users when they are interacting with a version of projects that this version of
+// the CLI is not officially compatible with
+async function validatePlatformVersion() {
+  try {
+    const { projectConfig } = await getProjectConfig();
+
+    if (isUnsupportedPlatformVersion(projectConfig?.platformVersion)) {
+      uiLogger.warn(
+        lib.projects.platformVersion.unsupported(
+          pkg.version,
+          LATEST_SUPPORTED_PLATFORM_VERSION,
+          projectConfig?.platformVersion
+        )
+      );
+      uiLogger.log('');
+    }
+  } catch (error) {
+    // Silently fail. We don't want this to interrupt command execution
+    debugError(error);
+  }
+}
+
 function projectBuilder(yargs: Argv): Argv {
+  yargs.middleware([validatePlatformVersion]);
+
   yargs
     .command(create)
     .command(add)

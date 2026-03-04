@@ -3,7 +3,6 @@ import {
   isPortManagerServerRunning,
   requestPorts,
 } from '@hubspot/local-dev-lib/portManager';
-import { uiLogger } from '../../ui/logger.js';
 import {
   LOCAL_DEV_UI_MESSAGE_RECEIVE_TYPES,
   LOCAL_DEV_UI_MESSAGE_SEND_TYPES,
@@ -11,7 +10,6 @@ import {
 } from '../../constants.js';
 import LocalDevWebsocketServer from '../localDev/LocalDevWebsocketServer.js';
 import LocalDevProcess from '../localDev/LocalDevProcess.js';
-import { lib } from '../../../lang/en.js';
 import { Mocked, Mock } from 'vitest';
 import type { Dependencies } from '@hubspot/project-parsing-lib/transform';
 import type { IntermediateRepresentationNodeLocalDev } from '@hubspot/project-parsing-lib/translate';
@@ -26,22 +24,17 @@ describe('LocalDevWebsocketServer', () => {
   let server: LocalDevWebsocketServer;
 
   beforeEach(() => {
-    // Reset all mocks
-
-    // Setup mock WebSocket
     mockWebSocket = {
       on: vi.fn(),
       send: vi.fn(),
       close: vi.fn(),
     } as unknown as Mocked<WebSocket>;
 
-    // Setup mock WebSocketServer
     mockWebSocketServer = {
       on: vi.fn(),
       close: vi.fn(),
     } as unknown as Mocked<WebSocketServer>;
 
-    // Setup mock LocalDevProcess
     mockLocalDevProcess = {
       addStateListener: vi.fn(),
       removeStateListener: vi.fn(),
@@ -57,174 +50,76 @@ describe('LocalDevWebsocketServer', () => {
       targetTestingAccountId: 789,
     } as unknown as Mocked<LocalDevProcess>;
 
-    // Mock WebSocketServer constructor
     (WebSocketServer as unknown as Mock).mockImplementation(
       () => mockWebSocketServer
     );
 
-    // Create server instance
     server = new LocalDevWebsocketServer(mockLocalDevProcess, true);
   });
 
+  function startServerAndConnect(ws?: Mocked<WebSocket>) {
+    const connectionCallback = mockWebSocketServer.on.mock.calls[0][1] as (
+      ws: WebSocket,
+      req: { headers: { origin?: string } }
+    ) => void;
+    connectionCallback(ws ?? mockWebSocket, {
+      headers: { origin: 'https://app.hubspot.com' },
+    });
+  }
+
   describe('start()', () => {
-    it('should throw error if port manager is not running', async () => {
-      (isPortManagerServerRunning as Mock).mockResolvedValue(false);
-
-      await expect(server.start()).rejects.toThrow();
-    });
-
-    it('should start websocket server successfully', async () => {
+    beforeEach(async () => {
       (isPortManagerServerRunning as Mock).mockResolvedValue(true);
       (requestPorts as Mock).mockResolvedValue({
         'local-dev-ui-websocket-server': 1234,
       });
-
       await server.start();
-
-      expect(WebSocketServer).toHaveBeenCalledWith({ port: 1234 });
-      expect(mockWebSocketServer.on).toHaveBeenCalledWith(
-        'connection',
-        expect.any(Function)
-      );
-      expect(uiLogger.log).toHaveBeenCalled();
     });
 
-    describe('valid origins', () => {
-      const validOrigins = [
-        'https://app.hubspot.com',
-        'https://app.hubspotqa.com',
-        'https://local.hubspot.com',
-        'https://local.hubspotqa.com',
-        'https://app-na2.hubspot.com',
-        'https://app-na2.hubspotqa.com',
-        'https://app-na3.hubspot.com',
-        'https://app-na3.hubspotqa.com',
-        'https://app-ap1.hubspot.com',
-        'https://app-ap1.hubspotqa.com',
-        'https://app-eu1.hubspot.com',
-        'https://app-eu1.hubspotqa.com',
-      ];
-
-      validOrigins.forEach(origin => {
-        it(`should accept connection from ${origin}`, async () => {
-          (isPortManagerServerRunning as Mock).mockResolvedValue(true);
-          (requestPorts as Mock).mockResolvedValue({
-            'local-dev-ui-websocket-server': 1234,
-          });
-
-          await server.start();
-
-          // Get the connection callback
-          const connectionCallback = mockWebSocketServer.on.mock
-            .calls[0][1] as (
-            ws: WebSocket,
-            req: { headers: { origin?: string } }
-          ) => void;
-
-          // Simulate connection from valid origin
-          connectionCallback(mockWebSocket, {
-            headers: { origin },
-          });
-
-          expect(mockWebSocket.on).toHaveBeenCalledWith(
-            'message',
-            expect.any(Function)
-          );
-          expect(mockLocalDevProcess.addStateListener).toHaveBeenCalledWith(
-            'projectNodes',
-            expect.any(Function)
-          );
-          expect(mockWebSocket.close).not.toHaveBeenCalled();
-        });
-      });
-    });
-
-    describe('invalid origins', () => {
-      const invalidOrigins = [
-        'https://malicious-site.com',
-        'https://app.malicious-site.com',
-        'https://app.hubspot.com.evil.com',
-      ];
-
-      invalidOrigins.forEach(origin => {
-        it(`should reject connection from "${origin}"`, async () => {
-          (isPortManagerServerRunning as Mock).mockResolvedValue(true);
-          (requestPorts as Mock).mockResolvedValue({
-            'local-dev-ui-websocket-server': 1234,
-          });
-
-          await server.start();
-
-          // Get the connection callback
-          const connectionCallback = mockWebSocketServer.on.mock
-            .calls[0][1] as (
-            ws: WebSocket,
-            req: { headers: { origin?: string } }
-          ) => void;
-
-          // Simulate connection from invalid origin
-          connectionCallback(mockWebSocket, {
-            headers: { origin },
-          });
-
-          expect(mockWebSocket.close).toHaveBeenCalledWith(
-            1008,
-            lib.LocalDevWebsocketServer.errors.originNotAllowed(origin)
-          );
-          expect(mockWebSocket.on).not.toHaveBeenCalled();
-          expect(mockLocalDevProcess.addStateListener).not.toHaveBeenCalled();
-        });
-      });
-    });
-
-    it('should reject connection with no origin header', async () => {
-      (isPortManagerServerRunning as Mock).mockResolvedValue(true);
-      (requestPorts as Mock).mockResolvedValue({
-        'local-dev-ui-websocket-server': 1234,
-      });
-
-      await server.start();
-
-      // Get the connection callback
-      const connectionCallback = mockWebSocketServer.on.mock.calls[0][1] as (
-        ws: WebSocket,
-        req: { headers: { origin?: string } }
-      ) => void;
-
-      // Simulate connection with no origin header
-      connectionCallback(mockWebSocket, {
-        headers: {},
-      });
-
-      expect(mockWebSocket.close).toHaveBeenCalledWith(
-        1008,
-        lib.LocalDevWebsocketServer.errors.originNotAllowed()
-      );
-      expect(mockWebSocket.on).not.toHaveBeenCalled();
-      expect(mockLocalDevProcess.addStateListener).not.toHaveBeenCalled();
-    });
-
-    it('should send WEBSOCKET_SERVER_CONNECTED message when valid connection is established', async () => {
-      (isPortManagerServerRunning as Mock).mockResolvedValue(true);
-      (requestPorts as Mock).mockResolvedValue({
-        'local-dev-ui-websocket-server': 1234,
-      });
-
-      await server.start();
-
-      // Get the connection callback
-      const connectionCallback = mockWebSocketServer.on.mock.calls[0][1] as (
-        ws: WebSocket,
-        req: { headers: { origin?: string } }
-      ) => void;
-
-      // Simulate connection from valid origin
-      connectionCallback(mockWebSocket, {
-        headers: { origin: 'https://app-na3.hubspot.com' },
-      });
+    it('should send WEBSOCKET_SERVER_CONNECTED message when valid connection is established', () => {
+      startServerAndConnect();
 
       expect(mockLocalDevProcess.sendDevServerMessage).toHaveBeenCalledWith(
         LOCAL_DEV_SERVER_MESSAGE_TYPES.WEBSOCKET_SERVER_CONNECTED
+      );
+    });
+
+    it('should send project data on connection', () => {
+      startServerAndConnect();
+
+      expect(mockWebSocket.send).toHaveBeenCalledWith(
+        JSON.stringify({
+          type: LOCAL_DEV_UI_MESSAGE_SEND_TYPES.UPDATE_PROJECT_DATA,
+          data: {
+            projectName: 'test-project',
+            projectId: 123,
+            latestBuild: { id: 'build-1', status: 'SUCCESS' },
+            deployedBuild: { id: 'build-1', status: 'SUCCESS' },
+            targetProjectAccountId: 456,
+            targetTestingAccountId: 789,
+          },
+        })
+      );
+    });
+
+    it('should setup state listeners on connection', () => {
+      startServerAndConnect();
+
+      expect(mockLocalDevProcess.addStateListener).toHaveBeenCalledWith(
+        'projectNodes',
+        expect.any(Function)
+      );
+      expect(mockLocalDevProcess.addStateListener).toHaveBeenCalledWith(
+        'appData',
+        expect.any(Function)
+      );
+      expect(mockLocalDevProcess.addStateListener).toHaveBeenCalledWith(
+        'uploadWarnings',
+        expect.any(Function)
+      );
+      expect(mockLocalDevProcess.addStateListener).toHaveBeenCalledWith(
+        'devServersStarted',
+        expect.any(Function)
       );
     });
   });
@@ -236,61 +131,19 @@ describe('LocalDevWebsocketServer', () => {
         'local-dev-ui-websocket-server': 1234,
       });
       await server.start();
-      const connectionCallback = mockWebSocketServer.on.mock.calls[0][1] as (
-        ws: WebSocket,
-        req: { headers: { origin?: string } }
-      ) => void;
-      connectionCallback(mockWebSocket, {
-        headers: { origin: 'https://app.hubspot.com' },
-      });
+      startServerAndConnect();
     });
 
     it('should handle UPLOAD message type', () => {
-      const messageCallback = mockWebSocket.on.mock.calls[0][1] as (
-        data: string
-      ) => void;
-      const message = {
-        type: LOCAL_DEV_UI_MESSAGE_RECEIVE_TYPES.UPLOAD,
-      };
+      const messageCallback = mockWebSocket.on.mock.calls.find(
+        call => call[0] === 'message'
+      )![1] as (data: string) => void;
 
-      messageCallback(JSON.stringify(message));
+      messageCallback(
+        JSON.stringify({ type: LOCAL_DEV_UI_MESSAGE_RECEIVE_TYPES.UPLOAD })
+      );
 
       expect(mockLocalDevProcess.uploadProject).toHaveBeenCalled();
-    });
-
-    it('should log error for missing message type', () => {
-      const messageCallback = mockWebSocket.on.mock.calls[0][1] as (
-        data: string
-      ) => void;
-      const message = {};
-
-      messageCallback(JSON.stringify(message));
-
-      expect(uiLogger.error).toHaveBeenCalled();
-    });
-
-    it('should log error for unknown message type', () => {
-      const messageCallback = mockWebSocket.on.mock.calls[0][1] as (
-        data: string
-      ) => void;
-      const message = {
-        type: 'UNKNOWN_TYPE',
-      };
-
-      messageCallback(JSON.stringify(message));
-
-      expect(uiLogger.error).toHaveBeenCalled();
-    });
-
-    it('should log error for invalid JSON', () => {
-      const messageCallback = mockWebSocket.on.mock.calls[0][1] as (
-        data: string
-      ) => void;
-      const invalidJson = 'invalid json';
-
-      messageCallback(invalidJson);
-
-      expect(uiLogger.error).toHaveBeenCalled();
     });
   });
 
@@ -318,7 +171,6 @@ describe('LocalDevWebsocketServer', () => {
     ) => void;
 
     beforeEach(async () => {
-      // Setup multiple mock WebSockets
       mockWebSocket1 = {
         on: vi.fn(),
         send: vi.fn(),
@@ -337,14 +189,12 @@ describe('LocalDevWebsocketServer', () => {
         close: vi.fn(),
       } as unknown as Mocked<WebSocket>;
 
-      // Start the server
       (isPortManagerServerRunning as Mock).mockResolvedValue(true);
       (requestPorts as Mock).mockResolvedValue({
         'local-dev-ui-websocket-server': 1234,
       });
       await server.start();
 
-      // Get the connection callback
       connectionCallback = mockWebSocketServer.on.mock.calls[0][1] as (
         ws: WebSocket,
         req: { headers: { origin?: string } }
@@ -352,7 +202,6 @@ describe('LocalDevWebsocketServer', () => {
     });
 
     it('should handle multiple valid connections simultaneously', () => {
-      // Establish three connections from valid origins
       connectionCallback(mockWebSocket1, {
         headers: { origin: 'https://app.hubspot.com' },
       });
@@ -363,7 +212,6 @@ describe('LocalDevWebsocketServer', () => {
         headers: { origin: 'https://local.hubspot.com' },
       });
 
-      // All connections should be established with proper setup
       expect(mockWebSocket1.on).toHaveBeenCalledWith(
         'message',
         expect.any(Function)
@@ -377,23 +225,18 @@ describe('LocalDevWebsocketServer', () => {
         expect.any(Function)
       );
 
-      // Each connection should trigger state listener setup
-      expect(mockLocalDevProcess.addStateListener).toHaveBeenCalledTimes(12); // 4 listeners per connection * 3 connections
-
-      // Each connection should trigger dev server message
+      expect(mockLocalDevProcess.addStateListener).toHaveBeenCalledTimes(12);
       expect(mockLocalDevProcess.sendDevServerMessage).toHaveBeenCalledTimes(3);
       expect(mockLocalDevProcess.sendDevServerMessage).toHaveBeenCalledWith(
         LOCAL_DEV_SERVER_MESSAGE_TYPES.WEBSOCKET_SERVER_CONNECTED
       );
 
-      // No connections should be closed
       expect(mockWebSocket1.close).not.toHaveBeenCalled();
       expect(mockWebSocket2.close).not.toHaveBeenCalled();
       expect(mockWebSocket3.close).not.toHaveBeenCalled();
     });
 
     it('should send project data to each connection independently', () => {
-      // Establish multiple connections
       connectionCallback(mockWebSocket1, {
         headers: { origin: 'https://app.hubspot.com' },
       });
@@ -401,38 +244,23 @@ describe('LocalDevWebsocketServer', () => {
         headers: { origin: 'https://app-eu1.hubspotqa.com' },
       });
 
-      // Each websocket should receive project data
-      expect(mockWebSocket1.send).toHaveBeenCalledWith(
-        JSON.stringify({
-          type: LOCAL_DEV_UI_MESSAGE_SEND_TYPES.UPDATE_PROJECT_DATA,
-          data: {
-            projectName: 'test-project',
-            projectId: 123,
-            latestBuild: { id: 'build-1', status: 'SUCCESS' },
-            deployedBuild: { id: 'build-1', status: 'SUCCESS' },
-            targetProjectAccountId: 456,
-            targetTestingAccountId: 789,
-          },
-        })
-      );
+      const expectedProjectData = JSON.stringify({
+        type: LOCAL_DEV_UI_MESSAGE_SEND_TYPES.UPDATE_PROJECT_DATA,
+        data: {
+          projectName: 'test-project',
+          projectId: 123,
+          latestBuild: { id: 'build-1', status: 'SUCCESS' },
+          deployedBuild: { id: 'build-1', status: 'SUCCESS' },
+          targetProjectAccountId: 456,
+          targetTestingAccountId: 789,
+        },
+      });
 
-      expect(mockWebSocket2.send).toHaveBeenCalledWith(
-        JSON.stringify({
-          type: LOCAL_DEV_UI_MESSAGE_SEND_TYPES.UPDATE_PROJECT_DATA,
-          data: {
-            projectName: 'test-project',
-            projectId: 123,
-            latestBuild: { id: 'build-1', status: 'SUCCESS' },
-            deployedBuild: { id: 'build-1', status: 'SUCCESS' },
-            targetProjectAccountId: 456,
-            targetTestingAccountId: 789,
-          },
-        })
-      );
+      expect(mockWebSocket1.send).toHaveBeenCalledWith(expectedProjectData);
+      expect(mockWebSocket2.send).toHaveBeenCalledWith(expectedProjectData);
     });
 
     it('should properly cleanup listeners when connections close', () => {
-      // Establish connections
       connectionCallback(mockWebSocket1, {
         headers: { origin: 'https://app.hubspot.com' },
       });
@@ -440,7 +268,6 @@ describe('LocalDevWebsocketServer', () => {
         headers: { origin: 'https://app-ap1.hubspotqa.com' },
       });
 
-      // Get all the close callbacks for both connections (there should be 2 per connection)
       const closeCallbacks1 = mockWebSocket1.on.mock.calls
         .filter(call => call[0] === 'close')
         .map(call => call[1] as () => void);
@@ -448,24 +275,17 @@ describe('LocalDevWebsocketServer', () => {
         .filter(call => call[0] === 'close')
         .map(call => call[1] as () => void);
 
-      expect(closeCallbacks1).toHaveLength(4); // projectNodes, appData, devServersStarted, and uploadWarnings listeners
-      expect(closeCallbacks2).toHaveLength(4); // projectNodes, appData, devServersStarted, and uploadWarnings listeners
+      expect(closeCallbacks1).toHaveLength(4);
+      expect(closeCallbacks2).toHaveLength(4);
 
-      // Simulate first connection closing (call all close callbacks)
       closeCallbacks1.forEach(callback => callback());
-
-      // Should have removed listeners for first connection (4 listeners: projectNodes, appData, devServersStarted, and uploadWarnings)
       expect(mockLocalDevProcess.removeStateListener).toHaveBeenCalledTimes(4);
 
-      // Simulate second connection closing
       closeCallbacks2.forEach(callback => callback());
-
-      // Should have removed listeners for second connection as well
       expect(mockLocalDevProcess.removeStateListener).toHaveBeenCalledTimes(8);
     });
 
     it('should broadcast state changes to all connected clients', () => {
-      // Establish connections
       connectionCallback(mockWebSocket1, {
         headers: { origin: 'https://app.hubspot.com' },
       });
@@ -473,7 +293,6 @@ describe('LocalDevWebsocketServer', () => {
         headers: { origin: 'https://local.hubspotqa.com' },
       });
 
-      // Get the projectNodes listeners that were registered
       const projectNodesListeners =
         mockLocalDevProcess.addStateListener.mock.calls
           .filter(call => call[0] === 'projectNodes')
@@ -481,7 +300,6 @@ describe('LocalDevWebsocketServer', () => {
 
       expect(projectNodesListeners).toHaveLength(2);
 
-      // Simulate a project nodes update by calling the listeners
       const mockProjectNodes = {
         component1: {
           uid: 'component1',
@@ -501,20 +319,13 @@ describe('LocalDevWebsocketServer', () => {
       } as { [key: string]: IntermediateRepresentationNodeLocalDev };
       projectNodesListeners.forEach(listener => listener(mockProjectNodes));
 
-      // Both websockets should receive the update
-      expect(mockWebSocket1.send).toHaveBeenCalledWith(
-        JSON.stringify({
-          type: LOCAL_DEV_UI_MESSAGE_SEND_TYPES.UPDATE_PROJECT_NODES,
-          data: mockProjectNodes,
-        })
-      );
+      const expectedMessage = JSON.stringify({
+        type: LOCAL_DEV_UI_MESSAGE_SEND_TYPES.UPDATE_PROJECT_NODES,
+        data: mockProjectNodes,
+      });
 
-      expect(mockWebSocket2.send).toHaveBeenCalledWith(
-        JSON.stringify({
-          type: LOCAL_DEV_UI_MESSAGE_SEND_TYPES.UPDATE_PROJECT_NODES,
-          data: mockProjectNodes,
-        })
-      );
+      expect(mockWebSocket1.send).toHaveBeenCalledWith(expectedMessage);
+      expect(mockWebSocket2.send).toHaveBeenCalledWith(expectedMessage);
     });
   });
 });
