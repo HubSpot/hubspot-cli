@@ -1,6 +1,11 @@
-import mockStdIn from 'mock-stdin';
 import { outputLogs } from '../ui/serverlessFunctionLogs.js';
 import { tailLogs } from '../serverlessLogs.js';
+import { handleKeypress } from '../process.js';
+import type { HubSpotPromise } from '@hubspot/local-dev-lib/types/Http';
+import type {
+  FunctionLog,
+  GetFunctionLogsResponse,
+} from '@hubspot/local-dev-lib/types/Functions';
 
 vi.mock('../ui/serverlessFunctionLogs');
 vi.mock('../ui/SpinniesManager', () => ({
@@ -13,47 +18,47 @@ vi.mock('../ui/SpinniesManager', () => ({
     stopAll: vi.fn(),
   },
 }));
+vi.mock('../process');
 vi.useFakeTimers();
 
 const ACCOUNT_ID = 123;
 
+function terminateTailLogs(): void {
+  const keypressCallback = vi.mocked(handleKeypress).mock.calls[0][0];
+  keypressCallback({ name: 'q' });
+}
+
 describe('lib/serverlessLogs', () => {
   describe('tailLogs()', () => {
-    let stdinMock: mockStdIn.MockSTDIN;
-
-    beforeEach(() => {
-      // @ts-ignore - we don't need to mock the entire process object
-      vi.spyOn(process, 'exit').mockImplementation(() => {});
-      stdinMock = mockStdIn.stdin();
-    });
-
     afterEach(() => {
       vi.clearAllTimers();
-      stdinMock.restore();
+      vi.clearAllMocks();
     });
 
     it('calls tailCall() to get the next results', async () => {
       const compact = false;
-      const fetchLatest = vi.fn(() => {
-        return Promise.resolve({
-          data: {
-            id: '1234',
-            executionTime: 510,
-            log: 'Log message',
-            error: { message: '', type: '', stackTrace: [] },
-            status: 'SUCCESS',
-            createdAt: 1620232011451,
-            memory: '70/128 MB',
-            duration: '53.40 ms',
-          },
-          status: 200,
-          statusText: 'OK',
-          headers: {},
-          config: {},
-        });
-      });
-      const tailCall = vi.fn(() => {
-        return Promise.resolve({
+      const fetchLatest = vi.fn(
+        () =>
+          Promise.resolve({
+            data: {
+              id: '1234',
+              executionTime: 510,
+              log: 'Log message',
+              error: { message: '', type: '', stackTrace: [] },
+              status: 'SUCCESS',
+              createdAt: 1620232011451,
+              memory: '70/128 MB',
+              duration: '53.40 ms',
+            },
+            status: 200,
+            statusText: 'OK',
+            headers: {},
+            // eslint-disable-next-line
+            config: { headers: {} } as any,
+          }) as HubSpotPromise<FunctionLog>
+      );
+      const tailCall = vi.fn(() =>
+        Promise.resolve({
           data: {
             results: [],
             paging: {
@@ -65,38 +70,58 @@ describe('lib/serverlessLogs', () => {
           status: 200,
           statusText: 'OK',
           headers: {},
-          config: {},
-        });
-      });
+          // eslint-disable-next-line
+          config: { headers: {} } as any,
+        } as unknown as HubSpotPromise<GetFunctionLogsResponse>)
+      );
 
       // @ts-ignore - headers is not used in the actual function and does not need to be mocked
-      await tailLogs(ACCOUNT_ID, 'name', fetchLatest, tailCall, compact);
-      vi.runOnlyPendingTimers();
+      const tailPromise = tailLogs(
+        ACCOUNT_ID,
+        'name',
+        fetchLatest,
+        tailCall,
+        compact
+      );
+      await vi.advanceTimersByTimeAsync(0);
 
       expect(fetchLatest).toHaveBeenCalled();
+      expect(tailCall).toHaveBeenCalledTimes(1);
+
+      await vi.advanceTimersByTimeAsync(5000);
       expect(tailCall).toHaveBeenCalledTimes(2);
+
+      terminateTailLogs();
+      await tailPromise;
     });
     it('outputs results', async () => {
       const compact = false;
 
-      const fetchLatest = vi.fn(() => {
-        return Promise.resolve({
-          data: {
-            id: '1234',
-            executionTime: 510,
-            log: 'Log message',
-            error: { message: '', type: '', stackTrace: [], statusCode: null },
-            status: 'SUCCESS',
-            createdAt: 1620232011451,
-            memory: '70/128 MB',
-            duration: '53.40 ms',
-          },
-          status: 200,
-          statusText: 'OK',
-          headers: {},
-          config: {},
-        });
-      });
+      const fetchLatest = vi.fn(
+        () =>
+          Promise.resolve({
+            data: {
+              id: '1234',
+              executionTime: 510,
+              log: 'Log message',
+              error: {
+                message: '',
+                type: '',
+                stackTrace: [],
+                statusCode: null,
+              },
+              status: 'SUCCESS',
+              createdAt: 1620232011451,
+              memory: '70/128 MB',
+              duration: '53.40 ms',
+            },
+            status: 200,
+            statusText: 'OK',
+            headers: {},
+            // eslint-disable-next-line
+            config: { headers: {} } as any,
+          }) as HubSpotPromise<FunctionLog>
+      );
       const latestLogResponse = {
         results: [
           {
@@ -127,17 +152,37 @@ describe('lib/serverlessLogs', () => {
         },
       };
       const tailCall = vi.fn(() =>
-        Promise.resolve({ data: latestLogResponse })
+        Promise.resolve({
+          data: latestLogResponse,
+          status: 200,
+          statusText: 'OK',
+          headers: {},
+          // eslint-disable-next-line
+          config: { headers: {} } as any,
+        } as unknown as HubSpotPromise<GetFunctionLogsResponse>)
       );
 
       // @ts-ignore - headers is not used in the actual function and does not need to be mocked
-      await tailLogs(ACCOUNT_ID, 'name', fetchLatest, tailCall, compact);
-      vi.runOnlyPendingTimers();
+      const tailPromise = tailLogs(
+        ACCOUNT_ID,
+        'name',
+        fetchLatest,
+        tailCall,
+        compact
+      );
+      await vi.advanceTimersByTimeAsync(0);
+
       expect(outputLogs).toHaveBeenCalledWith(
         latestLogResponse,
         expect.objectContaining({ compact })
       );
+      expect(tailCall).toHaveBeenCalledTimes(1);
+
+      await vi.advanceTimersByTimeAsync(5000);
       expect(tailCall).toHaveBeenCalledTimes(2);
+
+      terminateTailLogs();
+      await tailPromise;
     });
     it('handles no logs', async () => {
       const compact = false;
@@ -160,8 +205,7 @@ describe('lib/serverlessLogs', () => {
       );
 
       await tailLogs(ACCOUNT_ID, 'name', fetchLatest, tailCall, compact);
-      vi.runOnlyPendingTimers();
-      expect(tailCall).toHaveBeenCalledTimes(2);
+      expect(tailCall).toHaveBeenCalledTimes(1);
     });
   });
 });

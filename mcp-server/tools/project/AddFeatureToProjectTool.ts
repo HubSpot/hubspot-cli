@@ -14,7 +14,7 @@ import {
   absoluteProjectPath,
   features,
 } from './constants.js';
-import { runCommandInDir } from '../../utils/project.js';
+import { runCommandInDir } from '../../utils/command.js';
 import { formatTextContents, formatTextContent } from '../../utils/content.js';
 import { trackToolUsage } from '../../utils/toolUsageTracking.js';
 import { setupHubSpotConfig } from '../../utils/config.js';
@@ -29,25 +29,17 @@ const inputSchema = {
       'Should an app be added?  If there is no app in the project, an app must be added to add a feature'
     ),
   distribution: z
-    .optional(
-      z.union([
-        z.literal(APP_DISTRIBUTION_TYPES.MARKETPLACE),
-        z.literal(APP_DISTRIBUTION_TYPES.PRIVATE),
-      ])
-    )
+    .enum([APP_DISTRIBUTION_TYPES.MARKETPLACE, APP_DISTRIBUTION_TYPES.PRIVATE])
     .describe(
       'If not specified by the user, DO NOT choose for them.  This cannot be changed after a project is uploaded. Private is used if you do not wish to distribute your app on the HubSpot marketplace. '
-    ),
-  auth: z
-    .optional(
-      z.union([
-        z.literal(APP_AUTH_TYPES.STATIC),
-        z.literal(APP_AUTH_TYPES.OAUTH),
-      ])
     )
+    .optional(),
+  auth: z
+    .enum([APP_AUTH_TYPES.STATIC, APP_AUTH_TYPES.OAUTH])
     .describe(
       'If not specified by the user, DO NOT choose for them.  This cannot be changed after a project is uploaded. Static uses a static non changing authentication token, and is only available for private distribution. '
-    ),
+    )
+    .optional(),
   features,
 };
 

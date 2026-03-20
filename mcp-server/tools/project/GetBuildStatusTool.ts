@@ -41,11 +41,10 @@ const inputSchema = {
     ),
   limit: z
     .number()
-    .optional()
-    .default(3)
     .describe(
-      'Number of recent builds to fetch when buildId is not specified.'
-    ),
+      'Number of recent builds to fetch when buildId is not specified. Defaults to 3 if not specified.'
+    )
+    .optional(),
 };
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 const inputSchemaZodObject = z.object({ ...inputSchema });
@@ -189,7 +188,7 @@ export class GetBuildStatusTool extends Tool<GetBuildStatusInputSchema> {
         output = formatBuildDetails(build);
       } else {
         const response = await fetchProjectBuilds(accountId, projectName, {
-          limit,
+          limit: limit || 3,
         });
         const { results } = response.data;
 

@@ -17,24 +17,21 @@ const inputSchema = {
   absoluteCurrentWorkingDirectory,
   appId: z
     .string()
-    .regex(/^\d+$/, 'App ID must be a numeric string')
     .describe(
-      'The numeric app ID as a string (e.g., "3003909"). Use get-apps-info to find available app IDs.'
+      'The numeric app ID as a string (e.g., "3003909"). Must contain only digits. Use get-apps-info to find available app IDs.'
     ),
   startDate: z
     .string()
-    .regex(/^\d{4}-\d{2}-\d{2}$/, 'Start date must be in YYYY-MM-DD format')
-    .optional()
     .describe(
-      'Start date for the usage patterns query in ISO 8601 format (e.g., 2025-01-01).'
-    ),
+      'Start date for the usage patterns query in YYYY-MM-DD format (e.g., 2025-01-01).'
+    )
+    .optional(),
   endDate: z
     .string()
-    .regex(/^\d{4}-\d{2}-\d{2}$/, 'End date must be in YYYY-MM-DD format')
-    .optional()
     .describe(
-      'End date for the usage patterns query in ISO 8601 format (e.g., 2025-12-31).'
-    ),
+      'End date for the usage patterns query in YYYY-MM-DD format (e.g., 2025-12-31).'
+    )
+    .optional(),
 };
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars

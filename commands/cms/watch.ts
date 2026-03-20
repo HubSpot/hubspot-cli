@@ -35,7 +35,6 @@ export type WatchCommandArgs = ConfigArgs &
     fieldOptions?: string[];
     remove?: boolean;
     initialUpload?: boolean;
-    disableInitial?: boolean;
     notify?: string;
     convertFields?: boolean;
     saveOutput?: boolean;
@@ -47,8 +46,7 @@ const describe = commands.cms.subcommands.watch.describe;
 const handler = async (
   args: ArgumentsCamelCase<WatchCommandArgs>
 ): Promise<void> => {
-  const { remove, initialUpload, disableInitial, notify, derivedAccountId } =
-    args;
+  const { remove, initialUpload, notify, derivedAccountId } = args;
 
   if (!validateCmsPublishMode(args)) {
     process.exit(EXIT_CODES.ERROR);
@@ -79,13 +77,6 @@ const handler = async (
   }
 
   let filesToUpload: string[] = [];
-
-  if (disableInitial) {
-    uiLogger.info(commands.cms.subcommands.watch.warnings.disableInitial);
-  } else if (!initialUpload) {
-    uiLogger.info(commands.cms.subcommands.watch.warnings.notUploaded(src));
-    uiLogger.info(commands.cms.subcommands.watch.warnings.initialUpload);
-  }
 
   if (initialUpload) {
     filesToUpload = await getUploadableFileList(
@@ -175,6 +166,7 @@ function watchBuilder(yargs: Argv): Argv<WatchCommandArgs> {
     describe: commands.cms.subcommands.watch.options.initialUpload,
     type: 'boolean',
   });
+  // TODO: remove this before the next major release
   yargs.option('disable-initial', {
     describe: commands.cms.subcommands.watch.options.disableInitial,
     type: 'boolean',

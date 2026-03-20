@@ -94,7 +94,6 @@ export const FEATURES = {
   SANDBOXES_V2_CLI: 'sandboxes:v2:cliEnabled',
   APP_EVENTS: 'Developers:UnifiedApps:AppEventsAccess',
   APPS_HOME: 'UIE:AppHome',
-  MCP_ACCESS: 'Developers:CLIMCPAccess',
   THEME_MIGRATION_2025_2: 'Developers:ProjectThemeMigrations:2025.2',
   AGENT_TOOLS: 'ThirdPartyAgentTools',
 } as const;
@@ -181,3 +180,5 @@ export const ACCOUNT_LEVEL_CHOICES = [
   ACCOUNT_LEVELS.PROFESSIONAL,
   ACCOUNT_LEVELS.ENTERPRISE,
 ] as const;
+
+export const FEEDBACK_URL = 'https://developers.hubspot.com/feedback';

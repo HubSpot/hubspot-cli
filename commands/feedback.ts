@@ -6,8 +6,7 @@ import { makeYargsBuilder } from '../lib/yargsUtils.js';
 import { EXIT_CODES } from '../lib/enums/exitCodes.js';
 import { commands } from '../lang/en.js';
 import { uiLogger } from '../lib/ui/logger.js';
-
-const FEEDBACK_URL = 'https://developers.hubspot.com/feedback';
+import { FEEDBACK_URL } from '../lib/constants.js';
 
 const command = 'feedback';
 const describe = commands.project.feedback.describe;

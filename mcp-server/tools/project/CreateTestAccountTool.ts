@@ -7,7 +7,7 @@ import {
 import { trackToolUsage } from '../../utils/toolUsageTracking.js';
 import { formatTextContents, formatTextContent } from '../../utils/content.js';
 import { addFlag } from '../../utils/command.js';
-import { runCommandInDir } from '../../utils/project.js';
+import { runCommandInDir } from '../../utils/command.js';
 import {
   ACCOUNT_LEVELS,
   ACCOUNT_LEVEL_CHOICES,

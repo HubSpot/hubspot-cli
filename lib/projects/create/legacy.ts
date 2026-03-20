@@ -5,14 +5,12 @@ import {
   HUBSPOT_PROJECT_COMPONENTS_GITHUB_PATH,
   PROJECT_COMPONENT_TYPES,
 } from '../../constants.js';
-import { EXIT_CODES } from '../../enums/exitCodes.js';
 import {
   ProjectTemplate,
   ComponentTemplate,
   ProjectTemplateRepoConfig,
 } from '../../../types/Projects.js';
 import { debugError } from '../../errorHandlers/index.js';
-import { uiLogger } from '../../ui/logger.js';
 import { isV2Project } from '../platformVersion.js';
 import { lib } from '../../../lang/en.js';
 
@@ -67,13 +65,11 @@ export async function getProjectTemplateListFromRepo(
     config = data;
   } catch (e) {
     debugError(e);
-    uiLogger.error(lib.projects.create.errors.missingConfigFileTemplateSource);
-    return process.exit(EXIT_CODES.ERROR);
+    throw new Error(lib.projects.create.errors.missingConfigFileTemplateSource);
   }
 
   if (!config || !config[PROJECT_COMPONENT_TYPES.PROJECTS]) {
-    uiLogger.error(lib.projects.create.errors.noProjectsInConfig);
-    return process.exit(EXIT_CODES.ERROR);
+    throw new Error(lib.projects.create.errors.noProjectsInConfig);
   }
 
   const templates = config[PROJECT_COMPONENT_TYPES.PROJECTS]!;
@@ -85,8 +81,7 @@ export async function getProjectTemplateListFromRepo(
   );
 
   if (!templatesContainAllProperties) {
-    uiLogger.error(lib.projects.create.errors.missingPropertiesInConfig);
-    return process.exit(EXIT_CODES.ERROR);
+    throw new Error(lib.projects.create.errors.missingPropertiesInConfig);
   }
 
   return templates;

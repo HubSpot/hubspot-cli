@@ -1,6 +1,4 @@
-import { uiLogger } from '../../../ui/logger.js';
 import * as github from '@hubspot/local-dev-lib/api/github';
-import { EXIT_CODES } from '../../../enums/exitCodes.js';
 import {
   getProjectComponentListFromRepo,
   getProjectTemplateListFromRepo,
@@ -11,7 +9,6 @@ import {
   HUBSPOT_PROJECT_COMPONENTS_GITHUB_PATH,
 } from '../../../constants.js';
 import { AxiosResponse } from 'axios';
-import { Mock } from 'vitest';
 
 vi.mock('@hubspot/local-dev-lib/api/github');
 
@@ -57,19 +54,6 @@ describe('lib/projects/create/legacy', () => {
   });
 
   describe('getProjectTemplateListFromRepo()', () => {
-    let exitMock: Mock<typeof process.exit>;
-
-    beforeEach(() => {
-      // @ts-expect-error - Mocking process.exit
-      exitMock = vi
-        .spyOn(process, 'exit')
-        .mockImplementation((): never => undefined as never);
-    });
-
-    afterEach(() => {
-      exitMock.mockRestore();
-    });
-
     it('returns a list of project templates', async () => {
       // @ts-expect-error - Mocking AxiosResponse
       mockedFetchRepoFile.mockResolvedValue({
@@ -83,36 +67,30 @@ describe('lib/projects/create/legacy', () => {
       expect(templates).toEqual(repoConfig[PROJECT_COMPONENT_TYPES.PROJECTS]);
     });
 
-    it('Logs an error and exits the process if the request for the template list fails', async () => {
+    it('throws an error if the request for the template list fails', async () => {
       mockedFetchRepoFile.mockRejectedValue(new Error('Not found'));
-      await getProjectTemplateListFromRepo(
-        HUBSPOT_PROJECT_COMPONENTS_GITHUB_PATH,
-        'gh-ref'
-      );
-      expect(uiLogger.error).toHaveBeenCalledWith(
-        expect.stringMatching(
-          /Failed to fetch the config.json file from the target repository/
+      await expect(
+        getProjectTemplateListFromRepo(
+          HUBSPOT_PROJECT_COMPONENTS_GITHUB_PATH,
+          'gh-ref'
         )
+      ).rejects.toThrow(
+        'Failed to fetch the config.json file from the target repository'
       );
-      expect(exitMock).toHaveBeenCalledWith(EXIT_CODES.ERROR);
     });
 
-    it('Logs an error and exits the process if there are no projects listed in the repo config', async () => {
+    it('throws an error if there are no projects listed in the repo config', async () => {
       // @ts-expect-error - Mocking AxiosResponse
       mockedFetchRepoFile.mockResolvedValue({} as unknown as AxiosResponse);
-      await getProjectTemplateListFromRepo(
-        HUBSPOT_PROJECT_COMPONENTS_GITHUB_PATH,
-        'gh-ref'
-      );
-      expect(uiLogger.error).toHaveBeenCalledWith(
-        expect.stringMatching(
-          /Unable to find any projects in the target repository's config.json file/
+      await expect(
+        getProjectTemplateListFromRepo(
+          HUBSPOT_PROJECT_COMPONENTS_GITHUB_PATH,
+          'gh-ref'
         )
-      );
-      expect(exitMock).toHaveBeenCalledWith(EXIT_CODES.ERROR);
+      ).rejects.toThrow('Unable to find any projects in the target repository');
     });
 
-    it('Logs an error and exits the process if any of the projects in the repo config are missing required properties', async () => {
+    it('throws an error if any of the projects in the repo config are missing required properties', async () => {
       // @ts-expect-error - Mocking AxiosResponse
       mockedFetchRepoFile.mockResolvedValue({
         data: {
@@ -125,16 +103,14 @@ describe('lib/projects/create/legacy', () => {
           ],
         },
       } as unknown as AxiosResponse);
-      await getProjectTemplateListFromRepo(
-        HUBSPOT_PROJECT_COMPONENTS_GITHUB_PATH,
-        'gh-ref'
-      );
-      expect(uiLogger.error).toHaveBeenCalledWith(
-        expect.stringMatching(
-          /Found misconfigured projects in the target repository's config.json file/
+      await expect(
+        getProjectTemplateListFromRepo(
+          HUBSPOT_PROJECT_COMPONENTS_GITHUB_PATH,
+          'gh-ref'
         )
+      ).rejects.toThrow(
+        'Found misconfigured projects in the target repository'
       );
-      expect(exitMock).toHaveBeenCalledWith(EXIT_CODES.ERROR);
     });
   });
 });

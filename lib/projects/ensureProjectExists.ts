@@ -8,7 +8,7 @@ import { HubSpotPromise } from '@hubspot/local-dev-lib/types/Http';
 
 import { DEFAULT_POLLING_DELAY } from '../constants.js';
 import { promptUser } from '../prompts/promptUtils.js';
-import { EXIT_CODES } from '../enums/exitCodes.js';
+
 import { uiAccountDescription } from '../ui/index.js';
 import SpinniesManager from '../ui/SpinniesManager.js';
 import { logError, ApiErrorContext } from '../errorHandlers/index.js';
@@ -121,6 +121,6 @@ export async function ensureProjectExists(
       }
     }
     logError(err, new ApiErrorContext({ accountId }));
-    process.exit(EXIT_CODES.ERROR);
+    return { projectExists: false };
   }
 }

@@ -6,14 +6,28 @@ import {
 } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { getAllHsProfiles } from '@hubspot/project-parsing-lib/profiles';
 import { getProjectConfig } from '../../../../lib/projects/config.js';
-import { runCommandInDir } from '../../../utils/project.js';
+import { runCommandInDir } from '../../../utils/command.js';
 import { mcpFeedbackRequest } from '../../../utils/feedbackTracking.js';
 import { trackToolUsage } from '../../../utils/toolUsageTracking.js';
 
 vi.mock('@modelcontextprotocol/sdk/server/mcp.js');
 vi.mock('@hubspot/project-parsing-lib/profiles');
 vi.mock('../../../../lib/projects/config.js');
-vi.mock('../../../utils/project');
+vi.mock('../../../utils/command', () => ({
+  runCommandInDir: vi.fn(),
+  addFlag: vi.fn(
+    (
+      command: string,
+      flagName: string,
+      value: string | number | boolean | string[]
+    ) => {
+      if (Array.isArray(value)) {
+        return `${command} --${flagName} ${value.map(item => `"${item}"`).join(' ')}`;
+      }
+      return `${command} --${flagName} "${value}"`;
+    }
+  ),
+}));
 vi.mock('../../../utils/toolUsageTracking');
 vi.mock('../../../utils/feedbackTracking');
 

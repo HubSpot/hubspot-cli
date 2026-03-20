@@ -8,15 +8,23 @@ import * as errorHandlers from '../../../lib/errorHandlers/index.js';
 import * as usageTrackingLib from '../../../lib/usageTracking.js';
 import * as processLib from '../../../lib/process.js';
 import { EXIT_CODES } from '../../../lib/enums/exitCodes.js';
-import startCommand from '../start.js';
+
+// Create a mock execAsync function before importing the module
+const execAsyncMock = vi.fn();
 
 vi.mock('yargs');
 vi.mock('../../../lib/commonOpts');
 vi.mock('node:child_process');
+vi.mock('node:util', () => ({
+  promisify: vi.fn(() => execAsyncMock),
+}));
 vi.mock('fs');
 vi.mock('@hubspot/local-dev-lib/config');
 vi.mock('../../../lib/errorHandlers/index.js');
 vi.mock('../../../lib/process.js');
+
+// Import after mocks are set up
+const startCommand = await import('../start.js').then(m => m.default);
 
 const spawnSpy = vi.mocked(spawn);
 const existsSyncSpy = vi.spyOn(fs, 'existsSync');
@@ -45,6 +53,7 @@ describe('commands/mcp/start', () => {
     processExitSpy.mockImplementation(() => {});
     // Mock config to prevent reading actual config file in CI
     getConfigAccountIfExistsSpy.mockReturnValue(undefined);
+    execAsyncMock.mockClear();
   });
 
   describe('command', () => {

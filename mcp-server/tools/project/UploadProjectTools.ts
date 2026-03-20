@@ -7,7 +7,7 @@ import {
 import { getAllHsProfiles } from '@hubspot/project-parsing-lib/profiles';
 import { getProjectConfig } from '../../../lib/projects/config.js';
 import { TextContent, TextContentResponse, Tool } from '../../types.js';
-import { runCommandInDir } from '../../utils/project.js';
+import { runCommandInDir } from '../../utils/command.js';
 import {
   absoluteCurrentWorkingDirectory,
   absoluteProjectPath,

@@ -2,12 +2,9 @@ import { ArgumentsCamelCase, Argv } from 'yargs';
 import { EXIT_CODES } from '../../lib/enums/exitCodes.js';
 import { makeYargsBuilder } from '../../lib/yargsUtils.js';
 import { commands } from '../../lang/en.js';
-import { uiLogger } from '../../lib/ui/logger.js';
 import { CommonArgs, YargsCommandModule } from '../../types/Yargs.js';
 import { addMcpServerToConfig, supportedTools } from '../../lib/mcp/setup.js';
 import { trackCommandUsage } from '../../lib/usageTracking.js';
-import { hasFeature } from '../../lib/hasFeature.js';
-import { FEATURES } from '../../lib/constants.js';
 
 const command = ['setup'];
 const describe = commands.mcp.setup.describe;
@@ -19,14 +16,7 @@ interface MCPSetupArgs extends CommonArgs {
 async function handler(args: ArgumentsCamelCase<MCPSetupArgs>): Promise<void> {
   const { derivedAccountId } = args;
 
-  const hasMcpAccess = await hasFeature(derivedAccountId, FEATURES.MCP_ACCESS);
-
-  if (!hasMcpAccess) {
-    uiLogger.error(commands.mcp.setup.errors.needsMcpAccess(derivedAccountId));
-    process.exit(EXIT_CODES.ERROR);
-  }
-
-  trackCommandUsage('mcp-setup', {}, args.derivedAccountId);
+  await trackCommandUsage('mcp-setup', {}, derivedAccountId);
 
   try {
     await addMcpServerToConfig(args.client);

@@ -14,13 +14,11 @@ import SpinniesManager from '../ui/SpinniesManager.js';
 import { uiAccountDescription } from '../ui/index.js';
 import { ProjectConfig } from '../../types/Projects.js';
 
-import { logError } from '../errorHandlers/index.js';
 import util from 'node:util';
 import { lib } from '../../lang/en.js';
 import { ensureProjectExists } from './ensureProjectExists.js';
 import { uiLogger } from '../ui/logger.js';
 import { isV2Project } from './platformVersion.js';
-import { EXIT_CODES } from '../enums/exitCodes.js';
 import ProjectValidationError from '../errors/ProjectValidationError.js';
 import { walk } from '@hubspot/local-dev-lib/fs';
 import { LEGACY_CONFIG_FILES } from '../constants.js';
@@ -94,6 +92,7 @@ type ProjectUploadCallbackFunction<T> = (
 type ProjectUploadResult<T> = {
   result?: T;
   uploadError?: unknown;
+  projectNotFound?: boolean;
 };
 
 type HandleProjectUploadArg<T> = {
@@ -123,19 +122,8 @@ export async function handleProjectUpload<T>({
 }: HandleProjectUploadArg<T>): Promise<ProjectUploadResult<T>> {
   const srcDir = path.resolve(projectDir, projectConfig.srcDir);
 
-  try {
-    await validateSourceDirectory(srcDir, projectConfig, projectDir);
-  } catch (e) {
-    logError(e);
-    process.exit(EXIT_CODES.ERROR);
-  }
-
-  try {
-    await validateNoHSMetaMismatch(srcDir, projectConfig);
-  } catch (e) {
-    logError(e);
-    process.exit(EXIT_CODES.ERROR);
-  }
+  await validateSourceDirectory(srcDir, projectConfig, projectDir);
+  await validateNoHSMetaMismatch(srcDir, projectConfig);
 
   const tempFile = tmp.fileSync({ postfix: '.zip' });
 
@@ -146,64 +134,68 @@ export async function handleProjectUpload<T>({
   const output = fs.createWriteStream(tempFile.name);
   const archive = archiver('zip');
 
-  const result = new Promise<ProjectUploadResult<T>>(resolve =>
+  const result = new Promise<ProjectUploadResult<T>>((resolve, reject) =>
     output.on('close', async function () {
-      uiLogger.debug(
-        lib.projectUpload.handleProjectUpload.compressed(archive.pointer())
-      );
-
-      let intermediateRepresentation;
-
-      if (sendIR) {
-        try {
-          intermediateRepresentation = await handleTranslate({
-            projectDir,
-            projectConfig,
-            accountId,
-            skipValidation,
-            profile,
-          });
-        } catch (e) {
-          resolve({ uploadError: e });
-        }
-      }
-
-      const { projectExists } = await ensureProjectExists(
-        accountId,
-        projectConfig.name,
-        {
-          forceCreate,
-          uploadCommand: isUploadCommand,
-          noLogs: true,
-        }
-      );
-
-      if (!projectExists) {
-        uiLogger.log(
-          lib.projectUpload.handleProjectUpload.projectDoesNotExist(accountId)
+      try {
+        uiLogger.debug(
+          lib.projectUpload.handleProjectUpload.compressed(archive.pointer())
         );
-        process.exit(EXIT_CODES.SUCCESS);
-      }
 
-      const { buildId, error } = await uploadProjectFiles(
-        accountId,
-        projectConfig.name,
-        tempFile.name,
-        uploadMessage,
-        projectConfig.platformVersion,
-        intermediateRepresentation
-      );
+        let intermediateRepresentation;
 
-      if (error) {
-        resolve({ uploadError: error });
-      } else if (callbackFunc) {
-        const uploadResult = await callbackFunc(
+        if (sendIR) {
+          try {
+            intermediateRepresentation = await handleTranslate({
+              projectDir,
+              projectConfig,
+              accountId,
+              skipValidation,
+              profile,
+            });
+          } catch (e) {
+            return resolve({ uploadError: e });
+          }
+        }
+
+        const { projectExists } = await ensureProjectExists(
           accountId,
-          projectConfig,
-          tempFile,
-          buildId!
+          projectConfig.name,
+          {
+            forceCreate,
+            uploadCommand: isUploadCommand,
+            noLogs: true,
+          }
         );
-        resolve({ result: uploadResult });
+
+        if (!projectExists) {
+          uiLogger.log(
+            lib.projectUpload.handleProjectUpload.projectDoesNotExist(accountId)
+          );
+          return resolve({ projectNotFound: true });
+        }
+
+        const { buildId, error } = await uploadProjectFiles(
+          accountId,
+          projectConfig.name,
+          tempFile.name,
+          uploadMessage,
+          projectConfig.platformVersion,
+          intermediateRepresentation
+        );
+
+        if (error) {
+          resolve({ uploadError: error });
+        } else if (callbackFunc) {
+          const uploadResult = await callbackFunc(
+            accountId,
+            projectConfig,
+            tempFile,
+            buildId!
+          );
+          resolve({ result: uploadResult });
+        }
+      } catch (e) {
+        reject(e);
       }
     })
   );

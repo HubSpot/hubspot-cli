@@ -24,8 +24,6 @@ import { SelectProjectTemplatePromptResponse } from '../../prompts/selectProject
 import { isV2Project } from '../platformVersion.js';
 import path from 'path';
 import { getConfigForPlatformVersion } from './legacy.js';
-import { logError } from '../../errorHandlers/index.js';
-import { EXIT_CODES } from '../../enums/exitCodes.js';
 import { hasFeature } from '../../hasFeature.js';
 import { ValueOf } from '@hubspot/local-dev-lib/types/Utils';
 
@@ -197,12 +195,7 @@ export async function v2ComponentFlow(
   let authType: string | undefined;
   let distribution: string | undefined;
 
-  try {
-    repoConfig = await getConfigForPlatformVersion(platformVersion);
-  } catch (error) {
-    logError(error);
-    return process.exit(EXIT_CODES.SUCCESS);
-  }
+  repoConfig = await getConfigForPlatformVersion(platformVersion);
 
   const projectContentsChoice =
     projectBase ||

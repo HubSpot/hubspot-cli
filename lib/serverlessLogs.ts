@@ -16,7 +16,6 @@ import { outputLogs } from './ui/serverlessFunctionLogs.js';
 import { logError, ApiErrorContext } from './errorHandlers/index.js';
 import SpinniesManager from './ui/SpinniesManager.js';
 import { handleExit, handleKeypress } from './process.js';
-import { EXIT_CODES } from './enums/exitCodes.js';
 import { lib } from '../lang/en.js';
 import { HubSpotPromise } from '@hubspot/local-dev-lib/types/Http';
 import {
@@ -33,21 +32,6 @@ function base64EncodeString(valueToEncode: string): string {
 
   const stringBuffer = Buffer.from(valueToEncode);
   return encodeURIComponent(stringBuffer.toString('base64'));
-}
-
-function handleUserInput(): void {
-  const onTerminate = async () => {
-    SpinniesManager.remove('tailLogs');
-    SpinniesManager.remove('stopMessage');
-    process.exit(EXIT_CODES.SUCCESS);
-  };
-
-  handleExit(onTerminate);
-  handleKeypress(key => {
-    if ((key.ctrl && key.name == 'c') || key.name === 'q') {
-      onTerminate();
-    }
-  });
 }
 
 async function verifyAccessKeyAndUserAccess(
@@ -124,47 +108,68 @@ export async function tailLogs(
     }
   }
 
-  async function tail(after?: string): Promise<void> {
-    let latestLog: GetFunctionLogsResponse;
-    let nextAfter: string;
-    try {
-      const { data } = await tailCall(after);
-      latestLog = data;
-      nextAfter = latestLog.paging.next.after;
-    } catch (e) {
-      if (isHubSpotHttpError(e) && e.status !== 404) {
-        logError(
-          e,
-          new ApiErrorContext({
-            accountId,
-          })
-        );
+  return new Promise<void>(resolve => {
+    function cleanup(): void {
+      SpinniesManager.remove('tailLogs');
+      SpinniesManager.remove('stopMessage');
+    }
+
+    let resolved = false;
+    const onTerminate = async () => {
+      if (resolved) return;
+      resolved = true;
+      cleanup();
+      resolve();
+    };
+
+    handleExit(onTerminate);
+    handleKeypress(key => {
+      if ((key.ctrl && key.name == 'c') || key.name === 'q') {
+        onTerminate();
       }
-      process.exit(EXIT_CODES.SUCCESS);
+    });
+
+    async function tail(after?: string): Promise<void> {
+      let latestLog: GetFunctionLogsResponse;
+      let nextAfter: string;
+      try {
+        const { data } = await tailCall(after);
+        latestLog = data;
+        nextAfter = latestLog.paging.next.after;
+      } catch (e) {
+        if (isHubSpotHttpError(e) && e.status !== 404) {
+          logError(
+            e,
+            new ApiErrorContext({
+              accountId,
+            })
+          );
+        }
+        await onTerminate();
+        return;
+      }
+
+      if (latestLog && latestLog.results.length) {
+        outputLogs(latestLog, {
+          compact,
+        });
+      }
+
+      setTimeout(async () => {
+        await tail(nextAfter);
+      }, TAIL_DELAY);
     }
 
-    if (latestLog && latestLog.results.length) {
-      outputLogs(latestLog, {
-        compact,
-      });
-    }
+    SpinniesManager.add('tailLogs', {
+      text: `Following logs for ${name}`,
+    });
+    SpinniesManager.add('stopMessage', {
+      text: `> Press ${chalk.bold('q')} to stop following`,
+      status: 'non-spinnable',
+    });
 
-    setTimeout(async () => {
-      await tail(nextAfter);
-    }, TAIL_DELAY);
-  }
-
-  SpinniesManager.add('tailLogs', {
-    text: `Following logs for ${name}`,
+    tail(initialAfter);
   });
-  SpinniesManager.add('stopMessage', {
-    text: `> Press ${chalk.bold('q')} to stop following`,
-    status: 'non-spinnable',
-  });
-
-  handleUserInput();
-
-  await tail(initialAfter);
 }
 
 export async function outputBuildLog(buildLogUrl: string): Promise<string> {

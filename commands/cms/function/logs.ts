@@ -87,6 +87,7 @@ const endpointLog = async (
     };
 
     await tailLogs(accountId, functionPath, fetchLatest, tailCall, compact);
+    process.exit(EXIT_CODES.SUCCESS);
   } else if (latest) {
     try {
       const { data } = await getLatestFunctionLog(accountId, functionPath);

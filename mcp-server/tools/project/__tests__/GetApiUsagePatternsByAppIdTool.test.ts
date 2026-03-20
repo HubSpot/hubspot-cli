@@ -1,5 +1,4 @@
 import { GetApiUsagePatternsByAppIdTool } from '../GetApiUsagePatternsByAppIdTool.js';
-import { z } from 'zod';
 import {
   McpServer,
   RegisteredTool,
@@ -81,45 +80,6 @@ describe('mcp-server/tools/project/GetApiUsagePatternsByAppIdTool', () => {
         expect.any(Function)
       );
       expect(result).toBe(mockRegisteredTool);
-    });
-  });
-
-  describe('input validation', () => {
-    const inputSchema = z.object({
-      appId: z
-        .string()
-        .describe('The application ID to get API usage patterns for.'),
-      startDate: z
-        .string()
-        .regex(/^\d{4}-\d{2}-\d{2}$/, 'Start date must be in YYYY-MM-DD format')
-        .optional()
-        .describe(
-          'Start date for the usage patterns query in ISO 8601 format (e.g., 2025-01-01).'
-        ),
-      endDate: z
-        .string()
-        .regex(/^\d{4}-\d{2}-\d{2}$/, 'End date must be in YYYY-MM-DD format')
-        .optional()
-        .describe(
-          'End date for the usage patterns query in ISO 8601 format (e.g., 2025-12-31).'
-        ),
-    });
-
-    it('should validate date format correctly', () => {
-      const validInput = {
-        appId: '12345',
-        startDate: '2025-01-01',
-        endDate: '2025-12-31',
-      };
-
-      const invalidInput = {
-        appId: '12345',
-        startDate: '2025-1-1',
-        endDate: '2025-12-31T00:00:00Z',
-      };
-
-      expect(() => inputSchema.parse(validInput)).not.toThrow();
-      expect(() => inputSchema.parse(invalidInput)).toThrow();
     });
   });
 
