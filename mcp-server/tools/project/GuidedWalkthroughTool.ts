@@ -20,12 +20,7 @@ const nextCommands = {
 const inputSchema = {
   absoluteCurrentWorkingDirectory,
   command: z
-    .union([
-      z.literal('hs init'),
-      z.literal('hs auth'),
-      z.literal('hs project create'),
-      z.literal('hs project upload'),
-    ])
+    .enum(['hs init', 'hs auth', 'hs project create', 'hs project upload'])
     .describe('The command to learn more about.  Start with `hs init`')
     .optional(),
 };

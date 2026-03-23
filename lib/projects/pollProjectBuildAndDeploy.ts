@@ -36,7 +36,6 @@ import {
   ProjectPollStatusFunctionText,
   ProjectPollResult,
 } from '../../types/Projects.js';
-import { EXIT_CODES } from '../enums/exitCodes.js';
 import { lib } from '../../lang/en.js';
 import { uiLogger } from '../ui/logger.js';
 import { APP_FUNCTIONS_PACKAGE_KEY as AppFunctionsPackageKey } from '@hubspot/project-parsing-lib/constants';
@@ -107,12 +106,13 @@ type PollTaskStatusFunction<T extends ProjectTask> = (
 function handleTaskStatusError(
   statusText: ProjectPollStatusFunctionText
 ): never {
-  uiLogger.error(
+  const taskType =
+    statusText.TYPE_KEY === PROJECT_BUILD_TEXT.TYPE_KEY ? 'build' : 'deploy';
+  throw new Error(
     lib.projectBuildAndDeploy.makePollTaskStatusFunc.errorFetchingTaskStatus(
-      statusText.TYPE_KEY === PROJECT_BUILD_TEXT.TYPE_KEY ? 'build' : 'deploy'
+      taskType
     )
   );
-  process.exit(EXIT_CODES.ERROR);
 }
 
 function makePollTaskStatusFunc<T extends ProjectTask>({
@@ -238,136 +238,141 @@ function makePollTaskStatusFunc<T extends ProjectTask>({
       });
     }
 
-    return new Promise<T>(resolve => {
+    return new Promise<T>((resolve, reject) => {
       const pollInterval = setInterval(async () => {
-        let taskStatus: T;
         try {
-          const { data } = await statusFn(accountId, taskName, taskId);
-          taskStatus = data;
-        } catch (e) {
-          uiLogger.debug(e);
-          logError(
-            e,
-            new ApiErrorContext({
-              accountId,
-              projectName: taskName,
-            })
-          );
+          let taskStatus: T;
+          try {
+            const { data } = await statusFn(accountId, taskName, taskId);
+            taskStatus = data;
+          } catch (e) {
+            uiLogger.debug(e);
+            logError(
+              e,
+              new ApiErrorContext({
+                accountId,
+                projectName: taskName,
+              })
+            );
 
-          handleTaskStatusError(statusText);
-        }
-
-        const subtasks = getSubtasks(taskStatus);
-
-        if (!taskStatus || !taskStatus.status || !subtasks) {
-          handleTaskStatusError(statusText);
-        }
-
-        const { status } = taskStatus;
-
-        if (SpinniesManager.hasActiveSpinners()) {
-          subtasks.forEach(subtask => {
-            const { id, status } = subtask;
-            const spinner = SpinniesManager.pick(id);
-
-            if (!spinner || spinner.status !== SPINNER_STATUS.SPINNING) {
-              return;
-            }
-
-            const topLevelTask = structuredTasks.find(t => t.id == id);
-
-            if (
-              status === statusText.STATES.SUCCESS ||
-              status === statusText.STATES.FAILURE
-            ) {
-              const taskStatusText =
-                subtask.status === statusText.STATES.SUCCESS
-                  ? lib.projectBuildAndDeploy.makePollTaskStatusFunc
-                      .successStatusText
-                  : lib.projectBuildAndDeploy.makePollTaskStatusFunc
-                      .failedStatusText;
-              const hasNewline =
-                spinner?.text?.includes('\n') || Boolean(topLevelTask);
-              const updatedText = `${spinner?.text?.replace(
-                '\n',
-                ''
-              )} ${taskStatusText}${hasNewline ? '\n' : ''}`;
-
-              if (status === statusText.STATES.SUCCESS) {
-                SpinniesManager.succeed(id, { text: updatedText });
-              } else {
-                SpinniesManager.fail(id, { text: updatedText });
-              }
-
-              if (topLevelTask) {
-                topLevelTask.subtasks.forEach(currentSubtask =>
-                  SpinniesManager.remove(currentSubtask.id)
-                );
-              }
-            }
-          });
-
-          if (status === statusText.STATES.SUCCESS) {
-            SpinniesManager.succeed(overallTaskSpinniesKey, {
-              text: statusStrings.SUCCESS(taskName, displayId),
-            });
-            clearInterval(pollInterval);
-            resolve(taskStatus);
-          } else if (status === statusText.STATES.FAILURE) {
-            SpinniesManager.fail(overallTaskSpinniesKey, {
-              text: statusStrings.FAIL(taskName, displayId),
-            });
-
-            if (!silenceLogs) {
-              const failedSubtasks = subtasks.filter(
-                subtask => subtask.status === 'FAILURE'
-              );
-
-              uiLine();
-              uiLogger.log(
-                `${statusStrings.SUBTASK_FAIL(
-                  failedSubtasks.length === 1
-                    ? getSubtaskName(failedSubtasks[0])
-                    : failedSubtasks.length + ' components',
-                  displayId
-                )}\n`
-              );
-              uiLogger.log(
-                lib.projectBuildAndDeploy.makePollTaskStatusFunc.errorSummary
-              );
-              uiLine();
-
-              const displayErrors = failedSubtasks.filter(
-                subtask =>
-                  subtask?.standardError?.subCategory !==
-                    PROJECT_ERROR_TYPES.SUBBUILD_FAILED &&
-                  subtask?.standardError?.subCategory !==
-                    PROJECT_ERROR_TYPES.SUBDEPLOY_FAILED
-              );
-
-              displayErrors.forEach(subTask => {
-                uiLogger.log(
-                  `\n--- ${chalk.bold(
-                    getSubtaskName(subTask)
-                  )} failed with the following error ---`
-                );
-                uiLogger.error(subTask.errorMessage);
-
-                // Log nested errors
-                if (subTask.standardError && subTask.standardError.errors) {
-                  uiLogger.log('');
-                  subTask.standardError.errors.forEach(error => {
-                    uiLogger.log(error.message);
-                  });
-                }
-              });
-            }
-            clearInterval(pollInterval);
-            resolve(taskStatus);
-          } else if (!subtasks.length) {
-            clearInterval(pollInterval);
-            resolve(taskStatus);
+            handleTaskStatusError(statusText);
           }
+
+          const subtasks = getSubtasks(taskStatus);
+
+          if (!taskStatus || !taskStatus.status || !subtasks) {
+            handleTaskStatusError(statusText);
+          }
+
+          const { status } = taskStatus;
+
+          if (SpinniesManager.hasActiveSpinners()) {
+            subtasks.forEach(subtask => {
+              const { id, status } = subtask;
+              const spinner = SpinniesManager.pick(id);
+
+              if (!spinner || spinner.status !== SPINNER_STATUS.SPINNING) {
+                return;
+              }
+
+              const topLevelTask = structuredTasks.find(t => t.id == id);
+
+              if (
+                status === statusText.STATES.SUCCESS ||
+                status === statusText.STATES.FAILURE
+              ) {
+                const taskStatusText =
+                  subtask.status === statusText.STATES.SUCCESS
+                    ? lib.projectBuildAndDeploy.makePollTaskStatusFunc
+                        .successStatusText
+                    : lib.projectBuildAndDeploy.makePollTaskStatusFunc
+                        .failedStatusText;
+                const hasNewline =
+                  spinner?.text?.includes('\n') || Boolean(topLevelTask);
+                const updatedText = `${spinner?.text?.replace(
+                  '\n',
+                  ''
+                )} ${taskStatusText}${hasNewline ? '\n' : ''}`;
+
+                if (status === statusText.STATES.SUCCESS) {
+                  SpinniesManager.succeed(id, { text: updatedText });
+                } else {
+                  SpinniesManager.fail(id, { text: updatedText });
+                }
+
+                if (topLevelTask) {
+                  topLevelTask.subtasks.forEach(currentSubtask =>
+                    SpinniesManager.remove(currentSubtask.id)
+                  );
+                }
+              }
+            });
+
+            if (status === statusText.STATES.SUCCESS) {
+              SpinniesManager.succeed(overallTaskSpinniesKey, {
+                text: statusStrings.SUCCESS(taskName, displayId),
+              });
+              clearInterval(pollInterval);
+              resolve(taskStatus);
+            } else if (status === statusText.STATES.FAILURE) {
+              SpinniesManager.fail(overallTaskSpinniesKey, {
+                text: statusStrings.FAIL(taskName, displayId),
+              });
+
+              if (!silenceLogs) {
+                const failedSubtasks = subtasks.filter(
+                  subtask => subtask.status === 'FAILURE'
+                );
+
+                uiLine();
+                uiLogger.log(
+                  `${statusStrings.SUBTASK_FAIL(
+                    failedSubtasks.length === 1
+                      ? getSubtaskName(failedSubtasks[0])
+                      : failedSubtasks.length + ' components',
+                    displayId
+                  )}\n`
+                );
+                uiLogger.log(
+                  lib.projectBuildAndDeploy.makePollTaskStatusFunc.errorSummary
+                );
+                uiLine();
+
+                const displayErrors = failedSubtasks.filter(
+                  subtask =>
+                    subtask?.standardError?.subCategory !==
+                      PROJECT_ERROR_TYPES.SUBBUILD_FAILED &&
+                    subtask?.standardError?.subCategory !==
+                      PROJECT_ERROR_TYPES.SUBDEPLOY_FAILED
+                );
+
+                displayErrors.forEach(subTask => {
+                  uiLogger.log(
+                    `\n--- ${chalk.bold(
+                      getSubtaskName(subTask)
+                    )} failed with the following error ---`
+                  );
+                  uiLogger.error(subTask.errorMessage);
+
+                  // Log nested errors
+                  if (subTask.standardError && subTask.standardError.errors) {
+                    uiLogger.log('');
+                    subTask.standardError.errors.forEach(error => {
+                      uiLogger.log(error.message);
+                    });
+                  }
+                });
+              }
+              clearInterval(pollInterval);
+              resolve(taskStatus);
+            } else if (!subtasks.length) {
+              clearInterval(pollInterval);
+              resolve(taskStatus);
+            }
+          }
+        } catch (e) {
+          clearInterval(pollInterval);
+          reject(e);
         }
       }, DEFAULT_POLLING_DELAY);
     });

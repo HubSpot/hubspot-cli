@@ -75,11 +75,13 @@ export async function trackCommandUsage(
   let authType = 'unknown';
 
   if (accountId) {
-    const accountConfig = getConfigAccountById(accountId);
-    authType =
-      accountConfig && accountConfig.authType
-        ? accountConfig.authType
-        : API_KEY_AUTH_METHOD.value;
+    try {
+      const accountConfig = getConfigAccountById(accountId);
+      authType =
+        accountConfig && accountConfig.authType
+          ? accountConfig.authType
+          : API_KEY_AUTH_METHOD.value;
+    } catch (e) {}
   }
 
   return trackCliInteraction({

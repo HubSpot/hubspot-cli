@@ -5,7 +5,7 @@ import {
 } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { z } from 'zod';
 import { absoluteCurrentWorkingDirectory } from '../project/constants.js';
-import { runCommandInDir } from '../../utils/project.js';
+import { runCommandInDir } from '../../utils/command.js';
 import { formatTextContents, formatTextContent } from '../../utils/content.js';
 import { trackToolUsage } from '../../utils/toolUsageTracking.js';
 import { addFlag } from '../../utils/command.js';

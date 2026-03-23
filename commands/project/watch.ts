@@ -131,25 +131,39 @@ async function handler(
     } = await fetchProjectBuilds(derivedAccountId, projectConfig.name);
     const hasNoBuilds = !builds || !builds.length;
 
+    const handleWatchTermination = (error?: unknown) => {
+      if (error) {
+        logError(error, new ApiErrorContext({ accountId: derivedAccountId }));
+        process.exit(EXIT_CODES.ERROR);
+      } else {
+        process.exit(EXIT_CODES.SUCCESS);
+      }
+    };
+
     const startWatching = async () => {
       await createWatcher(
         derivedAccountId,
         projectConfig,
         projectDir,
         handleBuildStatus,
-        handleUserInput
+        handleUserInput,
+        handleWatchTermination
       );
     };
 
     // Upload all files if no build exists for this project yet
     if (initialUpload || hasNoBuilds) {
-      const { uploadError } = await handleProjectUpload({
+      const { uploadError, projectNotFound } = await handleProjectUpload({
         accountId: derivedAccountId,
         projectConfig,
         projectDir,
         callbackFunc: startWatching,
         isUploadCommand: false,
       });
+
+      if (projectNotFound) {
+        process.exit(EXIT_CODES.ERROR);
+      }
 
       if (uploadError) {
         if (
@@ -176,6 +190,7 @@ async function handler(
     }
   } catch (e) {
     logError(e, new ApiErrorContext({ accountId: derivedAccountId }));
+    process.exit(EXIT_CODES.ERROR);
   }
 }
 

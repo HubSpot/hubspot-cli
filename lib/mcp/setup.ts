@@ -31,6 +31,7 @@ export const supportedTools = [
 interface McpCommand {
   command: string;
   args: string[];
+  env?: Record<string, string>;
 }
 
 const defaultMcpCommand: McpCommand = {
@@ -59,28 +60,68 @@ export async function addMcpServerToConfig(
     } else {
       derivedTargets = targets;
     }
+
+    // Prompt for standalone mode
+    const { useStandaloneMode } = await promptUser({
+      name: 'useStandaloneMode',
+      type: 'confirm',
+      message: commands.mcp.setup.prompts.standaloneMode,
+      default: false,
+    });
+
+    const { cliVersion } = useStandaloneMode
+      ? await promptUser<{ cliVersion: string }>({
+          name: 'cliVersion',
+          type: 'input',
+          message: commands.mcp.setup.prompts.cliVersion,
+          validate: (v: string) =>
+            !v || /^[\d]+\.[\d]+\.[\d]+([-+][\w.]+)?$/.test(v.trim())
+              ? true
+              : 'Please enter a valid semver version (e.g. 8.0.1) or leave blank for latest.',
+        })
+      : { cliVersion: '' };
+
+    const cliPackage = cliVersion
+      ? `@hubspot/cli@${cliVersion}`
+      : '@hubspot/cli';
+
+    const standaloneEnv: Record<string, string> = {
+      HUBSPOT_MCP_STANDALONE: 'true',
+    };
+    if (cliVersion) {
+      standaloneEnv.HUBSPOT_CLI_VERSION = cliVersion;
+    }
+
+    const mcpCommand: McpCommand = useStandaloneMode
+      ? {
+          command: 'npx',
+          args: ['-y', '-p', cliPackage, 'hs', 'mcp', 'start'],
+          env: standaloneEnv,
+        }
+      : defaultMcpCommand;
+
     if (derivedTargets.includes(claudeCode)) {
-      await runSetupFunction(setupClaudeCode);
+      await runSetupFunction(() => setupClaudeCode(mcpCommand));
     }
 
     if (derivedTargets.includes(cursor)) {
-      await runSetupFunction(setupCursor);
+      await runSetupFunction(() => setupCursor(mcpCommand));
     }
 
     if (derivedTargets.includes(windsurf)) {
-      await runSetupFunction(setupWindsurf);
+      await runSetupFunction(() => setupWindsurf(mcpCommand));
     }
 
     if (derivedTargets.includes(vscode)) {
-      await runSetupFunction(setupVsCode);
+      await runSetupFunction(() => setupVsCode(mcpCommand));
     }
 
     if (derivedTargets.includes(codex)) {
-      await runSetupFunction(setupCodex);
+      await runSetupFunction(() => setupCodex(mcpCommand));
     }
 
     if (derivedTargets.includes(gemini)) {
-      await runSetupFunction(setupGemini);
+      await runSetupFunction(() => setupGemini(mcpCommand));
     }
 
     uiLogger.info(commands.mcp.setup.success(derivedTargets));
@@ -160,10 +201,7 @@ function setupMcpConfigFile(config: SetupConfig): boolean {
       mcpConfig.mcpServers = {};
     }
 
-    // Add or update HubSpot CLI MCP server
-    mcpConfig.mcpServers[mcpServerName] = {
-      ...config.mcpCommand,
-    };
+    mcpConfig.mcpServers[mcpServerName] = config.mcpCommand;
 
     // Write the updated config
     fs.writeFileSync(config.configPath, JSON.stringify(mcpConfig, null, 2));
@@ -188,10 +226,14 @@ export async function setupVsCode(
     SpinniesManager.add('vsCode', {
       text: commands.mcp.setup.spinners.configuringVsCode,
     });
-    const mcpConfig = JSON.stringify({
+    const commandWithAgent = buildCommandWithAgentString(mcpCommand, vscode);
+
+    const configObject: Record<string, unknown> = {
       name: mcpServerName,
-      ...buildCommandWithAgentString(mcpCommand, vscode),
-    });
+      ...commandWithAgent,
+    };
+
+    const mcpConfig = JSON.stringify(configObject);
 
     await execAsync(`code --add-mcp ${JSON.stringify(mcpConfig)}`);
 
@@ -220,26 +262,33 @@ export async function setupVsCode(
 export async function setupClaudeCode(
   mcpCommand: McpCommand = defaultMcpCommand
 ): Promise<boolean> {
+  SpinniesManager.add('claudeCode', {
+    text: commands.mcp.setup.spinners.configuringClaudeCode,
+  });
+
   try {
-    SpinniesManager.add('claudeCode', {
-      text: commands.mcp.setup.spinners.configuringClaudeCode,
+    // Check if claude command is available
+    await execAsync('claude --version');
+  } catch (e) {
+    SpinniesManager.fail('claudeCode', {
+      text: commands.mcp.setup.spinners.claudeCodeNotFound,
     });
+    return false;
+  }
 
-    try {
-      // Check if claude command is available
-      await execAsync('claude --version');
-    } catch (e) {
-      SpinniesManager.fail('claudeCode', {
-        text: commands.mcp.setup.spinners.claudeCodeNotFound,
-      });
-      return false;
-    }
-
+  try {
     // Run claude mcp add command
-    const mcpConfig = JSON.stringify({
+    const commandWithAgent = buildCommandWithAgentString(
+      mcpCommand,
+      claudeCode
+    );
+
+    const configObject: Record<string, unknown> = {
       type: 'stdio',
-      ...buildCommandWithAgentString(mcpCommand, claudeCode),
-    });
+      ...commandWithAgent,
+    };
+
+    const mcpConfig = JSON.stringify(configObject);
 
     const { stdout } = await execAsync('claude mcp list');
 
@@ -321,7 +370,7 @@ export async function setupCodex(
     const mcpCommandWithAgent = buildCommandWithAgentString(mcpCommand, codex);
 
     await execAsync(
-      `codex mcp add "${mcpServerName}" -- ${mcpCommandWithAgent.command} ${mcpCommandWithAgent.args.join(' ')}`
+      `codex mcp add "${mcpServerName}"${buildEnvFlagString(mcpCommand)} -- ${mcpCommandWithAgent.command} ${mcpCommandWithAgent.args.join(' ')}`
     );
 
     SpinniesManager.succeed('codexSpinner', {
@@ -357,7 +406,7 @@ export async function setupGemini(
     const mcpCommandWithAgent = buildCommandWithAgentString(mcpCommand, gemini);
 
     await execAsync(
-      `gemini mcp add -s user "${mcpServerName}" ${mcpCommandWithAgent.command} ${mcpCommandWithAgent.args.join(' ')}`
+      `gemini mcp add -s user${buildEnvFlagString(mcpCommand)} "${mcpServerName}" ${mcpCommandWithAgent.command} ${mcpCommandWithAgent.args.join(' ')}`
     );
 
     SpinniesManager.succeed('geminiSpinner', {
@@ -381,4 +430,18 @@ function buildCommandWithAgentString(
   const mcpCommandCopy = structuredClone(mcpCommand);
   mcpCommandCopy.args.push('--ai-agent', agent);
   return mcpCommandCopy;
+}
+
+function buildEnvFlagString(mcpCommand: McpCommand): string {
+  const envFlags: string[] = [];
+  if (mcpCommand.env) {
+    const env = Object.entries(mcpCommand.env);
+    env.forEach(([key, value]) => {
+      envFlags.push(`--env ${key}="${value}"`);
+    });
+  }
+  if (envFlags.length === 0) {
+    return '';
+  }
+  return ` ${envFlags.join(' ')}`;
 }

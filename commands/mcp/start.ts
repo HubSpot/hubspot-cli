@@ -49,7 +49,6 @@ async function startMcpServer(aiAgent?: string): Promise<void> {
 
     const args: string[] = [serverPath];
 
-    // Start the server using ts-node
     const child: ChildProcess = spawn(`node`, args, {
       stdio: 'inherit',
       env: {

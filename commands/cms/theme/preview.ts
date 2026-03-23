@@ -1,21 +1,16 @@
 import fs from 'fs';
 import path from 'path';
 import { Argv, ArgumentsCamelCase } from 'yargs';
-import cliProgress from 'cli-progress';
 import { commands } from '../../../lang/en.js';
 import { getCwd } from '@hubspot/local-dev-lib/path';
-import { FILE_UPLOAD_RESULT_TYPES } from '@hubspot/local-dev-lib/constants/files';
 import { getThemeJSONPath } from '@hubspot/local-dev-lib/cms/themes';
-import { createDevServer } from '@hubspot/cms-dev-server';
-import { UploadFolderResults } from '@hubspot/local-dev-lib/types/Files';
-import { getUploadableFileList } from '../../../lib/upload.js';
+import { spawnDevServer } from '../../../lib/theme/cmsDevServerProcess.js';
 import { trackCommandUsage } from '../../../lib/usageTracking.js';
 import {
   previewPrompt,
   previewProjectPrompt,
 } from '../../../lib/prompts/previewPrompt.js';
 import { EXIT_CODES } from '../../../lib/enums/exitCodes.js';
-import { ApiErrorContext, logError } from '../../../lib/errorHandlers/index.js';
 import { getProjectConfig } from '../../../lib/projects/config.js';
 import { findProjectComponents } from '../../../lib/projects/structure.js';
 import { ComponentTypes } from '../../../types/Projects.js';
@@ -111,92 +106,17 @@ async function handler(
 
   const { absoluteSrc, dest } = await determineSrcAndDest(args);
 
-  const filePaths = await getUploadableFileList(absoluteSrc, false);
-
-  function startProgressBar(numFiles: number): {
-    onAttemptCallback: () => void;
-    onSuccessCallback: () => void;
-    onFirstErrorCallback: () => void;
-    onRetryCallback: () => void;
-    onFinalErrorCallback: () => void;
-    onFinishCallback: (results: UploadFolderResults[]) => void;
-  } {
-    const initialUploadProgressBar = new cliProgress.SingleBar(
-      {
-        gracefulExit: true,
-        format: '[{bar}] {percentage}% | {value}/{total} | {label}',
-        hideCursor: true,
-      },
-      cliProgress.Presets.rect
-    );
-    initialUploadProgressBar.start(numFiles, 0, {
-      label:
-        commands.cms.subcommands.theme.subcommands.preview
-          .initialUploadProgressBar.start,
-    });
-    let uploadsHaveStarted = false;
-    const uploadOptions = {
-      onAttemptCallback: () => {
-        /* Intentionally blank */
-      },
-      onSuccessCallback: () => {
-        initialUploadProgressBar.increment();
-        if (!uploadsHaveStarted) {
-          uploadsHaveStarted = true;
-          initialUploadProgressBar.update(0, {
-            label:
-              commands.cms.subcommands.theme.subcommands.preview
-                .initialUploadProgressBar.uploading,
-          });
-        }
-      },
-      onFirstErrorCallback: () => {
-        /* Intentionally blank */
-      },
-      onRetryCallback: () => {
-        /* Intentionally blank */
-      },
-      onFinalErrorCallback: () => initialUploadProgressBar.increment(),
-      onFinishCallback: (results: UploadFolderResults[]) => {
-        initialUploadProgressBar.update(numFiles, {
-          label:
-            commands.cms.subcommands.theme.subcommands.preview
-              .initialUploadProgressBar.finish,
-        });
-        initialUploadProgressBar.stop();
-        results.forEach(result => {
-          if (result.resultType == FILE_UPLOAD_RESULT_TYPES.FAILURE) {
-            uiLogger.error(
-              commands.cms.subcommands.theme.subcommands.preview.errors.uploadFailed(
-                result.file,
-                dest
-              )
-            );
-            logError(
-              result.error,
-              new ApiErrorContext({
-                accountId: derivedAccountId,
-                request: dest,
-                payload: result.file,
-              })
-            );
-          }
-        });
-      },
-    };
-    return uploadOptions;
-  }
-
   trackCommandUsage('preview', {}, derivedAccountId);
 
-  if (port) {
-    process.env['PORT'] = port.toString();
-  }
-
-  createDevServer(absoluteSrc, false, '', '', !noSsl, generateFieldsTypes, {
-    filePaths,
+  // Spawn dev server in isolated subprocess to avoid React version conflicts
+  // File listing and progress bars are handled within the subprocess
+  await spawnDevServer({
+    absoluteSrc,
+    accountName: derivedAccountId?.toString(),
+    noSsl,
+    port,
+    generateFieldsTypes,
     resetSession: resetSession || false,
-    startProgressBar,
     dest,
   });
 }

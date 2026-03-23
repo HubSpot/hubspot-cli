@@ -91,10 +91,6 @@ describe('commands/cms/watch', () => {
         expect.objectContaining({ type: 'boolean', alias: 'i' })
       );
       expect(optionSpy).toHaveBeenCalledWith(
-        'disable-initial',
-        expect.objectContaining({ type: 'boolean' })
-      );
-      expect(optionSpy).toHaveBeenCalledWith(
         'notify',
         expect.objectContaining({ type: 'string', alias: 'n' })
       );
@@ -115,7 +111,6 @@ describe('commands/cms/watch', () => {
         derivedAccountId: 123456,
         remove: false,
         initialUpload: false,
-        disableInitial: false,
       } as ArgumentsCamelCase<WatchCommandArgs>;
       statSyncSpy.mockReturnValue({
         isFile: () => false,
@@ -200,9 +195,6 @@ describe('commands/cms/watch', () => {
       it('should start watching without initial upload by default', async () => {
         await watchCommand.handler(args);
 
-        expect(uiLogger.info).toHaveBeenCalledWith(
-          expect.stringContaining('not')
-        );
         expect(getUploadableFileListSpy).not.toHaveBeenCalled();
         expect(watchSpy).toHaveBeenCalledWith(
           123456,
@@ -242,16 +234,6 @@ describe('commands/cms/watch', () => {
           expect.any(Function),
           undefined,
           expect.any(Function)
-        );
-      });
-
-      it('should show disable initial message when disableInitial is true', async () => {
-        args.disableInitial = true;
-
-        await watchCommand.handler(args);
-
-        expect(uiLogger.info).toHaveBeenCalledWith(
-          expect.stringContaining('disable')
         );
       });
 

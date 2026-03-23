@@ -8,7 +8,7 @@ import {
   absoluteCurrentWorkingDirectory,
   absoluteProjectPath,
 } from './constants.js';
-import { runCommandInDir } from '../../utils/project.js';
+import { runCommandInDir } from '../../utils/command.js';
 import { formatTextContents } from '../../utils/content.js';
 import { trackToolUsage } from '../../utils/toolUsageTracking.js';
 import { setupHubSpotConfig } from '../../utils/config.js';

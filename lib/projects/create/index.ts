@@ -14,9 +14,7 @@ import {
 import { isV2Project } from '../platformVersion.js';
 import { v2ComponentFlow } from './v2.js';
 import { getProjectTemplateListFromRepo } from './legacy.js';
-import { uiLogger } from '../../ui/logger.js';
 import { commands } from '../../../lang/en.js';
-import { EXIT_CODES } from '../../enums/exitCodes.js';
 import {
   AccountArgs,
   CommonArgs,
@@ -98,8 +96,7 @@ export async function handleProjectCreationFlow(
   );
 
   if (!projectTemplates.length) {
-    uiLogger.error(commands.project.create.errors.failedToFetchProjectList);
-    process.exit(EXIT_CODES.ERROR);
+    throw new Error(commands.project.create.errors.failedToFetchProjectList);
   }
 
   const selectProjectTemplatePromptResponse = await selectProjectTemplatePrompt(

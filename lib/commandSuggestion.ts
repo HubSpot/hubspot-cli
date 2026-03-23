@@ -24,13 +24,6 @@ export const commandSuggestionMappings: Record<string, string> = {
   'theme generate-selectors': 'hs cms theme generate-selectors',
   'theme marketplace-validate': 'hs cms theme marketplace-validate',
   'theme preview': 'hs cms theme preview',
-
-  'custom-object schema create': 'hs custom-object create-schema',
-  'custom-object schema delete': 'hs custom-object delete-schema',
-  'custom-object schema fetch-all': 'hs custom-object fetch-all-schemas',
-  'custom-object schema fetch': 'hs custom-object fetch-schema',
-  'custom-object schema list': 'hs custom-object list-schemas',
-  'custom-object schema update': 'hs custom-object update-schema',
 };
 
 function createCommandSuggestionHandler(newCommand: string): () => void {
@@ -47,7 +40,7 @@ function createCommandSuggestion(
   return {
     command: oldCommand,
     builder: async (yargs: Argv) => {
-      return yargs.strict(false) as Argv<object>;
+      return yargs.strict(false).help(false).version(false) as Argv<object>;
     },
     handler: createCommandSuggestionHandler(newCommand),
   };

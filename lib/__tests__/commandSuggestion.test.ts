@@ -112,6 +112,8 @@ describe('lib/commandSuggestion', () => {
       // Create a mock yargs builder with strict method
       const mockYargsBuilder = {
         strict: vi.fn().mockReturnThis(),
+        help: vi.fn().mockReturnThis(),
+        version: vi.fn().mockReturnThis(),
       } as unknown as Argv;
 
       await commandModule.builder(mockYargsBuilder);

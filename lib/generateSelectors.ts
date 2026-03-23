@@ -1,5 +1,4 @@
 import fs from 'fs';
-import { EXIT_CODES } from './enums/exitCodes.js';
 import { commands } from '../lang/en.js';
 import { uiLogger } from './ui/logger.js';
 
@@ -23,7 +22,7 @@ export function findFieldsJsonPath(basePath: string): string | null {
         basePath
       )
     );
-    process.exit(EXIT_CODES.ERROR);
+    return null;
   }
   const files = fs.readdirSync(_path);
 

@@ -48,11 +48,10 @@ const inputSchema = {
     ),
   logLevel: z
     .enum(['ERROR', 'WARN', 'INFO', 'ALL'])
-    .optional()
-    .default('ALL')
     .describe(
-      'Filter logs by level. ERROR: Show only errors, WARN: Show only warnings, INFO: Show only info, ALL: Show all logs.'
-    ),
+      'Filter logs by level. ERROR: Show only errors, WARN: Show only warnings, INFO: Show only info, ALL: Show all logs. Defaults to ALL if not specified.'
+    )
+    .optional(),
 };
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -156,14 +155,14 @@ export class GetBuildLogsTool extends Tool<GetBuildLogsInputSchema> {
         );
       }
 
-      const filteredLogs = filterLogsByLevel(allLogs, logLevel);
+      const resolvedLogLevel = logLevel || 'ALL';
+      const filteredLogs = filterLogsByLevel(allLogs, resolvedLogLevel);
 
       let output: string;
       if (filteredLogs.length === 0) {
-        // No logs match filter, show all logs instead
-        output = `No ${logLevel} level logs found for build #${buildId} in '${projectName}'.\nShowing all logs instead:\n\n${formatLogs(allLogs)}`;
+        output = `No ${resolvedLogLevel} level logs found for build #${buildId} in '${projectName}'.\nShowing all logs instead:\n\n${formatLogs(allLogs)}`;
       } else {
-        output = `Logs for build #${buildId} in '${projectName}' (${logLevel} level):\n\n${formatLogs(filteredLogs)}`;
+        output = `Logs for build #${buildId} in '${projectName}' (${resolvedLogLevel} level):\n\n${formatLogs(filteredLogs)}`;
       }
 
       return formatTextContents(absoluteCurrentWorkingDirectory, output);

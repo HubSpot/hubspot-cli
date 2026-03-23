@@ -26,6 +26,8 @@ type ProjectWatchHandlerFunction = (
   currentBuildId: number
 ) => Promise<void> | void;
 
+type WatchTerminationHandler = (error?: unknown) => void;
+
 type WatchEvent = {
   filePath: string;
   remotePath: string;
@@ -39,6 +41,7 @@ const standbyQueue: WatchEvent[] = [];
 let currentBuildId: number;
 let handleBuildStatus: ProjectWatchHandlerFunction;
 let handleUserInput: ProjectWatchHandlerFunction;
+let handleWatchTermination: WatchTerminationHandler = () => {};
 let timer: NodeJS.Timeout;
 
 async function processStandByQueue(
@@ -87,39 +90,44 @@ function debounceQueueBuild(
   }
 
   timer = setTimeout(async () => {
-    uiLogger.debug(commands.project.watch.debug.pause);
-    queue.pause();
-    await queue.onIdle();
-
     try {
-      await queueBuild(accountId, projectName, platformVersion);
-      uiLogger.debug(commands.project.watch.debug.buildStarted);
-    } catch (err) {
-      if (
-        isSpecifiedError(err, {
-          subCategory: PROJECT_ERROR_TYPES.MISSING_PROJECT_PROVISION,
-        })
-      ) {
-        uiLogger.log(commands.project.watch.logs.watchCancelledFromUi);
-        process.exit(0);
-      } else {
-        logError(err, new ApiErrorContext({ accountId }));
+      uiLogger.debug(commands.project.watch.debug.pause);
+      queue.pause();
+      await queue.onIdle();
+
+      try {
+        await queueBuild(accountId, projectName, platformVersion);
+        uiLogger.debug(commands.project.watch.debug.buildStarted);
+      } catch (err) {
+        if (
+          isSpecifiedError(err, {
+            subCategory: PROJECT_ERROR_TYPES.MISSING_PROJECT_PROVISION,
+          })
+        ) {
+          uiLogger.log(commands.project.watch.logs.watchCancelledFromUi);
+          handleWatchTermination();
+          return;
+        } else {
+          logError(err, new ApiErrorContext({ accountId }));
+        }
+
+        return;
       }
 
-      return;
+      await handleBuildStatus(accountId, projectName, currentBuildId);
+
+      await createNewStagingBuild(accountId, projectName, platformVersion);
+
+      if (standbyQueue.length > 0) {
+        await processStandByQueue(accountId, projectName, platformVersion);
+      }
+
+      queue.start();
+      uiLogger.log(commands.project.watch.logs.resuming);
+      uiLogger.log(`\n> Press ${chalk.bold('q')} to quit watching\n`);
+    } catch (err) {
+      handleWatchTermination(err);
     }
-
-    await handleBuildStatus(accountId, projectName, currentBuildId);
-
-    await createNewStagingBuild(accountId, projectName, platformVersion);
-
-    if (standbyQueue.length > 0) {
-      await processStandByQueue(accountId, projectName, platformVersion);
-    }
-
-    queue.start();
-    uiLogger.log(commands.project.watch.logs.resuming);
-    uiLogger.log(`\n> Press ${chalk.bold('q')} to quit watching\n`);
   }, 2000);
 }
 
@@ -187,7 +195,7 @@ async function createNewBuild(
       await cancelStagedBuild(accountId, projectName);
       uiLogger.log(commands.project.watch.logs.previousStagingBuildCancelled);
     }
-    process.exit(1);
+    throw err;
   }
 }
 
@@ -227,12 +235,14 @@ export async function createWatcher(
   projectConfig: ProjectConfig,
   projectDir: string,
   handleBuildStatusFn: ProjectWatchHandlerFunction,
-  handleUserInputFn: ProjectWatchHandlerFunction
+  handleUserInputFn: ProjectWatchHandlerFunction,
+  handleWatchTerminationFn: WatchTerminationHandler
 ) {
   const projectSourceDir = path.join(projectDir, projectConfig.srcDir);
 
   handleBuildStatus = handleBuildStatusFn;
   handleUserInput = handleUserInputFn;
+  handleWatchTermination = handleWatchTerminationFn;
 
   await createNewStagingBuild(
     accountId,

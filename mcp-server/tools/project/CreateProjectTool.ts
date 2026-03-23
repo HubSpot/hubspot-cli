@@ -12,7 +12,7 @@ import {
 } from '../../../lib/constants.js';
 import { addFlag } from '../../utils/command.js';
 import { absoluteCurrentWorkingDirectory, features } from './constants.js';
-import { runCommandInDir } from '../../utils/project.js';
+import { runCommandInDir } from '../../utils/command.js';
 import { formatTextContents, formatTextContent } from '../../utils/content.js';
 import { trackToolUsage } from '../../utils/toolUsageTracking.js';
 import { setupHubSpotConfig } from '../../utils/config.js';
@@ -32,27 +32,18 @@ const inputSchema = {
       'DO NOT use the current directory unless the user has explicitly stated to do so. Relative path to the directory the project will be created in.'
     ),
   projectBase: z
-    .union([z.literal(EMPTY_PROJECT), z.literal(PROJECT_WITH_APP)])
+    .enum([EMPTY_PROJECT, PROJECT_WITH_APP])
     .describe(
       'Empty will create an empty project, and app will create a project with an app inside of it.'
     ),
   distribution: z
-    .optional(
-      z.union([
-        z.literal(APP_DISTRIBUTION_TYPES.MARKETPLACE),
-        z.literal(APP_DISTRIBUTION_TYPES.PRIVATE),
-      ])
-    )
+    .enum([APP_DISTRIBUTION_TYPES.MARKETPLACE, APP_DISTRIBUTION_TYPES.PRIVATE])
     .describe(
       'If not specified by the user, DO NOT choose for them.  This cannot be changed after a project is uploaded. Private is used if you do not wish to distribute your app on the HubSpot marketplace. '
-    ),
-  auth: z
-    .optional(
-      z.union([
-        z.literal(APP_AUTH_TYPES.STATIC),
-        z.literal(APP_AUTH_TYPES.OAUTH),
-      ])
     )
+    .optional(),
+  auth: z
+    .enum([APP_AUTH_TYPES.STATIC, APP_AUTH_TYPES.OAUTH])
     .describe(
       'If not specified by the user, DO NOT choose for them.  This cannot be changed after a project is uploaded. Static uses a static non changing authentication token, and is only available for private distribution. '
     )

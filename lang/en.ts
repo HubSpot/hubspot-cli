@@ -759,12 +759,6 @@ export const commands = {
           src: 'Path to the local directory your files are in, relative to your current working directory',
           dest: 'Path in HubSpot Design Tools. Can be a net new path',
         },
-        warnings: {
-          disableInitial: `Passing the "${chalk.bold('--disable-initial')}" option is no longer necessary. Running "${uiCommandReference('hs watch')}" no longer uploads the watched directory by default.`,
-          initialUpload: `To upload the directory run "${uiCommandReference('hs upload')}" beforehand or add the "${chalk.bold('--initial-upload')}" option when running "${uiCommandReference('hs watch')}".`,
-          notUploaded: (path: string) =>
-            `The "${uiCommandReference('hs watch')}" command no longer uploads the watched directory when started. The directory "${path}" was not uploaded.`,
-        },
       },
       fetch: {
         describe:
@@ -1560,8 +1554,6 @@ export const commands = {
       success: (derivedTargets: string[]) =>
         `You can now use the HubSpot CLI MCP Server in ${derivedTargets.join(', ')}.  ${chalk.bold('You may need to restart these tools to apply the changes')}.`,
       errors: {
-        needsMcpAccess: (accountId?: number) =>
-          `You must opt in to the developer MCP beta to use this feature on ${uiAccountDescription(accountId)}. Try again with a different account or ${uiLink('join the beta now', getProductUpdatesUrl('239890', accountId))}`,
         errorParsingJsonFIle: (filename: string, errorMessage: string) =>
           `Unable to update ${chalk.bold(filename)} due to invalid JSON: ${errorMessage}`,
       },
@@ -1611,6 +1603,9 @@ export const commands = {
         targets:
           '[--client] Which tools would you like to add the HubSpot CLI MCP server to?',
         targetsRequired: 'Must choose at least one app to configure.',
+        standaloneMode:
+          'Do you want to run in standalone mode? (This will use npx @hubspot/cli instead of the installed hs command)',
+        cliVersion: 'Specify a CLI version to pin (leave blank for latest):',
       },
     },
     start: {
@@ -4028,7 +4023,7 @@ export const lib = {
         'Cannot auto-update the HubSpot CLI because NPM is not installed globally',
       updateFailed: (latestVersion: string) =>
         `Failed to update HubSpot CLI to version ${chalk.bold(latestVersion)}`,
-      enableAutoUpdatesMessage: `The HubSpot CLI can automatically keep itself up to date.\n\nThis helps ensure compatibility with the HubSpot platform. You can change this later at any time.\n\nRun${uiCommandReference('hs config set --allow-auto-updates=true')}`,
+      enableAutoUpdatesMessage: `The HubSpot CLI can automatically keep itself up to date.\n\nThis helps ensure compatibility with the HubSpot platform. You can change this later at any time.\n\nRun ${uiCommandReference('hs config set --allow-auto-updates=true')}`,
     },
   },
   projectProfiles: {
@@ -5267,6 +5262,19 @@ export const lib = {
       copyingProjectFiles: 'Copying migrated project files',
       copyingProjectFilesComplete: 'Migrated project files copied',
       copyingProjectFilesFailed: 'Unable to copy migrated project files',
+    },
+  },
+  theme: {
+    cmsDevServerProcess: {
+      installStarted: (targetVersion: string) =>
+        `Installing cms-dev-server ${targetVersion}...`,
+      installSucceeded: 'cms-dev-server setup complete',
+      installFailed: 'Failed to install cms-dev-server',
+      serverStartError: (error: Error) =>
+        `Failed to start dev server: ${error}`,
+      serverExit: (code: number) => `Dev server exited with code ${code}`,
+      serverKill: (signal: NodeJS.Signals) =>
+        `Dev server killed with signal ${signal}`,
     },
   },
 };
