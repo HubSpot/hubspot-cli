@@ -13,7 +13,7 @@ vi.mock('../../../lib/app/migrate');
 vi.mock('../../../lib/projects/config');
 vi.mock('../../../lib/ui');
 
-const { v2025_2 } = PLATFORM_VERSIONS;
+const { v2025_2, v2026_03_beta, v2026_03 } = PLATFORM_VERSIONS;
 
 describe('commands/project/migrate', () => {
   const yargsMock = yargs as Argv;
@@ -59,8 +59,8 @@ describe('commands/project/migrate', () => {
 
       expect(optionsSpy).toHaveBeenCalledWith('platform-version', {
         type: 'string',
-        choices: [v2025_2],
-        default: v2025_2,
+        choices: [v2025_2, v2026_03_beta, v2026_03],
+        default: v2026_03,
       });
 
       expect(optionsSpy).toHaveBeenCalledWith('unstable', {

@@ -6,7 +6,6 @@ import {
   addTestingOptions,
 } from '../../../lib/commonOpts.js';
 import sandboxCreateCommand, { SandboxCreateArgs } from '../create.js';
-import { hasFeature } from '../../../lib/hasFeature.js';
 import * as sandboxPrompts from '../../../lib/prompts/sandboxesPrompt.js';
 import * as accountNamePrompt from '../../../lib/prompts/accountNamePrompt.js';
 import * as configUtils from '@hubspot/local-dev-lib/config';
@@ -14,12 +13,11 @@ import * as promptUtils from '../../../lib/prompts/promptUtils.js';
 import { trackCommandUsage } from '../../../lib/usageTracking.js';
 import { HUBSPOT_ACCOUNT_TYPES } from '@hubspot/local-dev-lib/constants/config';
 import * as buildAccount from '../../../lib/buildAccount.js';
-import { Sandbox, V2Sandbox } from '@hubspot/local-dev-lib/types/Sandbox';
+import { V2Sandbox } from '@hubspot/local-dev-lib/types/Sandbox';
 import { EXIT_CODES } from '../../../lib/enums/exitCodes.js';
 import { uiLogger } from '../../../lib/ui/logger.js';
 import * as sandboxesLib from '../../../lib/sandboxes.js';
-import * as sandboxSync from '../../../lib/sandboxSync.js';
-import { Mock, vi } from 'vitest';
+import { vi } from 'vitest';
 import { HubSpotConfigAccount } from '@hubspot/local-dev-lib/types/Accounts';
 import { ENVIRONMENTS } from '@hubspot/local-dev-lib/constants/environments';
 
@@ -38,17 +36,11 @@ const getConfigAccountByIdSpy = vi.spyOn(configUtils, 'getConfigAccountById');
 const promptUserSpy = vi.spyOn(promptUtils, 'promptUser');
 const sandboxTypePromptSpy = vi.spyOn(sandboxPrompts, 'sandboxTypePrompt');
 const processExitSpy = vi.spyOn(process, 'exit');
-const buildSandboxSpy = vi.spyOn(buildAccount, 'buildSandbox');
 const buildV2SandboxSpy = vi.spyOn(buildAccount, 'buildV2Sandbox');
 const getConfigAccountEnvironmentSpy = vi.spyOn(
   configUtils,
   'getConfigAccountEnvironment'
 );
-const getAvailableSyncTypesSpy = vi.spyOn(
-  sandboxesLib,
-  'getAvailableSyncTypes'
-);
-const syncSandboxSpy = vi.spyOn(sandboxSync, 'syncSandbox');
 const validateSandboxUsageLimitsSpy = vi.spyOn(
   sandboxesLib,
   'validateSandboxUsageLimits'
@@ -57,9 +49,6 @@ const hubspotAccountNamePromptSpy = vi.spyOn(
   accountNamePrompt,
   'hubspotAccountNamePrompt'
 );
-
-const mockedHasFeatureV2Sandboxes = hasFeature as Mock;
-const mockedHasFeatureV2Cli = hasFeature as Mock;
 
 describe('commands/sandbox/create', () => {
   const yargsMock = yargs as Argv;
@@ -138,23 +127,10 @@ describe('commands/sandbox/create', () => {
       });
 
       validateSandboxUsageLimitsSpy.mockResolvedValue(undefined);
-      mockedHasFeatureV2Sandboxes.mockResolvedValue(false);
-      mockedHasFeatureV2Cli.mockResolvedValue(false);
       getConfigAccountEnvironmentSpy.mockReturnValue(ENVIRONMENTS.PROD);
-
-      buildSandboxSpy.mockResolvedValue({
-        sandbox: mockSandbox as Sandbox,
-        personalAccessKey: 'mock-personal-access-key',
-        name: sandboxNameFromPrompt,
-      });
       buildV2SandboxSpy.mockResolvedValue({
         sandbox: { ...mockSandbox, version: 'V2' } as V2Sandbox,
       });
-      getAvailableSyncTypesSpy.mockResolvedValue([
-        { type: 'object-schemas' },
-        { type: 'workflows' },
-      ]);
-      syncSandboxSpy.mockResolvedValue(undefined);
 
       // Spy on process.exit so our tests don't close when it's called
       // @ts-expect-error Doesn't match the actual signature because then the linter complains about unused variables
@@ -221,49 +197,7 @@ describe('commands/sandbox/create', () => {
       expect(promptUserSpy).toHaveBeenCalledTimes(1);
     });
 
-    it('should build a v1 sandbox if the parent account is not ungated for sandboxes:v2:enabled and not ungated for sandboxes:v2:cliEnabled', async () => {
-      await sandboxCreateCommand.handler(args);
-      expect(buildSandboxSpy).toHaveBeenCalledTimes(1);
-      expect(buildSandboxSpy).toHaveBeenCalledWith(
-        sandboxNameFromPrompt,
-        {
-          accountId: 1234567890,
-          accountType: HUBSPOT_ACCOUNT_TYPES.STANDARD,
-          env: 'prod',
-        },
-        HUBSPOT_ACCOUNT_TYPES.DEVELOPMENT_SANDBOX,
-        'prod',
-        undefined // force
-      );
-      expect(getAvailableSyncTypesSpy).toHaveBeenCalledTimes(1);
-      expect(syncSandboxSpy).toHaveBeenCalledTimes(1);
-    });
-
-    it('should build a v1 sandbox if the parent account is ungated for sandboxes:v2:enabled but not ungated for sandboxes:v2:cliEnabled', async () => {
-      mockedHasFeatureV2Sandboxes.mockResolvedValue(true);
-      mockedHasFeatureV2Cli.mockResolvedValue(false);
-
-      await sandboxCreateCommand.handler(args);
-      expect(buildSandboxSpy).toHaveBeenCalledTimes(1);
-      expect(buildSandboxSpy).toHaveBeenCalledWith(
-        sandboxNameFromPrompt,
-        {
-          accountId: 1234567890,
-          accountType: HUBSPOT_ACCOUNT_TYPES.STANDARD,
-          env: 'prod',
-        },
-        HUBSPOT_ACCOUNT_TYPES.DEVELOPMENT_SANDBOX,
-        'prod',
-        undefined // force
-      );
-      expect(getAvailableSyncTypesSpy).toHaveBeenCalledTimes(1);
-      expect(syncSandboxSpy).toHaveBeenCalledTimes(1);
-    });
-
-    it('should build a v2 sandbox if the parent account is ungated for both sandboxes:v2:enabled and sandboxes:v2:cliEnabled', async () => {
-      mockedHasFeatureV2Sandboxes.mockResolvedValue(true);
-      mockedHasFeatureV2Cli.mockResolvedValue(true);
-
+    it('should build a v2 sandbox', async () => {
       await sandboxCreateCommand.handler(args);
       expect(buildV2SandboxSpy).toHaveBeenCalledTimes(1);
       expect(buildV2SandboxSpy).toHaveBeenCalledWith(

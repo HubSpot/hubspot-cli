@@ -24,6 +24,7 @@ import { CommonArgs, YargsCommandModule } from '../../types/Yargs.js';
 import { makeYargsBuilder } from '../../lib/yargsUtils.js';
 import { HubSpotConfigAccount } from '@hubspot/local-dev-lib/types/Accounts';
 import { authenticateNewAccount } from '../../lib/accountAuth.js';
+import { PromptExitError } from '../../lib/errors/PromptExitError.js';
 import { EXIT_CODES } from '../../lib/enums/exitCodes.js';
 
 const command = 'use [account]';
@@ -55,10 +56,18 @@ async function handler(
   }
 
   if (newDefaultAccount === AUTHENTICATE_NEW_ACCOUNT_VALUE) {
-    const updatedConfig = await authenticateNewAccount({
-      env: args.qa ? ENVIRONMENTS.QA : ENVIRONMENTS.PROD,
-      setAsDefaultAccount: true,
-    });
+    let updatedConfig;
+    try {
+      updatedConfig = await authenticateNewAccount({
+        env: args.qa ? ENVIRONMENTS.QA : ENVIRONMENTS.PROD,
+        setAsDefaultAccount: true,
+      });
+    } catch (e) {
+      if (e instanceof PromptExitError) {
+        process.exit(e.exitCode);
+      }
+      throw e;
+    }
 
     if (!updatedConfig) {
       process.exit(EXIT_CODES.ERROR);

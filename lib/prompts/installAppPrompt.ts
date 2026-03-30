@@ -1,8 +1,9 @@
 import open from 'open';
 import { promptUser } from './promptUtils.js';
-import { EXIT_CODES } from '../enums/exitCodes.js';
 import { lib } from '../../lang/en.js';
 import { uiLogger } from '../ui/logger.js';
+import { PromptExitError } from '../errors/PromptExitError.js';
+import { EXIT_CODES } from '../enums/exitCodes.js';
 
 export async function installAppBrowserPrompt(
   installUrl: string,
@@ -27,7 +28,10 @@ export async function installAppBrowserPrompt(
 
   if (!isReinstall && !shouldOpenBrowser) {
     uiLogger.log(lib.prompts.installAppPrompt.decline);
-    process.exit(EXIT_CODES.SUCCESS);
+    throw new PromptExitError(
+      lib.prompts.installAppPrompt.decline,
+      EXIT_CODES.SUCCESS
+    );
   } else if (!shouldOpenBrowser) {
     return;
   }

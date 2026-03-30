@@ -8,6 +8,7 @@ import * as modulesLib from '@hubspot/local-dev-lib/cms/modules';
 import * as ignoreRulesLib from '@hubspot/local-dev-lib/ignoreRules';
 import * as themesLib from '@hubspot/local-dev-lib/cms/themes';
 import * as configLib from '@hubspot/local-dev-lib/config';
+import * as handleFieldsJSLib from '@hubspot/local-dev-lib/cms/handleFieldsJS';
 import { uiLogger } from '../../../lib/ui/logger.js';
 import * as errorHandlers from '../../../lib/errorHandlers/index.js';
 import * as commonOpts from '../../../lib/commonOpts.js';
@@ -27,6 +28,7 @@ vi.mock('@hubspot/local-dev-lib/cms/modules');
 vi.mock('@hubspot/local-dev-lib/ignoreRules');
 vi.mock('@hubspot/local-dev-lib/cms/themes');
 vi.mock('@hubspot/local-dev-lib/config');
+vi.mock('@hubspot/local-dev-lib/cms/handleFieldsJS');
 vi.mock('../../../lib/errorHandlers/index.js');
 vi.mock('../../../lib/commonOpts.js');
 vi.mock('../../../lib/prompts/uploadPrompt.js');
@@ -64,6 +66,10 @@ const getConfigAccountIfExistsSpy = vi.spyOn(
   configLib,
   'getConfigAccountIfExists'
 );
+const isConvertableFieldJsSpy = vi.spyOn(
+  handleFieldsJSLib,
+  'isConvertableFieldJs'
+);
 
 describe('commands/cms/upload', () => {
   beforeEach(() => {
@@ -79,6 +85,7 @@ describe('commands/cms/upload', () => {
     getThemePreviewUrlSpy.mockReturnValue(undefined);
     // Mock config to prevent reading actual config file in CI
     getConfigAccountIfExistsSpy.mockReturnValue(undefined);
+    isConvertableFieldJsSpy.mockReturnValue(false);
   });
 
   describe('command', () => {

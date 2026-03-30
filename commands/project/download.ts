@@ -7,6 +7,7 @@ import {
   fetchProjectBuilds,
 } from '@hubspot/local-dev-lib/api/projects';
 import { logError, ApiErrorContext } from '../../lib/errorHandlers/index.js';
+import { PromptExitError } from '../../lib/errors/PromptExitError.js';
 import { getProjectConfig } from '../../lib/projects/config.js';
 import { downloadProjectPrompt } from '../../lib/prompts/downloadProjectPrompt.js';
 import { commands } from '../../lang/en.js';
@@ -43,12 +44,12 @@ async function handler(
   }
 
   const { dest, build, derivedAccountId } = args;
-  const { project: projectName } = await downloadProjectPrompt(args);
   let buildNumberToDownload = build;
 
   trackCommandUsage('project-download', undefined, derivedAccountId);
 
   try {
+    const { project: projectName } = await downloadProjectPrompt(args);
     if (!buildNumberToDownload) {
       const { data: projectBuildsResult } = await fetchProjectBuilds(
         derivedAccountId,
@@ -94,6 +95,9 @@ async function handler(
     );
     process.exit(EXIT_CODES.SUCCESS);
   } catch (e) {
+    if (e instanceof PromptExitError) {
+      process.exit(e.exitCode);
+    }
     logError(
       e,
       new ApiErrorContext({

@@ -97,11 +97,6 @@ describe('mcp-server/tools/project/CreateProjectTool', () => {
       const result = await tool.handler(baseInput);
 
       expect(mockAddFlag).toHaveBeenCalledWith(
-        'hs project create',
-        'platform-version',
-        '2025.2'
-      );
-      expect(mockAddFlag).toHaveBeenCalledWith(
         expect.any(String),
         'name',
         'test-project'

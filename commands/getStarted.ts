@@ -190,7 +190,7 @@ async function handler(
         HUBSPOT_PROJECT_COMPONENTS_GITHUB_PATH,
         projectDest,
         {
-          sourceDir: '2025.2/private-app-get-started-template',
+          sourceDir: '2026.03/private-app-get-started-template',
           hideLogs: true,
         }
       );

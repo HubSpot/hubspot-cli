@@ -17,6 +17,7 @@ import { EXIT_CODES } from '../../enums/exitCodes.js';
 import { isAppIRNode } from '../../projects/structure.js';
 import { uiLine } from '../../ui/index.js';
 import { logError } from '../../errorHandlers/index.js';
+import { PromptExitError } from '../../errors/PromptExitError.js';
 import {
   installAppAutoPrompt,
   installAppBrowserPrompt,
@@ -504,6 +505,9 @@ class AppDevModeInterface {
         uiLogger.log('');
       }
     } catch (e) {
+      if (e instanceof PromptExitError) {
+        throw e;
+      }
       if (SpinniesManager.pick('fetchAppData')) {
         SpinniesManager.fail('fetchAppData', {
           text: lib.AppDevModeInterface.fetchAppData.error,

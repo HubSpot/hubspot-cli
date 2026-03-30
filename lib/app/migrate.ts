@@ -6,6 +6,7 @@ import chalk from 'chalk';
 import { validateUid } from '@hubspot/project-parsing-lib/uid';
 import { UNMIGRATABLE_REASONS } from '@hubspot/local-dev-lib/constants/projects';
 import { mapToUserFacingType } from '@hubspot/project-parsing-lib/transform';
+import { AUTO_GENERATED_COMPONENT_TYPES } from '@hubspot/project-parsing-lib/constants';
 import { MIGRATION_STATUS } from '@hubspot/local-dev-lib/types/Migration';
 import {
   downloadProject,
@@ -242,6 +243,7 @@ export async function promptForAppToMigrate(
 
   return selectedAppId;
 }
+
 export async function selectAppToMigrate(
   allApps: MigrationApp[],
   derivedAccountId: number,
@@ -267,10 +269,19 @@ export async function selectAppToMigrate(
   const unmigratableComponents: Set<string> = new Set();
 
   selectedApp?.migrationComponents.forEach(component => {
-    if (component.isSupported) {
-      migratableComponents.add(mapToUserFacingType(component.componentType));
-    } else {
-      unmigratableComponents.add(mapToUserFacingType(component.componentType));
+    const userFacingComponentType = mapToUserFacingType(
+      component.componentType
+    );
+    const shouldDisplayComponent = !AUTO_GENERATED_COMPONENT_TYPES.includes(
+      userFacingComponentType
+    );
+
+    if (shouldDisplayComponent) {
+      if (component.isSupported) {
+        migratableComponents.add(userFacingComponentType);
+      } else {
+        unmigratableComponents.add(userFacingComponentType);
+      }
     }
   });
 
@@ -488,10 +499,14 @@ export async function pollMigrationStatus(
   migrationId: number,
   successStates: string[] = []
 ): Promise<MigrationStatus> {
-  return poll(() => checkMigrationStatusV2(derivedAccountId, migrationId), {
-    successStates: [...successStates],
-    errorStates: [...DEFAULT_POLLING_STATUS_LOOKUP.errorStates],
-  });
+  return poll(
+    () => checkMigrationStatusV2(derivedAccountId, migrationId),
+    {
+      successStates: [...successStates],
+      errorStates: [...DEFAULT_POLLING_STATUS_LOOKUP.errorStates],
+    },
+    300_000
+  );
 }
 
 export async function finalizeAppMigration(

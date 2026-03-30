@@ -201,11 +201,11 @@ export async function v2ComponentFlow(
     projectBase ||
     (await listPrompt(commands.project.create.prompts.parentComponents, {
       choices: [
+        { name: commands.project.create.prompts.app, value: PROJECT_WITH_APP },
         {
           name: commands.project.create.prompts.emptyProject,
           value: EMPTY_PROJECT,
         },
-        { name: commands.project.create.prompts.app, value: PROJECT_WITH_APP },
       ],
     }));
 

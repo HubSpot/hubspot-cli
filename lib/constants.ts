@@ -90,8 +90,6 @@ export const APP_AUTH_TYPES = {
 
 export const FEATURES = {
   UNIFIED_APPS: 'Developers:UnifiedApps:PrivateBeta',
-  SANDBOXES_V2: 'sandboxes:v2:enabled',
-  SANDBOXES_V2_CLI: 'sandboxes:v2:cliEnabled',
   APP_EVENTS: 'Developers:UnifiedApps:AppEventsAccess',
   APPS_HOME: 'UIE:AppHome',
   THEME_MIGRATION_2025_2: 'Developers:ProjectThemeMigrations:2025.2',

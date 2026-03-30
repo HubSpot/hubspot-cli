@@ -71,8 +71,8 @@ describe('commands/project/create', () => {
         expect.objectContaining({
           describe: 'The target platform version for the new project.',
           type: 'string',
-          choices: ['2025.1', '2025.2', '2026.03-beta'],
-          default: '2025.2',
+          choices: ['2025.1', '2025.2', '2026.03-beta', '2026.03'],
+          default: '2026.03',
         })
       );
     });

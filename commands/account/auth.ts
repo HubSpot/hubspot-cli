@@ -16,6 +16,7 @@ import { makeYargsBuilder } from '../../lib/yargsUtils.js';
 import { commands } from '../../lang/en.js';
 import { uiLogger } from '../../lib/ui/logger.js';
 import { authenticateNewAccount } from '../../lib/accountAuth.js';
+import { PromptExitError } from '../../lib/errors/PromptExitError.js';
 
 const TRACKING_STATUS = {
   STARTED: 'started',
@@ -61,11 +62,19 @@ async function handler(
 
   handleExit(deleteConfigFileIfEmpty);
 
-  const updatedConfig = await authenticateNewAccount({
-    env: args.qa ? ENVIRONMENTS.QA : ENVIRONMENTS.PROD,
-    providedPersonalAccessKey,
-    accountId: parsedUserProvidedAccountId,
-  });
+  let updatedConfig;
+  try {
+    updatedConfig = await authenticateNewAccount({
+      env: args.qa ? ENVIRONMENTS.QA : ENVIRONMENTS.PROD,
+      providedPersonalAccessKey,
+      accountId: parsedUserProvidedAccountId,
+    });
+  } catch (e) {
+    if (e instanceof PromptExitError) {
+      process.exit(e.exitCode);
+    }
+    throw e;
+  }
 
   if (!updatedConfig) {
     if (!disableTracking) {

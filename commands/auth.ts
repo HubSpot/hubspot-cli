@@ -36,6 +36,7 @@ import { authenticateWithOauth } from '../lib/oauth.js';
 import { EXIT_CODES } from '../lib/enums/exitCodes.js';
 import { uiFeatureHighlight } from '../lib/ui/index.js';
 import { logError } from '../lib/errorHandlers/index.js';
+import { PromptExitError } from '../lib/errors/PromptExitError.js';
 import {
   AccountArgs,
   CommonArgs,
@@ -155,14 +156,14 @@ async function handler(args: ArgumentsCamelCase<AuthArgs>): Promise<void> {
 
       break;
     case PERSONAL_ACCESS_KEY_AUTH_METHOD.value:
-      const { personalAccessKey } = providedPersonalAccessKey
-        ? { personalAccessKey: providedPersonalAccessKey }
-        : await personalAccessKeyPrompt({
-            env,
-            account: parsedUserProvidedAccountId,
-          });
-
       try {
+        const { personalAccessKey } = providedPersonalAccessKey
+          ? { personalAccessKey: providedPersonalAccessKey }
+          : await personalAccessKeyPrompt({
+              env,
+              account: parsedUserProvidedAccountId,
+            });
+
         token = await getAccessToken(personalAccessKey, env);
         defaultName = token.hubName ? toKebabCase(token.hubName) : undefined;
 
@@ -172,6 +173,9 @@ async function handler(args: ArgumentsCamelCase<AuthArgs>): Promise<void> {
           env
         );
       } catch (e) {
+        if (e instanceof PromptExitError) {
+          process.exit(e.exitCode);
+        }
         logError(e);
       }
 

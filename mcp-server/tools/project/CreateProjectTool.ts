@@ -17,6 +17,7 @@ import { formatTextContents, formatTextContent } from '../../utils/content.js';
 import { trackToolUsage } from '../../utils/toolUsageTracking.js';
 import { setupHubSpotConfig } from '../../utils/config.js';
 import { getErrorMessage } from '../../../lib/errorHandlers/index.js';
+import { PLATFORM_VERSIONS } from '@hubspot/local-dev-lib/constants/projects';
 
 const inputSchema = {
   absoluteCurrentWorkingDirectory,
@@ -72,7 +73,11 @@ export class CreateProjectTool extends Tool<CreateProjectInputSchema> {
   }: CreateProjectInputSchema): Promise<TextContentResponse> {
     setupHubSpotConfig(absoluteCurrentWorkingDirectory);
     await trackToolUsage(toolName);
-    let command = addFlag('hs project create', 'platform-version', '2025.2');
+    let command = addFlag(
+      'hs project create',
+      'platform-version',
+      PLATFORM_VERSIONS.v2026_03
+    );
 
     const content: TextContent[] = [];
 

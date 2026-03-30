@@ -38,6 +38,7 @@ import {
   uiLine,
 } from '../../ui/index.js';
 import { logError } from '../../errorHandlers/index.js';
+import { PromptExitError } from '../../errors/PromptExitError.js';
 import { installAppBrowserPrompt } from '../../prompts/installAppPrompt.js';
 import { confirmPrompt } from '../../prompts/promptUtils.js';
 import { handleKeypress } from '../../process.js';
@@ -136,6 +137,9 @@ class LocalDevManager_DEPRECATED {
         await this.checkActivePublicAppInstalls();
         await this.checkPublicAppInstallation();
       } catch (e) {
+        if (e instanceof PromptExitError) {
+          throw e;
+        }
         logError(e);
       }
     }

@@ -16,6 +16,7 @@ import { uiLogger } from '../ui/logger.js';
 import { uiAccountDescription } from '../ui/index.js';
 import { isSandbox } from '../accountTypes.js';
 import { PromptChoices } from '../../types/Prompts.js';
+import { PromptExitError } from '../errors/PromptExitError.js';
 import { EXIT_CODES } from '../enums/exitCodes.js';
 
 function mapNestedAccount(accountConfig: HubSpotConfigAccount): {
@@ -57,19 +58,21 @@ export async function selectSandboxTargetAccountPrompt(
   defaultAccountConfig: HubSpotConfigAccount
 ): Promise<ProjectDevTargetAccountPromptResponse> {
   const defaultAccountId = defaultAccountConfig.accountId;
+  if (!defaultAccountId) {
+    uiLogger.error(lib.prompts.projectDevTargetAccountPrompt.noAccountId);
+    throw new PromptExitError(
+      lib.prompts.projectDevTargetAccountPrompt.noAccountId,
+      EXIT_CODES.ERROR
+    );
+  }
   let choices = [];
   let sandboxUsage: Usage = {
     STANDARD: { used: 0, available: 0, limit: 0 },
     DEVELOPER: { used: 0, available: 0, limit: 0 },
   };
   try {
-    if (defaultAccountId) {
-      const { data } = await getSandboxUsageLimits(defaultAccountId);
-      sandboxUsage = data.usage;
-    } else {
-      uiLogger.error(lib.prompts.projectDevTargetAccountPrompt.noAccountId);
-      process.exit(EXIT_CODES.ERROR);
-    }
+    const { data } = await getSandboxUsageLimits(defaultAccountId);
+    sandboxUsage = data.usage;
   } catch (err) {
     uiLogger.debug('Unable to fetch sandbox usage limits: ', err);
   }
@@ -131,15 +134,17 @@ export async function selectDeveloperTestTargetAccountPrompt(
   defaultAccountConfig: HubSpotConfigAccount
 ): Promise<ProjectDevTargetAccountPromptResponse> {
   const defaultAccountId = defaultAccountConfig.accountId;
+  if (!defaultAccountId) {
+    uiLogger.error(lib.prompts.projectDevTargetAccountPrompt.noAccountId);
+    throw new PromptExitError(
+      lib.prompts.projectDevTargetAccountPrompt.noAccountId,
+      EXIT_CODES.ERROR
+    );
+  }
   let devTestAccountsResponse: FetchDeveloperTestAccountsResponse | undefined;
   try {
-    if (defaultAccountId) {
-      const { data } = await fetchDeveloperTestAccounts(defaultAccountId);
-      devTestAccountsResponse = data;
-    } else {
-      uiLogger.error(lib.prompts.projectDevTargetAccountPrompt.noAccountId);
-      process.exit(EXIT_CODES.ERROR);
-    }
+    const { data } = await fetchDeveloperTestAccounts(defaultAccountId);
+    devTestAccountsResponse = data;
   } catch (err) {
     uiLogger.debug(
       'Unable to fetch developer test account usage limits: ',

@@ -15,16 +15,13 @@ import { EXIT_CODES } from '../../lib/enums/exitCodes.js';
 import { uiFeatureHighlight, uiBetaTag } from '../../lib/ui/index.js';
 import {
   SANDBOX_TYPE_MAP,
-  getAvailableSyncTypes,
-  SYNC_TYPES,
   validateSandboxUsageLimits,
 } from '../../lib/sandboxes.js';
 import { trackCommandUsage } from '../../lib/usageTracking.js';
 import { sandboxTypePrompt } from '../../lib/prompts/sandboxesPrompt.js';
 import { promptUser } from '../../lib/prompts/promptUtils.js';
-import { syncSandbox } from '../../lib/sandboxSync.js';
 import { logError } from '../../lib/errorHandlers/index.js';
-import { buildSandbox, buildV2Sandbox } from '../../lib/buildAccount.js';
+import { buildV2Sandbox } from '../../lib/buildAccount.js';
 import { hubspotAccountNamePrompt } from '../../lib/prompts/accountNamePrompt.js';
 import {
   CommonArgs,
@@ -35,8 +32,6 @@ import {
   YargsCommandModule,
 } from '../../types/Yargs.js';
 import { makeYargsBuilder } from '../../lib/yargsUtils.js';
-import { hasFeature } from '../../lib/hasFeature.js';
-import { FEATURES } from '../../lib/constants.js';
 
 const command = 'create';
 const describe = uiBetaTag(commands.sandbox.subcommands.create.describe, false);
@@ -78,7 +73,9 @@ async function handler(
     uiLogger.error(
       commands.sandbox.subcommands.create.failure.invalidAccountType(
         HUBSPOT_ACCOUNT_TYPE_STRINGS[
-          HUBSPOT_ACCOUNT_TYPES[accountConfig.accountType]
+          HUBSPOT_ACCOUNT_TYPES[
+            accountConfig.accountType as keyof typeof HUBSPOT_ACCOUNT_TYPES
+          ]
         ],
         accountConfig.name || ''
       )
@@ -169,37 +166,16 @@ async function handler(
       contactRecordsSyncPromptResult = contactRecordsSyncPrompt;
     }
   }
-  // Check if parent portal is ungated for v2 sandboxes
-  const isUngatedForV2Cli = await hasFeature(
-    derivedAccountId,
-    FEATURES.SANDBOXES_V2_CLI
-  );
-  const isUngatedForV2Sandboxes = await hasFeature(
-    derivedAccountId,
-    FEATURES.SANDBOXES_V2
-  );
-  const canCreateV2Sandbox = isUngatedForV2Sandboxes && isUngatedForV2Cli;
 
   try {
-    let result;
-    if (canCreateV2Sandbox) {
-      result = await buildV2Sandbox(
-        sandboxName,
-        accountConfig,
-        sandboxType,
-        contactRecordsSyncPromptResult,
-        env,
-        force
-      );
-    } else {
-      result = await buildSandbox(
-        sandboxName,
-        accountConfig,
-        sandboxType,
-        env,
-        force
-      );
-    }
+    const result = await buildV2Sandbox(
+      sandboxName,
+      accountConfig,
+      sandboxType,
+      contactRecordsSyncPromptResult,
+      env,
+      force
+    );
 
     const sandboxAccountConfig = getConfigAccountById(
       result.sandbox.sandboxHubId
@@ -212,31 +188,6 @@ async function handler(
         )
       );
       process.exit(EXIT_CODES.ERROR);
-    }
-
-    if (result && !canCreateV2Sandbox) {
-      // For v1 sandboxes, keep sync here. Once we migrate to v2, this will be handled by BE automatically
-      try {
-        let availableSyncTasks = await getAvailableSyncTypes(
-          accountConfig,
-          sandboxAccountConfig
-        );
-
-        if (!contactRecordsSyncPromptResult) {
-          availableSyncTasks = availableSyncTasks.filter(
-            t => t.type !== SYNC_TYPES.OBJECT_RECORDS
-          );
-        }
-        await syncSandbox(
-          sandboxAccountConfig!,
-          accountConfig!,
-          env,
-          availableSyncTasks
-        );
-      } catch (err) {
-        logError(err);
-        throw err;
-      }
     }
 
     const highlightItems = ['accountsUseCommand', 'projectCreateCommand'];

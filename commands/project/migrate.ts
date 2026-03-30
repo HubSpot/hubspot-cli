@@ -19,7 +19,7 @@ import { renderInline } from '../../ui/render.js';
 import { getWarningBox } from '../../ui/components/StatusMessageBoxes.js';
 import {
   getHasMigratableThemes,
-  migrateThemes2025_2,
+  migrateThemesV2,
 } from '../../lib/theme/migrate.js';
 import { hasFeature } from '../../lib/hasFeature.js';
 import { FEATURES } from '../../lib/constants.js';
@@ -36,7 +36,7 @@ export type ProjectMigrateArgs = CommonArgs &
     unstable: boolean;
   };
 
-const { v2025_2 } = PLATFORM_VERSIONS;
+const { v2025_2, v2026_03_beta, v2026_03 } = PLATFORM_VERSIONS;
 
 const command = 'migrate';
 const describe = commands.project.migrate.describe;
@@ -61,8 +61,8 @@ async function handler(
   if (projectConfig?.projectConfig) {
     await renderInline(
       getWarningBox({
-        title: lib.migrate.projectMigrationWarningTitle,
-        message: lib.migrate.projectMigrationWarning,
+        title: lib.migrate.projectMigrationWarningTitle(platformVersion),
+        message: lib.migrate.projectMigrationWarning(platformVersion),
       })
     );
   }
@@ -85,7 +85,7 @@ async function handler(
         );
         return process.exit(EXIT_CODES.ERROR);
       }
-      await migrateThemes2025_2(
+      await migrateThemesV2(
         derivedAccountId,
         {
           ...args,
@@ -130,8 +130,8 @@ function projectMigrateBuilder(yargs: Argv): Argv<ProjectMigrateArgs> {
   yargs
     .option('platform-version', {
       type: 'string',
-      choices: [v2025_2],
-      default: v2025_2,
+      choices: [v2025_2, v2026_03_beta, v2026_03],
+      default: v2026_03,
     })
     .option('unstable', {
       type: 'boolean',

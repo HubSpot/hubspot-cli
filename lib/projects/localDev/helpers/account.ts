@@ -1,9 +1,6 @@
 import { HubSpotConfigAccount } from '@hubspot/local-dev-lib/types/Accounts';
 import { HUBSPOT_ACCOUNT_TYPE_STRINGS } from '@hubspot/local-dev-lib/constants/config';
-import {
-  getConfigAccountById,
-  getConfigAccountIfExists,
-} from '@hubspot/local-dev-lib/config';
+import { getConfigAccountIfExists } from '@hubspot/local-dev-lib/config';
 import { HUBSPOT_ACCOUNT_TYPES } from '@hubspot/local-dev-lib/constants/config';
 import { getHubSpotWebsiteOrigin } from '@hubspot/local-dev-lib/urls';
 import { Environment } from '@hubspot/local-dev-lib/types/Accounts';
@@ -26,15 +23,13 @@ import { selectSandboxTargetAccountPrompt } from '../../../prompts/projectDevTar
 import { ProjectDevTargetAccountPromptResponse } from '../../../prompts/projectDevTargetAccountPrompt.js';
 import { validateSandboxUsageLimits } from '../../../sandboxes.js';
 import { logError } from '../../../errorHandlers/index.js';
-import { syncSandbox } from '../../../sandboxSync.js';
-import { getAvailableSyncTypes } from '../../../sandboxes.js';
 import { hubspotAccountNamePrompt } from '../../../prompts/accountNamePrompt.js';
 import { trackCommandMetadataUsage } from '../../../usageTracking.js';
 import { validateDevTestAccountUsageLimits } from '../../../developerTestAccounts.js';
 import {
-  buildSandbox,
   buildDeveloperTestAccount,
   saveAccountToConfig,
+  buildV2Sandbox,
 } from '../../../buildAccount.js';
 import { debugError } from '../../../errorHandlers/index.js';
 import { listPrompt } from '../../../prompts/promptUtils.js';
@@ -200,32 +195,15 @@ export async function createSandboxForLocalDev(
       accountId
     );
 
-    const result = await buildSandbox(
+    const result = await buildV2Sandbox(
       name,
       accountConfig,
       HUBSPOT_ACCOUNT_TYPES.DEVELOPMENT_SANDBOX,
+      false, // syncObjectRecords
       env
     );
 
-    const targetAccountId = result.sandbox.sandboxHubId;
-
-    const sandboxAccountConfig = getConfigAccountById(
-      result.sandbox.sandboxHubId
-    );
-
-    const syncTasks = await getAvailableSyncTypes(
-      accountConfig,
-      sandboxAccountConfig
-    );
-    // For v1 sandboxes, keep sync here. Once we migrate to v2, this will be handled by BE automatically
-    await syncSandbox(
-      sandboxAccountConfig,
-      accountConfig,
-      env,
-      syncTasks,
-      true
-    );
-    return targetAccountId;
+    return result.sandbox.sandboxHubId;
   } catch (err) {
     logError(err);
     process.exit(EXIT_CODES.ERROR);

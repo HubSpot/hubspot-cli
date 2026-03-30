@@ -26,6 +26,7 @@ import { fileExists } from '../../lib/validation.js';
 import { commands } from '../../lang/en.js';
 import { createDeveloperTestAccountConfigPrompt } from '../../lib/prompts/createDeveloperTestAccountConfigPrompt.js';
 import { debugError, logError } from '../../lib/errorHandlers/index.js';
+import { PromptExitError } from '../../lib/errors/PromptExitError.js';
 import SpinniesManager from '../../lib/ui/SpinniesManager.js';
 import {
   createDeveloperTestAccountV2,
@@ -245,6 +246,9 @@ async function handler(
         );
       }
     } catch (e) {
+      if (e instanceof PromptExitError) {
+        process.exit(e.exitCode);
+      }
       debugError(e);
       uiLogger.error(
         commands.testAccount.create.errors.saveAccountToConfigFailure(

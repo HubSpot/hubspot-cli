@@ -1877,8 +1877,6 @@ export const commands = {
         },
       },
       header: `This command will migrate an app to the projects framework. It will walk you through the fields required to complete the migration and download the project source code into a directory of your choosing.\n${uiLink('Learn more about migrating apps to the projects framework', 'https://developers.hubspot.com/docs/platform/migrate-a-public-app-to-projects')}`,
-      deprecationWarning: (platformVersion: string) =>
-        `The ${uiCommandReference('hs project migrate-app')} command is deprecated and will be removed. Use ${uiCommandReference(`hs app migrate --platform-version=${platformVersion}`)} going forward.`,
       migrationStatus: {
         inProgress: () =>
           `Converting app configuration to ${chalk.bold(LEGACY_PUBLIC_APP_FILE)} component definition ...`,
@@ -4597,6 +4595,7 @@ export const lib = {
           'You did not enter a valid access key. Please try again.',
         invalidPersonalAccessKeyCopy:
           'Please copy the actual access key rather than the bullets that mask it.',
+        authCancelled: 'Authentication cancelled.',
       },
     },
     createTemplatePrompt: {
@@ -5173,17 +5172,18 @@ export const lib = {
   },
   migrate: {
     componentsToBeMigrated: (components: string) =>
-      `The following features will be migrated: ${components}`,
+      `${chalk.bold('The following features will be migrated:')} ${components}`,
     componentsThatWillNotBeMigrated: (components: string) =>
       `[NOTE] These features are not yet supported for migration but will be available later: ${components}`,
     sourceContentsMoved: (newLocation: string) =>
       `The contents of your old source directory have been moved to ${newLocation}, move any required files to the new source directory.`,
-    projectMigrationWarningTitle:
-      'Important: Migrating to platformVersion 2025.2 is irreversible',
-    projectMigrationWarning: uiBetaTag(
-      `Running the ${uiCommandReference('hs project migrate')} command will permanently upgrade your project to platformVersion 2025.2. This action cannot be undone. To ensure you have access to your original files, they will be copied to a new directory (archive) for safekeeping.\n\nThis command will guide you through the process, prompting you to enter the required fields and will download the new project source code into your project source directory.`,
-      false
-    ),
+    projectMigrationWarningTitle: (platformVersion: string) =>
+      `Important: Migrating to platformVersion ${platformVersion} is irreversible`,
+    projectMigrationWarning: (platformVersion: string) =>
+      uiBetaTag(
+        `Running the ${uiCommandReference('hs project migrate')} command will permanently upgrade your project to platformVersion ${platformVersion}. This action cannot be undone. To ensure you have access to your original files, they will be copied to a new directory (archive) for safekeeping.\n\nThis command will guide you through the process, prompting you to enter the required fields and will download the new project source code into your project source directory.`,
+        false
+      ),
     exitWithoutMigrating: 'Exiting without migrating',
     success: {
       downloadedProject: (projectName: string, projectDest: string) =>

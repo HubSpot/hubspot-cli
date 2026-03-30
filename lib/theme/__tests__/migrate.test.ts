@@ -11,13 +11,12 @@ import {
   writeProjectConfig,
 } from '../../projects/config.js';
 import { ensureProjectExists } from '../../projects/ensureProjectExists.js';
-import { isV2Project } from '../../projects/platformVersion.js';
 import { fetchMigrationApps } from '../../app/migrate.js';
 import {
   getHasMigratableThemes,
   validateMigrationAppsAndThemes,
   handleThemesMigration,
-  migrateThemes2025_2,
+  migrateThemesV2,
   MigrateThemesArgs,
 } from '../migrate.js';
 import { lib } from '../../../lang/en.js';
@@ -27,7 +26,6 @@ vi.mock('@hubspot/project-parsing-lib/themes');
 vi.mock('../../prompts/promptUtils');
 vi.mock('../../projects/config');
 vi.mock('../../projects/ensureProjectExists');
-vi.mock('../../projects/platformVersion');
 vi.mock('../../app/migrate');
 vi.mock('@hubspot/local-dev-lib/config');
 vi.mock('../../ui/SpinniesManager', () => ({
@@ -55,7 +53,6 @@ const mockedWriteProjectConfig = writeProjectConfig as MockedFunction<
 const mockedEnsureProjectExists = ensureProjectExists as MockedFunction<
   typeof ensureProjectExists
 >;
-const mockedUseV2Api = isV2Project as MockedFunction<typeof isV2Project>;
 const mockedFetchMigrationApps = fetchMigrationApps as MockedFunction<
   typeof fetchMigrationApps
 >;
@@ -76,8 +73,6 @@ const createLoadedProjectConfig = (name: string): LoadedProjectConfig =>
 
 describe('lib/theme/migrate', () => {
   beforeEach(() => {
-    mockedUseV2Api.mockReturnValue(false);
-
     // Mock account config for the test account ID
     mockedGetConfigAccountById.mockReturnValue({
       accountId: ACCOUNT_ID,
@@ -187,15 +182,6 @@ describe('lib/theme/migrate', () => {
   });
 
   describe('validateMigrationAppsAndThemes', () => {
-    it('should throw an error when themes are already migrated (v2 API)', async () => {
-      mockedUseV2Api.mockReturnValue(true);
-      const projectConfig = createLoadedProjectConfig(PROJECT_NAME);
-
-      await expect(
-        validateMigrationAppsAndThemes(0, projectConfig)
-      ).rejects.toThrow(lib.migrate.errors.project.themesAlreadyMigrated);
-    });
-
     it('should throw an error when apps and themes are both present', async () => {
       const projectConfig = createLoadedProjectConfig(PROJECT_NAME);
 
@@ -289,7 +275,7 @@ describe('lib/theme/migrate', () => {
     });
   });
 
-  describe('migrateThemes2025_2', () => {
+  describe('migrateThemesV2', () => {
     const options = {
       platformVersion: PLATFORM_VERSION,
     } as ArgumentsCamelCase<MigrateThemesArgs>;
@@ -319,12 +305,7 @@ describe('lib/theme/migrate', () => {
       } as unknown as LoadedProjectConfig;
 
       await expect(
-        migrateThemes2025_2(
-          ACCOUNT_ID,
-          options,
-          themeCount,
-          invalidProjectConfig
-        )
+        migrateThemesV2(ACCOUNT_ID, options, themeCount, invalidProjectConfig)
       ).rejects.toThrow(lib.migrate.errors.project.invalidConfig);
     });
 
@@ -332,12 +313,12 @@ describe('lib/theme/migrate', () => {
       mockedEnsureProjectExists.mockResolvedValue({ projectExists: false });
 
       await expect(
-        migrateThemes2025_2(ACCOUNT_ID, options, themeCount, projectConfig)
+        migrateThemesV2(ACCOUNT_ID, options, themeCount, projectConfig)
       ).rejects.toThrow(lib.migrate.errors.project.doesNotExist(ACCOUNT_ID));
     });
 
     it('should proceed with migration when user confirms', async () => {
-      await migrateThemes2025_2(ACCOUNT_ID, options, themeCount, projectConfig);
+      await migrateThemesV2(ACCOUNT_ID, options, themeCount, projectConfig);
 
       expect(mockedFetchMigrationApps).toHaveBeenCalledWith(
         ACCOUNT_ID,
@@ -359,13 +340,13 @@ describe('lib/theme/migrate', () => {
     it('should exit without migrating when user cancels', async () => {
       mockedConfirmPrompt.mockResolvedValue(false);
 
-      await migrateThemes2025_2(ACCOUNT_ID, options, themeCount, projectConfig);
+      await migrateThemesV2(ACCOUNT_ID, options, themeCount, projectConfig);
 
       expect(mockedMigrateThemes).not.toHaveBeenCalled();
     });
 
     it('should validate migration apps and themes', async () => {
-      await migrateThemes2025_2(ACCOUNT_ID, options, themeCount, projectConfig);
+      await migrateThemesV2(ACCOUNT_ID, options, themeCount, projectConfig);
 
       // The validation is called internally, so we verify it through the error handling
       expect(mockedFetchMigrationApps).toHaveBeenCalled();
