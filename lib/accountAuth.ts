@@ -15,6 +15,7 @@ import { Environment } from '@hubspot/local-dev-lib/types/Accounts';
 import { HubSpotConfigAccount } from '@hubspot/local-dev-lib/types/Accounts';
 import { handleMerge, handleMigration } from './configMigrate.js';
 import { debugError, logError } from './errorHandlers/index.js';
+import { PromptExitError } from './errors/PromptExitError.js';
 import { personalAccessKeyPrompt } from './prompts/personalAccessKeyPrompt.js';
 import { cliAccountNamePrompt } from './prompts/accountNamePrompt.js';
 import { setAsDefaultAccountPrompt } from './prompts/setAsDefaultAccountPrompt.js';
@@ -65,6 +66,9 @@ async function updateConfigWithNewAccount(
 
     return updatedConfig;
   } catch (e) {
+    if (e instanceof PromptExitError) {
+      throw e;
+    }
     debugError(e);
     return null;
   }

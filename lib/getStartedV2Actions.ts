@@ -104,7 +104,7 @@ export async function createProjectAction({
       HUBSPOT_PROJECT_COMPONENTS_GITHUB_PATH,
       projectDestAbsolute,
       {
-        sourceDir: '2025.2/private-app-get-started-template',
+        sourceDir: '2026.03/private-app-get-started-template',
         hideLogs: true,
       }
     );

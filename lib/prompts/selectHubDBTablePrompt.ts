@@ -4,11 +4,12 @@ import { lib } from '../../lang/en.js';
 import { debugError } from '../errorHandlers/index.js';
 import { uiLogger } from '../ui/logger.js';
 import { fetchTables } from '@hubspot/local-dev-lib/api/hubdb';
-import { EXIT_CODES } from '../enums/exitCodes.js';
 import { Table } from '@hubspot/local-dev-lib/types/Hubdb';
 import { isValidPath, untildify } from '@hubspot/local-dev-lib/path';
+import { PromptExitError } from '../errors/PromptExitError.js';
+import { EXIT_CODES } from '../enums/exitCodes.js';
 
-async function fetchHubDBOptions(accountId: number) {
+async function fetchHubDBOptions(accountId: number): Promise<Table[]> {
   try {
     const {
       data: { results: tables },
@@ -17,17 +18,30 @@ async function fetchHubDBOptions(accountId: number) {
       uiLogger.log(
         lib.prompts.selectHubDBTablePrompt.errors.noTables(accountId.toString())
       );
-      process.exit(EXIT_CODES.SUCCESS);
+      throw new PromptExitError(
+        lib.prompts.selectHubDBTablePrompt.errors.noTables(
+          accountId.toString()
+        ),
+        EXIT_CODES.SUCCESS
+      );
     }
     return tables;
   } catch (error) {
+    if (error instanceof PromptExitError) {
+      throw error;
+    }
     debugError(error, { accountId });
     uiLogger.error(
       lib.prompts.selectHubDBTablePrompt.errors.errorFetchingTables(
         accountId.toString()
       )
     );
-    process.exit(EXIT_CODES.ERROR);
+    throw new PromptExitError(
+      lib.prompts.selectHubDBTablePrompt.errors.errorFetchingTables(
+        accountId.toString()
+      ),
+      EXIT_CODES.ERROR
+    );
   }
 }
 
@@ -43,7 +57,7 @@ export async function selectHubDBTablePrompt({
   };
   skipDestPrompt?: boolean;
 }) {
-  const hubdbTables: Table[] = (await fetchHubDBOptions(accountId)) || [];
+  const hubdbTables: Table[] = await fetchHubDBOptions(accountId);
   const id = options.tableId?.toString();
   const isValidTable =
     options.tableId && hubdbTables.find(table => table.id === id);

@@ -2,10 +2,11 @@ import { promptUser } from './promptUtils.js';
 import { getConfigAccountIfExists } from '@hubspot/local-dev-lib/config';
 import { fetchProjects } from '@hubspot/local-dev-lib/api/projects';
 import { logError, ApiErrorContext } from '../errorHandlers/index.js';
-import { uiLogger } from '../ui/logger.js';
-import { EXIT_CODES } from '../enums/exitCodes.js';
 import { lib } from '../../lang/en.js';
 import { Project } from '@hubspot/local-dev-lib/types/Project';
+import { PromptExitError } from '../errors/PromptExitError.js';
+import { EXIT_CODES } from '../enums/exitCodes.js';
+import { uiLogger } from '../ui/logger.js';
 
 type DownloadProjectPromptResponse = {
   project: string;
@@ -14,16 +15,19 @@ type DownloadProjectPromptResponse = {
 async function createProjectsList(
   accountId: number | null
 ): Promise<Project[]> {
-  try {
-    if (accountId) {
-      const { data: projects } = await fetchProjects(accountId);
-      return projects.results;
-    }
+  if (!accountId) {
     uiLogger.error(lib.prompts.downloadProjectPrompt.errors.accountIdRequired);
-    process.exit(EXIT_CODES.ERROR);
+    throw new PromptExitError(
+      lib.prompts.downloadProjectPrompt.errors.accountIdRequired,
+      EXIT_CODES.ERROR
+    );
+  }
+  try {
+    const { data: projects } = await fetchProjects(accountId);
+    return projects.results;
   } catch (e) {
-    logError(e, accountId ? new ApiErrorContext({ accountId }) : undefined);
-    process.exit(EXIT_CODES.ERROR);
+    logError(e, new ApiErrorContext({ accountId }));
+    throw new PromptExitError('Failed to fetch projects', EXIT_CODES.ERROR);
   }
 }
 

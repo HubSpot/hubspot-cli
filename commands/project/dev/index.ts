@@ -20,6 +20,7 @@ import { loadProfile } from '../../../lib/projects/projectProfiles.js';
 import { commands } from '../../../lang/en.js';
 import { uiLogger } from '../../../lib/ui/logger.js';
 import { logError } from '../../../lib/errorHandlers/index.js';
+import { PromptExitError } from '../../../lib/errors/PromptExitError.js';
 import path from 'path';
 import { listPrompt } from '../../../lib/prompts/promptUtils.js';
 
@@ -159,26 +160,34 @@ async function handler(
 
   trackCommandUsage('project-dev', {}, targetProjectAccountId);
 
-  if (isV2Project(projectConfig.platformVersion)) {
-    const targetTestingAccountId = testingAccount
-      ? getConfigAccountIfExists(testingAccount)?.accountId
-      : undefined;
+  try {
+    if (isV2Project(projectConfig.platformVersion)) {
+      const targetTestingAccountId = testingAccount
+        ? getConfigAccountIfExists(testingAccount)?.accountId
+        : undefined;
 
-    await unifiedProjectDevFlow({
-      args,
-      targetProjectAccountId,
-      providedTargetTestingAccountId: targetTestingAccountId,
-      projectConfig,
-      projectDir,
-      profileConfig: profile,
-    });
-  } else {
-    await deprecatedProjectDevFlow({
-      args,
-      accountId: targetProjectAccountId,
-      projectConfig,
-      projectDir,
-    });
+      await unifiedProjectDevFlow({
+        args,
+        targetProjectAccountId,
+        providedTargetTestingAccountId: targetTestingAccountId,
+        projectConfig,
+        projectDir,
+        profileConfig: profile,
+      });
+    } else {
+      await deprecatedProjectDevFlow({
+        args,
+        accountId: targetProjectAccountId,
+        projectConfig,
+        projectDir,
+      });
+    }
+  } catch (e) {
+    if (e instanceof PromptExitError) {
+      process.exit(e.exitCode);
+    }
+    logError(e);
+    process.exit(EXIT_CODES.ERROR);
   }
 }
 

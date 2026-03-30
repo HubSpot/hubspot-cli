@@ -12,9 +12,10 @@ import {
   getCliAccountNamePromptConfig,
 } from './accountNamePrompt.js';
 import { uiInfoSection } from '../ui/index.js';
-import { EXIT_CODES } from '../enums/exitCodes.js';
 import { PromptConfig } from '../../types/Prompts.js';
 import { lib } from '../../lang/en.js';
+import { PromptExitError } from '../errors/PromptExitError.js';
+import { EXIT_CODES } from '../enums/exitCodes.js';
 
 export type PersonalAccessKeyPromptResponse = {
   personalAccessKey: string;
@@ -79,7 +80,10 @@ export async function personalAccessKeyPrompt({
 
     if (!choice) {
       deleteConfigFileIfEmpty();
-      process.exit(EXIT_CODES.SUCCESS);
+      throw new PromptExitError(
+        lib.prompts.personalAccessKeyPrompt.errors.authCancelled,
+        EXIT_CODES.SUCCESS
+      );
     }
 
     if (

@@ -1,6 +1,7 @@
 import { Argv, ArgumentsCamelCase } from 'yargs';
 import { uiLogger } from '../../lib/ui/logger.js';
 import { logError } from '../../lib/errorHandlers/index.js';
+import { PromptExitError } from '../../lib/errors/PromptExitError.js';
 import { downloadHubDbTable } from '@hubspot/local-dev-lib/hubdb';
 import { selectHubDBTablePrompt } from '../../lib/prompts/selectHubDBTablePrompt.js';
 import { trackCommandUsage } from '../../lib/usageTracking.js';
@@ -48,6 +49,9 @@ async function handler(
       commands.hubdb.subcommands.fetch.success.fetch(tableId, filePath)
     );
   } catch (e) {
+    if (e instanceof PromptExitError) {
+      process.exit(e.exitCode);
+    }
     logError(e);
   }
 }

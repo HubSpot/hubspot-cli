@@ -4,8 +4,9 @@ import { uiLine } from '../ui/index.js';
 import { logError } from '../errorHandlers/index.js';
 import { uiLogger } from '../ui/logger.js';
 import { fetchPublicAppsForPortal } from '@hubspot/local-dev-lib/api/appsDev';
-import { EXIT_CODES } from '../enums/exitCodes.js';
 import { PublicApp } from '@hubspot/local-dev-lib/types/Apps';
+import { PromptExitError } from '../errors/PromptExitError.js';
+import { EXIT_CODES } from '../enums/exitCodes.js';
 
 type PublicAppPromptResponse = {
   appId: number;
@@ -16,14 +17,17 @@ async function fetchPublicAppOptions(
   accountName: string,
   isMigratingApp = false
 ): Promise<PublicApp[]> {
-  try {
-    if (!accountId) {
-      uiLogger.error(
-        lib.prompts.selectPublicAppForMigrationPrompt.errors.noAccountId
-      );
-      process.exit(EXIT_CODES.ERROR);
-    }
+  if (!accountId) {
+    uiLogger.error(
+      lib.prompts.selectPublicAppForMigrationPrompt.errors.noAccountId
+    );
+    throw new PromptExitError(
+      lib.prompts.selectPublicAppForMigrationPrompt.errors.noAccountId,
+      EXIT_CODES.ERROR
+    );
+  }
 
+  try {
     const {
       data: { results: publicApps },
     } = await fetchPublicAppsForPortal(accountId);
@@ -50,15 +54,26 @@ async function fetchPublicAppOptions(
         );
       }
       uiLine();
-      process.exit(EXIT_CODES.SUCCESS);
+      throw new PromptExitError(
+        isMigratingApp
+          ? lib.prompts.selectPublicAppForMigrationPrompt.errors.noAppsMigration
+          : lib.prompts.selectPublicAppForMigrationPrompt.errors.noAppsClone,
+        EXIT_CODES.SUCCESS
+      );
     }
     return filteredPublicApps;
   } catch (error) {
+    if (error instanceof PromptExitError) {
+      throw error;
+    }
     logError(error, accountId ? { accountId } : undefined);
     uiLogger.error(
       lib.prompts.selectPublicAppForMigrationPrompt.errors.errorFetchingApps
     );
-    process.exit(EXIT_CODES.ERROR);
+    throw new PromptExitError(
+      lib.prompts.selectPublicAppForMigrationPrompt.errors.errorFetchingApps,
+      EXIT_CODES.ERROR
+    );
   }
 }
 

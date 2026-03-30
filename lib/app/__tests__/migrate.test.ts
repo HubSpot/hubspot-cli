@@ -661,7 +661,8 @@ describe('lib/app/migrate', () => {
 
       expect(mockedPoll).toHaveBeenCalledWith(
         expect.any(Function),
-        expect.any(Object)
+        expect.any(Object),
+        300_000
       );
       expect(result).toBe(mockStatus);
     });

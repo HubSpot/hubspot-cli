@@ -14,6 +14,7 @@ export const features = z
       'card',
       'settings',
       'app-function',
+      'app-function-endpoint',
       'webhooks',
       'workflow-action',
       'workflow-action-tool',
@@ -24,7 +25,7 @@ export const features = z
     ])
   )
   .describe(
-    'The features to include in the project, multiple options can be selected. "app-function" is also known as a public serverless function. "workflow-action" is also known as a custom workflow action. "workflow-action-tool" is also known as agent tools.'
+    'The features to include in the project, multiple options can be selected. "app-function" is also known as a private serverless function. "app-function-endpoint" is a serverless functions that is publicly accessible via endpoint. "workflow-action" is also known as a custom workflow action. "workflow-action-tool" is also known as agent tools.'
   )
   .optional();
 

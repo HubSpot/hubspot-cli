@@ -17,7 +17,6 @@ import {
   generateDeveloperTestAccountPersonalAccessKey,
 } from '@hubspot/local-dev-lib/api/developerTestAccounts';
 import {
-  createSandbox,
   createV2Sandbox,
   getSandboxPersonalAccessKey,
 } from '@hubspot/local-dev-lib/api/sandboxHubs';
@@ -56,7 +55,6 @@ const mockedFetchDeveloperTestAccountGateSyncStatus =
   fetchDeveloperTestAccountGateSyncStatus as Mock;
 const mockedGenerateDeveloperTestAccountPersonalAccessKey =
   generateDeveloperTestAccountPersonalAccessKey as Mock;
-const mockedCreateSandbox = createSandbox as Mock;
 const mockedCreateV2Sandbox = createV2Sandbox as Mock;
 const mockedGetPersonalAccessKey = getSandboxPersonalAccessKey as Mock;
 const mockedPoll = poll as Mock;
@@ -243,82 +241,6 @@ describe('lib/buildAccount', () => {
           mockParentAccountConfig,
           mockParentAccountConfig.env,
           10
-        )
-      ).rejects.toThrow();
-    });
-  });
-
-  describe('buildSandbox()', () => {
-    const mockParentAccountConfig = {
-      name: 'Prod account',
-      accountId: 123456,
-      accountType: HUBSPOT_ACCOUNT_TYPES.STANDARD,
-      env: 'prod' as Environment,
-    } as HubSpotConfigAccount;
-    const mockSandbox = {
-      sandboxHubId: 56789,
-      parentHubId: 123456,
-      createdAt: '2025-01-01',
-      type: 'STANDARD',
-      version: 'V1',
-      archived: false,
-      name: 'Test Sandbox',
-      domain: 'test-sandbox.hubspot.com',
-      createdByUser: {
-        id: 123456,
-        email: 'test@test.com',
-        firstName: 'Test',
-        lastName: 'User',
-      },
-    };
-
-    beforeEach(() => {
-      vi.spyOn(buildAccount, 'saveAccountToConfig').mockResolvedValue(
-        mockParentAccountConfig.name
-      );
-      mockedCreateSandbox.mockResolvedValue({
-        data: { sandbox: mockSandbox, personalAccessKey: 'test-key' },
-      });
-    });
-
-    it('should create a standard sandbox successfully', async () => {
-      const result = await buildAccount.buildSandbox(
-        mockSandbox.name,
-        mockParentAccountConfig,
-        HUBSPOT_ACCOUNT_TYPES.STANDARD_SANDBOX,
-        mockParentAccountConfig.env,
-        false
-      );
-      expect(result).toEqual({
-        name: mockSandbox.name,
-        personalAccessKey: 'test-key',
-        sandbox: mockSandbox,
-      });
-    });
-
-    it('should create a development sandbox successfully', async () => {
-      const result = await buildAccount.buildSandbox(
-        mockSandbox.name,
-        mockParentAccountConfig,
-        HUBSPOT_ACCOUNT_TYPES.DEVELOPMENT_SANDBOX,
-        mockParentAccountConfig.env
-      );
-      expect(result).toEqual({
-        name: mockSandbox.name,
-        personalAccessKey: 'test-key',
-        sandbox: mockSandbox,
-      });
-    });
-
-    it('should handle API errors when creating sandbox', async () => {
-      mockedCreateSandbox.mockRejectedValue(new Error('test-error'));
-      await expect(
-        buildAccount.buildSandbox(
-          mockSandbox.name,
-          mockParentAccountConfig,
-          HUBSPOT_ACCOUNT_TYPES.STANDARD_SANDBOX,
-          mockParentAccountConfig.env,
-          false
         )
       ).rejects.toThrow();
     });

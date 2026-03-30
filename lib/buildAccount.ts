@@ -15,28 +15,21 @@ import {
 import { DeveloperTestAccountConfig } from '@hubspot/local-dev-lib/types/developerTestAccounts';
 import { HUBSPOT_ACCOUNT_TYPES } from '@hubspot/local-dev-lib/constants/config';
 import {
-  createSandbox,
   createV2Sandbox,
   getSandboxPersonalAccessKey,
 } from '@hubspot/local-dev-lib/api/sandboxHubs';
 import { Environment } from '@hubspot/local-dev-lib/types/Accounts';
 
+import { PromptExitError } from './errors/PromptExitError.js';
 import { personalAccessKeyPrompt } from './prompts/personalAccessKeyPrompt.js';
 import { createDeveloperTestAccountConfigPrompt } from './prompts/createDeveloperTestAccountConfigPrompt.js';
 import { cliAccountNamePrompt } from './prompts/accountNamePrompt.js';
 import SpinniesManager from './ui/SpinniesManager.js';
 import { debugError, logError } from './errorHandlers/index.js';
-import {
-  SANDBOX_API_TYPE_MAP,
-  SANDBOX_TYPE_MAP_V2,
-  handleSandboxCreateError,
-} from './sandboxes.js';
+import { SANDBOX_TYPE_MAP_V2, handleSandboxCreateError } from './sandboxes.js';
 import { handleDeveloperTestAccountCreateError } from './developerTestAccounts.js';
 import { HubSpotConfigAccount } from '@hubspot/local-dev-lib/types/Accounts';
-import {
-  SandboxResponse,
-  V2Sandbox,
-} from '@hubspot/local-dev-lib/types/Sandbox';
+import { V2Sandbox } from '@hubspot/local-dev-lib/types/Sandbox';
 import { SandboxAccountType } from '../types/Sandboxes.js';
 import { lib } from '../lang/en.js';
 import { poll } from './polling.js';
@@ -235,86 +228,14 @@ export async function buildDeveloperTestAccount(
       developerTestAccountPersonalAccessKey
     );
   } catch (err) {
+    if (err instanceof PromptExitError) {
+      throw err;
+    }
     logError(err);
     throw err;
   }
 
   return developerTestAccountId;
-}
-
-type SandboxAccount = SandboxResponse & {
-  name: string;
-};
-
-export async function buildSandbox(
-  sandboxName: string,
-  parentAccountConfig: HubSpotConfigAccount,
-  sandboxType: SandboxAccountType,
-  env: Environment,
-  force = false
-): Promise<SandboxAccount> {
-  const sandboxTypeKey =
-    sandboxType === HUBSPOT_ACCOUNT_TYPES.STANDARD_SANDBOX
-      ? 'standard'
-      : 'developer';
-
-  const parentAccountId = parentAccountConfig.accountId;
-
-  if (!parentAccountId) {
-    throw new Error(lib.sandbox.create[sandboxTypeKey].loading.fail(''));
-  }
-
-  SpinniesManager.init({
-    succeedColor: 'white',
-  });
-
-  uiLogger.log('');
-  SpinniesManager.add('buildSandbox', {
-    text: lib.sandbox.create[sandboxTypeKey].loading.add(sandboxName),
-  });
-
-  let sandbox: SandboxAccount;
-
-  try {
-    const sandboxApiType = SANDBOX_API_TYPE_MAP[sandboxType];
-
-    const { data } = await createSandbox(
-      parentAccountId,
-      sandboxName,
-      sandboxApiType
-    );
-    sandbox = { name: sandboxName, ...data };
-
-    SpinniesManager.succeed('buildSandbox', {
-      text: lib.sandbox.create[sandboxTypeKey].loading.succeed(
-        sandboxName,
-        sandbox.sandbox.sandboxHubId.toString()
-      ),
-    });
-  } catch (e) {
-    debugError(e);
-
-    SpinniesManager.fail('buildSandbox', {
-      text: lib.sandbox.create[sandboxTypeKey].loading.fail(sandboxName),
-    });
-
-    handleSandboxCreateError(e, env, sandboxName, parentAccountId);
-  }
-
-  try {
-    await saveAccountToConfig(
-      sandbox.sandbox.sandboxHubId,
-      sandboxName,
-      env,
-      sandbox.personalAccessKey,
-      force
-    );
-  } catch (err) {
-    logError(err);
-    throw err;
-  }
-
-  return sandbox;
 }
 
 export async function buildV2Sandbox(
@@ -389,6 +310,9 @@ export async function buildV2Sandbox(
       force
     );
   } catch (err) {
+    if (err instanceof PromptExitError) {
+      throw err;
+    }
     logError(err);
     throw err;
   }

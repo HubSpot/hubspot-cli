@@ -1,6 +1,5 @@
 import { uiLogger } from '../ui/logger.js';
 import { getSandboxUsageLimits } from '@hubspot/local-dev-lib/api/sandboxHubs';
-import { fetchTypes } from '@hubspot/local-dev-lib/api/sandboxSync';
 import {
   getAllConfigAccounts,
   getConfigAccountIfExists,
@@ -11,7 +10,6 @@ import { mockHubSpotHttpError } from '../testUtils.js';
 import {
   getSandboxTypeAsString,
   getHasSandboxesByType,
-  getAvailableSyncTypes,
   validateSandboxUsageLimits,
   handleSandboxCreateError,
 } from '../sandboxes.js';
@@ -29,7 +27,6 @@ vi.mock('@hubspot/local-dev-lib/errors/index');
 
 const mockedGetConfigAccountIfExists = getConfigAccountIfExists as Mock;
 const mockedGetSandboxUsageLimits = getSandboxUsageLimits as Mock;
-const mockedFetchTypes = fetchTypes as Mock;
 const mockedGetAllConfigAccounts = getAllConfigAccounts as Mock;
 const mockedUiLogger = uiLogger as Mocked<typeof uiLogger>;
 const mockedIsMissingScopeError =
@@ -93,44 +90,6 @@ describe('lib/sandboxes', () => {
           HUBSPOT_ACCOUNT_TYPES.DEVELOPMENT_SANDBOX
         )
       ).toBe(false);
-    });
-  });
-
-  describe('getAvailableSyncTypes()', () => {
-    const mockParentAccount = {
-      name: 'Parent Account',
-      accountId: 123,
-      env: 'qa' as Environment,
-    } as HubSpotConfigAccount;
-
-    const mockChildAccount = {
-      ...mockParentAccount,
-      accountId: 456,
-    } as HubSpotConfigAccount;
-
-    it('returns available sync types when fetch is successful', async () => {
-      const mockSyncTypes = [{ name: 'type1' }, { name: 'type2' }];
-      mockedGetConfigAccountIfExists
-        .mockReturnValue(mockParentAccount.accountId)
-        .mockReturnValue(mockChildAccount.accountId);
-      mockedFetchTypes.mockResolvedValue({
-        data: { results: mockSyncTypes },
-      });
-
-      const result = await getAvailableSyncTypes(
-        mockParentAccount,
-        mockChildAccount
-      );
-
-      expect(result).toEqual([{ type: 'type1' }, { type: 'type2' }]);
-    });
-
-    it('throws error when sync types fetch fails', async () => {
-      mockedFetchTypes.mockResolvedValue({ data: { results: null } });
-
-      await expect(
-        getAvailableSyncTypes(mockParentAccount, mockChildAccount)
-      ).rejects.toThrow(/Unable to fetch available sandbox sync types/);
     });
   });
 

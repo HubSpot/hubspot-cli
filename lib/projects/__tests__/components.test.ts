@@ -262,6 +262,27 @@ describe('lib/projects/components', () => {
       consoleSpy.mockRestore();
     });
 
+    it('skips tooling config files on collision instead of renaming them', () => {
+      const collision: Collision = {
+        ...mockCollision,
+        collisions: [
+          'src/app/cards/.prettierrc.json',
+          'src/app/cards/component.js',
+          'src/app/cards/eslint.config.js',
+        ],
+      };
+
+      mockedFs.copyFileSync.mockImplementation(() => {});
+
+      handleComponentCollision(collision);
+
+      expect(mockedFs.copyFileSync).toHaveBeenCalledTimes(1);
+      expect(mockedFs.copyFileSync).toHaveBeenCalledWith(
+        '/src/path/src/app/cards/component.js',
+        '/dest/path/src/app/cards/component-2.js'
+      );
+    });
+
     it('falls back to timestamp when maxAttempts is exhausted', () => {
       const collision: Collision = {
         ...mockCollision,

@@ -130,7 +130,12 @@ function mapPlatformVersionToEnum(platformVersion: string): string {
     return PLATFORM_VERSIONS.unstable.toUpperCase();
   }
 
-  return `V${platformVersion.replace('.', '_')}`;
+  const reformattedPlatformVersion = platformVersion
+    .replaceAll('.', '_')
+    .replaceAll('-', '_')
+    .toUpperCase();
+
+  return `V${reformattedPlatformVersion}`;
 }
 
 export async function initializeAppMigration(

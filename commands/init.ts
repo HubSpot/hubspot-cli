@@ -30,6 +30,7 @@ import { setCLILogLevel } from '../lib/commonOpts.js';
 import { makeYargsBuilder } from '../lib/yargsUtils.js';
 import { handleExit } from '../lib/process.js';
 import { debugError, logError } from '../lib/errorHandlers/index.js';
+import { PromptExitError } from '../lib/errors/PromptExitError.js';
 import { trackCommandUsage, trackAuthAction } from '../lib/usageTracking.js';
 import { promptUser } from '../lib/prompts/promptUtils.js';
 import {
@@ -246,6 +247,9 @@ async function handler(args: ArgumentsCamelCase<InitArgs>): Promise<void> {
     }
     process.exit(EXIT_CODES.SUCCESS);
   } catch (err) {
+    if (err instanceof PromptExitError) {
+      process.exit(err.exitCode);
+    }
     logError(err);
     if (!disableTracking) {
       await trackAuthAction(

@@ -1,5 +1,4 @@
 import { getSandboxUsageLimits } from '@hubspot/local-dev-lib/api/sandboxHubs';
-import { fetchTypes } from '@hubspot/local-dev-lib/api/sandboxSync';
 import { getAllConfigAccounts } from '@hubspot/local-dev-lib/config';
 import { getHubSpotWebsiteOrigin } from '@hubspot/local-dev-lib/urls';
 import { HUBSPOT_ACCOUNT_TYPES } from '@hubspot/local-dev-lib/constants/config';
@@ -16,12 +15,8 @@ import { Environment } from '@hubspot/local-dev-lib/types/Accounts';
 import { uiLogger } from './ui/logger.js';
 import { lib } from '../lang/en.js';
 import { logError } from './errorHandlers/index.js';
-import { SandboxSyncTask, SandboxAccountType } from '../types/Sandboxes.js';
+import { SandboxAccountType } from '../types/Sandboxes.js';
 import { uiAccountDescription } from './ui/index.js';
-
-export const SYNC_TYPES = {
-  OBJECT_RECORDS: 'object-records',
-} as const;
 
 export const SANDBOX_TYPE_MAP: { [key: string]: SandboxAccountType } = {
   dev: HUBSPOT_ACCOUNT_TYPES.DEVELOPMENT_SANDBOX,
@@ -29,11 +24,6 @@ export const SANDBOX_TYPE_MAP: { [key: string]: SandboxAccountType } = {
   development: HUBSPOT_ACCOUNT_TYPES.DEVELOPMENT_SANDBOX,
   standard: HUBSPOT_ACCOUNT_TYPES.STANDARD_SANDBOX,
 };
-
-export const SANDBOX_API_TYPE_MAP = {
-  [HUBSPOT_ACCOUNT_TYPES.STANDARD_SANDBOX]: 1,
-  [HUBSPOT_ACCOUNT_TYPES.DEVELOPMENT_SANDBOX]: 2,
-} as const;
 
 export const SANDBOX_TYPE_MAP_V2 = {
   [HUBSPOT_ACCOUNT_TYPES.STANDARD_SANDBOX]: 'STANDARD',
@@ -66,27 +56,6 @@ export function getHasSandboxesByType(
     }
   }
   return false;
-}
-
-// Fetches available sync types for a given sandbox portal
-export async function getAvailableSyncTypes(
-  parentAccountConfig: HubSpotConfigAccount,
-  config: HubSpotConfigAccount
-): Promise<Array<SandboxSyncTask>> {
-  const parentPortalId = parentAccountConfig.accountId;
-  const portalId = config.accountId;
-
-  if (!parentPortalId || !portalId) {
-    throw new Error(lib.sandbox.sync.failure.syncTypeFetch);
-  }
-
-  const {
-    data: { results: syncTypes },
-  } = await fetchTypes(parentPortalId, portalId);
-  if (!syncTypes) {
-    throw new Error(lib.sandbox.sync.failure.syncTypeFetch);
-  }
-  return syncTypes.map(t => ({ type: t.name }));
 }
 
 export async function validateSandboxUsageLimits(

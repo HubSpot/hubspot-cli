@@ -1,6 +1,7 @@
 import { Argv, ArgumentsCamelCase } from 'yargs';
 import { uiLogger } from '../../lib/ui/logger.js';
 import { logError } from '../../lib/errorHandlers/index.js';
+import { PromptExitError } from '../../lib/errors/PromptExitError.js';
 import { clearHubDbTableRows } from '@hubspot/local-dev-lib/hubdb';
 import { publishTable } from '@hubspot/local-dev-lib/api/hubdb';
 import { selectHubDBTablePrompt } from '../../lib/prompts/selectHubDBTablePrompt.js';
@@ -59,6 +60,9 @@ async function handler(
       uiLogger.log(commands.hubdb.subcommands.clear.logs.tableEmpty(tableId));
     }
   } catch (e) {
+    if (e instanceof PromptExitError) {
+      process.exit(e.exitCode);
+    }
     logError(e);
   }
 }

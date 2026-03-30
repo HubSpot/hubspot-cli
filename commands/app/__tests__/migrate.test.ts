@@ -111,7 +111,7 @@ describe('commands/app/migrate', () => {
           }),
           'platform-version': expect.objectContaining({
             type: 'string',
-            default: '2025.2',
+            default: '2026.03',
           }),
         })
       );
@@ -123,7 +123,7 @@ describe('commands/app/migrate', () => {
       expect(optionsSpy).toHaveBeenCalledWith(
         expect.objectContaining({
           'platform-version': expect.objectContaining({
-            default: '2025.2',
+            default: '2026.03',
           }),
         })
       );

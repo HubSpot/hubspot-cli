@@ -43,7 +43,7 @@ import SpinniesManager from '../../lib/ui/SpinniesManager.js';
 const command = ['create', 'init'];
 const describe = commands.project.create.describe;
 
-const { v2025_1, v2025_2, v2026_03_beta } = PLATFORM_VERSIONS;
+const { v2025_1, v2025_2, v2026_03_beta, v2026_03 } = PLATFORM_VERSIONS;
 
 async function handler(
   args: ArgumentsCamelCase<ProjectCreateArgs>
@@ -210,8 +210,8 @@ function projectCreateBuilder(yargs: Argv): Argv<ProjectCreateArgs> {
     'platform-version': {
       describe: commands.project.create.options.platformVersion.describe,
       type: 'string',
-      choices: [v2025_1, v2025_2, v2026_03_beta],
-      default: v2025_2,
+      choices: [v2025_1, v2025_2, v2026_03_beta, v2026_03],
+      default: v2026_03,
     },
     'project-base': {
       describe: commands.project.create.options.projectBase.describe,

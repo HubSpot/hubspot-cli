@@ -140,6 +140,9 @@ class SpinniesManager {
     }
 
     delete this.spinners[name];
+
+    // Update the spinner state to clean up the deleted spinner
+    this.updateSpinnerState();
   }
 
   stopAll(newStatus: (typeof VALID_STATUSES)[number] = 'stopped'): {

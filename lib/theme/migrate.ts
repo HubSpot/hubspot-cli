@@ -17,7 +17,6 @@ import {
 import { PROJECT_CONFIG_FILE } from '../constants.js';
 import { uiLogger } from '../ui/logger.js';
 import { debugError } from '../errorHandlers/index.js';
-import { isV2Project } from '../projects/platformVersion.js';
 import { confirmPrompt } from '../prompts/promptUtils.js';
 import { fetchMigrationApps } from '../app/migrate.js';
 
@@ -55,9 +54,6 @@ export async function validateMigrationAppsAndThemes(
   hasApps: number,
   projectConfig?: LoadedProjectConfig
 ) {
-  if (isV2Project(projectConfig?.projectConfig?.platformVersion)) {
-    throw new Error(lib.migrate.errors.project.themesAlreadyMigrated);
-  }
   if (hasApps > 0 && projectConfig) {
     throw new Error(lib.migrate.errors.project.themesAndAppsNotAllowed);
   }
@@ -118,7 +114,7 @@ export async function handleThemesMigration(
   uiLogger.log(lib.migrate.success.themesMigrationSuccess(platformVersion));
 }
 
-export async function migrateThemes2025_2(
+export async function migrateThemesV2(
   derivedAccountId: number,
   options: ArgumentsCamelCase<MigrateThemesArgs>,
   themeCount: number,
