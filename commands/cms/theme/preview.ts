@@ -5,7 +5,7 @@ import { commands } from '../../../lang/en.js';
 import { getCwd } from '@hubspot/local-dev-lib/path';
 import { getThemeJSONPath } from '@hubspot/local-dev-lib/cms/themes';
 import { spawnDevServer } from '../../../lib/theme/cmsDevServerProcess.js';
-import { trackCommandUsage } from '../../../lib/usageTracking.js';
+import { logError } from '../../../lib/errorHandlers/index.js';
 import {
   previewPrompt,
   previewProjectPrompt,
@@ -20,6 +20,7 @@ import {
   AccountArgs,
   YargsCommandModule,
 } from '../../../types/Yargs.js';
+import { makeYargsHandlerWithUsageTracking } from '../../../lib/yargs/makeYargsHandlerWithUsageTracking.js';
 import { makeYargsBuilder } from '../../../lib/yargsUtils.js';
 import { uiLogger } from '../../../lib/ui/logger.js';
 
@@ -70,7 +71,11 @@ async function determineSrcAndDest(args: ThemePreviewArgs): Promise<{
     dest = args.dest || previewPromptAnswers.dest;
     absoluteSrc = path.resolve(getCwd(), src);
     if (!dest || !validateSrcPath(absoluteSrc)) {
-      process.exit(EXIT_CODES.ERROR);
+      throw new Error(
+        commands.cms.subcommands.theme.subcommands.preview.errors.invalidPath(
+          src
+        )
+      );
     }
   } else {
     // In a project
@@ -81,11 +86,10 @@ async function determineSrcAndDest(args: ThemePreviewArgs): Promise<{
         c => c.type === ComponentTypes.HublTheme
       );
       if (themeComponents.length === 0) {
-        uiLogger.error(
+        throw new Error(
           commands.cms.subcommands.theme.subcommands.preview.errors
             .noThemeComponents
         );
-        process.exit(EXIT_CODES.ERROR);
       }
       const answer = await previewProjectPrompt(themeComponents);
       themeJsonPath = `${answer.themeComponentPath}/theme.json`;
@@ -101,12 +105,23 @@ async function determineSrcAndDest(args: ThemePreviewArgs): Promise<{
 async function handler(
   args: ArgumentsCamelCase<ThemePreviewArgs>
 ): Promise<void> {
-  const { derivedAccountId, noSsl, resetSession, port, generateFieldsTypes } =
-    args;
+  const {
+    derivedAccountId,
+    noSsl,
+    resetSession,
+    port,
+    generateFieldsTypes,
+    exit,
+  } = args;
 
-  const { absoluteSrc, dest } = await determineSrcAndDest(args);
-
-  trackCommandUsage('preview', {}, derivedAccountId);
+  let absoluteSrc: string;
+  let dest: string;
+  try {
+    ({ absoluteSrc, dest } = await determineSrcAndDest(args));
+  } catch (error) {
+    logError(error);
+    return exit(EXIT_CODES.ERROR);
+  }
 
   // Spawn dev server in isolated subprocess to avoid React version conflicts
   // File listing and progress bars are handled within the subprocess
@@ -118,6 +133,7 @@ async function handler(
     generateFieldsTypes,
     resetSession: resetSession || false,
     dest,
+    exit,
   });
 }
 
@@ -170,7 +186,7 @@ const builder = makeYargsBuilder<ThemePreviewArgs>(
 const themePreviewCommand: YargsCommandModule<unknown, ThemePreviewArgs> = {
   command,
   describe,
-  handler,
+  handler: makeYargsHandlerWithUsageTracking('preview', handler),
   builder,
 };
 

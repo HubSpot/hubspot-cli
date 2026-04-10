@@ -15,6 +15,7 @@ import * as setAsDefaultPromptLib from '../../../lib/prompts/setAsDefaultAccount
 import * as parsingLib from '../../../lib/parsing.js';
 import { uiLogger } from '../../../lib/ui/logger.js';
 import { EXIT_CODES } from '../../../lib/enums/exitCodes.js';
+import type { UsageTrackingArgs } from '../../../types/Yargs.js';
 import accountAuthCommand from '../auth.js';
 
 vi.mock('../../../lib/commonOpts');
@@ -66,7 +67,7 @@ describe('commands/account/auth', () => {
     localConfigFileExistsSpy.mockReturnValue(false);
     globalConfigFileExistsSpy.mockReturnValue(true);
     createEmptyConfigFileSpy.mockImplementation(() => {});
-    handleExitSpy.mockImplementation(async () => {});
+    handleExitSpy.mockImplementation(() => () => {});
     trackCommandUsageSpy.mockImplementation(async () => {});
     trackAuthActionSpy.mockResolvedValue(undefined);
     personalAccessKeyPromptSpy.mockResolvedValue({
@@ -119,26 +120,8 @@ describe('commands/account/auth', () => {
   });
 
   describe('handler', () => {
-    let args: ArgumentsCamelCase<{
-      derivedAccountId: number;
-      userProvidedAccount?: string;
-      d: boolean;
-      debug: boolean;
-      c?: string;
-      config?: string;
-      disableTracking?: boolean;
-      personalAccessKey?: string;
-      qa?: boolean;
-    }>;
-
-    beforeEach(() => {
-      args = {
-        derivedAccountId: 0,
-        d: false,
-        debug: false,
-        _: [],
-        $0: '',
-      } as ArgumentsCamelCase<{
+    let args: ArgumentsCamelCase<
+      {
         derivedAccountId: number;
         userProvidedAccount?: string;
         d: boolean;
@@ -148,7 +131,31 @@ describe('commands/account/auth', () => {
         disableTracking?: boolean;
         personalAccessKey?: string;
         qa?: boolean;
-      }>;
+      } & UsageTrackingArgs
+    >;
+
+    beforeEach(() => {
+      args = {
+        derivedAccountId: undefined as unknown as number,
+        d: false,
+        debug: false,
+        _: [],
+        $0: '',
+        addUsageMetadata: vi.fn(),
+        exit: vi.fn(),
+      } as ArgumentsCamelCase<
+        {
+          derivedAccountId: number;
+          userProvidedAccount?: string;
+          d: boolean;
+          debug: boolean;
+          c?: string;
+          config?: string;
+          disableTracking?: boolean;
+          personalAccessKey?: string;
+          qa?: boolean;
+        } & UsageTrackingArgs
+      >;
     });
 
     it('should track command usage', async () => {
@@ -156,7 +163,7 @@ describe('commands/account/auth', () => {
 
       expect(trackCommandUsageSpy).toHaveBeenCalledWith(
         'account-auth',
-        {},
+        { successful: true },
         undefined
       );
       expect(trackAuthActionSpy).toHaveBeenCalledWith(
@@ -171,7 +178,6 @@ describe('commands/account/auth', () => {
 
       await accountAuthCommand.handler(args);
 
-      expect(trackCommandUsageSpy).not.toHaveBeenCalled();
       expect(trackAuthActionSpy).not.toHaveBeenCalled();
       expect(updateConfigWithAccessTokenSpy).toHaveBeenCalled();
     });
@@ -185,8 +191,8 @@ describe('commands/account/auth', () => {
       expect(parseStringToNumberSpy).toHaveBeenCalledWith('123456');
       expect(trackCommandUsageSpy).toHaveBeenCalledWith(
         'account-auth',
-        {},
-        123456
+        { successful: true },
+        undefined
       );
     });
 

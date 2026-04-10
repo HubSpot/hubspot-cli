@@ -1,6 +1,5 @@
 import { Argv, ArgumentsCamelCase } from 'yargs';
 import chalk from 'chalk';
-import { trackCommandUsage } from '../../lib/usageTracking.js';
 import { isPathFolder } from '../../lib/filesystem.js';
 import { logError } from '../../lib/errorHandlers/index.js';
 import { getDirectoryContentsByPath } from '@hubspot/local-dev-lib/api/fileMapper';
@@ -13,6 +12,7 @@ import {
   EnvironmentArgs,
   YargsCommandModule,
 } from '../../types/Yargs.js';
+import { makeYargsHandlerWithUsageTracking } from '../../lib/yargs/makeYargsHandlerWithUsageTracking.js';
 import { FileMapperNode } from '@hubspot/local-dev-lib/types/Files';
 import { makeYargsBuilder } from '../../lib/yargsUtils.js';
 import { uiLogger } from '../../lib/ui/logger.js';
@@ -55,11 +55,9 @@ export type ListArgs = CommonArgs &
   AccountArgs & { path: string };
 
 async function handler(args: ArgumentsCamelCase<ListArgs>): Promise<void> {
-  const { path, derivedAccountId } = args;
+  const { path, derivedAccountId, exit } = args;
   const directoryPath = path || '/';
   let contentsResp;
-
-  trackCommandUsage('list', undefined, derivedAccountId);
 
   uiLogger.debug(
     commands.cms.subcommands.list.gettingPathContents(directoryPath)
@@ -73,7 +71,7 @@ async function handler(args: ArgumentsCamelCase<ListArgs>): Promise<void> {
     contentsResp = data;
   } catch (e) {
     logError(e);
-    process.exit(EXIT_CODES.ERROR);
+    return exit(EXIT_CODES.ERROR);
   }
 
   if (!contentsResp.folder) {
@@ -101,7 +99,7 @@ async function handler(args: ArgumentsCamelCase<ListArgs>): Promise<void> {
     .join('\n');
 
   uiLogger.log(folderContentsOutput);
-  process.exit(EXIT_CODES.SUCCESS);
+  return exit(EXIT_CODES.SUCCESS);
 }
 
 function cmsListBuilder(yargs: Argv): Argv<ListArgs> {
@@ -128,7 +126,7 @@ const builder = makeYargsBuilder<ListArgs>(cmsListBuilder, command, describe, {
 const cmsListCommand: YargsCommandModule<unknown, ListArgs> = {
   command,
   describe,
-  handler,
+  handler: makeYargsHandlerWithUsageTracking('list', handler),
   builder,
 };
 

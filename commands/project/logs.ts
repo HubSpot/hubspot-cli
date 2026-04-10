@@ -1,7 +1,6 @@
 import { Argv, ArgumentsCamelCase } from 'yargs';
 import { getConfigAccountEnvironment } from '@hubspot/local-dev-lib/config';
 import { getHubSpotWebsiteOrigin } from '@hubspot/local-dev-lib/urls';
-import { trackCommandUsage } from '../../lib/usageTracking.js';
 import { logError } from '../../lib/errorHandlers/index.js';
 import { uiLine } from '../../lib/ui/index.js';
 import { projectLogsPrompt } from '../../lib/prompts/projectsLogsPrompt.js';
@@ -10,6 +9,7 @@ import { uiLogger } from '../../lib/ui/logger.js';
 import { EXIT_CODES } from '../../lib/enums/exitCodes.js';
 import { ProjectLogsManager } from '../../lib/projects/ProjectLogsManager.js';
 import { CommonArgs, YargsCommandModule } from '../../types/Yargs.js';
+import { makeYargsHandlerWithUsageTracking } from '../../lib/yargs/makeYargsHandlerWithUsageTracking.js';
 import { makeYargsBuilder } from '../../lib/yargsUtils.js';
 import { renderTable } from '../../ui/render.js';
 
@@ -89,9 +89,7 @@ export type ProjectLogsArgs = CommonArgs & {
 async function handler(
   args: ArgumentsCamelCase<ProjectLogsArgs>
 ): Promise<void> {
-  const { derivedAccountId } = args;
-
-  trackCommandUsage('project-logs', undefined, derivedAccountId);
+  const { derivedAccountId, exit } = args;
 
   try {
     await ProjectLogsManager.init(derivedAccountId);
@@ -110,9 +108,9 @@ async function handler(
       accountId: derivedAccountId,
       projectName: ProjectLogsManager.projectName,
     });
-    return process.exit(EXIT_CODES.ERROR);
+    return exit(EXIT_CODES.ERROR);
   }
-  process.exit(EXIT_CODES.SUCCESS);
+  return exit(EXIT_CODES.SUCCESS);
 }
 
 function projectLogsBuilder(yargs: Argv): Argv<ProjectLogsArgs> {
@@ -166,7 +164,7 @@ const builder = makeYargsBuilder<ProjectLogsArgs>(
 const projectLogsCommand: YargsCommandModule<unknown, ProjectLogsArgs> = {
   command,
   describe,
-  handler,
+  handler: makeYargsHandlerWithUsageTracking('project-logs', handler),
   builder,
 };
 

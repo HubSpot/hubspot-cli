@@ -31,12 +31,12 @@ import { cliAccountNamePrompt } from '../lib/prompts/accountNamePrompt.js';
 import { setAsDefaultAccountPrompt } from '../lib/prompts/setAsDefaultAccountPrompt.js';
 import { setCLILogLevel } from '../lib/commonOpts.js';
 import { makeYargsBuilder } from '../lib/yargsUtils.js';
-import { trackAuthAction, trackCommandUsage } from '../lib/usageTracking.js';
+import { trackAuthAction } from '../lib/usageTracking.js';
 import { authenticateWithOauth } from '../lib/oauth.js';
 import { EXIT_CODES } from '../lib/enums/exitCodes.js';
 import { uiFeatureHighlight } from '../lib/ui/index.js';
 import { logError } from '../lib/errorHandlers/index.js';
-import { PromptExitError } from '../lib/errors/PromptExitError.js';
+import { isPromptExitError } from '../lib/errors/PromptExitError.js';
 import {
   AccountArgs,
   CommonArgs,
@@ -44,6 +44,7 @@ import {
   TestingArgs,
   YargsCommandModule,
 } from '../types/Yargs.js';
+import { makeYargsHandlerWithUsageTracking } from '../lib/yargs/makeYargsHandlerWithUsageTracking.js';
 import { commands } from '../lang/en.js';
 import { uiLogger } from '../lib/ui/logger.js';
 import { parseStringToNumber } from '../lib/parsing.js';
@@ -80,6 +81,7 @@ async function handler(args: ArgumentsCamelCase<AuthArgs>): Promise<void> {
     personalAccessKey: providedPersonalAccessKey,
     userProvidedAccount,
     disableTracking,
+    exit,
   } = args;
 
   let parsedUserProvidedAccountId;
@@ -90,7 +92,7 @@ async function handler(args: ArgumentsCamelCase<AuthArgs>): Promise<void> {
     }
   } catch (err) {
     uiLogger.error(commands.auth.errors.invalidAccountIdProvided);
-    process.exit(EXIT_CODES.ERROR);
+    return exit(EXIT_CODES.ERROR);
   }
 
   const authType =
@@ -109,11 +111,10 @@ async function handler(args: ArgumentsCamelCase<AuthArgs>): Promise<void> {
     uiLogger.error(
       commands.auth.errors.globalConfigFileExists('hs account auth')
     );
-    process.exit(EXIT_CODES.ERROR);
+    return exit(EXIT_CODES.ERROR);
   }
 
   if (!disableTracking) {
-    trackCommandUsage('auth');
     trackAuthAction(
       'auth',
       authType,
@@ -151,7 +152,7 @@ async function handler(args: ArgumentsCamelCase<AuthArgs>): Promise<void> {
         successAuthMethod = OAUTH_AUTH_METHOD.name;
       } catch (e) {
         logError(e);
-        process.exit(EXIT_CODES.ERROR);
+        return exit(EXIT_CODES.ERROR);
       }
 
       break;
@@ -173,8 +174,8 @@ async function handler(args: ArgumentsCamelCase<AuthArgs>): Promise<void> {
           env
         );
       } catch (e) {
-        if (e instanceof PromptExitError) {
-          process.exit(e.exitCode);
+        if (isPromptExitError(e)) {
+          throw e;
         }
         logError(e);
       }
@@ -214,7 +215,7 @@ async function handler(args: ArgumentsCamelCase<AuthArgs>): Promise<void> {
       TRACKING_STATUS.ERROR,
       parsedUserProvidedAccountId
     );
-    process.exit(EXIT_CODES.ERROR);
+    return exit(EXIT_CODES.ERROR);
   }
 
   const nameFromConfigData =
@@ -250,7 +251,7 @@ async function handler(args: ArgumentsCamelCase<AuthArgs>): Promise<void> {
     );
   }
 
-  process.exit(EXIT_CODES.SUCCESS);
+  return exit(EXIT_CODES.SUCCESS);
 }
 
 function authBuilder(yargs: Argv): Argv<AuthArgs> {
@@ -302,7 +303,7 @@ const builder = makeYargsBuilder<AuthArgs>(
 const authCommand: YargsCommandModule<unknown, AuthArgs> = {
   command,
   describe,
-  handler,
+  handler: makeYargsHandlerWithUsageTracking('auth', handler),
   builder,
 };
 

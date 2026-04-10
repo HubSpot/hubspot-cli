@@ -1,7 +1,6 @@
 import { Argv, ArgumentsCamelCase } from 'yargs';
 import { GetValidationResultsResponse } from '@hubspot/local-dev-lib/types/MarketplaceValidation';
 import SpinniesManager from '../../../lib/ui/SpinniesManager.js';
-import { trackCommandUsage } from '../../../lib/usageTracking.js';
 import {
   kickOffValidation,
   pollForValidationFinish,
@@ -10,6 +9,7 @@ import {
   displayValidationResults,
 } from '../../../lib/marketplaceValidate.js';
 import { commands } from '../../../lang/en.js';
+import { EXIT_CODES } from '../../../lib/enums/exitCodes.js';
 import {
   CommonArgs,
   ConfigArgs,
@@ -17,8 +17,8 @@ import {
   EnvironmentArgs,
   YargsCommandModule,
 } from '../../../types/Yargs.js';
+import { makeYargsHandlerWithUsageTracking } from '../../../lib/yargs/makeYargsHandlerWithUsageTracking.js';
 import { makeYargsBuilder } from '../../../lib/yargsUtils.js';
-import { EXIT_CODES } from '../../../lib/enums/exitCodes.js';
 import { logError } from '../../../lib/errorHandlers/index.js';
 
 const command = 'marketplace-validate <path>';
@@ -33,9 +33,7 @@ export type ThemeValidateArgs = CommonArgs &
 async function handler(
   args: ArgumentsCamelCase<ThemeValidateArgs>
 ): Promise<void> {
-  const { path, derivedAccountId } = args;
-
-  trackCommandUsage('validate', {}, derivedAccountId);
+  const { path, derivedAccountId, exit } = args;
 
   SpinniesManager.add('marketplaceValidation', {
     text: commands.cms.subcommands.theme.subcommands.marketplaceValidate.logs.validatingTheme(
@@ -50,7 +48,7 @@ async function handler(
     await pollForValidationFinish(derivedAccountId, validationId);
   } catch (e) {
     logError(e);
-    process.exit(EXIT_CODES.ERROR);
+    return exit(EXIT_CODES.ERROR);
   }
 
   SpinniesManager.remove('marketplaceValidation');
@@ -63,7 +61,7 @@ async function handler(
     );
   } catch (e) {
     logError(e);
-    process.exit(EXIT_CODES.ERROR);
+    return exit(EXIT_CODES.ERROR);
   }
 
   const hasErrors = hasProcessValidationErrors(
@@ -73,7 +71,7 @@ async function handler(
   );
 
   if (hasErrors) {
-    process.exit(EXIT_CODES.ERROR);
+    return exit(EXIT_CODES.ERROR);
   }
 
   displayValidationResults(
@@ -81,7 +79,7 @@ async function handler(
     validationResults
   );
 
-  process.exit(EXIT_CODES.SUCCESS);
+  return exit(EXIT_CODES.SUCCESS);
 }
 
 function themeValidateBuilder(yargs: Argv): Argv<ThemeValidateArgs> {
@@ -111,7 +109,7 @@ const builder = makeYargsBuilder<ThemeValidateArgs>(
 const themeValidateCommand: YargsCommandModule<unknown, ThemeValidateArgs> = {
   command,
   describe,
-  handler,
+  handler: makeYargsHandlerWithUsageTracking('validate', handler),
   builder,
 };
 

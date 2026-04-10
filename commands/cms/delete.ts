@@ -1,7 +1,6 @@
 import { Argv, ArgumentsCamelCase } from 'yargs';
 import { deleteFile } from '@hubspot/local-dev-lib/api/fileMapper';
 import { logError, ApiErrorContext } from '../../lib/errorHandlers/index.js';
-import { trackCommandUsage } from '../../lib/usageTracking.js';
 import { commands } from '../../lang/en.js';
 import {
   AccountArgs,
@@ -10,6 +9,7 @@ import {
   EnvironmentArgs,
   YargsCommandModule,
 } from '../../types/Yargs.js';
+import { makeYargsHandlerWithUsageTracking } from '../../lib/yargs/makeYargsHandlerWithUsageTracking.js';
 import { makeYargsBuilder } from '../../lib/yargsUtils.js';
 import { uiLogger } from '../../lib/ui/logger.js';
 
@@ -23,8 +23,6 @@ export type DeleteArgs = CommonArgs &
 
 async function handler(args: ArgumentsCamelCase<DeleteArgs>): Promise<void> {
   const { path: hsPath, derivedAccountId } = args;
-
-  trackCommandUsage('delete', undefined, derivedAccountId);
 
   try {
     await deleteFile(derivedAccountId, hsPath);
@@ -72,7 +70,7 @@ const builder = makeYargsBuilder<DeleteArgs>(
 const cmsDeleteCommand: YargsCommandModule<unknown, DeleteArgs> = {
   command,
   describe,
-  handler,
+  handler: makeYargsHandlerWithUsageTracking('delete', handler),
   builder,
 };
 

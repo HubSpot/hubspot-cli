@@ -1,4 +1,3 @@
-import { trackCommandUsage } from '../../../lib/usageTracking.js';
 import { uiLogger } from '../../../lib/ui/logger.js';
 // This package is not typed, so we need to use require
 import { start as startTestServer } from '@hubspot/serverless-dev-runtime';
@@ -11,6 +10,7 @@ import {
   EnvironmentArgs,
   YargsCommandModule,
 } from '../../../types/Yargs.js';
+import { makeYargsHandlerWithUsageTracking } from '../../../lib/yargs/makeYargsHandlerWithUsageTracking.js';
 import { makeYargsBuilder } from '../../../lib/yargsUtils.js';
 
 const command = 'server <path>';
@@ -31,8 +31,6 @@ async function handler(
   args: ArgumentsCamelCase<FunctionServerArgs>
 ): Promise<void> {
   const { path: functionPath, derivedAccountId } = args;
-
-  trackCommandUsage('functions-server', undefined, derivedAccountId);
 
   uiLogger.debug(
     commands.cms.subcommands.function.subcommands.server.debug.startingServer(
@@ -109,7 +107,7 @@ const builder = makeYargsBuilder<FunctionServerArgs>(
 const functionServerCommand: YargsCommandModule<unknown, FunctionServerArgs> = {
   command,
   describe,
-  handler,
+  handler: makeYargsHandlerWithUsageTracking('functions-server', handler),
   builder,
 };
 

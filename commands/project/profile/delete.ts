@@ -11,11 +11,12 @@ import {
   deleteProject,
 } from '@hubspot/local-dev-lib/api/projects';
 import { getConfigAccountById } from '@hubspot/local-dev-lib/config';
-import { trackCommandUsage } from '../../../lib/usageTracking.js';
 import { getProjectConfig } from '../../../lib/projects/config.js';
+import { isV2Project } from '../../../lib/projects/platformVersion.js';
 import { uiLogger } from '../../../lib/ui/logger.js';
 import { EXIT_CODES } from '../../../lib/enums/exitCodes.js';
 import { YargsCommandModule, CommonArgs } from '../../../types/Yargs.js';
+import { makeYargsHandlerWithUsageTracking } from '../../../lib/yargs/makeYargsHandlerWithUsageTracking.js';
 import { makeYargsBuilder } from '../../../lib/yargsUtils.js';
 import { commands } from '../../../lang/en.js';
 import { confirmPrompt, listPrompt } from '../../../lib/prompts/promptUtils.js';
@@ -36,15 +37,20 @@ type ProjectProfileDeleteArgs = CommonArgs & {
 async function handler(
   args: ArgumentsCamelCase<ProjectProfileDeleteArgs>
 ): Promise<void> {
-  const { derivedAccountId } = args;
-
-  trackCommandUsage('project-profile-delete', undefined, derivedAccountId);
+  const { exit } = args;
 
   const { projectConfig, projectDir } = await getProjectConfig();
 
   if (!projectConfig || !projectDir) {
     uiLogger.error(commands.project.profile.delete.errors.noProjectConfig);
-    process.exit(EXIT_CODES.ERROR);
+    return exit(EXIT_CODES.ERROR);
+  }
+
+  if (!isV2Project(projectConfig.platformVersion)) {
+    uiLogger.error(
+      commands.project.profile.delete.errors.unsupportedPlatformVersion
+    );
+    return exit(EXIT_CODES.ERROR);
   }
 
   const projectSourceDir = path.join(projectDir, projectConfig.srcDir);
@@ -58,14 +64,14 @@ async function handler(
       uiLogger.error(
         commands.project.profile.delete.errors.noProfileFound(profileFilename)
       );
-      process.exit(EXIT_CODES.ERROR);
+      return exit(EXIT_CODES.ERROR);
     }
   } else {
     const existingProfiles = await getAllHsProfiles(projectSourceDir);
 
     if (existingProfiles.length === 0) {
       uiLogger.error(commands.project.profile.delete.errors.noProfilesFound);
-      process.exit(EXIT_CODES.ERROR);
+      return exit(EXIT_CODES.ERROR);
     }
 
     const promptResponse = await listPrompt(
@@ -86,7 +92,7 @@ async function handler(
 
   // This should never happen
   if (!profileName) {
-    process.exit(EXIT_CODES.ERROR);
+    return exit(EXIT_CODES.ERROR);
   }
 
   let targetAccountId: number | undefined;
@@ -111,7 +117,7 @@ async function handler(
         profileFilename
       )
     );
-    process.exit(EXIT_CODES.ERROR);
+    return exit(EXIT_CODES.ERROR);
   }
 
   uiLogger.log(
@@ -159,7 +165,7 @@ async function handler(
               targetAccountId
             )
           );
-          process.exit(EXIT_CODES.ERROR);
+          return exit(EXIT_CODES.ERROR);
         }
 
         uiLogger.log(
@@ -175,7 +181,7 @@ async function handler(
     }
   }
 
-  process.exit(EXIT_CODES.SUCCESS);
+  return exit(EXIT_CODES.SUCCESS);
 }
 
 function projectProfileDeleteBuilder(
@@ -208,7 +214,7 @@ const projectProfileDeleteCommand: YargsCommandModule<
 > = {
   command,
   describe,
-  handler,
+  handler: makeYargsHandlerWithUsageTracking('project-profile-delete', handler),
   builder,
 };
 

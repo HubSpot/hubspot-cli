@@ -1,6 +1,5 @@
-import { ArgumentsCamelCase, Argv } from 'yargs';
+import { Argv, ArgumentsCamelCase } from 'yargs';
 import { CmsPublishMode } from '@hubspot/local-dev-lib/types/Files';
-import { trackCommandUsage } from '../../lib/usageTracking.js';
 import { promptUser } from '../../lib/prompts/promptUtils.js';
 import { EXIT_CODES } from '../../lib/enums/exitCodes.js';
 import {
@@ -15,6 +14,7 @@ import {
   ConfigArgs,
   YargsCommandModule,
 } from '../../types/Yargs.js';
+import { makeYargsHandlerWithUsageTracking } from '../../lib/yargs/makeYargsHandlerWithUsageTracking.js';
 import { commands } from '../../lang/en.js';
 import {
   makeYargsBuilder,
@@ -100,9 +100,8 @@ async function handler(args: ArgumentsCamelCase<ConfigSetArgs>): Promise<void> {
     defaultCmsPublishMode,
     httpTimeout,
     autoOpenBrowser,
+    exit,
   } = args;
-
-  trackCommandUsage('config-set', {}, derivedAccountId);
 
   try {
     if (
@@ -119,10 +118,10 @@ async function handler(args: ArgumentsCamelCase<ConfigSetArgs>): Promise<void> {
     }
   } catch (err) {
     logError(err);
-    process.exit(EXIT_CODES.ERROR);
+    return exit(EXIT_CODES.ERROR);
   }
 
-  process.exit(EXIT_CODES.SUCCESS);
+  return exit(EXIT_CODES.SUCCESS);
 }
 
 function configSetBuilder(yargs: Argv): Argv<ConfigSetArgs> {
@@ -205,7 +204,7 @@ const builder = makeYargsBuilder<ConfigSetArgs>(
 const configSetCommand: YargsCommandModule<unknown, ConfigSetArgs> = {
   command,
   describe,
-  handler,
+  handler: makeYargsHandlerWithUsageTracking('config-set', handler),
   builder,
 };
 

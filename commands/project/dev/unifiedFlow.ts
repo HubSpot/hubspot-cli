@@ -50,7 +50,7 @@ import {
 import { uiLogger } from '../../../lib/ui/logger.js';
 import { commands } from '../../../lang/en.js';
 import LocalDevWebsocketServer from '../../../lib/projects/localDev/LocalDevWebsocketServer.js';
-import { confirmLocalDevIsNotRunning } from '../../../lib/projects/localDev/helpers/process.js';
+import { isLocalDevRunning } from '../../../lib/projects/localDev/helpers/process.js';
 
 type UnifiedProjectDevFlowArgs = {
   args: ArgumentsCamelCase<ProjectDevArgs>;
@@ -68,7 +68,12 @@ export async function unifiedProjectDevFlow({
   projectConfig,
   projectDir,
 }: UnifiedProjectDevFlowArgs): Promise<void> {
-  await confirmLocalDevIsNotRunning();
+  const { exit } = args;
+
+  if (await isLocalDevRunning()) {
+    uiLogger.error(commands.project.dev.errors.localDevAlreadyRunning);
+    return exit(EXIT_CODES.ERROR);
+  }
 
   const env = getConfigAccountEnvironment(targetProjectAccountId);
 
@@ -96,12 +101,12 @@ export async function unifiedProjectDevFlow({
     } else {
       logError(e);
     }
-    return process.exit(EXIT_CODES.ERROR);
+    return exit(EXIT_CODES.ERROR);
   }
 
   if (!Object.keys(projectNodes).length) {
     uiLogger.error(commands.project.dev.errors.noRunnableComponents);
-    process.exit(EXIT_CODES.SUCCESS);
+    return exit(EXIT_CODES.SUCCESS);
   }
 
   const targetProjectAccountConfig = getConfigAccountById(
@@ -111,7 +116,7 @@ export async function unifiedProjectDevFlow({
     uiLogger.error(
       commands.project.dev.errors.noAccount(targetProjectAccountId)
     );
-    process.exit(EXIT_CODES.ERROR);
+    return exit(EXIT_CODES.ERROR);
   }
 
   const accounts = getAllConfigAccounts();
@@ -122,7 +127,7 @@ export async function unifiedProjectDevFlow({
 
   if (!accountIsCombined) {
     uiLogger.error(commands.project.dev.errors.accountNotCombined);
-    process.exit(EXIT_CODES.ERROR);
+    return exit(EXIT_CODES.ERROR);
   }
 
   let targetTestingAccountId = providedTargetTestingAccountId;
@@ -164,18 +169,25 @@ export async function unifiedProjectDevFlow({
       if (!!devAccountPromptResponse.notInConfigAccount) {
         // When the developer test account isn't configured in the CLI config yet
         // Walk the user through adding the account's PAK to the config
-        await useExistingDevTestAccount(
+        const accountAdded = await useExistingDevTestAccount(
           env,
           devAccountPromptResponse.notInConfigAccount
         );
+        if (!accountAdded) {
+          return exit(EXIT_CODES.SUCCESS);
+        }
       } else if (devAccountPromptResponse.createNestedAccount) {
         // Create a new developer test account and automatically add it to the CLI config
-        targetTestingAccountId = await createDeveloperTestAccountForLocalDev(
-          targetProjectAccountId,
-          targetProjectAccountConfig,
-          env,
-          true
-        );
+        try {
+          targetTestingAccountId = await createDeveloperTestAccountForLocalDev(
+            targetProjectAccountId,
+            targetProjectAccountConfig,
+            env,
+            true
+          );
+        } catch {
+          return exit(EXIT_CODES.ERROR);
+        }
       }
     } else if (accountType === HUBSPOT_ACCOUNT_TYPES.DEVELOPMENT_SANDBOX) {
       const sandboxAccountPromptResponse =
@@ -188,11 +200,15 @@ export async function unifiedProjectDevFlow({
         sandboxAccountPromptResponse.targetAccountId || undefined;
 
       if (sandboxAccountPromptResponse.createNestedAccount) {
-        targetTestingAccountId = await createSandboxForLocalDev(
-          targetProjectAccountId,
-          targetProjectAccountConfig,
-          env
-        );
+        try {
+          targetTestingAccountId = await createSandboxForLocalDev(
+            targetProjectAccountId,
+            targetProjectAccountConfig,
+            env
+          );
+        } catch {
+          return exit(EXIT_CODES.ERROR);
+        }
       }
     } else {
       targetTestingAccountId = targetProjectAccountId;
@@ -223,6 +239,7 @@ export async function unifiedProjectDevFlow({
       targetProjectAccountId,
       project.deployedBuild?.buildId,
       projectNodes,
+      exit,
       args.profile
     );
   } else {
@@ -230,27 +247,33 @@ export async function unifiedProjectDevFlow({
       projectConfig,
       targetProjectAccountId,
       false,
-      false
+      false,
+      exit
     );
 
     await createInitialBuildForNewProject(
       projectConfig,
       projectDir,
       targetProjectAccountId,
+      exit,
       true,
       args.profile
     );
   }
 
   // Check for missing/outdated dependencies
-  await checkAndInstallDependencies();
+  try {
+    await checkAndInstallDependencies();
+  } catch {
+    return exit(EXIT_CODES.ERROR);
+  }
 
   // End setup, start local dev process
   try {
     await startPortManagerServer();
   } catch (e) {
     logError(e);
-    process.exit(EXIT_CODES.ERROR);
+    return exit(EXIT_CODES.ERROR);
   }
 
   const localDevProcess = new LocalDevProcess({
@@ -264,6 +287,7 @@ export async function unifiedProjectDevFlow({
     projectDir,
     projectData: project,
     env,
+    actions: { exit },
   });
 
   const websocketServer = new LocalDevWebsocketServer(

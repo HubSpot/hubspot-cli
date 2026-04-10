@@ -1,7 +1,6 @@
 import { Argv, ArgumentsCamelCase } from 'yargs';
 import { addAppSecret } from '@hubspot/local-dev-lib/api/devSecrets';
 import { logError } from '../../../lib/errorHandlers/index.js';
-import { trackCommandUsage } from '../../../lib/usageTracking.js';
 import {
   secretValuePrompt,
   secretNamePrompt,
@@ -16,6 +15,7 @@ import {
   EnvironmentArgs,
   YargsCommandModule,
 } from '../../../types/Yargs.js';
+import { makeYargsHandlerWithUsageTracking } from '../../../lib/yargs/makeYargsHandlerWithUsageTracking.js';
 import { makeYargsBuilder } from '../../../lib/yargsUtils.js';
 import { uiLogger } from '../../../lib/ui/logger.js';
 import { uiBetaTag } from '../../../lib/ui/index.js';
@@ -34,9 +34,7 @@ type AddAppSecretArgs = CommonArgs &
 async function handler(
   args: ArgumentsCamelCase<AddAppSecretArgs>
 ): Promise<void> {
-  const { derivedAccountId } = args;
-
-  trackCommandUsage('app-secret-add', {}, derivedAccountId);
+  const { derivedAccountId, exit } = args;
 
   try {
     const appSecretApp = await selectAppPrompt(derivedAccountId, args.app);
@@ -46,7 +44,7 @@ async function handler(
       uiLogger.log(
         commands.app.subcommands.secret.subcommands.add.errors.noApps
       );
-      return process.exit(EXIT_CODES.ERROR);
+      return exit(EXIT_CODES.ERROR);
     }
 
     let appSecretName = args.name;
@@ -74,10 +72,10 @@ async function handler(
     );
   } catch (err) {
     logError(err);
-    return process.exit(EXIT_CODES.ERROR);
+    return exit(EXIT_CODES.ERROR);
   }
 
-  process.exit(EXIT_CODES.SUCCESS);
+  return exit(EXIT_CODES.SUCCESS);
 }
 
 function addAppSecretBuilder(yargs: Argv): Argv<AddAppSecretArgs> {
@@ -114,7 +112,7 @@ const builder = makeYargsBuilder<AddAppSecretArgs>(
 const addAppSecretCommand: YargsCommandModule<unknown, AddAppSecretArgs> = {
   command,
   describe,
-  handler,
+  handler: makeYargsHandlerWithUsageTracking('app-secret-add', handler),
   builder,
 };
 

@@ -4,7 +4,6 @@ import { secretListPrompt } from '../../lib/prompts/secretPrompt.js';
 import { confirmPrompt } from '../../lib/prompts/promptUtils.js';
 import { EXIT_CODES } from '../../lib/enums/exitCodes.js';
 import { ApiErrorContext, logError } from '../../lib/errorHandlers/index.js';
-import { trackCommandUsage } from '../../lib/usageTracking.js';
 import { commands } from './../../lang/en.js';
 import { uiLogger } from '../../lib/ui/logger.js';
 import {
@@ -14,6 +13,7 @@ import {
   EnvironmentArgs,
   YargsCommandModule,
 } from '../../types/Yargs.js';
+import { makeYargsHandlerWithUsageTracking } from '../../lib/yargs/makeYargsHandlerWithUsageTracking.js';
 import { makeYargsBuilder } from '../../lib/yargsUtils.js';
 
 const command = 'delete [name]';
@@ -27,10 +27,8 @@ type DeleteSecretArgs = CommonArgs &
 async function handler(
   args: ArgumentsCamelCase<DeleteSecretArgs>
 ): Promise<void> {
-  const { name, derivedAccountId, force } = args;
+  const { name, derivedAccountId, force, exit } = args;
   let secretName = name;
-
-  trackCommandUsage('secrets-delete', {}, derivedAccountId);
 
   try {
     const {
@@ -41,7 +39,7 @@ async function handler(
       uiLogger.error(
         commands.secret.subcommands.delete.errors.noSecret(secretName)
       );
-      process.exit(EXIT_CODES.ERROR);
+      return exit(EXIT_CODES.ERROR);
     }
 
     if (!secretName) {
@@ -63,7 +61,7 @@ async function handler(
 
     if (!confirmDelete) {
       uiLogger.success(commands.secret.subcommands.delete.deleteCanceled);
-      process.exit(EXIT_CODES.SUCCESS);
+      return exit(EXIT_CODES.SUCCESS);
     }
 
     await deleteSecret(derivedAccountId, secretName);
@@ -118,7 +116,7 @@ const builder = makeYargsBuilder<DeleteSecretArgs>(
 const deleteSecretCommand: YargsCommandModule<unknown, DeleteSecretArgs> = {
   command,
   describe,
-  handler,
+  handler: makeYargsHandlerWithUsageTracking('secrets-delete', handler),
   builder,
 };
 

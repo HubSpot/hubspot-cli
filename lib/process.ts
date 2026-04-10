@@ -27,13 +27,15 @@ export const TERMINATION_SIGNALS = [
 
 export function handleExit(
   callback: (onTerminate: { isSIGHUP: boolean }) => void
-): void {
+): () => void {
   let exitInProgress = false;
+  const listeners: Array<{
+    signal: string;
+    handler: (...args: unknown[]) => void;
+  }> = [];
 
   TERMINATION_SIGNALS.forEach(signal => {
-    process.removeAllListeners(signal);
-
-    process.on(signal, async (...args: unknown[]) => {
+    const handler = async (...args: unknown[]) => {
       // Prevent duplicate exit handling
       if (!exitInProgress) {
         exitInProgress = true;
@@ -56,8 +58,17 @@ export function handleExit(
 
         await callback({ isSIGHUP });
       }
-    });
+    };
+
+    listeners.push({ signal, handler });
+    process.on(signal, handler);
   });
+
+  return () => {
+    for (const { signal, handler } of listeners) {
+      process.removeListener(signal, handler);
+    }
+  };
 }
 
 export function handleKeypress(callback: (onKeyPress: KeyPress) => void): void {

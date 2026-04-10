@@ -17,7 +17,6 @@ import {
   SANDBOX_TYPE_MAP,
   validateSandboxUsageLimits,
 } from '../../lib/sandboxes.js';
-import { trackCommandUsage } from '../../lib/usageTracking.js';
 import { sandboxTypePrompt } from '../../lib/prompts/sandboxesPrompt.js';
 import { promptUser } from '../../lib/prompts/promptUtils.js';
 import { logError } from '../../lib/errorHandlers/index.js';
@@ -31,6 +30,7 @@ import {
   TestingArgs,
   YargsCommandModule,
 } from '../../types/Yargs.js';
+import { makeYargsHandlerWithUsageTracking } from '../../lib/yargs/makeYargsHandlerWithUsageTracking.js';
 import { makeYargsBuilder } from '../../lib/yargsUtils.js';
 
 const command = 'create';
@@ -49,11 +49,9 @@ export type SandboxCreateArgs = CommonArgs &
 async function handler(
   args: ArgumentsCamelCase<SandboxCreateArgs>
 ): Promise<void> {
-  const { name, type, force, derivedAccountId } = args;
+  const { name, type, force, derivedAccountId, exit } = args;
   const accountConfig = getConfigAccountById(derivedAccountId);
   const env = getConfigAccountEnvironment(derivedAccountId);
-
-  trackCommandUsage('sandbox-create', {}, derivedAccountId);
 
   // Check if account config exists
   if (!accountConfig) {
@@ -62,7 +60,7 @@ async function handler(
         derivedAccountId
       )
     );
-    process.exit(EXIT_CODES.ERROR);
+    return exit(EXIT_CODES.ERROR);
   }
 
   // Default account is not a production portal
@@ -80,7 +78,7 @@ async function handler(
         accountConfig.name || ''
       )
     );
-    process.exit(EXIT_CODES.ERROR);
+    return exit(EXIT_CODES.ERROR);
   }
 
   let typePrompt;
@@ -93,7 +91,7 @@ async function handler(
       uiLogger.error(
         commands.sandbox.subcommands.create.failure.optionMissing.type
       );
-      process.exit(EXIT_CODES.ERROR);
+      return exit(EXIT_CODES.ERROR);
     }
   }
 
@@ -127,7 +125,7 @@ async function handler(
     } else {
       logError(err);
     }
-    process.exit(EXIT_CODES.ERROR);
+    return exit(EXIT_CODES.ERROR);
   }
 
   if (!name) {
@@ -137,17 +135,18 @@ async function handler(
       uiLogger.error(
         commands.sandbox.subcommands.create.failure.optionMissing.name
       );
-      process.exit(EXIT_CODES.ERROR);
+      return exit(EXIT_CODES.ERROR);
     }
   }
 
-  const sandboxName = name || (namePrompt && namePrompt.name);
-  if (!sandboxName) {
+  const maybeSandboxName = name || (namePrompt && namePrompt.name);
+  if (!maybeSandboxName) {
     uiLogger.error(
       commands.sandbox.subcommands.create.failure.optionMissing.name
     );
-    process.exit(EXIT_CODES.ERROR);
+    return exit(EXIT_CODES.ERROR);
   }
+  const sandboxName: string = maybeSandboxName;
 
   let contactRecordsSyncPromptResult = false;
   if (!force) {
@@ -187,7 +186,7 @@ async function handler(
           result.sandbox.sandboxHubId
         )
       );
-      process.exit(EXIT_CODES.ERROR);
+      return exit(EXIT_CODES.ERROR);
     }
 
     const highlightItems = ['accountsUseCommand', 'projectCreateCommand'];
@@ -198,10 +197,10 @@ async function handler(
     }
 
     uiFeatureHighlight(highlightItems);
-    process.exit(EXIT_CODES.SUCCESS);
+    return exit(EXIT_CODES.SUCCESS);
   } catch (error) {
     // Errors are logged in util functions
-    process.exit(EXIT_CODES.ERROR);
+    return exit(EXIT_CODES.ERROR);
   }
 }
 
@@ -246,7 +245,7 @@ const builder = makeYargsBuilder<SandboxCreateArgs>(
 const sandboxCreateCommand: YargsCommandModule<unknown, SandboxCreateArgs> = {
   command,
   describe,
-  handler,
+  handler: makeYargsHandlerWithUsageTracking('sandbox-create', handler),
   builder,
 };
 

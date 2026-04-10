@@ -4,7 +4,6 @@ import path from 'path';
 import { getConfigAccountById } from '@hubspot/local-dev-lib/config';
 
 import { isV2Project } from '../../lib/projects/platformVersion.js';
-import { trackCommandUsage } from '../../lib/usageTracking.js';
 import { uiLogger } from '../../lib/ui/logger.js';
 import {
   getProjectConfig,
@@ -12,6 +11,7 @@ import {
 } from '../../lib/projects/config.js';
 import { EXIT_CODES } from '../../lib/enums/exitCodes.js';
 import { CommonArgs, YargsCommandModule } from '../../types/Yargs.js';
+import { makeYargsHandlerWithUsageTracking } from '../../lib/yargs/makeYargsHandlerWithUsageTracking.js';
 import { makeYargsBuilder } from '../../lib/yargsUtils.js';
 import {
   validateSourceDirectory,
@@ -34,33 +34,29 @@ type ProjectValidateArgs = CommonArgs & {
 async function handler(
   args: ArgumentsCamelCase<ProjectValidateArgs>
 ): Promise<void> {
-  const { derivedAccountId, profile } = args;
+  const { derivedAccountId, profile, exit, addUsageMetadata } = args;
 
   const { projectConfig, projectDir } = await getProjectConfig();
 
   const accountConfig = getConfigAccountById(derivedAccountId!);
   const accountType = accountConfig && accountConfig.accountType;
-  trackCommandUsage(
-    'project-validate',
-    { type: accountType! },
-    derivedAccountId
-  );
+  addUsageMetadata({ type: accountType! });
 
   if (!projectConfig || !projectDir) {
     uiLogger.error(commands.project.validate.mustBeRanWithinAProject);
-    process.exit(EXIT_CODES.ERROR);
+    return exit(EXIT_CODES.ERROR);
   }
 
-  if (!isV2Project(projectConfig?.platformVersion)) {
+  if (!isV2Project(projectConfig.platformVersion)) {
     uiLogger.error(commands.project.validate.badVersion);
-    process.exit(EXIT_CODES.ERROR);
+    return exit(EXIT_CODES.ERROR);
   }
 
   try {
     validateProjectConfig(projectConfig, projectDir);
   } catch (error) {
     logError(error);
-    process.exit(EXIT_CODES.ERROR);
+    return exit(EXIT_CODES.ERROR);
   }
 
   let validationSucceeded = true;
@@ -132,18 +128,18 @@ async function handler(
   }
 
   if (!validationSucceeded) {
-    process.exit(EXIT_CODES.ERROR);
+    return exit(EXIT_CODES.ERROR);
   }
 
   try {
     await validateSourceDirectory(srcDir, projectConfig, projectDir);
   } catch (e) {
     logError(e);
-    process.exit(EXIT_CODES.ERROR);
+    return exit(EXIT_CODES.ERROR);
   }
 
   uiLogger.success(commands.project.validate.success(projectConfig.name));
-  process.exit(EXIT_CODES.SUCCESS);
+  return exit(EXIT_CODES.SUCCESS);
 }
 
 function projectValidateBuilder(yargs: Argv): Argv<ProjectValidateArgs> {
@@ -194,7 +190,7 @@ const projectValidateCommand: YargsCommandModule<unknown, ProjectValidateArgs> =
   {
     command,
     describe,
-    handler,
+    handler: makeYargsHandlerWithUsageTracking('project-validate', handler),
     builder,
   };
 

@@ -133,7 +133,7 @@ describe('commands/cms/fetch', () => {
 
         expect(trackCommandUsageSpy).toHaveBeenCalledWith(
           'fetch',
-          { mode: 'publish' },
+          { mode: 'publish', successful: true },
           123456
         );
       });

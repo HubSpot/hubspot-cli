@@ -9,6 +9,8 @@ The above copyright notice and this permission notice shall be included in all c
 **/
 import readline from 'readline';
 import stripAnsi from 'strip-ansi';
+import { isUnicodeSupported } from '@hubspot/local-dev-lib/isUnicodeSupported';
+import { getSymbols } from '@hubspot/local-dev-lib/logger';
 
 export const VALID_STATUSES = [
   'succeed',
@@ -93,7 +95,7 @@ export function purgeSpinnersOptions({
 }
 
 function turnToValidSpinner(spinner: Partial<Spinner> = {}): Spinner {
-  const platformSpinner = terminalSupportsUnicode()
+  const platformSpinner = isUnicodeSupported()
     ? SPINNERS.dots
     : SPINNERS.dashes;
   if (typeof spinner !== 'object') {
@@ -141,13 +143,9 @@ export function prefixOptions({
   succeedPrefix,
   failPrefix,
 }: SpinnerOptions): Partial<SpinnerOptions> {
-  if (terminalSupportsUnicode()) {
-    succeedPrefix = succeedPrefix || '✓';
-    failPrefix = failPrefix || '✖';
-  } else {
-    succeedPrefix = succeedPrefix || '√';
-    failPrefix = failPrefix || '×';
-  }
+  const symbols = getSymbols();
+  succeedPrefix = succeedPrefix || symbols.success;
+  failPrefix = failPrefix || symbols.error;
 
   return { succeedPrefix, failPrefix };
 }
@@ -200,14 +198,4 @@ export function cleanStream(
   readline.moveCursor(stream, 0, rawLines.length);
   readline.clearScreenDown(stream);
   readline.moveCursor(stream, 0, -rawLines.length);
-}
-
-export function terminalSupportsUnicode(): boolean {
-  // The default command prompt and powershell in Windows do not support Unicode characters.
-  // However, the VSCode integrated terminal and the Windows Terminal both do.
-  return (
-    process.platform !== 'win32' ||
-    process.env.TERM_PROGRAM === 'vscode' ||
-    !!process.env.WT_SESSION
-  );
 }

@@ -6,7 +6,6 @@ import { createObjectSchema } from '@hubspot/local-dev-lib/api/customObjects';
 import { getHubSpotWebsiteOrigin } from '@hubspot/local-dev-lib/urls';
 import { logError } from '../../lib/errorHandlers/index.js';
 import { checkAndConvertToJson } from '../../lib/validation.js';
-import { trackCommandUsage } from '../../lib/usageTracking.js';
 import { commands } from '../../lang/en.js';
 import { EXIT_CODES } from '../../lib/enums/exitCodes.js';
 import { isSchemaDefinition } from '../../lib/customObject.js';
@@ -18,6 +17,7 @@ import {
   TestingArgs,
   YargsCommandModule,
 } from '../../types/Yargs.js';
+import { makeYargsHandlerWithUsageTracking } from '../../lib/yargs/makeYargsHandlerWithUsageTracking.js';
 import { makeYargsBuilder } from '../../lib/yargsUtils.js';
 
 const command = 'create-schema';
@@ -32,9 +32,7 @@ export type SchemaCreateArgs = CommonArgs &
 async function handler(
   args: ArgumentsCamelCase<SchemaCreateArgs>
 ): Promise<void> {
-  const { path, derivedAccountId } = args;
-
-  trackCommandUsage('custom-object-schema-create', {}, derivedAccountId);
+  const { path, derivedAccountId, exit } = args;
 
   const filePath = getAbsoluteFilePath(path);
   const schemaJson = checkAndConvertToJson(filePath);
@@ -43,7 +41,7 @@ async function handler(
     uiLogger.error(
       commands.customObject.subcommands.createSchema.errors.invalidSchema
     );
-    process.exit(EXIT_CODES.ERROR);
+    return exit(EXIT_CODES.ERROR);
   }
 
   try {
@@ -91,7 +89,10 @@ const builder = makeYargsBuilder<SchemaCreateArgs>(
 const createSchemaCommand: YargsCommandModule<unknown, SchemaCreateArgs> = {
   command,
   describe,
-  handler,
+  handler: makeYargsHandlerWithUsageTracking(
+    'custom-object-schema-create',
+    handler
+  ),
   builder,
 };
 

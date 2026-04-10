@@ -141,6 +141,7 @@ describe('AppDevModeInterface', () => {
       addListener: vi.fn(),
       addUploadWarning: vi.fn(),
       removeListener: vi.fn(),
+      actions: { exit: vi.fn() },
     } as unknown as Mocked<LocalDevState>;
 
     mockLocalDevLogger = {} as unknown as Mocked<LocalDevLogger>;
@@ -194,13 +195,6 @@ describe('AppDevModeInterface', () => {
     (installStaticAuthAppOnTestAccount as Mock).mockResolvedValue(undefined);
     (isServerRunningAtUrl as Mock).mockResolvedValue(true);
 
-    // Mock process.exit
-    vi.spyOn(global.process, 'exit').mockImplementation(
-      (code?: string | number | null) => {
-        throw new Error(`Process.exit called with code ${code}`);
-      }
-    );
-
     appDevModeInterface = new AppDevModeInterface({
       localDevState: mockLocalDevState,
       localDevLogger: mockLocalDevLogger,
@@ -220,12 +214,13 @@ describe('AppDevModeInterface', () => {
         targetProjectAccountId: null,
       } as unknown as Mocked<LocalDevState>;
 
-      expect(() => {
-        new AppDevModeInterface({
-          localDevState: mockLocalDevStateWithoutAccountId,
-          localDevLogger: mockLocalDevLogger,
-        });
-      }).toThrow('Process.exit called with code 1');
+      expect(
+        () =>
+          new AppDevModeInterface({
+            localDevState: mockLocalDevStateWithoutAccountId,
+            localDevLogger: mockLocalDevLogger,
+          })
+      ).toThrow();
     });
 
     it('should exit if projectConfig is missing', () => {
@@ -234,12 +229,13 @@ describe('AppDevModeInterface', () => {
         projectConfig: null,
       } as unknown as Mocked<LocalDevState>;
 
-      expect(() => {
-        new AppDevModeInterface({
-          localDevState: mockLocalDevStateWithoutConfig,
-          localDevLogger: mockLocalDevLogger,
-        });
-      }).toThrow('Process.exit called with code 1');
+      expect(
+        () =>
+          new AppDevModeInterface({
+            localDevState: mockLocalDevStateWithoutConfig,
+            localDevLogger: mockLocalDevLogger,
+          })
+      ).toThrow();
     });
 
     it('should exit if projectDir is missing', () => {
@@ -248,12 +244,13 @@ describe('AppDevModeInterface', () => {
         projectDir: null,
       } as unknown as Mocked<LocalDevState>;
 
-      expect(() => {
-        new AppDevModeInterface({
-          localDevState: mockLocalDevStateWithoutDir,
-          localDevLogger: mockLocalDevLogger,
-        });
-      }).toThrow('Process.exit called with code 1');
+      expect(
+        () =>
+          new AppDevModeInterface({
+            localDevState: mockLocalDevStateWithoutDir,
+            localDevLogger: mockLocalDevLogger,
+          })
+      ).toThrow();
     });
   });
 
@@ -328,20 +325,14 @@ describe('AppDevModeInterface', () => {
       mockLocalDevState.getAppDataByUid.mockReturnValue(mockAppData);
       (confirmPrompt as Mock).mockResolvedValue(false);
 
-      // Create a new instance to trigger the exit during setup
       const newAppDevModeInterface = new AppDevModeInterface({
         localDevState: mockLocalDevState,
         localDevLogger: mockLocalDevLogger,
       });
 
-      // process.exit throws in tests, so we need to catch the error
-      try {
-        await newAppDevModeInterface.setup();
-      } catch {
-        // Expected - process.exit throws in tests
-      }
+      await newAppDevModeInterface.setup();
 
-      expect(process.exit).toHaveBeenCalledWith(0);
+      expect(mockLocalDevState.actions.exit).toHaveBeenCalledWith(0);
     });
 
     it('should auto-install static auth app on test account', async () => {
@@ -417,15 +408,10 @@ describe('AppDevModeInterface', () => {
       const error = new Error('Setup failed');
       (fetchAppMetadataBySourceId as Mock).mockRejectedValue(error);
 
-      // process.exit throws in tests, so we need to catch the error
-      try {
-        await appDevModeInterface.setup();
-      } catch {
-        // Expected - process.exit throws in tests
-      }
+      await appDevModeInterface.setup();
 
       expect(logError).toHaveBeenCalledWith(error);
-      expect(process.exit).toHaveBeenCalledWith(1);
+      expect(mockLocalDevState.actions.exit).toHaveBeenCalledWith(1);
     });
 
     it('should exit if user declines auto-install', async () => {
@@ -443,20 +429,14 @@ describe('AppDevModeInterface', () => {
       });
       (installAppAutoPrompt as Mock).mockResolvedValue(false);
 
-      // Create a new instance to trigger the exit during setup
       const newAppDevModeInterface = new AppDevModeInterface({
         localDevState: mockLocalDevState,
         localDevLogger: mockLocalDevLogger,
       });
 
-      // process.exit throws in tests, so we need to catch the error
-      try {
-        await newAppDevModeInterface.setup();
-      } catch {
-        // Expected - process.exit throws in tests
-      }
+      await newAppDevModeInterface.setup();
 
-      expect(process.exit).toHaveBeenCalledWith(0);
+      expect(mockLocalDevState.actions.exit).toHaveBeenCalledWith(0);
     });
 
     it('should fallback to browser install if auto-install fails', async () => {

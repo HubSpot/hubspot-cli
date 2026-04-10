@@ -12,6 +12,7 @@ import * as platformVersionLib from '../../../lib/projects/platformVersion.js';
 import * as usageTrackingLib from '../../../lib/usageTracking.js';
 import * as projectConfigLib from '../../../lib/projects/config.js';
 import * as projectProfilesLib from '../../../lib/projects/projectProfiles.js';
+import * as projectProfilePromptLib from '../../../lib/prompts/projectProfilePrompt.js';
 import * as pollProjectLib from '../../../lib/projects/pollProjectBuildAndDeploy.js';
 import * as uploadLib from '../../../lib/projects/upload.js';
 import * as uiLib from '../../../lib/projects/ui.js';
@@ -26,6 +27,7 @@ vi.mock('@hubspot/local-dev-lib/errors/index');
 vi.mock('../../../lib/projects/platformVersion.js');
 vi.mock('../../../lib/projects/config.js');
 vi.mock('../../../lib/projects/projectProfiles.js');
+vi.mock('../../../lib/prompts/projectProfilePrompt.js');
 vi.mock('../../../lib/projects/pollProjectBuildAndDeploy.js');
 vi.mock('../../../lib/projects/upload.js');
 vi.mock('../../../lib/projects/ui.js');
@@ -43,6 +45,10 @@ const isV2ProjectSpy = vi.spyOn(platformVersionLib, 'isV2Project');
 const loadAndValidateProfileSpy = vi.spyOn(
   projectProfilesLib,
   'loadAndValidateProfile'
+);
+const projectProfilePromptSpy = vi.spyOn(
+  projectProfilePromptLib,
+  'projectProfilePrompt'
 );
 const getConfigAccountByIdSpy = vi.spyOn(configUtils, 'getConfigAccountById');
 const trackCommandUsageSpy = vi.spyOn(usageTrackingLib, 'trackCommandUsage');
@@ -171,7 +177,8 @@ describe('commands/project/upload', () => {
     it('should load and validate profile for v2 projects', async () => {
       isV2ProjectSpy.mockReturnValue(true);
       args.profile = 'test-profile';
-      loadAndValidateProfileSpy.mockResolvedValue(789012);
+      projectProfilePromptSpy.mockResolvedValue('test-profile');
+      loadAndValidateProfileSpy.mockResolvedValue({ accountId: 12345 });
 
       await projectUploadCommand.handler(args);
 
@@ -186,9 +193,10 @@ describe('commands/project/upload', () => {
     it('should exit if profile validation fails', async () => {
       isV2ProjectSpy.mockReturnValue(true);
       const error = new Error('Invalid profile');
+      projectProfilePromptSpy.mockResolvedValue('test');
       loadAndValidateProfileSpy.mockRejectedValue(error);
 
-      await projectUploadCommand.handler(args);
+      await projectUploadCommand.handler({ ...args, profile: 'test' });
 
       expect(logErrorSpy).toHaveBeenCalledWith(error);
       expect(processExitSpy).toHaveBeenCalledWith(EXIT_CODES.ERROR);
@@ -199,7 +207,7 @@ describe('commands/project/upload', () => {
 
       expect(trackCommandUsageSpy).toHaveBeenCalledWith(
         'project-upload',
-        { type: 'STANDARD', assetType: '2024.1' },
+        { type: 'STANDARD', assetType: '2024.1', successful: true },
         123456
       );
     });
@@ -318,6 +326,77 @@ describe('commands/project/upload', () => {
         expect.any(errorHandlers.ApiErrorContext)
       );
       expect(processExitSpy).toHaveBeenCalledWith(EXIT_CODES.ERROR);
+    });
+
+    describe('with useEnv flag', () => {
+      beforeEach(() => {
+        args.useEnv = 'qa';
+        isV2ProjectSpy.mockReturnValue(true);
+      });
+
+      it('should call projectProfilePrompt with exitIfMissing=true when useEnv is set', async () => {
+        const testProjectDir = '/test/project';
+        const testConfig = {
+          name: 'test-project',
+          srcDir: 'src',
+          platformVersion: '2025.2',
+        };
+        getProjectConfigSpy.mockResolvedValue({
+          projectConfig: testConfig,
+          projectDir: testProjectDir,
+        });
+        projectProfilePromptSpy.mockResolvedValue(null);
+
+        await projectUploadCommand.handler(args);
+
+        expect(projectProfilePromptSpy).toHaveBeenCalledWith(
+          testProjectDir,
+          testConfig,
+          undefined,
+          true
+        );
+      });
+
+      it('should exit if projectProfilePrompt throws when exitIfMissing=true', async () => {
+        projectProfilePromptSpy.mockRejectedValue(
+          new Error('Profile required but not specified')
+        );
+
+        await projectUploadCommand.handler(args);
+
+        expect(processExitSpy).toHaveBeenCalledWith(EXIT_CODES.ERROR);
+      });
+
+      it('should load and validate profile when returned from prompt', async () => {
+        const testProjectDir = '/test/project';
+        const testConfig = {
+          name: 'test-project',
+          srcDir: 'src',
+          platformVersion: '2025.2',
+        };
+        const mockProfile = {
+          accountId: 999888777,
+        };
+        getProjectConfigSpy.mockResolvedValue({
+          projectConfig: testConfig,
+          projectDir: testProjectDir,
+        });
+        projectProfilePromptSpy.mockResolvedValue('test-profile');
+        loadAndValidateProfileSpy.mockResolvedValue(mockProfile);
+
+        await projectUploadCommand.handler(args);
+
+        expect(loadAndValidateProfileSpy).toHaveBeenCalledWith(
+          testConfig,
+          testProjectDir,
+          'test-profile'
+        );
+        expect(handleProjectUploadSpy).toHaveBeenCalledWith(
+          expect.objectContaining({
+            accountId: mockProfile.accountId,
+          })
+        );
+      });
     });
   });
 });

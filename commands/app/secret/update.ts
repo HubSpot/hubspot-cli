@@ -4,7 +4,6 @@ import {
   updateAppSecret,
 } from '@hubspot/local-dev-lib/api/devSecrets';
 import { logError } from '../../../lib/errorHandlers/index.js';
-import { trackCommandUsage } from '../../../lib/usageTracking.js';
 import { secretValuePrompt } from '../../../lib/prompts/secretPrompt.js';
 import { selectAppPrompt } from '../../../lib/prompts/selectAppPrompt.js';
 import { listPrompt } from '../../../lib/prompts/promptUtils.js';
@@ -17,6 +16,7 @@ import {
   EnvironmentArgs,
   YargsCommandModule,
 } from '../../../types/Yargs.js';
+import { makeYargsHandlerWithUsageTracking } from '../../../lib/yargs/makeYargsHandlerWithUsageTracking.js';
 import { makeYargsBuilder } from '../../../lib/yargsUtils.js';
 import { uiLogger } from '../../../lib/ui/logger.js';
 import { uiBetaTag } from '../../../lib/ui/index.js';
@@ -35,14 +35,12 @@ type UpdateAppSecretArgs = CommonArgs &
 async function handler(
   args: ArgumentsCamelCase<UpdateAppSecretArgs>
 ): Promise<void> {
-  const { derivedAccountId } = args;
-
-  trackCommandUsage('app-secret-update', {}, derivedAccountId);
+  const { derivedAccountId, exit } = args;
 
   const appSecretApp = await selectAppPrompt(derivedAccountId, args.app);
 
   if (!appSecretApp) {
-    process.exit(EXIT_CODES.ERROR);
+    return exit(EXIT_CODES.ERROR);
   }
 
   let appSecretToUpdate = args.name;
@@ -60,14 +58,14 @@ async function handler(
       }
     } catch (err) {
       logError(err);
-      process.exit(EXIT_CODES.ERROR);
+      return exit(EXIT_CODES.ERROR);
     }
 
     if (appSecrets.length === 0) {
       uiLogger.error(
         commands.app.subcommands.secret.subcommands.update.errors.noSecrets
       );
-      process.exit(EXIT_CODES.ERROR);
+      return exit(EXIT_CODES.ERROR);
     }
 
     appSecretToUpdate = await listPrompt(
@@ -95,10 +93,10 @@ async function handler(
     );
   } catch (err) {
     logError(err);
-    process.exit(EXIT_CODES.ERROR);
+    return exit(EXIT_CODES.ERROR);
   }
 
-  process.exit(EXIT_CODES.SUCCESS);
+  return exit(EXIT_CODES.SUCCESS);
 }
 
 function updateAppSecretBuilder(yargs: Argv): Argv<UpdateAppSecretArgs> {
@@ -137,7 +135,7 @@ const updateAppSecretCommand: YargsCommandModule<unknown, UpdateAppSecretArgs> =
   {
     command,
     describe,
-    handler,
+    handler: makeYargsHandlerWithUsageTracking('app-secret-update', handler),
     builder,
   };
 

@@ -4,7 +4,6 @@ import { getRoutes } from '@hubspot/local-dev-lib/api/functions';
 import { uiLogger } from '../../../lib/ui/logger.js';
 
 import { logError, ApiErrorContext } from '../../../lib/errorHandlers/index.js';
-import { trackCommandUsage } from '../../../lib/usageTracking.js';
 import { commands } from '../../../lang/en.js';
 import { EXIT_CODES } from '../../../lib/enums/exitCodes.js';
 import {
@@ -14,6 +13,7 @@ import {
   EnvironmentArgs,
   YargsCommandModule,
 } from '../../../types/Yargs.js';
+import { makeYargsHandlerWithUsageTracking } from '../../../lib/yargs/makeYargsHandlerWithUsageTracking.js';
 import { makeYargsBuilder } from '../../../lib/yargsUtils.js';
 import { renderTable } from '../../../ui/render.js';
 
@@ -28,20 +28,20 @@ export type FunctionListArgs = CommonArgs &
 async function handler(
   args: ArgumentsCamelCase<FunctionListArgs>
 ): Promise<void> {
-  const { derivedAccountId } = args;
-
-  trackCommandUsage('function-list', undefined, derivedAccountId);
+  const { derivedAccountId, exit } = args;
 
   uiLogger.debug(
     commands.cms.subcommands.function.subcommands.list.debug.gettingFunctions
   );
 
-  const { data: routesResp } = await getRoutes(derivedAccountId).catch(
-    async e => {
-      logError(e, new ApiErrorContext({ accountId: derivedAccountId }));
-      process.exit(EXIT_CODES.SUCCESS);
-    }
-  );
+  let routesResp: Awaited<ReturnType<typeof getRoutes>>['data'];
+  try {
+    const { data } = await getRoutes(derivedAccountId);
+    routesResp = data;
+  } catch (e) {
+    logError(e, new ApiErrorContext({ accountId: derivedAccountId }));
+    return exit(EXIT_CODES.SUCCESS);
+  }
 
   if (!routesResp.objects.length) {
     return uiLogger.info(
@@ -97,7 +97,7 @@ const builder = makeYargsBuilder<FunctionListArgs>(
 const functionListCommand: YargsCommandModule<unknown, FunctionListArgs> = {
   command,
   describe,
-  handler,
+  handler: makeYargsHandlerWithUsageTracking('function-list', handler),
   builder,
 };
 

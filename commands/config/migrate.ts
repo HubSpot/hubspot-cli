@@ -10,10 +10,10 @@ import {
   ConfigArgs,
   YargsCommandModule,
 } from '../../types/Yargs.js';
+import { makeYargsHandlerWithUsageTracking } from '../../lib/yargs/makeYargsHandlerWithUsageTracking.js';
 import { logError } from '../../lib/errorHandlers/index.js';
 import { EXIT_CODES } from '../../lib/enums/exitCodes.js';
 import { makeYargsBuilder } from '../../lib/yargsUtils.js';
-import { trackCommandUsage } from '../../lib/usageTracking.js';
 import { uiLogger } from '../../lib/ui/logger.js';
 import { commands } from '../../lang/en.js';
 
@@ -25,15 +25,13 @@ type ConfigMigrateArgs = CommonArgs & ConfigArgs & { force?: boolean };
 async function handler(
   args: ArgumentsCamelCase<ConfigMigrateArgs>
 ): Promise<void> {
-  const { derivedAccountId, config: configPath, force } = args;
-
-  trackCommandUsage('config-migrate', {}, derivedAccountId);
+  const { config: configPath, force, exit } = args;
 
   if (configPath && !fs.existsSync(configPath)) {
     uiLogger.error(
       commands.config.subcommands.migrate.errors.configNotFound(configPath)
     );
-    process.exit(EXIT_CODES.ERROR);
+    return exit(EXIT_CODES.ERROR);
   }
 
   const deprecatedConfigExists = localConfigFileExists();
@@ -43,7 +41,7 @@ async function handler(
     uiLogger.error(
       commands.config.subcommands.migrate.errors.noConfigToMigrate
     );
-    process.exit(EXIT_CODES.ERROR);
+    return exit(EXIT_CODES.ERROR);
   }
 
   let success = false;
@@ -57,7 +55,7 @@ async function handler(
     logError(error);
   }
 
-  process.exit(success ? EXIT_CODES.SUCCESS : EXIT_CODES.ERROR);
+  return exit(success ? EXIT_CODES.SUCCESS : EXIT_CODES.ERROR);
 }
 
 function configMigrateBuilder(yargs: Argv): Argv<ConfigMigrateArgs> {
@@ -95,7 +93,7 @@ const builder = makeYargsBuilder<ConfigMigrateArgs>(
 const configMigrateCommand: YargsCommandModule<unknown, ConfigMigrateArgs> = {
   command,
   describe,
-  handler,
+  handler: makeYargsHandlerWithUsageTracking('config-migrate', handler),
   builder,
 };
 

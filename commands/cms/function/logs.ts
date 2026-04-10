@@ -1,5 +1,4 @@
 import { Argv, ArgumentsCamelCase } from 'yargs';
-import { trackCommandUsage } from '../../../lib/usageTracking.js';
 import { outputLogs } from '../../../lib/ui/serverlessFunctionLogs.js';
 import {
   getFunctionLogs,
@@ -15,7 +14,9 @@ import {
   AccountArgs,
   YargsCommandModule,
   EnvironmentArgs,
+  ExitFunction,
 } from '../../../types/Yargs.js';
+import { makeYargsHandlerWithUsageTracking } from '../../../lib/yargs/makeYargsHandlerWithUsageTracking.js';
 import { makeYargsBuilder } from '../../../lib/yargsUtils.js';
 import {
   GetFunctionLogsResponse,
@@ -54,7 +55,8 @@ const handleLogsError = (
 const endpointLog = async (
   accountId: number,
   functionPath: string,
-  options: LogsArgs
+  options: LogsArgs,
+  exit: ExitFunction
 ): Promise<void> => {
   const { limit, latest, follow, compact } = options;
 
@@ -87,27 +89,17 @@ const endpointLog = async (
     };
 
     await tailLogs(accountId, functionPath, fetchLatest, tailCall, compact);
-    process.exit(EXIT_CODES.SUCCESS);
+    return exit(EXIT_CODES.SUCCESS);
   } else if (latest) {
-    try {
-      const { data } = await getLatestFunctionLog(accountId, functionPath);
-      logsResp = data;
-    } catch (e) {
-      handleLogsError(e, accountId, functionPath);
-      process.exit(EXIT_CODES.ERROR);
-    }
+    const { data } = await getLatestFunctionLog(accountId, functionPath);
+    logsResp = data;
   } else {
-    try {
-      const { data } = await getFunctionLogs(
-        accountId,
-        functionPath,
-        requestParams
-      );
-      logsResp = data;
-    } catch (e) {
-      handleLogsError(e, accountId, functionPath);
-      process.exit(EXIT_CODES.ERROR);
-    }
+    const { data } = await getFunctionLogs(
+      accountId,
+      functionPath,
+      requestParams
+    );
+    logsResp = data;
   }
 
   if (logsResp) {
@@ -121,13 +113,15 @@ const describe = commands.cms.subcommands.function.subcommands.logs.describe;
 const handler = async (
   options: ArgumentsCamelCase<LogsArgs>
 ): Promise<void> => {
-  const { endpoint: endpointArgValue, latest, derivedAccountId } = options;
+  const {
+    endpoint: endpointArgValue,
+    latest,
+    derivedAccountId,
+    exit,
+    addUsageMetadata,
+  } = options;
 
-  trackCommandUsage(
-    'logs',
-    latest ? { action: 'latest' } : {},
-    derivedAccountId
-  );
+  addUsageMetadata(latest ? { action: 'latest' } : {});
 
   const { endpointPromptValue } = await promptUser<{
     endpointPromptValue: string;
@@ -137,11 +131,21 @@ const handler = async (
     when: !endpointArgValue,
   });
 
-  await endpointLog(
-    derivedAccountId,
-    endpointArgValue || endpointPromptValue,
-    options
-  );
+  try {
+    await endpointLog(
+      derivedAccountId,
+      endpointArgValue || endpointPromptValue,
+      options,
+      exit
+    );
+  } catch (e) {
+    handleLogsError(
+      e,
+      derivedAccountId,
+      endpointArgValue || endpointPromptValue
+    );
+    return exit(EXIT_CODES.ERROR);
+  }
 };
 
 function logsBuilder(yargs: Argv): Argv<LogsArgs> {
@@ -211,7 +215,7 @@ const logsCommand: YargsCommandModule<unknown, LogsArgs> = {
   command,
   describe,
   builder,
-  handler,
+  handler: makeYargsHandlerWithUsageTracking('logs', handler),
 };
 
 export default logsCommand;

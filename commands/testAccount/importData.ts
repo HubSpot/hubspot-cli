@@ -1,4 +1,4 @@
-import { ArgumentsCamelCase, Argv } from 'yargs';
+import { Argv, ArgumentsCamelCase } from 'yargs';
 
 import { getImportDataRequest } from '@hubspot/local-dev-lib/crm';
 
@@ -10,8 +10,8 @@ import {
   EnvironmentArgs,
   YargsCommandModule,
 } from '../../types/Yargs.js';
+import { makeYargsHandlerWithUsageTracking } from '../../lib/yargs/makeYargsHandlerWithUsageTracking.js';
 import { makeYargsBuilder } from '../../lib/yargsUtils.js';
-import { trackCommandUsage } from '../../lib/usageTracking.js';
 import { EXIT_CODES } from '../../lib/enums/exitCodes.js';
 import { importDataFilePathPrompt } from '../../lib/prompts/importDataFilePathPrompt.js';
 import {
@@ -40,9 +40,8 @@ async function handler(
     userProvidedAccount,
     filePath: providedFilePath,
     skipConfirm,
+    exit,
   } = args;
-
-  trackCommandUsage('crm-import-data', {}, derivedAccountId);
 
   let targetAccountId: number;
 
@@ -60,16 +59,16 @@ async function handler(
       (await confirmImportDataPrompt(targetAccountId, dataFileNames));
 
     if (!confirmImportData) {
-      process.exit(EXIT_CODES.SUCCESS);
+      return exit(EXIT_CODES.SUCCESS);
     }
 
     await handleImportData(targetAccountId, dataFileNames, importRequest);
   } catch (error) {
     logError(error);
-    process.exit(EXIT_CODES.ERROR);
+    return exit(EXIT_CODES.ERROR);
   }
 
-  process.exit(EXIT_CODES.SUCCESS);
+  return exit(EXIT_CODES.SUCCESS);
 }
 
 function crmImportDataBuilder(yargs: Argv): Argv<CrmImportDataArgs> {
@@ -108,7 +107,7 @@ const crmImportDataCommand: YargsCommandModule<unknown, CrmImportDataArgs> = {
   command,
   describe,
   builder,
-  handler,
+  handler: makeYargsHandlerWithUsageTracking('crm-import-data', handler),
 };
 
 export default crmImportDataCommand;

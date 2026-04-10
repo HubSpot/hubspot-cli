@@ -3,7 +3,7 @@ import { ENVIRONMENTS } from '@hubspot/local-dev-lib/constants/environments';
 import { PERSONAL_ACCESS_KEY_AUTH_METHOD } from '@hubspot/local-dev-lib/constants/auth';
 import { deleteConfigFileIfEmpty } from '@hubspot/local-dev-lib/config';
 import { handleExit } from '../../lib/process.js';
-import { trackCommandUsage, trackAuthAction } from '../../lib/usageTracking.js';
+import { trackAuthAction } from '../../lib/usageTracking.js';
 import { EXIT_CODES } from '../../lib/enums/exitCodes.js';
 import { uiFeatureHighlight } from '../../lib/ui/index.js';
 import { parseStringToNumber } from '../../lib/parsing.js';
@@ -12,11 +12,11 @@ import {
   ConfigArgs,
   YargsCommandModule,
 } from '../../types/Yargs.js';
+import { makeYargsHandlerWithUsageTracking } from '../../lib/yargs/makeYargsHandlerWithUsageTracking.js';
 import { makeYargsBuilder } from '../../lib/yargsUtils.js';
 import { commands } from '../../lang/en.js';
 import { uiLogger } from '../../lib/ui/logger.js';
 import { authenticateNewAccount } from '../../lib/accountAuth.js';
-import { PromptExitError } from '../../lib/errors/PromptExitError.js';
 
 const TRACKING_STATUS = {
   STARTED: 'started',
@@ -40,6 +40,7 @@ async function handler(
     disableTracking,
     personalAccessKey: providedPersonalAccessKey,
     userProvidedAccount,
+    exit,
   } = args;
 
   let parsedUserProvidedAccountId: number | undefined;
@@ -51,36 +52,28 @@ async function handler(
       uiLogger.error(
         commands.account.subcommands.auth.errors.invalidAccountIdProvided
       );
-      process.exit(EXIT_CODES.ERROR);
+      return exit(EXIT_CODES.ERROR);
     }
   }
 
   if (!disableTracking) {
-    trackCommandUsage('account-auth', {}, parsedUserProvidedAccountId);
     await trackAuthAction('account-auth', authType, TRACKING_STATUS.STARTED);
   }
 
   handleExit(deleteConfigFileIfEmpty);
 
-  let updatedConfig;
-  try {
-    updatedConfig = await authenticateNewAccount({
-      env: args.qa ? ENVIRONMENTS.QA : ENVIRONMENTS.PROD,
-      providedPersonalAccessKey,
-      accountId: parsedUserProvidedAccountId,
-    });
-  } catch (e) {
-    if (e instanceof PromptExitError) {
-      process.exit(e.exitCode);
-    }
-    throw e;
-  }
+  const updatedConfig = await authenticateNewAccount({
+    env: args.qa ? ENVIRONMENTS.QA : ENVIRONMENTS.PROD,
+    providedPersonalAccessKey,
+    accountId: parsedUserProvidedAccountId,
+  });
 
   if (!updatedConfig) {
     if (!disableTracking) {
       await trackAuthAction('account-auth', authType, TRACKING_STATUS.ERROR);
     }
-    return process.exit(EXIT_CODES.ERROR);
+
+    return exit(EXIT_CODES.ERROR);
   }
 
   const { accountId } = updatedConfig;
@@ -101,7 +94,7 @@ async function handler(
     );
   }
 
-  process.exit(EXIT_CODES.SUCCESS);
+  return exit(EXIT_CODES.SUCCESS);
 }
 
 function accountAuthBuilder(yargs: Argv): Argv<AccountAuthArgs> {
@@ -140,7 +133,7 @@ const builder = makeYargsBuilder<AccountAuthArgs>(
 const accountAuthCommand: YargsCommandModule<unknown, AccountAuthArgs> = {
   command,
   describe,
-  handler,
+  handler: makeYargsHandlerWithUsageTracking('account-auth', handler),
   builder,
 };
 

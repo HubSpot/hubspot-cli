@@ -149,7 +149,7 @@ describe('commands/sandbox/create', () => {
       expect(trackCommandUsage).toHaveBeenCalledTimes(1);
       expect(trackCommandUsage).toHaveBeenCalledWith(
         'sandbox-create',
-        {},
+        { successful: true },
         args.derivedAccountId
       );
     });

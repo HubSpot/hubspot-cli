@@ -1,6 +1,5 @@
 import { Argv, ArgumentsCamelCase } from 'yargs';
 import open from 'open';
-import { trackCommandUsage } from '../../lib/usageTracking.js';
 import { commands } from '../../lang/en.js';
 import { uiLogger } from '../../lib/ui/logger.js';
 import { getProjectConfig } from '../../lib/projects/config.js';
@@ -16,6 +15,7 @@ import {
   TestingArgs,
   YargsCommandModule,
 } from '../../types/Yargs.js';
+import { makeYargsHandlerWithUsageTracking } from '../../lib/yargs/makeYargsHandlerWithUsageTracking.js';
 import { makeYargsBuilder } from '../../lib/yargsUtils.js';
 
 const command = 'open';
@@ -30,9 +30,7 @@ type ProjectOpenArgs = CommonArgs &
 async function handler(
   args: ArgumentsCamelCase<ProjectOpenArgs>
 ): Promise<void> {
-  const { project, derivedAccountId } = args;
-
-  trackCommandUsage('project-open', undefined, derivedAccountId);
+  const { project, derivedAccountId, exit } = args;
 
   const { projectConfig } = await getProjectConfig();
 
@@ -48,7 +46,7 @@ async function handler(
     );
 
     if (!projectExists) {
-      process.exit(EXIT_CODES.ERROR);
+      return exit(EXIT_CODES.ERROR);
     }
   } else if (!projectName && projectConfig) {
     projectName = projectConfig.name;
@@ -60,7 +58,7 @@ async function handler(
   const url = getProjectDetailUrl(projectName!, derivedAccountId)!;
   open(url, { url: true });
   uiLogger.success(commands.project.open.success(projectName!));
-  process.exit(EXIT_CODES.SUCCESS);
+  return exit(EXIT_CODES.SUCCESS);
 }
 
 function projectOpenBuilder(yargs: Argv): Argv<ProjectOpenArgs> {
@@ -92,7 +90,7 @@ const builder = makeYargsBuilder<ProjectOpenArgs>(
 const projectOpenCommand: YargsCommandModule<unknown, ProjectOpenArgs> = {
   command,
   describe,
-  handler,
+  handler: makeYargsHandlerWithUsageTracking('project-open', handler),
   builder,
 };
 

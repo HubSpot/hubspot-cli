@@ -9,38 +9,42 @@ import { EXIT_CODES } from '../../enums/exitCodes.js';
 import { uiLogger } from '../../ui/logger.js';
 import { lib } from '../../../lang/en.js';
 import { getErrorMessage } from '../../errorHandlers/index.js';
+import { ExitFunction } from '../../../types/Yargs.js';
 
 type DevSessionManagerConstructorOptions = {
   targetTestingAccountId: number;
   localDevLogger?: LocalDevLogger;
+  exit: ExitFunction;
 };
 
 class DevSessionManager {
   localDevLogger?: LocalDevLogger;
   targetTestingAccountId: number;
-  protected _devSessionId: number | undefined;
-  private _heartbeatInterval: NodeJS.Timeout | undefined;
-  private _heartbeatRetries: number;
+  protected devSessionId: number | undefined;
+  private heartbeatInterval: NodeJS.Timeout | undefined;
+  private heartbeatRetries: number;
+  private exit: ExitFunction;
 
   constructor(options: DevSessionManagerConstructorOptions) {
     this.targetTestingAccountId = options.targetTestingAccountId;
     this.localDevLogger = options.localDevLogger;
-    this._devSessionId = undefined;
-    this._heartbeatInterval = undefined;
-    this._heartbeatRetries = 0;
+    this.exit = options.exit;
+    this.devSessionId = undefined;
+    this.heartbeatInterval = undefined;
+    this.heartbeatRetries = 0;
   }
 
   private validateSessionIdExists(): asserts this is this & {
-    _devSessionId: number;
+    devSessionId: number;
   } {
-    if (!this._devSessionId) {
+    if (!this.devSessionId) {
       if (this.localDevLogger) {
         this.localDevLogger.devSessionMissingSessionIdError();
       } else {
         // Fallback for deprecated local dev manager
         uiLogger.error(lib.LocalDevManager.devSession.missingSessionIdError);
       }
-      process.exit(EXIT_CODES.ERROR);
+      throw new Error(lib.LocalDevManager.devSession.missingSessionIdError);
     }
   }
 
@@ -56,7 +60,7 @@ class DevSessionManager {
         this.targetTestingAccountId,
         portData
       );
-      this._devSessionId = registerDevSessionResponse.data.sessionId;
+      this.devSessionId = registerDevSessionResponse.data.sessionId;
     } catch (e) {
       if (this.localDevLogger) {
         this.localDevLogger.devSessionRegistrationError(e);
@@ -69,24 +73,32 @@ class DevSessionManager {
       return false;
     }
 
-    this.validateSessionIdExists();
+    try {
+      this.validateSessionIdExists();
+    } catch {
+      return this.exit(EXIT_CODES.ERROR);
+    }
 
     this.initializeHeartbeat();
     return true;
   }
 
   private initializeHeartbeat(): void {
-    this._heartbeatInterval = setInterval(async () => {
-      this.validateSessionIdExists();
+    this.heartbeatInterval = setInterval(async () => {
+      try {
+        this.validateSessionIdExists();
+      } catch {
+        return this.exit(EXIT_CODES.ERROR);
+      }
 
       try {
         await devSessionHeartbeat(
           this.targetTestingAccountId,
-          this._devSessionId
+          this.devSessionId
         );
       } catch (e) {
-        if (this._heartbeatRetries < 3) {
-          this._heartbeatRetries++;
+        if (this.heartbeatRetries < 3) {
+          this.heartbeatRetries++;
           return;
         }
 
@@ -98,17 +110,17 @@ class DevSessionManager {
             lib.LocalDevManager.devSession.heartbeatError(getErrorMessage(e))
           );
         }
-        process.exit(EXIT_CODES.ERROR);
+        return this.exit(EXIT_CODES.ERROR);
       }
     }, 30000);
   }
 
   async deleteDevSession(): Promise<boolean> {
-    if (this._devSessionId) {
-      clearInterval(this._heartbeatInterval);
+    if (this.devSessionId) {
+      clearInterval(this.heartbeatInterval);
 
       try {
-        await deleteDevSession(this.targetTestingAccountId, this._devSessionId);
+        await deleteDevSession(this.targetTestingAccountId, this.devSessionId);
       } catch (e) {
         if (this.localDevLogger) {
           this.localDevLogger.devSessionDeletionError(e);

@@ -1,7 +1,6 @@
 import { Argv, ArgumentsCamelCase } from 'yargs';
 import { fetchSecrets } from '@hubspot/local-dev-lib/api/secrets';
 import { logError, ApiErrorContext } from '../../lib/errorHandlers/index.js';
-import { trackCommandUsage } from '../../lib/usageTracking.js';
 import { uiAccountDescription } from '../../lib/ui/index.js';
 import { commands } from '../../lang/en.js';
 import { uiLogger } from '../../lib/ui/logger.js';
@@ -12,6 +11,7 @@ import {
   EnvironmentArgs,
   YargsCommandModule,
 } from '../../types/Yargs.js';
+import { makeYargsHandlerWithUsageTracking } from '../../lib/yargs/makeYargsHandlerWithUsageTracking.js';
 import { makeYargsBuilder } from '../../lib/yargsUtils.js';
 
 const command = 'list';
@@ -23,7 +23,6 @@ async function handler(
   args: ArgumentsCamelCase<ListSecretArgs>
 ): Promise<void> {
   const { derivedAccountId } = args;
-  trackCommandUsage('secrets-list', {}, derivedAccountId);
 
   try {
     const {
@@ -66,7 +65,7 @@ const builder = makeYargsBuilder<ListSecretArgs>(
 const listSecretCommand: YargsCommandModule<unknown, ListSecretArgs> = {
   command,
   describe,
-  handler,
+  handler: makeYargsHandlerWithUsageTracking('secrets-list', handler),
   builder,
 };
 

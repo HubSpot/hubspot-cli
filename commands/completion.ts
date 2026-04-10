@@ -1,16 +1,13 @@
 import { Argv } from 'yargs';
 import yargsParser from 'yargs-parser';
 import { commands } from '../lang/en.js';
-import { trackCommandUsage } from '../lib/usageTracking.js';
 import { makeYargsBuilder } from '../lib/yargsUtils.js';
 import { CommonArgs, YargsCommandModule } from '../types/Yargs.js';
-
+import { makeYargsHandlerWithUsageTracking } from '../lib/yargs/makeYargsHandlerWithUsageTracking.js';
 const command = 'completion';
 const describe = commands.completion.describe;
 
-async function handler(): Promise<void> {
-  await trackCommandUsage('completion');
-}
+async function handler(): Promise<void> {}
 
 function completionBuilder(yargs: Argv): Argv<CommonArgs> {
   const { help } = yargsParser(process.argv.slice(2));
@@ -31,7 +28,7 @@ const builder = makeYargsBuilder(completionBuilder, command, describe);
 const completionCommand: YargsCommandModule<unknown, CommonArgs> = {
   command,
   describe,
-  handler,
+  handler: makeYargsHandlerWithUsageTracking('completion', handler),
   builder,
 };
 

@@ -1620,6 +1620,34 @@ export const commands = {
       shuttingDown: 'Shutting down MCP server...',
     },
   },
+  api: {
+    describe: 'Make an authenticated HTTP request to the HubSpot API.',
+    verboseDescribe: `Make an authenticated HTTP request to any HubSpot API that supports PAKs using your CLI authentication.\n\nThis command is intended for testing and exploration of HubSpot APIs. It uses the authentication credentials configured in the CLI to make requests on your behalf.\n\nThe endpoint should be the API path, e.g. ${chalk.bold('/crm/v3/objects/contacts')}. The request will be authenticated using the account specified by ${uiCommandReference('--account')} or the default account.\n\nNote: The available endpoints depend on the scopes granted to your personal access key. If you receive a 403 error, check that your key includes the required scopes for the endpoint you are trying to reach. ${uiLink('Learn more about the HubSpot API', 'https://developers.hubspot.com/docs/api-reference/latest/overview')}`,
+    positionals: {
+      endpoint: {
+        describe: 'API endpoint path (e.g. /crm/v3/objects/contacts)',
+      },
+    },
+    options: {
+      method: {
+        describe:
+          'HTTP method to use. Defaults to GET, or POST if --data is provided',
+      },
+      data: {
+        describe:
+          'JSON-formatted request body for POST, PUT, and PATCH requests',
+      },
+    },
+    requestLog: (method: string, url: string) => `${chalk.bold(method)} ${url}`,
+    requestBodyLog: (body: string) => `Request body: ${body}`,
+    responseLog: 'Response:',
+    errors: {
+      invalidJson:
+        'The value passed to --data is not valid JSON. Please provide a valid JSON string.',
+      statusLine: (status: number, statusText: string) =>
+        `${chalk.red(`${status} ${statusText}`)}`,
+    },
+  },
   open: {
     describe: 'Open a HubSpot page in your browser.',
     options: {
@@ -1670,6 +1698,8 @@ export const commands = {
         errors: {
           noProjectConfig:
             'No project config found. Please run this command from a project directory.',
+          unsupportedPlatformVersion:
+            'This command is only available for projects 2025.2 and later.',
           profileExists: (profileName: string) =>
             `Profile ${chalk.bold(profileName)} already exists. Please choose a different name.`,
           invalidTargetAccount: 'Target account is not configured in the CLI',
@@ -1714,6 +1744,8 @@ export const commands = {
         errors: {
           noProjectConfig:
             'No project config found. Please run this command from a project directory.',
+          unsupportedPlatformVersion:
+            'This command is only available for projects 2025.2 and later.',
           noProfileFound: (profileName: string) =>
             `No profile with filename ${chalk.bold(profileName)} found in your project.`,
           noProfilesFound: 'No profiles found in your project.',
@@ -2018,6 +2050,8 @@ export const commands = {
     deploy: {
       describe: 'Deploy a project build.',
       deployBuildIdPrompt: '[--build] Deploy which build?',
+      profileMessage: (profileName: string, accountId: number) =>
+        `Deploying with ${chalk.bold(profileName)} profile: ${uiAccountDescription(accountId)}`,
       debug: {
         deploying: (path: string) => `Deploying project at path: ${path}`,
       },
@@ -2175,6 +2209,8 @@ export const commands = {
           `Automatic deploys are disabled for this project. Run ${uiCommandReference(deployCommand)} to deploy this build.`,
       },
       errors: {
+        noProjectConfig:
+          'No project detected. Run this command from a project directory.',
         projectLockedError: `Your project is locked. This may mean that another user is running the ${uiCommandReference('hs project dev')} command for this project. If this is you, unlock the project in Projects UI.`,
       },
       options: {
@@ -2447,6 +2483,104 @@ export const commands = {
       errors: {
         noProjectsFound: (accountId: number) =>
           `No projects found for account ${uiAccountDescription(accountId)}`,
+      },
+    },
+    info: {
+      describe:
+        'Display information about a project, its app, and its components',
+      verboseDescribe: `Display information about a project, its app, and its components\n\nShows the project's platform version, deployed build ID, auto-deploy status, app metadata, and a list of components.\n\nRun ${uiCommandReference('hs project info --json')} to output the result as JSON for scripting.`,
+      project: {
+        title: (name: string) => `Project: ${name}`,
+        platformVersion: (version: string) => `Platform Version: ${version}`,
+        id: (id: number) => `Project ID: ${id}`,
+        deployedBuild: (buildId: number) => `Deployed Build: #${buildId}`,
+        autoDeploy: (enabled: boolean) =>
+          `Auto-deploy: ${enabled ? 'Enabled' : 'Disabled'}`,
+      },
+      app: {
+        title: 'App',
+        name: (name: string) => `Name: ${name}`,
+        id: (id: number) => `App ID: ${id}`,
+        uid: (uid: string) => `UID: ${uid}`,
+        authType: (authType: string) => `Auth Type: ${authType}`,
+        distributionType: (distributionType: string) =>
+          `Distribution: ${distributionType}`,
+      },
+      examples: {
+        default: 'Display project information',
+        json: 'Output as JSON for scripting',
+      },
+      viewProjectLink: 'View project in HubSpot',
+      componentsHeader: 'Components',
+      labels: {
+        type: 'Type',
+        uid: 'UID',
+      },
+      errors: {
+        noProjectConfig: `No project found in this directory.\n\nRun ${uiCommandReference('hs project create')} to start a new project, or change to a directory containing hsproject.json.`,
+        projectNotFound: (projectName: string, accountId: number) =>
+          `Project "${projectName}" was not found in account ${uiAccountDescription(accountId)}. Make sure the project has been uploaded at least once.`,
+        noDeployedBuild: `This project has not been deployed yet.\n\nRun ${uiCommandReference('hs project deploy')} to deploy your project.`,
+        unsupportedPlatformVersion: (platformVersion: string) =>
+          `This command is not supported for platform version ${chalk.bold(platformVersion)}. Please upgrade to 2025.2 or later.`,
+      },
+    },
+    delete: {
+      describe: 'Delete a project from the current target account',
+      verboseDescribe: `Delete a project from the current target account\n\nThis will permanently delete the project, all deployed components, and any app installations associated with it. Your local project files will not be affected.`,
+      warnings: {
+        irreversibleTitle: 'Warning: This will permanently delete your project',
+        irreversible:
+          'Deleting this project will also delete all deployed components and app installations. This action cannot be undone. Your local project files will not be affected.',
+      },
+      prompts: {
+        selectProject: (accountId: number) =>
+          `Select a project to delete in ${uiAccountDescription(accountId)}`,
+        confirmDelete: (projectName: string, accountId: number) =>
+          `[--force] Delete ${chalk.bold(projectName)} from ${uiAccountDescription(accountId)}? This cannot be undone.`,
+        validation: {
+          projectRequired: 'Please select a project to delete',
+        },
+      },
+      logs: {
+        deleting: (projectName: string) =>
+          `Deleting project ${chalk.bold(projectName)}...`,
+        deleted: (projectName: string, accountId: number) =>
+          `Deleted project ${chalk.bold(projectName)} from ${uiAccountDescription(accountId)}`,
+        cancelled: 'Deletion cancelled',
+        componentsToDeleteUnified: (
+          components: { componentType: string; componentId: string }[]
+        ) =>
+          `The following deployed components will be deleted:\n${components.map(c => `  - ${chalk.bold(c.componentId)} (${mapToUserFriendlyName(c.componentType)})`).join('\n')}`,
+        componentsToDeleteLegacy: (components: string[]) =>
+          `The following deployed components will be deleted:\n${components.map(c => `  - ${chalk.bold(c)}`).join('\n')}`,
+        deletingComponents: (projectName: string) =>
+          `Deleting deployed components from ${chalk.bold(projectName)}...`,
+        componentsDeleted: (projectName: string) =>
+          `Deleted deployed components from ${chalk.bold(projectName)}`,
+        unableToDetermineIfComponentsWereDeleted: (projectName: string) =>
+          `Unable to determine if components were successfully deleted from ${chalk.bold(projectName)}.  Please try again.`,
+        installWarning: (installCount: number) =>
+          `This project has ${chalk.bold(String(installCount))} active app ${installCount === 1 ? 'installation' : 'installations'} that will be deleted.`,
+        installCountUnknown:
+          'Unable to determine the number of active app installations for this project.',
+      },
+      errors: {
+        noProjectsFound: (accountId: number) =>
+          `No projects found for account ${uiAccountDescription(accountId)}`,
+        projectNotFound: (projectName: string, accountId: number) =>
+          `Project ${chalk.bold(projectName)} not found in ${uiAccountDescription(accountId)}`,
+        deleteFailed: (projectName: string) =>
+          `Failed to delete project ${chalk.bold(projectName)}. Run with --debug for details or try again.`,
+        cannotDelete: (projectName: string, reason: string) =>
+          `Cannot delete project ${chalk.bold(projectName)}: ${reason}`,
+        noPlatformVersion: 'Unable to determine platform version for project',
+        componentDeletionFailed: (projectName: string) =>
+          `Failed to delete deployed components from ${chalk.bold(projectName)}. The project was not deleted.`,
+      },
+      options: {
+        project: 'name of the project to delete',
+        force: 'skip confirmation prompt',
       },
     },
   },
@@ -4032,11 +4166,6 @@ export const lib = {
         `Targeting ${uiAccountDescription(accountId)}`,
       profileVariables: 'Profile variables',
     },
-    exitIfUsingProfiles: {
-      errors: {
-        noProfileSpecified: `This project is configured to use profiles, but no profile was specified. Target a profile using the ${uiCommandReference('--profile')} flag.`,
-      },
-    },
     loadProfile: {
       errors: {
         noProjectConfig:
@@ -4347,6 +4476,9 @@ export const lib = {
         'Failed to generate personal access key for developer test account',
     },
   },
+  usageTracking: {
+    transparencyMessage: `HubSpot CLI collects anonymous usage data to improve the product. Run ${uiCommandReference('hs config set --enable-usage-tracking=false', false)} to opt out.\n`,
+  },
   configOptions: {
     enableOrDisableBooleanFieldPrompt: {
       message: (fieldName: string) =>
@@ -4461,7 +4593,15 @@ export const lib = {
       errors: {
         noSelectableChoices:
           'Exiting prompt because no selectable choices are available',
+        userCancelled: 'User cancelled prompt',
       },
+    },
+    projectProfilePrompt: {
+      message:
+        '[--profile] This project is configured to use profiles. Select a profile to use:',
+      exitMessage: `This project is configured to use profiles, but no profile was specified. Try again using ${uiCommandReference('--profile')}`,
+      noValidProfilesMessage:
+        'There are no valid profiles in this project. Ensure the accounts they are targeting are authenticated and try again.',
     },
     importDataFilePathPrompt: {
       promptContext: `To view the JSON schema for data imports, visit ${uiLink('the docs', 'https://developers.hubspot.com/docs/guides/api/crm/imports')}`,

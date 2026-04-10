@@ -13,8 +13,8 @@ vi.mock('@hubspot/local-dev-lib/logger', async () => {
 const mockedReadline = readline as Mocked<typeof readline>;
 const mockedUiLogger = uiLogger as Mocked<typeof uiLogger>;
 const mockedSetLogLevel = setLogLevel as Mock;
-const processRemoveListenerSpy = vi.spyOn(process, 'removeAllListeners');
 const processOnSpy = vi.spyOn(process, 'on');
+const processRemoveListenerSpy = vi.spyOn(process, 'removeListener');
 
 describe('lib/process', () => {
   describe('handleExit()', () => {
@@ -24,8 +24,20 @@ describe('lib/process', () => {
       handleExit(mockCallback);
 
       TERMINATION_SIGNALS.forEach(signal => {
-        expect(processRemoveListenerSpy).toHaveBeenCalledWith(signal);
         expect(processOnSpy).toHaveBeenCalledWith(signal, expect.any(Function));
+      });
+    });
+
+    it('should return a cleanup function that removes all listeners', () => {
+      const cleanup = handleExit(mockCallback);
+
+      cleanup();
+
+      TERMINATION_SIGNALS.forEach(signal => {
+        expect(processRemoveListenerSpy).toHaveBeenCalledWith(
+          signal,
+          expect.any(Function)
+        );
       });
     });
 

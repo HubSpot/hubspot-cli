@@ -36,11 +36,11 @@ const validateProjectConfigSpy = vi.spyOn(
   'validateProjectConfig'
 );
 const isV2ProjectSpy = vi.spyOn(platformVersionLib, 'isV2Project');
-const loadProfileSpy = vi.spyOn(projectProfilesLib, 'loadProfile');
-const enforceProfileUsageSpy = vi.spyOn(
+const loadAndValidateProfileSpy = vi.spyOn(
   projectProfilesLib,
-  'enforceProfileUsage'
+  'loadAndValidateProfile'
 );
+const loadProfileSpy = vi.spyOn(projectProfilesLib, 'loadProfile');
 const getAllHsProfilesSpy = vi.spyOn(
   projectParsingProfiles,
   'getAllHsProfiles'
@@ -75,9 +75,12 @@ describe('commands/project/dev', () => {
     trackCommandUsageSpy.mockImplementation(async () => {});
     deprecatedProjectDevFlowSpy.mockResolvedValue(undefined);
     unifiedProjectDevFlowSpy.mockResolvedValue(undefined);
-    enforceProfileUsageSpy.mockResolvedValue(undefined);
     getAllHsProfilesSpy.mockResolvedValue([]);
     listPromptSpy.mockResolvedValue('dev' as any);
+    loadProfileSpy.mockReturnValue({
+      accountId: 123456,
+      variables: {},
+    });
   });
 
   describe('command', () => {
@@ -165,8 +168,12 @@ describe('commands/project/dev', () => {
 
         await projectDevCommand.handler(args);
 
-        expect(uiLogger.error).toHaveBeenCalledWith(
-          expect.stringContaining('--project-account and --testing-account')
+        expect(logErrorSpy).toHaveBeenCalledWith(
+          expect.objectContaining({
+            message: expect.stringContaining(
+              '--project-account and --testing-account'
+            ),
+          })
         );
         expect(processExitSpy).toHaveBeenCalledWith(EXIT_CODES.ERROR);
       });
@@ -177,8 +184,10 @@ describe('commands/project/dev', () => {
 
         await projectDevCommand.handler(args);
 
-        expect(uiLogger.error).toHaveBeenCalledWith(
-          expect.stringContaining('--account flag')
+        expect(logErrorSpy).toHaveBeenCalledWith(
+          expect.objectContaining({
+            message: expect.stringContaining('--account flag'),
+          })
         );
         expect(processExitSpy).toHaveBeenCalledWith(EXIT_CODES.ERROR);
       });
@@ -196,7 +205,7 @@ describe('commands/project/dev', () => {
         expect(getConfigAccountIfExistsSpy).toHaveBeenCalledWith('999999');
         expect(trackCommandUsageSpy).toHaveBeenCalledWith(
           'project-dev',
-          {},
+          { successful: true },
           999999
         );
       });
@@ -210,20 +219,20 @@ describe('commands/project/dev', () => {
 
         expect(trackCommandUsageSpy).toHaveBeenCalledWith(
           'project-dev',
-          {},
+          { successful: true },
           888888
         );
       });
 
       it('should use profile accountId when profile specified', async () => {
         args.profile = 'test-profile';
-        loadProfileSpy.mockReturnValue({
+        loadAndValidateProfileSpy.mockReturnValue({
           accountId: 777777,
         } as any);
 
         await projectDevCommand.handler(args);
 
-        expect(loadProfileSpy).toHaveBeenCalledWith(
+        expect(loadAndValidateProfileSpy).toHaveBeenCalledWith(
           {
             name: 'test-project',
             srcDir: 'src',
@@ -234,7 +243,7 @@ describe('commands/project/dev', () => {
         );
         expect(trackCommandUsageSpy).toHaveBeenCalledWith(
           'project-dev',
-          {},
+          { successful: true },
           777777
         );
       });
@@ -242,7 +251,7 @@ describe('commands/project/dev', () => {
       it('should exit if profile loading fails', async () => {
         args.profile = 'invalid-profile';
         const error = new Error('Profile not found');
-        loadProfileSpy.mockImplementation(() => {
+        loadAndValidateProfileSpy.mockImplementation(() => {
           throw error;
         });
         // Make process.exit actually throw to stop execution
@@ -262,6 +271,10 @@ describe('commands/project/dev', () => {
         getAllHsProfilesSpy.mockResolvedValue(['dev', 'prod']);
         listPromptSpy.mockResolvedValue('dev' as any);
         loadProfileSpy.mockReturnValue({
+          accountId: 123456,
+          variables: {},
+        });
+        loadAndValidateProfileSpy.mockResolvedValue({
           accountId: 789012,
           variables: {},
         });
@@ -270,9 +283,12 @@ describe('commands/project/dev', () => {
 
         expect(getAllHsProfilesSpy).toHaveBeenCalledWith('/test/project/src');
         expect(listPromptSpy).toHaveBeenCalledWith(expect.any(String), {
-          choices: ['dev', 'prod'],
+          choices: [
+            { name: 'dev [123456]', value: 'dev' },
+            { name: 'prod [123456]', value: 'prod' },
+          ],
         });
-        expect(loadProfileSpy).toHaveBeenCalledWith(
+        expect(loadAndValidateProfileSpy).toHaveBeenCalledWith(
           {
             name: 'test-project',
             srcDir: 'src',
@@ -283,7 +299,7 @@ describe('commands/project/dev', () => {
         );
         expect(trackCommandUsageSpy).toHaveBeenCalledWith(
           'project-dev',
-          {},
+          { successful: true },
           789012
         );
       });
@@ -291,8 +307,12 @@ describe('commands/project/dev', () => {
       it('should exit if profile loading fails after selection', async () => {
         getAllHsProfilesSpy.mockResolvedValue(['dev', 'prod']);
         listPromptSpy.mockResolvedValue('dev' as any);
+        loadProfileSpy.mockReturnValue({
+          accountId: 123456,
+          variables: {},
+        });
         const error = new Error('Failed to load profile');
-        loadProfileSpy.mockImplementation(() => {
+        loadAndValidateProfileSpy.mockImplementation(() => {
           throw error;
         });
 
@@ -314,7 +334,7 @@ describe('commands/project/dev', () => {
 
         expect(trackCommandUsageSpy).toHaveBeenCalledWith(
           'project-dev',
-          {},
+          { successful: true },
           123456
         );
       });
@@ -326,7 +346,7 @@ describe('commands/project/dev', () => {
 
         expect(trackCommandUsageSpy).toHaveBeenCalledWith(
           'project-dev',
-          {},
+          { successful: true },
           123456
         );
       });
@@ -388,7 +408,7 @@ describe('commands/project/dev', () => {
       it('should pass profile config to unified flow', async () => {
         args.profile = 'dev-profile';
         const profileConfig = { accountId: 666666 } as any;
-        loadProfileSpy.mockReturnValue(profileConfig);
+        loadAndValidateProfileSpy.mockReturnValue(profileConfig);
 
         await projectDevCommand.handler(args);
 

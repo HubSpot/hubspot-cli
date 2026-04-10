@@ -16,7 +16,10 @@ import updateDeps from '../project/updateDeps.js';
 import validate from '../project/validate.js';
 import profileCommands from '../project/profile.js';
 import list from '../project/list.js';
+import info from '../project/info.js';
 import projectCommand from '../project.js';
+import deleteCommand from '../project/delete.js';
+
 import * as projectConfigLib from '../../lib/projects/config.js';
 import * as platformVersionLib from '../../lib/projects/platformVersion.js';
 import { uiLogger } from '../../lib/ui/logger.js';
@@ -100,6 +103,8 @@ describe('commands/project', () => {
       profileCommands,
       validate,
       list,
+      info,
+      deleteCommand,
     ];
 
     it('should demand the command takes one positional argument', () => {

@@ -2,7 +2,6 @@ import { Argv, ArgumentsCamelCase } from 'yargs';
 import { downloadFileOrFolder } from '@hubspot/local-dev-lib/fileManager';
 import { uiLogger } from '../../lib/ui/logger.js';
 import { resolveLocalPath } from '../../lib/filesystem.js';
-import { trackCommandUsage } from '../../lib/usageTracking.js';
 import { commands } from '../../lang/en.js';
 import { EXIT_CODES } from '../../lib/enums/exitCodes.js';
 import { logError } from '../../lib/errorHandlers/index.js';
@@ -15,6 +14,7 @@ import {
   OverwriteArgs,
   YargsCommandModule,
 } from '../../types/Yargs.js';
+import { makeYargsHandlerWithUsageTracking } from '../../lib/yargs/makeYargsHandlerWithUsageTracking.js';
 import { makeYargsBuilder } from '../../lib/yargsUtils.js';
 
 const command = 'fetch <src> [dest]';
@@ -33,18 +33,16 @@ type FileManagerFetchArgs = CommonArgs &
 async function handler(
   args: ArgumentsCamelCase<FileManagerFetchArgs>
 ): Promise<void> {
-  const { src, includeArchived, derivedAccountId, overwrite } = args;
+  const { src, includeArchived, derivedAccountId, overwrite, exit } = args;
 
   if (typeof src !== 'string') {
     uiLogger.error(
       commands.filemanager.subcommands.fetch.errors.sourceRequired
     );
-    process.exit(EXIT_CODES.ERROR);
+    return exit(EXIT_CODES.ERROR);
   }
 
   const dest = resolveLocalPath(args.dest);
-
-  trackCommandUsage('filemanager-fetch', {}, derivedAccountId);
 
   try {
     // Fetch and write file/folder.
@@ -57,7 +55,7 @@ async function handler(
     );
   } catch (err) {
     logError(err);
-    process.exit(EXIT_CODES.ERROR);
+    return exit(EXIT_CODES.ERROR);
   }
 }
 
@@ -100,7 +98,7 @@ const fileManagerFetchCommand: YargsCommandModule<
 > = {
   command,
   describe,
-  handler,
+  handler: makeYargsHandlerWithUsageTracking('filemanager-fetch', handler),
   builder,
 };
 

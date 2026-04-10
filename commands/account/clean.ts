@@ -12,7 +12,6 @@ import {
   getDefaultAccountOverrideFilePath,
 } from '@hubspot/local-dev-lib/config/defaultAccountOverride';
 import { isSpecifiedError } from '@hubspot/local-dev-lib/errors/index';
-import { trackCommandUsage } from '../../lib/usageTracking.js';
 import { EXIT_CODES } from '../../lib/enums/exitCodes.js';
 import { promptUser } from '../../lib/prompts/promptUtils.js';
 import { selectAccountFromConfig } from '../../lib/prompts/accountsPrompt.js';
@@ -23,6 +22,7 @@ import {
   ConfigArgs,
   YargsCommandModule,
 } from '../../types/Yargs.js';
+import { makeYargsHandlerWithUsageTracking } from '../../lib/yargs/makeYargsHandlerWithUsageTracking.js';
 import { logError } from '../../lib/errorHandlers/index.js';
 import { makeYargsBuilder } from '../../lib/yargsUtils.js';
 import { commands } from '../../lang/en.js';
@@ -40,9 +40,7 @@ type AccountCleanArgs = CommonArgs &
 async function handler(
   args: ArgumentsCamelCase<AccountCleanArgs>
 ): Promise<void> {
-  const { qa } = args;
-
-  trackCommandUsage('accounts-clean');
+  const { qa, exit } = args;
 
   const accountsList = getAllConfigAccounts();
   const filteredTestAccounts = accountsList.filter(p =>
@@ -51,7 +49,7 @@ async function handler(
 
   if (filteredTestAccounts && filteredTestAccounts.length === 0) {
     uiLogger.log(commands.account.subcommands.clean.noResults);
-    process.exit(EXIT_CODES.SUCCESS);
+    return exit(EXIT_CODES.SUCCESS);
   }
 
   const accountsToRemove = [];
@@ -157,7 +155,7 @@ async function handler(
   }
 
   uiLogger.log('');
-  process.exit(EXIT_CODES.SUCCESS);
+  return exit(EXIT_CODES.SUCCESS);
 }
 
 function accountCleanBuilder(yargs: Argv): Argv<AccountCleanArgs> {
@@ -180,7 +178,7 @@ const builder = makeYargsBuilder<AccountCleanArgs>(
 const accountCleanCommand: YargsCommandModule<unknown, AccountCleanArgs> = {
   command,
   describe,
-  handler,
+  handler: makeYargsHandlerWithUsageTracking('accounts-clean', handler),
   builder,
 };
 

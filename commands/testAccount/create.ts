@@ -13,20 +13,20 @@ import {
   ConfigArgs,
   AccountArgs,
   TestingArgs,
-  YargsCommandModule,
   EnvironmentArgs,
   JSONOutputArgs,
+  YargsCommandModule,
 } from '../../types/Yargs.js';
+import { makeYargsHandlerWithUsageTracking } from '../../lib/yargs/makeYargsHandlerWithUsageTracking.js';
 import { makeYargsBuilder } from '../../lib/yargsUtils.js';
 import { promptUser, listPrompt } from '../../lib/prompts/promptUtils.js';
 import { EXIT_CODES } from '../../lib/enums/exitCodes.js';
 import { uiLogger } from '../../lib/ui/logger.js';
-import { trackCommandUsage } from '../../lib/usageTracking.js';
 import { fileExists } from '../../lib/validation.js';
 import { commands } from '../../lang/en.js';
 import { createDeveloperTestAccountConfigPrompt } from '../../lib/prompts/createDeveloperTestAccountConfigPrompt.js';
 import { debugError, logError } from '../../lib/errorHandlers/index.js';
-import { PromptExitError } from '../../lib/errors/PromptExitError.js';
+import { isPromptExitError } from '../../lib/errors/PromptExitError.js';
 import SpinniesManager from '../../lib/ui/SpinniesManager.js';
 import {
   createDeveloperTestAccountV2,
@@ -77,27 +77,23 @@ function hasAnyFlags(args: ArgumentsCamelCase<CreateTestAccountArgs>): boolean {
   );
 }
 
-async function readConfigFile(
-  configPath: string
-): Promise<DeveloperTestAccountConfig> {
+function readConfigFile(configPath: string): DeveloperTestAccountConfig {
   const absoluteConfigPath = path.resolve(getCwd(), configPath);
 
   if (!fileExists(absoluteConfigPath)) {
-    uiLogger.error(
+    throw new Error(
       commands.testAccount.create.errors.configFileNotFound(absoluteConfigPath)
     );
-    process.exit(EXIT_CODES.ERROR);
   }
 
   try {
     return JSON.parse(fs.readFileSync(absoluteConfigPath, 'utf8'));
   } catch (err) {
-    uiLogger.error(
+    throw new Error(
       commands.testAccount.create.errors.configFileParseFailed(
         absoluteConfigPath
       )
     );
-    process.exit(EXIT_CODES.ERROR);
   }
 }
 
@@ -174,13 +170,17 @@ async function buildTestAccountConfig(
 async function handler(
   args: ArgumentsCamelCase<CreateTestAccountArgs>
 ): Promise<void> {
-  const { derivedAccountId, formatOutputAsJson } = args;
-
-  trackCommandUsage('test-account-create', {}, derivedAccountId);
+  const { derivedAccountId, formatOutputAsJson, exit } = args;
 
   const env = getValidEnv(getConfigAccountEnvironment(derivedAccountId));
 
-  const testAccountConfig = await buildTestAccountConfig(args);
+  let testAccountConfig: DeveloperTestAccountConfig;
+  try {
+    testAccountConfig = await buildTestAccountConfig(args);
+  } catch (error) {
+    logError(error);
+    return exit(EXIT_CODES.ERROR);
+  }
 
   const resultJson: {
     accountName?: string;
@@ -212,7 +212,7 @@ async function handler(
     SpinniesManager.fail('createTestAccount', {
       text: commands.testAccount.create.polling.createFailure,
     });
-    process.exit(EXIT_CODES.ERROR);
+    return exit(EXIT_CODES.ERROR);
   }
 
   SpinniesManager.succeed('createTestAccount', {
@@ -246,8 +246,8 @@ async function handler(
         );
       }
     } catch (e) {
-      if (e instanceof PromptExitError) {
-        process.exit(e.exitCode);
+      if (isPromptExitError(e)) {
+        throw e;
       }
       debugError(e);
       uiLogger.error(
@@ -255,11 +255,11 @@ async function handler(
           testAccountConfig.accountName
         )
       );
-      process.exit(EXIT_CODES.ERROR);
+      return exit(EXIT_CODES.ERROR);
     }
   }
 
-  process.exit(EXIT_CODES.SUCCESS);
+  return exit(EXIT_CODES.SUCCESS);
 }
 
 function createTestAccountBuilder(yargs: Argv): Argv<CreateTestAccountArgs> {
@@ -369,7 +369,7 @@ const createTestAccountCommand: YargsCommandModule<
 > = {
   command,
   describe,
-  handler,
+  handler: makeYargsHandlerWithUsageTracking('test-account-create', handler),
   builder,
 };
 

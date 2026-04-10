@@ -12,7 +12,6 @@ import {
 } from '@hubspot/local-dev-lib/config';
 import { getHubSpotWebsiteOrigin } from '@hubspot/local-dev-lib/urls';
 import { getValidEnv } from '@hubspot/local-dev-lib/environment';
-import { trackCommandUsage } from '../../lib/usageTracking.js';
 import { logError, debugError } from '../../lib/errorHandlers/index.js';
 import { commands } from '../../lang/en.js';
 import { deleteSandboxPrompt } from '../../lib/prompts/sandboxesPrompt.js';
@@ -28,6 +27,7 @@ import {
   TestingArgs,
   YargsCommandModule,
 } from '../../types/Yargs.js';
+import { makeYargsHandlerWithUsageTracking } from '../../lib/yargs/makeYargsHandlerWithUsageTracking.js';
 import { makeYargsBuilder } from '../../lib/yargsUtils.js';
 
 const command = 'delete';
@@ -42,9 +42,7 @@ type SandboxDeleteArgs = CommonArgs &
 async function handler(
   args: ArgumentsCamelCase<SandboxDeleteArgs>
 ): Promise<void> {
-  const { userProvidedAccount, derivedAccountId, force } = args;
-
-  trackCommandUsage('sandbox-delete', {}, derivedAccountId);
+  const { userProvidedAccount, force, exit } = args;
 
   let accountPrompt;
   if (!userProvidedAccount) {
@@ -54,14 +52,14 @@ async function handler(
       // Account is required, throw error if force flag is present and no account is specified
       uiLogger.log('');
       uiLogger.error(commands.sandbox.subcommands.delete.failure.noAccount);
-      process.exit(EXIT_CODES.ERROR);
+      return exit(EXIT_CODES.ERROR);
     }
     if (!accountPrompt) {
       uiLogger.log('');
       uiLogger.error(
         commands.sandbox.subcommands.delete.failure.noSandboxAccounts
       );
-      process.exit(EXIT_CODES.ERROR);
+      return exit(EXIT_CODES.ERROR);
     }
   }
 
@@ -72,7 +70,7 @@ async function handler(
     uiLogger.error(
       commands.sandbox.subcommands.delete.failure.noSandboxAccountId
     );
-    process.exit(EXIT_CODES.ERROR);
+    return exit(EXIT_CODES.ERROR);
   }
 
   const sandboxAccountId = sandboxAccount.accountId;
@@ -96,7 +94,7 @@ async function handler(
           uiLogger.error(
             commands.sandbox.subcommands.delete.failure.noParentAccount
           );
-          process.exit(EXIT_CODES.ERROR);
+          return exit(EXIT_CODES.ERROR);
         }
         const parentAccount = getConfigAccountIfExists(
           parentAccountPrompt.account
@@ -106,7 +104,7 @@ async function handler(
         uiLogger.error(
           commands.sandbox.subcommands.delete.failure.noParentAccount
         );
-        process.exit(EXIT_CODES.ERROR);
+        return exit(EXIT_CODES.ERROR);
       }
     }
   }
@@ -126,7 +124,7 @@ async function handler(
       )
     );
     uiLogger.log('');
-    process.exit(EXIT_CODES.ERROR);
+    return exit(EXIT_CODES.ERROR);
   }
 
   uiLogger.debug(
@@ -153,7 +151,7 @@ async function handler(
         },
       ]);
       if (!confirmed) {
-        process.exit(EXIT_CODES.SUCCESS);
+        return exit(EXIT_CODES.SUCCESS);
       }
     }
 
@@ -182,7 +180,7 @@ async function handler(
       // If force is specified, skip prompt and set the parent account id as the default account
       setConfigAccountAsDefault(parentAccountId!);
     }
-    process.exit(EXIT_CODES.SUCCESS);
+    return exit(EXIT_CODES.SUCCESS);
   } catch (err) {
     debugError(err);
 
@@ -232,11 +230,11 @@ async function handler(
         // If force is specified, skip prompt and set the parent account id as the default account
         setConfigAccountAsDefault(parentAccountId!);
       }
-      process.exit(EXIT_CODES.SUCCESS);
+      return exit(EXIT_CODES.SUCCESS);
     } else {
       logError(err);
     }
-    process.exit(EXIT_CODES.ERROR);
+    return exit(EXIT_CODES.ERROR);
   }
 }
 
@@ -277,7 +275,7 @@ const builder = makeYargsBuilder<SandboxDeleteArgs>(
 const sandboxDeleteCommand: YargsCommandModule<unknown, SandboxDeleteArgs> = {
   command,
   describe,
-  handler,
+  handler: makeYargsHandlerWithUsageTracking('sandbox-delete', handler),
   builder,
 };
 

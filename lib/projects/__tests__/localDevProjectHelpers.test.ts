@@ -57,8 +57,14 @@ describe('isDeployedProjectUpToDateWithLocal', () => {
     // Mock fs.mkdtemp
     (fs.mkdtemp as unknown as Mock).mockResolvedValue(mockTempDir);
 
-    // Mock fs.pathExists
+    // Mock fs.pathExists - return true for hsproject.json
     (fs.pathExists as Mock).mockResolvedValue(true);
+
+    // Mock fs.readJson to return deployed project config
+    (fs.readJson as Mock).mockResolvedValue({
+      srcDir: 'src',
+      platformVersion: '1.0.0',
+    });
 
     // Mock fs.remove
     (fs.remove as Mock).mockResolvedValue(undefined);
@@ -178,6 +184,45 @@ describe('isDeployedProjectUpToDateWithLocal', () => {
 
       expect(result).toBe(false);
       expect(fs.remove).toHaveBeenCalledWith(mockTempDir);
+    });
+
+    it('should default to "src" when hsproject.json has no srcDir field', async () => {
+      // Mock downloadProject
+      (downloadProject as Mock).mockResolvedValue({
+        data: mockZippedProject,
+      });
+
+      // Mock extractZipArchive
+      (extractZipArchive as Mock).mockResolvedValue(undefined);
+
+      // Mock fs.readJson to return config without srcDir
+      (fs.readJson as Mock).mockResolvedValue({
+        platformVersion: '1.0.0',
+      });
+
+      // Mock translate to return nodes
+      (translate as Mock).mockResolvedValue({
+        intermediateNodesIndexedByUid: mockLocalProjectNodes,
+      });
+
+      // Mock isDeepEqual to return true
+      (isDeepEqual as Mock).mockReturnValue(true);
+
+      const result = await isDeployedProjectUpToDateWithLocal(
+        mockProjectConfig,
+        mockAccountId,
+        mockBuildId,
+        mockLocalProjectNodes
+      );
+
+      expect(result).toBe(true);
+      // Verify translate was called with "src" as the srcDir
+      expect(translate).toHaveBeenCalledWith(
+        expect.objectContaining({
+          projectSourceDir: `${mockTempDir}/src`,
+        }),
+        expect.anything()
+      );
     });
   });
 });

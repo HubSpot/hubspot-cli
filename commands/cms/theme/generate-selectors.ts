@@ -11,6 +11,7 @@ import {
 } from '../../../lib/generateSelectors.js';
 import { EXIT_CODES } from '../../../lib/enums/exitCodes.js';
 import { CommonArgs, YargsCommandModule } from '../../../types/Yargs.js';
+import { makeYargsHandlerWithUsageTracking } from '../../../lib/yargs/makeYargsHandlerWithUsageTracking.js';
 import { makeYargsBuilder } from '../../../lib/yargsUtils.js';
 import { uiLogger } from '../../../lib/ui/logger.js';
 
@@ -34,7 +35,7 @@ export type ThemeSelectorArgs = CommonArgs & { path: string };
 async function handler(
   args: ArgumentsCamelCase<ThemeSelectorArgs>
 ): Promise<void> {
-  const { path } = args;
+  const { path, exit } = args;
 
   const fieldsJsonPath = findFieldsJsonPath(path);
   if (!fieldsJsonPath) {
@@ -42,7 +43,7 @@ async function handler(
       commands.cms.subcommands.theme.subcommands.generateSelectors.errors
         .fieldsNotFound
     );
-    process.exit(EXIT_CODES.ERROR);
+    return exit(EXIT_CODES.ERROR);
   }
 
   let fieldsJson = JSON.parse(fs.readFileSync(fieldsJsonPath, 'utf-8'));
@@ -193,7 +194,7 @@ async function handler(
       commands.cms.subcommands.theme.subcommands.generateSelectors.errors
         .noSelectorsFound
     );
-    process.exit(EXIT_CODES.ERROR);
+    return exit(EXIT_CODES.ERROR);
   }
   Object.keys(finalMap).forEach(themeFieldKey => {
     const fieldKey = themeFieldKey.split('.');
@@ -248,7 +249,7 @@ const builder = makeYargsBuilder<ThemeSelectorArgs>(
 const themeSelectorsCommand: YargsCommandModule<unknown, ThemeSelectorArgs> = {
   command,
   describe,
-  handler,
+  handler: makeYargsHandlerWithUsageTracking('generate-selectors', handler),
   builder,
 };
 

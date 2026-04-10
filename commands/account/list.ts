@@ -1,4 +1,4 @@
-import { Argv, ArgumentsCamelCase } from 'yargs';
+import { Argv } from 'yargs';
 import {
   getConfigFilePath,
   getAllConfigAccounts,
@@ -7,7 +7,6 @@ import {
 import { getDefaultAccountOverrideFilePath } from '@hubspot/local-dev-lib/config/defaultAccountOverride';
 import { HubSpotConfigAccount } from '@hubspot/local-dev-lib/types/Accounts';
 import { indent } from '../../lib/ui/index.js';
-import { trackCommandUsage } from '../../lib/usageTracking.js';
 import { isSandbox, isDeveloperTestAccount } from '../../lib/accountTypes.js';
 import {
   HUBSPOT_ACCOUNT_TYPES,
@@ -18,6 +17,7 @@ import {
   ConfigArgs,
   YargsCommandModule,
 } from '../../types/Yargs.js';
+import { makeYargsHandlerWithUsageTracking } from '../../lib/yargs/makeYargsHandlerWithUsageTracking.js';
 import { makeYargsBuilder } from '../../lib/yargsUtils.js';
 import { uiLogger } from '../../lib/ui/logger.js';
 import { commands } from '../../lang/en.js';
@@ -90,13 +90,7 @@ function getAccountData(mappedAccountData: {
   return accountData;
 }
 
-async function handler(
-  args: ArgumentsCamelCase<AccountListArgs>
-): Promise<void> {
-  const { derivedAccountId } = args;
-
-  trackCommandUsage('accounts-list', undefined, derivedAccountId);
-
+async function handler(): Promise<void> {
   const configPath = getConfigFilePath();
   const accountsList = getAllConfigAccounts();
   const mappedAccountData = sortAndMapAccounts(accountsList);
@@ -161,7 +155,7 @@ const builder = makeYargsBuilder<AccountListArgs>(
 const accountListCommand: YargsCommandModule<unknown, AccountListArgs> = {
   command,
   describe,
-  handler,
+  handler: makeYargsHandlerWithUsageTracking('accounts-list', handler),
   builder,
 };
 

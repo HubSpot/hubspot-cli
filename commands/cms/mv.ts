@@ -2,7 +2,6 @@ import { Argv, ArgumentsCamelCase } from 'yargs';
 import { moveFile } from '@hubspot/local-dev-lib/api/fileMapper';
 import { isSpecifiedError } from '@hubspot/local-dev-lib/errors/index';
 import { logError, ApiErrorContext } from '../../lib/errorHandlers/index.js';
-import { trackCommandUsage } from '../../lib/usageTracking.js';
 import { isPathFolder } from '../../lib/filesystem.js';
 import {
   CommonArgs,
@@ -10,6 +9,7 @@ import {
   EnvironmentArgs,
   YargsCommandModule,
 } from '../../types/Yargs.js';
+import { makeYargsHandlerWithUsageTracking } from '../../lib/yargs/makeYargsHandlerWithUsageTracking.js';
 import { makeYargsBuilder } from '../../lib/yargsUtils.js';
 import { uiLogger } from '../../lib/ui/logger.js';
 import { commands } from '../../lang/en.js';
@@ -32,8 +32,6 @@ export type MvArgs = CommonArgs &
 
 async function handler(args: ArgumentsCamelCase<MvArgs>) {
   const { srcPath, destPath, derivedAccountId } = args;
-
-  trackCommandUsage('mv', undefined, derivedAccountId);
 
   try {
     await moveFile(
@@ -90,7 +88,7 @@ const builder = makeYargsBuilder<MvArgs>(cmsMvBuilder, command, describe, {
 const cmsMvCommand: YargsCommandModule<unknown, MvArgs> = {
   command,
   describe,
-  handler,
+  handler: makeYargsHandlerWithUsageTracking('mv', handler),
   builder,
 };
 

@@ -5,7 +5,10 @@ import { logError } from '../errorHandlers/index.js';
 import { uiLogger } from '../ui/logger.js';
 import { fetchPublicAppsForPortal } from '@hubspot/local-dev-lib/api/appsDev';
 import { PublicApp } from '@hubspot/local-dev-lib/types/Apps';
-import { PromptExitError } from '../errors/PromptExitError.js';
+import {
+  isPromptExitError,
+  PromptExitError,
+} from '../errors/PromptExitError.js';
 import { EXIT_CODES } from '../enums/exitCodes.js';
 
 type PublicAppPromptResponse = {
@@ -63,7 +66,7 @@ async function fetchPublicAppOptions(
     }
     return filteredPublicApps;
   } catch (error) {
-    if (error instanceof PromptExitError) {
+    if (isPromptExitError(error)) {
       throw error;
     }
     logError(error, accountId ? { accountId } : undefined);

@@ -14,12 +14,13 @@ import { HubSpotHttpError } from '@hubspot/local-dev-lib/models/HubSpotHttpError
 export function logError(error: unknown, context?: ApiErrorContext): void {
   debugError(error, context);
 
-  if (isProjectValidationError(error)) {
-    uiLogger.error(error.message);
+  // This should be right after debugError.  Add anything else below it
+  if (shouldSuppressError(error, context)) {
     return;
   }
 
-  if (shouldSuppressError(error, context)) {
+  if (isProjectValidationError(error)) {
+    uiLogger.error(error.message);
     return;
   }
 

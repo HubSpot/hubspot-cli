@@ -10,7 +10,7 @@ const version = pkg.version;
 const usageTrackingDiabled =
   'Usage tracking is disabled via the --disable-usage-tracking flag, not sending usage events';
 
-type Meta = {
+export type UsageTrackingMeta = {
   action?: string; // "The specific action taken in the CLI"
   os?: string; // "The user's OS"
   nodeVersion?: string; // "The user's version of node.js"
@@ -56,7 +56,7 @@ export function getPlatform(): string {
 
 export async function trackCommandUsage(
   command: string,
-  meta: Meta = {},
+  meta: UsageTrackingMeta = {},
   accountId?: number
 ): Promise<void> {
   if (isUsageTrackingDisableFlagSet()) {
@@ -141,7 +141,7 @@ export async function trackAuthAction(
 
 export async function trackCommandMetadataUsage(
   command: string,
-  meta: Meta = {},
+  meta: UsageTrackingMeta = {},
   accountId?: number
 ): Promise<void> {
   if (isUsageTrackingDisableFlagSet()) {
@@ -183,7 +183,7 @@ async function trackCliInteraction({
   accountId?: number;
   command?: string;
   authType?: string;
-  meta?: Meta;
+  meta?: UsageTrackingMeta;
 }): Promise<void> {
   try {
     const config = getConfig();

@@ -10,6 +10,7 @@ import { trackCommandUsage } from '../../../../lib/usageTracking.js';
 import { logError } from '../../../../lib/errorHandlers/index.js';
 import { uiLogger } from '../../../../lib/ui/logger.js';
 import { EXIT_CODES } from '../../../../lib/enums/exitCodes.js';
+import type { UsageTrackingArgs } from '../../../../types/Yargs.js';
 import addAppSecretCommand from '../add.js';
 
 vi.mock('../../../../lib/commonOpts');
@@ -73,13 +74,15 @@ describe('commands/app/secret/add', () => {
   });
 
   describe('handler', () => {
-    let args: ArgumentsCamelCase<{
-      name?: string;
-      app?: number;
-      derivedAccountId: number;
-      d: boolean;
-      debug: boolean;
-    }>;
+    let args: ArgumentsCamelCase<
+      {
+        name?: string;
+        app?: number;
+        derivedAccountId: number;
+        d: boolean;
+        debug: boolean;
+      } & UsageTrackingArgs
+    >;
 
     beforeEach(() => {
       args = {
@@ -87,13 +90,19 @@ describe('commands/app/secret/add', () => {
         derivedAccountId: 123456,
         d: false,
         debug: false,
-      } as ArgumentsCamelCase<{
-        name?: string;
-        app?: number;
-        derivedAccountId: number;
-        d: boolean;
-        debug: boolean;
-      }>;
+        addUsageMetadata: vi.fn(),
+        exit: vi.fn(),
+        _: [],
+        $0: '',
+      } as ArgumentsCamelCase<
+        {
+          name?: string;
+          app?: number;
+          derivedAccountId: number;
+          d: boolean;
+          debug: boolean;
+        } & UsageTrackingArgs
+      >;
     });
 
     it('should track command usage', async () => {
@@ -101,7 +110,7 @@ describe('commands/app/secret/add', () => {
 
       expect(trackCommandUsageMock).toHaveBeenCalledWith(
         'app-secret-add',
-        {},
+        { successful: true },
         123456
       );
     });

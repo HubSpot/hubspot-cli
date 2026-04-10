@@ -5,7 +5,6 @@ import {
   getResolvedPath,
 } from '@hubspot/local-dev-lib/customObjects';
 import { inputPrompt } from '../../lib/prompts/promptUtils.js';
-import { trackCommandUsage } from '../../lib/usageTracking.js';
 import { commands } from '../../lang/en.js';
 import { logSchemas } from '../../lib/schema.js';
 import { logError } from '../../lib/errorHandlers/index.js';
@@ -16,6 +15,7 @@ import {
   EnvironmentArgs,
   YargsCommandModule,
 } from '../../types/Yargs.js';
+import { makeYargsHandlerWithUsageTracking } from '../../lib/yargs/makeYargsHandlerWithUsageTracking.js';
 import { makeYargsBuilder } from '../../lib/yargsUtils.js';
 
 const command = 'fetch-all-schemas [dest]';
@@ -30,8 +30,6 @@ async function handler(
   args: ArgumentsCamelCase<SchemaFetchAllArgs>
 ): Promise<void> {
   const { derivedAccountId, dest: providedDest } = args;
-
-  trackCommandUsage('custom-object-schema-fetch-all', {}, derivedAccountId);
 
   try {
     const dest =
@@ -92,7 +90,10 @@ const fetchAllSchemasCommand: YargsCommandModule<unknown, SchemaFetchAllArgs> =
   {
     command,
     describe,
-    handler,
+    handler: makeYargsHandlerWithUsageTracking(
+      'custom-object-schema-fetch-all',
+      handler
+    ),
     builder,
   };
 

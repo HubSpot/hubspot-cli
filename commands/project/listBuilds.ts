@@ -13,7 +13,6 @@ import {
 import { getProjectDetailUrl } from '../../lib/projects/urls.js';
 import moment from 'moment';
 import { promptUser } from '../../lib/prompts/promptUtils.js';
-import { trackCommandUsage } from '../../lib/usageTracking.js';
 import { uiLogger } from '../../lib/ui/logger.js';
 import { logError, ApiErrorContext } from '../../lib/errorHandlers/index.js';
 import {
@@ -23,6 +22,7 @@ import {
   EnvironmentArgs,
   YargsCommandModule,
 } from '../../types/Yargs.js';
+import { makeYargsHandlerWithUsageTracking } from '../../lib/yargs/makeYargsHandlerWithUsageTracking.js';
 import { EXIT_CODES } from '../../lib/enums/exitCodes.js';
 import { makeYargsBuilder } from '../../lib/yargsUtils.js';
 import { commands } from '../../lang/en.js';
@@ -108,9 +108,7 @@ async function fetchAndDisplayBuilds(
 async function handler(
   args: ArgumentsCamelCase<ProjectListBuildsArgs>
 ): Promise<void> {
-  const { project: projectFlagValue, limit, derivedAccountId } = args;
-
-  trackCommandUsage('project-list-builds', undefined, derivedAccountId);
+  const { project: projectFlagValue, limit, derivedAccountId, exit } = args;
 
   let projectName = projectFlagValue;
 
@@ -121,7 +119,11 @@ async function handler(
       validateProjectConfig(projectConfig, projectDir);
     } catch (error) {
       logError(error);
-      process.exit(EXIT_CODES.ERROR);
+      return exit(EXIT_CODES.ERROR);
+    }
+
+    if (!projectConfig) {
+      return exit(EXIT_CODES.ERROR);
     }
     projectName = projectConfig.name;
   }
@@ -144,7 +146,7 @@ async function handler(
       );
     }
   }
-  process.exit(EXIT_CODES.SUCCESS);
+  return exit(EXIT_CODES.SUCCESS);
 }
 
 function projectListBuildsBuilder(yargs: Argv): Argv<ProjectListBuildsArgs> {
@@ -184,7 +186,7 @@ const projectListBuildsCommand: YargsCommandModule<
 > = {
   command,
   describe,
-  handler,
+  handler: makeYargsHandlerWithUsageTracking('project-list-builds', handler),
   builder,
 };
 

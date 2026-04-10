@@ -8,17 +8,17 @@ import {
 import DevSessionManager from '../localDev/DevSessionManager.js';
 import { Mock, vi, Mocked } from 'vitest';
 import { EXIT_CODES } from '../../enums/exitCodes.js';
+import { ExitFunction } from '../../../types/Yargs.js';
 
 vi.mock('@hubspot/local-dev-lib/portManager');
 vi.mock('../localDev/helpers/devSessionsApi.js');
 vi.mock('../localDev/LocalDevState');
 vi.mock('../localDev/LocalDevLogger');
 
-const processExitSpy = vi.spyOn(process, 'exit');
-
 describe('DevSessionManager', () => {
   let mockTargetTestingAccountId: number;
   let mockLocalDevLogger: Mocked<LocalDevLogger>;
+  let mockExit: Mock<ExitFunction>;
   let devSessionManager: DevSessionManager;
 
   beforeEach(() => {
@@ -32,10 +32,12 @@ describe('DevSessionManager', () => {
       devSessionHeartbeatError: vi.fn(),
       devSessionDeletionError: vi.fn(),
     } as unknown as Mocked<LocalDevLogger>;
+    mockExit = vi.fn();
 
     devSessionManager = new DevSessionManager({
       targetTestingAccountId: mockTargetTestingAccountId,
       localDevLogger: mockLocalDevLogger,
+      exit: mockExit,
     });
 
     // Spy on clearInterval but let it actually work
@@ -45,9 +47,9 @@ describe('DevSessionManager', () => {
   afterEach(() => {
     // Clear any remaining intervals
     // @ts-expect-error accessing private property for testing
-    if (devSessionManager._heartbeatInterval) {
+    if (devSessionManager.heartbeatInterval) {
       // @ts-expect-error accessing private property for testing
-      clearInterval(devSessionManager._heartbeatInterval);
+      clearInterval(devSessionManager.heartbeatInterval);
     }
     vi.useRealTimers();
   });
@@ -59,11 +61,11 @@ describe('DevSessionManager', () => {
       );
       expect(devSessionManager.localDevLogger).toBe(mockLocalDevLogger);
       // @ts-expect-error accessing private property for testing
-      expect(devSessionManager._devSessionId).toBeUndefined();
+      expect(devSessionManager.devSessionId).toBeUndefined();
       // @ts-expect-error accessing private property for testing
-      expect(devSessionManager._heartbeatInterval).toBeUndefined();
+      expect(devSessionManager.heartbeatInterval).toBeUndefined();
       // @ts-expect-error accessing private property for testing
-      expect(devSessionManager._heartbeatRetries).toBe(0);
+      expect(devSessionManager.heartbeatRetries).toBe(0);
     });
   });
 
@@ -91,10 +93,10 @@ describe('DevSessionManager', () => {
         ]
       );
       // @ts-expect-error accessing private property for testing
-      expect(devSessionManager._devSessionId).toBe(mockSessionId);
+      expect(devSessionManager.devSessionId).toBe(mockSessionId);
       expect(result).toBe(true);
       // @ts-expect-error accessing private property for testing
-      expect(devSessionManager._heartbeatInterval).toBeDefined();
+      expect(devSessionManager.heartbeatInterval).toBeDefined();
     });
 
     it('should return false and log error when registration fails', async () => {
@@ -109,7 +111,7 @@ describe('DevSessionManager', () => {
       ).toHaveBeenCalledWith(error);
       expect(result).toBe(false);
       // @ts-expect-error accessing private property for testing
-      expect(devSessionManager._devSessionId).toBeUndefined();
+      expect(devSessionManager.devSessionId).toBeUndefined();
     });
 
     it('should exit if session ID is missing after registration', async () => {
@@ -118,10 +120,11 @@ describe('DevSessionManager', () => {
         data: { sessionId: undefined },
       });
 
-      await expect(devSessionManager.registerSession()).rejects.toThrow();
+      await devSessionManager.registerSession();
       expect(
         mockLocalDevLogger.devSessionMissingSessionIdError
       ).toHaveBeenCalled();
+      expect(mockExit).toHaveBeenCalledWith(EXIT_CODES.ERROR);
     });
 
     it('should handle empty active servers', async () => {
@@ -144,10 +147,10 @@ describe('DevSessionManager', () => {
   describe('deleteDevSession()', () => {
     it('should successfully delete dev session when session ID exists', async () => {
       // @ts-expect-error accessing private property for testing
-      devSessionManager._devSessionId = 789;
+      devSessionManager.devSessionId = 789;
       const mockInterval = setInterval(() => {}, 30000);
       // @ts-expect-error accessing private property for testing
-      devSessionManager._heartbeatInterval = mockInterval;
+      devSessionManager.heartbeatInterval = mockInterval;
 
       (deleteDevSession as Mock).mockResolvedValue(undefined);
 
@@ -163,7 +166,7 @@ describe('DevSessionManager', () => {
 
     it('should return true when no session ID exists', async () => {
       // @ts-expect-error accessing private property for testing
-      devSessionManager._devSessionId = undefined;
+      devSessionManager.devSessionId = undefined;
 
       const result = await devSessionManager.deleteDevSession();
 
@@ -174,9 +177,9 @@ describe('DevSessionManager', () => {
     it('should return false and log error when deletion fails', async () => {
       const error = new Error('Deletion failed');
       // @ts-expect-error accessing private property for testing
-      devSessionManager._devSessionId = 789;
+      devSessionManager.devSessionId = 789;
       // @ts-expect-error accessing private property for testing
-      devSessionManager._heartbeatInterval = setInterval(() => {}, 30000);
+      devSessionManager.heartbeatInterval = setInterval(() => {}, 30000);
 
       (deleteDevSession as Mock).mockRejectedValue(error);
 
@@ -197,8 +200,6 @@ describe('DevSessionManager', () => {
         data: { sessionId: mockSessionId },
       });
       (devSessionHeartbeat as Mock).mockResolvedValue(undefined);
-      // @ts-expect-error Doesn't match the actual signature because then the linter complains about unused variables
-      processExitSpy.mockImplementation(() => {});
 
       await devSessionManager.registerSession();
 
@@ -220,9 +221,9 @@ describe('DevSessionManager', () => {
 
       // Clean up interval
       // @ts-expect-error accessing private property for testing
-      if (devSessionManager._heartbeatInterval) {
+      if (devSessionManager.heartbeatInterval) {
         // @ts-expect-error accessing private property for testing
-        clearInterval(devSessionManager._heartbeatInterval);
+        clearInterval(devSessionManager.heartbeatInterval);
       }
     });
 
@@ -235,9 +236,6 @@ describe('DevSessionManager', () => {
       });
       (devSessionHeartbeat as Mock).mockRejectedValue(error);
 
-      // @ts-expect-error Doesn't match the actual signature because then the linter complains about unused variables
-      processExitSpy.mockImplementation(() => {});
-
       await devSessionManager.registerSession();
 
       // Fast-forward to trigger 3 failed heartbeats
@@ -246,13 +244,13 @@ describe('DevSessionManager', () => {
       }
 
       // @ts-expect-error accessing private property for testing
-      expect(devSessionManager._heartbeatRetries).toBe(3);
+      expect(devSessionManager.heartbeatRetries).toBe(3);
       expect(devSessionHeartbeat).toHaveBeenCalledTimes(3);
 
       // Advance timers - the error will be captured by errorPromise
       await vi.advanceTimersByTimeAsync(30000);
 
-      expect(processExitSpy).toHaveBeenCalledWith(EXIT_CODES.ERROR);
+      expect(mockExit).toHaveBeenCalledWith(EXIT_CODES.ERROR);
       expect(mockLocalDevLogger.devSessionHeartbeatError).toHaveBeenCalledWith(
         error
       );
@@ -276,18 +274,18 @@ describe('DevSessionManager', () => {
       // Trigger first failed heartbeat
       await vi.advanceTimersByTimeAsync(30000);
       // @ts-expect-error accessing private property for testing
-      expect(devSessionManager._heartbeatRetries).toBe(1);
+      expect(devSessionManager.heartbeatRetries).toBe(1);
 
       // Trigger successful heartbeat
       await vi.advanceTimersByTimeAsync(30000);
       // @ts-expect-error accessing private property for testing
-      expect(devSessionManager._heartbeatRetries).toBe(1); // Should not reset, but next failure should increment
+      expect(devSessionManager.heartbeatRetries).toBe(1); // Should not reset, but next failure should increment
 
       // Clean up interval
       // @ts-expect-error accessing private property for testing
-      if (devSessionManager._heartbeatInterval) {
+      if (devSessionManager.heartbeatInterval) {
         // @ts-expect-error accessing private property for testing
-        clearInterval(devSessionManager._heartbeatInterval);
+        clearInterval(devSessionManager.heartbeatInterval);
       }
     });
 
@@ -303,11 +301,11 @@ describe('DevSessionManager', () => {
 
       // Clear the session ID to simulate missing session
       // @ts-expect-error accessing private property for testing
-      devSessionManager._devSessionId = undefined;
+      devSessionManager.devSessionId = undefined;
 
       // Advance timers - the error will be captured by errorPromise
       await vi.advanceTimersByTimeAsync(30000);
-      expect(processExitSpy).toHaveBeenCalledWith(EXIT_CODES.ERROR);
+      expect(mockExit).toHaveBeenCalledWith(EXIT_CODES.ERROR);
       expect(
         mockLocalDevLogger.devSessionMissingSessionIdError
       ).toHaveBeenCalled();
@@ -325,7 +323,7 @@ describe('DevSessionManager', () => {
       await devSessionManager.registerSession();
 
       // @ts-expect-error accessing private property for testing
-      const intervalId = devSessionManager._heartbeatInterval;
+      const intervalId = devSessionManager.heartbeatInterval;
       expect(intervalId).toBeDefined();
 
       // Reset mock to count calls after deletion

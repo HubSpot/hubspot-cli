@@ -1,4 +1,4 @@
-import { ArgumentsCamelCase, Argv } from 'yargs';
+import { Argv, ArgumentsCamelCase } from 'yargs';
 import {
   AccountArgs,
   CommonArgs,
@@ -6,6 +6,7 @@ import {
   EnvironmentArgs,
   YargsCommandModule,
 } from '../../types/Yargs.js';
+import { makeYargsHandlerWithUsageTracking } from '../../lib/yargs/makeYargsHandlerWithUsageTracking.js';
 import { migrateApp } from '../../lib/app/migrate.js';
 import { getProjectConfig } from '../../lib/projects/config.js';
 import { PLATFORM_VERSIONS } from '@hubspot/local-dev-lib/constants/projects';
@@ -23,10 +24,7 @@ import {
 } from '../../lib/theme/migrate.js';
 import { hasFeature } from '../../lib/hasFeature.js';
 import { FEATURES } from '../../lib/constants.js';
-import {
-  trackCommandMetadataUsage,
-  trackCommandUsage,
-} from '../../lib/usageTracking.js';
+import { trackCommandMetadataUsage } from '../../lib/usageTracking.js';
 
 export type ProjectMigrateArgs = CommonArgs &
   AccountArgs &
@@ -44,9 +42,7 @@ const describe = commands.project.migrate.describe;
 async function handler(
   args: ArgumentsCamelCase<ProjectMigrateArgs>
 ): Promise<void> {
-  const { platformVersion, unstable, derivedAccountId } = args;
-
-  await trackCommandUsage('project-migrate', {}, derivedAccountId);
+  const { platformVersion, unstable, derivedAccountId, exit } = args;
   const projectConfig = await getProjectConfig();
 
   if (!projectConfig.projectConfig) {
@@ -55,7 +51,7 @@ async function handler(
         uiCommandReference('hs app migrate')
       )
     );
-    return process.exit(EXIT_CODES.ERROR);
+    return exit(EXIT_CODES.ERROR);
   }
 
   if (projectConfig?.projectConfig) {
@@ -83,7 +79,7 @@ async function handler(
             derivedAccountId
           )
         );
-        return process.exit(EXIT_CODES.ERROR);
+        return exit(EXIT_CODES.ERROR);
       }
       await migrateThemesV2(
         derivedAccountId,
@@ -116,14 +112,14 @@ async function handler(
       derivedAccountId
     );
     logError(error);
-    return process.exit(EXIT_CODES.ERROR);
+    return exit(EXIT_CODES.ERROR);
   }
   await trackCommandMetadataUsage(
     'project-migrate',
     { successful: true },
     derivedAccountId
   );
-  return process.exit(EXIT_CODES.SUCCESS);
+  return exit(EXIT_CODES.SUCCESS);
 }
 
 function projectMigrateBuilder(yargs: Argv): Argv<ProjectMigrateArgs> {
@@ -156,7 +152,7 @@ const builder = makeYargsBuilder<ProjectMigrateArgs>(
 const migrateCommand: YargsCommandModule<unknown, ProjectMigrateArgs> = {
   command,
   describe,
-  handler,
+  handler: makeYargsHandlerWithUsageTracking('project-migrate', handler),
   builder,
 };
 

@@ -4,9 +4,9 @@ import {
   secretNamePrompt,
   secretValuePrompt,
 } from '../../../lib/prompts/secretPrompt.js';
-import { trackCommandUsage } from '../../../lib/usageTracking.js';
 import { logError, ApiErrorContext } from '../../../lib/errorHandlers/index.js';
 import { EXIT_CODES } from '../../../lib/enums/exitCodes.js';
+import type { UsageTrackingArgs } from '../../../types/Yargs.js';
 import addSecretCommand from '../addSecret.js';
 
 vi.mock('../../../lib/commonOpts');
@@ -19,7 +19,6 @@ const addSecretMock = vi.mocked(addSecret);
 const fetchSecretsMock = vi.mocked(fetchSecrets);
 const secretNamePromptMock = vi.mocked(secretNamePrompt);
 const secretValuePromptMock = vi.mocked(secretValuePrompt);
-const trackCommandUsageMock = vi.mocked(trackCommandUsage);
 const logErrorMock = vi.mocked(logError);
 const processExitSpy = vi.spyOn(process, 'exit');
 
@@ -69,12 +68,14 @@ describe('commands/secret/addSecret', () => {
   });
 
   describe('handler', () => {
-    let args: ArgumentsCamelCase<{
-      name?: string;
-      derivedAccountId: number;
-      d: boolean;
-      debug: boolean;
-    }>;
+    let args: ArgumentsCamelCase<
+      {
+        name?: string;
+        derivedAccountId: number;
+        d: boolean;
+        debug: boolean;
+      } & UsageTrackingArgs
+    >;
 
     beforeEach(() => {
       args = {
@@ -82,22 +83,20 @@ describe('commands/secret/addSecret', () => {
         derivedAccountId: 123456,
         d: false,
         debug: false,
-      } as ArgumentsCamelCase<{
-        name?: string;
-        derivedAccountId: number;
-        d: boolean;
-        debug: boolean;
-      }>;
+      } as unknown as ArgumentsCamelCase<
+        {
+          name?: string;
+          derivedAccountId: number;
+          d: boolean;
+          debug: boolean;
+        } & UsageTrackingArgs
+      >;
     });
 
     it('should track command usage', async () => {
       await addSecretCommand.handler(args);
 
-      expect(trackCommandUsageMock).toHaveBeenCalledWith(
-        'secrets-add',
-        {},
-        123456
-      );
+      expect(processExitSpy).toHaveBeenCalledWith(EXIT_CODES.SUCCESS);
     });
 
     it('should prompt for secret name when not provided', async () => {

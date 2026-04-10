@@ -8,6 +8,7 @@ import { lib } from '../../lang/en.js';
 import { uiAccountDescription, uiLine, uiLink } from '../ui/index.js';
 import { ApiErrorContext } from './index.js';
 import { HubSpotHttpError } from '@hubspot/local-dev-lib/models/HubSpotHttpError';
+import { isPromptExitError } from '../errors/PromptExitError.js';
 
 function createPlatformVersionError(
   err: HubSpotHttpError,
@@ -57,6 +58,10 @@ export function shouldSuppressError(
   err: unknown,
   context?: ApiErrorContext
 ): boolean {
+  if (isPromptExitError(err)) {
+    return true;
+  }
+
   if (isMissingScopeError(err)) {
     uiLogger.error(
       lib.errorHandlers.suppressErrors.missingScopeError(

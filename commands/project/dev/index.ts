@@ -1,28 +1,24 @@
-import { ArgumentsCamelCase, Argv, CommandModule } from 'yargs';
-import { trackCommandUsage } from '../../../lib/usageTracking.js';
+import { Argv, ArgumentsCamelCase } from 'yargs';
 import { getConfigAccountIfExists } from '@hubspot/local-dev-lib/config';
-import {
-  getAllHsProfiles,
-  HsProfileFile,
-} from '@hubspot/project-parsing-lib/profiles';
+import { HsProfileFile } from '@hubspot/project-parsing-lib/profiles';
 import {
   getProjectConfig,
   validateProjectConfig,
 } from '../../../lib/projects/config.js';
 import { EXIT_CODES } from '../../../lib/enums/exitCodes.js';
 import { uiLine } from '../../../lib/ui/index.js';
-import { ProjectDevArgs } from '../../../types/Yargs.js';
+import { ProjectDevArgs, YargsCommandModule } from '../../../types/Yargs.js';
+import { makeYargsHandlerWithUsageTracking } from '../../../lib/yargs/makeYargsHandlerWithUsageTracking.js';
 import { deprecatedProjectDevFlow } from './deprecatedFlow.js';
 import { unifiedProjectDevFlow } from './unifiedFlow.js';
 import { isV2Project } from '../../../lib/projects/platformVersion.js';
 import { makeYargsBuilder } from '../../../lib/yargsUtils.js';
-import { loadProfile } from '../../../lib/projects/projectProfiles.js';
+import { loadAndValidateProfile } from '../../../lib/projects/projectProfiles.js';
 import { commands } from '../../../lang/en.js';
 import { uiLogger } from '../../../lib/ui/logger.js';
 import { logError } from '../../../lib/errorHandlers/index.js';
-import { PromptExitError } from '../../../lib/errors/PromptExitError.js';
-import path from 'path';
-import { listPrompt } from '../../../lib/prompts/promptUtils.js';
+import { projectProfilePrompt } from '../../../lib/prompts/projectProfilePrompt.js';
+import { isPromptExitError } from '../../../lib/errors/PromptExitError.js';
 
 const command = 'dev';
 const describe = commands.project.dev.describe;
@@ -35,13 +31,11 @@ function validateAccountFlags(
 ) {
   // Legacy projects do not support targetTestingAccount and targetProjectAccount
   if (testingAccount && projectAccount && !useV2) {
-    uiLogger.error(commands.project.dev.errors.unsupportedAccountFlagLegacy);
-    process.exit(EXIT_CODES.ERROR);
+    throw new Error(commands.project.dev.errors.unsupportedAccountFlagLegacy);
   }
 
   if (userProvidedAccount && useV2) {
-    uiLogger.error(commands.project.dev.errors.unsupportedAccountFlagV2);
-    process.exit(EXIT_CODES.ERROR);
+    throw new Error(commands.project.dev.errors.unsupportedAccountFlagV2);
   }
 }
 
@@ -53,6 +47,9 @@ async function handler(
     userProvidedAccount,
     testingAccount,
     projectAccount,
+    profile: profileOption,
+    exit,
+    addUsageMetadata,
   } = args;
 
   const { projectConfig, projectDir } = await getProjectConfig();
@@ -61,22 +58,27 @@ async function handler(
     validateProjectConfig(projectConfig, projectDir);
   } catch (error) {
     logError(error);
-    process.exit(EXIT_CODES.ERROR);
+    return exit(EXIT_CODES.ERROR);
   }
 
   const useV2Projects = isV2Project(projectConfig.platformVersion);
 
   if (!projectDir) {
     uiLogger.error(commands.project.dev.errors.noProjectConfig);
-    process.exit(EXIT_CODES.ERROR);
+    return exit(EXIT_CODES.ERROR);
   }
 
-  validateAccountFlags(
-    testingAccount,
-    projectAccount,
-    userProvidedAccount,
-    useV2Projects
-  );
+  try {
+    validateAccountFlags(
+      testingAccount,
+      projectAccount,
+      userProvidedAccount,
+      useV2Projects
+    );
+  } catch (error) {
+    logError(error);
+    return exit(EXIT_CODES.ERROR);
+  }
 
   uiLogger.log(commands.project.dev.logs.header);
   if (useV2Projects) {
@@ -107,26 +109,19 @@ async function handler(
 
   // Determine profile name: from flag or prompt
   if (!targetProjectAccountId && isV2Project(projectConfig.platformVersion)) {
-    let profileName = args.profile;
-
-    if (!profileName) {
-      const existingProfiles = await getAllHsProfiles(
-        path.join(projectDir, projectConfig.srcDir)
-      );
-
-      if (existingProfiles.length !== 0) {
-        profileName = await listPrompt<string>(
-          commands.project.dev.prompts.selectProfile,
-          {
-            choices: existingProfiles,
-          }
-        );
-      }
-    }
+    const profileName = await projectProfilePrompt(
+      projectDir,
+      projectConfig,
+      profileOption
+    );
 
     if (profileName) {
       try {
-        profile = loadProfile(projectConfig, projectDir, profileName);
+        profile = await loadAndValidateProfile(
+          projectConfig,
+          projectDir,
+          profileName
+        );
         targetProjectAccountId = profile.accountId;
 
         uiLogger.log('');
@@ -139,7 +134,7 @@ async function handler(
       } catch (error) {
         logError(error);
         uiLine();
-        process.exit(EXIT_CODES.ERROR);
+        return exit(EXIT_CODES.ERROR);
       }
     }
   }
@@ -158,7 +153,7 @@ async function handler(
     }
   }
 
-  trackCommandUsage('project-dev', {}, targetProjectAccountId);
+  addUsageMetadata({ accountId: targetProjectAccountId ?? undefined });
 
   try {
     if (isV2Project(projectConfig.platformVersion)) {
@@ -183,11 +178,11 @@ async function handler(
       });
     }
   } catch (e) {
-    if (e instanceof PromptExitError) {
-      process.exit(e.exitCode);
+    if (isPromptExitError(e)) {
+      throw e;
     }
     logError(e);
-    process.exit(EXIT_CODES.ERROR);
+    return exit(EXIT_CODES.ERROR);
   }
 }
 
@@ -238,10 +233,10 @@ export const builder = makeYargsBuilder<ProjectDevArgs>(
   }
 );
 
-const projectDevCommand: CommandModule<unknown, ProjectDevArgs> = {
+const projectDevCommand: YargsCommandModule<unknown, ProjectDevArgs> = {
   command,
   describe,
-  handler,
+  handler: makeYargsHandlerWithUsageTracking('project-dev', handler),
   builder,
 };
 

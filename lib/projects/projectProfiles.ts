@@ -2,13 +2,12 @@ import path from 'path';
 import {
   loadHsProfileFile,
   getHsProfileFilename,
-  getAllHsProfiles,
   validateProfileVariables,
   type HsProfileFile,
 } from '@hubspot/project-parsing-lib/profiles';
 import { ProjectConfig } from '../../types/Projects.js';
 import { commands, lib } from '../../lang/en.js';
-import { indent, uiBetaTag, uiLine } from '../ui/index.js';
+import { indent, uiLine } from '../ui/index.js';
 import { uiLogger } from '../ui/logger.js';
 import { getConfigAccountById } from '@hubspot/local-dev-lib/config';
 import SpinniesManager from '../ui/SpinniesManager.js';
@@ -17,7 +16,7 @@ import { getErrorMessage } from '../errorHandlers/index.js';
 
 export function logProfileHeader(profileName: string): void {
   uiLine();
-  uiBetaTag(
+  uiLogger.log(
     lib.projectProfiles.logs.usingProfile(getHsProfileFilename(profileName))
   );
   uiLogger.log('');
@@ -90,34 +89,12 @@ export function loadProfile(
   return profile;
 }
 
-export async function enforceProfileUsage(
-  projectConfig: ProjectConfig | null,
-  projectDir: string | null
-): Promise<void> {
-  if (projectConfig && projectDir) {
-    const existingProfiles = await getAllHsProfiles(
-      path.join(projectDir, projectConfig.srcDir)
-    );
-
-    if (existingProfiles.length > 0) {
-      throw new Error(
-        lib.projectProfiles.exitIfUsingProfiles.errors.noProfileSpecified
-      );
-    }
-  }
-}
-
 export async function loadAndValidateProfile(
   projectConfig: ProjectConfig | null,
   projectDir: string | null,
-  profileName: string | undefined,
+  profileName: string,
   silent = false
-): Promise<number | undefined> {
-  if (!profileName) {
-    await enforceProfileUsage(projectConfig, projectDir);
-    return;
-  }
-
+): Promise<HsProfileFile | never> {
   if (!silent) {
     logProfileHeader(profileName);
   }
@@ -142,7 +119,7 @@ export async function loadAndValidateProfile(
     }
   }
 
-  return profile.accountId;
+  return profile;
 }
 
 function formatProfileValidationError(
@@ -188,7 +165,7 @@ export async function validateProjectForProfile({
   }
 
   try {
-    const accountId = await loadAndValidateProfile(
+    const { accountId } = await loadAndValidateProfile(
       projectConfig,
       projectDir,
       profileName,

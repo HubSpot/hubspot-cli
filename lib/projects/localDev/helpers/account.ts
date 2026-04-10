@@ -34,17 +34,19 @@ import {
 import { debugError } from '../../../errorHandlers/index.js';
 import { listPrompt } from '../../../prompts/promptUtils.js';
 import { confirmUseExistingDeveloperTestAccountPrompt } from '../../../prompts/projectDevTargetAccountPrompt.js';
+import { ExitFunction } from '../../../../types/Yargs.js';
 
 // If the user passed in the --account flag, confirm they want to use that account as
 // their target account, otherwise exit
 export async function confirmDefaultAccountIsTarget(
-  accountConfig: HubSpotConfigAccount
+  accountConfig: HubSpotConfigAccount,
+  exit: ExitFunction
 ): Promise<void> {
   if (!accountConfig.name || !accountConfig.accountType) {
     uiLogger.error(
       lib.localDevHelpers.account.confirmDefaultAccountIsTarget.configError
     );
-    process.exit(EXIT_CODES.ERROR);
+    return exit(EXIT_CODES.ERROR);
   }
 
   uiLogger.log('');
@@ -58,14 +60,15 @@ export async function confirmDefaultAccountIsTarget(
       lib.localDevHelpers.account.confirmDefaultAccountIsTarget
         .declineDefaultAccountExplanation
     );
-    process.exit(EXIT_CODES.SUCCESS);
+    return exit(EXIT_CODES.SUCCESS);
   }
 }
 
 // Confirm the default account is supported for the type of apps being developed
 export async function checkIfDefaultAccountIsSupported(
   accountConfig: HubSpotConfigAccount,
-  hasPublicApps: boolean
+  hasPublicApps: boolean,
+  exit: ExitFunction
 ): Promise<void> {
   const defaultAccountIsUnified = await isUnifiedAccount(accountConfig);
 
@@ -80,12 +83,12 @@ export async function checkIfDefaultAccountIsSupported(
     uiLogger.error(
       lib.localDevHelpers.account.checkIfDefaultAccountIsSupported.publicApp
     );
-    process.exit(EXIT_CODES.SUCCESS);
+    return exit(EXIT_CODES.SUCCESS);
   } else if (!hasPublicApps && isAppDeveloperAccount(accountConfig)) {
     uiLogger.error(
       lib.localDevHelpers.account.checkIfDefaultAccountIsSupported.privateApp
     );
-    process.exit(EXIT_CODES.SUCCESS);
+    return exit(EXIT_CODES.SUCCESS);
   }
 }
 
@@ -96,13 +99,12 @@ export function checkIfParentAccountIsAuthed(
     !accountConfig.parentAccountId ||
     !getConfigAccountIfExists(accountConfig.parentAccountId)?.accountId
   ) {
-    uiLogger.error(
+    throw new Error(
       lib.localDevHelpers.account.checkIfParentAccountIsAuthed.notAuthedError(
         accountConfig.parentAccountId || '',
         uiAccountDescription(accountConfig.accountId)
       )
     );
-    process.exit(EXIT_CODES.SUCCESS);
   }
 }
 
@@ -113,18 +115,16 @@ export function checkIfAccountFlagIsSupported(
 ): void {
   if (hasPublicApps) {
     if (!isDeveloperTestAccount(accountConfig)) {
-      uiLogger.error(
+      throw new Error(
         lib.localDevHelpers.account.validateAccountOption
           .invalidPublicAppAccount
       );
-      process.exit(EXIT_CODES.SUCCESS);
     }
     checkIfParentAccountIsAuthed(accountConfig);
   } else if (isAppDeveloperAccount(accountConfig)) {
-    uiLogger.error(
+    throw new Error(
       lib.localDevHelpers.account.validateAccountOption.invalidPrivateAppAccount
     );
-    process.exit(EXIT_CODES.SUCCESS);
   }
 }
 
@@ -182,7 +182,7 @@ export async function createSandboxForLocalDev(
     } else {
       logError(err);
     }
-    process.exit(EXIT_CODES.ERROR);
+    throw err;
   }
   try {
     const { name } = await hubspotAccountNamePrompt({
@@ -206,7 +206,7 @@ export async function createSandboxForLocalDev(
     return result.sandbox.sandboxHubId;
   } catch (err) {
     logError(err);
-    process.exit(EXIT_CODES.ERROR);
+    throw err;
   }
 }
 
@@ -242,7 +242,7 @@ export async function createDeveloperTestAccountForLocalDev(
     } else {
       logError(err);
     }
-    process.exit(EXIT_CODES.ERROR);
+    throw err;
   }
 
   try {
@@ -256,18 +256,16 @@ export async function createDeveloperTestAccountForLocalDev(
       accountId
     );
 
-    const result = await buildDeveloperTestAccount(
+    return await buildDeveloperTestAccount(
       name,
       accountConfig,
       env,
       maxTestPortals,
       useV2
     );
-
-    return result;
   } catch (err) {
     logError(err);
-    process.exit(EXIT_CODES.ERROR);
+    throw err;
   }
 }
 
@@ -275,7 +273,7 @@ export async function createDeveloperTestAccountForLocalDev(
 export async function useExistingDevTestAccount(
   env: Environment,
   account: DeveloperTestAccount
-): Promise<void> {
+): Promise<boolean> {
   const useExistingDevTestAcct =
     await confirmUseExistingDeveloperTestAccountPrompt(account);
   if (!useExistingDevTestAcct) {
@@ -285,7 +283,7 @@ export async function useExistingDevTestAccount(
         .declineDefaultAccountExplanation
     );
     uiLogger.log('');
-    process.exit(EXIT_CODES.SUCCESS);
+    return false;
   }
   const devTestAcctConfigName = await saveAccountToConfig(
     account.id,
@@ -298,6 +296,7 @@ export async function useExistingDevTestAccount(
       PERSONAL_ACCESS_KEY_AUTH_METHOD.name
     )
   );
+  return true;
 }
 
 export async function hasSandboxes(

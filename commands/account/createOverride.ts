@@ -16,10 +16,10 @@ import {
 
 import { promptUser } from '../../lib/prompts/promptUtils.js';
 import { EXIT_CODES } from '../../lib/enums/exitCodes.js';
-import { trackCommandUsage } from '../../lib/usageTracking.js';
 import { selectAccountFromConfig } from '../../lib/prompts/accountsPrompt.js';
 import { logError } from '../../lib/errorHandlers/index.js';
 import { CommonArgs, YargsCommandModule } from '../../types/Yargs.js';
+import { makeYargsHandlerWithUsageTracking } from '../../lib/yargs/makeYargsHandlerWithUsageTracking.js';
 import { makeYargsBuilder } from '../../lib/yargsUtils.js';
 import { commands } from '../../lang/en.js';
 import { uiLogger } from '../../lib/ui/logger.js';
@@ -36,6 +36,7 @@ type AccountCreateOverrideArgs = CommonArgs & {
 async function handler(
   args: ArgumentsCamelCase<AccountCreateOverrideArgs>
 ): Promise<void> {
+  const { exit } = args;
   let overrideDefaultAccount = args.account;
 
   const globalConfigExists = globalConfigFileExists();
@@ -43,7 +44,7 @@ async function handler(
     uiLogger.error(
       commands.account.subcommands.createOverride.errors.globalConfigNotFound
     );
-    process.exit(EXIT_CODES.ERROR);
+    return exit(EXIT_CODES.ERROR);
   }
 
   const accounts = getAllConfigAccounts();
@@ -66,7 +67,7 @@ async function handler(
     uiLogger.log('');
 
     if (!replaceOverrideFile) {
-      process.exit(EXIT_CODES.SUCCESS);
+      return exit(EXIT_CODES.SUCCESS);
     }
   }
 
@@ -86,8 +87,6 @@ async function handler(
   const account = getConfigAccountIfExists(overrideDefaultAccount);
   const accountId = account?.accountId;
 
-  trackCommandUsage('account-createOverride', undefined, accountId!);
-
   try {
     const overrideFilePath = path.join(
       getCwd(),
@@ -97,10 +96,10 @@ async function handler(
     uiLogger.success(
       commands.account.subcommands.createOverride.success(overrideFilePath)
     );
-    process.exit(EXIT_CODES.SUCCESS);
+    return exit(EXIT_CODES.SUCCESS);
   } catch (e: unknown) {
     logError(e);
-    process.exit(EXIT_CODES.ERROR);
+    return exit(EXIT_CODES.ERROR);
   }
 }
 
@@ -151,7 +150,7 @@ const accountCreateOverrideCommand: YargsCommandModule<
 > = {
   command,
   describe,
-  handler,
+  handler: makeYargsHandlerWithUsageTracking('account-createOverride', handler),
   builder,
 };
 

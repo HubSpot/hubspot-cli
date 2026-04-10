@@ -3,14 +3,16 @@ import { fetchProject } from '@hubspot/local-dev-lib/api/projects';
 import { getConfigAccountById } from '@hubspot/local-dev-lib/config';
 import { isHubSpotHttpError } from '@hubspot/local-dev-lib/errors/index';
 import { isV2Project } from '../../lib/projects/platformVersion.js';
-import { trackCommandUsage } from '../../lib/usageTracking.js';
 import { logError, ApiErrorContext } from '../../lib/errorHandlers/index.js';
-import { getProjectConfig } from '../../lib/projects/config.js';
+import {
+  getProjectConfig,
+  validateProjectConfig,
+} from '../../lib/projects/config.js';
 import { projectNamePrompt } from '../../lib/prompts/projectNamePrompt.js';
+import { projectProfilePrompt } from '../../lib/prompts/projectProfilePrompt.js';
 import { promptUser } from '../../lib/prompts/promptUtils.js';
 import { EXIT_CODES } from '../../lib/enums/exitCodes.js';
 import { uiLogger } from '../../lib/ui/logger.js';
-
 import {
   CommonArgs,
   ConfigArgs,
@@ -19,13 +21,9 @@ import {
   JSONOutputArgs,
   YargsCommandModule,
 } from '../../types/Yargs.js';
+import { makeYargsHandlerWithUsageTracking } from '../../lib/yargs/makeYargsHandlerWithUsageTracking.js';
 import { makeYargsBuilder } from '../../lib/yargsUtils.js';
-import {
-  loadProfile,
-  logProfileFooter,
-  logProfileHeader,
-  enforceProfileUsage,
-} from '../../lib/projects/projectProfiles.js';
+import { loadProfile } from '../../lib/projects/projectProfiles.js';
 import { PROJECT_DEPLOY_TEXT } from '../../lib/constants.js';
 import { commands } from '../../lang/en.js';
 import {
@@ -60,6 +58,10 @@ async function handler(
     force: forceOption,
     deployLatestBuild: deployLatestBuildOption,
     json: formatOutputAsJson,
+    profile: profileOption,
+    useEnv: useEnvOption,
+    exit,
+    addUsageMetadata,
   } = args;
   const accountConfig = getConfigAccountById(derivedAccountId);
   const accountType = accountConfig && accountConfig.accountType;
@@ -68,29 +70,37 @@ async function handler(
 
   const { projectConfig, projectDir } = await getProjectConfig();
 
-  if (isV2Project(projectConfig?.platformVersion)) {
-    if (args.profile) {
-      logProfileHeader(args.profile);
+  let isInProjectDirectory = false;
 
-      let profile;
-      try {
-        profile = loadProfile(projectConfig, projectDir, args.profile);
-      } catch (error) {
-        logError(error);
-        process.exit(EXIT_CODES.ERROR);
+  // Validate project config, but it's valid to run this command from outside a project dir
+  try {
+    validateProjectConfig(projectConfig, projectDir);
+    isInProjectDirectory = true;
+  } catch (e) {}
+
+  if (isInProjectDirectory && isV2Project(projectConfig?.platformVersion)) {
+    try {
+      const profileName = await projectProfilePrompt(
+        projectDir!,
+        projectConfig!,
+        profileOption,
+        !!useEnvOption
+      );
+
+      if (profileName) {
+        // Use loadProfile instead of loadAndValidateProfile because the local
+        // profile does not need to be valid to successfully deploy
+        const profile = loadProfile(projectConfig, projectDir, profileName);
+        targetAccountId = profile.accountId;
+
+        uiLogger.log(
+          commands.project.deploy.profileMessage(profileName, targetAccountId)
+        );
+        uiLogger.log('');
       }
-
-      targetAccountId = profile.accountId;
-
-      logProfileFooter(profile);
-    } else {
-      // A profile must be specified if this project has profiles configured
-      try {
-        await enforceProfileUsage(projectConfig, projectDir);
-      } catch (error) {
-        logError(error);
-        process.exit(EXIT_CODES.ERROR);
-      }
+    } catch (error) {
+      logError(error);
+      return exit(EXIT_CODES.ERROR);
     }
   }
 
@@ -98,11 +108,9 @@ async function handler(
     targetAccountId = derivedAccountId;
   }
 
-  trackCommandUsage(
-    'project-deploy',
-    accountType ? { type: accountType } : undefined,
-    targetAccountId
-  );
+  if (accountType) {
+    addUsageMetadata({ type: accountType });
+  }
 
   let projectName = projectOption;
 
@@ -125,7 +133,7 @@ async function handler(
 
     if (!latestBuild || !latestBuild.buildId) {
       uiLogger.error(commands.project.deploy.errors.noBuilds);
-      return process.exit(EXIT_CODES.ERROR);
+      return exit(EXIT_CODES.ERROR);
     }
 
     if (buildIdToDeploy) {
@@ -138,7 +146,7 @@ async function handler(
       );
       if (validationResult !== true) {
         uiLogger.error(validationResult.toString());
-        return process.exit(EXIT_CODES.ERROR);
+        return exit(EXIT_CODES.ERROR);
       }
     } else {
       if (deployLatestBuildOption) {
@@ -166,7 +174,7 @@ async function handler(
 
     if (!buildIdToDeploy) {
       uiLogger.error(commands.project.deploy.errors.noBuildId);
-      return process.exit(EXIT_CODES.ERROR);
+      return exit(EXIT_CODES.ERROR);
     }
 
     const deployResult = await handleProjectDeploy(
@@ -178,7 +186,7 @@ async function handler(
     );
 
     if (!deployResult) {
-      return process.exit(EXIT_CODES.ERROR);
+      return exit(EXIT_CODES.ERROR);
     } else if (formatOutputAsJson) {
       jsonOutput.deployId = deployResult.deployId;
     }
@@ -209,7 +217,7 @@ async function handler(
         })
       );
     }
-    return process.exit(EXIT_CODES.ERROR);
+    return exit(EXIT_CODES.ERROR);
   }
 
   if (formatOutputAsJson) {
@@ -217,9 +225,9 @@ async function handler(
   }
 
   if (deploySuccess) {
-    process.exit(EXIT_CODES.SUCCESS);
+    return exit(EXIT_CODES.SUCCESS);
   } else {
-    process.exit(EXIT_CODES.ERROR);
+    return exit(EXIT_CODES.ERROR);
   }
 }
 
@@ -288,7 +296,7 @@ const projectDeployCommand: YargsCommandModule<unknown, ProjectDeployArgs> = {
   command,
   describe,
   builder,
-  handler,
+  handler: makeYargsHandlerWithUsageTracking('project-deploy', handler),
 };
 
 export default projectDeployCommand;

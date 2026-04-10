@@ -1,12 +1,23 @@
 import { HubSpotConfigAccount } from '@hubspot/local-dev-lib/types/Accounts';
 
 vi.mock('@hubspot/local-dev-lib/config');
+vi.mock('@hubspot/local-dev-lib/logger', async importOriginal => {
+  const original =
+    await importOriginal<typeof import('@hubspot/local-dev-lib/logger')>();
+  return {
+    ...original,
+    getLabels: vi.fn(),
+  };
+});
 
 import { Diagnosis } from '../Diagnosis.js';
 import { DiagnosticInfo } from '../DiagnosticInfoBuilder.js';
 import { getConfigAccountIfExists as __getConfigAccountIfExists } from '@hubspot/local-dev-lib/config';
+import { getLabels as __getLabels } from '@hubspot/local-dev-lib/logger';
 import stripAnsi from 'strip-ansi';
 import { Mock } from 'vitest';
+
+const getLabels = __getLabels as Mock<typeof __getLabels>;
 
 const getConfigAccountIfExists = __getConfigAccountIfExists as Mock<
   typeof __getConfigAccountIfExists
@@ -43,6 +54,13 @@ describe('lib/doctor/Diagnosis', () => {
   const accountId = 123456;
 
   beforeEach(() => {
+    getLabels.mockReturnValue({
+      success: '✔ SUCCESS',
+      warning: '⚠ WARNING',
+      error: '✖ ERROR',
+      info: 'ℹ INFO',
+      debug: 'DEBUG',
+    });
     getConfigAccountIfExists.mockReturnValue({
       accountId,
       accountType: 'STANDARD',
@@ -100,6 +118,38 @@ describe('lib/doctor/Diagnosis', () => {
         type: 'success',
         message: cliMessage,
         secondaryMessaging: cliSecondaryMessage,
+      });
+
+      expect(stripAnsi(diagnosis.toString())).toMatchSnapshot();
+    });
+
+    it('should use ASCII labels when unicode is not supported', () => {
+      getLabels.mockReturnValue({
+        success: '[SUCCESS]',
+        warning: '[WARNING]',
+        error: '[ERROR]',
+        info: '[INFO]',
+        debug: '[DEBUG]',
+      });
+
+      const diagnosis = new Diagnosis({ diagnosticInfo, accountId });
+
+      diagnosis.addCliSection({
+        type: 'success',
+        message: 'Important CLI Message',
+        secondaryMessaging: 'The CLI Section is Showing',
+      });
+
+      diagnosis.addCLIConfigSection({
+        type: 'error',
+        message: 'Important CLI Config Message',
+        secondaryMessaging: 'The CLI Config Section is Showing',
+      });
+
+      diagnosis.addProjectSection({
+        type: 'warning',
+        message: 'Important Project Message',
+        secondaryMessaging: 'The Project Section is Showing',
       });
 
       expect(stripAnsi(diagnosis.toString())).toMatchSnapshot();

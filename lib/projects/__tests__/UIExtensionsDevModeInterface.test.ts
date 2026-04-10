@@ -9,6 +9,7 @@ import {
   getHubSpotWebsiteOrigin,
 } from '@hubspot/local-dev-lib/urls';
 import { ENVIRONMENTS } from '@hubspot/local-dev-lib/constants/environments';
+import { ExitFunction } from '../../../types/Yargs.js';
 
 vi.mock('@hubspot/ui-extensions-dev-server', () => ({
   DevModeUnifiedInterface: {
@@ -82,6 +83,7 @@ describe('UIExtensionsDevModeInterface', () => {
       },
       profile: 'test',
       env: ENVIRONMENTS.QA,
+      actions: { exit: vi.fn() as unknown as ExitFunction },
     });
 
     uiExtensionsInterface = new UIExtensionsDevModeInterface({

@@ -1,9 +1,15 @@
-export class PromptExitError extends Error {
-  exitCode: number;
+import { ExitCode } from '../../types/Yargs.js';
 
-  constructor(message: string, exitCode: number) {
+export class PromptExitError extends Error {
+  exitCode: ExitCode;
+
+  constructor(message: string, exitCode: ExitCode) {
     super(message);
     this.name = 'PromptExitError';
     this.exitCode = exitCode;
   }
+}
+
+export function isPromptExitError(e: unknown): e is PromptExitError {
+  return e instanceof PromptExitError;
 }

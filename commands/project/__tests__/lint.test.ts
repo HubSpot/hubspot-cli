@@ -97,7 +97,7 @@ describe('commands/project/lint', () => {
       expect(trackCommandUsage).toHaveBeenCalledTimes(1);
       expect(trackCommandUsage).toHaveBeenCalledWith(
         'project-lint',
-        undefined,
+        { successful: true },
         args.derivedAccountId
       );
     });

@@ -29,7 +29,6 @@ import { getCmsPublishMode } from '../../lib/commonOpts.js';
 import { uploadPrompt } from '../../lib/prompts/uploadPrompt.js';
 import { confirmPrompt } from '../../lib/prompts/promptUtils.js';
 import { validateCmsPublishMode } from '../../lib/validation.js';
-import { trackCommandUsage } from '../../lib/usageTracking.js';
 import { getUploadableFileList } from '../../lib/upload.js';
 import { commands } from '../../lang/en.js';
 import { EXIT_CODES } from '../../lib/enums/exitCodes.js';
@@ -41,6 +40,7 @@ import {
   CmsPublishModeArgs,
   YargsCommandModule,
 } from '../../types/Yargs.js';
+import { makeYargsHandlerWithUsageTracking } from '../../lib/yargs/makeYargsHandlerWithUsageTracking.js';
 import { makeYargsBuilder } from '../../lib/yargsUtils.js';
 import { uiLogger } from '../../lib/ui/logger.js';
 
@@ -70,11 +70,11 @@ export type UploadArgs = CommonArgs &
   };
 
 async function handler(args: ArgumentsCamelCase<UploadArgs>): Promise<void> {
-  if (!validateCmsPublishMode(args)) {
-    process.exit(EXIT_CODES.WARNING);
-  }
+  const { derivedAccountId, exit, addUsageMetadata } = args;
 
-  const { derivedAccountId } = args;
+  if (!validateCmsPublishMode(args)) {
+    return exit(EXIT_CODES.WARNING);
+  }
   const cmsPublishMode = getCmsPublishMode(args);
 
   const uploadPromptAnswers = await uploadPrompt(args);
@@ -122,11 +122,10 @@ async function handler(args: ArgumentsCamelCase<UploadArgs>): Promise<void> {
   }
 
   const normalizedDest = convertToUnixPath(dest);
-  trackCommandUsage(
-    'upload',
-    { mode: cmsPublishMode, type: stats.isFile() ? 'file' : 'folder' },
-    derivedAccountId
-  );
+  addUsageMetadata({
+    mode: cmsPublishMode,
+    type: stats.isFile() ? 'file' : 'folder',
+  });
   const srcDestIssues = await validateSrcAndDestPaths(
     { isLocal: true, path: src },
     { isHubSpot: true, path: dest }
@@ -134,7 +133,7 @@ async function handler(args: ArgumentsCamelCase<UploadArgs>): Promise<void> {
 
   if (srcDestIssues.length) {
     srcDestIssues.forEach(({ message }) => uiLogger.error(message));
-    process.exit(EXIT_CODES.WARNING);
+    return exit(EXIT_CODES.WARNING);
   }
   if (stats.isFile()) {
     if (!isAllowedExtension(src) && !convertFields) {
@@ -162,7 +161,7 @@ async function handler(args: ArgumentsCamelCase<UploadArgs>): Promise<void> {
         );
         logThemePreview(src, derivedAccountId);
       })
-      .catch(error => {
+      .catch(async error => {
         uiLogger.error(
           commands.cms.subcommands.upload.errors.uploadFailed(
             src,
@@ -177,7 +176,7 @@ async function handler(args: ArgumentsCamelCase<UploadArgs>): Promise<void> {
             payload: src,
           })
         );
-        process.exit(EXIT_CODES.WARNING);
+        return exit(EXIT_CODES.WARNING);
       })
       .finally(() => {
         if (!convertFields) return;
@@ -240,7 +239,7 @@ async function handler(args: ArgumentsCamelCase<UploadArgs>): Promise<void> {
       },
       filePaths
     )
-      .then(results => {
+      .then(async results => {
         if (!hasUploadErrors(results)) {
           uiLogger.success(
             commands.cms.subcommands.upload.success.uploadComplete(dest)
@@ -250,17 +249,17 @@ async function handler(args: ArgumentsCamelCase<UploadArgs>): Promise<void> {
           uiLogger.error(
             commands.cms.subcommands.upload.errors.someFilesFailed(dest)
           );
-          process.exit(EXIT_CODES.WARNING);
+          return exit(EXIT_CODES.WARNING);
         }
       })
-      .catch(error => {
+      .catch(async error => {
         uiLogger.error(
           commands.cms.subcommands.upload.errors.uploadFailed(src, dest)
         );
         logError(error, {
           accountId: derivedAccountId,
         });
-        process.exit(EXIT_CODES.WARNING);
+        return exit(EXIT_CODES.WARNING);
       });
   }
 }
@@ -315,7 +314,7 @@ const builder = makeYargsBuilder<UploadArgs>(uploadBuilder, command, describe, {
 const uploadCommand: YargsCommandModule<unknown, UploadArgs> = {
   command,
   describe,
-  handler,
+  handler: makeYargsHandlerWithUsageTracking('upload', handler),
   builder,
 };
 

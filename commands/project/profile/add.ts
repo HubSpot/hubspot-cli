@@ -11,12 +11,13 @@ import {
   loadHsProfileFile,
   type HsProfileFile,
 } from '@hubspot/project-parsing-lib/profiles';
-import { trackCommandUsage } from '../../../lib/usageTracking.js';
 import { getProjectConfig } from '../../../lib/projects/config.js';
+import { isV2Project } from '../../../lib/projects/platformVersion.js';
 import { uiAccountDescription } from '../../../lib/ui/index.js';
 import { uiLogger } from '../../../lib/ui/logger.js';
 import { EXIT_CODES } from '../../../lib/enums/exitCodes.js';
 import { YargsCommandModule, CommonArgs } from '../../../types/Yargs.js';
+import { makeYargsHandlerWithUsageTracking } from '../../../lib/yargs/makeYargsHandlerWithUsageTracking.js';
 import { makeYargsBuilder } from '../../../lib/yargsUtils.js';
 import { commands } from '../../../lang/en.js';
 import {
@@ -87,15 +88,20 @@ async function selectProfileToCopyVariablesFrom(
 async function handler(
   args: ArgumentsCamelCase<ProjectProfileAddArgs>
 ): Promise<void> {
-  const { derivedAccountId } = args;
-
-  trackCommandUsage('project-profile-add', undefined, derivedAccountId);
+  const { exit } = args;
 
   const { projectConfig, projectDir } = await getProjectConfig();
 
   if (!projectConfig || !projectDir) {
     uiLogger.error(commands.project.profile.add.errors.noProjectConfig);
-    process.exit(EXIT_CODES.ERROR);
+    return exit(EXIT_CODES.ERROR);
+  }
+
+  if (!isV2Project(projectConfig.platformVersion)) {
+    uiLogger.error(
+      commands.project.profile.add.errors.unsupportedPlatformVersion
+    );
+    return exit(EXIT_CODES.ERROR);
   }
 
   const projectSourceDir = path.join(projectDir, projectConfig.srcDir);
@@ -171,7 +177,7 @@ async function handler(
 
     if (!configuredAccounts || !configuredAccounts.length) {
       uiLogger.error(commands.project.profile.add.errors.noAccountsConfigured);
-      process.exit(EXIT_CODES.ERROR);
+      return exit(EXIT_CODES.ERROR);
     }
 
     const promptResponse = await listPrompt(
@@ -254,12 +260,12 @@ async function handler(
     );
   } catch (err) {
     uiLogger.error(commands.project.profile.add.errors.failedToCreateProfile);
-    process.exit(EXIT_CODES.ERROR);
+    return exit(EXIT_CODES.ERROR);
   }
 
   uiLogger.log('');
   uiLogger.log(commands.project.profile.add.logs.profileAdded(profileFilename));
-  process.exit(EXIT_CODES.SUCCESS);
+  return exit(EXIT_CODES.SUCCESS);
 }
 
 function projectProfileAddBuilder(yargs: Argv): Argv<ProjectProfileAddArgs> {
@@ -294,7 +300,7 @@ const projectProfileAddCommand: YargsCommandModule<
 > = {
   command,
   describe,
-  handler,
+  handler: makeYargsHandlerWithUsageTracking('project-profile-add', handler),
   builder,
 };
 

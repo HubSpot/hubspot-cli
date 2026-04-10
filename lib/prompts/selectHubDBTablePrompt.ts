@@ -6,7 +6,10 @@ import { uiLogger } from '../ui/logger.js';
 import { fetchTables } from '@hubspot/local-dev-lib/api/hubdb';
 import { Table } from '@hubspot/local-dev-lib/types/Hubdb';
 import { isValidPath, untildify } from '@hubspot/local-dev-lib/path';
-import { PromptExitError } from '../errors/PromptExitError.js';
+import {
+  isPromptExitError,
+  PromptExitError,
+} from '../errors/PromptExitError.js';
 import { EXIT_CODES } from '../enums/exitCodes.js';
 
 async function fetchHubDBOptions(accountId: number): Promise<Table[]> {
@@ -27,7 +30,7 @@ async function fetchHubDBOptions(accountId: number): Promise<Table[]> {
     }
     return tables;
   } catch (error) {
-    if (error instanceof PromptExitError) {
+    if (isPromptExitError(error)) {
       throw error;
     }
     debugError(error, { accountId });

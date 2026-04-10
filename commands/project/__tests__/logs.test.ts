@@ -138,7 +138,7 @@ describe('commands/project/logs', () => {
       expect(trackCommandUsage).toHaveBeenCalledTimes(1);
       expect(trackCommandUsage).toHaveBeenCalledWith(
         'project-logs',
-        undefined,
+        { successful: true },
         options.derivedAccountId
       );
     });
