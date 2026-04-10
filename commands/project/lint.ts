@@ -5,11 +5,12 @@ import {
   installPackages,
 } from '../../lib/dependencyManagement.js';
 import { EXIT_CODES } from '../../lib/enums/exitCodes.js';
+import { isPromptExitError } from '../../lib/errors/PromptExitError.js';
 import { getProjectConfig } from '../../lib/projects/config.js';
 import { commands } from '../../lang/en.js';
 import { uiLogger } from '../../lib/ui/logger.js';
-import { trackCommandUsage } from '../../lib/usageTracking.js';
 import { CommonArgs, YargsCommandModule } from '../../types/Yargs.js';
+import { makeYargsHandlerWithUsageTracking } from '../../lib/yargs/makeYargsHandlerWithUsageTracking.js';
 import { logError } from '../../lib/errorHandlers/index.js';
 import { makeYargsBuilder } from '../../lib/yargsUtils.js';
 import { promptUser } from '../../lib/prompts/promptUtils.js';
@@ -36,14 +37,12 @@ export type ProjectLintArgs = CommonArgs & {
 async function handler(
   args: ArgumentsCamelCase<ProjectLintArgs>
 ): Promise<void> {
-  const { derivedAccountId, installMissingDeps } = args;
+  const { installMissingDeps, exit } = args;
   try {
-    trackCommandUsage('project-lint', undefined, derivedAccountId);
-
     const projectConfig = await getProjectConfig();
     if (!projectConfig || !projectConfig.projectDir) {
       uiLogger.error(commands.project.lint.noProjectConfig);
-      return process.exit(EXIT_CODES.ERROR);
+      return exit(EXIT_CODES.ERROR);
     }
 
     SpinniesManager.init({ succeedColor: 'white' });
@@ -193,7 +192,7 @@ async function handler(
           });
         } else {
           uiLogger.error(commands.project.lint.eslintConfigRequired);
-          return process.exit(EXIT_CODES.ERROR);
+          return exit(EXIT_CODES.ERROR);
         }
       }
 
@@ -211,12 +210,15 @@ async function handler(
       displayLintResults(results);
 
       if (!success) {
-        return process.exit(EXIT_CODES.ERROR);
+        return exit(EXIT_CODES.ERROR);
       }
     }
   } catch (e) {
+    if (isPromptExitError(e)) {
+      throw e;
+    }
     logError(e);
-    return process.exit(EXIT_CODES.ERROR);
+    return exit(EXIT_CODES.ERROR);
   }
 }
 
@@ -253,7 +255,7 @@ const builder = makeYargsBuilder<ProjectLintArgs>(
 const projectLintCommand: YargsCommandModule<unknown, ProjectLintArgs> = {
   command,
   describe,
-  handler,
+  handler: makeYargsHandlerWithUsageTracking('project-lint', handler),
   builder,
 };
 

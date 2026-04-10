@@ -6,7 +6,6 @@ import { getCwd, untildify, isValidPath } from '@hubspot/local-dev-lib/path';
 import { createHubDbTable } from '@hubspot/local-dev-lib/hubdb';
 import { promptUser } from '../../lib/prompts/promptUtils.js';
 import { checkAndConvertToJson } from '../../lib/validation.js';
-import { trackCommandUsage } from '../../lib/usageTracking.js';
 import { commands } from '../../lang/en.js';
 import { EXIT_CODES } from '../../lib/enums/exitCodes.js';
 import {
@@ -16,6 +15,7 @@ import {
   EnvironmentArgs,
   YargsCommandModule,
 } from '../../types/Yargs.js';
+import { makeYargsHandlerWithUsageTracking } from '../../lib/yargs/makeYargsHandlerWithUsageTracking.js';
 import { makeYargsBuilder } from '../../lib/yargsUtils.js';
 
 const command = 'create';
@@ -51,9 +51,7 @@ function selectPathPrompt(options: HubdbCreateArgs): Promise<{ path: string }> {
 async function handler(
   args: ArgumentsCamelCase<HubdbCreateArgs>
 ): Promise<void> {
-  const { derivedAccountId } = args;
-
-  trackCommandUsage('hubdb-create', {}, derivedAccountId);
+  const { derivedAccountId, exit } = args;
 
   let filePath;
   try {
@@ -62,7 +60,7 @@ async function handler(
         ? path.resolve(getCwd(), args.path)
         : path.resolve(getCwd(), (await selectPathPrompt(args)).path);
     if (!checkAndConvertToJson(filePath)) {
-      process.exit(EXIT_CODES.ERROR);
+      return exit(EXIT_CODES.ERROR);
     }
 
     const table = await createHubDbTable(
@@ -108,7 +106,7 @@ const builder = makeYargsBuilder<HubdbCreateArgs>(
 const hubdbCreateCommand: YargsCommandModule<unknown, HubdbCreateArgs> = {
   command,
   describe,
-  handler,
+  handler: makeYargsHandlerWithUsageTracking('hubdb-create', handler),
   builder,
 };
 

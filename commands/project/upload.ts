@@ -4,7 +4,6 @@ import { uiLogger } from '../../lib/ui/logger.js';
 import { getConfigAccountById } from '@hubspot/local-dev-lib/config';
 import { isSpecifiedError } from '@hubspot/local-dev-lib/errors/index';
 import { isV2Project } from '../../lib/projects/platformVersion.js';
-import { trackCommandUsage } from '../../lib/usageTracking.js';
 import {
   getProjectConfig,
   validateProjectConfig,
@@ -25,8 +24,10 @@ import {
   JSONOutputArgs,
   YargsCommandModule,
 } from '../../types/Yargs.js';
+import { makeYargsHandlerWithUsageTracking } from '../../lib/yargs/makeYargsHandlerWithUsageTracking.js';
 import { ProjectPollResult } from '../../types/Projects.js';
 import { makeYargsBuilder } from '../../lib/yargsUtils.js';
+import { projectProfilePrompt } from '../../lib/prompts/projectProfilePrompt.js';
 
 const command = 'upload';
 const describe = commands.project.upload.describe;
@@ -49,7 +50,10 @@ async function handler(
     derivedAccountId,
     skipValidation,
     formatOutputAsJson,
-    profile,
+    profile: profileOption,
+    useEnv: useEnvOption,
+    exit,
+    addUsageMetadata,
   } = args;
   const jsonOutput: { buildId?: number; deployId?: number } = {};
 
@@ -59,22 +63,40 @@ async function handler(
     validateProjectConfig(projectConfig, projectDir);
   } catch (error) {
     logError(error);
-    process.exit(EXIT_CODES.ERROR);
+    return exit(EXIT_CODES.ERROR);
+  }
+
+  if (!projectDir) {
+    uiLogger.error(commands.project.upload.errors.noProjectConfig);
+    return exit(EXIT_CODES.ERROR);
   }
 
   let targetAccountId;
+  let profileName = args.profile;
 
-  try {
-    if (isV2Project(projectConfig.platformVersion)) {
-      targetAccountId = await loadAndValidateProfile(
-        projectConfig,
+  if (isV2Project(projectConfig?.platformVersion)) {
+    try {
+      const profileNamePromptResult = await projectProfilePrompt(
         projectDir,
-        profile
+        projectConfig,
+        profileOption,
+        !!useEnvOption
       );
+
+      if (profileNamePromptResult) {
+        profileName = profileNamePromptResult;
+
+        const profile = await loadAndValidateProfile(
+          projectConfig,
+          projectDir,
+          profileName
+        );
+        targetAccountId = profile.accountId;
+      }
+    } catch (error) {
+      logError(error);
+      return exit(EXIT_CODES.ERROR);
     }
-  } catch (err) {
-    logError(err);
-    process.exit(EXIT_CODES.ERROR);
   }
 
   targetAccountId = targetAccountId || derivedAccountId;
@@ -82,25 +104,24 @@ async function handler(
   const accountConfig = getConfigAccountById(targetAccountId!);
   const accountType = accountConfig && accountConfig.accountType;
 
-  trackCommandUsage(
-    'project-upload',
-    { type: accountType!, assetType: projectConfig.platformVersion },
-    targetAccountId
-  );
+  addUsageMetadata({
+    type: accountType!,
+    assetType: projectConfig.platformVersion,
+  });
 
   try {
     const { result, uploadError } =
       await handleProjectUpload<ProjectPollResult>({
         accountId: targetAccountId!,
         projectConfig,
-        projectDir: projectDir!,
+        projectDir,
         callbackFunc: pollProjectBuildAndDeploy,
         uploadMessage: message,
         forceCreate,
         isUploadCommand: true,
         sendIR: isV2Project(projectConfig.platformVersion),
         skipValidation,
-        profile: args.profile,
+        profile: profileName,
       });
 
     if (uploadError) {
@@ -121,7 +142,7 @@ async function handler(
           })
         );
       }
-      process.exit(EXIT_CODES.ERROR);
+      return exit(EXIT_CODES.ERROR);
     }
     if (result && result.succeeded && !result.buildResult.isAutoDeployEnabled) {
       uiLogger.log(
@@ -155,14 +176,14 @@ async function handler(
         request: 'project upload',
       })
     );
-    process.exit(EXIT_CODES.ERROR);
+    return exit(EXIT_CODES.ERROR);
   }
 
   if (formatOutputAsJson) {
     uiLogger.json(jsonOutput);
   }
 
-  process.exit(EXIT_CODES.SUCCESS);
+  return exit(EXIT_CODES.SUCCESS);
 }
 
 function projectUploadBuilder(yargs: Argv): Argv<ProjectUploadArgs> {
@@ -219,7 +240,7 @@ const builder = makeYargsBuilder<ProjectUploadArgs>(
 const projectUploadCommand: YargsCommandModule<unknown, ProjectUploadArgs> = {
   command,
   describe,
-  handler,
+  handler: makeYargsHandlerWithUsageTracking('project-upload', handler),
   builder,
 };
 

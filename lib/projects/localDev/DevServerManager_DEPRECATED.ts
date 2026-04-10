@@ -20,6 +20,7 @@ import { lib } from '../../../lang/en.js';
 import { uiLogger } from '../../ui/logger.js';
 import { logError } from '../../errorHandlers/index.js';
 import { EXIT_CODES } from '../../enums/exitCodes.js';
+import { ExitFunction } from '../../../types/Yargs.js';
 
 const SERVER_KEYS = {
   privateApp: 'privateApp',
@@ -111,11 +112,13 @@ class DevServerManager_DEPRECATED {
     onUploadRequired,
     accountId,
     setActiveApp,
+    exit,
   }: {
     components: Component[];
     onUploadRequired: () => void;
     accountId: number;
     setActiveApp: (appUid: string | undefined) => Promise<void>;
+    exit: ExitFunction;
   }): Promise<void> {
     this.componentsByType = this.arrangeComponentsByType(components);
     let env: Environment;
@@ -128,7 +131,7 @@ class DevServerManager_DEPRECATED {
       await startPortManagerServer();
     } catch (e) {
       logError(e);
-      process.exit(EXIT_CODES.ERROR);
+      return exit(EXIT_CODES.ERROR);
     }
 
     await this.iterateDevServers(

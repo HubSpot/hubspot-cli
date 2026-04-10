@@ -30,6 +30,7 @@ import {
   createNewProjectForLocalDev,
 } from '../../../lib/projects/localDev/helpers/project.js';
 import { handleExit } from '../../../lib/process.js';
+import { getErrorMessage } from '../../../lib/errorHandlers/index.js';
 import {
   isSandbox,
   isDeveloperTestAccount,
@@ -50,7 +51,7 @@ export async function deprecatedProjectDevFlow({
   projectConfig,
   projectDir,
 }: DeprecatedProjectDevFlowArgs): Promise<void> {
-  const { userProvidedAccount, derivedAccountId } = args;
+  const { userProvidedAccount, derivedAccountId, exit } = args;
   const env = getConfigAccountEnvironment(derivedAccountId);
 
   const components = await findProjectComponents(projectDir);
@@ -62,22 +63,22 @@ export async function deprecatedProjectDevFlow({
   const accountConfig = getConfigAccountById(accountId);
   if (!accountConfig) {
     uiLogger.error(commands.project.dev.errors.noAccount(accountId));
-    process.exit(EXIT_CODES.ERROR);
+    return exit(EXIT_CODES.ERROR);
   }
 
   if (runnableComponents.length === 0) {
     uiLogger.error(commands.project.dev.errors.noRunnableComponents);
-    process.exit(EXIT_CODES.SUCCESS);
+    return exit(EXIT_CODES.SUCCESS);
   } else if (hasPrivateApps && hasPublicApps) {
     uiLogger.error(commands.project.dev.errors.invalidProjectComponents);
-    process.exit(EXIT_CODES.SUCCESS);
+    return exit(EXIT_CODES.SUCCESS);
   }
 
   const accounts = getAllConfigAccounts();
 
   if (!accounts) {
     uiLogger.error(commands.project.dev.errors.noAccountsInConfig);
-    process.exit(EXIT_CODES.ERROR);
+    return exit(EXIT_CODES.ERROR);
   }
 
   let bypassRecommendedAccountPrompt = false;
@@ -99,23 +100,33 @@ export async function deprecatedProjectDevFlow({
 
   // Check that the default account or flag option is valid for the type of app in this project
   if (userProvidedAccount) {
-    checkIfAccountFlagIsSupported(accountConfig, hasPublicApps);
+    try {
+      checkIfAccountFlagIsSupported(accountConfig, hasPublicApps);
+    } catch (e) {
+      uiLogger.error(getErrorMessage(e));
+      return exit(EXIT_CODES.SUCCESS);
+    }
 
     if (hasPublicApps) {
       targetProjectAccountId = accountConfig.parentAccountId || null;
     }
   } else {
-    await checkIfDefaultAccountIsSupported(accountConfig, hasPublicApps);
+    await checkIfDefaultAccountIsSupported(accountConfig, hasPublicApps, exit);
   }
 
   // The user is targeting an account type that we recommend developing on
   if (!targetProjectAccountId && bypassRecommendedAccountPrompt) {
     targetTestingAccountId = derivedAccountId;
 
-    await confirmDefaultAccountIsTarget(accountConfig);
+    await confirmDefaultAccountIsTarget(accountConfig, exit);
 
     if (hasPublicApps) {
-      checkIfParentAccountIsAuthed(accountConfig);
+      try {
+        checkIfParentAccountIsAuthed(accountConfig);
+      } catch (e) {
+        uiLogger.error(getErrorMessage(e));
+        return exit(EXIT_CODES.SUCCESS);
+      }
       targetProjectAccountId = accountConfig.parentAccountId || null;
     } else {
       targetProjectAccountId = derivedAccountId;
@@ -144,7 +155,13 @@ export async function deprecatedProjectDevFlow({
 
     // Only used for developer test accounts that are not yet in the config
     if (notInConfigAccount) {
-      await useExistingDevTestAccount(env, notInConfigAccount);
+      const accountAdded = await useExistingDevTestAccount(
+        env,
+        notInConfigAccount
+      );
+      if (!accountAdded) {
+        return exit(EXIT_CODES.SUCCESS);
+      }
     }
 
     createNewSandbox = hasPrivateApps && createNestedAccount;
@@ -152,26 +169,35 @@ export async function deprecatedProjectDevFlow({
   }
 
   if (createNewSandbox) {
-    targetProjectAccountId = await createSandboxForLocalDev(
-      derivedAccountId,
-      accountConfig,
-      env
-    );
+    try {
+      targetProjectAccountId = await createSandboxForLocalDev(
+        derivedAccountId,
+        accountConfig,
+        env
+      );
+    } catch {
+      return exit(EXIT_CODES.ERROR);
+    }
     // We will be running our tests against this new sandbox account
     targetTestingAccountId = targetProjectAccountId;
   }
   if (createNewDeveloperTestAccount) {
-    targetTestingAccountId = await createDeveloperTestAccountForLocalDev(
-      derivedAccountId,
-      accountConfig,
-      env
-    );
+    try {
+      targetTestingAccountId = await createDeveloperTestAccountForLocalDev(
+        derivedAccountId,
+        accountConfig,
+        env,
+        false
+      );
+    } catch {
+      return exit(EXIT_CODES.ERROR);
+    }
     targetProjectAccountId = derivedAccountId;
   }
 
   if (!targetProjectAccountId || !targetTestingAccountId) {
     uiLogger.error(commands.project.dev.errors.noAccount(accountId));
-    process.exit(EXIT_CODES.ERROR);
+    return exit(EXIT_CODES.ERROR);
   }
 
   // eslint-disable-next-line prefer-const
@@ -198,13 +224,15 @@ export async function deprecatedProjectDevFlow({
       projectConfig,
       targetProjectAccountId,
       createNewSandbox,
-      hasPublicApps
+      hasPublicApps,
+      exit
     );
 
     deployedBuild = await createInitialBuildForNewProject(
       projectConfig,
       projectDir,
-      targetProjectAccountId
+      targetProjectAccountId,
+      exit
     );
   }
 
@@ -219,6 +247,7 @@ export async function deprecatedProjectDevFlow({
     projectId: project!.id,
     targetAccountId: targetTestingAccountId,
     env,
+    exit,
   });
 
   await LocalDev.start();

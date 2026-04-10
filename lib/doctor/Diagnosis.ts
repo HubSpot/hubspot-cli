@@ -1,4 +1,4 @@
-import { prefixOptions } from '../ui/spinniesUtils.js';
+import { getLabels } from '@hubspot/local-dev-lib/logger';
 import chalk from 'chalk';
 import { helpers } from '../interpolation.js';
 import { DiagnosticInfo } from './DiagnosticInfoBuilder.js';
@@ -42,12 +42,12 @@ export class Diagnosis {
   private warningCount = 0;
 
   constructor({ diagnosticInfo, accountId }: DiagnosisOptions) {
-    const { succeedPrefix, failPrefix } = prefixOptions({});
+    const labels = getLabels();
 
     this.prefixes = {
-      success: chalk.green(succeedPrefix),
-      error: chalk.red(failPrefix),
-      warning: helpers.orange('!'),
+      success: chalk.green(labels.success),
+      error: chalk.red(labels.error),
+      warning: helpers.orange(labels.warning),
     };
 
     this.diagnosis = {

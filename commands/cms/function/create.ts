@@ -1,8 +1,7 @@
 import fs from 'fs-extra';
-import { ArgumentsCamelCase, Argv } from 'yargs';
+import { Argv, ArgumentsCamelCase } from 'yargs';
 import { logError } from '../../../lib/errorHandlers/index.js';
 import { resolveLocalPath } from '../../../lib/filesystem.js';
-import { trackCommandUsage } from '../../../lib/usageTracking.js';
 import { commands } from '../../../lang/en.js';
 import { uiLogger } from '../../../lib/ui/logger.js';
 import { HTTP_METHODS, HttpMethod } from '../../../types/Cms.js';
@@ -12,7 +11,9 @@ import {
   ConfigArgs,
   YargsCommandModule,
 } from '../../../types/Yargs.js';
+import { makeYargsHandlerWithUsageTracking } from '../../../lib/yargs/makeYargsHandlerWithUsageTracking.js';
 import { EXIT_CODES } from '../../../lib/enums/exitCodes.js';
+import { isPromptExitError } from '../../../lib/errors/PromptExitError.js';
 import assets from '../../../lib/cmsAssets/index.js';
 
 const command = 'create [name] [dest]';
@@ -31,11 +32,11 @@ type FunctionCreateArgs = CommonArgs &
 async function handler(
   args: ArgumentsCamelCase<FunctionCreateArgs>
 ): Promise<void> {
-  const { derivedAccountId, name, dest } = args;
+  const { name, dest, exit, addUsageMetadata } = args;
 
   const assetType = 'function';
 
-  trackCommandUsage('create', { assetType }, derivedAccountId);
+  addUsageMetadata({ assetType });
 
   const asset = assets[assetType];
   const argsToPass = {
@@ -64,8 +65,11 @@ async function handler(
   try {
     await asset.execute(argsToPass);
   } catch (e) {
+    if (isPromptExitError(e)) {
+      throw e;
+    }
     logError(e);
-    process.exit(EXIT_CODES.ERROR);
+    return exit(EXIT_CODES.ERROR);
   }
 }
 
@@ -122,7 +126,7 @@ const functionCreateCommand: YargsCommandModule<unknown, FunctionCreateArgs> = {
   command,
   describe,
   builder,
-  handler,
+  handler: makeYargsHandlerWithUsageTracking('create', handler),
 };
 
 export default functionCreateCommand;

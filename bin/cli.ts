@@ -41,6 +41,7 @@ import testAccountCommands from '../commands/testAccount.js';
 import getStartedCommand from '../commands/getStarted.js';
 import mcpCommand from '../commands/mcp.js';
 import upgradeCommand from '../commands/upgrade.js';
+import apiCommand from '../commands/api.js';
 import { uiLogger } from '../lib/ui/logger.js';
 import { initializeSpinniesManager } from '../lib/middleware/spinniesMiddleware.js';
 import { addCommandSuggestions } from '../lib/commandSuggestion.js';
@@ -128,6 +129,7 @@ const argv = yargs(process.argv.slice(2))
   .command(filemanagerCommand)
 
   // Misc commands
+  .command(apiCommand)
   .command(customObjectCommand)
   .command(completionCommand)
   .command(doctorCommand)

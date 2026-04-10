@@ -16,6 +16,9 @@ import * as projectUrlUtils from '../../../lib/projects/urls.js';
 import { pollDeployStatus } from '../../../lib/projects/pollProjectBuildAndDeploy.js';
 import * as projectNamePrompt from '../../../lib/prompts/projectNamePrompt.js';
 import * as promptUtils from '../../../lib/prompts/promptUtils.js';
+import * as projectProfilePrompt from '../../../lib/prompts/projectProfilePrompt.js';
+import * as projectProfiles from '../../../lib/projects/projectProfiles.js';
+import * as platformVersionLib from '../../../lib/projects/platformVersion.js';
 import { trackCommandUsage } from '../../../lib/usageTracking.js';
 import { EXIT_CODES } from '../../../lib/enums/exitCodes.js';
 import { ProjectConfig } from '../../../types/Projects.js';
@@ -43,6 +46,8 @@ vi.mock('../../../lib/projects/pollProjectBuildAndDeploy');
 vi.mock('../../../lib/projects/platformVersion');
 vi.mock('../../../lib/prompts/projectNamePrompt');
 vi.mock('../../../lib/prompts/promptUtils');
+vi.mock('../../../lib/prompts/projectProfilePrompt');
+vi.mock('../../../lib/projects/projectProfiles');
 
 vi.spyOn(ui, 'uiLine');
 
@@ -56,6 +61,12 @@ const deployProjectV1Spy = vi.spyOn(projectApiUtils, 'deployProjectV1');
 const getConfigAccountByIdSpy = vi.spyOn(configUtils, 'getConfigAccountById');
 const promptUserSpy = vi.spyOn(promptUtils, 'promptUser');
 const processExitSpy = vi.spyOn(process, 'exit');
+const projectProfilePromptSpy = vi.spyOn(
+  projectProfilePrompt,
+  'projectProfilePrompt'
+);
+const loadProfileSpy = vi.spyOn(projectProfiles, 'loadProfile');
+const isV2ProjectSpy = vi.spyOn(platformVersionLib, 'isV2Project');
 
 const optionsSpy = vi
   .spyOn(yargs as Argv, 'options')
@@ -198,7 +209,7 @@ describe('commands/project/deploy', () => {
       expect(trackCommandUsage).toHaveBeenCalledTimes(1);
       expect(trackCommandUsage).toHaveBeenCalledWith(
         'project-deploy',
-        { type: accountType },
+        { type: accountType, successful: false },
         args.derivedAccountId
       );
     });
@@ -245,16 +256,15 @@ describe('commands/project/deploy', () => {
       });
       getProjectConfigSpy.mockResolvedValue({
         projectConfig: null,
-        projectDir: null,
+        projectDir: '/path/to/project',
       });
 
       await projectDeployCommand.handler(argsWithoutProject);
 
       expect(projectNamePromptSpy).toHaveBeenCalledTimes(1);
-      expect(projectNamePromptSpy).toHaveBeenCalledWith(
-        args.derivedAccountId,
-        {}
-      );
+      expect(projectNamePromptSpy).toHaveBeenCalledWith(args.derivedAccountId, {
+        project: undefined,
+      });
       expect(fetchProjectSpy).toHaveBeenCalledTimes(1);
       expect(fetchProjectSpy).toHaveBeenCalledWith(
         args.derivedAccountId,
@@ -414,6 +424,84 @@ describe('commands/project/deploy', () => {
       );
       expect(processExitSpy).toHaveBeenCalledTimes(1);
       expect(processExitSpy).toHaveBeenCalledWith(EXIT_CODES.ERROR);
+    });
+
+    describe('with useEnv flag', () => {
+      beforeEach(() => {
+        args.useEnv = 'qa';
+        projectConfig.platformVersion = '2025.2';
+        isV2ProjectSpy.mockReturnValue(true);
+      });
+
+      it('should call projectProfilePrompt with exitIfMissing=true when useEnv is set', async () => {
+        projectProfilePromptSpy.mockResolvedValue(null);
+
+        await projectDeployCommand.handler(args);
+
+        expect(projectProfilePromptSpy).toHaveBeenCalledWith(
+          'projectDir',
+          projectConfig,
+          undefined,
+          true
+        );
+      });
+
+      it('should exit if projectProfilePrompt throws when exitIfMissing=true', async () => {
+        projectProfilePromptSpy.mockRejectedValue(
+          new Error('Profile required but not specified')
+        );
+
+        await projectDeployCommand.handler(args);
+
+        expect(processExitSpy).toHaveBeenCalledWith(EXIT_CODES.ERROR);
+      });
+
+      it('should load profile and use its accountId when profile is returned', async () => {
+        const mockProfile = {
+          accountId: 999888777,
+          variables: {},
+        };
+        projectProfilePromptSpy.mockResolvedValue('test-profile');
+        loadProfileSpy.mockReturnValue(mockProfile);
+
+        await projectDeployCommand.handler(args);
+
+        expect(loadProfileSpy).toHaveBeenCalledWith(
+          projectConfig,
+          'projectDir',
+          'test-profile'
+        );
+        expect(fetchProjectSpy).toHaveBeenCalledWith(
+          mockProfile.accountId,
+          expect.any(String)
+        );
+      });
+    });
+
+    describe('with profile flag', () => {
+      beforeEach(() => {
+        args.profile = 'test-profile';
+        projectConfig.platformVersion = '2025.2';
+        isV2ProjectSpy.mockReturnValue(true);
+      });
+
+      it('should call projectProfilePrompt with the provided profile', async () => {
+        const mockProfile = {
+          accountId: 999888777,
+          variables: {},
+        };
+        projectProfilePromptSpy.mockResolvedValue('test-profile');
+        loadProfileSpy.mockReturnValue(mockProfile);
+
+        await projectDeployCommand.handler(args);
+
+        expect(projectProfilePromptSpy).toHaveBeenCalledWith(
+          'projectDir',
+          projectConfig,
+          'test-profile',
+          false
+        );
+      });
     });
   });
 });

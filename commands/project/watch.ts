@@ -1,4 +1,4 @@
-import { ArgumentsCamelCase, Argv } from 'yargs';
+import { Argv, ArgumentsCamelCase } from 'yargs';
 import {
   cancelStagedBuild,
   fetchProjectBuilds,
@@ -10,7 +10,6 @@ import { createWatcher } from '../../lib/projects/watch.js';
 import { logError, ApiErrorContext } from '../../lib/errorHandlers/index.js';
 import { uiLogger } from '../../lib/ui/logger.js';
 import { PROJECT_ERROR_TYPES } from '../../lib/constants.js';
-import { trackCommandUsage } from '../../lib/usageTracking.js';
 import {
   getProjectConfig,
   validateProjectConfig,
@@ -29,11 +28,14 @@ import {
   ConfigArgs,
   EnvironmentArgs,
   YargsCommandModule,
+  ExitFunction,
 } from '../../types/Yargs.js';
+import { makeYargsHandlerWithUsageTracking } from '../../lib/yargs/makeYargsHandlerWithUsageTracking.js';
 import { makeYargsBuilder } from '../../lib/yargsUtils.js';
+import { uiDeprecatedTag } from '../../lib/ui/index.js';
 
 const command = 'watch';
-const describe = commands.project.watch.describe;
+const describe = uiDeprecatedTag(commands.project.watch.describe, false);
 
 type ProjectWatchArgs = CommonArgs &
   ConfigArgs &
@@ -65,7 +67,8 @@ async function handleBuildStatus(
 function handleUserInput(
   accountId: number,
   projectName: string,
-  currentBuildId: number
+  currentBuildId: number,
+  exit: ExitFunction
 ): void {
   const onTerminate = async () => {
     uiLogger.log(commands.project.watch.logs.processExited);
@@ -73,21 +76,21 @@ function handleUserInput(
     if (currentBuildId) {
       try {
         await cancelStagedBuild(accountId, projectName);
-        process.exit(EXIT_CODES.SUCCESS);
+        return exit(EXIT_CODES.SUCCESS);
       } catch (err) {
         if (
           isSpecifiedError(err, {
             subCategory: PROJECT_ERROR_TYPES.BUILD_NOT_IN_PROGRESS,
           })
         ) {
-          process.exit(EXIT_CODES.SUCCESS);
+          return exit(EXIT_CODES.SUCCESS);
         } else {
           logError(err, new ApiErrorContext({ accountId }));
-          process.exit(EXIT_CODES.ERROR);
+          return exit(EXIT_CODES.ERROR);
         }
       }
     } else {
-      process.exit(EXIT_CODES.SUCCESS);
+      return exit(EXIT_CODES.SUCCESS);
     }
   };
 
@@ -102,27 +105,27 @@ function handleUserInput(
 async function handler(
   args: ArgumentsCamelCase<ProjectWatchArgs>
 ): Promise<void> {
-  const { initialUpload, derivedAccountId } = args;
-
-  trackCommandUsage('project-watch', undefined, derivedAccountId);
+  const { initialUpload, derivedAccountId, exit } = args;
 
   const { projectConfig, projectDir } = await getProjectConfig();
 
   if (!projectConfig || !projectDir) {
     uiLogger.error(commands.project.watch.errors.projectConfigNotFound);
-    return process.exit(EXIT_CODES.ERROR);
+    return exit(EXIT_CODES.ERROR);
   }
 
   if (isV2Project(projectConfig.platformVersion)) {
-    uiLogger.error(projectConfig.platformVersion);
-    return process.exit(EXIT_CODES.ERROR);
+    uiLogger.error(
+      commands.project.watch.errors.v2ApiError(projectConfig.platformVersion)
+    );
+    return exit(EXIT_CODES.ERROR);
   }
 
   try {
     validateProjectConfig(projectConfig, projectDir);
   } catch (error) {
     logError(error);
-    process.exit(EXIT_CODES.ERROR);
+    return exit(EXIT_CODES.ERROR);
   }
 
   try {
@@ -134,9 +137,9 @@ async function handler(
     const handleWatchTermination = (error?: unknown) => {
       if (error) {
         logError(error, new ApiErrorContext({ accountId: derivedAccountId }));
-        process.exit(EXIT_CODES.ERROR);
+        return exit(EXIT_CODES.ERROR);
       } else {
-        process.exit(EXIT_CODES.SUCCESS);
+        return exit(EXIT_CODES.SUCCESS);
       }
     };
 
@@ -146,7 +149,8 @@ async function handler(
         projectConfig,
         projectDir,
         handleBuildStatus,
-        handleUserInput,
+        (accountId, projectName, buildId) =>
+          handleUserInput(accountId, projectName, buildId, exit),
         handleWatchTermination
       );
     };
@@ -162,7 +166,7 @@ async function handler(
       });
 
       if (projectNotFound) {
-        process.exit(EXIT_CODES.ERROR);
+        return exit(EXIT_CODES.ERROR);
       }
 
       if (uploadError) {
@@ -183,14 +187,14 @@ async function handler(
             })
           );
         }
-        process.exit(EXIT_CODES.ERROR);
+        return exit(EXIT_CODES.ERROR);
       }
     } else {
       await startWatching();
     }
   } catch (e) {
     logError(e, new ApiErrorContext({ accountId: derivedAccountId }));
-    process.exit(EXIT_CODES.ERROR);
+    return exit(EXIT_CODES.ERROR);
   }
 }
 
@@ -223,7 +227,7 @@ const builder = makeYargsBuilder<ProjectWatchArgs>(
 const projectWatchCommand: YargsCommandModule<unknown, ProjectWatchArgs> = {
   command,
   describe,
-  handler,
+  handler: makeYargsHandlerWithUsageTracking('project-watch', handler),
   builder,
 };
 

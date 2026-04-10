@@ -1,7 +1,6 @@
 import { Argv, ArgumentsCamelCase } from 'yargs';
 import { uiLogger } from '../../lib/ui/logger.js';
 import { logError } from '../../lib/errorHandlers/index.js';
-import { trackCommandUsage } from '../../lib/usageTracking.js';
 import { listSchemas } from '../../lib/schema.js';
 import { commands } from '../../lang/en.js';
 import {
@@ -11,6 +10,7 @@ import {
   EnvironmentArgs,
   YargsCommandModule,
 } from '../../types/Yargs.js';
+import { makeYargsHandlerWithUsageTracking } from '../../lib/yargs/makeYargsHandlerWithUsageTracking.js';
 import { makeYargsBuilder } from '../../lib/yargsUtils.js';
 
 const command = 'list-schemas';
@@ -25,8 +25,6 @@ async function handler(
   args: ArgumentsCamelCase<SchemaListArgs>
 ): Promise<void> {
   const { derivedAccountId } = args;
-
-  trackCommandUsage('custom-object-schema-list', {}, derivedAccountId);
 
   try {
     await listSchemas(derivedAccountId);
@@ -55,7 +53,10 @@ const builder = makeYargsBuilder<SchemaListArgs>(
 const listSchemasCommand: YargsCommandModule<unknown, SchemaListArgs> = {
   command,
   describe,
-  handler,
+  handler: makeYargsHandlerWithUsageTracking(
+    'custom-object-schema-list',
+    handler
+  ),
   builder,
 };
 

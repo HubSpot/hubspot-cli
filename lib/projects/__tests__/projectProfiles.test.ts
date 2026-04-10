@@ -15,7 +15,6 @@ import {
   logProfileHeader,
   logProfileFooter,
   loadProfile,
-  enforceProfileUsage,
   loadAndValidateProfile,
   validateProjectForProfile,
 } from '../projectProfiles.js';
@@ -59,7 +58,7 @@ describe('lib/projectProfiles', () => {
       logProfileHeader(profileName);
 
       expect(mockedUiLine).toHaveBeenCalled();
-      expect(mockedUiBetaTag).toHaveBeenCalledWith(
+      expect(mockedUiLogger.log).toHaveBeenCalledWith(
         lib.projectProfiles.logs.usingProfile(filename)
       );
       expect(mockedUiLogger.log).toHaveBeenCalledWith('');
@@ -205,45 +204,6 @@ describe('lib/projectProfiles', () => {
     });
   });
 
-  describe('enforceProfileUsage()', () => {
-    const mockProjectConfig: ProjectConfig = {
-      srcDir: 'src',
-      name: 'test-project',
-      platformVersion: '1.0.0',
-    };
-    const mockProjectDir = '/test/project';
-
-    it('should not throw when no profiles exist', async () => {
-      mockedGetAllHsProfiles.mockResolvedValue([]);
-
-      await expect(
-        enforceProfileUsage(mockProjectConfig, mockProjectDir)
-      ).resolves.toBeUndefined();
-    });
-
-    it('should throw error when profiles exist', async () => {
-      mockedGetAllHsProfiles.mockResolvedValue(['profile1', 'profile2']);
-
-      await expect(
-        enforceProfileUsage(mockProjectConfig, mockProjectDir)
-      ).rejects.toThrow(
-        lib.projectProfiles.exitIfUsingProfiles.errors.noProfileSpecified
-      );
-    });
-
-    it('should not throw when project config is null', async () => {
-      await expect(
-        enforceProfileUsage(null, mockProjectDir)
-      ).resolves.toBeUndefined();
-    });
-
-    it('should not throw when project dir is null', async () => {
-      await expect(
-        enforceProfileUsage(mockProjectConfig, null)
-      ).resolves.toBeUndefined();
-    });
-  });
-
   describe('loadAndValidateProfile()', () => {
     const mockProjectConfig: ProjectConfig = {
       srcDir: 'src',
@@ -260,31 +220,6 @@ describe('lib/projectProfiles', () => {
       },
     };
 
-    it('should enforce profile usage when no profile name provided', async () => {
-      mockedGetAllHsProfiles.mockResolvedValue([]);
-
-      const result = await loadAndValidateProfile(
-        mockProjectConfig,
-        mockProjectDir,
-        undefined
-      );
-
-      expect(result).toBeUndefined();
-      expect(mockedGetAllHsProfiles).toHaveBeenCalledWith(
-        path.join(mockProjectDir, mockProjectConfig.srcDir)
-      );
-    });
-
-    it('should throw when profiles exist but no profile name provided', async () => {
-      mockedGetAllHsProfiles.mockResolvedValue(['profile1']);
-
-      await expect(
-        loadAndValidateProfile(mockProjectConfig, mockProjectDir, undefined)
-      ).rejects.toThrow(
-        lib.projectProfiles.exitIfUsingProfiles.errors.noProfileSpecified
-      );
-    });
-
     it('should load and return account ID when profile is valid', async () => {
       mockedLoadHsProfileFile.mockReturnValue(mockProfile);
       mockedGetConfigAccountById.mockReturnValue({
@@ -299,7 +234,7 @@ describe('lib/projectProfiles', () => {
         mockProfileName
       );
 
-      expect(result).toBe(mockProfile.accountId);
+      expect(result).toBe(mockProfile);
       expect(mockedLoadHsProfileFile).toHaveBeenCalledWith(
         path.join(mockProjectDir, mockProjectConfig.srcDir),
         mockProfileName
@@ -325,7 +260,6 @@ describe('lib/projectProfiles', () => {
         false
       );
 
-      expect(mockedUiBetaTag).toHaveBeenCalled();
       expect(mockedUiLine).toHaveBeenCalled();
       expect(mockedUiLogger.log).toHaveBeenCalled();
     });
@@ -396,7 +330,7 @@ describe('lib/projectProfiles', () => {
         mockProfileName
       );
 
-      expect(result).toBe(profileWithoutVars.accountId);
+      expect(result).toBe(profileWithoutVars);
       expect(mockedValidateProfileVariables).not.toHaveBeenCalled();
     });
   });

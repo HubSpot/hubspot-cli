@@ -56,6 +56,7 @@ class LocalDevProcess {
     this.devSessionManager = new DevSessionManager({
       targetTestingAccountId: this.state.targetTestingAccountId,
       localDevLogger: this._logger,
+      exit: this.state.actions.exit,
     });
   }
 
@@ -100,7 +101,7 @@ class LocalDevProcess {
       await this.devServerManager.start();
     } catch (e) {
       this.logger.devServerStartError(e);
-      process.exit(EXIT_CODES.ERROR);
+      return this.state.actions.exit(EXIT_CODES.ERROR);
     }
   }
 
@@ -211,7 +212,7 @@ class LocalDevProcess {
     const setupSucceeded = await this.setupDevServers();
 
     if (!setupSucceeded) {
-      process.exit(EXIT_CODES.ERROR);
+      return this.state.actions.exit(EXIT_CODES.ERROR);
     }
 
     this.logger.startupMessage();
@@ -225,7 +226,7 @@ class LocalDevProcess {
     const devSessionRegistered = await this.devSessionManager.registerSession();
 
     if (!devSessionRegistered) {
-      process.exit(EXIT_CODES.ERROR);
+      return this.state.actions.exit(EXIT_CODES.ERROR);
     }
 
     this.state.devServersStarted = true;
@@ -245,13 +246,13 @@ class LocalDevProcess {
       if (showProgress) {
         this.logger.cleanupError();
       }
-      process.exit(EXIT_CODES.ERROR);
+      return this.state.actions.exit(EXIT_CODES.ERROR);
     }
 
     if (showProgress) {
       this.logger.cleanupSuccess();
     }
-    process.exit(EXIT_CODES.SUCCESS);
+    return this.state.actions.exit(EXIT_CODES.SUCCESS);
   }
 
   async uploadProject(): Promise<LocalDevProjectUploadResult> {

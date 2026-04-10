@@ -1,11 +1,9 @@
 import { getConfigAccountById } from '@hubspot/local-dev-lib/config';
 import { PLATFORM_VERSIONS } from '@hubspot/local-dev-lib/constants/projects';
-import { ArgumentsCamelCase, Argv } from 'yargs';
+import { Argv, ArgumentsCamelCase } from 'yargs';
 import { YargsCommandModule } from '../../types/Yargs.js';
-import {
-  trackCommandMetadataUsage,
-  trackCommandUsage,
-} from '../../lib/usageTracking.js';
+import { makeYargsHandlerWithUsageTracking } from '../../lib/yargs/makeYargsHandlerWithUsageTracking.js';
+import { trackCommandMetadataUsage } from '../../lib/usageTracking.js';
 import { commands } from '../../lang/en.js';
 import { uiLogger } from '../../lib/ui/logger.js';
 import { ApiErrorContext, logError } from '../../lib/errorHandlers/index.js';
@@ -25,13 +23,12 @@ export function handlerGenerator(
   return async function handler(
     args: ArgumentsCamelCase<MigrateAppArgs>
   ): Promise<void> {
-    const { derivedAccountId, platformVersion, unstable } = args;
-    await trackCommandUsage(commandTrackingName, {}, derivedAccountId);
+    const { derivedAccountId, platformVersion, unstable, exit } = args;
     const accountConfig = getConfigAccountById(derivedAccountId);
 
     if (!accountConfig) {
       uiLogger.error(commands.project.migrateApp.errors.noAccountConfig);
-      return process.exit(EXIT_CODES.ERROR);
+      return exit(EXIT_CODES.ERROR);
     }
 
     uiLogger.log('');
@@ -43,7 +40,7 @@ export function handlerGenerator(
         uiLogger.error(
           commands.project.migrateApp.errors.notAllowedWithinProject
         );
-        return process.exit(EXIT_CODES.ERROR);
+        return exit(EXIT_CODES.ERROR);
       }
 
       args.platformVersion = unstable
@@ -67,7 +64,7 @@ export function handlerGenerator(
         { successful: false },
         derivedAccountId
       );
-      return process.exit(EXIT_CODES.ERROR);
+      return exit(EXIT_CODES.ERROR);
     }
 
     await trackCommandMetadataUsage(
@@ -75,7 +72,7 @@ export function handlerGenerator(
       { successful: true },
       derivedAccountId
     );
-    return process.exit(EXIT_CODES.SUCCESS);
+    return exit(EXIT_CODES.SUCCESS);
   };
 }
 
@@ -129,7 +126,7 @@ const builder = makeYargsBuilder<MigrateAppArgs>(
 const migrateCommand: YargsCommandModule<unknown, MigrateAppArgs> = {
   command,
   describe,
-  handler,
+  handler: makeYargsHandlerWithUsageTracking('app-migrate', handler),
   builder,
 };
 

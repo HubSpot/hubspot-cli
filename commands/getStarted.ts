@@ -3,7 +3,7 @@ import { getCwd } from '@hubspot/local-dev-lib/path';
 import fs from 'fs-extra';
 import open from 'open';
 import path from 'path';
-import { ArgumentsCamelCase, Argv } from 'yargs';
+import { Argv, ArgumentsCamelCase } from 'yargs';
 
 import { commands } from '../lang/en.js';
 import {
@@ -27,10 +27,7 @@ import {
   uiInfoSection,
 } from '../lib/ui/index.js';
 import { uiLogger } from '../lib/ui/logger.js';
-import {
-  trackCommandMetadataUsage,
-  trackCommandUsage,
-} from '../lib/usageTracking.js';
+import { trackCommandMetadataUsage } from '../lib/usageTracking.js';
 import { makeYargsBuilder } from '../lib/yargsUtils.js';
 import { ProjectConfig, ProjectPollResult } from '../types/Projects.js';
 import {
@@ -40,7 +37,7 @@ import {
   EnvironmentArgs,
   YargsCommandModule,
 } from '../types/Yargs.js';
-
+import { makeYargsHandlerWithUsageTracking } from '../lib/yargs/makeYargsHandlerWithUsageTracking.js';
 import { isV2Project } from '../lib/projects/platformVersion.js';
 import { pollProjectBuildAndDeploy } from '../lib/projects/pollProjectBuildAndDeploy.js';
 
@@ -66,10 +63,8 @@ type GetStartedArgs = CommonArgs &
 async function handler(
   args: ArgumentsCamelCase<GetStartedArgs>
 ): Promise<void> {
-  const { derivedAccountId } = args;
+  const { derivedAccountId, exit } = args;
   const env = getConfigAccountEnvironment(derivedAccountId);
-
-  await trackCommandUsage('get-started', {}, derivedAccountId);
 
   const accountName = uiAccountDescription(derivedAccountId);
 
@@ -80,12 +75,10 @@ async function handler(
         name: args.name,
         dest: args.dest,
       });
-      process.exit(EXIT_CODES.SUCCESS);
-      return;
+      return exit(EXIT_CODES.SUCCESS);
     } catch (error) {
       logError(error);
-      process.exit(EXIT_CODES.ERROR);
-      return;
+      return exit(EXIT_CODES.ERROR);
     }
   }
 
@@ -148,7 +141,7 @@ async function handler(
         openLink(derivedAccountId, 'design-manager');
       }
     }
-    process.exit(EXIT_CODES.SUCCESS);
+    return exit(EXIT_CODES.SUCCESS);
   } else {
     uiLogger.log(' ');
     uiLogger.log(commands.getStarted.logs.appSelected);
@@ -181,7 +174,7 @@ async function handler(
       uiLogger.error(
         commands.project.create.errors.cannotNestProjects(existingProjectDir)
       );
-      process.exit(EXIT_CODES.ERROR);
+      return exit(EXIT_CODES.ERROR);
     }
 
     // 4. Clone the project template from GitHub
@@ -215,7 +208,7 @@ async function handler(
       debugError(err);
       uiLogger.log(' ');
       uiLogger.error(commands.project.create.errors.failedToDownloadProject);
-      process.exit(EXIT_CODES.ERROR);
+      return exit(EXIT_CODES.ERROR);
     }
 
     const projectConfigPath = path.join(projectDest, PROJECT_CONFIG_FILE);
@@ -286,7 +279,7 @@ async function handler(
 
           uiLogger.log(' ');
           uiLogger.error(commands.getStarted.errors.configFileNotFound);
-          process.exit(EXIT_CODES.ERROR);
+          return exit(EXIT_CODES.ERROR);
         }
 
         try {
@@ -305,7 +298,7 @@ async function handler(
 
             uiLogger.log(' ');
             uiLogger.error(error.message);
-            process.exit(EXIT_CODES.ERROR);
+            return exit(EXIT_CODES.ERROR);
           }
           throw error;
         }
@@ -418,12 +411,12 @@ async function handler(
         uiLogger.log(' ');
         uiLogger.error(commands.getStarted.errors.uploadFailed);
         debugError(err);
-        process.exit(EXIT_CODES.ERROR);
+        return exit(EXIT_CODES.ERROR);
       }
     } else {
       uiLogger.log(' ');
       uiFeatureHighlight(['projectUploadCommand', 'projectDevCommand']);
-      process.exit(EXIT_CODES.SUCCESS);
+      return exit(EXIT_CODES.SUCCESS);
     }
   }
 
@@ -437,7 +430,7 @@ async function handler(
     derivedAccountId
   );
 
-  process.exit(EXIT_CODES.SUCCESS);
+  return exit(EXIT_CODES.SUCCESS);
 }
 
 function getStartedBuilder(yargs: Argv): Argv<GetStartedArgs> {
@@ -479,7 +472,7 @@ const builder = makeYargsBuilder<GetStartedArgs>(
 const getStartedCommand: YargsCommandModule<unknown, GetStartedArgs> = {
   command,
   describe,
-  handler,
+  handler: makeYargsHandlerWithUsageTracking('get-started', handler),
   builder,
 };
 

@@ -20,7 +20,7 @@ import {
 } from '@hubspot/local-dev-lib/api/sandboxHubs';
 import { Environment } from '@hubspot/local-dev-lib/types/Accounts';
 
-import { PromptExitError } from './errors/PromptExitError.js';
+import { isPromptExitError } from './errors/PromptExitError.js';
 import { personalAccessKeyPrompt } from './prompts/personalAccessKeyPrompt.js';
 import { createDeveloperTestAccountConfigPrompt } from './prompts/createDeveloperTestAccountConfigPrompt.js';
 import { cliAccountNamePrompt } from './prompts/accountNamePrompt.js';
@@ -228,7 +228,7 @@ export async function buildDeveloperTestAccount(
       developerTestAccountPersonalAccessKey
     );
   } catch (err) {
-    if (err instanceof PromptExitError) {
+    if (isPromptExitError(err)) {
       throw err;
     }
     logError(err);
@@ -310,7 +310,7 @@ export async function buildV2Sandbox(
       force
     );
   } catch (err) {
-    if (err instanceof PromptExitError) {
+    if (isPromptExitError(err)) {
       throw err;
     }
     logError(err);

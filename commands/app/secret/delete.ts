@@ -4,7 +4,6 @@ import {
   fetchAppSecrets,
 } from '@hubspot/local-dev-lib/api/devSecrets';
 import { logError } from '../../../lib/errorHandlers/index.js';
-import { trackCommandUsage } from '../../../lib/usageTracking.js';
 import { confirmPrompt, listPrompt } from '../../../lib/prompts/promptUtils.js';
 import { selectAppPrompt } from '../../../lib/prompts/selectAppPrompt.js';
 import { commands } from '../../../lang/en.js';
@@ -16,6 +15,7 @@ import {
   EnvironmentArgs,
   YargsCommandModule,
 } from '../../../types/Yargs.js';
+import { makeYargsHandlerWithUsageTracking } from '../../../lib/yargs/makeYargsHandlerWithUsageTracking.js';
 import { makeYargsBuilder } from '../../../lib/yargsUtils.js';
 import { uiLogger } from '../../../lib/ui/logger.js';
 import { uiBetaTag } from '../../../lib/ui/index.js';
@@ -34,14 +34,12 @@ type DeleteAppSecretArgs = CommonArgs &
 async function handler(
   args: ArgumentsCamelCase<DeleteAppSecretArgs>
 ): Promise<void> {
-  const { derivedAccountId, force } = args;
-
-  trackCommandUsage('app-secret-delete', {}, derivedAccountId);
+  const { derivedAccountId, force, exit } = args;
 
   const appSecretApp = await selectAppPrompt(derivedAccountId, args.app);
 
   if (!appSecretApp) {
-    process.exit(EXIT_CODES.ERROR);
+    return exit(EXIT_CODES.ERROR);
   }
 
   let appSecretToDelete = args.name;
@@ -59,14 +57,14 @@ async function handler(
       }
     } catch (err) {
       logError(err);
-      process.exit(EXIT_CODES.ERROR);
+      return exit(EXIT_CODES.ERROR);
     }
 
     if (appSecrets.length === 0) {
       uiLogger.error(
         commands.app.subcommands.secret.subcommands.delete.errors.noSecrets
       );
-      process.exit(EXIT_CODES.ERROR);
+      return exit(EXIT_CODES.ERROR);
     }
 
     appSecretToDelete = await listPrompt(
@@ -91,7 +89,7 @@ async function handler(
     uiLogger.log(
       commands.app.subcommands.secret.subcommands.delete.deleteCanceled
     );
-    process.exit(EXIT_CODES.SUCCESS);
+    return exit(EXIT_CODES.SUCCESS);
   }
 
   try {
@@ -110,10 +108,10 @@ async function handler(
     );
   } catch (err) {
     logError(err);
-    process.exit(EXIT_CODES.ERROR);
+    return exit(EXIT_CODES.ERROR);
   }
 
-  process.exit(EXIT_CODES.SUCCESS);
+  return exit(EXIT_CODES.SUCCESS);
 }
 
 function deleteAppSecretBuilder(yargs: Argv): Argv<DeleteAppSecretArgs> {
@@ -155,7 +153,7 @@ const deleteAppSecretCommand: YargsCommandModule<unknown, DeleteAppSecretArgs> =
   {
     command,
     describe,
-    handler,
+    handler: makeYargsHandlerWithUsageTracking('app-secret-delete', handler),
     builder,
   };
 

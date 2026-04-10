@@ -504,15 +504,22 @@ describe('SpinniesManager', () => {
 
     it('should bind SIGINT handler on init', () => {
       const processOnSpy = vi.spyOn(process, 'on');
-      const processRemoveAllListenersSpy = vi.spyOn(
-        process,
-        'removeAllListeners'
-      );
 
       spinniesManager.init();
 
-      expect(processRemoveAllListenersSpy).toHaveBeenCalledWith('SIGINT');
       expect(processOnSpy).toHaveBeenCalledWith('SIGINT', expect.any(Function));
+    });
+
+    it('should remove previous SIGINT handler on re-init', () => {
+      const processRemoveListenerSpy = vi.spyOn(process, 'removeListener');
+
+      spinniesManager.init();
+      spinniesManager.init();
+
+      expect(processRemoveListenerSpy).toHaveBeenCalledWith(
+        'SIGINT',
+        expect.any(Function)
+      );
     });
   });
 

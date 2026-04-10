@@ -251,7 +251,7 @@ describe('commands/cms/upload', () => {
 
         expect(trackCommandUsageSpy).toHaveBeenCalledWith(
           'upload',
-          { mode: 'publish', type: 'file' },
+          { mode: 'publish', type: 'file', successful: true },
           123456
         );
       });
@@ -342,7 +342,7 @@ describe('commands/cms/upload', () => {
 
         expect(trackCommandUsageSpy).toHaveBeenCalledWith(
           'upload',
-          { mode: 'publish', type: 'folder' },
+          { mode: 'publish', type: 'folder', successful: true },
           123456
         );
       });

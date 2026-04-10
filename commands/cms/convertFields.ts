@@ -14,7 +14,13 @@ import {
 import { trackConvertFieldsUsage } from '../../lib/usageTracking.js';
 import { logError } from '../../lib/errorHandlers/index.js';
 import { EXIT_CODES } from '../../lib/enums/exitCodes.js';
-import { CommonArgs, YargsCommandModule } from '../../types/Yargs.js';
+
+import {
+  CommonArgs,
+  ExitFunction,
+  YargsCommandModule,
+} from '../../types/Yargs.js';
+import { makeYargsHandlerWithUsageTracking } from '../../lib/yargs/makeYargsHandlerWithUsageTracking.js';
 import { makeYargsBuilder } from '../../lib/yargsUtils.js';
 
 const command = 'convert-fields';
@@ -25,14 +31,15 @@ type ConvertFieldsArgs = CommonArgs & {
   fieldOptions: string[];
 };
 
-function invalidPath(src: string): void {
+function invalidPath(src: string, exit: ExitFunction): Promise<never> {
   uiLogger.error(commands.convertFields.errors.invalidPath(src));
-  process.exit(EXIT_CODES.ERROR);
+  return exit(EXIT_CODES.ERROR);
 }
 
 async function handler(
   args: ArgumentsCamelCase<ConvertFieldsArgs>
 ): Promise<void> {
+  const { exit } = args;
   let stats: fs.Stats | undefined;
   let projectRoot: string | undefined;
   let src: string | undefined;
@@ -45,18 +52,16 @@ async function handler(
       : path.dirname(getCwd());
     stats = fs.statSync(src);
     if (!stats.isFile() && !stats.isDirectory()) {
-      invalidPath(args.src);
-      return;
+      return invalidPath(args.src, exit);
     }
   } catch (e) {
-    invalidPath(args.src);
+    return invalidPath(args.src, exit);
   }
 
   trackConvertFieldsUsage('process');
 
   if (!src || !stats || !projectRoot) {
-    invalidPath(args.src);
-    return;
+    return invalidPath(args.src, exit);
   }
 
   if (stats.isFile()) {
@@ -122,7 +127,7 @@ const builder = makeYargsBuilder<ConvertFieldsArgs>(
 const convertFieldsCommand: YargsCommandModule<unknown, ConvertFieldsArgs> = {
   command,
   describe,
-  handler,
+  handler: makeYargsHandlerWithUsageTracking('convert-fields', handler),
   builder,
 };
 

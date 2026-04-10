@@ -1,6 +1,5 @@
 import { HubSpotPromise } from '@hubspot/local-dev-lib/types/Http';
 import { HubSpotHttpError } from '@hubspot/local-dev-lib/models/HubSpotHttpError';
-
 type MockErrorResponse = {
   status: number;
   data: {

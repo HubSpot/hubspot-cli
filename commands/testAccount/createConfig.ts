@@ -1,13 +1,13 @@
 import fs from 'fs-extra';
 import path from 'path';
-import { ArgumentsCamelCase, Argv } from 'yargs';
+import { Argv, ArgumentsCamelCase } from 'yargs';
 import { getCwd } from '@hubspot/local-dev-lib/path';
 import { CommonArgs, YargsCommandModule } from '../../types/Yargs.js';
+import { makeYargsHandlerWithUsageTracking } from '../../lib/yargs/makeYargsHandlerWithUsageTracking.js';
 import { makeYargsBuilder } from '../../lib/yargsUtils.js';
 import { promptUser } from '../../lib/prompts/promptUtils.js';
 import { EXIT_CODES } from '../../lib/enums/exitCodes.js';
 import { uiLogger } from '../../lib/ui/logger.js';
-import { trackCommandUsage } from '../../lib/usageTracking.js';
 import { commands } from '../../lang/en.js';
 import { createDeveloperTestAccountConfigPrompt } from '../../lib/prompts/createDeveloperTestAccountConfigPrompt.js';
 import { fileExists } from '../../lib/validation.js';
@@ -24,9 +24,7 @@ type CreateTestAccountConfigArgs = CommonArgs & {
 async function handler(
   args: ArgumentsCamelCase<CreateTestAccountConfigArgs>
 ): Promise<void> {
-  const { derivedAccountId, name, description, path: configPath } = args;
-
-  trackCommandUsage('test-account-create-config', {}, derivedAccountId);
+  const { name, description, path: configPath, exit } = args;
 
   let accountConfigPath = configPath;
 
@@ -59,12 +57,12 @@ async function handler(
 
   if (!accountConfigPath) {
     uiLogger.error(commands.testAccount.createConfig.errors.pathError);
-    process.exit(EXIT_CODES.ERROR);
+    return exit(EXIT_CODES.ERROR);
   }
 
   if (fileExists(accountConfigPath)) {
     uiLogger.error(commands.testAccount.createConfig.errors.pathExistsError);
-    process.exit(EXIT_CODES.ERROR);
+    return exit(EXIT_CODES.ERROR);
   }
 
   try {
@@ -75,7 +73,7 @@ async function handler(
     );
   } catch (err) {
     uiLogger.error(commands.testAccount.createConfig.errors.failedToCreate);
-    process.exit(EXIT_CODES.ERROR);
+    return exit(EXIT_CODES.ERROR);
   }
 
   uiLogger.success(
@@ -84,7 +82,7 @@ async function handler(
     )
   );
 
-  process.exit(EXIT_CODES.SUCCESS);
+  return exit(EXIT_CODES.SUCCESS);
 }
 
 function createTestAccountConfigBuilder(
@@ -126,7 +124,10 @@ const createTestAccountConfigCommand: YargsCommandModule<
 > = {
   command,
   describe,
-  handler,
+  handler: makeYargsHandlerWithUsageTracking(
+    'test-account-create-config',
+    handler
+  ),
   builder,
 };
 

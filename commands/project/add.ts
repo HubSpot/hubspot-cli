@@ -3,11 +3,13 @@ import { Argv, ArgumentsCamelCase } from 'yargs';
 import { logError } from '../../lib/errorHandlers/index.js';
 import { getProjectConfig } from '../../lib/projects/config.js';
 import { EXIT_CODES } from '../../lib/enums/exitCodes.js';
+import { isPromptExitError } from '../../lib/errors/PromptExitError.js';
 import {
   YargsCommandModule,
   CommonArgs,
   ConfigArgs,
 } from '../../types/Yargs.js';
+import { makeYargsHandlerWithUsageTracking } from '../../lib/yargs/makeYargsHandlerWithUsageTracking.js';
 import { makeYargsBuilder } from '../../lib/yargsUtils.js';
 import { commands } from '../../lang/en.js';
 import { isV2Project } from '../../lib/projects/platformVersion.js';
@@ -36,14 +38,13 @@ export type ProjectAddArgs = CommonArgs &
 async function handler(
   args: ArgumentsCamelCase<ProjectAddArgs>
 ): Promise<void> {
+  const { derivedAccountId, exit } = args;
   try {
-    const { derivedAccountId } = args;
-
     const { projectConfig, projectDir } = await getProjectConfig();
 
     if (!projectDir || !projectConfig) {
       uiLogger.error(commands.project.add.error.locationInProject);
-      process.exit(EXIT_CODES.ERROR);
+      return exit(EXIT_CODES.ERROR);
     }
 
     const isV2ProjectCreate = isV2Project(projectConfig.platformVersion);
@@ -59,10 +60,13 @@ async function handler(
       );
     }
   } catch (e) {
+    if (isPromptExitError(e)) {
+      throw e;
+    }
     logError(e);
-    process.exit(EXIT_CODES.ERROR);
+    return exit(EXIT_CODES.ERROR);
   }
-  process.exit(EXIT_CODES.SUCCESS);
+  return exit(EXIT_CODES.SUCCESS);
 }
 
 function projectAddBuilder(yargs: Argv): Argv<ProjectAddArgs> {
@@ -115,7 +119,7 @@ const builder = makeYargsBuilder<ProjectAddArgs>(
 const projectAddCommand: YargsCommandModule<unknown, ProjectAddArgs> = {
   command,
   describe,
-  handler,
+  handler: makeYargsHandlerWithUsageTracking('project-add', handler),
   builder,
 };
 

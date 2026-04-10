@@ -1,4 +1,4 @@
-import { ArgumentsCamelCase, Argv } from 'yargs';
+import { Argv, ArgumentsCamelCase } from 'yargs';
 import { spawn, ChildProcess } from 'node:child_process';
 import path from 'path';
 import fs from 'fs';
@@ -9,7 +9,7 @@ import { logError } from '../../lib/errorHandlers/index.js';
 import { commands } from '../../lang/en.js';
 import { handleExit } from '../../lib/process.js';
 import { CommonArgs, YargsCommandModule } from '../../types/Yargs.js';
-import { trackCommandUsage } from '../../lib/usageTracking.js';
+import { makeYargsHandlerWithUsageTracking } from '../../lib/yargs/makeYargsHandlerWithUsageTracking.js';
 import { fileURLToPath } from 'url';
 
 const command = 'start';
@@ -23,8 +23,6 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 async function handler(args: ArgumentsCamelCase<McpStartArgs>): Promise<void> {
-  trackCommandUsage('mcp-start', {}, args.derivedAccountId);
-
   await startMcpServer(args.aiAgent);
 }
 
@@ -92,7 +90,7 @@ const builder = makeYargsBuilder(startBuilder, command, describe, {
 const mcpStartCommand: YargsCommandModule<unknown, McpStartArgs> = {
   command,
   describe,
-  handler,
+  handler: makeYargsHandlerWithUsageTracking('mcp-start', handler),
   builder,
 };
 

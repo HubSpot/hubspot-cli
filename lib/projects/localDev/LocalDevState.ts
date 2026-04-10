@@ -6,6 +6,7 @@ import { ProjectConfig } from '../../../types/Projects.js';
 import {
   LocalDevStateConstructorOptions,
   LocalDevStateListener,
+  LocalDevActions,
   AppLocalDevData,
   LocalDevServerMessage,
 } from '../../../types/LocalDev.js';
@@ -34,6 +35,7 @@ class LocalDevState {
   private _devServerMessage: LocalDevServerMessage;
   private _uploadWarnings: Set<string>;
   private _devServersStarted: boolean;
+  actions: LocalDevActions;
 
   constructor({
     targetProjectAccountId,
@@ -46,6 +48,7 @@ class LocalDevState {
     initialProjectProfileData,
     profile,
     env,
+    actions,
   }: LocalDevStateConstructorOptions) {
     this._targetProjectAccountId = targetProjectAccountId;
     this._targetTestingAccountId = targetTestingAccountId;
@@ -62,6 +65,7 @@ class LocalDevState {
     this._devServerMessage = LOCAL_DEV_SERVER_MESSAGE_TYPES.INITIAL;
     this._uploadWarnings = new Set();
     this._devServersStarted = false;
+    this.actions = actions;
 
     this._listeners = {};
   }

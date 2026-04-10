@@ -1,4 +1,4 @@
-import { ArgumentsCamelCase, Argv } from 'yargs';
+import { Argv, ArgumentsCamelCase } from 'yargs';
 import {
   fetchDeveloperTestAccounts,
   deleteDeveloperTestAccount,
@@ -10,10 +10,10 @@ import {
   TestingArgs,
   YargsCommandModule,
 } from '../../types/Yargs.js';
+import { makeYargsHandlerWithUsageTracking } from '../../lib/yargs/makeYargsHandlerWithUsageTracking.js';
 import { makeYargsBuilder } from '../../lib/yargsUtils.js';
 import { EXIT_CODES } from '../../lib/enums/exitCodes.js';
 import { uiLogger } from '../../lib/ui/logger.js';
-import { trackCommandUsage } from '../../lib/usageTracking.js';
 import { commands } from '../../lang/en.js';
 import {
   removeAccountFromConfig,
@@ -24,7 +24,7 @@ import {
 } from '@hubspot/local-dev-lib/config';
 import { promptUser } from '../../lib/prompts/promptUtils.js';
 import { PromptChoices } from '../../types/Prompts.js';
-import { debugError } from '../../lib/errorHandlers/index.js';
+import { debugError, logError } from '../../lib/errorHandlers/index.js';
 import { HubSpotConfigAccount } from '@hubspot/local-dev-lib/types/Accounts';
 
 const command = 'delete [test-account]';
@@ -61,10 +61,9 @@ async function accountToDeleteSelectionPrompt(
   const accountData = await getAccountPromptOptions(derivedAccountId);
 
   if (accountData.length === 0) {
-    uiLogger.error(
+    throw new Error(
       commands.testAccount.delete.errors.noAccountsToDelete(derivedAccountId)
     );
-    process.exit(EXIT_CODES.ERROR);
   }
 
   const { testAccountToDelete } = await promptUser<{
@@ -150,25 +149,21 @@ async function deleteTestAccountFromConfig(
   }
 }
 
-async function validateTestAccountConfigs(
-  testAccountId: number | null
-): Promise<{
+function validateTestAccountConfigs(testAccountId: number | null): {
   testAccountConfig: HubSpotConfigAccount;
   parentAccountName: string;
-}> {
+} {
   if (!testAccountId) {
-    uiLogger.error(
+    throw new Error(
       commands.testAccount.delete.errors.testAccountNotFound(testAccountId)
     );
-    process.exit(EXIT_CODES.ERROR);
   }
   const testAccountConfig = getConfigAccountById(testAccountId);
 
   if (!testAccountConfig) {
-    uiLogger.error(
+    throw new Error(
       commands.testAccount.delete.errors.testAccountNotFound(testAccountId)
     );
-    process.exit(EXIT_CODES.ERROR);
   }
 
   const parentAccountConfig = getConfigAccountById(
@@ -176,10 +171,9 @@ async function validateTestAccountConfigs(
   );
 
   if (!parentAccountConfig) {
-    uiLogger.error(
+    throw new Error(
       commands.testAccount.delete.errors.parentAccountNotFound(testAccountId)
     );
-    process.exit(EXIT_CODES.ERROR);
   }
 
   const parentAccountName = parentAccountConfig.name!;
@@ -190,16 +184,20 @@ async function validateTestAccountConfigs(
 async function handler(
   args: ArgumentsCamelCase<DeleteTestAccountArgs>
 ): Promise<void> {
-  const { derivedAccountId, testAccount, force } = args;
+  const { derivedAccountId, testAccount, force, exit } = args;
 
-  trackCommandUsage('test-account-delete', {}, derivedAccountId);
   let testAccountIdToDelete: number = 0;
 
   // See if the account exists
   if (testAccount) {
     const account = getConfigAccountIfExists(testAccount);
     const accountId = account?.accountId || null;
-    await validateTestAccountConfigs(accountId);
+    try {
+      validateTestAccountConfigs(accountId);
+    } catch (error) {
+      logError(error);
+      return exit(EXIT_CODES.ERROR);
+    }
 
     if (accountId) {
       testAccountIdToDelete = accountId;
@@ -214,12 +212,20 @@ async function handler(
     } catch (err) {
       debugError(err);
       uiLogger.error(commands.testAccount.delete.errors.failedToSelectAccount);
-      process.exit(EXIT_CODES.ERROR);
+      return exit(EXIT_CODES.ERROR);
     }
   }
 
-  const { testAccountConfig, parentAccountName } =
-    await validateTestAccountConfigs(testAccountIdToDelete);
+  let testAccountConfig: HubSpotConfigAccount;
+  let parentAccountName: string;
+  try {
+    ({ testAccountConfig, parentAccountName } = validateTestAccountConfigs(
+      testAccountIdToDelete
+    ));
+  } catch (error) {
+    logError(error);
+    return exit(EXIT_CODES.ERROR);
+  }
 
   // If --force, don't prompt user; else confirm deletion
   let shouldDeleteAccount: boolean;
@@ -243,7 +249,7 @@ async function handler(
     uiLogger.info(commands.testAccount.delete.info.deletionCanceled);
   }
 
-  process.exit(EXIT_CODES.SUCCESS);
+  return exit(EXIT_CODES.SUCCESS);
 }
 
 function deleteTestAccountBuilder(yargs: Argv): Argv<DeleteTestAccountArgs> {
@@ -300,7 +306,7 @@ const deleteTestAccountCommand: YargsCommandModule<
 > = {
   command,
   describe,
-  handler,
+  handler: makeYargsHandlerWithUsageTracking('test-account-delete', handler),
   builder,
 };
 

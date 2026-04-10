@@ -1,9 +1,9 @@
-import { ArgumentsCamelCase, Argv } from 'yargs';
+import { Argv, ArgumentsCamelCase } from 'yargs';
 import { isConfigFlagEnabled } from '@hubspot/local-dev-lib/config';
 import { CONFIG_FLAGS } from '@hubspot/local-dev-lib/constants/config';
-import { trackCommandUsage } from '../lib/usageTracking.js';
 import { EXIT_CODES } from '../lib/enums/exitCodes.js';
 import { CommonArgs, YargsCommandModule } from '../types/Yargs.js';
+import { makeYargsHandlerWithUsageTracking } from '../lib/yargs/makeYargsHandlerWithUsageTracking.js';
 import { makeYargsBuilder } from '../lib/yargsUtils.js';
 import { uiLogger } from '../lib/ui/logger.js';
 import { commands } from '../lang/en.js';
@@ -27,9 +27,7 @@ const command = ['upgrade [version]', 'update [version]'];
 const describe = commands.upgrade.describe;
 
 const handler = async (args: ArgumentsCamelCase<UpgradeArgs>) => {
-  const { version, force, beta, derivedAccountId } = args;
-
-  trackCommandUsage('upgrade', {}, derivedAccountId);
+  const { version, force, beta, exit } = args;
 
   SpinniesManager.init({
     succeedColor: 'white',
@@ -45,7 +43,7 @@ const handler = async (args: ArgumentsCamelCase<UpgradeArgs>) => {
       const latestVersion = beta ? nextCliVersion : latestCliVersion;
       if (!latestVersion) {
         uiLogger.error(commands.upgrade.errors.unableToDetermineLatestVersion);
-        return process.exit(EXIT_CODES.ERROR);
+        return exit(EXIT_CODES.ERROR);
       }
       targetVersion = latestVersion;
     }
@@ -60,7 +58,7 @@ const handler = async (args: ArgumentsCamelCase<UpgradeArgs>) => {
         uiLogger.log(commands.upgrade.alreadyLatest(currentVersion, beta));
       }
 
-      return process.exit(EXIT_CODES.SUCCESS);
+      return exit(EXIT_CODES.SUCCESS);
     }
 
     // Check if globally installed
@@ -69,7 +67,7 @@ const handler = async (args: ArgumentsCamelCase<UpgradeArgs>) => {
     if (!isGlobal) {
       uiLogger.log(commands.upgrade.autoUpgradeNotAvailable(targetVersion));
 
-      return process.exit(EXIT_CODES.SUCCESS);
+      return exit(EXIT_CODES.SUCCESS);
     }
 
     // Prompt for confirmation unless --force is used
@@ -82,7 +80,7 @@ const handler = async (args: ArgumentsCamelCase<UpgradeArgs>) => {
       if (!shouldUpgrade) {
         uiLogger.log(commands.upgrade.cancelled);
 
-        return process.exit(EXIT_CODES.SUCCESS);
+        return exit(EXIT_CODES.SUCCESS);
       }
     }
 
@@ -98,7 +96,7 @@ const handler = async (args: ArgumentsCamelCase<UpgradeArgs>) => {
     });
     uiLogger.log('');
     uiLogger.error(commands.upgrade.errors.generic);
-    return process.exit(EXIT_CODES.ERROR);
+    return exit(EXIT_CODES.ERROR);
   }
 
   SpinniesManager.succeed('upgrade', {
@@ -122,7 +120,7 @@ const handler = async (args: ArgumentsCamelCase<UpgradeArgs>) => {
     uiLogger.log(commands.upgrade.autoUpgradeMessage);
   }
 
-  return process.exit(EXIT_CODES.SUCCESS);
+  return exit(EXIT_CODES.SUCCESS);
 };
 
 function upgradeBuilder(yargs: Argv): Argv<UpgradeArgs> {
@@ -159,7 +157,7 @@ const builder = makeYargsBuilder<UpgradeArgs>(
 const upgradeCommand: YargsCommandModule<unknown, UpgradeArgs> = {
   command,
   describe,
-  handler,
+  handler: makeYargsHandlerWithUsageTracking('upgrade', handler),
   builder,
 };
 

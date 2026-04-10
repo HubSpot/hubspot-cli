@@ -6,6 +6,8 @@ import { fileURLToPath } from 'url';
 import { getConfigFilePath } from '@hubspot/local-dev-lib/config';
 import SpinniesManager from '../ui/SpinniesManager.js';
 import { lib } from '../../lang/en.js';
+import { ExitCode, ExitFunction } from '../../types/Yargs.js';
+import { EXIT_CODES } from '../enums/exitCodes.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -21,6 +23,7 @@ interface DevServerOptions {
   generateFieldsTypes?: boolean;
   resetSession?: boolean;
   dest: string;
+  exit: ExitFunction;
 }
 
 /**
@@ -125,6 +128,7 @@ export async function spawnDevServer(
     generateFieldsTypes,
     resetSession,
     dest,
+    exit,
   } = options;
   // Ensure cms-dev-server is installed in isolated cache
   const cacheDir = await ensureCmsDevServerCache(TARGET_CMS_DEV_SERVER_VERSION);
@@ -169,19 +173,19 @@ export async function spawnDevServer(
   });
 
   // Handle process events
-  devServer.on('error', error => {
+  devServer.on('error', async error => {
     console.error(lib.theme.cmsDevServerProcess.serverStartError(error));
-    process.exit(1);
+    await exit(EXIT_CODES.ERROR);
   });
 
-  devServer.on('exit', (code, signal) => {
+  devServer.on('exit', async (code, signal) => {
     if (code !== 0 && code !== null) {
       console.error(lib.theme.cmsDevServerProcess.serverExit(code));
-      process.exit(code);
+      await exit(code as ExitCode);
     }
     if (signal) {
       console.error(lib.theme.cmsDevServerProcess.serverKill(signal));
-      process.exit(1);
+      await exit(EXIT_CODES.ERROR);
     }
   });
 

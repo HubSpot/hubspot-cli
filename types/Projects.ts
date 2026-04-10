@@ -135,6 +135,23 @@ export type GenericComponentConfig =
   | PrivateAppComponentConfig
   | AppCardComponentConfig;
 
+export type ProjectInfo = {
+  projectName: string;
+  platformVersion: string;
+  projectId: number;
+  deployedBuildId: number;
+  autoDeployEnabled: boolean;
+  projectUrl?: string;
+  app?: {
+    name: string;
+    id: number;
+    uid: string;
+    authType?: string;
+    distributionType?: string;
+  };
+  components: { uid: string; type: string }[];
+};
+
 export enum ComponentTypes {
   PrivateApp = 'private-app',
   PublicApp = 'public-app',

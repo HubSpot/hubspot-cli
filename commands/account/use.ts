@@ -13,7 +13,6 @@ import {
   getDefaultAccountOverrideFilePath,
 } from '@hubspot/local-dev-lib/config/defaultAccountOverride';
 import { ENVIRONMENTS } from '@hubspot/local-dev-lib/constants/environments';
-import { trackCommandUsage } from '../../lib/usageTracking.js';
 import { commands } from '../../lang/en.js';
 import { uiLogger } from '../../lib/ui/logger.js';
 import {
@@ -21,10 +20,10 @@ import {
   AUTHENTICATE_NEW_ACCOUNT_VALUE,
 } from '../../lib/prompts/accountsPrompt.js';
 import { CommonArgs, YargsCommandModule } from '../../types/Yargs.js';
+import { makeYargsHandlerWithUsageTracking } from '../../lib/yargs/makeYargsHandlerWithUsageTracking.js';
 import { makeYargsBuilder } from '../../lib/yargsUtils.js';
 import { HubSpotConfigAccount } from '@hubspot/local-dev-lib/types/Accounts';
 import { authenticateNewAccount } from '../../lib/accountAuth.js';
-import { PromptExitError } from '../../lib/errors/PromptExitError.js';
 import { EXIT_CODES } from '../../lib/enums/exitCodes.js';
 
 const command = 'use [account]';
@@ -37,6 +36,7 @@ type AccountUseArgs = CommonArgs & {
 async function handler(
   args: ArgumentsCamelCase<AccountUseArgs>
 ): Promise<void> {
+  const { exit } = args;
   let newDefaultAccount: string | number | undefined = args.account;
   const usingGlobalConfig = globalConfigFileExists();
 
@@ -56,24 +56,15 @@ async function handler(
   }
 
   if (newDefaultAccount === AUTHENTICATE_NEW_ACCOUNT_VALUE) {
-    let updatedConfig;
-    try {
-      updatedConfig = await authenticateNewAccount({
-        env: args.qa ? ENVIRONMENTS.QA : ENVIRONMENTS.PROD,
-        setAsDefaultAccount: true,
-      });
-    } catch (e) {
-      if (e instanceof PromptExitError) {
-        process.exit(e.exitCode);
-      }
-      throw e;
-    }
+    const updatedConfig = await authenticateNewAccount({
+      env: args.qa ? ENVIRONMENTS.QA : ENVIRONMENTS.PROD,
+      setAsDefaultAccount: true,
+    });
 
     if (!updatedConfig) {
-      process.exit(EXIT_CODES.ERROR);
+      return exit(EXIT_CODES.ERROR);
     }
 
-    trackCommandUsage('accounts-use', undefined, updatedConfig.accountId);
     return;
   }
 
@@ -84,8 +75,6 @@ async function handler(
   } else {
     account = getConfigAccountByName(String(newDefaultAccount));
   }
-
-  trackCommandUsage('accounts-use', undefined, account?.accountId);
 
   const accounts = getAllConfigAccounts();
   const accountOverride = getDefaultAccountOverrideAccountId(accounts);
@@ -140,7 +129,7 @@ const builder = makeYargsBuilder<AccountUseArgs>(
 const accountUseCommand: YargsCommandModule<unknown, AccountUseArgs> = {
   command,
   describe,
-  handler,
+  handler: makeYargsHandlerWithUsageTracking('accounts-use', handler),
   builder,
 };
 

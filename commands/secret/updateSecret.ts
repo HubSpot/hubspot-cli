@@ -2,7 +2,6 @@ import { Argv, ArgumentsCamelCase } from 'yargs';
 import { updateSecret, fetchSecrets } from '@hubspot/local-dev-lib/api/secrets';
 import { EXIT_CODES } from '../../lib/enums/exitCodes.js';
 import { ApiErrorContext, logError } from '../../lib/errorHandlers/index.js';
-import { trackCommandUsage } from '../../lib/usageTracking.js';
 import {
   secretValuePrompt,
   secretListPrompt,
@@ -16,6 +15,7 @@ import {
   EnvironmentArgs,
   YargsCommandModule,
 } from '../../types/Yargs.js';
+import { makeYargsHandlerWithUsageTracking } from '../../lib/yargs/makeYargsHandlerWithUsageTracking.js';
 import { makeYargsBuilder } from '../../lib/yargsUtils.js';
 
 const command = 'update [name]';
@@ -29,10 +29,8 @@ type UpdateSecretArgs = CommonArgs &
 async function handler(
   args: ArgumentsCamelCase<UpdateSecretArgs>
 ): Promise<void> {
-  const { name, derivedAccountId } = args;
+  const { name, derivedAccountId, exit } = args;
   let secretName = name;
-
-  trackCommandUsage('secrets-update', {}, derivedAccountId);
 
   try {
     const {
@@ -43,7 +41,7 @@ async function handler(
       uiLogger.error(
         commands.secret.subcommands.update.errors.noSecret(secretName)
       );
-      process.exit(EXIT_CODES.ERROR);
+      return exit(EXIT_CODES.ERROR);
     }
 
     if (!secretName) {
@@ -102,7 +100,7 @@ const builder = makeYargsBuilder<UpdateSecretArgs>(
 const updateSecretCommand: YargsCommandModule<unknown, UpdateSecretArgs> = {
   command,
   describe,
-  handler,
+  handler: makeYargsHandlerWithUsageTracking('secrets-update', handler),
   builder,
 };
 

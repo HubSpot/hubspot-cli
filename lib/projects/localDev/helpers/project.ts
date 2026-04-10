@@ -21,6 +21,7 @@ import {
   PROJECT_ERROR_TYPES,
   PROJECT_BUILD_TEXT,
   PROJECT_DEPLOY_TEXT,
+  PROJECT_CONFIG_FILE,
 } from '../../../constants.js';
 import { lib } from '../../../../lang/en.js';
 import { uiLogger } from '../../../ui/logger.js';
@@ -41,13 +42,15 @@ import {
   hasMissingPackages,
   installPackages,
 } from '../../../dependencyManagement.js';
+import { ExitFunction } from '../../../../types/Yargs.js';
 
 // Prompt the user to create a new project if one doesn't exist on their target account
 export async function createNewProjectForLocalDev(
   projectConfig: ProjectConfig,
   targetAccountId: number,
   shouldCreateWithoutConfirmation: boolean,
-  hasPublicApps: boolean
+  hasPublicApps: boolean,
+  exit: ExitFunction
 ): Promise<Project> {
   // Create the project without prompting if this is a newly created sandbox
   let shouldCreateProject = shouldCreateWithoutConfirmation;
@@ -104,7 +107,7 @@ export async function createNewProjectForLocalDev(
         lib.localDevHelpers.project.createNewProjectForLocalDev
           .failedToCreateProject
       );
-      process.exit(EXIT_CODES.ERROR);
+      return exit(EXIT_CODES.ERROR);
     }
   } else {
     // We cannot continue if the project does not exist in the target account
@@ -113,7 +116,7 @@ export async function createNewProjectForLocalDev(
       lib.localDevHelpers.project.createNewProjectForLocalDev
         .choseNotToCreateProject
     );
-    process.exit(EXIT_CODES.SUCCESS);
+    return exit(EXIT_CODES.SUCCESS);
   }
 }
 
@@ -121,13 +124,14 @@ function projectUploadCallback(
   accountId: number,
   projectConfig: ProjectConfig,
   tempFile: FileResult,
+  exit: ExitFunction,
   buildId?: number
 ): Promise<ProjectPollResult> {
   if (!buildId) {
     uiLogger.error(
       lib.localDevHelpers.project.createInitialBuildForNewProject.genericError
     );
-    process.exit(EXIT_CODES.ERROR);
+    return exit(EXIT_CODES.ERROR);
   }
 
   return pollProjectBuildAndDeploy(
@@ -145,6 +149,7 @@ export async function createInitialBuildForNewProject(
   projectConfig: ProjectConfig,
   projectDir: string,
   targetAccountId: number,
+  exit: ExitFunction,
   sendIR?: boolean,
   profile?: string
 ): Promise<Build> {
@@ -153,7 +158,8 @@ export async function createInitialBuildForNewProject(
       accountId: targetAccountId,
       projectConfig,
       projectDir,
-      callbackFunc: projectUploadCallback,
+      callbackFunc: (accountId, config, tempFile, buildId) =>
+        projectUploadCallback(accountId, config, tempFile, exit, buildId),
       uploadMessage:
         lib.localDevHelpers.project.createInitialBuildForNewProject
           .initialUploadMessage,
@@ -184,7 +190,7 @@ export async function createInitialBuildForNewProject(
         })
       );
     }
-    process.exit(EXIT_CODES.ERROR);
+    return exit(EXIT_CODES.ERROR);
   }
 
   if (!initialUploadResult?.succeeded) {
@@ -206,7 +212,7 @@ export async function createInitialBuildForNewProject(
     });
     uiLogger.log('');
 
-    process.exit(EXIT_CODES.ERROR);
+    return exit(EXIT_CODES.ERROR);
   }
 
   return initialUploadResult.buildResult;
@@ -217,6 +223,7 @@ export async function compareLocalProjectToDeployed(
   accountId: number,
   deployedBuildId: number | undefined,
   localProjectNodes: { [key: string]: IntermediateRepresentationNodeLocalDev },
+  exit: ExitFunction,
   profile?: string
 ): Promise<void> {
   uiLogger.log('');
@@ -228,7 +235,7 @@ export async function compareLocalProjectToDeployed(
         uiAccountDescription(accountId)
       )
     );
-    process.exit(EXIT_CODES.SUCCESS);
+    return exit(EXIT_CODES.SUCCESS);
   }
 
   SpinniesManager.add('compareLocalProjectToDeployed', {
@@ -258,7 +265,7 @@ export async function compareLocalProjectToDeployed(
         profile
       )
     );
-    process.exit(EXIT_CODES.SUCCESS);
+    return exit(EXIT_CODES.SUCCESS);
   }
 }
 export async function getDeployedProjectNodes(
@@ -287,7 +294,30 @@ export async function getDeployedProjectNodes(
       { hideLogs: true }
     );
 
-    const deployedProjectSourceDir = path.join(tempDir, projectConfig.srcDir);
+    // Read the deployed project's hsproject.json to get its srcDir
+    // Deployed projects always use "src" as the srcDir
+    const possibleProjectPaths = [
+      path.join(tempDir, PROJECT_CONFIG_FILE),
+      path.join(
+        tempDir,
+        sanitizeFileName(projectConfig.name),
+        PROJECT_CONFIG_FILE
+      ),
+    ];
+
+    let deployedSrcDir = 'src';
+
+    for (const projectJsonPath of possibleProjectPaths) {
+      if (await fs.pathExists(projectJsonPath)) {
+        const deployedProjectConfig = await fs.readJson(projectJsonPath);
+        if (deployedProjectConfig.srcDir) {
+          deployedSrcDir = deployedProjectConfig.srcDir;
+        }
+        break;
+      }
+    }
+
+    const deployedProjectSourceDir = path.join(tempDir, deployedSrcDir);
 
     const { intermediateNodesIndexedByUid } = await translate(
       {
@@ -361,6 +391,6 @@ export async function checkAndInstallDependencies(): Promise<void> {
       text: lib.localDevHelpers.project.checkAndInstallDependencies
         .dependenciesFailure,
     });
-    process.exit(EXIT_CODES.ERROR);
+    throw e;
   }
 }

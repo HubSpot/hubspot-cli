@@ -9,12 +9,12 @@ import {
   EnvironmentArgs,
   YargsCommandModule,
 } from '../../types/Yargs.js';
+import { makeYargsHandlerWithUsageTracking } from '../../lib/yargs/makeYargsHandlerWithUsageTracking.js';
 import { EXIT_CODES } from '../../lib/enums/exitCodes.js';
 import { uiLogger } from '../../lib/ui/logger.js';
 import { logError } from '../../lib/errorHandlers/index.js';
 import { commands } from '../../lang/en.js';
 import { makeYargsBuilder } from '../../lib/yargsUtils.js';
-import { trackCommandUsage } from '../../lib/usageTracking.js';
 import { renderTable } from '../../ui/render.js';
 import { getBaseHubSpotUrlForAccount } from '../../lib/projects/urls.js';
 
@@ -24,13 +24,8 @@ const describe = commands.hubdb.subcommands.list.describe;
 type HubdbListArgs = CommonArgs & ConfigArgs & AccountArgs & EnvironmentArgs;
 
 async function getTableData(accountId: number): Promise<FetchTablesResponse> {
-  try {
-    const response = await fetchTables(accountId);
-    return response.data;
-  } catch (err) {
-    logError(err);
-    process.exit(EXIT_CODES.ERROR);
-  }
+  const response = await fetchTables(accountId);
+  return response.data;
 }
 
 // stripping the types and unnecessary fields so this data can be turned into a UI table
@@ -45,10 +40,18 @@ function mapTablesToUI(tables: Table[]): string[][] {
 }
 
 async function handler(args: ArgumentsCamelCase<HubdbListArgs>): Promise<void> {
-  const { derivedAccountId } = args;
-  trackCommandUsage('hubdb-list', {}, derivedAccountId);
+  const { derivedAccountId, exit } = args;
 
-  const { results: tables, total } = await getTableData(derivedAccountId);
+  let tableData: FetchTablesResponse;
+  try {
+    tableData = await getTableData(derivedAccountId);
+  } catch (err) {
+    logError(err);
+    return exit(EXIT_CODES.ERROR);
+    return;
+  }
+
+  const { results: tables, total } = tableData;
 
   const tableUIData = mapTablesToUI(tables);
   const tableHeader = [
@@ -85,7 +88,7 @@ async function handler(args: ArgumentsCamelCase<HubdbListArgs>): Promise<void> {
   } else {
     uiLogger.log(commands.hubdb.subcommands.list.noTables(derivedAccountId));
   }
-  process.exit(EXIT_CODES.SUCCESS);
+  return exit(EXIT_CODES.SUCCESS);
 }
 
 function hubdbListBuilder(yargs: Argv): Argv<HubdbListArgs> {
@@ -109,7 +112,7 @@ const builder = makeYargsBuilder<HubdbListArgs>(
 const hubdbListCommand: YargsCommandModule<unknown, HubdbListArgs> = {
   command,
   describe,
-  handler,
+  handler: makeYargsHandlerWithUsageTracking('hubdb-list', handler),
   builder,
 };
 

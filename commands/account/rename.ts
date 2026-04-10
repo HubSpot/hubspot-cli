@@ -1,6 +1,5 @@
 import { Argv, ArgumentsCamelCase } from 'yargs';
 import { renameConfigAccount } from '@hubspot/local-dev-lib/config';
-import { trackCommandUsage } from '../../lib/usageTracking.js';
 import { commands } from '../../lang/en.js';
 import { uiLogger } from '../../lib/ui/logger.js';
 import {
@@ -8,6 +7,7 @@ import {
   ConfigArgs,
   YargsCommandModule,
 } from '../../types/Yargs.js';
+import { makeYargsHandlerWithUsageTracking } from '../../lib/yargs/makeYargsHandlerWithUsageTracking.js';
 import { logError } from '../../lib/errorHandlers/index.js';
 import { EXIT_CODES } from '../../lib/enums/exitCodes.js';
 import { makeYargsBuilder } from '../../lib/yargsUtils.js';
@@ -25,9 +25,7 @@ export type AccountRenameArgs = CommonArgs &
 async function handler(
   args: ArgumentsCamelCase<AccountRenameArgs>
 ): Promise<void> {
-  const { accountName, newName, derivedAccountId } = args;
-
-  trackCommandUsage('accounts-rename', undefined, derivedAccountId);
+  const { accountName, newName, exit } = args;
 
   const newNameKebabCase = toKebabCase(newName);
   const nameWasSanitized = newNameKebabCase !== newName;
@@ -35,7 +33,7 @@ async function handler(
     renameConfigAccount(accountName, newNameKebabCase);
   } catch (error) {
     logError(error);
-    process.exit(EXIT_CODES.ERROR);
+    return exit(EXIT_CODES.ERROR);
   }
 
   uiLogger.success(
@@ -45,7 +43,7 @@ async function handler(
       nameWasSanitized
     )
   );
-  process.exit(EXIT_CODES.SUCCESS);
+  return exit(EXIT_CODES.SUCCESS);
 }
 
 function accountRenameBuilder(yargs: Argv): Argv<AccountRenameArgs> {
@@ -80,7 +78,7 @@ const builder = makeYargsBuilder<AccountRenameArgs>(
 const accountRenameCommand: YargsCommandModule<unknown, AccountRenameArgs> = {
   command,
   describe,
-  handler,
+  handler: makeYargsHandlerWithUsageTracking('accounts-rename', handler),
   builder,
 };
 

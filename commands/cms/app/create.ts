@@ -1,17 +1,18 @@
 import fs from 'fs-extra';
 import { logError } from '../../../lib/errorHandlers/index.js';
 import { resolveLocalPath } from '../../../lib/filesystem.js';
-import { trackCommandUsage } from '../../../lib/usageTracking.js';
 import { commands } from '../../../lang/en.js';
 import { uiLogger } from '../../../lib/ui/logger.js';
-import { ArgumentsCamelCase, Argv } from 'yargs';
+import { Argv, ArgumentsCamelCase } from 'yargs';
 import { makeYargsBuilder } from '../../../lib/yargsUtils.js';
 import {
   CommonArgs,
   ConfigArgs,
   YargsCommandModule,
 } from '../../../types/Yargs.js';
+import { makeYargsHandlerWithUsageTracking } from '../../../lib/yargs/makeYargsHandlerWithUsageTracking.js';
 import { EXIT_CODES } from '../../../lib/enums/exitCodes.js';
+import { isPromptExitError } from '../../../lib/errors/PromptExitError.js';
 import assets from '../../../lib/cmsAssets/index.js';
 
 const APP_ASSET_TYPES = ['api-sample', 'app', 'react-app', 'vue-app'];
@@ -29,11 +30,12 @@ type AppCreateArgs = CommonArgs &
 
 async function handler(args: ArgumentsCamelCase<AppCreateArgs>): Promise<void> {
   const {
-    derivedAccountId,
     name,
     internal: getInternalVersion,
     type,
     dest,
+    exit,
+    addUsageMetadata,
   } = args;
 
   const assetType = type.toLowerCase();
@@ -48,7 +50,7 @@ async function handler(args: ArgumentsCamelCase<AppCreateArgs>): Promise<void> {
     return;
   }
 
-  trackCommandUsage('create', { assetType }, derivedAccountId);
+  addUsageMetadata({ assetType });
 
   const asset = assets[assetType];
   const argsToPass = {
@@ -80,8 +82,11 @@ async function handler(args: ArgumentsCamelCase<AppCreateArgs>): Promise<void> {
   try {
     await asset.execute(argsToPass);
   } catch (e) {
+    if (isPromptExitError(e)) {
+      throw e;
+    }
     logError(e);
-    process.exit(EXIT_CODES.ERROR);
+    return exit(EXIT_CODES.ERROR);
   }
 }
 
@@ -122,7 +127,7 @@ const appCreateCommand: YargsCommandModule<unknown, AppCreateArgs> = {
   command,
   describe,
   builder,
-  handler,
+  handler: makeYargsHandlerWithUsageTracking('create', handler),
 };
 
 export default appCreateCommand;

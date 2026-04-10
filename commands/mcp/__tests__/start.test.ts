@@ -8,6 +8,7 @@ import * as errorHandlers from '../../../lib/errorHandlers/index.js';
 import * as usageTrackingLib from '../../../lib/usageTracking.js';
 import * as processLib from '../../../lib/process.js';
 import { EXIT_CODES } from '../../../lib/enums/exitCodes.js';
+import type { UsageTrackingArgs } from '../../../types/Yargs.js';
 
 // Create a mock execAsync function before importing the module
 const execAsyncMock = vi.fn();
@@ -76,12 +77,14 @@ describe('commands/mcp/start', () => {
   });
 
   describe('handler', () => {
-    let args: ArgumentsCamelCase<{
-      aiAgent?: string;
-      derivedAccountId: number;
-      d: boolean;
-      debug: boolean;
-    }>;
+    let args: ArgumentsCamelCase<
+      {
+        aiAgent?: string;
+        derivedAccountId: number;
+        d: boolean;
+        debug: boolean;
+      } & UsageTrackingArgs
+    >;
 
     beforeEach(() => {
       args = {
@@ -89,12 +92,18 @@ describe('commands/mcp/start', () => {
         derivedAccountId: 123456,
         d: false,
         debug: false,
-      } as ArgumentsCamelCase<{
-        aiAgent?: string;
-        derivedAccountId: number;
-        d: boolean;
-        debug: boolean;
-      }>;
+        addUsageMetadata: vi.fn(),
+        exit: vi.fn(),
+        _: [],
+        $0: '',
+      } as ArgumentsCamelCase<
+        {
+          aiAgent?: string;
+          derivedAccountId: number;
+          d: boolean;
+          debug: boolean;
+        } & UsageTrackingArgs
+      >;
     });
 
     it('should track command usage', async () => {
@@ -102,7 +111,7 @@ describe('commands/mcp/start', () => {
 
       expect(trackCommandUsageSpy).toHaveBeenCalledWith(
         'mcp-start',
-        {},
+        { successful: true },
         123456
       );
     });

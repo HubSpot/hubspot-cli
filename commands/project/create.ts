@@ -1,9 +1,8 @@
-import { ArgumentsCamelCase, Argv } from 'yargs';
+import { Argv, ArgumentsCamelCase } from 'yargs';
 import path from 'path';
 import fs from 'fs-extra';
 import { cloneGithubRepo } from '@hubspot/local-dev-lib/github';
 import { getCwd } from '@hubspot/local-dev-lib/path';
-import { trackCommandUsage } from '../../lib/usageTracking.js';
 import {
   writeProjectConfig,
   getProjectConfig,
@@ -23,6 +22,7 @@ import {
   DEFAULT_PROJECT_TEMPLATE_BRANCH,
 } from '../../lib/constants.js';
 import { YargsCommandModule } from '../../types/Yargs.js';
+import { makeYargsHandlerWithUsageTracking } from '../../lib/yargs/makeYargsHandlerWithUsageTracking.js';
 import { makeYargsBuilder } from '../../lib/yargsUtils.js';
 import { ProjectConfig } from '../../types/Projects.js';
 
@@ -48,11 +48,11 @@ const { v2025_1, v2025_2, v2026_03_beta, v2026_03 } = PLATFORM_VERSIONS;
 async function handler(
   args: ArgumentsCamelCase<ProjectCreateArgs>
 ): Promise<void> {
-  const { derivedAccountId, platformVersion, templateSource } = args;
+  const { platformVersion, templateSource, exit, addUsageMetadata } = args;
 
   if (templateSource && !templateSource.includes('/')) {
     uiLogger.error(commands.project.create.errors.invalidTemplateSource);
-    process.exit(EXIT_CODES.ERROR);
+    return exit(EXIT_CODES.ERROR);
   }
 
   const repo = templateSource || HUBSPOT_PROJECT_COMPONENTS_GITHUB_PATH;
@@ -62,7 +62,7 @@ async function handler(
     handleResult = await handleProjectCreationFlow(args);
   } catch (error) {
     logError(error);
-    process.exit(EXIT_CODES.ERROR);
+    return exit(EXIT_CODES.ERROR);
   }
 
   const {
@@ -74,18 +74,14 @@ async function handler(
     projectNameAndDestPromptResponse,
   } = handleResult;
 
-  trackCommandUsage(
-    'project-create',
-    {
-      type:
-        selectProjectTemplatePromptResponse.projectTemplate?.name ||
-        (selectProjectTemplatePromptResponse.componentTemplates || [])
-          // @ts-expect-error
-          .map((item: never) => item.type)
-          .join(','),
-    },
-    derivedAccountId
-  );
+  addUsageMetadata({
+    type:
+      selectProjectTemplatePromptResponse.projectTemplate?.name ||
+      (selectProjectTemplatePromptResponse.componentTemplates || [])
+        // @ts-expect-error
+        .map((item: never) => item.type)
+        .join(','),
+  });
 
   const projectDest = path.resolve(
     getCwd(),
@@ -106,7 +102,7 @@ async function handler(
     uiLogger.error(
       commands.project.create.errors.cannotNestProjects(existingProjectDir)
     );
-    process.exit(EXIT_CODES.ERROR);
+    return exit(EXIT_CODES.ERROR);
   }
 
   const components: string[] = generateComponentPaths({
@@ -145,7 +141,7 @@ async function handler(
     });
     debugError(err);
     uiLogger.error(commands.project.create.errors.failedToDownloadProject);
-    process.exit(EXIT_CODES.ERROR);
+    return exit(EXIT_CODES.ERROR);
   }
 
   const projectConfigPath = path.join(projectDest, PROJECT_CONFIG_FILE);
@@ -186,7 +182,7 @@ async function handler(
     fs.ensureDirSync(path.join(projectDest, 'src'));
   }
 
-  process.exit(EXIT_CODES.SUCCESS);
+  return exit(EXIT_CODES.SUCCESS);
 }
 
 function projectCreateBuilder(yargs: Argv): Argv<ProjectCreateArgs> {
@@ -264,7 +260,7 @@ const builder = makeYargsBuilder<ProjectCreateArgs>(
 const projectCreateCommand: YargsCommandModule<unknown, ProjectCreateArgs> = {
   command,
   describe,
-  handler,
+  handler: makeYargsHandlerWithUsageTracking('project-create', handler),
   builder,
 };
 

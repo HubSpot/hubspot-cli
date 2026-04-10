@@ -13,6 +13,8 @@ import { LocalDevStateConstructorOptions } from '../../../types/LocalDev.js';
 import { ProjectConfig } from '../../../types/Projects.js';
 import { ENVIRONMENTS } from '@hubspot/local-dev-lib/constants/environments';
 import { Mock, vi, Mocked } from 'vitest';
+import { EXIT_CODES } from '../../enums/exitCodes.js';
+import { ExitCode } from '../../../types/Yargs.js';
 
 // Mock @hubspot/ui-extensions-dev-server
 vi.mock('@hubspot/ui-extensions-dev-server', () => ({
@@ -84,6 +86,7 @@ describe('LocalDevProcess', () => {
     initialProjectNodes: {},
     initialProjectProfileData: {},
     env: ENVIRONMENTS.PROD,
+    actions: { exit: vi.fn() as unknown as (code: ExitCode) => never },
   };
 
   beforeEach(() => {
@@ -131,31 +134,22 @@ describe('LocalDevProcess', () => {
 
     // Create process instance
     process = new LocalDevProcess(mockOptions);
-
-    // Mock process.exit
-    vi.spyOn(global.process, 'exit').mockImplementation(
-      (code?: string | number | null) => {
-        throw new Error(`Process.exit called with code ${code}`);
-      }
-    );
   });
 
   describe('start()', () => {
     it('should exit if dev server setup fails', async () => {
       mockDevServerManager.setup.mockRejectedValue(new Error('Setup failed'));
 
-      await expect(process.start()).rejects.toThrow(
-        'Process.exit called with code 1'
-      );
+      await process.start();
       expect(mockLocalDevLogger.devServerSetupError).toHaveBeenCalled();
+      expect(mockOptions.actions.exit).toHaveBeenCalledWith(EXIT_CODES.ERROR);
     });
 
     it('should exit if dev session registration fails', async () => {
       mockDevSessionManager.registerSession.mockResolvedValue(false);
 
-      await expect(process.start()).rejects.toThrow(
-        'Process.exit called with code 1'
-      );
+      await process.start();
+      expect(mockOptions.actions.exit).toHaveBeenCalledWith(EXIT_CODES.ERROR);
     });
 
     it('should start successfully and compare project nodes', async () => {
@@ -177,33 +171,29 @@ describe('LocalDevProcess', () => {
         new Error('Cleanup failed')
       );
 
-      await expect(process.stop()).rejects.toThrow(
-        'Process.exit called with code 1'
-      );
+      await process.stop();
       expect(mockLocalDevLogger.cleanupError).toHaveBeenCalled();
+      expect(mockOptions.actions.exit).toHaveBeenCalledWith(EXIT_CODES.ERROR);
     });
 
     it('should exit with error if dev session deletion fails', async () => {
       mockDevSessionManager.deleteDevSession.mockResolvedValue(false);
 
-      await expect(process.stop()).rejects.toThrow(
-        'Process.exit called with code 1'
-      );
+      await process.stop();
+      expect(mockOptions.actions.exit).toHaveBeenCalledWith(EXIT_CODES.ERROR);
     });
 
     it('should exit successfully after cleanup', async () => {
-      await expect(process.stop()).rejects.toThrow(
-        'Process.exit called with code 0'
-      );
+      await process.stop();
       expect(mockLocalDevLogger.cleanupSuccess).toHaveBeenCalled();
+      expect(mockOptions.actions.exit).toHaveBeenCalledWith(EXIT_CODES.SUCCESS);
     });
 
     it('should not show progress messages when showProgress is false', async () => {
-      await expect(process.stop(false)).rejects.toThrow(
-        'Process.exit called with code 0'
-      );
+      await process.stop(false);
       expect(mockLocalDevLogger.cleanupStart).not.toHaveBeenCalled();
       expect(mockLocalDevLogger.cleanupSuccess).not.toHaveBeenCalled();
+      expect(mockOptions.actions.exit).toHaveBeenCalledWith(EXIT_CODES.SUCCESS);
     });
   });
 

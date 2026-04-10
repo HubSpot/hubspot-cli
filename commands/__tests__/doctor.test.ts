@@ -11,6 +11,7 @@ import { Mock } from 'vitest';
 
 vi.mock('../../lib/doctor/Doctor');
 vi.mock('@hubspot/local-dev-lib/path');
+vi.mock('@hubspot/local-dev-lib/config/state');
 vi.mock('fs');
 
 // @ts-expect-error Doesn't match the actual signature because then the linter complains about unused variables
@@ -74,11 +75,13 @@ describe('doctor', () => {
     });
 
     it('should track the command usage', async () => {
-      await doctorCommand.handler({} as ArgumentsCamelCase<DoctorArgs>);
+      await doctorCommand.handler({
+        derivedAccountId: accountId,
+      } as ArgumentsCamelCase<DoctorArgs>);
       expect(trackCommandUsage).toHaveBeenCalledTimes(1);
       expect(trackCommandUsage).toHaveBeenCalledWith(
         'doctor',
-        undefined,
+        { successful: true },
         accountId
       );
     });

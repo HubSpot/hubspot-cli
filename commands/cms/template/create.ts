@@ -1,22 +1,19 @@
 import fs from 'fs-extra';
-import { ArgumentsCamelCase, Argv } from 'yargs';
+import { Argv, ArgumentsCamelCase } from 'yargs';
 import { logError } from '../../../lib/errorHandlers/index.js';
 import { resolveLocalPath } from '../../../lib/filesystem.js';
-import { trackCommandUsage } from '../../../lib/usageTracking.js';
 import { commands } from '../../../lang/en.js';
 import { uiLogger } from '../../../lib/ui/logger.js';
-import {
-  CreateArgs,
-  TEMPLATE_TYPES,
-  TemplateType,
-} from '../../../types/Cms.js';
+import { TEMPLATE_TYPES, TemplateType } from '../../../types/Cms.js';
 import { makeYargsBuilder } from '../../../lib/yargsUtils.js';
 import {
   CommonArgs,
   ConfigArgs,
   YargsCommandModule,
 } from '../../../types/Yargs.js';
+import { makeYargsHandlerWithUsageTracking } from '../../../lib/yargs/makeYargsHandlerWithUsageTracking.js';
 import { EXIT_CODES } from '../../../lib/enums/exitCodes.js';
+import { isPromptExitError } from '../../../lib/errors/PromptExitError.js';
 import assets from '../../../lib/cmsAssets/index.js';
 
 const command = 'create <name> [dest]';
@@ -32,11 +29,11 @@ type TemplateCreateArgs = CommonArgs &
 async function handler(
   args: ArgumentsCamelCase<TemplateCreateArgs>
 ): Promise<void> {
-  const { derivedAccountId, name, dest } = args;
+  const { name, dest, exit, addUsageMetadata } = args;
 
   const assetType = 'template';
 
-  trackCommandUsage('create', { assetType }, derivedAccountId);
+  addUsageMetadata({ assetType });
 
   const asset = assets[assetType];
   const argsToPass = {
@@ -68,8 +65,11 @@ async function handler(
   try {
     await asset.execute(argsToPass);
   } catch (e) {
+    if (isPromptExitError(e)) {
+      throw e;
+    }
     logError(e);
-    process.exit(EXIT_CODES.ERROR);
+    return exit(EXIT_CODES.ERROR);
   }
 }
 
@@ -94,7 +94,7 @@ function templateCreateBuilder(yargs: Argv): Argv<TemplateCreateArgs> {
   return yargs as Argv<TemplateCreateArgs>;
 }
 
-const builder = makeYargsBuilder<CreateArgs>(
+const builder = makeYargsBuilder<TemplateCreateArgs>(
   templateCreateBuilder,
   command,
   describe,
@@ -108,7 +108,7 @@ const templateCreateCommand: YargsCommandModule<unknown, TemplateCreateArgs> = {
   command,
   describe,
   builder,
-  handler,
+  handler: makeYargsHandlerWithUsageTracking('create', handler),
 };
 
 export default templateCreateCommand;

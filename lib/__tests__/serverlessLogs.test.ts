@@ -6,6 +6,7 @@ import type {
   FunctionLog,
   GetFunctionLogsResponse,
 } from '@hubspot/local-dev-lib/types/Functions';
+import type { InternalAxiosRequestConfig } from 'axios';
 
 vi.mock('../ui/serverlessFunctionLogs');
 vi.mock('../ui/SpinniesManager', () => ({
@@ -53,8 +54,7 @@ describe('lib/serverlessLogs', () => {
             status: 200,
             statusText: 'OK',
             headers: {},
-            // eslint-disable-next-line
-            config: { headers: {} } as any,
+            config: { headers: {} } as InternalAxiosRequestConfig,
           }) as HubSpotPromise<FunctionLog>
       );
       const tailCall = vi.fn(() =>
@@ -70,8 +70,7 @@ describe('lib/serverlessLogs', () => {
           status: 200,
           statusText: 'OK',
           headers: {},
-          // eslint-disable-next-line
-          config: { headers: {} } as any,
+          config: { headers: {} } as InternalAxiosRequestConfig,
         } as unknown as HubSpotPromise<GetFunctionLogsResponse>)
       );
 
@@ -118,8 +117,7 @@ describe('lib/serverlessLogs', () => {
             status: 200,
             statusText: 'OK',
             headers: {},
-            // eslint-disable-next-line
-            config: { headers: {} } as any,
+            config: { headers: {} } as InternalAxiosRequestConfig,
           }) as HubSpotPromise<FunctionLog>
       );
       const latestLogResponse = {
@@ -157,8 +155,7 @@ describe('lib/serverlessLogs', () => {
           status: 200,
           statusText: 'OK',
           headers: {},
-          // eslint-disable-next-line
-          config: { headers: {} } as any,
+          config: { headers: {} } as InternalAxiosRequestConfig,
         } as unknown as HubSpotPromise<GetFunctionLogsResponse>)
       );
 

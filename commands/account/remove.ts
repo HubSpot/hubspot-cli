@@ -13,7 +13,6 @@ import {
   getDefaultAccountOverrideAccountId,
   getDefaultAccountOverrideFilePath,
 } from '@hubspot/local-dev-lib/config/defaultAccountOverride';
-import { trackCommandUsage } from '../../lib/usageTracking.js';
 import { promptUser } from '../../lib/prompts/promptUtils.js';
 import { logError } from '../../lib/errorHandlers/index.js';
 import { selectAccountFromConfig } from '../../lib/prompts/accountsPrompt.js';
@@ -22,6 +21,7 @@ import {
   ConfigArgs,
   YargsCommandModule,
 } from '../../types/Yargs.js';
+import { makeYargsHandlerWithUsageTracking } from '../../lib/yargs/makeYargsHandlerWithUsageTracking.js';
 import { makeYargsBuilder } from '../../lib/yargsUtils.js';
 import { uiLogger } from '../../lib/ui/logger.js';
 import { commands } from '../../lang/en.js';
@@ -61,7 +61,6 @@ async function handler(
   }
 
   accountToRemoveConfig = getConfigAccountById(accountToRemoveId);
-  trackCommandUsage('accounts-remove', undefined, accountToRemoveId);
 
   const currentDefaultAccount = getConfigDefaultAccountIfExists();
 
@@ -145,7 +144,7 @@ const builder = makeYargsBuilder<AccountRemoveArgs>(
 const accountRemoveCommand: YargsCommandModule<unknown, AccountRemoveArgs> = {
   command,
   describe,
-  handler,
+  handler: makeYargsHandlerWithUsageTracking('accounts-remove', handler),
   builder,
 };
 

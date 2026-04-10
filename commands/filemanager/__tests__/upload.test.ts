@@ -15,8 +15,9 @@ import {
 } from '../../../lib/commonOpts.js';
 import { uiLogger } from '../../../lib/ui/logger.js';
 import * as errorHandlers from '../../../lib/errorHandlers/index.js';
-import * as usageTrackingLib from '../../../lib/usageTracking.js';
 import { EXIT_CODES } from '../../../lib/enums/exitCodes.js';
+import * as usageTrackingLib from '../../../lib/usageTracking.js';
+import type { UsageTrackingArgs } from '../../../types/Yargs.js';
 import fileManagerUploadCommand from '../upload.js';
 
 vi.mock('../../../lib/commonOpts');
@@ -39,13 +40,13 @@ const validateSrcAndDestPathsSpy = vi.spyOn(
 const shouldIgnoreFileSpy = vi.spyOn(ignoreRulesLib, 'shouldIgnoreFile');
 const getCwdSpy = vi.spyOn(pathLib, 'getCwd');
 const convertToUnixPathSpy = vi.spyOn(pathLib, 'convertToUnixPath');
-const trackCommandUsageSpy = vi.spyOn(usageTrackingLib, 'trackCommandUsage');
-const processExitSpy = vi.spyOn(process, 'exit');
 const logErrorSpy = vi.spyOn(errorHandlers, 'logError');
 const getConfigAccountIfExistsSpy = vi.spyOn(
   configLib,
   'getConfigAccountIfExists'
 );
+const trackCommandUsageSpy = vi.spyOn(usageTrackingLib, 'trackCommandUsage');
+const processExitSpy = vi.spyOn(process, 'exit');
 
 describe('commands/filemanager/upload', () => {
   const yargsMock = yargs as Argv;
@@ -91,13 +92,15 @@ describe('commands/filemanager/upload', () => {
   });
 
   describe('handler', () => {
-    let args: ArgumentsCamelCase<{
-      src: string;
-      dest: string;
-      derivedAccountId: number;
-      d: boolean;
-      debug: boolean;
-    }>;
+    let args: ArgumentsCamelCase<
+      {
+        src: string;
+        dest: string;
+        derivedAccountId: number;
+        d: boolean;
+        debug: boolean;
+      } & UsageTrackingArgs
+    >;
 
     beforeEach(() => {
       args = {
@@ -106,13 +109,15 @@ describe('commands/filemanager/upload', () => {
         derivedAccountId: 123456,
         d: false,
         debug: false,
-      } as ArgumentsCamelCase<{
-        src: string;
-        dest: string;
-        derivedAccountId: number;
-        d: boolean;
-        debug: boolean;
-      }>;
+      } as ArgumentsCamelCase<
+        {
+          src: string;
+          dest: string;
+          derivedAccountId: number;
+          d: boolean;
+          debug: boolean;
+        } & UsageTrackingArgs
+      >;
     });
 
     describe('validation', () => {
@@ -190,7 +195,7 @@ describe('commands/filemanager/upload', () => {
 
         expect(trackCommandUsageSpy).toHaveBeenCalledWith(
           'filemanager-upload',
-          { type: 'file' },
+          { type: 'file', successful: true },
           123456
         );
       });
@@ -254,7 +259,7 @@ describe('commands/filemanager/upload', () => {
 
         expect(trackCommandUsageSpy).toHaveBeenCalledWith(
           'filemanager-upload',
-          { type: 'folder' },
+          { type: 'folder', successful: true },
           123456
         );
       });

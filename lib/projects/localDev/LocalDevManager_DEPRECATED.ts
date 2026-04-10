@@ -38,13 +38,14 @@ import {
   uiLine,
 } from '../../ui/index.js';
 import { logError } from '../../errorHandlers/index.js';
-import { PromptExitError } from '../../errors/PromptExitError.js';
+import { isPromptExitError } from '../../errors/PromptExitError.js';
 import { installAppBrowserPrompt } from '../../prompts/installAppPrompt.js';
 import { confirmPrompt } from '../../prompts/promptUtils.js';
 import { handleKeypress } from '../../process.js';
 import { lib } from '../../../lang/en.js';
 import { uiLogger } from '../../ui/logger.js';
 import { getOauthAppInstallUrl } from '../../app/urls.js';
+import { ExitFunction } from '../../../types/Yargs.js';
 
 const WATCH_EVENTS = {
   add: 'add',
@@ -64,6 +65,7 @@ type LocalDevManagerConstructorOptions = {
   isGithubLinked: boolean;
   runnableComponents: Component[];
   env: Environment;
+  exit: ExitFunction;
 };
 
 class LocalDevManager_DEPRECATED {
@@ -85,6 +87,7 @@ class LocalDevManager_DEPRECATED {
   projectSourceDir: string;
   mostRecentUploadWarning: string | null;
   private devSessionManager: DevSessionManager;
+  private exit: ExitFunction;
 
   constructor(options: LocalDevManagerConstructorOptions) {
     this.targetAccountId = options.targetAccountId;
@@ -105,6 +108,7 @@ class LocalDevManager_DEPRECATED {
     this.env = options.env;
     this.publicAppActiveInstalls = null;
     this.mostRecentUploadWarning = null;
+    this.exit = options.exit;
 
     this.projectSourceDir = path.join(
       this.projectDir,
@@ -112,19 +116,20 @@ class LocalDevManager_DEPRECATED {
     );
 
     if (!this.targetAccountId || !this.projectConfig || !this.projectDir) {
-      uiLogger.log(lib.LocalDevManager.failedToInitialize);
-      process.exit(EXIT_CODES.ERROR);
+      uiLogger.error(lib.LocalDevManager.failedToInitialize);
+      throw new Error(lib.LocalDevManager.failedToInitialize);
     }
 
     this.devSessionManager = new DevSessionManager({
       targetTestingAccountId: this.targetAccountId,
+      exit: this.exit,
     });
   }
 
   async setActiveApp(appUid?: string): Promise<void> {
     if (!appUid) {
       uiLogger.error(lib.LocalDevManager.missingUid);
-      process.exit(EXIT_CODES.ERROR);
+      return this.exit(EXIT_CODES.ERROR);
     }
     this.activeApp =
       this.runnableComponents.find(component => {
@@ -137,7 +142,7 @@ class LocalDevManager_DEPRECATED {
         await this.checkActivePublicAppInstalls();
         await this.checkPublicAppInstallation();
       } catch (e) {
-        if (e instanceof PromptExitError) {
+        if (isPromptExitError(e)) {
           throw e;
         }
         logError(e);
@@ -198,7 +203,7 @@ class LocalDevManager_DEPRECATED {
     );
 
     if (!proceed) {
-      process.exit(EXIT_CODES.SUCCESS);
+      return this.exit(EXIT_CODES.SUCCESS);
     }
   }
 
@@ -216,13 +221,13 @@ class LocalDevManager_DEPRECATED {
         )
       );
       uiLogger.log('');
-      process.exit(EXIT_CODES.SUCCESS);
+      return this.exit(EXIT_CODES.SUCCESS);
     }
 
     const setupSucceeded = await this.devServerSetup();
 
     if (!setupSucceeded) {
-      process.exit(EXIT_CODES.ERROR);
+      return this.exit(EXIT_CODES.ERROR);
     } else if (!this.debug) {
       console.clear();
     }
@@ -271,7 +276,7 @@ class LocalDevManager_DEPRECATED {
     const devSessionRegistered = await this.devSessionManager.registerSession();
 
     if (!devSessionRegistered) {
-      process.exit(EXIT_CODES.ERROR);
+      return this.exit(EXIT_CODES.ERROR);
     }
 
     // Initialize project file watcher to detect configuration file changes
@@ -304,7 +309,7 @@ class LocalDevManager_DEPRECATED {
           text: lib.LocalDevManager.exitingFail,
         });
       }
-      process.exit(EXIT_CODES.ERROR);
+      return this.exit(EXIT_CODES.ERROR);
     }
 
     if (showProgress) {
@@ -312,7 +317,7 @@ class LocalDevManager_DEPRECATED {
         text: lib.LocalDevManager.exitingSucceed,
       });
     }
-    process.exit(EXIT_CODES.SUCCESS);
+    return this.exit(EXIT_CODES.SUCCESS);
   }
 
   async checkPublicAppInstallation(): Promise<void> {
@@ -539,6 +544,7 @@ class LocalDevManager_DEPRECATED {
         onUploadRequired: this.logUploadWarning.bind(this),
         accountId: this.targetAccountId,
         setActiveApp: this.setActiveApp.bind(this),
+        exit: this.exit,
       });
       return true;
     } catch (e) {
@@ -565,7 +571,7 @@ class LocalDevManager_DEPRECATED {
       uiLogger.error(
         lib.LocalDevManager.devServer.startError(getErrorMessage(e))
       );
-      process.exit(EXIT_CODES.ERROR);
+      return this.exit(EXIT_CODES.ERROR);
     }
   }
 

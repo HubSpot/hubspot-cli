@@ -1,11 +1,11 @@
-import { ArgumentsCamelCase, Argv } from 'yargs';
+import { Argv, ArgumentsCamelCase } from 'yargs';
 import {
   AccountArgs,
   CommonArgs,
   ConfigArgs,
   YargsCommandModule,
 } from '../../types/Yargs.js';
-import { trackCommandUsage } from '../../lib/usageTracking.js';
+import { makeYargsHandlerWithUsageTracking } from '../../lib/yargs/makeYargsHandlerWithUsageTracking.js';
 import { makeYargsBuilder } from '../../lib/yargsUtils.js';
 import { Project } from '@hubspot/local-dev-lib/types/Project';
 import { fetchProjects } from '@hubspot/local-dev-lib/api/projects';
@@ -21,13 +21,8 @@ const describe = commands.project.list.describe;
 type ProjectListArgs = CommonArgs & ConfigArgs & AccountArgs;
 
 async function getProjectData(accountId: number): Promise<Project[]> {
-  try {
-    const { data: projects } = await fetchProjects(accountId);
-    return projects.results;
-  } catch (e) {
-    logError(e);
-    process.exit(EXIT_CODES.ERROR);
-  }
+  const { data: projects } = await fetchProjects(accountId);
+  return projects.results;
 }
 
 function formatProjectsAsTableRows(projects: Project[]): string[][] {
@@ -44,17 +39,21 @@ function formatProjectsAsTableRows(projects: Project[]): string[][] {
 async function handler(
   args: ArgumentsCamelCase<ProjectListArgs>
 ): Promise<void> {
-  const { derivedAccountId } = args;
+  const { derivedAccountId, exit } = args;
 
-  trackCommandUsage('projects-list', undefined, derivedAccountId);
-
-  const projectData = await getProjectData(derivedAccountId);
+  let projectData: Project[];
+  try {
+    projectData = await getProjectData(derivedAccountId);
+  } catch (e) {
+    logError(e);
+    return exit(EXIT_CODES.ERROR);
+  }
 
   if (projectData.length === 0) {
     uiLogger.error(
       commands.project.list.errors.noProjectsFound(derivedAccountId)
     );
-    process.exit(EXIT_CODES.ERROR);
+    return exit(EXIT_CODES.ERROR);
   }
   const projectListData = formatProjectsAsTableRows(projectData);
 
@@ -87,7 +86,7 @@ const builder = makeYargsBuilder<ProjectListArgs>(
 const projectListCommand: YargsCommandModule<unknown, ProjectListArgs> = {
   command,
   describe,
-  handler,
+  handler: makeYargsHandlerWithUsageTracking('projects-list', handler),
   builder,
 };
 

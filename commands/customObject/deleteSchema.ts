@@ -6,7 +6,6 @@ import {
 import { EXIT_CODES } from '../../lib/enums/exitCodes.js';
 import { confirmPrompt, listPrompt } from '../../lib/prompts/promptUtils.js';
 import { uiLogger } from '../../lib/ui/logger.js';
-import { trackCommandUsage } from '../../lib/usageTracking.js';
 import { commands } from '../../lang/en.js';
 import { logError } from '../../lib/errorHandlers/index.js';
 import {
@@ -16,6 +15,7 @@ import {
   EnvironmentArgs,
   YargsCommandModule,
 } from '../../types/Yargs.js';
+import { makeYargsHandlerWithUsageTracking } from '../../lib/yargs/makeYargsHandlerWithUsageTracking.js';
 import { makeYargsBuilder } from '../../lib/yargsUtils.js';
 
 const command = 'delete-schema [name]';
@@ -29,9 +29,7 @@ export type SchemaDeleteArgs = CommonArgs &
 async function handler(
   args: ArgumentsCamelCase<SchemaDeleteArgs>
 ): Promise<void> {
-  const { name: providedName, force, derivedAccountId } = args;
-
-  trackCommandUsage('custom-object-schema-delete', {}, derivedAccountId);
+  const { name: providedName, force, derivedAccountId, exit } = args;
 
   let name;
   try {
@@ -59,7 +57,7 @@ async function handler(
       uiLogger.info(
         commands.customObject.subcommands.deleteSchema.deleteCancelled(name)
       );
-      return process.exit(EXIT_CODES.SUCCESS);
+      return exit(EXIT_CODES.SUCCESS);
     }
 
     await deleteObjectSchema(derivedAccountId, name);
@@ -112,7 +110,10 @@ const builder = makeYargsBuilder<SchemaDeleteArgs>(
 const deleteSchemaCommand: YargsCommandModule<unknown, SchemaDeleteArgs> = {
   command,
   describe,
-  handler,
+  handler: makeYargsHandlerWithUsageTracking(
+    'custom-object-schema-delete',
+    handler
+  ),
   builder,
 };
 

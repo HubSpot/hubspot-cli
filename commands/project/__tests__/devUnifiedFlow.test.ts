@@ -79,6 +79,8 @@ describe('unifiedProjectDevFlow', () => {
     userProvidedAccount: undefined,
     testingAccount: undefined,
     projectAccount: undefined,
+    addUsageMetadata: vi.fn(),
+    exit: vi.fn(),
     _: [],
     $0: 'hs',
   };
@@ -142,12 +144,9 @@ describe('unifiedProjectDevFlow', () => {
   };
 
   beforeEach(() => {
-    // Mock process.exit
-    vi.spyOn(global.process, 'exit').mockImplementation(
-      (code?: string | number | null) => {
-        throw new Error(`Process.exit called with code ${code}`);
-      }
-    );
+    // Reset exit mock
+    (mockArgs.exit as ReturnType<typeof vi.fn>).mockReset();
+    (mockArgs.exit as ReturnType<typeof vi.fn>).mockResolvedValue(undefined);
 
     // Setup default mocks
     (getValidEnv as Mock).mockReturnValue(ENVIRONMENTS.PROD);
@@ -245,16 +244,15 @@ describe('unifiedProjectDevFlow', () => {
       const translationError = new Error('Translation failed');
       (translateForLocalDev as Mock).mockRejectedValue(translationError);
 
-      await expect(
-        unifiedProjectDevFlow({
-          args: mockArgs,
-          targetProjectAccountId: mockTargetProjectAccountId,
-          projectConfig: mockProjectConfig,
-          projectDir: mockProjectDir,
-        })
-      ).rejects.toThrow('Process.exit called with code 1');
+      await unifiedProjectDevFlow({
+        args: mockArgs,
+        targetProjectAccountId: mockTargetProjectAccountId,
+        projectConfig: mockProjectConfig,
+        projectDir: mockProjectDir,
+      });
 
       expect(logError).toHaveBeenCalledWith(translationError);
+      expect(mockArgs.exit).toHaveBeenCalledWith(1);
     });
 
     it('should exit with success when no runnable components found', async () => {
@@ -262,52 +260,49 @@ describe('unifiedProjectDevFlow', () => {
         intermediateNodesIndexedByUid: {},
       });
 
-      await expect(
-        unifiedProjectDevFlow({
-          args: mockArgs,
-          targetProjectAccountId: mockTargetProjectAccountId,
-          projectConfig: mockProjectConfig,
-          projectDir: mockProjectDir,
-        })
-      ).rejects.toThrow('Process.exit called with code 0');
+      await unifiedProjectDevFlow({
+        args: mockArgs,
+        targetProjectAccountId: mockTargetProjectAccountId,
+        projectConfig: mockProjectConfig,
+        projectDir: mockProjectDir,
+      });
 
       expect(uiLogger.error).toHaveBeenCalledWith(
         commands.project.dev.errors.noRunnableComponents
       );
+      expect(mockArgs.exit).toHaveBeenCalledWith(0);
     });
 
     it('should exit with error when account config not found', async () => {
       (getConfigAccountById as Mock).mockReturnValue(null);
 
-      await expect(
-        unifiedProjectDevFlow({
-          args: mockArgs,
-          targetProjectAccountId: mockTargetProjectAccountId,
-          projectConfig: mockProjectConfig,
-          projectDir: mockProjectDir,
-        })
-      ).rejects.toThrow('Process.exit called with code 1');
+      await unifiedProjectDevFlow({
+        args: mockArgs,
+        targetProjectAccountId: mockTargetProjectAccountId,
+        projectConfig: mockProjectConfig,
+        projectDir: mockProjectDir,
+      });
 
       expect(uiLogger.error).toHaveBeenCalledWith(
         commands.project.dev.errors.noAccount(mockTargetProjectAccountId)
       );
+      expect(mockArgs.exit).toHaveBeenCalledWith(1);
     });
 
     it('should exit with error when account is not combined and no profile', async () => {
       (isUnifiedAccount as Mock).mockResolvedValue(false);
 
-      await expect(
-        unifiedProjectDevFlow({
-          args: mockArgs,
-          targetProjectAccountId: mockTargetProjectAccountId,
-          projectConfig: mockProjectConfig,
-          projectDir: mockProjectDir,
-        })
-      ).rejects.toThrow('Process.exit called with code 1');
+      await unifiedProjectDevFlow({
+        args: mockArgs,
+        targetProjectAccountId: mockTargetProjectAccountId,
+        projectConfig: mockProjectConfig,
+        projectDir: mockProjectDir,
+      });
 
       expect(uiLogger.error).toHaveBeenCalledWith(
         commands.project.dev.errors.accountNotCombined
       );
+      expect(mockArgs.exit).toHaveBeenCalledWith(1);
     });
   });
 
@@ -434,12 +429,14 @@ describe('unifiedProjectDevFlow', () => {
         mockProjectConfig,
         mockTargetProjectAccountId,
         false,
-        false
+        false,
+        mockArgs.exit
       );
       expect(createInitialBuildForNewProject).toHaveBeenCalledWith(
         mockProjectConfig,
         mockProjectDir,
         mockTargetProjectAccountId,
+        mockArgs.exit,
         true,
         mockArgs.profile
       );
@@ -475,6 +472,7 @@ describe('unifiedProjectDevFlow', () => {
 
       expect(LocalDevProcess).toHaveBeenCalledWith({
         initialProjectNodes: mockProjectNodes,
+        initialProjectProfileData: undefined,
         debug: mockArgs.debug,
         profile: mockArgs.profile,
         targetProjectAccountId: mockTargetProjectAccountId,
@@ -483,6 +481,7 @@ describe('unifiedProjectDevFlow', () => {
         projectDir: mockProjectDir,
         projectData: mockProject,
         env: ENVIRONMENTS.PROD,
+        actions: { exit: mockArgs.exit },
       });
     });
 
@@ -555,12 +554,9 @@ describe('unifiedProjectDevFlow', () => {
     });
   });
 
-  describe('confirmLocalDevIsNotRunning', () => {
+  describe('isLocalDevRunning', () => {
     it('should exit with error when local dev is already running', async () => {
       (getServerPortByInstanceId as Mock).mockResolvedValue(3000);
-      const mockExit = vi.spyOn(process, 'exit').mockImplementation(() => {
-        throw new Error('Process.exit called');
-      });
 
       await unifiedProjectDevFlow({
         args: mockArgs,
@@ -573,8 +569,7 @@ describe('unifiedProjectDevFlow', () => {
       expect(uiLogger.error).toHaveBeenCalledWith(
         commands.project.dev.errors.localDevAlreadyRunning
       );
-      expect(mockExit).toHaveBeenCalledWith(1);
-      mockExit.mockRestore();
+      expect(mockArgs.exit).toHaveBeenCalledWith(1);
     });
 
     it('should continue when local dev is not running', async () => {

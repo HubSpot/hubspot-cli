@@ -8,7 +8,6 @@ import { getCwd } from '@hubspot/local-dev-lib/path';
 import { getCmsPublishMode } from '../../lib/commonOpts.js';
 import { uploadPrompt } from '../../lib/prompts/uploadPrompt.js';
 import { validateCmsPublishMode } from '../../lib/validation.js';
-import { trackCommandUsage } from '../../lib/usageTracking.js';
 import { commands } from '../../lang/en.js';
 import { getUploadableFileList } from '../../lib/upload.js';
 import { logError, ApiErrorContext } from '../../lib/errorHandlers/index.js';
@@ -22,6 +21,7 @@ import {
   EnvironmentArgs,
   YargsCommandModule,
 } from '../../types/Yargs.js';
+import { makeYargsHandlerWithUsageTracking } from '../../lib/yargs/makeYargsHandlerWithUsageTracking.js';
 import { WatchErrorHandler } from '@hubspot/local-dev-lib/types/Files';
 import { uiLogger } from '../../lib/ui/logger.js';
 
@@ -46,10 +46,17 @@ const describe = commands.cms.subcommands.watch.describe;
 const handler = async (
   args: ArgumentsCamelCase<WatchCommandArgs>
 ): Promise<void> => {
-  const { remove, initialUpload, notify, derivedAccountId } = args;
+  const {
+    remove,
+    initialUpload,
+    notify,
+    derivedAccountId,
+    exit,
+    addUsageMetadata,
+  } = args;
 
   if (!validateCmsPublishMode(args)) {
-    process.exit(EXIT_CODES.ERROR);
+    return exit(EXIT_CODES.ERROR);
   }
 
   const cmsPublishMode = getCmsPublishMode(args);
@@ -85,7 +92,7 @@ const handler = async (
     );
   }
 
-  trackCommandUsage('watch', { mode: cmsPublishMode }, derivedAccountId);
+  addUsageMetadata({ mode: cmsPublishMode });
 
   const onUploadFolderError: WatchErrorHandler = (
     error: Error | AxiosError
@@ -208,7 +215,7 @@ const builder = makeYargsBuilder<WatchCommandArgs>(
 const watchCommand: YargsCommandModule<unknown, WatchCommandArgs> = {
   command,
   describe,
-  handler,
+  handler: makeYargsHandlerWithUsageTracking('watch', handler),
   builder,
 };
 

@@ -8,7 +8,6 @@ import {
 } from '../../lib/commonOpts.js';
 import { resolveLocalPath } from '../../lib/filesystem.js';
 import { validateCmsPublishMode } from '../../lib/validation.js';
-import { trackCommandUsage } from '../../lib/usageTracking.js';
 import { makeYargsBuilder } from '../../lib/yargsUtils.js';
 import {
   AccountArgs,
@@ -17,6 +16,7 @@ import {
   EnvironmentArgs,
   YargsCommandModule,
 } from '../../types/Yargs.js';
+import { makeYargsHandlerWithUsageTracking } from '../../lib/yargs/makeYargsHandlerWithUsageTracking.js';
 
 import { EXIT_CODES } from '../../lib/enums/exitCodes.js';
 import { logError } from '../../lib/errorHandlers/index.js';
@@ -43,19 +43,20 @@ async function handler(
 ): Promise<void> {
   const { src, dest } = options;
 
+  const { derivedAccountId, exit, addUsageMetadata } = options;
+
   if (!validateCmsPublishMode(options)) {
-    process.exit(EXIT_CODES.ERROR);
+    return exit(EXIT_CODES.ERROR);
   }
 
   if (typeof src !== 'string') {
     uiLogger.error(commands.cms.subcommands.fetch.errors.sourceRequired);
-    process.exit(EXIT_CODES.ERROR);
+    return exit(EXIT_CODES.ERROR);
   }
 
-  const { derivedAccountId } = options;
   const cmsPublishMode = getCmsPublishMode(options);
 
-  trackCommandUsage('fetch', { mode: cmsPublishMode }, derivedAccountId);
+  addUsageMetadata({ mode: cmsPublishMode });
 
   const { assetVersion, staging, overwrite } = options;
   try {
@@ -75,7 +76,7 @@ async function handler(
     );
   } catch (err) {
     logError(err);
-    process.exit(EXIT_CODES.ERROR);
+    return exit(EXIT_CODES.ERROR);
   }
 }
 
@@ -127,7 +128,7 @@ const builder = makeYargsBuilder<FetchCommandArgs>(
 const fetchCommand: YargsCommandModule<unknown, FetchCommandArgs> = {
   command,
   describe,
-  handler,
+  handler: makeYargsHandlerWithUsageTracking('fetch', handler),
   builder,
 };
 

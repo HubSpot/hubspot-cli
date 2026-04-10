@@ -3,6 +3,7 @@ import DevServerManager from '../localDev/DevServerManager.js';
 import LocalDevState from '../localDev/LocalDevState.js';
 import LocalDevLogger from '../localDev/LocalDevLogger.js';
 import { ENVIRONMENTS } from '@hubspot/local-dev-lib/constants/environments';
+import { ExitCode } from '../../../types/Yargs.js';
 
 vi.mock('@hubspot/ui-extensions-dev-server', () => ({
   DevModeUnifiedInterface: {
@@ -80,6 +81,7 @@ describe('DevServerManager', () => {
       initialProjectProfileData: {},
       profile: 'test',
       env: ENVIRONMENTS.QA,
+      actions: { exit: vi.fn() as unknown as (code: ExitCode) => never },
     });
 
     logger = new LocalDevLogger(localDevState);

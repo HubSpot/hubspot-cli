@@ -18,6 +18,8 @@ import updateDeps from './project/updateDeps.js';
 import profile from './project/profile.js';
 import projectValidate from './project/validate.js';
 import list from './project/list.js';
+import info from './project/info.js';
+import deleteProject from './project/delete.js';
 import { makeYargsBuilder } from '../lib/yargsUtils.js';
 import { YargsCommandModuleBucket } from '../types/Yargs.js';
 import { getProjectConfig } from '../lib/projects/config.js';
@@ -59,8 +61,10 @@ function projectBuilder(yargs: Argv): Argv {
   yargs
     .command(create)
     .command(add)
+    .command(deleteProject)
     .command(watch)
     .command(list)
+    .command(info)
     .command(dev)
     .command(upload)
     .command(deploy)

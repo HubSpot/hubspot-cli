@@ -1,9 +1,8 @@
 import { Argv, ArgumentsCamelCase } from 'yargs';
 import { uiLogger } from '../../lib/ui/logger.js';
 import { logError } from '../../lib/errorHandlers/index.js';
-import { PromptExitError } from '../../lib/errors/PromptExitError.js';
+import { isPromptExitError } from '../../lib/errors/PromptExitError.js';
 import { deleteTable } from '@hubspot/local-dev-lib/api/hubdb';
-import { trackCommandUsage } from '../../lib/usageTracking.js';
 import { selectHubDBTablePrompt } from '../../lib/prompts/selectHubDBTablePrompt.js';
 import { promptUser } from '../../lib/prompts/promptUtils.js';
 import { EXIT_CODES } from '../../lib/enums/exitCodes.js';
@@ -15,6 +14,7 @@ import {
   EnvironmentArgs,
   YargsCommandModule,
 } from '../../types/Yargs.js';
+import { makeYargsHandlerWithUsageTracking } from '../../lib/yargs/makeYargsHandlerWithUsageTracking.js';
 import { makeYargsBuilder } from '../../lib/yargsUtils.js';
 
 const command = 'delete [table-id]';
@@ -28,9 +28,7 @@ type HubdbDeleteArgs = CommonArgs &
 async function handler(
   args: ArgumentsCamelCase<HubdbDeleteArgs>
 ): Promise<void> {
-  const { force, derivedAccountId } = args;
-
-  trackCommandUsage('hubdb-delete', {}, derivedAccountId);
+  const { force, derivedAccountId, exit } = args;
 
   try {
     const { tableId } =
@@ -49,7 +47,7 @@ async function handler(
       });
 
       if (!shouldDeleteTable) {
-        process.exit(EXIT_CODES.SUCCESS);
+        return exit(EXIT_CODES.SUCCESS);
       }
     }
 
@@ -60,10 +58,10 @@ async function handler(
         derivedAccountId
       )
     );
-    process.exit(EXIT_CODES.SUCCESS);
+    return exit(EXIT_CODES.SUCCESS);
   } catch (e) {
-    if (e instanceof PromptExitError) {
-      process.exit(e.exitCode);
+    if (isPromptExitError(e)) {
+      throw e;
     }
     uiLogger.error(
       commands.hubdb.subcommands.delete.errors.delete(args.tableId || '')
@@ -101,7 +99,7 @@ const builder = makeYargsBuilder<HubdbDeleteArgs>(
 const hubdbDeleteCommand: YargsCommandModule<unknown, HubdbDeleteArgs> = {
   command,
   describe,
-  handler,
+  handler: makeYargsHandlerWithUsageTracking('hubdb-delete', handler),
   builder,
 };
 

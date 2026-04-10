@@ -7,12 +7,11 @@ import {
   fetchProjectBuilds,
 } from '@hubspot/local-dev-lib/api/projects';
 import { logError, ApiErrorContext } from '../../lib/errorHandlers/index.js';
-import { PromptExitError } from '../../lib/errors/PromptExitError.js';
+import { isPromptExitError } from '../../lib/errors/PromptExitError.js';
 import { getProjectConfig } from '../../lib/projects/config.js';
 import { downloadProjectPrompt } from '../../lib/prompts/downloadProjectPrompt.js';
 import { commands } from '../../lang/en.js';
 import { uiLogger } from '../../lib/ui/logger.js';
-import { trackCommandUsage } from '../../lib/usageTracking.js';
 import { EXIT_CODES } from '../../lib/enums/exitCodes.js';
 import {
   CommonArgs,
@@ -21,6 +20,7 @@ import {
   EnvironmentArgs,
   YargsCommandModule,
 } from '../../types/Yargs.js';
+import { makeYargsHandlerWithUsageTracking } from '../../lib/yargs/makeYargsHandlerWithUsageTracking.js';
 import { makeYargsBuilder } from '../../lib/yargsUtils.js';
 
 const command = 'download';
@@ -34,19 +34,16 @@ type ProjectDownloadArgs = CommonArgs &
 async function handler(
   args: ArgumentsCamelCase<ProjectDownloadArgs>
 ): Promise<void> {
+  const { dest, build, derivedAccountId, exit } = args;
   const { projectConfig } = await getProjectConfig();
 
   if (projectConfig) {
     uiLogger.error(
       commands.project.download.warnings.cannotDownloadWithinProject
     );
-    process.exit(EXIT_CODES.ERROR);
+    return exit(EXIT_CODES.ERROR);
   }
-
-  const { dest, build, derivedAccountId } = args;
   let buildNumberToDownload = build;
-
-  trackCommandUsage('project-download', undefined, derivedAccountId);
 
   try {
     const { project: projectName } = await downloadProjectPrompt(args);
@@ -66,7 +63,7 @@ async function handler(
 
     if (!buildNumberToDownload) {
       uiLogger.error(commands.project.download.errors.noBuildIdToDownload);
-      process.exit(EXIT_CODES.ERROR);
+      return exit(EXIT_CODES.ERROR);
     }
 
     const sanitizedProjectName = sanitizeFileName(projectName);
@@ -93,10 +90,10 @@ async function handler(
         projectName
       )
     );
-    process.exit(EXIT_CODES.SUCCESS);
+    return exit(EXIT_CODES.SUCCESS);
   } catch (e) {
-    if (e instanceof PromptExitError) {
-      process.exit(e.exitCode);
+    if (isPromptExitError(e)) {
+      throw e;
     }
     logError(
       e,
@@ -105,7 +102,7 @@ async function handler(
         request: 'project download',
       })
     );
-    process.exit(EXIT_CODES.ERROR);
+    return exit(EXIT_CODES.ERROR);
   }
 }
 
@@ -152,7 +149,7 @@ const projectDownloadCommand: YargsCommandModule<unknown, ProjectDownloadArgs> =
   {
     command,
     describe,
-    handler,
+    handler: makeYargsHandlerWithUsageTracking('project-download', handler),
     builder,
   };
 

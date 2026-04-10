@@ -108,6 +108,8 @@ describe('commands/testAccount/importData', () => {
         userProvidedAccount: 'test-account',
         filePath: 'test-file.json',
         skipConfirm: true,
+        addUsageMetadata: vi.fn(),
+        exit: vi.fn(),
       };
 
       mockHandleTargetTestAccountSelectionFlow.mockResolvedValue(

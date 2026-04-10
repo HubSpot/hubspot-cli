@@ -5,7 +5,6 @@ import { inputPrompt } from '../../lib/prompts/promptUtils.js';
 import { logError } from '../../lib/errorHandlers/index.js';
 import { getAbsoluteFilePath } from '@hubspot/local-dev-lib/path';
 import { checkAndConvertToJson } from '../../lib/validation.js';
-import { trackCommandUsage } from '../../lib/usageTracking.js';
 import { commands } from '../../lang/en.js';
 import { EXIT_CODES } from '../../lib/enums/exitCodes.js';
 import { isObjectDefinition } from '../../lib/customObject.js';
@@ -16,6 +15,7 @@ import {
   EnvironmentArgs,
   YargsCommandModule,
 } from '../../types/Yargs.js';
+import { makeYargsHandlerWithUsageTracking } from '../../lib/yargs/makeYargsHandlerWithUsageTracking.js';
 import { makeYargsBuilder } from '../../lib/yargsUtils.js';
 
 const command = 'create [name]';
@@ -29,11 +29,9 @@ type CustomObjectCreateArgs = CommonArgs &
 async function handler(
   args: ArgumentsCamelCase<CustomObjectCreateArgs>
 ): Promise<void> {
-  const { path, name: providedName, derivedAccountId } = args;
+  const { path, name: providedName, derivedAccountId, exit } = args;
   let definitionPath = path;
   let name = providedName;
-
-  trackCommandUsage('custom-object-batch-create', {}, derivedAccountId);
 
   if (!name) {
     name = await inputPrompt(
@@ -54,7 +52,7 @@ async function handler(
     uiLogger.error(
       commands.customObject.subcommands.create.errors.invalidObjectDefinition
     );
-    process.exit(EXIT_CODES.ERROR);
+    return exit(EXIT_CODES.ERROR);
   }
 
   try {
@@ -105,7 +103,10 @@ const customObjectCreateCommand: YargsCommandModule<
 > = {
   command,
   describe,
-  handler,
+  handler: makeYargsHandlerWithUsageTracking(
+    'custom-object-batch-create',
+    handler
+  ),
   builder,
 };
 

@@ -1,6 +1,6 @@
 import path from 'path';
 import { existsSync } from 'fs';
-import { ArgumentsCamelCase, Argv } from 'yargs';
+import { Argv, ArgumentsCamelCase } from 'yargs';
 import {
   getConfigFilePath,
   createEmptyConfigFile,
@@ -30,8 +30,8 @@ import { setCLILogLevel } from '../lib/commonOpts.js';
 import { makeYargsBuilder } from '../lib/yargsUtils.js';
 import { handleExit } from '../lib/process.js';
 import { debugError, logError } from '../lib/errorHandlers/index.js';
-import { PromptExitError } from '../lib/errors/PromptExitError.js';
-import { trackCommandUsage, trackAuthAction } from '../lib/usageTracking.js';
+import { isPromptExitError } from '../lib/errors/PromptExitError.js';
+import { trackAuthAction } from '../lib/usageTracking.js';
 import { promptUser } from '../lib/prompts/promptUtils.js';
 import {
   OAUTH_FLOW,
@@ -49,6 +49,7 @@ import {
   AccountArgs,
   YargsCommandModule,
 } from '../types/Yargs.js';
+import { makeYargsHandlerWithUsageTracking } from '../lib/yargs/makeYargsHandlerWithUsageTracking.js';
 import { uiLogger } from '../lib/ui/logger.js';
 import { commands } from '../lang/en.js';
 import { parseStringToNumber } from '../lib/parsing.js';
@@ -108,7 +109,7 @@ async function oauthConfigCreationFlow(
     setConfigAccountAsDefault(configData.accountId);
   } catch (e) {
     logError(e);
-    process.exit(EXIT_CODES.ERROR);
+    throw e;
   }
 
   return oauthAccount;
@@ -137,6 +138,8 @@ async function handler(args: ArgumentsCamelCase<InitArgs>): Promise<void> {
     c: configFlagValue,
     disableTracking,
     userProvidedAccount,
+    exit,
+    addUsageMetadata,
   } = args;
 
   let parsedUserProvidedAccountId;
@@ -147,7 +150,7 @@ async function handler(args: ArgumentsCamelCase<InitArgs>): Promise<void> {
     }
   } catch (err) {
     uiLogger.error(commands.init.errors.invalidAccountIdProvided);
-    process.exit(EXIT_CODES.ERROR);
+    return exit(EXIT_CODES.ERROR);
   }
 
   const authType =
@@ -164,25 +167,21 @@ async function handler(args: ArgumentsCamelCase<InitArgs>): Promise<void> {
 
   setCLILogLevel(args);
 
-  if (!disableTracking) {
-    trackCommandUsage('init', {
-      authType,
-    });
-  }
+  addUsageMetadata({ authType });
 
   const env = args.qa ? ENVIRONMENTS.QA : ENVIRONMENTS.PROD;
 
   // Only check for global config if user is not providing a custom config path
   if (!configFlagValue && globalConfigFileExists()) {
     uiLogger.error(commands.init.errors.globalConfigFileExists);
-    process.exit(EXIT_CODES.ERROR);
+    return exit(EXIT_CODES.ERROR);
   }
 
   // Check if the specific config file path already exists
   if (existingConfigPath && existsSync(existingConfigPath)) {
     uiLogger.error(commands.init.errors.configFileExists(existingConfigPath));
     uiLogger.info(commands.init.logs.updateConfig);
-    process.exit(EXIT_CODES.ERROR);
+    return exit(EXIT_CODES.ERROR);
   }
 
   if (!disableTracking) {
@@ -245,10 +244,10 @@ async function handler(args: ArgumentsCamelCase<InitArgs>): Promise<void> {
         accountId!
       );
     }
-    process.exit(EXIT_CODES.SUCCESS);
+    return exit(EXIT_CODES.SUCCESS);
   } catch (err) {
-    if (err instanceof PromptExitError) {
-      process.exit(err.exitCode);
+    if (isPromptExitError(err)) {
+      throw err;
     }
     logError(err);
     if (!disableTracking) {
@@ -259,7 +258,7 @@ async function handler(args: ArgumentsCamelCase<InitArgs>): Promise<void> {
         parsedUserProvidedAccountId
       );
     }
-    process.exit(EXIT_CODES.ERROR);
+    return exit(EXIT_CODES.ERROR);
   }
 }
 
@@ -309,7 +308,7 @@ const builder = makeYargsBuilder<InitArgs>(
 const initCommand: YargsCommandModule<unknown, InitArgs> = {
   command,
   describe,
-  handler,
+  handler: makeYargsHandlerWithUsageTracking('init', handler),
   builder,
 };
 

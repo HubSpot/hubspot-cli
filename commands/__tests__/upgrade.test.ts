@@ -121,7 +121,7 @@ describe('commands/upgrade', () => {
       expect(mockedTrackCommandUsage).toHaveBeenCalledTimes(1);
       expect(mockedTrackCommandUsage).toHaveBeenCalledWith(
         'upgrade',
-        {},
+        { successful: true },
         accountId
       );
     });

@@ -93,6 +93,8 @@ describe('commands/get-started', () => {
       useEnv: undefined,
       _: [],
       $0: 'hs',
+      addUsageMetadata: vi.fn(),
+      exit: vi.fn(),
     };
 
     beforeEach(() => {
@@ -233,7 +235,7 @@ describe('commands/get-started', () => {
 
         expect(trackCommandUsage).toHaveBeenCalledWith(
           'get-started',
-          {},
+          { successful: false },
           mockArgs.derivedAccountId
         );
       });

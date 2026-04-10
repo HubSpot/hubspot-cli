@@ -1,14 +1,12 @@
-import { ArgumentsCamelCase, Argv } from 'yargs';
+import { Argv, ArgumentsCamelCase } from 'yargs';
 import path from 'path';
 import fs from 'fs';
-import {
-  trackCommandMetadataUsage,
-  trackCommandUsage,
-} from '../lib/usageTracking.js';
+import { trackCommandMetadataUsage } from '../lib/usageTracking.js';
 import { Doctor } from '../lib/doctor/Doctor.js';
 import { EXIT_CODES } from '../lib/enums/exitCodes.js';
 import { getCwd } from '@hubspot/local-dev-lib/path';
 import { CommonArgs, YargsCommandModule } from '../types/Yargs.js';
+import { makeYargsHandlerWithUsageTracking } from '../lib/yargs/makeYargsHandlerWithUsageTracking.js';
 import { makeYargsBuilder } from '../lib/yargsUtils.js';
 import { uiLogger } from '../lib/ui/logger.js';
 import { removeAnsiCodes } from '../lib/ui/removeAnsiCodes.js';
@@ -23,11 +21,9 @@ const command = 'doctor';
 const describe = commands.doctor.describe;
 
 const handler = async (args: ArgumentsCamelCase<DoctorArgs>) => {
-  const { outputDir } = args;
+  const { outputDir, exit } = args;
 
   const doctor = new Doctor();
-
-  trackCommandUsage(command, undefined, doctor.accountId || undefined);
 
   const output = await doctor.diagnose();
 
@@ -45,9 +41,9 @@ const handler = async (args: ArgumentsCamelCase<DoctorArgs>) => {
       uiLogger.log(output.diagnosis);
     } else {
       uiLogger.error(commands.doctor.errors.generatingDiagnosis);
-      return process.exit(EXIT_CODES.ERROR);
+      return exit(EXIT_CODES.ERROR);
     }
-    return process.exit(EXIT_CODES.SUCCESS);
+    return exit(EXIT_CODES.SUCCESS);
   }
 
   let outputDirPath = outputDir;
@@ -77,10 +73,10 @@ const handler = async (args: ArgumentsCamelCase<DoctorArgs>) => {
         getErrorMessage(e)
       )
     );
-    return process.exit(EXIT_CODES.ERROR);
+    return exit(EXIT_CODES.ERROR);
   }
 
-  return process.exit(EXIT_CODES.SUCCESS);
+  return exit(EXIT_CODES.SUCCESS);
 };
 
 function doctorBuilder(yargs: Argv): Argv<DoctorArgs> {
@@ -99,7 +95,7 @@ const builder = makeYargsBuilder<DoctorArgs>(doctorBuilder, command, describe, {
 const doctorCommand: YargsCommandModule<unknown, DoctorArgs> = {
   command,
   describe,
-  handler,
+  handler: makeYargsHandlerWithUsageTracking('doctor', handler),
   builder,
 };
 

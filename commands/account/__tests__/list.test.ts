@@ -6,6 +6,7 @@ import { HUBSPOT_ACCOUNT_TYPES } from '@hubspot/local-dev-lib/constants/config';
 import * as commonOpts from '../../../lib/commonOpts.js';
 import * as usageTrackingLib from '../../../lib/usageTracking.js';
 import { uiLogger } from '../../../lib/ui/logger.js';
+import type { UsageTrackingArgs } from '../../../types/Yargs.js';
 import accountListCommand from '../list.js';
 
 vi.mock('../../../lib/commonOpts');
@@ -65,14 +66,16 @@ describe('commands/account/list', () => {
   });
 
   describe('handler', () => {
-    let args: ArgumentsCamelCase<{
-      derivedAccountId: number;
-      userProvidedAccount?: string;
-      d: boolean;
-      debug: boolean;
-      c?: string;
-      config?: string;
-    }>;
+    let args: ArgumentsCamelCase<
+      {
+        derivedAccountId: number;
+        userProvidedAccount?: string;
+        d: boolean;
+        debug: boolean;
+        c?: string;
+        config?: string;
+      } & UsageTrackingArgs
+    >;
 
     beforeEach(() => {
       args = {
@@ -81,14 +84,18 @@ describe('commands/account/list', () => {
         debug: false,
         _: [],
         $0: '',
-      } as ArgumentsCamelCase<{
-        derivedAccountId: number;
-        userProvidedAccount?: string;
-        d: boolean;
-        debug: boolean;
-        c?: string;
-        config?: string;
-      }>;
+        addUsageMetadata: vi.fn(),
+        exit: vi.fn(),
+      } as ArgumentsCamelCase<
+        {
+          derivedAccountId: number;
+          userProvidedAccount?: string;
+          d: boolean;
+          debug: boolean;
+          c?: string;
+          config?: string;
+        } & UsageTrackingArgs
+      >;
     });
 
     it('should track command usage', async () => {
@@ -96,7 +103,7 @@ describe('commands/account/list', () => {
 
       expect(trackCommandUsageSpy).toHaveBeenCalledWith(
         'accounts-list',
-        undefined,
+        { successful: true },
         123456
       );
     });

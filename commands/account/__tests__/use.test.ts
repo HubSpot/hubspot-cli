@@ -3,6 +3,7 @@ import yargs, { Argv, ArgumentsCamelCase } from 'yargs';
 import * as configLib from '@hubspot/local-dev-lib/config';
 import * as defaultAccountOverrideLib from '@hubspot/local-dev-lib/config/defaultAccountOverride';
 import * as usageTrackingLib from '../../../lib/usageTracking.js';
+import type { UsageTrackingArgs } from '../../../types/Yargs.js';
 import { uiLogger } from '../../../lib/ui/logger.js';
 
 vi.mock('@hubspot/local-dev-lib/config');
@@ -84,28 +85,34 @@ describe('commands/account/use', () => {
   });
 
   describe('handler', () => {
-    let args: ArgumentsCamelCase<{
-      derivedAccountId: number;
-      userProvidedAccount?: string;
-      d: boolean;
-      debug: boolean;
-      account?: string;
-    }>;
-
-    beforeEach(() => {
-      args = {
-        derivedAccountId: 0,
-        d: false,
-        debug: false,
-        _: [],
-        $0: '',
-      } as ArgumentsCamelCase<{
+    let args: ArgumentsCamelCase<
+      {
         derivedAccountId: number;
         userProvidedAccount?: string;
         d: boolean;
         debug: boolean;
         account?: string;
-      }>;
+      } & UsageTrackingArgs
+    >;
+
+    beforeEach(() => {
+      args = {
+        derivedAccountId: undefined as unknown as number,
+        d: false,
+        debug: false,
+        _: [],
+        $0: '',
+        addUsageMetadata: vi.fn(),
+        exit: vi.fn(),
+      } as ArgumentsCamelCase<
+        {
+          derivedAccountId: number;
+          userProvidedAccount?: string;
+          d: boolean;
+          debug: boolean;
+          account?: string;
+        } & UsageTrackingArgs
+      >;
     });
 
     describe('with account ID', () => {
@@ -138,8 +145,8 @@ describe('commands/account/use', () => {
 
         expect(trackCommandUsageSpy).toHaveBeenCalledWith(
           'accounts-use',
-          undefined,
-          123456
+          { successful: true },
+          undefined
         );
       });
     });

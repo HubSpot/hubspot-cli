@@ -7,7 +7,6 @@ import {
 } from '@hubspot/local-dev-lib/customObjects';
 
 import { inputPrompt, listPrompt } from '../../lib/prompts/promptUtils.js';
-import { trackCommandUsage } from '../../lib/usageTracking.js';
 import { commands } from '../../lang/en.js';
 import { logError } from '../../lib/errorHandlers/index.js';
 import {
@@ -17,6 +16,7 @@ import {
   EnvironmentArgs,
   YargsCommandModule,
 } from '../../types/Yargs.js';
+import { makeYargsHandlerWithUsageTracking } from '../../lib/yargs/makeYargsHandlerWithUsageTracking.js';
 import { makeYargsBuilder } from '../../lib/yargsUtils.js';
 
 const command = 'fetch-schema [name] [dest]';
@@ -32,7 +32,6 @@ async function handler(
 ): Promise<void> {
   const { name: providedName, dest: providedDest, derivedAccountId } = args;
 
-  trackCommandUsage('custom-object-schema-fetch', {}, derivedAccountId);
   let name;
 
   try {
@@ -111,7 +110,10 @@ const builder = makeYargsBuilder<SchemaFetchArgs>(
 const fetchSchemaCommand: YargsCommandModule<unknown, SchemaFetchArgs> = {
   command,
   describe,
-  handler,
+  handler: makeYargsHandlerWithUsageTracking(
+    'custom-object-schema-fetch',
+    handler
+  ),
   builder,
 };
 

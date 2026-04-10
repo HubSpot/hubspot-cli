@@ -7,10 +7,10 @@ import { GithubRepoFile } from '@hubspot/local-dev-lib/types/Github';
 import { commands } from '../../lang/en.js';
 import { uiLogger } from '../../lib/ui/logger.js';
 import { logError } from '../../lib/errorHandlers/index.js';
-import { trackCommandUsage } from '../../lib/usageTracking.js';
 import { listPrompt } from '../../lib/prompts/promptUtils.js';
 import { EXIT_CODES } from '../../lib/enums/exitCodes.js';
 import { CommonArgs, YargsCommandModule } from '../../types/Yargs.js';
+import { makeYargsHandlerWithUsageTracking } from '../../lib/yargs/makeYargsHandlerWithUsageTracking.js';
 import { makeYargsBuilder } from '../../lib/yargsUtils.js';
 
 const command = 'get-react-module [name] [dest]';
@@ -22,9 +22,7 @@ type GetReactModuleArgs = CommonArgs & {
 };
 
 async function handler(args: ArgumentsCamelCase<GetReactModuleArgs>) {
-  const { name, dest } = args;
-
-  trackCommandUsage('get-react-modules');
+  const { name, dest, exit } = args;
 
   let moduleToRetrieve = name;
 
@@ -37,7 +35,7 @@ async function handler(args: ArgumentsCamelCase<GetReactModuleArgs>) {
     }
 
     if (!availableModules) {
-      process.exit(EXIT_CODES.ERROR);
+      return exit(EXIT_CODES.ERROR);
     }
 
     const moduleChoice = await listPrompt(
@@ -57,7 +55,7 @@ async function handler(args: ArgumentsCamelCase<GetReactModuleArgs>) {
     uiLogger.error(
       commands.cms.subcommands.getReactModule.errors.pathExists(destPath)
     );
-    process.exit(EXIT_CODES.ERROR);
+    return exit(EXIT_CODES.ERROR);
   }
 
   try {
@@ -79,9 +77,9 @@ async function handler(args: ArgumentsCamelCase<GetReactModuleArgs>) {
     } else {
       logError(e);
     }
-    process.exit(EXIT_CODES.ERROR);
+    return exit(EXIT_CODES.ERROR);
   }
-  process.exit(EXIT_CODES.SUCCESS);
+  return exit(EXIT_CODES.SUCCESS);
 }
 
 function cmsGetReactModuleBuilder(yargs: Argv): Argv<GetReactModuleArgs> {
@@ -111,7 +109,7 @@ const cmsGetReactModuleCommand: YargsCommandModule<
 > = {
   command,
   describe,
-  handler,
+  handler: makeYargsHandlerWithUsageTracking('get-react-module', handler),
   builder,
 };
 

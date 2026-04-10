@@ -1,5 +1,4 @@
 import { Argv, ArgumentsCamelCase } from 'yargs';
-import { trackCommandUsage } from '../lib/usageTracking.js';
 import { logSiteLinks, getSiteLinksAsArray, openLink } from '../lib/links.js';
 import { promptUser } from '../lib/prompts/promptUtils.js';
 import { commands } from '../lang/en.js';
@@ -11,6 +10,7 @@ import {
   AccountArgs,
   YargsCommandModule,
 } from '../types/Yargs.js';
+import { makeYargsHandlerWithUsageTracking } from '../lib/yargs/makeYargsHandlerWithUsageTracking.js';
 import { makeYargsBuilder } from '../lib/yargsUtils.js';
 
 const separator = ' => ';
@@ -42,9 +42,7 @@ type OpenArgs = CommonArgs &
   };
 
 async function handler(args: ArgumentsCamelCase<OpenArgs>): Promise<void> {
-  const { shortcut, list, derivedAccountId } = args;
-
-  trackCommandUsage('open', undefined, derivedAccountId);
+  const { shortcut, list, derivedAccountId, exit } = args;
 
   if (shortcut === undefined && !list) {
     const { open } = await createListPrompt(derivedAccountId);
@@ -54,7 +52,7 @@ async function handler(args: ArgumentsCamelCase<OpenArgs>): Promise<void> {
   } else if (shortcut) {
     openLink(derivedAccountId, shortcut);
   }
-  process.exit(EXIT_CODES.SUCCESS);
+  return exit(EXIT_CODES.SUCCESS);
 }
 
 function openBuilder(yargs: Argv): Argv<OpenArgs> {
@@ -90,7 +88,7 @@ const builder = makeYargsBuilder<OpenArgs>(openBuilder, command, describe, {
 const openCommand: YargsCommandModule<unknown, OpenArgs> = {
   command,
   describe,
-  handler,
+  handler: makeYargsHandlerWithUsageTracking('open', handler),
   builder,
 };
 

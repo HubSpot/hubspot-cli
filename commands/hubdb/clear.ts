@@ -1,11 +1,10 @@
 import { Argv, ArgumentsCamelCase } from 'yargs';
 import { uiLogger } from '../../lib/ui/logger.js';
 import { logError } from '../../lib/errorHandlers/index.js';
-import { PromptExitError } from '../../lib/errors/PromptExitError.js';
+import { isPromptExitError } from '../../lib/errors/PromptExitError.js';
 import { clearHubDbTableRows } from '@hubspot/local-dev-lib/hubdb';
 import { publishTable } from '@hubspot/local-dev-lib/api/hubdb';
 import { selectHubDBTablePrompt } from '../../lib/prompts/selectHubDBTablePrompt.js';
-import { trackCommandUsage } from '../../lib/usageTracking.js';
 import { commands } from '../../lang/en.js';
 import {
   CommonArgs,
@@ -14,6 +13,7 @@ import {
   EnvironmentArgs,
   YargsCommandModule,
 } from '../../types/Yargs.js';
+import { makeYargsHandlerWithUsageTracking } from '../../lib/yargs/makeYargsHandlerWithUsageTracking.js';
 import { makeYargsBuilder } from '../../lib/yargsUtils.js';
 
 const command = 'clear [table-id]';
@@ -28,7 +28,6 @@ async function handler(
   args: ArgumentsCamelCase<HubdbClearArgs>
 ): Promise<void> {
   const { derivedAccountId } = args;
-  trackCommandUsage('hubdb-clear', {}, derivedAccountId);
 
   try {
     const { tableId } =
@@ -60,8 +59,8 @@ async function handler(
       uiLogger.log(commands.hubdb.subcommands.clear.logs.tableEmpty(tableId));
     }
   } catch (e) {
-    if (e instanceof PromptExitError) {
-      process.exit(e.exitCode);
+    if (isPromptExitError(e)) {
+      throw e;
     }
     logError(e);
   }
@@ -91,7 +90,7 @@ const builder = makeYargsBuilder<HubdbClearArgs>(
 const hubdbClearCommand: YargsCommandModule<unknown, HubdbClearArgs> = {
   command,
   describe,
-  handler,
+  handler: makeYargsHandlerWithUsageTracking('hubdb-clear', handler),
   builder,
 };
 

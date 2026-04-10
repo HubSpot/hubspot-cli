@@ -9,7 +9,6 @@ import { uiLogger } from '../../lib/ui/logger.js';
 import { validateSrcAndDestPaths } from '@hubspot/local-dev-lib/cms/modules';
 import { shouldIgnoreFile } from '@hubspot/local-dev-lib/ignoreRules';
 import { ApiErrorContext, logError } from '../../lib/errorHandlers/index.js';
-import { trackCommandUsage } from '../../lib/usageTracking.js';
 import { commands } from '../../lang/en.js';
 import { EXIT_CODES } from '../../lib/enums/exitCodes.js';
 import {
@@ -19,6 +18,7 @@ import {
   EnvironmentArgs,
   YargsCommandModule,
 } from '../../types/Yargs.js';
+import { makeYargsHandlerWithUsageTracking } from '../../lib/yargs/makeYargsHandlerWithUsageTracking.js';
 import { makeYargsBuilder } from '../../lib/yargsUtils.js';
 
 const command = 'upload <src> <dest>';
@@ -35,7 +35,7 @@ type FileManagerUploadArgs = CommonArgs &
 async function handler(
   args: ArgumentsCamelCase<FileManagerUploadArgs>
 ): Promise<void> {
-  const { src, dest, derivedAccountId } = args;
+  const { src, dest, derivedAccountId, addUsageMetadata, exit } = args;
 
   const absoluteSrcPath = path.resolve(getCwd(), src);
 
@@ -62,11 +62,7 @@ async function handler(
     return;
   }
   const normalizedDest = convertToUnixPath(dest);
-  trackCommandUsage(
-    'filemanager-upload',
-    { type: stats.isFile() ? 'file' : 'folder' },
-    derivedAccountId
-  );
+  addUsageMetadata({ type: stats.isFile() ? 'file' : 'folder' });
 
   const srcDestIssues = await validateSrcAndDestPaths(
     { isLocal: true, path: src },
@@ -74,7 +70,7 @@ async function handler(
   );
   if (srcDestIssues.length) {
     srcDestIssues.forEach(({ message }) => uiLogger.error(message));
-    process.exit(EXIT_CODES.ERROR);
+    return exit(EXIT_CODES.ERROR);
   }
 
   if (stats.isFile()) {
@@ -167,7 +163,7 @@ const fileManagerUploadCommand: YargsCommandModule<
 > = {
   command,
   describe,
-  handler,
+  handler: makeYargsHandlerWithUsageTracking('filemanager-upload', handler),
   builder,
 };
 

@@ -16,12 +16,14 @@ import {
 import { HUBSPOT_FOLDER, MARKETPLACE_FOLDER } from '../../lib/constants.js';
 import { uiLink } from '../../lib/ui/index.js';
 import { EXIT_CODES } from '../../lib/enums/exitCodes.js';
+
 import {
   AccountArgs,
   CommonArgs,
   EnvironmentArgs,
   YargsCommandModule,
 } from '../../types/Yargs.js';
+import { makeYargsHandlerWithUsageTracking } from '../../lib/yargs/makeYargsHandlerWithUsageTracking.js';
 import { makeYargsBuilder } from '../../lib/yargsUtils.js';
 import { renderTable } from '../../ui/render.js';
 
@@ -55,25 +57,18 @@ type LighthouseScoreArgs = CommonArgs &
 
 async function selectTheme(accountId: number): Promise<string> {
   let themes: string[] = [];
-  try {
-    const { data: result } = await fetchThemes(accountId, {
-      limit: 500,
-      sorting: 'MOST_USED',
-    });
-    if (result && result.objects) {
-      themes = result.objects
-        .map(({ theme }) => theme.path)
-        .filter(
-          themePath =>
-            !themePath.startsWith(HUBSPOT_FOLDER) &&
-            !themePath.startsWith(MARKETPLACE_FOLDER)
-        );
-    }
-  } catch (err) {
-    uiLogger.error(
-      commands.cms.subcommands.lighthouseScore.errors.failedToFetchThemes
-    );
-    process.exit(EXIT_CODES.ERROR);
+  const { data: result } = await fetchThemes(accountId, {
+    limit: 500,
+    sorting: 'MOST_USED',
+  });
+  if (result && result.objects) {
+    themes = result.objects
+      .map(({ theme }) => theme.path)
+      .filter(
+        themePath =>
+          !themePath.startsWith(HUBSPOT_FOLDER) &&
+          !themePath.startsWith(MARKETPLACE_FOLDER)
+      );
   }
 
   const { theme: selectedTheme } = await promptUser([
@@ -89,7 +84,7 @@ async function selectTheme(accountId: number): Promise<string> {
 }
 
 async function handler(args: ArgumentsCamelCase<LighthouseScoreArgs>) {
-  const { target, verbose, theme, derivedAccountId } = args;
+  const { target, verbose, theme, derivedAccountId, exit } = args;
 
   const includeDesktopScore = target === 'desktop' || !verbose;
   const includeMobileScore = target === 'mobile' || !verbose;
@@ -113,10 +108,17 @@ async function handler(args: ArgumentsCamelCase<LighthouseScoreArgs>) {
           themeToCheck
         )
       );
-      process.exit(EXIT_CODES.ERROR);
+      return exit(EXIT_CODES.ERROR);
     }
   } else {
-    themeToCheck = await selectTheme(derivedAccountId);
+    try {
+      themeToCheck = await selectTheme(derivedAccountId);
+    } catch (err) {
+      uiLogger.error(
+        commands.cms.subcommands.lighthouseScore.errors.failedToFetchThemes
+      );
+      return exit(EXIT_CODES.ERROR);
+    }
     uiLogger.log('');
   }
 
@@ -136,7 +138,7 @@ async function handler(args: ArgumentsCamelCase<LighthouseScoreArgs>) {
     uiLogger.error(
       commands.cms.subcommands.lighthouseScore.errors.failedToGetLighthouseScore
     );
-    process.exit(EXIT_CODES.ERROR);
+    return exit(EXIT_CODES.ERROR);
   }
 
   // Poll till scoring is finished
@@ -178,7 +180,7 @@ async function handler(args: ArgumentsCamelCase<LighthouseScoreArgs>) {
     SpinniesManager.remove('lighthouseScore');
   } catch (err) {
     uiLogger.debug(err);
-    process.exit(EXIT_CODES.ERROR);
+    return exit(EXIT_CODES.ERROR);
   }
 
   // Fetch the scoring results
@@ -217,7 +219,7 @@ async function handler(args: ArgumentsCamelCase<LighthouseScoreArgs>) {
     uiLogger.error(
       commands.cms.subcommands.lighthouseScore.errors.failedToGetLighthouseScore
     );
-    process.exit(EXIT_CODES.ERROR);
+    return exit(EXIT_CODES.ERROR);
   }
 
   if (verbose) {
@@ -229,7 +231,7 @@ async function handler(args: ArgumentsCamelCase<LighthouseScoreArgs>) {
         commands.cms.subcommands.lighthouseScore.errors
           .failedToGetLighthouseScore
       );
-      process.exit(EXIT_CODES.ERROR);
+      return exit(EXIT_CODES.ERROR);
     }
 
     uiLogger.log(
@@ -333,7 +335,7 @@ async function handler(args: ArgumentsCamelCase<LighthouseScoreArgs>) {
   uiLogger.log('');
   uiLogger.log(commands.cms.subcommands.lighthouseScore.info.poweredByLink);
 
-  process.exit(EXIT_CODES.SUCCESS);
+  return exit(EXIT_CODES.SUCCESS);
 }
 
 function cmslighthouseScoreBuilder(yargs: Argv): Argv<LighthouseScoreArgs> {
@@ -380,7 +382,7 @@ const cmslighthouseScoreCommand: YargsCommandModule<
 > = {
   command,
   describe,
-  handler,
+  handler: makeYargsHandlerWithUsageTracking('lighthouse-score', handler),
   builder,
 };
 

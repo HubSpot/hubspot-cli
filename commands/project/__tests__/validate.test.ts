@@ -184,7 +184,7 @@ describe('commands/project/validate', () => {
             d: false,
             debug: false,
           } as ArgumentsCamelCase<ProjectValidateArgs>)
-        ).rejects.toThrow('Process exited with code 0');
+        ).rejects.toThrow('Process exited with code 1');
 
         // Should call validateProjectForProfile for the specified profile
         expect(validateProjectForProfile).toHaveBeenCalledWith({
@@ -269,7 +269,7 @@ describe('commands/project/validate', () => {
             d: false,
             debug: false,
           } as ArgumentsCamelCase<ProjectValidateArgs>)
-        ).rejects.toThrow('Process exited with code 0');
+        ).rejects.toThrow('Process exited with code 1');
 
         // Should validate all three profiles
         expect(validateProjectForProfile).toHaveBeenCalledTimes(3);
@@ -377,7 +377,7 @@ describe('commands/project/validate', () => {
             d: false,
             debug: false,
           } as ArgumentsCamelCase<ProjectValidateArgs>)
-        ).rejects.toThrow('Process exited with code 0');
+        ).rejects.toThrow('Process exited with code 1');
 
         // Should call handleTranslate without a profile
         expect(handleTranslate).toHaveBeenCalledWith({
@@ -437,7 +437,7 @@ describe('commands/project/validate', () => {
           d: false,
           debug: false,
         } as ArgumentsCamelCase<ProjectValidateArgs>)
-      ).rejects.toThrow('Process exited with code 0');
+      ).rejects.toThrow('Process exited with code 1');
 
       const expectedSrcDir = path.resolve(projectDir, mockProjectConfig.srcDir);
       expect(validateSourceDirectory).toHaveBeenCalledWith(
@@ -489,11 +489,11 @@ describe('commands/project/validate', () => {
           d: false,
           debug: false,
         } as ArgumentsCamelCase<ProjectValidateArgs>)
-      ).rejects.toThrow('Process exited with code 0');
+      ).rejects.toThrow('Process exited with code 1');
 
       expect(trackCommandUsage).toHaveBeenCalledWith(
         'project-validate',
-        { type: 'STANDARD' },
+        { type: 'STANDARD', successful: true },
         123
       );
     });

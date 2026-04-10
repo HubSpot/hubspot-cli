@@ -6,7 +6,6 @@ import {
   Validation,
 } from '@hubspot/local-dev-lib/types/HublValidation';
 import { logError } from '../../lib/errorHandlers/index.js';
-import { trackCommandUsage } from '../../lib/usageTracking.js';
 import { commands } from '../../lang/en.js';
 import { resolveLocalPath } from '../../lib/filesystem.js';
 import { EXIT_CODES } from '../../lib/enums/exitCodes.js';
@@ -16,6 +15,7 @@ import {
   ConfigArgs,
   YargsCommandModule,
 } from '../../types/Yargs.js';
+import { makeYargsHandlerWithUsageTracking } from '../../lib/yargs/makeYargsHandlerWithUsageTracking.js';
 import { makeYargsBuilder } from '../../lib/yargsUtils.js';
 import { uiLogger } from '../../lib/ui/logger.js';
 
@@ -66,12 +66,10 @@ function printHublValidationResult({ file, validation }: LintResult): number {
 export type LintArgs = CommonArgs & ConfigArgs & AccountArgs & { path: string };
 
 async function handler(args: ArgumentsCamelCase<LintArgs>): Promise<void> {
-  const { path: lintPath, derivedAccountId } = args;
+  const { path: lintPath, derivedAccountId, exit } = args;
 
   const localPath = resolveLocalPath(lintPath);
   const groupName = commands.cms.subcommands.lint.groupName(localPath);
-
-  trackCommandUsage('lint', undefined, derivedAccountId);
 
   uiLogger.group(groupName);
   let count = 0;
@@ -82,7 +80,7 @@ async function handler(args: ArgumentsCamelCase<LintArgs>): Promise<void> {
   } catch (err) {
     uiLogger.groupEnd();
     logError(err, { accountId: derivedAccountId });
-    process.exit(EXIT_CODES.ERROR);
+    return exit(EXIT_CODES.ERROR);
   }
   uiLogger.groupEnd();
   uiLogger.log(commands.cms.subcommands.lint.issuesFound(count));
@@ -107,7 +105,7 @@ const builder = makeYargsBuilder<LintArgs>(lintBuilder, command, describe, {
 const lintCommand: YargsCommandModule<unknown, LintArgs> = {
   command,
   describe,
-  handler,
+  handler: makeYargsHandlerWithUsageTracking('lint', handler),
   builder,
 };
 

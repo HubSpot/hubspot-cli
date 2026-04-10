@@ -17,7 +17,7 @@ import { EXIT_CODES } from '../../enums/exitCodes.js';
 import { isAppIRNode } from '../../projects/structure.js';
 import { uiLine } from '../../ui/index.js';
 import { logError } from '../../errorHandlers/index.js';
-import { PromptExitError } from '../../errors/PromptExitError.js';
+import { isPromptExitError } from '../../errors/PromptExitError.js';
 import {
   installAppAutoPrompt,
   installAppBrowserPrompt,
@@ -60,7 +60,7 @@ class AppDevModeInterface {
       !this.localDevState.projectDir
     ) {
       uiLogger.error(lib.LocalDevManager.failedToInitialize);
-      process.exit(EXIT_CODES.ERROR);
+      throw new Error(lib.LocalDevManager.failedToInitialize);
     }
   }
 
@@ -85,13 +85,13 @@ class AppDevModeInterface {
     // App data will never be accessed before being set
     if (!this.appNode) {
       uiLogger.log(lib.AppDevModeInterface.appDataNotFound);
-      process.exit(EXIT_CODES.ERROR);
+      throw new Error(lib.AppDevModeInterface.appDataNotFound);
     }
 
     const data = this.localDevState.getAppDataByUid(this.appNode.uid);
     if (!data) {
       uiLogger.log(lib.AppDevModeInterface.appDataNotFound);
-      process.exit(EXIT_CODES.ERROR);
+      throw new Error(lib.AppDevModeInterface.appDataNotFound);
     }
     return data;
   }
@@ -174,7 +174,7 @@ class AppDevModeInterface {
         text: lib.AppDevModeInterface.fetchAppData.error,
       });
       logError(e);
-      process.exit(EXIT_CODES.ERROR);
+      return this.localDevState.actions.exit(EXIT_CODES.ERROR);
     }
 
     if (!appData) {
@@ -221,7 +221,7 @@ class AppDevModeInterface {
     );
 
     if (!proceed) {
-      process.exit(EXIT_CODES.SUCCESS);
+      return this.localDevState.actions.exit(EXIT_CODES.SUCCESS);
     }
 
     this.localDevState.addUploadWarning(
@@ -257,7 +257,7 @@ class AppDevModeInterface {
 
     if (!shouldInstall) {
       uiLogger.log(lib.AppDevModeInterface.autoInstallDeclined);
-      process.exit(EXIT_CODES.SUCCESS);
+      return this.localDevState.actions.exit(EXIT_CODES.SUCCESS);
     }
 
     uiLogger.log('');
@@ -370,7 +370,7 @@ class AppDevModeInterface {
       uiLogger.error(
         lib.AppDevModeInterface.oauthAppRedirectUrlError(redirectUrl)
       );
-      process.exit(EXIT_CODES.ERROR);
+      return this.localDevState.actions.exit(EXIT_CODES.ERROR);
     }
   }
 
@@ -396,7 +396,7 @@ class AppDevModeInterface {
 
   private handleAppInstallFailureDevServerMessage(): void {
     uiLogger.error(lib.AppDevModeInterface.installationFailed);
-    process.exit(EXIT_CODES.ERROR);
+    this.localDevState.actions.exit(EXIT_CODES.ERROR);
   }
 
   private onDevServerMessage = async (message: string) => {
@@ -505,7 +505,7 @@ class AppDevModeInterface {
         uiLogger.log('');
       }
     } catch (e) {
-      if (e instanceof PromptExitError) {
+      if (isPromptExitError(e)) {
         throw e;
       }
       if (SpinniesManager.pick('fetchAppData')) {
@@ -515,7 +515,7 @@ class AppDevModeInterface {
         });
       }
       logError(e);
-      process.exit(EXIT_CODES.ERROR);
+      return this.localDevState.actions.exit(EXIT_CODES.ERROR);
     }
   }
 

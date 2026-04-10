@@ -2,6 +2,7 @@ import { promptUser } from './promptUtils.js';
 import { lib } from '../../lang/en.js';
 import { PromptConfig } from '../../types/Prompts.js';
 import { ApiSampleChoice, ApiSampleConfig } from '../../types/Cms.js';
+import { isPromptExitError } from '../errors/PromptExitError.js';
 
 type SampleTypePromptResponse = {
   sampleType?: string;
@@ -79,6 +80,9 @@ export async function createApiSamplePrompt(
       ...languagesAnswer,
     };
   } catch (e) {
+    if (isPromptExitError(e)) {
+      throw e;
+    }
     return {};
   }
 }

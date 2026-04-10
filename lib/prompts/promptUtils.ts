@@ -18,6 +18,7 @@ import { EXIT_CODES } from '../enums/exitCodes.js';
 import chalk from 'chalk';
 import { lib } from '../../lang/en.js';
 import { uiLogger } from '../ui/logger.js';
+import { PromptExitError } from '../errors/PromptExitError.js';
 
 export const Separator = new _Separator();
 export const PROMPT_THEME = { prefix: { idle: chalk.green('?') } };
@@ -43,14 +44,20 @@ function handlePromptError<T extends GenericPromptResponse>(
   error: unknown
 ): never {
   if (isUserCancellationError(error)) {
-    process.exit(EXIT_CODES.SUCCESS);
+    throw new PromptExitError(
+      lib.prompts.promptUtils.errors.userCancelled,
+      EXIT_CODES.SUCCESS
+    );
   }
   if (isNoSelectableChoicesError(error)) {
     if (!Array.isArray(config)) {
       uiLogger.log(config.message as string);
     }
     uiLogger.error(lib.prompts.promptUtils.errors.noSelectableChoices);
-    process.exit(EXIT_CODES.ERROR);
+    throw new PromptExitError(
+      lib.prompts.promptUtils.errors.noSelectableChoices,
+      EXIT_CODES.ERROR
+    );
   }
   throw error;
 }

@@ -21,10 +21,10 @@ import {
   purgeSpinnersOptions,
   SpinnerOptions as BaseSpinnerOptions,
   SPINNERS,
-  terminalSupportsUnicode,
   VALID_STATUSES,
   writeStream,
 } from './spinniesUtils.js';
+import { isUnicodeSupported } from '@hubspot/local-dev-lib/isUnicodeSupported';
 
 import { uiLogger } from './logger.js';
 
@@ -51,6 +51,7 @@ class SpinniesManager {
   private lineCount = 0;
   private currentFrameIndex = 0;
   private spin!: boolean;
+  private sigintHandler: (() => void) | null = null;
 
   constructor() {
     this.resetState();
@@ -61,7 +62,7 @@ class SpinniesManager {
       spinnerColor: 'greenBright',
       succeedColor: 'green',
       failColor: 'red',
-      spinner: terminalSupportsUnicode() ? SPINNERS.dots : SPINNERS.dashes,
+      spinner: isUnicodeSupported() ? SPINNERS.dots : SPINNERS.dashes,
       disableSpins: false,
       ...purgeSpinnersOptions(options),
     };
@@ -320,12 +321,24 @@ class SpinniesManager {
   }
 
   private bindSigint(): void {
-    process.removeAllListeners('SIGINT');
-    process.on('SIGINT', () => {
+    if (this.sigintHandler) {
+      process.removeListener('SIGINT', this.sigintHandler);
+    }
+    this.sigintHandler = () => {
       cliCursor.show();
       readline.moveCursor(process.stderr, 0, this.lineCount);
-      process.exit(0);
-    });
+      const remainingListeners = process
+        .listeners('SIGINT')
+        .filter(l => l !== this.sigintHandler);
+      if (remainingListeners.length === 0) {
+        // process.exit is intentionally used here rather than the command-level
+        // exit() function because this SIGINT handler runs outside of a command
+        // context and needs to force-terminate the process when no other SIGINT
+        // listeners remain to handle it.
+        process.exit(0);
+      }
+    };
+    process.on('SIGINT', this.sigintHandler);
   }
 }
 

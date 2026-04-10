@@ -7,7 +7,6 @@ import {
 import { isHubSpotHttpError } from '@hubspot/local-dev-lib/errors/index';
 
 import SpinniesManager from '../../../lib/ui/SpinniesManager.js';
-import { trackCommandUsage } from '../../../lib/usageTracking.js';
 import { logError, ApiErrorContext } from '../../../lib/errorHandlers/index.js';
 import { uiAccountDescription } from '../../../lib/ui/index.js';
 import { poll } from '../../../lib/polling.js';
@@ -20,6 +19,7 @@ import {
   EnvironmentArgs,
   YargsCommandModule,
 } from '../../../types/Yargs.js';
+import { makeYargsHandlerWithUsageTracking } from '../../../lib/yargs/makeYargsHandlerWithUsageTracking.js';
 import { makeYargsBuilder } from '../../../lib/yargsUtils.js';
 
 type FunctionBuildError = {
@@ -47,8 +47,6 @@ async function handler(
 ): Promise<void> {
   const { path: functionPath, derivedAccountId } = args;
   const splitFunctionPath = functionPath.split('.');
-
-  trackCommandUsage('function-deploy', undefined, derivedAccountId);
 
   if (
     !splitFunctionPath.length ||
@@ -167,7 +165,7 @@ const builder = makeYargsBuilder<FunctionDeployArgs>(
 const functionDeployCommand: YargsCommandModule<unknown, FunctionDeployArgs> = {
   command,
   describe,
-  handler,
+  handler: makeYargsHandlerWithUsageTracking('function-deploy', handler),
   builder,
 };
 

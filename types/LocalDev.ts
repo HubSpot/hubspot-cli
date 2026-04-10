@@ -10,6 +10,11 @@ import {
   LOCAL_DEV_UI_MESSAGE_RECEIVE_TYPES,
   LOCAL_DEV_SERVER_MESSAGE_TYPES,
 } from '../lib/constants.js';
+import { ExitFunction } from './Yargs.js';
+
+export type LocalDevActions = {
+  exit: ExitFunction;
+};
 
 export type LocalDevStateConstructorOptions = {
   targetProjectAccountId: number;
@@ -24,6 +29,7 @@ export type LocalDevStateConstructorOptions = {
   };
   initialProjectProfileData: HSProfileVariables;
   env: Environment;
+  actions: LocalDevActions;
 };
 
 export type LocalDevDeployWebsocketMessage = {
