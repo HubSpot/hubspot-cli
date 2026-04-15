@@ -10,6 +10,7 @@ import { AUTO_GENERATED_COMPONENT_TYPES } from '@hubspot/project-parsing-lib/con
 import { MIGRATION_STATUS } from '@hubspot/local-dev-lib/types/Migration';
 import {
   downloadProject,
+  fetchProject,
   fetchProjectComponentsMetadata,
 } from '@hubspot/local-dev-lib/api/projects';
 import { Separator } from '@inquirer/prompts';
@@ -509,12 +510,16 @@ export async function pollMigrationStatus(
   );
 }
 
+type FinalizeResult =
+  | { buildId: number; migrationSucceededBuildFailed?: false }
+  | { buildId: undefined; migrationSucceededBuildFailed: true };
+
 export async function finalizeAppMigration(
   derivedAccountId: number,
   migrationId: number,
   uidMap: Record<string, string>,
   projectName: string
-): Promise<number> {
+): Promise<FinalizeResult> {
   let pollResponse: MigrationStatus;
   try {
     SpinniesManager.add('finishingMigration', {
@@ -536,7 +541,16 @@ export async function finalizeAppMigration(
     });
 
     if (isMigrationStatus(error) && error.status === MIGRATION_STATUS.FAILURE) {
-      throw new Error(buildErrorMessageFromMigrationStatus(error));
+      const errorMessage = buildErrorMessageFromMigrationStatus(error);
+      // The migration itself succeeded but the automatic post-migration build
+      // failed (typically a transient server error). The migrated source code
+      // is still available on the server — return a sentinel so the caller
+      // can resolve the latest build ID and still download the project files.
+      if (errorMessage?.includes('initial build failed')) {
+        uiLogger.warn(errorMessage);
+        return { buildId: undefined, migrationSucceededBuildFailed: true };
+      }
+      throw new Error(errorMessage);
     }
 
     throw new Error(lib.migrate.errors.migrationFailed, {
@@ -554,7 +568,7 @@ export async function finalizeAppMigration(
     });
   }
 
-  return pollResponse.buildId;
+  return { buildId: pollResponse.buildId };
 }
 
 export async function downloadProjectFiles(
@@ -710,12 +724,28 @@ export async function migrateApp(
   }
 
   const { migrationId, uidMap } = migrationInProgress;
-  const buildId = await finalizeAppMigration(
+  const migrationResult = await finalizeAppMigration(
     derivedAccountId,
     migrationId,
     uidMap,
     projectConfig?.projectConfig?.name || projectName
   );
+
+  let buildId: number;
+  if (migrationResult.migrationSucceededBuildFailed) {
+    // Migration succeeded but the auto-build failed — look up the latest build
+    // ID from the project so we can still download the migrated source files.
+    const { data: project } = await fetchProject(derivedAccountId, projectName);
+    const latestBuildId = project?.latestBuild?.buildId;
+    if (!latestBuildId) {
+      throw new Error(
+        'Migration succeeded but could not determine build ID to download migrated project files.'
+      );
+    }
+    buildId = latestBuildId;
+  } else {
+    buildId = migrationResult.buildId;
+  }
 
   await downloadProjectFiles(
     derivedAccountId,
