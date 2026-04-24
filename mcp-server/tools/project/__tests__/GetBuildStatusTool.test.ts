@@ -3,6 +3,7 @@ import {
   McpServer,
   RegisteredTool,
 } from '@modelcontextprotocol/sdk/server/mcp.js';
+import { McpLogger } from '../../../utils/logger.js';
 import {
   fetchProjectBuilds,
   getBuildStatus,
@@ -16,19 +17,14 @@ import { MockedFunction, Mocked } from 'vitest';
 import { mcpFeedbackRequest } from '../../../utils/feedbackTracking.js';
 import { getConfigDefaultAccountIfExists } from '@hubspot/local-dev-lib/config';
 import { HubSpotConfigAccount } from '@hubspot/local-dev-lib/types/Accounts';
-import { trackToolUsage } from '../../../utils/toolUsageTracking.js';
 
 vi.mock('@modelcontextprotocol/sdk/server/mcp.js');
-vi.mock('../../../utils/toolUsageTracking');
+vi.mock('../../../utils/logger.js');
 vi.mock('@hubspot/local-dev-lib/api/projects');
 vi.mock('@hubspot/local-dev-lib/errors/index');
 vi.mock('../../../../lib/projects/config.js');
 vi.mock('../../../utils/feedbackTracking');
 vi.mock('@hubspot/local-dev-lib/config');
-
-const mockTrackToolUsage = trackToolUsage as MockedFunction<
-  typeof trackToolUsage
->;
 
 const mockMcpFeedbackRequest = mcpFeedbackRequest as MockedFunction<
   typeof mcpFeedbackRequest
@@ -126,6 +122,7 @@ function expectTextContent(
 
 describe('mcp-server/tools/project/GetBuildStatusTool', () => {
   let mockMcpServer: Mocked<McpServer>;
+  let mockLogger: Mocked<McpLogger>;
   let tool: GetBuildStatusTool;
   let mockRegisteredTool: RegisteredTool;
 
@@ -135,12 +132,19 @@ describe('mcp-server/tools/project/GetBuildStatusTool', () => {
       registerTool: vi.fn(),
     };
 
+    // @ts-expect-error Not mocking the whole thing
+    mockLogger = {
+      debug: vi.fn(),
+      info: vi.fn(),
+      warn: vi.fn(),
+      error: vi.fn(),
+    };
+
     mockRegisteredTool = {} as RegisteredTool;
     mockMcpServer.registerTool.mockReturnValue(mockRegisteredTool);
     mockMcpFeedbackRequest.mockResolvedValue('');
-    mockTrackToolUsage.mockResolvedValue(undefined);
 
-    tool = new GetBuildStatusTool(mockMcpServer);
+    tool = new GetBuildStatusTool(mockMcpServer, mockLogger);
 
     // Default mock implementations
     mockIsHubSpotHttpError.mockReturnValue(false);

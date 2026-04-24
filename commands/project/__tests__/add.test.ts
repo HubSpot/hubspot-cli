@@ -9,7 +9,7 @@ import {
 import { v2AddComponent } from '../../../lib/projects/add/v2AddComponent.js';
 import { legacyAddComponent } from '../../../lib/projects/add/legacyAddComponent.js';
 import { getProjectConfig } from '../../../lib/projects/config.js';
-import { isV2Project } from '../../../lib/projects/platformVersion.js';
+import { isLegacyProject } from '@hubspot/project-parsing-lib/projects';
 import { trackCommandUsage } from '../../../lib/usageTracking.js';
 
 vi.mock('../../../lib/commonOpts');
@@ -17,12 +17,12 @@ vi.mock('../../../lib/errorHandlers/index.js');
 vi.mock('../../../lib/projects/add/v2AddComponent');
 vi.mock('../../../lib/projects/add/legacyAddComponent');
 vi.mock('../../../lib/projects/config');
-vi.mock('../../../lib/projects/platformVersion');
+vi.mock('@hubspot/project-parsing-lib/projects');
 
 const mockedV2AddComponent = vi.mocked(v2AddComponent);
 const mockedLegacyAddComponent = vi.mocked(legacyAddComponent);
 const mockedGetProjectConfig = vi.mocked(getProjectConfig);
-const mockedUseV2Api = vi.mocked(isV2Project);
+const mockedUseV2Api = vi.mocked(isLegacyProject);
 const mockedTrackCommandUsage = vi.mocked(trackCommandUsage);
 
 describe('commands/project/add', () => {
@@ -95,7 +95,7 @@ describe('commands/project/add', () => {
     });
 
     it('should call v2AddComponent with accountId for v2 projects', async () => {
-      mockedUseV2Api.mockReturnValue(true);
+      mockedUseV2Api.mockReturnValue(false);
 
       await expect(projectAddCommand.handler(mockArgs)).rejects.toThrow(
         'process.exit called'
@@ -111,7 +111,7 @@ describe('commands/project/add', () => {
     });
 
     it('should call legacyAddComponent for non-v2 projects', async () => {
-      mockedUseV2Api.mockReturnValue(false);
+      mockedUseV2Api.mockReturnValue(true);
 
       await expect(projectAddCommand.handler(mockArgs)).rejects.toThrow(
         'process.exit called'

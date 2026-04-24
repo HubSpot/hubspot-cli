@@ -1,7 +1,7 @@
 import yargs, { ArgumentsCamelCase, Argv } from 'yargs';
 import projectInfoCommand from '../info.js';
 import { getProjectConfig } from '../../../lib/projects/config.js';
-import { isV2Project } from '../../../lib/projects/platformVersion.js';
+import { isLegacyProject } from '@hubspot/project-parsing-lib/projects';
 import { fetchProject } from '@hubspot/local-dev-lib/api/projects';
 import {
   getProjectInfo,
@@ -20,7 +20,7 @@ import {
 vi.mock('../../../lib/commonOpts');
 vi.mock('../../../lib/errorHandlers/index.js');
 vi.mock('../../../lib/projects/config');
-vi.mock('../../../lib/projects/platformVersion');
+vi.mock('@hubspot/project-parsing-lib/projects');
 vi.mock('../../../lib/projects/projectInfo');
 vi.mock('../../../lib/yargs/makeYargsHandlerWithUsageTracking', () => ({
   makeYargsHandlerWithUsageTracking: (
@@ -45,7 +45,7 @@ type ProjectInfoArgs = CommonArgs &
   UsageTrackingArgs;
 
 const mockedGetProjectConfig = vi.mocked(getProjectConfig);
-const mockedIsV2Project = vi.mocked(isV2Project);
+const mockedIsLegacyProject = vi.mocked(isLegacyProject);
 const mockedFetchProject = vi.mocked(fetchProject);
 const mockedGetProjectInfo = vi.mocked(getProjectInfo);
 const mockedLogProjectInfo = vi.mocked(logProjectInfo);
@@ -126,7 +126,7 @@ describe('commands/project/info', () => {
         projectConfig: mockProjectConfig,
         projectDir: '/path/to/project',
       });
-      mockedIsV2Project.mockReturnValue(true);
+      mockedIsLegacyProject.mockReturnValue(false);
       mockedFetchProject.mockResolvedValue({
         data: mockProject,
       } as unknown as Awaited<ReturnType<typeof fetchProject>>);
@@ -148,7 +148,7 @@ describe('commands/project/info', () => {
     });
 
     it('should exit with error for unsupported platform version', async () => {
-      mockedIsV2Project.mockReturnValue(false);
+      mockedIsLegacyProject.mockReturnValue(true);
 
       await projectInfoCommand.handler(mockArgs);
 

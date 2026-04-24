@@ -12,7 +12,7 @@ import {
   type HsProfileFile,
 } from '@hubspot/project-parsing-lib/profiles';
 import { getProjectConfig } from '../../../lib/projects/config.js';
-import { isV2Project } from '../../../lib/projects/platformVersion.js';
+import { isLegacyProject } from '@hubspot/project-parsing-lib/projects';
 import { uiAccountDescription } from '../../../lib/ui/index.js';
 import { uiLogger } from '../../../lib/ui/logger.js';
 import { EXIT_CODES } from '../../../lib/enums/exitCodes.js';
@@ -97,7 +97,7 @@ async function handler(
     return exit(EXIT_CODES.ERROR);
   }
 
-  if (!isV2Project(projectConfig.platformVersion)) {
+  if (isLegacyProject(projectConfig.platformVersion)) {
     uiLogger.error(
       commands.project.profile.add.errors.unsupportedPlatformVersion
     );

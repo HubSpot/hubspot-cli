@@ -267,11 +267,17 @@ export async function selectAppToMigrate(
 
   const migratableComponents: Set<string> = new Set();
   const unmigratableComponents: Set<string> = new Set();
+  let hasLegacyCrmCards = false;
 
   selectedApp?.migrationComponents.forEach(component => {
     const userFacingComponentType = mapToUserFacingType(
       component.componentType
     );
+
+    if (component.componentType === 'LEGACY_CRM_CARD' && !component.isSupported) {
+      hasLegacyCrmCards = true;
+    }
+
     const shouldDisplayComponent = !AUTO_GENERATED_COMPONENT_TYPES.includes(
       userFacingComponentType
     );
@@ -299,6 +305,10 @@ export async function selectAppToMigrate(
         `\n - ${[...unmigratableComponents].join('\n - ')}`
       )
     );
+  }
+
+  if (hasLegacyCrmCards) {
+    uiLogger.info(lib.migrate.legacyCrmCardMigrationDocs());
   }
 
   uiLogger.log('');

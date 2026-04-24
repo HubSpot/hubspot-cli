@@ -1,8 +1,10 @@
-import { TextContent, TextContentResponse, Tool } from '../../types.js';
+import { TextContent, TextContentResponse } from '../../types.js';
+import { Tool } from '../../Tool.js';
 import {
   McpServer,
   RegisteredTool,
 } from '@modelcontextprotocol/sdk/server/mcp.js';
+import { McpLogger } from '../../utils/logger.js';
 import { z } from 'zod';
 import {
   APP_AUTH_TYPES,
@@ -16,7 +18,6 @@ import {
 } from './constants.js';
 import { runCommandInDir } from '../../utils/command.js';
 import { formatTextContents, formatTextContent } from '../../utils/content.js';
-import { trackToolUsage } from '../../utils/toolUsageTracking.js';
 import { setupHubSpotConfig } from '../../utils/config.js';
 import { getErrorMessage } from '../../../lib/errorHandlers/index.js';
 
@@ -52,8 +53,8 @@ export type AddFeatureInputSchema = z.infer<typeof inputSchemaZodObject>;
 
 const toolName: string = 'add-feature-to-project';
 export class AddFeatureToProjectTool extends Tool<AddFeatureInputSchema> {
-  constructor(mcpServer: McpServer) {
-    super(mcpServer);
+  constructor(mcpServer: McpServer, logger: McpLogger) {
+    super(mcpServer, logger, toolName);
   }
 
   async handler({
@@ -66,7 +67,6 @@ export class AddFeatureToProjectTool extends Tool<AddFeatureInputSchema> {
   }: AddFeatureInputSchema): Promise<TextContentResponse> {
     setupHubSpotConfig(absoluteCurrentWorkingDirectory);
     try {
-      await trackToolUsage(toolName);
       let command = `hs project add`;
 
       const content: TextContent[] = [];
@@ -107,6 +107,10 @@ export class AddFeatureToProjectTool extends Tool<AddFeatureInputSchema> {
 
       return formatTextContents(stdout, stderr);
     } catch (error) {
+      this.logger.debug(toolName, {
+        message: 'Handler caught error',
+        error: error instanceof Error ? error.message : String(error),
+      });
       return formatTextContents(getErrorMessage(error));
     }
   }
@@ -126,7 +130,7 @@ export class AddFeatureToProjectTool extends Tool<AddFeatureInputSchema> {
           openWorldHint: false,
         },
       },
-      this.handler
+      input => this.wrappedHandler(input)
     );
   }
 }

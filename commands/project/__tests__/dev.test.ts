@@ -2,7 +2,7 @@
 import { ArgumentsCamelCase } from 'yargs';
 import * as configLib from '@hubspot/local-dev-lib/config';
 import * as projectConfigLib from '../../../lib/projects/config.js';
-import * as platformVersionLib from '../../../lib/projects/platformVersion.js';
+import * as platformVersionLib from '@hubspot/project-parsing-lib/projects';
 import * as projectProfilesLib from '../../../lib/projects/projectProfiles.js';
 import * as projectParsingProfiles from '@hubspot/project-parsing-lib/profiles';
 import * as promptUtilsLib from '../../../lib/prompts/promptUtils.js';
@@ -18,7 +18,7 @@ import { ProjectDevArgs } from '../../../types/Yargs.js';
 vi.mock('@hubspot/local-dev-lib/config');
 vi.mock('@hubspot/project-parsing-lib/profiles');
 vi.mock('../../../lib/projects/config.js');
-vi.mock('../../../lib/projects/platformVersion.js');
+vi.mock('@hubspot/project-parsing-lib/projects');
 vi.mock('../../../lib/projects/projectProfiles.js');
 vi.mock('../../../lib/prompts/promptUtils.js');
 vi.mock('../../../lib/errorHandlers/index.js');
@@ -35,7 +35,7 @@ const validateProjectConfigSpy = vi.spyOn(
   projectConfigLib,
   'validateProjectConfig'
 );
-const isV2ProjectSpy = vi.spyOn(platformVersionLib, 'isV2Project');
+const isLegacyProjectSpy = vi.spyOn(platformVersionLib, 'isLegacyProject');
 const loadAndValidateProfileSpy = vi.spyOn(
   projectProfilesLib,
   'loadAndValidateProfile'
@@ -71,7 +71,7 @@ describe('commands/project/dev', () => {
       projectDir: '/test/project',
     });
     validateProjectConfigSpy.mockImplementation(() => {});
-    isV2ProjectSpy.mockReturnValue(true);
+    isLegacyProjectSpy.mockReturnValue(false);
     trackCommandUsageSpy.mockImplementation(async () => {});
     deprecatedProjectDevFlowSpy.mockResolvedValue(undefined);
     unifiedProjectDevFlowSpy.mockResolvedValue(undefined);
@@ -162,7 +162,7 @@ describe('commands/project/dev', () => {
       });
 
       it('should error if using testingAccount and projectAccount with legacy project', async () => {
-        isV2ProjectSpy.mockReturnValue(false);
+        isLegacyProjectSpy.mockReturnValue(true);
         args.testingAccount = '111111';
         args.projectAccount = '222222';
 
@@ -179,7 +179,7 @@ describe('commands/project/dev', () => {
       });
 
       it('should error if using account flag with V2 project', async () => {
-        isV2ProjectSpy.mockReturnValue(true);
+        isLegacyProjectSpy.mockReturnValue(false);
         args.userProvidedAccount = '123456';
 
         await projectDevCommand.handler(args);
@@ -211,7 +211,7 @@ describe('commands/project/dev', () => {
       });
 
       it('should use userProvidedAccount for legacy projects', async () => {
-        isV2ProjectSpy.mockReturnValue(false);
+        isLegacyProjectSpy.mockReturnValue(true);
         args.userProvidedAccount = '888888';
         args.derivedAccountId = 888888;
 
@@ -352,7 +352,7 @@ describe('commands/project/dev', () => {
       });
 
       it('should run unified flow for V2 projects', async () => {
-        isV2ProjectSpy.mockReturnValue(true);
+        isLegacyProjectSpy.mockReturnValue(false);
 
         await projectDevCommand.handler(args);
 
@@ -372,7 +372,7 @@ describe('commands/project/dev', () => {
       });
 
       it('should run deprecated flow for legacy projects', async () => {
-        isV2ProjectSpy.mockReturnValue(false);
+        isLegacyProjectSpy.mockReturnValue(true);
 
         await projectDevCommand.handler(args);
 
@@ -390,7 +390,7 @@ describe('commands/project/dev', () => {
       });
 
       it('should pass testingAccount to unified flow', async () => {
-        isV2ProjectSpy.mockReturnValue(true);
+        isLegacyProjectSpy.mockReturnValue(false);
         args.testingAccount = '555555';
         getConfigAccountIfExistsSpy.mockReturnValue({
           accountId: 555555,

@@ -182,7 +182,7 @@ describe('lib/projects/deploy', () => {
     const targetAccountId = 12345;
     const projectName = 'test-project';
     const buildId = 5;
-    const useV2Api = true;
+    const isLegacyProject = false;
     const force = false;
 
     it('successfully deploys and returns deploy result', async () => {
@@ -216,7 +216,7 @@ describe('lib/projects/deploy', () => {
         targetAccountId,
         projectName,
         buildId,
-        useV2Api,
+        isLegacyProject,
         force
       );
 
@@ -255,7 +255,7 @@ describe('lib/projects/deploy', () => {
         targetAccountId,
         projectName,
         buildId,
-        useV2Api,
+        isLegacyProject,
         force
       );
 
@@ -290,7 +290,7 @@ describe('lib/projects/deploy', () => {
         targetAccountId,
         projectName,
         buildId,
-        useV2Api,
+        isLegacyProject,
         force
       );
 
@@ -327,7 +327,7 @@ describe('lib/projects/deploy', () => {
         targetAccountId,
         projectName,
         buildId,
-        useV2Api,
+        isLegacyProject,
         force
       );
 
@@ -349,7 +349,7 @@ describe('lib/projects/deploy', () => {
         targetAccountId,
         projectName,
         buildId,
-        useV2Api,
+        isLegacyProject,
         force
       );
 
@@ -366,7 +366,7 @@ describe('lib/projects/deploy', () => {
         targetAccountId,
         projectName,
         buildId,
-        useV2Api,
+        isLegacyProject,
         force
       );
 
@@ -394,7 +394,7 @@ describe('lib/projects/deploy', () => {
         targetAccountId,
         projectName,
         buildId,
-        false, // isV2Project
+        true, // isLegacyProject
         true // force
       );
 

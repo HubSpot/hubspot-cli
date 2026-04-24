@@ -1,7 +1,7 @@
 import yargs, { ArgumentsCamelCase, Argv } from 'yargs';
 import profileAddCommand from '../add.js';
 import { getProjectConfig } from '../../../../lib/projects/config.js';
-import { isV2Project } from '../../../../lib/projects/platformVersion.js';
+import { isLegacyProject } from '@hubspot/project-parsing-lib/projects';
 import { uiLogger } from '../../../../lib/ui/logger.js';
 import { EXIT_CODES } from '../../../../lib/enums/exitCodes.js';
 import { CommonArgs } from '../../../../types/Yargs.js';
@@ -16,7 +16,7 @@ import { fileExists } from '../../../../lib/validation.js';
 vi.mock('../../../../lib/commonOpts');
 vi.mock('../../../../lib/errorHandlers/index.js');
 vi.mock('../../../../lib/projects/config');
-vi.mock('../../../../lib/projects/platformVersion');
+vi.mock('@hubspot/project-parsing-lib/projects');
 vi.mock('@hubspot/project-parsing-lib/profiles');
 vi.mock('../../../../lib/prompts/promptUtils');
 vi.mock('../../../../lib/validation');
@@ -49,7 +49,7 @@ type ProjectProfileAddArgs = CommonArgs & {
 };
 
 const mockedGetProjectConfig = vi.mocked(getProjectConfig);
-const mockedIsV2Project = vi.mocked(isV2Project);
+const mockedIsLegacyProject = vi.mocked(isLegacyProject);
 const mockedUiLogger = vi.mocked(uiLogger);
 const mockedGetAllHsProfiles = vi.mocked(getAllHsProfiles);
 const mockedGetAllConfigAccounts = vi.mocked(getAllConfigAccounts);
@@ -103,7 +103,7 @@ describe('commands/project/profile/add', () => {
         projectConfig: mockProjectConfig,
         projectDir: '/path/to/project',
       });
-      mockedIsV2Project.mockReturnValue(true);
+      mockedIsLegacyProject.mockReturnValue(false);
       mockedGetAllHsProfiles.mockResolvedValue([]);
       mockedGetAllConfigAccounts.mockReturnValue([
         {
@@ -135,7 +135,7 @@ describe('commands/project/profile/add', () => {
     });
 
     it('should exit with error for unsupported platform version', async () => {
-      mockedIsV2Project.mockReturnValue(false);
+      mockedIsLegacyProject.mockReturnValue(true);
 
       await profileAddCommand.handler(mockArgs);
 

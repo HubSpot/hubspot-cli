@@ -11,7 +11,7 @@ import { ProjectDevArgs, YargsCommandModule } from '../../../types/Yargs.js';
 import { makeYargsHandlerWithUsageTracking } from '../../../lib/yargs/makeYargsHandlerWithUsageTracking.js';
 import { deprecatedProjectDevFlow } from './deprecatedFlow.js';
 import { unifiedProjectDevFlow } from './unifiedFlow.js';
-import { isV2Project } from '../../../lib/projects/platformVersion.js';
+import { isLegacyProject } from '@hubspot/project-parsing-lib/projects';
 import { makeYargsBuilder } from '../../../lib/yargsUtils.js';
 import { loadAndValidateProfile } from '../../../lib/projects/projectProfiles.js';
 import { commands } from '../../../lang/en.js';
@@ -61,7 +61,7 @@ async function handler(
     return exit(EXIT_CODES.ERROR);
   }
 
-  const useV2Projects = isV2Project(projectConfig.platformVersion);
+  const useV2Projects = !isLegacyProject(projectConfig.platformVersion);
 
   if (!projectDir) {
     uiLogger.error(commands.project.dev.errors.noProjectConfig);
@@ -108,7 +108,10 @@ async function handler(
   }
 
   // Determine profile name: from flag or prompt
-  if (!targetProjectAccountId && isV2Project(projectConfig.platformVersion)) {
+  if (
+    !targetProjectAccountId &&
+    !isLegacyProject(projectConfig.platformVersion)
+  ) {
     const profileName = await projectProfilePrompt(
       projectDir,
       projectConfig,
@@ -156,7 +159,7 @@ async function handler(
   addUsageMetadata({ accountId: targetProjectAccountId ?? undefined });
 
   try {
-    if (isV2Project(projectConfig.platformVersion)) {
+    if (!isLegacyProject(projectConfig.platformVersion)) {
       const targetTestingAccountId = testingAccount
         ? getConfigAccountIfExists(testingAccount)?.accountId
         : undefined;

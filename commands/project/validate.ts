@@ -1,9 +1,7 @@
 import { Argv, ArgumentsCamelCase } from 'yargs';
 import path from 'path';
-
 import { getConfigAccountById } from '@hubspot/local-dev-lib/config';
-
-import { isV2Project } from '../../lib/projects/platformVersion.js';
+import { isLegacyProject } from '@hubspot/project-parsing-lib/projects';
 import { uiLogger } from '../../lib/ui/logger.js';
 import {
   getProjectConfig,
@@ -47,7 +45,7 @@ async function handler(
     return exit(EXIT_CODES.ERROR);
   }
 
-  if (!isV2Project(projectConfig.platformVersion)) {
+  if (isLegacyProject(projectConfig.platformVersion)) {
     uiLogger.error(commands.project.validate.badVersion);
     return exit(EXIT_CODES.ERROR);
   }

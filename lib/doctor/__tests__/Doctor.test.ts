@@ -24,7 +24,7 @@ import {
   ScopeGroupAuthorization,
 } from '@hubspot/local-dev-lib/types/Accounts';
 import { validateProjectConfig as _validateProjectConfig } from '../../projects/config.js';
-import { isV2Project as _isV2Project } from '../../projects/platformVersion.js';
+import { isLegacyProject as _isLegacyProject } from '@hubspot/project-parsing-lib/projects';
 import {
   validateSourceDirectory as _validateSourceDirectory,
   handleTranslate as _handleTranslate,
@@ -45,10 +45,10 @@ vi.mock('@hubspot/local-dev-lib/errors/index');
 vi.mock('@hubspot/local-dev-lib/config');
 vi.mock('util');
 vi.mock('../../projects/config.js');
-vi.mock('../../projects/platformVersion.js');
 vi.mock('../../projects/upload.js');
 vi.mock('../../projects/projectProfiles.js');
 vi.mock('@hubspot/project-parsing-lib/profiles');
+vi.mock('@hubspot/project-parsing-lib/projects');
 vi.mock('@hubspot/project-parsing-lib/constants');
 vi.mock('../../cliUpgradeUtils.js');
 
@@ -66,7 +66,7 @@ const getConfigDefaultAccountIfExists = vi.mocked(
   _getConfigDefaultAccountIfExists
 );
 const validateProjectConfig = vi.mocked(_validateProjectConfig);
-const isV2Project = vi.mocked(_isV2Project);
+const isLegacyProject = vi.mocked(_isLegacyProject);
 const validateSourceDirectory = vi.mocked(_validateSourceDirectory);
 const handleTranslate = vi.mocked(_handleTranslate);
 const validateProjectForProfile = vi.mocked(_validateProjectForProfile);
@@ -595,7 +595,7 @@ describe('lib/doctor/Doctor', () => {
 
     it('should validate V1 projects successfully', async () => {
       validateProjectConfig.mockReturnValue(undefined);
-      isV2Project.mockReturnValue(false);
+      isLegacyProject.mockReturnValue(true);
 
       await doctor.diagnose();
 
@@ -623,7 +623,7 @@ describe('lib/doctor/Doctor', () => {
 
     it('should validate V2 projects with profiles', async () => {
       validateProjectConfig.mockReturnValue(undefined);
-      isV2Project.mockReturnValue(true);
+      isLegacyProject.mockReturnValue(false);
       validateSourceDirectory.mockResolvedValue(undefined);
       getAllHsProfiles.mockResolvedValue(['dev', 'prod']);
       validateProjectForProfile.mockResolvedValue([]);
@@ -640,7 +640,7 @@ describe('lib/doctor/Doctor', () => {
 
     it('should report profile validation errors', async () => {
       validateProjectConfig.mockReturnValue(undefined);
-      isV2Project.mockReturnValue(true);
+      isLegacyProject.mockReturnValue(false);
       validateSourceDirectory.mockResolvedValue(undefined);
       getAllHsProfiles.mockResolvedValue(['dev']);
       validateProjectForProfile.mockResolvedValue([
@@ -659,7 +659,7 @@ describe('lib/doctor/Doctor', () => {
 
     it('should validate V2 projects without profiles', async () => {
       validateProjectConfig.mockReturnValue(undefined);
-      isV2Project.mockReturnValue(true);
+      isLegacyProject.mockReturnValue(false);
       validateSourceDirectory.mockResolvedValue(undefined);
       getAllHsProfiles.mockResolvedValue([]);
       handleTranslate.mockResolvedValue(undefined);
@@ -676,7 +676,7 @@ describe('lib/doctor/Doctor', () => {
 
     it('should handle translation failures', async () => {
       validateProjectConfig.mockReturnValue(undefined);
-      isV2Project.mockReturnValue(true);
+      isLegacyProject.mockReturnValue(false);
       validateSourceDirectory.mockResolvedValue(undefined);
       getAllHsProfiles.mockResolvedValue([]);
       handleTranslate.mockRejectedValue(new Error('Translation failed'));
@@ -693,7 +693,7 @@ describe('lib/doctor/Doctor', () => {
 
     it('should handle source directory validation errors', async () => {
       validateProjectConfig.mockReturnValue(undefined);
-      isV2Project.mockReturnValue(true);
+      isLegacyProject.mockReturnValue(false);
       validateSourceDirectory.mockRejectedValue(
         new Error('Source directory invalid')
       );

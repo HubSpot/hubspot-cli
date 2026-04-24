@@ -18,7 +18,7 @@ import * as projectNamePrompt from '../../../lib/prompts/projectNamePrompt.js';
 import * as promptUtils from '../../../lib/prompts/promptUtils.js';
 import * as projectProfilePrompt from '../../../lib/prompts/projectProfilePrompt.js';
 import * as projectProfiles from '../../../lib/projects/projectProfiles.js';
-import * as platformVersionLib from '../../../lib/projects/platformVersion.js';
+import * as platformVersionLib from '@hubspot/project-parsing-lib/projects';
 import { trackCommandUsage } from '../../../lib/usageTracking.js';
 import { EXIT_CODES } from '../../../lib/enums/exitCodes.js';
 import { ProjectConfig } from '../../../types/Projects.js';
@@ -43,7 +43,7 @@ vi.mock('../../../lib/validation');
 vi.mock('../../../lib/projects/config');
 vi.mock('../../../lib/projects/urls');
 vi.mock('../../../lib/projects/pollProjectBuildAndDeploy');
-vi.mock('../../../lib/projects/platformVersion');
+vi.mock('@hubspot/project-parsing-lib/projects');
 vi.mock('../../../lib/prompts/projectNamePrompt');
 vi.mock('../../../lib/prompts/promptUtils');
 vi.mock('../../../lib/prompts/projectProfilePrompt');
@@ -66,7 +66,7 @@ const projectProfilePromptSpy = vi.spyOn(
   'projectProfilePrompt'
 );
 const loadProfileSpy = vi.spyOn(projectProfiles, 'loadProfile');
-const isV2ProjectSpy = vi.spyOn(platformVersionLib, 'isV2Project');
+const isLegacyProjectSpy = vi.spyOn(platformVersionLib, 'isLegacyProject');
 
 const optionsSpy = vi
   .spyOn(yargs as Argv, 'options')
@@ -190,6 +190,7 @@ describe('commands/project/deploy', () => {
       deployProjectV1Spy.mockReturnValue(
         mockHubSpotHttpResponse(deployDetails)
       );
+      isLegacyProjectSpy.mockReturnValue(true);
 
       // Spy on process.exit so our tests don't close when it's called
       // @ts-expect-error Doesn't match the actual signature because then the linter complains about unused variables
@@ -430,7 +431,7 @@ describe('commands/project/deploy', () => {
       beforeEach(() => {
         args.useEnv = 'qa';
         projectConfig.platformVersion = '2025.2';
-        isV2ProjectSpy.mockReturnValue(true);
+        isLegacyProjectSpy.mockReturnValue(false);
       });
 
       it('should call projectProfilePrompt with exitIfMissing=true when useEnv is set', async () => {
@@ -482,7 +483,7 @@ describe('commands/project/deploy', () => {
       beforeEach(() => {
         args.profile = 'test-profile';
         projectConfig.platformVersion = '2025.2';
-        isV2ProjectSpy.mockReturnValue(true);
+        isLegacyProjectSpy.mockReturnValue(false);
       });
 
       it('should call projectProfilePrompt with the provided profile', async () => {

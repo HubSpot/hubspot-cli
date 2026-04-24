@@ -20,6 +20,16 @@ describe('lib/prompts/projectsLogsPrompt', () => {
     expect(promptUser).not.toHaveBeenCalled();
   });
 
+  it('should return the passed function name without prompting when promptOptions.function is set', async () => {
+    const functionChoices = ['choice 1', 'choice 2'];
+    const { functionName } = await projectLogsPrompt({
+      functionChoices,
+      promptOptions: { function: 'choice 2' },
+    });
+    expect(functionName).toEqual('choice 2');
+    expect(promptUser).not.toHaveBeenCalled();
+  });
+
   it('should prompt the user if there is more than one choice', async () => {
     const functionChoices = ['choice 1', 'choice 2'];
     const projectName = 'my cool project';

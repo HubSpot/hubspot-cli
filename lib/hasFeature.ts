@@ -3,7 +3,7 @@ import { fetchEnabledFeatures } from '@hubspot/local-dev-lib/api/localDevAuth';
 import { FEATURES } from './constants.js';
 import { ValueOf } from '@hubspot/local-dev-lib/types/Utils';
 
-const FEATURES_THAT_DEFAULT_ON: string[] = [FEATURES.APPS_HOME];
+const FEATURES_THAT_DEFAULT_ON: string[] = [];
 
 export async function hasFeature(
   accountId: number,

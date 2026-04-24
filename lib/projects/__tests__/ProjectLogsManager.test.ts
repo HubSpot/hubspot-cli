@@ -4,7 +4,7 @@ import { ensureProjectExists } from '../ensureProjectExists.js';
 import { fetchProjectComponentsMetadata } from '@hubspot/local-dev-lib/api/projects';
 import { fetchAppMetadataBySourceId } from '@hubspot/local-dev-lib/api/appsDev';
 import { getDeployedProjectNodes } from '../localDev/helpers/project.js';
-import { isV2Project } from '../platformVersion.js';
+import { isLegacyProject } from '@hubspot/project-parsing-lib/projects';
 
 const SUBCOMPONENT_TYPES = {
   APP_ID: 'APP_ID',
@@ -26,7 +26,7 @@ vi.mock('../../projects/ensureProjectExists');
 vi.mock('@hubspot/local-dev-lib/api/projects');
 vi.mock('@hubspot/local-dev-lib/api/appsDev');
 vi.mock('../../projects/localDev/helpers/project');
-vi.mock('../../projects/platformVersion');
+vi.mock('@hubspot/project-parsing-lib/projects');
 
 describe('lib/projects/ProjectLogsManager', () => {
   const accountId = 12345678;
@@ -87,7 +87,7 @@ describe('lib/projects/ProjectLogsManager', () => {
   beforeEach(() => {
     ProjectLogsManager.reset();
 
-    (isV2Project as Mock).mockReturnValue(false);
+    (isLegacyProject as Mock).mockReturnValue(true);
     (getProjectConfig as Mock).mockResolvedValue(projectConfig);
     (ensureProjectExists as Mock).mockResolvedValue(projectDetails);
     (fetchProjectComponentsMetadata as Mock).mockResolvedValue({
@@ -235,7 +235,7 @@ describe('lib/projects/ProjectLogsManager', () => {
     beforeEach(() => {
       (getProjectConfig as Mock).mockResolvedValue(v2ProjectConfig);
       (ensureProjectExists as Mock).mockResolvedValue(v2ProjectDetails);
-      (isV2Project as Mock).mockReturnValue(true);
+      (isLegacyProject as Mock).mockReturnValue(false);
       (getDeployedProjectNodes as Mock).mockResolvedValue(deployedNodes);
       (fetchAppMetadataBySourceId as Mock).mockResolvedValue({
         data: { id: appId },
@@ -324,6 +324,13 @@ describe('lib/projects/ProjectLogsManager', () => {
       ProjectLogsManager.functions = [];
       expect(() => ProjectLogsManager.setFunction('foo')).toThrow(
         `There aren't any functions in this project`
+      );
+    });
+
+    it('should throw a function-name-required error when no name is provided but functions exist', async () => {
+      ProjectLogsManager.functions = functions;
+      expect(() => ProjectLogsManager.setFunction(undefined)).toThrow(
+        /A function name is required/
       );
     });
 

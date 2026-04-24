@@ -72,6 +72,11 @@ export async function autoUpdateCLI(argv: Arguments<{ useEnv?: boolean }>) {
 
   const cliUpgradeInfo = getCliUpgradeInfo();
 
+  // Ignore all update notifications if the current version is a pre-release (contains a hyphen)
+  if (cliUpgradeInfo.current && cliUpgradeInfo.current.includes('-')) {
+    showManualInstallHelp = false;
+  }
+
   if (
     isAllowAutoUpdatesEnabled &&
     cliUpgradeInfo.current &&
@@ -81,9 +86,8 @@ export async function autoUpdateCLI(argv: Arguments<{ useEnv?: boolean }>) {
     !process.env.SKIP_HUBSPOT_CLI_AUTO_UPDATES &&
     !preventAutoUpdateForCommand(argv._)
   ) {
-    // Ignore all update notifications if the current version is a pre-release (contains a hyphen)
-    if (cliUpgradeInfo.current.includes('-')) {
-      showManualInstallHelp = false;
+    if (!showManualInstallHelp) {
+      // Pre-release version detected, skip auto-update
     } else if (!['major', 'latest'].includes(cliUpgradeInfo.type)) {
       // type "latest" => current installed version is latest
       // Auto-update if upgrade type is "minor" or "patch"

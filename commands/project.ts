@@ -24,9 +24,9 @@ import { makeYargsBuilder } from '../lib/yargsUtils.js';
 import { YargsCommandModuleBucket } from '../types/Yargs.js';
 import { getProjectConfig } from '../lib/projects/config.js';
 import {
-  isUnsupportedPlatformVersion,
+  isSupportedPlatformVersion,
   LATEST_SUPPORTED_PLATFORM_VERSION,
-} from '../lib/projects/platformVersion.js';
+} from '@hubspot/project-parsing-lib/projects';
 import { uiLogger } from '../lib/ui/logger.js';
 import { debugError } from '../lib/errorHandlers/index.js';
 
@@ -39,12 +39,17 @@ async function validatePlatformVersion() {
   try {
     const { projectConfig } = await getProjectConfig();
 
-    if (isUnsupportedPlatformVersion(projectConfig?.platformVersion)) {
+    // Only warn if a platform version is explicitly set but not supported
+    // Don't warn if the platform version is missing/undefined
+    if (
+      projectConfig?.platformVersion &&
+      !isSupportedPlatformVersion(projectConfig.platformVersion)
+    ) {
       uiLogger.warn(
         lib.projects.platformVersion.unsupported(
           pkg.version,
           LATEST_SUPPORTED_PLATFORM_VERSION,
-          projectConfig?.platformVersion
+          projectConfig.platformVersion
         )
       );
       uiLogger.log('');

@@ -13,10 +13,17 @@ vi.mock('../../validation.js');
 vi.mock('@hubspot/project-parsing-lib/uid', () => ({
   coerceToValidUid: vi.fn(),
 }));
-vi.mock('@hubspot/project-parsing-lib/constants', () => ({
-  METAFILE_EXTENSION: '.module.meta.json',
-  APP_KEY: 'app',
-}));
+vi.mock('@hubspot/project-parsing-lib/constants', async importOriginal => {
+  const actual =
+    await importOriginal<
+      typeof import('@hubspot/project-parsing-lib/constants')
+    >();
+  return {
+    ...actual,
+    METAFILE_EXTENSION: '.module.meta.json',
+    APP_KEY: 'app',
+  };
+});
 
 const mockedFs = vi.mocked(fs);
 const mockCoerceToValidUid = vi.mocked(coerceToValidUid);

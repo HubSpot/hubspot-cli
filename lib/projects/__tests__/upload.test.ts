@@ -7,13 +7,18 @@ import { vi } from 'vitest';
 import { validateSourceDirectory, handleProjectUpload } from '../upload.js';
 import { uiLogger } from '../../ui/logger.js';
 import { lib } from '../../../lang/en.js';
-import { isV2Project } from '../platformVersion.js';
+import { isLegacyProject } from '@hubspot/project-parsing-lib/projects';
 import ProjectValidationError from '../../errors/ProjectValidationError.js';
 import { walk } from '@hubspot/local-dev-lib/fs';
 import { ProjectConfig } from '../../../types/Projects.js';
 import { uploadProject } from '@hubspot/local-dev-lib/api/projects';
 import { ensureProjectExists } from '../ensureProjectExists.js';
 import { projectContainsHsMetaFiles } from '@hubspot/project-parsing-lib/projects';
+import {
+  findAndParsePackageJsonFiles,
+  collectWorkspaceDirectories,
+  collectFileDependencies,
+} from '@hubspot/project-parsing-lib/workspaces';
 import { shouldIgnoreFile } from '@hubspot/local-dev-lib/ignoreRules';
 import { getConfigAccountIfExists } from '@hubspot/local-dev-lib/config';
 
@@ -24,6 +29,12 @@ vi.mock('@hubspot/local-dev-lib/fs');
 vi.mock('@hubspot/local-dev-lib/api/projects');
 vi.mock('../ensureProjectExists.js');
 vi.mock('@hubspot/project-parsing-lib/projects');
+vi.mock('@hubspot/project-parsing-lib/workspaces', () => ({
+  findAndParsePackageJsonFiles: vi.fn(),
+  collectWorkspaceDirectories: vi.fn(),
+  collectFileDependencies: vi.fn(),
+  getPackableFiles: vi.fn(),
+}));
 vi.mock('@hubspot/local-dev-lib/ignoreRules');
 vi.mock('@hubspot/local-dev-lib/config');
 vi.mock('archiver');
@@ -72,7 +83,7 @@ describe('lib/projects/upload', () => {
     });
 
     it('should warn about legacy files in V2 projects', async () => {
-      vi.mocked(isV2Project).mockReturnValue(true);
+      vi.mocked(isLegacyProject).mockReturnValue(false);
       const legacyFilePath = path.join(srcDir, 'app', 'serverless.json');
       vi.mocked(walk).mockResolvedValue([legacyFilePath]);
 
@@ -87,7 +98,7 @@ describe('lib/projects/upload', () => {
     });
 
     it('should warn about multiple legacy files', async () => {
-      vi.mocked(isV2Project).mockReturnValue(true);
+      vi.mocked(isLegacyProject).mockReturnValue(false);
       const filePaths = [
         path.join(srcDir, 'app1', 'serverless.json'),
         path.join(srcDir, 'app2', 'app.json'),
@@ -119,7 +130,7 @@ describe('lib/projects/upload', () => {
     });
 
     it('should not warn about non-legacy files', async () => {
-      vi.mocked(isV2Project).mockReturnValue(true);
+      vi.mocked(isLegacyProject).mockReturnValue(false);
       const filePaths = [
         path.join(srcDir, 'component.js'),
         path.join(srcDir, 'config.json'),
@@ -132,7 +143,7 @@ describe('lib/projects/upload', () => {
     });
 
     it('should not warn about legacy files in non-V2 projects', async () => {
-      vi.mocked(isV2Project).mockReturnValue(false);
+      vi.mocked(isLegacyProject).mockReturnValue(true);
       projectConfig.platformVersion = '2025.1';
       const filePaths = [
         path.join(srcDir, 'app', 'serverless.json'),
@@ -176,7 +187,12 @@ describe('lib/projects/upload', () => {
       vi.mocked(walk).mockResolvedValue([path.join(srcDir, 'test.js')]);
       vi.mocked(shouldIgnoreFile).mockReturnValue(false);
       vi.mocked(projectContainsHsMetaFiles).mockResolvedValue(false);
-      vi.mocked(isV2Project).mockReturnValue(false);
+      vi.mocked(isLegacyProject).mockReturnValue(true);
+
+      // Mock workspace functions to return empty arrays
+      vi.mocked(findAndParsePackageJsonFiles).mockResolvedValue([]);
+      vi.mocked(collectWorkspaceDirectories).mockResolvedValue([]);
+      vi.mocked(collectFileDependencies).mockResolvedValue([]);
       vi.mocked(tmp.fileSync).mockReturnValue({
         name: path.join(tempDir, 'test.zip'),
         fd: 1,
@@ -247,6 +263,125 @@ describe('lib/projects/upload', () => {
       expect(uploadProject).toHaveBeenCalled();
       expect(callbackFunc).toHaveBeenCalled();
       expect(result.result).toEqual(callbackResult);
+    });
+
+    it('should exclude modified package.json files from directory walk to prevent duplicate zip entries', async () => {
+      const srcDir = path.join(tempDir, 'src');
+
+      vi.mocked(isLegacyProject).mockReturnValue(false);
+      vi.mocked(collectWorkspaceDirectories).mockResolvedValue([
+        {
+          workspaceDir: '/external/utils',
+          sourcePackageJsonPath: path.join(
+            srcDir,
+            'app/functions/package.json'
+          ),
+        },
+      ]);
+
+      vi.mocked(ensureProjectExists).mockResolvedValue({
+        projectExists: true,
+      });
+
+      vi.mocked(uploadProject).mockResolvedValue({
+        data: { buildId: 1 },
+      } as Awaited<ReturnType<typeof uploadProject>>);
+
+      const uploadPromise = handleProjectUpload({
+        accountId: 123,
+        projectConfig,
+        projectDir: tempDir,
+        callbackFunc: vi.fn().mockResolvedValue({}),
+        isUploadCommand: true,
+      });
+
+      mockArchive.finalize();
+      await uploadPromise;
+
+      const srcDirCall = mockArchive.directory.mock.calls[0];
+      expect(srcDirCall[1]).toBe(false);
+      const filterFn = srcDirCall[2];
+
+      expect(filterFn({ name: 'app/functions/package.json' })).toBe(false);
+      expect(filterFn({ name: 'app/functions/index.js' })).toBeTruthy();
+      expect(filterFn({ name: 'other/package.json' })).toBeTruthy();
+    });
+
+    it('should exclude lock files for dirs with external deps from directory walk', async () => {
+      const srcDir = path.join(tempDir, 'src');
+      const lockfilePath = path.join(srcDir, 'app/functions/package-lock.json');
+
+      vi.mocked(isLegacyProject).mockReturnValue(false);
+      vi.mocked(collectWorkspaceDirectories).mockResolvedValue([
+        {
+          workspaceDir: '/external/utils',
+          sourcePackageJsonPath: path.join(
+            srcDir,
+            'app/functions/package.json'
+          ),
+        },
+      ]);
+
+      // Lock file must exist on disk for getLockfilePathsToUpdate to include it
+      const originalExistsSync = fs.existsSync;
+      vi.spyOn(fs, 'existsSync').mockImplementation(p => {
+        if (p === lockfilePath) return true;
+        return originalExistsSync(p as string);
+      });
+
+      vi.mocked(ensureProjectExists).mockResolvedValue({
+        projectExists: true,
+      });
+
+      vi.mocked(uploadProject).mockResolvedValue({
+        data: { buildId: 1 },
+      } as Awaited<ReturnType<typeof uploadProject>>);
+
+      const uploadPromise = handleProjectUpload({
+        accountId: 123,
+        projectConfig,
+        projectDir: tempDir,
+        callbackFunc: vi.fn().mockResolvedValue({}),
+        isUploadCommand: true,
+      });
+
+      mockArchive.finalize();
+      await uploadPromise;
+
+      const srcDirCall = mockArchive.directory.mock.calls[0];
+      const filterFn = srcDirCall[2];
+
+      expect(filterFn({ name: 'app/functions/package-lock.json' })).toBe(false);
+      expect(filterFn({ name: 'app/functions/index.js' })).toBeTruthy();
+      expect(filterFn({ name: 'other/package-lock.json' })).toBeTruthy();
+    });
+
+    it('should skip workspace collection for pre-v2 platform versions', async () => {
+      projectConfig.platformVersion = '2025.1';
+      vi.mocked(isLegacyProject).mockReturnValue(true);
+
+      vi.mocked(ensureProjectExists).mockResolvedValue({
+        projectExists: true,
+      });
+
+      vi.mocked(uploadProject).mockResolvedValue({
+        data: { buildId: 1 },
+      } as Awaited<ReturnType<typeof uploadProject>>);
+
+      const uploadPromise = handleProjectUpload({
+        accountId: 123,
+        projectConfig,
+        projectDir: tempDir,
+        callbackFunc: vi.fn().mockResolvedValue({}),
+        isUploadCommand: true,
+      });
+
+      mockArchive.finalize();
+      await uploadPromise;
+
+      expect(findAndParsePackageJsonFiles).not.toHaveBeenCalled();
+      expect(collectWorkspaceDirectories).not.toHaveBeenCalled();
+      expect(collectFileDependencies).not.toHaveBeenCalled();
     });
   });
 });

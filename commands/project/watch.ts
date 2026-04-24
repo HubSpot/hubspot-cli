@@ -4,7 +4,7 @@ import {
   fetchProjectBuilds,
 } from '@hubspot/local-dev-lib/api/projects';
 import { isSpecifiedError } from '@hubspot/local-dev-lib/errors/index';
-import { isV2Project } from '../../lib/projects/platformVersion.js';
+import { isLegacyProject } from '@hubspot/project-parsing-lib/projects';
 import { commands } from '../../lang/en.js';
 import { createWatcher } from '../../lib/projects/watch.js';
 import { logError, ApiErrorContext } from '../../lib/errorHandlers/index.js';
@@ -114,7 +114,7 @@ async function handler(
     return exit(EXIT_CODES.ERROR);
   }
 
-  if (isV2Project(projectConfig.platformVersion)) {
+  if (!isLegacyProject(projectConfig.platformVersion)) {
     uiLogger.error(
       commands.project.watch.errors.v2ApiError(projectConfig.platformVersion)
     );

@@ -42,7 +42,7 @@ import {
   validateSourceDirectory,
   handleTranslate,
 } from '../projects/upload.js';
-import { isV2Project } from '../projects/platformVersion.js';
+import { isLegacyProject } from '@hubspot/project-parsing-lib/projects';
 import { validateProjectForProfile } from '../projects/projectProfiles.js';
 import { getAllHsProfiles } from '@hubspot/project-parsing-lib/profiles';
 
@@ -710,7 +710,7 @@ export class Doctor {
         return;
       }
 
-      if (!isV2Project(projectConfig.platformVersion)) {
+      if (isLegacyProject(projectConfig.platformVersion)) {
         this.diagnosis?.addProjectSection({
           type: 'success',
           message: lib.doctor.projectValidation.valid,

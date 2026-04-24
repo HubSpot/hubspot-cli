@@ -1,14 +1,15 @@
-import { TextContentResponse, Tool } from '../../types.js';
+import { TextContentResponse } from '../../types.js';
+import { Tool } from '../../Tool.js';
 import {
   McpServer,
   RegisteredTool,
 } from '@modelcontextprotocol/sdk/server/mcp.js';
+import { McpLogger } from '../../utils/logger.js';
 import { z } from 'zod';
 import { addFlag } from '../../utils/command.js';
 import { absoluteCurrentWorkingDirectory } from '../project/constants.js';
 import { runCommandInDir } from '../../utils/command.js';
 import { formatTextContents } from '../../utils/content.js';
-import { trackToolUsage } from '../../utils/toolUsageTracking.js';
 import { setupHubSpotConfig } from '../../utils/config.js';
 import { getErrorMessage } from '../../../lib/errorHandlers/index.js';
 
@@ -44,8 +45,8 @@ export type HsFunctionLogsInputSchema = z.infer<typeof inputSchemaZodObject>;
 const toolName: string = 'get-cms-serverless-function-logs';
 
 export class HsFunctionLogsTool extends Tool<HsFunctionLogsInputSchema> {
-  constructor(mcpServer: McpServer) {
-    super(mcpServer);
+  constructor(mcpServer: McpServer, logger: McpLogger) {
+    super(mcpServer, logger, toolName);
   }
 
   async handler({
@@ -57,7 +58,6 @@ export class HsFunctionLogsTool extends Tool<HsFunctionLogsInputSchema> {
     absoluteCurrentWorkingDirectory,
   }: HsFunctionLogsInputSchema): Promise<TextContentResponse> {
     setupHubSpotConfig(absoluteCurrentWorkingDirectory);
-    await trackToolUsage(toolName);
 
     // Ensure endpoint doesn't start with '/'
     const normalizedEndpoint = endpoint.startsWith('/')
@@ -89,6 +89,10 @@ export class HsFunctionLogsTool extends Tool<HsFunctionLogsInputSchema> {
 
       return formatTextContents(stdout, stderr);
     } catch (error) {
+      this.logger.debug(toolName, {
+        message: 'Handler caught error',
+        error: error instanceof Error ? error.message : String(error),
+      });
       return formatTextContents(
         `Error executing hs logs command: ${getErrorMessage(error)}`
       );
@@ -108,7 +112,7 @@ export class HsFunctionLogsTool extends Tool<HsFunctionLogsInputSchema> {
           openWorldHint: true,
         },
       },
-      this.handler
+      input => this.wrappedHandler(input)
     );
   }
 }

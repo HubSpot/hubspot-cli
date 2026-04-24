@@ -1,6 +1,6 @@
 import chalk from 'chalk';
 import { mapToUserFriendlyName } from '@hubspot/project-parsing-lib/transform';
-import { PLATFORM_VERSIONS } from '@hubspot/local-dev-lib/constants/projects';
+import { PLATFORM_VERSIONS } from '@hubspot/project-parsing-lib/constants';
 import { PERSONAL_ACCESS_KEY_AUTH_METHOD } from '@hubspot/local-dev-lib/constants/auth';
 import {
   ARCHIVED_HUBSPOT_CONFIG_YAML_FILE_NAME,
@@ -1621,7 +1621,8 @@ export const commands = {
     },
   },
   api: {
-    describe: 'Make an authenticated HTTP request to the HubSpot API.',
+    describe:
+      'Make an authenticated HTTP request to any HubSpot API endpoint that supports PAKs.',
     verboseDescribe: `Make an authenticated HTTP request to any HubSpot API that supports PAKs using your CLI authentication.\n\nThis command is intended for testing and exploration of HubSpot APIs. It uses the authentication credentials configured in the CLI to make requests on your behalf.\n\nThe endpoint should be the API path, e.g. ${chalk.bold('/crm/v3/objects/contacts')}. The request will be authenticated using the account specified by ${uiCommandReference('--account')} or the default account.\n\nNote: The available endpoints depend on the scopes granted to your personal access key. If you receive a 403 error, check that your key includes the required scopes for the endpoint you are trying to reach. ${uiLink('Learn more about the HubSpot API', 'https://developers.hubspot.com/docs/api-reference/latest/overview')}`,
     positionals: {
       endpoint: {
@@ -1806,7 +1807,7 @@ export const commands = {
         unsupportedAccountFlagLegacy:
           'The --project-account and --testing-account flags are not supported for projects with platform versions earlier than 2025.2.',
         unsupportedAccountFlagV2:
-          'The --account flag is is not supported supported for projects with platform versions 2025.2 and newer. Use --testing-account and --project-account flags to specify accounts to use for local dev',
+          'The --account flag is not supported for projects with platform versions 2025.2 and newer. Use --testing-account and --project-account flags to specify accounts to use for local dev',
         localDevAlreadyRunning: `Another ${uiCommandReference('hs project dev')} process is already running. To proceed with local development of this project, stop the existing process and re-run ${uiCommandReference('hs project dev')}.`,
       },
       examples: {
@@ -2147,6 +2148,7 @@ export const commands = {
           'https://developers.hubspot.com/docs/platform/serverless-functions'
         )} to learn more about serverless functions`,
         noFunctionWithName: (name: string) => `No function with name "${name}"`,
+        functionNameRequired: `A function name is required. Pass ${uiCommandReference('--function=<name>')} or run without it to select one interactively.`,
         functionNotDeployed: (name: string) =>
           `The function with name "${name}" is not deployed`,
         projectLogsManagerNotInitialized:
@@ -2946,7 +2948,7 @@ export const commands = {
       createTestAccountFromConfigPrompt:
         'How would you like to create your test account?',
       createFromConfigOption: 'Create test account from config file',
-      createFromScratchOption: 'Create test account from scratch',
+      createFromScratchOption: 'Select hub tiers manually',
       errors: {
         configFileNotFound: (configPath: string) =>
           `No test account config file exists at ${configPath}. Create a test account config file with the ${uiCommandReference('hs test-account create-config')} command.`,
@@ -4332,6 +4334,35 @@ export const lib = {
         `The ${chalk.bold(filename)} file is not supported on platform version ${chalk.bold(platformVersion)} and will be ignored.`,
       projectDoesNotExist: (accountId: number) =>
         `Upload cancelled. Run ${uiCommandReference('hs project upload')} again to create the project in ${uiAccountDescription(accountId)}.`,
+      workspaceIncluded: (workspaceDir: string, archivePath: string) =>
+        `Including workspace: ${workspaceDir} → ${archivePath}`,
+      fileDependencyIncluded: (
+        packageName: string,
+        localPath: string,
+        archivePath: string
+      ) =>
+        `Including file: dependency ${packageName}: ${localPath} → ${archivePath}`,
+      malformedPackageJson: (packageJsonPath: string, error: string) =>
+        `Skipping malformed package.json at ${packageJsonPath}: ${error}`,
+      workspaceCollision: (
+        archivePath: string,
+        workspaceDir: string,
+        existingWorkspace: string
+      ) =>
+        `Workspace collision: ${archivePath} from ${workspaceDir} and ${existingWorkspace}`,
+      fileDependencyAlreadyIncluded: (
+        packageName: string,
+        archivePath: string
+      ) =>
+        `file: dependency ${packageName} already included as workspace: ${archivePath}`,
+      updatingLockfile: (lockfilePath: string) =>
+        `Updating package-lock.json in archive: ${lockfilePath}`,
+      updatingPackageJsonWorkspaces: (packageJsonPath: string) =>
+        `Updating package.json workspaces in archive: ${packageJsonPath}`,
+      updatedWorkspaces: (workspaces: string) =>
+        `  Updated workspaces: ${workspaces}`,
+      updatedFileDependency: (packageName: string, relativePath: string) =>
+        `  Updated dependencies.${packageName}: file:${relativePath}`,
     },
   },
 
@@ -5315,6 +5346,8 @@ export const lib = {
       `${chalk.bold('The following features will be migrated:')} ${components}`,
     componentsThatWillNotBeMigrated: (components: string) =>
       `[NOTE] These features are not yet supported for migration but will be available later: ${components}`,
+    legacyCrmCardMigrationDocs: () =>
+      `For more information on migrating legacy-crm-card components, follow ${uiLink('these docs', 'https://developers.hubspot.com/docs/apps/developer-platform/build-apps/migrate-an-app/migrate-legacy-crm-cards-to-app-cards')}`,
     sourceContentsMoved: (newLocation: string) =>
       `The contents of your old source directory have been moved to ${newLocation}, move any required files to the new source directory.`,
     projectMigrationWarningTitle: (platformVersion: string) =>
@@ -5342,7 +5375,7 @@ export const lib = {
         noProjectForThemesMigration:
           'Theme migrations are only supported for projects. Please try again from a project directory.',
         themesAndAppsNotAllowed:
-          'Support for migrating projects containing both themes and apps to the latest platform version is coming soon. Try again later.',
+          'Projects containing both themes and apps cannot be migrated together. To migrate, split the project into separate theme-only and app-only projects, then run migrate on each individually.',
         multipleApps:
           'Multiple apps found in project, this is not allowed in 2025.2',
         alreadyExists: (projectName: string) =>

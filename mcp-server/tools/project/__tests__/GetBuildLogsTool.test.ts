@@ -3,6 +3,7 @@ import {
   McpServer,
   RegisteredTool,
 } from '@modelcontextprotocol/sdk/server/mcp.js';
+import { McpLogger } from '../../../utils/logger.js';
 import { http } from '@hubspot/local-dev-lib/http';
 import { isHubSpotHttpError } from '@hubspot/local-dev-lib/errors/index';
 import {
@@ -14,20 +15,15 @@ import { mcpFeedbackRequest } from '../../../utils/feedbackTracking.js';
 import { ProjectLog } from '@hubspot/local-dev-lib/types/ProjectLog';
 import { getConfigDefaultAccountIfExists } from '@hubspot/local-dev-lib/config';
 import { HubSpotConfigAccount } from '@hubspot/local-dev-lib/types/Accounts';
-import { trackToolUsage } from '../../../utils/toolUsageTracking.js';
 
 vi.mock('@modelcontextprotocol/sdk/server/mcp.js');
-vi.mock('../../../utils/toolUsageTracking');
+vi.mock('../../../utils/logger.js');
 vi.mock('../../../utils/cliConfig');
 vi.mock('@hubspot/local-dev-lib/http');
 vi.mock('@hubspot/local-dev-lib/errors/index');
 vi.mock('../../../../lib/projects/config.js');
 vi.mock('../../../utils/feedbackTracking');
 vi.mock('@hubspot/local-dev-lib/config');
-
-const mockTrackToolUsage = trackToolUsage as MockedFunction<
-  typeof trackToolUsage
->;
 
 const mockMcpFeedbackRequest = mcpFeedbackRequest as MockedFunction<
   typeof mcpFeedbackRequest
@@ -171,6 +167,7 @@ function expectTextContent(
 
 describe('mcp-server/tools/project/GetBuildLogsTool', () => {
   let mockMcpServer: Mocked<McpServer>;
+  let mockLogger: Mocked<McpLogger>;
   let tool: GetBuildLogsTool;
   let mockRegisteredTool: RegisteredTool;
 
@@ -180,12 +177,19 @@ describe('mcp-server/tools/project/GetBuildLogsTool', () => {
       registerTool: vi.fn(),
     };
 
+    // @ts-expect-error Not mocking the whole thing
+    mockLogger = {
+      debug: vi.fn(),
+      info: vi.fn(),
+      warn: vi.fn(),
+      error: vi.fn(),
+    };
+
     mockRegisteredTool = {} as RegisteredTool;
     mockMcpServer.registerTool.mockReturnValue(mockRegisteredTool);
     mockMcpFeedbackRequest.mockResolvedValue('');
-    mockTrackToolUsage.mockResolvedValue(undefined);
 
-    tool = new GetBuildLogsTool(mockMcpServer);
+    tool = new GetBuildLogsTool(mockMcpServer, mockLogger);
 
     // Default mock implementations
     mockGetConfigDefaultAccountIfExists.mockReturnValue({

@@ -4,13 +4,14 @@ import {
   McpServer,
   RegisteredTool,
 } from '@modelcontextprotocol/sdk/server/mcp.js';
+import { McpLogger } from '../../../utils/logger.js';
 import { getAllHsProfiles } from '@hubspot/project-parsing-lib/profiles';
 import { getProjectConfig } from '../../../../lib/projects/config.js';
 import { runCommandInDir } from '../../../utils/command.js';
 import { mcpFeedbackRequest } from '../../../utils/feedbackTracking.js';
-import { trackToolUsage } from '../../../utils/toolUsageTracking.js';
 
 vi.mock('@modelcontextprotocol/sdk/server/mcp.js');
+vi.mock('../../../utils/logger.js');
 vi.mock('@hubspot/project-parsing-lib/profiles');
 vi.mock('../../../../lib/projects/config.js');
 vi.mock('../../../utils/command', () => ({
@@ -28,12 +29,7 @@ vi.mock('../../../utils/command', () => ({
     }
   ),
 }));
-vi.mock('../../../utils/toolUsageTracking');
 vi.mock('../../../utils/feedbackTracking');
-
-const mockTrackToolUsage = trackToolUsage as MockedFunction<
-  typeof trackToolUsage
->;
 
 const mockMcpFeedbackRequest = mcpFeedbackRequest as MockedFunction<
   typeof mcpFeedbackRequest
@@ -53,6 +49,7 @@ const mockGetAllHsProfiles = getAllHsProfiles as MockedFunction<
 
 describe('mcp-server/tools/project/UploadProjectTools', () => {
   let mockMcpServer: Mocked<McpServer>;
+  let mockLogger: Mocked<McpLogger>;
   let tool: UploadProjectTools;
   let mockRegisteredTool: RegisteredTool;
 
@@ -62,10 +59,17 @@ describe('mcp-server/tools/project/UploadProjectTools', () => {
       registerTool: vi.fn(),
     };
 
+    // @ts-expect-error Not mocking the whole thing
+    mockLogger = {
+      debug: vi.fn(),
+      info: vi.fn(),
+      warn: vi.fn(),
+      error: vi.fn(),
+    };
+
     mockRegisteredTool = {} as RegisteredTool;
     mockMcpServer.registerTool.mockReturnValue(mockRegisteredTool);
     mockMcpFeedbackRequest.mockResolvedValue('');
-    mockTrackToolUsage.mockResolvedValue(undefined);
     mockGetProjectConfig.mockResolvedValue({
       projectConfig: {
         srcDir: 'src',
@@ -76,7 +80,7 @@ describe('mcp-server/tools/project/UploadProjectTools', () => {
     });
     mockGetAllHsProfiles.mockResolvedValue([]);
 
-    tool = new UploadProjectTools(mockMcpServer);
+    tool = new UploadProjectTools(mockMcpServer, mockLogger);
   });
 
   describe('register', () => {

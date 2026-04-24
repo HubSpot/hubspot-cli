@@ -11,7 +11,7 @@ import {
   HUBSPOT_PROJECT_COMPONENTS_GITHUB_PATH,
   EMPTY_PROJECT,
 } from '../../constants.js';
-import { isV2Project } from '../platformVersion.js';
+import { isLegacyProject } from '@hubspot/project-parsing-lib/projects';
 import { v2ComponentFlow } from './v2.js';
 import { getProjectTemplateListFromRepo } from './legacy.js';
 import { commands } from '../../../lang/en.js';
@@ -58,7 +58,7 @@ export async function handleProjectCreationFlow(
   const repo = templateSource || HUBSPOT_PROJECT_COMPONENTS_GITHUB_PATH;
 
   const projectNameAndDestPromptResponse = await projectNameAndDestPrompt(args);
-  if (isV2Project(platformVersion)) {
+  if (!isLegacyProject(platformVersion)) {
     const {
       componentTemplateChoices,
       authType,

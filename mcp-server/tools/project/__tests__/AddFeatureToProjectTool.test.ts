@@ -6,6 +6,7 @@ import {
   McpServer,
   RegisteredTool,
 } from '@modelcontextprotocol/sdk/server/mcp.js';
+import { McpLogger } from '../../../utils/logger.js';
 import { MockedFunction, Mocked } from 'vitest';
 import { runCommandInDir } from '../../../utils/command.js';
 import { addFlag } from '../../../utils/command.js';
@@ -14,17 +15,12 @@ import {
   APP_DISTRIBUTION_TYPES,
 } from '../../../../lib/constants.js';
 import { mcpFeedbackRequest } from '../../../utils/feedbackTracking.js';
-import { trackToolUsage } from '../../../utils/toolUsageTracking.js';
 
 vi.mock('@modelcontextprotocol/sdk/server/mcp.js');
+vi.mock('../../../utils/logger.js');
 vi.mock('../../../utils/command');
 vi.mock('../../../../lib/constants');
-vi.mock('../../../utils/toolUsageTracking');
 vi.mock('../../../utils/feedbackTracking');
-
-const mockTrackToolUsage = trackToolUsage as MockedFunction<
-  typeof trackToolUsage
->;
 
 const mockMcpFeedbackRequest = mcpFeedbackRequest as MockedFunction<
   typeof mcpFeedbackRequest
@@ -37,6 +33,7 @@ const mockAddFlag = addFlag as MockedFunction<typeof addFlag>;
 
 describe('mcp-server/tools/project/AddFeatureToProject', () => {
   let mockMcpServer: Mocked<McpServer>;
+  let mockLogger: Mocked<McpLogger>;
   let tool: AddFeatureToProjectTool;
   let mockRegisteredTool: RegisteredTool;
 
@@ -46,12 +43,19 @@ describe('mcp-server/tools/project/AddFeatureToProject', () => {
       registerTool: vi.fn(),
     };
 
+    // @ts-expect-error Not mocking the whole thing
+    mockLogger = {
+      debug: vi.fn(),
+      info: vi.fn(),
+      warn: vi.fn(),
+      error: vi.fn(),
+    };
+
     mockRegisteredTool = {} as RegisteredTool;
     mockMcpServer.registerTool.mockReturnValue(mockRegisteredTool);
     mockMcpFeedbackRequest.mockResolvedValue('');
-    mockTrackToolUsage.mockResolvedValue(undefined);
 
-    tool = new AddFeatureToProjectTool(mockMcpServer);
+    tool = new AddFeatureToProjectTool(mockMcpServer, mockLogger);
 
     // Mock addFlag to simulate command building
     mockAddFlag.mockImplementation(

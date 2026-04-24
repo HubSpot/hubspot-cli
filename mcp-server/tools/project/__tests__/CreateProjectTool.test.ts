@@ -6,6 +6,7 @@ import {
   McpServer,
   RegisteredTool,
 } from '@modelcontextprotocol/sdk/server/mcp.js';
+import { McpLogger } from '../../../utils/logger.js';
 import { runCommandInDir } from '../../../utils/command.js';
 import { addFlag } from '../../../utils/command.js';
 import {
@@ -15,18 +16,13 @@ import {
 } from '../../../../lib/constants.js';
 import { MockedFunction, Mocked } from 'vitest';
 import { mcpFeedbackRequest } from '../../../utils/feedbackTracking.js';
-import { trackToolUsage } from '../../../utils/toolUsageTracking.js';
 
 vi.mock('@modelcontextprotocol/sdk/server/mcp.js');
+vi.mock('../../../utils/logger.js');
 vi.mock('../../../utils/command');
 vi.mock('../../../../lib/constants');
 vi.mock('../../../../lib/projects/create/v2');
-vi.mock('../../../utils/toolUsageTracking');
 vi.mock('../../../utils/feedbackTracking');
-
-const mockTrackToolUsage = trackToolUsage as MockedFunction<
-  typeof trackToolUsage
->;
 
 const mockMcpFeedbackRequest = mcpFeedbackRequest as MockedFunction<
   typeof mcpFeedbackRequest
@@ -39,6 +35,7 @@ const mockAddFlag = addFlag as MockedFunction<typeof addFlag>;
 
 describe('mcp-server/tools/project/CreateProjectTool', () => {
   let mockMcpServer: Mocked<McpServer>;
+  let mockLogger: Mocked<McpLogger>;
   let tool: CreateProjectTool;
   let mockRegisteredTool: RegisteredTool;
 
@@ -48,12 +45,19 @@ describe('mcp-server/tools/project/CreateProjectTool', () => {
       registerTool: vi.fn(),
     };
 
+    // @ts-expect-error Not mocking the whole thing
+    mockLogger = {
+      debug: vi.fn(),
+      info: vi.fn(),
+      warn: vi.fn(),
+      error: vi.fn(),
+    };
+
     mockRegisteredTool = {} as RegisteredTool;
     mockMcpServer.registerTool.mockReturnValue(mockRegisteredTool);
     mockMcpFeedbackRequest.mockResolvedValue('');
-    mockTrackToolUsage.mockResolvedValue(undefined);
 
-    tool = new CreateProjectTool(mockMcpServer);
+    tool = new CreateProjectTool(mockMcpServer, mockLogger);
 
     // Mock addFlag to simulate command building
     mockAddFlag.mockImplementation(

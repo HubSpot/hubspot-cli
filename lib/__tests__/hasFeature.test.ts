@@ -54,30 +54,6 @@ describe('lib/hasFeature', () => {
       expect(result).toBe(false);
     });
 
-    it('should return true for APPS_HOME feature when not present in enabled features (defaults on)', async () => {
-      mockedFetchEnabledFeatures.mockResolvedValueOnce({
-        data: {
-          enabledFeatures: {},
-        },
-      });
-
-      const result = await hasFeature(accountId, FEATURES.APPS_HOME);
-      expect(result).toBe(true);
-    });
-
-    it('should respect explicit setting for APPS_HOME feature even when it defaults on', async () => {
-      mockedFetchEnabledFeatures.mockResolvedValueOnce({
-        data: {
-          enabledFeatures: {
-            [FEATURES.APPS_HOME]: false,
-          },
-        },
-      });
-
-      const result = await hasFeature(accountId, FEATURES.APPS_HOME);
-      expect(result).toBe(false);
-    });
-
     it('should handle truthy values correctly', async () => {
       mockedFetchEnabledFeatures.mockResolvedValueOnce({
         data: {

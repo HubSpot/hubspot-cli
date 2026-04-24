@@ -1,10 +1,11 @@
-import { TextContentResponse, Tool } from '../../types.js';
+import { TextContentResponse } from '../../types.js';
+import { Tool } from '../../Tool.js';
 import {
   McpServer,
   RegisteredTool,
 } from '@modelcontextprotocol/sdk/server/mcp.js';
+import { McpLogger } from '../../utils/logger.js';
 import { z } from 'zod';
-import { trackToolUsage } from '../../utils/toolUsageTracking.js';
 import { formatTextContents } from '../../utils/content.js';
 import { isHubSpotHttpError } from '@hubspot/local-dev-lib/errors/index';
 import {
@@ -153,8 +154,8 @@ function formatBuildDetails(build: BuildWithErrors): string {
 }
 
 export class GetBuildStatusTool extends Tool<GetBuildStatusInputSchema> {
-  constructor(mcpServer: McpServer) {
-    super(mcpServer);
+  constructor(mcpServer: McpServer, logger: McpLogger) {
+    super(mcpServer, logger, TOOL_NAME);
   }
 
   async handler({
@@ -164,7 +165,6 @@ export class GetBuildStatusTool extends Tool<GetBuildStatusInputSchema> {
     limit,
   }: GetBuildStatusInputSchema): Promise<TextContentResponse> {
     setupHubSpotConfig(absoluteCurrentWorkingDirectory);
-    await trackToolUsage(TOOL_NAME);
 
     try {
       const accountId = getConfigDefaultAccountIfExists()?.accountId;
@@ -204,6 +204,10 @@ export class GetBuildStatusTool extends Tool<GetBuildStatusInputSchema> {
 
       return formatTextContents(absoluteCurrentWorkingDirectory, output);
     } catch (error) {
+      this.logger.debug(TOOL_NAME, {
+        message: 'Handler caught error',
+        error: error instanceof Error ? error.message : String(error),
+      });
       let errorMessage: string;
       if (isHubSpotHttpError(error)) {
         errorMessage = error.toString();
@@ -231,7 +235,7 @@ export class GetBuildStatusTool extends Tool<GetBuildStatusInputSchema> {
           idempotentHint: true,
         },
       },
-      this.handler
+      input => this.wrappedHandler(input)
     );
   }
 }

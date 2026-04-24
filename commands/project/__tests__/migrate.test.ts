@@ -1,6 +1,6 @@
 import yargs, { Argv, ArgumentsCamelCase } from 'yargs';
 import { uiLogger } from '../../../lib/ui/logger.js';
-import { PLATFORM_VERSIONS } from '@hubspot/local-dev-lib/constants/projects';
+import { PLATFORM_VERSIONS } from '@hubspot/project-parsing-lib/constants';
 import { ProjectMigrateArgs } from '../migrate.js';
 import migrateCommand from '../migrate.js';
 import { migrateApp } from '../../../lib/app/migrate.js';
@@ -13,7 +13,7 @@ vi.mock('../../../lib/app/migrate');
 vi.mock('../../../lib/projects/config');
 vi.mock('../../../lib/ui');
 
-const { v2025_2, v2026_03_beta, v2026_03 } = PLATFORM_VERSIONS;
+const { v2025_2, v2026_03_BETA, v2026_03 } = PLATFORM_VERSIONS;
 
 describe('commands/project/migrate', () => {
   const yargsMock = yargs as Argv;
@@ -59,7 +59,7 @@ describe('commands/project/migrate', () => {
 
       expect(optionsSpy).toHaveBeenCalledWith('platform-version', {
         type: 'string',
-        choices: [v2025_2, v2026_03_beta, v2026_03],
+        choices: [v2025_2, v2026_03_BETA, v2026_03],
         default: v2026_03,
       });
 
@@ -120,7 +120,7 @@ describe('commands/project/migrate', () => {
         {
           ...options,
           name: 'test-project',
-          platformVersion: PLATFORM_VERSIONS.unstable,
+          platformVersion: PLATFORM_VERSIONS.UNSTABLE,
         },
         { projectConfig: { name: 'test-project' } }
       );

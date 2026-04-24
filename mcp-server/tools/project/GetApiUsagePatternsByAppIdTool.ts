@@ -1,10 +1,11 @@
-import { TextContentResponse, Tool } from '../../types.js';
+import { TextContentResponse } from '../../types.js';
+import { Tool } from '../../Tool.js';
 import {
   McpServer,
   RegisteredTool,
 } from '@modelcontextprotocol/sdk/server/mcp.js';
+import { McpLogger } from '../../utils/logger.js';
 import { z } from 'zod';
-import { trackToolUsage } from '../../utils/toolUsageTracking.js';
 import { http } from '@hubspot/local-dev-lib/http';
 import { formatTextContents } from '../../utils/content.js';
 import { isHubSpotHttpError } from '@hubspot/local-dev-lib/errors/index';
@@ -53,8 +54,8 @@ interface GetApiUsagePatternsByAppIdResponse {
 }
 
 export class GetApiUsagePatternsByAppIdTool extends Tool<GetApiUsagePatternsByAppIdInputSchema> {
-  constructor(mcpServer: McpServer) {
-    super(mcpServer);
+  constructor(mcpServer: McpServer, logger: McpLogger) {
+    super(mcpServer, logger, toolName);
   }
 
   async handler({
@@ -64,7 +65,6 @@ export class GetApiUsagePatternsByAppIdTool extends Tool<GetApiUsagePatternsByAp
     absoluteCurrentWorkingDirectory,
   }: GetApiUsagePatternsByAppIdInputSchema): Promise<TextContentResponse> {
     setupHubSpotConfig(absoluteCurrentWorkingDirectory);
-    await trackToolUsage(toolName);
 
     try {
       // Get account ID from CLI config
@@ -91,6 +91,10 @@ export class GetApiUsagePatternsByAppIdTool extends Tool<GetApiUsagePatternsByAp
       const formattedResult = JSON.stringify(data, null, 2);
       return formatTextContents(formattedResult);
     } catch (error) {
+      this.logger.debug(toolName, {
+        message: 'Handler caught error',
+        error: error instanceof Error ? error.message : String(error),
+      });
       if (isHubSpotHttpError(error)) {
         // Handle HubSpot-specific HTTP errors
         return formatTextContents(error.toString());
@@ -113,7 +117,7 @@ export class GetApiUsagePatternsByAppIdTool extends Tool<GetApiUsagePatternsByAp
           openWorldHint: true,
         },
       },
-      this.handler
+      input => this.wrappedHandler(input)
     );
   }
 }

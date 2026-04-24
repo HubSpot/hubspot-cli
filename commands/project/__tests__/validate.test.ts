@@ -8,7 +8,7 @@ import {
 } from '../../../lib/projects/config.js';
 import { uiLogger } from '../../../lib/ui/logger.js';
 import { commands } from '../../../lang/en.js';
-import { isV2Project } from '../../../lib/projects/platformVersion.js';
+import { isLegacyProject } from '@hubspot/project-parsing-lib/projects';
 import { validateProjectForProfile } from '../../../lib/projects/projectProfiles.js';
 import { trackCommandUsage } from '../../../lib/usageTracking.js';
 import { getConfigAccountById } from '@hubspot/local-dev-lib/config';
@@ -30,7 +30,7 @@ vi.mock('../../../lib/projects/config.js');
 vi.mock('../../../lib/projects/projectProfiles.js');
 vi.mock('../../../lib/errorHandlers/index.js');
 vi.mock('@hubspot/local-dev-lib/config');
-vi.mock('../../../lib/projects/platformVersion.js');
+vi.mock('@hubspot/project-parsing-lib/projects');
 vi.mock('@hubspot/project-parsing-lib/profiles');
 vi.mock('../../../lib/ui/SpinniesManager.js');
 
@@ -124,7 +124,7 @@ describe('commands/project/validate', () => {
         },
         projectDir,
       });
-      vi.mocked(isV2Project).mockReturnValue(false);
+      vi.mocked(isLegacyProject).mockReturnValue(true);
 
       await expect(
         // @ts-expect-error partial mock
@@ -145,7 +145,7 @@ describe('commands/project/validate', () => {
         projectConfig: mockProjectConfig,
         projectDir,
       });
-      vi.mocked(isV2Project).mockReturnValue(true);
+      vi.mocked(isLegacyProject).mockReturnValue(false);
       const error = new Error('Invalid project config');
       vi.mocked(validateProjectConfig).mockImplementation(() => {
         throw error;
@@ -171,7 +171,7 @@ describe('commands/project/validate', () => {
           projectConfig: mockProjectConfig,
           projectDir,
         });
-        vi.mocked(isV2Project).mockReturnValue(true);
+        vi.mocked(isLegacyProject).mockReturnValue(false);
         vi.mocked(validateProjectConfig).mockReturnValue(undefined);
         vi.mocked(getAllHsProfiles).mockResolvedValue(['dev', 'prod', 'qa']);
         vi.mocked(validateProjectForProfile).mockResolvedValue([]);
@@ -204,7 +204,7 @@ describe('commands/project/validate', () => {
           projectConfig: mockProjectConfig,
           projectDir,
         });
-        vi.mocked(isV2Project).mockReturnValue(true);
+        vi.mocked(isLegacyProject).mockReturnValue(false);
         vi.mocked(validateProjectConfig).mockReturnValue(undefined);
         vi.mocked(getAllHsProfiles).mockResolvedValue(['dev', 'prod']);
         const errorMessage = 'Profile not found';
@@ -228,7 +228,7 @@ describe('commands/project/validate', () => {
           projectConfig: mockProjectConfig,
           projectDir,
         });
-        vi.mocked(isV2Project).mockReturnValue(true);
+        vi.mocked(isLegacyProject).mockReturnValue(false);
         vi.mocked(validateProjectConfig).mockReturnValue(undefined);
         vi.mocked(getAllHsProfiles).mockResolvedValue(['dev', 'prod']);
         const error = new Error('Translation failed');
@@ -257,7 +257,7 @@ describe('commands/project/validate', () => {
           projectConfig: mockProjectConfig,
           projectDir,
         });
-        vi.mocked(isV2Project).mockReturnValue(true);
+        vi.mocked(isLegacyProject).mockReturnValue(false);
         vi.mocked(validateProjectConfig).mockReturnValue(undefined);
         vi.mocked(getAllHsProfiles).mockResolvedValue(['dev', 'prod', 'qa']);
         vi.mocked(validateProjectForProfile).mockResolvedValue([]);
@@ -311,7 +311,7 @@ describe('commands/project/validate', () => {
           projectConfig: mockProjectConfig,
           projectDir,
         });
-        vi.mocked(isV2Project).mockReturnValue(true);
+        vi.mocked(isLegacyProject).mockReturnValue(false);
         vi.mocked(validateProjectConfig).mockReturnValue(undefined);
         vi.mocked(getAllHsProfiles).mockResolvedValue(['dev', 'prod']);
         vi.mocked(validateProjectForProfile)
@@ -337,7 +337,7 @@ describe('commands/project/validate', () => {
           projectConfig: mockProjectConfig,
           projectDir,
         });
-        vi.mocked(isV2Project).mockReturnValue(true);
+        vi.mocked(isLegacyProject).mockReturnValue(false);
         vi.mocked(validateProjectConfig).mockReturnValue(undefined);
         vi.mocked(getAllHsProfiles).mockResolvedValue(['dev', 'prod', 'qa']);
         vi.mocked(validateProjectForProfile)
@@ -365,7 +365,7 @@ describe('commands/project/validate', () => {
           projectConfig: mockProjectConfig,
           projectDir,
         });
-        vi.mocked(isV2Project).mockReturnValue(true);
+        vi.mocked(isLegacyProject).mockReturnValue(false);
         vi.mocked(validateProjectConfig).mockReturnValue(undefined);
         vi.mocked(getAllHsProfiles).mockResolvedValue([]);
         vi.mocked(handleTranslate).mockResolvedValue(undefined);
@@ -397,7 +397,7 @@ describe('commands/project/validate', () => {
           projectConfig: mockProjectConfig,
           projectDir,
         });
-        vi.mocked(isV2Project).mockReturnValue(true);
+        vi.mocked(isLegacyProject).mockReturnValue(false);
         vi.mocked(validateProjectConfig).mockReturnValue(undefined);
         vi.mocked(getAllHsProfiles).mockResolvedValue([]);
         const error = new Error('Translation failed');
@@ -425,7 +425,7 @@ describe('commands/project/validate', () => {
         projectConfig: mockProjectConfig,
         projectDir,
       });
-      vi.mocked(isV2Project).mockReturnValue(true);
+      vi.mocked(isLegacyProject).mockReturnValue(false);
       vi.mocked(validateProjectConfig).mockReturnValue(undefined);
       vi.mocked(getAllHsProfiles).mockResolvedValue([]);
       vi.mocked(handleTranslate).mockResolvedValue(undefined);
@@ -452,7 +452,7 @@ describe('commands/project/validate', () => {
         projectConfig: mockProjectConfig,
         projectDir,
       });
-      vi.mocked(isV2Project).mockReturnValue(true);
+      vi.mocked(isLegacyProject).mockReturnValue(false);
       vi.mocked(validateProjectConfig).mockReturnValue(undefined);
       vi.mocked(getAllHsProfiles).mockResolvedValue([]);
       vi.mocked(handleTranslate).mockResolvedValue(undefined);
@@ -477,7 +477,7 @@ describe('commands/project/validate', () => {
         projectConfig: mockProjectConfig,
         projectDir,
       });
-      vi.mocked(isV2Project).mockReturnValue(true);
+      vi.mocked(isLegacyProject).mockReturnValue(false);
       vi.mocked(validateProjectConfig).mockReturnValue(undefined);
       vi.mocked(getAllHsProfiles).mockResolvedValue([]);
       vi.mocked(handleTranslate).mockResolvedValue(undefined);

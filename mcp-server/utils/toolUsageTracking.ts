@@ -8,8 +8,6 @@ import {
   getConfig,
   getConfigDefaultAccountIfExists,
 } from '@hubspot/local-dev-lib/config';
-import { uiLogger } from '../../lib/ui/logger.js';
-
 export async function trackToolUsage(
   toolName: string,
   meta?: {
@@ -32,7 +30,6 @@ export async function trackToolUsage(
 
   const accountId = getConfigDefaultAccountIfExists()?.accountId || undefined;
   try {
-    uiLogger.info('Tracking tool usage');
     await trackUsage(
       'cli-interaction',
       EventClass.INTERACTION,

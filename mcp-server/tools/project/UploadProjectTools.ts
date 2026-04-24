@@ -4,16 +4,17 @@ import {
   McpServer,
   RegisteredTool,
 } from '@modelcontextprotocol/sdk/server/mcp.js';
+import { McpLogger } from '../../utils/logger.js';
 import { getAllHsProfiles } from '@hubspot/project-parsing-lib/profiles';
 import { getProjectConfig } from '../../../lib/projects/config.js';
-import { TextContent, TextContentResponse, Tool } from '../../types.js';
+import { TextContent, TextContentResponse } from '../../types.js';
+import { Tool } from '../../Tool.js';
 import { runCommandInDir } from '../../utils/command.js';
 import {
   absoluteCurrentWorkingDirectory,
   absoluteProjectPath,
 } from './constants.js';
 import { formatTextContent, formatTextContents } from '../../utils/content.js';
-import { trackToolUsage } from '../../utils/toolUsageTracking.js';
 import { addFlag } from '../../utils/command.js';
 import { setupHubSpotConfig } from '../../utils/config.js';
 
@@ -28,7 +29,7 @@ const inputSchema = {
   profile: z
     .optional(z.string())
     .describe(
-      'CRITICAL: If the user has not explicitly specified a profile name, you MUST ask them which profile to use. NEVER automatically choose a profile based on files you see in the directory (e.g., seeing "hsprofile.prod.json" does NOT mean you should use "prod"). The profile to be used for the upload. All projects configured to use profiles must specify a profile when uploading. Profile files have the following format: "hsprofile.<profile>.json".'
+      'The profile to use for the upload. Only required for projects configured with profiles. If the project uses profiles and the user has not specified one, ask them rather than inferring from filenames in the directory. NEVER automatically choose a profile based on files you see. Profile files have the format: "hsprofile.<profile>.json".'
     ),
 };
 
@@ -41,8 +42,8 @@ type InputSchemaType = z.infer<typeof inputSchemaZodObject>;
 const toolName: string = 'upload-project';
 
 export class UploadProjectTools extends Tool<InputSchemaType> {
-  constructor(mcpServer: McpServer) {
-    super(mcpServer);
+  constructor(mcpServer: McpServer, logger: McpLogger) {
+    super(mcpServer, logger, toolName);
   }
   async handler({
     absoluteProjectPath,
@@ -51,7 +52,6 @@ export class UploadProjectTools extends Tool<InputSchemaType> {
     uploadMessage,
   }: InputSchemaType): Promise<TextContentResponse> {
     setupHubSpotConfig(absoluteCurrentWorkingDirectory);
-    await trackToolUsage(toolName);
 
     let command = addFlag('hs project upload', 'force-create', true);
 
@@ -75,6 +75,10 @@ export class UploadProjectTools extends Tool<InputSchemaType> {
           hasProfiles = profiles.length > 0;
         }
       } catch (e) {
+        this.logger.debug(toolName, {
+          message: 'Handler caught error checking for profiles',
+          error: e instanceof Error ? e.message : String(e),
+        });
         // If any of these checks fail, the safest thing to do is to assume there are no profiles.
         hasProfiles = false;
       }
@@ -125,7 +129,7 @@ export class UploadProjectTools extends Tool<InputSchemaType> {
           openWorldHint: true,
         },
       },
-      this.handler
+      input => this.wrappedHandler(input)
     );
   }
 }

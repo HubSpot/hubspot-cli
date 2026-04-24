@@ -8,7 +8,7 @@ import {
 import * as configUtils from '@hubspot/local-dev-lib/config';
 import * as errorsLib from '@hubspot/local-dev-lib/errors/index';
 import { uiLogger } from '../../../lib/ui/logger.js';
-import * as platformVersionLib from '../../../lib/projects/platformVersion.js';
+import * as platformVersionLib from '@hubspot/project-parsing-lib/projects';
 import * as usageTrackingLib from '../../../lib/usageTracking.js';
 import * as projectConfigLib from '../../../lib/projects/config.js';
 import * as projectProfilesLib from '../../../lib/projects/projectProfiles.js';
@@ -24,7 +24,7 @@ import projectUploadCommand, { ProjectUploadArgs } from '../upload.js';
 vi.mock('../../../lib/commonOpts');
 vi.mock('@hubspot/local-dev-lib/config');
 vi.mock('@hubspot/local-dev-lib/errors/index');
-vi.mock('../../../lib/projects/platformVersion.js');
+vi.mock('@hubspot/project-parsing-lib/projects');
 vi.mock('../../../lib/projects/config.js');
 vi.mock('../../../lib/projects/projectProfiles.js');
 vi.mock('../../../lib/prompts/projectProfilePrompt.js');
@@ -41,7 +41,7 @@ const validateProjectConfigSpy = vi.spyOn(
   projectConfigLib,
   'validateProjectConfig'
 );
-const isV2ProjectSpy = vi.spyOn(platformVersionLib, 'isV2Project');
+const isLegacyProjectSpy = vi.spyOn(platformVersionLib, 'isLegacyProject');
 const loadAndValidateProfileSpy = vi.spyOn(
   projectProfilesLib,
   'loadAndValidateProfile'
@@ -76,7 +76,7 @@ describe('commands/project/upload', () => {
       projectDir: '/test/project',
     });
     validateProjectConfigSpy.mockImplementation(() => {});
-    isV2ProjectSpy.mockReturnValue(false);
+    isLegacyProjectSpy.mockReturnValue(true);
     // @ts-expect-error Mock config account doesn't need full type implementation
     getConfigAccountByIdSpy.mockReturnValue({
       accountId: 123456,
@@ -175,14 +175,14 @@ describe('commands/project/upload', () => {
     });
 
     it('should load and validate profile for v2 projects', async () => {
-      isV2ProjectSpy.mockReturnValue(true);
+      isLegacyProjectSpy.mockReturnValue(false);
       args.profile = 'test-profile';
       projectProfilePromptSpy.mockResolvedValue('test-profile');
       loadAndValidateProfileSpy.mockResolvedValue({ accountId: 12345 });
 
       await projectUploadCommand.handler(args);
 
-      expect(isV2ProjectSpy).toHaveBeenCalled();
+      expect(isLegacyProjectSpy).toHaveBeenCalled();
       expect(loadAndValidateProfileSpy).toHaveBeenCalledWith(
         expect.objectContaining({ name: 'test-project' }),
         '/test/project',
@@ -191,7 +191,7 @@ describe('commands/project/upload', () => {
     });
 
     it('should exit if profile validation fails', async () => {
-      isV2ProjectSpy.mockReturnValue(true);
+      isLegacyProjectSpy.mockReturnValue(false);
       const error = new Error('Invalid profile');
       projectProfilePromptSpy.mockResolvedValue('test');
       loadAndValidateProfileSpy.mockRejectedValue(error);
@@ -331,7 +331,7 @@ describe('commands/project/upload', () => {
     describe('with useEnv flag', () => {
       beforeEach(() => {
         args.useEnv = 'qa';
-        isV2ProjectSpy.mockReturnValue(true);
+        isLegacyProjectSpy.mockReturnValue(false);
       });
 
       it('should call projectProfilePrompt with exitIfMissing=true when useEnv is set', async () => {

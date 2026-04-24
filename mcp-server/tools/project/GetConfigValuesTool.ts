@@ -1,14 +1,16 @@
-import { TextContentResponse, Tool } from '../../types.js';
+import { TextContentResponse } from '../../types.js';
+import { Tool } from '../../Tool.js';
 import {
   McpServer,
   RegisteredTool,
 } from '@modelcontextprotocol/sdk/server/mcp.js';
+import { McpLogger } from '../../utils/logger.js';
 import { z } from 'zod';
 import { formatTextContents } from '../../utils/content.js';
 import { absoluteCurrentWorkingDirectory } from './constants.js';
 import { getIntermediateRepresentationSchema } from '@hubspot/project-parsing-lib/schema';
 import { mapToInternalType } from '@hubspot/project-parsing-lib/transform';
-import { isV2Project } from '../../../lib/projects/platformVersion.js';
+import { isLegacyProject } from '@hubspot/project-parsing-lib/projects';
 import { getConfigDefaultAccountIfExists } from '@hubspot/local-dev-lib/config';
 import { setupHubSpotConfig } from '../../utils/config.js';
 
@@ -36,8 +38,8 @@ type InputSchemaType = z.infer<typeof inputSchemaZodObject>;
 const toolName: string = 'get-feature-config-schema';
 
 export class GetConfigValuesTool extends Tool<InputSchemaType> {
-  constructor(mcpServer: McpServer) {
-    super(mcpServer);
+  constructor(mcpServer: McpServer, logger: McpLogger) {
+    super(mcpServer, logger, toolName);
   }
   async handler({
     platformVersion,
@@ -46,7 +48,7 @@ export class GetConfigValuesTool extends Tool<InputSchemaType> {
   }: InputSchemaType): Promise<TextContentResponse> {
     setupHubSpotConfig(absoluteCurrentWorkingDirectory);
     try {
-      if (!isV2Project(platformVersion)) {
+      if (isLegacyProject(platformVersion)) {
         return formatTextContents(
           `Can only be used on projects with a minimum platformVersion of 2025.2`
         );
@@ -72,7 +74,12 @@ export class GetConfigValuesTool extends Tool<InputSchemaType> {
           JSON.stringify({ config: schema[internalComponentType] })
         );
       }
-    } catch (error) {}
+    } catch (error) {
+      this.logger.debug(toolName, {
+        message: 'Handler caught error',
+        error: error instanceof Error ? error.message : String(error),
+      });
+    }
 
     return formatTextContents(
       `Unable to locate JSON schema for type ${featureType}`
@@ -93,7 +100,7 @@ export class GetConfigValuesTool extends Tool<InputSchemaType> {
           openWorldHint: false,
         },
       },
-      this.handler
+      input => this.wrappedHandler(input)
     );
   }
 }

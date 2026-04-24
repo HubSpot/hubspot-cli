@@ -1,8 +1,6 @@
 import { HubSpotPromise } from '@hubspot/local-dev-lib/types/Http';
-import {
-  PLATFORM_VERSIONS,
-  UNMIGRATABLE_REASONS,
-} from '@hubspot/local-dev-lib/constants/projects';
+import { PLATFORM_VERSIONS } from '@hubspot/project-parsing-lib/constants';
+import { UNMIGRATABLE_REASONS } from '@hubspot/local-dev-lib/constants/projects';
 import { http } from '@hubspot/local-dev-lib/http';
 import { MIGRATION_STATUS } from '@hubspot/local-dev-lib/types/Migration';
 
@@ -126,8 +124,8 @@ export async function listAppsForMigration(
 }
 
 function mapPlatformVersionToEnum(platformVersion: string): string {
-  if (platformVersion === PLATFORM_VERSIONS.unstable) {
-    return PLATFORM_VERSIONS.unstable.toUpperCase();
+  if (platformVersion === PLATFORM_VERSIONS.UNSTABLE) {
+    return PLATFORM_VERSIONS.UNSTABLE.toUpperCase();
   }
 
   const reformattedPlatformVersion = platformVersion

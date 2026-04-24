@@ -38,15 +38,14 @@ import {
   YargsCommandModule,
 } from '../types/Yargs.js';
 import { makeYargsHandlerWithUsageTracking } from '../lib/yargs/makeYargsHandlerWithUsageTracking.js';
-import { isV2Project } from '../lib/projects/platformVersion.js';
 import { pollProjectBuildAndDeploy } from '../lib/projects/pollProjectBuildAndDeploy.js';
-
 import { fetchPublicAppsForPortal } from '@hubspot/local-dev-lib/api/appsDev';
 import { getConfigAccountEnvironment } from '@hubspot/local-dev-lib/config';
 import { getStaticAuthAppInstallUrl } from '../lib/app/urls.js';
 import ProjectValidationError from '../lib/errors/ProjectValidationError.js';
 import { openLink } from '../lib/links.js';
 import { runGetStartedV2 } from '../lib/getStarted/getStartedV2.js';
+import { isLegacyProject } from '@hubspot/project-parsing-lib/projects';
 
 const command = 'get-started';
 const describe = commands.getStarted.describe;
@@ -316,7 +315,7 @@ async function handler(
             uploadMessage: 'Initial upload from get-started command',
             forceCreate: true, // Auto-create project on HubSpot
             isUploadCommand: false,
-            sendIR: isV2Project(newProjectConfig.platformVersion),
+            sendIR: !isLegacyProject(newProjectConfig.platformVersion),
             skipValidation: false,
           });
 
