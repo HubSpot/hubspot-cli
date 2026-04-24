@@ -101,12 +101,12 @@ export async function handleProjectDeploy(
   targetAccountId: number,
   projectName: string,
   buildId: number,
-  isV2Project: boolean,
+  isLegacyProject: boolean,
   force: boolean
 ): Promise<Deploy | undefined> {
   let deployId: string;
 
-  if (isV2Project) {
+  if (!isLegacyProject) {
     const { data: deployResp } = await deployProjectV2(
       targetAccountId,
       projectName,

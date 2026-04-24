@@ -4,7 +4,7 @@ import {
   McpServer,
   RegisteredTool,
 } from '@modelcontextprotocol/sdk/server/mcp.js';
-import { trackToolUsage } from '../../utils/toolUsageTracking.js';
+import { McpLogger } from '../../utils/logger.js';
 import { formatTextContents, formatTextContent } from '../../utils/content.js';
 import { addFlag } from '../../utils/command.js';
 import { runCommandInDir } from '../../utils/command.js';
@@ -12,7 +12,8 @@ import {
   ACCOUNT_LEVELS,
   ACCOUNT_LEVEL_CHOICES,
 } from '../../../lib/constants.js';
-import { TextContent, TextContentResponse, Tool } from '../../types.js';
+import { TextContent, TextContentResponse } from '../../types.js';
+import { Tool } from '../../Tool.js';
 import { absoluteCurrentWorkingDirectory } from './constants.js';
 import { DeveloperTestAccountConfig } from '@hubspot/local-dev-lib/types/developerTestAccounts.js';
 import { getConfigAccountByName } from '@hubspot/local-dev-lib/config';
@@ -100,8 +101,8 @@ export type CreateTestAccountInputSchema = z.infer<
 
 const toolName: string = 'create-test-account';
 export class CreateTestAccountTool extends Tool<CreateTestAccountInputSchema> {
-  constructor(mcpServer: McpServer) {
-    super(mcpServer);
+  constructor(mcpServer: McpServer, logger: McpLogger) {
+    super(mcpServer, logger, toolName);
   }
 
   async handler({
@@ -117,7 +118,6 @@ export class CreateTestAccountTool extends Tool<CreateTestAccountInputSchema> {
     configPath,
   }: CreateTestAccountInputSchema): Promise<TextContentResponse> {
     setupHubSpotConfig(absoluteCurrentWorkingDirectory);
-    await trackToolUsage(toolName);
 
     let command = 'hs test-account create';
 
@@ -130,6 +130,10 @@ export class CreateTestAccountTool extends Tool<CreateTestAccountInputSchema> {
         const config = fs.readFileSync(configPath, 'utf8');
         configJson = JSON.parse(config) as DeveloperTestAccountConfig;
       } catch (error) {
+        this.logger.debug(toolName, {
+          message: 'Handler caught error reading config file',
+          error: error instanceof Error ? error.message : String(error),
+        });
         return {
           content: [
             formatTextContent(
@@ -149,7 +153,10 @@ export class CreateTestAccountTool extends Tool<CreateTestAccountInputSchema> {
             );
           }
         } catch (error) {
-          // nothing to do here
+          this.logger.debug(toolName, {
+            message: 'Handler caught error checking account by config name',
+            error: error instanceof Error ? error.message : String(error),
+          });
         }
       }
 
@@ -166,7 +173,10 @@ export class CreateTestAccountTool extends Tool<CreateTestAccountInputSchema> {
           );
         }
       } catch (e) {
-        // nothing to do here
+        this.logger.debug(toolName, {
+          message: 'Handler caught error checking account by name',
+          error: e instanceof Error ? e.message : String(e),
+        });
       }
 
       command = addFlag(command, 'name', name);
@@ -213,6 +223,10 @@ export class CreateTestAccountTool extends Tool<CreateTestAccountInputSchema> {
         stderr
       );
     } catch (error) {
+      this.logger.debug(toolName, {
+        message: 'Handler caught error',
+        error: error instanceof Error ? error.message : String(error),
+      });
       return formatTextContents(
         absoluteCurrentWorkingDirectory,
         getErrorMessage(error)
@@ -251,7 +265,7 @@ export class CreateTestAccountTool extends Tool<CreateTestAccountInputSchema> {
           openWorldHint: true,
         },
       },
-      this.handler
+      input => this.wrappedHandler(input)
     );
   }
 }

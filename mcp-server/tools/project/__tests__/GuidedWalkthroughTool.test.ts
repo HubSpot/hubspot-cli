@@ -3,19 +3,15 @@ import {
   McpServer,
   RegisteredTool,
 } from '@modelcontextprotocol/sdk/server/mcp.js';
+import { McpLogger } from '../../../utils/logger.js';
 import { execAsync } from '../../../utils/command.js';
 import { MockedFunction, Mocked } from 'vitest';
 import { mcpFeedbackRequest } from '../../../utils/feedbackTracking.js';
-import { trackToolUsage } from '../../../utils/toolUsageTracking.js';
 
 vi.mock('@modelcontextprotocol/sdk/server/mcp.js');
+vi.mock('../../../utils/logger.js');
 vi.mock('../../../utils/command');
-vi.mock('../../../utils/toolUsageTracking');
 vi.mock('../../../utils/feedbackTracking');
-
-const mockTrackToolUsage = trackToolUsage as MockedFunction<
-  typeof trackToolUsage
->;
 
 const mockExecAsync = execAsync as unknown as MockedFunction<typeof execAsync>;
 const mockMcpFeedbackRequest = mcpFeedbackRequest as MockedFunction<
@@ -24,6 +20,7 @@ const mockMcpFeedbackRequest = mcpFeedbackRequest as MockedFunction<
 
 describe('mcp-server/tools/project/GuidedWalkthroughTool', () => {
   let mockMcpServer: Mocked<McpServer>;
+  let mockLogger: Mocked<McpLogger>;
   let tool: GuidedWalkthroughTool;
   let mockRegisteredTool: RegisteredTool;
 
@@ -33,12 +30,19 @@ describe('mcp-server/tools/project/GuidedWalkthroughTool', () => {
       registerTool: vi.fn(),
     };
 
+    // @ts-expect-error Not mocking the whole thing
+    mockLogger = {
+      debug: vi.fn(),
+      info: vi.fn(),
+      warn: vi.fn(),
+      error: vi.fn(),
+    };
+
     mockRegisteredTool = {} as RegisteredTool;
     mockMcpServer.registerTool.mockReturnValue(mockRegisteredTool);
     mockMcpFeedbackRequest.mockResolvedValue('');
-    mockTrackToolUsage.mockResolvedValue(undefined);
 
-    tool = new GuidedWalkthroughTool(mockMcpServer);
+    tool = new GuidedWalkthroughTool(mockMcpServer, mockLogger);
   });
 
   describe('register', () => {

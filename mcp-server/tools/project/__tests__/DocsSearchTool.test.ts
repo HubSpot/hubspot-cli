@@ -3,24 +3,20 @@ import {
   McpServer,
   RegisteredTool,
 } from '@modelcontextprotocol/sdk/server/mcp.js';
+import { McpLogger } from '../../../utils/logger.js';
 import { http } from '@hubspot/local-dev-lib/http';
 import { isHubSpotHttpError } from '@hubspot/local-dev-lib/errors/index';
 import { MockedFunction, Mocked } from 'vitest';
 import { getConfigDefaultAccountIfExists } from '@hubspot/local-dev-lib/config';
 import { HubSpotConfigAccount } from '@hubspot/local-dev-lib/types/Accounts';
 import { mcpFeedbackRequest } from '../../../utils/feedbackTracking.js';
-import { trackToolUsage } from '../../../utils/toolUsageTracking.js';
 
 vi.mock('@modelcontextprotocol/sdk/server/mcp.js');
+vi.mock('../../../utils/logger.js');
 vi.mock('@hubspot/local-dev-lib/http');
 vi.mock('@hubspot/local-dev-lib/errors/index');
 vi.mock('@hubspot/local-dev-lib/config');
-vi.mock('../../../utils/toolUsageTracking');
 vi.mock('../../../utils/feedbackTracking');
-
-const mockTrackToolUsage = trackToolUsage as MockedFunction<
-  typeof trackToolUsage
->;
 
 const mockMcpFeedbackRequest = mcpFeedbackRequest as MockedFunction<
   typeof mcpFeedbackRequest
@@ -35,6 +31,7 @@ const mockGetConfigDefaultAccountIfExists =
 
 describe('mcp-server/tools/project/DocsSearchTool', () => {
   let mockMcpServer: Mocked<McpServer>;
+  let mockLogger: Mocked<McpLogger>;
   let tool: DocsSearchTool;
   let mockRegisteredTool: RegisteredTool;
 
@@ -44,13 +41,20 @@ describe('mcp-server/tools/project/DocsSearchTool', () => {
       registerTool: vi.fn(),
     };
 
+    // @ts-expect-error Not mocking the whole thing
+    mockLogger = {
+      debug: vi.fn(),
+      info: vi.fn(),
+      warn: vi.fn(),
+      error: vi.fn(),
+    };
+
     mockRegisteredTool = {} as RegisteredTool;
     mockMcpServer.registerTool.mockReturnValue(mockRegisteredTool);
 
     mockMcpFeedbackRequest.mockResolvedValue('');
-    mockTrackToolUsage.mockResolvedValue(undefined);
 
-    tool = new DocsSearchTool(mockMcpServer);
+    tool = new DocsSearchTool(mockMcpServer, mockLogger);
   });
 
   describe('register', () => {
@@ -75,6 +79,7 @@ describe('mcp-server/tools/project/DocsSearchTool', () => {
   describe('handler', () => {
     const mockInput = {
       docsSearchQuery: 'test query',
+      docsSearchLimit: 5,
       absoluteCurrentWorkingDirectory: '/foo',
     };
 
@@ -132,16 +137,8 @@ describe('mcp-server/tools/project/DocsSearchTool', () => {
         },
       });
 
-      expect(result).toEqual({
-        content: [
-          {
-            type: 'text',
-            text: expect.stringContaining('Found 2 documentation results:'),
-          },
-        ],
-      });
-
       const resultText = result.content[0].text;
+      expect(resultText).toContain('Found 2 results, showing top 2:');
       expect(resultText).toContain('**Test Doc 1**');
       expect(resultText).toContain('Test description 1');
       expect(resultText).toContain('https://example.com/doc1');
@@ -152,6 +149,84 @@ describe('mcp-server/tools/project/DocsSearchTool', () => {
       expect(resultText).toContain('https://example.com/doc2');
       expect(resultText).toContain('Score: 0.8');
       expect(resultText).toContain('Test content 2');
+    });
+
+    it('should dedupe results by URL before applying limit', async () => {
+      mockGetConfigDefaultAccountIfExists.mockReturnValue({
+        accountId: 12345,
+      } as HubSpotConfigAccount);
+
+      const mockResponse: DocsSearchResponse = {
+        results: [
+          {
+            title: 'Doc A',
+            content: 'Content A',
+            description: 'Description A',
+            url: 'https://example.com/doc-a',
+            score: 0.9,
+          },
+          {
+            title: 'Doc A duplicate',
+            content: 'Content A again',
+            description: 'Description A again',
+            url: 'https://example.com/doc-a',
+            score: 0.85,
+          },
+          {
+            title: 'Doc B',
+            content: 'Content B',
+            description: 'Description B',
+            url: 'https://example.com/doc-b',
+            score: 0.8,
+          },
+        ],
+      };
+
+      // @ts-expect-error - Mocking axios response structure
+      mockHttp.post.mockResolvedValue({
+        data: mockResponse,
+      });
+
+      const result = await tool.handler(mockInput);
+
+      const resultText = result.content[0].text;
+      expect(resultText).toContain('Found 2 results, showing top 2:');
+      expect(resultText).toContain('**Doc A**');
+      expect(resultText).toContain('**Doc B**');
+      expect(resultText).not.toContain('Doc A duplicate');
+    });
+
+    it('should limit results to the specified docsSearchLimit', async () => {
+      mockGetConfigDefaultAccountIfExists.mockReturnValue({
+        accountId: 12345,
+      } as HubSpotConfigAccount);
+
+      const mockResponse: DocsSearchResponse = {
+        results: Array.from({ length: 10 }, (_, i) => ({
+          title: `Doc ${i + 1}`,
+          content: `Content ${i + 1}`,
+          description: `Description ${i + 1}`,
+          url: `https://example.com/doc${i + 1}`,
+          score: 1 - i * 0.1,
+        })),
+      };
+
+      // @ts-expect-error - Mocking axios response structure
+      mockHttp.post.mockResolvedValue({
+        data: mockResponse,
+      });
+
+      const result = await tool.handler({
+        ...mockInput,
+        docsSearchLimit: 3,
+      });
+
+      const resultText = result.content[0].text;
+      expect(resultText).toContain('Found 10 results, showing top 3:');
+      expect(resultText).toContain('**Doc 1**');
+      expect(resultText).toContain('**Doc 2**');
+      expect(resultText).toContain('**Doc 3**');
+      expect(resultText).not.toContain('**Doc 4**');
     });
 
     it('should return no results message when no documentation is found', async () => {

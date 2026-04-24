@@ -1,5 +1,5 @@
 import { getConfigAccountById } from '@hubspot/local-dev-lib/config';
-import { PLATFORM_VERSIONS } from '@hubspot/local-dev-lib/constants/projects';
+import { PLATFORM_VERSIONS } from '@hubspot/project-parsing-lib/constants';
 import { Argv, ArgumentsCamelCase } from 'yargs';
 import { YargsCommandModule } from '../../types/Yargs.js';
 import { makeYargsHandlerWithUsageTracking } from '../../lib/yargs/makeYargsHandlerWithUsageTracking.js';
@@ -12,7 +12,7 @@ import { migrateApp, MigrateAppArgs } from '../../lib/app/migrate.js';
 import { getIsInProject } from '../../lib/projects/config.js';
 import { makeYargsBuilder } from '../../lib/yargsUtils.js';
 
-const { v2025_2, v2026_03_beta, v2026_03 } = PLATFORM_VERSIONS;
+const { v2025_2, v2026_03_BETA, v2026_03 } = PLATFORM_VERSIONS;
 
 const command = 'migrate';
 const describe = commands.project.migrateApp.describe;
@@ -44,7 +44,7 @@ export function handlerGenerator(
       }
 
       args.platformVersion = unstable
-        ? PLATFORM_VERSIONS.unstable
+        ? PLATFORM_VERSIONS.UNSTABLE
         : platformVersion;
 
       await migrateApp(derivedAccountId, args);
@@ -94,7 +94,7 @@ function appMigrateBuilder(yargs: Argv): Argv<MigrateAppArgs> {
     },
     'platform-version': {
       type: 'string',
-      choices: [v2025_2, v2026_03_beta, v2026_03],
+      choices: [v2025_2, v2026_03_BETA, v2026_03],
       default: v2026_03,
     },
     unstable: {

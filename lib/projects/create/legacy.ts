@@ -11,7 +11,7 @@ import {
   ProjectTemplateRepoConfig,
 } from '../../../types/Projects.js';
 import { debugError } from '../../errorHandlers/index.js';
-import { isV2Project } from '../platformVersion.js';
+import { isLegacyProject } from '@hubspot/project-parsing-lib/projects';
 import { lib } from '../../../lang/en.js';
 
 const PROJECT_TEMPLATE_PROPERTIES = ['name', 'label', 'path'];
@@ -22,7 +22,7 @@ export async function getConfigForPlatformVersion(
   platformVersion: string
 ): Promise<ProjectTemplateRepoConfig> | never {
   let path = '';
-  if (isV2Project(platformVersion)) {
+  if (!isLegacyProject(platformVersion)) {
     path = `${platformVersion}/`;
   }
   const { data } = await fetchRepoFile<ProjectTemplateRepoConfig>(

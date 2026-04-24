@@ -35,7 +35,7 @@ import {
   validateProjectConfig,
   writeProjectConfig,
 } from '../lib/projects/config.js';
-import { isV2Project } from '../lib/projects/platformVersion.js';
+import { isLegacyProject } from '@hubspot/project-parsing-lib/projects';
 import { pollProjectBuildAndDeploy } from '../lib/projects/pollProjectBuildAndDeploy.js';
 import { handleProjectUpload } from '../lib/projects/upload.js';
 import { validateProjectDirectory } from '../lib/prompts/projectNameAndDestPrompt.js';
@@ -240,7 +240,7 @@ export async function uploadAndDeployAction({
         uploadMessage: commands.getStarted.logs.initialUploadMessage,
         forceCreate: true,
         isUploadCommand: false,
-        sendIR: isV2Project(projectConfig.platformVersion),
+        sendIR: !isLegacyProject(projectConfig.platformVersion),
         skipValidation: false,
       });
 

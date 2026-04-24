@@ -103,12 +103,12 @@ async function promptForConfigPath(): Promise<string | undefined> {
     {
       choices: [
         {
-          name: commands.testAccount.create.createFromConfigOption,
-          value: true,
-        },
-        {
           name: commands.testAccount.create.createFromScratchOption,
           value: false,
+        },
+        {
+          name: commands.testAccount.create.createFromConfigOption,
+          value: true,
         },
       ],
     }

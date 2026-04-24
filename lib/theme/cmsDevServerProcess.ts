@@ -13,7 +13,7 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 // cms-dev-server version to install to isolated cache
-const TARGET_CMS_DEV_SERVER_VERSION = '1.2.16';
+const TARGET_CMS_DEV_SERVER_VERSION = '1.2.26';
 
 interface DevServerOptions {
   absoluteSrc: string;

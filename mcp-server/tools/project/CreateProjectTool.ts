@@ -1,8 +1,10 @@
-import { TextContent, TextContentResponse, Tool } from '../../types.js';
+import { TextContent, TextContentResponse } from '../../types.js';
+import { Tool } from '../../Tool.js';
 import {
   McpServer,
   RegisteredTool,
 } from '@modelcontextprotocol/sdk/server/mcp.js';
+import { McpLogger } from '../../utils/logger.js';
 import { z } from 'zod';
 import {
   APP_AUTH_TYPES,
@@ -14,10 +16,9 @@ import { addFlag } from '../../utils/command.js';
 import { absoluteCurrentWorkingDirectory, features } from './constants.js';
 import { runCommandInDir } from '../../utils/command.js';
 import { formatTextContents, formatTextContent } from '../../utils/content.js';
-import { trackToolUsage } from '../../utils/toolUsageTracking.js';
 import { setupHubSpotConfig } from '../../utils/config.js';
 import { getErrorMessage } from '../../../lib/errorHandlers/index.js';
-import { PLATFORM_VERSIONS } from '@hubspot/local-dev-lib/constants/projects';
+import { PLATFORM_VERSIONS } from '@hubspot/project-parsing-lib/constants';
 
 const inputSchema = {
   absoluteCurrentWorkingDirectory,
@@ -59,8 +60,8 @@ export type CreateProjectInputSchema = z.infer<typeof inputSchemaZodObject>;
 const toolName: string = 'create-project';
 
 export class CreateProjectTool extends Tool<CreateProjectInputSchema> {
-  constructor(mcpServer: McpServer) {
-    super(mcpServer);
+  constructor(mcpServer: McpServer, logger: McpLogger) {
+    super(mcpServer, logger, toolName);
   }
   async handler({
     name,
@@ -72,7 +73,6 @@ export class CreateProjectTool extends Tool<CreateProjectInputSchema> {
     absoluteCurrentWorkingDirectory,
   }: CreateProjectInputSchema): Promise<TextContentResponse> {
     setupHubSpotConfig(absoluteCurrentWorkingDirectory);
-    await trackToolUsage(toolName);
     let command = addFlag(
       'hs project create',
       'platform-version',
@@ -134,6 +134,10 @@ export class CreateProjectTool extends Tool<CreateProjectInputSchema> {
 
       return formatTextContents(stdout, stderr);
     } catch (error) {
+      this.logger.debug(toolName, {
+        message: 'Handler caught error',
+        error: error instanceof Error ? error.message : String(error),
+      });
       return formatTextContents(getErrorMessage(error));
     }
   }
@@ -152,7 +156,7 @@ export class CreateProjectTool extends Tool<CreateProjectInputSchema> {
           openWorldHint: false,
         },
       },
-      this.handler
+      input => this.wrappedHandler(input)
     );
   }
 }

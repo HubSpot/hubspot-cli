@@ -1,8 +1,10 @@
-import { TextContent, TextContentResponse, Tool } from '../../types.js';
+import { TextContent, TextContentResponse } from '../../types.js';
+import { Tool } from '../../Tool.js';
 import {
   McpServer,
   RegisteredTool,
 } from '@modelcontextprotocol/sdk/server/mcp.js';
+import { McpLogger } from '../../utils/logger.js';
 import { z } from 'zod';
 import { addFlag } from '../../utils/command.js';
 
@@ -12,7 +14,6 @@ import {
 } from './constants.js';
 import { runCommandInDir } from '../../utils/command.js';
 import { formatTextContents, formatTextContent } from '../../utils/content.js';
-import { trackToolUsage } from '../../utils/toolUsageTracking.js';
 import { setupHubSpotConfig } from '../../utils/config.js';
 
 const inputSchema = {
@@ -35,8 +36,8 @@ type InputSchemaType = z.infer<typeof inputSchemaZodObject>;
 const toolName: string = 'deploy-project';
 
 export class DeployProjectTool extends Tool<InputSchemaType> {
-  constructor(mcpServer: McpServer) {
-    super(mcpServer);
+  constructor(mcpServer: McpServer, logger: McpLogger) {
+    super(mcpServer, logger, toolName);
   }
   async handler({
     absoluteProjectPath,
@@ -44,7 +45,6 @@ export class DeployProjectTool extends Tool<InputSchemaType> {
     buildNumber,
   }: InputSchemaType): Promise<TextContentResponse> {
     setupHubSpotConfig(absoluteCurrentWorkingDirectory);
-    await trackToolUsage(toolName);
     let command = `hs project deploy`;
     const content: TextContent[] = [];
 
@@ -91,7 +91,7 @@ export class DeployProjectTool extends Tool<InputSchemaType> {
           openWorldHint: true,
         },
       },
-      this.handler
+      input => this.wrappedHandler(input)
     );
   }
 }

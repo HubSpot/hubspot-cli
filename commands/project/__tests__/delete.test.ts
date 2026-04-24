@@ -11,7 +11,7 @@ import {
   Deploy,
   ProjectDeletionResponse,
 } from '@hubspot/local-dev-lib/types/Deploy';
-import * as platformVersionUtils from '../../../lib/projects/platformVersion.js';
+import * as platformVersionUtils from '@hubspot/project-parsing-lib/projects';
 import * as promptUtils from '../../../lib/prompts/promptUtils.js';
 import { EXIT_CODES } from '../../../lib/enums/exitCodes.js';
 import { mockHubSpotHttpResponse } from '../../../lib/testUtils.js';
@@ -24,7 +24,7 @@ vi.mock('@hubspot/local-dev-lib/api/projects');
 vi.mock('@hubspot/local-dev-lib/api/appsDev');
 vi.mock('@hubspot/local-dev-lib/config');
 vi.mock('../../../lib/commonOpts');
-vi.mock('../../../lib/projects/platformVersion');
+vi.mock('@hubspot/project-parsing-lib/projects');
 vi.mock('../../../lib/prompts/promptUtils');
 vi.mock('../../../lib/ui/SpinniesManager.js');
 vi.mock('../../../ui/render.js');
@@ -43,7 +43,7 @@ const stageProjectForDeletionSpy = vi.spyOn(
   'stageProjectForDeletion'
 );
 const getDeployStatusSpy = vi.spyOn(projectApiUtils, 'getDeployStatus');
-const isV2ProjectSpy = vi.spyOn(platformVersionUtils, 'isV2Project');
+const isLegacyProjectSpy = vi.spyOn(platformVersionUtils, 'isLegacyProject');
 const confirmPromptSpy = vi.spyOn(promptUtils, 'confirmPrompt');
 const fetchPublicAppsForPortalSpy = vi.spyOn(
   appsDevUtils,
@@ -159,7 +159,7 @@ describe('commands/project/delete', () => {
         fetchProjectSpy.mockReturnValue(
           mockHubSpotHttpResponse(exampleProjectOld)
         );
-        isV2ProjectSpy.mockReturnValue(false);
+        isLegacyProjectSpy.mockReturnValue(true);
       });
 
       it('should call deleteProject directly without staging', async () => {
@@ -198,7 +198,7 @@ describe('commands/project/delete', () => {
         fetchProjectSpy.mockReturnValue(
           mockHubSpotHttpResponse(exampleProjectV2)
         );
-        isV2ProjectSpy.mockReturnValue(true);
+        isLegacyProjectSpy.mockReturnValue(false);
         stageProjectForDeletionSpy
           .mockReturnValueOnce(
             mockHubSpotHttpResponse<ProjectDeletionResponse>(dryRunResponse)
@@ -290,7 +290,7 @@ describe('commands/project/delete', () => {
         fetchProjectSpy.mockReturnValue(
           mockHubSpotHttpResponse(exampleProjectV2)
         );
-        isV2ProjectSpy.mockReturnValue(true);
+        isLegacyProjectSpy.mockReturnValue(false);
         stageProjectForDeletionSpy.mockReturnValue(
           mockHubSpotHttpResponse<ProjectDeletionResponse>(dryRunResponse)
         );
@@ -310,7 +310,7 @@ describe('commands/project/delete', () => {
         fetchProjectSpy.mockReturnValue(
           mockHubSpotHttpResponse(exampleProjectV2)
         );
-        isV2ProjectSpy.mockReturnValue(true);
+        isLegacyProjectSpy.mockReturnValue(false);
         stageProjectForDeletionSpy.mockRejectedValue(
           new Error('Deploy blocked: app has marketplace listing')
         );
@@ -336,7 +336,7 @@ describe('commands/project/delete', () => {
         fetchProjectSpy.mockReturnValue(
           mockHubSpotHttpResponse(exampleProjectOld)
         );
-        isV2ProjectSpy.mockReturnValue(false);
+        isLegacyProjectSpy.mockReturnValue(true);
         args.force = false;
       });
 

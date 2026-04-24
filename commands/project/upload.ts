@@ -3,7 +3,7 @@ import chalk from 'chalk';
 import { uiLogger } from '../../lib/ui/logger.js';
 import { getConfigAccountById } from '@hubspot/local-dev-lib/config';
 import { isSpecifiedError } from '@hubspot/local-dev-lib/errors/index';
-import { isV2Project } from '../../lib/projects/platformVersion.js';
+import { isLegacyProject } from '@hubspot/project-parsing-lib/projects';
 import {
   getProjectConfig,
   validateProjectConfig,
@@ -74,7 +74,7 @@ async function handler(
   let targetAccountId;
   let profileName = args.profile;
 
-  if (isV2Project(projectConfig?.platformVersion)) {
+  if (!isLegacyProject(projectConfig?.platformVersion)) {
     try {
       const profileNamePromptResult = await projectProfilePrompt(
         projectDir,
@@ -119,7 +119,7 @@ async function handler(
         uploadMessage: message,
         forceCreate,
         isUploadCommand: true,
-        sendIR: isV2Project(projectConfig.platformVersion),
+        sendIR: !isLegacyProject(projectConfig.platformVersion),
         skipValidation,
         profile: profileName,
       });

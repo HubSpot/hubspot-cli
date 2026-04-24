@@ -9,7 +9,7 @@ import {
 import { makeYargsHandlerWithUsageTracking } from '../../lib/yargs/makeYargsHandlerWithUsageTracking.js';
 import { migrateApp } from '../../lib/app/migrate.js';
 import { getProjectConfig } from '../../lib/projects/config.js';
-import { PLATFORM_VERSIONS } from '@hubspot/local-dev-lib/constants/projects';
+import { PLATFORM_VERSIONS } from '@hubspot/project-parsing-lib/constants';
 import { logError } from '../../lib/errorHandlers/index.js';
 import { EXIT_CODES } from '../../lib/enums/exitCodes.js';
 import { makeYargsBuilder } from '../../lib/yargsUtils.js';
@@ -34,7 +34,7 @@ export type ProjectMigrateArgs = CommonArgs &
     unstable: boolean;
   };
 
-const { v2025_2, v2026_03_beta, v2026_03 } = PLATFORM_VERSIONS;
+const { v2025_2, v2026_03_BETA, v2026_03 } = PLATFORM_VERSIONS;
 
 const command = 'migrate';
 const describe = commands.project.migrate.describe;
@@ -86,7 +86,7 @@ async function handler(
         {
           ...args,
           platformVersion: unstable
-            ? PLATFORM_VERSIONS.unstable
+            ? PLATFORM_VERSIONS.UNSTABLE
             : platformVersion,
         },
         migratableThemesCount,
@@ -99,7 +99,7 @@ async function handler(
           ...args,
           name: projectConfig?.projectConfig?.name,
           platformVersion: unstable
-            ? PLATFORM_VERSIONS.unstable
+            ? PLATFORM_VERSIONS.UNSTABLE
             : platformVersion,
         },
         projectConfig
@@ -126,7 +126,7 @@ function projectMigrateBuilder(yargs: Argv): Argv<ProjectMigrateArgs> {
   yargs
     .option('platform-version', {
       type: 'string',
-      choices: [v2025_2, v2026_03_beta, v2026_03],
+      choices: [v2025_2, v2026_03_BETA, v2026_03],
       default: v2026_03,
     })
     .option('unstable', {

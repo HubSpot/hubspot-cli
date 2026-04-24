@@ -1,5 +1,5 @@
 import yargs, { ArgumentsCamelCase, Argv } from 'yargs';
-import { PLATFORM_VERSIONS } from '@hubspot/local-dev-lib/constants/projects';
+import { PLATFORM_VERSIONS } from '@hubspot/project-parsing-lib/constants';
 import { uiLogger } from '../../../lib/ui/logger.js';
 import { getConfigAccountById } from '@hubspot/local-dev-lib/config';
 import { migrateApp, MigrateAppArgs } from '../../../lib/app/migrate.js';

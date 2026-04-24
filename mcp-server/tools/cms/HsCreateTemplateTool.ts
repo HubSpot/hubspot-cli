@@ -1,13 +1,14 @@
-import { TextContent, TextContentResponse, Tool } from '../../types.js';
+import { TextContent, TextContentResponse } from '../../types.js';
+import { Tool } from '../../Tool.js';
 import {
   McpServer,
   RegisteredTool,
 } from '@modelcontextprotocol/sdk/server/mcp.js';
+import { McpLogger } from '../../utils/logger.js';
 import { z } from 'zod';
 import { absoluteCurrentWorkingDirectory } from '../project/constants.js';
 import { runCommandInDir } from '../../utils/command.js';
 import { formatTextContents, formatTextContent } from '../../utils/content.js';
-import { trackToolUsage } from '../../utils/toolUsageTracking.js';
 import { addFlag } from '../../utils/command.js';
 import { TEMPLATE_TYPES } from '../../../types/Cms.js';
 import { setupHubSpotConfig } from '../../utils/config.js';
@@ -43,8 +44,8 @@ export type HsCreateTemplateInputSchema = z.infer<typeof inputSchemaZodObject>;
 const toolName: string = 'create-cms-template';
 
 export class HsCreateTemplateTool extends Tool<HsCreateTemplateInputSchema> {
-  constructor(mcpServer: McpServer) {
-    super(mcpServer);
+  constructor(mcpServer: McpServer, logger: McpLogger) {
+    super(mcpServer, logger, toolName);
   }
 
   async handler({
@@ -54,7 +55,6 @@ export class HsCreateTemplateTool extends Tool<HsCreateTemplateInputSchema> {
     absoluteCurrentWorkingDirectory,
   }: HsCreateTemplateInputSchema): Promise<TextContentResponse> {
     setupHubSpotConfig(absoluteCurrentWorkingDirectory);
-    await trackToolUsage(toolName);
 
     const content: TextContent[] = [];
 
@@ -107,6 +107,10 @@ export class HsCreateTemplateTool extends Tool<HsCreateTemplateInputSchema> {
 
       return formatTextContents(stdout, stderr);
     } catch (error) {
+      this.logger.debug(toolName, {
+        message: 'Handler caught error',
+        error: error instanceof Error ? error.message : String(error),
+      });
       return formatTextContents(getErrorMessage(error));
     }
   }
@@ -125,7 +129,7 @@ export class HsCreateTemplateTool extends Tool<HsCreateTemplateInputSchema> {
           openWorldHint: false,
         },
       },
-      this.handler
+      input => this.wrappedHandler(input)
     );
   }
 }

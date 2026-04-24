@@ -3,10 +3,11 @@ import {
   McpServer,
   RegisteredTool,
 } from '@modelcontextprotocol/sdk/server/mcp.js';
+import { McpLogger } from '../../utils/logger.js';
 import z from 'zod';
-import { TextContentResponse, Tool } from '../../types.js';
+import { TextContentResponse } from '../../types.js';
+import { Tool } from '../../Tool.js';
 import { formatTextContents } from '../../utils/content.js';
-import { trackToolUsage } from '../../utils/toolUsageTracking.js';
 import {
   absoluteCurrentWorkingDirectory,
   docsSearchQuery,
@@ -16,9 +17,18 @@ import { getConfigDefaultAccountIfExists } from '@hubspot/local-dev-lib/config';
 import { setupHubSpotConfig } from '../../utils/config.js';
 import { getErrorMessage } from '../../../lib/errorHandlers/index.js';
 
+const docsSearchLimit = z
+  .number()
+  .int()
+  .min(1)
+  .max(20)
+  .default(5)
+  .describe('Maximum number of results to return.');
+
 const inputSchema = {
   absoluteCurrentWorkingDirectory,
   docsSearchQuery,
+  docsSearchLimit,
 };
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -40,16 +50,22 @@ type InputSchemaType = z.infer<typeof inputSchemaZodObject>;
 const toolName: string = 'search-docs';
 
 export class DocsSearchTool extends Tool<InputSchemaType> {
-  constructor(mcpServer: McpServer) {
-    super(mcpServer);
+  constructor(mcpServer: McpServer, logger: McpLogger) {
+    super(mcpServer, logger, toolName);
+  }
+
+  protected getTrackingMeta({
+    docsSearchQuery,
+  }: InputSchemaType): { [key: string]: string } | undefined {
+    return { mode: docsSearchQuery };
   }
 
   async handler({
     docsSearchQuery,
+    docsSearchLimit,
     absoluteCurrentWorkingDirectory,
   }: InputSchemaType): Promise<TextContentResponse> {
     setupHubSpotConfig(absoluteCurrentWorkingDirectory);
-    await trackToolUsage(toolName, { mode: docsSearchQuery });
 
     const accountId = getConfigDefaultAccountIfExists()?.accountId;
 
@@ -71,16 +87,32 @@ export class DocsSearchTool extends Tool<InputSchemaType> {
         return formatTextContents('No documentation found for your query.');
       }
 
-      const formattedResults = results
+      // The docs-search API returns duplicate URLs; dedupe to avoid wasting the result limit on repeats
+      const seen = new Set<string>();
+      const dedupedResults = results.filter(result => {
+        if (seen.has(result.url)) {
+          return false;
+        }
+        seen.add(result.url);
+        return true;
+      });
+
+      const limitedResults = dedupedResults.slice(0, docsSearchLimit);
+
+      const formattedResults = limitedResults
         .map(
           result =>
             `**${result.title}**\n${result.description}\nURL: ${result.url}\nScore: ${result.score}\n\n${result.content}\n---\n`
         )
         .join('\n');
 
-      const successMessage = `Found ${results.length} documentation results:\n\n${formattedResults}`;
+      const successMessage = `Found ${dedupedResults.length} results, showing top ${limitedResults.length}:\n\n${formattedResults}`;
       return formatTextContents(successMessage);
     } catch (error) {
+      this.logger.debug(toolName, {
+        message: 'Handler caught error',
+        error: error instanceof Error ? error.message : String(error),
+      });
       if (isHubSpotHttpError(error)) {
         // Handle different status codes
         return formatTextContents(error.toString());
@@ -104,7 +136,7 @@ export class DocsSearchTool extends Tool<InputSchemaType> {
           openWorldHint: true,
         },
       },
-      this.handler
+      input => this.wrappedHandler(input)
     );
   }
 }

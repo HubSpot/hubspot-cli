@@ -2,10 +2,11 @@ import {
   McpServer,
   RegisteredTool,
 } from '@modelcontextprotocol/sdk/server/mcp.js';
+import { McpLogger } from '../../utils/logger.js';
 import z from 'zod';
-import { TextContentResponse, Tool } from '../../types.js';
+import { TextContentResponse } from '../../types.js';
+import { Tool } from '../../Tool.js';
 import { formatTextContents } from '../../utils/content.js';
-import { trackToolUsage } from '../../utils/toolUsageTracking.js';
 import { absoluteCurrentWorkingDirectory, docUrl } from './constants.js';
 import { http } from '@hubspot/local-dev-lib/http/unauthed';
 import { isHubSpotHttpError } from '@hubspot/local-dev-lib/errors/index';
@@ -27,8 +28,8 @@ type InputSchemaType = z.infer<typeof inputSchemaZodObject>;
 const toolName: string = 'fetch-doc';
 
 export class DocFetchTool extends Tool<InputSchemaType> {
-  constructor(mcpServer: McpServer) {
-    super(mcpServer);
+  constructor(mcpServer: McpServer, logger: McpLogger) {
+    super(mcpServer, logger, toolName);
   }
 
   async handler({
@@ -36,7 +37,6 @@ export class DocFetchTool extends Tool<InputSchemaType> {
     absoluteCurrentWorkingDirectory,
   }: InputSchemaType): Promise<TextContentResponse> {
     setupHubSpotConfig(absoluteCurrentWorkingDirectory);
-    await trackToolUsage(toolName);
 
     try {
       // Append .md extension to the URL
@@ -54,6 +54,10 @@ export class DocFetchTool extends Tool<InputSchemaType> {
 
       return formatTextContents(content);
     } catch (error) {
+      this.logger.debug(toolName, {
+        message: 'Handler caught error',
+        error: error instanceof Error ? error.message : String(error),
+      });
       if (isHubSpotHttpError(error)) {
         return formatTextContents(error.toString());
       }
@@ -76,7 +80,7 @@ export class DocFetchTool extends Tool<InputSchemaType> {
           openWorldHint: true,
         },
       },
-      this.handler
+      input => this.wrappedHandler(input)
     );
   }
 }

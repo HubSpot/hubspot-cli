@@ -1,7 +1,7 @@
 import yargs, { ArgumentsCamelCase, Argv } from 'yargs';
 import profileDeleteCommand from '../delete.js';
 import { getProjectConfig } from '../../../../lib/projects/config.js';
-import { isV2Project } from '../../../../lib/projects/platformVersion.js';
+import { isLegacyProject } from '@hubspot/project-parsing-lib/projects';
 import { uiLogger } from '../../../../lib/ui/logger.js';
 import { EXIT_CODES } from '../../../../lib/enums/exitCodes.js';
 import { CommonArgs } from '../../../../types/Yargs.js';
@@ -11,7 +11,7 @@ import * as promptUtils from '../../../../lib/prompts/promptUtils.js';
 vi.mock('../../../../lib/commonOpts');
 vi.mock('../../../../lib/errorHandlers/index.js');
 vi.mock('../../../../lib/projects/config');
-vi.mock('../../../../lib/projects/platformVersion');
+vi.mock('@hubspot/project-parsing-lib/projects');
 vi.mock('@hubspot/project-parsing-lib/profiles');
 vi.mock('../../../../lib/prompts/promptUtils');
 vi.mock('../../../../lib/validation', () => ({
@@ -48,7 +48,7 @@ type ProjectProfileDeleteArgs = CommonArgs & {
 };
 
 const mockedGetProjectConfig = vi.mocked(getProjectConfig);
-const mockedIsV2Project = vi.mocked(isV2Project);
+const mockedIsLegacyProject = vi.mocked(isLegacyProject);
 const mockedUiLogger = vi.mocked(uiLogger);
 const mockedGetAllHsProfiles = vi.mocked(getAllHsProfiles);
 const mockedListPrompt = vi.mocked(promptUtils.listPrompt);
@@ -97,7 +97,7 @@ describe('commands/project/profile/delete', () => {
         projectConfig: mockProjectConfig,
         projectDir: '/path/to/project',
       });
-      mockedIsV2Project.mockReturnValue(true);
+      mockedIsLegacyProject.mockReturnValue(false);
       mockedGetAllHsProfiles.mockResolvedValue(['qa']);
       mockedListPrompt.mockResolvedValue('qa');
     });
@@ -115,7 +115,7 @@ describe('commands/project/profile/delete', () => {
     });
 
     it('should exit with error for unsupported platform version', async () => {
-      mockedIsV2Project.mockReturnValue(false);
+      mockedIsLegacyProject.mockReturnValue(true);
 
       await profileDeleteCommand.handler(mockArgs);
 

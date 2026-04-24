@@ -45,6 +45,7 @@ import apiCommand from '../commands/api.js';
 import { uiLogger } from '../lib/ui/logger.js';
 import { initializeSpinniesManager } from '../lib/middleware/spinniesMiddleware.js';
 import { addCommandSuggestions } from '../lib/commandSuggestion.js';
+import { pkg } from '../lib/jsonLoader.js';
 
 function getTerminalWidth(): number {
   const width = yargs().terminalWidth();
@@ -139,6 +140,8 @@ const argv = yargs(process.argv.slice(2))
 const argvWithSuggestions = addCommandSuggestions(argv)
   .help()
   .alias('h', 'help')
+  .version(pkg.version)
+  .alias('v', 'version')
   .recommendCommands()
   .demandCommand(1, '')
   .wrap(getTerminalWidth())

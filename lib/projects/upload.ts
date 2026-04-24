@@ -9,6 +9,11 @@ import {
   translate,
 } from '@hubspot/project-parsing-lib/translate';
 import { projectContainsHsMetaFiles } from '@hubspot/project-parsing-lib/projects';
+import {
+  findAndParsePackageJsonFiles,
+  collectWorkspaceDirectories,
+  collectFileDependencies,
+} from '@hubspot/project-parsing-lib/workspaces';
 
 import SpinniesManager from '../ui/SpinniesManager.js';
 import { uiAccountDescription } from '../ui/index.js';
@@ -18,10 +23,15 @@ import util from 'node:util';
 import { lib } from '../../lang/en.js';
 import { ensureProjectExists } from './ensureProjectExists.js';
 import { uiLogger } from '../ui/logger.js';
-import { isV2Project } from './platformVersion.js';
 import ProjectValidationError from '../errors/ProjectValidationError.js';
 import { walk } from '@hubspot/local-dev-lib/fs';
 import { LEGACY_CONFIG_FILES } from '../constants.js';
+import {
+  archiveWorkspacesAndDependencies,
+  getPackageJsonPathsToUpdate,
+  getLockfilePathsToUpdate,
+} from './workspaces.js';
+import { isLegacyProject } from '@hubspot/project-parsing-lib/projects';
 
 async function uploadProjectFiles(
   accountId: number,
@@ -131,6 +141,21 @@ export async function handleProjectUpload<T>({
     lib.projectUpload.handleProjectUpload.compressing(tempFile.name)
   );
 
+  // Collect workspace directories and file: dependencies for v2+ projects only.
+  // Versions <= 2025.1 do not support the new npm workspaces bundling behavior.
+  let workspaceMappings: Awaited<
+    ReturnType<typeof collectWorkspaceDirectories>
+  > = [];
+  let fileDependencyMappings: Awaited<
+    ReturnType<typeof collectFileDependencies>
+  > = [];
+
+  if (!isLegacyProject(projectConfig.platformVersion)) {
+    const parsedPackageJsons = await findAndParsePackageJsonFiles(srcDir);
+    workspaceMappings = await collectWorkspaceDirectories(parsedPackageJsons);
+    fileDependencyMappings = await collectFileDependencies(parsedPackageJsons);
+  }
+
   const output = fs.createWriteStream(tempFile.name);
   const archive = archiver('zip');
 
@@ -202,9 +227,28 @@ export async function handleProjectUpload<T>({
 
   archive.pipe(output);
 
+  const modifiedPackageJsonPaths = getPackageJsonPathsToUpdate(
+    srcDir,
+    workspaceMappings,
+    fileDependencyMappings
+  );
+
+  const lockfilePathsToUpdate = getLockfilePathsToUpdate(
+    srcDir,
+    workspaceMappings,
+    fileDependencyMappings
+  );
+
   let loggedIgnoredNodeModule = false;
 
   archive.directory(srcDir, false, file => {
+    if (
+      modifiedPackageJsonPaths.has(file.name) ||
+      lockfilePathsToUpdate.has(file.name)
+    ) {
+      return false;
+    }
+
     const ignored = shouldIgnoreFile(file.name, true);
     if (ignored) {
       const isNodeModule = file.name.includes('node_modules');
@@ -221,6 +265,15 @@ export async function handleProjectUpload<T>({
     }
     return ignored ? false : file;
   });
+
+  // Archive workspaces and file: dependencies
+  await archiveWorkspacesAndDependencies(
+    archive,
+    srcDir,
+    projectDir,
+    workspaceMappings,
+    fileDependencyMappings
+  );
 
   archive.finalize();
 
@@ -239,7 +292,7 @@ export async function validateSourceDirectory(
     );
   }
 
-  if (isV2Project(projectConfig.platformVersion)) {
+  if (!isLegacyProject(projectConfig.platformVersion)) {
     projectFilePaths.forEach(filePath => {
       const filename = path.basename(filePath);
       if (LEGACY_CONFIG_FILES.includes(filename)) {
@@ -259,7 +312,7 @@ export async function validateNoHSMetaMismatch(
   projectConfig: ProjectConfig
 ) {
   const hasHsMetaFiles = await projectContainsHsMetaFiles(srcDir);
-  if (!isV2Project(projectConfig.platformVersion) && hasHsMetaFiles) {
+  if (isLegacyProject(projectConfig.platformVersion) && hasHsMetaFiles) {
     throw new ProjectValidationError(
       lib.projectUpload.wrongPlatformVersionMetaFiles
     );

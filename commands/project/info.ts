@@ -15,7 +15,7 @@ import { EXIT_CODES } from '../../lib/enums/exitCodes.js';
 import { uiLogger } from '../../lib/ui/logger.js';
 import { commands } from '../../lang/en.js';
 import { getProjectConfig } from '../../lib/projects/config.js';
-import { isV2Project } from '../../lib/projects/platformVersion.js';
+import { isLegacyProject } from '@hubspot/project-parsing-lib/projects';
 import {
   getProjectInfo,
   logProjectInfo,
@@ -39,7 +39,7 @@ async function handler(
     return exit(EXIT_CODES.ERROR);
   }
 
-  if (!isV2Project(projectConfig.platformVersion)) {
+  if (isLegacyProject(projectConfig.platformVersion)) {
     uiLogger.error(
       commands.project.info.errors.unsupportedPlatformVersion(
         projectConfig.platformVersion

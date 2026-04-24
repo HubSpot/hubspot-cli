@@ -19,6 +19,11 @@ export async function projectLogsPrompt({
   if (!functionChoices) {
     return {};
   }
+
+  if (promptOptions?.function) {
+    return { functionName: promptOptions.function };
+  }
+
   if (functionChoices.length === 1) {
     return { functionName: functionChoices[0] };
   }

@@ -5,7 +5,7 @@ import { fetchAppMetadataBySourceId } from '@hubspot/local-dev-lib/api/appsDev';
 import { AppFunctionComponentMetadata } from '@hubspot/local-dev-lib/types/ComponentStructure';
 import { uiLogger } from '../ui/logger.js';
 import { commands } from '../../lang/en.js';
-import { isV2Project } from './platformVersion.js';
+import { isLegacyProject } from '@hubspot/project-parsing-lib/projects';
 import { getDeployedProjectNodes } from './localDev/helpers/project.js';
 import { ProjectConfig } from '../../types/Projects.js';
 import { debugError } from '../errorHandlers/index.js';
@@ -75,7 +75,7 @@ class _ProjectLogsManager {
 
     this.projectId = project.id;
 
-    if (isV2Project(projectConfig.platformVersion)) {
+    if (!isLegacyProject(projectConfig.platformVersion)) {
       const deployedBuildId = project.deployedBuild.buildId;
       if (!deployedBuildId) {
         throw new Error(commands.project.logs.errors.noDeployedBuild);
@@ -197,8 +197,12 @@ class _ProjectLogsManager {
   }
 
   setFunction(functionName?: string) {
-    if (!functionName || this.functions.length === 0) {
+    if (this.functions.length === 0) {
       throw new Error(commands.project.logs.errors.noFunctionsInProject);
+    }
+
+    if (!functionName) {
+      throw new Error(commands.project.logs.errors.functionNameRequired);
     }
 
     this.selectedFunction = this.functions.find(

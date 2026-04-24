@@ -12,7 +12,7 @@ import { EXIT_CODES } from '../../lib/enums/exitCodes.js';
 import { renderInline } from '../../ui/render.js';
 import { getWarningBox } from '../../ui/components/StatusMessageBoxes.js';
 import { commands } from '../../lang/en.js';
-import { isV2Project } from '../../lib/projects/platformVersion.js';
+import { isLegacyProject } from '@hubspot/project-parsing-lib/projects';
 import { isPromptExitError } from '../../lib/errors/PromptExitError.js';
 import {
   resolveProjectName,
@@ -58,7 +58,7 @@ async function handler(
       await confirmDeletion(projectName, derivedAccountId, projectId);
     }
 
-    if (isV2Project(platformVersion) && hasUnifiedComponents) {
+    if (!isLegacyProject(platformVersion) && hasUnifiedComponents) {
       await deleteDeployedComponents(derivedAccountId, projectName);
     }
 

@@ -2,6 +2,7 @@ import {
   McpServer,
   RegisteredTool,
 } from '@modelcontextprotocol/sdk/server/mcp.js';
+import { McpLogger } from '../utils/logger.js';
 import { UploadProjectTools } from './project/UploadProjectTools.js';
 import { CreateProjectTool } from './project/CreateProjectTool.js';
 import { GuidedWalkthroughTool } from './project/GuidedWalkthroughTool.js';
@@ -23,32 +24,38 @@ import { HsListFunctionsTool } from './cms/HsListFunctionsTool.js';
 import { HsFunctionLogsTool } from './cms/HsFunctionLogsTool.js';
 import { CreateTestAccountTool } from './project/CreateTestAccountTool.js';
 
-export function registerProjectTools(mcpServer: McpServer): RegisteredTool[] {
+export function registerProjectTools(
+  mcpServer: McpServer,
+  logger: McpLogger
+): RegisteredTool[] {
   return [
-    new UploadProjectTools(mcpServer).register(),
-    new CreateProjectTool(mcpServer).register(),
-    new GuidedWalkthroughTool(mcpServer).register(),
-    new CreateTestAccountTool(mcpServer).register(),
-    new DeployProjectTool(mcpServer).register(),
-    new AddFeatureToProjectTool(mcpServer).register(),
-    new ValidateProjectTool(mcpServer).register(),
-    new GetConfigValuesTool(mcpServer).register(),
-    new DocsSearchTool(mcpServer).register(),
-    new DocFetchTool(mcpServer).register(),
-    new GetApiUsagePatternsByAppIdTool(mcpServer).register(),
-    new GetApplicationInfoTool(mcpServer).register(),
-    new GetBuildLogsTool(mcpServer).register(),
-    new GetBuildStatusTool(mcpServer).register(),
+    new UploadProjectTools(mcpServer, logger).register(),
+    new CreateProjectTool(mcpServer, logger).register(),
+    new GuidedWalkthroughTool(mcpServer, logger).register(),
+    new CreateTestAccountTool(mcpServer, logger).register(),
+    new DeployProjectTool(mcpServer, logger).register(),
+    new AddFeatureToProjectTool(mcpServer, logger).register(),
+    new ValidateProjectTool(mcpServer, logger).register(),
+    new GetConfigValuesTool(mcpServer, logger).register(),
+    new DocsSearchTool(mcpServer, logger).register(),
+    new DocFetchTool(mcpServer, logger).register(),
+    new GetApiUsagePatternsByAppIdTool(mcpServer, logger).register(),
+    new GetApplicationInfoTool(mcpServer, logger).register(),
+    new GetBuildLogsTool(mcpServer, logger).register(),
+    new GetBuildStatusTool(mcpServer, logger).register(),
   ];
 }
 
-export function registerCmsTools(mcpServer: McpServer): RegisteredTool[] {
+export function registerCmsTools(
+  mcpServer: McpServer,
+  logger: McpLogger
+): RegisteredTool[] {
   return [
-    new HsListTool(mcpServer).register(),
-    new HsCreateModuleTool(mcpServer).register(),
-    new HsCreateTemplateTool(mcpServer).register(),
-    new HsCreateFunctionTool(mcpServer).register(),
-    new HsListFunctionsTool(mcpServer).register(),
-    new HsFunctionLogsTool(mcpServer).register(),
+    new HsListTool(mcpServer, logger).register(),
+    new HsCreateModuleTool(mcpServer, logger).register(),
+    new HsCreateTemplateTool(mcpServer, logger).register(),
+    new HsCreateFunctionTool(mcpServer, logger).register(),
+    new HsListFunctionsTool(mcpServer, logger).register(),
+    new HsFunctionLogsTool(mcpServer, logger).register(),
   ];
 }

@@ -3,24 +3,20 @@ import {
   McpServer,
   RegisteredTool,
 } from '@modelcontextprotocol/sdk/server/mcp.js';
+import { McpLogger } from '../../../utils/logger.js';
 import { getConfigDefaultAccountIfExists } from '@hubspot/local-dev-lib/config';
 import { http } from '@hubspot/local-dev-lib/http';
 import { isHubSpotHttpError } from '@hubspot/local-dev-lib/errors/index';
 import { MockedFunction, Mocked } from 'vitest';
 import { HubSpotConfigAccount } from '@hubspot/local-dev-lib/types/Accounts';
 import { mcpFeedbackRequest } from '../../../utils/feedbackTracking.js';
-import { trackToolUsage } from '../../../utils/toolUsageTracking.js';
 
 vi.mock('@modelcontextprotocol/sdk/server/mcp.js');
-vi.mock('../../../utils/toolUsageTracking');
+vi.mock('../../../utils/logger.js');
 vi.mock('@hubspot/local-dev-lib/http');
 vi.mock('@hubspot/local-dev-lib/errors/index');
 vi.mock('@hubspot/local-dev-lib/config');
 vi.mock('../../../utils/feedbackTracking');
-
-const mockTrackToolUsage = trackToolUsage as MockedFunction<
-  typeof trackToolUsage
->;
 
 const mockMcpFeedbackRequest = mcpFeedbackRequest as MockedFunction<
   typeof mcpFeedbackRequest
@@ -37,6 +33,7 @@ const mockIsHubSpotHttpError = isHubSpotHttpError as unknown as MockedFunction<
 
 describe('mcp-server/tools/project/GetApiUsagePatternsByAppIdTool', () => {
   let mockMcpServer: Mocked<McpServer>;
+  let mockLogger: Mocked<McpLogger>;
   let tool: GetApiUsagePatternsByAppIdTool;
   let mockRegisteredTool: RegisteredTool;
 
@@ -46,12 +43,19 @@ describe('mcp-server/tools/project/GetApiUsagePatternsByAppIdTool', () => {
       registerTool: vi.fn(),
     };
 
+    // @ts-expect-error Not mocking the whole thing
+    mockLogger = {
+      debug: vi.fn(),
+      info: vi.fn(),
+      warn: vi.fn(),
+      error: vi.fn(),
+    };
+
     mockRegisteredTool = {} as RegisteredTool;
     mockMcpServer.registerTool.mockReturnValue(mockRegisteredTool);
     mockMcpFeedbackRequest.mockResolvedValue('');
-    mockTrackToolUsage.mockResolvedValue(undefined);
 
-    tool = new GetApiUsagePatternsByAppIdTool(mockMcpServer);
+    tool = new GetApiUsagePatternsByAppIdTool(mockMcpServer, mockLogger);
   });
 
   describe('register', () => {

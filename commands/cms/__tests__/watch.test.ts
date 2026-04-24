@@ -318,7 +318,6 @@ describe('commands/cms/watch', () => {
         const folderErrorHandler = watchSpy.mock.calls[0][5];
         const error = new AxiosError('Folder error');
 
-        // @ts-expect-error Axios version mismatch between test and implementation
         folderErrorHandler?.(error);
 
         expect(uiLogger.error).toHaveBeenCalledWith(
@@ -337,7 +336,6 @@ describe('commands/cms/watch', () => {
         );
         const error = new AxiosError('File error');
 
-        // @ts-expect-error Axios version mismatch between test and implementation
         fileErrorHandler?.(error);
 
         expect(uiLogger.error).toHaveBeenCalledWith(

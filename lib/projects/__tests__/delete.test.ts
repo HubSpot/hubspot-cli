@@ -12,6 +12,7 @@ import { FetchPublicAppsForPortalResponse } from '@hubspot/local-dev-lib/types/A
 import * as promptUtils from '../../prompts/promptUtils.js';
 import * as errorHandlers from '../../errorHandlers/index.js';
 import * as pollingUtils from '../../polling.js';
+import * as platformVersionUtils from '@hubspot/project-parsing-lib/projects';
 import { uiLogger } from '../../ui/logger.js';
 import SpinniesManager from '../../ui/SpinniesManager.js';
 import { EXIT_CODES } from '../../enums/exitCodes.js';
@@ -36,6 +37,7 @@ vi.mock('@hubspot/local-dev-lib/config');
 vi.mock('../../prompts/promptUtils.js');
 vi.mock('../../errorHandlers/index.js');
 vi.mock('../../ui/SpinniesManager.js');
+vi.mock('@hubspot/project-parsing-lib/projects');
 vi.mock('../../polling.js', async importOriginal => {
   const actual = await importOriginal<typeof import('../../polling.js')>();
   return { ...actual, poll: vi.fn() };
@@ -55,6 +57,7 @@ const mockListPrompt = vi.mocked(promptUtils.listPrompt);
 const mockConfirmPrompt = vi.mocked(promptUtils.confirmPrompt);
 const mockDebugError = vi.mocked(errorHandlers.debugError);
 const mockGetErrorMessage = vi.mocked(errorHandlers.getErrorMessage);
+const mockIsLegacyProject = vi.mocked(platformVersionUtils.isLegacyProject);
 const mockSpinniesAdd = vi.mocked(SpinniesManager.add);
 const mockSpinniesSucceed = vi.mocked(SpinniesManager.succeed);
 const mockSpinniesFail = vi.mocked(SpinniesManager.fail);
@@ -151,6 +154,7 @@ describe('lib/projects/delete', () => {
   describe('checkDeployedComponents()', () => {
     describe('v2 project', () => {
       beforeEach(() => {
+        mockIsLegacyProject.mockReturnValue(false);
         mockFetchProject.mockReturnValue(
           mockHubSpotHttpResponse<Project>({
             id: PROJECT_ID,
@@ -239,6 +243,10 @@ describe('lib/projects/delete', () => {
     });
 
     describe('legacy project', () => {
+      beforeEach(() => {
+        mockIsLegacyProject.mockReturnValue(true);
+      });
+
       it('returns hasUnifiedComponents=false and logs user-visible components', async () => {
         mockFetchProject.mockReturnValue(
           mockHubSpotHttpResponse<Project>({

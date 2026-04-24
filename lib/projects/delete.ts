@@ -20,7 +20,7 @@ import { PromptExitError } from '../errors/PromptExitError.js';
 import { EXIT_CODES } from '../enums/exitCodes.js';
 import { AUTO_GENERATED_COMPONENT_TYPES } from '@hubspot/project-parsing-lib/constants';
 import { mapToUserFacingType } from '@hubspot/project-parsing-lib/transform';
-import { isV2Project } from './platformVersion.js';
+import { isLegacyProject } from '@hubspot/project-parsing-lib/projects';
 import {
   COMPONENT_TYPES,
   SUBCOMPONENT_TYPES,
@@ -134,7 +134,7 @@ export async function checkDeployedComponents(
     throw new Error(commands.project.delete.errors.noPlatformVersion);
   }
 
-  if (!isV2Project(platformVersion)) {
+  if (isLegacyProject(platformVersion)) {
     const userVisibleComponents: string[] = [];
     projectData.deployedBuild?.subbuildStatuses?.forEach(item => {
       if (LEGACY_COMPONENTS_TO_FILTER.includes(item.buildType)) {

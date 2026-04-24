@@ -16,12 +16,9 @@ import {
   ProjectTemplateRepoConfig,
 } from '../../../types/Projects.js';
 import type { ProjectMetadata } from '@hubspot/project-parsing-lib/projects';
-import {
-  APP_EVENTS_KEY as AppEventsKey,
-  PAGES_KEY as PagesKey,
-} from '@hubspot/project-parsing-lib/constants';
+import { APP_EVENTS_KEY as AppEventsKey } from '@hubspot/project-parsing-lib/constants';
 import { SelectProjectTemplatePromptResponse } from '../../prompts/selectProjectTemplatePrompt.js';
-import { isV2Project } from '../platformVersion.js';
+import { isLegacyProject } from '@hubspot/project-parsing-lib/projects';
 import path from 'path';
 import { getConfigForPlatformVersion } from './legacy.js';
 import { hasFeature } from '../../hasFeature.js';
@@ -86,7 +83,6 @@ export async function createV2App(
 
 const componentTypeToGateMap: Record<string, ValueOf<typeof FEATURES>> = {
   [AppEventsKey]: FEATURES.APP_EVENTS,
-  [PagesKey]: FEATURES.APPS_HOME,
   'workflow-action-tool': FEATURES.AGENT_TOOLS,
 };
 
@@ -247,7 +243,7 @@ export function generateComponentPaths({
   authType?: string;
   distribution?: string;
 }): string[] {
-  if (!isV2Project(platformVersion)) {
+  if (isLegacyProject(platformVersion)) {
     return [];
   }
   const components: string[] =

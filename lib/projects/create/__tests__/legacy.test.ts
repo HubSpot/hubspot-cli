@@ -34,7 +34,6 @@ const repoConfig: ProjectTemplateRepoConfig = {
 describe('lib/projects/create/legacy', () => {
   describe('getProjectComponentListFromRepo()', () => {
     it('returns a list of components', async () => {
-      // @ts-expect-error - Mocking AxiosResponse
       mockedFetchRepoFile.mockResolvedValue({
         data: repoConfig,
       } as unknown as AxiosResponse);
@@ -55,7 +54,6 @@ describe('lib/projects/create/legacy', () => {
 
   describe('getProjectTemplateListFromRepo()', () => {
     it('returns a list of project templates', async () => {
-      // @ts-expect-error - Mocking AxiosResponse
       mockedFetchRepoFile.mockResolvedValue({
         data: repoConfig,
       } as unknown as AxiosResponse);
@@ -80,7 +78,6 @@ describe('lib/projects/create/legacy', () => {
     });
 
     it('throws an error if there are no projects listed in the repo config', async () => {
-      // @ts-expect-error - Mocking AxiosResponse
       mockedFetchRepoFile.mockResolvedValue({} as unknown as AxiosResponse);
       await expect(
         getProjectTemplateListFromRepo(
@@ -91,7 +88,6 @@ describe('lib/projects/create/legacy', () => {
     });
 
     it('throws an error if any of the projects in the repo config are missing required properties', async () => {
-      // @ts-expect-error - Mocking AxiosResponse
       mockedFetchRepoFile.mockResolvedValue({
         data: {
           ...repoConfig,

@@ -12,7 +12,7 @@ import {
 import { makeYargsHandlerWithUsageTracking } from '../../lib/yargs/makeYargsHandlerWithUsageTracking.js';
 import { makeYargsBuilder } from '../../lib/yargsUtils.js';
 import { commands } from '../../lang/en.js';
-import { isV2Project } from '../../lib/projects/platformVersion.js';
+import { isLegacyProject } from '@hubspot/project-parsing-lib/projects';
 import { legacyAddComponent } from '../../lib/projects/add/legacyAddComponent.js';
 import { v2AddComponent } from '../../lib/projects/add/v2AddComponent.js';
 import {
@@ -47,9 +47,11 @@ async function handler(
       return exit(EXIT_CODES.ERROR);
     }
 
-    const isV2ProjectCreate = isV2Project(projectConfig.platformVersion);
+    const isLegacyProjectCreate = isLegacyProject(
+      projectConfig.platformVersion
+    );
 
-    if (isV2ProjectCreate) {
+    if (!isLegacyProjectCreate) {
       await v2AddComponent(args, projectDir, projectConfig, derivedAccountId);
     } else {
       await legacyAddComponent(

@@ -21,7 +21,7 @@ import projectCommand from '../project.js';
 import deleteCommand from '../project/delete.js';
 
 import * as projectConfigLib from '../../lib/projects/config.js';
-import * as platformVersionLib from '../../lib/projects/platformVersion.js';
+import * as platformVersionLib from '@hubspot/project-parsing-lib/projects';
 import { uiLogger } from '../../lib/ui/logger.js';
 
 vi.mock('../project/deploy');
@@ -48,7 +48,7 @@ vi.mock('../project/lint');
 vi.mock('../project/profile');
 vi.mock('../../lib/commonOpts');
 vi.mock('../../lib/projects/config.js');
-vi.mock('../../lib/projects/platformVersion.js');
+vi.mock('@hubspot/project-parsing-lib/projects');
 
 const commandSpy = vi
   .spyOn(yargs as Argv, 'command')
@@ -58,9 +58,9 @@ const demandCommandSpy = vi
   .mockReturnValue(yargs as Argv);
 
 const getProjectConfigSpy = vi.spyOn(projectConfigLib, 'getProjectConfig');
-const isUnsupportedPlatformVersionSpy = vi.spyOn(
+const isSupportedPlatformVersionSpy = vi.spyOn(
   platformVersionLib,
-  'isUnsupportedPlatformVersion'
+  'isSupportedPlatformVersion'
 );
 const processExitSpy = vi.spyOn(process, 'exit');
 const uiLoggerErrorSpy = vi.spyOn(uiLogger, 'error');
@@ -130,7 +130,7 @@ describe('commands/project', () => {
     it('should have platform version validation functions available', () => {
       // Verify the necessary functions are available for middleware
       expect(getProjectConfigSpy).toBeDefined();
-      expect(isUnsupportedPlatformVersionSpy).toBeDefined();
+      expect(isSupportedPlatformVersionSpy).toBeDefined();
       expect(uiLoggerErrorSpy).toBeDefined();
       expect(processExitSpy).toBeDefined();
     });

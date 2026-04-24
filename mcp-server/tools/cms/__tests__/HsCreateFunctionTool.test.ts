@@ -4,21 +4,17 @@ import {
   McpServer,
   RegisteredTool,
 } from '@modelcontextprotocol/sdk/server/mcp.js';
+import { McpLogger } from '../../../utils/logger.js';
 import { runCommandInDir } from '../../../utils/command.js';
 import { addFlag } from '../../../utils/command.js';
 import { MockedFunction, Mocked } from 'vitest';
 import { mcpFeedbackRequest } from '../../../utils/feedbackTracking.js';
-import { trackToolUsage } from '../../../utils/toolUsageTracking.js';
 
 vi.mock('@modelcontextprotocol/sdk/server/mcp.js');
+vi.mock('../../../utils/logger.js');
 vi.mock('../../../utils/command');
-vi.mock('../../../utils/toolUsageTracking');
 vi.mock('../../../utils/feedbackTracking');
 vi.mock('@hubspot/local-dev-lib/config');
-
-const mockTrackToolUsage = trackToolUsage as MockedFunction<
-  typeof trackToolUsage
->;
 
 const mockMcpFeedbackRequest = mcpFeedbackRequest as MockedFunction<
   typeof mcpFeedbackRequest
@@ -31,6 +27,7 @@ const mockAddFlag = addFlag as MockedFunction<typeof addFlag>;
 
 describe('HsCreateFunctionTool', () => {
   let mockMcpServer: Mocked<McpServer>;
+  let mockLogger: Mocked<McpLogger>;
   let tool: HsCreateFunctionTool;
   let mockRegisteredTool: RegisteredTool;
 
@@ -40,12 +37,19 @@ describe('HsCreateFunctionTool', () => {
       registerTool: vi.fn(),
     };
 
+    // @ts-expect-error Not mocking the whole thing
+    mockLogger = {
+      debug: vi.fn(),
+      info: vi.fn(),
+      warn: vi.fn(),
+      error: vi.fn(),
+    };
+
     mockRegisteredTool = {} as RegisteredTool;
     mockMcpServer.registerTool.mockReturnValue(mockRegisteredTool);
     mockMcpFeedbackRequest.mockResolvedValue('');
-    mockTrackToolUsage.mockResolvedValue(undefined);
 
-    tool = new HsCreateFunctionTool(mockMcpServer);
+    tool = new HsCreateFunctionTool(mockMcpServer, mockLogger);
   });
 
   describe('register', () => {

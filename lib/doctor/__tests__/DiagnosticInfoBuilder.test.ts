@@ -193,7 +193,6 @@ describe('lib/doctor/DiagnosticInfo', () => {
       };
 
       getProjectConfig.mockResolvedValue(projectConfig);
-      // @ts-expect-error - Mocking AxiosResponse
       fetchProject.mockResolvedValue({
         data: projectDetails,
       } as unknown as AxiosResponse<Project>);

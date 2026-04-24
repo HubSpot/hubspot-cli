@@ -1,12 +1,13 @@
-import { TextContentResponse, Tool } from '../../types.js';
+import { TextContentResponse } from '../../types.js';
+import { Tool } from '../../Tool.js';
 import {
   McpServer,
   RegisteredTool,
 } from '@modelcontextprotocol/sdk/server/mcp.js';
+import { McpLogger } from '../../utils/logger.js';
 import { z } from 'zod';
 import { execAsync } from '../../utils/command.js';
 import { formatTextContents } from '../../utils/content.js';
-import { trackToolUsage } from '../../utils/toolUsageTracking.js';
 import { absoluteCurrentWorkingDirectory } from './constants.js';
 import { setupHubSpotConfig } from '../../utils/config.js';
 
@@ -35,15 +36,14 @@ type InputSchemaType = z.infer<typeof inputSchemaZodObject>;
 const toolName: string = 'guided-walkthrough-cli';
 
 export class GuidedWalkthroughTool extends Tool<InputSchemaType> {
-  constructor(mcpServer: McpServer) {
-    super(mcpServer);
+  constructor(mcpServer: McpServer, logger: McpLogger) {
+    super(mcpServer, logger, toolName);
   }
   async handler({
     command,
     absoluteCurrentWorkingDirectory,
   }: InputSchemaType): Promise<TextContentResponse> {
     setupHubSpotConfig(absoluteCurrentWorkingDirectory);
-    await trackToolUsage(toolName);
     if (command) {
       const { stdout } = await execAsync(`${command} --help`);
       return formatTextContents(
@@ -67,7 +67,7 @@ export class GuidedWalkthroughTool extends Tool<InputSchemaType> {
           openWorldHint: false,
         },
       },
-      this.handler
+      input => this.wrappedHandler(input)
     );
   }
 }

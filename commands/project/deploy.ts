@@ -2,7 +2,7 @@ import { Argv, ArgumentsCamelCase } from 'yargs';
 import { fetchProject } from '@hubspot/local-dev-lib/api/projects';
 import { getConfigAccountById } from '@hubspot/local-dev-lib/config';
 import { isHubSpotHttpError } from '@hubspot/local-dev-lib/errors/index';
-import { isV2Project } from '../../lib/projects/platformVersion.js';
+import { isLegacyProject } from '@hubspot/project-parsing-lib/projects';
 import { logError, ApiErrorContext } from '../../lib/errorHandlers/index.js';
 import {
   getProjectConfig,
@@ -78,7 +78,10 @@ async function handler(
     isInProjectDirectory = true;
   } catch (e) {}
 
-  if (isInProjectDirectory && isV2Project(projectConfig?.platformVersion)) {
+  if (
+    isInProjectDirectory &&
+    !isLegacyProject(projectConfig?.platformVersion)
+  ) {
     try {
       const profileName = await projectProfilePrompt(
         projectDir!,
@@ -181,7 +184,7 @@ async function handler(
       targetAccountId,
       projectName,
       buildIdToDeploy,
-      isV2Project(projectConfig?.platformVersion),
+      isLegacyProject(projectConfig?.platformVersion),
       forceOption
     );
 

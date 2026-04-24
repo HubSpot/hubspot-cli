@@ -70,6 +70,23 @@ body:
       description: If applicable, add screenshots to help explain the problem.
 
   - type: textarea
+    id: debug-output
+    attributes:
+      label: Debug Output
+      description: |
+        Re-run the failing command with the `--debug` flag and paste the output below. For long outputs, consider sharing a [gist](https://gist.github.com) link instead. The placeholder wraps the output in a collapsible block so it doesn't clutter the issue.
+      placeholder: |
+        <details>
+        <summary>Debug output</summary>
+
+        ```
+        $ hs <command> --debug
+        ...paste output here...
+        ```
+
+        </details>
+
+  - type: textarea
     id: additional
     attributes:
       label: Additional Context
