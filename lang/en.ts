@@ -2983,7 +2983,7 @@ export const commands = {
         salesLevel:
           'Sales Hub tier. Options: FREE, STARTER, PROFESSIONAL, ENTERPRISE',
         contentLevel:
-          'CMS Hub tier. Options: FREE, STARTER, PROFESSIONAL, ENTERPRISE',
+          'Content Hub tier. Options: FREE, STARTER, PROFESSIONAL, ENTERPRISE',
         commerceLevel:
           'Commerce Hub tier. Options: FREE, PROFESSIONAL, ENTERPRISE',
       },
