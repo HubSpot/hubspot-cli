@@ -82,7 +82,7 @@ const inputSchema = {
     .enum(ACCOUNT_LEVEL_CHOICES)
     .optional()
     .describe(
-      `CMS Hub tier level. Options: ${ACCOUNT_LEVEL_CHOICES.join(', ')}. Defaults to ENTERPRISE if not specified.`
+      `Content Hub tier level. Options: ${ACCOUNT_LEVEL_CHOICES.join(', ')}. Defaults to ENTERPRISE if not specified.`
     ),
   commerceLevel: z
     .enum(ACCOUNT_LEVEL_CHOICES_WITHOUT_STARTER)

@@ -2,6 +2,7 @@
 import yargs, { Argv, ArgumentsCamelCase } from 'yargs';
 import * as configLib from '@hubspot/local-dev-lib/config';
 import * as defaultAccountOverrideLib from '@hubspot/local-dev-lib/config/defaultAccountOverride';
+import * as hsSettingsLib from '@hubspot/local-dev-lib/config/hsSettings';
 import { HUBSPOT_ACCOUNT_TYPES } from '@hubspot/local-dev-lib/constants/config';
 import * as commonOpts from '../../../lib/commonOpts.js';
 import * as usageTrackingLib from '../../../lib/usageTracking.js';
@@ -12,8 +13,18 @@ import accountListCommand from '../list.js';
 vi.mock('../../../lib/commonOpts');
 vi.mock('@hubspot/local-dev-lib/config');
 vi.mock('@hubspot/local-dev-lib/config/defaultAccountOverride');
+vi.mock('@hubspot/local-dev-lib/config/hsSettings');
+vi.mock('@hubspot/local-dev-lib/path', () => ({
+  getCwd: vi.fn().mockReturnValue('/test/project'),
+  getExt: vi.fn(),
+  isRelativePath: vi.fn(),
+  resolveLocalPath: vi.fn(),
+}));
 vi.mock('../../../lib/ui/index.js');
 vi.mock('../../../lib/ui/table.js');
+vi.mock('../../../lib/link/renderLinkedAccountsTable.js', () => ({
+  renderLinkedAccountsTable: vi.fn().mockResolvedValue(undefined),
+}));
 
 const getConfigFilePathSpy = vi.spyOn(configLib, 'getConfigFilePath');
 const getAllConfigAccountsSpy = vi.spyOn(configLib, 'getAllConfigAccounts');
@@ -24,6 +35,14 @@ const getConfigDefaultAccountIfExistsSpy = vi.spyOn(
 const getDefaultAccountOverrideFilePathSpy = vi.spyOn(
   defaultAccountOverrideLib,
   'getDefaultAccountOverrideFilePath'
+);
+const getHsSettingsFileIfExistsSpy = vi.spyOn(
+  hsSettingsLib,
+  'getHsSettingsFileIfExists'
+);
+const getHsSettingsFilePathSpy = vi.spyOn(
+  hsSettingsLib,
+  'getHsSettingsFilePath'
 );
 const trackCommandUsageSpy = vi.spyOn(usageTrackingLib, 'trackCommandUsage');
 
@@ -39,6 +58,8 @@ describe('commands/account/list', () => {
     getAllConfigAccountsSpy.mockReturnValue([]);
     getConfigDefaultAccountIfExistsSpy.mockReturnValue(undefined);
     getDefaultAccountOverrideFilePathSpy.mockReturnValue(null);
+    getHsSettingsFileIfExistsSpy.mockReturnValue(null);
+    getHsSettingsFilePathSpy.mockReturnValue(null);
     trackCommandUsageSpy.mockImplementation(async () => {});
   });
 
@@ -218,6 +239,88 @@ describe('commands/account/list', () => {
 
       expect(getAllConfigAccountsSpy).toHaveBeenCalled();
       expect(uiLogger.log).toHaveBeenCalled();
+    });
+
+    it('should show linked default title and settings path in linked directory', async () => {
+      getHsSettingsFileIfExistsSpy.mockReturnValue({
+        accounts: [111],
+        localDefaultAccount: 111,
+      });
+      getHsSettingsFilePathSpy.mockReturnValue('/test/.hs/settings.json');
+
+      await accountListCommand.handler(args);
+
+      expect(uiLogger.log).toHaveBeenCalledWith(
+        expect.stringContaining('Linked Default Account')
+      );
+      expect(uiLogger.log).toHaveBeenCalledWith(
+        expect.stringContaining('.hs/settings.json')
+      );
+    });
+
+    it('should show linked accounts label in linked directory', async () => {
+      getHsSettingsFileIfExistsSpy.mockReturnValue({
+        accounts: [111],
+        localDefaultAccount: 111,
+      });
+      getHsSettingsFilePathSpy.mockReturnValue('/test/.hs/settings.json');
+
+      await accountListCommand.handler(args);
+
+      expect(uiLogger.log).toHaveBeenCalledWith(
+        expect.stringContaining('Linked Accounts')
+      );
+    });
+
+    it('should not show override section in linked directory', async () => {
+      getHsSettingsFileIfExistsSpy.mockReturnValue({
+        accounts: [111],
+        localDefaultAccount: 111,
+      });
+      getHsSettingsFilePathSpy.mockReturnValue('/test/.hs/settings.json');
+      getDefaultAccountOverrideFilePathSpy.mockReturnValue('/test/.hsaccount');
+      getConfigDefaultAccountIfExistsSpy.mockReturnValue({
+        accountId: 111,
+      } as any);
+
+      await accountListCommand.handler(args);
+
+      expect(uiLogger.log).not.toHaveBeenCalledWith(
+        expect.stringContaining('Default Account Override')
+      );
+    });
+
+    it('should fall back to global config display when settings file has empty accounts', async () => {
+      getHsSettingsFileIfExistsSpy.mockReturnValue({
+        accounts: [],
+        localDefaultAccount: undefined,
+      });
+      getConfigDefaultAccountIfExistsSpy.mockReturnValue({
+        accountId: 123456,
+      } as any);
+
+      await accountListCommand.handler(args);
+
+      expect(uiLogger.log).toHaveBeenCalledWith(
+        expect.stringContaining('Default Account')
+      );
+      expect(uiLogger.log).not.toHaveBeenCalledWith(
+        expect.stringContaining('Linked Default Account')
+      );
+    });
+
+    it('should always show all accounts section even in linked directory', async () => {
+      getHsSettingsFileIfExistsSpy.mockReturnValue({
+        accounts: [111],
+        localDefaultAccount: 111,
+      });
+      getHsSettingsFilePathSpy.mockReturnValue('/test/.hs/settings.json');
+
+      await accountListCommand.handler(args);
+
+      expect(uiLogger.log).toHaveBeenCalledWith(
+        expect.stringContaining('Accounts')
+      );
     });
   });
 });

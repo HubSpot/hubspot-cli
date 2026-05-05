@@ -2,31 +2,33 @@ import chalk from 'chalk';
 import { mapToUserFriendlyName } from '@hubspot/project-parsing-lib/transform';
 import { PLATFORM_VERSIONS } from '@hubspot/project-parsing-lib/constants';
 import { PERSONAL_ACCESS_KEY_AUTH_METHOD } from '@hubspot/local-dev-lib/constants/auth';
+import { LOCAL_DEV_DEFAULT_PORT } from '../lib/constants.js';
 import {
   ARCHIVED_HUBSPOT_CONFIG_YAML_FILE_NAME,
-  GLOBAL_CONFIG_PATH,
   DEFAULT_HUBSPOT_CONFIG_YAML_FILE_NAME,
+  GLOBAL_CONFIG_PATH,
 } from '@hubspot/local-dev-lib/constants/config';
 import {
+  indent,
+  UI_COLORS,
   uiAccountDescription,
+  uiAuthCommandReference,
   uiBetaTag,
   uiCommandReference,
   uiLink,
-  UI_COLORS,
-  uiAuthCommandReference,
 } from '../lib/ui/index.js';
 import {
+  getLocalDevUiUrl,
   getProjectDetailUrl,
   getProjectSettingsUrl,
-  getLocalDevUiUrl,
 } from '../lib/projects/urls.js';
 import { getProductUpdatesUrl } from '../lib/links.js';
 import {
-  APP_DISTRIBUTION_TYPES,
   APP_AUTH_TYPES,
+  APP_DISTRIBUTION_TYPES,
+  LEGACY_PUBLIC_APP_FILE,
   PROJECT_CONFIG_FILE,
   PROJECT_WITH_APP,
-  LEGACY_PUBLIC_APP_FILE,
 } from '../lib/constants.js';
 import { HubSpotConfigAccount } from '@hubspot/local-dev-lib/types/Accounts';
 
@@ -188,9 +190,13 @@ export const commands = {
       },
       list: {
         accounts: `${chalk.bold('Accounts')}:`,
+        allAccounts: `${chalk.bold('All Accounts')}:`,
+        linkedAccounts: `${chalk.bold('Linked Accounts')}:`,
         defaultAccountTitle: `${chalk.bold('Default Account')}`,
+        linkedDefaultTitle: `${chalk.bold('Linked Default Account')}`,
         currentResolvedDefaultAccount: (accountId: number) =>
           `Account: ${uiAccountDescription(accountId)}`,
+        directory: (dir: string) => `Directory: ${dir}`,
         describe: 'List names of accounts defined in config.',
         configPath: (configPath: string) => `Source: ${configPath}`,
         overrideFilePathTitle: `${chalk.bold('Default Account Override')}`,
@@ -245,6 +251,94 @@ export const commands = {
           defaultAccountUpdated: (accountName: string) =>
             `Default account updated to "${accountName}"`,
         },
+        linked: {
+          editingLinkedDefault: (dir: string) =>
+            `Editing the default linked account for this directory (not the global default):\n${indent(1)}${dir}`,
+          alreadyDefault: (accountId: number) =>
+            `${uiAccountDescription(accountId)} is the only linked account and is already the default.`,
+          setLinkedDefault: (account: string) =>
+            `Linked default set to ${chalk.cyan(account)}`,
+          accountNotLinked: (account: string) =>
+            `${account} is not linked to this directory.`,
+          promptToLink: (account: string) =>
+            `Would you like to link ${account} to this directory?`,
+          settingGlobalDefault: 'Setting global default instead.',
+          nonInteractiveNotLinked: (account: string) =>
+            `${account} is not linked to this directory. Setting global default instead.`,
+        },
+      },
+      link: {
+        describe:
+          'Link authenticated HubSpot accounts to the current directory',
+        verboseDescribe: `Link one or more authenticated HubSpot accounts to the current directory. Linked accounts are saved in a local ${chalk.bold('.hs/settings.json')} file (added to .gitignore automatically).\n\nThis lets the CLI know which account to use when you run commands from this directory, without changing the global default. Run ${uiCommandReference('hs account current')} to see the active configuration.`,
+        shared: {
+          noLinkedAccounts: 'No HubSpot accounts are linked in this directory.',
+          globalAccountsAvailable: (count: number) =>
+            `You have ${chalk.cyan(count.toString())} ${count === 1 ? 'account' : 'accounts'} in your global config.`,
+          configurePrompt: `To configure this directory, run:\n${indent(1)}${uiCommandReference('hs account link')}`,
+          deprecatedConfigNotSupported: (command: string) =>
+            `${uiCommandReference(command)} does not support deprecated config. Run ${uiCommandReference('hs config migrate')} to migrate to global config. Then re-run ${uiCommandReference(command)}`,
+          writeSettingsFailed: (path: string, err: unknown) =>
+            `Failed to write to ${path}: ${err}`,
+          savedToSettings: (path: string) => `Saved to ${path}`,
+          usingLinkedAccounts: (settingsPath: string) =>
+            `This directory has linked accounts via ${settingsPath}. Only linked accounts will be available for this command. To manage linked accounts, run ${uiCommandReference('hs account link')}.`,
+          accountAutoLinked: (accountId: number) =>
+            `Automatically linked ${uiAccountDescription(accountId)} to this directory.`,
+          accountAutoLinkFailed: (accountId: number) =>
+            `Could not automatically link ${uiAccountDescription(accountId)} to this directory. Run ${uiCommandReference('hs account link')} to link it manually.`,
+        },
+        linkingDirectory: (dir: string) =>
+          `Linking HubSpot account(s) for directory:\n${indent(1)}${dir}`,
+        managingLinkedAccounts: (dir: string) =>
+          `Managing linked accounts for:\n${indent(1)}${dir}`,
+        settingsInfo: (path: string) =>
+          `\u2139 Accounts linked here are saved in ${path}`,
+        success: {
+          created: (path: string) =>
+            `Linked to ${path} (created .hs and added to .gitignore).\n${indent(1)}Now when you work within this directory, the CLI will use the linked account(s).`,
+        },
+        errors: {
+          authFailed: `Authentication failed to complete`,
+        },
+        events: {
+          accountsLinked: (count: number) =>
+            `Linked ${count} account${count !== 1 ? 's' : ''}`,
+          accountsUnlinked: (count: number) =>
+            `Unlinked ${count} account${count !== 1 ? 's' : ''}`,
+          overrideAccountDetected: (accountId: number) =>
+            `\nCurrent default account (from .hsaccount):\n${indent(1)}${uiAccountDescription(accountId)}`,
+          defaultAccountSet: (accountId: number) =>
+            `Linked default account set to ${chalk.cyan(uiAccountDescription(accountId))}`,
+          defaultAccountRemoved: (isSelectionRequired: boolean) =>
+            `The linked default account was removed. ${isSelectionRequired ? 'A linked default account is required.\n' : ''}`,
+          defaultAccountRemains: (accountId: number) =>
+            `Linked default account remains ${chalk.cyan(uiAccountDescription(accountId))}`,
+          updatedLinkedAccounts: 'Updated linked accounts',
+          noAccountsLinked: `All accounts have been unlinked. Your global config accounts will be used.\n${indent(1)}The ${chalk.bold('.hs')} directory is no longer needed and can be safely deleted.`,
+          overrideFileRemoved: '.hsaccount file removed',
+          invalidDefaultAccount: (accountId: number) =>
+            `Default account ${uiAccountDescription(accountId)} is not in the linked accounts list and has been reset. Please select a new default.`,
+        },
+        prompts: {
+          howToProceed: 'How would you like to link an account?',
+          whatToDo: 'Which action would you like to perform?',
+          linkExisting: 'Link existing authenticated account(s)',
+          authenticateNew: 'Authenticate and link a new account',
+          cancel: 'Cancel',
+          selectDefault: 'Select a linked default account',
+          selectToLink: 'Select authenticated account(s) to link:',
+          selectToUnlink: 'Select account(s) to unlink',
+          alreadyLinked: '- Already linked',
+          fromHsAccount: '(from .hsaccount)',
+          newlyAuthenticated: '(just authenticated)',
+          mustSelectOne: 'You must select at least one account to link',
+          keepAsDefault: 'Keep this as the default?',
+        },
+      },
+      unlink: {
+        describe: 'Unlink HubSpot account(s) from the current directory',
+        verboseDescribe: `Remove one or more linked accounts from this directory's ${chalk.bold('.hs/settings.json')}. If the default account is removed, you will be prompted to select a new one.\n\nThis does not delete the account from the global config - it only removes the local association.`,
       },
       remove: {
         describe: 'Remove an account from the config.',
@@ -326,6 +420,9 @@ export const commands = {
         },
         name: (name: string) => `${chalk.bold('Account name')}: ${name}`,
         scopeGroups: `${chalk.bold('Scopes available')}:`,
+        linkedDefaultTitle: `${chalk.bold('Linked Default Account')}`,
+        settingsPath: (path: string) => `Source: ${path}`,
+        linkedDefault: (account: string) => `Account: ${account}`,
       },
       clean: {
         describe:
@@ -1825,6 +1922,7 @@ export const commands = {
           'The id of the account to install apps and test on. Must be used with --project-account. Supported on platform versions 2025.2 and newer.',
         account:
           'The id of the account to upload your project to. Unsupported on platform versions 2025.2 and newer.',
+        port: `The port for the local dev server. Defaults to ${LOCAL_DEV_DEFAULT_PORT}.`,
       },
     },
     create: {
@@ -1838,6 +1936,10 @@ export const commands = {
           'Failed to fetch the list of available project templates. Please try again later.',
         cannotNestProjects: (projectDir: string) =>
           `A project already exists at ${projectDir}. Projects cannot be nested within other projects. Please choose a different destination and try again.`,
+      },
+      warnings: {
+        betaPlatformVersion: (platformVersion: string) =>
+          `Your portal must be enrolled in the beta to use platform version ${platformVersion}. If you are not enrolled in the beta, your upload will fail. ${uiLink('Enroll in the beta', getProductUpdatesUrl('286886'))}`,
       },
       logs: {
         success: (projectName: string, projectDest: string) =>
@@ -2375,6 +2477,7 @@ export const commands = {
       loading: {
         checking: 'Checking lint packages and configuration…',
         creatingConfig: 'Creating ESLint configuration files…',
+        addingLintScripts: 'Adding lint scripts to package.json files…',
         linting: 'Linting…',
       },
       noProjectConfig:
@@ -2404,10 +2507,24 @@ export const commands = {
         `ESLint configuration file not found in the following ${directories.length === 1 ? 'directory' : 'directories'}:\n${directories.map(d => `  - ${d}`).join('\n')}\n\nWould you like to set up the required ESLint configuration?`,
       eslintConfigCreated: (configPath: string) =>
         `ESLint configuration created at ${configPath}`,
+      createEslintConfigRequiresV2Platform: (
+        platformVersion?: string | null
+      ) => {
+        if (!platformVersion) {
+          return 'Automatic ESLint configuration requires a Developer Platform project (2025.2 or later) with platformVersion set in hsproject.json. Add an eslint.config.js file manually, or set platformVersion and try again.';
+        }
+        return `Automatic ESLint configuration is not available for platform version ${platformVersion}. Use Developer Platform 2025.2 or later, or add eslint.config.js manually.`;
+      },
+      failedToFetchRemoteEslintConfig: (platformVersion: string) =>
+        `Could not download the ESLint config from HubSpot project components for platform version ${platformVersion}. Check your network connection and try again, or add eslint.config.js manually.`,
       failedToCreateEslintConfig: (configPath: string) =>
         `Failed to create ESLint configuration at ${configPath}`,
       eslintConfigRequired:
         'ESLint configuration is required to run the lint command. Run the command again to create the configuration.',
+      lintScriptsAdded: (scriptNames: string[], packageJsonPath: string) =>
+        `Added ${scriptNames.map(s => `"${s}"`).join(' and ')} to ${packageJsonPath}`,
+      failedToAddLintScripts: (packageJsonPath: string) =>
+        `Failed to add lint scripts to ${packageJsonPath}`,
     },
     updateDeps: {
       help: {
@@ -2584,6 +2701,34 @@ export const commands = {
         project: 'name of the project to delete',
         force: 'skip confirmation prompt',
       },
+    },
+    installStatus: {
+      describe:
+        'Check whether a static auth app in the current project is installed in the target account. This command must be run from within a HubSpot project directory.',
+      examples: {
+        default:
+          'Check install status for the static auth app in the current project',
+        json: 'Output install status as JSON',
+      },
+      errors: {
+        noProjectConfig: `No project config found. Run this command from within a HubSpot project directory, or use ${uiCommandReference('hs project create')} to create a new one.`,
+        unsupportedPlatformVersion: (platformVersion: string) =>
+          `This command is only supported for projects on platform version 2025.2 or later (detected: ${platformVersion}).`,
+        failedToParseProject:
+          'Failed to parse the project. Check your project configuration is valid and try again.',
+        noAppInProject:
+          'No app was found in the local project. Install status is only available for projects that contain an app.',
+        unsupportedAuthType: (authType: string) =>
+          `This command only supports static auth apps. Detected auth type: ${authType}.`,
+      },
+      success: {
+        installed: (appName: string, accountId: number) =>
+          `${chalk.bold(appName)} is installed in ${uiAccountDescription(accountId)}.`,
+        installedWithOutdatedScopes: (appName: string, accountId: number) =>
+          `${chalk.bold(appName)} is installed in ${uiAccountDescription(accountId)} with outdated scopes. Reinstall the app to grant the latest scopes.`,
+      },
+      notInstalled: (appName: string, accountId: number) =>
+        `${chalk.bold(appName)} is not installed in ${uiAccountDescription(accountId)}.`,
     },
   },
   sandbox: {
@@ -2983,7 +3128,7 @@ export const commands = {
         salesLevel:
           'Sales Hub tier. Options: FREE, STARTER, PROFESSIONAL, ENTERPRISE',
         contentLevel:
-          'CMS Hub tier. Options: FREE, STARTER, PROFESSIONAL, ENTERPRISE',
+          'Content Hub tier. Options: FREE, STARTER, PROFESSIONAL, ENTERPRISE',
         commerceLevel:
           'Commerce Hub tier. Options: FREE, PROFESSIONAL, ENTERPRISE',
       },
@@ -3868,6 +4013,10 @@ export const commands = {
 };
 
 export const lib = {
+  linkedDirectory: {
+    warning: (action: string, settingsPath: string) =>
+      `This directory has linked accounts via ${settingsPath}. ${uiCommandReference(action)} modifies your global config, not the linked directory settings. Use ${uiCommandReference('hs account link')} to manage linked accounts.\n`,
+  },
   parsing: {
     unableToParseStringToNumber: 'Unable to parse string to number',
   },
@@ -4670,6 +4819,8 @@ export const lib = {
         `Continue testing on ${chalk.bold(`${accountName} (${accountType})`)}? (Y/n)`,
       confirmUseExistingDeveloperTestAccount: (accountName: string) =>
         `Continue with ${accountName}? This account isn't currently connected to the HubSpot CLI. By continuing, you'll be prompted to generate a personal access key and connect it.`,
+      confirmLinkExistingDeveloperTestAccount: (accountName: string) =>
+        `${accountName} is not linked to this directory. Would you like to link it?`,
       noAccountId:
         'No account ID found for the selected account. Please try again.',
     },
@@ -5213,10 +5364,10 @@ export const lib = {
       validJson: 'JSON files valid',
     },
     port: {
-      inUse: (port: number) => `Port ${port} is in use`,
-      inUseSecondary: `Make sure it is available before running ${uiCommandReference('hs project dev')}`,
+      inUse: (port: number) => `Default port ${port} is in use`,
+      inUseSecondary: `Make sure it is available before running ${uiCommandReference('hs project dev')}, or use ${uiCommandReference('--port')} to specify a different port`,
       available: (port: number) =>
-        `Port ${port} available for local development`,
+        `Default port ${port} available for local development`,
     },
     projectValidation: {
       valid: 'Project configuration and structure is valid',

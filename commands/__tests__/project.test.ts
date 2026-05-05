@@ -19,6 +19,7 @@ import list from '../project/list.js';
 import info from '../project/info.js';
 import projectCommand from '../project.js';
 import deleteCommand from '../project/delete.js';
+import appInstallStatus from '../project/appInstallStatus.js';
 
 import * as projectConfigLib from '../../lib/projects/config.js';
 import * as platformVersionLib from '@hubspot/project-parsing-lib/projects';
@@ -105,6 +106,7 @@ describe('commands/project', () => {
       list,
       info,
       deleteCommand,
+      appInstallStatus,
     ];
 
     it('should demand the command takes one positional argument', () => {

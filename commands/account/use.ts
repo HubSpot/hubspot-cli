@@ -12,6 +12,12 @@ import {
   getDefaultAccountOverrideAccountId,
   getDefaultAccountOverrideFilePath,
 } from '@hubspot/local-dev-lib/config/defaultAccountOverride';
+import {
+  getHsSettingsFileIfExists,
+  getHsSettingsFilePath,
+  writeHsSettingsFile,
+} from '@hubspot/local-dev-lib/config/hsSettings';
+import { getCwd } from '@hubspot/local-dev-lib/path';
 import { ENVIRONMENTS } from '@hubspot/local-dev-lib/constants/environments';
 import { commands } from '../../lang/en.js';
 import { uiLogger } from '../../lib/ui/logger.js';
@@ -25,6 +31,11 @@ import { makeYargsBuilder } from '../../lib/yargsUtils.js';
 import { HubSpotConfigAccount } from '@hubspot/local-dev-lib/types/Accounts';
 import { authenticateNewAccount } from '../../lib/accountAuth.js';
 import { EXIT_CODES } from '../../lib/enums/exitCodes.js';
+import { confirmPrompt } from '../../lib/prompts/promptUtils.js';
+import { handleLinkedUseAction } from '../../lib/link/index.js';
+import { isDirectoryLinked } from '../../lib/link/linkUtils.js';
+import { ACTION_RESULT_STATUS } from '../../types/Link.js';
+import { DEFAULT_HS_SETTINGS_PATH } from '@hubspot/local-dev-lib/constants/config';
 
 const command = 'use [account]';
 const describe = commands.account.subcommands.use.describe;
@@ -33,7 +44,113 @@ type AccountUseArgs = CommonArgs & {
   account?: string;
 };
 
-async function handler(
+async function handleLinkedUse(
+  args: ArgumentsCamelCase<AccountUseArgs>,
+  hsSettings: { accounts: number[]; localDefaultAccount: number | undefined }
+): Promise<void> {
+  const { exit } = args;
+  uiLogger.log(
+    commands.account.subcommands.use.linked.editingLinkedDefault(getCwd())
+  );
+  uiLogger.log('');
+
+  if (!args.account && hsSettings.accounts.length === 1) {
+    uiLogger.log(
+      commands.account.subcommands.use.linked.alreadyDefault(
+        hsSettings.accounts[0]
+      )
+    );
+    return exit(EXIT_CODES.SUCCESS);
+  }
+
+  let targetAccountId: number | undefined;
+
+  if (args.account) {
+    const account = getConfigAccountIfExists(args.account);
+    if (!account) {
+      uiLogger.error(
+        commands.account.subcommands.use.errors.accountNotFound(
+          args.account,
+          getConfigFilePath()
+        )
+      );
+      return exit(EXIT_CODES.ERROR);
+    }
+
+    if (!hsSettings.accounts.includes(account.accountId)) {
+      if (!process.stdin.isTTY) {
+        uiLogger.log(
+          commands.account.subcommands.use.linked.nonInteractiveNotLinked(
+            account.name
+          )
+        );
+        setConfigAccountAsDefault(String(args.account));
+        uiLogger.success(
+          commands.account.subcommands.use.success.defaultAccountUpdated(
+            account.name
+          )
+        );
+        return exit(EXIT_CODES.SUCCESS);
+      }
+
+      uiLogger.log(
+        commands.account.subcommands.use.linked.accountNotLinked(account.name)
+      );
+      const shouldLink = await confirmPrompt(
+        commands.account.subcommands.use.linked.promptToLink(account.name)
+      );
+
+      if (!shouldLink) {
+        uiLogger.log(
+          commands.account.subcommands.use.linked.settingGlobalDefault
+        );
+        setConfigAccountAsDefault(String(args.account));
+        uiLogger.success(
+          commands.account.subcommands.use.success.defaultAccountUpdated(
+            account.name
+          )
+        );
+        return exit(EXIT_CODES.SUCCESS);
+      }
+    }
+
+    targetAccountId = account.accountId;
+  }
+
+  const result = await handleLinkedUseAction({
+    state: hsSettings,
+    targetAccountId,
+  });
+
+  if (result.status === ACTION_RESULT_STATUS.ERROR) {
+    uiLogger.error(result.reason);
+    return exit(EXIT_CODES.ERROR);
+  }
+  if (result.status === ACTION_RESULT_STATUS.NOOP) {
+    return exit(EXIT_CODES.SUCCESS);
+  }
+
+  const settingsPath = getHsSettingsFilePath() || DEFAULT_HS_SETTINGS_PATH;
+
+  try {
+    writeHsSettingsFile(result.settings);
+  } catch (err) {
+    uiLogger.error(
+      commands.account.subcommands.link.shared.writeSettingsFailed(
+        settingsPath,
+        err
+      )
+    );
+    return exit(EXIT_CODES.ERROR);
+  }
+
+  uiLogger.success(
+    commands.account.subcommands.link.shared.savedToSettings(settingsPath)
+  );
+  return exit(EXIT_CODES.SUCCESS);
+}
+
+async function handleGlobalUse(
   args: ArgumentsCamelCase<AccountUseArgs>
 ): Promise<void> {
   const { exit } = args;
@@ -94,6 +211,19 @@ async function handler(
   return uiLogger.success(
     commands.account.subcommands.use.success.defaultAccountUpdated(account.name)
   );
+}
+
+async function handler(
+  args: ArgumentsCamelCase<AccountUseArgs>
+): Promise<void> {
+  const hsSettings = getHsSettingsFileIfExists();
+  const isLinked = isDirectoryLinked(hsSettings);
+
+  if (isLinked) {
+    return handleLinkedUse(args, hsSettings);
+  }
+
+  return handleGlobalUse(args);
 }
 
 function accountUseBuilder(yargs: Argv): Argv<AccountUseArgs> {

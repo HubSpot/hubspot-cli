@@ -23,6 +23,7 @@ import { makeYargsHandlerWithUsageTracking } from '../../lib/yargs/makeYargsHand
 import { makeYargsBuilder } from '../../lib/yargsUtils.js';
 import { commands } from '../../lang/en.js';
 import { uiLogger } from '../../lib/ui/logger.js';
+import { warnIfLinkedDirectory } from '../../lib/link/warnIfLinkedDirectory.js';
 
 const command = 'create-override [account]';
 const describe = commands.account.subcommands.createOverride.describe(
@@ -38,6 +39,9 @@ async function handler(
 ): Promise<void> {
   const { exit } = args;
   let overrideDefaultAccount = args.account;
+
+  // TODO: Block this command when linked directory exists (next breaking change)
+  warnIfLinkedDirectory(args._);
 
   const globalConfigExists = globalConfigFileExists();
   if (!globalConfigExists) {

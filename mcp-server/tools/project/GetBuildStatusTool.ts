@@ -227,7 +227,7 @@ export class GetBuildStatusTool extends Tool<GetBuildStatusInputSchema> {
       {
         title: 'Get HubSpot Projects Build Status and Errors',
         description:
-          'Retrieves build status and error messages for HubSpot projects. When buildId is omitted, shows recent builds with their status(default 3) - use this to find the latest builds when troubleshooting. When buildId is provided, shows detailed error information for that specific build. Displays buildErrorMessage and subbuild failures to help diagnose build issues.',
+          'Retrieves build status and error messages for HubSpot projects. When buildId is omitted, shows recent builds with their status(default 3) - use this to find the latest builds when troubleshooting. When buildId is provided, shows detailed error information for that specific build. Displays buildErrorMessage and subbuild failures to help diagnose build issues. If you do not know the project path, use the find-projects tool first to locate HubSpot projects in the workspace.',
         inputSchema,
         annotations: {
           readOnlyHint: true,

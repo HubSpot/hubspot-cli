@@ -5,7 +5,13 @@ import {
   getConfigFilePath,
 } from '@hubspot/local-dev-lib/config';
 import { getDefaultAccountOverrideFilePath } from '@hubspot/local-dev-lib/config/defaultAccountOverride';
+import {
+  getHsSettingsFileIfExists,
+  getHsSettingsFilePath,
+} from '@hubspot/local-dev-lib/config/hsSettings';
+import { isDirectoryLinked } from '../../lib/link/linkUtils.js';
 import { getAccessToken } from '@hubspot/local-dev-lib/personalAccessKey';
+import { uiAccountDescription } from '../../lib/ui/index.js';
 import { makeYargsBuilder } from '../../lib/yargsUtils.js';
 import { indent } from '../../lib/ui/index.js';
 import {
@@ -23,12 +29,53 @@ const command = 'info [account]';
 
 type AccountInfoArgs = CommonArgs & ConfigArgs;
 
+function logLinkedAccountInfo(
+  hsSettingsPath: string,
+  localDefaultAccount: number | undefined
+): void {
+  uiLogger.log(commands.account.subcommands.info.linkedDefaultTitle);
+  uiLogger.log(
+    `${indent(1)}${commands.account.subcommands.info.settingsPath(hsSettingsPath)}`
+  );
+  if (localDefaultAccount) {
+    uiLogger.log(
+      `${indent(1)}${commands.account.subcommands.info.linkedDefault(uiAccountDescription(localDefaultAccount))}`
+    );
+  }
+}
+
+function logGlobalAccountInfo(): void {
+  const configPath = getConfigFilePath();
+  if (configPath) {
+    uiLogger.log(commands.account.subcommands.info.defaultAccountTitle);
+    uiLogger.log(
+      `${indent(1)}${commands.account.subcommands.info.configPath(configPath)}`
+    );
+    const defaultAccount = getConfigDefaultAccount();
+    uiLogger.log(
+      `${indent(1)}${commands.account.subcommands.info.defaultAccount(defaultAccount.name)}`
+    );
+  }
+
+  const overrideFilePath = getDefaultAccountOverrideFilePath();
+  if (overrideFilePath) {
+    uiLogger.log('');
+    uiLogger.log(commands.account.subcommands.info.overrideFilePathTitle);
+    uiLogger.log(
+      `${indent(1)}${commands.account.subcommands.info.overrideFilePath(overrideFilePath)}`
+    );
+    const defaultAccount = getConfigDefaultAccount();
+    uiLogger.log(
+      `${indent(1)}${commands.account.subcommands.info.overrideAccount(defaultAccount.name)}`
+    );
+  }
+}
+
 async function handler(
   args: ArgumentsCamelCase<AccountInfoArgs>
 ): Promise<void> {
   const { derivedAccountId } = args;
   const config = getConfigAccountById(derivedAccountId);
-  // check if the provided account is using a personal access key, if not, show an error
   if (config && config.authType === 'personalaccesskey') {
     const { name, personalAccessKey, env } = config;
     let scopeGroups: string[][] = [];
@@ -41,37 +88,14 @@ async function handler(
 
     scopeGroups = response.scopeGroups.map(s => [s]);
 
-    // If a default account is present in the config, display it
-    const configPath = getConfigFilePath();
-    if (configPath) {
-      uiLogger.log(commands.account.subcommands.info.defaultAccountTitle);
-      uiLogger.log(
-        `${indent(1)}${commands.account.subcommands.info.configPath(
-          configPath
-        )}`
-      );
-      const defaultAccount = getConfigDefaultAccount();
-      uiLogger.log(
-        `${indent(1)}${commands.account.subcommands.info.defaultAccount(
-          defaultAccount.name
-        )}`
-      );
-    }
+    const hsSettings = getHsSettingsFileIfExists();
+    const hsSettingsPath = getHsSettingsFilePath();
+    const isLinked = isDirectoryLinked(hsSettings) && hsSettingsPath !== null;
 
-    // If a default account override is present, display it
-    const overrideFilePath = getDefaultAccountOverrideFilePath();
-    if (overrideFilePath) {
-      uiLogger.log('');
-      uiLogger.log(commands.account.subcommands.info.overrideFilePathTitle);
-      uiLogger.log(
-        `${indent(1)}${commands.account.subcommands.info.overrideFilePath(overrideFilePath)}`
-      );
-      const defaultAccount = getConfigDefaultAccount();
-      uiLogger.log(
-        `${indent(1)}${commands.account.subcommands.info.overrideAccount(
-          defaultAccount.name
-        )}`
-      );
+    if (isLinked) {
+      logLinkedAccountInfo(hsSettingsPath, hsSettings.localDefaultAccount);
+    } else {
+      logGlobalAccountInfo();
     }
 
     uiLogger.log('');

@@ -18,8 +18,8 @@ import {
   DiagnosticInfo,
   ProjectConfig,
 } from './DiagnosticInfoBuilder.js';
-import { isPortManagerPortAvailable } from '@hubspot/local-dev-lib/portManager';
-import { PORT_MANAGER_SERVER_PORT } from '@hubspot/local-dev-lib/constants/ports';
+import { isPortAvailable } from '@hubspot/local-dev-lib/portManager';
+import { LOCAL_DEV_DEFAULT_PORT } from '../constants.js';
 import {
   accessTokenForPersonalAccessKey,
   // scopesOnAccessToken,
@@ -419,17 +419,17 @@ export class Doctor {
   }
 
   private async checkIfPortsAreAvailable(): Promise<void> {
-    if (await isPortManagerPortAvailable()) {
+    if (await isPortAvailable(LOCAL_DEV_DEFAULT_PORT)) {
       this.diagnosis?.addProjectSection({
         type: 'success',
-        message: lib.doctor.port.available(PORT_MANAGER_SERVER_PORT),
+        message: lib.doctor.port.available(LOCAL_DEV_DEFAULT_PORT),
       });
       return;
     }
 
     this.diagnosis?.addProjectSection({
       type: 'warning',
-      message: lib.doctor.port.inUse(PORT_MANAGER_SERVER_PORT),
+      message: lib.doctor.port.inUse(LOCAL_DEV_DEFAULT_PORT),
       secondaryMessaging: lib.doctor.port.inUseSecondary,
     });
   }

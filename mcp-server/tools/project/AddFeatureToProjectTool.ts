@@ -121,7 +121,7 @@ export class AddFeatureToProjectTool extends Tool<AddFeatureInputSchema> {
       {
         title: 'Add feature to HubSpot Project',
         description: `Adds a feature to an existing HubSpot project.
-          Only works for projects with platformVersion '2025.2' and beyond`,
+          Only works for projects with platformVersion '2025.2' and beyond. If you do not know the project path, use the find-projects tool first to locate HubSpot projects in the workspace.`,
         inputSchema,
         annotations: {
           readOnlyHint: false,

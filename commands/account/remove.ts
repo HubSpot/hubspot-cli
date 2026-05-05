@@ -25,6 +25,7 @@ import { makeYargsHandlerWithUsageTracking } from '../../lib/yargs/makeYargsHand
 import { makeYargsBuilder } from '../../lib/yargsUtils.js';
 import { uiLogger } from '../../lib/ui/logger.js';
 import { commands } from '../../lang/en.js';
+import { warnIfLinkedDirectory } from '../../lib/link/warnIfLinkedDirectory.js';
 
 const command = 'remove [account]';
 const describe = commands.account.subcommands.remove.describe;
@@ -37,6 +38,8 @@ type AccountRemoveArgs = CommonArgs &
 async function handler(
   args: ArgumentsCamelCase<AccountRemoveArgs>
 ): Promise<void> {
+  warnIfLinkedDirectory(args._);
+
   const { account: accountFlag } = args;
 
   let accountToRemoveConfig = accountFlag

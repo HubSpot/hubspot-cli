@@ -43,6 +43,8 @@ const getDeprecatedEslintConfigFilesSpy = vi.spyOn(
   'getDeprecatedEslintConfigFiles'
 );
 const createEslintConfigSpy = vi.spyOn(linting, 'createEslintConfig');
+const getMissingLintScriptsSpy = vi.spyOn(linting, 'getMissingLintScripts');
+vi.spyOn(linting, 'addLintScriptsToPackageJson');
 
 describe('commands/project/lint', () => {
   describe('command', () => {
@@ -80,9 +82,12 @@ describe('commands/project/lint', () => {
       // Default to having config present unless overridden
       hasEslintConfigSpy.mockReturnValue(true);
       hasDeprecatedEslintConfigSpy.mockReturnValue(false);
+      // Default to no missing lint scripts
+      getMissingLintScriptsSpy.mockReturnValue([]);
       // Default to linting succeeding unless overridden
       lintPackagesSpy.mockResolvedValue({ success: true, results: [] });
       displayLintResultsSpy.mockImplementation(() => {});
+      createEslintConfigSpy.mockResolvedValue('component/eslint.config.js');
     });
 
     it('should track the command usage', async () => {
@@ -525,8 +530,35 @@ describe('commands/project/lint', () => {
           default: true,
         },
       ]);
-      expect(createEslintConfigSpy).toHaveBeenCalledWith(lintLocation);
+      expect(createEslintConfigSpy).toHaveBeenCalledWith(lintLocation, null);
       expect(lintPackagesSpy).toHaveBeenCalledWith([lintLocation], projectDir);
+    });
+
+    it('should pass platformVersion to createEslintConfig when set in hsproject', async () => {
+      const projectDir = '/test/project';
+      const lintLocation = path.join(projectDir, 'component1');
+
+      getProjectConfigSpy.mockResolvedValue({
+        projectDir,
+        projectConfig: {
+          name: 'p',
+          srcDir: 'src',
+          platformVersion: '2026.03',
+        },
+      });
+      getProjectPackageJsonLocationsSpy.mockResolvedValue([lintLocation]);
+      areAllLintPackagesInstalledSpy.mockReturnValue(true);
+      hasEslintConfigSpy.mockReturnValue(false);
+      promptUserSpy.mockResolvedValueOnce({
+        shouldCreateConfig: true,
+      });
+
+      await projectLintCommand.handler(args);
+
+      expect(createEslintConfigSpy).toHaveBeenCalledWith(
+        lintLocation,
+        '2026.03'
+      );
     });
 
     it('should exit if user declines to create ESLint config', async () => {
@@ -595,8 +627,8 @@ describe('commands/project/lint', () => {
       await projectLintCommand.handler(args);
 
       expect(createEslintConfigSpy).toHaveBeenCalledTimes(2);
-      expect(createEslintConfigSpy).toHaveBeenCalledWith(lintLocation1);
-      expect(createEslintConfigSpy).toHaveBeenCalledWith(lintLocation2);
+      expect(createEslintConfigSpy).toHaveBeenCalledWith(lintLocation1, null);
+      expect(createEslintConfigSpy).toHaveBeenCalledWith(lintLocation2, null);
     });
 
     it('should warn and create new config if deprecated config exists', async () => {
@@ -639,7 +671,7 @@ describe('commands/project/lint', () => {
         },
       ]);
       // Creates config once from prompt
-      expect(createEslintConfigSpy).toHaveBeenCalledWith(lintLocation);
+      expect(createEslintConfigSpy).toHaveBeenCalledWith(lintLocation, null);
       expect(createEslintConfigSpy).toHaveBeenCalledTimes(1);
       expect(lintPackagesSpy).toHaveBeenCalledWith([lintLocation], projectDir);
     });
@@ -685,8 +717,8 @@ describe('commands/project/lint', () => {
       ]);
       // Creates configs from prompt
       expect(createEslintConfigSpy).toHaveBeenCalledTimes(2);
-      expect(createEslintConfigSpy).toHaveBeenCalledWith(lintLocation1);
-      expect(createEslintConfigSpy).toHaveBeenCalledWith(lintLocation2);
+      expect(createEslintConfigSpy).toHaveBeenCalledWith(lintLocation1, null);
+      expect(createEslintConfigSpy).toHaveBeenCalledWith(lintLocation2, null);
     });
 
     it('should not warn about deprecated configs if none exist', async () => {
@@ -750,8 +782,8 @@ describe('commands/project/lint', () => {
         },
       ]);
       // Should create configs for both from prompt
-      expect(createEslintConfigSpy).toHaveBeenCalledWith(lintLocation1);
-      expect(createEslintConfigSpy).toHaveBeenCalledWith(lintLocation2);
+      expect(createEslintConfigSpy).toHaveBeenCalledWith(lintLocation1, null);
+      expect(createEslintConfigSpy).toHaveBeenCalledWith(lintLocation2, null);
       expect(createEslintConfigSpy).toHaveBeenCalledTimes(2);
       expect(lintPackagesSpy).toHaveBeenCalledWith(
         [lintLocation1, lintLocation2],

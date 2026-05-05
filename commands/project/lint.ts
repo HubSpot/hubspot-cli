@@ -18,6 +18,8 @@ import SpinniesManager from '../../lib/ui/SpinniesManager.js';
 import {
   areAllLintPackagesInstalled,
   getMissingLintPackages,
+  getMissingLintScripts,
+  addLintScriptsToPackageJson,
   lintPackages,
   displayLintResults,
   hasEslintConfig,
@@ -177,9 +179,15 @@ async function handler(
             text: commands.project.lint.loading.creatingConfig,
           });
 
+          const platformVersion =
+            projectConfig.projectConfig?.platformVersion ?? null;
+
           const createdConfigs: string[] = [];
           for (const location of locationsNeedingConfig) {
-            const configPath = createEslintConfig(location);
+            const configPath = await createEslintConfig(
+              location,
+              platformVersion
+            );
             createdConfigs.push(configPath);
           }
 
@@ -194,6 +202,32 @@ async function handler(
           uiLogger.error(commands.project.lint.eslintConfigRequired);
           return exit(EXIT_CODES.ERROR);
         }
+      }
+
+      const locationsNeedingScripts = locationsReadyToLint.filter(
+        location => getMissingLintScripts(location).length > 0
+      );
+
+      if (locationsNeedingScripts.length > 0) {
+        SpinniesManager.add('lintScriptsAdd', {
+          text: commands.project.lint.loading.addingLintScripts,
+        });
+
+        const addedResults: { added: string[]; relativePath: string }[] = [];
+        for (const location of locationsNeedingScripts) {
+          const result = addLintScriptsToPackageJson(location);
+          if (result.added.length > 0) {
+            addedResults.push(result);
+          }
+        }
+
+        SpinniesManager.succeed('lintScriptsAdd');
+
+        addedResults.forEach(({ added, relativePath }) => {
+          uiLogger.success(
+            commands.project.lint.lintScriptsAdded(added, relativePath)
+          );
+        });
       }
 
       SpinniesManager.add('lintRun', {

@@ -1,9 +1,13 @@
 import { ArgumentsCamelCase } from 'yargs';
 import {
   getConfigAccountById,
-  getAllConfigAccounts,
+  getLinkedOrAllConfigAccounts,
   getConfigAccountEnvironment,
 } from '@hubspot/local-dev-lib/config';
+import {
+  getHsSettingsFileIfExists,
+  getHsSettingsFilePath,
+} from '@hubspot/local-dev-lib/config/hsSettings';
 
 import {
   findProjectComponents,
@@ -37,6 +41,10 @@ import {
 } from '../../../lib/accountTypes.js';
 import { ensureProjectExists } from '../../../lib/projects/ensureProjectExists.js';
 import { ProjectDevArgs } from '../../../types/Yargs.js';
+import {
+  isDirectoryLinked,
+  addAccountToLinkedSettings,
+} from '../../../lib/link/linkUtils.js';
 
 type DeprecatedProjectDevFlowArgs = {
   args: ArgumentsCamelCase<ProjectDevArgs>;
@@ -74,7 +82,9 @@ export async function deprecatedProjectDevFlow({
     return exit(EXIT_CODES.SUCCESS);
   }
 
-  const accounts = getAllConfigAccounts();
+  const hsSettings = getHsSettingsFileIfExists();
+  const directoryIsLinked = isDirectoryLinked(hsSettings);
+  const accounts = getLinkedOrAllConfigAccounts();
 
   if (!accounts) {
     uiLogger.error(commands.project.dev.errors.noAccountsInConfig);
@@ -112,6 +122,15 @@ export async function deprecatedProjectDevFlow({
     }
   } else {
     await checkIfDefaultAccountIsSupported(accountConfig, hasPublicApps, exit);
+  }
+
+  if (directoryIsLinked) {
+    uiLogger.log('');
+    uiLogger.info(
+      commands.account.subcommands.link.shared.usingLinkedAccounts(
+        getHsSettingsFilePath()!
+      )
+    );
   }
 
   // The user is targeting an account type that we recommend developing on
@@ -162,6 +181,9 @@ export async function deprecatedProjectDevFlow({
       if (!accountAdded) {
         return exit(EXIT_CODES.SUCCESS);
       }
+      if (directoryIsLinked) {
+        addAccountToLinkedSettings(notInConfigAccount.id);
+      }
     }
 
     createNewSandbox = hasPrivateApps && createNestedAccount;
@@ -180,6 +202,9 @@ export async function deprecatedProjectDevFlow({
     }
     // We will be running our tests against this new sandbox account
     targetTestingAccountId = targetProjectAccountId;
+    if (directoryIsLinked) {
+      addAccountToLinkedSettings(targetProjectAccountId);
+    }
   }
   if (createNewDeveloperTestAccount) {
     try {
@@ -193,6 +218,9 @@ export async function deprecatedProjectDevFlow({
       return exit(EXIT_CODES.ERROR);
     }
     targetProjectAccountId = derivedAccountId;
+    if (directoryIsLinked) {
+      addAccountToLinkedSettings(targetTestingAccountId);
+    }
   }
 
   if (!targetProjectAccountId || !targetTestingAccountId) {
@@ -248,6 +276,7 @@ export async function deprecatedProjectDevFlow({
     targetAccountId: targetTestingAccountId,
     env,
     exit,
+    port: args.port,
   });
 
   await LocalDev.start();

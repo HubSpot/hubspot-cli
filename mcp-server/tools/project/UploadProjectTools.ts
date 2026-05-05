@@ -120,7 +120,7 @@ export class UploadProjectTools extends Tool<InputSchemaType> {
       {
         title: 'Upload HubSpot Project',
         description:
-          'DO NOT run this tool unless the user specifies they would like to upload the project, it is potentially destructive. Uploads the HubSpot project in current working directory.  If the project does not exist, it will be created. MUST be ran from within the project directory. IMPORTANT: Uploading a project does NOT automatically make cards live or visible to users. Cards must be manually added to a view in HubSpot after upload to become visible.',
+          'DO NOT run this tool unless the user specifies they would like to upload the project, it is potentially destructive. Uploads the HubSpot project in current working directory.  If the project does not exist, it will be created. MUST be ran from within the project directory. IMPORTANT: Uploading a project does NOT automatically make cards live or visible to users. Cards must be manually added to a view in HubSpot after upload to become visible. If you do not know the project path, use the find-projects tool first to locate HubSpot projects in the workspace.',
         inputSchema,
         annotations: {
           readOnlyHint: false,

@@ -57,7 +57,7 @@ export class ValidateProjectTool extends Tool<CreateProjectInputSchema> {
       {
         title: 'Validate HubSpot Project',
         description:
-          'Validates the HubSpot project and its configuration files.  This tool does not need to be ran before uploading the project',
+          'Validates the HubSpot project and its configuration files.  This tool does not need to be ran before uploading the project. If you do not know the project path, use the find-projects tool first to locate HubSpot projects in the workspace.',
         inputSchema,
         annotations: {
           readOnlyHint: true,

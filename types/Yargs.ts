@@ -63,6 +63,7 @@ export type ProjectDevArgs = CommonArgs &
     profile?: string;
     testingAccount?: string | number;
     projectAccount?: string | number;
+    port?: number;
   };
 
 export type TestingArgs = {

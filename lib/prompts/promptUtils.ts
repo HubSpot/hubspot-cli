@@ -83,6 +83,7 @@ function mapPromptChoicesToChoices<T extends GenericPromptResponse>(
       return {
         value: choice.value,
         name: choice.name,
+        short: choice.short,
         disabled: choice.disabled,
         checked: choice.checked,
       } as Choice<T>;

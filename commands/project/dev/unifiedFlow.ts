@@ -16,8 +16,9 @@ import type {
 } from '@hubspot/project-parsing-lib/profiles';
 import {
   getConfigAccountEnvironment,
-  getAllConfigAccounts,
+  getLinkedOrAllConfigAccounts,
   getConfigAccountById,
+  getConfigAccountIfExists,
 } from '@hubspot/local-dev-lib/config';
 import { ProjectDevArgs } from '../../../types/Yargs.js';
 import { ProjectConfig } from '../../../types/Projects.js';
@@ -39,6 +40,7 @@ import {
 import {
   selectDeveloperTestTargetAccountPrompt,
   selectSandboxTargetAccountPrompt,
+  confirmLinkExistingDeveloperTestAccountPrompt,
 } from '../../../lib/prompts/projectDevTargetAccountPrompt.js';
 import LocalDevProcess from '../../../lib/projects/localDev/LocalDevProcess.js';
 import LocalDevWatcher from '../../../lib/projects/localDev/LocalDevWatcher.js';
@@ -51,6 +53,14 @@ import { uiLogger } from '../../../lib/ui/logger.js';
 import { commands } from '../../../lang/en.js';
 import LocalDevWebsocketServer from '../../../lib/projects/localDev/LocalDevWebsocketServer.js';
 import { isLocalDevRunning } from '../../../lib/projects/localDev/helpers/process.js';
+import {
+  getHsSettingsFileIfExists,
+  getHsSettingsFilePath,
+} from '@hubspot/local-dev-lib/config/hsSettings';
+import {
+  isDirectoryLinked,
+  addAccountToLinkedSettings,
+} from '../../../lib/link/linkUtils.js';
 
 type UnifiedProjectDevFlowArgs = {
   args: ArgumentsCamelCase<ProjectDevArgs>;
@@ -119,7 +129,9 @@ export async function unifiedProjectDevFlow({
     return exit(EXIT_CODES.ERROR);
   }
 
-  const accounts = getAllConfigAccounts();
+  const hsSettings = getHsSettingsFileIfExists();
+  const directoryIsLinked = isDirectoryLinked(hsSettings);
+  const accounts = getLinkedOrAllConfigAccounts();
   const accountIsCombined = await isUnifiedAccount(targetProjectAccountConfig);
   const targetProjectAccountIsTestAccountOrSandbox = isTestAccountOrSandbox(
     targetProjectAccountConfig
@@ -128,6 +140,15 @@ export async function unifiedProjectDevFlow({
   if (!accountIsCombined) {
     uiLogger.error(commands.project.dev.errors.accountNotCombined);
     return exit(EXIT_CODES.ERROR);
+  }
+
+  if (directoryIsLinked && !providedTargetTestingAccountId) {
+    uiLogger.log('');
+    uiLogger.info(
+      commands.account.subcommands.link.shared.usingLinkedAccounts(
+        getHsSettingsFilePath()!
+      )
+    );
   }
 
   let targetTestingAccountId = providedTargetTestingAccountId;
@@ -163,18 +184,35 @@ export async function unifiedProjectDevFlow({
           targetProjectAccountConfig
         );
 
+      const { notInConfigAccount } = devAccountPromptResponse;
       targetTestingAccountId =
         devAccountPromptResponse.targetAccountId || undefined;
 
-      if (!!devAccountPromptResponse.notInConfigAccount) {
-        // When the developer test account isn't configured in the CLI config yet
-        // Walk the user through adding the account's PAK to the config
-        const accountAdded = await useExistingDevTestAccount(
-          env,
-          devAccountPromptResponse.notInConfigAccount
+      if (notInConfigAccount) {
+        const existingGlobalConfig = getConfigAccountIfExists(
+          notInConfigAccount.id
         );
-        if (!accountAdded) {
-          return exit(EXIT_CODES.SUCCESS);
+
+        if (directoryIsLinked && existingGlobalConfig) {
+          const shouldLink =
+            await confirmLinkExistingDeveloperTestAccountPrompt(
+              notInConfigAccount.accountName
+            );
+          if (!shouldLink) {
+            return exit(EXIT_CODES.SUCCESS);
+          }
+          addAccountToLinkedSettings(notInConfigAccount.id);
+        } else {
+          const accountAdded = await useExistingDevTestAccount(
+            env,
+            notInConfigAccount
+          );
+          if (!accountAdded) {
+            return exit(EXIT_CODES.SUCCESS);
+          }
+          if (directoryIsLinked) {
+            addAccountToLinkedSettings(notInConfigAccount.id);
+          }
         }
       } else if (devAccountPromptResponse.createNestedAccount) {
         // Create a new developer test account and automatically add it to the CLI config
@@ -187,6 +225,9 @@ export async function unifiedProjectDevFlow({
           );
         } catch {
           return exit(EXIT_CODES.ERROR);
+        }
+        if (directoryIsLinked) {
+          addAccountToLinkedSettings(targetTestingAccountId!);
         }
       }
     } else if (accountType === HUBSPOT_ACCOUNT_TYPES.DEVELOPMENT_SANDBOX) {
@@ -208,6 +249,9 @@ export async function unifiedProjectDevFlow({
           );
         } catch {
           return exit(EXIT_CODES.ERROR);
+        }
+        if (directoryIsLinked) {
+          addAccountToLinkedSettings(targetTestingAccountId!);
         }
       }
     } else {
@@ -270,7 +314,7 @@ export async function unifiedProjectDevFlow({
 
   // End setup, start local dev process
   try {
-    await startPortManagerServer();
+    await startPortManagerServer(args.port);
   } catch (e) {
     logError(e);
     return exit(EXIT_CODES.ERROR);

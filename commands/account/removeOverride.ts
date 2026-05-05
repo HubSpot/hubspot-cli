@@ -17,6 +17,7 @@ import { makeYargsHandlerWithUsageTracking } from '../../lib/yargs/makeYargsHand
 import { makeYargsBuilder } from '../../lib/yargsUtils.js';
 import { uiLogger } from '../../lib/ui/logger.js';
 import { commands } from '../../lang/en.js';
+import { warnIfLinkedDirectory } from '../../lib/link/warnIfLinkedDirectory.js';
 
 const command = 'remove-override';
 const describe = commands.account.subcommands.removeOverride.describe(
@@ -29,6 +30,9 @@ async function handler(
   args: ArgumentsCamelCase<RemoveOverrideArgs>
 ): Promise<void> {
   const { force, exit } = args;
+
+  // TODO: Block this command when linked directory exists (next breaking change)
+  warnIfLinkedDirectory(args._);
 
   const globalConfigExists = globalConfigFileExists();
   if (!globalConfigExists) {

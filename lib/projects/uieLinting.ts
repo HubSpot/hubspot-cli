@@ -3,21 +3,39 @@ import path from 'path';
 import util from 'util';
 import semver from 'semver';
 import { exec as execAsync } from 'node:child_process';
+import { fetchRepoFile } from '@hubspot/local-dev-lib/api/github';
 import {
   getProjectPackageJsonLocations,
   isPackageInstalled,
 } from '../dependencyManagement.js';
 import { commands } from '../../lang/en.js';
 import { uiLogger } from '../ui/logger.js';
-import { safeGetPackageJsonCached } from '../npm/packageJson.js';
+import {
+  clearPackageJsonCache,
+  safeGetPackageJsonCached,
+} from '../npm/packageJson.js';
+import { debugError } from '../errorHandlers/index.js';
+import { isLegacyProject } from '@hubspot/project-parsing-lib/projects';
+import {
+  HUBSPOT_PROJECT_COMPONENTS_GITHUB_PATH,
+  DEFAULT_PROJECT_TEMPLATE_BRANCH,
+} from '../constants.js';
 
 export const REQUIRED_PACKAGES_AND_MIN_VERSIONS = {
   eslint: '9.0.0',
-  '@typescript-eslint/eslint-plugin': '8.46.4',
-  '@typescript-eslint/parser': '8.46.4',
+  '@eslint/js': '9.0.0',
   'typescript-eslint': '8.46.4',
+  '@hubspot/eslint-config-ui-extensions': '1.0.0',
+  'eslint-config-prettier': '10.0.0',
+  'eslint-plugin-react': '7.0.0',
+  'eslint-plugin-react-hooks': '7.0.0',
+  'eslint-plugin-unused-imports': '4.0.0',
+  prettier: '3.0.0',
   jiti: '2.6.1',
 } as const;
+
+const UIE_ESLINT_CONFIG_PATH_IN_REPO =
+  'components/cards/src/app/cards/eslint.config.js';
 
 const ESLINT_CONFIG_FILES = [
   'eslint.config.mts',
@@ -37,28 +55,10 @@ const DEPRECATED_ESLINT_CONFIG_FILES = [
   '.eslintrc',
 ] as const;
 
-const ESLINT_CONFIG_TEMPLATE = `import { defineConfig } from "eslint/config";
-import tsParser from "@typescript-eslint/parser";
-
-export default defineConfig([
-  {
-    files: ["**/*.{js,mjs,cjs,ts,mts,cts,jsx,tsx}"],
-    languageOptions: {
-      parser: tsParser,
-      parserOptions: {
-        ecmaVersion: "latest",
-        sourceType: "module",
-        ecmaFeatures: {
-          jsx: true
-        }
-      }
-    },
-    rules: {
-      "no-console": ["warn", { allow: ["warn", "error"] }]
-    }
-  },
-]);
-`;
+export const LINT_SCRIPTS = {
+  lint: 'eslint .',
+  'lint:fix': 'eslint . --fix',
+} as const;
 
 function getPackageVersionFromPackageJson(
   directory: string,
@@ -163,10 +163,59 @@ export function getDeprecatedEslintConfigFiles(directory: string): string[] {
   });
 }
 
-export function createEslintConfig(directory: string): string {
-  const configPath = path.join(directory, 'eslint.config.mts');
+function repoFileDataToString(data: unknown): string {
+  if (typeof data === 'string') {
+    return data;
+  }
+  if (Buffer.isBuffer(data)) {
+    return data.toString('utf-8');
+  }
+  return String(data);
+}
+
+export async function createEslintConfig(
+  directory: string,
+  platformVersion?: string | null
+): Promise<string> {
+  const versionForRemote =
+    platformVersion && !isLegacyProject(platformVersion)
+      ? platformVersion
+      : null;
+
+  if (versionForRemote === null) {
+    const message =
+      commands.project.lint.createEslintConfigRequiresV2Platform(
+        platformVersion
+      );
+    uiLogger.error(message);
+    throw new Error(message);
+  }
+
+  let fetchedContent: string | null = null;
   try {
-    fs.writeFileSync(configPath, ESLINT_CONFIG_TEMPLATE, 'utf-8');
+    const { data } = await fetchRepoFile(
+      HUBSPOT_PROJECT_COMPONENTS_GITHUB_PATH,
+      `${versionForRemote}/${UIE_ESLINT_CONFIG_PATH_IN_REPO}`,
+      DEFAULT_PROJECT_TEMPLATE_BRANCH
+    );
+    const content = repoFileDataToString(data);
+    if (content.trim().length > 0) {
+      fetchedContent = content;
+    }
+  } catch (error) {
+    debugError(error);
+  }
+
+  if (fetchedContent === null) {
+    const message =
+      commands.project.lint.failedToFetchRemoteEslintConfig(versionForRemote);
+    uiLogger.error(message);
+    throw new Error(message);
+  }
+
+  const configPath = path.join(directory, 'eslint.config.js');
+  try {
+    fs.writeFileSync(configPath, fetchedContent, 'utf-8');
     return path.relative(process.cwd(), configPath);
   } catch (error) {
     uiLogger.error(
@@ -287,5 +336,63 @@ export function displayLintResults(
     failedLocations.forEach(r => {
       uiLogger.log(`  ✗ ${r.location}`);
     });
+  }
+}
+
+export function getMissingLintScripts(directory: string): string[] {
+  const packageJsonPath = path.join(directory, 'package.json');
+  const packageJson = safeGetPackageJsonCached(packageJsonPath);
+  if (!packageJson) {
+    return [];
+  }
+
+  return Object.keys(LINT_SCRIPTS).filter(
+    scriptName => !packageJson.scripts?.[scriptName]
+  );
+}
+
+export function addLintScriptsToPackageJson(directory: string): {
+  added: string[];
+  relativePath: string;
+} {
+  const packageJsonPath = path.join(directory, 'package.json');
+
+  try {
+    const rawContent = fs.readFileSync(packageJsonPath, 'utf-8');
+    const packageJson = JSON.parse(rawContent);
+
+    if (!packageJson.scripts) {
+      packageJson.scripts = {};
+    }
+
+    const added: string[] = [];
+    for (const [scriptName, scriptValue] of Object.entries(LINT_SCRIPTS)) {
+      if (!packageJson.scripts[scriptName]) {
+        packageJson.scripts[scriptName] = scriptValue;
+        added.push(scriptName);
+      }
+    }
+
+    if (added.length > 0) {
+      fs.writeFileSync(
+        packageJsonPath,
+        JSON.stringify(packageJson, null, 2) + '\n',
+        'utf-8'
+      );
+      clearPackageJsonCache();
+    }
+
+    return {
+      added,
+      relativePath: path.relative(process.cwd(), packageJsonPath),
+    };
+  } catch {
+    uiLogger.warn(
+      commands.project.lint.failedToAddLintScripts(packageJsonPath)
+    );
+    return {
+      added: [],
+      relativePath: path.relative(process.cwd(), packageJsonPath),
+    };
   }
 }

@@ -28,6 +28,7 @@ import { makeYargsBuilder } from '../../lib/yargsUtils.js';
 import { commands } from '../../lang/en.js';
 import { uiLogger } from '../../lib/ui/logger.js';
 import { renderList } from '../../ui/render.js';
+import { warnIfLinkedDirectory } from '../../lib/link/warnIfLinkedDirectory.js';
 
 const command = 'clean';
 const describe = commands.account.subcommands.clean.describe;
@@ -51,6 +52,8 @@ async function handler(
     uiLogger.log(commands.account.subcommands.clean.noResults);
     return exit(EXIT_CODES.SUCCESS);
   }
+
+  warnIfLinkedDirectory(args._);
 
   const accountsToRemove = [];
   SpinniesManager.init({
