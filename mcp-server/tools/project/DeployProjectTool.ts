@@ -82,7 +82,7 @@ export class DeployProjectTool extends Tool<InputSchemaType> {
       {
         title: 'Deploy a build of HubSpot Project',
         description:
-          'Takes a build number and a project name and deploys that build of the project. DO NOT run this tool unless the user specifies they would like to deploy the project.',
+          'Takes a build number and a project name and deploys that build of the project. DO NOT run this tool unless the user specifies they would like to deploy the project. If you do not know the project path, use the find-projects tool first to locate HubSpot projects in the workspace.',
         inputSchema,
         annotations: {
           readOnlyHint: false,

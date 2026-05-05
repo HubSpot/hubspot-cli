@@ -274,7 +274,10 @@ export async function selectAppToMigrate(
       component.componentType
     );
 
-    if (component.componentType === 'LEGACY_CRM_CARD' && !component.isSupported) {
+    if (
+      component.componentType === 'LEGACY_CRM_CARD' &&
+      !component.isSupported
+    ) {
       hasLegacyCrmCards = true;
     }
 

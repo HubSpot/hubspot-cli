@@ -113,12 +113,14 @@ class DevServerManager_DEPRECATED {
     accountId,
     setActiveApp,
     exit,
+    port,
   }: {
     components: Component[];
     onUploadRequired: () => void;
     accountId: number;
     setActiveApp: (appUid: string | undefined) => Promise<void>;
     exit: ExitFunction;
+    port?: number;
   }): Promise<void> {
     this.componentsByType = this.arrangeComponentsByType(components);
     let env: Environment;
@@ -128,7 +130,7 @@ class DevServerManager_DEPRECATED {
     }
 
     try {
-      await startPortManagerServer();
+      await startPortManagerServer(port);
     } catch (e) {
       logError(e);
       return exit(EXIT_CODES.ERROR);

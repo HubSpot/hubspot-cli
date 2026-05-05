@@ -262,3 +262,21 @@ export async function confirmUseExistingDeveloperTestAccountPrompt(
   ]);
   return confirmUseExistingDeveloperTestAccount;
 }
+
+export async function confirmLinkExistingDeveloperTestAccountPrompt(
+  accountName: string
+): Promise<boolean> {
+  const { confirmLinkExistingDeveloperTestAccount } = await promptUser<{
+    confirmLinkExistingDeveloperTestAccount: boolean;
+  }>([
+    {
+      name: 'confirmLinkExistingDeveloperTestAccount',
+      type: 'confirm',
+      message:
+        lib.prompts.projectDevTargetAccountPrompt.confirmLinkExistingDeveloperTestAccount(
+          accountName
+        ),
+    },
+  ]);
+  return confirmLinkExistingDeveloperTestAccount;
+}

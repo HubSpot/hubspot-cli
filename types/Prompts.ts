@@ -19,6 +19,7 @@ export type PromptChoices<T = any> = Array<
   | string
   | {
       name: string;
+      short?: string;
       value?: T;
       disabled?: string | boolean;
       checked?: boolean;

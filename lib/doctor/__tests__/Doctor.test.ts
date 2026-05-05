@@ -1,6 +1,6 @@
 import { Doctor } from '../Doctor.js';
 import { hasMissingPackages as _hasMissingPackages } from '../../dependencyManagement.js';
-import { isPortManagerPortAvailable as _isPortManagerPortAvailable } from '@hubspot/local-dev-lib/portManager';
+import { isPortAvailable as _isPortAvailable } from '@hubspot/local-dev-lib/portManager';
 import {
   DiagnosticInfo,
   DiagnosticInfoBuilder,
@@ -53,7 +53,11 @@ vi.mock('@hubspot/project-parsing-lib/constants');
 vi.mock('../../cliUpgradeUtils.js');
 
 const hasMissingPackages = vi.mocked(_hasMissingPackages);
-const isPortManagerPortAvailable = vi.mocked(_isPortManagerPortAvailable);
+const isPortAvailable = vi.mocked(_isPortAvailable);
+
+function mockPortAvailability(available: boolean) {
+  isPortAvailable.mockResolvedValue(available);
+}
 const utilPromisify = vi.mocked(_promisify);
 const accessTokenForPersonalAccessKey = vi.mocked(
   _accessTokenForPersonalAccessKey
@@ -152,6 +156,8 @@ describe('lib/doctor/Doctor', () => {
         return JSON.stringify({ valid: true });
       })
     );
+
+    mockPortAvailability(true);
   });
 
   describe('CLI Checks', () => {
@@ -511,13 +517,13 @@ describe('lib/doctor/Doctor', () => {
 
     describe('Port', () => {
       it('should add warning section if port is in use', async () => {
-        isPortManagerPortAvailable.mockResolvedValue(false);
+        mockPortAvailability(false);
         await doctor.diagnose();
 
         // @ts-expect-error Testing private method
         expect(doctor.diagnosis?.addProjectSection).toHaveBeenCalledWith({
           type: 'warning',
-          message: 'Port 8080 is in use',
+          message: 'Default port 4828 is in use',
           secondaryMessaging: expect.stringMatching(
             /Make sure it is available before running/
           ),
@@ -525,13 +531,13 @@ describe('lib/doctor/Doctor', () => {
       });
 
       it('should add success section if port is available', async () => {
-        isPortManagerPortAvailable.mockResolvedValue(true);
+        mockPortAvailability(true);
 
         await doctor.diagnose();
         // @ts-expect-error Testing private method
         expect(doctor.diagnosis.addProjectSection).toHaveBeenCalledWith({
           type: 'success',
-          message: 'Port 8080 available for local development',
+          message: 'Default port 4828 available for local development',
         });
       });
     });

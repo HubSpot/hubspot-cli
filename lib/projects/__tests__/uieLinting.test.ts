@@ -1,12 +1,19 @@
 import fs from 'fs';
 import path from 'path';
 import util from 'util';
+import { fetchRepoFile } from '@hubspot/local-dev-lib/api/github';
+import {
+  DEFAULT_PROJECT_TEMPLATE_BRANCH,
+  HUBSPOT_PROJECT_COMPONENTS_GITHUB_PATH,
+} from '../../constants.js';
 import { uiLogger } from '../../ui/logger.js';
 import * as dependencyManagement from '../../dependencyManagement.js';
 import {
   isEslintInstalled,
   areAllLintPackagesInstalled,
   getMissingLintPackages,
+  getMissingLintScripts,
+  addLintScriptsToPackageJson,
   lintPackages,
   lintPackagesInDirectory,
   displayLintResults,
@@ -14,10 +21,14 @@ import {
   hasDeprecatedEslintConfig,
   getDeprecatedEslintConfigFiles,
   createEslintConfig,
+  REQUIRED_PACKAGES_AND_MIN_VERSIONS,
 } from '../uieLinting.js';
 import { clearPackageJsonCache } from '../../npm/packageJson.js';
 
 vi.mock('fs');
+vi.mock('@hubspot/local-dev-lib/api/github', () => ({
+  fetchRepoFile: vi.fn(),
+}));
 vi.mock('../../dependencyManagement.js', async () => {
   const actual = await vi.importActual<
     typeof import('../../dependencyManagement.js')
@@ -32,10 +43,28 @@ vi.mock('util');
 
 const readFileSyncSpy = vi.spyOn(fs, 'readFileSync');
 const existsSyncSpy = vi.spyOn(fs, 'existsSync');
+const mockedFetchRepoFile = vi.mocked(fetchRepoFile);
 const getProjectPackageJsonLocationsSpy = vi.spyOn(
   dependencyManagement,
   'getProjectPackageJsonLocations'
 );
+
+const fullLintDevDependencies = {
+  eslint: '^9.0.0',
+  '@eslint/js': '^9.0.0',
+  'typescript-eslint': '^8.46.4',
+  '@hubspot/eslint-config-ui-extensions': '^1.0.0',
+  'eslint-config-prettier': '^10.0.0',
+  'eslint-plugin-react': '^7.0.0',
+  'eslint-plugin-react-hooks': '^7.0.0',
+  'eslint-plugin-unused-imports': '^4.0.0',
+  prettier: '^3.0.0',
+  jiti: '^2.6.1',
+} as const;
+
+const allLintPackageNames = Object.keys(
+  REQUIRED_PACKAGES_AND_MIN_VERSIONS
+) as string[];
 
 // Mock exec function
 const mockExec = vi.fn();
@@ -137,13 +166,7 @@ describe('lib/linting', () => {
     it('should return true if all packages are installed', () => {
       const directory = '/test/project/component1';
       const packageJson = JSON.stringify({
-        devDependencies: {
-          eslint: '^9.0.0',
-          '@typescript-eslint/eslint-plugin': '^8.46.4',
-          '@typescript-eslint/parser': '^8.46.4',
-          'typescript-eslint': '^8.46.4',
-          jiti: '^2.6.1',
-        },
+        devDependencies: { ...fullLintDevDependencies },
       });
 
       readFileSyncSpy.mockImplementation(() => packageJson);
@@ -166,41 +189,24 @@ describe('lib/linting', () => {
       expect(result).toBe(false);
     });
 
-    it('should return false if @typescript-eslint/eslint-plugin is missing', () => {
+    it('should return false if @eslint/js is missing', () => {
       const directory = '/test/project/component1';
+      const rest: Record<string, string> = { ...fullLintDevDependencies };
+      delete rest['@eslint/js'];
       const packageJson = JSON.stringify({
-        devDependencies: {
-          eslint: '^9.0.0',
-          '@typescript-eslint/parser': '^8.46.4',
-          // @typescript-eslint/eslint-plugin is missing
-        },
+        devDependencies: rest,
       });
 
       readFileSyncSpy.mockImplementation(() => packageJson);
-      existsSyncSpy.mockImplementation(path => {
-        // Only @typescript-eslint/eslint-plugin is missing from node_modules
-        return !String(path).includes('@typescript-eslint/eslint-plugin');
-      });
-
-      const result = areAllLintPackagesInstalled(directory);
-
-      expect(result).toBe(false);
-    });
-
-    it('should return false if @typescript-eslint/parser is missing', () => {
-      const directory = '/test/project/component1';
-      const packageJson = JSON.stringify({
-        devDependencies: {
-          eslint: '^9.0.0',
-          '@typescript-eslint/eslint-plugin': '^8.46.4',
-          // @typescript-eslint/parser is missing
-        },
-      });
-
-      readFileSyncSpy.mockImplementation(() => packageJson);
-      existsSyncSpy.mockImplementation(path => {
-        // Only @typescript-eslint/parser is missing from node_modules
-        return !String(path).includes('@typescript-eslint/parser');
+      existsSyncSpy.mockImplementation(p => {
+        const s = String(p);
+        if (
+          s.includes('node_modules/@eslint/js') ||
+          s.includes('node_modules\\@eslint\\js')
+        ) {
+          return false;
+        }
+        return true;
       });
 
       const result = areAllLintPackagesInstalled(directory);
@@ -210,18 +216,14 @@ describe('lib/linting', () => {
 
     it('should return false if typescript-eslint is missing', () => {
       const directory = '/test/project/component1';
+      const rest: Record<string, string> = { ...fullLintDevDependencies };
+      delete rest['typescript-eslint'];
       const packageJson = JSON.stringify({
-        devDependencies: {
-          eslint: '^9.0.0',
-          '@typescript-eslint/eslint-plugin': '^8.46.4',
-          '@typescript-eslint/parser': '^8.46.4',
-          // typescript-eslint is missing
-        },
+        devDependencies: rest,
       });
 
       readFileSyncSpy.mockImplementation(() => packageJson);
       existsSyncSpy.mockImplementation(path => {
-        // Only typescript-eslint is missing from node_modules
         return !String(path).includes('typescript-eslint');
       });
 
@@ -232,19 +234,14 @@ describe('lib/linting', () => {
 
     it('should return false if jiti is missing', () => {
       const directory = '/test/project/component1';
+      const rest: Record<string, string> = { ...fullLintDevDependencies };
+      delete rest.jiti;
       const packageJson = JSON.stringify({
-        devDependencies: {
-          eslint: '^9.0.0',
-          '@typescript-eslint/eslint-plugin': '^8.46.4',
-          '@typescript-eslint/parser': '^8.46.4',
-          'typescript-eslint': '^8.46.4',
-          // jiti is missing
-        },
+        devDependencies: rest,
       });
 
       readFileSyncSpy.mockImplementation(() => packageJson);
       existsSyncSpy.mockImplementation(path => {
-        // Only jiti is missing from node_modules
         return !String(path).includes('jiti');
       });
 
@@ -258,13 +255,7 @@ describe('lib/linting', () => {
     it('should return empty array if all packages are installed with correct versions', () => {
       const directory = '/test/project/component1';
       const packageJson = JSON.stringify({
-        devDependencies: {
-          eslint: '^9.0.0',
-          '@typescript-eslint/eslint-plugin': '^8.46.4',
-          '@typescript-eslint/parser': '^8.46.4',
-          'typescript-eslint': '^8.46.4',
-          jiti: '^2.6.1',
-        },
+        devDependencies: { ...fullLintDevDependencies },
       });
 
       readFileSyncSpy.mockImplementation(() => packageJson);
@@ -280,13 +271,7 @@ describe('lib/linting', () => {
     it('should return packages that are in package.json but not installed', () => {
       const directory = '/test/project/component1';
       const packageJson = JSON.stringify({
-        devDependencies: {
-          eslint: '^9.0.0',
-          '@typescript-eslint/eslint-plugin': '^8.46.4',
-          '@typescript-eslint/parser': '^8.46.4',
-          'typescript-eslint': '^8.46.4',
-          jiti: '^2.6.1',
-        },
+        devDependencies: { ...fullLintDevDependencies },
       });
 
       readFileSyncSpy.mockImplementation(() => packageJson);
@@ -295,13 +280,7 @@ describe('lib/linting', () => {
       const result = getMissingLintPackages(directory);
 
       expect(result).toEqual({
-        missingPackages: [
-          'eslint',
-          '@typescript-eslint/eslint-plugin',
-          '@typescript-eslint/parser',
-          'typescript-eslint',
-          'jiti',
-        ],
+        missingPackages: allLintPackageNames,
       });
     });
 
@@ -313,13 +292,7 @@ describe('lib/linting', () => {
       const result = getMissingLintPackages(directory);
 
       expect(result).toEqual({
-        missingPackages: [
-          'eslint',
-          '@typescript-eslint/eslint-plugin',
-          '@typescript-eslint/parser',
-          'typescript-eslint',
-          'jiti',
-        ],
+        missingPackages: allLintPackageNames,
       });
     });
 
@@ -329,10 +302,8 @@ describe('lib/linting', () => {
       readFileSyncSpy.mockImplementation(() => {
         readCount++;
         if (readCount === 1) {
-          // eslint in package.json
           return JSON.stringify({ devDependencies: { eslint: '^9.0.0' } });
         }
-        // Others not in package.json
         return JSON.stringify({ dependencies: {} });
       });
 
@@ -341,13 +312,7 @@ describe('lib/linting', () => {
       const result = getMissingLintPackages(directory);
 
       expect(result).toEqual({
-        missingPackages: [
-          'eslint',
-          '@typescript-eslint/eslint-plugin',
-          '@typescript-eslint/parser',
-          'typescript-eslint',
-          'jiti',
-        ],
+        missingPackages: allLintPackageNames,
       });
     });
 
@@ -359,13 +324,7 @@ describe('lib/linting', () => {
       const result = getMissingLintPackages(directory);
 
       expect(result).toEqual({
-        missingPackages: [
-          'eslint',
-          '@typescript-eslint/eslint-plugin',
-          '@typescript-eslint/parser',
-          'typescript-eslint',
-          'jiti',
-        ],
+        missingPackages: allLintPackageNames,
       });
     });
 
@@ -374,9 +333,14 @@ describe('lib/linting', () => {
       const packageJson = JSON.stringify({
         devDependencies: {
           eslint: '^8.0.0',
-          '@typescript-eslint/eslint-plugin': '^7.0.0',
-          '@typescript-eslint/parser': '^8.0.0',
-          'typescript-eslint': '^8.0.0',
+          '@eslint/js': '^8.0.0',
+          'typescript-eslint': '^7.0.0',
+          '@hubspot/eslint-config-ui-extensions': '^0.1.0',
+          'eslint-config-prettier': '^9.0.0',
+          'eslint-plugin-react': '^6.0.0',
+          'eslint-plugin-react-hooks': '^5.0.0',
+          'eslint-plugin-unused-imports': '^3.0.0',
+          prettier: '^2.0.0',
           jiti: '^2.0.0',
         },
       });
@@ -387,13 +351,7 @@ describe('lib/linting', () => {
       const result = getMissingLintPackages(directory);
 
       expect(result).toEqual({
-        missingPackages: [
-          'eslint',
-          '@typescript-eslint/eslint-plugin',
-          '@typescript-eslint/parser',
-          'typescript-eslint',
-          'jiti',
-        ],
+        missingPackages: allLintPackageNames,
       });
     });
 
@@ -401,11 +359,8 @@ describe('lib/linting', () => {
       const directory = '/test/project/component1';
       const packageJson = JSON.stringify({
         devDependencies: {
+          ...fullLintDevDependencies,
           eslint: '^8.0.0',
-          '@typescript-eslint/eslint-plugin': '^8.46.4',
-          '@typescript-eslint/parser': '^8.46.4',
-          'typescript-eslint': '^8.46.4',
-          jiti: '^2.6.1',
         },
       });
 
@@ -577,32 +532,92 @@ describe('lib/linting', () => {
   describe('createEslintConfig', () => {
     const writeFileSyncSpy = vi.spyOn(fs, 'writeFileSync');
 
-    it('should create eslint.config.mts with template content', () => {
-      const directory = '/test/project/component1';
-
-      const result = createEslintConfig(directory);
-
-      expect(writeFileSyncSpy).toHaveBeenCalledWith(
-        path.join(directory, 'eslint.config.mts'),
-        expect.stringContaining('@typescript-eslint/parser'),
-        'utf-8'
-      );
-      expect(writeFileSyncSpy).toHaveBeenCalledWith(
-        path.join(directory, 'eslint.config.mts'),
-        expect.stringContaining('"no-console": ["warn"'),
-        'utf-8'
-      );
-      // Result is a relative path from process.cwd() to the config file
-      expect(result).toContain('eslint.config.mts');
+    beforeEach(() => {
+      mockedFetchRepoFile.mockReset();
     });
 
-    it('should log error if write fails', () => {
+    it('should create eslint.config.js with fetched content for v2 platform', async () => {
       const directory = '/test/project/component1';
+      const remote = `import { defineConfig } from 'eslint/config';
+export default defineConfig([]);`;
+
+      mockedFetchRepoFile.mockResolvedValueOnce({ data: remote } as never);
+
+      const result = await createEslintConfig(directory, '2026.03');
+
+      expect(mockedFetchRepoFile).toHaveBeenCalledWith(
+        HUBSPOT_PROJECT_COMPONENTS_GITHUB_PATH,
+        '2026.03/components/cards/src/app/cards/eslint.config.js',
+        DEFAULT_PROJECT_TEMPLATE_BRANCH
+      );
+      expect(writeFileSyncSpy).toHaveBeenCalledWith(
+        path.join(directory, 'eslint.config.js'),
+        remote,
+        'utf-8'
+      );
+      expect(result).toContain('eslint.config.js');
+    });
+
+    it('should reject when remote fetch fails', async () => {
+      const directory = '/test/project/component1';
+
+      mockedFetchRepoFile.mockRejectedValueOnce(new Error('network'));
+
+      await expect(createEslintConfig(directory, '2026.03')).rejects.toThrow();
+
+      expect(uiLogger.error).toHaveBeenCalledWith(
+        expect.stringContaining('2026.03')
+      );
+      expect(writeFileSyncSpy).not.toHaveBeenCalled();
+    });
+
+    it('should reject when remote body is empty after trim', async () => {
+      const directory = '/test/project/component1';
+
+      mockedFetchRepoFile.mockResolvedValueOnce({ data: '  \n  ' } as never);
+
+      await expect(createEslintConfig(directory, '2026.03')).rejects.toThrow();
+
+      expect(uiLogger.error).toHaveBeenCalledWith(
+        expect.stringContaining('2026.03')
+      );
+      expect(writeFileSyncSpy).not.toHaveBeenCalled();
+    });
+
+    it('should reject when platform is not v2', async () => {
+      const directory = '/test/project/component1';
+
+      await expect(createEslintConfig(directory, '2023.2')).rejects.toThrow();
+
+      expect(mockedFetchRepoFile).not.toHaveBeenCalled();
+      expect(writeFileSyncSpy).not.toHaveBeenCalled();
+      expect(uiLogger.error).toHaveBeenCalledWith(
+        expect.stringContaining('2023.2')
+      );
+    });
+
+    it('should reject when platformVersion is missing', async () => {
+      const directory = '/test/project/component1';
+
+      await expect(createEslintConfig(directory, null)).rejects.toThrow();
+
+      expect(mockedFetchRepoFile).not.toHaveBeenCalled();
+      expect(writeFileSyncSpy).not.toHaveBeenCalled();
+      expect(uiLogger.error).toHaveBeenCalledWith(
+        expect.stringContaining('platformVersion')
+      );
+    });
+
+    it('should log error if write fails', async () => {
+      const directory = '/test/project/component1';
+      mockedFetchRepoFile.mockResolvedValueOnce({
+        data: 'export default [];',
+      } as never);
       writeFileSyncSpy.mockImplementationOnce(() => {
         throw new Error('Write failed');
       });
 
-      expect(() => createEslintConfig(directory)).toThrow();
+      await expect(createEslintConfig(directory, '2026.03')).rejects.toThrow();
       expect(uiLogger.error).toHaveBeenCalledWith(
         expect.stringContaining('Failed to create ESLint configuration')
       );
@@ -827,6 +842,204 @@ describe('lib/linting', () => {
       );
       expect(uiLogger.log).toHaveBeenCalledWith('  ✗ component1');
       expect(uiLogger.log).toHaveBeenCalledWith('  ✗ component2');
+    });
+  });
+
+  describe('getMissingLintScripts', () => {
+    it('should return both scripts when neither exists', () => {
+      const directory = '/test/project/component1';
+      readFileSyncSpy.mockReturnValueOnce(
+        JSON.stringify({ name: 'test', scripts: {} })
+      );
+
+      const result = getMissingLintScripts(directory);
+
+      expect(result).toEqual(['lint', 'lint:fix']);
+    });
+
+    it('should return both scripts when scripts field is missing', () => {
+      const directory = '/test/project/component1';
+      readFileSyncSpy.mockReturnValueOnce(JSON.stringify({ name: 'test' }));
+
+      const result = getMissingLintScripts(directory);
+
+      expect(result).toEqual(['lint', 'lint:fix']);
+    });
+
+    it('should return only lint:fix when lint already exists', () => {
+      const directory = '/test/project/component1';
+      readFileSyncSpy.mockReturnValueOnce(
+        JSON.stringify({
+          name: 'test',
+          scripts: { lint: 'eslint .' },
+        })
+      );
+
+      const result = getMissingLintScripts(directory);
+
+      expect(result).toEqual(['lint:fix']);
+    });
+
+    it('should return only lint when lint:fix already exists', () => {
+      const directory = '/test/project/component1';
+      readFileSyncSpy.mockReturnValueOnce(
+        JSON.stringify({
+          name: 'test',
+          scripts: { 'lint:fix': 'eslint . --fix' },
+        })
+      );
+
+      const result = getMissingLintScripts(directory);
+
+      expect(result).toEqual(['lint']);
+    });
+
+    it('should return empty array when both scripts exist', () => {
+      const directory = '/test/project/component1';
+      readFileSyncSpy.mockReturnValueOnce(
+        JSON.stringify({
+          name: 'test',
+          scripts: { lint: 'eslint .', 'lint:fix': 'eslint . --fix' },
+        })
+      );
+
+      const result = getMissingLintScripts(directory);
+
+      expect(result).toEqual([]);
+    });
+
+    it('should return empty array when package.json cannot be read', () => {
+      const directory = '/test/project/component1';
+      readFileSyncSpy.mockImplementationOnce(() => {
+        throw new Error('File not found');
+      });
+
+      const result = getMissingLintScripts(directory);
+
+      expect(result).toEqual([]);
+    });
+
+    it('should not consider custom lint scripts as missing', () => {
+      const directory = '/test/project/component1';
+      readFileSyncSpy.mockReturnValueOnce(
+        JSON.stringify({
+          name: 'test',
+          scripts: {
+            lint: 'custom-linter run',
+            'lint:fix': 'custom-linter fix',
+          },
+        })
+      );
+
+      const result = getMissingLintScripts(directory);
+
+      expect(result).toEqual([]);
+    });
+  });
+
+  describe('addLintScriptsToPackageJson', () => {
+    const writeFileSyncSpy = vi.spyOn(fs, 'writeFileSync');
+
+    it('should add both lint scripts when neither exists', () => {
+      const directory = '/test/project/component1';
+      readFileSyncSpy.mockReturnValueOnce(
+        JSON.stringify({ name: 'test', scripts: { build: 'tsc' } }, null, 2)
+      );
+
+      const result = addLintScriptsToPackageJson(directory);
+
+      expect(result.added).toEqual(['lint', 'lint:fix']);
+      expect(writeFileSyncSpy).toHaveBeenCalledWith(
+        path.join(directory, 'package.json'),
+        expect.stringContaining('"lint": "eslint ."'),
+        'utf-8'
+      );
+      expect(writeFileSyncSpy).toHaveBeenCalledWith(
+        path.join(directory, 'package.json'),
+        expect.stringContaining('"lint:fix": "eslint . --fix"'),
+        'utf-8'
+      );
+    });
+
+    it('should add only the missing script when one exists', () => {
+      const directory = '/test/project/component1';
+      readFileSyncSpy.mockReturnValueOnce(
+        JSON.stringify({ name: 'test', scripts: { lint: 'eslint .' } }, null, 2)
+      );
+
+      const result = addLintScriptsToPackageJson(directory);
+
+      expect(result.added).toEqual(['lint:fix']);
+    });
+
+    it('should not write if both scripts already exist', () => {
+      const directory = '/test/project/component1';
+      readFileSyncSpy.mockReturnValueOnce(
+        JSON.stringify(
+          {
+            name: 'test',
+            scripts: { lint: 'eslint .', 'lint:fix': 'eslint . --fix' },
+          },
+          null,
+          2
+        )
+      );
+
+      const result = addLintScriptsToPackageJson(directory);
+
+      expect(result.added).toEqual([]);
+      expect(writeFileSyncSpy).not.toHaveBeenCalled();
+    });
+
+    it('should create scripts field if it does not exist', () => {
+      const directory = '/test/project/component1';
+      readFileSyncSpy.mockReturnValueOnce(
+        JSON.stringify({ name: 'test' }, null, 2)
+      );
+
+      const result = addLintScriptsToPackageJson(directory);
+
+      expect(result.added).toEqual(['lint', 'lint:fix']);
+      expect(writeFileSyncSpy).toHaveBeenCalledWith(
+        path.join(directory, 'package.json'),
+        expect.stringContaining('"scripts"'),
+        'utf-8'
+      );
+    });
+
+    it('should preserve existing scripts', () => {
+      const directory = '/test/project/component1';
+      readFileSyncSpy.mockReturnValueOnce(
+        JSON.stringify(
+          { name: 'test', scripts: { build: 'tsc', test: 'vitest' } },
+          null,
+          2
+        )
+      );
+
+      const result = addLintScriptsToPackageJson(directory);
+
+      expect(result.added).toEqual(['lint', 'lint:fix']);
+      const writtenContent = writeFileSyncSpy.mock.calls[0][1] as string;
+      expect(writtenContent).toContain('"build": "tsc"');
+      expect(writtenContent).toContain('"test": "vitest"');
+    });
+
+    it('should warn and return empty added array if write fails', () => {
+      const directory = '/test/project/component1';
+      readFileSyncSpy.mockReturnValueOnce(
+        JSON.stringify({ name: 'test' }, null, 2)
+      );
+      writeFileSyncSpy.mockImplementationOnce(() => {
+        throw new Error('Permission denied');
+      });
+
+      const result = addLintScriptsToPackageJson(directory);
+
+      expect(result.added).toEqual([]);
+      expect(uiLogger.warn).toHaveBeenCalledWith(
+        expect.stringContaining('Failed to add lint scripts')
+      );
     });
   });
 });

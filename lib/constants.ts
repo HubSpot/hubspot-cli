@@ -179,3 +179,7 @@ export const ACCOUNT_LEVEL_CHOICES = [
 ] as const;
 
 export const FEEDBACK_URL = 'https://developers.hubspot.com/feedback';
+
+// TODO: remove this constant and use PORT_MANAGER_SERVER_PORT from
+// @hubspot/local-dev-lib once LDL changes its default to 4828.
+export const LOCAL_DEV_DEFAULT_PORT = 4828;

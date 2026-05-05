@@ -43,10 +43,20 @@ import SpinniesManager from '../../lib/ui/SpinniesManager.js';
 const command = ['create', 'init'];
 const describe = commands.project.create.describe;
 
+const BETA_VERSIONS = [
+  PLATFORM_VERSIONS.v2026_09_BETA,
+  PLATFORM_VERSIONS.v2026_03_BETA,
+];
+
 async function handler(
   args: ArgumentsCamelCase<ProjectCreateArgs>
 ): Promise<void> {
   const { platformVersion, templateSource, exit, addUsageMetadata } = args;
+  if (BETA_VERSIONS.includes(platformVersion)) {
+    uiLogger.warn(
+      commands.project.create.warnings.betaPlatformVersion(platformVersion)
+    );
+  }
 
   if (templateSource && !templateSource.includes('/')) {
     uiLogger.error(commands.project.create.errors.invalidTemplateSource);
@@ -209,6 +219,7 @@ function projectCreateBuilder(yargs: Argv): Argv<ProjectCreateArgs> {
         PLATFORM_VERSIONS.v2025_2,
         PLATFORM_VERSIONS.v2026_03_BETA,
         PLATFORM_VERSIONS.v2026_03,
+        PLATFORM_VERSIONS.v2026_09_BETA,
       ],
       default: PLATFORM_VERSIONS.v2026_03,
     },

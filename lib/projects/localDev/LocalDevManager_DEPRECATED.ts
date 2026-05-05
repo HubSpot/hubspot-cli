@@ -66,6 +66,7 @@ type LocalDevManagerConstructorOptions = {
   runnableComponents: Component[];
   env: Environment;
   exit: ExitFunction;
+  port?: number;
 };
 
 class LocalDevManager_DEPRECATED {
@@ -88,6 +89,7 @@ class LocalDevManager_DEPRECATED {
   mostRecentUploadWarning: string | null;
   private devSessionManager: DevSessionManager;
   private exit: ExitFunction;
+  private port?: number;
 
   constructor(options: LocalDevManagerConstructorOptions) {
     this.targetAccountId = options.targetAccountId;
@@ -109,6 +111,7 @@ class LocalDevManager_DEPRECATED {
     this.publicAppActiveInstalls = null;
     this.mostRecentUploadWarning = null;
     this.exit = options.exit;
+    this.port = options.port;
 
     this.projectSourceDir = path.join(
       this.projectDir,
@@ -545,6 +548,7 @@ class LocalDevManager_DEPRECATED {
         accountId: this.targetAccountId,
         setActiveApp: this.setActiveApp.bind(this),
         exit: this.exit,
+        port: this.port,
       });
       return true;
     } catch (e) {

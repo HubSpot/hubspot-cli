@@ -9,6 +9,8 @@ import remove from './account/remove.js';
 import clean from './account/clean.js';
 import createOverride from './account/createOverride.js';
 import removeOverride from './account/removeOverride.js';
+import link from './account/link.js';
+import unlink from './account/unlink.js';
 import { makeYargsBuilder } from '../lib/yargsUtils.js';
 import { YargsCommandModuleBucket } from '../types/Yargs.js';
 
@@ -18,6 +20,8 @@ const describe = commands.account.describe;
 function accountBuilder(yargs: Argv): Argv {
   yargs
     .command(auth)
+    .command(link)
+    .command(unlink)
     .command(list)
     .command(rename)
     .command(use)

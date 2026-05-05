@@ -1,5 +1,7 @@
 import yargs, { Argv } from 'yargs';
 import auth from '../account/auth.js';
+import link from '../account/link.js';
+import unlink from '../account/unlink.js';
 import list from '../account/list.js';
 import rename from '../account/rename.js';
 import use from '../account/use.js';
@@ -11,6 +13,8 @@ import removeOverride from '../account/removeOverride.js';
 import accountCommands from '../account.js';
 
 vi.mock('../account/auth');
+vi.mock('../account/link');
+vi.mock('../account/unlink');
 vi.mock('../account/list');
 vi.mock('../account/rename');
 vi.mock('../account/use');
@@ -49,6 +53,8 @@ describe('commands/account', () => {
 
     const subcommands = [
       auth,
+      link,
+      unlink,
       list,
       rename,
       use,

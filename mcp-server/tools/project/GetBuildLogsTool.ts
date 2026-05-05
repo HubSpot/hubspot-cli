@@ -190,7 +190,7 @@ export class GetBuildLogsTool extends Tool<GetBuildLogsInputSchema> {
       {
         title: 'Get HubSpot Project Build Logs',
         description:
-          'Retrieves build logs for a specific HubSpot project build. Use this to debug build failures by viewing the full build pipeline output. This tool is for more comprehensive troubleshootings or addressing build WARNINGs, build errors should be troubleshooted with get-build-status tool first. Logs can be filtered by level (ERROR, WARN, INFO, or ALL). Use `hs project list-builds`  first to identify the build ID and error messages.',
+          'Retrieves build logs for a specific HubSpot project build. Use this to debug build failures by viewing the full build pipeline output. This tool is for more comprehensive troubleshootings or addressing build WARNINGs, build errors should be troubleshooted with get-build-status tool first. Logs can be filtered by level (ERROR, WARN, INFO, or ALL). Use `hs project list-builds`  first to identify the build ID and error messages. If you do not know the project path, use the find-projects tool first to locate HubSpot projects in the workspace.',
         inputSchema,
         annotations: {
           readOnlyHint: true,

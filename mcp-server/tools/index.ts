@@ -23,6 +23,7 @@ import { HsCreateFunctionTool } from './cms/HsCreateFunctionTool.js';
 import { HsListFunctionsTool } from './cms/HsListFunctionsTool.js';
 import { HsFunctionLogsTool } from './cms/HsFunctionLogsTool.js';
 import { CreateTestAccountTool } from './project/CreateTestAccountTool.js';
+import { FindProjectsTool } from './project/FindProjectsTool.js';
 
 export function registerProjectTools(
   mcpServer: McpServer,
@@ -43,6 +44,7 @@ export function registerProjectTools(
     new GetApplicationInfoTool(mcpServer, logger).register(),
     new GetBuildLogsTool(mcpServer, logger).register(),
     new GetBuildStatusTool(mcpServer, logger).register(),
+    new FindProjectsTool(mcpServer, logger).register(),
   ];
 }
 

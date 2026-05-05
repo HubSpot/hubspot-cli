@@ -6,10 +6,15 @@ import {
   getAllConfigAccounts,
   getConfigAccountById,
   getConfigAccountEnvironment,
+  getConfigAccountIfExists,
 } from '@hubspot/local-dev-lib/config';
 import { getValidEnv } from '@hubspot/local-dev-lib/environment';
-import { getServerPortByInstanceId } from '@hubspot/local-dev-lib/portManager';
+import {
+  getServerPortByInstanceId,
+  startPortManagerServer,
+} from '@hubspot/local-dev-lib/portManager';
 import { ProjectDevArgs } from '../../../types/Yargs.js';
+import { LOCAL_DEV_DEFAULT_PORT } from '../../../lib/constants.js';
 import { ProjectConfig } from '../../../types/Projects.js';
 import { logError } from '../../../lib/errorHandlers/index.js';
 import { ensureProjectExists } from '../../../lib/projects/ensureProjectExists.js';
@@ -25,7 +30,12 @@ import {
 import {
   selectDeveloperTestTargetAccountPrompt,
   selectSandboxTargetAccountPrompt,
+  confirmLinkExistingDeveloperTestAccountPrompt,
 } from '../../../lib/prompts/projectDevTargetAccountPrompt.js';
+import {
+  addAccountToLinkedSettings,
+  isDirectoryLinked,
+} from '../../../lib/link/linkUtils.js';
 import SpinniesManager from '../../../lib/ui/SpinniesManager.js';
 import LocalDevProcess from '../../../lib/projects/localDev/LocalDevProcess.js';
 import LocalDevWatcher from '../../../lib/projects/localDev/LocalDevWatcher.js';
@@ -69,6 +79,8 @@ vi.mock('../../../lib/projects/localDev/LocalDevWebsocketServer');
 vi.mock('../../../lib/process');
 vi.mock('../../../lib/accountTypes');
 vi.mock('../../../lib/ui');
+vi.mock('@hubspot/local-dev-lib/config/hsSettings');
+vi.mock('../../../lib/link/linkUtils');
 
 describe('unifiedProjectDevFlow', () => {
   const mockArgs: ArgumentsCamelCase<ProjectDevArgs> = {
@@ -382,6 +394,86 @@ describe('unifiedProjectDevFlow', () => {
       );
     });
 
+    it('should prompt to link instead of re-authenticating when account is globally authed but not linked', async () => {
+      const notInConfigAccount = {
+        id: 777,
+        accountName: 'my-test-account',
+        testPortalId: 777,
+        parentPortalId: 123,
+        createdAt: '',
+        updatedAt: '',
+        status: 'ACTIVE',
+      };
+
+      vi.mocked(isDirectoryLinked).mockReturnValue(true);
+      (getConfigAccountIfExists as Mock).mockReturnValue({
+        accountId: 777,
+        name: 'my-test-account',
+      });
+      (selectAccountTypePrompt as Mock).mockResolvedValue(
+        HUBSPOT_ACCOUNT_TYPES.DEVELOPER_TEST
+      );
+      (selectDeveloperTestTargetAccountPrompt as Mock).mockResolvedValue({
+        targetAccountId: 777,
+        notInConfigAccount,
+      });
+      (confirmLinkExistingDeveloperTestAccountPrompt as Mock).mockResolvedValue(
+        true
+      );
+
+      await unifiedProjectDevFlow({
+        args: mockArgs,
+        targetProjectAccountId: mockTargetProjectAccountId,
+        projectConfig: mockProjectConfig,
+        projectDir: mockProjectDir,
+      });
+
+      expect(
+        confirmLinkExistingDeveloperTestAccountPrompt
+      ).toHaveBeenCalledWith('my-test-account');
+      expect(addAccountToLinkedSettings).toHaveBeenCalledWith(777);
+      expect(useExistingDevTestAccount).not.toHaveBeenCalled();
+    });
+
+    it('should exit when user declines to link a globally authed account', async () => {
+      const notInConfigAccount = {
+        id: 777,
+        accountName: 'my-test-account',
+        testPortalId: 777,
+        parentPortalId: 123,
+        createdAt: '',
+        updatedAt: '',
+        status: 'ACTIVE',
+      };
+
+      vi.mocked(isDirectoryLinked).mockReturnValue(true);
+      (getConfigAccountIfExists as Mock).mockReturnValue({
+        accountId: 777,
+        name: 'my-test-account',
+      });
+      (selectAccountTypePrompt as Mock).mockResolvedValue(
+        HUBSPOT_ACCOUNT_TYPES.DEVELOPER_TEST
+      );
+      (selectDeveloperTestTargetAccountPrompt as Mock).mockResolvedValue({
+        targetAccountId: 777,
+        notInConfigAccount,
+      });
+      (confirmLinkExistingDeveloperTestAccountPrompt as Mock).mockResolvedValue(
+        false
+      );
+
+      await unifiedProjectDevFlow({
+        args: mockArgs,
+        targetProjectAccountId: mockTargetProjectAccountId,
+        projectConfig: mockProjectConfig,
+        projectDir: mockProjectDir,
+      });
+
+      expect(mockArgs.exit).toHaveBeenCalledWith(0);
+      expect(addAccountToLinkedSettings).not.toHaveBeenCalled();
+      expect(useExistingDevTestAccount).not.toHaveBeenCalled();
+    });
+
     it('should handle sandbox account selection', async () => {
       (selectAccountTypePrompt as Mock).mockResolvedValue(
         HUBSPOT_ACCOUNT_TYPES.DEVELOPMENT_SANDBOX
@@ -550,6 +642,34 @@ describe('unifiedProjectDevFlow', () => {
         commands.project.dev.logs.testingAccountFlagExplanation(
           providedTestingAccountId
         )
+      );
+    });
+  });
+
+  describe('port manager', () => {
+    it('should pass custom port to startPortManagerServer', async () => {
+      await unifiedProjectDevFlow({
+        args: { ...mockArgs, port: 9090 },
+        targetProjectAccountId: mockTargetProjectAccountId,
+        providedTargetTestingAccountId: mockProvidedTargetTestingAccountId,
+        projectConfig: mockProjectConfig,
+        projectDir: mockProjectDir,
+      });
+
+      expect(startPortManagerServer).toHaveBeenCalledWith(9090);
+    });
+
+    it('should pass the default port to startPortManagerServer when --port is not specified', async () => {
+      await unifiedProjectDevFlow({
+        args: { ...mockArgs, port: LOCAL_DEV_DEFAULT_PORT },
+        targetProjectAccountId: mockTargetProjectAccountId,
+        providedTargetTestingAccountId: mockProvidedTargetTestingAccountId,
+        projectConfig: mockProjectConfig,
+        projectDir: mockProjectDir,
+      });
+
+      expect(startPortManagerServer).toHaveBeenCalledWith(
+        LOCAL_DEV_DEFAULT_PORT
       );
     });
   });

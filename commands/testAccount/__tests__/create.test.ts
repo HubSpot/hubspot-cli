@@ -103,7 +103,7 @@ describe('commands/testAccount/create', () => {
       expect(yargsMock.option).toHaveBeenCalledWith('content-level', {
         type: 'string',
         description:
-          'CMS Hub tier. Options: FREE, STARTER, PROFESSIONAL, ENTERPRISE',
+          'Content Hub tier. Options: FREE, STARTER, PROFESSIONAL, ENTERPRISE',
         choices: ACCOUNT_LEVEL_CHOICES,
       });
 

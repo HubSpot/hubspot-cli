@@ -46,6 +46,7 @@ import { uiLogger } from '../lib/ui/logger.js';
 import { initializeSpinniesManager } from '../lib/middleware/spinniesMiddleware.js';
 import { addCommandSuggestions } from '../lib/commandSuggestion.js';
 import { pkg } from '../lib/jsonLoader.js';
+import { parseYargsOrExit } from '../lib/yargs/parseYargsOrExit.js';
 
 function getTerminalWidth(): number {
   const width = yargs().terminalWidth();
@@ -55,7 +56,7 @@ function getTerminalWidth(): number {
   return width;
 }
 
-function handleFailure(msg: string, err: Error, yargs: Argv): void {
+function handleFailure(msg: string | null, err: unknown, yargs: Argv): never {
   if (msg) {
     uiLogger.error(msg);
   } else if (err) {
@@ -87,7 +88,6 @@ const argv = yargs(process.argv.slice(2))
     initializeSpinniesManager,
   ])
   .exitProcess(false)
-  .fail(handleFailure)
   .option('noHyperlinks', {
     default: false,
     describe: 'prevent hyperlinks from displaying in the ui',
@@ -137,7 +137,7 @@ const argv = yargs(process.argv.slice(2))
   .command(mcpCommand)
   .command(upgradeCommand);
 
-const argvWithSuggestions = addCommandSuggestions(argv)
+const parser = addCommandSuggestions(argv)
   .help()
   .alias('h', 'help')
   .version(pkg.version)
@@ -145,7 +145,9 @@ const argvWithSuggestions = addCommandSuggestions(argv)
   .recommendCommands()
   .demandCommand(1, '')
   .wrap(getTerminalWidth())
-  .strict().argv;
+  .strict();
+
+const argvWithSuggestions = await parseYargsOrExit(parser, handleFailure);
 
 if ('help' in argvWithSuggestions && argvWithSuggestions.help !== undefined) {
   (async () => {

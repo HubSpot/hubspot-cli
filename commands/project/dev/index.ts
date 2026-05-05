@@ -19,6 +19,7 @@ import { uiLogger } from '../../../lib/ui/logger.js';
 import { logError } from '../../../lib/errorHandlers/index.js';
 import { projectProfilePrompt } from '../../../lib/prompts/projectProfilePrompt.js';
 import { isPromptExitError } from '../../../lib/errors/PromptExitError.js';
+import { LOCAL_DEV_DEFAULT_PORT } from '../../../lib/constants.js';
 
 const command = 'dev';
 const describe = commands.project.dev.describe;
@@ -214,6 +215,12 @@ function projectDevBuilder(yargs: Argv): Argv<ProjectDevArgs> {
     describe: '',
     type: 'string',
     description: commands.project.dev.options.account,
+  });
+
+  yargs.option('port', {
+    type: 'number',
+    description: commands.project.dev.options.port,
+    default: LOCAL_DEV_DEFAULT_PORT,
   });
 
   yargs.example([['$0 project dev', commands.project.dev.examples.default]]);
