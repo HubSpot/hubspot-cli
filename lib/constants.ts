@@ -10,6 +10,8 @@ export const MARKETPLACE_FOLDER = '@marketplace' as const;
 
 export const DEFAULT_POLLING_DELAY = 2000;
 
+export const PREVIEW_POLL_TIMEOUT = 5 * 60 * 1000;
+
 export const PROJECT_CONFIG_FILE = 'hsproject.json' as const;
 
 export const PROJECT_BUILD_STATES = {

@@ -19,7 +19,7 @@ import {
   ConfigArgs,
   YargsCommandModule,
 } from '../../types/Yargs.js';
-import { makeYargsHandlerWithUsageTracking } from '../../lib/yargs/makeYargsHandlerWithUsageTracking.js';
+import { makeWrappedYargsHandler } from '../../lib/yargs/makeWrappedYargsHandler.js';
 import { commands } from '../../lang/en.js';
 import { uiLogger } from '../../lib/ui/logger.js';
 import { renderList } from '../../ui/render.js';
@@ -144,7 +144,7 @@ const builder = makeYargsBuilder<AccountInfoArgs>(
 const accountInfoCommand: YargsCommandModule<unknown, AccountInfoArgs> = {
   command,
   describe,
-  handler: makeYargsHandlerWithUsageTracking('account-info', handler),
+  handler: makeWrappedYargsHandler('account-info', handler),
   builder,
 };
 

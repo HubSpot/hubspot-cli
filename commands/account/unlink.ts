@@ -18,7 +18,7 @@ import {
 } from '../../lib/link/linkUtils.js';
 import { commands } from '../../lang/en.js';
 import { DEFAULT_HS_SETTINGS_PATH } from '@hubspot/local-dev-lib/constants/config';
-import { makeYargsHandlerWithUsageTracking } from '../../lib/yargs/makeYargsHandlerWithUsageTracking.js';
+import { makeWrappedYargsHandler } from '../../lib/yargs/makeWrappedYargsHandler.js';
 
 const command = 'unlink';
 // Hide the command until we're done testing and ready to make linking GA
@@ -101,7 +101,7 @@ const builder = makeYargsBuilder<LinkArgs>(
 const unlinkCommand: YargsCommandModule<unknown, LinkArgs> = {
   command,
   describe,
-  handler: makeYargsHandlerWithUsageTracking('account-unlink', handler),
+  handler: makeWrappedYargsHandler('account-unlink', handler),
   builder,
 };
 

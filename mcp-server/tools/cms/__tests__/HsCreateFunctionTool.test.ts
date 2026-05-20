@@ -91,15 +91,15 @@ describe('HsCreateFunctionTool', () => {
 
     it('should not prompt when all required params provided', async () => {
       mockAddFlag
-        .mockReturnValueOnce('hs create function --functions-folder api')
+        .mockReturnValueOnce('hs cms function create --functions-folder api')
         .mockReturnValueOnce(
-          'hs create function --functions-folder api --filename test-function'
+          'hs cms function create --functions-folder api --filename test-function'
         )
         .mockReturnValueOnce(
-          'hs create function --functions-folder api --filename test-function --endpoint-method GET'
+          'hs cms function create --functions-folder api --filename test-function --endpoint-method GET'
         )
         .mockReturnValueOnce(
-          'hs create function --functions-folder api --filename test-function --endpoint-method GET --endpoint-path /api/test'
+          'hs cms function create --functions-folder api --filename test-function --endpoint-method GET --endpoint-path /api/test'
         );
 
       mockRunCommandInDir.mockResolvedValue({
@@ -159,15 +159,15 @@ describe('HsCreateFunctionTool', () => {
 
     it('should execute command with all required parameters (default GET method)', async () => {
       mockAddFlag
-        .mockReturnValueOnce('hs create function --functions-folder api')
+        .mockReturnValueOnce('hs cms function create --functions-folder api')
         .mockReturnValueOnce(
-          'hs create function --functions-folder api --filename test-function'
+          'hs cms function create --functions-folder api --filename test-function'
         )
         .mockReturnValueOnce(
-          'hs create function --functions-folder api --filename test-function --endpoint-method GET'
+          'hs cms function create --functions-folder api --filename test-function --endpoint-method GET'
         )
         .mockReturnValueOnce(
-          'hs create function --functions-folder api --filename test-function --endpoint-method GET --endpoint-path /api/test'
+          'hs cms function create --functions-folder api --filename test-function --endpoint-method GET --endpoint-path /api/test'
         );
 
       mockRunCommandInDir.mockResolvedValue({
@@ -183,7 +183,7 @@ describe('HsCreateFunctionTool', () => {
       });
 
       expect(mockAddFlag).toHaveBeenCalledWith(
-        'hs create function',
+        'hs cms function create',
         'functions-folder',
         'api'
       );
@@ -204,7 +204,7 @@ describe('HsCreateFunctionTool', () => {
       );
       expect(mockRunCommandInDir).toHaveBeenCalledWith(
         '/test/dir',
-        expect.stringContaining('hs create function')
+        expect.stringContaining('hs cms function create')
       );
       expect(result.content).toHaveLength(2);
       expect(result.content[0].text).toContain('Function created successfully');
@@ -212,15 +212,15 @@ describe('HsCreateFunctionTool', () => {
 
     it('should execute command with POST method', async () => {
       mockAddFlag
-        .mockReturnValueOnce('hs create function --functions-folder api')
+        .mockReturnValueOnce('hs cms function create --functions-folder api')
         .mockReturnValueOnce(
-          'hs create function --functions-folder api --filename post-function'
+          'hs cms function create --functions-folder api --filename post-function'
         )
         .mockReturnValueOnce(
-          'hs create function "POST Function" --functions-folder api --filename post-function --endpoint-method POST'
+          'hs cms function create "POST Function" --functions-folder api --filename post-function --endpoint-method POST'
         )
         .mockReturnValueOnce(
-          'hs create function "POST Function" --functions-folder api --filename post-function --endpoint-method POST --endpoint-path /api/create'
+          'hs cms function create "POST Function" --functions-folder api --filename post-function --endpoint-method POST --endpoint-path /api/create'
         );
 
       mockRunCommandInDir.mockResolvedValue({
@@ -248,15 +248,15 @@ describe('HsCreateFunctionTool', () => {
 
     it('should execute command with PUT method', async () => {
       mockAddFlag
-        .mockReturnValueOnce('hs create function --functions-folder api')
+        .mockReturnValueOnce('hs cms function create --functions-folder api')
         .mockReturnValueOnce(
-          'hs create function "PUT Function" --functions-folder api --filename put-function'
+          'hs cms function create "PUT Function" --functions-folder api --filename put-function'
         )
         .mockReturnValueOnce(
-          'hs create function "PUT Function" --functions-folder api --filename put-function --endpoint-method PUT'
+          'hs cms function create "PUT Function" --functions-folder api --filename put-function --endpoint-method PUT'
         )
         .mockReturnValueOnce(
-          'hs create function "PUT Function" --functions-folder api --filename put-function --endpoint-method PUT --endpoint-path /api/update'
+          'hs cms function create "PUT Function" --functions-folder api --filename put-function --endpoint-method PUT --endpoint-path /api/update'
         );
 
       mockRunCommandInDir.mockResolvedValue({
@@ -284,15 +284,15 @@ describe('HsCreateFunctionTool', () => {
 
     it('should execute command with DELETE method', async () => {
       mockAddFlag
-        .mockReturnValueOnce('hs create function --functions-folder api')
+        .mockReturnValueOnce('hs cms function create --functions-folder api')
         .mockReturnValueOnce(
-          'hs create function "DELETE Function" --functions-folder api --filename delete-function'
+          'hs cms function create "DELETE Function" --functions-folder api --filename delete-function'
         )
         .mockReturnValueOnce(
-          'hs create function "DELETE Function" --functions-folder api --filename delete-function --endpoint-method DELETE'
+          'hs cms function create "DELETE Function" --functions-folder api --filename delete-function --endpoint-method DELETE'
         )
         .mockReturnValueOnce(
-          'hs create function "DELETE Function" --functions-folder api --filename delete-function --endpoint-method DELETE --endpoint-path /api/delete'
+          'hs cms function create "DELETE Function" --functions-folder api --filename delete-function --endpoint-method DELETE --endpoint-path /api/delete'
         );
 
       mockRunCommandInDir.mockResolvedValue({
@@ -320,15 +320,15 @@ describe('HsCreateFunctionTool', () => {
 
     it('should execute command with PATCH method', async () => {
       mockAddFlag
-        .mockReturnValueOnce('hs create function --functions-folder api')
+        .mockReturnValueOnce('hs cms function create --functions-folder api')
         .mockReturnValueOnce(
-          'hs create function "PATCH Function" --functions-folder api --filename patch-function'
+          'hs cms function create "PATCH Function" --functions-folder api --filename patch-function'
         )
         .mockReturnValueOnce(
-          'hs create function "PATCH Function" --functions-folder api --filename patch-function --endpoint-method PATCH'
+          'hs cms function create "PATCH Function" --functions-folder api --filename patch-function --endpoint-method PATCH'
         )
         .mockReturnValueOnce(
-          'hs create function "PATCH Function" --functions-folder api --filename patch-function --endpoint-method PATCH --endpoint-path /api/patch'
+          'hs cms function create "PATCH Function" --functions-folder api --filename patch-function --endpoint-method PATCH --endpoint-path /api/patch'
         );
 
       mockRunCommandInDir.mockResolvedValue({
@@ -373,16 +373,16 @@ describe('HsCreateFunctionTool', () => {
     it('should handle stderr output', async () => {
       mockAddFlag
         .mockReturnValueOnce(
-          'hs create function "Test Function" --functions-folder api'
+          'hs cms function create "Test Function" --functions-folder api'
         )
         .mockReturnValueOnce(
-          'hs create function "Test Function" --functions-folder api --filename test-function'
+          'hs cms function create "Test Function" --functions-folder api --filename test-function'
         )
         .mockReturnValueOnce(
-          'hs create function "Test Function" --functions-folder api --filename test-function --endpoint-method GET'
+          'hs cms function create "Test Function" --functions-folder api --filename test-function --endpoint-method GET'
         )
         .mockReturnValueOnce(
-          'hs create function "Test Function" --functions-folder api --filename test-function --endpoint-method GET --endpoint-path /api/test'
+          'hs cms function create "Test Function" --functions-folder api --filename test-function --endpoint-method GET --endpoint-path /api/test'
         );
 
       mockRunCommandInDir.mockResolvedValue({
@@ -407,16 +407,16 @@ describe('HsCreateFunctionTool', () => {
     it('should execute command with destination path', async () => {
       mockAddFlag
         .mockReturnValueOnce(
-          'hs create function "functions/custom" --functions-folder api'
+          'hs cms function create "functions/custom" --functions-folder api'
         )
         .mockReturnValueOnce(
-          'hs create function "functions/custom" --functions-folder api --filename test-function'
+          'hs cms function create "functions/custom" --functions-folder api --filename test-function'
         )
         .mockReturnValueOnce(
-          'hs create function "functions/custom" --functions-folder api --filename test-function --endpoint-method GET'
+          'hs cms function create "functions/custom" --functions-folder api --filename test-function --endpoint-method GET'
         )
         .mockReturnValueOnce(
-          'hs create function "functions/custom" --functions-folder api --filename test-function --endpoint-method GET --endpoint-path /api/test'
+          'hs cms function create "functions/custom" --functions-folder api --filename test-function --endpoint-method GET --endpoint-path /api/test'
         );
 
       mockRunCommandInDir.mockResolvedValue({

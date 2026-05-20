@@ -30,7 +30,7 @@ import {
   YargsCommandModule,
   ExitFunction,
 } from '../../types/Yargs.js';
-import { makeYargsHandlerWithUsageTracking } from '../../lib/yargs/makeYargsHandlerWithUsageTracking.js';
+import { makeWrappedYargsHandler } from '../../lib/yargs/makeWrappedYargsHandler.js';
 import { makeYargsBuilder } from '../../lib/yargsUtils.js';
 import { uiDeprecatedTag } from '../../lib/ui/index.js';
 
@@ -227,7 +227,7 @@ const builder = makeYargsBuilder<ProjectWatchArgs>(
 const projectWatchCommand: YargsCommandModule<unknown, ProjectWatchArgs> = {
   command,
   describe,
-  handler: makeYargsHandlerWithUsageTracking('project-watch', handler),
+  handler: makeWrappedYargsHandler('project-watch', handler),
   builder,
 };
 

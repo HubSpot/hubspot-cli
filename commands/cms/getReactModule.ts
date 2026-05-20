@@ -10,7 +10,7 @@ import { logError } from '../../lib/errorHandlers/index.js';
 import { listPrompt } from '../../lib/prompts/promptUtils.js';
 import { EXIT_CODES } from '../../lib/enums/exitCodes.js';
 import { CommonArgs, YargsCommandModule } from '../../types/Yargs.js';
-import { makeYargsHandlerWithUsageTracking } from '../../lib/yargs/makeYargsHandlerWithUsageTracking.js';
+import { makeWrappedYargsHandler } from '../../lib/yargs/makeWrappedYargsHandler.js';
 import { makeYargsBuilder } from '../../lib/yargsUtils.js';
 
 const command = 'get-react-module [name] [dest]';
@@ -109,7 +109,7 @@ const cmsGetReactModuleCommand: YargsCommandModule<
 > = {
   command,
   describe,
-  handler: makeYargsHandlerWithUsageTracking('get-react-module', handler),
+  handler: makeWrappedYargsHandler('get-react-module', handler),
   builder,
 };
 

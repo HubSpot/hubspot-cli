@@ -8,7 +8,7 @@ import {
 import { EXIT_CODES } from '../../../lib/enums/exitCodes.js';
 import { uiLine } from '../../../lib/ui/index.js';
 import { ProjectDevArgs, YargsCommandModule } from '../../../types/Yargs.js';
-import { makeYargsHandlerWithUsageTracking } from '../../../lib/yargs/makeYargsHandlerWithUsageTracking.js';
+import { makeWrappedYargsHandler } from '../../../lib/yargs/makeWrappedYargsHandler.js';
 import { deprecatedProjectDevFlow } from './deprecatedFlow.js';
 import { unifiedProjectDevFlow } from './unifiedFlow.js';
 import { isLegacyProject } from '@hubspot/project-parsing-lib/projects';
@@ -246,7 +246,7 @@ export const builder = makeYargsBuilder<ProjectDevArgs>(
 const projectDevCommand: YargsCommandModule<unknown, ProjectDevArgs> = {
   command,
   describe,
-  handler: makeYargsHandlerWithUsageTracking('project-dev', handler),
+  handler: makeWrappedYargsHandler('project-dev', handler),
   builder,
 };
 

@@ -21,6 +21,7 @@ acceptance-tests/*.html
 acceptance-tests/test-output
 
 **/.claude/settings.local.json
+**/.claude/worktrees/
 
 # Dir to sync to public repo
 hs-temp-repo-sync

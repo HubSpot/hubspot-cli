@@ -72,7 +72,7 @@ describe('HsListTool', () => {
   });
 
   describe('handler', () => {
-    it('should execute hs list command with no parameters', async () => {
+    it('should execute hs cms list command with no parameters', async () => {
       mockRunCommandInDir.mockResolvedValue({
         stdout: 'file1.html\nfile2.js\nfolder/',
         stderr: '',
@@ -82,13 +82,16 @@ describe('HsListTool', () => {
         absoluteCurrentWorkingDirectory: '/test/dir',
       });
 
-      expect(mockRunCommandInDir).toHaveBeenCalledWith('/test/dir', 'hs list');
+      expect(mockRunCommandInDir).toHaveBeenCalledWith(
+        '/test/dir',
+        'hs cms list'
+      );
       expect(result.content).toHaveLength(2);
       expect(result.content[0].text).toContain('file1.html\nfile2.js\nfolder/');
       expect(result.content[1].text).toBe('');
     });
 
-    it('should execute hs list command with path parameter', async () => {
+    it('should execute hs cms list command with path parameter', async () => {
       mockRunCommandInDir.mockResolvedValue({
         stdout: 'nested-file.html',
         stderr: '',
@@ -101,15 +104,15 @@ describe('HsListTool', () => {
 
       expect(mockRunCommandInDir).toHaveBeenCalledWith(
         '/test/dir',
-        'hs list /my-modules'
+        'hs cms list /my-modules'
       );
       expect(result.content).toHaveLength(2);
       expect(result.content[0].text).toContain('nested-file.html');
       expect(result.content[1].text).toBe('');
     });
 
-    it('should execute hs list command with account parameter', async () => {
-      mockAddFlag.mockReturnValue('hs list --account test-account');
+    it('should execute hs cms list command with account parameter', async () => {
+      mockAddFlag.mockReturnValue('hs cms list --account test-account');
       mockRunCommandInDir.mockResolvedValue({
         stdout: 'account-specific-files.html',
         stderr: '',
@@ -121,21 +124,23 @@ describe('HsListTool', () => {
       });
 
       expect(mockAddFlag).toHaveBeenCalledWith(
-        'hs list',
+        'hs cms list',
         'account',
         'test-account'
       );
       expect(mockRunCommandInDir).toHaveBeenCalledWith(
         '/test/dir',
-        'hs list --account test-account'
+        'hs cms list --account test-account'
       );
       expect(result.content).toHaveLength(2);
       expect(result.content[0].text).toContain('account-specific-files.html');
       expect(result.content[1].text).toBe('');
     });
 
-    it('should execute hs list command with both path and account parameters', async () => {
-      mockAddFlag.mockReturnValue('hs list /my-path --account test-account');
+    it('should execute hs cms list command with both path and account parameters', async () => {
+      mockAddFlag.mockReturnValue(
+        'hs cms list /my-path --account test-account'
+      );
       mockRunCommandInDir.mockResolvedValue({
         stdout: 'path-and-account-files.html',
         stderr: '',
@@ -148,13 +153,13 @@ describe('HsListTool', () => {
       });
 
       expect(mockAddFlag).toHaveBeenCalledWith(
-        'hs list /my-path',
+        'hs cms list /my-path',
         'account',
         'test-account'
       );
       expect(mockRunCommandInDir).toHaveBeenCalledWith(
         '/test/dir',
-        'hs list /my-path --account test-account'
+        'hs cms list /my-path --account test-account'
       );
       expect(result.content).toHaveLength(2);
       expect(result.content[0].text).toContain('path-and-account-files.html');
@@ -170,7 +175,7 @@ describe('HsListTool', () => {
 
       expect(result.content).toHaveLength(1);
       expect(result.content[0].text).toContain(
-        'Error executing hs list command: Command failed'
+        'Error executing hs cms list command: Command failed'
       );
     });
 

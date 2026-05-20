@@ -210,7 +210,7 @@ describe('commands/project/deploy', () => {
       expect(trackCommandUsage).toHaveBeenCalledTimes(1);
       expect(trackCommandUsage).toHaveBeenCalledWith(
         'project-deploy',
-        { type: accountType, successful: false },
+        expect.objectContaining({ type: accountType, successful: false }),
         args.derivedAccountId
       );
     });

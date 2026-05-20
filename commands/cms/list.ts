@@ -12,7 +12,7 @@ import {
   EnvironmentArgs,
   YargsCommandModule,
 } from '../../types/Yargs.js';
-import { makeYargsHandlerWithUsageTracking } from '../../lib/yargs/makeYargsHandlerWithUsageTracking.js';
+import { makeWrappedYargsHandler } from '../../lib/yargs/makeWrappedYargsHandler.js';
 import { FileMapperNode } from '@hubspot/local-dev-lib/types/Files';
 import { makeYargsBuilder } from '../../lib/yargsUtils.js';
 import { uiLogger } from '../../lib/ui/logger.js';
@@ -126,7 +126,7 @@ const builder = makeYargsBuilder<ListArgs>(cmsListBuilder, command, describe, {
 const cmsListCommand: YargsCommandModule<unknown, ListArgs> = {
   command,
   describe,
-  handler: makeYargsHandlerWithUsageTracking('list', handler),
+  handler: makeWrappedYargsHandler('list', handler),
   builder,
 };
 

@@ -3,10 +3,11 @@ import {
   AccountArgs,
   CommonArgs,
   ConfigArgs,
+  EnvironmentArgs,
   JSONOutputArgs,
   YargsCommandModule,
 } from '../../types/Yargs.js';
-import { makeYargsHandlerWithUsageTracking } from '../../lib/yargs/makeYargsHandlerWithUsageTracking.js';
+import { makeWrappedYargsHandler } from '../../lib/yargs/makeWrappedYargsHandler.js';
 import { makeYargsBuilder } from '../../lib/yargsUtils.js';
 import { fetchProject } from '@hubspot/local-dev-lib/api/projects';
 import { Project } from '@hubspot/local-dev-lib/types/Project';
@@ -25,7 +26,11 @@ const command = 'info';
 const describe = commands.project.info.describe;
 const verboseDescribe = commands.project.info.verboseDescribe;
 
-type ProjectInfoArgs = CommonArgs & ConfigArgs & AccountArgs & JSONOutputArgs;
+type ProjectInfoArgs = CommonArgs &
+  ConfigArgs &
+  AccountArgs &
+  EnvironmentArgs &
+  JSONOutputArgs;
 
 async function handler(
   args: ArgumentsCamelCase<ProjectInfoArgs>
@@ -102,6 +107,7 @@ const builder = makeYargsBuilder<ProjectInfoArgs>(
     useGlobalOptions: true,
     useConfigOptions: true,
     useAccountOptions: true,
+    useEnvironmentOptions: true,
     useJSONOutputOptions: true,
   }
 );
@@ -109,7 +115,7 @@ const builder = makeYargsBuilder<ProjectInfoArgs>(
 const projectInfoCommand: YargsCommandModule<unknown, ProjectInfoArgs> = {
   command,
   describe,
-  handler: makeYargsHandlerWithUsageTracking('project-info', handler),
+  handler: makeWrappedYargsHandler('project-info', handler),
   builder,
 };
 

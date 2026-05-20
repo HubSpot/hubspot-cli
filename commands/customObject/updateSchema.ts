@@ -22,7 +22,7 @@ import {
   TestingArgs,
   YargsCommandModule,
 } from '../../types/Yargs.js';
-import { makeYargsHandlerWithUsageTracking } from '../../lib/yargs/makeYargsHandlerWithUsageTracking.js';
+import { makeWrappedYargsHandler } from '../../lib/yargs/makeWrappedYargsHandler.js';
 import { makeYargsBuilder } from '../../lib/yargsUtils.js';
 
 const command = 'update-schema [name]';
@@ -119,10 +119,7 @@ const builder = makeYargsBuilder<SchemaUpdateArgs>(
 const updateSchemaCommand: YargsCommandModule<unknown, SchemaUpdateArgs> = {
   command,
   describe,
-  handler: makeYargsHandlerWithUsageTracking(
-    'custom-object-schema-update',
-    handler
-  ),
+  handler: makeWrappedYargsHandler('custom-object-schema-update', handler),
   builder,
 };
 

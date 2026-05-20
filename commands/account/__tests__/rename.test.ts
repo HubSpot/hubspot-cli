@@ -61,7 +61,7 @@ describe('commands/account/rename', () => {
       );
       expect(trackCommandUsageSpy).toHaveBeenCalledWith(
         'accounts-rename',
-        { successful: true },
+        expect.objectContaining({ successful: true }),
         undefined
       );
       expect(renameAccountSpy).toHaveBeenCalledWith(
@@ -83,7 +83,7 @@ describe('commands/account/rename', () => {
 
       expect(trackCommandUsageSpy).toHaveBeenCalledWith(
         'accounts-rename',
-        { successful: false },
+        expect.objectContaining({ successful: false }),
         undefined
       );
       expect(renameAccountSpy).toHaveBeenCalledWith(

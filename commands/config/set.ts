@@ -14,7 +14,7 @@ import {
   ConfigArgs,
   YargsCommandModule,
 } from '../../types/Yargs.js';
-import { makeYargsHandlerWithUsageTracking } from '../../lib/yargs/makeYargsHandlerWithUsageTracking.js';
+import { makeWrappedYargsHandler } from '../../lib/yargs/makeWrappedYargsHandler.js';
 import { commands } from '../../lang/en.js';
 import {
   makeYargsBuilder,
@@ -204,7 +204,7 @@ const builder = makeYargsBuilder<ConfigSetArgs>(
 const configSetCommand: YargsCommandModule<unknown, ConfigSetArgs> = {
   command,
   describe,
-  handler: makeYargsHandlerWithUsageTracking('config-set', handler),
+  handler: makeWrappedYargsHandler('config-set', handler),
   builder,
 };
 

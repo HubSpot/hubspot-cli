@@ -13,7 +13,7 @@ import {
   EnvironmentArgs,
   YargsCommandModule,
 } from '../../types/Yargs.js';
-import { makeYargsHandlerWithUsageTracking } from '../../lib/yargs/makeYargsHandlerWithUsageTracking.js';
+import { makeWrappedYargsHandler } from '../../lib/yargs/makeWrappedYargsHandler.js';
 import { makeYargsBuilder } from '../../lib/yargsUtils.js';
 
 const command = 'delete [name]';
@@ -116,7 +116,7 @@ const builder = makeYargsBuilder<DeleteSecretArgs>(
 const deleteSecretCommand: YargsCommandModule<unknown, DeleteSecretArgs> = {
   command,
   describe,
-  handler: makeYargsHandlerWithUsageTracking('secrets-delete', handler),
+  handler: makeWrappedYargsHandler('secrets-delete', handler),
   builder,
 };
 

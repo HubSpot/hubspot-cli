@@ -1,5 +1,5 @@
 import fs from 'fs-extra';
-import { Argv, ArgumentsCamelCase } from 'yargs';
+import { ArgumentsCamelCase, Argv } from 'yargs';
 import { logError } from '../../../lib/errorHandlers/index.js';
 import { resolveLocalPath } from '../../../lib/filesystem.js';
 import { commands } from '../../../lang/en.js';
@@ -11,7 +11,7 @@ import {
   ConfigArgs,
   YargsCommandModule,
 } from '../../../types/Yargs.js';
-import { makeYargsHandlerWithUsageTracking } from '../../../lib/yargs/makeYargsHandlerWithUsageTracking.js';
+import { makeWrappedYargsHandler } from '../../../lib/yargs/makeWrappedYargsHandler.js';
 import { EXIT_CODES } from '../../../lib/enums/exitCodes.js';
 import { isPromptExitError } from '../../../lib/errors/PromptExitError.js';
 import assets from '../../../lib/cmsAssets/index.js';
@@ -109,6 +109,13 @@ function moduleCreateBuilder(yargs: Argv): Argv<ModuleCreateArgs> {
     type: 'boolean',
     default: false,
   });
+  yargs.option('available-for-new-content', {
+    describe:
+      commands.cms.subcommands.module.subcommands.create.options
+        .availableForNewContent,
+    type: 'boolean',
+    default: true,
+  });
 
   return yargs as Argv<ModuleCreateArgs>;
 }
@@ -127,7 +134,7 @@ const moduleCreateCommand: YargsCommandModule<unknown, ModuleCreateArgs> = {
   command,
   describe,
   builder,
-  handler: makeYargsHandlerWithUsageTracking('create', handler),
+  handler: makeWrappedYargsHandler('create', handler),
 };
 
 export default moduleCreateCommand;

@@ -508,13 +508,19 @@ export async function displayWarnLogs(
   }
 }
 
+type PollOptions = {
+  silenceLogs?: boolean;
+  skipDeploy?: boolean;
+};
+
 export async function pollProjectBuildAndDeploy(
   accountId: number,
   projectConfig: ProjectConfig,
   tempFile: FileResult,
   buildId: number,
-  silenceLogs = false
+  options: PollOptions = {}
 ): Promise<ProjectPollResult> {
+  const { silenceLogs = false, skipDeploy = false } = options;
   let buildStatus = await pollBuildStatus(
     accountId,
     projectConfig.name,
@@ -537,7 +543,7 @@ export async function pollProjectBuildAndDeploy(
   if (buildStatus.status === 'FAILURE') {
     result.succeeded = false;
     return result;
-  } else if (buildStatus.isAutoDeployEnabled) {
+  } else if (buildStatus.isAutoDeployEnabled && !skipDeploy) {
     if (!silenceLogs) {
       uiLogger.log(
         lib.projectBuildAndDeploy.pollProjectBuildAndDeploy.buildSucceededAutomaticallyDeploying(

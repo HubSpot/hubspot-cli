@@ -7,9 +7,8 @@ import {
 import { McpLogger } from '../../utils/logger.js';
 import { z } from 'zod';
 import { absoluteCurrentWorkingDirectory } from '../project/constants.js';
-import { runCommandInDir } from '../../utils/command.js';
-import { formatTextContents, formatTextContent } from '../../utils/content.js';
-import { addFlag } from '../../utils/command.js';
+import { addFlag, runCommandInDir } from '../../utils/command.js';
+import { formatTextContent, formatTextContents } from '../../utils/content.js';
 import { CONTENT_TYPES } from '../../../types/Cms.js';
 import { setupHubSpotConfig } from '../../utils/config.js';
 import { getErrorMessage } from '../../../lib/errorHandlers/index.js';
@@ -129,7 +128,7 @@ export class HsCreateModuleTool extends Tool<HsCreateModuleInputSchema> {
     }
 
     // Build the command
-    let command = 'hs create module';
+    let command = 'hs cms module create';
 
     if (userSuppliedName) {
       command += ` "${userSuppliedName}"`;
@@ -188,7 +187,7 @@ export class HsCreateModuleTool extends Tool<HsCreateModuleInputSchema> {
       {
         title: 'Create HubSpot CMS Module',
         description:
-          'Creates a new HubSpot CMS module using the hs create module command. Modules can be created non-interactively by specifying moduleLabel and other module options. You can create either HubL or React modules by setting the reactType parameter.',
+          'Creates a new HubSpot CMS module using the hs cms module create command. Modules can be created non-interactively by specifying moduleLabel and other module options. You can create either HubL or React modules by setting the reactType parameter.',
         inputSchema,
         annotations: {
           readOnlyHint: false,

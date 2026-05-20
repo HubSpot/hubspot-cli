@@ -110,7 +110,7 @@ describe('commands/app/secret/add', () => {
 
       expect(trackCommandUsageMock).toHaveBeenCalledWith(
         'app-secret-add',
-        { successful: true },
+        expect.objectContaining({ successful: true }),
         123456
       );
     });

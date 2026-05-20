@@ -187,7 +187,7 @@ describe('commands/cms/watch', () => {
 
         expect(trackCommandUsageSpy).toHaveBeenCalledWith(
           'watch',
-          { mode: 'publish', successful: true },
+          expect.objectContaining({ mode: 'publish', successful: true }),
           123456
         );
       });

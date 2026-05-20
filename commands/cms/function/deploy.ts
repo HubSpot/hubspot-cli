@@ -19,7 +19,7 @@ import {
   EnvironmentArgs,
   YargsCommandModule,
 } from '../../../types/Yargs.js';
-import { makeYargsHandlerWithUsageTracking } from '../../../lib/yargs/makeYargsHandlerWithUsageTracking.js';
+import { makeWrappedYargsHandler } from '../../../lib/yargs/makeWrappedYargsHandler.js';
 import { makeYargsBuilder } from '../../../lib/yargsUtils.js';
 
 type FunctionBuildError = {
@@ -165,7 +165,7 @@ const builder = makeYargsBuilder<FunctionDeployArgs>(
 const functionDeployCommand: YargsCommandModule<unknown, FunctionDeployArgs> = {
   command,
   describe,
-  handler: makeYargsHandlerWithUsageTracking('function-deploy', handler),
+  handler: makeWrappedYargsHandler('function-deploy', handler),
   builder,
 };
 

@@ -10,7 +10,7 @@ import {
   ConfigArgs,
   YargsCommandModule,
 } from '../../../types/Yargs.js';
-import { makeYargsHandlerWithUsageTracking } from '../../../lib/yargs/makeYargsHandlerWithUsageTracking.js';
+import { makeWrappedYargsHandler } from '../../../lib/yargs/makeWrappedYargsHandler.js';
 import { EXIT_CODES } from '../../../lib/enums/exitCodes.js';
 import assets from '../../../lib/cmsAssets/index.js';
 
@@ -86,7 +86,7 @@ const webpackCreateCommand: YargsCommandModule<unknown, WebpackCreateArgs> = {
   command,
   describe,
   builder,
-  handler: makeYargsHandlerWithUsageTracking('create', handler),
+  handler: makeWrappedYargsHandler('create', handler),
 };
 
 export default webpackCreateCommand;

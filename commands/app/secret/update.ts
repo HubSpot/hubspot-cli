@@ -16,7 +16,7 @@ import {
   EnvironmentArgs,
   YargsCommandModule,
 } from '../../../types/Yargs.js';
-import { makeYargsHandlerWithUsageTracking } from '../../../lib/yargs/makeYargsHandlerWithUsageTracking.js';
+import { makeWrappedYargsHandler } from '../../../lib/yargs/makeWrappedYargsHandler.js';
 import { makeYargsBuilder } from '../../../lib/yargsUtils.js';
 import { uiLogger } from '../../../lib/ui/logger.js';
 import { uiBetaTag } from '../../../lib/ui/index.js';
@@ -135,7 +135,7 @@ const updateAppSecretCommand: YargsCommandModule<unknown, UpdateAppSecretArgs> =
   {
     command,
     describe,
-    handler: makeYargsHandlerWithUsageTracking('app-secret-update', handler),
+    handler: makeWrappedYargsHandler('app-secret-update', handler),
     builder,
   };
 

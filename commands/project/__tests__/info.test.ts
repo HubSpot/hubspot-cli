@@ -13,6 +13,7 @@ import {
   AccountArgs,
   CommonArgs,
   ConfigArgs,
+  EnvironmentArgs,
   JSONOutputArgs,
   UsageTrackingArgs,
 } from '../../../types/Yargs.js';
@@ -22,8 +23,8 @@ vi.mock('../../../lib/errorHandlers/index.js');
 vi.mock('../../../lib/projects/config');
 vi.mock('@hubspot/project-parsing-lib/projects');
 vi.mock('../../../lib/projects/projectInfo');
-vi.mock('../../../lib/yargs/makeYargsHandlerWithUsageTracking', () => ({
-  makeYargsHandlerWithUsageTracking: (
+vi.mock('../../../lib/yargs/makeWrappedYargsHandler', () => ({
+  makeWrappedYargsHandler: (
     _name: string,
     handler: (...args: unknown[]) => unknown
   ) => handler,
@@ -41,6 +42,7 @@ vi.mock('@hubspot/local-dev-lib/config', async importOriginal => {
 type ProjectInfoArgs = CommonArgs &
   ConfigArgs &
   AccountArgs &
+  EnvironmentArgs &
   JSONOutputArgs &
   UsageTrackingArgs;
 

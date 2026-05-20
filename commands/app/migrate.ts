@@ -2,7 +2,7 @@ import { getConfigAccountById } from '@hubspot/local-dev-lib/config';
 import { PLATFORM_VERSIONS } from '@hubspot/project-parsing-lib/constants';
 import { Argv, ArgumentsCamelCase } from 'yargs';
 import { YargsCommandModule } from '../../types/Yargs.js';
-import { makeYargsHandlerWithUsageTracking } from '../../lib/yargs/makeYargsHandlerWithUsageTracking.js';
+import { makeWrappedYargsHandler } from '../../lib/yargs/makeWrappedYargsHandler.js';
 import { trackCommandMetadataUsage } from '../../lib/usageTracking.js';
 import { commands } from '../../lang/en.js';
 import { uiLogger } from '../../lib/ui/logger.js';
@@ -126,7 +126,7 @@ const builder = makeYargsBuilder<MigrateAppArgs>(
 const migrateCommand: YargsCommandModule<unknown, MigrateAppArgs> = {
   command,
   describe,
-  handler: makeYargsHandlerWithUsageTracking('app-migrate', handler),
+  handler: makeWrappedYargsHandler('app-migrate', handler),
   builder,
 };
 

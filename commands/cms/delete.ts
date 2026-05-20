@@ -9,7 +9,7 @@ import {
   EnvironmentArgs,
   YargsCommandModule,
 } from '../../types/Yargs.js';
-import { makeYargsHandlerWithUsageTracking } from '../../lib/yargs/makeYargsHandlerWithUsageTracking.js';
+import { makeWrappedYargsHandler } from '../../lib/yargs/makeWrappedYargsHandler.js';
 import { makeYargsBuilder } from '../../lib/yargsUtils.js';
 import { uiLogger } from '../../lib/ui/logger.js';
 
@@ -70,7 +70,7 @@ const builder = makeYargsBuilder<DeleteArgs>(
 const cmsDeleteCommand: YargsCommandModule<unknown, DeleteArgs> = {
   command,
   describe,
-  handler: makeYargsHandlerWithUsageTracking('delete', handler),
+  handler: makeWrappedYargsHandler('delete', handler),
   builder,
 };
 

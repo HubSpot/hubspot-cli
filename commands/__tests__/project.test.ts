@@ -15,6 +15,7 @@ import lint from '../project/lint.js';
 import updateDeps from '../project/updateDeps.js';
 import validate from '../project/validate.js';
 import profileCommands from '../project/profile.js';
+import releaseCommands from '../project/release.js';
 import list from '../project/list.js';
 import info from '../project/info.js';
 import projectCommand from '../project.js';
@@ -47,6 +48,7 @@ vi.mock('../project/migrate', () => ({
 vi.mock('../project/installDeps');
 vi.mock('../project/lint');
 vi.mock('../project/profile');
+vi.mock('../project/release');
 vi.mock('../../lib/commonOpts');
 vi.mock('../../lib/projects/config.js');
 vi.mock('@hubspot/project-parsing-lib/projects');
@@ -102,6 +104,7 @@ describe('commands/project', () => {
       lint,
       updateDeps,
       profileCommands,
+      releaseCommands,
       validate,
       list,
       info,

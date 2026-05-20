@@ -3,7 +3,7 @@ import { isConfigFlagEnabled } from '@hubspot/local-dev-lib/config';
 import { CONFIG_FLAGS } from '@hubspot/local-dev-lib/constants/config';
 import { EXIT_CODES } from '../lib/enums/exitCodes.js';
 import { CommonArgs, YargsCommandModule } from '../types/Yargs.js';
-import { makeYargsHandlerWithUsageTracking } from '../lib/yargs/makeYargsHandlerWithUsageTracking.js';
+import { makeWrappedYargsHandler } from '../lib/yargs/makeWrappedYargsHandler.js';
 import { makeYargsBuilder } from '../lib/yargsUtils.js';
 import { uiLogger } from '../lib/ui/logger.js';
 import { commands } from '../lang/en.js';
@@ -157,7 +157,7 @@ const builder = makeYargsBuilder<UpgradeArgs>(
 const upgradeCommand: YargsCommandModule<unknown, UpgradeArgs> = {
   command,
   describe,
-  handler: makeYargsHandlerWithUsageTracking('upgrade', handler),
+  handler: makeWrappedYargsHandler('upgrade', handler),
   builder,
 };
 

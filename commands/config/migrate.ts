@@ -10,7 +10,7 @@ import {
   ConfigArgs,
   YargsCommandModule,
 } from '../../types/Yargs.js';
-import { makeYargsHandlerWithUsageTracking } from '../../lib/yargs/makeYargsHandlerWithUsageTracking.js';
+import { makeWrappedYargsHandler } from '../../lib/yargs/makeWrappedYargsHandler.js';
 import { logError } from '../../lib/errorHandlers/index.js';
 import { EXIT_CODES } from '../../lib/enums/exitCodes.js';
 import { makeYargsBuilder } from '../../lib/yargsUtils.js';
@@ -93,7 +93,7 @@ const builder = makeYargsBuilder<ConfigMigrateArgs>(
 const configMigrateCommand: YargsCommandModule<unknown, ConfigMigrateArgs> = {
   command,
   describe,
-  handler: makeYargsHandlerWithUsageTracking('config-migrate', handler),
+  handler: makeWrappedYargsHandler('config-migrate', handler),
   builder,
 };
 

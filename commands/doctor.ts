@@ -6,7 +6,7 @@ import { Doctor } from '../lib/doctor/Doctor.js';
 import { EXIT_CODES } from '../lib/enums/exitCodes.js';
 import { getCwd } from '@hubspot/local-dev-lib/path';
 import { CommonArgs, YargsCommandModule } from '../types/Yargs.js';
-import { makeYargsHandlerWithUsageTracking } from '../lib/yargs/makeYargsHandlerWithUsageTracking.js';
+import { makeWrappedYargsHandler } from '../lib/yargs/makeWrappedYargsHandler.js';
 import { makeYargsBuilder } from '../lib/yargsUtils.js';
 import { uiLogger } from '../lib/ui/logger.js';
 import { removeAnsiCodes } from '../lib/ui/removeAnsiCodes.js';
@@ -95,7 +95,7 @@ const builder = makeYargsBuilder<DoctorArgs>(doctorBuilder, command, describe, {
 const doctorCommand: YargsCommandModule<unknown, DoctorArgs> = {
   command,
   describe,
-  handler: makeYargsHandlerWithUsageTracking('doctor', handler),
+  handler: makeWrappedYargsHandler('doctor', handler),
   builder,
 };
 

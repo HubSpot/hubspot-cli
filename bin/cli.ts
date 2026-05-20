@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 
 import yargs, { Argv } from 'yargs';
-import { logError } from '../lib/errorHandlers/index.js';
+import { logError, debugError } from '../lib/errorHandlers/index.js';
 import { setCLILogLevel, getCommandName } from '../lib/commonOpts.js';
 import {
   trackHelpUsage,
@@ -152,7 +152,7 @@ const argvWithSuggestions = await parseYargsOrExit(parser, handleFailure);
 if ('help' in argvWithSuggestions && argvWithSuggestions.help !== undefined) {
   (async () => {
     await trackHelpUsage(getCommandName(argvWithSuggestions));
-  })();
+  })().catch(debugError);
 }
 
 if (
@@ -161,5 +161,5 @@ if (
 ) {
   (async () => {
     await trackConvertFieldsUsage(getCommandName(argvWithSuggestions));
-  })();
+  })().catch(debugError);
 }

@@ -11,7 +11,7 @@ import {
   EnvironmentArgs,
   YargsCommandModule,
 } from '../../types/Yargs.js';
-import { makeYargsHandlerWithUsageTracking } from '../../lib/yargs/makeYargsHandlerWithUsageTracking.js';
+import { makeWrappedYargsHandler } from '../../lib/yargs/makeWrappedYargsHandler.js';
 import { makeYargsBuilder } from '../../lib/yargsUtils.js';
 
 const command = 'list';
@@ -65,7 +65,7 @@ const builder = makeYargsBuilder<ListSecretArgs>(
 const listSecretCommand: YargsCommandModule<unknown, ListSecretArgs> = {
   command,
   describe,
-  handler: makeYargsHandlerWithUsageTracking('secrets-list', handler),
+  handler: makeWrappedYargsHandler('secrets-list', handler),
   builder,
 };
 

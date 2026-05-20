@@ -10,10 +10,11 @@ import {
   AccountArgs,
   CommonArgs,
   ConfigArgs,
+  EnvironmentArgs,
   JSONOutputArgs,
   YargsCommandModule,
 } from '../../types/Yargs.js';
-import { makeYargsHandlerWithUsageTracking } from '../../lib/yargs/makeYargsHandlerWithUsageTracking.js';
+import { makeWrappedYargsHandler } from '../../lib/yargs/makeWrappedYargsHandler.js';
 import { makeYargsBuilder } from '../../lib/yargsUtils.js';
 import { uiLogger } from '../../lib/ui/logger.js';
 import {
@@ -34,6 +35,7 @@ const describe = commands.project.installStatus.describe;
 type ProjectInstallStatusArgs = CommonArgs &
   ConfigArgs &
   AccountArgs &
+  EnvironmentArgs &
   JSONOutputArgs;
 
 async function handler(
@@ -199,6 +201,7 @@ const builder = makeYargsBuilder<ProjectInstallStatusArgs>(
     useGlobalOptions: true,
     useConfigOptions: true,
     useAccountOptions: true,
+    useEnvironmentOptions: true,
     useJSONOutputOptions: true,
   }
 );
@@ -209,10 +212,7 @@ const projectInstallStatusCommand: YargsCommandModule<
 > = {
   command,
   describe,
-  handler: makeYargsHandlerWithUsageTracking(
-    'project-app-install-status',
-    handler
-  ),
+  handler: makeWrappedYargsHandler('project-app-install-status', handler),
   builder,
 };
 

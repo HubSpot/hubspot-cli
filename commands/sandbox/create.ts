@@ -30,7 +30,7 @@ import {
   TestingArgs,
   YargsCommandModule,
 } from '../../types/Yargs.js';
-import { makeYargsHandlerWithUsageTracking } from '../../lib/yargs/makeYargsHandlerWithUsageTracking.js';
+import { makeWrappedYargsHandler } from '../../lib/yargs/makeWrappedYargsHandler.js';
 import { makeYargsBuilder } from '../../lib/yargsUtils.js';
 
 const command = 'create';
@@ -245,7 +245,7 @@ const builder = makeYargsBuilder<SandboxCreateArgs>(
 const sandboxCreateCommand: YargsCommandModule<unknown, SandboxCreateArgs> = {
   command,
   describe,
-  handler: makeYargsHandlerWithUsageTracking('sandbox-create', handler),
+  handler: makeWrappedYargsHandler('sandbox-create', handler),
   builder,
 };
 

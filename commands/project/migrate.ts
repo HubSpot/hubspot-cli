@@ -6,7 +6,7 @@ import {
   EnvironmentArgs,
   YargsCommandModule,
 } from '../../types/Yargs.js';
-import { makeYargsHandlerWithUsageTracking } from '../../lib/yargs/makeYargsHandlerWithUsageTracking.js';
+import { makeWrappedYargsHandler } from '../../lib/yargs/makeWrappedYargsHandler.js';
 import { migrateApp } from '../../lib/app/migrate.js';
 import { getProjectConfig } from '../../lib/projects/config.js';
 import { PLATFORM_VERSIONS } from '@hubspot/project-parsing-lib/constants';
@@ -152,7 +152,7 @@ const builder = makeYargsBuilder<ProjectMigrateArgs>(
 const migrateCommand: YargsCommandModule<unknown, ProjectMigrateArgs> = {
   command,
   describe,
-  handler: makeYargsHandlerWithUsageTracking('project-migrate', handler),
+  handler: makeWrappedYargsHandler('project-migrate', handler),
   builder,
 };
 

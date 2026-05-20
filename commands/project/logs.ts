@@ -9,7 +9,7 @@ import { uiLogger } from '../../lib/ui/logger.js';
 import { EXIT_CODES } from '../../lib/enums/exitCodes.js';
 import { ProjectLogsManager } from '../../lib/projects/ProjectLogsManager.js';
 import { CommonArgs, YargsCommandModule } from '../../types/Yargs.js';
-import { makeYargsHandlerWithUsageTracking } from '../../lib/yargs/makeYargsHandlerWithUsageTracking.js';
+import { makeWrappedYargsHandler } from '../../lib/yargs/makeWrappedYargsHandler.js';
 import { makeYargsBuilder } from '../../lib/yargsUtils.js';
 import { renderTable } from '../../ui/render.js';
 
@@ -164,7 +164,7 @@ const builder = makeYargsBuilder<ProjectLogsArgs>(
 const projectLogsCommand: YargsCommandModule<unknown, ProjectLogsArgs> = {
   command,
   describe,
-  handler: makeYargsHandlerWithUsageTracking('project-logs', handler),
+  handler: makeWrappedYargsHandler('project-logs', handler),
   builder,
 };
 

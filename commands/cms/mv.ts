@@ -9,7 +9,7 @@ import {
   EnvironmentArgs,
   YargsCommandModule,
 } from '../../types/Yargs.js';
-import { makeYargsHandlerWithUsageTracking } from '../../lib/yargs/makeYargsHandlerWithUsageTracking.js';
+import { makeWrappedYargsHandler } from '../../lib/yargs/makeWrappedYargsHandler.js';
 import { makeYargsBuilder } from '../../lib/yargsUtils.js';
 import { uiLogger } from '../../lib/ui/logger.js';
 import { commands } from '../../lang/en.js';
@@ -88,7 +88,7 @@ const builder = makeYargsBuilder<MvArgs>(cmsMvBuilder, command, describe, {
 const cmsMvCommand: YargsCommandModule<unknown, MvArgs> = {
   command,
   describe,
-  handler: makeYargsHandlerWithUsageTracking('mv', handler),
+  handler: makeWrappedYargsHandler('mv', handler),
   builder,
 };
 

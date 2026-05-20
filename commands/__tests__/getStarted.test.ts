@@ -235,7 +235,7 @@ describe('commands/get-started', () => {
 
         expect(trackCommandUsage).toHaveBeenCalledWith(
           'get-started',
-          { successful: false },
+          expect.objectContaining({ successful: false }),
           mockArgs.derivedAccountId
         );
       });

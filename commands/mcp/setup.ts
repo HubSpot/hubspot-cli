@@ -3,7 +3,7 @@ import { EXIT_CODES } from '../../lib/enums/exitCodes.js';
 import { makeYargsBuilder } from '../../lib/yargsUtils.js';
 import { commands } from '../../lang/en.js';
 import { CommonArgs, YargsCommandModule } from '../../types/Yargs.js';
-import { makeYargsHandlerWithUsageTracking } from '../../lib/yargs/makeYargsHandlerWithUsageTracking.js';
+import { makeWrappedYargsHandler } from '../../lib/yargs/makeWrappedYargsHandler.js';
 import { addMcpServerToConfig, supportedTools } from '../../lib/mcp/setup.js';
 
 const command = ['setup'];
@@ -41,7 +41,7 @@ const builder = makeYargsBuilder(setupBuilder, command, describe, {
 const mcpSetupCommand: YargsCommandModule<unknown, MCPSetupArgs> = {
   command,
   describe,
-  handler: makeYargsHandlerWithUsageTracking('mcp-setup', handler),
+  handler: makeWrappedYargsHandler('mcp-setup', handler),
   builder,
 };
 

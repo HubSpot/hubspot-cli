@@ -26,7 +26,7 @@ import {
   AUTHENTICATE_NEW_ACCOUNT_VALUE,
 } from '../../lib/prompts/accountsPrompt.js';
 import { CommonArgs, YargsCommandModule } from '../../types/Yargs.js';
-import { makeYargsHandlerWithUsageTracking } from '../../lib/yargs/makeYargsHandlerWithUsageTracking.js';
+import { makeWrappedYargsHandler } from '../../lib/yargs/makeWrappedYargsHandler.js';
 import { makeYargsBuilder } from '../../lib/yargsUtils.js';
 import { HubSpotConfigAccount } from '@hubspot/local-dev-lib/types/Accounts';
 import { authenticateNewAccount } from '../../lib/accountAuth.js';
@@ -259,7 +259,7 @@ const builder = makeYargsBuilder<AccountUseArgs>(
 const accountUseCommand: YargsCommandModule<unknown, AccountUseArgs> = {
   command,
   describe,
-  handler: makeYargsHandlerWithUsageTracking('accounts-use', handler),
+  handler: makeWrappedYargsHandler('accounts-use', handler),
   builder,
 };
 

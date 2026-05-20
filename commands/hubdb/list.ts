@@ -9,7 +9,7 @@ import {
   EnvironmentArgs,
   YargsCommandModule,
 } from '../../types/Yargs.js';
-import { makeYargsHandlerWithUsageTracking } from '../../lib/yargs/makeYargsHandlerWithUsageTracking.js';
+import { makeWrappedYargsHandler } from '../../lib/yargs/makeWrappedYargsHandler.js';
 import { EXIT_CODES } from '../../lib/enums/exitCodes.js';
 import { uiLogger } from '../../lib/ui/logger.js';
 import { logError } from '../../lib/errorHandlers/index.js';
@@ -112,7 +112,7 @@ const builder = makeYargsBuilder<HubdbListArgs>(
 const hubdbListCommand: YargsCommandModule<unknown, HubdbListArgs> = {
   command,
   describe,
-  handler: makeYargsHandlerWithUsageTracking('hubdb-list', handler),
+  handler: makeWrappedYargsHandler('hubdb-list', handler),
   builder,
 };
 

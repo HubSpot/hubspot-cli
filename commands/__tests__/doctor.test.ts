@@ -81,7 +81,7 @@ describe('doctor', () => {
       expect(trackCommandUsage).toHaveBeenCalledTimes(1);
       expect(trackCommandUsage).toHaveBeenCalledWith(
         'doctor',
-        { successful: true },
+        expect.objectContaining({ successful: true }),
         accountId
       );
     });

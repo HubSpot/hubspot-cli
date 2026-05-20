@@ -116,7 +116,7 @@ describe('commands/api', () => {
       expect(trackCommandUsage).toHaveBeenCalledTimes(1);
       expect(trackCommandUsage).toHaveBeenCalledWith(
         'api',
-        { action: 'GET', successful: true },
+        expect.objectContaining({ action: 'GET', successful: true }),
         accountId
       );
     });
@@ -366,7 +366,7 @@ describe('commands/api', () => {
 
       expect(trackCommandUsage).toHaveBeenCalledWith(
         'api',
-        { action: 'POST', successful: true },
+        expect.objectContaining({ action: 'POST', successful: true }),
         accountId
       );
     });

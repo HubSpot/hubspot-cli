@@ -114,7 +114,7 @@ describe('HsCreateTemplateTool', () => {
 
     it('should execute command with all required parameters (page template)', async () => {
       mockAddFlag.mockReturnValueOnce(
-        'hs create template "Page Template" --template-type page-template'
+        'hs cms template create "Page Template" --template-type page-template'
       );
 
       mockRunCommandInDir.mockResolvedValue({
@@ -129,13 +129,13 @@ describe('HsCreateTemplateTool', () => {
       });
 
       expect(mockAddFlag).toHaveBeenCalledWith(
-        'hs create template "Page Template"',
+        'hs cms template create "Page Template"',
         'template-type',
         'page-template'
       );
       expect(mockRunCommandInDir).toHaveBeenCalledWith(
         '/test/dir',
-        'hs create template "Page Template" --template-type page-template'
+        'hs cms template create "Page Template" --template-type page-template'
       );
       expect(result.content).toHaveLength(2);
       expect(result.content[0].text).toContain(
@@ -145,7 +145,7 @@ describe('HsCreateTemplateTool', () => {
 
     it('should execute command with email template', async () => {
       mockAddFlag.mockReturnValueOnce(
-        'hs create template "Email Template" --template-type email-template'
+        'hs cms template create "Email Template" --template-type email-template'
       );
 
       mockRunCommandInDir.mockResolvedValue({
@@ -160,7 +160,7 @@ describe('HsCreateTemplateTool', () => {
       });
 
       expect(mockAddFlag).toHaveBeenCalledWith(
-        'hs create template "Email Template"',
+        'hs cms template create "Email Template"',
         'template-type',
         'email-template'
       );
@@ -171,7 +171,7 @@ describe('HsCreateTemplateTool', () => {
 
     it('should execute command with partial template', async () => {
       mockAddFlag.mockReturnValueOnce(
-        'hs create template "Header Partial" --template-type partial'
+        'hs cms template create "Header Partial" --template-type partial'
       );
 
       mockRunCommandInDir.mockResolvedValue({
@@ -186,7 +186,7 @@ describe('HsCreateTemplateTool', () => {
       });
 
       expect(mockAddFlag).toHaveBeenCalledWith(
-        'hs create template "Header Partial"',
+        'hs cms template create "Header Partial"',
         'template-type',
         'partial'
       );
@@ -197,7 +197,7 @@ describe('HsCreateTemplateTool', () => {
 
     it('should execute command with blog-listing-template', async () => {
       mockAddFlag.mockReturnValueOnce(
-        'hs create template "Blog Listing" --template-type blog-listing-template'
+        'hs cms template create "Blog Listing" --template-type blog-listing-template'
       );
 
       mockRunCommandInDir.mockResolvedValue({
@@ -212,7 +212,7 @@ describe('HsCreateTemplateTool', () => {
       });
 
       expect(mockAddFlag).toHaveBeenCalledWith(
-        'hs create template "Blog Listing"',
+        'hs cms template create "Blog Listing"',
         'template-type',
         'blog-listing-template'
       );
@@ -223,7 +223,7 @@ describe('HsCreateTemplateTool', () => {
 
     it('should execute command with destination path', async () => {
       mockAddFlag.mockReturnValueOnce(
-        'hs create template "Test Template" "templates/custom" --template-type page-template'
+        'hs cms template create "Test Template" "templates/custom" --template-type page-template'
       );
 
       mockRunCommandInDir.mockResolvedValue({
@@ -249,7 +249,7 @@ describe('HsCreateTemplateTool', () => {
 
     it('should execute command with section template', async () => {
       mockAddFlag.mockReturnValueOnce(
-        'hs create template "Hero Section" --template-type section'
+        'hs cms template create "Hero Section" --template-type section'
       );
 
       mockRunCommandInDir.mockResolvedValue({
@@ -264,7 +264,7 @@ describe('HsCreateTemplateTool', () => {
       });
 
       expect(mockAddFlag).toHaveBeenCalledWith(
-        'hs create template "Hero Section"',
+        'hs cms template create "Hero Section"',
         'template-type',
         'section'
       );
@@ -275,7 +275,7 @@ describe('HsCreateTemplateTool', () => {
 
     it('should execute command with search template', async () => {
       mockAddFlag.mockReturnValueOnce(
-        'hs create template "Search Results" --template-type search-template'
+        'hs cms template create "Search Results" --template-type search-template'
       );
 
       mockRunCommandInDir.mockResolvedValue({
@@ -290,7 +290,7 @@ describe('HsCreateTemplateTool', () => {
       });
 
       expect(mockAddFlag).toHaveBeenCalledWith(
-        'hs create template "Search Results"',
+        'hs cms template create "Search Results"',
         'template-type',
         'search-template'
       );
@@ -301,7 +301,7 @@ describe('HsCreateTemplateTool', () => {
 
     it('should execute command with blog-post-template', async () => {
       mockAddFlag.mockReturnValueOnce(
-        'hs create template "Custom Blog Post" --template-type blog-post-template'
+        'hs cms template create "Custom Blog Post" --template-type blog-post-template'
       );
 
       mockRunCommandInDir.mockResolvedValue({
@@ -316,7 +316,7 @@ describe('HsCreateTemplateTool', () => {
       });
 
       expect(mockAddFlag).toHaveBeenCalledWith(
-        'hs create template "Custom Blog Post"',
+        'hs cms template create "Custom Blog Post"',
         'template-type',
         'blog-post-template'
       );
@@ -342,7 +342,7 @@ describe('HsCreateTemplateTool', () => {
 
     it('should handle stderr output', async () => {
       mockAddFlag.mockReturnValueOnce(
-        'hs create template "Test Template" --template-type page-template'
+        'hs cms template create "Test Template" --template-type page-template'
       );
 
       mockRunCommandInDir.mockResolvedValue({

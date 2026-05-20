@@ -13,7 +13,7 @@ import {
   EnvironmentArgs,
   YargsCommandModule,
 } from '../../types/Yargs.js';
-import { makeYargsHandlerWithUsageTracking } from '../../lib/yargs/makeYargsHandlerWithUsageTracking.js';
+import { makeWrappedYargsHandler } from '../../lib/yargs/makeWrappedYargsHandler.js';
 import { makeYargsBuilder } from '../../lib/yargsUtils.js';
 
 const command = 'clear [table-id]';
@@ -90,7 +90,7 @@ const builder = makeYargsBuilder<HubdbClearArgs>(
 const hubdbClearCommand: YargsCommandModule<unknown, HubdbClearArgs> = {
   command,
   describe,
-  handler: makeYargsHandlerWithUsageTracking('hubdb-clear', handler),
+  handler: makeWrappedYargsHandler('hubdb-clear', handler),
   builder,
 };
 

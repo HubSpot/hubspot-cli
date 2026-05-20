@@ -11,7 +11,7 @@ import {
 } from '../../../lib/generateSelectors.js';
 import { EXIT_CODES } from '../../../lib/enums/exitCodes.js';
 import { CommonArgs, YargsCommandModule } from '../../../types/Yargs.js';
-import { makeYargsHandlerWithUsageTracking } from '../../../lib/yargs/makeYargsHandlerWithUsageTracking.js';
+import { makeWrappedYargsHandler } from '../../../lib/yargs/makeWrappedYargsHandler.js';
 import { makeYargsBuilder } from '../../../lib/yargsUtils.js';
 import { uiLogger } from '../../../lib/ui/logger.js';
 
@@ -249,7 +249,7 @@ const builder = makeYargsBuilder<ThemeSelectorArgs>(
 const themeSelectorsCommand: YargsCommandModule<unknown, ThemeSelectorArgs> = {
   command,
   describe,
-  handler: makeYargsHandlerWithUsageTracking('generate-selectors', handler),
+  handler: makeWrappedYargsHandler('generate-selectors', handler),
   builder,
 };
 

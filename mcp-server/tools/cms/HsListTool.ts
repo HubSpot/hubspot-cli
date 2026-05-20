@@ -48,7 +48,7 @@ export class HsListTool extends Tool<HsListInputSchema> {
   }: HsListInputSchema): Promise<TextContentResponse> {
     setupHubSpotConfig(absoluteCurrentWorkingDirectory);
 
-    let command = 'hs list';
+    let command = 'hs cms list';
 
     if (path) {
       command += ` ${path}`;
@@ -74,7 +74,7 @@ export class HsListTool extends Tool<HsListInputSchema> {
         content: [
           {
             type: 'text',
-            text: `Error executing hs list command: ${getErrorMessage(error)}`,
+            text: `Error executing hs cms list command: ${getErrorMessage(error)}`,
           },
         ],
       };

@@ -3,9 +3,10 @@ import {
   AccountArgs,
   CommonArgs,
   ConfigArgs,
+  EnvironmentArgs,
   YargsCommandModule,
 } from '../../types/Yargs.js';
-import { makeYargsHandlerWithUsageTracking } from '../../lib/yargs/makeYargsHandlerWithUsageTracking.js';
+import { makeWrappedYargsHandler } from '../../lib/yargs/makeWrappedYargsHandler.js';
 import { makeYargsBuilder } from '../../lib/yargsUtils.js';
 import { Project } from '@hubspot/local-dev-lib/types/Project';
 import { fetchProjects } from '@hubspot/local-dev-lib/api/projects';
@@ -18,7 +19,7 @@ import { renderTable } from '../../ui/render.js';
 const command = ['list', 'ls'];
 const describe = commands.project.list.describe;
 
-type ProjectListArgs = CommonArgs & ConfigArgs & AccountArgs;
+type ProjectListArgs = CommonArgs & ConfigArgs & AccountArgs & EnvironmentArgs;
 
 async function getProjectData(accountId: number): Promise<Project[]> {
   const { data: projects } = await fetchProjects(accountId);
@@ -80,13 +81,14 @@ const builder = makeYargsBuilder<ProjectListArgs>(
     useGlobalOptions: true,
     useConfigOptions: true,
     useAccountOptions: true,
+    useEnvironmentOptions: true,
   }
 );
 
 const projectListCommand: YargsCommandModule<unknown, ProjectListArgs> = {
   command,
   describe,
-  handler: makeYargsHandlerWithUsageTracking('projects-list', handler),
+  handler: makeWrappedYargsHandler('projects-list', handler),
   builder,
 };
 

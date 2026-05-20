@@ -16,7 +16,7 @@ import { isLegacyProject } from '@hubspot/project-parsing-lib/projects';
 import { uiLogger } from '../../../lib/ui/logger.js';
 import { EXIT_CODES } from '../../../lib/enums/exitCodes.js';
 import { YargsCommandModule, CommonArgs } from '../../../types/Yargs.js';
-import { makeYargsHandlerWithUsageTracking } from '../../../lib/yargs/makeYargsHandlerWithUsageTracking.js';
+import { makeWrappedYargsHandler } from '../../../lib/yargs/makeWrappedYargsHandler.js';
 import { makeYargsBuilder } from '../../../lib/yargsUtils.js';
 import { commands } from '../../../lang/en.js';
 import { confirmPrompt, listPrompt } from '../../../lib/prompts/promptUtils.js';
@@ -214,7 +214,7 @@ const projectProfileDeleteCommand: YargsCommandModule<
 > = {
   command,
   describe,
-  handler: makeYargsHandlerWithUsageTracking('project-profile-delete', handler),
+  handler: makeWrappedYargsHandler('project-profile-delete', handler),
   builder,
 };
 

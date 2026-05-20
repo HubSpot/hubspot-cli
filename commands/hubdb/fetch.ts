@@ -12,7 +12,7 @@ import {
   EnvironmentArgs,
   YargsCommandModule,
 } from '../../types/Yargs.js';
-import { makeYargsHandlerWithUsageTracking } from '../../lib/yargs/makeYargsHandlerWithUsageTracking.js';
+import { makeWrappedYargsHandler } from '../../lib/yargs/makeWrappedYargsHandler.js';
 import { makeYargsBuilder } from '../../lib/yargsUtils.js';
 
 const command = 'fetch [table-id] [dest]';
@@ -83,7 +83,7 @@ const builder = makeYargsBuilder<HubdbFetchArgs>(
 const hubdbFetchCommand: YargsCommandModule<unknown, HubdbFetchArgs> = {
   command,
   describe,
-  handler: makeYargsHandlerWithUsageTracking('hubdb-fetch', handler),
+  handler: makeWrappedYargsHandler('hubdb-fetch', handler),
   builder,
 };
 

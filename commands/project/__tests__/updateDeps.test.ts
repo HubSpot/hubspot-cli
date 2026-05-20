@@ -68,7 +68,7 @@ describe('commands/project/updateDeps', () => {
       expect(trackCommandUsage).toHaveBeenCalledTimes(1);
       expect(trackCommandUsage).toHaveBeenCalledWith(
         'project-update-deps',
-        { successful: false },
+        expect.objectContaining({ successful: false }),
         args.derivedAccountId
       );
     });

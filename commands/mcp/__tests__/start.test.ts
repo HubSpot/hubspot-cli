@@ -111,7 +111,7 @@ describe('commands/mcp/start', () => {
 
       expect(trackCommandUsageSpy).toHaveBeenCalledWith(
         'mcp-start',
-        { successful: true },
+        expect.objectContaining({ successful: true }),
         123456
       );
     });

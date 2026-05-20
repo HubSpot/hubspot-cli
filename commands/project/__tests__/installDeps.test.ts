@@ -68,7 +68,7 @@ describe('commands/project/installDeps', () => {
       expect(trackCommandUsage).toHaveBeenCalledTimes(1);
       expect(trackCommandUsage).toHaveBeenCalledWith(
         'project-install-deps',
-        { successful: false },
+        expect.objectContaining({ successful: false }),
         args.derivedAccountId
       );
     });

@@ -2,6 +2,7 @@ import yargs, { Argv } from 'yargs';
 import {
   addAccountOptions,
   addConfigOptions,
+  addUseEnvironmentOptions,
 } from '../../../lib/commonOpts.js';
 import projectListCommand from '../list.js';
 
@@ -31,6 +32,9 @@ describe('commands/project/list', () => {
 
       expect(addConfigOptions).toHaveBeenCalledTimes(1);
       expect(addConfigOptions).toHaveBeenCalledWith(yargsMock);
+
+      expect(addUseEnvironmentOptions).toHaveBeenCalledTimes(1);
+      expect(addUseEnvironmentOptions).toHaveBeenCalledWith(yargsMock);
     });
 
     it('should define examples', () => {

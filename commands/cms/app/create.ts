@@ -10,7 +10,7 @@ import {
   ConfigArgs,
   YargsCommandModule,
 } from '../../../types/Yargs.js';
-import { makeYargsHandlerWithUsageTracking } from '../../../lib/yargs/makeYargsHandlerWithUsageTracking.js';
+import { makeWrappedYargsHandler } from '../../../lib/yargs/makeWrappedYargsHandler.js';
 import { EXIT_CODES } from '../../../lib/enums/exitCodes.js';
 import { isPromptExitError } from '../../../lib/errors/PromptExitError.js';
 import assets from '../../../lib/cmsAssets/index.js';
@@ -127,7 +127,7 @@ const appCreateCommand: YargsCommandModule<unknown, AppCreateArgs> = {
   command,
   describe,
   builder,
-  handler: makeYargsHandlerWithUsageTracking('create', handler),
+  handler: makeWrappedYargsHandler('create', handler),
 };
 
 export default appCreateCommand;

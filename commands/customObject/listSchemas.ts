@@ -10,7 +10,7 @@ import {
   EnvironmentArgs,
   YargsCommandModule,
 } from '../../types/Yargs.js';
-import { makeYargsHandlerWithUsageTracking } from '../../lib/yargs/makeYargsHandlerWithUsageTracking.js';
+import { makeWrappedYargsHandler } from '../../lib/yargs/makeWrappedYargsHandler.js';
 import { makeYargsBuilder } from '../../lib/yargsUtils.js';
 
 const command = 'list-schemas';
@@ -53,10 +53,7 @@ const builder = makeYargsBuilder<SchemaListArgs>(
 const listSchemasCommand: YargsCommandModule<unknown, SchemaListArgs> = {
   command,
   describe,
-  handler: makeYargsHandlerWithUsageTracking(
-    'custom-object-schema-list',
-    handler
-  ),
+  handler: makeWrappedYargsHandler('custom-object-schema-list', handler),
   builder,
 };
 

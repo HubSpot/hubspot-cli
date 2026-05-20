@@ -84,7 +84,7 @@ export class HsCreateTemplateTool extends Tool<HsCreateTemplateInputSchema> {
     }
 
     // Build the command
-    let command = 'hs create template';
+    let command = 'hs cms template create';
 
     if (userSuppliedName) {
       command += ` "${userSuppliedName}"`;
@@ -120,7 +120,7 @@ export class HsCreateTemplateTool extends Tool<HsCreateTemplateInputSchema> {
       toolName,
       {
         title: 'Create HubSpot CMS Template',
-        description: `Creates a new HubSpot CMS template using the hs create template command. Templates can be created non-interactively by specifying templateType. Supports all template types including: ${TEMPLATE_TYPES.join(', ')}.`,
+        description: `Creates a new HubSpot CMS template using the hs cms template create command. Templates can be created non-interactively by specifying templateType. Supports all template types including: ${TEMPLATE_TYPES.join(', ')}.`,
         inputSchema,
         annotations: {
           readOnlyHint: false,
