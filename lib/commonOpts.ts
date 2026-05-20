@@ -97,7 +97,6 @@ export function addJSONOutputOptions(yargs: Argv): Argv {
     alias: 'format-output-as-json',
     describe: lib.commonOpts.options.jsonOutput,
     type: 'boolean',
-    hidden: true,
   });
 }
 

@@ -24,7 +24,7 @@ import {
 import { renderLinkedAccountsTable } from '../../lib/link/renderLinkedAccountsTable.js';
 import { commands } from '../../lang/en.js';
 import { debugError } from '../../lib/errorHandlers/index.js';
-import { makeYargsHandlerWithUsageTracking } from '../../lib/yargs/makeYargsHandlerWithUsageTracking.js';
+import { makeWrappedYargsHandler } from '../../lib/yargs/makeWrappedYargsHandler.js';
 
 const command = 'link';
 // Hide the command until we're done testing and ready to make linking GA
@@ -123,7 +123,7 @@ const builder = makeYargsBuilder<LinkArgs>(
 const linkCommand: YargsCommandModule<unknown, LinkArgs> = {
   command,
   describe,
-  handler: makeYargsHandlerWithUsageTracking('account-link', handler),
+  handler: makeWrappedYargsHandler('account-link', handler),
   builder,
 };
 

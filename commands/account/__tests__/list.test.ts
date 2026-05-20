@@ -124,7 +124,7 @@ describe('commands/account/list', () => {
 
       expect(trackCommandUsageSpy).toHaveBeenCalledWith(
         'accounts-list',
-        { successful: true },
+        expect.objectContaining({ successful: true }),
         123456
       );
     });

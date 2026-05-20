@@ -16,7 +16,7 @@ import {
   EnvironmentArgs,
   YargsCommandModule,
 } from '../../types/Yargs.js';
-import { makeYargsHandlerWithUsageTracking } from '../../lib/yargs/makeYargsHandlerWithUsageTracking.js';
+import { makeWrappedYargsHandler } from '../../lib/yargs/makeWrappedYargsHandler.js';
 
 import { EXIT_CODES } from '../../lib/enums/exitCodes.js';
 import { logError } from '../../lib/errorHandlers/index.js';
@@ -128,7 +128,7 @@ const builder = makeYargsBuilder<FetchCommandArgs>(
 const fetchCommand: YargsCommandModule<unknown, FetchCommandArgs> = {
   command,
   describe,
-  handler: makeYargsHandlerWithUsageTracking('fetch', handler),
+  handler: makeWrappedYargsHandler('fetch', handler),
   builder,
 };
 

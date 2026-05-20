@@ -9,7 +9,7 @@ import { logError } from '../../lib/errorHandlers/index.js';
 import { commands } from '../../lang/en.js';
 import { handleExit } from '../../lib/process.js';
 import { CommonArgs, YargsCommandModule } from '../../types/Yargs.js';
-import { makeYargsHandlerWithUsageTracking } from '../../lib/yargs/makeYargsHandlerWithUsageTracking.js';
+import { makeWrappedYargsHandler } from '../../lib/yargs/makeWrappedYargsHandler.js';
 import { fileURLToPath } from 'url';
 
 const command = 'start';
@@ -90,7 +90,7 @@ const builder = makeYargsBuilder(startBuilder, command, describe, {
 const mcpStartCommand: YargsCommandModule<unknown, McpStartArgs> = {
   command,
   describe,
-  handler: makeYargsHandlerWithUsageTracking('mcp-start', handler),
+  handler: makeWrappedYargsHandler('mcp-start', handler),
   builder,
 };
 

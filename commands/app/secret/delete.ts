@@ -15,7 +15,7 @@ import {
   EnvironmentArgs,
   YargsCommandModule,
 } from '../../../types/Yargs.js';
-import { makeYargsHandlerWithUsageTracking } from '../../../lib/yargs/makeYargsHandlerWithUsageTracking.js';
+import { makeWrappedYargsHandler } from '../../../lib/yargs/makeWrappedYargsHandler.js';
 import { makeYargsBuilder } from '../../../lib/yargsUtils.js';
 import { uiLogger } from '../../../lib/ui/logger.js';
 import { uiBetaTag } from '../../../lib/ui/index.js';
@@ -153,7 +153,7 @@ const deleteAppSecretCommand: YargsCommandModule<unknown, DeleteAppSecretArgs> =
   {
     command,
     describe,
-    handler: makeYargsHandlerWithUsageTracking('app-secret-delete', handler),
+    handler: makeWrappedYargsHandler('app-secret-delete', handler),
     builder,
   };
 

@@ -13,7 +13,7 @@ import {
   EnvironmentArgs,
   YargsCommandModule,
 } from '../../../types/Yargs.js';
-import { makeYargsHandlerWithUsageTracking } from '../../../lib/yargs/makeYargsHandlerWithUsageTracking.js';
+import { makeWrappedYargsHandler } from '../../../lib/yargs/makeWrappedYargsHandler.js';
 import { makeYargsBuilder } from '../../../lib/yargsUtils.js';
 import { renderTable } from '../../../ui/render.js';
 
@@ -97,7 +97,7 @@ const builder = makeYargsBuilder<FunctionListArgs>(
 const functionListCommand: YargsCommandModule<unknown, FunctionListArgs> = {
   command,
   describe,
-  handler: makeYargsHandlerWithUsageTracking('function-list', handler),
+  handler: makeWrappedYargsHandler('function-list', handler),
   builder,
 };
 

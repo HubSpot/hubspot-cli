@@ -8,6 +8,7 @@ import * as dependencyManagement from '../../../lib/dependencyManagement.js';
 import * as promptUtils from '../../../lib/prompts/promptUtils.js';
 import * as linting from '../../../lib/projects/uieLinting.js';
 import { REQUIRED_PACKAGES_AND_MIN_VERSIONS } from '../../../lib/projects/uieLinting.js';
+import * as packageJsonModule from '../../../lib/npm/packageJson.js';
 import projectLintCommand, { ProjectLintArgs } from '../lint.js';
 
 vi.mock('../../../lib/ui/SpinniesManager.js');
@@ -16,13 +17,14 @@ vi.mock('../../../lib/dependencyManagement');
 vi.mock('../../../lib/prompts/promptUtils');
 vi.mock('../../../lib/projects/uieLinting');
 vi.mock('../../../lib/commonOpts');
+vi.mock('../../../lib/npm/packageJson.js');
 
 const exampleSpy = vi.spyOn(yargs as Argv, 'example');
 const processExitSpy = vi.spyOn(process, 'exit');
 const getProjectConfigSpy = vi.spyOn(projectUtils, 'getProjectConfig');
-const getProjectPackageJsonLocationsSpy = vi.spyOn(
-  dependencyManagement,
-  'getProjectPackageJsonLocations'
+const getUieLintablePackageJsonLocationsSpy = vi.spyOn(
+  linting,
+  'getUieLintablePackageJsonLocations'
 );
 const installPackagesSpy = vi.spyOn(dependencyManagement, 'installPackages');
 const promptUserSpy = vi.spyOn(promptUtils, 'promptUser');
@@ -45,6 +47,10 @@ const getDeprecatedEslintConfigFilesSpy = vi.spyOn(
 const createEslintConfigSpy = vi.spyOn(linting, 'createEslintConfig');
 const getMissingLintScriptsSpy = vi.spyOn(linting, 'getMissingLintScripts');
 vi.spyOn(linting, 'addLintScriptsToPackageJson');
+const clearPackageJsonCacheSpy = vi.spyOn(
+  packageJsonModule,
+  'clearPackageJsonCache'
+);
 
 describe('commands/project/lint', () => {
   describe('command', () => {
@@ -95,14 +101,14 @@ describe('commands/project/lint', () => {
         projectDir: '/test/project',
         projectConfig: null,
       });
-      getProjectPackageJsonLocationsSpy.mockResolvedValue([]);
+      getUieLintablePackageJsonLocationsSpy.mockResolvedValue([]);
 
       await projectLintCommand.handler(args);
 
       expect(trackCommandUsage).toHaveBeenCalledTimes(1);
       expect(trackCommandUsage).toHaveBeenCalledWith(
         'project-lint',
-        { successful: true },
+        expect.objectContaining({ successful: true }),
         args.derivedAccountId
       );
     });
@@ -160,7 +166,7 @@ describe('commands/project/lint', () => {
         projectDir,
         projectConfig: null,
       });
-      getProjectPackageJsonLocationsSpy.mockResolvedValue([lintLocation]);
+      getUieLintablePackageJsonLocationsSpy.mockResolvedValue([lintLocation]);
       areAllLintPackagesInstalledSpy.mockReturnValueOnce(true);
 
       await projectLintCommand.handler(args);
@@ -178,7 +184,7 @@ describe('commands/project/lint', () => {
         projectDir,
         projectConfig: null,
       });
-      getProjectPackageJsonLocationsSpy.mockResolvedValue([lintLocation]);
+      getUieLintablePackageJsonLocationsSpy.mockResolvedValue([lintLocation]);
       areAllLintPackagesInstalledSpy
         .mockReturnValueOnce(false) // Initial check
         .mockReturnValueOnce(true); // After install
@@ -217,7 +223,7 @@ describe('commands/project/lint', () => {
         projectDir,
         projectConfig: null,
       });
-      getProjectPackageJsonLocationsSpy.mockResolvedValue([lintLocation]);
+      getUieLintablePackageJsonLocationsSpy.mockResolvedValue([lintLocation]);
       areAllLintPackagesInstalledSpy.mockReturnValue(false);
       getMissingLintPackagesSpy.mockReturnValueOnce({
         missingPackages: [
@@ -254,7 +260,7 @@ describe('commands/project/lint', () => {
         projectDir,
         projectConfig: null,
       });
-      getProjectPackageJsonLocationsSpy.mockResolvedValue([lintLocation]);
+      getUieLintablePackageJsonLocationsSpy.mockResolvedValue([lintLocation]);
       areAllLintPackagesInstalledSpy
         .mockReturnValueOnce(false) // Initial check
         .mockReturnValueOnce(true); // After install
@@ -277,6 +283,32 @@ describe('commands/project/lint', () => {
       expect(lintPackagesSpy).toHaveBeenCalledWith([lintLocation], projectDir);
     });
 
+    it('should clear the package.json cache after installing packages so the re-check reads fresh data', async () => {
+      const projectDir = '/test/project';
+      const lintLocation = path.join(projectDir, 'component1');
+
+      getProjectConfigSpy.mockResolvedValue({
+        projectDir,
+        projectConfig: null,
+      });
+      getUieLintablePackageJsonLocationsSpy.mockResolvedValue([lintLocation]);
+      areAllLintPackagesInstalledSpy
+        .mockReturnValueOnce(false) // initial check
+        .mockReturnValueOnce(true); // re-check after install
+      getMissingLintPackagesSpy.mockReturnValueOnce({
+        missingPackages: ['eslint'],
+      });
+      promptUserSpy.mockResolvedValueOnce({
+        shouldInstallPackages: true,
+      });
+
+      await projectLintCommand.handler(args);
+
+      expect(installPackagesSpy).toHaveBeenCalledTimes(1);
+      expect(clearPackageJsonCacheSpy).toHaveBeenCalledTimes(1);
+      expect(lintPackagesSpy).toHaveBeenCalledWith([lintLocation], projectDir);
+    });
+
     it('should handle mixed scenarios: some directories ready, some needing packages', async () => {
       const projectDir = '/test/project';
       const lintLocation1 = path.join(projectDir, 'component1'); // All installed
@@ -287,7 +319,7 @@ describe('commands/project/lint', () => {
         projectDir,
         projectConfig: null,
       });
-      getProjectPackageJsonLocationsSpy.mockResolvedValue([
+      getUieLintablePackageJsonLocationsSpy.mockResolvedValue([
         lintLocation1,
         lintLocation2,
         lintLocation3,
@@ -334,7 +366,7 @@ describe('commands/project/lint', () => {
         projectDir,
         projectConfig: null,
       });
-      getProjectPackageJsonLocationsSpy.mockResolvedValue([lintLocation]);
+      getUieLintablePackageJsonLocationsSpy.mockResolvedValue([lintLocation]);
       areAllLintPackagesInstalledSpy.mockReturnValue(false);
       getMissingLintPackagesSpy.mockReturnValueOnce({
         missingPackages: ['eslint'],
@@ -364,7 +396,7 @@ describe('commands/project/lint', () => {
         projectDir,
         projectConfig: null,
       });
-      getProjectPackageJsonLocationsSpy.mockResolvedValue([
+      getUieLintablePackageJsonLocationsSpy.mockResolvedValue([
         lintLocation1,
         lintLocation2,
       ]);
@@ -401,7 +433,7 @@ describe('commands/project/lint', () => {
         projectDir,
         projectConfig: null,
       });
-      getProjectPackageJsonLocationsSpy.mockResolvedValue([
+      getUieLintablePackageJsonLocationsSpy.mockResolvedValue([
         lintLocation1,
         lintLocation2,
       ]);
@@ -439,7 +471,7 @@ describe('commands/project/lint', () => {
         projectDir,
         projectConfig: null,
       });
-      getProjectPackageJsonLocationsSpy.mockResolvedValue([
+      getUieLintablePackageJsonLocationsSpy.mockResolvedValue([
         lintLocation1,
         lintLocation2,
       ]);
@@ -464,7 +496,7 @@ describe('commands/project/lint', () => {
         projectDir,
         projectConfig: null,
       });
-      getProjectPackageJsonLocationsSpy.mockResolvedValue([]);
+      getUieLintablePackageJsonLocationsSpy.mockResolvedValue([]);
 
       await projectLintCommand.handler(args);
 
@@ -481,7 +513,7 @@ describe('commands/project/lint', () => {
         projectDir,
         projectConfig: null,
       });
-      getProjectPackageJsonLocationsSpy.mockResolvedValue([lintLocation]);
+      getUieLintablePackageJsonLocationsSpy.mockResolvedValue([lintLocation]);
       areAllLintPackagesInstalledSpy.mockReturnValue(false);
       getMissingLintPackagesSpy.mockReturnValueOnce({
         missingPackages: ['eslint'],
@@ -510,7 +542,7 @@ describe('commands/project/lint', () => {
         projectDir,
         projectConfig: null,
       });
-      getProjectPackageJsonLocationsSpy.mockResolvedValue([lintLocation]);
+      getUieLintablePackageJsonLocationsSpy.mockResolvedValue([lintLocation]);
       areAllLintPackagesInstalledSpy.mockReturnValue(true);
       hasEslintConfigSpy.mockReturnValue(false);
       promptUserSpy.mockResolvedValueOnce({
@@ -546,7 +578,7 @@ describe('commands/project/lint', () => {
           platformVersion: '2026.03',
         },
       });
-      getProjectPackageJsonLocationsSpy.mockResolvedValue([lintLocation]);
+      getUieLintablePackageJsonLocationsSpy.mockResolvedValue([lintLocation]);
       areAllLintPackagesInstalledSpy.mockReturnValue(true);
       hasEslintConfigSpy.mockReturnValue(false);
       promptUserSpy.mockResolvedValueOnce({
@@ -569,7 +601,7 @@ describe('commands/project/lint', () => {
         projectDir,
         projectConfig: null,
       });
-      getProjectPackageJsonLocationsSpy.mockResolvedValue([lintLocation]);
+      getUieLintablePackageJsonLocationsSpy.mockResolvedValue([lintLocation]);
       areAllLintPackagesInstalledSpy.mockReturnValue(true);
       hasEslintConfigSpy.mockReturnValue(false);
       promptUserSpy.mockResolvedValueOnce({
@@ -594,7 +626,7 @@ describe('commands/project/lint', () => {
         projectDir,
         projectConfig: null,
       });
-      getProjectPackageJsonLocationsSpy.mockResolvedValue([lintLocation]);
+      getUieLintablePackageJsonLocationsSpy.mockResolvedValue([lintLocation]);
       areAllLintPackagesInstalledSpy.mockReturnValue(true);
       hasEslintConfigSpy.mockReturnValue(true);
 
@@ -614,7 +646,7 @@ describe('commands/project/lint', () => {
         projectDir,
         projectConfig: null,
       });
-      getProjectPackageJsonLocationsSpy.mockResolvedValue([
+      getUieLintablePackageJsonLocationsSpy.mockResolvedValue([
         lintLocation1,
         lintLocation2,
       ]);
@@ -639,7 +671,7 @@ describe('commands/project/lint', () => {
         projectDir,
         projectConfig: null,
       });
-      getProjectPackageJsonLocationsSpy.mockResolvedValue([lintLocation]);
+      getUieLintablePackageJsonLocationsSpy.mockResolvedValue([lintLocation]);
       areAllLintPackagesInstalledSpy.mockReturnValue(true);
       hasEslintConfigSpy.mockReturnValue(false); // No modern config initially
       hasDeprecatedEslintConfigSpy.mockReturnValue(true);
@@ -685,7 +717,7 @@ describe('commands/project/lint', () => {
         projectDir,
         projectConfig: null,
       });
-      getProjectPackageJsonLocationsSpy.mockResolvedValue([
+      getUieLintablePackageJsonLocationsSpy.mockResolvedValue([
         lintLocation1,
         lintLocation2,
       ]);
@@ -729,7 +761,7 @@ describe('commands/project/lint', () => {
         projectDir,
         projectConfig: null,
       });
-      getProjectPackageJsonLocationsSpy.mockResolvedValue([lintLocation]);
+      getUieLintablePackageJsonLocationsSpy.mockResolvedValue([lintLocation]);
       areAllLintPackagesInstalledSpy.mockReturnValue(true);
       hasDeprecatedEslintConfigSpy.mockReturnValue(false);
       hasEslintConfigSpy.mockReturnValue(true);
@@ -749,7 +781,7 @@ describe('commands/project/lint', () => {
         projectDir,
         projectConfig: null,
       });
-      getProjectPackageJsonLocationsSpy.mockResolvedValue([
+      getUieLintablePackageJsonLocationsSpy.mockResolvedValue([
         lintLocation1,
         lintLocation2,
       ]);
@@ -801,7 +833,7 @@ describe('commands/project/lint', () => {
         projectDir,
         projectConfig: null,
       });
-      getProjectPackageJsonLocationsSpy.mockResolvedValue([lintLocation]);
+      getUieLintablePackageJsonLocationsSpy.mockResolvedValue([lintLocation]);
       areAllLintPackagesInstalledSpy
         .mockReturnValueOnce(false) // Initial check
         .mockReturnValueOnce(true); // After install
@@ -832,7 +864,7 @@ describe('commands/project/lint', () => {
         projectDir,
         projectConfig: null,
       });
-      getProjectPackageJsonLocationsSpy.mockResolvedValue([lintLocation]);
+      getUieLintablePackageJsonLocationsSpy.mockResolvedValue([lintLocation]);
       areAllLintPackagesInstalledSpy.mockReturnValueOnce(false);
       getMissingLintPackagesSpy.mockReturnValueOnce({
         missingPackages: ['eslint', '@typescript-eslint/parser'],
@@ -858,7 +890,7 @@ describe('commands/project/lint', () => {
         projectDir,
         projectConfig: null,
       });
-      getProjectPackageJsonLocationsSpy.mockResolvedValue([lintLocation]);
+      getUieLintablePackageJsonLocationsSpy.mockResolvedValue([lintLocation]);
       areAllLintPackagesInstalledSpy
         .mockReturnValueOnce(false) // Initial check
         .mockReturnValueOnce(true); // After install
@@ -897,7 +929,7 @@ describe('commands/project/lint', () => {
         projectDir,
         projectConfig: null,
       });
-      getProjectPackageJsonLocationsSpy.mockResolvedValue([lintLocation]);
+      getUieLintablePackageJsonLocationsSpy.mockResolvedValue([lintLocation]);
       areAllLintPackagesInstalledSpy.mockReturnValue(true);
       lintPackagesSpy.mockResolvedValueOnce({ success: false, results: [] }); // Linting fails
 

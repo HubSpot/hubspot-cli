@@ -15,7 +15,7 @@ import {
   EnvironmentArgs,
   YargsCommandModule,
 } from '../../types/Yargs.js';
-import { makeYargsHandlerWithUsageTracking } from '../../lib/yargs/makeYargsHandlerWithUsageTracking.js';
+import { makeWrappedYargsHandler } from '../../lib/yargs/makeWrappedYargsHandler.js';
 import { makeYargsBuilder } from '../../lib/yargsUtils.js';
 
 const command = 'fetch-all-schemas [dest]';
@@ -90,10 +90,7 @@ const fetchAllSchemasCommand: YargsCommandModule<unknown, SchemaFetchAllArgs> =
   {
     command,
     describe,
-    handler: makeYargsHandlerWithUsageTracking(
-      'custom-object-schema-fetch-all',
-      handler
-    ),
+    handler: makeWrappedYargsHandler('custom-object-schema-fetch-all', handler),
     builder,
   };
 

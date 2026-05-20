@@ -17,8 +17,8 @@ vi.mock('../../../../lib/prompts/promptUtils');
 vi.mock('../../../../lib/validation', () => ({
   fileExists: vi.fn().mockReturnValue(true),
 }));
-vi.mock('../../../../lib/yargs/makeYargsHandlerWithUsageTracking', () => ({
-  makeYargsHandlerWithUsageTracking: (
+vi.mock('../../../../lib/yargs/makeWrappedYargsHandler', () => ({
+  makeWrappedYargsHandler: (
     _name: string,
     handler: (...args: unknown[]) => unknown
   ) => handler,

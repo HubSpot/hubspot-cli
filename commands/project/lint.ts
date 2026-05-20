@@ -1,33 +1,32 @@
 import path from 'path';
-import { Argv, ArgumentsCamelCase } from 'yargs';
-import {
-  getProjectPackageJsonLocations,
-  installPackages,
-} from '../../lib/dependencyManagement.js';
+import { ArgumentsCamelCase, Argv } from 'yargs';
+import { installPackages } from '../../lib/dependencyManagement.js';
 import { EXIT_CODES } from '../../lib/enums/exitCodes.js';
 import { isPromptExitError } from '../../lib/errors/PromptExitError.js';
 import { getProjectConfig } from '../../lib/projects/config.js';
 import { commands } from '../../lang/en.js';
 import { uiLogger } from '../../lib/ui/logger.js';
 import { CommonArgs, YargsCommandModule } from '../../types/Yargs.js';
-import { makeYargsHandlerWithUsageTracking } from '../../lib/yargs/makeYargsHandlerWithUsageTracking.js';
+import { makeWrappedYargsHandler } from '../../lib/yargs/makeWrappedYargsHandler.js';
 import { logError } from '../../lib/errorHandlers/index.js';
 import { makeYargsBuilder } from '../../lib/yargsUtils.js';
 import { promptUser } from '../../lib/prompts/promptUtils.js';
 import SpinniesManager from '../../lib/ui/SpinniesManager.js';
 import {
+  addLintScriptsToPackageJson,
   areAllLintPackagesInstalled,
+  createEslintConfig,
+  displayLintResults,
+  getDeprecatedEslintConfigFiles,
   getMissingLintPackages,
   getMissingLintScripts,
-  addLintScriptsToPackageJson,
-  lintPackages,
-  displayLintResults,
-  hasEslintConfig,
+  getUieLintablePackageJsonLocations,
   hasDeprecatedEslintConfig,
-  getDeprecatedEslintConfigFiles,
-  createEslintConfig,
+  hasEslintConfig,
+  lintPackages,
   REQUIRED_PACKAGES_AND_MIN_VERSIONS,
 } from '../../lib/projects/uieLinting.js';
+import { clearPackageJsonCache } from '../../lib/npm/packageJson.js';
 
 const command = 'lint';
 const describe = commands.project.lint.help.describe;
@@ -52,7 +51,8 @@ async function handler(
       text: commands.project.lint.loading.checking,
     });
 
-    const lintLocations = await getProjectPackageJsonLocations();
+    const lintLocations =
+      await getUieLintablePackageJsonLocations(projectConfig);
     const locationsReadyToLint: string[] = [];
     const locationsNeedingPackages = new Map<string, string[]>();
 
@@ -110,6 +110,8 @@ async function handler(
           installLocations: locationsArray,
           dev: true,
         });
+
+        clearPackageJsonCache();
 
         // Re-check which locations are now ready
         for (const location of locationsArray) {
@@ -289,7 +291,7 @@ const builder = makeYargsBuilder<ProjectLintArgs>(
 const projectLintCommand: YargsCommandModule<unknown, ProjectLintArgs> = {
   command,
   describe,
-  handler: makeYargsHandlerWithUsageTracking('project-lint', handler),
+  handler: makeWrappedYargsHandler('project-lint', handler),
   builder,
 };
 

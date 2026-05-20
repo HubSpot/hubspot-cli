@@ -20,7 +20,7 @@ import {
   ExitFunction,
   YargsCommandModule,
 } from '../../types/Yargs.js';
-import { makeYargsHandlerWithUsageTracking } from '../../lib/yargs/makeYargsHandlerWithUsageTracking.js';
+import { makeWrappedYargsHandler } from '../../lib/yargs/makeWrappedYargsHandler.js';
 import { makeYargsBuilder } from '../../lib/yargsUtils.js';
 
 const command = 'convert-fields';
@@ -127,7 +127,7 @@ const builder = makeYargsBuilder<ConvertFieldsArgs>(
 const convertFieldsCommand: YargsCommandModule<unknown, ConvertFieldsArgs> = {
   command,
   describe,
-  handler: makeYargsHandlerWithUsageTracking('convert-fields', handler),
+  handler: makeWrappedYargsHandler('convert-fields', handler),
   builder,
 };
 

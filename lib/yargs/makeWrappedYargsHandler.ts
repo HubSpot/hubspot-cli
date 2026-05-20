@@ -1,3 +1,5 @@
+import os from 'os';
+import path from 'path';
 import { ArgumentsCamelCase } from 'yargs';
 import { getConfig } from '@hubspot/local-dev-lib/config';
 import {
@@ -5,6 +7,7 @@ import {
   setStateValue,
 } from '@hubspot/local-dev-lib/config/state';
 import { STATE_FLAGS } from '@hubspot/local-dev-lib/constants/config';
+import { logger as ldlLogger } from '@hubspot/local-dev-lib/logger';
 import { trackCommandUsage as _trackCommandUsage } from '../usageTracking.js';
 import { pkg } from '../jsonLoader.js';
 import { uiLogger } from '../ui/logger.js';
@@ -19,6 +22,8 @@ import {
 import { EXIT_CODES } from '../enums/exitCodes.js';
 import { isPromptExitError } from '../errors/PromptExitError.js';
 import { debugError } from '../errorHandlers/index.js';
+
+const HANDLER_LOG_DIR = path.join(os.homedir(), '.hscli', 'logs');
 
 function logUsageTrackingMessage(isJsonOutput: boolean): void {
   if (isJsonOutput) {
@@ -49,11 +54,12 @@ function logUsageTrackingMessage(isJsonOutput: boolean): void {
   }
 }
 
-export function makeYargsHandlerWithUsageTracking<T extends CommonArgs>(
+export function makeWrappedYargsHandler<T extends CommonArgs>(
   trackingName: string,
   handler: (args: ArgumentsCamelCase<T>) => Promise<void>
 ): (args: ArgumentsCamelCase<T>) => Promise<void> {
   return async (args: ArgumentsCamelCase<T>) => {
+    const startTime = Date.now();
     const meta: UsageTrackingMetaWithAccountId = {};
     let trackingFired = false;
 
@@ -73,6 +79,7 @@ export function makeYargsHandlerWithUsageTracking<T extends CommonArgs>(
       try {
         const { accountId: overrideAccountId, ...trackingMeta } = meta;
         trackingMeta.successful = successful;
+        trackingMeta.executionTime = Date.now() - startTime;
 
         await _trackCommandUsage(
           trackingName,
@@ -103,15 +110,34 @@ export function makeYargsHandlerWithUsageTracking<T extends CommonArgs>(
       process.removeListener('SIGINT', onForcedExit);
     };
 
+    const jsonArgs = args as ArgumentsCamelCase<T & JSONOutputArgs>;
+    const isJsonOutput = Boolean(jsonArgs.json || jsonArgs.formatOutputAsJson);
+
+    const writeFailureLogFile = (): void => {
+      // Skip in JSON output modes so the side effect + stderr message don't
+      // interfere with structured output consumers.
+      if (isJsonOutput) {
+        return;
+      }
+      const savedPath = ldlLogger.writeBufferedLogsToFile({
+        dir: HANDLER_LOG_DIR,
+        filenamePrefix: trackingName,
+      });
+      if (savedPath) {
+        uiLogger.log('');
+        uiLogger.error(lib.handlerLogFile.saved(savedPath));
+      }
+    };
+
     trackingArgs.exit = async (code: ExitCode): Promise<never> => {
       await trackCommandUsageAndRemoveListeners(code !== EXIT_CODES.ERROR);
+      if (code === EXIT_CODES.ERROR) {
+        writeFailureLogFile();
+      }
       return process.exit(code);
     };
 
-    const jsonArgs = args as ArgumentsCamelCase<T & JSONOutputArgs>;
-    logUsageTrackingMessage(
-      Boolean(jsonArgs.json || jsonArgs.formatOutputAsJson)
-    );
+    logUsageTrackingMessage(isJsonOutput);
 
     try {
       await handler(trackingArgs);
@@ -125,6 +151,7 @@ export function makeYargsHandlerWithUsageTracking<T extends CommonArgs>(
         return process.exit(e.exitCode);
       } else {
         debugError(e);
+        writeFailureLogFile();
         return process.exit(EXIT_CODES.ERROR);
       }
     }

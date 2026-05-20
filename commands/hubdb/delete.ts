@@ -14,7 +14,7 @@ import {
   EnvironmentArgs,
   YargsCommandModule,
 } from '../../types/Yargs.js';
-import { makeYargsHandlerWithUsageTracking } from '../../lib/yargs/makeYargsHandlerWithUsageTracking.js';
+import { makeWrappedYargsHandler } from '../../lib/yargs/makeWrappedYargsHandler.js';
 import { makeYargsBuilder } from '../../lib/yargsUtils.js';
 
 const command = 'delete [table-id]';
@@ -99,7 +99,7 @@ const builder = makeYargsBuilder<HubdbDeleteArgs>(
 const hubdbDeleteCommand: YargsCommandModule<unknown, HubdbDeleteArgs> = {
   command,
   describe,
-  handler: makeYargsHandlerWithUsageTracking('hubdb-delete', handler),
+  handler: makeWrappedYargsHandler('hubdb-delete', handler),
   builder,
 };
 

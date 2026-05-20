@@ -205,7 +205,7 @@ describe('commands/project/dev', () => {
         expect(getConfigAccountIfExistsSpy).toHaveBeenCalledWith('999999');
         expect(trackCommandUsageSpy).toHaveBeenCalledWith(
           'project-dev',
-          { successful: true },
+          expect.objectContaining({ successful: true }),
           999999
         );
       });
@@ -219,7 +219,7 @@ describe('commands/project/dev', () => {
 
         expect(trackCommandUsageSpy).toHaveBeenCalledWith(
           'project-dev',
-          { successful: true },
+          expect.objectContaining({ successful: true }),
           888888
         );
       });
@@ -243,7 +243,7 @@ describe('commands/project/dev', () => {
         );
         expect(trackCommandUsageSpy).toHaveBeenCalledWith(
           'project-dev',
-          { successful: true },
+          expect.objectContaining({ successful: true }),
           777777
         );
       });
@@ -299,7 +299,7 @@ describe('commands/project/dev', () => {
         );
         expect(trackCommandUsageSpy).toHaveBeenCalledWith(
           'project-dev',
-          { successful: true },
+          expect.objectContaining({ successful: true }),
           789012
         );
       });
@@ -334,7 +334,7 @@ describe('commands/project/dev', () => {
 
         expect(trackCommandUsageSpy).toHaveBeenCalledWith(
           'project-dev',
-          { successful: true },
+          expect.objectContaining({ successful: true }),
           123456
         );
       });
@@ -346,7 +346,7 @@ describe('commands/project/dev', () => {
 
         expect(trackCommandUsageSpy).toHaveBeenCalledWith(
           'project-dev',
-          { successful: true },
+          expect.objectContaining({ successful: true }),
           123456
         );
       });

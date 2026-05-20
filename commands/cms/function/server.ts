@@ -10,7 +10,7 @@ import {
   EnvironmentArgs,
   YargsCommandModule,
 } from '../../../types/Yargs.js';
-import { makeYargsHandlerWithUsageTracking } from '../../../lib/yargs/makeYargsHandlerWithUsageTracking.js';
+import { makeWrappedYargsHandler } from '../../../lib/yargs/makeWrappedYargsHandler.js';
 import { makeYargsBuilder } from '../../../lib/yargsUtils.js';
 
 const command = 'server <path>';
@@ -107,7 +107,7 @@ const builder = makeYargsBuilder<FunctionServerArgs>(
 const functionServerCommand: YargsCommandModule<unknown, FunctionServerArgs> = {
   command,
   describe,
-  handler: makeYargsHandlerWithUsageTracking('functions-server', handler),
+  handler: makeWrappedYargsHandler('functions-server', handler),
   builder,
 };
 

@@ -15,7 +15,7 @@ import {
   ConfigArgs,
   YargsCommandModule,
 } from '../../types/Yargs.js';
-import { makeYargsHandlerWithUsageTracking } from '../../lib/yargs/makeYargsHandlerWithUsageTracking.js';
+import { makeWrappedYargsHandler } from '../../lib/yargs/makeWrappedYargsHandler.js';
 import { makeYargsBuilder } from '../../lib/yargsUtils.js';
 import { uiLogger } from '../../lib/ui/logger.js';
 import { commands } from '../../lang/en.js';
@@ -101,7 +101,7 @@ const builder = makeYargsBuilder<AccountListArgs>(
 const accountListCommand: YargsCommandModule<unknown, AccountListArgs> = {
   command,
   describe,
-  handler: makeYargsHandlerWithUsageTracking('accounts-list', handler),
+  handler: makeWrappedYargsHandler('accounts-list', handler),
   builder,
 };
 

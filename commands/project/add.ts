@@ -9,7 +9,7 @@ import {
   CommonArgs,
   ConfigArgs,
 } from '../../types/Yargs.js';
-import { makeYargsHandlerWithUsageTracking } from '../../lib/yargs/makeYargsHandlerWithUsageTracking.js';
+import { makeWrappedYargsHandler } from '../../lib/yargs/makeWrappedYargsHandler.js';
 import { makeYargsBuilder } from '../../lib/yargsUtils.js';
 import { commands } from '../../lang/en.js';
 import { isLegacyProject } from '@hubspot/project-parsing-lib/projects';
@@ -121,7 +121,7 @@ const builder = makeYargsBuilder<ProjectAddArgs>(
 const projectAddCommand: YargsCommandModule<unknown, ProjectAddArgs> = {
   command,
   describe,
-  handler: makeYargsHandlerWithUsageTracking('project-add', handler),
+  handler: makeWrappedYargsHandler('project-add', handler),
   builder,
 };
 

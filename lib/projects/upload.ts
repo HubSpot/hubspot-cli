@@ -32,6 +32,9 @@ import {
   getLockfilePathsToUpdate,
 } from './workspaces.js';
 import { isLegacyProject } from '@hubspot/project-parsing-lib/projects';
+import type { ParsedPackageJson } from '@hubspot/project-parsing-lib/workspaces';
+import { validateLintConfigOnUpload } from './validateLintConfigOnUpload.js';
+import { runNpmAuditsBeforeProjectUpload } from './npmAuditOnUpload.js';
 
 async function uploadProjectFiles(
   accountId: number,
@@ -103,6 +106,7 @@ type ProjectUploadResult<T> = {
   result?: T;
   uploadError?: unknown;
   projectNotFound?: boolean;
+  projectId?: number;
 };
 
 type HandleProjectUploadArg<T> = {
@@ -115,6 +119,7 @@ type HandleProjectUploadArg<T> = {
   isUploadCommand?: boolean;
   sendIR?: boolean;
   skipValidation?: boolean;
+  skipNpmAudit?: boolean;
   profile?: string;
 };
 
@@ -129,6 +134,7 @@ export async function handleProjectUpload<T>({
   isUploadCommand = false,
   sendIR = false,
   skipValidation = false,
+  skipNpmAudit = false,
 }: HandleProjectUploadArg<T>): Promise<ProjectUploadResult<T>> {
   const srcDir = path.resolve(projectDir, projectConfig.srcDir);
 
@@ -149,11 +155,30 @@ export async function handleProjectUpload<T>({
   let fileDependencyMappings: Awaited<
     ReturnType<typeof collectFileDependencies>
   > = [];
+  let parsedPackageJsons: ParsedPackageJson[] = [];
 
   if (!isLegacyProject(projectConfig.platformVersion)) {
-    const parsedPackageJsons = await findAndParsePackageJsonFiles(srcDir);
+    parsedPackageJsons = await findAndParsePackageJsonFiles(srcDir);
     workspaceMappings = await collectWorkspaceDirectories(parsedPackageJsons);
     fileDependencyMappings = await collectFileDependencies(parsedPackageJsons);
+  }
+
+  if (isUploadCommand && !skipValidation) {
+    await validateLintConfigOnUpload({
+      srcDir,
+      projectDir,
+      parsedPackageJsons,
+      isLegacyPlatform: isLegacyProject(projectConfig.platformVersion),
+    });
+  }
+
+  if (isUploadCommand && !skipNpmAudit) {
+    await runNpmAuditsBeforeProjectUpload({
+      srcDir,
+      projectDir,
+      parsedPackageJsons,
+      isLegacyPlatform: isLegacyProject(projectConfig.platformVersion),
+    });
   }
 
   const output = fs.createWriteStream(tempFile.name);
@@ -182,7 +207,7 @@ export async function handleProjectUpload<T>({
           }
         }
 
-        const { projectExists } = await ensureProjectExists(
+        const { projectExists, project } = await ensureProjectExists(
           accountId,
           projectConfig.name,
           {
@@ -199,6 +224,8 @@ export async function handleProjectUpload<T>({
           return resolve({ projectNotFound: true });
         }
 
+        const projectId = project?.id;
+
         const { buildId, error } = await uploadProjectFiles(
           accountId,
           projectConfig.name,
@@ -209,7 +236,7 @@ export async function handleProjectUpload<T>({
         );
 
         if (error) {
-          resolve({ uploadError: error });
+          resolve({ uploadError: error, projectId });
         } else if (callbackFunc) {
           const uploadResult = await callbackFunc(
             accountId,
@@ -217,7 +244,7 @@ export async function handleProjectUpload<T>({
             tempFile,
             buildId!
           );
-          resolve({ result: uploadResult });
+          resolve({ result: uploadResult, projectId });
         }
       } catch (e) {
         reject(e);
@@ -270,7 +297,6 @@ export async function handleProjectUpload<T>({
   await archiveWorkspacesAndDependencies(
     archive,
     srcDir,
-    projectDir,
     workspaceMappings,
     fileDependencyMappings
   );

@@ -6,9 +6,8 @@ import {
 } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { McpLogger } from '../../utils/logger.js';
 import { z } from 'zod';
-import { addFlag } from '../../utils/command.js';
+import { addFlag, runCommandInDir } from '../../utils/command.js';
 import { absoluteCurrentWorkingDirectory } from '../project/constants.js';
-import { runCommandInDir } from '../../utils/command.js';
 import { formatTextContents } from '../../utils/content.js';
 import { setupHubSpotConfig } from '../../utils/config.js';
 import { getErrorMessage } from '../../../lib/errorHandlers/index.js';
@@ -48,7 +47,7 @@ export class HsListFunctionsTool extends Tool<HsListFunctionsInputSchema> {
   }: HsListFunctionsInputSchema): Promise<TextContentResponse> {
     setupHubSpotConfig(absoluteCurrentWorkingDirectory);
 
-    let command = 'hs function list';
+    let command = 'hs cms function list';
 
     if (json) {
       command += ' --json';

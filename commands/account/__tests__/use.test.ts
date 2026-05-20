@@ -189,7 +189,7 @@ describe('commands/account/use', () => {
 
         expect(trackCommandUsageSpy).toHaveBeenCalledWith(
           'accounts-use',
-          { successful: true },
+          expect.objectContaining({ successful: true }),
           undefined
         );
       });

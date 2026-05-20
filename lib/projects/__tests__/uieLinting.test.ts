@@ -9,19 +9,22 @@ import {
 import { uiLogger } from '../../ui/logger.js';
 import * as dependencyManagement from '../../dependencyManagement.js';
 import {
-  isEslintInstalled,
+  addLintScriptsToPackageJson,
   areAllLintPackagesInstalled,
+  createEslintConfig,
+  displayLintResults,
+  getDeprecatedEslintConfigFiles,
   getMissingLintPackages,
   getMissingLintScripts,
-  addLintScriptsToPackageJson,
+  getUieLintablePackageJsonLocations,
+  hasDeprecatedEslintConfig,
+  hasEslintConfig,
+  isEslintInstalled,
   lintPackages,
   lintPackagesInDirectory,
-  displayLintResults,
-  hasEslintConfig,
-  hasDeprecatedEslintConfig,
-  getDeprecatedEslintConfigFiles,
-  createEslintConfig,
+  isHubSpotEslintConfigActive,
   REQUIRED_PACKAGES_AND_MIN_VERSIONS,
+  HUBSPOT_UI_EXTENSIONS_RULE_PREFIX,
 } from '../uieLinting.js';
 import { clearPackageJsonCache } from '../../npm/packageJson.js';
 
@@ -75,6 +78,7 @@ vi.mocked(util.promisify).mockReturnValue(
 describe('lib/linting', () => {
   afterEach(() => {
     clearPackageJsonCache();
+    vi.unstubAllEnvs();
   });
 
   describe('isEslintInstalled', () => {
@@ -624,6 +628,66 @@ export default defineConfig([]);`;
     });
   });
 
+  describe('isHubSpotEslintConfigActive', () => {
+    it('returns true when resolved config has HubSpot rules', async () => {
+      const directory = '/test/project/component1';
+      const config = {
+        rules: {
+          [`${HUBSPOT_UI_EXTENSIONS_RULE_PREFIX}no-something`]: 'error',
+          'no-unused-vars': 'warn',
+        },
+      };
+      mockExec.mockResolvedValueOnce({ stdout: JSON.stringify(config) });
+
+      const result = await isHubSpotEslintConfigActive(directory);
+
+      expect(mockExec).toHaveBeenCalledWith(
+        'npx eslint --print-config ./Component.tsx',
+        { cwd: directory }
+      );
+      expect(result).toBe(true);
+    });
+
+    it('returns false when resolved config has no HubSpot rules', async () => {
+      const directory = '/test/project/component1';
+      const config = {
+        rules: { 'no-unused-vars': 'warn', 'no-console': 'error' },
+      };
+      mockExec.mockResolvedValueOnce({ stdout: JSON.stringify(config) });
+
+      const result = await isHubSpotEslintConfigActive(directory);
+
+      expect(result).toBe(false);
+    });
+
+    it('returns false when resolved config has no rules field', async () => {
+      const directory = '/test/project/component1';
+      mockExec.mockResolvedValueOnce({ stdout: JSON.stringify({}) });
+
+      const result = await isHubSpotEslintConfigActive(directory);
+
+      expect(result).toBe(false);
+    });
+
+    it('returns false when exec throws', async () => {
+      const directory = '/test/project/component1';
+      mockExec.mockRejectedValueOnce(new Error('ESLint not found'));
+
+      const result = await isHubSpotEslintConfigActive(directory);
+
+      expect(result).toBe(false);
+    });
+
+    it('returns false when stdout is invalid JSON', async () => {
+      const directory = '/test/project/component1';
+      mockExec.mockResolvedValueOnce({ stdout: 'not valid json' });
+
+      const result = await isHubSpotEslintConfigActive(directory);
+
+      expect(result).toBe(false);
+    });
+  });
+
   describe('lintPackagesInDirectory', () => {
     it('should execute eslint and return success with output', async () => {
       const directory = '/test/project/component1';
@@ -634,13 +698,36 @@ export default defineConfig([]);`;
 
       const result = await lintPackagesInDirectory(directory);
 
-      expect(mockExec).toHaveBeenCalledWith('npx eslint . --color', {
-        cwd: directory,
-        maxBuffer: 10 * 1024 * 1024,
-      });
+      expect(mockExec).toHaveBeenCalledWith(
+        'npx eslint . --color',
+        expect.objectContaining({
+          cwd: directory,
+          maxBuffer: 10 * 1024 * 1024,
+        })
+      );
       expect(result.success).toBe(true);
       expect(result.output).toContain('/test/project/component1');
       expect(result.output).toContain('All files passed!');
+    });
+
+    it('should remove inherited npm config variables when executing eslint', async () => {
+      const originalPath = process.env.PATH;
+      vi.stubEnv('npm_config_argv', '{}');
+      vi.stubEnv('npm_config_version_git_tag', 'true');
+      vi.stubEnv('NPM_CONFIG_VERSION_GIT_MESSAGE', 'v%s');
+      const directory = '/test/project/component1';
+      mockExec.mockResolvedValueOnce({ stdout: '', stderr: '' });
+
+      await lintPackagesInDirectory(directory);
+
+      const execOptions = mockExec.mock.calls[0][1] as {
+        env?: NodeJS.ProcessEnv;
+      };
+      expect(execOptions.env).toBeDefined();
+      expect(execOptions.env?.PATH).toBe(originalPath);
+      expect(execOptions.env?.npm_config_argv).toBeUndefined();
+      expect(execOptions.env?.npm_config_version_git_tag).toBeUndefined();
+      expect(execOptions.env?.NPM_CONFIG_VERSION_GIT_MESSAGE).toBeUndefined();
     });
 
     it('should use relative path when projectDir is provided', async () => {
@@ -754,10 +841,13 @@ export default defineConfig([]);`;
       await lintPackages();
 
       expect(getProjectPackageJsonLocationsSpy).toHaveBeenCalledTimes(1);
-      expect(mockExec).toHaveBeenCalledWith('npx eslint . --color', {
-        cwd: locations[0],
-        maxBuffer: 10 * 1024 * 1024,
-      });
+      expect(mockExec).toHaveBeenCalledWith(
+        'npx eslint . --color',
+        expect.objectContaining({
+          cwd: locations[0],
+          maxBuffer: 10 * 1024 * 1024,
+        })
+      );
     });
 
     it('should handle empty locations array', async () => {
@@ -1040,6 +1130,168 @@ export default defineConfig([]);`;
       expect(uiLogger.warn).toHaveBeenCalledWith(
         expect.stringContaining('Failed to add lint scripts')
       );
+    });
+  });
+
+  describe('getUieLintablePackageJsonLocations', () => {
+    const projectDir = '/test/project';
+    const srcDir = 'src';
+    const srcDirAbsolute = path.join(projectDir, srcDir);
+    const cardsDir = path.join(srcDirAbsolute, 'app', 'cards');
+    const pagesDir = path.join(srcDirAbsolute, 'app', 'pages');
+    const settingsDir = path.join(srcDirAbsolute, 'app', 'settings');
+    const loadedProjectConfig = {
+      projectDir,
+      projectConfig: {
+        name: 'test-project',
+        srcDir,
+        platformVersion: '2026.03',
+      },
+    };
+
+    it('should include package.json locations inside app/cards', async () => {
+      const cardLocation = path.join(cardsDir, 'my-card');
+      getProjectPackageJsonLocationsSpy.mockResolvedValueOnce([cardLocation]);
+
+      const result =
+        await getUieLintablePackageJsonLocations(loadedProjectConfig);
+
+      expect(result).toEqual([cardLocation]);
+    });
+
+    it('should include package.json locations inside app/pages', async () => {
+      const pageLocation = path.join(pagesDir, 'my-page');
+      getProjectPackageJsonLocationsSpy.mockResolvedValueOnce([pageLocation]);
+
+      const result =
+        await getUieLintablePackageJsonLocations(loadedProjectConfig);
+
+      expect(result).toEqual([pageLocation]);
+    });
+
+    it('should include package.json locations inside app/settings', async () => {
+      const settingsLocation = path.join(settingsDir, 'my-settings');
+      getProjectPackageJsonLocationsSpy.mockResolvedValueOnce([
+        settingsLocation,
+      ]);
+
+      const result =
+        await getUieLintablePackageJsonLocations(loadedProjectConfig);
+
+      expect(result).toEqual([settingsLocation]);
+    });
+
+    it('should include nested package.json locations under UIE package directories', async () => {
+      const nestedCard = path.join(cardsDir, 'my-card', 'inner');
+      getProjectPackageJsonLocationsSpy.mockResolvedValueOnce([nestedCard]);
+
+      const result =
+        await getUieLintablePackageJsonLocations(loadedProjectConfig);
+
+      expect(result).toEqual([nestedCard]);
+    });
+
+    it('should exclude the project root', async () => {
+      const cardLocation = path.join(cardsDir, 'my-card');
+      getProjectPackageJsonLocationsSpy.mockResolvedValueOnce([
+        projectDir,
+        cardLocation,
+      ]);
+
+      const result =
+        await getUieLintablePackageJsonLocations(loadedProjectConfig);
+
+      expect(result).toEqual([cardLocation]);
+    });
+
+    it('should exclude the project srcDir', async () => {
+      const cardLocation = path.join(cardsDir, 'my-card');
+      getProjectPackageJsonLocationsSpy.mockResolvedValueOnce([
+        srcDirAbsolute,
+        cardLocation,
+      ]);
+
+      const result =
+        await getUieLintablePackageJsonLocations(loadedProjectConfig);
+
+      expect(result).toEqual([cardLocation]);
+    });
+
+    it('should exclude directories not in the UIE allowlist', async () => {
+      const extensionsLocation = path.join(srcDirAbsolute, 'app', 'extensions');
+      const functionsLocation = path.join(
+        srcDirAbsolute,
+        'app',
+        'functions',
+        'my-function'
+      );
+      const cardLocation = path.join(cardsDir, 'my-card');
+      getProjectPackageJsonLocationsSpy.mockResolvedValueOnce([
+        extensionsLocation,
+        functionsLocation,
+        cardLocation,
+      ]);
+
+      const result =
+        await getUieLintablePackageJsonLocations(loadedProjectConfig);
+
+      expect(result).toEqual([cardLocation]);
+    });
+
+    it('should exclude UIE-named directories outside of srcDir/app', async () => {
+      const cardsOutsideSrc = path.join(projectDir, 'cards', 'my-card');
+      getProjectPackageJsonLocationsSpy.mockResolvedValueOnce([
+        cardsOutsideSrc,
+      ]);
+
+      const result =
+        await getUieLintablePackageJsonLocations(loadedProjectConfig);
+
+      expect(result).toEqual([]);
+    });
+
+    it('should return an empty array when there is no project config', async () => {
+      const result = await getUieLintablePackageJsonLocations({
+        projectDir: null,
+        projectConfig: null,
+      });
+
+      expect(result).toEqual([]);
+      expect(getProjectPackageJsonLocationsSpy).not.toHaveBeenCalled();
+    });
+
+    it('should return an empty array when srcDir is missing', async () => {
+      const result = await getUieLintablePackageJsonLocations({
+        projectDir,
+        projectConfig: {
+          name: 'test-project',
+          srcDir: '',
+          platformVersion: '2026.03',
+        },
+      });
+
+      expect(result).toEqual([]);
+      expect(getProjectPackageJsonLocationsSpy).not.toHaveBeenCalled();
+    });
+
+    it('should handle a mix of UIE and non-UIE locations', async () => {
+      const cardLocation = path.join(cardsDir, 'my-card');
+      const pageLocation = path.join(pagesDir, 'my-page');
+      const settingsLocation = path.join(settingsDir, 'my-settings');
+      const extensionsLocation = path.join(srcDirAbsolute, 'app', 'extensions');
+      getProjectPackageJsonLocationsSpy.mockResolvedValueOnce([
+        projectDir,
+        srcDirAbsolute,
+        extensionsLocation,
+        cardLocation,
+        pageLocation,
+        settingsLocation,
+      ]);
+
+      const result =
+        await getUieLintablePackageJsonLocations(loadedProjectConfig);
+
+      expect(result).toEqual([cardLocation, pageLocation, settingsLocation]);
     });
   });
 });

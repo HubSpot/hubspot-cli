@@ -16,6 +16,7 @@ import installDeps from './project/installDeps.js';
 import lint from './project/lint.js';
 import updateDeps from './project/updateDeps.js';
 import profile from './project/profile.js';
+import release from './project/release.js';
 import projectValidate from './project/validate.js';
 import list from './project/list.js';
 import info from './project/info.js';
@@ -83,6 +84,7 @@ function projectBuilder(yargs: Argv): Argv {
     .command(lint)
     .command(updateDeps)
     .command(profile)
+    .command(release)
     .command(projectValidate)
     .command(appInstallStatus)
     .demandCommand(1, '');

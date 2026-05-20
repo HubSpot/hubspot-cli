@@ -17,7 +17,7 @@ import { uiAccountDescription } from '../../../lib/ui/index.js';
 import { uiLogger } from '../../../lib/ui/logger.js';
 import { EXIT_CODES } from '../../../lib/enums/exitCodes.js';
 import { YargsCommandModule, CommonArgs } from '../../../types/Yargs.js';
-import { makeYargsHandlerWithUsageTracking } from '../../../lib/yargs/makeYargsHandlerWithUsageTracking.js';
+import { makeWrappedYargsHandler } from '../../../lib/yargs/makeWrappedYargsHandler.js';
 import { makeYargsBuilder } from '../../../lib/yargsUtils.js';
 import { commands } from '../../../lang/en.js';
 import {
@@ -300,7 +300,7 @@ const projectProfileAddCommand: YargsCommandModule<
 > = {
   command,
   describe,
-  handler: makeYargsHandlerWithUsageTracking('project-profile-add', handler),
+  handler: makeWrappedYargsHandler('project-profile-add', handler),
   builder,
 };
 

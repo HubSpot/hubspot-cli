@@ -3,7 +3,7 @@ import yargsParser from 'yargs-parser';
 import { commands } from '../lang/en.js';
 import { makeYargsBuilder } from '../lib/yargsUtils.js';
 import { CommonArgs, YargsCommandModule } from '../types/Yargs.js';
-import { makeYargsHandlerWithUsageTracking } from '../lib/yargs/makeYargsHandlerWithUsageTracking.js';
+import { makeWrappedYargsHandler } from '../lib/yargs/makeWrappedYargsHandler.js';
 const command = 'completion';
 const describe = commands.completion.describe;
 
@@ -28,7 +28,7 @@ const builder = makeYargsBuilder(completionBuilder, command, describe);
 const completionCommand: YargsCommandModule<unknown, CommonArgs> = {
   command,
   describe,
-  handler: makeYargsHandlerWithUsageTracking('completion', handler),
+  handler: makeWrappedYargsHandler('completion', handler),
   builder,
 };
 

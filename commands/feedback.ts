@@ -2,7 +2,7 @@ import { Argv, ArgumentsCamelCase } from 'yargs';
 import open from 'open';
 import { confirmPrompt } from '../lib/prompts/promptUtils.js';
 import { CommonArgs, YargsCommandModule } from '../types/Yargs.js';
-import { makeYargsHandlerWithUsageTracking } from '../lib/yargs/makeYargsHandlerWithUsageTracking.js';
+import { makeWrappedYargsHandler } from '../lib/yargs/makeWrappedYargsHandler.js';
 import { makeYargsBuilder } from '../lib/yargsUtils.js';
 import { EXIT_CODES } from '../lib/enums/exitCodes.js';
 import { commands } from '../lang/en.js';
@@ -45,7 +45,7 @@ const builder = makeYargsBuilder<FeedbackArgs>(
 const feedbackCommand: YargsCommandModule<unknown, FeedbackArgs> = {
   command,
   describe,
-  handler: makeYargsHandlerWithUsageTracking('feedback', handler),
+  handler: makeWrappedYargsHandler('feedback', handler),
   builder,
 };
 

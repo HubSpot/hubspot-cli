@@ -21,7 +21,7 @@ import {
   EnvironmentArgs,
   YargsCommandModule,
 } from '../../types/Yargs.js';
-import { makeYargsHandlerWithUsageTracking } from '../../lib/yargs/makeYargsHandlerWithUsageTracking.js';
+import { makeWrappedYargsHandler } from '../../lib/yargs/makeWrappedYargsHandler.js';
 import { WatchErrorHandler } from '@hubspot/local-dev-lib/types/Files';
 import { uiLogger } from '../../lib/ui/logger.js';
 
@@ -215,7 +215,7 @@ const builder = makeYargsBuilder<WatchCommandArgs>(
 const watchCommand: YargsCommandModule<unknown, WatchCommandArgs> = {
   command,
   describe,
-  handler: makeYargsHandlerWithUsageTracking('watch', handler),
+  handler: makeWrappedYargsHandler('watch', handler),
   builder,
 };
 

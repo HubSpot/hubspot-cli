@@ -15,7 +15,7 @@ import {
   TestingArgs,
   YargsCommandModule,
 } from '../../types/Yargs.js';
-import { makeYargsHandlerWithUsageTracking } from '../../lib/yargs/makeYargsHandlerWithUsageTracking.js';
+import { makeWrappedYargsHandler } from '../../lib/yargs/makeWrappedYargsHandler.js';
 import { makeYargsBuilder } from '../../lib/yargsUtils.js';
 
 const command = 'open';
@@ -90,7 +90,7 @@ const builder = makeYargsBuilder<ProjectOpenArgs>(
 const projectOpenCommand: YargsCommandModule<unknown, ProjectOpenArgs> = {
   command,
   describe,
-  handler: makeYargsHandlerWithUsageTracking('project-open', handler),
+  handler: makeWrappedYargsHandler('project-open', handler),
   builder,
 };
 

@@ -9,7 +9,7 @@ import {
 } from '../../lib/projects/config.js';
 import { EXIT_CODES } from '../../lib/enums/exitCodes.js';
 import { CommonArgs, YargsCommandModule } from '../../types/Yargs.js';
-import { makeYargsHandlerWithUsageTracking } from '../../lib/yargs/makeYargsHandlerWithUsageTracking.js';
+import { makeWrappedYargsHandler } from '../../lib/yargs/makeWrappedYargsHandler.js';
 import { makeYargsBuilder } from '../../lib/yargsUtils.js';
 import {
   validateSourceDirectory,
@@ -188,7 +188,7 @@ const projectValidateCommand: YargsCommandModule<unknown, ProjectValidateArgs> =
   {
     command,
     describe,
-    handler: makeYargsHandlerWithUsageTracking('project-validate', handler),
+    handler: makeWrappedYargsHandler('project-validate', handler),
     builder,
   };
 

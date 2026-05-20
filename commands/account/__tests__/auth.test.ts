@@ -163,7 +163,7 @@ describe('commands/account/auth', () => {
 
       expect(trackCommandUsageSpy).toHaveBeenCalledWith(
         'account-auth',
-        { successful: true },
+        expect.objectContaining({ successful: true }),
         undefined
       );
       expect(trackAuthActionSpy).toHaveBeenCalledWith(
@@ -191,7 +191,7 @@ describe('commands/account/auth', () => {
       expect(parseStringToNumberSpy).toHaveBeenCalledWith('123456');
       expect(trackCommandUsageSpy).toHaveBeenCalledWith(
         'account-auth',
-        { successful: true },
+        expect.objectContaining({ successful: true }),
         undefined
       );
     });

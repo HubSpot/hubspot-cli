@@ -16,7 +16,7 @@ import {
   EnvironmentArgs,
   ExitFunction,
 } from '../../../types/Yargs.js';
-import { makeYargsHandlerWithUsageTracking } from '../../../lib/yargs/makeYargsHandlerWithUsageTracking.js';
+import { makeWrappedYargsHandler } from '../../../lib/yargs/makeWrappedYargsHandler.js';
 import { makeYargsBuilder } from '../../../lib/yargsUtils.js';
 import {
   GetFunctionLogsResponse,
@@ -215,7 +215,7 @@ const logsCommand: YargsCommandModule<unknown, LogsArgs> = {
   command,
   describe,
   builder,
-  handler: makeYargsHandlerWithUsageTracking('logs', handler),
+  handler: makeWrappedYargsHandler('logs', handler),
 };
 
 export default logsCommand;

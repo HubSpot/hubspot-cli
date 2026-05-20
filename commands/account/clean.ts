@@ -22,7 +22,7 @@ import {
   ConfigArgs,
   YargsCommandModule,
 } from '../../types/Yargs.js';
-import { makeYargsHandlerWithUsageTracking } from '../../lib/yargs/makeYargsHandlerWithUsageTracking.js';
+import { makeWrappedYargsHandler } from '../../lib/yargs/makeWrappedYargsHandler.js';
 import { logError } from '../../lib/errorHandlers/index.js';
 import { makeYargsBuilder } from '../../lib/yargsUtils.js';
 import { commands } from '../../lang/en.js';
@@ -181,7 +181,7 @@ const builder = makeYargsBuilder<AccountCleanArgs>(
 const accountCleanCommand: YargsCommandModule<unknown, AccountCleanArgs> = {
   command,
   describe,
-  handler: makeYargsHandlerWithUsageTracking('accounts-clean', handler),
+  handler: makeWrappedYargsHandler('accounts-clean', handler),
   builder,
 };
 

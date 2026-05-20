@@ -107,7 +107,7 @@ export class HsCreateFunctionTool extends Tool<HsCreateFunctionInputSchema> {
     }
 
     // Build the command
-    let command = 'hs create function';
+    let command = 'hs cms function create';
 
     if (dest) {
       command += ` "${dest}"`;
@@ -153,7 +153,7 @@ export class HsCreateFunctionTool extends Tool<HsCreateFunctionInputSchema> {
       toolName,
       {
         title: 'Create HubSpot CMS Serverless Function',
-        description: `Creates a new HubSpot CMS serverless function using the hs create function command. Functions can be created non-interactively by specifying functionsFolder, filename, and endpointPath. Supports all HTTP methods (${HTTP_METHODS.join(', ')}).`,
+        description: `Creates a new HubSpot CMS serverless function using the hs cms function create command. Functions can be created non-interactively by specifying functionsFolder, filename, and endpointPath. Supports all HTTP methods (${HTTP_METHODS.join(', ')}).`,
         inputSchema,
         annotations: {
           readOnlyHint: false,

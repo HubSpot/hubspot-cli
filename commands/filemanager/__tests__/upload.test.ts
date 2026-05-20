@@ -195,7 +195,7 @@ describe('commands/filemanager/upload', () => {
 
         expect(trackCommandUsageSpy).toHaveBeenCalledWith(
           'filemanager-upload',
-          { type: 'file', successful: true },
+          expect.objectContaining({ type: 'file', successful: true }),
           123456
         );
       });
@@ -259,7 +259,7 @@ describe('commands/filemanager/upload', () => {
 
         expect(trackCommandUsageSpy).toHaveBeenCalledWith(
           'filemanager-upload',
-          { type: 'folder', successful: true },
+          expect.objectContaining({ type: 'folder', successful: true }),
           123456
         );
       });

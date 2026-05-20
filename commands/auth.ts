@@ -44,7 +44,7 @@ import {
   TestingArgs,
   YargsCommandModule,
 } from '../types/Yargs.js';
-import { makeYargsHandlerWithUsageTracking } from '../lib/yargs/makeYargsHandlerWithUsageTracking.js';
+import { makeWrappedYargsHandler } from '../lib/yargs/makeWrappedYargsHandler.js';
 import { commands } from '../lang/en.js';
 import { uiLogger } from '../lib/ui/logger.js';
 import { parseStringToNumber } from '../lib/parsing.js';
@@ -303,7 +303,7 @@ const builder = makeYargsBuilder<AuthArgs>(
 const authCommand: YargsCommandModule<unknown, AuthArgs> = {
   command,
   describe,
-  handler: makeYargsHandlerWithUsageTracking('auth', handler),
+  handler: makeWrappedYargsHandler('auth', handler),
   builder,
 };
 

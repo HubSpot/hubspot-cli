@@ -18,7 +18,7 @@ import {
   EnvironmentArgs,
   YargsCommandModule,
 } from '../../types/Yargs.js';
-import { makeYargsHandlerWithUsageTracking } from '../../lib/yargs/makeYargsHandlerWithUsageTracking.js';
+import { makeWrappedYargsHandler } from '../../lib/yargs/makeWrappedYargsHandler.js';
 import { makeYargsBuilder } from '../../lib/yargsUtils.js';
 
 const command = 'upload <src> <dest>';
@@ -163,7 +163,7 @@ const fileManagerUploadCommand: YargsCommandModule<
 > = {
   command,
   describe,
-  handler: makeYargsHandlerWithUsageTracking('filemanager-upload', handler),
+  handler: makeWrappedYargsHandler('filemanager-upload', handler),
   builder,
 };
 

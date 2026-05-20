@@ -26,7 +26,11 @@ import { shouldIgnoreFile } from '@hubspot/local-dev-lib/ignoreRules';
 import {
   archiveWorkspacesAndDependencies,
   computeExternalArchivePath,
+  getLockfilePathsToUpdate,
+  getPackageJsonPathsToUpdate,
   rewriteLockfileForExternalDeps,
+  toPosixPath,
+  updatePackageJsonInArchive,
 } from '../workspaces.js';
 
 type DirectoryCall = {
@@ -65,7 +69,6 @@ function createMockArchive() {
 
 describe('archiveWorkspacesAndDependencies', () => {
   const srcDir = '/project/src';
-  const projectDir = '/project';
 
   beforeEach(() => {
     vi.clearAllMocks();
@@ -84,7 +87,6 @@ describe('archiveWorkspacesAndDependencies', () => {
     const result = await archiveWorkspacesAndDependencies(
       archive,
       srcDir,
-      projectDir,
       [],
       []
     );
@@ -104,13 +106,7 @@ describe('archiveWorkspacesAndDependencies', () => {
         },
       ];
 
-      await archiveWorkspacesAndDependencies(
-        archive,
-        srcDir,
-        projectDir,
-        workspaces,
-        []
-      );
+      await archiveWorkspacesAndDependencies(archive, srcDir, workspaces, []);
 
       expect(directoryCalls).toHaveLength(1);
       expect(directoryCalls[0].sourcePath).toBe('/external/utils');
@@ -128,13 +124,7 @@ describe('archiveWorkspacesAndDependencies', () => {
         },
       ];
 
-      await archiveWorkspacesAndDependencies(
-        archive,
-        srcDir,
-        projectDir,
-        workspaces,
-        []
-      );
+      await archiveWorkspacesAndDependencies(archive, srcDir, workspaces, []);
 
       expect(directoryCalls).toHaveLength(0);
     });
@@ -151,7 +141,6 @@ describe('archiveWorkspacesAndDependencies', () => {
       const result = await archiveWorkspacesAndDependencies(
         archive,
         srcDir,
-        projectDir,
         workspaces,
         []
       );
@@ -177,7 +166,6 @@ describe('archiveWorkspacesAndDependencies', () => {
       const result = await archiveWorkspacesAndDependencies(
         archive,
         srcDir,
-        projectDir,
         workspaces,
         []
       );
@@ -207,7 +195,6 @@ describe('archiveWorkspacesAndDependencies', () => {
       const result = await archiveWorkspacesAndDependencies(
         archive,
         srcDir,
-        projectDir,
         workspaces,
         []
       );
@@ -241,7 +228,6 @@ describe('archiveWorkspacesAndDependencies', () => {
       const result = await archiveWorkspacesAndDependencies(
         archive,
         srcDir,
-        projectDir,
         workspaces,
         []
       );
@@ -276,7 +262,6 @@ describe('archiveWorkspacesAndDependencies', () => {
       const result = await archiveWorkspacesAndDependencies(
         archive,
         srcDir,
-        projectDir,
         [],
         fileDeps
       );
@@ -308,7 +293,6 @@ describe('archiveWorkspacesAndDependencies', () => {
       const result = await archiveWorkspacesAndDependencies(
         archive,
         srcDir,
-        projectDir,
         [],
         fileDeps
       );
@@ -336,7 +320,6 @@ describe('archiveWorkspacesAndDependencies', () => {
       const result = await archiveWorkspacesAndDependencies(
         archive,
         srcDir,
-        projectDir,
         workspaces,
         fileDeps
       );
@@ -370,7 +353,6 @@ describe('archiveWorkspacesAndDependencies', () => {
       const result = await archiveWorkspacesAndDependencies(
         archive,
         srcDir,
-        projectDir,
         [],
         fileDeps
       );
@@ -407,7 +389,6 @@ describe('archiveWorkspacesAndDependencies', () => {
       await archiveWorkspacesAndDependencies(
         archive,
         srcDir,
-        projectDir,
         workspaces,
         fileDeps
       );
@@ -426,13 +407,7 @@ describe('archiveWorkspacesAndDependencies', () => {
         },
       ];
 
-      await archiveWorkspacesAndDependencies(
-        archive,
-        srcDir,
-        projectDir,
-        workspaces,
-        []
-      );
+      await archiveWorkspacesAndDependencies(archive, srcDir, workspaces, []);
 
       expect(getPackableFiles).not.toHaveBeenCalled();
     });
@@ -449,13 +424,7 @@ describe('archiveWorkspacesAndDependencies', () => {
         },
       ];
 
-      await archiveWorkspacesAndDependencies(
-        archive,
-        srcDir,
-        projectDir,
-        workspaces,
-        []
-      );
+      await archiveWorkspacesAndDependencies(archive, srcDir, workspaces, []);
 
       const filter = directoryCalls[0].filter!;
       expect(filter({ name: 'index.js' } as EntryData)).toBeTruthy();
@@ -475,13 +444,7 @@ describe('archiveWorkspacesAndDependencies', () => {
         },
       ];
 
-      await archiveWorkspacesAndDependencies(
-        archive,
-        srcDir,
-        projectDir,
-        workspaces,
-        []
-      );
+      await archiveWorkspacesAndDependencies(archive, srcDir, workspaces, []);
 
       const filter = directoryCalls[0].filter!;
       expect(filter({ name: 'index.js' } as EntryData)).toBeTruthy();
@@ -505,13 +468,7 @@ describe('archiveWorkspacesAndDependencies', () => {
         },
       ];
 
-      await archiveWorkspacesAndDependencies(
-        archive,
-        srcDir,
-        projectDir,
-        workspaces,
-        []
-      );
+      await archiveWorkspacesAndDependencies(archive, srcDir, workspaces, []);
 
       const filter = directoryCalls[0].filter!;
       expect(filter({ name: 'index.js' } as EntryData)).toBeTruthy();
@@ -533,13 +490,7 @@ describe('archiveWorkspacesAndDependencies', () => {
         },
       ];
 
-      await archiveWorkspacesAndDependencies(
-        archive,
-        srcDir,
-        projectDir,
-        workspaces,
-        []
-      );
+      await archiveWorkspacesAndDependencies(archive, srcDir, workspaces, []);
 
       const filter = directoryCalls[0].filter!;
       expect(filter({ name: 'any-file.txt' } as EntryData)).toBeTruthy();
@@ -562,7 +513,6 @@ describe('archiveWorkspacesAndDependencies', () => {
       const result = await archiveWorkspacesAndDependencies(
         archive,
         srcDir,
-        projectDir,
         workspaces,
         []
       );
@@ -583,13 +533,7 @@ describe('archiveWorkspacesAndDependencies', () => {
         },
       ];
 
-      await archiveWorkspacesAndDependencies(
-        archive,
-        srcDir,
-        projectDir,
-        workspaces,
-        []
-      );
+      await archiveWorkspacesAndDependencies(archive, srcDir, workspaces, []);
 
       expect(directoryCalls).toHaveLength(0);
     });
@@ -607,7 +551,6 @@ describe('archiveWorkspacesAndDependencies', () => {
       const result = await archiveWorkspacesAndDependencies(
         archive,
         srcDir,
-        projectDir,
         [],
         fileDeps
       );
@@ -629,7 +572,6 @@ describe('archiveWorkspacesAndDependencies', () => {
       const result = await archiveWorkspacesAndDependencies(
         archive,
         srcDir,
-        projectDir,
         [],
         fileDeps
       );
@@ -656,7 +598,6 @@ describe('archiveWorkspacesAndDependencies', () => {
       const result = await archiveWorkspacesAndDependencies(
         archive,
         srcDir,
-        projectDir,
         workspaces,
         []
       );
@@ -706,7 +647,6 @@ describe('archiveWorkspacesAndDependencies', () => {
       await archiveWorkspacesAndDependencies(
         archive,
         srcDir,
-        projectDir,
         workspaces,
         fileDeps
       );
@@ -736,13 +676,7 @@ describe('archiveWorkspacesAndDependencies', () => {
         },
       ];
 
-      await archiveWorkspacesAndDependencies(
-        archive,
-        srcDir,
-        projectDir,
-        workspaces,
-        []
-      );
+      await archiveWorkspacesAndDependencies(archive, srcDir, workspaces, []);
 
       expect(appendCalls).toHaveLength(0);
     });
@@ -762,13 +696,7 @@ describe('archiveWorkspacesAndDependencies', () => {
         },
       ];
 
-      await archiveWorkspacesAndDependencies(
-        archive,
-        srcDir,
-        projectDir,
-        workspaces,
-        []
-      );
+      await archiveWorkspacesAndDependencies(archive, srcDir, workspaces, []);
 
       expect(uiLogger.warn).toHaveBeenCalled();
       expect(appendCalls).toHaveLength(1);
@@ -820,13 +748,7 @@ describe('archiveWorkspacesAndDependencies', () => {
         },
       ];
 
-      await archiveWorkspacesAndDependencies(
-        archive,
-        srcDir,
-        projectDir,
-        workspaces,
-        []
-      );
+      await archiveWorkspacesAndDependencies(archive, srcDir, workspaces, []);
 
       const lockfileCall = appendCalls.find(
         c => c.name === 'app/package-lock.json'
@@ -861,13 +783,7 @@ describe('archiveWorkspacesAndDependencies', () => {
 
       const { archive, appendCalls } = createMockArchive();
 
-      await archiveWorkspacesAndDependencies(
-        archive,
-        srcDir,
-        projectDir,
-        [],
-        []
-      );
+      await archiveWorkspacesAndDependencies(archive, srcDir, [], []);
 
       expect(appendCalls).toHaveLength(0);
     });
@@ -888,13 +804,7 @@ describe('archiveWorkspacesAndDependencies', () => {
         },
       ];
 
-      await archiveWorkspacesAndDependencies(
-        archive,
-        srcDir,
-        projectDir,
-        workspaces,
-        []
-      );
+      await archiveWorkspacesAndDependencies(archive, srcDir, workspaces, []);
 
       const lockfileCall = appendCalls.find(c =>
         c.name.endsWith('package-lock.json')
@@ -949,13 +859,7 @@ describe('archiveWorkspacesAndDependencies', () => {
         },
       ];
 
-      await archiveWorkspacesAndDependencies(
-        archive,
-        srcDir,
-        projectDir,
-        [],
-        fileDeps
-      );
+      await archiveWorkspacesAndDependencies(archive, srcDir, [], fileDeps);
 
       const lockfileCall = appendCalls.find(
         c => c.name === 'app/package-lock.json'
@@ -1010,13 +914,7 @@ describe('archiveWorkspacesAndDependencies', () => {
         },
       ];
 
-      await archiveWorkspacesAndDependencies(
-        archive,
-        srcDir,
-        projectDir,
-        workspaces,
-        []
-      );
+      await archiveWorkspacesAndDependencies(archive, srcDir, workspaces, []);
 
       const lockfileCall = appendCalls.find(c =>
         c.name.endsWith('package-lock.json')
@@ -1040,13 +938,7 @@ describe('archiveWorkspacesAndDependencies', () => {
         },
       ];
 
-      await archiveWorkspacesAndDependencies(
-        archive,
-        srcDir,
-        projectDir,
-        workspaces,
-        []
-      );
+      await archiveWorkspacesAndDependencies(archive, srcDir, workspaces, []);
 
       const lockfileCall = appendCalls.find(c =>
         c.name.endsWith('package-lock.json')
@@ -1180,5 +1072,130 @@ describe('rewriteLockfileForExternalDeps', () => {
     ]);
 
     expect(result).toBe(lockfile);
+  });
+});
+
+describe('toPosixPath', () => {
+  it('returns a POSIX input unchanged', () => {
+    expect(toPosixPath('a/b/c')).toBe('a/b/c');
+  });
+
+  it('returns an empty string unchanged', () => {
+    expect(toPosixPath('')).toBe('');
+  });
+
+  it('returns a single segment unchanged', () => {
+    expect(toPosixPath('package.json')).toBe('package.json');
+  });
+
+  it('converts the backslash-separated output of path.win32.relative to a POSIX path', () => {
+    const winRelative = path.win32.relative(
+      'C:\\project\\src',
+      'C:\\project\\src\\app\\package.json'
+    );
+    expect(winRelative).toBe('app\\package.json');
+
+    const splitAndJoin = (p: string) => p.split('\\').join('/');
+    expect(splitAndJoin(winRelative)).toBe('app/package.json');
+  });
+
+  it('is a no-op on POSIX systems', () => {
+    if (path.sep !== '/') return;
+    expect(toPosixPath('app\\package.json')).toBe('app\\package.json');
+    expect(toPosixPath('a/b/c')).toBe('a/b/c');
+  });
+});
+
+describe('Windows path normalization (regression for duplicate zip entries)', () => {
+  const srcDir = '/project/src';
+
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
+
+  it('getPackageJsonPathsToUpdate returns POSIX-form keys', () => {
+    const result = getPackageJsonPathsToUpdate(
+      srcDir,
+      [
+        {
+          workspaceDir: '/external/utils',
+          sourcePackageJsonPath: '/project/src/app/package.json',
+        },
+      ],
+      []
+    );
+
+    expect(result.has('app/package.json')).toBe(true);
+    for (const entry of result) {
+      expect(entry).not.toContain('\\');
+    }
+  });
+
+  it('getLockfilePathsToUpdate returns POSIX-form keys', () => {
+    vi.spyOn(fs, 'existsSync').mockReturnValue(true);
+
+    const result = getLockfilePathsToUpdate(
+      srcDir,
+      [
+        {
+          workspaceDir: '/external/utils',
+          sourcePackageJsonPath: '/project/src/app/package.json',
+        },
+      ],
+      []
+    );
+
+    expect(result.has('app/package-lock.json')).toBe(true);
+    for (const entry of result) {
+      expect(entry).not.toContain('\\');
+    }
+  });
+
+  it('updatePackageJsonInArchive appends entries with POSIX names only', async () => {
+    const packageJsonPath = '/project/src/app/package.json';
+    vi.spyOn(fs, 'existsSync').mockReturnValue(true);
+    vi.spyOn(fs, 'readFileSync').mockReturnValue(
+      JSON.stringify({ name: 'my-app', workspaces: ['placeholder'] })
+    );
+
+    const appendCalls: Array<{ name: string }> = [];
+    const archive = {
+      append: vi.fn((_content: unknown, opts: { name: string }) => {
+        appendCalls.push({ name: opts.name });
+        return archive;
+      }),
+    } as unknown as Archiver;
+
+    const packageWorkspaces = new Map<string, string[]>();
+    packageWorkspaces.set(packageJsonPath, ['../_workspaces/utils-abcd1234']);
+
+    await updatePackageJsonInArchive(
+      archive,
+      srcDir,
+      packageWorkspaces,
+      new Map()
+    );
+
+    expect(appendCalls).toHaveLength(1);
+    expect(appendCalls[0].name).toBe('app/package.json');
+    expect(appendCalls[0].name).not.toContain('\\');
+  });
+
+  it('computeExternalArchivePath returns a POSIX-only path', () => {
+    const result = computeExternalArchivePath('/Users/test/libs/utils');
+    expect(result).not.toContain('\\');
+    expect(result).toMatch(/^_workspaces\/utils-[a-f0-9]{8}$/);
+  });
+
+  it('exclusion Set keys match the POSIX names archiver passes to the filter callback (Windows shape)', () => {
+    const winSrcDir = 'C:\\project\\src';
+    const winPkgJsonPath = 'C:\\project\\src\\app\\package.json';
+    const archiverFilterName = 'app/package.json';
+
+    const winRelative = path.win32.relative(winSrcDir, winPkgJsonPath);
+    expect(winRelative).toContain('\\');
+
+    const normalized = winRelative.split('\\').join('/');
+    expect(normalized).toBe(archiverFilterName);
   });
 });

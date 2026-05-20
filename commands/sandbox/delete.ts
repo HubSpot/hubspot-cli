@@ -27,7 +27,7 @@ import {
   TestingArgs,
   YargsCommandModule,
 } from '../../types/Yargs.js';
-import { makeYargsHandlerWithUsageTracking } from '../../lib/yargs/makeYargsHandlerWithUsageTracking.js';
+import { makeWrappedYargsHandler } from '../../lib/yargs/makeWrappedYargsHandler.js';
 import { makeYargsBuilder } from '../../lib/yargsUtils.js';
 
 const command = 'delete';
@@ -275,7 +275,7 @@ const builder = makeYargsBuilder<SandboxDeleteArgs>(
 const sandboxDeleteCommand: YargsCommandModule<unknown, SandboxDeleteArgs> = {
   command,
   describe,
-  handler: makeYargsHandlerWithUsageTracking('sandbox-delete', handler),
+  handler: makeWrappedYargsHandler('sandbox-delete', handler),
   builder,
 };
 

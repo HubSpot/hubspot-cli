@@ -2207,6 +2207,77 @@ export const commands = {
         deployLatestBuild: 'Deploy the latest build of the current project',
       },
     },
+    release: {
+      describe: 'Manage project releases.',
+      create: {
+        describe: 'Create a release for a project build.',
+        verboseDescribe: `Create a release for a project build\n\nReleases mark a deployed build with an auto-generated semantic version tag (e.g. v1.0.0). The build must have been successfully deployed before it can be released.\n\nBy default, the latest deployed build is used. Use ${uiCommandReference('--build')} to specify a different build ID.`,
+        confirmPrompt: (projectName: string, buildId: number) =>
+          `Create a release for project ${chalk.bold(projectName)} using build ${chalk.bold(String(buildId))}?`,
+        success: (releaseTag: string, buildId: number) =>
+          `Release ${chalk.bold(releaseTag)} created for build ${chalk.bold(String(buildId))}.`,
+        cancelled: 'Release creation cancelled.',
+        errors: {
+          projectNotFound: (accountId: number, projectName: string) =>
+            `The project ${chalk.bold(projectName)} does not exist in account ${uiAccountDescription(accountId)}. Run ${uiCommandReference('hs project upload')} to upload your project files to HubSpot.`,
+          noDeployedBuild: `No deployed build found for this project. Run ${uiCommandReference('hs project deploy')} first.`,
+          buildNotFound: (buildId: number, projectName: string) =>
+            `Build ${chalk.bold(String(buildId))} was not found for project ${chalk.bold(projectName)}. Run ${uiCommandReference('hs project list-builds')} to view existing builds or ${uiCommandReference('hs project deploy')} to deploy a build first.`,
+          buildNotDeployed: (buildId: number) =>
+            `Build ${chalk.bold(String(buildId))} has not been deployed. Run ${uiCommandReference('hs project deploy')} first.`,
+        },
+        options: {
+          build: 'Build ID to release. Defaults to the latest deployed build.',
+          force: 'Skip confirmation prompt.',
+        },
+        examples: {
+          default: 'Create a release for the latest deployed build',
+          withBuild: 'Create a release for a specific build',
+        },
+      },
+      list: {
+        describe: 'List releases for the current project.',
+        verboseDescribe: `List releases for the current project\n\nDisplays all releases in sorted order, newest first. Includes the version tag, build ID, and creation date. Use ${uiCommandReference('--limit')} to control how many results are shown.`,
+        noReleases: 'No releases found for this project.',
+        showingReleases: (count: number, projectName: string) =>
+          `Showing ${count} release${count === 1 ? '' : 's'} for ${chalk.bold(projectName)}:`,
+        continueOrExitPrompt: 'Press <enter> to load more, or ctrl+c to exit',
+        errors: {
+          projectNotFound: (accountId: number, projectName: string) =>
+            `The project ${chalk.bold(projectName)} does not exist in account ${uiAccountDescription(accountId)}. Run ${uiCommandReference('hs project upload')} to upload your project files to HubSpot.`,
+        },
+        options: {
+          limit: 'Number of releases to show',
+        },
+        examples: {
+          default: 'List releases for the current project',
+          withLimit: 'Show only the 5 most recent releases',
+        },
+      },
+      info: {
+        describe: 'Show details about a specific release.',
+        verboseDescribe: `Show details about a specific release\n\nDisplays the release tag, build ID, creation date, and list of components included in the release. Use ${uiCommandReference('--json')} for machine-readable output.`,
+        releaseDetails: (releaseTag: string, projectName: string) =>
+          `Release ${chalk.bold(releaseTag)} for ${chalk.bold(projectName)}:`,
+        components: 'Components:',
+        noComponents: 'No components found for this release.',
+        moreReleasesHint: `Not all releases are shown. Use ${uiCommandReference('--tag')} to look up an older release directly.`,
+        selectRelease: (projectName: string) =>
+          `Select a release for ${chalk.bold(projectName)}`,
+        errors: {
+          releaseNotFound: (releaseTag: string, projectName: string) =>
+            `Release ${chalk.bold(releaseTag)} was not found for project ${chalk.bold(projectName)}. Verify the project has been uploaded and the release tag exists. Run ${uiCommandReference('hs project release list')} to view existing releases.`,
+          noReleases: 'No releases found for this project.',
+        },
+        options: {
+          tag: 'Release tag to look up (e.g. v1.0.0)',
+        },
+        examples: {
+          default: 'Show details about a specific release',
+          json: 'Output release details as JSON',
+        },
+      },
+    },
     listBuilds: {
       describe: "List the project's builds.",
       continueOrExitPrompt: 'Press <enter> to load more, or ctrl+c to exit',
@@ -2303,6 +2374,7 @@ export const commands = {
         default: 'Upload a project into your HubSpot account',
         withProfile:
           'Upload a project into your HubSpot account when using profiles',
+        withPreview: 'Upload and preview the build on a target portal',
       },
       logs: {
         buildSucceeded: (buildId: number) => `Build #${buildId} succeeded\n`,
@@ -2316,6 +2388,8 @@ export const commands = {
         noProjectConfig:
           'No project detected. Run this command from a project directory.',
         projectLockedError: `Your project is locked. This may mean that another user is running the ${uiCommandReference('hs project dev')} command for this project. If this is you, unlock the project in Projects UI.`,
+        previewRequiresTarget: `${uiCommandReference('--preview')} requires ${uiCommandReference('--target=<portalId>')} to specify the portal to preview on.`,
+        targetRequiresPreview: `${uiCommandReference('--target')} can only be used with ${uiCommandReference('--preview')}.`,
       },
       options: {
         forceCreate: {
@@ -2327,6 +2401,16 @@ export const commands = {
         },
         profile: {
           describe: 'Profile to target for this upload',
+        },
+        skipNpmAudit: {
+          describe: 'Skip the npm audit security check before uploading',
+        },
+        preview: {
+          describe:
+            'Preview the build on a target portal after a successful upload',
+        },
+        target: {
+          describe: 'Portal ID to preview the build on',
         },
       },
     },
@@ -4028,6 +4112,9 @@ export const lib = {
     exitDebug: (signal: string) =>
       `Attempting to gracefully exit. Triggered by ${signal}`,
   },
+  handlerLogFile: {
+    saved: (filePath: string) => `Debug logs can be viewed at ${filePath}`,
+  },
   DevServerManager: {
     portConflict: (port: string) => `The port ${port} is already in use.`,
     notInitialized:
@@ -4512,7 +4599,35 @@ export const lib = {
         `  Updated workspaces: ${workspaces}`,
       updatedFileDependency: (packageName: string, relativePath: string) =>
         `  Updated dependencies.${packageName}: file:${relativePath}`,
+      lintPackagesNotConfigured: (packageRoot: string) =>
+        `Project lint: lint packages not installed for ${chalk.bold(packageRoot)}. Run ${uiCommandReference('hs project lint')} to install them.`,
+      lintConfigNotFound: (packageRoot: string) =>
+        `Project lint: ESLint configuration not found for ${chalk.bold(packageRoot)}. Run ${uiCommandReference('hs project lint')} to create an ESLint config.`,
+      lintHubSpotRulesNotActive: (packageRoot: string) =>
+        `Project lint: HubSpot ESLint rules not active for ${chalk.bold(packageRoot)}. Configure ${chalk.bold('@hubspot/eslint-config-ui-extensions')} — see ${uiLink('setup instructions', 'https://www.npmjs.com/package/@hubspot/eslint-config-ui-extensions')}.`,
+      npmAuditClean: (packageRoot: string) =>
+        `npm audit: No npm dependency issues found for ${chalk.bold(packageRoot)}`,
+      npmAuditIssues: (packageRoot: string, details: string) =>
+        `npm audit: security issues found for ${chalk.bold(packageRoot)}: ${details}`,
+      npmAuditNpmUnavailable: (packageRoot: string) =>
+        `npm audit: skipped for ${chalk.bold(packageRoot)} (npm not available in PATH)`,
+      npmAuditNonZeroExit: (packageRoot: string, exitCode: number) =>
+        `npm audit: ${chalk.bold(packageRoot)} exited with code ${exitCode}`,
     },
+  },
+
+  projectPreview: {
+    triggeringPreview: (buildId: number, targetPortalId: number) =>
+      `Previewing build #${buildId} on ${uiAccountDescription(targetPortalId)}`,
+    pollingStatus: (releaseTag: string, targetPortalId: number) =>
+      `Previewing ${chalk.bold(releaseTag)} on ${uiAccountDescription(targetPortalId)}`,
+    succeeded: (releaseTag: string, targetPortalId: number) =>
+      `Previewed ${chalk.bold(releaseTag)} on ${uiAccountDescription(targetPortalId)}`,
+    triggerFailed: 'Failed to trigger preview',
+    pollFailed: 'Failed to poll preview status',
+    warning:
+      'The build succeeded but the preview failed. You can manually preview this build from the project UI.',
+    missingProjectId: 'Unable to preview: could not resolve the project ID.',
   },
 
   importData: {

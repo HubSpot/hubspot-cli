@@ -15,7 +15,8 @@ import {
   displayWarnLogs,
   pollProjectBuildAndDeploy,
 } from '../../lib/projects/pollProjectBuildAndDeploy.js';
-import { commands } from '../../lang/en.js';
+import { triggerAndPollPreview } from '../../lib/projects/preview.js';
+import { commands, lib } from '../../lang/en.js';
 import { PROJECT_ERROR_TYPES } from '../../lib/constants.js';
 import { logError, ApiErrorContext } from '../../lib/errorHandlers/index.js';
 import { EXIT_CODES } from '../../lib/enums/exitCodes.js';
@@ -24,7 +25,7 @@ import {
   JSONOutputArgs,
   YargsCommandModule,
 } from '../../types/Yargs.js';
-import { makeYargsHandlerWithUsageTracking } from '../../lib/yargs/makeYargsHandlerWithUsageTracking.js';
+import { makeWrappedYargsHandler } from '../../lib/yargs/makeWrappedYargsHandler.js';
 import { ProjectPollResult } from '../../types/Projects.js';
 import { makeYargsBuilder } from '../../lib/yargsUtils.js';
 import { projectProfilePrompt } from '../../lib/prompts/projectProfilePrompt.js';
@@ -38,8 +39,41 @@ export type ProjectUploadArgs = CommonArgs &
     message: string;
     m: string;
     skipValidation: boolean;
+    skipNpmAudit: boolean;
     profile?: string;
+    preview: boolean;
+    target?: number;
   };
+
+type PreviewJsonOutput = { releaseTag?: string; succeeded: boolean };
+
+async function handlePreview(
+  accountId: number,
+  projectId: number | undefined,
+  buildId: number,
+  targetPortalId: number
+): Promise<PreviewJsonOutput | undefined> {
+  if (!projectId) {
+    uiLogger.warn(lib.projectPreview.missingProjectId);
+    return;
+  }
+
+  const previewResult = await triggerAndPollPreview(
+    accountId,
+    projectId,
+    buildId,
+    targetPortalId
+  );
+
+  if (!previewResult.succeeded) {
+    uiLogger.warn(lib.projectPreview.warning);
+  }
+
+  return {
+    releaseTag: previewResult.releaseTag,
+    succeeded: previewResult.succeeded,
+  };
+}
 
 async function handler(
   args: ArgumentsCamelCase<ProjectUploadArgs>
@@ -49,13 +83,20 @@ async function handler(
     message,
     derivedAccountId,
     skipValidation,
+    skipNpmAudit,
     formatOutputAsJson,
     profile: profileOption,
     useEnv: useEnvOption,
+    preview,
+    target: targetPortalId,
     exit,
     addUsageMetadata,
   } = args;
-  const jsonOutput: { buildId?: number; deployId?: number } = {};
+  const jsonOutput: {
+    buildId?: number;
+    deployId?: number;
+    preview?: { releaseTag?: string; succeeded: boolean };
+  } = {};
 
   const { projectConfig, projectDir } = await getProjectConfig();
 
@@ -110,17 +151,21 @@ async function handler(
   });
 
   try {
-    const { result, uploadError } =
+    const { result, uploadError, projectId } =
       await handleProjectUpload<ProjectPollResult>({
         accountId: targetAccountId!,
         projectConfig,
         projectDir,
-        callbackFunc: pollProjectBuildAndDeploy,
+        callbackFunc: preview
+          ? (...args) =>
+              pollProjectBuildAndDeploy(...args, { skipDeploy: true })
+          : pollProjectBuildAndDeploy,
         uploadMessage: message,
         forceCreate,
         isUploadCommand: true,
         sendIR: !isLegacyProject(projectConfig.platformVersion),
         skipValidation,
+        skipNpmAudit,
         profile: profileName,
       });
 
@@ -144,16 +189,23 @@ async function handler(
       }
       return exit(EXIT_CODES.ERROR);
     }
-    if (result && result.succeeded && !result.buildResult.isAutoDeployEnabled) {
+    if (
+      result &&
+      result.succeeded &&
+      (!result.buildResult.isAutoDeployEnabled || preview)
+    ) {
       uiLogger.log(
         chalk.bold(commands.project.upload.logs.buildSucceeded(result.buildId))
       );
-      uiLogger.log(
-        commands.project.upload.logs.autoDeployDisabled(
-          `hs project deploy --build=${result.buildId}`
-        )
-      );
-      logFeedbackMessage(result.buildId);
+
+      if (!preview) {
+        uiLogger.log(
+          commands.project.upload.logs.autoDeployDisabled(
+            `hs project deploy --build=${result.buildId}`
+          )
+        );
+        logFeedbackMessage(result.buildId);
+      }
 
       await displayWarnLogs(
         targetAccountId!,
@@ -162,11 +214,35 @@ async function handler(
       );
     }
 
+    if (result && result.succeeded && preview && targetPortalId) {
+      const previewJson = await handlePreview(
+        targetAccountId!,
+        projectId,
+        result.buildId,
+        targetPortalId
+      );
+
+      if (previewJson && formatOutputAsJson) {
+        jsonOutput.preview = previewJson;
+      }
+    }
+
     if (result && result.succeeded && formatOutputAsJson) {
       jsonOutput.buildId = result.buildId;
       if (result.deployResult) {
         jsonOutput.deployId = result.deployResult.deployId;
       }
+    }
+
+    if (result && !result.succeeded) {
+      if (formatOutputAsJson) {
+        uiLogger.json(jsonOutput);
+      }
+      return exit(EXIT_CODES.ERROR);
+    }
+
+    if (!result && !uploadError) {
+      return exit(EXIT_CODES.ERROR);
     }
   } catch (e) {
     logError(
@@ -204,21 +280,52 @@ function projectUploadBuilder(yargs: Argv): Argv<ProjectUploadArgs> {
       hidden: true,
       default: false,
     },
+    'skip-npm-audit': {
+      describe: commands.project.upload.options.skipNpmAudit.describe,
+      type: 'boolean',
+      default: false,
+    },
     profile: {
       type: 'string',
       alias: 'p',
       describe: commands.project.upload.options.profile.describe,
     },
+    preview: {
+      describe: commands.project.upload.options.preview.describe,
+      type: 'boolean',
+      default: false,
+      hidden: true,
+    },
+    target: {
+      describe: commands.project.upload.options.target.describe,
+      type: 'number',
+      requiresArg: true,
+      hidden: true,
+    },
+  });
+
+  yargs.check(argv => {
+    if (argv.preview && argv.target == null) {
+      throw new Error(commands.project.upload.errors.previewRequiresTarget);
+    }
+    if (argv.target != null && !argv.preview) {
+      throw new Error(commands.project.upload.errors.targetRequiresPreview);
+    }
+    return true;
   });
 
   yargs.conflicts('profile', 'account');
-
   yargs.example([
     ['$0 project upload', commands.project.upload.examples.default],
     [
       '$0 project upload --profile=profileName',
       commands.project.upload.examples.withProfile,
     ],
+    // TODO: Unhide when 2026.09 ships
+    // [
+    //   '$0 project upload --preview --target=12345',
+    //   commands.project.upload.examples.withPreview,
+    // ],
   ]);
 
   return yargs as Argv<ProjectUploadArgs>;
@@ -240,7 +347,7 @@ const builder = makeYargsBuilder<ProjectUploadArgs>(
 const projectUploadCommand: YargsCommandModule<unknown, ProjectUploadArgs> = {
   command,
   describe,
-  handler: makeYargsHandlerWithUsageTracking('project-upload', handler),
+  handler: makeWrappedYargsHandler('project-upload', handler),
   builder,
 };
 

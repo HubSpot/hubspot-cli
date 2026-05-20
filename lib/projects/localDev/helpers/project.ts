@@ -139,7 +139,7 @@ function projectUploadCallback(
     projectConfig,
     tempFile,
     buildId,
-    true
+    { silenceLogs: true }
   );
 }
 

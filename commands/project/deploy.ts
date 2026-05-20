@@ -21,7 +21,7 @@ import {
   JSONOutputArgs,
   YargsCommandModule,
 } from '../../types/Yargs.js';
-import { makeYargsHandlerWithUsageTracking } from '../../lib/yargs/makeYargsHandlerWithUsageTracking.js';
+import { makeWrappedYargsHandler } from '../../lib/yargs/makeWrappedYargsHandler.js';
 import { makeYargsBuilder } from '../../lib/yargsUtils.js';
 import { loadProfile } from '../../lib/projects/projectProfiles.js';
 import { PROJECT_DEPLOY_TEXT } from '../../lib/constants.js';
@@ -299,7 +299,7 @@ const projectDeployCommand: YargsCommandModule<unknown, ProjectDeployArgs> = {
   command,
   describe,
   builder,
-  handler: makeYargsHandlerWithUsageTracking('project-deploy', handler),
+  handler: makeWrappedYargsHandler('project-deploy', handler),
 };
 
 export default projectDeployCommand;

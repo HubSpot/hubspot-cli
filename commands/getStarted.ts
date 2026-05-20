@@ -37,7 +37,7 @@ import {
   EnvironmentArgs,
   YargsCommandModule,
 } from '../types/Yargs.js';
-import { makeYargsHandlerWithUsageTracking } from '../lib/yargs/makeYargsHandlerWithUsageTracking.js';
+import { makeWrappedYargsHandler } from '../lib/yargs/makeWrappedYargsHandler.js';
 import { pollProjectBuildAndDeploy } from '../lib/projects/pollProjectBuildAndDeploy.js';
 import { fetchPublicAppsForPortal } from '@hubspot/local-dev-lib/api/appsDev';
 import { getConfigAccountEnvironment } from '@hubspot/local-dev-lib/config';
@@ -471,7 +471,7 @@ const builder = makeYargsBuilder<GetStartedArgs>(
 const getStartedCommand: YargsCommandModule<unknown, GetStartedArgs> = {
   command,
   describe,
-  handler: makeYargsHandlerWithUsageTracking('get-started', handler),
+  handler: makeWrappedYargsHandler('get-started', handler),
   builder,
 };
 

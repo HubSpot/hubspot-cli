@@ -1,30 +1,30 @@
-import { trackUsage } from '@hubspot/local-dev-lib/trackUsage';
-import { getConfigAccountById, getConfig } from '@hubspot/local-dev-lib/config';
+import {
+  getConfig,
+  getConfigAccountById,
+  getConfigFilePath,
+  getGlobalConfigFilePath,
+} from '@hubspot/local-dev-lib/config';
 import { API_KEY_AUTH_METHOD } from '@hubspot/local-dev-lib/constants/auth';
 import { uiLogger } from './ui/logger.js';
 import { pkg } from './jsonLoader.js';
 import { debugError } from './errorHandlers/index.js';
 import { isUsageTrackingDisableFlagSet } from './middleware/usageTrackingMiddleware.js';
+import {
+  sendUsageEvent,
+  type UsageTrackingMeta,
+  type ConfigType,
+  type ExecutionSource,
+} from './api/usageTracking.js';
+
+export type {
+  UsageTrackingMeta,
+  ConfigType,
+  ExecutionSource,
+} from './api/usageTracking.js';
 
 const version = pkg.version;
 const usageTrackingDiabled =
   'Usage tracking is disabled via the --disable-usage-tracking flag, not sending usage events';
-
-export type UsageTrackingMeta = {
-  action?: string; // "The specific action taken in the CLI"
-  os?: string; // "The user's OS"
-  nodeVersion?: string; // "The user's version of node.js"
-  nodeMajorVersion?: string; // "The user's major version of node.js"
-  version?: string; // "The user's version of the CLI"
-  command?: string; //  "The specific command that the user ran in this interaction"
-  authType?: string; // "The configured auth type the user has for the CLI"
-  step?: string; // "The specific step in the process"
-  assetType?: string; // "The  asset type"
-  mode?: string; // "The CMS publish mode (draft or publish)"
-  type?: string | number; // "The upload type"
-  file?: boolean; // "Whether or not the 'file' flag was used"
-  successful?: boolean; // "Whether or not the CLI interaction was successful"
-};
 
 export const EventClass = {
   USAGE: 'USAGE',
@@ -33,7 +33,7 @@ export const EventClass = {
   ACTIVATION: 'ACTIVATION',
 };
 
-export function getNodeVersionData(): {
+function getNodeVersionData(): {
   nodeVersion: string;
   nodeMajorVersion: string;
 } {
@@ -43,7 +43,7 @@ export function getNodeVersionData(): {
   };
 }
 
-export function getPlatform(): string {
+function getPlatform(): string {
   switch (process.platform) {
     case 'darwin':
       return 'macos';
@@ -52,6 +52,43 @@ export function getPlatform(): string {
     default:
       return process.platform;
   }
+}
+
+function getConfigType(): ConfigType | undefined {
+  try {
+    return getConfigFilePath() === getGlobalConfigFilePath()
+      ? 'global'
+      : 'local';
+  } catch (_e) {
+    return undefined;
+  }
+}
+
+function getExecutionSource(): ExecutionSource {
+  if (process.env.HUBSPOT_MCP_AI_AGENT) {
+    return 'mcp';
+  }
+  if (process.env.CI) {
+    return 'ci';
+  }
+  return 'user';
+}
+
+export function getExecutionEnvironmentMeta(): {
+  os: string;
+  nodeVersion: string;
+  nodeMajorVersion: string;
+  version: string;
+  configType?: ConfigType;
+  executionSource: ExecutionSource;
+} {
+  return {
+    os: getPlatform(),
+    ...getNodeVersionData(),
+    version,
+    configType: getConfigType(),
+    executionSource: getExecutionSource(),
+  };
 }
 
 export async function trackCommandUsage(
@@ -191,51 +228,27 @@ async function trackCliInteraction({
       return;
     }
 
-    const usageTrackingEvent = {
-      action,
-      os: getPlatform(),
-      ...getNodeVersionData(),
-      version,
-      command,
-      authType,
-      ...meta,
-    };
-
-    if (process.env.HUBSPOT_MCP_AI_AGENT) {
-      try {
-        await trackUsage(
-          'cli-interaction',
-          EventClass.INTERACTION,
-          {
-            ...usageTrackingEvent,
-            action: 'cli-mcp-server',
-            type: process.env.HUBSPOT_MCP_AI_AGENT,
-          },
-          accountId
-        );
-        uiLogger.debug('Sent AI usage tracking command event:', {
-          ...usageTrackingEvent,
-          action: 'cli-mcp-server',
-          type: process.env.HUBSPOT_MCP_AI_AGENT,
-        });
-      } catch (error) {
-        debugError(error);
-      }
-    }
-
     if (isUsageTrackingDisableFlagSet()) {
       uiLogger.debug(usageTrackingDiabled);
       return;
     }
 
+    const usageTrackingEvent = {
+      action,
+      command,
+      authType,
+      ...getExecutionEnvironmentMeta(),
+      ...meta,
+    };
+
     try {
       uiLogger.debug('Sent usage tracking command event:', usageTrackingEvent);
-      return trackUsage(
-        'cli-interaction',
-        EventClass.INTERACTION,
-        usageTrackingEvent,
-        accountId
-      );
+      await sendUsageEvent({
+        eventName: 'cli-interaction',
+        eventClass: EventClass.INTERACTION,
+        meta: usageTrackingEvent,
+        accountId,
+      });
     } catch (error) {
       debugError(error);
     }

@@ -6,7 +6,7 @@ import {
   YargsCommandModule,
 } from '../../types/Yargs.js';
 import { makeYargsBuilder } from '../../lib/yargsUtils.js';
-import { makeYargsHandlerWithUsageTracking } from '../../lib/yargs/makeYargsHandlerWithUsageTracking.js';
+import { makeWrappedYargsHandler } from '../../lib/yargs/makeWrappedYargsHandler.js';
 import { logError } from '../../lib/errorHandlers/index.js';
 import { EXIT_CODES } from '../../lib/enums/exitCodes.js';
 import { renderInline } from '../../ui/render.js';
@@ -115,7 +115,7 @@ const builder = makeYargsBuilder<ProjectDeleteArgs>(
 const projectDeleteCommand: YargsCommandModule<unknown, ProjectDeleteArgs> = {
   command,
   describe,
-  handler: makeYargsHandlerWithUsageTracking('project-delete', handler),
+  handler: makeWrappedYargsHandler('project-delete', handler),
   builder,
 };
 

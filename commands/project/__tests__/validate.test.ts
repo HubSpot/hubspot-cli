@@ -493,7 +493,7 @@ describe('commands/project/validate', () => {
 
       expect(trackCommandUsage).toHaveBeenCalledWith(
         'project-validate',
-        { type: 'STANDARD', successful: true },
+        expect.objectContaining({ type: 'STANDARD', successful: true }),
         123
       );
     });

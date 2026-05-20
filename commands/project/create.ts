@@ -28,7 +28,7 @@ import {
   EMPTY_PROJECT,
 } from '../../lib/constants.js';
 import { YargsCommandModule } from '../../types/Yargs.js';
-import { makeYargsHandlerWithUsageTracking } from '../../lib/yargs/makeYargsHandlerWithUsageTracking.js';
+import { makeWrappedYargsHandler } from '../../lib/yargs/makeWrappedYargsHandler.js';
 import { makeYargsBuilder } from '../../lib/yargsUtils.js';
 import { ProjectConfig } from '../../types/Projects.js';
 import { commands } from '../../lang/en.js';
@@ -274,7 +274,7 @@ const builder = makeYargsBuilder<ProjectCreateArgs>(
 const projectCreateCommand: YargsCommandModule<unknown, ProjectCreateArgs> = {
   command,
   describe,
-  handler: makeYargsHandlerWithUsageTracking('project-create', handler),
+  handler: makeWrappedYargsHandler('project-create', handler),
   builder,
 };
 

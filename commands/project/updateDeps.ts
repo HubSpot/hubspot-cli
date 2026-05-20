@@ -15,7 +15,7 @@ import {
   ConfigArgs,
   YargsCommandModule,
 } from '../../types/Yargs.js';
-import { makeYargsHandlerWithUsageTracking } from '../../lib/yargs/makeYargsHandlerWithUsageTracking.js';
+import { makeWrappedYargsHandler } from '../../lib/yargs/makeWrappedYargsHandler.js';
 import { logError } from '../../lib/errorHandlers/index.js';
 import { makeYargsBuilder } from '../../lib/yargsUtils.js';
 
@@ -109,7 +109,7 @@ const projectUpdateDepsCommand: YargsCommandModule<
 > = {
   command,
   describe,
-  handler: makeYargsHandlerWithUsageTracking('project-update-deps', handler),
+  handler: makeWrappedYargsHandler('project-update-deps', handler),
   builder,
 };
 

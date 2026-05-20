@@ -23,7 +23,7 @@ import {
   EnvironmentArgs,
   YargsCommandModule,
 } from '../../types/Yargs.js';
-import { makeYargsHandlerWithUsageTracking } from '../../lib/yargs/makeYargsHandlerWithUsageTracking.js';
+import { makeWrappedYargsHandler } from '../../lib/yargs/makeWrappedYargsHandler.js';
 import { makeYargsBuilder } from '../../lib/yargsUtils.js';
 import { renderTable } from '../../ui/render.js';
 
@@ -382,7 +382,7 @@ const cmslighthouseScoreCommand: YargsCommandModule<
 > = {
   command,
   describe,
-  handler: makeYargsHandlerWithUsageTracking('lighthouse-score', handler),
+  handler: makeWrappedYargsHandler('lighthouse-score', handler),
   builder,
 };
 

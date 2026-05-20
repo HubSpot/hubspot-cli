@@ -17,7 +17,7 @@ import {
   EnvironmentArgs,
   YargsCommandModule,
 } from '../../../types/Yargs.js';
-import { makeYargsHandlerWithUsageTracking } from '../../../lib/yargs/makeYargsHandlerWithUsageTracking.js';
+import { makeWrappedYargsHandler } from '../../../lib/yargs/makeWrappedYargsHandler.js';
 import { makeYargsBuilder } from '../../../lib/yargsUtils.js';
 import { logError } from '../../../lib/errorHandlers/index.js';
 
@@ -109,7 +109,7 @@ const builder = makeYargsBuilder<ThemeValidateArgs>(
 const themeValidateCommand: YargsCommandModule<unknown, ThemeValidateArgs> = {
   command,
   describe,
-  handler: makeYargsHandlerWithUsageTracking('validate', handler),
+  handler: makeWrappedYargsHandler('validate', handler),
   builder,
 };
 

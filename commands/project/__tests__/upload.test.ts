@@ -15,6 +15,7 @@ import * as projectProfilesLib from '../../../lib/projects/projectProfiles.js';
 import * as projectProfilePromptLib from '../../../lib/prompts/projectProfilePrompt.js';
 import * as pollProjectLib from '../../../lib/projects/pollProjectBuildAndDeploy.js';
 import * as uploadLib from '../../../lib/projects/upload.js';
+import * as previewLib from '../../../lib/projects/preview.js';
 import * as uiLib from '../../../lib/projects/ui.js';
 import * as errorHandlers from '../../../lib/errorHandlers/index.js';
 import { EXIT_CODES } from '../../../lib/enums/exitCodes.js';
@@ -30,12 +31,14 @@ vi.mock('../../../lib/projects/projectProfiles.js');
 vi.mock('../../../lib/prompts/projectProfilePrompt.js');
 vi.mock('../../../lib/projects/pollProjectBuildAndDeploy.js');
 vi.mock('../../../lib/projects/upload.js');
+vi.mock('../../../lib/projects/preview.js');
 vi.mock('../../../lib/projects/ui.js');
 vi.mock('../../../lib/errorHandlers/index.js');
 
 const optionsSpy = vi.spyOn(yargs as Argv, 'options');
 const exampleSpy = vi.spyOn(yargs as Argv, 'example');
 const conflictsSpy = vi.spyOn(yargs as Argv, 'conflicts');
+const triggerAndPollPreviewSpy = vi.spyOn(previewLib, 'triggerAndPollPreview');
 const getProjectConfigSpy = vi.spyOn(projectConfigLib, 'getProjectConfig');
 const validateProjectConfigSpy = vi.spyOn(
   projectConfigLib,
@@ -89,6 +92,7 @@ describe('commands/project/upload', () => {
         buildResult: { isAutoDeployEnabled: true },
       },
       uploadError: null,
+      projectId: 999,
     });
   });
 
@@ -124,7 +128,7 @@ describe('commands/project/upload', () => {
       expect(addJSONOutputOptions).toHaveBeenCalledWith(yargs);
     });
 
-    it('should define force-create, message, and skip-validation options', () => {
+    it('should define force-create, message, skip-validation, preview, and target options', () => {
       projectUploadCommand.builder(yargs as Argv);
 
       expect(optionsSpy).toHaveBeenCalledWith(
@@ -132,6 +136,8 @@ describe('commands/project/upload', () => {
           'force-create': expect.any(Object),
           message: expect.any(Object),
           'skip-validation': expect.any(Object),
+          preview: expect.objectContaining({ default: false }),
+          target: expect.any(Object),
         })
       );
 
@@ -148,6 +154,7 @@ describe('commands/project/upload', () => {
         message: 'Test upload',
         derivedAccountId: 123456,
         skipValidation: false,
+        skipNpmAudit: false,
         formatOutputAsJson: false,
       } as ArgumentsCamelCase<ProjectUploadArgs>;
     });
@@ -207,7 +214,11 @@ describe('commands/project/upload', () => {
 
       expect(trackCommandUsageSpy).toHaveBeenCalledWith(
         'project-upload',
-        { type: 'STANDARD', assetType: '2024.1', successful: true },
+        expect.objectContaining({
+          type: 'STANDARD',
+          assetType: '2024.1',
+          successful: true,
+        }),
         123456
       );
     });
@@ -225,6 +236,7 @@ describe('commands/project/upload', () => {
         isUploadCommand: true,
         sendIR: false,
         skipValidation: false,
+        skipNpmAudit: false,
         profile: undefined,
       });
     });
@@ -315,6 +327,40 @@ describe('commands/project/upload', () => {
       expect(processExitSpy).toHaveBeenCalledWith(EXIT_CODES.SUCCESS);
     });
 
+    it('should exit with ERROR code when build fails', async () => {
+      handleProjectUploadSpy.mockResolvedValue({
+        result: {
+          succeeded: false,
+          buildId: 123,
+          buildResult: { isAutoDeployEnabled: true },
+        },
+        uploadError: null,
+        projectId: 999,
+      });
+
+      await projectUploadCommand.handler(args);
+
+      expect(processExitSpy).toHaveBeenCalledWith(EXIT_CODES.ERROR);
+    });
+
+    it('should output empty JSON and exit with ERROR when build fails with --json', async () => {
+      args.formatOutputAsJson = true;
+      handleProjectUploadSpy.mockResolvedValue({
+        result: {
+          succeeded: false,
+          buildId: 123,
+          buildResult: { isAutoDeployEnabled: true },
+        },
+        uploadError: null,
+        projectId: 999,
+      });
+
+      await projectUploadCommand.handler(args);
+
+      expect(uiLogger.json).toHaveBeenCalledWith({});
+      expect(processExitSpy).toHaveBeenCalledWith(EXIT_CODES.ERROR);
+    });
+
     it('should handle exceptions during upload', async () => {
       const error = new Error('Unexpected error');
       handleProjectUploadSpy.mockRejectedValue(error);
@@ -326,6 +372,200 @@ describe('commands/project/upload', () => {
         expect.any(errorHandlers.ApiErrorContext)
       );
       expect(processExitSpy).toHaveBeenCalledWith(EXIT_CODES.ERROR);
+    });
+
+    it('should exit with ERROR when project is not found (user declined creation)', async () => {
+      handleProjectUploadSpy.mockResolvedValue({ projectNotFound: true });
+
+      await projectUploadCommand.handler(args);
+
+      expect(processExitSpy).toHaveBeenCalledWith(EXIT_CODES.ERROR);
+    });
+
+    describe('with --preview flag', () => {
+      beforeEach(() => {
+        handleProjectUploadSpy.mockResolvedValue({
+          result: {
+            succeeded: true,
+            buildId: 123,
+            buildResult: { isAutoDeployEnabled: false },
+          },
+          uploadError: null,
+          projectId: 999,
+        });
+        triggerAndPollPreviewSpy.mockResolvedValue({
+          succeeded: true,
+          releaseTag: 'v1.0.0',
+          appId: 42,
+        });
+      });
+
+      it('should trigger preview after successful build', async () => {
+        await projectUploadCommand.handler({
+          ...args,
+          preview: true,
+          target: 55555,
+        });
+
+        expect(triggerAndPollPreviewSpy).toHaveBeenCalledWith(
+          123456,
+          999,
+          123,
+          55555
+        );
+      });
+
+      it('should not trigger preview when flag is not set', async () => {
+        await projectUploadCommand.handler({
+          ...args,
+          preview: false,
+        });
+
+        expect(triggerAndPollPreviewSpy).not.toHaveBeenCalled();
+      });
+
+      it('should warn but still succeed when preview fails', async () => {
+        triggerAndPollPreviewSpy.mockResolvedValue({
+          succeeded: false,
+        });
+
+        await projectUploadCommand.handler({
+          ...args,
+          preview: true,
+          target: 55555,
+        });
+
+        expect(uiLogger.warn).toHaveBeenCalledWith(
+          expect.stringContaining('preview failed')
+        );
+        expect(processExitSpy).toHaveBeenCalledWith(EXIT_CODES.SUCCESS);
+      });
+
+      it('should warn when projectId is missing', async () => {
+        handleProjectUploadSpy.mockResolvedValue({
+          result: {
+            succeeded: true,
+            buildId: 123,
+            buildResult: { isAutoDeployEnabled: false },
+          },
+          uploadError: null,
+          projectId: undefined,
+        });
+
+        await projectUploadCommand.handler({
+          ...args,
+          preview: true,
+          target: 55555,
+        });
+
+        expect(uiLogger.warn).toHaveBeenCalledWith(
+          expect.stringContaining('project ID')
+        );
+        expect(triggerAndPollPreviewSpy).not.toHaveBeenCalled();
+      });
+
+      it('should not trigger preview when build fails and should exit with ERROR', async () => {
+        handleProjectUploadSpy.mockResolvedValue({
+          result: {
+            succeeded: false,
+            buildId: 123,
+            buildResult: { isAutoDeployEnabled: false },
+          },
+          uploadError: null,
+          projectId: 999,
+        });
+
+        await projectUploadCommand.handler({
+          ...args,
+          preview: true,
+          target: 55555,
+        });
+
+        expect(triggerAndPollPreviewSpy).not.toHaveBeenCalled();
+        expect(processExitSpy).toHaveBeenCalledWith(EXIT_CODES.ERROR);
+      });
+
+      it('should include preview result in JSON output', async () => {
+        await projectUploadCommand.handler({
+          ...args,
+          preview: true,
+          target: 55555,
+          formatOutputAsJson: true,
+        });
+
+        expect(uiLogger.json).toHaveBeenCalledWith(
+          expect.objectContaining({
+            buildId: 123,
+            preview: {
+              releaseTag: 'v1.0.0',
+              succeeded: true,
+            },
+          })
+        );
+      });
+
+      it('should skip deploy and show build success when auto-deploy is enabled', async () => {
+        handleProjectUploadSpy.mockResolvedValue({
+          result: {
+            succeeded: true,
+            buildId: 789,
+            buildResult: { isAutoDeployEnabled: true },
+          },
+          uploadError: null,
+          projectId: 999,
+        });
+
+        await projectUploadCommand.handler({
+          ...args,
+          preview: true,
+          target: 55555,
+        });
+
+        expect(uiLogger.log).toHaveBeenCalledWith(
+          expect.stringContaining('789')
+        );
+        expect(logFeedbackMessageSpy).not.toHaveBeenCalled();
+        expect(displayWarnLogsSpy).toHaveBeenCalledWith(
+          123456,
+          'test-project',
+          789
+        );
+        expect(triggerAndPollPreviewSpy).toHaveBeenCalledWith(
+          123456,
+          999,
+          789,
+          55555
+        );
+      });
+
+      it('should pass skipDeploy to pollProjectBuildAndDeploy', async () => {
+        await projectUploadCommand.handler({
+          ...args,
+          preview: true,
+          target: 55555,
+        });
+
+        const { callbackFunc } = handleProjectUploadSpy.mock.calls[0][0];
+        expect(callbackFunc).not.toBe(pollProjectBuildAndDeploySpy);
+      });
+
+      it('should not show deploy instructions when auto-deploy is disabled', async () => {
+        await projectUploadCommand.handler({
+          ...args,
+          preview: true,
+          target: 55555,
+        });
+
+        const logCalls = vi
+          .mocked(uiLogger.log)
+          .mock.calls.map(call => call[0]);
+        const hasDeployInstruction = logCalls.some(
+          msg =>
+            typeof msg === 'string' &&
+            msg.includes('Automatic deploys are disabled')
+        );
+        expect(hasDeployInstruction).toBe(false);
+      });
     });
 
     describe('with useEnv flag', () => {

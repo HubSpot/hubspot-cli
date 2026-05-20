@@ -6,9 +6,8 @@ import {
 } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { McpLogger } from '../../utils/logger.js';
 import { z } from 'zod';
-import { addFlag } from '../../utils/command.js';
+import { addFlag, runCommandInDir } from '../../utils/command.js';
 import { absoluteCurrentWorkingDirectory } from '../project/constants.js';
-import { runCommandInDir } from '../../utils/command.js';
 import { formatTextContents } from '../../utils/content.js';
 import { setupHubSpotConfig } from '../../utils/config.js';
 import { getErrorMessage } from '../../../lib/errorHandlers/index.js';
@@ -63,7 +62,7 @@ export class HsFunctionLogsTool extends Tool<HsFunctionLogsInputSchema> {
     const normalizedEndpoint = endpoint.startsWith('/')
       ? endpoint.slice(1)
       : endpoint;
-    let command = `hs logs ${normalizedEndpoint}`;
+    let command = `hs cms function logs ${normalizedEndpoint}`;
 
     if (latest) {
       command = addFlag(command, 'latest', latest);

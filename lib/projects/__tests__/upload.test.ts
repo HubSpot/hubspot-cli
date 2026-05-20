@@ -22,13 +22,28 @@ import {
 import { shouldIgnoreFile } from '@hubspot/local-dev-lib/ignoreRules';
 import { getConfigAccountIfExists } from '@hubspot/local-dev-lib/config';
 
+const validateLintConfigMocks = vi.hoisted(() => ({
+  validateLintConfigOnUpload: vi.fn().mockResolvedValue(undefined),
+}));
+
+const npmAuditBuildMocks = vi.hoisted(() => ({
+  runNpmAuditJson: vi.fn().mockResolvedValue({
+    source: '{"metadata":{"vulnerabilities":{"total":0}}}',
+    exitCode: 0,
+    skipped: false,
+  }),
+}));
+
 // Mock dependencies
 vi.mock('../../ui/SpinniesManager');
 vi.mock('../platformVersion.js');
 vi.mock('@hubspot/local-dev-lib/fs');
 vi.mock('@hubspot/local-dev-lib/api/projects');
 vi.mock('../ensureProjectExists.js');
-vi.mock('@hubspot/project-parsing-lib/projects');
+vi.mock('@hubspot/project-parsing-lib/projects', () => ({
+  isLegacyProject: vi.fn(),
+  projectContainsHsMetaFiles: vi.fn(),
+}));
 vi.mock('@hubspot/project-parsing-lib/workspaces', () => ({
   findAndParsePackageJsonFiles: vi.fn(),
   collectWorkspaceDirectories: vi.fn(),
@@ -37,6 +52,13 @@ vi.mock('@hubspot/project-parsing-lib/workspaces', () => ({
 }));
 vi.mock('@hubspot/local-dev-lib/ignoreRules');
 vi.mock('@hubspot/local-dev-lib/config');
+vi.mock('../validateLintConfigOnUpload.js', () => ({
+  validateLintConfigOnUpload:
+    validateLintConfigMocks.validateLintConfigOnUpload,
+}));
+vi.mock('@hubspot/ui-extensions-dev-server', () => ({
+  runNpmAuditJson: npmAuditBuildMocks.runNpmAuditJson,
+}));
 vi.mock('archiver');
 vi.mock('tmp');
 vi.mock('fs-extra', async () => {
@@ -263,6 +285,129 @@ describe('lib/projects/upload', () => {
       expect(uploadProject).toHaveBeenCalled();
       expect(callbackFunc).toHaveBeenCalled();
       expect(result.result).toEqual(callbackResult);
+      expect(npmAuditBuildMocks.runNpmAuditJson).toHaveBeenCalledWith(
+        path.join(tempDir, 'src')
+      );
+    });
+
+    it('should not run npm audit when isUploadCommand is false', async () => {
+      vi.mocked(ensureProjectExists).mockResolvedValue({
+        projectExists: true,
+      });
+
+      vi.mocked(uploadProject).mockResolvedValue({
+        data: { buildId: 1 },
+      } as Awaited<ReturnType<typeof uploadProject>>);
+
+      const uploadPromise = handleProjectUpload({
+        accountId: 123,
+        projectConfig,
+        projectDir: tempDir,
+        callbackFunc: vi.fn().mockResolvedValue({}),
+        isUploadCommand: false,
+      });
+
+      mockArchive.finalize();
+      await uploadPromise;
+
+      expect(npmAuditBuildMocks.runNpmAuditJson).not.toHaveBeenCalled();
+    });
+
+    it('should not run npm audit when skipNpmAudit is true', async () => {
+      vi.mocked(ensureProjectExists).mockResolvedValue({
+        projectExists: true,
+      });
+
+      vi.mocked(uploadProject).mockResolvedValue({
+        data: { buildId: 1 },
+      } as Awaited<ReturnType<typeof uploadProject>>);
+
+      const uploadPromise = handleProjectUpload({
+        accountId: 123,
+        projectConfig,
+        projectDir: tempDir,
+        callbackFunc: vi.fn().mockResolvedValue({}),
+        isUploadCommand: true,
+        skipNpmAudit: true,
+      });
+
+      mockArchive.finalize();
+      await uploadPromise;
+
+      expect(npmAuditBuildMocks.runNpmAuditJson).not.toHaveBeenCalled();
+    });
+
+    it('should validate the lint config when isUploadCommand is true', async () => {
+      vi.mocked(ensureProjectExists).mockResolvedValue({
+        projectExists: true,
+      });
+      vi.mocked(uploadProject).mockResolvedValue({
+        data: { buildId: 1 },
+      } as Awaited<ReturnType<typeof uploadProject>>);
+
+      const uploadPromise = handleProjectUpload({
+        accountId: 123,
+        projectConfig,
+        projectDir: tempDir,
+        callbackFunc: vi.fn().mockResolvedValue({}),
+        isUploadCommand: true,
+      });
+
+      mockArchive.finalize();
+      await uploadPromise;
+
+      expect(
+        validateLintConfigMocks.validateLintConfigOnUpload
+      ).toHaveBeenCalled();
+    });
+
+    it('should not validate the lint config when isUploadCommand is false', async () => {
+      vi.mocked(ensureProjectExists).mockResolvedValue({
+        projectExists: true,
+      });
+      vi.mocked(uploadProject).mockResolvedValue({
+        data: { buildId: 1 },
+      } as Awaited<ReturnType<typeof uploadProject>>);
+
+      const uploadPromise = handleProjectUpload({
+        accountId: 123,
+        projectConfig,
+        projectDir: tempDir,
+        callbackFunc: vi.fn().mockResolvedValue({}),
+        isUploadCommand: false,
+      });
+
+      mockArchive.finalize();
+      await uploadPromise;
+
+      expect(
+        validateLintConfigMocks.validateLintConfigOnUpload
+      ).not.toHaveBeenCalled();
+    });
+
+    it('should not run lint when skipValidation is true', async () => {
+      vi.mocked(ensureProjectExists).mockResolvedValue({
+        projectExists: true,
+      });
+      vi.mocked(uploadProject).mockResolvedValue({
+        data: { buildId: 1 },
+      } as Awaited<ReturnType<typeof uploadProject>>);
+
+      const uploadPromise = handleProjectUpload({
+        accountId: 123,
+        projectConfig,
+        projectDir: tempDir,
+        callbackFunc: vi.fn().mockResolvedValue({}),
+        isUploadCommand: true,
+        skipValidation: true,
+      });
+
+      mockArchive.finalize();
+      await uploadPromise;
+
+      expect(
+        validateLintConfigMocks.validateLintConfigOnUpload
+      ).not.toHaveBeenCalled();
     });
 
     it('should exclude modified package.json files from directory walk to prevent duplicate zip entries', async () => {

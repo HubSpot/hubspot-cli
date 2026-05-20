@@ -28,6 +28,22 @@ export function shortHash(input: string): string {
 }
 
 /**
+ * Converts native path separators to POSIX forward slashes.
+ *
+ * Zip entry names and npm workspace globs are POSIX-only. On Windows,
+ * `path.relative` returns backslash-separated paths; archiver normalizes
+ * its appended entry names to forward slashes but its filter callback
+ * receives forward-slashed names too. Without this normalization, lookups
+ * in our exclusion Sets miss on Windows and a file gets archived twice.
+ */
+export function toPosixPath(p: string): string {
+  if (path.sep === path.posix.sep) {
+    return p;
+  }
+  return p.replaceAll(path.sep, path.posix.sep);
+}
+
+/**
  * Determines the archive path for an external workspace or file: dependency.
  * Produces `_workspaces/<basename>-<hash>` with no subdirectory.
  * The hash prevents collisions between different directories with the same basename.
@@ -35,7 +51,7 @@ export function shortHash(input: string): string {
 export function computeExternalArchivePath(absolutePath: string): string {
   const resolved = path.resolve(absolutePath);
   const name = path.basename(resolved);
-  return path.join('_workspaces', `${name}-${shortHash(resolved)}`);
+  return path.posix.join('_workspaces', `${name}-${shortHash(resolved)}`);
 }
 
 /**
@@ -105,9 +121,11 @@ async function archiveWorkspaceDirectories(
     if (isInsideSrcDir(workspaceDir, srcDir)) {
       // Internal: already in archive from srcDir walk.
       // Store the relative path from the package.json directory so npm can resolve it.
-      const relPath = path.relative(
-        path.dirname(sourcePackageJsonPath),
-        path.resolve(workspaceDir)
+      const relPath = toPosixPath(
+        path.relative(
+          path.dirname(sourcePackageJsonPath),
+          path.resolve(workspaceDir)
+        )
       );
       packageWorkspaceEntries.get(sourcePackageJsonPath)!.push(relPath);
     } else {
@@ -137,7 +155,9 @@ async function archiveWorkspaceDirectories(
         srcDir,
         path.dirname(sourcePackageJsonPath)
       );
-      const relativeEntry = path.relative(relPkgJsonDir, archivePath);
+      const relativeEntry = toPosixPath(
+        path.relative(relPkgJsonDir, archivePath)
+      );
       packageWorkspaceEntries.get(sourcePackageJsonPath)!.push(relativeEntry);
     }
   }
@@ -206,7 +226,9 @@ async function archiveFileDependencies(
       srcDir,
       path.dirname(sourcePackageJsonPath)
     );
-    const relativeArchivePath = path.relative(relPkgJsonDir, archivePath);
+    const relativeArchivePath = toPosixPath(
+      path.relative(relPkgJsonDir, archivePath)
+    );
     packageFileDeps
       .get(sourcePackageJsonPath)!
       .set(packageName, relativeArchivePath);
@@ -277,7 +299,9 @@ export async function updatePackageJsonInArchive(
       continue;
     }
 
-    const relativePackageJsonPath = path.relative(srcDir, packageJsonPath);
+    const relativePackageJsonPath = toPosixPath(
+      path.relative(srcDir, packageJsonPath)
+    );
 
     let rawContent: string;
     try {
@@ -412,12 +436,12 @@ export function getPackageJsonPathsToUpdate(
   const paths = new Set<string>();
 
   for (const { sourcePackageJsonPath } of workspaceMappings) {
-    paths.add(path.relative(srcDir, sourcePackageJsonPath));
+    paths.add(toPosixPath(path.relative(srcDir, sourcePackageJsonPath)));
   }
 
   for (const { localPath, sourcePackageJsonPath } of fileDependencyMappings) {
     if (!isInsideSrcDir(localPath, srcDir)) {
-      paths.add(path.relative(srcDir, sourcePackageJsonPath));
+      paths.add(toPosixPath(path.relative(srcDir, sourcePackageJsonPath)));
     }
   }
 
@@ -457,7 +481,7 @@ export function getLockfilePathsToUpdate(
   for (const dir of dirsWithExternalDeps) {
     const lockfilePath = path.join(dir, 'package-lock.json');
     if (fs.existsSync(lockfilePath)) {
-      paths.add(path.relative(srcDir, lockfilePath));
+      paths.add(toPosixPath(path.relative(srcDir, lockfilePath)));
     }
   }
   return paths;
@@ -488,15 +512,19 @@ async function rewriteLockfilesInArchive(
     const pathMappings: Array<{ oldPath: string; newPath: string }> = [];
     for (const [absoluteExternalPath, archivePath] of externalArchivePaths) {
       pathMappings.push({
-        oldPath: path.relative(dir, absoluteExternalPath),
-        newPath: path.relative(dir, path.join(srcDir, archivePath)),
+        oldPath: toPosixPath(path.relative(dir, absoluteExternalPath)),
+        newPath: toPosixPath(
+          path.relative(dir, path.join(srcDir, archivePath))
+        ),
       });
     }
     const rewritten = rewriteLockfileForExternalDeps(
       lockfileContent,
       pathMappings
     );
-    const relativeLockfilePath = path.relative(srcDir, lockfilePath);
+    const relativeLockfilePath = toPosixPath(
+      path.relative(srcDir, lockfilePath)
+    );
     uiLogger.debug(
       lib.projectUpload.handleProjectUpload.updatingLockfile(
         relativeLockfilePath
@@ -516,7 +544,6 @@ async function rewriteLockfilesInArchive(
 export async function archiveWorkspacesAndDependencies(
   archive: archiver.Archiver,
   srcDir: string,
-  projectDir: string,
   workspaceMappings: WorkspaceMapping[],
   fileDependencyMappings: FileDependencyMapping[]
 ): Promise<WorkspaceArchiveResult> {

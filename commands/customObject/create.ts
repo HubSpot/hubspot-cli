@@ -15,7 +15,7 @@ import {
   EnvironmentArgs,
   YargsCommandModule,
 } from '../../types/Yargs.js';
-import { makeYargsHandlerWithUsageTracking } from '../../lib/yargs/makeYargsHandlerWithUsageTracking.js';
+import { makeWrappedYargsHandler } from '../../lib/yargs/makeWrappedYargsHandler.js';
 import { makeYargsBuilder } from '../../lib/yargsUtils.js';
 
 const command = 'create [name]';
@@ -103,10 +103,7 @@ const customObjectCreateCommand: YargsCommandModule<
 > = {
   command,
   describe,
-  handler: makeYargsHandlerWithUsageTracking(
-    'custom-object-batch-create',
-    handler
-  ),
+  handler: makeWrappedYargsHandler('custom-object-batch-create', handler),
   builder,
 };
 

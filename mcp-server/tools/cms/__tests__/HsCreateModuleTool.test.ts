@@ -131,13 +131,13 @@ describe('HsCreateModuleTool', () => {
     it('should execute command with all required parameters (HubL module)', async () => {
       mockAddFlag
         .mockReturnValueOnce(
-          'hs create module "Test Module" --module-label Test Label'
+          'hs cms module create "Test Module" --module-label Test Label'
         )
         .mockReturnValueOnce(
-          'hs create module "Test Module" --module-label Test Label --react-type false'
+          'hs cms module create "Test Module" --module-label Test Label --react-type false'
         )
         .mockReturnValueOnce(
-          'hs create module "Test Module" --module-label Test Label --react-type false --content-types ANY'
+          'hs cms module create "Test Module" --module-label Test Label --react-type false --content-types ANY'
         );
 
       mockRunCommandInDir.mockResolvedValue({
@@ -153,7 +153,7 @@ describe('HsCreateModuleTool', () => {
       });
 
       expect(mockAddFlag).toHaveBeenCalledWith(
-        'hs create module "Test Module"',
+        'hs cms module create "Test Module"',
         'module-label',
         'Test Label'
       );
@@ -169,7 +169,7 @@ describe('HsCreateModuleTool', () => {
       );
       expect(mockRunCommandInDir).toHaveBeenCalledWith(
         '/test/dir',
-        expect.stringContaining('hs create module')
+        expect.stringContaining('hs cms module create')
       );
       expect(result.content).toHaveLength(2);
       expect(result.content[0].text).toContain('Module created successfully');
@@ -178,13 +178,13 @@ describe('HsCreateModuleTool', () => {
     it('should execute command with React module', async () => {
       mockAddFlag
         .mockReturnValueOnce(
-          'hs create module "React Module" --module-label React Label'
+          'hs cms module create "React Module" --module-label React Label'
         )
         .mockReturnValueOnce(
-          'hs create module "React Module" --module-label React Label --react-type true'
+          'hs cms module create "React Module" --module-label React Label --react-type true'
         )
         .mockReturnValueOnce(
-          'hs create module "React Module" --module-label React Label --react-type true --content-types ANY'
+          'hs cms module create "React Module" --module-label React Label --react-type true --content-types ANY'
         );
 
       mockRunCommandInDir.mockResolvedValue({
@@ -212,13 +212,13 @@ describe('HsCreateModuleTool', () => {
     it('should execute command with destination path', async () => {
       mockAddFlag
         .mockReturnValueOnce(
-          'hs create module "Test Module" "custom/path" --module-label Test Label'
+          'hs cms module create "Test Module" "custom/path" --module-label Test Label'
         )
         .mockReturnValueOnce(
-          'hs create module "Test Module" "custom/path" --module-label Test Label --react-type false'
+          'hs cms module create "Test Module" "custom/path" --module-label Test Label --react-type false'
         )
         .mockReturnValueOnce(
-          'hs create module "Test Module" "custom/path" --module-label Test Label --react-type false --content-types ANY'
+          'hs cms module create "Test Module" "custom/path" --module-label Test Label --react-type false --content-types ANY'
         );
 
       mockRunCommandInDir.mockResolvedValue({
@@ -244,13 +244,13 @@ describe('HsCreateModuleTool', () => {
     it('should execute command with custom content types', async () => {
       mockAddFlag
         .mockReturnValueOnce(
-          'hs create module "Test Module" --module-label Test Label'
+          'hs cms module create "Test Module" --module-label Test Label'
         )
         .mockReturnValueOnce(
-          'hs create module "Test Module" --module-label Test Label --react-type false'
+          'hs cms module create "Test Module" --module-label Test Label --react-type false'
         )
         .mockReturnValueOnce(
-          'hs create module "Test Module" --module-label Test Label --react-type false --content-types LANDING_PAGE,BLOG_POST'
+          'hs cms module create "Test Module" --module-label Test Label --react-type false --content-types LANDING_PAGE,BLOG_POST'
         );
 
       mockRunCommandInDir.mockResolvedValue({
@@ -279,16 +279,16 @@ describe('HsCreateModuleTool', () => {
     it('should execute command with global flag', async () => {
       mockAddFlag
         .mockReturnValueOnce(
-          'hs create module "Global Module" --module-label Global Label'
+          'hs cms module create "Global Module" --module-label Global Label'
         )
         .mockReturnValueOnce(
-          'hs create module "Global Module" --module-label Global Label --react-type false'
+          'hs cms module create "Global Module" --module-label Global Label --react-type false'
         )
         .mockReturnValueOnce(
-          'hs create module "Global Module" --module-label Global Label --react-type false --content-types ANY'
+          'hs cms module create "Global Module" --module-label Global Label --react-type false --content-types ANY'
         )
         .mockReturnValueOnce(
-          'hs create module "Global Module" --module-label Global Label --react-type false --content-types ANY --global true'
+          'hs cms module create "Global Module" --module-label Global Label --react-type false --content-types ANY --global true'
         );
 
       mockRunCommandInDir.mockResolvedValue({
@@ -315,16 +315,16 @@ describe('HsCreateModuleTool', () => {
     it('should execute command with availableForNewContent flag', async () => {
       mockAddFlag
         .mockReturnValueOnce(
-          'hs create module "Test Module" --module-label Test Label'
+          'hs cms module create "Test Module" --module-label Test Label'
         )
         .mockReturnValueOnce(
-          'hs create module "Test Module" --module-label Test Label --react-type false'
+          'hs cms module create "Test Module" --module-label Test Label --react-type false'
         )
         .mockReturnValueOnce(
-          'hs create module "Test Module" --module-label Test Label --react-type false --content-types ANY'
+          'hs cms module create "Test Module" --module-label Test Label --react-type false --content-types ANY'
         )
         .mockReturnValueOnce(
-          'hs create module "Test Module" --module-label Test Label --react-type false --content-types ANY --available-for-new-content false'
+          'hs cms module create "Test Module" --module-label Test Label --react-type false --content-types ANY --available-for-new-content false'
         );
 
       mockRunCommandInDir.mockResolvedValue({
@@ -367,13 +367,13 @@ describe('HsCreateModuleTool', () => {
     it('should handle stderr output', async () => {
       mockAddFlag
         .mockReturnValueOnce(
-          'hs create module "Test Module" --module-label Test Label'
+          'hs cms module create "Test Module" --module-label Test Label'
         )
         .mockReturnValueOnce(
-          'hs create module "Test Module" --module-label Test Label --react-type false'
+          'hs cms module create "Test Module" --module-label Test Label --react-type false'
         )
         .mockReturnValueOnce(
-          'hs create module "Test Module" --module-label Test Label --react-type false --content-types ANY'
+          'hs cms module create "Test Module" --module-label Test Label --react-type false --content-types ANY'
         );
 
       mockRunCommandInDir.mockResolvedValue({

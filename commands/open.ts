@@ -10,7 +10,7 @@ import {
   AccountArgs,
   YargsCommandModule,
 } from '../types/Yargs.js';
-import { makeYargsHandlerWithUsageTracking } from '../lib/yargs/makeYargsHandlerWithUsageTracking.js';
+import { makeWrappedYargsHandler } from '../lib/yargs/makeWrappedYargsHandler.js';
 import { makeYargsBuilder } from '../lib/yargsUtils.js';
 
 const separator = ' => ';
@@ -88,7 +88,7 @@ const builder = makeYargsBuilder<OpenArgs>(openBuilder, command, describe, {
 const openCommand: YargsCommandModule<unknown, OpenArgs> = {
   command,
   describe,
-  handler: makeYargsHandlerWithUsageTracking('open', handler),
+  handler: makeWrappedYargsHandler('open', handler),
   builder,
 };
 

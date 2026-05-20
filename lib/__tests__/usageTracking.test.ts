@@ -1,5 +1,9 @@
-import { trackUsage } from '@hubspot/local-dev-lib/trackUsage';
-import { getConfig, getConfigAccountById } from '@hubspot/local-dev-lib/config';
+import {
+  getConfig,
+  getConfigAccountById,
+  getConfigFilePath,
+  getGlobalConfigFilePath,
+} from '@hubspot/local-dev-lib/config';
 import { API_KEY_AUTH_METHOD } from '@hubspot/local-dev-lib/constants/auth';
 import { uiLogger } from '../ui/logger.js';
 import {
@@ -9,6 +13,7 @@ import {
   trackAuthAction,
   trackCommandMetadataUsage,
 } from '../usageTracking.js';
+import { sendUsageEvent } from '../api/usageTracking.js';
 import { pkg } from '../jsonLoader.js';
 import { Mock, Mocked } from 'vitest';
 
@@ -17,12 +22,14 @@ const version = pkg.version;
 // Unmock the usageTracking module for this test file
 vi.unmock('../usageTracking.js');
 
-vi.mock('@hubspot/local-dev-lib/trackUsage');
+vi.mock('../api/usageTracking.js');
 vi.mock('@hubspot/local-dev-lib/config');
 
-const mockedTrackUsage = trackUsage as Mock;
+const mockedSendUsageEvent = sendUsageEvent as Mock;
 const mockedGetConfig = getConfig as Mock;
 const mockedGetConfigAccountById = getConfigAccountById as Mock;
+const mockedGetConfigFilePath = getConfigFilePath as Mock;
+const mockedGetGlobalConfigFilePath = getGlobalConfigFilePath as Mock;
 const mockedUiLogger = uiLogger as Mocked<typeof uiLogger>;
 
 describe('lib/usageTracking', () => {
@@ -31,13 +38,21 @@ describe('lib/usageTracking', () => {
 
   beforeEach(() => {
     mockedGetConfig.mockReturnValue({ allowUsageTracking: true });
+    mockedGetConfigFilePath.mockReturnValue('/some/local/hubspot.config.yml');
+    mockedGetGlobalConfigFilePath.mockReturnValue(
+      '/Users/test/.hubspot/config.yml'
+    );
     Object.defineProperty(process, 'platform', { value: mockPlatform });
     Object.defineProperty(process, 'version', { value: mockNodeVersion });
     delete process.env.DISABLE_USAGE_TRACKING;
+    delete process.env.CI;
+    delete process.env.HUBSPOT_MCP_AI_AGENT;
   });
 
   afterEach(() => {
     delete process.env.DISABLE_USAGE_TRACKING;
+    delete process.env.CI;
+    delete process.env.HUBSPOT_MCP_AI_AGENT;
   });
 
   describe('trackCommandUsage()', () => {
@@ -49,7 +64,7 @@ describe('lib/usageTracking', () => {
 
       await trackCommandUsage(mockCommand);
 
-      expect(mockedTrackUsage).not.toHaveBeenCalled();
+      expect(mockedSendUsageEvent).not.toHaveBeenCalled();
     });
 
     it('should not track when --disable-usage-tracking flag is set', async () => {
@@ -57,7 +72,7 @@ describe('lib/usageTracking', () => {
 
       await trackCommandUsage(mockCommand, {}, mockAccountId);
 
-      expect(mockedTrackUsage).not.toHaveBeenCalled();
+      expect(mockedSendUsageEvent).not.toHaveBeenCalled();
       expect(mockedUiLogger.debug).toHaveBeenCalledWith(
         'Usage tracking is disabled via the --disable-usage-tracking flag, not sending usage events'
       );
@@ -66,19 +81,21 @@ describe('lib/usageTracking', () => {
     it('should track command usage with default auth type', async () => {
       await trackCommandUsage(mockCommand, {}, mockAccountId);
 
-      expect(mockedTrackUsage).toHaveBeenCalledWith(
-        'cli-interaction',
-        'INTERACTION',
+      expect(mockedSendUsageEvent).toHaveBeenCalledWith(
         expect.objectContaining({
-          action: 'cli-command',
-          command: mockCommand,
-          os: 'macos',
-          nodeVersion: mockNodeVersion,
-          nodeMajorVersion: 'v16',
-          version,
-          authType: API_KEY_AUTH_METHOD.value,
-        }),
-        mockAccountId
+          eventName: 'cli-interaction',
+          eventClass: 'INTERACTION',
+          accountId: mockAccountId,
+          meta: expect.objectContaining({
+            action: 'cli-command',
+            command: mockCommand,
+            os: 'macos',
+            nodeVersion: mockNodeVersion,
+            nodeMajorVersion: 'v16',
+            version,
+            authType: API_KEY_AUTH_METHOD.value,
+          }),
+        })
       );
     });
 
@@ -87,19 +104,18 @@ describe('lib/usageTracking', () => {
 
       await trackCommandUsage(mockCommand, {}, mockAccountId);
 
-      expect(mockedTrackUsage).toHaveBeenCalledWith(
-        'cli-interaction',
-        'INTERACTION',
+      expect(mockedSendUsageEvent).toHaveBeenCalledWith(
         expect.objectContaining({
-          authType: 'oauth2',
-        }),
-        mockAccountId
+          meta: expect.objectContaining({
+            authType: 'oauth2',
+          }),
+        })
       );
     });
 
     it('should handle tracking errors gracefully', async () => {
       const error = new Error('Tracking failed');
-      mockedTrackUsage.mockImplementationOnce(() => {
+      mockedSendUsageEvent.mockImplementationOnce(() => {
         throw error;
       });
 
@@ -119,7 +135,7 @@ describe('lib/usageTracking', () => {
 
       await trackHelpUsage(mockCommand);
 
-      expect(mockedTrackUsage).not.toHaveBeenCalled();
+      expect(mockedSendUsageEvent).not.toHaveBeenCalled();
     });
 
     it('should not track when --disable-usage-tracking flag is set', async () => {
@@ -127,7 +143,7 @@ describe('lib/usageTracking', () => {
 
       await trackHelpUsage(mockCommand);
 
-      expect(mockedTrackUsage).not.toHaveBeenCalled();
+      expect(mockedSendUsageEvent).not.toHaveBeenCalled();
       expect(mockedUiLogger.debug).toHaveBeenCalledWith(
         'Usage tracking is disabled via the --disable-usage-tracking flag, not sending usage events'
       );
@@ -136,18 +152,19 @@ describe('lib/usageTracking', () => {
     it('should track help usage with command', async () => {
       await trackHelpUsage(mockCommand);
 
-      expect(mockedTrackUsage).toHaveBeenCalledWith(
-        'cli-interaction',
-        'INTERACTION',
+      expect(mockedSendUsageEvent).toHaveBeenCalledWith(
         expect.objectContaining({
-          action: 'cli-help',
-          command: mockCommand,
-          os: 'macos',
-          nodeVersion: mockNodeVersion,
-          nodeMajorVersion: 'v16',
-          version,
-        }),
-        undefined
+          eventName: 'cli-interaction',
+          eventClass: 'INTERACTION',
+          meta: expect.objectContaining({
+            action: 'cli-help',
+            command: mockCommand,
+            os: 'macos',
+            nodeVersion: mockNodeVersion,
+            nodeMajorVersion: 'v16',
+            version,
+          }),
+        })
       );
     });
 
@@ -156,6 +173,17 @@ describe('lib/usageTracking', () => {
 
       expect(mockedUiLogger.debug).toHaveBeenCalledWith(
         expect.stringContaining('main command')
+      );
+    });
+
+    it('should swallow async rejections from sendUsageEvent', async () => {
+      const error = new Error('Network unavailable');
+      mockedSendUsageEvent.mockRejectedValueOnce(error);
+
+      await expect(trackHelpUsage(mockCommand)).resolves.toBeUndefined();
+
+      expect(mockedUiLogger.debug).toHaveBeenCalledWith(
+        expect.stringContaining(error.message)
       );
     });
   });
@@ -168,7 +196,7 @@ describe('lib/usageTracking', () => {
 
       await trackConvertFieldsUsage(mockCommand);
 
-      expect(mockedTrackUsage).not.toHaveBeenCalled();
+      expect(mockedSendUsageEvent).not.toHaveBeenCalled();
     });
 
     it('should not track when --disable-usage-tracking flag is set', async () => {
@@ -176,24 +204,25 @@ describe('lib/usageTracking', () => {
 
       await trackConvertFieldsUsage(mockCommand);
 
-      expect(mockedTrackUsage).not.toHaveBeenCalled();
+      expect(mockedSendUsageEvent).not.toHaveBeenCalled();
     });
 
     it('should track convert fields usage', async () => {
       await trackConvertFieldsUsage(mockCommand);
 
-      expect(mockedTrackUsage).toHaveBeenCalledWith(
-        'cli-interaction',
-        'INTERACTION',
+      expect(mockedSendUsageEvent).toHaveBeenCalledWith(
         expect.objectContaining({
-          action: 'cli-process-fields',
-          command: mockCommand,
-          os: 'macos',
-          nodeVersion: mockNodeVersion,
-          nodeMajorVersion: 'v16',
-          version,
-        }),
-        undefined
+          eventName: 'cli-interaction',
+          eventClass: 'INTERACTION',
+          meta: expect.objectContaining({
+            action: 'cli-process-fields',
+            command: mockCommand,
+            os: 'macos',
+            nodeVersion: mockNodeVersion,
+            nodeMajorVersion: 'v16',
+            version,
+          }),
+        })
       );
     });
   });
@@ -209,7 +238,7 @@ describe('lib/usageTracking', () => {
 
       await trackAuthAction(mockCommand, mockAuthType, mockStep, mockAccountId);
 
-      expect(mockedTrackUsage).not.toHaveBeenCalled();
+      expect(mockedSendUsageEvent).not.toHaveBeenCalled();
     });
 
     it('should not track when --disable-usage-tracking flag is set', async () => {
@@ -217,26 +246,27 @@ describe('lib/usageTracking', () => {
 
       await trackAuthAction(mockCommand, mockAuthType, mockStep, mockAccountId);
 
-      expect(mockedTrackUsage).not.toHaveBeenCalled();
+      expect(mockedSendUsageEvent).not.toHaveBeenCalled();
     });
 
     it('should track auth action', async () => {
       await trackAuthAction(mockCommand, mockAuthType, mockStep, mockAccountId);
 
-      expect(mockedTrackUsage).toHaveBeenCalledWith(
-        'cli-interaction',
-        'INTERACTION',
+      expect(mockedSendUsageEvent).toHaveBeenCalledWith(
         expect.objectContaining({
-          action: 'cli-auth',
-          command: mockCommand,
-          authType: mockAuthType,
-          step: mockStep,
-          os: 'macos',
-          nodeVersion: mockNodeVersion,
-          nodeMajorVersion: 'v16',
-          version,
-        }),
-        mockAccountId
+          eventName: 'cli-interaction',
+          eventClass: 'INTERACTION',
+          meta: expect.objectContaining({
+            action: 'cli-auth',
+            command: mockCommand,
+            authType: mockAuthType,
+            step: mockStep,
+            os: 'macos',
+            nodeVersion: mockNodeVersion,
+            nodeMajorVersion: 'v16',
+            version,
+          }),
+        })
       );
     });
   });
@@ -251,7 +281,7 @@ describe('lib/usageTracking', () => {
 
       await trackCommandMetadataUsage(mockCommand, mockMeta, mockAccountId);
 
-      expect(mockedTrackUsage).not.toHaveBeenCalled();
+      expect(mockedSendUsageEvent).not.toHaveBeenCalled();
     });
 
     it('should not track when --disable-usage-tracking flag is set', async () => {
@@ -259,7 +289,7 @@ describe('lib/usageTracking', () => {
 
       await trackCommandMetadataUsage(mockCommand, mockMeta, mockAccountId);
 
-      expect(mockedTrackUsage).not.toHaveBeenCalled();
+      expect(mockedSendUsageEvent).not.toHaveBeenCalled();
       expect(mockedUiLogger.debug).toHaveBeenCalledWith(
         'Usage tracking is disabled via the --disable-usage-tracking flag, not sending usage events'
       );
@@ -268,19 +298,20 @@ describe('lib/usageTracking', () => {
     it('should track command metadata usage', async () => {
       await trackCommandMetadataUsage(mockCommand, mockMeta, mockAccountId);
 
-      expect(mockedTrackUsage).toHaveBeenCalledWith(
-        'cli-interaction',
-        'INTERACTION',
+      expect(mockedSendUsageEvent).toHaveBeenCalledWith(
         expect.objectContaining({
-          action: 'cli-command-metadata',
-          command: mockCommand,
-          assetType: 'test-asset',
-          os: 'macos',
-          nodeVersion: mockNodeVersion,
-          nodeMajorVersion: 'v16',
-          version,
-        }),
-        mockAccountId
+          eventName: 'cli-interaction',
+          eventClass: 'INTERACTION',
+          meta: expect.objectContaining({
+            action: 'cli-command-metadata',
+            command: mockCommand,
+            assetType: 'test-asset',
+            os: 'macos',
+            nodeVersion: mockNodeVersion,
+            nodeMajorVersion: 'v16',
+            version,
+          }),
+        })
       );
     });
   });
@@ -291,11 +322,10 @@ describe('lib/usageTracking', () => {
 
       await trackHelpUsage('test');
 
-      expect(mockedTrackUsage).toHaveBeenCalledWith(
-        expect.anything(),
-        expect.anything(),
-        expect.objectContaining({ os: 'macos' }),
-        undefined
+      expect(mockedSendUsageEvent).toHaveBeenCalledWith(
+        expect.objectContaining({
+          meta: expect.objectContaining({ os: 'macos' }),
+        })
       );
     });
 
@@ -304,11 +334,10 @@ describe('lib/usageTracking', () => {
 
       await trackHelpUsage('test');
 
-      expect(mockedTrackUsage).toHaveBeenCalledWith(
-        expect.anything(),
-        expect.anything(),
-        expect.objectContaining({ os: 'windows' }),
-        undefined
+      expect(mockedSendUsageEvent).toHaveBeenCalledWith(
+        expect.objectContaining({
+          meta: expect.objectContaining({ os: 'windows' }),
+        })
       );
     });
 
@@ -317,11 +346,98 @@ describe('lib/usageTracking', () => {
 
       await trackHelpUsage('test');
 
-      expect(mockedTrackUsage).toHaveBeenCalledWith(
-        expect.anything(),
-        expect.anything(),
-        expect.objectContaining({ os: 'linux' }),
-        undefined
+      expect(mockedSendUsageEvent).toHaveBeenCalledWith(
+        expect.objectContaining({
+          meta: expect.objectContaining({ os: 'linux' }),
+        })
+      );
+    });
+  });
+
+  describe('auto-attached metadata fields', () => {
+    it('should attach configType "global" when config path matches the global config path', async () => {
+      const globalPath = '/Users/test/.hubspot/config.yml';
+      mockedGetConfigFilePath.mockReturnValue(globalPath);
+      mockedGetGlobalConfigFilePath.mockReturnValue(globalPath);
+
+      await trackHelpUsage('test');
+
+      expect(mockedSendUsageEvent).toHaveBeenCalledWith(
+        expect.objectContaining({
+          meta: expect.objectContaining({ configType: 'global' }),
+        })
+      );
+    });
+
+    it('should attach configType "local" when config path differs from the global config path', async () => {
+      mockedGetConfigFilePath.mockReturnValue(
+        '/some/project/hubspot.config.yml'
+      );
+      mockedGetGlobalConfigFilePath.mockReturnValue(
+        '/Users/test/.hubspot/config.yml'
+      );
+
+      await trackHelpUsage('test');
+
+      expect(mockedSendUsageEvent).toHaveBeenCalledWith(
+        expect.objectContaining({
+          meta: expect.objectContaining({ configType: 'local' }),
+        })
+      );
+    });
+
+    it('should omit configType when getConfigFilePath throws', async () => {
+      mockedGetConfigFilePath.mockImplementation(() => {
+        throw new Error('no config');
+      });
+
+      await trackHelpUsage('test');
+
+      const sentMeta = mockedSendUsageEvent.mock.calls[0][0].meta;
+      expect(sentMeta.configType).toBeUndefined();
+    });
+
+    it('should attach executionSource "ci" when CI env var is set', async () => {
+      process.env.CI = 'true';
+
+      await trackHelpUsage('test');
+
+      expect(mockedSendUsageEvent).toHaveBeenCalledWith(
+        expect.objectContaining({
+          meta: expect.objectContaining({ executionSource: 'ci' }),
+        })
+      );
+    });
+
+    it('should attach executionSource "mcp" when HUBSPOT_MCP_AI_AGENT is set', async () => {
+      process.env.HUBSPOT_MCP_AI_AGENT = 'cursor';
+
+      await trackHelpUsage('test');
+
+      expect(mockedSendUsageEvent).toHaveBeenCalledWith(
+        expect.objectContaining({
+          meta: expect.objectContaining({ executionSource: 'mcp' }),
+        })
+      );
+    });
+
+    it('should attach executionSource "user" by default', async () => {
+      await trackHelpUsage('test');
+
+      expect(mockedSendUsageEvent).toHaveBeenCalledWith(
+        expect.objectContaining({
+          meta: expect.objectContaining({ executionSource: 'user' }),
+        })
+      );
+    });
+
+    it('should pass through platformVersion from meta', async () => {
+      await trackCommandUsage('project-upload', { platformVersion: '2026.1' });
+
+      expect(mockedSendUsageEvent).toHaveBeenCalledWith(
+        expect.objectContaining({
+          meta: expect.objectContaining({ platformVersion: '2026.1' }),
+        })
       );
     });
   });

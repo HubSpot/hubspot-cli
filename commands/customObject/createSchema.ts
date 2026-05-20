@@ -17,7 +17,7 @@ import {
   TestingArgs,
   YargsCommandModule,
 } from '../../types/Yargs.js';
-import { makeYargsHandlerWithUsageTracking } from '../../lib/yargs/makeYargsHandlerWithUsageTracking.js';
+import { makeWrappedYargsHandler } from '../../lib/yargs/makeWrappedYargsHandler.js';
 import { makeYargsBuilder } from '../../lib/yargsUtils.js';
 
 const command = 'create-schema';
@@ -89,10 +89,7 @@ const builder = makeYargsBuilder<SchemaCreateArgs>(
 const createSchemaCommand: YargsCommandModule<unknown, SchemaCreateArgs> = {
   command,
   describe,
-  handler: makeYargsHandlerWithUsageTracking(
-    'custom-object-schema-create',
-    handler
-  ),
+  handler: makeWrappedYargsHandler('custom-object-schema-create', handler),
   builder,
 };
 

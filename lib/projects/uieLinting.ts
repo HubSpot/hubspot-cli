@@ -16,10 +16,17 @@ import {
 } from '../npm/packageJson.js';
 import { debugError } from '../errorHandlers/index.js';
 import { isLegacyProject } from '@hubspot/project-parsing-lib/projects';
+import { LoadedProjectConfig } from './config.js';
 import {
-  HUBSPOT_PROJECT_COMPONENTS_GITHUB_PATH,
   DEFAULT_PROJECT_TEMPLATE_BRANCH,
+  HUBSPOT_PROJECT_COMPONENTS_GITHUB_PATH,
 } from '../constants.js';
+import {
+  CARDS_KEY,
+  Components,
+  PAGES_KEY,
+  SETTINGS_KEY,
+} from '@hubspot/project-parsing-lib/constants';
 
 export const REQUIRED_PACKAGES_AND_MIN_VERSIONS = {
   eslint: '9.0.0',
@@ -54,6 +61,12 @@ const DEPRECATED_ESLINT_CONFIG_FILES = [
   '.eslintrc.json',
   '.eslintrc',
 ] as const;
+
+const UIE_COMPONENTS = [
+  Components[CARDS_KEY],
+  Components[SETTINGS_KEY],
+  Components[PAGES_KEY],
+];
 
 export const LINT_SCRIPTS = {
   lint: 'eslint .',
@@ -225,6 +238,67 @@ export async function createEslintConfig(
   }
 }
 
+export async function getUieLintablePackageJsonLocations(
+  projectConfig: LoadedProjectConfig
+): Promise<string[]> {
+  if (!projectConfig.projectDir || !projectConfig.projectConfig?.srcDir) {
+    return [];
+  }
+
+  const srcDirAbsolute = path.resolve(
+    projectConfig.projectDir,
+    projectConfig.projectConfig.srcDir
+  );
+  const uiePackageDirPrefixes = UIE_COMPONENTS.map(component =>
+    path.join(
+      srcDirAbsolute,
+      component.parentComponent
+        ? Components[component.parentComponent].dir
+        : '',
+      component.dir
+    )
+  );
+
+  const allLocations = await getProjectPackageJsonLocations(
+    projectConfig.projectDir
+  );
+
+  return allLocations.filter(location => {
+    const resolvedLocation = path.resolve(location);
+    return uiePackageDirPrefixes.some(prefix =>
+      resolvedLocation.startsWith(prefix)
+    );
+  });
+}
+
+export const HUBSPOT_UI_EXTENSIONS_RULE_PREFIX = '@hubspot/ui-extensions/';
+
+function getEnvironmentWithoutNpmConfig(): NodeJS.ProcessEnv {
+  return Object.fromEntries(
+    Object.entries(process.env).filter(
+      ([key]) => !key.toLowerCase().startsWith('npm_config_')
+    )
+  );
+}
+
+export async function isHubSpotEslintConfigActive(
+  directory: string
+): Promise<boolean> {
+  const exec = util.promisify(execAsync);
+  try {
+    const { stdout } = await exec('npx eslint --print-config ./Component.tsx', {
+      cwd: directory,
+    });
+    const config = JSON.parse(stdout) as { rules?: Record<string, unknown> };
+    const rules = config.rules ?? {};
+    return Object.keys(rules).some(rule =>
+      rule.startsWith(HUBSPOT_UI_EXTENSIONS_RULE_PREFIX)
+    );
+  } catch {
+    return false;
+  }
+}
+
 export async function lintPackagesInDirectory(
   directory: string,
   projectDir?: string
@@ -240,6 +314,7 @@ export async function lintPackagesInDirectory(
     const { stdout, stderr } = await exec(lintCommand, {
       cwd: directory,
       maxBuffer: 10 * 1024 * 1024, // 10MB buffer for large outputs
+      env: getEnvironmentWithoutNpmConfig(),
     });
 
     let output = `\n${displayPath}:\n`;

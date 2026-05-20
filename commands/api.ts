@@ -19,7 +19,7 @@ import {
   JSONOutputArgs,
   YargsCommandModule,
 } from '../types/Yargs.js';
-import { makeYargsHandlerWithUsageTracking } from '../lib/yargs/makeYargsHandlerWithUsageTracking.js';
+import { makeWrappedYargsHandler } from '../lib/yargs/makeWrappedYargsHandler.js';
 import { makeYargsBuilder } from '../lib/yargsUtils.js';
 import { uiLogger } from '../lib/ui/logger.js';
 
@@ -229,7 +229,7 @@ const apiCommand: YargsCommandModule<unknown, ApiArgs> = {
   command,
   describe,
   builder,
-  handler: makeYargsHandlerWithUsageTracking('api', handler),
+  handler: makeWrappedYargsHandler('api', handler),
 };
 
 export default apiCommand;

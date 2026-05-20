@@ -15,7 +15,7 @@ import {
   EnvironmentArgs,
   YargsCommandModule,
 } from '../../types/Yargs.js';
-import { makeYargsHandlerWithUsageTracking } from '../../lib/yargs/makeYargsHandlerWithUsageTracking.js';
+import { makeWrappedYargsHandler } from '../../lib/yargs/makeWrappedYargsHandler.js';
 import { makeYargsBuilder } from '../../lib/yargsUtils.js';
 
 const command = 'add [name]';
@@ -94,7 +94,7 @@ const builder = makeYargsBuilder<AddSecretArgs>(
 const addSecretCommand: YargsCommandModule<unknown, AddSecretArgs> = {
   command,
   describe,
-  handler: makeYargsHandlerWithUsageTracking('secrets-add', handler),
+  handler: makeWrappedYargsHandler('secrets-add', handler),
   builder,
 };
 

@@ -1,0 +1,118 @@
+# Project-local Codex execution policy for hubspot-cli-private.
+#
+# These rules control which commands Codex can run outside the sandbox. They are
+# not behavioral coding instructions; keep those in AGENTS.md.
+
+prefix_rule(
+    pattern = ["yarn", ["build", "test", "lint:local", "prettier:write", "hs", "why"]],
+    decision = "allow",
+    justification = "Standard Yarn workflows for this TypeScript CLI repo",
+    match = [
+        "yarn build",
+        "yarn test commands/project/__tests__/upload.test.ts",
+        "yarn lint:local",
+        "yarn prettier:write",
+        "yarn hs project upload",
+        "yarn why @hubspot/local-dev-lib",
+    ],
+)
+
+prefix_rule(
+    pattern = ["git", ["status", "diff", "log", "branch", "show"]],
+    decision = "allow",
+    justification = "Read-only Git inspection is safe for normal agent work",
+    match = [
+        "git status --short",
+        "git diff --stat",
+        "git log -1 --oneline",
+        "git branch --show-current",
+        "git show HEAD:package.json",
+    ],
+)
+
+prefix_rule(
+    pattern = ["git", ["commit", "push"]],
+    decision = "prompt",
+    justification = "Committing or pushing changes requires explicit user approval",
+    match = [
+        "git commit -m update-agent-instructions",
+        "git push",
+        "git push -u origin feature/agent-instructions",
+    ],
+)
+
+prefix_rule(
+    pattern = ["gh", "auth", ["status"]],
+    decision = "allow",
+    justification = "Checking GitHub authentication state is read-only",
+    match = [
+        "gh auth status",
+    ],
+)
+
+prefix_rule(
+    pattern = ["gh", "pr", ["view", "diff", "list", "status", "checks"]],
+    decision = "allow",
+    justification = "Read-only PR inspection is safe for review and debugging",
+    match = [
+        "gh pr view 123",
+        "gh pr diff 123",
+        "gh pr list --state open",
+        "gh pr status",
+        "gh pr checks 123",
+    ],
+)
+
+prefix_rule(
+    pattern = ["gh", "issue", ["list", "view"]],
+    decision = "allow",
+    justification = "Read-only issue inspection is safe for triage",
+    match = [
+        "gh issue list --repo HubSpot/hubspot-cli",
+        "gh issue view 123 --repo HubSpot/hubspot-cli",
+    ],
+)
+
+prefix_rule(
+    pattern = ["gh", "search"],
+    decision = "allow",
+    justification = "GitHub search is read-only and useful for issue triage",
+    match = [
+        "gh search issues repo:HubSpot/hubspot-cli upload",
+    ],
+)
+
+prefix_rule(
+    pattern = ["gh", "pr", ["create", "comment", "review", "merge", "close", "edit"]],
+    decision = "prompt",
+    justification = "PR mutations and comments require explicit user approval",
+    match = [
+        "gh pr create --draft --title update-agent-instructions",
+        "gh pr comment 123 --body Thanks",
+        "gh pr review 123 --approve",
+        "gh pr merge 123",
+        "gh pr close 123",
+        "gh pr edit 123 --add-label bug",
+    ],
+)
+
+prefix_rule(
+    pattern = ["gh", "issue", ["comment", "close", "edit", "reopen"]],
+    decision = "prompt",
+    justification = "Issue mutations and comments require explicit user approval",
+    match = [
+        "gh issue comment 123 --body Thanks",
+        "gh issue close 123",
+        "gh issue edit 123 --add-label bug",
+        "gh issue reopen 123",
+    ],
+)
+
+prefix_rule(
+    pattern = ["gh", "api"],
+    decision = "prompt",
+    justification = "GitHub API calls can mutate data depending on method and path",
+    match = [
+        "gh api repos/HubSpot/hubspot-cli/pulls/123",
+    ],
+)
