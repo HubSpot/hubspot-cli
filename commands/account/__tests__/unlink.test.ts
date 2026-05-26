@@ -81,17 +81,9 @@ describe('commands/account/unlink', () => {
   });
 
   describe('describe', () => {
-    // TODO: uncomment these tests (and remove the one below it) after we unhide the unlink command
-    // it('should provide a description', () => {
-    //   expect(unlinkCommand.describe).toBeDefined();
-    //   expect(unlinkCommand.describe).toEqual(
-    //     commands.account.subcommands.unlink.describe
-    //   );
-    // });
-
-    it('should not provide a description', () => {
-      expect(unlinkCommand.describe).not.toBeDefined();
-      expect(unlinkCommand.describe).not.toEqual(
+    it('should provide a description', () => {
+      expect(unlinkCommand.describe).toBeDefined();
+      expect(unlinkCommand.describe).toEqual(
         commands.account.subcommands.unlink.describe
       );
     });

@@ -21,9 +21,7 @@ import { DEFAULT_HS_SETTINGS_PATH } from '@hubspot/local-dev-lib/constants/confi
 import { makeWrappedYargsHandler } from '../../lib/yargs/makeWrappedYargsHandler.js';
 
 const command = 'unlink';
-// Hide the command until we're done testing and ready to make linking GA
-// const describe = commands.account.subcommands.link.describe;
-const describe = undefined;
+const describe = commands.account.subcommands.unlink.describe;
 
 async function handler(args: ArgumentsCamelCase<LinkArgs>): Promise<void> {
   const { exit } = args;
