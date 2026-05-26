@@ -98,17 +98,9 @@ describe('commands/account/link', () => {
   });
 
   describe('describe', () => {
-    // TODO: uncomment these tests (and remove the one below it) after we unhide the link command
-    // it('should provide a description', () => {
-    //   expect(linkCommand.describe).toBeDefined();
-    //   expect(linkCommand.describe).toEqual(
-    //     commands.account.subcommands.link.describe
-    //   );
-    // });
-
-    it('should not provide a description', () => {
-      expect(linkCommand.describe).not.toBeDefined();
-      expect(linkCommand.describe).not.toEqual(
+    it('should provide a description', () => {
+      expect(linkCommand.describe).toBeDefined();
+      expect(linkCommand.describe).toEqual(
         commands.account.subcommands.link.describe
       );
     });
