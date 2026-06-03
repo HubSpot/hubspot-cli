@@ -42,10 +42,13 @@ export async function runCommandInDir(
     finalCommand = addFlag(finalCommand, 'disable-usage-tracking', true);
   }
 
+  const resolvedDir = path.resolve(directory);
+
   return execAsync(finalCommand, {
-    cwd: path.resolve(directory),
+    cwd: resolvedDir,
     env: {
       ...process.env,
+      INIT_CWD: resolvedDir,
     },
   });
 }

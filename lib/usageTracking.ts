@@ -4,7 +4,11 @@ import {
   getConfigFilePath,
   getGlobalConfigFilePath,
 } from '@hubspot/local-dev-lib/config';
-import { API_KEY_AUTH_METHOD } from '@hubspot/local-dev-lib/constants/auth';
+import {
+  API_KEY_AUTH_METHOD,
+  PERSONAL_ACCESS_KEY_AUTH_METHOD,
+} from '@hubspot/local-dev-lib/constants/auth';
+import { getAccessToken } from '@hubspot/local-dev-lib/personalAccessKey';
 import { uiLogger } from './ui/logger.js';
 import { pkg } from './jsonLoader.js';
 import { debugError } from './errorHandlers/index.js';
@@ -14,6 +18,7 @@ import {
   type UsageTrackingMeta,
   type ConfigType,
   type ExecutionSource,
+  type UsageTrackingRequest,
 } from './api/usageTracking.js';
 
 export type {
@@ -89,6 +94,33 @@ export function getExecutionEnvironmentMeta(): {
     configType: getConfigType(),
     executionSource: getExecutionSource(),
   };
+}
+
+async function getUsageTrackingUserId(
+  accountId?: number
+): Promise<number | undefined> {
+  if (!accountId) {
+    return undefined;
+  }
+
+  try {
+    const accountConfig = getConfigAccountById(accountId);
+    if (accountConfig.authType !== PERSONAL_ACCESS_KEY_AUTH_METHOD.value) {
+      return undefined;
+    }
+
+    const accessToken = await getAccessToken(
+      accountConfig.personalAccessKey,
+      accountConfig.env,
+      accountConfig.accountId
+    );
+
+    return typeof accessToken.userId === 'number'
+      ? accessToken.userId
+      : undefined;
+  } catch (_e) {
+    return undefined;
+  }
 }
 
 export async function trackCommandUsage(
@@ -242,13 +274,20 @@ async function trackCliInteraction({
     };
 
     try {
-      uiLogger.debug('Sent usage tracking command event:', usageTrackingEvent);
-      await sendUsageEvent({
+      const userId = await getUsageTrackingUserId(accountId);
+      const request: UsageTrackingRequest = {
         eventName: 'cli-interaction',
         eventClass: EventClass.INTERACTION,
         meta: usageTrackingEvent,
         accountId,
-      });
+      };
+
+      if (userId !== undefined) {
+        request.userId = userId;
+      }
+
+      uiLogger.debug('Sent usage tracking command event:', usageTrackingEvent);
+      await sendUsageEvent(request);
     } catch (error) {
       debugError(error);
     }

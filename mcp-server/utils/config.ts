@@ -7,6 +7,8 @@ export function setupHubSpotConfig(
     return;
   }
 
+  process.env.INIT_CWD = absoluteCurrentWorkingDirectory;
+
   const configPath = getLocalConfigFilePathIfExists(
     absoluteCurrentWorkingDirectory
   );

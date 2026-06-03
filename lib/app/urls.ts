@@ -1,5 +1,6 @@
 import { getHubSpotWebsiteOrigin } from '@hubspot/local-dev-lib/urls';
 import { Environment } from '@hubspot/local-dev-lib/types/Accounts';
+import { getBaseHubSpotUrlForAccount } from '../projects/urls.js';
 
 type PrivateAppInstallUrlArgs = {
   targetAccountId: number;
@@ -47,4 +48,21 @@ export function getAppCardSetupUrl({
 }: PrivateAppInstallUrlArgs): string {
   const websiteOrigin = getHubSpotWebsiteOrigin(env);
   return `${websiteOrigin}/integrations-settings/${targetAccountId}/installed/framework/${appId}/app-cards?tourId=get-started`;
+}
+
+export function getAppLogsUrl(
+  accountId: number,
+  appId: number,
+  systemType: string
+): string {
+  return `${getBaseHubSpotUrlForAccount(accountId)}/developer-monitoring/${accountId}/?logType=${systemType}&appId=${appId}`;
+}
+
+export function getAppLogDetailsUrl(
+  accountId: number,
+  appId: number,
+  systemType: string,
+  logId: string
+): string {
+  return `${getAppLogsUrl(accountId, appId, systemType)}&logId=${logId}`;
 }

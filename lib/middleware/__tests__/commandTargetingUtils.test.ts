@@ -77,6 +77,11 @@ describe('lib/middleware/commandTargetingUtils', () => {
       expect(result).toBe(false);
     });
 
+    it('should return false for project lint, which runs locally without a config', () => {
+      const result = shouldLoadConfigForCommand(['project', 'lint']);
+      expect(result).toBe(false);
+    });
+
     it('should return false when the user is trying to migrate the global config', () => {
       globalConfigFileExistsSpy.mockReturnValue(false);
 
@@ -112,6 +117,11 @@ describe('lib/middleware/commandTargetingUtils', () => {
       expect(result2).toBe(false);
       expect(result3).toBe(false);
     });
+
+    it('should return false for project lint', () => {
+      const result = shouldRunAccountValidationForCommand(['project', 'lint']);
+      expect(result).toBe(false);
+    });
   });
 
   describe('shouldRunConfigValidationForCommand()', () => {
@@ -122,6 +132,11 @@ describe('lib/middleware/commandTargetingUtils', () => {
 
     it('should return false for a command that does not require config validation', () => {
       const result = shouldRunConfigValidationForCommand(['init']);
+      expect(result).toBe(false);
+    });
+
+    it('should return false for project lint', () => {
+      const result = shouldRunConfigValidationForCommand(['project', 'lint']);
       expect(result).toBe(false);
     });
   });

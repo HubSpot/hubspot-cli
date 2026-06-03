@@ -1,9 +1,6 @@
-import { http } from '@hubspot/local-dev-lib/http';
 import { http as unauthedHttp } from '@hubspot/local-dev-lib/http/unauthed';
-import { getConfigAccountById } from '@hubspot/local-dev-lib/config';
 
 const USAGE_PATH = 'local/dev/tools/proxy/v1/usage';
-const USAGE_AUTHENTICATED_PATH = `${USAGE_PATH}/authenticated`;
 
 export type ConfigType = 'local' | 'global';
 export type ExecutionSource = 'ci' | 'mcp' | 'user';
@@ -31,6 +28,7 @@ export type UsageTrackingMeta = {
 export type UsageTrackingRequest = {
   portalId?: number;
   accountId?: number;
+  userId?: number;
   eventName: string;
   eventClass: string;
   meta: UsageTrackingMeta;
@@ -39,21 +37,6 @@ export type UsageTrackingRequest = {
 export async function sendUsageEvent(
   request: UsageTrackingRequest
 ): Promise<void> {
-  const { accountId } = request;
-
-  if (accountId) {
-    try {
-      const account = getConfigAccountById(accountId);
-      if (account?.authType === 'personalaccesskey') {
-        await http.post(accountId, {
-          url: USAGE_AUTHENTICATED_PATH,
-          data: request,
-        });
-        return;
-      }
-    } catch (_e) {}
-  }
-
   try {
     await unauthedHttp.post({
       url: USAGE_PATH,

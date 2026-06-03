@@ -21,7 +21,7 @@ import {
   getSandboxPersonalAccessKey,
 } from '@hubspot/local-dev-lib/api/sandboxHubs';
 import { HUBSPOT_ACCOUNT_TYPES } from '@hubspot/local-dev-lib/constants/config';
-import { personalAccessKeyPrompt } from '../prompts/personalAccessKeyPrompt.js';
+import { legacyPersonalAccessKeyPrompt as personalAccessKeyPrompt } from '../prompts/personalAccessKeyPrompt.js';
 import { cliAccountNamePrompt } from '../prompts/accountNamePrompt.js';
 import * as buildAccount from '../buildAccount.js';
 import { poll } from '../polling.js';

@@ -5,6 +5,7 @@ import {
   localConfigFileExists,
   globalConfigFileExists,
   setConfigAccountAsDefault,
+  getConfigDefaultAccountIfExists,
 } from '@hubspot/local-dev-lib/config';
 import {
   getAccessToken,
@@ -18,9 +19,10 @@ import {
 } from '@hubspot/local-dev-lib/types/Accounts';
 import { PERSONAL_ACCESS_KEY_AUTH_METHOD } from '@hubspot/local-dev-lib/constants/auth';
 import { handleMerge, handleMigration } from '../configMigrate.js';
-import { personalAccessKeyPrompt } from '../prompts/personalAccessKeyPrompt.js';
+import { legacyPersonalAccessKeyPrompt as personalAccessKeyPrompt } from '../prompts/personalAccessKeyPrompt.js';
 import { cliAccountNamePrompt } from '../prompts/accountNamePrompt.js';
 import { setAsDefaultAccountPrompt } from '../prompts/setAsDefaultAccountPrompt.js';
+import { awaitPersonalAccessKeyOverWebsocket } from '../auth/awaitPersonalAccessKeyOverWebsocket.js';
 import { authenticateNewAccount } from '../accountAuth.js';
 import { Mock } from 'vitest';
 
@@ -32,6 +34,7 @@ vi.mock('../errorHandlers/index.js');
 vi.mock('../prompts/personalAccessKeyPrompt.js');
 vi.mock('../prompts/accountNamePrompt.js');
 vi.mock('../prompts/setAsDefaultAccountPrompt.js');
+vi.mock('../auth/awaitPersonalAccessKeyOverWebsocket.js');
 vi.mock('../ui/logger.js', () => ({
   uiLogger: {
     log: vi.fn(),
@@ -46,6 +49,8 @@ const mockedGetConfigFilePath = getConfigFilePath as Mock;
 const mockedLocalConfigFileExists = localConfigFileExists as Mock;
 const mockedGlobalConfigFileExists = globalConfigFileExists as Mock;
 const mockedSetConfigAccountAsDefault = setConfigAccountAsDefault as Mock;
+const mockedGetConfigDefaultAccountIfExists =
+  getConfigDefaultAccountIfExists as Mock;
 const mockedGetAccessToken = getAccessToken as Mock;
 const mockedUpdateConfigWithAccessToken = updateConfigWithAccessToken as Mock;
 const mockedToKebabCase = toKebabCase as Mock;
@@ -54,6 +59,8 @@ const mockedHandleMigration = handleMigration as Mock;
 const mockedPersonalAccessKeyPrompt = personalAccessKeyPrompt as Mock;
 const mockedCliAccountNamePrompt = cliAccountNamePrompt as Mock;
 const mockedSetAsDefaultAccountPrompt = setAsDefaultAccountPrompt as Mock;
+const mockedAwaitPersonalAccessKeyOverWebsocket =
+  awaitPersonalAccessKeyOverWebsocket as Mock;
 
 describe('lib/accountAuth', () => {
   describe('authenticateNewAccount()', () => {
@@ -83,8 +90,11 @@ describe('lib/accountAuth', () => {
       },
     };
 
+    const originalBrowserEnv = process.env.BROWSER;
+
     beforeEach(() => {
       vi.clearAllMocks();
+      delete process.env.BROWSER;
       mockedLocalConfigFileExists.mockReturnValue(false);
       mockedGlobalConfigFileExists.mockReturnValue(false);
       mockedGetAccessToken.mockResolvedValue(mockAccessToken);
@@ -95,6 +105,15 @@ describe('lib/accountAuth', () => {
       mockedPersonalAccessKeyPrompt.mockResolvedValue({
         personalAccessKey: 'test-key',
       });
+      mockedAwaitPersonalAccessKeyOverWebsocket.mockResolvedValue('test-key');
+    });
+
+    afterEach(() => {
+      if (originalBrowserEnv === undefined) {
+        delete process.env.BROWSER;
+      } else {
+        process.env.BROWSER = originalBrowserEnv;
+      }
     });
 
     it('should create config file if it does not exist', async () => {
@@ -132,17 +151,51 @@ describe('lib/accountAuth', () => {
       expect(mockedGetAccessToken).toHaveBeenCalledWith('test-key', 'prod');
     });
 
-    it('should prompt for personal access key if not provided', async () => {
+    it('should request personal access key over websocket if not provided', async () => {
       await authenticateNewAccount({
         env: 'prod' as Environment,
         accountId: 123456,
       });
 
+      expect(mockedAwaitPersonalAccessKeyOverWebsocket).toHaveBeenCalledWith({
+        env: 'prod',
+        account: 123456,
+      });
+      expect(mockedPersonalAccessKeyPrompt).not.toHaveBeenCalled();
+      expect(mockedGetAccessToken).toHaveBeenCalledWith('test-key', 'prod');
+    });
+
+    it('should fall back to the paste prompt if the websocket flow fails', async () => {
+      mockedAwaitPersonalAccessKeyOverWebsocket.mockRejectedValue(
+        new Error('timeout')
+      );
+
+      await authenticateNewAccount({
+        env: 'prod' as Environment,
+        accountId: 123456,
+      });
+
+      expect(mockedAwaitPersonalAccessKeyOverWebsocket).toHaveBeenCalled();
       expect(mockedPersonalAccessKeyPrompt).toHaveBeenCalledWith({
         env: 'prod',
         account: 123456,
       });
       expect(mockedGetAccessToken).toHaveBeenCalledWith('test-key', 'prod');
+    });
+
+    it('should skip the websocket flow when BROWSER is none', async () => {
+      process.env.BROWSER = 'none';
+
+      await authenticateNewAccount({
+        env: 'prod' as Environment,
+        accountId: 123456,
+      });
+
+      expect(mockedAwaitPersonalAccessKeyOverWebsocket).not.toHaveBeenCalled();
+      expect(mockedPersonalAccessKeyPrompt).toHaveBeenCalledWith({
+        env: 'prod',
+        account: 123456,
+      });
     });
 
     it('should prompt for account name if config does not exist', async () => {
@@ -157,6 +210,60 @@ describe('lib/accountAuth', () => {
       expect(mockedCliAccountNamePrompt).toHaveBeenCalledWith('test-hub');
     });
 
+    it('should use provided account name without prompting', async () => {
+      mockedGlobalConfigFileExists.mockReturnValue(false);
+
+      await authenticateNewAccount({
+        env: 'prod' as Environment,
+        providedPersonalAccessKey: 'test-key',
+        accountId: 123456,
+        accountName: 'my-account',
+      });
+
+      expect(mockedCliAccountNamePrompt).not.toHaveBeenCalled();
+      expect(mockedUpdateConfigWithAccessToken).toHaveBeenCalledWith(
+        expect.anything(),
+        'test-key',
+        'prod',
+        'my-account',
+        true
+      );
+    });
+
+    it('should use the default name without prompting when useDefaultAccountName is true', async () => {
+      mockedGlobalConfigFileExists.mockReturnValue(false);
+
+      await authenticateNewAccount({
+        env: 'prod' as Environment,
+        providedPersonalAccessKey: 'test-key',
+        accountId: 123456,
+        useDefaultAccountName: true,
+      });
+
+      expect(mockedCliAccountNamePrompt).not.toHaveBeenCalled();
+      expect(mockedUpdateConfigWithAccessToken).toHaveBeenCalledWith(
+        expect.anything(),
+        'test-key',
+        'prod',
+        'test-hub',
+        true
+      );
+    });
+
+    it('should fall back to the prompt when useDefaultAccountName is true but no hub name exists', async () => {
+      mockedGlobalConfigFileExists.mockReturnValue(false);
+      mockedToKebabCase.mockReturnValue(undefined);
+
+      await authenticateNewAccount({
+        env: 'prod' as Environment,
+        providedPersonalAccessKey: 'test-key',
+        accountId: 123456,
+        useDefaultAccountName: true,
+      });
+
+      expect(mockedCliAccountNamePrompt).toHaveBeenCalled();
+    });
+
     it('should not prompt for account name if config already exists', async () => {
       mockedGlobalConfigFileExists.mockReturnValue(true);
 
@@ -169,8 +276,28 @@ describe('lib/accountAuth', () => {
       expect(mockedCliAccountNamePrompt).not.toHaveBeenCalled();
     });
 
+    it('should not prompt for account name when reauthenticating with existing config and no flags', async () => {
+      mockedGlobalConfigFileExists.mockReturnValue(true);
+
+      await authenticateNewAccount({
+        env: 'prod' as Environment,
+        providedPersonalAccessKey: 'test-key',
+        accountId: 123456,
+      });
+
+      expect(mockedCliAccountNamePrompt).not.toHaveBeenCalled();
+      expect(mockedUpdateConfigWithAccessToken).toHaveBeenCalledWith(
+        expect.anything(),
+        'test-key',
+        'prod',
+        undefined,
+        false
+      );
+    });
+
     it('should set account as default when setAsDefaultAccount is true', async () => {
       mockedGlobalConfigFileExists.mockReturnValue(true);
+      mockedGetConfigDefaultAccountIfExists.mockReturnValue(undefined);
 
       await authenticateNewAccount({
         env: 'prod' as Environment,
@@ -180,6 +307,36 @@ describe('lib/accountAuth', () => {
       });
 
       expect(mockedSetConfigAccountAsDefault).toHaveBeenCalledWith('test-hub');
+    });
+
+    it('should not set as default when setAsDefaultAccount is true but account is already default', async () => {
+      mockedGlobalConfigFileExists.mockReturnValue(true);
+      mockedGetConfigDefaultAccountIfExists.mockReturnValue({
+        name: 'test-hub',
+      });
+
+      await authenticateNewAccount({
+        env: 'prod' as Environment,
+        providedPersonalAccessKey: 'test-key',
+        accountId: 123456,
+        setAsDefaultAccount: true,
+      });
+
+      expect(mockedSetConfigAccountAsDefault).not.toHaveBeenCalled();
+    });
+
+    it('should skip the default prompt when setAsDefaultAccount is false', async () => {
+      mockedGlobalConfigFileExists.mockReturnValue(true);
+
+      await authenticateNewAccount({
+        env: 'prod' as Environment,
+        providedPersonalAccessKey: 'test-key',
+        accountId: 123456,
+        setAsDefaultAccount: false,
+      });
+
+      expect(mockedSetConfigAccountAsDefault).not.toHaveBeenCalled();
+      expect(mockedSetAsDefaultAccountPrompt).not.toHaveBeenCalled();
     });
 
     it('should prompt to set as default when setAsDefaultAccount is not provided and config exists', async () => {

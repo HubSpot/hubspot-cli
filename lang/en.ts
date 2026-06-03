@@ -2,7 +2,14 @@ import chalk from 'chalk';
 import { mapToUserFriendlyName } from '@hubspot/project-parsing-lib/transform';
 import { PLATFORM_VERSIONS } from '@hubspot/project-parsing-lib/constants';
 import { PERSONAL_ACCESS_KEY_AUTH_METHOD } from '@hubspot/local-dev-lib/constants/auth';
-import { LOCAL_DEV_DEFAULT_PORT } from '../lib/constants.js';
+import {
+  APP_AUTH_TYPES,
+  APP_DISTRIBUTION_TYPES,
+  LEGACY_PUBLIC_APP_FILE,
+  LOCAL_DEV_DEFAULT_PORT,
+  PROJECT_CONFIG_FILE,
+  PROJECT_WITH_APP,
+} from '../lib/constants.js';
 import {
   ARCHIVED_HUBSPOT_CONFIG_YAML_FILE_NAME,
   DEFAULT_HUBSPOT_CONFIG_YAML_FILE_NAME,
@@ -23,13 +30,6 @@ import {
   getProjectSettingsUrl,
 } from '../lib/projects/urls.js';
 import { getProductUpdatesUrl } from '../lib/links.js';
-import {
-  APP_AUTH_TYPES,
-  APP_DISTRIBUTION_TYPES,
-  LEGACY_PUBLIC_APP_FILE,
-  PROJECT_CONFIG_FILE,
-  PROJECT_WITH_APP,
-} from '../lib/constants.js';
 import { HubSpotConfigAccount } from '@hubspot/local-dev-lib/types/Accounts';
 
 export const commands = {
@@ -173,6 +173,10 @@ export const commands = {
         options: {
           account: 'HubSpot account to authenticate',
           personalAccessKey: 'Enter existing personal access key',
+          default: 'Set the authenticated account as the default account',
+          name: 'Set a name for the account in the CLI config',
+          useDefaultName:
+            'Use the account name derived from the HubSpot portal name',
         },
         errors: {
           invalidAccountIdProvided: `--account must be a number.`,
@@ -2577,6 +2581,8 @@ export const commands = {
       },
       skippingDirectoriesWarning: (directories: string[]) =>
         `Skipping linting for the following ${directories.length === 1 ? 'directory' : 'directories'}:\n${directories.map(d => `  - ${d}`).join('\n')}`,
+      skippedDirectoriesError: (directoryCount: number) =>
+        `Linting could not run for ${directoryCount === 1 ? 'the directory' : 'the directories'} above because the required dependencies are missing. Run ${uiCommandReference('hs project lint --install-missing-deps')} to install them.`,
       deprecatedEslintConfigWarning: (
         details: { path: string; files: string[] }[]
       ) => {
@@ -3055,6 +3061,113 @@ export const commands = {
               'Update a secret named "my-secret" for the app with ID 1234567890',
             success: (appName: string, secretName: string) =>
               `App secret "${secretName}" was updated in "${appName}"`,
+          },
+        },
+      },
+      logs: {
+        describe: 'View recent application logs.',
+        verboseDescribe: `View recent application logs for a specific log type.\n\nFilter by time range with ${uiCommandReference('--since')} (e.g. 1h, 30m, 2d, or an ISO timestamp). Use ${uiCommandReference('--tail')} to follow logs in real-time, ${uiCommandReference('--compact')} for one-line-per-log output, or ${uiCommandReference('--json')} for machine-readable output.\n\nRun ${uiCommandReference('hs app log-details <logId>')} to inspect a specific log entry.`,
+        options: {
+          appId: 'App ID',
+          type: 'Log type',
+          json: 'Output logs as JSON',
+          limit: 'Maximum number of logs to return',
+          since: 'Filter logs by time ago (1h, 30m, 2d, or ISO timestamp)',
+          tail: 'Follow logs in real-time',
+          errorsOnly: 'Only show error logs',
+          compact: 'Display logs in compact format (one line per log)',
+        },
+        errors: {
+          noLogs:
+            'No logs found. Try a wider time range (--since) or remove --errors-only to see all logs.',
+          noApps: `No apps found. Create an app with ${uiCommandReference('hs project create')}.`,
+        },
+        prompts: {
+          selectType: '[--type] Select the type of logs to view:',
+        },
+        examples: {
+          basic: 'Fetch webhook logs for app 123456',
+          since: 'Fetch logs from the last hour',
+          tail: 'Follow logs in real-time',
+          json: 'Output logs as JSON',
+          compact: 'Display logs in compact format',
+        },
+        outputMessages: {
+          viewInHubSpot: (url: string) => uiLink('View in HubSpot', url),
+          tableHeaders: {
+            appId: 'App ID',
+            type: 'Type',
+            logsFound: 'Logs Found',
+          },
+          logDetails: {
+            id: 'ID',
+            duration: 'Duration',
+            portal: 'Portal',
+            trace: 'Trace',
+            error: 'Error',
+            viewDetails: (logId: string, appId: number, systemType: string) =>
+              `To view more details, run: ${uiCommandReference(`hs app log-details ${logId} --app=${appId} --type=${systemType}`)}`,
+            viewInUI: (url: string) => uiLink('View details in UI', url),
+          },
+          tailMessages: {
+            following: (appId: number) => `Following logs for app ${appId}`,
+            stop: `> Press ${chalk.bold('q')} to stop following`,
+          },
+        },
+      },
+      logDetails: {
+        describe: 'View details for a specific log entry.',
+        verboseDescribe: `View full details for a specific app log entry, including request/response bodies, context information, and error details.\n\nUse ${uiCommandReference('--json')} for machine-readable output.`,
+        positionals: {
+          logId: 'The log ID to fetch details for',
+        },
+        options: {
+          appId: 'App ID',
+          type: 'Log type',
+          json: 'Output details as JSON',
+        },
+        errors: {
+          noApps: `No apps found. Create an app with ${uiCommandReference('hs project create')}.`,
+        },
+        prompts: {
+          selectType: '[--type] Select the log type:',
+        },
+        examples: {
+          basic: 'Fetch details for log abc-123',
+          json: 'Output log details as JSON',
+        },
+        outputMessages: {
+          viewInHubSpot: (url: string) => uiLink('View in HubSpot', url),
+          logDetailsHeader: 'Log Details',
+          basicInfo: {
+            id: 'Log ID',
+            timestamp: 'Timestamp',
+            status: 'Status',
+            duration: 'Duration',
+            systemType: 'Type',
+          },
+          contextInfo: {
+            header: 'Context',
+            portalId: 'Portal ID',
+            traceId: 'Trace ID',
+            function: 'Function',
+            location: 'Location',
+            card: 'Card',
+            userId: 'User ID',
+          },
+          requestResponse: {
+            header: 'Request/Response',
+            requestBody: 'Request Body',
+            responseBody: 'Response Body',
+          },
+          errorInfo: {
+            header: 'Error Details',
+            errorType: 'Type',
+            errorMessage: 'Message',
+            stackTrace: 'Stack Trace',
+          },
+          additionalInfo: {
+            header: 'Additional Information',
           },
         },
       },
@@ -4256,6 +4369,15 @@ export const lib = {
     oauthAppRedirectUrlError: (redirectUrl: string) =>
       `${chalk.bold('No reponse from your OAuth service:')} ${redirectUrl}\nYour app needs a valid OAuth2 service to be installed for local dev. ${uiLink('Learn more', 'https://developers.hubspot.com/docs/apps/developer-platform/build-apps/authentication/oauth/working-with-oauth')}`,
   },
+  accountAuthWebsocket: {
+    logs: {
+      openingWebBrowser: (url: string) =>
+        `Opening ${uiLink('HubSpot', url)} in your web browser\n`,
+      spinner:
+        'Waiting for HubSpot to send your personal access key... (press any key to enter it manually)',
+      received: 'Personal access key received',
+    },
+  },
   CLIWebsocketServer: {
     errors: {
       portManagerNotRunning: (prefix?: string) =>
@@ -4268,6 +4390,8 @@ export const lib = {
         `Unsupported message received. Invalid JSON: ${data}`,
       unknownMessageType: (type: string) =>
         `Unsupported message received. Unknown message type: ${type}`,
+      failedToBindEphemeralPort: (prefix?: string) =>
+        `${prefix ? `${prefix} ` : ''}Failed to determine the assigned port for the WebsocketServer.`,
     },
     logs: {
       startup: (port: number) => `WebsocketServer running on port ${port}`,
@@ -4944,7 +5068,8 @@ export const lib = {
         `[--function] Select function in ${chalk.bold(projectName)} project`,
     },
     setAsDefaultAccountPrompt: {
-      setAsDefaultAccountMessage: 'Set this account as the default?',
+      setAsDefaultAccountMessage: (accountName: string) =>
+        `Set ${accountName} as your default account? [--default]`,
       setAsDefaultAccount: (accountName: string) =>
         `Account "${accountName}" set as the default account`,
       keepingCurrentDefault: (accountName: string | number) =>

@@ -48,11 +48,8 @@ export type OauthPromptResponse = AccountNamePromptResponse &
   ClientSecretPromptResponse &
   ScopesPromptResponse;
 
-/**
- * Displays notification to user that we are about to open the browser,
- * then opens their browser to the personal-access-key shortlink
- */
-export async function personalAccessKeyPrompt({
+// Full PAK flow: browser-open menu + paste. Used by commands that haven't adopted websocket PAK delivery.
+export async function legacyPersonalAccessKeyPrompt({
   env,
   account,
 }: {
@@ -105,6 +102,13 @@ export async function personalAccessKeyPrompt({
     personalAccessKey,
     env,
   };
+}
+
+// Paste-only: shows the masked input directly. Used by hs account auth after the browser is already open via websocket.
+export async function personalAccessKeyPrompt(): Promise<string> {
+  const { personalAccessKey } =
+    await promptUser<PersonalAccessKeyPromptResponse>(PERSONAL_ACCESS_KEY);
+  return personalAccessKey;
 }
 
 const ACCOUNT_ID: PromptConfig<AccountIdPromptResponse> = {

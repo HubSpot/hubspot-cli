@@ -39,9 +39,15 @@ type DirectoryCall = {
   filter?: (file: EntryData) => false | EntryData;
 };
 
+type FileCall = {
+  sourcePath: string;
+  name: string;
+};
+
 function createMockArchive() {
   const directoryCalls: DirectoryCall[] = [];
   const appendCalls: Array<{ content: string; name: string }> = [];
+  const fileCalls: FileCall[] = [];
 
   const mock = {
     directory: vi.fn(
@@ -58,12 +64,17 @@ function createMockArchive() {
       appendCalls.push({ content: content as string, name: opts.name });
       return mock;
     }),
+    file: vi.fn((sourcePath: string, opts: { name: string }) => {
+      fileCalls.push({ sourcePath, name: opts.name });
+      return mock;
+    }),
   };
 
   return {
     archive: mock as unknown as Archiver,
     directoryCalls,
     appendCalls,
+    fileCalls,
   };
 }
 
@@ -256,6 +267,8 @@ describe('archiveWorkspacesAndDependencies', () => {
           packageName: '@company/logger',
           localPath: '/external/logger',
           sourcePackageJsonPath: '/project/src/app/package.json',
+          kind: 'directory',
+          protocol: 'file',
         },
       ];
 
@@ -275,9 +288,10 @@ describe('archiveWorkspacesAndDependencies', () => {
       const fileDepsMap = result.packageFileDeps.get(
         '/project/src/app/package.json'
       );
-      expect(fileDepsMap!.get('@company/logger')).toBe(
-        `../${computeExternalArchivePath('/external/logger')}`
-      );
+      expect(fileDepsMap!.get('@company/logger')).toEqual({
+        archivePath: `../${computeExternalArchivePath('/external/logger')}`,
+        protocol: 'file',
+      });
     });
 
     it('skips internal file dependency', async () => {
@@ -287,6 +301,8 @@ describe('archiveWorkspacesAndDependencies', () => {
           packageName: '@internal/utils',
           localPath: '/project/src/packages/utils',
           sourcePackageJsonPath: '/project/src/app/package.json',
+          kind: 'directory',
+          protocol: 'file',
         },
       ];
 
@@ -314,6 +330,8 @@ describe('archiveWorkspacesAndDependencies', () => {
           packageName: 'shared-lib',
           localPath: '/external/shared-lib',
           sourcePackageJsonPath: '/project/src/app/package.json',
+          kind: 'directory',
+          protocol: 'file',
         },
       ];
 
@@ -330,9 +348,10 @@ describe('archiveWorkspacesAndDependencies', () => {
         '/project/src/app/package.json'
       );
       expect(fileDepsMap).toBeDefined();
-      expect(fileDepsMap!.get('shared-lib')).toBe(
-        `../${computeExternalArchivePath('/external/shared-lib')}`
-      );
+      expect(fileDepsMap!.get('shared-lib')).toEqual({
+        archivePath: `../${computeExternalArchivePath('/external/shared-lib')}`,
+        protocol: 'file',
+      });
     });
 
     it('deduplicates external file dep from multiple package.jsons', async () => {
@@ -342,11 +361,15 @@ describe('archiveWorkspacesAndDependencies', () => {
           packageName: 'shared',
           localPath: '/external/shared',
           sourcePackageJsonPath: '/project/src/app1/package.json',
+          kind: 'directory',
+          protocol: 'file',
         },
         {
           packageName: 'shared',
           localPath: '/external/shared',
           sourcePackageJsonPath: '/project/src/app2/package.json',
+          kind: 'directory',
+          protocol: 'file',
         },
       ];
 
@@ -365,7 +388,329 @@ describe('archiveWorkspacesAndDependencies', () => {
       const fileDeps2 = result.packageFileDeps.get(
         '/project/src/app2/package.json'
       );
-      expect(fileDeps1!.get('shared')).toBe(fileDeps2!.get('shared'));
+      expect(fileDeps1!.get('shared')).toEqual(fileDeps2!.get('shared'));
+    });
+  });
+
+  describe('tarball file dependency archiving', () => {
+    it('archives external tarball via archive.file with original filename', async () => {
+      const { archive, directoryCalls, fileCalls } = createMockArchive();
+      const fileDeps: FileDependencyMapping[] = [
+        {
+          packageName: '@company/flywheel-sdk',
+          localPath: '/external/sdk/flywheel-sdk-1.2.3.tgz',
+          sourcePackageJsonPath: '/project/src/app/package.json',
+          kind: 'tarball',
+          protocol: 'file',
+        },
+      ];
+
+      const result = await archiveWorkspacesAndDependencies(
+        archive,
+        srcDir,
+        [],
+        fileDeps
+      );
+
+      expect(directoryCalls).toHaveLength(0);
+      expect(fileCalls).toHaveLength(1);
+      expect(fileCalls[0].sourcePath).toBe(
+        '/external/sdk/flywheel-sdk-1.2.3.tgz'
+      );
+      expect(fileCalls[0].name).toMatch(
+        /^_workspaces\/flywheel-sdk-1\.2\.3-[a-f0-9]{8}\/flywheel-sdk-1\.2\.3\.tgz$/
+      );
+
+      const fileDepsMap = result.packageFileDeps.get(
+        '/project/src/app/package.json'
+      );
+      const entry = fileDepsMap!.get('@company/flywheel-sdk');
+      expect(entry!.protocol).toBe('file');
+      expect(entry!.archivePath).toMatch(
+        /^\.\.\/_workspaces\/flywheel-sdk-1\.2\.3-[a-f0-9]{8}\/flywheel-sdk-1\.2\.3\.tgz$/
+      );
+    });
+
+    it('does not call getPackableFiles for tarball deps', async () => {
+      const { archive } = createMockArchive();
+      const fileDeps: FileDependencyMapping[] = [
+        {
+          packageName: 'foo',
+          localPath: '/external/foo.tgz',
+          sourcePackageJsonPath: '/project/src/app/package.json',
+          kind: 'tarball',
+          protocol: 'file',
+        },
+      ];
+
+      await archiveWorkspacesAndDependencies(archive, srcDir, [], fileDeps);
+
+      expect(getPackableFiles).not.toHaveBeenCalled();
+    });
+
+    it('rewrites package.json with file: prefix preserved for tarball', async () => {
+      const packageJsonPath = '/project/src/app/package.json';
+      vi.spyOn(fs, 'existsSync').mockImplementation(p => p === packageJsonPath);
+      vi.spyOn(fs, 'readFileSync').mockReturnValue(
+        JSON.stringify({
+          name: 'my-app',
+          dependencies: {
+            '@company/sdk': 'file:../../external/sdk/sdk-1.0.0.tgz',
+          },
+        })
+      );
+
+      const { archive, appendCalls } = createMockArchive();
+      const fileDeps: FileDependencyMapping[] = [
+        {
+          packageName: '@company/sdk',
+          localPath: '/external/sdk/sdk-1.0.0.tgz',
+          sourcePackageJsonPath: packageJsonPath,
+          kind: 'tarball',
+          protocol: 'file',
+        },
+      ];
+
+      await archiveWorkspacesAndDependencies(archive, srcDir, [], fileDeps);
+
+      const pkgJsonCall = appendCalls.find(c => c.name === 'app/package.json');
+      const written = JSON.parse(pkgJsonCall!.content);
+      expect(written.dependencies['@company/sdk']).toMatch(
+        /^file:\.\.\/_workspaces\/sdk-1\.0\.0-[a-f0-9]{8}\/sdk-1\.0\.0\.tgz$/
+      );
+    });
+
+    it('skips internal tarball file dep (already in srcDir walk)', async () => {
+      const { archive, fileCalls } = createMockArchive();
+      const fileDeps: FileDependencyMapping[] = [
+        {
+          packageName: 'internal-sdk',
+          localPath: '/project/src/vendor/sdk-1.0.0.tgz',
+          sourcePackageJsonPath: '/project/src/app/package.json',
+          kind: 'tarball',
+          protocol: 'file',
+        },
+      ];
+
+      const result = await archiveWorkspacesAndDependencies(
+        archive,
+        srcDir,
+        [],
+        fileDeps
+      );
+
+      expect(fileCalls).toHaveLength(0);
+      expect(result.packageFileDeps.size).toBe(0);
+    });
+  });
+
+  describe('link: protocol file dependency archiving', () => {
+    it('archives external link: directory dep via archive.directory', async () => {
+      const { archive, directoryCalls } = createMockArchive();
+      const fileDeps: FileDependencyMapping[] = [
+        {
+          packageName: '@company/logger',
+          localPath: '/external/logger',
+          sourcePackageJsonPath: '/project/src/app/package.json',
+          kind: 'directory',
+          protocol: 'link',
+        },
+      ];
+
+      const result = await archiveWorkspacesAndDependencies(
+        archive,
+        srcDir,
+        [],
+        fileDeps
+      );
+
+      expect(directoryCalls).toHaveLength(1);
+      expect(directoryCalls[0].sourcePath).toBe('/external/logger');
+
+      const fileDepsMap = result.packageFileDeps.get(
+        '/project/src/app/package.json'
+      );
+      expect(fileDepsMap!.get('@company/logger')).toEqual({
+        archivePath: `../${computeExternalArchivePath('/external/logger')}`,
+        protocol: 'link',
+      });
+    });
+
+    it('skips internal link: dep (already in srcDir walk)', async () => {
+      const { archive, directoryCalls } = createMockArchive();
+      const fileDeps: FileDependencyMapping[] = [
+        {
+          packageName: 'internal-logger',
+          localPath: '/project/src/vendor/logger',
+          sourcePackageJsonPath: '/project/src/app/package.json',
+          kind: 'directory',
+          protocol: 'link',
+        },
+      ];
+
+      const result = await archiveWorkspacesAndDependencies(
+        archive,
+        srcDir,
+        [],
+        fileDeps
+      );
+
+      expect(directoryCalls).toHaveLength(0);
+      expect(result.packageFileDeps.size).toBe(0);
+    });
+
+    it('rewrites package.json preserving link: prefix', async () => {
+      const packageJsonPath = '/project/src/app/package.json';
+      vi.spyOn(fs, 'existsSync').mockImplementation(p => p === packageJsonPath);
+      vi.spyOn(fs, 'readFileSync').mockReturnValue(
+        JSON.stringify({
+          name: 'my-app',
+          dependencies: {
+            '@company/logger': 'link:../../external/logger',
+          },
+        })
+      );
+
+      const { archive, appendCalls } = createMockArchive();
+      const fileDeps: FileDependencyMapping[] = [
+        {
+          packageName: '@company/logger',
+          localPath: '/external/logger',
+          sourcePackageJsonPath: packageJsonPath,
+          kind: 'directory',
+          protocol: 'link',
+        },
+      ];
+
+      await archiveWorkspacesAndDependencies(archive, srcDir, [], fileDeps);
+
+      const pkgJsonCall = appendCalls.find(c => c.name === 'app/package.json');
+      const written = JSON.parse(pkgJsonCall!.content);
+      expect(written.dependencies['@company/logger']).toMatch(
+        /^link:\.\.\/_workspaces\/logger-[a-f0-9]{8}$/
+      );
+    });
+  });
+
+  describe('lockfile rewriting for tarball deps', () => {
+    it('rewrites resolved field with file: prefix for tarball dep', async () => {
+      const packageJsonPath = '/project/src/app/package.json';
+      const lockfilePath = '/project/src/app/package-lock.json';
+      const lockfileContent = {
+        lockfileVersion: 3,
+        packages: {
+          '': { name: 'my-app' },
+          'node_modules/@company/sdk': {
+            version: '1.0.0',
+            resolved: 'file:../../../external/sdk/sdk-1.0.0.tgz',
+            integrity: 'sha512-abc',
+          },
+        },
+      };
+
+      vi.spyOn(fs, 'existsSync').mockImplementation(p => {
+        return p === packageJsonPath || p === lockfilePath;
+      });
+      vi.spyOn(fs, 'readFileSync').mockImplementation(p => {
+        if (p === packageJsonPath) {
+          return JSON.stringify({
+            name: 'my-app',
+            dependencies: {
+              '@company/sdk': 'file:../../../external/sdk/sdk-1.0.0.tgz',
+            },
+          });
+        }
+        if (p === lockfilePath) {
+          return JSON.stringify(lockfileContent);
+        }
+        return '';
+      });
+
+      const { archive, appendCalls } = createMockArchive();
+      const fileDeps: FileDependencyMapping[] = [
+        {
+          packageName: '@company/sdk',
+          localPath: '/external/sdk/sdk-1.0.0.tgz',
+          sourcePackageJsonPath: packageJsonPath,
+          kind: 'tarball',
+          protocol: 'file',
+        },
+      ];
+
+      await archiveWorkspacesAndDependencies(archive, srcDir, [], fileDeps);
+
+      const lockfileCall = appendCalls.find(
+        c => c.name === 'app/package-lock.json'
+      );
+      const rewritten = JSON.parse(lockfileCall!.content);
+      const sdkEntry = rewritten.packages['node_modules/@company/sdk'] as {
+        resolved: string;
+      };
+      expect(sdkEntry.resolved).toMatch(
+        /^file:.*_workspaces\/sdk-1\.0\.0-[a-f0-9]{8}\/sdk-1\.0\.0\.tgz$/
+      );
+    });
+
+    it('rewrites resolved field as bare path for link: directory dep', async () => {
+      const packageJsonPath = '/project/src/app/package.json';
+      const lockfilePath = '/project/src/app/package-lock.json';
+      const lockfileContent = {
+        lockfileVersion: 3,
+        packages: {
+          '': { name: 'my-app' },
+          'node_modules/@company/logger': {
+            resolved: '../../../external/logger',
+            link: true,
+          },
+        },
+      };
+
+      vi.spyOn(fs, 'existsSync').mockImplementation(p => {
+        return p === packageJsonPath || p === lockfilePath;
+      });
+      vi.spyOn(fs, 'readFileSync').mockImplementation(p => {
+        if (p === packageJsonPath) {
+          return JSON.stringify({
+            name: 'my-app',
+            dependencies: {
+              '@company/logger': 'link:../../../external/logger',
+            },
+          });
+        }
+        if (p === lockfilePath) {
+          return JSON.stringify(lockfileContent);
+        }
+        return '';
+      });
+
+      const { archive, appendCalls } = createMockArchive();
+      const fileDeps: FileDependencyMapping[] = [
+        {
+          packageName: '@company/logger',
+          localPath: '/external/logger',
+          sourcePackageJsonPath: packageJsonPath,
+          kind: 'directory',
+          protocol: 'link',
+        },
+      ];
+
+      await archiveWorkspacesAndDependencies(archive, srcDir, [], fileDeps);
+
+      const lockfileCall = appendCalls.find(
+        c => c.name === 'app/package-lock.json'
+      );
+      const rewritten = JSON.parse(lockfileCall!.content);
+      const loggerEntry = rewritten.packages[
+        'node_modules/@company/logger'
+      ] as {
+        resolved: string;
+        link: boolean;
+      };
+      expect(loggerEntry.resolved).toMatch(
+        /^[^:]*_workspaces\/logger-[a-f0-9]{8}$/
+      );
+      expect(loggerEntry.resolved.startsWith('file:')).toBe(false);
+      expect(loggerEntry.link).toBe(true);
     });
   });
 
@@ -383,6 +728,8 @@ describe('archiveWorkspacesAndDependencies', () => {
           packageName: 'logger',
           localPath: '/external/logger',
           sourcePackageJsonPath: '/project/src/app/package.json',
+          kind: 'directory',
+          protocol: 'file',
         },
       ];
 
@@ -545,6 +892,8 @@ describe('archiveWorkspacesAndDependencies', () => {
           packageName: 'backup-utils',
           localPath: '/project/src-backup/utils',
           sourcePackageJsonPath: '/project/src/app/package.json',
+          kind: 'directory',
+          protocol: 'file',
         },
       ];
 
@@ -566,6 +915,8 @@ describe('archiveWorkspacesAndDependencies', () => {
           packageName: 'internal-pkg',
           localPath: '/project/src/shared/utils',
           sourcePackageJsonPath: '/project/src/app/package.json',
+          kind: 'directory',
+          protocol: 'file',
         },
       ];
 
@@ -641,6 +992,8 @@ describe('archiveWorkspacesAndDependencies', () => {
           packageName: '@company/logger',
           localPath: '/external/logger',
           sourcePackageJsonPath: packageJsonPath,
+          kind: 'directory',
+          protocol: 'file',
         },
       ];
 
@@ -856,6 +1209,8 @@ describe('archiveWorkspacesAndDependencies', () => {
           packageName: '@company/logger',
           localPath: '/external/logger',
           sourcePackageJsonPath: packageJsonPath,
+          kind: 'directory',
+          protocol: 'file',
         },
       ];
 

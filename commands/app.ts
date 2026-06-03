@@ -1,6 +1,8 @@
 import { Argv } from 'yargs';
 import migrateCommand from './app/migrate.js';
 import appSecretCommand from './app/secret.js';
+import logsCommand from './app/logs.js';
+import logDetailsCommand from './app/logDetails.js';
 import { makeYargsBuilder } from '../lib/yargsUtils.js';
 import { YargsCommandModuleBucket } from '../types/Yargs.js';
 import { commands } from '../lang/en.js';
@@ -9,7 +11,12 @@ const command = ['app', 'apps'];
 const describe = commands.app.describe;
 
 function appBuilder(yargs: Argv) {
-  yargs.command(migrateCommand).command(appSecretCommand).demandCommand(1, '');
+  yargs
+    .command(migrateCommand)
+    .command(appSecretCommand)
+    .command(logsCommand)
+    .command(logDetailsCommand)
+    .demandCommand(1, '');
   return yargs;
 }
 

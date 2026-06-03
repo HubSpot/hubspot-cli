@@ -147,6 +147,17 @@ export const LOCAL_DEV_SERVER_MESSAGE_TYPES = {
 export const LOCAL_DEV_WEBSOCKET_SERVER_INSTANCE_ID =
   'local-dev-ui-websocket-server';
 
+export const ACCOUNT_AUTH_UI_MESSAGE_SEND_TYPES = {
+  AUTH_RECEIVED: 'server:authReceived',
+  AUTH_FAILED: 'server:authFailed',
+} as const;
+
+export const ACCOUNT_AUTH_UI_MESSAGE_RECEIVE_TYPES = {
+  PERSONAL_ACCESS_KEY: 'client:personalAccessKey',
+} as const;
+
+export const ACCOUNT_AUTH_WEBSOCKET_SERVER_VERSION = 1;
+
 export const CONFIG_LOCAL_STATE_FLAGS = {
   LOCAL_DEV_UI_WELCOME: 'LOCAL_DEV_UI_WELCOME',
 } as const;

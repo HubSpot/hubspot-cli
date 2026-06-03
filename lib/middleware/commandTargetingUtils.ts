@@ -38,6 +38,7 @@ const SKIP_CONFIG_LOADING_COMMANDS = {
   init: true,
   feedback: true,
   mcp: { start: true },
+  project: { lint: true },
 };
 
 // Returns true if the command requires a config file to be present

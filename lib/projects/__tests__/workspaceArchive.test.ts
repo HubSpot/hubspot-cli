@@ -228,10 +228,21 @@ describe('updatePackageJsonInArchive', () => {
     );
 
     const { archive, getAppended } = createMockArchive();
-    const packageFileDeps = new Map<string, Map<string, string>>();
+    const packageFileDeps = new Map<
+      string,
+      Map<string, { archivePath: string; protocol: 'file' | 'link' }>
+    >();
     packageFileDeps.set(
       packageJsonPath,
-      new Map([['@company/logger', '../../_workspaces/logger-a1b2c3d4']])
+      new Map([
+        [
+          '@company/logger',
+          {
+            archivePath: '../../_workspaces/logger-a1b2c3d4',
+            protocol: 'file' as const,
+          },
+        ],
+      ])
     );
 
     await updatePackageJsonInArchive(
@@ -366,6 +377,8 @@ describe('getPackageJsonPathsToUpdate', () => {
           packageName: '@company/logger',
           localPath: '/external/logger',
           sourcePackageJsonPath: '/project/src/app/package.json',
+          kind: 'directory',
+          protocol: 'file',
         },
       ]
     );
@@ -384,6 +397,8 @@ describe('getPackageJsonPathsToUpdate', () => {
           packageName: '@internal/utils',
           localPath: '/project/src/packages/utils',
           sourcePackageJsonPath: '/project/src/app/package.json',
+          kind: 'directory',
+          protocol: 'file',
         },
       ]
     );
@@ -409,6 +424,8 @@ describe('getPackageJsonPathsToUpdate', () => {
           packageName: '@company/core',
           localPath: '/external/core',
           sourcePackageJsonPath: '/project/src/app/package.json',
+          kind: 'directory',
+          protocol: 'file',
         },
       ]
     );
@@ -491,6 +508,8 @@ describe('getLockfilePathsToUpdate', () => {
           packageName: '@company/logger',
           localPath: '/external/logger',
           sourcePackageJsonPath: '/project/src/app/package.json',
+          kind: 'directory',
+          protocol: 'file',
         },
       ]
     );
@@ -516,6 +535,8 @@ describe('getLockfilePathsToUpdate', () => {
           packageName: '@internal/core',
           localPath: '/project/src/shared/core',
           sourcePackageJsonPath: '/project/src/app/package.json',
+          kind: 'directory',
+          protocol: 'file',
         },
       ]
     );
