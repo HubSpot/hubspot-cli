@@ -880,6 +880,55 @@ describe('commands/project/lint', () => {
       expect(lintPackagesSpy).not.toHaveBeenCalled();
     });
 
+    it('should exit with error code when --install-missing-deps is false and a directory is skipped', async () => {
+      const projectDir = '/test/project';
+      const lintLocation = path.join(projectDir, 'component1');
+
+      args.installMissingDeps = false;
+
+      getProjectConfigSpy.mockResolvedValue({
+        projectDir,
+        projectConfig: null,
+      });
+      getUieLintablePackageJsonLocationsSpy.mockResolvedValue([lintLocation]);
+      areAllLintPackagesInstalledSpy.mockReturnValueOnce(false);
+      getMissingLintPackagesSpy.mockReturnValueOnce({
+        missingPackages: ['eslint', '@typescript-eslint/parser'],
+      });
+
+      await projectLintCommand.handler(args);
+
+      expect(lintPackagesSpy).not.toHaveBeenCalled();
+      expect(uiLogger.error).toHaveBeenCalledTimes(1);
+      expect(processExitSpy).toHaveBeenCalledWith(EXIT_CODES.ERROR);
+    });
+
+    it('should not exit with error code when the user declines the install prompt', async () => {
+      const projectDir = '/test/project';
+      const lintLocation = path.join(projectDir, 'component1');
+
+      // installMissingDeps is undefined, so the user is prompted
+
+      getProjectConfigSpy.mockResolvedValue({
+        projectDir,
+        projectConfig: null,
+      });
+      getUieLintablePackageJsonLocationsSpy.mockResolvedValue([lintLocation]);
+      areAllLintPackagesInstalledSpy.mockReturnValueOnce(false);
+      getMissingLintPackagesSpy.mockReturnValueOnce({
+        missingPackages: ['eslint', '@typescript-eslint/parser'],
+      });
+      promptUserSpy.mockResolvedValueOnce({
+        shouldInstallPackages: false,
+      });
+
+      await projectLintCommand.handler(args);
+
+      expect(installPackagesSpy).not.toHaveBeenCalled();
+      expect(lintPackagesSpy).not.toHaveBeenCalled();
+      expect(processExitSpy).not.toHaveBeenCalledWith(EXIT_CODES.ERROR);
+    });
+
     it('should prompt for installation when --install-missing-deps is not provided', async () => {
       const projectDir = '/test/project';
       const lintLocation = path.join(projectDir, 'component1');

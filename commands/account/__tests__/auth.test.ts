@@ -12,6 +12,7 @@ import * as usageTrackingLib from '../../../lib/usageTracking.js';
 import * as personalAccessKeyPromptLib from '../../../lib/prompts/personalAccessKeyPrompt.js';
 import * as accountNamePromptLib from '../../../lib/prompts/accountNamePrompt.js';
 import * as setAsDefaultPromptLib from '../../../lib/prompts/setAsDefaultAccountPrompt.js';
+import * as awaitPersonalAccessKeyOverWebsocketLib from '../../../lib/auth/awaitPersonalAccessKeyOverWebsocket.js';
 import * as parsingLib from '../../../lib/parsing.js';
 import { uiLogger } from '../../../lib/ui/logger.js';
 import { EXIT_CODES } from '../../../lib/enums/exitCodes.js';
@@ -26,6 +27,7 @@ vi.mock('../../../lib/process.js');
 vi.mock('../../../lib/prompts/personalAccessKeyPrompt.js');
 vi.mock('../../../lib/prompts/accountNamePrompt.js');
 vi.mock('../../../lib/prompts/setAsDefaultAccountPrompt.js');
+vi.mock('../../../lib/auth/awaitPersonalAccessKeyOverWebsocket.js');
 vi.mock('../../../lib/parsing.js');
 vi.mock('../../../lib/ui/index.js');
 vi.mock('../../../lib/errorHandlers/index.js');
@@ -33,6 +35,14 @@ vi.mock('../../../lib/errorHandlers/index.js');
 const localConfigFileExistsSpy = vi.spyOn(configLib, 'localConfigFileExists');
 const globalConfigFileExistsSpy = vi.spyOn(configLib, 'globalConfigFileExists');
 const createEmptyConfigFileSpy = vi.spyOn(configLib, 'createEmptyConfigFile');
+const setConfigAccountAsDefaultSpy = vi.spyOn(
+  configLib,
+  'setConfigAccountAsDefault'
+);
+const getConfigDefaultAccountIfExistsSpy = vi.spyOn(
+  configLib,
+  'getConfigDefaultAccountIfExists'
+);
 const getAccessTokenSpy = vi.spyOn(personalAccessKeyLib, 'getAccessToken');
 const updateConfigWithAccessTokenSpy = vi.spyOn(
   personalAccessKeyLib,
@@ -45,7 +55,11 @@ const trackCommandUsageSpy = vi.spyOn(usageTrackingLib, 'trackCommandUsage');
 const trackAuthActionSpy = vi.spyOn(usageTrackingLib, 'trackAuthAction');
 const personalAccessKeyPromptSpy = vi.spyOn(
   personalAccessKeyPromptLib,
-  'personalAccessKeyPrompt'
+  'legacyPersonalAccessKeyPrompt'
+);
+const awaitPersonalAccessKeyOverWebsocketSpy = vi.spyOn(
+  awaitPersonalAccessKeyOverWebsocketLib,
+  'awaitPersonalAccessKeyOverWebsocket'
 );
 const cliAccountNamePromptSpy = vi.spyOn(
   accountNamePromptLib,
@@ -74,6 +88,7 @@ describe('commands/account/auth', () => {
       personalAccessKey: 'test-key',
       env: 'prod',
     });
+    awaitPersonalAccessKeyOverWebsocketSpy.mockResolvedValue('test-key');
     getAccessTokenSpy.mockResolvedValue({
       portalId: 456789,
       accessToken: 'test-access-token',
@@ -130,6 +145,9 @@ describe('commands/account/auth', () => {
         config?: string;
         disableTracking?: boolean;
         personalAccessKey?: string;
+        default?: boolean;
+        name?: string;
+        useDefaultName?: boolean;
         qa?: boolean;
       } & UsageTrackingArgs
     >;
@@ -254,7 +272,21 @@ describe('commands/account/auth', () => {
       expect(createEmptyConfigFileSpy).toHaveBeenCalledWith(true);
     });
 
-    it('should prompt for personal access key', async () => {
+    it('should request personal access key over websocket by default', async () => {
+      await accountAuthCommand.handler(args);
+
+      expect(awaitPersonalAccessKeyOverWebsocketSpy).toHaveBeenCalledWith({
+        env: ENVIRONMENTS.PROD,
+        account: undefined,
+      });
+      expect(personalAccessKeyPromptSpy).not.toHaveBeenCalled();
+    });
+
+    it('should fall back to the paste prompt when the websocket flow fails', async () => {
+      awaitPersonalAccessKeyOverWebsocketSpy.mockRejectedValue(
+        new Error('timeout')
+      );
+
       await accountAuthCommand.handler(args);
 
       expect(personalAccessKeyPromptSpy).toHaveBeenCalledWith({
@@ -269,9 +301,63 @@ describe('commands/account/auth', () => {
       await accountAuthCommand.handler(args);
 
       expect(personalAccessKeyPromptSpy).not.toHaveBeenCalled();
+      expect(awaitPersonalAccessKeyOverWebsocketSpy).not.toHaveBeenCalled();
       expect(getAccessTokenSpy).toHaveBeenCalledWith(
         'provided-key',
         ENVIRONMENTS.PROD
+      );
+    });
+
+    it('should set account as default when --default flag is passed', async () => {
+      args.default = true;
+      globalConfigFileExistsSpy.mockReturnValue(true);
+      getConfigDefaultAccountIfExistsSpy.mockReturnValue(undefined);
+
+      await accountAuthCommand.handler(args);
+
+      expect(setConfigAccountAsDefaultSpy).toHaveBeenCalledWith('test-account');
+      expect(setAsDefaultAccountPromptSpy).not.toHaveBeenCalled();
+    });
+
+    it('should skip the default prompt when --no-default flag is passed', async () => {
+      args.default = false;
+      globalConfigFileExistsSpy.mockReturnValue(true);
+
+      await accountAuthCommand.handler(args);
+
+      expect(setConfigAccountAsDefaultSpy).not.toHaveBeenCalled();
+      expect(setAsDefaultAccountPromptSpy).not.toHaveBeenCalled();
+    });
+
+    it('should use provided name when --name flag is passed', async () => {
+      args.name = 'my-portal';
+      globalConfigFileExistsSpy.mockReturnValue(false);
+
+      await accountAuthCommand.handler(args);
+
+      expect(cliAccountNamePromptSpy).not.toHaveBeenCalled();
+      expect(updateConfigWithAccessTokenSpy).toHaveBeenCalledWith(
+        expect.anything(),
+        'test-key',
+        ENVIRONMENTS.PROD,
+        'my-portal',
+        true
+      );
+    });
+
+    it('should use the default name when --use-default-name flag is passed', async () => {
+      args.useDefaultName = true;
+      globalConfigFileExistsSpy.mockReturnValue(false);
+
+      await accountAuthCommand.handler(args);
+
+      expect(cliAccountNamePromptSpy).not.toHaveBeenCalled();
+      expect(updateConfigWithAccessTokenSpy).toHaveBeenCalledWith(
+        expect.anything(),
+        'test-key',
+        ENVIRONMENTS.PROD,
+        'test-hub',
+        true
       );
     });
 

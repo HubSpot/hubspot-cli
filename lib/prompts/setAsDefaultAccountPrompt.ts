@@ -19,7 +19,11 @@ export async function setAsDefaultAccountPrompt(
       name: 'setAsDefault',
       type: 'confirm',
       when: accounts.length >= 1 && defaultAccount?.name !== accountName,
-      message: lib.prompts.setAsDefaultAccountPrompt.setAsDefaultAccountMessage,
+      message:
+        lib.prompts.setAsDefaultAccountPrompt.setAsDefaultAccountMessage(
+          accountName
+        ),
+      default: false,
     },
   ]);
 

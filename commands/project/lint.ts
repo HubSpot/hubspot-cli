@@ -55,6 +55,7 @@ async function handler(
       await getUieLintablePackageJsonLocations(projectConfig);
     const locationsReadyToLint: string[] = [];
     const locationsNeedingPackages = new Map<string, string[]>();
+    let skippedDirectoryCount = 0;
 
     for (const lintLocation of lintLocations) {
       if (areAllLintPackagesInstalled(lintLocation)) {
@@ -123,6 +124,9 @@ async function handler(
         uiLogger.warn(
           commands.project.lint.skippingDirectoriesWarning(relativeLocations)
         );
+        if (installMissingDeps === false) {
+          skippedDirectoryCount = relativeLocations.length;
+        }
       }
     }
 
@@ -248,6 +252,13 @@ async function handler(
       if (!success) {
         return exit(EXIT_CODES.ERROR);
       }
+    }
+
+    if (skippedDirectoryCount > 0) {
+      uiLogger.error(
+        commands.project.lint.skippedDirectoriesError(skippedDirectoryCount)
+      );
+      return exit(EXIT_CODES.ERROR);
     }
   } catch (e) {
     if (isPromptExitError(e)) {

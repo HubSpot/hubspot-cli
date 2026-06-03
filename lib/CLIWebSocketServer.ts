@@ -1,3 +1,4 @@
+import { AddressInfo } from 'net';
 import { WebSocketServer, WebSocket } from 'ws';
 import {
   isPortManagerServerRunning,
@@ -21,7 +22,7 @@ export type CLIWebSocketMessage = {
 
 class CLIWebSocketServer {
   private server?: WebSocketServer;
-  private instanceId: string;
+  private instanceId?: string;
   private logPrefix?: string;
   private debug?: boolean;
 
@@ -30,7 +31,7 @@ class CLIWebSocketServer {
     logPrefix,
     debug,
   }: {
-    instanceId: string;
+    instanceId?: string;
     logPrefix?: string;
     debug?: boolean;
   }) {
@@ -68,6 +69,46 @@ class CLIWebSocketServer {
     });
   }
 
+  private async bindPortManagerPort(
+    instanceId: string
+  ): Promise<{ server: WebSocketServer; port: number }> {
+    const portManagerIsRunning = await isPortManagerServerRunning();
+    if (!portManagerIsRunning) {
+      throw new Error(
+        lib.CLIWebsocketServer.errors.portManagerNotRunning(this.logPrefix)
+      );
+    }
+    const portData = await requestPorts([{ instanceId }]);
+    const port = portData[instanceId];
+    return { server: new WebSocketServer({ port }), port };
+  }
+
+  private async bindEphemeralPort(): Promise<{
+    server: WebSocketServer;
+    port: number;
+  }> {
+    const server = new WebSocketServer({ port: 0 });
+    await new Promise<void>((resolve, reject) => {
+      const onListening = () => {
+        server.off('error', onError);
+        resolve();
+      };
+      const onError = (err: Error) => {
+        server.off('listening', onListening);
+        reject(err);
+      };
+      server.once('listening', onListening);
+      server.once('error', onError);
+    });
+    const address = server.address() as AddressInfo | null;
+    if (!address || typeof address !== 'object') {
+      throw new Error(
+        lib.CLIWebsocketServer.errors.failedToBindEphemeralPort(this.logPrefix)
+      );
+    }
+    return { server, port: address.port };
+  }
+
   async start({
     onConnection,
     onMessage,
@@ -78,18 +119,11 @@ class CLIWebSocketServer {
     onMessage?: (websocket: WebSocket, message: CLIWebSocketMessage) => boolean;
     onClose?: () => void;
     metadata?: Record<string, unknown>;
-  }) {
-    const portManagerIsRunning = await isPortManagerServerRunning();
-    if (!portManagerIsRunning) {
-      throw new Error(
-        lib.CLIWebsocketServer.errors.portManagerNotRunning(this.logPrefix)
-      );
-    }
-
-    const portData = await requestPorts([{ instanceId: this.instanceId }]);
-    const port = portData[this.instanceId];
-
-    this.server = new WebSocketServer({ port });
+  }): Promise<number> {
+    const { server, port } = this.instanceId
+      ? await this.bindPortManagerPort(this.instanceId)
+      : await this.bindEphemeralPort();
+    this.server = server;
 
     this.log(lib.CLIWebsocketServer.logs.startup(port));
 
@@ -138,6 +172,8 @@ class CLIWebSocketServer {
         onClose();
       }
     });
+
+    return port;
   }
 
   shutdown() {

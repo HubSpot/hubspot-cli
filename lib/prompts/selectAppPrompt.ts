@@ -34,6 +34,8 @@ export async function selectAppPrompt(
     }
   }
 
+  availableApps.sort((a, b) => a.name.localeCompare(b.name));
+
   const appPromptValue = await listPrompt(
     lib.prompts.selectAppPrompt.selectAppId,
     {

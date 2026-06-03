@@ -31,7 +31,11 @@ const command = 'auth';
 type AccountAuthArgs = CommonArgs &
   ConfigArgs & {
     disableTracking?: boolean;
-  } & { personalAccessKey?: string };
+    personalAccessKey?: string;
+    default?: boolean;
+    name?: string;
+    useDefaultName?: boolean;
+  };
 
 async function handler(
   args: ArgumentsCamelCase<AccountAuthArgs>
@@ -40,6 +44,9 @@ async function handler(
     disableTracking,
     personalAccessKey: providedPersonalAccessKey,
     userProvidedAccount,
+    default: setAsDefaultAccount,
+    name: accountName,
+    useDefaultName: useDefaultAccountName,
     exit,
   } = args;
 
@@ -66,6 +73,9 @@ async function handler(
     env: args.qa ? ENVIRONMENTS.QA : ENVIRONMENTS.PROD,
     providedPersonalAccessKey,
     accountId: parsedUserProvidedAccountId,
+    setAsDefaultAccount,
+    accountName,
+    useDefaultAccountName,
   });
 
   if (!updatedConfig) {
@@ -115,7 +125,21 @@ function accountAuthBuilder(yargs: Argv): Argv<AccountAuthArgs> {
       hidden: false,
       alias: 'pak',
     },
+    default: {
+      describe: commands.account.subcommands.auth.options.default,
+      type: 'boolean',
+    },
+    name: {
+      describe: commands.account.subcommands.auth.options.name,
+      type: 'string',
+    },
+    'use-default-name': {
+      describe: commands.account.subcommands.auth.options.useDefaultName,
+      type: 'boolean',
+    },
   });
+
+  yargs.conflicts('name', 'use-default-name');
 
   return yargs as Argv<AccountAuthArgs>;
 }

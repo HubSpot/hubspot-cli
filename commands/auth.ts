@@ -23,7 +23,7 @@ import {
 import { commaSeparatedValues, toKebabCase } from '@hubspot/local-dev-lib/text';
 import { promptUser } from '../lib/prompts/promptUtils.js';
 import {
-  personalAccessKeyPrompt,
+  legacyPersonalAccessKeyPrompt as personalAccessKeyPrompt,
   OAUTH_FLOW,
   OauthPromptResponse,
 } from '../lib/prompts/personalAccessKeyPrompt.js';

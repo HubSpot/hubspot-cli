@@ -7,16 +7,28 @@ import {
   getPackableFiles,
   WorkspaceMapping,
   FileDependencyMapping,
+  FileDependencyKind,
+  LocalDependencyProtocol,
 } from '@hubspot/project-parsing-lib/workspaces';
 import { uiLogger } from '../ui/logger.js';
 import { lib } from '../../lang/en.js';
+
+const FILE_PROTOCOL_PREFIX = 'file:';
+const LINK_PROTOCOL_PREFIX = 'link:';
+const KIND_DIRECTORY: FileDependencyKind = 'directory';
+const KIND_TARBALL: FileDependencyKind = 'tarball';
+
+export type FileDepArchiveEntry = {
+  archivePath: string;
+  protocol: LocalDependencyProtocol;
+};
 
 /**
  * Result of archiving workspaces and file dependencies
  */
 export type WorkspaceArchiveResult = {
   packageWorkspaces: Map<string, string[]>;
-  packageFileDeps: Map<string, Map<string, string>>;
+  packageFileDeps: Map<string, Map<string, FileDepArchiveEntry>>;
 };
 
 /**
@@ -44,13 +56,44 @@ export function toPosixPath(p: string): string {
 }
 
 /**
- * Determines the archive path for an external workspace or file: dependency.
- * Produces `_workspaces/<basename>-<hash>` with no subdirectory.
- * The hash prevents collisions between different directories with the same basename.
+ * Strips the longest matching tarball extension (.tar.gz, .tgz, .tar)
+ * from a file basename. Returns the input unchanged if no extension matches.
  */
-export function computeExternalArchivePath(absolutePath: string): string {
+function stripTarballExtension(basename: string): string {
+  const lower = basename.toLowerCase();
+  for (const ext of ['.tar.gz', '.tgz', '.tar']) {
+    if (lower.endsWith(ext)) {
+      return basename.slice(0, basename.length - ext.length);
+    }
+  }
+  return basename;
+}
+
+/**
+ * Determines the archive path for an external workspace or file: dependency.
+ *
+ * For directories, produces `_workspaces/<basename>-<hash>`.
+ * For tarballs, produces `_workspaces/<basename-no-ext>-<hash>/<original-basename>`,
+ * so the rewritten package.json reference still ends in the original filename.
+ *
+ * The hash prevents collisions between different paths with the same basename.
+ */
+export function computeExternalArchivePath(
+  absolutePath: string,
+  kind: FileDependencyKind = KIND_DIRECTORY
+): string {
   const resolved = path.resolve(absolutePath);
   const name = path.basename(resolved);
+
+  if (kind === KIND_TARBALL) {
+    const nameNoExt = stripTarballExtension(name);
+    return path.posix.join(
+      '_workspaces',
+      `${nameNoExt}-${shortHash(resolved)}`,
+      name
+    );
+  }
+
   return path.posix.join('_workspaces', `${name}-${shortHash(resolved)}`);
 }
 
@@ -186,37 +229,39 @@ async function archiveWorkspaceDirectories(
 }
 
 /**
- * Archives file: dependencies and returns mapping information.
+ * Archives file: and link: dependencies and returns mapping information.
  *
- * Internal file: dependencies (inside srcDir) are skipped — their original
- * `file:` references in package.json remain valid after upload.
+ * Internal dependencies (inside srcDir) are skipped — their original
+ * references in package.json remain valid after upload.
  *
- * External file: dependencies are archived to `_workspaces/<name>-<hash>`
- * and tracked in the returned map so package.json can be rewritten.
+ * External directory dependencies are archived to `_workspaces/<name>-<hash>`.
+ * External tarball dependencies are archived to
+ * `_workspaces/<name-no-ext>-<hash>/<original-basename>` so the rewritten
+ * reference still ends in the original filename.
  */
 async function archiveFileDependencies(
   archive: archiver.Archiver,
   srcDir: string,
   fileDependencyMappings: FileDependencyMapping[],
   externalArchivePaths: Map<string, string>
-): Promise<Map<string, Map<string, string>>> {
-  const packageFileDeps = new Map<string, Map<string, string>>();
+): Promise<Map<string, Map<string, FileDepArchiveEntry>>> {
+  const packageFileDeps = new Map<string, Map<string, FileDepArchiveEntry>>();
   const toArchive: Array<{
     localPath: string;
     archivePath: string;
     packageName: string;
+    kind: FileDependencyKind;
   }> = [];
 
   for (const mapping of fileDependencyMappings) {
-    const { packageName, localPath, sourcePackageJsonPath } = mapping;
+    const { packageName, localPath, sourcePackageJsonPath, kind, protocol } =
+      mapping;
 
     if (isInsideSrcDir(localPath, srcDir)) {
-      // Internal: original file: reference stays unchanged, nothing to do
       continue;
     }
 
-    // External: archive to _workspaces/<name>-<hash>
-    const archivePath = computeExternalArchivePath(localPath);
+    const archivePath = computeExternalArchivePath(localPath, kind);
     const resolvedPath = path.resolve(localPath);
 
     if (!packageFileDeps.has(sourcePackageJsonPath)) {
@@ -231,30 +276,31 @@ async function archiveFileDependencies(
     );
     packageFileDeps
       .get(sourcePackageJsonPath)!
-      .set(packageName, relativeArchivePath);
+      .set(packageName, { archivePath: relativeArchivePath, protocol });
 
-    // Only archive each unique path once
     if (!externalArchivePaths.has(resolvedPath)) {
       externalArchivePaths.set(resolvedPath, archivePath);
-      toArchive.push({ localPath, archivePath, packageName });
+      toArchive.push({ localPath, archivePath, packageName, kind });
     }
   }
 
-  // Fetch packable files in parallel (I/O optimization)
-  const withPackableFiles = await Promise.all(
-    toArchive.map(async item => ({
+  const directoryItems = toArchive.filter(item => item.kind === KIND_DIRECTORY);
+  const tarballItems = toArchive.filter(item => item.kind === KIND_TARBALL);
+
+  // getPackableFiles only applies to directory deps; tarballs are a single file.
+  const directoriesWithPackableFiles = await Promise.all(
+    directoryItems.map(async item => ({
       ...item,
       packableFiles: await getPackableFiles(item.localPath),
     }))
   );
 
-  // Archive directories sequentially (archiver requires sequential operations)
   for (const {
     localPath,
     archivePath,
     packageName,
     packableFiles,
-  } of withPackableFiles) {
+  } of directoriesWithPackableFiles) {
     uiLogger.log(
       lib.projectUpload.handleProjectUpload.fileDependencyIncluded(
         packageName,
@@ -267,6 +313,17 @@ async function archiveFileDependencies(
       archivePath,
       createWorkspaceFileFilter(packableFiles)
     );
+  }
+
+  for (const { localPath, archivePath, packageName } of tarballItems) {
+    uiLogger.log(
+      lib.projectUpload.handleProjectUpload.fileDependencyIncluded(
+        packageName,
+        localPath,
+        archivePath
+      )
+    );
+    archive.file(localPath, { name: archivePath });
   }
 
   return packageFileDeps;
@@ -286,7 +343,7 @@ export async function updatePackageJsonInArchive(
   archive: archiver.Archiver,
   srcDir: string,
   packageWorkspaces: Map<string, string[]>,
-  packageFileDeps: Map<string, Map<string, string>>
+  packageFileDeps: Map<string, Map<string, FileDepArchiveEntry>>
 ): Promise<void> {
   // Collect all package.json paths that need updating
   const allPackageJsonPaths = new Set([
@@ -344,18 +401,28 @@ export async function updatePackageJsonInArchive(
       );
     }
 
-    // Update external file: dependencies; internal ones are left untouched
+    // Update external file: and link: dependencies; internal ones are left untouched.
+    // The protocol prefix (file: vs link:) is preserved from the original spec.
     const fileDeps = packageFileDeps.get(packageJsonPath);
     if (fileDeps && fileDeps.size > 0 && packageJson.dependencies) {
-      for (const [packageName, archivePath] of fileDeps.entries()) {
-        if (packageJson.dependencies[packageName]?.startsWith('file:')) {
-          packageJson.dependencies[packageName] = `file:${archivePath}`;
+      for (const [
+        packageName,
+        { archivePath, protocol },
+      ] of fileDeps.entries()) {
+        const current = packageJson.dependencies[packageName];
+        if (
+          typeof current === 'string' &&
+          (current.startsWith(FILE_PROTOCOL_PREFIX) ||
+            current.startsWith(LINK_PROTOCOL_PREFIX))
+        ) {
+          const newValue = `${protocol}:${archivePath}`;
+          packageJson.dependencies[packageName] = newValue;
           modified = true;
 
           uiLogger.debug(
             lib.projectUpload.handleProjectUpload.updatedFileDependency(
               packageName,
-              archivePath
+              newValue
             )
           );
         }
@@ -401,11 +468,24 @@ export function rewriteLockfileForExternalDeps(
       value !== null
     ) {
       const entry = value as Record<string, unknown>;
-      if (entry.link === true && typeof entry.resolved === 'string') {
-        const mapping = pathMappings.find(m => m.oldPath === entry.resolved);
-        if (mapping) {
-          newPackages[key] = { ...entry, resolved: mapping.newPath };
-        }
+      if (typeof entry.resolved !== 'string') continue;
+
+      // Symlink entries (directory deps with link:true) store resolved as a
+      // bare relative path. Tarball entries store resolved as a "file:" URL.
+      const resolved = entry.resolved;
+      const isFileUrl = resolved.startsWith(FILE_PROTOCOL_PREFIX);
+      const resolvedPath = isFileUrl
+        ? resolved.slice(FILE_PROTOCOL_PREFIX.length)
+        : resolved;
+
+      const mapping = pathMappings.find(m => m.oldPath === resolvedPath);
+      if (mapping) {
+        newPackages[key] = {
+          ...entry,
+          resolved: isFileUrl
+            ? `${FILE_PROTOCOL_PREFIX}${mapping.newPath}`
+            : mapping.newPath,
+        };
       }
     }
   }

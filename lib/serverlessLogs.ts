@@ -6,14 +6,14 @@ import {
   isMissingScopeError,
 } from '@hubspot/local-dev-lib/errors/index';
 import {
-  SCOPE_GROUPS,
   PERSONAL_ACCESS_KEY_AUTH_METHOD,
+  SCOPE_GROUPS,
 } from '@hubspot/local-dev-lib/constants/auth';
 import { getConfigAccountById } from '@hubspot/local-dev-lib/config';
 import { fetchScopeData } from '@hubspot/local-dev-lib/api/localDevAuth';
 
 import { outputLogs } from './ui/serverlessFunctionLogs.js';
-import { logError, ApiErrorContext } from './errorHandlers/index.js';
+import { ApiErrorContext, logError } from './errorHandlers/index.js';
 import SpinniesManager from './ui/SpinniesManager.js';
 import { handleExit, handleKeypress } from './process.js';
 import { lib } from '../lang/en.js';

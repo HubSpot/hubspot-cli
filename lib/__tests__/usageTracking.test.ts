@@ -4,7 +4,11 @@ import {
   getConfigFilePath,
   getGlobalConfigFilePath,
 } from '@hubspot/local-dev-lib/config';
-import { API_KEY_AUTH_METHOD } from '@hubspot/local-dev-lib/constants/auth';
+import {
+  API_KEY_AUTH_METHOD,
+  PERSONAL_ACCESS_KEY_AUTH_METHOD,
+} from '@hubspot/local-dev-lib/constants/auth';
+import { getAccessToken } from '@hubspot/local-dev-lib/personalAccessKey';
 import { uiLogger } from '../ui/logger.js';
 import {
   trackCommandUsage,
@@ -24,12 +28,14 @@ vi.unmock('../usageTracking.js');
 
 vi.mock('../api/usageTracking.js');
 vi.mock('@hubspot/local-dev-lib/config');
+vi.mock('@hubspot/local-dev-lib/personalAccessKey');
 
 const mockedSendUsageEvent = sendUsageEvent as Mock;
 const mockedGetConfig = getConfig as Mock;
 const mockedGetConfigAccountById = getConfigAccountById as Mock;
 const mockedGetConfigFilePath = getConfigFilePath as Mock;
 const mockedGetGlobalConfigFilePath = getGlobalConfigFilePath as Mock;
+const mockedGetAccessToken = getAccessToken as Mock;
 const mockedUiLogger = uiLogger as Mocked<typeof uiLogger>;
 
 describe('lib/usageTracking', () => {
@@ -109,6 +115,67 @@ describe('lib/usageTracking', () => {
           meta: expect.objectContaining({
             authType: 'oauth2',
           }),
+        })
+      );
+    });
+
+    it('should track command usage with userId for personal access key accounts', async () => {
+      mockedGetConfigAccountById.mockReturnValue({
+        accountId: mockAccountId,
+        authType: PERSONAL_ACCESS_KEY_AUTH_METHOD.value,
+        env: 'prod',
+        personalAccessKey: 'test-key',
+        auth: { tokenInfo: { accessToken: 'test-token' } },
+      });
+      mockedGetAccessToken.mockResolvedValue({
+        userId: 456,
+      });
+
+      await trackCommandUsage(mockCommand, {}, mockAccountId);
+
+      expect(mockedGetAccessToken).toHaveBeenCalledWith(
+        'test-key',
+        'prod',
+        mockAccountId
+      );
+      expect(mockedSendUsageEvent).toHaveBeenCalledWith(
+        expect.objectContaining({
+          accountId: mockAccountId,
+          userId: 456,
+        })
+      );
+    });
+
+    it('should not fetch userId for non-personal access key accounts', async () => {
+      mockedGetConfigAccountById.mockReturnValue({ authType: 'oauth2' });
+
+      await trackCommandUsage(mockCommand, {}, mockAccountId);
+
+      expect(mockedGetAccessToken).not.toHaveBeenCalled();
+      expect(mockedSendUsageEvent).toHaveBeenCalledWith(
+        expect.not.objectContaining({
+          userId: expect.any(Number),
+        })
+      );
+    });
+
+    it('should send command usage without userId when userId lookup fails', async () => {
+      mockedGetConfigAccountById.mockReturnValue({
+        accountId: mockAccountId,
+        authType: PERSONAL_ACCESS_KEY_AUTH_METHOD.value,
+        env: 'prod',
+        personalAccessKey: 'test-key',
+        auth: { tokenInfo: { accessToken: 'test-token' } },
+      });
+      mockedGetAccessToken.mockRejectedValueOnce(
+        new Error('token info failed')
+      );
+
+      await trackCommandUsage(mockCommand, {}, mockAccountId);
+
+      expect(mockedSendUsageEvent).toHaveBeenCalledWith(
+        expect.not.objectContaining({
+          userId: expect.any(Number),
         })
       );
     });

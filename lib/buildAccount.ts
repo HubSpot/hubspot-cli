@@ -21,7 +21,7 @@ import {
 import { Environment } from '@hubspot/local-dev-lib/types/Accounts';
 
 import { isPromptExitError } from './errors/PromptExitError.js';
-import { personalAccessKeyPrompt } from './prompts/personalAccessKeyPrompt.js';
+import { legacyPersonalAccessKeyPrompt as personalAccessKeyPrompt } from './prompts/personalAccessKeyPrompt.js';
 import { createDeveloperTestAccountConfigPrompt } from './prompts/createDeveloperTestAccountConfigPrompt.js';
 import { cliAccountNamePrompt } from './prompts/accountNamePrompt.js';
 import SpinniesManager from './ui/SpinniesManager.js';

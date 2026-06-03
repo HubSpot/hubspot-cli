@@ -80,6 +80,56 @@ describe('CLIWebSocketServer', () => {
         expect.stringContaining(String(PORT))
       );
     });
+
+    describe('ephemeral-port mode (no instanceId)', () => {
+      const EPHEMERAL_PORT = 54321;
+      let ephemeralServer: CLIWebSocketServer;
+
+      beforeEach(() => {
+        const onceListeners: Record<string, () => void> = {};
+        mockWebSocketServer = {
+          on: vi.fn(),
+          off: vi.fn(),
+          once: vi.fn((event: string, cb: () => void) => {
+            onceListeners[event] = cb;
+            if (event === 'listening') {
+              setTimeout(() => onceListeners.listening?.(), 0);
+            }
+          }),
+          address: vi.fn().mockReturnValue({ port: EPHEMERAL_PORT }),
+          close: vi.fn(),
+        } as unknown as Mocked<WebSocketServer>;
+
+        (WebSocketServer as unknown as Mock).mockImplementation(
+          () => mockWebSocketServer
+        );
+
+        ephemeralServer = new CLIWebSocketServer({
+          logPrefix: LOG_PREFIX,
+          debug: true,
+        });
+      });
+
+      it('should bind to port 0 and skip the port manager', async () => {
+        const port = await ephemeralServer.start({});
+
+        expect(isPortManagerServerRunning).not.toHaveBeenCalled();
+        expect(requestPorts).not.toHaveBeenCalled();
+        expect(WebSocketServer).toHaveBeenCalledWith({ port: 0 });
+        expect(port).toBe(EPHEMERAL_PORT);
+      });
+
+      it('should reject when the underlying server emits an error before listening', async () => {
+        const bindError = new Error('EADDRINUSE');
+        mockWebSocketServer.once = vi.fn((event: string, cb: () => void) => {
+          if (event === 'error') {
+            setTimeout(() => (cb as (e: Error) => void)(bindError), 0);
+          }
+        }) as unknown as Mocked<WebSocketServer>['once'];
+
+        await expect(ephemeralServer.start({})).rejects.toThrow(bindError);
+      });
+    });
   });
 
   describe('origin validation', () => {

@@ -5,6 +5,7 @@ import {
   localConfigFileExists,
   globalConfigFileExists,
   setConfigAccountAsDefault,
+  getConfigDefaultAccountIfExists,
 } from '@hubspot/local-dev-lib/config';
 import {
   getAccessToken,
@@ -16,33 +17,59 @@ import { HubSpotConfigAccount } from '@hubspot/local-dev-lib/types/Accounts';
 import { handleMerge, handleMigration } from './configMigrate.js';
 import { debugError, logError } from './errorHandlers/index.js';
 import { isPromptExitError } from './errors/PromptExitError.js';
-import { personalAccessKeyPrompt } from './prompts/personalAccessKeyPrompt.js';
+import { legacyPersonalAccessKeyPrompt } from './prompts/personalAccessKeyPrompt.js';
 import { cliAccountNamePrompt } from './prompts/accountNamePrompt.js';
 import { setAsDefaultAccountPrompt } from './prompts/setAsDefaultAccountPrompt.js';
+import { awaitPersonalAccessKeyOverWebsocket } from './auth/awaitPersonalAccessKeyOverWebsocket.js';
 import { commands } from '../lang/en.js';
 import { uiLogger } from './ui/logger.js';
+
+async function getPersonalAccessKey(
+  env: Environment,
+  accountId?: number
+): Promise<string> {
+  if (process.env.BROWSER !== 'none') {
+    try {
+      return await awaitPersonalAccessKeyOverWebsocket({
+        env,
+        account: accountId,
+      });
+    } catch (e) {
+      if (isPromptExitError(e)) throw e;
+      debugError(e);
+    }
+  }
+  const { personalAccessKey } = await legacyPersonalAccessKeyPrompt({
+    env,
+    account: accountId,
+  });
+  return personalAccessKey;
+}
 
 async function updateConfigWithNewAccount(
   env: Environment,
   configAlreadyExists: boolean,
   providedPersonalAccessKey?: string,
-  accountId?: number
+  accountId?: number,
+  providedAccountName?: string,
+  useDefaultAccountName?: boolean
 ): Promise<HubSpotConfigAccount | null> {
   try {
-    const { personalAccessKey } = providedPersonalAccessKey
-      ? { personalAccessKey: providedPersonalAccessKey }
-      : await personalAccessKeyPrompt({
-          env,
-          account: accountId,
-        });
+    const personalAccessKey =
+      providedPersonalAccessKey ?? (await getPersonalAccessKey(env, accountId));
     const token = await getAccessToken(personalAccessKey, env);
     const defaultAccountName = token.hubName
       ? toKebabCase(token.hubName)
       : undefined;
 
-    const accountName = configAlreadyExists
-      ? undefined
-      : (await cliAccountNamePrompt(defaultAccountName)).name;
+    let accountName: string | undefined;
+    if (providedAccountName) {
+      accountName = providedAccountName;
+    } else if (useDefaultAccountName && defaultAccountName) {
+      accountName = defaultAccountName;
+    } else if (!configAlreadyExists) {
+      accountName = (await cliAccountNamePrompt(defaultAccountName)).name;
+    }
 
     const updatedConfig = await updateConfigWithAccessToken(
       token,
@@ -118,6 +145,8 @@ type AuthenticateNewAccountOptions = {
   providedPersonalAccessKey?: string;
   accountId?: number;
   setAsDefaultAccount?: boolean;
+  accountName?: string;
+  useDefaultAccountName?: boolean;
 };
 
 export async function authenticateNewAccount({
@@ -125,6 +154,8 @@ export async function authenticateNewAccount({
   providedPersonalAccessKey,
   accountId,
   setAsDefaultAccount,
+  accountName: providedAccountName,
+  useDefaultAccountName,
 }: AuthenticateNewAccountOptions): Promise<HubSpotConfigAccount | null> {
   const configMigrationSuccess = await handleConfigMigration();
 
@@ -142,7 +173,9 @@ export async function authenticateNewAccount({
     env,
     configAlreadyExists,
     providedPersonalAccessKey,
-    accountId
+    accountId,
+    providedAccountName,
+    useDefaultAccountName
   );
 
   if (!updatedConfig) {
@@ -164,14 +197,19 @@ export async function authenticateNewAccount({
     uiLogger.success(
       commands.account.subcommands.auth.success.configFileUpdated(newAccountId)
     );
-  } else if (setAsDefaultAccount) {
-    setConfigAccountAsDefault(name);
+  } else if (setAsDefaultAccount === true) {
+    const currentDefault = getConfigDefaultAccountIfExists();
+    if (currentDefault?.name !== name) {
+      setConfigAccountAsDefault(name);
 
-    uiLogger.log('');
-    uiLogger.success(
-      commands.account.subcommands.auth.success.configFileUpdated(newAccountId)
-    );
-  } else {
+      uiLogger.log('');
+      uiLogger.success(
+        commands.account.subcommands.auth.success.configFileUpdated(
+          newAccountId
+        )
+      );
+    }
+  } else if (setAsDefaultAccount !== false) {
     await setAsDefaultAccountPrompt(name);
   }
 

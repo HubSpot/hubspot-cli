@@ -342,6 +342,28 @@ describe('mcp-server/utils/command', () => {
       }
     });
 
+    it('should set INIT_CWD to the resolved directory', async () => {
+      const expectedResult: CommandResults = {
+        stdout: 'success',
+        stderr: '',
+      };
+
+      mockExistsSync.mockReturnValue(true);
+      mockExecAsync.mockResolvedValue(expectedResult);
+
+      await runCommandInDir(mockDirectory, mockCommand);
+
+      expect(mockExecAsync).toHaveBeenCalledWith(
+        mockCommand,
+        expect.objectContaining({
+          cwd: mockResolvedPath,
+          env: expect.objectContaining({
+            INIT_CWD: mockResolvedPath,
+          }),
+        })
+      );
+    });
+
     it('should use pinned CLI version when HUBSPOT_CLI_VERSION is set in standalone mode', async () => {
       const originalStandaloneEnv = process.env.HUBSPOT_MCP_STANDALONE;
       const originalVersionEnv = process.env.HUBSPOT_CLI_VERSION;

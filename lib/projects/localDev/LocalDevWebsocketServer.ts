@@ -208,7 +208,7 @@ class LocalDevWebsocketServer {
   }
 
   async start(): Promise<void> {
-    return this.cliWebSocketServer.start({
+    await this.cliWebSocketServer.start({
       metadata: {
         localDevWebsocketServerVersion: LOCAL_DEV_WEBSOCKET_SERVER_VERSION,
       },

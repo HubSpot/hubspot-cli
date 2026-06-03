@@ -35,7 +35,7 @@ import { trackAuthAction } from '../lib/usageTracking.js';
 import { promptUser } from '../lib/prompts/promptUtils.js';
 import {
   OAUTH_FLOW,
-  personalAccessKeyPrompt,
+  legacyPersonalAccessKeyPrompt as personalAccessKeyPrompt,
   OauthPromptResponse,
 } from '../lib/prompts/personalAccessKeyPrompt.js';
 import { cliAccountNamePrompt } from '../lib/prompts/accountNamePrompt.js';
