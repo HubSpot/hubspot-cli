@@ -31,6 +31,7 @@ import {
 } from '../lib/projects/urls.js';
 import { getProductUpdatesUrl } from '../lib/links.js';
 import { HubSpotConfigAccount } from '@hubspot/local-dev-lib/types/Accounts';
+import { LocallyChangedComponents } from '../types/Projects.js';
 
 export const commands = {
   generalErrors: {
@@ -4421,8 +4422,28 @@ export const lib = {
         checking: 'Checking if your deployed build is up to date...',
         upToDate: 'Deployed build is up to date.',
         notUpToDate: `Your project contains undeployed local changes.`,
+        changedFiles: (changed: LocallyChangedComponents) => {
+          const sections: string[] = [];
+          if (changed.added.length > 0) {
+            sections.push(
+              `${chalk.bold('Features Added:')}\n${changed.added.map(f => `  - ${f}`).join('\n')}`
+            );
+          }
+          if (changed.updated.length > 0) {
+            sections.push(
+              `${chalk.bold('Features Modified:')}\n${changed.updated.map(f => `  - ${f}`).join('\n')}`
+            );
+          }
+          if (changed.removed.length > 0) {
+            sections.push(
+              `${chalk.bold('Features Removed:')}\n${changed.removed.map(f => `  - ${f}`).join('\n')}`
+            );
+          }
+          return sections.join('\n\n');
+        },
         notUpToDateExplanation: (profile?: string) =>
           `Run ${uiCommandReference(`hs project upload${profile ? ` --profile ${profile}` : ''}`)} to upload these changes to HubSpot, then re-run ${uiCommandReference(`hs project dev${profile ? ` --profile ${profile}` : ''}`)} to continue local development.`,
+        unableToCompare: `Unable to check if local *-hsmeta.json files match the deployed build. Run ${uiCommandReference('hs project upload')} to upload any local changes before continuing.`,
       },
       createNewProjectForLocalDev: {
         projectMustExistExplanation: (projectName: string, accountId: number) =>

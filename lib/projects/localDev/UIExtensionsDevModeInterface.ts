@@ -33,11 +33,14 @@ class UIExtensionsDevModeInterface {
   }
 
   async start(): Promise<void> {
+    const appId = Object.values(this.localDevState.appData)[0]?.id;
+
     return UIEDevModeInterface.start({
       accountId: this.localDevState.targetTestingAccountId,
       // @ts-expect-error TODO: reconcile types between CLI and UIE Dev Server
       projectConfig: this.localDevState.projectConfig,
       requestPorts,
+      appId,
     });
   }
 

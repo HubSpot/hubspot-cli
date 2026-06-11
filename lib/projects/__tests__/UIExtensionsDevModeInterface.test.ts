@@ -3,6 +3,7 @@ import UIExtensionsDevModeInterface from '../localDev/UIExtensionsDevModeInterfa
 import LocalDevState from '../localDev/LocalDevState.js';
 import { DevModeUnifiedInterface } from '@hubspot/ui-extensions-dev-server';
 import { requestPorts } from '@hubspot/local-dev-lib/portManager';
+import { APP_INSTALLATION_STATES } from '../../constants.js';
 import { logger } from '@hubspot/local-dev-lib/logger';
 import {
   getHubSpotApiOrigin,
@@ -161,6 +162,30 @@ describe('UIExtensionsDevModeInterface', () => {
         .calls[0][0];
       expect(startCall.projectConfig).toStrictEqual(
         mockLocalDevState.projectConfig
+      );
+    });
+
+    it('should pass appId from localDevState when app data is available', async () => {
+      mockLocalDevState.setAppDataForUid('test-app-uid', {
+        id: 98765,
+        clientId: 'test-client-id',
+        name: 'Test App',
+        installationState: APP_INSTALLATION_STATES.INSTALLED,
+        scopeGroupIds: [],
+      });
+
+      await uiExtensionsInterface.start();
+
+      expect(DevModeUnifiedInterface.start).toHaveBeenCalledWith(
+        expect.objectContaining({ appId: 98765 })
+      );
+    });
+
+    it('should pass appId as undefined when no app data is available', async () => {
+      await uiExtensionsInterface.start();
+
+      expect(DevModeUnifiedInterface.start).toHaveBeenCalledWith(
+        expect.objectContaining({ appId: undefined })
       );
     });
   });

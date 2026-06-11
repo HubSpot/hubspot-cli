@@ -164,3 +164,9 @@ export type Component<T = GenericComponentConfig> = {
   runnable: boolean;
   path: string;
 };
+
+export type LocallyChangedComponents = {
+  added: string[];
+  updated: string[];
+  removed: string[];
+};
