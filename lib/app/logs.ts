@@ -67,7 +67,7 @@ export function parseSinceTime(sinceInput: string): {
     };
   }
 
-  const isoTime = moment(sinceInput);
+  const isoTime = moment(sinceInput, moment.ISO_8601, true);
   if (isoTime.isValid()) {
     return {
       startTime: isoTime.valueOf(),

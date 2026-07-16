@@ -24,6 +24,7 @@ import { ProjectDevArgs } from '../../../types/Yargs.js';
 import { ProjectConfig } from '../../../types/Projects.js';
 import { logError } from '../../../lib/errorHandlers/index.js';
 import { EXIT_CODES } from '../../../lib/enums/exitCodes.js';
+import { warnAboutSkippedHsMetaFiles } from '../../../lib/projects/ui.js';
 import { ensureProjectExists } from '../../../lib/projects/ensureProjectExists.js';
 import {
   createInitialBuildForNewProject,
@@ -92,19 +93,22 @@ export async function unifiedProjectDevFlow({
 
   // Get IR
   try {
-    const intermediateRepresentation = await translateForLocalDev(
-      {
-        projectSourceDir: path.join(projectDir, projectConfig.srcDir),
-        platformVersion: projectConfig.platformVersion,
-        accountId: targetProjectAccountId,
-      },
-      { profile: args.profile }
-    );
+    const { intermediateRepresentation, skippedHsMetaFiles } =
+      await translateForLocalDev(
+        {
+          projectSourceDir: path.join(projectDir, projectConfig.srcDir),
+          platformVersion: projectConfig.platformVersion,
+          accountId: targetProjectAccountId,
+        },
+        { profile: args.profile }
+      );
 
     projectNodes = intermediateRepresentation.intermediateNodesIndexedByUid;
     projectProfileData = intermediateRepresentation.profileData;
 
     uiLogger.debug(util.inspect(projectNodes, false, null, true));
+
+    await warnAboutSkippedHsMetaFiles(skippedHsMetaFiles, true, false);
   } catch (e) {
     if (isTranslationError(e)) {
       uiLogger.error(e.toString());

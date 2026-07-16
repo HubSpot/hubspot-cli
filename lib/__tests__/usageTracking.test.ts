@@ -16,6 +16,7 @@ import {
   trackConvertFieldsUsage,
   trackAuthAction,
   trackCommandMetadataUsage,
+  trackMcpPromotionShown,
 } from '../usageTracking.js';
 import { sendUsageEvent } from '../api/usageTracking.js';
 import { pkg } from '../jsonLoader.js';
@@ -373,6 +374,28 @@ describe('lib/usageTracking', () => {
             action: 'cli-command-metadata',
             command: mockCommand,
             assetType: 'test-asset',
+            os: 'macos',
+            nodeVersion: mockNodeVersion,
+            nodeMajorVersion: 'v16',
+            version,
+          }),
+        })
+      );
+    });
+  });
+
+  describe('MCP promotion tracking', () => {
+    it('should track Dev MCP promotion shown metadata', async () => {
+      await trackMcpPromotionShown('upgrade');
+
+      expect(mockedSendUsageEvent).toHaveBeenCalledWith(
+        expect.objectContaining({
+          eventName: 'cli-interaction',
+          eventClass: 'INTERACTION',
+          meta: expect.objectContaining({
+            action: 'cli-mcp-promotion',
+            step: 'shown',
+            command: 'upgrade',
             os: 'macos',
             nodeVersion: mockNodeVersion,
             nodeMajorVersion: 'v16',

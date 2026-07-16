@@ -449,8 +449,7 @@ export function rewriteLockfileForExternalDeps(
   }
 
   const packages = lockfileContent.packages as
-    | Record<string, unknown>
-    | undefined;
+    Record<string, unknown> | undefined;
   if (!packages) {
     return lockfileContent;
   }

@@ -1,6 +1,6 @@
 {
   "name": "@hubspot/cli",
-  "version": "8.9.1",
+  "version": "8.10.0",
   "description": "The official CLI for developing on HubSpot",
   "license": "Apache-2.0",
   "repository": "https://github.com/HubSpot/hubspot-cli",
@@ -10,10 +10,10 @@
     "!**/__tests__/**"
   ],
   "dependencies": {
-    "@hubspot/local-dev-lib": "5.8.1",
-    "@hubspot/project-parsing-lib": "0.17.0",
+    "@hubspot/local-dev-lib": "5.9.0",
+    "@hubspot/project-parsing-lib": "0.19.1",
     "@hubspot/serverless-dev-runtime": "7.0.7",
-    "@hubspot/ui-extensions-dev-server": "2.0.9",
+    "@hubspot/ui-extensions-dev-server": "2.0.10",
     "@inquirer/prompts": "7.1.0",
     "@modelcontextprotocol/sdk": "1.29.0",
     "archiver": "7.0.1",
@@ -33,6 +33,7 @@
     "open": "7.4.2",
     "p-queue": "8.1.0",
     "react": "19.2.3",
+    "semver": "7.6.3",
     "strip-ansi": "7.1.0",
     "table": "6.9.0",
     "tmp": "0.2.4",
@@ -67,7 +68,6 @@
     "madge": "^8.0.0",
     "mock-stdin": "^1.0.0",
     "prettier": "^3.4.2",
-    "semver": "^7.6.3",
     "ts-node": "^10.9.2",
     "tsx": "^4.20.3",
     "typescript": "^5.6.2",

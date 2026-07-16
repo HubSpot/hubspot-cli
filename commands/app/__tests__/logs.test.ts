@@ -4,6 +4,7 @@ import * as selectAppPromptLib from '../../../lib/prompts/selectAppPrompt.js';
 import * as promptUtilsLib from '../../../lib/prompts/promptUtils.js';
 import * as appLogsLib from '../../../lib/app/logs.js';
 import { EXIT_CODES } from '../../../lib/enums/exitCodes.js';
+import { showMcpPromotionNudge } from '../../../lib/mcp/promotion.js';
 import logsCommand, { AppLogsArgs } from '../logs.js';
 import {
   parseSinceTime,
@@ -24,9 +25,11 @@ vi.mock('../../../lib/prompts/selectAppPrompt.js');
 vi.mock('../../../lib/prompts/promptUtils.js');
 vi.mock('../../../lib/commonOpts.js');
 vi.mock('../../../lib/errorHandlers/index.js');
+vi.mock('../../../lib/mcp/promotion.js');
 
 // @ts-expect-error process.exit mock does not match the real signature
 const processExitSpy = vi.spyOn(process, 'exit').mockImplementation(() => {});
+const mockedShowMcpPromotionNudge = vi.mocked(showMcpPromotionNudge);
 
 describe('commands/app/logs', () => {
   describe('command definition', () => {
@@ -102,9 +105,16 @@ describe('commands/app/logs', () => {
     });
 
     it('should throw error for invalid format', () => {
+      const consoleWarnSpy = vi
+        .spyOn(console, 'warn')
+        .mockImplementation(() => {});
+
       expect(() => parseSinceTime('invalid')).toThrow();
       expect(() => parseSinceTime('10x')).toThrow();
       expect(() => parseSinceTime('')).toThrow();
+
+      expect(consoleWarnSpy).not.toHaveBeenCalled();
+      consoleWarnSpy.mockRestore();
     });
   });
 
@@ -131,6 +141,7 @@ describe('commands/app/logs', () => {
 
     beforeEach(() => {
       args = {
+        _: ['app', 'logs'],
         derivedAccountId: ACCOUNT_ID,
         app: APP_ID,
         type: 'webhooks',
@@ -139,6 +150,7 @@ describe('commands/app/logs', () => {
 
       vi.mocked(appLogsLib.handleLogsRequest).mockResolvedValue(undefined);
       vi.mocked(appLogsLib.tailAppLogs).mockResolvedValue(undefined);
+      mockedShowMcpPromotionNudge.mockResolvedValue(undefined);
     });
 
     it('prompts for type when type is not provided', async () => {
@@ -195,6 +207,20 @@ describe('commands/app/logs', () => {
       expect(processExitSpy).toHaveBeenCalledWith(EXIT_CODES.SUCCESS);
     });
 
+    it('shows MCP promotion nudge after successful log fetch', async () => {
+      await logsCommand.handler(args);
+
+      expect(mockedShowMcpPromotionNudge).toHaveBeenCalledWith('app logs');
+    });
+
+    it('does not show MCP promotion nudge for JSON output', async () => {
+      args.json = true;
+
+      await logsCommand.handler(args);
+
+      expect(mockedShowMcpPromotionNudge).not.toHaveBeenCalled();
+    });
+
     it('calls tailAppLogs instead of handleLogsRequest when tail is set', async () => {
       args.tail = true;
 
@@ -207,6 +233,7 @@ describe('commands/app/logs', () => {
         expect.any(Object)
       );
       expect(appLogsLib.handleLogsRequest).not.toHaveBeenCalled();
+      expect(mockedShowMcpPromotionNudge).not.toHaveBeenCalled();
     });
 
     it('uses the appId from the prompt result', async () => {

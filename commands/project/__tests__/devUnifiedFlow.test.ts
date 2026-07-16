@@ -163,7 +163,11 @@ describe('unifiedProjectDevFlow', () => {
     // Setup default mocks
     (getValidEnv as Mock).mockReturnValue(ENVIRONMENTS.PROD);
     (translateForLocalDev as Mock).mockResolvedValue({
-      intermediateNodesIndexedByUid: mockProjectNodes,
+      intermediateRepresentation: {
+        intermediateNodesIndexedByUid: mockProjectNodes,
+        profileData: undefined,
+      },
+      skippedHsMetaFiles: [],
     });
     (getConfigAccountById as Mock).mockReturnValue(mockAccountConfig);
     (getConfigAccountEnvironment as Mock).mockReturnValue(ENVIRONMENTS.PROD);
@@ -269,7 +273,11 @@ describe('unifiedProjectDevFlow', () => {
 
     it('should exit with success when no runnable components found', async () => {
       (translateForLocalDev as Mock).mockResolvedValue({
-        intermediateNodesIndexedByUid: {},
+        intermediateRepresentation: {
+          intermediateNodesIndexedByUid: {},
+          profileData: undefined,
+        },
+        skippedHsMetaFiles: [],
       });
 
       await unifiedProjectDevFlow({

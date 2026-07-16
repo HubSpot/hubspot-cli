@@ -61,7 +61,7 @@ async function handler(
 
   let appNode: AppIRNode | undefined;
   try {
-    const { intermediateNodesIndexedByUid } = await translateForLocalDev(
+    const { intermediateRepresentation } = await translateForLocalDev(
       {
         projectSourceDir: path.join(projectDir, projectConfig.srcDir),
         platformVersion: projectConfig.platformVersion,
@@ -69,7 +69,9 @@ async function handler(
       },
       { skipValidation: true }
     );
-    appNode = Object.values(intermediateNodesIndexedByUid).find(isAppIRNode);
+    appNode = Object.values(
+      intermediateRepresentation.intermediateNodesIndexedByUid
+    ).find(isAppIRNode);
   } catch (error) {
     debugError(error);
     uiLogger.error(commands.project.installStatus.errors.failedToParseProject);

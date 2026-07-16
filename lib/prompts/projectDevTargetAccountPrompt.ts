@@ -1,7 +1,7 @@
 import { getSandboxUsageLimits } from '@hubspot/local-dev-lib/api/sandboxHubs';
 import {
-  HUBSPOT_ACCOUNT_TYPES,
   HUBSPOT_ACCOUNT_TYPE_STRINGS,
+  HUBSPOT_ACCOUNT_TYPES,
 } from '@hubspot/local-dev-lib/constants/config';
 import { fetchDeveloperTestAccounts } from '@hubspot/local-dev-lib/api/developerTestAccounts';
 import { HubSpotConfigAccount } from '@hubspot/local-dev-lib/types/Accounts';
@@ -146,9 +146,12 @@ export async function selectDeveloperTestTargetAccountPrompt(
     const { data } = await fetchDeveloperTestAccounts(defaultAccountId);
     devTestAccountsResponse = data;
   } catch (err) {
-    uiLogger.debug(
-      'Unable to fetch developer test account usage limits: ',
-      err
+    uiLogger.error(
+      lib.prompts.projectDevTargetAccountPrompt.fetchDeveloperTestAccountsError
+    );
+    throw new PromptExitError(
+      lib.prompts.projectDevTargetAccountPrompt.fetchDeveloperTestAccountsError,
+      EXIT_CODES.ERROR
     );
   }
 

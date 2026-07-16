@@ -368,7 +368,10 @@ describe('commands/project/validate', () => {
         vi.mocked(isLegacyProject).mockReturnValue(false);
         vi.mocked(validateProjectConfig).mockReturnValue(undefined);
         vi.mocked(getAllHsProfiles).mockResolvedValue([]);
-        vi.mocked(handleTranslate).mockResolvedValue(undefined);
+        vi.mocked(handleTranslate).mockResolvedValue({
+          intermediateRepresentation: { intermediateNodesIndexedByUid: {} },
+          skippedHsMetaFiles: [],
+        });
         vi.mocked(validateSourceDirectory).mockResolvedValue(undefined);
 
         await expect(
@@ -428,7 +431,10 @@ describe('commands/project/validate', () => {
       vi.mocked(isLegacyProject).mockReturnValue(false);
       vi.mocked(validateProjectConfig).mockReturnValue(undefined);
       vi.mocked(getAllHsProfiles).mockResolvedValue([]);
-      vi.mocked(handleTranslate).mockResolvedValue(undefined);
+      vi.mocked(handleTranslate).mockResolvedValue({
+        intermediateRepresentation: { intermediateNodesIndexedByUid: {} },
+        skippedHsMetaFiles: [],
+      });
       vi.mocked(validateSourceDirectory).mockResolvedValue(undefined);
 
       await expect(
@@ -455,7 +461,10 @@ describe('commands/project/validate', () => {
       vi.mocked(isLegacyProject).mockReturnValue(false);
       vi.mocked(validateProjectConfig).mockReturnValue(undefined);
       vi.mocked(getAllHsProfiles).mockResolvedValue([]);
-      vi.mocked(handleTranslate).mockResolvedValue(undefined);
+      vi.mocked(handleTranslate).mockResolvedValue({
+        intermediateRepresentation: { intermediateNodesIndexedByUid: {} },
+        skippedHsMetaFiles: [],
+      });
       const error = new Error('Invalid source directory');
       vi.mocked(validateSourceDirectory).mockRejectedValue(error);
 
@@ -480,7 +489,10 @@ describe('commands/project/validate', () => {
       vi.mocked(isLegacyProject).mockReturnValue(false);
       vi.mocked(validateProjectConfig).mockReturnValue(undefined);
       vi.mocked(getAllHsProfiles).mockResolvedValue([]);
-      vi.mocked(handleTranslate).mockResolvedValue(undefined);
+      vi.mocked(handleTranslate).mockResolvedValue({
+        intermediateRepresentation: { intermediateNodesIndexedByUid: {} },
+        skippedHsMetaFiles: [],
+      });
       vi.mocked(validateSourceDirectory).mockResolvedValue(undefined);
 
       await expect(

@@ -7,6 +7,7 @@ import { shouldIgnoreFile } from '@hubspot/local-dev-lib/ignoreRules';
 import {
   isTranslationError,
   translate,
+  type IntermediateRepresentation,
 } from '@hubspot/project-parsing-lib/translate';
 import { projectContainsHsMetaFiles } from '@hubspot/project-parsing-lib/projects';
 import {
@@ -18,6 +19,7 @@ import {
 import SpinniesManager from '../ui/SpinniesManager.js';
 import { uiAccountDescription } from '../ui/index.js';
 import { ProjectConfig } from '../../types/Projects.js';
+import { warnAboutSkippedHsMetaFiles } from './ui.js';
 
 import util from 'node:util';
 import { lib } from '../../lang/en.js';
@@ -58,6 +60,7 @@ async function uploadProjectFiles(
   let error: unknown;
 
   try {
+    // TODO(skip-auto-deploy): Pass skipAutoDeploy once local-dev-lib is bumped
     const { data: upload } = await uploadProject(
       accountId,
       projectName,
@@ -107,6 +110,7 @@ type ProjectUploadResult<T> = {
   uploadError?: unknown;
   projectNotFound?: boolean;
   projectId?: number;
+  userDeclined?: boolean;
 };
 
 type HandleProjectUploadArg<T> = {
@@ -120,9 +124,12 @@ type HandleProjectUploadArg<T> = {
   sendIR?: boolean;
   skipValidation?: boolean;
   skipNpmAudit?: boolean;
+  skipAutoDeploy?: boolean;
   profile?: string;
+  force?: boolean;
 };
 
+// TODO(skip-auto-deploy): Use skipAutoDeploy once local-dev-lib is bumped to support it
 export async function handleProjectUpload<T>({
   accountId,
   projectConfig,
@@ -135,6 +142,9 @@ export async function handleProjectUpload<T>({
   sendIR = false,
   skipValidation = false,
   skipNpmAudit = false,
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  skipAutoDeploy: _skipAutoDeploy = false,
+  force = false,
 }: HandleProjectUploadArg<T>): Promise<ProjectUploadResult<T>> {
   const srcDir = path.resolve(projectDir, projectConfig.srcDir);
 
@@ -195,13 +205,22 @@ export async function handleProjectUpload<T>({
 
         if (sendIR) {
           try {
-            intermediateRepresentation = await handleTranslate({
+            const translateResult = await handleTranslate({
               projectDir,
               projectConfig,
               accountId,
               skipValidation,
               profile,
             });
+            intermediateRepresentation =
+              translateResult.intermediateRepresentation;
+            const shouldContinue = await warnAboutSkippedHsMetaFiles(
+              translateResult.skippedHsMetaFiles,
+              force
+            );
+            if (!shouldContinue) {
+              return resolve({ userDeclined: true });
+            }
           } catch (e) {
             return resolve({ uploadError: e });
           }
@@ -354,6 +373,11 @@ type HandleTranslateArg = {
   includeTranslationErrorMessage?: boolean;
 };
 
+export type HandleTranslateResult = {
+  intermediateRepresentation: IntermediateRepresentation;
+  skippedHsMetaFiles: string[];
+};
+
 export async function handleTranslate({
   projectDir,
   projectConfig,
@@ -361,9 +385,9 @@ export async function handleTranslate({
   skipValidation,
   profile,
   includeTranslationErrorMessage = true,
-}: HandleTranslateArg): Promise<unknown> {
+}: HandleTranslateArg): Promise<HandleTranslateResult> {
   try {
-    const intermediateRepresentation = await translate(
+    const { intermediateRepresentation, skippedHsMetaFiles } = await translate(
       {
         projectSourceDir: path.join(projectDir, projectConfig.srcDir),
         platformVersion: projectConfig.platformVersion,
@@ -372,7 +396,7 @@ export async function handleTranslate({
       { skipValidation, profile }
     );
     uiLogger.debug(util.inspect(intermediateRepresentation, false, null, true));
-    return intermediateRepresentation;
+    return { intermediateRepresentation, skippedHsMetaFiles };
   } catch (e) {
     if (isTranslationError(e)) {
       throw new ProjectValidationError(

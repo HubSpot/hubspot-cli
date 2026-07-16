@@ -131,9 +131,7 @@ export type AppCardComponentConfig = {
 };
 
 export type GenericComponentConfig =
-  | PublicAppComponentConfig
-  | PrivateAppComponentConfig
-  | AppCardComponentConfig;
+  PublicAppComponentConfig | PrivateAppComponentConfig | AppCardComponentConfig;
 
 export type ProjectInfo = {
   projectName: string;

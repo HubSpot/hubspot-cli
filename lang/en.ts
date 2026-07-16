@@ -22,6 +22,7 @@ import {
   uiAuthCommandReference,
   uiBetaTag,
   uiCommandReference,
+  uiDeprecatedTag,
   uiLink,
 } from '../lib/ui/index.js';
 import {
@@ -1640,8 +1641,11 @@ export const commands = {
   },
   mcp: {
     describe: 'Commands for managing HubSpot MCP servers.',
+    promotion: {
+      activeNudge: `${chalk.bold('Tip:')} Work faster with AI coding tools. Run ${uiCommandReference('hs mcp setup')} to connect HubSpot developer context to supported clients.`,
+    },
     setup: {
-      describe: 'Setup the HubSpot development MCP servers.',
+      describe: `Run ${uiCommandReference('hs mcp setup')} to connect the HubSpot Dev MCP and work faster with your AI coding tools.`,
       installingDocSearch: 'Adding the docs-search mcp server',
       codex: 'Codex CLI',
       claudeCode: 'Claude Code',
@@ -2397,8 +2401,14 @@ export const commands = {
         targetRequiresPreview: `${uiCommandReference('--target')} can only be used with ${uiCommandReference('--preview')}.`,
       },
       options: {
+        force: {
+          describe: 'Skip confirmation prompts and force the upload.',
+        },
         forceCreate: {
-          describe: 'Automatically create project if it does not exist',
+          describe: uiDeprecatedTag(
+            `Automatically create project if it does not exist. Use ${uiCommandReference('--force')} instead.`,
+            false
+          ),
         },
         message: {
           describe:
@@ -2409,6 +2419,9 @@ export const commands = {
         },
         skipNpmAudit: {
           describe: 'Skip the npm audit security check before uploading',
+        },
+        skipAutoDeploy: {
+          describe: 'Skip automatic deployment after a successful build',
         },
         preview: {
           describe:
@@ -2792,6 +2805,68 @@ export const commands = {
         project: 'name of the project to delete',
         force: 'skip confirmation prompt',
       },
+    },
+    installApp: {
+      describe:
+        'Install a static auth app from the current project into the target account',
+      verboseDescribe: `Install a static auth app from the current project into the target account.\n\nRun this command from within the project directory. The project must contain a privately distributed static auth app and must already be uploaded to the target account.`,
+      examples: {
+        default: 'Install the static auth app from the current project',
+        withAccount: 'Install the app into a specific account',
+        withProfile: 'Install the app into the account targeted by a profile',
+        json: 'Output install result as JSON',
+      },
+      options: {
+        force: 'Skip confirmation prompts',
+        profile: 'The profile to target with this install',
+      },
+      errors: {
+        noProjectConfig: `No project config found. Run this command from within a HubSpot project directory, or use ${uiCommandReference('hs project create')} to create a new one.`,
+        unsupportedPlatformVersion: (platformVersion: string) =>
+          `This command is only supported for projects on platform version 2025.2 or later (detected: ${platformVersion}).`,
+        failedToParseProject:
+          'Failed to parse the project. Check your project configuration is valid and try again.',
+        noAppInProject:
+          'No app was found in the local project. This command requires a project that contains an app.',
+        unsupportedAuthType: (authType: string) =>
+          `This command only supports static auth apps. Detected auth type: ${authType}.`,
+        unsupportedDistribution: (distribution: string) =>
+          `This command only supports privately distributed apps. Detected distribution: ${distribution}.`,
+        invalidAppDeveloperAccount: (accountId: number) =>
+          `Static auth apps can't be installed into the app developer account ${uiAccountDescription(accountId)}. Switch to a standard, sandbox, or developer test account with ${uiCommandReference('hs account use')}, or pass ${uiCommandReference('--account')}.`,
+        projectNotFound: (accountId: number, projectName: string) =>
+          `The project ${chalk.bold(projectName)} does not exist in ${uiAccountDescription(accountId)}. Run ${uiCommandReference('hs project upload')} to upload your project files to HubSpot.`,
+        appNotDeployed: (appName: string, accountId: number) =>
+          `The app ${chalk.bold(appName)} has not been deployed to ${uiAccountDescription(accountId)}. Upload the project with ${uiCommandReference('hs project upload')} and ensure the build succeeds, then try again.`,
+        automaticInstallUnavailable: (appName: string, accountId: number) =>
+          `${chalk.bold(appName)} could not be installed automatically in ${uiAccountDescription(accountId)}.`,
+        installFailed: (appName: string, accountId: number) =>
+          `Failed to install ${chalk.bold(appName)} in ${uiAccountDescription(accountId)}.`,
+      },
+      jsonErrors: {
+        automaticInstallUnavailable:
+          'Automatic install is unavailable for this account.',
+        installFailed: (appName: string, accountId: number) =>
+          `Failed to install ${appName} in account ${accountId}.`,
+      },
+      profileMessage: (profileName: string, accountId: number) =>
+        `Installing with ${chalk.bold(profileName)} profile: ${uiAccountDescription(accountId)}`,
+      appDeveloperAccountNotice: (accountId: number) =>
+        `${uiAccountDescription(accountId)} is an app developer account, which can't have apps installed into it.`,
+      selectInstallAccountPrompt: 'Select an account to install the app into',
+      uploadAndDeployPrompt: (accountId: number) =>
+        `The app isn't deployed to ${uiAccountDescription(accountId)} yet. Upload and deploy the project now?`,
+      alreadyInstalled: (appName: string, accountId: number) =>
+        `${chalk.bold(appName)} is already installed in ${uiAccountDescription(accountId)}.`,
+      outdatedScopes: (appName: string, accountId: number) =>
+        `${chalk.bold(appName)} is installed in ${uiAccountDescription(accountId)} with outdated scopes.`,
+      reinstallPrompt: 'Reinstall the app to grant the latest scopes?',
+      installPrompt: (appName: string, accountId: number) =>
+        `Install ${chalk.bold(appName)} in ${uiAccountDescription(accountId)}?`,
+      installFromBrowser: (installUrl: string) =>
+        `Install the app in HubSpot: ${uiLink('Open install page', installUrl)}`,
+      success: (appName: string, accountId: number) =>
+        `${chalk.bold(appName)} installed in ${uiAccountDescription(accountId)}.`,
     },
     installStatus: {
       describe:
@@ -3328,7 +3403,7 @@ export const commands = {
         contentLevel:
           'Content Hub tier. Options: FREE, STARTER, PROFESSIONAL, ENTERPRISE',
         commerceLevel:
-          'Commerce Hub tier. Options: FREE, PROFESSIONAL, ENTERPRISE',
+          'Revenue Hub tier. Options: FREE, PROFESSIONAL, ENTERPRISE',
       },
       example: (configPath: string) =>
         `Create a test account from the config file at ${configPath}`,
@@ -4222,6 +4297,12 @@ export const lib = {
     invalidAccountIdEnvironmentVariable:
       'Unable to parse `HUBSPOT_ACCOUNT_ID` environment variable into a number',
   },
+  accountTargetDiscovery: {
+    errors: {
+      explicitAccountNotFound: (account: string | number) =>
+        `Account ${chalk.bold(String(account))} was not found in your config. Run ${uiCommandReference('hs account list')} to see available accounts.`,
+    },
+  },
   process: {
     exitDebug: (signal: string) =>
       `Attempting to gracefully exit. Triggered by ${signal}`,
@@ -4646,6 +4727,13 @@ export const lib = {
       feedbackHeader: "We'd love to hear your feedback!",
       feedbackMessage: `How are you liking the new projects and developer tools? \n > Run ${uiCommandReference('hs feedback')} to let us know what you think!\n`,
     },
+    skippedHsMetaFiles: {
+      warning: (files: string[]) =>
+        `The following *-hsmeta.json files will be skipped.\nThis CLI version doesn't support the features they require:\n${files.map(f => `  ${chalk.bold(f)}`).join('\n')}\nRun ${uiCommandReference('hs upgrade')} to update the CLI, which may add support for these features.`,
+      uploadWarning: (files: string[]) =>
+        `The following *-hsmeta.json files will be skipped during upload.\nThis CLI version doesn't support the features they require:\n${files.map(f => `  ${chalk.bold(f)}`).join('\n')}\nRun ${uiCommandReference('hs upgrade')} to update the CLI, which may add support for these features.`,
+      prompt: '[--force] Continue anyway?',
+    },
     components: {
       unableToGetUidFromHsmeta: 'Unable to get UID from hsmeta',
       buildSuccessMessage: {
@@ -4657,9 +4745,9 @@ export const lib = {
         headerAdded: (featureText: string, uid: string, plural: boolean) =>
           `${featureText} ${plural ? 'were' : 'was'} successfully added to ${uid}:`,
         docsDetails: (docsLink: string) =>
-          `📖 ${docsLink} for more details about building and testing these features.`,
-        uploadPrompt: `🚀 Run ${uiCommandReference('hs project upload')} when you're ready to deploy.`,
-        devPrompt: `🧪 Run ${uiCommandReference('hs project dev')} to start local development.`,
+          `${docsLink} for more details about building and testing these features.`,
+        uploadPrompt: `Run ${uiCommandReference('hs project upload')} when you're ready to deploy.`,
+        devPrompt: `Run ${uiCommandReference('hs project dev')} to start local development.`,
       },
     },
   },
@@ -5083,6 +5171,8 @@ export const lib = {
         `${accountName} is not linked to this directory. Would you like to link it?`,
       noAccountId:
         'No account ID found for the selected account. Please try again.',
+      fetchDeveloperTestAccountsError:
+        'Unable to fetch developer test accounts. Please try again.',
     },
     projectLogsPrompt: {
       functionName: (projectName: string) =>
@@ -5600,6 +5690,13 @@ export const lib = {
       notInstalled: 'npm is not installed',
       installed: (npmVersion: string) => `npm v${npmVersion} is installed`,
       unableToDetermine: 'Unable to determine if npm is installed',
+    },
+    mcpChecks: {
+      configured: (clients: string[]) =>
+        `HubSpot MCP server configured in ${clients.join(', ')}`,
+      notConfigured: (clients: string[]) =>
+        `HubSpot MCP server not configured in ${clients.join(', ')}`,
+      notConfiguredSecondary: `Run ${uiCommandReference('hs mcp setup')} to connect AI coding tools to HubSpot developer context`,
     },
     hsChecks: {
       notLatest: (hsVersion: string) => `Version ${hsVersion} outdated`,

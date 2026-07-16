@@ -201,7 +201,11 @@ describe('LocalDevProcess', () => {
     it('should update project nodes with translated representation', async () => {
       const mockNodes = { node1: { uid: 'node1' } };
       (translateForLocalDev as Mock).mockResolvedValue({
-        intermediateNodesIndexedByUid: mockNodes,
+        intermediateRepresentation: {
+          intermediateNodesIndexedByUid: mockNodes,
+          profileData: undefined,
+        },
+        skippedHsMetaFiles: [],
       });
 
       // @ts-expect-error testing private method
@@ -351,7 +355,11 @@ describe('LocalDevProcess', () => {
         },
       });
       (translateForLocalDev as Mock).mockResolvedValue({
-        intermediateNodesIndexedByUid: mockNewNodes,
+        intermediateRepresentation: {
+          intermediateNodesIndexedByUid: mockNewNodes,
+          profileData: undefined,
+        },
+        skippedHsMetaFiles: [],
       });
       (fetchProject as Mock).mockResolvedValue({
         data: {
@@ -425,7 +433,11 @@ describe('LocalDevProcess', () => {
   describe('handleConfigFileChange()', () => {
     beforeEach(() => {
       (translateForLocalDev as Mock).mockResolvedValue({
-        intermediateNodesIndexedByUid: {},
+        intermediateRepresentation: {
+          intermediateNodesIndexedByUid: {},
+          profileData: undefined,
+        },
+        skippedHsMetaFiles: [],
       });
     });
 

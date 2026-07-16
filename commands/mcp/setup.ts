@@ -4,7 +4,7 @@ import { makeYargsBuilder } from '../../lib/yargsUtils.js';
 import { commands } from '../../lang/en.js';
 import { CommonArgs, YargsCommandModule } from '../../types/Yargs.js';
 import { makeWrappedYargsHandler } from '../../lib/yargs/makeWrappedYargsHandler.js';
-import { addMcpServerToConfig, supportedTools } from '../../lib/mcp/setup.js';
+import { configureMcpServer, supportedTools } from '../../lib/mcp/setup.js';
 
 const command = ['setup'];
 const describe = commands.mcp.setup.describe;
@@ -17,7 +17,7 @@ async function handler(args: ArgumentsCamelCase<MCPSetupArgs>): Promise<void> {
   const { exit } = args;
 
   try {
-    await addMcpServerToConfig(args.client);
+    await configureMcpServer(args.client);
   } catch (e) {
     return exit(EXIT_CODES.ERROR);
   }

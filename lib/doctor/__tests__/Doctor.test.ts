@@ -32,6 +32,7 @@ import {
 import { validateProjectForProfile as _validateProjectForProfile } from '../../projects/projectProfiles.js';
 import { getAllHsProfiles as _getAllHsProfiles } from '@hubspot/project-parsing-lib/profiles';
 import { getLatestCliVersion as _getLatestCliVersion } from '../../cliUpgradeUtils.js';
+import { detectConfiguredMcpClients as _detectConfiguredMcpClients } from '../../mcp/promotion.js';
 
 vi.mock('../Diagnosis');
 vi.mock('../../ui/SpinniesManager');
@@ -51,6 +52,14 @@ vi.mock('@hubspot/project-parsing-lib/profiles');
 vi.mock('@hubspot/project-parsing-lib/projects');
 vi.mock('@hubspot/project-parsing-lib/constants');
 vi.mock('../../cliUpgradeUtils.js');
+vi.mock('../../mcp/promotion.js');
+vi.mock('../../mcp/clients.js', () => ({
+  MCP_CLIENTS: [
+    { id: 'claude', detection: { type: 'json', getPathSegments: () => [] } },
+    { id: 'cursor', detection: { type: 'json', getPathSegments: () => [] } },
+    { id: 'vscode', detection: { type: 'json', getPathSegments: () => [] } },
+  ],
+}));
 
 const hasMissingPackages = vi.mocked(_hasMissingPackages);
 const isPortAvailable = vi.mocked(_isPortAvailable);
@@ -76,6 +85,7 @@ const handleTranslate = vi.mocked(_handleTranslate);
 const validateProjectForProfile = vi.mocked(_validateProjectForProfile);
 const getAllHsProfiles = vi.mocked(_getAllHsProfiles);
 const getLatestCliVersion = vi.mocked(_getLatestCliVersion);
+const detectConfiguredMcpClients = vi.mocked(_detectConfiguredMcpClients);
 
 function createMockScopeAuthorizationResponse(
   results: ScopeGroupAuthorization[]
@@ -141,6 +151,8 @@ describe('lib/doctor/Doctor', () => {
       latest: '7.12.0',
       next: '7.12.0-beta.1',
     });
+
+    detectConfiguredMcpClients.mockReturnValue([]);
 
     doctor = new Doctor({
       generateDiagnosticInfo: vi.fn().mockResolvedValue({
@@ -232,6 +244,61 @@ describe('lib/doctor/Doctor', () => {
           type: 'error',
           message: expect.any(String),
         });
+      });
+    });
+
+    describe('MCP readiness', () => {
+      it('should add success and warning sections when some MCP clients are configured', async () => {
+        detectConfiguredMcpClients.mockReturnValue(['cursor', 'claude']);
+
+        await doctor.diagnose();
+
+        // @ts-expect-error Testing private method
+        expect(doctor.diagnosis.addCliSection).toHaveBeenCalledWith({
+          type: 'success',
+          message: expect.stringMatching(
+            /HubSpot MCP server configured in cursor, claude/
+          ),
+        });
+
+        // @ts-expect-error Testing private method
+        expect(doctor.diagnosis.addCliSection).toHaveBeenCalledWith({
+          type: 'warning',
+          message: expect.stringMatching(
+            /HubSpot MCP server not configured in vscode/
+          ),
+          secondaryMessaging: expect.stringMatching(/hs mcp setup/),
+        });
+      });
+
+      it('should add warning section when no MCP clients are configured', async () => {
+        detectConfiguredMcpClients.mockReturnValue([]);
+
+        await doctor.diagnose();
+
+        // @ts-expect-error Testing private method
+        expect(doctor.diagnosis.addCliSection).toHaveBeenCalledWith({
+          type: 'warning',
+          message: expect.stringMatching(
+            /HubSpot MCP server not configured in/
+          ),
+          secondaryMessaging: expect.stringMatching(/hs mcp setup/),
+        });
+      });
+
+      it('should handle detection errors gracefully', async () => {
+        detectConfiguredMcpClients.mockImplementation(() => {
+          throw new Error('detection failed');
+        });
+
+        await doctor.diagnose();
+
+        // @ts-expect-error Testing private property
+        expect(doctor.diagnosis.addCliSection).not.toHaveBeenCalledWith(
+          expect.objectContaining({
+            message: expect.stringMatching(/MCP/),
+          })
+        );
       });
     });
   });
@@ -668,7 +735,10 @@ describe('lib/doctor/Doctor', () => {
       isLegacyProject.mockReturnValue(false);
       validateSourceDirectory.mockResolvedValue(undefined);
       getAllHsProfiles.mockResolvedValue([]);
-      handleTranslate.mockResolvedValue(undefined);
+      handleTranslate.mockResolvedValue({
+        intermediateRepresentation: { intermediateNodesIndexedByUid: {} },
+        skippedHsMetaFiles: [],
+      });
 
       await doctor.diagnose();
 

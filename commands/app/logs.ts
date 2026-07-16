@@ -20,6 +20,7 @@ import {
   toSystemType,
 } from '../../lib/app/logs.js';
 import { logError } from '../../lib/errorHandlers/index.js';
+import { showMcpPromotionNudge } from '../../lib/mcp/promotion.js';
 
 export type AppLogsArgs = CommonArgs &
   ConfigArgs &
@@ -84,6 +85,9 @@ const handler = async (
       await tailAppLogs(derivedAccountId, appId, systemType, options);
     } else {
       await handleLogsRequest(derivedAccountId, appId, systemType, options);
+      if (!options.json) {
+        await showMcpPromotionNudge(options._.join(' '));
+      }
     }
     return exit(EXIT_CODES.SUCCESS);
   } catch (e) {

@@ -5,11 +5,13 @@ import {
   IR_COMPONENT_TYPES,
   APP_DISTRIBUTION_TYPES,
   APP_AUTH_TYPES,
+  APP_INSTALLATION_STATES,
 } from '../lib/constants.js';
 import { ValueOf } from '@hubspot/local-dev-lib/types/Utils';
 
 type AppDistributionType = ValueOf<typeof APP_DISTRIBUTION_TYPES>;
 type AppAuthType = ValueOf<typeof APP_AUTH_TYPES>;
+export type AppInstallationState = ValueOf<typeof APP_INSTALLATION_STATES>;
 
 type AppConfig = {
   description: string;

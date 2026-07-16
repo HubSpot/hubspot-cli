@@ -6,13 +6,7 @@ export type GenericPromptResponse = {
 };
 
 type PromptType =
-  | 'confirm'
-  | 'list'
-  | 'checkbox'
-  | 'input'
-  | 'password'
-  | 'number'
-  | 'rawlist';
+  'confirm' | 'list' | 'checkbox' | 'input' | 'password' | 'number' | 'rawlist';
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export type PromptChoices<T = any> = Array<
@@ -30,12 +24,7 @@ export type PromptChoices<T = any> = Array<
 export type PromptWhen = boolean | (() => boolean);
 
 export type PromptOperand =
-  | string
-  | number
-  | boolean
-  | string[]
-  | boolean[]
-  | null;
+  string | number | boolean | string[] | boolean[] | null;
 
 export type PromptConfig<T extends GenericPromptResponse> = {
   name: keyof T;

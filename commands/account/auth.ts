@@ -17,6 +17,7 @@ import { makeYargsBuilder } from '../../lib/yargsUtils.js';
 import { commands } from '../../lang/en.js';
 import { uiLogger } from '../../lib/ui/logger.js';
 import { authenticateNewAccount } from '../../lib/accountAuth.js';
+import { showMcpPromotionNudge } from '../../lib/mcp/promotion.js';
 
 const TRACKING_STATUS = {
   STARTED: 'started',
@@ -94,6 +95,8 @@ async function handler(
     'accountAuthCommand',
     'accountsListCommand',
   ]);
+
+  await showMcpPromotionNudge(args._.join(' '));
 
   if (!disableTracking) {
     await trackAuthAction(

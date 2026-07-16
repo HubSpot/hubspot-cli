@@ -14,7 +14,6 @@ import {
   LOCAL_DEV_SERVER_MESSAGE_TYPES,
 } from '../../constants.js';
 import { EXIT_CODES } from '../../enums/exitCodes.js';
-import { isAppIRNode } from '../../projects/structure.js';
 import { uiLine } from '../../ui/index.js';
 import { logError } from '../../errorHandlers/index.js';
 import { isPromptExitError } from '../../errors/PromptExitError.js';
@@ -33,10 +32,16 @@ import {
   getStaticAuthAppInstallUrl,
 } from '../../app/urls.js';
 import { AppLocalDevData } from '../../../types/LocalDev.js';
-import { isDeveloperTestAccount, isSandbox } from '../../accountTypes.js';
 import type { IntermediateRepresentationNodeLocalDev } from '@hubspot/project-parsing-lib/translate';
 import SpinniesManager from '../../ui/SpinniesManager.js';
 import { isServerRunningAtUrl } from '../../http.js';
+import {
+  canUseStaticAuthTestAccountInstall,
+  getAppInstallationState,
+  getAppNodeFromProjectNodes,
+  isMarketplaceApp,
+  isOAuthApp,
+} from '../../app/install.js';
 
 type AppDevModeInterfaceConstructorOptions = {
   localDevState: LocalDevState;
@@ -64,16 +69,10 @@ class AppDevModeInterface {
     }
   }
 
-  private getAppNodeFromProjectNodes(projectNodes: {
-    [key: string]: IntermediateRepresentationNodeLocalDev;
-  }): AppIRNode | null {
-    return Object.values(projectNodes).find(isAppIRNode) || null;
-  }
-
   // Assumes only one app per project
   private get appNode(): AppIRNode | null {
     if (this._appNode === undefined) {
-      this._appNode = this.getAppNodeFromProjectNodes(
+      this._appNode = getAppNodeFromProjectNodes(
         this.localDevState.projectNodes
       );
     }
@@ -103,40 +102,20 @@ class AppDevModeInterface {
     this.localDevState.setAppDataForUid(this.appNode.uid, appData);
   }
 
-  private isStaticAuthApp(): boolean {
-    return (
-      this.appNode?.config.auth.type.toLowerCase() === APP_AUTH_TYPES.STATIC
-    );
-  }
-
-  private isOAuthApp(): boolean {
-    return (
-      this.appNode?.config.auth.type.toLowerCase() === APP_AUTH_TYPES.OAUTH
-    );
-  }
-
   private isAutomaticallyInstallable(): boolean {
     const targetTestingAccount = getConfigAccountById(
       this.localDevState.targetTestingAccountId
     );
 
-    if (!targetTestingAccount) {
-      return false;
-    }
-
-    const isTestAccount =
-      isDeveloperTestAccount(targetTestingAccount) ||
-      isSandbox(targetTestingAccount);
-
-    const hasCorrectParent =
-      targetTestingAccount.parentAccountId ===
-      this.localDevState.targetProjectAccountId;
-
-    return isTestAccount && hasCorrectParent && this.isStaticAuthApp();
+    return canUseStaticAuthTestAccountInstall({
+      accountConfig: targetTestingAccount,
+      appNode: this.appNode,
+      parentAccountId: this.localDevState.targetProjectAccountId,
+    });
   }
 
   private async getAppInstallUrl(): Promise<string> {
-    if (this.appNode && this.isOAuthApp()) {
+    if (this.appNode && isOAuthApp(this.appNode)) {
       return getOauthAppInstallUrl({
         targetAccountId: this.localDevState.targetTestingAccountId,
         env: this.localDevState.env,
@@ -332,27 +311,23 @@ class AppDevModeInterface {
       this.appNode.config.auth.optionalScopes
     );
 
-    const isReinstall = previouslyAuthorizedScopeGroups.length > 0;
+    const installationState = getAppInstallationState(
+      isInstalledWithScopeGroups,
+      previouslyAuthorizedScopeGroups
+    );
+    const isReinstall =
+      installationState ===
+      APP_INSTALLATION_STATES.INSTALLED_WITH_OUTDATED_SCOPES;
 
-    if (isInstalledWithScopeGroups) {
-      this.appData = {
-        ...this.appData,
-        installationState: APP_INSTALLATION_STATES.INSTALLED,
-      };
-    } else if (isReinstall) {
-      this.appData = {
-        ...this.appData,
-        installationState:
-          APP_INSTALLATION_STATES.INSTALLED_WITH_OUTDATED_SCOPES,
-      };
-    } else {
-      this.appData = {
-        ...this.appData,
-        installationState: APP_INSTALLATION_STATES.NOT_INSTALLED,
-      };
-    }
+    this.appData = {
+      ...this.appData,
+      installationState,
+    };
 
-    return { needsInstall: !isInstalledWithScopeGroups, isReinstall };
+    return {
+      needsInstall: installationState !== APP_INSTALLATION_STATES.INSTALLED,
+      isReinstall,
+    };
   }
 
   private async validateOauthAppRedirectUrl(): Promise<void> {
@@ -420,7 +395,7 @@ class AppDevModeInterface {
   private onChangeProjectNodes = (nodes: {
     [key: string]: IntermediateRepresentationNodeLocalDev;
   }) => {
-    const newAppNode = this.getAppNodeFromProjectNodes(nodes);
+    const newAppNode = getAppNodeFromProjectNodes(nodes);
 
     const oldDistribution = this.appNode?.config.distribution;
     const newDistribution = newAppNode?.config.distribution;
@@ -464,9 +439,7 @@ class AppDevModeInterface {
     try {
       await this.fetchAppData();
 
-      if (
-        this.appNode.config.distribution === APP_DISTRIBUTION_TYPES.MARKETPLACE
-      ) {
+      if (isMarketplaceApp(this.appNode)) {
         await this.checkMarketplaceAppInstalls();
       }
 
@@ -484,7 +457,7 @@ class AppDevModeInterface {
           });
         }
 
-        if (this.isOAuthApp()) {
+        if (isOAuthApp(this.appNode)) {
           await this.validateOauthAppRedirectUrl();
         }
 

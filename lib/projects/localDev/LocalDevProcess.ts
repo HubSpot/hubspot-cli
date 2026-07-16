@@ -132,10 +132,10 @@ class LocalDevProcess {
     return true;
   }
 
-  private getIntermediateRepresentation(projectNodesAtLastDeploy?: {
+  private async getIntermediateRepresentation(projectNodesAtLastDeploy?: {
     [key: string]: IntermediateRepresentationNodeLocalDev;
   }): Promise<IntermediateRepresentationLocalDev> {
-    return translateForLocalDev(
+    const { intermediateRepresentation } = await translateForLocalDev(
       {
         projectSourceDir: path.join(
           this.state.projectDir,
@@ -149,6 +149,7 @@ class LocalDevProcess {
         profile: this.state.profile,
       }
     );
+    return intermediateRepresentation;
   }
 
   private async updateProjectNodes(): Promise<void> {
@@ -275,6 +276,7 @@ class LocalDevProcess {
         projectDir: this.state.projectDir,
         callbackFunc: pollProjectBuildAndDeploy,
         sendIR: true,
+        force: true,
       });
 
     const deploy = result?.deployResult;

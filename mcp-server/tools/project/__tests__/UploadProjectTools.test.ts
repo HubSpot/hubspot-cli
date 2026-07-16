@@ -123,7 +123,7 @@ describe('mcp-server/tools/project/UploadProjectTools', () => {
       );
       expect(mockRunCommandInDir).toHaveBeenCalledWith(
         '/test/project',
-        expect.stringContaining('--force-create')
+        expect.stringContaining('--force')
       );
       expect(mockRunCommandInDir).toHaveBeenCalledWith(
         '/test/project',
@@ -167,7 +167,7 @@ describe('mcp-server/tools/project/UploadProjectTools', () => {
       await expect(tool.handler(input)).rejects.toThrow('Upload failed');
     });
 
-    it('should use force-create and message flags', async () => {
+    it('should use force and message flags', async () => {
       mockRunCommandInDir.mockResolvedValue({
         stdout: 'Project created and uploaded',
         stderr: '',
@@ -181,7 +181,7 @@ describe('mcp-server/tools/project/UploadProjectTools', () => {
       );
       expect(mockRunCommandInDir).toHaveBeenCalledWith(
         '/test/project',
-        expect.stringContaining('--force-create')
+        expect.stringContaining('--force')
       );
       expect(mockRunCommandInDir).toHaveBeenCalledWith(
         '/test/project',
@@ -206,7 +206,7 @@ describe('mcp-server/tools/project/UploadProjectTools', () => {
       );
       expect(mockRunCommandInDir).toHaveBeenCalledWith(
         '/test/project',
-        expect.stringContaining('--force-create')
+        expect.stringContaining('--force')
       );
       expect(mockRunCommandInDir).toHaveBeenCalledWith(
         '/test/project',
@@ -275,7 +275,7 @@ describe('mcp-server/tools/project/UploadProjectTools', () => {
       );
       expect(mockRunCommandInDir).toHaveBeenCalledWith(
         '/different/path/to/project',
-        expect.stringContaining('--force-create')
+        expect.stringContaining('--force')
       );
       expect(mockRunCommandInDir).toHaveBeenCalledWith(
         '/different/path/to/project',

@@ -16,6 +16,7 @@ import { getLatestCliVersion } from '../lib/cliUpgradeUtils.js';
 import { pkg } from '../lib/jsonLoader.js';
 import SpinniesManager from '../lib/ui/SpinniesManager.js';
 import { debugError } from '../lib/errorHandlers/index.js';
+import { showMcpPromotionNudge } from '../lib/mcp/promotion.js';
 
 export type UpgradeArgs = CommonArgs & {
   version?: string;
@@ -119,6 +120,8 @@ const handler = async (args: ArgumentsCamelCase<UpgradeArgs>) => {
     uiLogger.log('');
     uiLogger.log(commands.upgrade.autoUpgradeMessage);
   }
+
+  await showMcpPromotionNudge(args._.join(' '));
 
   return exit(EXIT_CODES.SUCCESS);
 };

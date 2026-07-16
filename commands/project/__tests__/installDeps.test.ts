@@ -6,6 +6,7 @@ import { EXIT_CODES } from '../../../lib/enums/exitCodes.js';
 import { trackCommandUsage } from '../../../lib/usageTracking.js';
 import * as dependencyManagement from '../../../lib/dependencyManagement.js';
 import * as promptUtils from '../../../lib/prompts/promptUtils.js';
+import { showMcpPromotionNudge } from '../../../lib/mcp/promotion.js';
 import projectInstallDepsCommand, {
   ProjectInstallDepsArgs,
 } from '../installDeps.js';
@@ -14,6 +15,7 @@ vi.mock('../../../lib/projects/config');
 vi.mock('../../../lib/dependencyManagement');
 vi.mock('../../../lib/prompts/promptUtils');
 vi.mock('../../../lib/commonOpts');
+vi.mock('../../../lib/mcp/promotion.js');
 
 const exampleSpy = vi.spyOn(yargs as Argv, 'example');
 const processExitSpy = vi.spyOn(process, 'exit');
@@ -24,6 +26,7 @@ const getProjectPackageJsonLocationsSpy = vi.spyOn(
   'getProjectPackageJsonLocations'
 );
 const installPackagesSpy = vi.spyOn(dependencyManagement, 'installPackages');
+const mockedShowMcpPromotionNudge = vi.mocked(showMcpPromotionNudge);
 
 describe('commands/project/installDeps', () => {
   describe('command', () => {
@@ -56,10 +59,12 @@ describe('commands/project/installDeps', () => {
 
     beforeEach(() => {
       args = {
+        _: ['project', 'install-deps'],
         derivedAccountId: 999999,
       } as ArgumentsCamelCase<ProjectInstallDepsArgs>;
       // @ts-expect-error Doesn't match the actual signature because then the linter complains about unused variables
       processExitSpy.mockImplementation(() => {});
+      mockedShowMcpPromotionNudge.mockResolvedValue(undefined);
     });
 
     it('should track the command usage', async () => {
@@ -86,6 +91,7 @@ describe('commands/project/installDeps', () => {
 
       expect(processExitSpy).toHaveBeenCalledTimes(1);
       expect(processExitSpy).toHaveBeenCalledWith(EXIT_CODES.ERROR);
+      expect(mockedShowMcpPromotionNudge).not.toHaveBeenCalled();
     });
 
     it('should log an error and exit when the project config is not defined', async () => {
@@ -101,6 +107,7 @@ describe('commands/project/installDeps', () => {
       );
       expect(processExitSpy).toHaveBeenCalledTimes(1);
       expect(processExitSpy).toHaveBeenCalledWith(EXIT_CODES.ERROR);
+      expect(mockedShowMcpPromotionNudge).not.toHaveBeenCalled();
     });
 
     it('should log an error and exit when the project config has no projectDir', async () => {
@@ -177,6 +184,44 @@ describe('commands/project/installDeps', () => {
         packages,
         installLocations: packageJsonLocation,
       });
+    });
+
+    it('should show MCP promotion nudge after successful dependency installation', async () => {
+      const projectDir = 'src';
+      const packageJsonLocation = path.join(projectDir, 'directory1');
+
+      getProjectConfigSpy.mockResolvedValue({
+        projectDir,
+        projectConfig: null,
+      });
+      getProjectPackageJsonLocationsSpy.mockResolvedValue([
+        packageJsonLocation,
+      ]);
+
+      await projectInstallDepsCommand.handler(args);
+
+      expect(mockedShowMcpPromotionNudge).toHaveBeenCalledWith(
+        'project install-deps'
+      );
+    });
+
+    it('should not show MCP promotion nudge when dependency installation fails', async () => {
+      const projectDir = 'src';
+      const packageJsonLocation = path.join(projectDir, 'directory1');
+
+      getProjectConfigSpy.mockResolvedValue({
+        projectDir,
+        projectConfig: null,
+      });
+      getProjectPackageJsonLocationsSpy.mockResolvedValue([
+        packageJsonLocation,
+      ]);
+      installPackagesSpy.mockRejectedValue(new Error('Install failed'));
+
+      await projectInstallDepsCommand.handler(args);
+
+      expect(mockedShowMcpPromotionNudge).not.toHaveBeenCalled();
+      expect(processExitSpy).toHaveBeenCalledWith(EXIT_CODES.ERROR);
     });
   });
 });

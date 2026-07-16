@@ -7,6 +7,7 @@ import {
 import { uiLogger } from '../../ui/logger.js';
 import { coerceToValidUid } from '@hubspot/project-parsing-lib/uid';
 import { fileExists } from '../../validation.js';
+import { lib } from '../../../lang/en.js';
 
 vi.mock('fs');
 vi.mock('../../validation.js');
@@ -705,6 +706,25 @@ describe('lib/projects/components', () => {
           2
         )
       );
+    });
+  });
+
+  describe('buildSuccessMessage strings', () => {
+    it('should not contain emojis in success message prompts', () => {
+      const messages = lib.projects.components.buildSuccessMessage;
+
+      // Test that docsDetails doesn't start with an emoji
+      const docsDetailsResult = messages.docsDetails('test link');
+      expect(docsDetailsResult).not.toMatch(/^[\u{1F300}-\u{1F9FF}]/u);
+      expect(docsDetailsResult).toMatch(/^test link/);
+
+      // Test that uploadPrompt doesn't start with an emoji
+      expect(messages.uploadPrompt).not.toMatch(/^[\u{1F300}-\u{1F9FF}]/u);
+      expect(messages.uploadPrompt).toMatch(/^Run/);
+
+      // Test that devPrompt doesn't start with an emoji
+      expect(messages.devPrompt).not.toMatch(/^[\u{1F300}-\u{1F9FF}]/u);
+      expect(messages.devPrompt).toMatch(/^Run/);
     });
   });
 });

@@ -6,11 +6,11 @@ import { Project } from '@hubspot/local-dev-lib/types/Project';
 import { ProjectConfig } from './Projects.js';
 import LocalDevState from '../lib/projects/localDev/LocalDevState.js';
 import {
-  APP_INSTALLATION_STATES,
   LOCAL_DEV_UI_MESSAGE_RECEIVE_TYPES,
   LOCAL_DEV_SERVER_MESSAGE_TYPES,
 } from '../lib/constants.js';
 import { ExitFunction } from './Yargs.js';
+import type { AppInstallationState } from './ProjectComponents.js';
 
 export type LocalDevActions = {
   exit: ExitFunction;
@@ -47,7 +47,7 @@ export type AppLocalDevData = {
   id: number;
   clientId: string;
   name: string;
-  installationState: ValueOf<typeof APP_INSTALLATION_STATES>;
+  installationState: AppInstallationState;
   scopeGroupIds: number[];
 };
 

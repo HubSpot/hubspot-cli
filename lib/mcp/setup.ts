@@ -4,29 +4,40 @@ import { promptUser } from '../prompts/promptUtils.js';
 import SpinniesManager from '../ui/SpinniesManager.js';
 import { logError, getErrorMessage } from '../errorHandlers/index.js';
 import { execAsync } from '../../mcp-server/utils/command.js';
+import {
+  MCP_CLIENTS,
+  MCP_SERVER_NAME,
+  McpClientId,
+  getMcpClientPathSegments,
+} from './clients.js';
 
 import path from 'path';
 import os from 'os';
 import fs from 'fs-extra';
 import { existsSync } from 'fs';
 
-const mcpServerName = 'HubSpotDev';
+const mcpServerName = MCP_SERVER_NAME;
 
-const claudeCode = 'claude';
-const windsurf = 'windsurf';
-const cursor = 'cursor';
-const vscode = 'vscode';
-const codex = 'codex';
-const gemini = 'gemini';
+const claudeCode: McpClientId = 'claude';
+const windsurf: McpClientId = 'windsurf';
+const cursor: McpClientId = 'cursor';
+const vscode: McpClientId = 'vscode';
+const codex: McpClientId = 'codex';
+const gemini: McpClientId = 'gemini';
 
-export const supportedTools = [
-  { name: commands.mcp.setup.codex, value: codex },
-  { name: commands.mcp.setup.claudeCode, value: claudeCode },
-  { name: commands.mcp.setup.cursor, value: cursor },
-  { name: commands.mcp.setup.gemini, value: gemini },
-  { name: commands.mcp.setup.vsCode, value: vscode },
-  { name: commands.mcp.setup.windsurf, value: windsurf },
-];
+const clientLabels: Record<McpClientId, string> = {
+  codex: commands.mcp.setup.codex,
+  claude: commands.mcp.setup.claudeCode,
+  cursor: commands.mcp.setup.cursor,
+  gemini: commands.mcp.setup.gemini,
+  vscode: commands.mcp.setup.vsCode,
+  windsurf: commands.mcp.setup.windsurf,
+};
+
+export const supportedTools = MCP_CLIENTS.map(client => ({
+  name: clientLabels[client.id],
+  value: client.id,
+}));
 
 interface McpCommand {
   command: string;
@@ -39,7 +50,7 @@ const defaultMcpCommand: McpCommand = {
   args: ['mcp', 'start'],
 };
 
-export async function addMcpServerToConfig(
+export async function configureMcpServer(
   targets: string[] | undefined
 ): Promise<string[]> {
   try {
@@ -319,7 +330,10 @@ export async function setupClaudeCode(
 export function setupCursor(
   mcpCommand: McpCommand = defaultMcpCommand
 ): boolean {
-  const cursorConfigPath = path.join(os.homedir(), '.cursor', 'mcp.json');
+  const cursorConfigPath = path.join(
+    os.homedir(),
+    ...getMcpClientPathSegments(cursor)
+  );
 
   return setupMcpConfigFile({
     configPath: cursorConfigPath,
@@ -335,9 +349,7 @@ export function setupWindsurf(
 ): boolean {
   const windsurfConfigPath = path.join(
     os.homedir(),
-    '.codeium',
-    'windsurf',
-    'mcp_config.json'
+    ...getMcpClientPathSegments(windsurf)
   );
 
   return setupMcpConfigFile({
