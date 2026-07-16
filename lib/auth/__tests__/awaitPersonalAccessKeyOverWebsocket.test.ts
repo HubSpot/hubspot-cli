@@ -43,8 +43,7 @@ let serverInstance: {
   sendMessage: Mock;
 };
 let onMessageHandler:
-  | ((ws: WebSocket, message: CLIWebSocketMessage) => boolean)
-  | undefined;
+  ((ws: WebSocket, message: CLIWebSocketMessage) => boolean) | undefined;
 
 beforeEach(async () => {
   const { randomUUID } = await import('crypto');
@@ -84,6 +83,11 @@ describe('awaitPersonalAccessKeyOverWebsocket', () => {
       { url: true }
     );
 
+    onMessageHandler!({} as WebSocket, {
+      type: ACCOUNT_AUTH_UI_MESSAGE_RECEIVE_TYPES.PERSONAL_ACCESS_KEY,
+      data: { personalAccessKey: 'test-pak', cliCallbackToken: TOKEN },
+    });
+
     await promise;
   });
 
@@ -101,15 +105,30 @@ describe('awaitPersonalAccessKeyOverWebsocket', () => {
       { url: true }
     );
 
+    onMessageHandler!({} as WebSocket, {
+      type: ACCOUNT_AUTH_UI_MESSAGE_RECEIVE_TYPES.PERSONAL_ACCESS_KEY,
+      data: { personalAccessKey: 'test-pak', cliCallbackToken: TOKEN },
+    });
+
     await promise;
   });
 
-  it('returns the PAK from the paste prompt when no websocket message arrives', async () => {
-    mockedPromptForPersonalAccessKey.mockResolvedValue('user-pasted-pak');
+  it('returns the PAK from the websocket in non-TTY mode without prompting', async () => {
+    const ws = {} as WebSocket;
+    const promise = awaitPersonalAccessKeyOverWebsocket({ env: 'prod' });
 
-    const result = await awaitPersonalAccessKeyOverWebsocket({ env: 'prod' });
+    await Promise.resolve();
+    await Promise.resolve();
 
-    expect(result).toBe('user-pasted-pak');
+    onMessageHandler!(ws, {
+      type: ACCOUNT_AUTH_UI_MESSAGE_RECEIVE_TYPES.PERSONAL_ACCESS_KEY,
+      data: { personalAccessKey: 'websocket-pak', cliCallbackToken: TOKEN },
+    });
+
+    const result = await promise;
+
+    expect(result).toBe('websocket-pak');
+    expect(mockedPromptForPersonalAccessKey).not.toHaveBeenCalled();
     expect(serverInstance.shutdown).toHaveBeenCalled();
   });
 
@@ -125,6 +144,11 @@ describe('awaitPersonalAccessKeyOverWebsocket', () => {
     });
 
     expect(handled).toBe(false);
+
+    onMessageHandler!({} as WebSocket, {
+      type: ACCOUNT_AUTH_UI_MESSAGE_RECEIVE_TYPES.PERSONAL_ACCESS_KEY,
+      data: { personalAccessKey: 'test-pak', cliCallbackToken: TOKEN },
+    });
 
     await promise;
   });
@@ -144,6 +168,11 @@ describe('awaitPersonalAccessKeyOverWebsocket', () => {
     expect(serverInstance.sendMessage).toHaveBeenCalledWith(ws, {
       type: ACCOUNT_AUTH_UI_MESSAGE_SEND_TYPES.AUTH_FAILED,
       data: { reason: 'cliCallbackTokenMismatch' },
+    });
+
+    onMessageHandler!(ws, {
+      type: ACCOUNT_AUTH_UI_MESSAGE_RECEIVE_TYPES.PERSONAL_ACCESS_KEY,
+      data: { personalAccessKey: 'test-pak', cliCallbackToken: TOKEN },
     });
 
     await promise;
@@ -202,9 +231,33 @@ describe('awaitPersonalAccessKeyOverWebsocket', () => {
     });
 
     it('pushes PAK to stdin to auto-fill paste prompt when websocket delivers during paste phase', async () => {
+      Object.defineProperty(process.stdin, 'isTTY', {
+        value: true,
+        configurable: true,
+      });
+
       const stdinPushSpy = vi
         .spyOn(process.stdin, 'push')
         .mockImplementation(() => true);
+
+      const setRawModeSpy = vi.fn();
+      const pauseSpy = vi.fn();
+      let capturedDataHandler: ((chunk: Buffer) => void) | undefined;
+      const onSpy = vi
+        .fn()
+        .mockImplementation(
+          (event: string, handler: (chunk: Buffer) => void) => {
+            if (event === 'data') {
+              capturedDataHandler = handler;
+            }
+          }
+        );
+      Object.assign(process.stdin, {
+        setRawMode: setRawModeSpy,
+        pause: pauseSpy,
+        on: onSpy,
+        removeListener: vi.fn(),
+      });
 
       let resolvePrompt!: (v: string) => void;
       mockedPromptForPersonalAccessKey.mockReturnValue(
@@ -215,6 +268,11 @@ describe('awaitPersonalAccessKeyOverWebsocket', () => {
 
       const ws = {} as WebSocket;
       const promise = awaitPersonalAccessKeyOverWebsocket({ env: 'prod' });
+
+      await Promise.resolve();
+      await Promise.resolve();
+
+      capturedDataHandler!(Buffer.from([65]));
 
       await vi.waitFor(() =>
         expect(mockedPromptForPersonalAccessKey).toHaveBeenCalled()

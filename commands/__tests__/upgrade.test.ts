@@ -15,6 +15,7 @@ import { debugError } from '../../lib/errorHandlers/index.js';
 import { commands } from '../../lang/en.js';
 import { Mock } from 'vitest';
 import { isConfigFlagEnabled } from '@hubspot/local-dev-lib/config';
+import { showMcpPromotionNudge } from '../../lib/mcp/promotion.js';
 
 vi.mock('../../lib/usageTracking');
 vi.mock('@hubspot/local-dev-lib/config');
@@ -24,6 +25,7 @@ vi.mock('../../lib/ui/logger.js');
 vi.mock('../../lib/jsonLoader.js');
 vi.mock('../../lib/ui/SpinniesManager');
 vi.mock('../../lib/errorHandlers/index.js');
+vi.mock('../../lib/mcp/promotion.js');
 
 const mockedTrackCommandUsage = vi.mocked(trackCommandUsage);
 const mockedCanCliBeAutoUpgraded = vi.mocked(canCliBeAutoUpgraded);
@@ -32,6 +34,7 @@ const mockedInstallCliVersion = vi.mocked(installCliVersion);
 const mockedConfirmPrompt = vi.mocked(confirmPrompt);
 const mockedDebugError = vi.mocked(debugError);
 const mockedIsConfigFlagEnabled = vi.mocked(isConfigFlagEnabled);
+const mockedShowMcpPromotionNudge = vi.mocked(showMcpPromotionNudge);
 
 const optionSpy = vi
   .spyOn(yargs as Argv, 'option')
@@ -116,6 +119,7 @@ describe('commands/upgrade', () => {
 
       await upgradeCommand.handler({
         derivedAccountId: accountId,
+        _: ['upgrade'],
       } as ArgumentsCamelCase<UpgradeArgs>);
 
       expect(mockedTrackCommandUsage).toHaveBeenCalledTimes(1);
@@ -132,7 +136,9 @@ describe('commands/upgrade', () => {
         next: '7.11.2-beta.1',
       });
 
-      await upgradeCommand.handler({} as ArgumentsCamelCase<UpgradeArgs>);
+      await upgradeCommand.handler({
+        _: ['upgrade'],
+      } as ArgumentsCamelCase<UpgradeArgs>);
 
       expect(uiLogger.log).toHaveBeenCalledWith(
         commands.upgrade.alreadyLatest(currentVersion)
@@ -150,6 +156,7 @@ describe('commands/upgrade', () => {
 
       await upgradeCommand.handler({
         version: requestedVersion,
+        _: ['upgrade'],
       } as ArgumentsCamelCase<UpgradeArgs>);
 
       expect(uiLogger.log).toHaveBeenCalledWith(
@@ -166,7 +173,9 @@ describe('commands/upgrade', () => {
       });
       mockedCanCliBeAutoUpgraded.mockResolvedValueOnce(false);
 
-      await upgradeCommand.handler({} as ArgumentsCamelCase<UpgradeArgs>);
+      await upgradeCommand.handler({
+        _: ['upgrade'],
+      } as ArgumentsCamelCase<UpgradeArgs>);
 
       expect(uiLogger.log).toHaveBeenCalledWith(
         commands.upgrade.autoUpgradeNotAvailable(latestVersion)
@@ -183,7 +192,9 @@ describe('commands/upgrade', () => {
       mockedCanCliBeAutoUpgraded.mockResolvedValueOnce(true);
       mockedConfirmPrompt.mockResolvedValueOnce(false);
 
-      await upgradeCommand.handler({} as ArgumentsCamelCase<UpgradeArgs>);
+      await upgradeCommand.handler({
+        _: ['upgrade'],
+      } as ArgumentsCamelCase<UpgradeArgs>);
 
       expect(mockedConfirmPrompt).toHaveBeenCalledWith(
         commands.upgrade.confirmPrompt(currentVersion, latestVersion),
@@ -203,7 +214,9 @@ describe('commands/upgrade', () => {
       mockedConfirmPrompt.mockResolvedValueOnce(true);
       mockedInstallCliVersion.mockResolvedValueOnce(undefined);
 
-      await upgradeCommand.handler({} as ArgumentsCamelCase<UpgradeArgs>);
+      await upgradeCommand.handler({
+        _: ['upgrade'],
+      } as ArgumentsCamelCase<UpgradeArgs>);
 
       expect(mockedConfirmPrompt).toHaveBeenCalled();
       expect(SpinniesManager.add).toHaveBeenCalledWith('upgrade', {
@@ -226,6 +239,7 @@ describe('commands/upgrade', () => {
 
       await upgradeCommand.handler({
         force: true,
+        _: ['upgrade'],
       } as ArgumentsCamelCase<UpgradeArgs>);
 
       expect(mockedConfirmPrompt).not.toHaveBeenCalled();
@@ -245,6 +259,7 @@ describe('commands/upgrade', () => {
 
       await upgradeCommand.handler({
         version: specificVersion,
+        _: ['upgrade'],
       } as ArgumentsCamelCase<UpgradeArgs>);
 
       expect(mockedInstallCliVersion).toHaveBeenCalledWith(specificVersion);
@@ -264,7 +279,9 @@ describe('commands/upgrade', () => {
       mockedConfirmPrompt.mockResolvedValueOnce(true);
       mockedInstallCliVersion.mockRejectedValueOnce(error);
 
-      await upgradeCommand.handler({} as ArgumentsCamelCase<UpgradeArgs>);
+      await upgradeCommand.handler({
+        _: ['upgrade'],
+      } as ArgumentsCamelCase<UpgradeArgs>);
 
       expect(mockedDebugError).toHaveBeenCalledWith(error);
       expect(SpinniesManager.fail).toHaveBeenCalledWith('upgrade', {
@@ -288,6 +305,7 @@ describe('commands/upgrade', () => {
 
       await upgradeCommand.handler({
         beta: true,
+        _: ['upgrade'],
       } as ArgumentsCamelCase<UpgradeArgs>);
 
       expect(mockedGetLatestCliVersion).toHaveBeenCalled();
@@ -310,6 +328,7 @@ describe('commands/upgrade', () => {
 
       await upgradeCommand.handler({
         beta: true,
+        _: ['upgrade'],
       } as ArgumentsCamelCase<UpgradeArgs>);
 
       expect(mockedGetLatestCliVersion).toHaveBeenCalled();
@@ -331,6 +350,7 @@ describe('commands/upgrade', () => {
 
       await upgradeCommand.handler({
         beta: true,
+        _: ['upgrade'],
       } as ArgumentsCamelCase<UpgradeArgs>);
 
       expect(uiLogger.log).toHaveBeenCalledWith(
@@ -353,6 +373,7 @@ describe('commands/upgrade', () => {
 
       await upgradeCommand.handler({
         beta: true,
+        _: ['upgrade'],
       } as ArgumentsCamelCase<UpgradeArgs>);
 
       // Verify the auto-upgrade message was not logged
@@ -378,11 +399,46 @@ describe('commands/upgrade', () => {
       await upgradeCommand.handler({
         force: true,
         beta: true,
+        _: ['upgrade'],
       } as ArgumentsCamelCase<UpgradeArgs>);
 
       expect(mockedConfirmPrompt).not.toHaveBeenCalled();
       expect(mockedInstallCliVersion).toHaveBeenCalledWith(betaVersion);
       expect(processExitSpy).toHaveBeenCalledWith(EXIT_CODES.SUCCESS);
+    });
+
+    it('should show MCP promotion nudge after successful upgrade', async () => {
+      mockedGetLatestCliVersion.mockResolvedValueOnce({
+        latest: latestVersion,
+        next: '7.12.0-beta.1',
+      });
+      mockedCanCliBeAutoUpgraded.mockResolvedValueOnce(true);
+      mockedConfirmPrompt.mockResolvedValueOnce(true);
+      mockedInstallCliVersion.mockResolvedValueOnce(undefined);
+
+      await upgradeCommand.handler({
+        _: ['update'],
+      } as ArgumentsCamelCase<UpgradeArgs>);
+
+      expect(mockedShowMcpPromotionNudge).toHaveBeenCalledWith('update');
+    });
+
+    it('should not show MCP promotion nudge when upgrade fails', async () => {
+      mockedGetLatestCliVersion.mockResolvedValueOnce({
+        latest: latestVersion,
+        next: '7.12.0-beta.1',
+      });
+      mockedCanCliBeAutoUpgraded.mockResolvedValueOnce(true);
+      mockedConfirmPrompt.mockResolvedValueOnce(true);
+      mockedInstallCliVersion.mockRejectedValueOnce(
+        new Error('Installation failed')
+      );
+
+      await upgradeCommand.handler({
+        _: ['upgrade'],
+      } as ArgumentsCamelCase<UpgradeArgs>);
+
+      expect(mockedShowMcpPromotionNudge).not.toHaveBeenCalled();
     });
   });
 });

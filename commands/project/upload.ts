@@ -29,17 +29,20 @@ import { makeWrappedYargsHandler } from '../../lib/yargs/makeWrappedYargsHandler
 import { ProjectPollResult } from '../../types/Projects.js';
 import { makeYargsBuilder } from '../../lib/yargsUtils.js';
 import { projectProfilePrompt } from '../../lib/prompts/projectProfilePrompt.js';
+import { showMcpPromotionNudge } from '../../lib/mcp/promotion.js';
 
 const command = 'upload';
 const describe = commands.project.upload.describe;
 
 export type ProjectUploadArgs = CommonArgs &
   JSONOutputArgs & {
+    force: boolean;
     forceCreate: boolean;
     message: string;
     m: string;
     skipValidation: boolean;
     skipNpmAudit: boolean;
+    skipAutoDeploy: boolean;
     profile?: string;
     preview: boolean;
     target?: number;
@@ -79,11 +82,13 @@ async function handler(
   args: ArgumentsCamelCase<ProjectUploadArgs>
 ): Promise<void> {
   const {
-    forceCreate,
+    force = false,
+    forceCreate = false,
     message,
     derivedAccountId,
     skipValidation,
     skipNpmAudit,
+    skipAutoDeploy,
     formatOutputAsJson,
     profile: profileOption,
     useEnv: useEnvOption,
@@ -151,23 +156,30 @@ async function handler(
   });
 
   try {
-    const { result, uploadError, projectId } =
+    const { result, uploadError, projectId, userDeclined } =
       await handleProjectUpload<ProjectPollResult>({
         accountId: targetAccountId!,
         projectConfig,
         projectDir,
-        callbackFunc: preview
-          ? (...args) =>
-              pollProjectBuildAndDeploy(...args, { skipDeploy: true })
-          : pollProjectBuildAndDeploy,
+        callbackFunc:
+          preview || skipAutoDeploy
+            ? (...args) =>
+                pollProjectBuildAndDeploy(...args, { skipDeploy: true })
+            : pollProjectBuildAndDeploy,
         uploadMessage: message,
-        forceCreate,
+        forceCreate: forceCreate || force,
         isUploadCommand: true,
         sendIR: !isLegacyProject(projectConfig.platformVersion),
         skipValidation,
         skipNpmAudit,
+        skipAutoDeploy,
         profile: profileName,
+        force,
       });
+
+    if (userDeclined) {
+      return exit(EXIT_CODES.SUCCESS);
+    }
 
     if (uploadError) {
       if (
@@ -192,7 +204,7 @@ async function handler(
     if (
       result &&
       result.succeeded &&
-      (!result.buildResult.isAutoDeployEnabled || preview)
+      (!result.buildResult.isAutoDeployEnabled || preview || skipAutoDeploy)
     ) {
       uiLogger.log(
         chalk.bold(commands.project.upload.logs.buildSucceeded(result.buildId))
@@ -257,6 +269,8 @@ async function handler(
 
   if (formatOutputAsJson) {
     uiLogger.json(jsonOutput);
+  } else {
+    await showMcpPromotionNudge(args._.join(' '));
   }
 
   return exit(EXIT_CODES.SUCCESS);
@@ -264,10 +278,17 @@ async function handler(
 
 function projectUploadBuilder(yargs: Argv): Argv<ProjectUploadArgs> {
   yargs.options({
+    force: {
+      alias: 'f',
+      describe: commands.project.upload.options.force.describe,
+      type: 'boolean',
+      default: false,
+    },
     'force-create': {
       describe: commands.project.upload.options.forceCreate.describe,
       type: 'boolean',
       default: false,
+      hidden: true,
     },
     message: {
       alias: 'm',
@@ -282,6 +303,11 @@ function projectUploadBuilder(yargs: Argv): Argv<ProjectUploadArgs> {
     },
     'skip-npm-audit': {
       describe: commands.project.upload.options.skipNpmAudit.describe,
+      type: 'boolean',
+      default: false,
+    },
+    'skip-auto-deploy': {
+      describe: commands.project.upload.options.skipAutoDeploy.describe,
       type: 'boolean',
       default: false,
     },

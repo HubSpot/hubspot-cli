@@ -110,7 +110,7 @@ describe('commands/testAccount/create', () => {
       expect(yargsMock.option).toHaveBeenCalledWith('commerce-level', {
         type: 'string',
         description:
-          'Commerce Hub tier. Options: FREE, PROFESSIONAL, ENTERPRISE',
+          'Revenue Hub tier. Options: FREE, PROFESSIONAL, ENTERPRISE',
         choices: ACCOUNT_LEVEL_CHOICES.filter(
           level => level !== ACCOUNT_LEVELS.STARTER
         ),

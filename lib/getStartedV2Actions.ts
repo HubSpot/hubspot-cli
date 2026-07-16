@@ -183,7 +183,7 @@ async function buildProjectMetadata(
   const srcDir = path.join(projectDir, projectConfig.srcDir);
   const projectMetadata = await getProjectMetadata(srcDir);
 
-  const intermediateRepresentation = await translate(
+  const { intermediateRepresentation } = await translate(
     {
       projectSourceDir: srcDir,
       platformVersion: projectConfig.platformVersion,
@@ -242,6 +242,7 @@ export async function uploadAndDeployAction({
         isUploadCommand: false,
         sendIR: !isLegacyProject(projectConfig.platformVersion),
         skipValidation: false,
+        force: true,
       });
 
     if (uploadError) {

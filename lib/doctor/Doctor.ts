@@ -35,6 +35,8 @@ import { pkg } from '../jsonLoader.js';
 import { lib } from '../../lang/en.js';
 import { uiLink } from '../ui/index.js';
 import { isServerRunningAtUrl } from '../http.js';
+import { detectConfiguredMcpClients } from '../mcp/promotion.js';
+import { MCP_CLIENTS } from '../mcp/clients.js';
 import { WEBHOOKS_KEY, APP_KEY } from '@hubspot/project-parsing-lib/constants';
 import { validateProjectConfig } from '../projects/config.js';
 import { ProjectConfig as ProjectConfigType } from '../../types/Projects.js';
@@ -106,6 +108,7 @@ export class Doctor {
       this.checkIfNodeIsInstalled(),
       this.checkIfNpmIsInstalled(),
       this.checkCLIVersion(),
+      this.checkMcpReadiness(),
     ];
   }
 
@@ -325,6 +328,33 @@ export class Doctor {
         type: 'success',
         message: lib.doctor.hsChecks.latest(pkg.version),
       });
+    }
+  }
+
+  private async checkMcpReadiness(): Promise<void> {
+    try {
+      const configuredClients = detectConfiguredMcpClients();
+      const allClientIds = MCP_CLIENTS.map(c => c.id);
+      const unconfiguredClients = allClientIds.filter(
+        id => !configuredClients.includes(id)
+      );
+
+      if (configuredClients.length > 0) {
+        this.diagnosis?.addCliSection({
+          type: 'success',
+          message: lib.doctor.mcpChecks.configured(configuredClients),
+        });
+      }
+
+      if (unconfiguredClients.length > 0) {
+        this.diagnosis?.addCliSection({
+          type: 'warning',
+          message: lib.doctor.mcpChecks.notConfigured(unconfiguredClients),
+          secondaryMessaging: lib.doctor.mcpChecks.notConfiguredSecondary,
+        });
+      }
+    } catch (e) {
+      uiLogger.debug(getErrorMessage(e));
     }
   }
 

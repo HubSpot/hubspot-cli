@@ -18,6 +18,7 @@ import {
 import { makeWrappedYargsHandler } from '../../lib/yargs/makeWrappedYargsHandler.js';
 import { logError } from '../../lib/errorHandlers/index.js';
 import { makeYargsBuilder } from '../../lib/yargsUtils.js';
+import { showMcpPromotionNudge } from '../../lib/mcp/promotion.js';
 
 const command = 'install-deps [packages..]';
 const describe = commands.project.installDeps.help.describe;
@@ -69,6 +70,8 @@ async function handler(
       packages,
       installLocations,
     });
+
+    await showMcpPromotionNudge(args._.join(' '));
   } catch (e) {
     if (isPromptExitError(e)) {
       throw e;

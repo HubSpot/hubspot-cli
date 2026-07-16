@@ -53,7 +53,7 @@ export class UploadProjectTools extends Tool<InputSchemaType> {
   }: InputSchemaType): Promise<TextContentResponse> {
     setupHubSpotConfig(absoluteCurrentWorkingDirectory);
 
-    let command = addFlag('hs project upload', 'force-create', true);
+    let command = addFlag('hs project upload', 'force', true);
 
     const content: TextContent[] = [];
 

@@ -18,6 +18,7 @@ import * as uploadLib from '../../../lib/projects/upload.js';
 import * as previewLib from '../../../lib/projects/preview.js';
 import * as uiLib from '../../../lib/projects/ui.js';
 import * as errorHandlers from '../../../lib/errorHandlers/index.js';
+import { showMcpPromotionNudge } from '../../../lib/mcp/promotion.js';
 import { EXIT_CODES } from '../../../lib/enums/exitCodes.js';
 import { PROJECT_ERROR_TYPES } from '../../../lib/constants.js';
 import projectUploadCommand, { ProjectUploadArgs } from '../upload.js';
@@ -34,6 +35,7 @@ vi.mock('../../../lib/projects/upload.js');
 vi.mock('../../../lib/projects/preview.js');
 vi.mock('../../../lib/projects/ui.js');
 vi.mock('../../../lib/errorHandlers/index.js');
+vi.mock('../../../lib/mcp/promotion.js');
 
 const optionsSpy = vi.spyOn(yargs as Argv, 'options');
 const exampleSpy = vi.spyOn(yargs as Argv, 'example');
@@ -65,6 +67,7 @@ const logFeedbackMessageSpy = vi.spyOn(uiLib, 'logFeedbackMessage');
 const isSpecifiedErrorSpy = vi.spyOn(errorsLib, 'isSpecifiedError');
 const processExitSpy = vi.spyOn(process, 'exit');
 const logErrorSpy = vi.spyOn(errorHandlers, 'logError');
+const mockedShowMcpPromotionNudge = vi.mocked(showMcpPromotionNudge);
 
 describe('commands/project/upload', () => {
   beforeEach(() => {
@@ -94,6 +97,7 @@ describe('commands/project/upload', () => {
       uploadError: null,
       projectId: 999,
     });
+    mockedShowMcpPromotionNudge.mockResolvedValue(undefined);
   });
 
   describe('command', () => {
@@ -150,6 +154,7 @@ describe('commands/project/upload', () => {
 
     beforeEach(() => {
       args = {
+        _: ['project', 'upload'],
         forceCreate: false,
         message: 'Test upload',
         derivedAccountId: 123456,
@@ -232,6 +237,7 @@ describe('commands/project/upload', () => {
         projectDir: '/test/project',
         callbackFunc: pollProjectBuildAndDeploySpy,
         uploadMessage: 'Test upload',
+        force: false,
         forceCreate: false,
         isUploadCommand: true,
         sendIR: false,
@@ -327,6 +333,22 @@ describe('commands/project/upload', () => {
       expect(processExitSpy).toHaveBeenCalledWith(EXIT_CODES.SUCCESS);
     });
 
+    it('should show MCP promotion nudge after successful upload', async () => {
+      await projectUploadCommand.handler(args);
+
+      expect(mockedShowMcpPromotionNudge).toHaveBeenCalledWith(
+        'project upload'
+      );
+    });
+
+    it('should not show MCP promotion nudge for JSON output', async () => {
+      args.formatOutputAsJson = true;
+
+      await projectUploadCommand.handler(args);
+
+      expect(mockedShowMcpPromotionNudge).not.toHaveBeenCalled();
+    });
+
     it('should exit with ERROR code when build fails', async () => {
       handleProjectUploadSpy.mockResolvedValue({
         result: {
@@ -340,6 +362,7 @@ describe('commands/project/upload', () => {
 
       await projectUploadCommand.handler(args);
 
+      expect(mockedShowMcpPromotionNudge).not.toHaveBeenCalled();
       expect(processExitSpy).toHaveBeenCalledWith(EXIT_CODES.ERROR);
     });
 

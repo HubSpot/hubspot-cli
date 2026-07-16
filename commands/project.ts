@@ -22,6 +22,7 @@ import list from './project/list.js';
 import info from './project/info.js';
 import deleteProject from './project/delete.js';
 import appInstallStatus from './project/appInstallStatus.js';
+import installApp from './project/installApp.js';
 import { makeYargsBuilder } from '../lib/yargsUtils.js';
 import { YargsCommandModuleBucket } from '../types/Yargs.js';
 import { getProjectConfig } from '../lib/projects/config.js';
@@ -87,6 +88,7 @@ function projectBuilder(yargs: Argv): Argv {
     .command(release)
     .command(projectValidate)
     .command(appInstallStatus)
+    .command(installApp)
     .demandCommand(1, '');
 
   return yargs;

@@ -139,9 +139,13 @@ describe('commands/project/appInstallStatus', () => {
       });
       mockedIsLegacyProject.mockReturnValue(false);
       mockedTranslate.mockResolvedValue({
-        intermediateNodesIndexedByUid: {
-          'my-app-uid': mockStaticAppNode,
+        intermediateRepresentation: {
+          intermediateNodesIndexedByUid: {
+            'my-app-uid': mockStaticAppNode,
+          },
+          profileData: undefined,
         },
+        skippedHsMetaFiles: [],
       } as unknown as Awaited<ReturnType<typeof translateForLocalDev>>);
       mockedFetchProject.mockResolvedValue({
         data: { id: 42, name: 'my-project' },
@@ -176,7 +180,11 @@ describe('commands/project/appInstallStatus', () => {
 
     it('should exit with error when the project has no app', async () => {
       mockedTranslate.mockResolvedValue({
-        intermediateNodesIndexedByUid: {},
+        intermediateRepresentation: {
+          intermediateNodesIndexedByUid: {},
+          profileData: undefined,
+        },
+        skippedHsMetaFiles: [],
       } as unknown as Awaited<ReturnType<typeof translateForLocalDev>>);
 
       await projectInstallStatusCommand.handler(mockArgs);
@@ -188,9 +196,13 @@ describe('commands/project/appInstallStatus', () => {
 
     it('should exit with error when the app is not static-auth', async () => {
       mockedTranslate.mockResolvedValue({
-        intermediateNodesIndexedByUid: {
-          'my-app-uid': mockOAuthAppNode,
+        intermediateRepresentation: {
+          intermediateNodesIndexedByUid: {
+            'my-app-uid': mockOAuthAppNode,
+          },
+          profileData: undefined,
         },
+        skippedHsMetaFiles: [],
       } as unknown as Awaited<ReturnType<typeof translateForLocalDev>>);
 
       await projectInstallStatusCommand.handler(mockArgs);

@@ -18,6 +18,7 @@ import { uiLogger } from '../../../lib/ui/logger.js';
 import { EXIT_CODES } from '../../../lib/enums/exitCodes.js';
 import type { UsageTrackingArgs } from '../../../types/Yargs.js';
 import accountAuthCommand from '../auth.js';
+import { showMcpPromotionNudge } from '../../../lib/mcp/promotion.js';
 
 vi.mock('../../../lib/commonOpts');
 vi.mock('@hubspot/local-dev-lib/config');
@@ -31,6 +32,7 @@ vi.mock('../../../lib/auth/awaitPersonalAccessKeyOverWebsocket.js');
 vi.mock('../../../lib/parsing.js');
 vi.mock('../../../lib/ui/index.js');
 vi.mock('../../../lib/errorHandlers/index.js');
+vi.mock('../../../lib/mcp/promotion.js');
 
 const localConfigFileExistsSpy = vi.spyOn(configLib, 'localConfigFileExists');
 const globalConfigFileExistsSpy = vi.spyOn(configLib, 'globalConfigFileExists');
@@ -70,6 +72,7 @@ const setAsDefaultAccountPromptSpy = vi.spyOn(
   'setAsDefaultAccountPrompt'
 );
 const parseStringToNumberSpy = vi.spyOn(parsingLib, 'parseStringToNumber');
+const mockedShowMcpPromotionNudge = vi.mocked(showMcpPromotionNudge);
 const processExitSpy = vi.spyOn(process, 'exit');
 
 describe('commands/account/auth', () => {
@@ -108,6 +111,7 @@ describe('commands/account/auth', () => {
       personalAccessKey: 'test-key',
     });
     setAsDefaultAccountPromptSpy.mockResolvedValue(true);
+    mockedShowMcpPromotionNudge.mockResolvedValue(undefined);
   });
 
   describe('command', () => {
@@ -157,7 +161,7 @@ describe('commands/account/auth', () => {
         derivedAccountId: undefined as unknown as number,
         d: false,
         debug: false,
-        _: [],
+        _: ['account', 'auth'],
         $0: '',
         addUsageMetadata: vi.fn(),
         exit: vi.fn(),
@@ -417,6 +421,20 @@ describe('commands/account/auth', () => {
         456789
       );
       expect(processExitSpy).toHaveBeenCalledWith(EXIT_CODES.SUCCESS);
+    });
+
+    it('should show MCP promotion nudge after successful auth', async () => {
+      await accountAuthCommand.handler(args);
+
+      expect(mockedShowMcpPromotionNudge).toHaveBeenCalledWith('account auth');
+    });
+
+    it('should not show MCP promotion nudge when auth fails', async () => {
+      getAccessTokenSpy.mockRejectedValue(new Error('Invalid key'));
+
+      await accountAuthCommand.handler(args);
+
+      expect(mockedShowMcpPromotionNudge).not.toHaveBeenCalled();
     });
   });
 });

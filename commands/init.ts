@@ -53,6 +53,7 @@ import { makeWrappedYargsHandler } from '../lib/yargs/makeWrappedYargsHandler.js
 import { uiLogger } from '../lib/ui/logger.js';
 import { commands } from '../lang/en.js';
 import { parseStringToNumber } from '../lib/parsing.js';
+import { showMcpPromotionNudge } from '../lib/mcp/promotion.js';
 
 const TRACKING_STATUS = {
   STARTED: 'started',
@@ -235,6 +236,7 @@ async function handler(args: ArgumentsCamelCase<InitArgs>): Promise<void> {
       'authCommand',
       'accountsListCommand',
     ]);
+    await showMcpPromotionNudge(args._.join(' '));
 
     if (!disableTracking) {
       await trackAuthAction(

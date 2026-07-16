@@ -176,6 +176,7 @@ export async function createInitialBuildForNewProject(
       skipValidation: true,
       sendIR,
       profile,
+      force: true,
     });
 
   if (uploadError) {
@@ -334,7 +335,7 @@ export async function getDeployedProjectNodes(
 
     const deployedProjectSourceDir = path.join(tempDir, deployedSrcDir);
 
-    const { intermediateNodesIndexedByUid } = await translate(
+    const { intermediateRepresentation } = await translate(
       {
         projectSourceDir: deployedProjectSourceDir,
         platformVersion: projectConfig.platformVersion,
@@ -343,7 +344,7 @@ export async function getDeployedProjectNodes(
       { profile }
     );
 
-    return intermediateNodesIndexedByUid;
+    return intermediateRepresentation.intermediateNodesIndexedByUid;
   } finally {
     if (tempDir && (await fs.pathExists(tempDir))) {
       await fs.remove(tempDir);

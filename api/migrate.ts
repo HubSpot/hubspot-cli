@@ -26,8 +26,7 @@ export const CLI_UNMIGRATABLE_REASONS = {
 export interface UnmigratableApp extends BaseMigrationApp {
   isMigratable: false;
   unmigratableReason:
-    | keyof typeof UNMIGRATABLE_REASONS
-    | keyof typeof CLI_UNMIGRATABLE_REASONS;
+    keyof typeof UNMIGRATABLE_REASONS | keyof typeof CLI_UNMIGRATABLE_REASONS;
 }
 
 export type MigrationApp = MigratableApp | UnmigratableApp;

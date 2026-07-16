@@ -7,8 +7,8 @@ import CLIWebSocketServer, {
   CLIWebSocketMessage,
 } from '../CLIWebSocketServer.js';
 import {
-  ACCOUNT_AUTH_UI_MESSAGE_SEND_TYPES,
   ACCOUNT_AUTH_UI_MESSAGE_RECEIVE_TYPES,
+  ACCOUNT_AUTH_UI_MESSAGE_SEND_TYPES,
   ACCOUNT_AUTH_WEBSOCKET_SERVER_VERSION,
 } from '../constants.js';
 import { personalAccessKeyPrompt } from '../prompts/personalAccessKeyPrompt.js';
@@ -90,7 +90,8 @@ async function awaitKeypressOrWebsocketPak(
   websocketPakPromise: Promise<string>
 ): Promise<WaitResult> {
   if (!process.stdin.isTTY) {
-    return { type: 'keypress' };
+    const pak = await websocketPakPromise;
+    return { type: 'pak', pak };
   }
 
   SpinniesManager.init();

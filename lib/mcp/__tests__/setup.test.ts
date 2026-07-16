@@ -6,7 +6,7 @@ import {
   setupCursor,
   setupWindsurf,
   setupVsCode,
-  addMcpServerToConfig,
+  configureMcpServer,
   supportedTools,
 } from '../setup.js';
 import SpinniesManager from '../../ui/SpinniesManager.js';
@@ -594,7 +594,7 @@ describe('lib/mcp/setup', () => {
     });
   });
 
-  describe('addMcpServerToConfig', () => {
+  describe('configureMcpServer', () => {
     const mockedPromptUser = vi.mocked(promptUser);
     const mockedExistsSync = vi.mocked(existsSync);
     const mockedFs = vi.mocked(fs);
@@ -609,11 +609,10 @@ describe('lib/mcp/setup', () => {
 
     it('should use provided targets without prompting', async () => {
       mockedPromptUser.mockResolvedValueOnce({ useStandaloneMode: false });
-      mockedExecAsync
-        .mockResolvedValueOnce({ stdout: '', stderr: '' })
-        .mockResolvedValueOnce({ stdout: '', stderr: '' });
+      mockedExistsSync.mockReturnValue(true);
+      mockedFs.readFileSync.mockReturnValue('{}');
 
-      const result = await addMcpServerToConfig(['cursor']);
+      const result = await configureMcpServer(['cursor']);
 
       expect(result).toEqual(['cursor']);
       expect(mockedPromptUser).not.toHaveBeenCalledWith(
@@ -628,7 +627,7 @@ describe('lib/mcp/setup', () => {
       mockedExistsSync.mockReturnValue(true);
       mockedFs.readFileSync.mockReturnValue('{}');
 
-      const result = await addMcpServerToConfig(undefined);
+      const result = await configureMcpServer(undefined);
 
       expect(result).toEqual(['cursor']);
       expect(mockedPromptUser).toHaveBeenCalledWith(
@@ -643,7 +642,7 @@ describe('lib/mcp/setup', () => {
       mockedExistsSync.mockReturnValue(true);
       mockedFs.readFileSync.mockReturnValue('{}');
 
-      const result = await addMcpServerToConfig([]);
+      const result = await configureMcpServer([]);
 
       expect(result).toEqual(['windsurf']);
       expect(mockedPromptUser).toHaveBeenCalledWith(
@@ -658,7 +657,7 @@ describe('lib/mcp/setup', () => {
       mockedExistsSync.mockReturnValue(true);
       mockedFs.readFileSync.mockReturnValue('{}');
 
-      const result = await addMcpServerToConfig(['cursor']);
+      const result = await configureMcpServer(['cursor']);
 
       expect(result).toEqual(['cursor']);
       const writeCall = mockedFs.writeFileSync.mock.calls.find(c =>
@@ -678,7 +677,7 @@ describe('lib/mcp/setup', () => {
       mockedExistsSync.mockReturnValue(true);
       mockedFs.readFileSync.mockReturnValue('{}');
 
-      const result = await addMcpServerToConfig(['cursor']);
+      const result = await configureMcpServer(['cursor']);
 
       expect(result).toEqual(['cursor']);
       const writeCall = mockedFs.writeFileSync.mock.calls.find(c =>
@@ -698,7 +697,7 @@ describe('lib/mcp/setup', () => {
       mockedExistsSync.mockReturnValue(true);
       mockedFs.readFileSync.mockReturnValue('{}');
 
-      await addMcpServerToConfig(['cursor', 'windsurf']);
+      await configureMcpServer(['cursor', 'windsurf']);
 
       expect(mockedUiLogger.info).toHaveBeenCalledWith(
         commands.mcp.setup.success(['cursor', 'windsurf'])
@@ -707,13 +706,12 @@ describe('lib/mcp/setup', () => {
 
     it('should throw and fail spinner when setup function returns false', async () => {
       mockedPromptUser.mockResolvedValueOnce({ useStandaloneMode: false });
-      const error = new Error('Permission denied');
       mockedExistsSync.mockReturnValue(true);
       mockedFs.readFileSync.mockImplementation(() => {
-        throw error;
+        throw new Error('Permission denied');
       });
 
-      await expect(addMcpServerToConfig(['cursor'])).rejects.toThrow();
+      await expect(configureMcpServer(['cursor'])).rejects.toThrow();
       expect(mockedSpinniesManager.fail).toHaveBeenCalledWith('mcpSetup', {
         text: commands.mcp.setup.spinners.failedToConfigure,
       });
@@ -724,7 +722,7 @@ describe('lib/mcp/setup', () => {
       mockedExistsSync.mockReturnValue(true);
       mockedFs.readFileSync.mockReturnValue('{}');
 
-      const result = await addMcpServerToConfig(['cursor', 'windsurf']);
+      const result = await configureMcpServer(['cursor', 'windsurf']);
 
       expect(result).toEqual(['cursor', 'windsurf']);
     });

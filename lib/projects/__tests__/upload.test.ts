@@ -501,6 +501,34 @@ describe('lib/projects/upload', () => {
       expect(filterFn({ name: 'other/package-lock.json' })).toBeTruthy();
     });
 
+    it('should accept skipAutoDeploy and still upload successfully', async () => {
+      const callbackFunc = vi.fn().mockResolvedValue({ success: true });
+
+      vi.mocked(ensureProjectExists).mockResolvedValue({
+        projectExists: true,
+      });
+
+      vi.mocked(uploadProject).mockResolvedValue({
+        data: { buildId: 1 },
+      } as Awaited<ReturnType<typeof uploadProject>>);
+
+      const uploadPromise = handleProjectUpload({
+        accountId: 123,
+        projectConfig,
+        projectDir: tempDir,
+        callbackFunc,
+        isUploadCommand: true,
+        skipAutoDeploy: true,
+      });
+
+      mockArchive.finalize();
+      const result = await uploadPromise;
+
+      expect(uploadProject).toHaveBeenCalled();
+      expect(callbackFunc).toHaveBeenCalled();
+      expect(result.result).toEqual({ success: true });
+    });
+
     it('should skip workspace collection for pre-v2 platform versions', async () => {
       projectConfig.platformVersion = '2025.1';
       vi.mocked(isLegacyProject).mockReturnValue(true);

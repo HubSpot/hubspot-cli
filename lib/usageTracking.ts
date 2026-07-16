@@ -241,6 +241,16 @@ export async function trackCommandMetadataUsage(
   });
 }
 
+export async function trackMcpPromotionShown(command?: string): Promise<void> {
+  return trackCliInteraction({
+    action: 'cli-mcp-promotion',
+    command: command ?? 'mcp-promotion',
+    meta: {
+      step: 'shown',
+    },
+  });
+}
+
 async function trackCliInteraction({
   action,
   accountId,

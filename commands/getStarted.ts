@@ -46,6 +46,7 @@ import ProjectValidationError from '../lib/errors/ProjectValidationError.js';
 import { openLink } from '../lib/links.js';
 import { runGetStartedV2 } from '../lib/getStarted/getStartedV2.js';
 import { isLegacyProject } from '@hubspot/project-parsing-lib/projects';
+import { showMcpPromotionNudge } from '../lib/mcp/promotion.js';
 
 const command = 'get-started';
 const describe = commands.getStarted.describe;
@@ -317,6 +318,7 @@ async function handler(
             isUploadCommand: false,
             sendIR: !isLegacyProject(newProjectConfig.platformVersion),
             skipValidation: false,
+            force: true,
           });
 
         if (uploadError) {
@@ -418,6 +420,8 @@ async function handler(
       return exit(EXIT_CODES.SUCCESS);
     }
   }
+
+  await showMcpPromotionNudge(args._.join(' '));
 
   // Track successful completion of get-started command
   await trackCommandMetadataUsage(

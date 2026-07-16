@@ -19,13 +19,20 @@ import { EXIT_CODES } from '../../lib/enums/exitCodes.js';
 import open from 'open';
 import { renderInteractive } from '../../ui/render.js';
 import { getGetStartedFlow } from '../../ui/components/getStarted/GetStartedFlow.js';
+import { showMcpPromotionNudge } from '../../lib/mcp/promotion.js';
+import { handleProjectUpload } from '../../lib/projects/upload.js';
+import { fetchPublicAppsForPortal } from '@hubspot/local-dev-lib/api/appsDev';
 
 vi.mock('../../lib/prompts/promptUtils');
 vi.mock('../../lib/prompts/projectNameAndDestPrompt');
 vi.mock('../../lib/projects/config');
 vi.mock('../../lib/errorHandlers');
 vi.mock('@hubspot/local-dev-lib/github');
+vi.mock('../../lib/mcp/promotion.js');
 vi.mock('../../lib/dependencyManagement');
+vi.mock('../../lib/projects/upload.js');
+vi.mock('../../lib/projects/pollProjectBuildAndDeploy.js');
+vi.mock('@hubspot/local-dev-lib/api/appsDev');
 vi.mock('@hubspot/local-dev-lib/config');
 vi.mock('../../ui/render');
 vi.mock('../../ui/components/getStarted/GetStartedFlow');
@@ -91,7 +98,7 @@ describe('commands/get-started', () => {
       account: undefined,
       'use-env': undefined,
       useEnv: undefined,
-      _: [],
+      _: ['get-started'],
       $0: 'hs',
       addUsageMetadata: vi.fn(),
       exit: vi.fn(),
@@ -238,6 +245,61 @@ describe('commands/get-started', () => {
           expect.objectContaining({ successful: false }),
           mockArgs.derivedAccountId
         );
+      });
+    });
+
+    describe('MCP promotion nudge', () => {
+      const mockedShowMcpPromotionNudge = vi.mocked(showMcpPromotionNudge);
+      const mockedHandleProjectUpload = vi.mocked(handleProjectUpload);
+      const mockedFetchPublicAppsForPortal = vi.mocked(
+        fetchPublicAppsForPortal
+      );
+
+      it('should show MCP promotion nudge after successful app upload', async () => {
+        const savedBrowser = process.env.BROWSER;
+        process.env.BROWSER = 'none';
+
+        (promptUser as MockedFunction<typeof promptUser>)
+          .mockResolvedValueOnce({ default: GET_STARTED_OPTIONS.APP })
+          .mockResolvedValueOnce({ shouldUpload: true });
+
+        (getProjectConfig as MockedFunction<typeof getProjectConfig>)
+          .mockResolvedValueOnce({
+            projectConfig: null,
+            projectDir: null,
+          })
+          .mockResolvedValueOnce({
+            projectConfig: {
+              name: 'test-project',
+              srcDir: 'src',
+              platformVersion: '2026.03',
+            },
+            projectDir: '/path/to/project',
+          });
+
+        mockedHandleProjectUpload.mockResolvedValueOnce({
+          result: { isAutoDeployEnabled: false },
+          uploadError: null,
+        });
+        mockedFetchPublicAppsForPortal.mockResolvedValueOnce({
+          data: { results: [{ id: 1, createdAt: Date.now() }] },
+        } as Awaited<ReturnType<typeof fetchPublicAppsForPortal>>);
+
+        await getStartedCommand.handler(mockArgs);
+
+        expect(mockedShowMcpPromotionNudge).toHaveBeenCalledWith('get-started');
+
+        process.env.BROWSER = savedBrowser;
+      });
+
+      it('should not show MCP promotion nudge for CMS flow', async () => {
+        (promptUser as MockedFunction<typeof promptUser>).mockResolvedValue({
+          default: GET_STARTED_OPTIONS.CMS,
+        });
+
+        await getStartedCommand.handler(mockArgs);
+
+        expect(mockedShowMcpPromotionNudge).not.toHaveBeenCalled();
       });
     });
   });

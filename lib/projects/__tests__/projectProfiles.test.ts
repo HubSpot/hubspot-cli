@@ -364,7 +364,10 @@ describe('lib/projectProfiles', () => {
       });
       mockedValidateProfileVariables.mockReturnValue({ success: true });
 
-      vi.mocked(handleTranslate).mockResolvedValue(undefined);
+      vi.mocked(handleTranslate).mockResolvedValue({
+        intermediateRepresentation: { intermediateNodesIndexedByUid: {} },
+        skippedHsMetaFiles: [],
+      });
     });
 
     it('should return empty array when validation succeeds', async () => {
