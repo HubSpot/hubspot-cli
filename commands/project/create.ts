@@ -44,7 +44,7 @@ import { showMcpPromotionNudge } from '../../lib/mcp/promotion.js';
 const command = ['create', 'init'];
 const describe = commands.project.create.describe;
 
-const BETA_VERSIONS = [
+const BETA_VERSIONS: string[] = [
   PLATFORM_VERSIONS.v2026_09_BETA,
   PLATFORM_VERSIONS.v2026_03_BETA,
 ];
@@ -218,7 +218,6 @@ function projectCreateBuilder(yargs: Argv): Argv<ProjectCreateArgs> {
       describe: commands.project.create.options.platformVersion.describe,
       type: 'string',
       choices: [
-        PLATFORM_VERSIONS.v2025_1,
         PLATFORM_VERSIONS.v2025_2,
         PLATFORM_VERSIONS.v2026_03_BETA,
         PLATFORM_VERSIONS.v2026_03,

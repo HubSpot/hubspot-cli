@@ -6,14 +6,10 @@ import {
   addConfigOptions,
   addUseEnvironmentOptions,
 } from '../../../lib/commonOpts.js';
-import testAccountImportDataCommand from '../importData.js';
+import testAccountImportDataCommand, {
+  type CrmImportDataArgs,
+} from '../importData.js';
 import { EXIT_CODES } from '../../../lib/enums/exitCodes.js';
-import {
-  AccountArgs,
-  CommonArgs,
-  ConfigArgs,
-  EnvironmentArgs,
-} from '../../../types/Yargs.js';
 import {
   handleImportData,
   handleTargetTestAccountSelectionFlow,
@@ -89,14 +85,6 @@ describe('commands/testAccount/importData', () => {
   });
 
   describe('handler', () => {
-    type CrmImportDataArgs = CommonArgs &
-      ConfigArgs &
-      AccountArgs &
-      EnvironmentArgs & {
-        filePath: string | undefined;
-        skipConfirm: boolean | undefined;
-      };
-
     it('should complete the flow given the correct args', async () => {
       const targetAccountId = 123456789;
       const mockArgs: ArgumentsCamelCase<CrmImportDataArgs> = {

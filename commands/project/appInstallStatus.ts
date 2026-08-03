@@ -15,6 +15,10 @@ import {
   YargsCommandModule,
 } from '../../types/Yargs.js';
 import { makeWrappedYargsHandler } from '../../lib/yargs/makeWrappedYargsHandler.js';
+import {
+  InstallStatusJsonOutput,
+  InstallStatusSchema,
+} from '../../lib/jsonOutput.js';
 import { makeYargsBuilder } from '../../lib/yargsUtils.js';
 import { uiLogger } from '../../lib/ui/logger.js';
 import {
@@ -32,16 +36,16 @@ import { AppIRNode } from '../../types/ProjectComponents.js';
 const command = 'app-install-status';
 const describe = commands.project.installStatus.describe;
 
-type ProjectInstallStatusArgs = CommonArgs &
+export type ProjectInstallStatusArgs = CommonArgs &
   ConfigArgs &
   AccountArgs &
   EnvironmentArgs &
-  JSONOutputArgs;
+  JSONOutputArgs<InstallStatusJsonOutput>;
 
 async function handler(
   args: ArgumentsCamelCase<ProjectInstallStatusArgs>
 ): Promise<void> {
-  const { derivedAccountId, formatOutputAsJson, exit } = args;
+  const { derivedAccountId, formatOutputAsJson, exit, addJsonOutput } = args;
 
   const { projectConfig, projectDir } = await getProjectConfig();
 
@@ -138,35 +142,37 @@ async function handler(
   const isInstalled =
     isInstalledWithScopeGroups || previouslyAuthorizedScopeGroups.length > 0;
 
+  addJsonOutput({
+    appId,
+    appUid: appNode.uid,
+    accountId: derivedAccountId,
+    projectId,
+    isInstalled,
+    isInstalledWithCurrentScopes: isInstalledWithScopeGroups,
+    previouslyAuthorizedScopeGroups,
+  });
+
   if (formatOutputAsJson) {
-    uiLogger.json({
-      appId,
-      appUid: appNode.uid,
-      accountId: derivedAccountId,
-      projectId,
-      isInstalled,
-      isInstalledWithCurrentScopes: isInstalledWithScopeGroups,
-      previouslyAuthorizedScopeGroups,
-    });
     return exit(isInstalled ? EXIT_CODES.SUCCESS : EXIT_CODES.WARNING);
   }
 
+  if (isInstalledWithScopeGroups) {
+    uiLogger.success(
+      commands.project.installStatus.success.installed(
+        appNode.config.name,
+        derivedAccountId
+      )
+    );
+    return exit(EXIT_CODES.SUCCESS);
+  }
+
   if (isInstalled) {
-    if (isInstalledWithScopeGroups) {
-      uiLogger.success(
-        commands.project.installStatus.success.installed(
-          appNode.config.name,
-          derivedAccountId
-        )
-      );
-    } else {
-      uiLogger.success(
-        commands.project.installStatus.success.installedWithOutdatedScopes(
-          appNode.config.name,
-          derivedAccountId
-        )
-      );
-    }
+    uiLogger.success(
+      commands.project.installStatus.success.installedWithOutdatedScopes(
+        appNode.config.name,
+        derivedAccountId
+      )
+    );
     return exit(EXIT_CODES.SUCCESS);
   }
 
@@ -214,7 +220,9 @@ const projectInstallStatusCommand: YargsCommandModule<
 > = {
   command,
   describe,
-  handler: makeWrappedYargsHandler('project-app-install-status', handler),
+  handler: makeWrappedYargsHandler('project-app-install-status', handler, {
+    jsonOutputSchema: InstallStatusSchema,
+  }),
   builder,
 };
 

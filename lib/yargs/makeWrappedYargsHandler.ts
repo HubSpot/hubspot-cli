@@ -1,6 +1,7 @@
 import os from 'os';
 import path from 'path';
 import { ArgumentsCamelCase } from 'yargs';
+import { z } from 'zod';
 import { getConfig } from '@hubspot/local-dev-lib/config';
 import {
   getStateValue,
@@ -22,8 +23,13 @@ import {
 import { EXIT_CODES } from '../enums/exitCodes.js';
 import { isPromptExitError } from '../errors/PromptExitError.js';
 import { debugError } from '../errorHandlers/index.js';
+import { MAX_LOG_FILES } from '../constants.js';
 
-const HANDLER_LOG_DIR = path.join(os.homedir(), '.hscli', 'logs');
+export type WrappedHandlerOptions = {
+  jsonOutputSchema?: z.ZodType;
+};
+
+const HANDLER_LOG_DIR = path.join(os.homedir(), '.hscli', 'logs', 'cli');
 
 function logUsageTrackingMessage(isJsonOutput: boolean): void {
   if (isJsonOutput) {
@@ -54,108 +60,181 @@ function logUsageTrackingMessage(isJsonOutput: boolean): void {
   }
 }
 
+function createUsageTracker(
+  trackingName: string,
+  derivedAccountId: number | undefined
+) {
+  const startTime = Date.now();
+  const meta: UsageTrackingMetaWithAccountId = {};
+  let fired = false;
+
+  const addMetadata = (newMeta: UsageTrackingMetaWithAccountId) => {
+    Object.assign(meta, newMeta);
+  };
+
+  const track = async (successful: boolean) => {
+    if (fired) {
+      return;
+    }
+    fired = true;
+
+    try {
+      const { accountId: overrideAccountId, ...trackingMeta } = meta;
+      trackingMeta.successful = successful;
+      trackingMeta.executionTime = Date.now() - startTime;
+
+      await _trackCommandUsage(
+        trackingName,
+        trackingMeta,
+        overrideAccountId ?? derivedAccountId
+      );
+    } catch (_e) {}
+  };
+
+  const onForcedExit = () => {
+    process.exit(EXIT_CODES.SUCCESS);
+  };
+
+  const onSigint = async () => {
+    process.removeListener('SIGINT', onSigint);
+    process.on('SIGINT', onForcedExit);
+    try {
+      await track(false);
+    } catch (_e) {}
+    process.removeListener('SIGINT', onForcedExit);
+    process.exit(EXIT_CODES.SUCCESS);
+  };
+  process.on('SIGINT', onSigint);
+
+  const trackAndCleanup = async (successful: boolean) => {
+    await track(successful);
+    process.removeListener('SIGINT', onSigint);
+    process.removeListener('SIGINT', onForcedExit);
+  };
+
+  return { addMetadata, trackAndCleanup };
+}
+
+function createJsonOutputManager(isJsonOutput: boolean, schema?: z.ZodType) {
+  const data: Record<string, unknown> = {};
+  let emitted = false;
+
+  const add = (newData: Record<string, unknown>) => {
+    Object.assign(data, newData);
+  };
+
+  const emit = (): boolean => {
+    if (!emitted && isJsonOutput && Object.keys(data).length > 0) {
+      emitted = true;
+      if (schema) {
+        const result = schema.safeParse(data);
+        if (!result.success) {
+          uiLogger.json(data);
+          uiLogger.warn(lib.jsonSchema.validationFailed);
+          return false;
+        }
+      }
+      uiLogger.json(data);
+    }
+    return true;
+  };
+
+  return { add, emit };
+}
+
+function createLogFileWriter(trackingName: string, isJsonOutput: boolean) {
+  const writeLogFile = (): string | null => {
+    if (isJsonOutput) {
+      return null;
+    }
+    return ldlLogger.writeBufferedLogsToFile({
+      dir: HANDLER_LOG_DIR,
+      filenamePrefix: trackingName,
+      maxFiles: MAX_LOG_FILES,
+    });
+  };
+
+  const writeFailureLogFile = (): void => {
+    const savedPath = writeLogFile();
+    if (savedPath) {
+      uiLogger.log('');
+      uiLogger.error(lib.handlerLogFile.saved(savedPath));
+    }
+  };
+
+  return { writeLogFile, writeFailureLogFile };
+}
+
 export function makeWrappedYargsHandler<T extends CommonArgs>(
   trackingName: string,
-  handler: (args: ArgumentsCamelCase<T>) => Promise<void>
+  handler: (args: ArgumentsCamelCase<T>) => Promise<void>,
+  options?: WrappedHandlerOptions
 ): (args: ArgumentsCamelCase<T>) => Promise<void> {
   return async (args: ArgumentsCamelCase<T>) => {
-    const startTime = Date.now();
-    const meta: UsageTrackingMetaWithAccountId = {};
-    let trackingFired = false;
+    const wrappedHandlerArgs = args as ArgumentsCamelCase<T> &
+      UsageTrackingArgs &
+      JSONOutputArgs<Record<string, unknown>>;
 
-    const trackingArgs = args as ArgumentsCamelCase<T> & UsageTrackingArgs;
+    const isJsonOutput = Boolean(
+      wrappedHandlerArgs.json || wrappedHandlerArgs.formatOutputAsJson
+    );
+    const schema = options?.jsonOutputSchema;
 
-    const addUsageMetadata = (newMeta: UsageTrackingMetaWithAccountId) => {
-      Object.assign(meta, newMeta);
-    };
-    trackingArgs.addUsageMetadata = addUsageMetadata;
+    const tracker = createUsageTracker(trackingName, args.derivedAccountId);
 
-    const trackCommandUsage = async (successful: boolean) => {
-      if (trackingFired) {
-        return;
+    if (wrappedHandlerArgs.jsonSchema) {
+      if (schema) {
+        uiLogger.json(z.toJSONSchema(schema));
+      } else {
+        uiLogger.json({ error: lib.jsonSchema.noSchemaForCommand });
       }
-      trackingFired = true;
+      await tracker.trackAndCleanup(true);
+      return process.exit(EXIT_CODES.SUCCESS);
+    }
+    const json = createJsonOutputManager(isJsonOutput, schema);
+    const logs = createLogFileWriter(trackingName, isJsonOutput);
 
-      try {
-        const { accountId: overrideAccountId, ...trackingMeta } = meta;
-        trackingMeta.successful = successful;
-        trackingMeta.executionTime = Date.now() - startTime;
+    wrappedHandlerArgs.addUsageMetadata = tracker.addMetadata;
+    wrappedHandlerArgs.addJsonOutput = json.add;
 
-        await _trackCommandUsage(
-          trackingName,
-          trackingMeta,
-          overrideAccountId ?? args.derivedAccountId
-        );
-      } catch (_e) {}
-    };
-
-    const onForcedExit = () => {
-      process.exit(EXIT_CODES.SUCCESS);
-    };
-
-    const onSigint = async () => {
-      process.removeListener('SIGINT', onSigint);
-      process.on('SIGINT', onForcedExit);
-      try {
-        await trackCommandUsage(false);
-      } catch (_e) {}
-      process.removeListener('SIGINT', onForcedExit);
-      process.exit(EXIT_CODES.SUCCESS);
-    };
-    process.on('SIGINT', onSigint);
-
-    const trackCommandUsageAndRemoveListeners = async (successful: boolean) => {
-      await trackCommandUsage(successful);
-      process.removeListener('SIGINT', onSigint);
-      process.removeListener('SIGINT', onForcedExit);
-    };
-
-    const jsonArgs = args as ArgumentsCamelCase<T & JSONOutputArgs>;
-    const isJsonOutput = Boolean(jsonArgs.json || jsonArgs.formatOutputAsJson);
-
-    const writeFailureLogFile = (): void => {
-      // Skip in JSON output modes so the side effect + stderr message don't
-      // interfere with structured output consumers.
-      if (isJsonOutput) {
-        return;
+    wrappedHandlerArgs.exit = async (code: ExitCode): Promise<never> => {
+      const jsonValid = json.emit();
+      const exitCode =
+        !jsonValid && code === EXIT_CODES.SUCCESS ? EXIT_CODES.WARNING : code;
+      await tracker.trackAndCleanup(exitCode !== EXIT_CODES.ERROR);
+      if (exitCode === EXIT_CODES.ERROR) {
+        logs.writeFailureLogFile();
+      } else {
+        logs.writeLogFile();
       }
-      const savedPath = ldlLogger.writeBufferedLogsToFile({
-        dir: HANDLER_LOG_DIR,
-        filenamePrefix: trackingName,
-      });
-      if (savedPath) {
-        uiLogger.log('');
-        uiLogger.error(lib.handlerLogFile.saved(savedPath));
-      }
-    };
-
-    trackingArgs.exit = async (code: ExitCode): Promise<never> => {
-      await trackCommandUsageAndRemoveListeners(code !== EXIT_CODES.ERROR);
-      if (code === EXIT_CODES.ERROR) {
-        writeFailureLogFile();
-      }
-      return process.exit(code);
+      return process.exit(exitCode);
     };
 
     logUsageTrackingMessage(isJsonOutput);
 
     try {
-      await handler(trackingArgs);
+      await handler(wrappedHandlerArgs);
     } catch (e) {
       const isSuccessfulPromptExit = isPromptExitError(e)
         ? e.exitCode !== EXIT_CODES.ERROR
         : false;
-      await trackCommandUsageAndRemoveListeners(isSuccessfulPromptExit);
+      await tracker.trackAndCleanup(isSuccessfulPromptExit);
 
       if (isPromptExitError(e)) {
+        logs.writeLogFile();
         return process.exit(e.exitCode);
       } else {
         debugError(e);
-        writeFailureLogFile();
+        logs.writeFailureLogFile();
         return process.exit(EXIT_CODES.ERROR);
       }
     }
 
-    await trackCommandUsageAndRemoveListeners(true);
+    const jsonValid = json.emit();
+    await tracker.trackAndCleanup(true);
+    logs.writeLogFile();
+    if (!jsonValid) {
+      return process.exit(EXIT_CODES.WARNING);
+    }
   };
 }

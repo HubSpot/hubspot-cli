@@ -1,5 +1,5 @@
 import { TextContent, TextContentResponse } from '../../types.js';
-import { Tool } from '../../Tool.js';
+import { Tool, ToolExtra } from '../../Tool.js';
 import {
   McpServer,
   RegisteredTool,
@@ -7,10 +7,9 @@ import {
 import { McpLogger } from '../../utils/logger.js';
 import { z } from 'zod';
 import { absoluteCurrentWorkingDirectory } from '../project/constants.js';
-import { runCommandInDir } from '../../utils/command.js';
 import { formatTextContents, formatTextContent } from '../../utils/content.js';
-import { addFlag } from '../../utils/command.js';
 import { HTTP_METHODS } from '../../../types/Cms.js';
+import { HubSpotCommand } from '../../utils/command.js';
 import { setupHubSpotConfig } from '../../utils/config.js';
 import { getErrorMessage } from '../../../lib/errorHandlers/index.js';
 
@@ -60,14 +59,17 @@ export class HsCreateFunctionTool extends Tool<HsCreateFunctionInputSchema> {
     super(mcpServer, logger, toolName);
   }
 
-  async handler({
-    dest,
-    functionsFolder,
-    filename,
-    endpointMethod,
-    endpointPath,
-    absoluteCurrentWorkingDirectory,
-  }: HsCreateFunctionInputSchema): Promise<TextContentResponse> {
+  async handler(
+    {
+      dest,
+      functionsFolder,
+      filename,
+      endpointMethod,
+      endpointPath,
+      absoluteCurrentWorkingDirectory,
+    }: HsCreateFunctionInputSchema,
+    extra?: ToolExtra
+  ): Promise<TextContentResponse> {
     setupHubSpotConfig(absoluteCurrentWorkingDirectory);
 
     const content: TextContent[] = [];
@@ -107,35 +109,26 @@ export class HsCreateFunctionTool extends Tool<HsCreateFunctionInputSchema> {
     }
 
     // Build the command
-    let command = 'hs cms function create';
-
+    const command = new HubSpotCommand('cms function create');
     if (dest) {
-      command += ` "${dest}"`;
+      command.addArg(dest);
     }
-
-    // Add function-specific flags
     if (functionsFolder) {
-      command = addFlag(command, 'functions-folder', functionsFolder);
+      command.addFlag('functions-folder', functionsFolder);
     }
-
     if (filename) {
-      command = addFlag(command, 'filename', filename);
+      command.addFlag('filename', filename);
     }
-
-    if (endpointMethod) {
-      command = addFlag(command, 'endpoint-method', endpointMethod);
-    } else {
-      command = addFlag(command, 'endpoint-method', 'GET');
-    }
-
+    command.addFlag('endpoint-method', endpointMethod ?? 'GET');
     if (endpointPath) {
-      command = addFlag(command, 'endpoint-path', endpointPath);
+      command.addFlag('endpoint-path', endpointPath);
     }
 
     try {
-      const { stdout, stderr } = await runCommandInDir(
+      const { stdout, stderr } = await this.runCommand(
         absoluteCurrentWorkingDirectory,
-        command
+        command,
+        extra
       );
 
       return formatTextContents(stdout, stderr);
@@ -162,7 +155,7 @@ export class HsCreateFunctionTool extends Tool<HsCreateFunctionInputSchema> {
           openWorldHint: false,
         },
       },
-      input => this.wrappedHandler(input)
+      (input, extra) => this.wrappedHandler(input, extra)
     );
   }
 }

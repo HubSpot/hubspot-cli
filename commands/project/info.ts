@@ -21,21 +21,25 @@ import {
   getProjectInfo,
   logProjectInfo,
 } from '../../lib/projects/projectInfo.js';
+import {
+  ProjectInfoJsonOutput,
+  ProjectInfoSchema,
+} from '../../lib/jsonOutput.js';
 
 const command = 'info';
 const describe = commands.project.info.describe;
 const verboseDescribe = commands.project.info.verboseDescribe;
 
-type ProjectInfoArgs = CommonArgs &
+export type ProjectInfoArgs = CommonArgs &
   ConfigArgs &
   AccountArgs &
   EnvironmentArgs &
-  JSONOutputArgs;
+  JSONOutputArgs<ProjectInfoJsonOutput>;
 
 async function handler(
   args: ArgumentsCamelCase<ProjectInfoArgs>
 ): Promise<void> {
-  const { derivedAccountId, formatOutputAsJson, exit } = args;
+  const { derivedAccountId, formatOutputAsJson, exit, addJsonOutput } = args;
 
   const { projectConfig } = await getProjectConfig();
 
@@ -82,12 +86,11 @@ async function handler(
     derivedAccountId
   );
 
-  if (formatOutputAsJson) {
-    uiLogger.json(projectInfo);
-    return;
-  }
+  addJsonOutput(projectInfo);
 
-  logProjectInfo(projectInfo);
+  if (!formatOutputAsJson) {
+    logProjectInfo(projectInfo);
+  }
 }
 
 function projectInfoBuilder(yargs: Argv): Argv<ProjectInfoArgs> {
@@ -115,7 +118,9 @@ const builder = makeYargsBuilder<ProjectInfoArgs>(
 const projectInfoCommand: YargsCommandModule<unknown, ProjectInfoArgs> = {
   command,
   describe,
-  handler: makeWrappedYargsHandler('project-info', handler),
+  handler: makeWrappedYargsHandler('project-info', handler, {
+    jsonOutputSchema: ProjectInfoSchema,
+  }),
   builder,
 };
 

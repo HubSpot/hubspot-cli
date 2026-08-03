@@ -47,6 +47,10 @@ const validateProjectConfigSpy = vi.spyOn(
   'validateProjectConfig'
 );
 const isLegacyProjectSpy = vi.spyOn(platformVersionLib, 'isLegacyProject');
+const meetsMinimumPlatformVersionSpy = vi.spyOn(
+  platformVersionLib,
+  'meetsMinimumPlatformVersion'
+);
 const loadAndValidateProfileSpy = vi.spyOn(
   projectProfilesLib,
   'loadAndValidateProfile'
@@ -284,11 +288,15 @@ describe('commands/project/upload', () => {
     });
 
     it('should handle successful build with auto-deploy disabled', async () => {
+      meetsMinimumPlatformVersionSpy.mockReturnValue(false);
       handleProjectUploadSpy.mockResolvedValue({
         result: {
           succeeded: true,
           buildId: 456,
-          buildResult: { isAutoDeployEnabled: false },
+          buildResult: {
+            isAutoDeployEnabled: false,
+            platformVersion: '2026.03',
+          },
         },
         uploadError: null,
       });
@@ -304,6 +312,30 @@ describe('commands/project/upload', () => {
         123456,
         'test-project',
         456
+      );
+    });
+
+    it('should show release management message for builds with modern platform version', async () => {
+      meetsMinimumPlatformVersionSpy.mockReturnValue(true);
+      handleProjectUploadSpy.mockResolvedValue({
+        result: {
+          succeeded: true,
+          buildId: 456,
+          buildResult: {
+            isAutoDeployEnabled: false,
+            platformVersion: '2026.09',
+          },
+        },
+        uploadError: null,
+      });
+
+      await projectUploadCommand.handler(args);
+
+      expect(uiLogger.log).toHaveBeenCalledWith(
+        expect.stringContaining('release create')
+      );
+      expect(uiLogger.log).not.toHaveBeenCalledWith(
+        expect.stringContaining('hs project deploy')
       );
     });
 
@@ -366,7 +398,7 @@ describe('commands/project/upload', () => {
       expect(processExitSpy).toHaveBeenCalledWith(EXIT_CODES.ERROR);
     });
 
-    it('should output empty JSON and exit with ERROR when build fails with --json', async () => {
+    it('should output buildId in JSON and exit with ERROR when build fails with --json', async () => {
       args.formatOutputAsJson = true;
       handleProjectUploadSpy.mockResolvedValue({
         result: {
@@ -380,7 +412,29 @@ describe('commands/project/upload', () => {
 
       await projectUploadCommand.handler(args);
 
-      expect(uiLogger.json).toHaveBeenCalledWith({});
+      expect(uiLogger.json).toHaveBeenCalledWith({ buildId: 123 });
+      expect(processExitSpy).toHaveBeenCalledWith(EXIT_CODES.ERROR);
+    });
+
+    it('should output buildId and deployId in JSON and exit with ERROR when deploy fails with --json', async () => {
+      args.formatOutputAsJson = true;
+      handleProjectUploadSpy.mockResolvedValue({
+        result: {
+          succeeded: false,
+          buildId: 456,
+          buildResult: { isAutoDeployEnabled: true },
+          deployResult: { deployId: 789 },
+        },
+        uploadError: null,
+        projectId: 999,
+      });
+
+      await projectUploadCommand.handler(args);
+
+      expect(uiLogger.json).toHaveBeenCalledWith({
+        buildId: 456,
+        deployId: 789,
+      });
       expect(processExitSpy).toHaveBeenCalledWith(EXIT_CODES.ERROR);
     });
 

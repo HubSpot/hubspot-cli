@@ -30,7 +30,7 @@ import {
 const command = 'delete [name]';
 const describe = commands.project.profile.delete.describe;
 
-type ProjectProfileDeleteArgs = CommonArgs & {
+export type ProjectProfileDeleteArgs = CommonArgs & {
   name?: string;
 };
 

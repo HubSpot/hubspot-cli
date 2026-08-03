@@ -10,7 +10,6 @@ import * as usageTrackingLib from '../../../lib/usageTracking.js';
 import * as errorHandlers from '../../../lib/errorHandlers/index.js';
 import { uiLogger } from '../../../lib/ui/logger.js';
 import { EXIT_CODES } from '../../../lib/enums/exitCodes.js';
-import * as deprecatedFlowLib from '../dev/deprecatedFlow.js';
 import * as unifiedFlowLib from '../dev/unifiedFlow.js';
 import projectDevCommand from '../dev/index.js';
 import { ProjectDevArgs } from '../../../types/Yargs.js';
@@ -23,7 +22,6 @@ vi.mock('../../../lib/projects/projectProfiles.js');
 vi.mock('../../../lib/prompts/promptUtils.js');
 vi.mock('../../../lib/errorHandlers/index.js');
 vi.mock('../../../lib/ui/index.js');
-vi.mock('../dev/deprecatedFlow.js');
 vi.mock('../dev/unifiedFlow.js');
 
 const getConfigAccountIfExistsSpy = vi.spyOn(
@@ -31,11 +29,11 @@ const getConfigAccountIfExistsSpy = vi.spyOn(
   'getConfigAccountIfExists'
 );
 const getProjectConfigSpy = vi.spyOn(projectConfigLib, 'getProjectConfig');
+const isLegacyProjectSpy = vi.spyOn(platformVersionLib, 'isLegacyProject');
 const validateProjectConfigSpy = vi.spyOn(
   projectConfigLib,
   'validateProjectConfig'
 );
-const isLegacyProjectSpy = vi.spyOn(platformVersionLib, 'isLegacyProject');
 const loadAndValidateProfileSpy = vi.spyOn(
   projectProfilesLib,
   'loadAndValidateProfile'
@@ -48,10 +46,6 @@ const getAllHsProfilesSpy = vi.spyOn(
 const listPromptSpy = vi.spyOn(promptUtilsLib, 'listPrompt');
 const trackCommandUsageSpy = vi.spyOn(usageTrackingLib, 'trackCommandUsage');
 const logErrorSpy = vi.spyOn(errorHandlers, 'logError');
-const deprecatedProjectDevFlowSpy = vi.spyOn(
-  deprecatedFlowLib,
-  'deprecatedProjectDevFlow'
-);
 const unifiedProjectDevFlowSpy = vi.spyOn(
   unifiedFlowLib,
   'unifiedProjectDevFlow'
@@ -73,7 +67,6 @@ describe('commands/project/dev', () => {
     validateProjectConfigSpy.mockImplementation(() => {});
     isLegacyProjectSpy.mockReturnValue(false);
     trackCommandUsageSpy.mockImplementation(async () => {});
-    deprecatedProjectDevFlowSpy.mockResolvedValue(undefined);
     unifiedProjectDevFlowSpy.mockResolvedValue(undefined);
     getAllHsProfilesSpy.mockResolvedValue([]);
     listPromptSpy.mockResolvedValue('dev' as any);
@@ -136,6 +129,26 @@ describe('commands/project/dev', () => {
         expect(processExitSpy).toHaveBeenCalledWith(EXIT_CODES.ERROR);
       });
 
+      it('should exit with error for legacy platform versions', async () => {
+        isLegacyProjectSpy.mockReturnValue(true);
+        getProjectConfigSpy.mockResolvedValue({
+          projectConfig: {
+            name: 'test-project',
+            srcDir: 'src',
+            platformVersion: '2025.1',
+          },
+          projectDir: '/test/project',
+        });
+
+        await projectDevCommand.handler(args);
+
+        expect(uiLogger.error).toHaveBeenCalledWith(
+          expect.stringContaining('2025.1')
+        );
+        expect(processExitSpy).toHaveBeenCalledWith(EXIT_CODES.ERROR);
+        expect(unifiedProjectDevFlowSpy).not.toHaveBeenCalled();
+      });
+
       it('should exit if no project directory', async () => {
         getProjectConfigSpy.mockResolvedValue({
           projectConfig: {
@@ -160,37 +173,6 @@ describe('commands/project/dev', () => {
         );
         expect(processExitSpy).toHaveBeenCalledWith(EXIT_CODES.ERROR);
       });
-
-      it('should error if using testingAccount and projectAccount with legacy project', async () => {
-        isLegacyProjectSpy.mockReturnValue(true);
-        args.testingAccount = '111111';
-        args.projectAccount = '222222';
-
-        await projectDevCommand.handler(args);
-
-        expect(logErrorSpy).toHaveBeenCalledWith(
-          expect.objectContaining({
-            message: expect.stringContaining(
-              '--project-account and --testing-account'
-            ),
-          })
-        );
-        expect(processExitSpy).toHaveBeenCalledWith(EXIT_CODES.ERROR);
-      });
-
-      it('should error if using account flag with V2 project', async () => {
-        isLegacyProjectSpy.mockReturnValue(false);
-        args.userProvidedAccount = '123456';
-
-        await projectDevCommand.handler(args);
-
-        expect(logErrorSpy).toHaveBeenCalledWith(
-          expect.objectContaining({
-            message: expect.stringContaining('--account flag'),
-          })
-        );
-        expect(processExitSpy).toHaveBeenCalledWith(EXIT_CODES.ERROR);
-      });
     });
 
     describe('account resolution', () => {
@@ -207,20 +189,6 @@ describe('commands/project/dev', () => {
           'project-dev',
           expect.objectContaining({ successful: true }),
           999999
-        );
-      });
-
-      it('should use userProvidedAccount for legacy projects', async () => {
-        isLegacyProjectSpy.mockReturnValue(true);
-        args.userProvidedAccount = '888888';
-        args.derivedAccountId = 888888;
-
-        await projectDevCommand.handler(args);
-
-        expect(trackCommandUsageSpy).toHaveBeenCalledWith(
-          'project-dev',
-          expect.objectContaining({ successful: true }),
-          888888
         );
       });
 
@@ -351,9 +319,7 @@ describe('commands/project/dev', () => {
         );
       });
 
-      it('should run unified flow for V2 projects', async () => {
-        isLegacyProjectSpy.mockReturnValue(false);
-
+      it('should always run unified flow', async () => {
         await projectDevCommand.handler(args);
 
         expect(unifiedProjectDevFlowSpy).toHaveBeenCalledWith({
@@ -368,29 +334,9 @@ describe('commands/project/dev', () => {
           projectDir: '/test/project',
           profileConfig: undefined,
         });
-        expect(deprecatedProjectDevFlowSpy).not.toHaveBeenCalled();
-      });
-
-      it('should run deprecated flow for legacy projects', async () => {
-        isLegacyProjectSpy.mockReturnValue(true);
-
-        await projectDevCommand.handler(args);
-
-        expect(deprecatedProjectDevFlowSpy).toHaveBeenCalledWith({
-          args,
-          accountId: 123456,
-          projectConfig: {
-            name: 'test-project',
-            srcDir: 'src',
-            platformVersion: 'v2',
-          },
-          projectDir: '/test/project',
-        });
-        expect(unifiedProjectDevFlowSpy).not.toHaveBeenCalled();
       });
 
       it('should pass testingAccount to unified flow', async () => {
-        isLegacyProjectSpy.mockReturnValue(false);
         args.testingAccount = '555555';
         getConfigAccountIfExistsSpy.mockReturnValue({
           accountId: 555555,

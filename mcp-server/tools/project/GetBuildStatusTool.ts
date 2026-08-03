@@ -167,11 +167,16 @@ export class GetBuildStatusTool extends Tool<GetBuildStatusInputSchema> {
     setupHubSpotConfig(absoluteCurrentWorkingDirectory);
 
     try {
-      const accountId = getConfigDefaultAccountIfExists()?.accountId;
+      let accountId: number | undefined;
+      try {
+        accountId = getConfigDefaultAccountIfExists()?.accountId;
+      } catch {
+        // Config file does not exist
+      }
       if (!accountId) {
         return formatTextContents(
           absoluteCurrentWorkingDirectory,
-          'No account ID found. Please run `hs account auth` to configure an account, or set a default account with `hs account use <account>`'
+          'No account ID found. Call the auth-account tool to authenticate a HubSpot account.'
         );
       }
 
@@ -235,7 +240,7 @@ export class GetBuildStatusTool extends Tool<GetBuildStatusInputSchema> {
           idempotentHint: true,
         },
       },
-      input => this.wrappedHandler(input)
+      (input, extra) => this.wrappedHandler(input, extra)
     );
   }
 }

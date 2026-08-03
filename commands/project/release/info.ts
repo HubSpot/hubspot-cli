@@ -25,6 +25,12 @@ import { isPromptExitError } from '../../../lib/errors/PromptExitError.js';
 import { mapToUserFacingType } from '@hubspot/project-parsing-lib/transform';
 import { AUTO_GENERATED_COMPONENT_TYPES } from '@hubspot/project-parsing-lib/constants';
 
+import {
+  ReleaseJsonOutput,
+  ReleaseSchema,
+  mapReleaseToJsonOutput,
+} from '../../../lib/jsonOutput.js';
+
 const command = 'info';
 // const describe = commands.project.release.info.describe;
 const describe = undefined;
@@ -35,7 +41,7 @@ export type ProjectReleaseInfoArgs = CommonArgs &
   ConfigArgs &
   AccountArgs &
   EnvironmentArgs &
-  JSONOutputArgs & {
+  JSONOutputArgs<ReleaseJsonOutput> & {
     tag?: string;
   };
 
@@ -78,6 +84,7 @@ async function handler(
     tag: rawTag,
     json: formatOutputAsJson,
     exit,
+    addJsonOutput,
   } = args;
 
   const { projectConfig, projectDir } = await getProjectConfig();
@@ -119,9 +126,8 @@ async function handler(
       tag
     );
 
-    if (formatOutputAsJson) {
-      uiLogger.json(release);
-    } else {
+    addJsonOutput(mapReleaseToJsonOutput(release));
+    if (!formatOutputAsJson) {
       uiLogger.log(
         commands.project.release.info.releaseDetails(
           release.releaseTag,
@@ -223,7 +229,9 @@ const projectReleaseInfoCommand: YargsCommandModule<
   command,
   describe,
   builder,
-  handler: makeWrappedYargsHandler('project-release-info', handler),
+  handler: makeWrappedYargsHandler('project-release-info', handler, {
+    jsonOutputSchema: ReleaseSchema,
+  }),
 };
 
 export default projectReleaseInfoCommand;

@@ -259,7 +259,7 @@ const builder = makeYargsBuilder<AccountUseArgs>(
 const accountUseCommand: YargsCommandModule<unknown, AccountUseArgs> = {
   command,
   describe,
-  handler: makeWrappedYargsHandler('accounts-use', handler),
+  handler: makeWrappedYargsHandler('account-use', handler),
   builder,
 };
 

@@ -188,7 +188,7 @@ describe('commands/account/use', () => {
         await accountUseCommand.handler(args);
 
         expect(trackCommandUsageSpy).toHaveBeenCalledWith(
-          'accounts-use',
+          'account-use',
           expect.objectContaining({ successful: true }),
           undefined
         );

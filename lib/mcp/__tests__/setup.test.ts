@@ -612,7 +612,7 @@ describe('lib/mcp/setup', () => {
       mockedExistsSync.mockReturnValue(true);
       mockedFs.readFileSync.mockReturnValue('{}');
 
-      const result = await configureMcpServer(['cursor']);
+      const result = await configureMcpServer({ targets: ['cursor'] });
 
       expect(result).toEqual(['cursor']);
       expect(mockedPromptUser).not.toHaveBeenCalledWith(
@@ -627,7 +627,7 @@ describe('lib/mcp/setup', () => {
       mockedExistsSync.mockReturnValue(true);
       mockedFs.readFileSync.mockReturnValue('{}');
 
-      const result = await configureMcpServer(undefined);
+      const result = await configureMcpServer({});
 
       expect(result).toEqual(['cursor']);
       expect(mockedPromptUser).toHaveBeenCalledWith(
@@ -642,7 +642,7 @@ describe('lib/mcp/setup', () => {
       mockedExistsSync.mockReturnValue(true);
       mockedFs.readFileSync.mockReturnValue('{}');
 
-      const result = await configureMcpServer([]);
+      const result = await configureMcpServer({ targets: [] });
 
       expect(result).toEqual(['windsurf']);
       expect(mockedPromptUser).toHaveBeenCalledWith(
@@ -657,7 +657,7 @@ describe('lib/mcp/setup', () => {
       mockedExistsSync.mockReturnValue(true);
       mockedFs.readFileSync.mockReturnValue('{}');
 
-      const result = await configureMcpServer(['cursor']);
+      const result = await configureMcpServer({ targets: ['cursor'] });
 
       expect(result).toEqual(['cursor']);
       const writeCall = mockedFs.writeFileSync.mock.calls.find(c =>
@@ -670,6 +670,69 @@ describe('lib/mcp/setup', () => {
       );
     });
 
+    it('should skip standalone prompt when --standalone flag is provided', async () => {
+      mockedExistsSync.mockReturnValue(true);
+      mockedFs.readFileSync.mockReturnValue('{}');
+
+      const result = await configureMcpServer({
+        targets: ['cursor'],
+        standalone: true,
+        cliVersion: '',
+      });
+
+      expect(result).toEqual(['cursor']);
+      expect(mockedPromptUser).not.toHaveBeenCalledWith(
+        expect.objectContaining({ name: 'useStandaloneMode' })
+      );
+      const writeCall = mockedFs.writeFileSync.mock.calls.find(c =>
+        (c[1] as string).includes('HubSpotDev')
+      );
+      const written = JSON.parse(writeCall![1] as string);
+      expect(written.mcpServers.HubSpotDev.command).toBe('npx');
+    });
+
+    it('should skip standalone prompt when --no-standalone flag is provided', async () => {
+      mockedExistsSync.mockReturnValue(true);
+      mockedFs.readFileSync.mockReturnValue('{}');
+
+      const result = await configureMcpServer({
+        targets: ['cursor'],
+        standalone: false,
+      });
+
+      expect(result).toEqual(['cursor']);
+      expect(mockedPromptUser).not.toHaveBeenCalled();
+      const writeCall = mockedFs.writeFileSync.mock.calls.find(c =>
+        (c[1] as string).includes('HubSpotDev')
+      );
+      const written = JSON.parse(writeCall![1] as string);
+      expect(written.mcpServers.HubSpotDev.command).toBe('hs');
+    });
+
+    it('should skip cli version prompt when --cli-version flag is provided', async () => {
+      mockedExistsSync.mockReturnValue(true);
+      mockedFs.readFileSync.mockReturnValue('{}');
+
+      const result = await configureMcpServer({
+        targets: ['cursor'],
+        standalone: true,
+        cliVersion: '8.5.0',
+      });
+
+      expect(result).toEqual(['cursor']);
+      expect(mockedPromptUser).not.toHaveBeenCalled();
+      const writeCall = mockedFs.writeFileSync.mock.calls.find(c =>
+        (c[1] as string).includes('HubSpotDev')
+      );
+      const written = JSON.parse(writeCall![1] as string);
+      expect(written.mcpServers.HubSpotDev.args).toContain(
+        '@hubspot/cli@8.5.0'
+      );
+      expect(written.mcpServers.HubSpotDev.env?.HUBSPOT_CLI_VERSION).toBe(
+        '8.5.0'
+      );
+    });
+
     it('should pin version in standalone mode when version is provided', async () => {
       mockedPromptUser
         .mockResolvedValueOnce({ useStandaloneMode: true })
@@ -677,7 +740,7 @@ describe('lib/mcp/setup', () => {
       mockedExistsSync.mockReturnValue(true);
       mockedFs.readFileSync.mockReturnValue('{}');
 
-      const result = await configureMcpServer(['cursor']);
+      const result = await configureMcpServer({ targets: ['cursor'] });
 
       expect(result).toEqual(['cursor']);
       const writeCall = mockedFs.writeFileSync.mock.calls.find(c =>
@@ -697,7 +760,7 @@ describe('lib/mcp/setup', () => {
       mockedExistsSync.mockReturnValue(true);
       mockedFs.readFileSync.mockReturnValue('{}');
 
-      await configureMcpServer(['cursor', 'windsurf']);
+      await configureMcpServer({ targets: ['cursor', 'windsurf'] });
 
       expect(mockedUiLogger.info).toHaveBeenCalledWith(
         commands.mcp.setup.success(['cursor', 'windsurf'])
@@ -711,7 +774,9 @@ describe('lib/mcp/setup', () => {
         throw new Error('Permission denied');
       });
 
-      await expect(configureMcpServer(['cursor'])).rejects.toThrow();
+      await expect(
+        configureMcpServer({ targets: ['cursor'] })
+      ).rejects.toThrow();
       expect(mockedSpinniesManager.fail).toHaveBeenCalledWith('mcpSetup', {
         text: commands.mcp.setup.spinners.failedToConfigure,
       });
@@ -722,7 +787,9 @@ describe('lib/mcp/setup', () => {
       mockedExistsSync.mockReturnValue(true);
       mockedFs.readFileSync.mockReturnValue('{}');
 
-      const result = await configureMcpServer(['cursor', 'windsurf']);
+      const result = await configureMcpServer({
+        targets: ['cursor', 'windsurf'],
+      });
 
       expect(result).toEqual(['cursor', 'windsurf']);
     });

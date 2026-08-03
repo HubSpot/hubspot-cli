@@ -101,7 +101,7 @@ const builder = makeYargsBuilder<AccountListArgs>(
 const accountListCommand: YargsCommandModule<unknown, AccountListArgs> = {
   command,
   describe,
-  handler: makeWrappedYargsHandler('accounts-list', handler),
+  handler: makeWrappedYargsHandler('account-list', handler),
   builder,
 };
 

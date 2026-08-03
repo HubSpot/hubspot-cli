@@ -80,7 +80,7 @@ export class DocFetchTool extends Tool<InputSchemaType> {
           openWorldHint: true,
         },
       },
-      input => this.wrappedHandler(input)
+      (input, extra) => this.wrappedHandler(input, extra)
     );
   }
 }

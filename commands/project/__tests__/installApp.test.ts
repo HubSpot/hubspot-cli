@@ -15,7 +15,9 @@ import {
   installStaticAuthAppOnTestAccount,
 } from '@hubspot/local-dev-lib/api/appsDev';
 
-import projectInstallAppCommand from '../installApp.js';
+import projectInstallAppCommand, {
+  type ProjectInstallAppArgs,
+} from '../installApp.js';
 import { getProjectConfig } from '../../../lib/projects/config.js';
 import { handleProjectUpload } from '../../../lib/projects/upload.js';
 import { loadProfile } from '../../../lib/projects/projectProfiles.js';
@@ -25,14 +27,6 @@ import { EXIT_CODES } from '../../../lib/enums/exitCodes.js';
 import { confirmPrompt, listPrompt } from '../../../lib/prompts/promptUtils.js';
 import { warnAboutSkippedHsMetaFiles } from '../../../lib/projects/ui.js';
 import { mockHubSpotHttpError } from '../../../lib/testUtils.js';
-import {
-  AccountArgs,
-  CommonArgs,
-  ConfigArgs,
-  EnvironmentArgs,
-  JSONOutputArgs,
-  UsageTrackingArgs,
-} from '../../../types/Yargs.js';
 
 vi.mock('../../../lib/commonOpts');
 vi.mock('../../../lib/errorHandlers/index.js');
@@ -63,15 +57,6 @@ vi.mock('@hubspot/local-dev-lib/config', async importOriginal => {
     getAllConfigAccounts: vi.fn().mockReturnValue([]),
   };
 });
-
-type ProjectInstallAppArgs = CommonArgs &
-  ConfigArgs &
-  AccountArgs &
-  EnvironmentArgs &
-  JSONOutputArgs &
-  UsageTrackingArgs & {
-    force: boolean;
-  };
 
 const mockedGetProjectConfig = vi.mocked(getProjectConfig);
 const mockedIsLegacyProject = vi.mocked(isLegacyProject);
@@ -192,6 +177,7 @@ describe('commands/project/installApp', () => {
       force: false,
       exit: mockExit,
       addUsageMetadata: vi.fn(),
+      addJsonOutput: vi.fn(),
     } as unknown as ArgumentsCamelCase<ProjectInstallAppArgs>;
 
     beforeEach(() => {
@@ -792,7 +778,7 @@ describe('commands/project/installApp', () => {
 
       await projectInstallAppCommand.handler(jsonArgs);
 
-      expect(mockedUiLogger.json).toHaveBeenCalledWith({
+      expect(mockArgs.addJsonOutput).toHaveBeenCalledWith({
         appId: 99,
         appUid: 'my-app-uid',
         accountId: 100,
@@ -815,7 +801,7 @@ describe('commands/project/installApp', () => {
 
       await projectInstallAppCommand.handler(jsonArgs);
 
-      expect(mockedUiLogger.json).toHaveBeenCalledWith(
+      expect(mockArgs.addJsonOutput).toHaveBeenCalledWith(
         expect.objectContaining({
           installationState: 'INSTALLED',
           installed: true,

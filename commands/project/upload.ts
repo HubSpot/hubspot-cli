@@ -3,7 +3,10 @@ import chalk from 'chalk';
 import { uiLogger } from '../../lib/ui/logger.js';
 import { getConfigAccountById } from '@hubspot/local-dev-lib/config';
 import { isSpecifiedError } from '@hubspot/local-dev-lib/errors/index';
-import { isLegacyProject } from '@hubspot/project-parsing-lib/projects';
+import {
+  isLegacyProject,
+  meetsMinimumPlatformVersion,
+} from '@hubspot/project-parsing-lib/projects';
 import {
   getProjectConfig,
   validateProjectConfig,
@@ -26,16 +29,22 @@ import {
   YargsCommandModule,
 } from '../../types/Yargs.js';
 import { makeWrappedYargsHandler } from '../../lib/yargs/makeWrappedYargsHandler.js';
+import {
+  PreviewJsonOutput,
+  UploadJsonOutput,
+  UploadSchema,
+} from '../../lib/jsonOutput.js';
 import { ProjectPollResult } from '../../types/Projects.js';
 import { makeYargsBuilder } from '../../lib/yargsUtils.js';
 import { projectProfilePrompt } from '../../lib/prompts/projectProfilePrompt.js';
 import { showMcpPromotionNudge } from '../../lib/mcp/promotion.js';
+import { PLATFORM_VERSIONS } from '@hubspot/project-parsing-lib/constants';
 
 const command = 'upload';
 const describe = commands.project.upload.describe;
 
 export type ProjectUploadArgs = CommonArgs &
-  JSONOutputArgs & {
+  JSONOutputArgs<UploadJsonOutput> & {
     force: boolean;
     forceCreate: boolean;
     message: string;
@@ -47,8 +56,6 @@ export type ProjectUploadArgs = CommonArgs &
     preview: boolean;
     target?: number;
   };
-
-type PreviewJsonOutput = { releaseTag?: string; succeeded: boolean };
 
 async function handlePreview(
   accountId: number,
@@ -96,12 +103,8 @@ async function handler(
     target: targetPortalId,
     exit,
     addUsageMetadata,
+    addJsonOutput,
   } = args;
-  const jsonOutput: {
-    buildId?: number;
-    deployId?: number;
-    preview?: { releaseTag?: string; succeeded: boolean };
-  } = {};
 
   const { projectConfig, projectDir } = await getProjectConfig();
 
@@ -211,11 +214,26 @@ async function handler(
       );
 
       if (!preview) {
-        uiLogger.log(
-          commands.project.upload.logs.autoDeployDisabled(
-            `hs project deploy --build=${result.buildId}`
+        if (
+          meetsMinimumPlatformVersion(
+            result.buildResult.platformVersion,
+            PLATFORM_VERSIONS.v2026_09_BETA
           )
-        );
+        ) {
+          const releaseCommand = `hs project release create --build=${result.buildId}`;
+          uiLogger.log(
+            commands.project.upload.logs.releaseManagementRequired(
+              releaseCommand
+            )
+          );
+        } else {
+          const deployCommand = `hs project deploy --build=${result.buildId}`;
+          uiLogger.log(
+            skipAutoDeploy
+              ? commands.project.upload.logs.autoDeploySkipped(deployCommand)
+              : commands.project.upload.logs.autoDeployDisabled(deployCommand)
+          );
+        }
         logFeedbackMessage(result.buildId);
       }
 
@@ -234,22 +252,19 @@ async function handler(
         targetPortalId
       );
 
-      if (previewJson && formatOutputAsJson) {
-        jsonOutput.preview = previewJson;
+      if (previewJson) {
+        addJsonOutput({ preview: previewJson });
       }
     }
 
-    if (result && result.succeeded && formatOutputAsJson) {
-      jsonOutput.buildId = result.buildId;
+    if (result) {
+      addJsonOutput({ buildId: result.buildId });
       if (result.deployResult) {
-        jsonOutput.deployId = result.deployResult.deployId;
+        addJsonOutput({ deployId: result.deployResult.deployId });
       }
     }
 
     if (result && !result.succeeded) {
-      if (formatOutputAsJson) {
-        uiLogger.json(jsonOutput);
-      }
       return exit(EXIT_CODES.ERROR);
     }
 
@@ -267,9 +282,7 @@ async function handler(
     return exit(EXIT_CODES.ERROR);
   }
 
-  if (formatOutputAsJson) {
-    uiLogger.json(jsonOutput);
-  } else {
+  if (!formatOutputAsJson) {
     await showMcpPromotionNudge(args._.join(' '));
   }
 
@@ -373,7 +386,9 @@ const builder = makeYargsBuilder<ProjectUploadArgs>(
 const projectUploadCommand: YargsCommandModule<unknown, ProjectUploadArgs> = {
   command,
   describe,
-  handler: makeWrappedYargsHandler('project-upload', handler),
+  handler: makeWrappedYargsHandler('project-upload', handler, {
+    jsonOutputSchema: UploadSchema,
+  }),
   builder,
 };
 

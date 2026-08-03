@@ -1,10 +1,13 @@
 import { Argv, ArgumentsCamelCase } from 'yargs';
+import { handleProjectUpload } from '../../../lib/projects/upload.js';
+import { pollProjectBuildAndDeploy } from '../../../lib/projects/pollProjectBuildAndDeploy.js';
 import {
-  fetchProject,
-  getBuildStatus,
-} from '@hubspot/local-dev-lib/api/projects';
-import { isHubSpotHttpError } from '@hubspot/local-dev-lib/errors/index';
+  resolveBuildId,
+  validateBuildForRelease,
+  executeRelease,
+} from '../../../lib/projects/release.js';
 import { logError, ApiErrorContext } from '../../../lib/errorHandlers/index.js';
+import { isPromptExitError } from '../../../lib/errors/PromptExitError.js';
 import {
   getProjectConfig,
   validateProjectConfig,
@@ -23,7 +26,12 @@ import {
 import { makeYargsBuilder } from '../../../lib/yargsUtils.js';
 import { commands } from '../../../lang/en.js';
 import { makeWrappedYargsHandler } from '../../../lib/yargs/makeWrappedYargsHandler.js';
-import { createRelease } from '../../../api/releases.js';
+import { ProjectPollResult } from '../../../types/Projects.js';
+import {
+  ReleaseJsonOutput,
+  ReleaseSchema,
+  mapReleaseToJsonOutput,
+} from '../../../lib/jsonOutput.js';
 
 const command = 'create';
 // const describe = commands.project.release.create.describe;
@@ -35,98 +43,22 @@ export type ProjectReleaseCreateArgs = CommonArgs &
   ConfigArgs &
   AccountArgs &
   EnvironmentArgs &
-  JSONOutputArgs & {
+  JSONOutputArgs<ReleaseJsonOutput> & {
     build?: number;
     force: boolean;
   };
 
-async function resolveBuildId(
-  accountId: number,
-  projectName: string,
-  buildOption?: number
-): Promise<number> {
-  const {
-    data: { deployedBuildId },
-  } = await fetchProject(accountId, projectName);
-
-  if (buildOption) {
-    return buildOption;
+function logUploadError(error: unknown, accountId: number): void {
+  if (!error) {
+    return;
   }
-
-  if (!deployedBuildId) {
-    throw new Error(commands.project.release.create.errors.noDeployedBuild);
-  }
-
-  return deployedBuildId;
-}
-
-async function validateBuild(
-  accountId: number,
-  projectName: string,
-  buildId: number
-): Promise<void> {
-  try {
-    await getBuildStatus(accountId, projectName, buildId);
-  } catch (e) {
-    if (isHubSpotHttpError(e) && e.status === 404) {
-      uiLogger.error(
-        commands.project.release.create.errors.buildNotFound(
-          buildId,
-          projectName
-        )
-      );
-    } else {
-      logError(
-        e,
-        new ApiErrorContext({
-          accountId,
-          request: 'project release create',
-        })
-      );
-    }
-    throw e;
-  }
-}
-
-async function executeRelease(
-  accountId: number,
-  projectName: string,
-  buildId: number,
-  formatOutputAsJson: boolean
-): Promise<void> {
-  try {
-    const { data: release } = await createRelease(
+  logError(
+    error,
+    new ApiErrorContext({
       accountId,
-      projectName,
-      buildId
-    );
-
-    if (formatOutputAsJson) {
-      uiLogger.json(release);
-    } else {
-      uiLogger.success(
-        commands.project.release.create.success(
-          release.releaseTag,
-          release.buildId
-        )
-      );
-    }
-  } catch (e) {
-    if (isHubSpotHttpError(e) && e.status === 422) {
-      uiLogger.error(
-        commands.project.release.create.errors.buildNotDeployed(buildId)
-      );
-    } else {
-      logError(
-        e,
-        new ApiErrorContext({
-          accountId,
-          request: 'project release create',
-        })
-      );
-    }
-    throw e;
-  }
+      request: 'project release create',
+    })
+  );
 }
 
 async function handler(
@@ -138,6 +70,7 @@ async function handler(
     build: buildOption,
     json: formatOutputAsJson,
     force,
+    addJsonOutput,
   } = args;
 
   const { projectConfig, projectDir } = await getProjectConfig();
@@ -149,40 +82,93 @@ async function handler(
     return exit(EXIT_CODES.ERROR);
   }
 
-  const projectName = projectConfig.name;
-
-  let buildId: number;
-
-  try {
-    buildId = await resolveBuildId(derivedAccountId, projectName, buildOption);
-  } catch (e) {
-    if (isHubSpotHttpError(e) && e.status === 404) {
-      uiLogger.error(
-        commands.project.release.create.errors.projectNotFound(
-          derivedAccountId,
-          projectName
-        )
-      );
-    } else if (!(e instanceof Error) || !e.message) {
-      logError(
-        e,
-        new ApiErrorContext({
-          accountId: derivedAccountId,
-          request: 'project release create',
-        })
-      );
-    } else {
-      uiLogger.error(e.message);
-    }
+  if (!projectConfig || !projectDir) {
     return exit(EXIT_CODES.ERROR);
   }
 
-  if (buildOption) {
+  const projectName = projectConfig.name;
+
+  let buildId: number | null | undefined;
+
+  try {
+    buildId = await resolveBuildId(
+      derivedAccountId,
+      projectName,
+      buildOption,
+      force
+    );
+  } catch (e) {
+    if (isPromptExitError(e)) {
+      return exit(e.exitCode);
+    }
+    logError(
+      e,
+      new ApiErrorContext({
+        accountId: derivedAccountId,
+        request: 'project release create',
+      })
+    );
+    return exit(EXIT_CODES.ERROR);
+  }
+
+  if (buildId === null) {
+    return exit(EXIT_CODES.ERROR);
+  }
+
+  if (!buildId && !force) {
+    let shouldUpload: boolean;
     try {
-      await validateBuild(derivedAccountId, projectName, buildId);
-    } catch {
+      shouldUpload = await confirmPrompt(
+        commands.project.release.create.uploadPrompt(projectName)
+      );
+    } catch (e) {
+      if (isPromptExitError(e)) {
+        return exit(e.exitCode);
+      }
+      throw e;
+    }
+    if (!shouldUpload) {
+      return exit(EXIT_CODES.SUCCESS);
+    }
+  }
+
+  if (!buildId) {
+    const {
+      result: pollResult,
+      uploadError,
+      projectNotFound,
+    } = await handleProjectUpload<ProjectPollResult>({
+      accountId: derivedAccountId,
+      projectConfig,
+      projectDir,
+      sendIR: true,
+      callbackFunc: (...args) =>
+        pollProjectBuildAndDeploy(...args, { skipDeploy: true }),
+    });
+
+    if (projectNotFound || !pollResult || !pollResult.succeeded) {
+      logUploadError(uploadError, derivedAccountId);
       return exit(EXIT_CODES.ERROR);
     }
+
+    buildId = pollResult.buildId;
+  }
+
+  try {
+    const supportsReleases = await validateBuildForRelease(
+      derivedAccountId,
+      projectName,
+      buildId
+    );
+
+    if (!supportsReleases) {
+      uiLogger.error(
+        commands.project.release.create.errors.incompatibleBuildVersion
+      );
+      return exit(EXIT_CODES.ERROR);
+    }
+  } catch {
+    return exit(EXIT_CODES.ERROR);
   }
 
   if (!formatOutputAsJson && !force) {
@@ -197,12 +183,20 @@ async function handler(
   }
 
   try {
-    await executeRelease(
+    const release = await executeRelease(
       derivedAccountId,
       projectName,
-      buildId,
-      !!formatOutputAsJson
+      buildId
     );
+    addJsonOutput(mapReleaseToJsonOutput(release));
+    if (!formatOutputAsJson) {
+      uiLogger.success(
+        commands.project.release.create.success(
+          release.releaseTag,
+          release.buildId
+        )
+      );
+    }
   } catch {
     return exit(EXIT_CODES.ERROR);
   }
@@ -261,7 +255,9 @@ const projectReleaseCreateCommand: YargsCommandModule<
   command,
   describe,
   builder,
-  handler: makeWrappedYargsHandler('project-release-create', handler),
+  handler: makeWrappedYargsHandler('project-release-create', handler, {
+    jsonOutputSchema: ReleaseSchema,
+  }),
 };
 
 export default projectReleaseCreateCommand;

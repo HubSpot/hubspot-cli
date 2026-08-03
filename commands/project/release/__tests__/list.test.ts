@@ -177,7 +177,15 @@ describe('commands/project/release/list', () => {
       args.json = true;
       await projectReleaseListCommand.handler(args);
       expect(uiLogger.json).toHaveBeenCalledTimes(1);
-      expect(uiLogger.json).toHaveBeenCalledWith(releasesResponse);
+      expect(uiLogger.json).toHaveBeenCalledWith({
+        results: releasesResponse.results.map(r => ({
+          releaseTag: r.releaseTag,
+          buildId: r.buildId,
+          createdAt: r.createdAt,
+          components: undefined,
+        })),
+        paging: releasesResponse.paging,
+      });
     });
 
     it('should handle 404 error from API', async () => {

@@ -6,13 +6,16 @@ import {
 } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { McpLogger } from '../../../utils/logger.js';
 import { runCommandInDir } from '../../../utils/command.js';
-import { addFlag } from '../../../utils/command.js';
 import { MockedFunction, Mocked } from 'vitest';
 import { mcpFeedbackRequest } from '../../../utils/feedbackTracking.js';
 
 vi.mock('@modelcontextprotocol/sdk/server/mcp.js');
 vi.mock('../../../utils/logger.js');
-vi.mock('../../../utils/command');
+vi.mock('../../../utils/command', async importOriginal => {
+  const mod =
+    await importOriginal<typeof import('../../../utils/command.js')>();
+  return { ...mod, runCommandInDir: vi.fn() };
+});
 vi.mock('../../../utils/feedbackTracking');
 
 const mockMcpFeedbackRequest = mcpFeedbackRequest as MockedFunction<
@@ -22,7 +25,6 @@ const mockMcpFeedbackRequest = mcpFeedbackRequest as MockedFunction<
 const mockRunCommandInDir = runCommandInDir as MockedFunction<
   typeof runCommandInDir
 >;
-const mockAddFlag = addFlag as MockedFunction<typeof addFlag>;
 
 describe('HsFunctionLogsTool', () => {
   let mockMcpServer: Mocked<McpServer>;
@@ -85,7 +87,16 @@ describe('HsFunctionLogsTool', () => {
 
       expect(mockRunCommandInDir).toHaveBeenCalledWith(
         '/test/dir',
-        'hs cms function logs my-function'
+        expect.objectContaining({
+          executable: 'hs',
+          args: expect.arrayContaining([
+            'cms',
+            'function',
+            'logs',
+            'my-function',
+          ]),
+        }),
+        expect.any(Function)
       );
       expect(result.content).toHaveLength(2);
       expect(result.content[0].text).toContain(
@@ -107,7 +118,16 @@ describe('HsFunctionLogsTool', () => {
 
       expect(mockRunCommandInDir).toHaveBeenCalledWith(
         '/test/dir',
-        'hs cms function logs api/my-endpoint'
+        expect.objectContaining({
+          executable: 'hs',
+          args: expect.arrayContaining([
+            'cms',
+            'function',
+            'logs',
+            'api/my-endpoint',
+          ]),
+        }),
+        expect.any(Function)
       );
       expect(result.content).toHaveLength(2);
       expect(result.content[0].text).toContain(
@@ -117,7 +137,6 @@ describe('HsFunctionLogsTool', () => {
     });
 
     it('should execute hs logs command with latest flag', async () => {
-      mockAddFlag.mockReturnValue('hs cms function logs my-endpoint --latest');
       mockRunCommandInDir.mockResolvedValue({
         stdout: '2023-01-01 10:00:00 INFO Latest log entry',
         stderr: '',
@@ -129,14 +148,20 @@ describe('HsFunctionLogsTool', () => {
         latest: true,
       });
 
-      expect(mockAddFlag).toHaveBeenCalledWith(
-        'hs cms function logs my-endpoint',
-        'latest',
-        true
-      );
       expect(mockRunCommandInDir).toHaveBeenCalledWith(
         '/test/dir',
-        'hs cms function logs my-endpoint --latest'
+        expect.objectContaining({
+          executable: 'hs',
+          args: expect.arrayContaining([
+            'cms',
+            'function',
+            'logs',
+            'my-endpoint',
+            '--latest',
+            'true',
+          ]),
+        }),
+        expect.any(Function)
       );
       expect(result.content).toHaveLength(2);
       expect(result.content[0].text).toContain('Latest log entry');
@@ -144,7 +169,6 @@ describe('HsFunctionLogsTool', () => {
     });
 
     it('should execute hs logs command with compact flag', async () => {
-      mockAddFlag.mockReturnValue('hs cms function logs my-endpoint --compact');
       mockRunCommandInDir.mockResolvedValue({
         stdout: 'compact log output',
         stderr: '',
@@ -156,14 +180,20 @@ describe('HsFunctionLogsTool', () => {
         compact: true,
       });
 
-      expect(mockAddFlag).toHaveBeenCalledWith(
-        'hs cms function logs my-endpoint',
-        'compact',
-        true
-      );
       expect(mockRunCommandInDir).toHaveBeenCalledWith(
         '/test/dir',
-        'hs cms function logs my-endpoint --compact'
+        expect.objectContaining({
+          executable: 'hs',
+          args: expect.arrayContaining([
+            'cms',
+            'function',
+            'logs',
+            'my-endpoint',
+            '--compact',
+            'true',
+          ]),
+        }),
+        expect.any(Function)
       );
       expect(result.content).toHaveLength(2);
       expect(result.content[0].text).toContain('compact log output');
@@ -171,9 +201,6 @@ describe('HsFunctionLogsTool', () => {
     });
 
     it('should execute hs logs command with limit parameter', async () => {
-      mockAddFlag.mockReturnValue(
-        'hs cms function logs my-endpoint --limit 10'
-      );
       mockRunCommandInDir.mockResolvedValue({
         stdout: 'limited log entries',
         stderr: '',
@@ -185,14 +212,20 @@ describe('HsFunctionLogsTool', () => {
         limit: 10,
       });
 
-      expect(mockAddFlag).toHaveBeenCalledWith(
-        'hs cms function logs my-endpoint',
-        'limit',
-        10
-      );
       expect(mockRunCommandInDir).toHaveBeenCalledWith(
         '/test/dir',
-        'hs cms function logs my-endpoint --limit 10'
+        expect.objectContaining({
+          executable: 'hs',
+          args: expect.arrayContaining([
+            'cms',
+            'function',
+            'logs',
+            'my-endpoint',
+            '--limit',
+            '10',
+          ]),
+        }),
+        expect.any(Function)
       );
       expect(result.content).toHaveLength(2);
       expect(result.content[0].text).toContain('limited log entries');
@@ -200,9 +233,6 @@ describe('HsFunctionLogsTool', () => {
     });
 
     it('should execute hs logs command with account parameter', async () => {
-      mockAddFlag.mockReturnValue(
-        'hs cms function logs my-endpoint --account test-account'
-      );
       mockRunCommandInDir.mockResolvedValue({
         stdout: 'account-specific logs',
         stderr: '',
@@ -214,14 +244,20 @@ describe('HsFunctionLogsTool', () => {
         account: 'test-account',
       });
 
-      expect(mockAddFlag).toHaveBeenCalledWith(
-        'hs cms function logs my-endpoint',
-        'account',
-        'test-account'
-      );
       expect(mockRunCommandInDir).toHaveBeenCalledWith(
         '/test/dir',
-        'hs cms function logs my-endpoint --account test-account'
+        expect.objectContaining({
+          executable: 'hs',
+          args: expect.arrayContaining([
+            'cms',
+            'function',
+            'logs',
+            'my-endpoint',
+            '--account',
+            'test-account',
+          ]),
+        }),
+        expect.any(Function)
       );
       expect(result.content).toHaveLength(2);
       expect(result.content[0].text).toContain('account-specific logs');
@@ -229,14 +265,6 @@ describe('HsFunctionLogsTool', () => {
     });
 
     it('should execute hs logs command with multiple parameters', async () => {
-      mockAddFlag
-        .mockReturnValueOnce('hs cms function logs my-endpoint --latest')
-        .mockReturnValueOnce(
-          'hs cms function logs my-endpoint --latest --compact'
-        )
-        .mockReturnValueOnce(
-          'hs cms function logs my-endpoint --latest --compact --account test-account'
-        );
       mockRunCommandInDir.mockResolvedValue({
         stdout: 'latest compact logs',
         stderr: '',
@@ -250,28 +278,24 @@ describe('HsFunctionLogsTool', () => {
         account: 'test-account',
       });
 
-      expect(mockAddFlag).toHaveBeenCalledTimes(3);
-      expect(mockAddFlag).toHaveBeenNthCalledWith(
-        1,
-        'hs cms function logs my-endpoint',
-        'latest',
-        true
-      );
-      expect(mockAddFlag).toHaveBeenNthCalledWith(
-        2,
-        'hs cms function logs my-endpoint --latest',
-        'compact',
-        true
-      );
-      expect(mockAddFlag).toHaveBeenNthCalledWith(
-        3,
-        'hs cms function logs my-endpoint --latest --compact',
-        'account',
-        'test-account'
-      );
       expect(mockRunCommandInDir).toHaveBeenCalledWith(
         '/test/dir',
-        'hs cms function logs my-endpoint --latest --compact --account test-account'
+        expect.objectContaining({
+          executable: 'hs',
+          args: expect.arrayContaining([
+            'cms',
+            'function',
+            'logs',
+            'my-endpoint',
+            '--latest',
+            'true',
+            '--compact',
+            'true',
+            '--account',
+            'test-account',
+          ]),
+        }),
+        expect.any(Function)
       );
       expect(result.content).toHaveLength(2);
       expect(result.content[0].text).toContain('latest compact logs');

@@ -1,12 +1,12 @@
 import { TextContentResponse } from '../../types.js';
-import { Tool } from '../../Tool.js';
+import { Tool, ToolExtra } from '../../Tool.js';
 import {
   McpServer,
   RegisteredTool,
 } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { McpLogger } from '../../utils/logger.js';
 import { z } from 'zod';
-import { addFlag, runCommandInDir } from '../../utils/command.js';
+import { HubSpotCommand } from '../../utils/command.js';
 import { absoluteCurrentWorkingDirectory } from '../project/constants.js';
 import { formatTextContents } from '../../utils/content.js';
 import { setupHubSpotConfig } from '../../utils/config.js';
@@ -48,42 +48,48 @@ export class HsFunctionLogsTool extends Tool<HsFunctionLogsInputSchema> {
     super(mcpServer, logger, toolName);
   }
 
-  async handler({
-    endpoint,
-    account,
-    latest,
-    compact,
-    limit,
-    absoluteCurrentWorkingDirectory,
-  }: HsFunctionLogsInputSchema): Promise<TextContentResponse> {
+  async handler(
+    {
+      endpoint,
+      account,
+      latest,
+      compact,
+      limit,
+      absoluteCurrentWorkingDirectory,
+    }: HsFunctionLogsInputSchema,
+    extra?: ToolExtra
+  ): Promise<TextContentResponse> {
     setupHubSpotConfig(absoluteCurrentWorkingDirectory);
 
     // Ensure endpoint doesn't start with '/'
     const normalizedEndpoint = endpoint.startsWith('/')
       ? endpoint.slice(1)
       : endpoint;
-    let command = `hs cms function logs ${normalizedEndpoint}`;
+    const command = new HubSpotCommand(
+      `cms function logs ${normalizedEndpoint}`
+    );
 
     if (latest) {
-      command = addFlag(command, 'latest', latest);
+      command.addFlag('latest', latest);
     }
 
     if (compact) {
-      command = addFlag(command, 'compact', compact);
+      command.addFlag('compact', compact);
     }
 
     if (limit) {
-      command = addFlag(command, 'limit', limit);
+      command.addFlag('limit', limit);
     }
 
     if (account) {
-      command = addFlag(command, 'account', account);
+      command.addFlag('account', account);
     }
 
     try {
-      const { stdout, stderr } = await runCommandInDir(
+      const { stdout, stderr } = await this.runCommand(
         absoluteCurrentWorkingDirectory,
-        command
+        command,
+        extra
       );
 
       return formatTextContents(stdout, stderr);
@@ -111,7 +117,7 @@ export class HsFunctionLogsTool extends Tool<HsFunctionLogsInputSchema> {
           openWorldHint: true,
         },
       },
-      input => this.wrappedHandler(input)
+      (input, extra) => this.wrappedHandler(input, extra)
     );
   }
 }

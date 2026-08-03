@@ -1,9 +1,8 @@
 import { HttpStatusCode } from 'axios';
 import yargs, { Argv, ArgumentsCamelCase } from 'yargs';
-import { Project } from '@hubspot/local-dev-lib/types/Project';
-import { Build } from '@hubspot/local-dev-lib/types/Build';
-import * as projectApiUtils from '@hubspot/local-dev-lib/api/projects';
-import * as releaseApiUtils from '../../../../api/releases.js';
+import { ProjectPollResult } from '../../../../types/Projects.js';
+import * as releaseLib from '../../../../lib/projects/release.js';
+import * as uploadUtils from '../../../../lib/projects/upload.js';
 import {
   addAccountOptions,
   addConfigOptions,
@@ -13,11 +12,8 @@ import {
 import * as projectUtils from '../../../../lib/projects/config.js';
 import * as promptUtils from '../../../../lib/prompts/promptUtils.js';
 import { EXIT_CODES } from '../../../../lib/enums/exitCodes.js';
-import { loadJson } from '../../../../lib/jsonLoader.js';
-import {
-  mockHubSpotHttpResponse,
-  mockHubSpotHttpError,
-} from '../../../../lib/testUtils.js';
+import { mockHubSpotHttpError } from '../../../../lib/testUtils.js';
+import { PromptExitError } from '../../../../lib/errors/PromptExitError.js';
 import projectReleaseCreateCommand, {
   ProjectReleaseCreateArgs,
 } from '../create.js';
@@ -25,26 +21,27 @@ import { uiLogger } from '../../../../lib/ui/logger.js';
 import { Release } from '../../../../api/releases.js';
 import { expect } from 'vitest';
 
-vi.mock('@hubspot/local-dev-lib/api/projects');
 vi.mock('@hubspot/local-dev-lib/config');
+vi.mock('@hubspot/project-parsing-lib/projects');
 vi.mock('../../../../lib/commonOpts');
 vi.mock('../../../../lib/validation');
 vi.mock('../../../../lib/projects/config');
 vi.mock('../../../../lib/prompts/promptUtils');
-
-const exampleProject = loadJson<Project>(
-  import.meta.url,
-  '../../__tests__/fixtures/exampleProject.json'
-);
+vi.mock('../../../../lib/projects/upload.js');
+vi.mock('../../../../lib/projects/release.js');
 
 const getProjectConfigSpy = vi.spyOn(projectUtils, 'getProjectConfig');
 const validateProjectConfigSpy = vi.spyOn(
   projectUtils,
   'validateProjectConfig'
 );
-const fetchProjectSpy = vi.spyOn(projectApiUtils, 'fetchProject');
-const getBuildStatusSpy = vi.spyOn(projectApiUtils, 'getBuildStatus');
-const createReleaseSpy = vi.spyOn(releaseApiUtils, 'createRelease');
+const resolveBuildIdSpy = vi.spyOn(releaseLib, 'resolveBuildId');
+const validateBuildForReleaseSpy = vi.spyOn(
+  releaseLib,
+  'validateBuildForRelease'
+);
+const executeReleaseSpy = vi.spyOn(releaseLib, 'executeRelease');
+const handleProjectUploadSpy = vi.spyOn(uploadUtils, 'handleProjectUpload');
 const confirmPromptSpy = vi.spyOn(promptUtils, 'confirmPrompt');
 const processExitSpy = vi.spyOn(process, 'exit');
 
@@ -56,11 +53,7 @@ const exampleSpy = vi
   .spyOn(yargs as Argv, 'example')
   .mockReturnValue(yargs as Argv);
 
-const exampleRelease: Release = {
-  releaseTag: 'v1.0.0',
-  buildId: 1,
-  createdAt: '2026-02-23T12:00:00.000Z',
-};
+const EXAMPLE_BUILD_ID = 8;
 
 describe('commands/project/release/create', () => {
   let args: ArgumentsCamelCase<ProjectReleaseCreateArgs>;
@@ -69,7 +62,8 @@ describe('commands/project/release/create', () => {
     vi.clearAllMocks();
     args = {
       derivedAccountId: 1234567890,
-    } as ArgumentsCamelCase<ProjectReleaseCreateArgs>;
+      addJsonOutput: vi.fn(),
+    } as unknown as ArgumentsCamelCase<ProjectReleaseCreateArgs>;
 
     getProjectConfigSpy.mockResolvedValue({
       projectConfig: {
@@ -80,15 +74,19 @@ describe('commands/project/release/create', () => {
       projectDir: '/path/to/project',
     });
     validateProjectConfigSpy.mockImplementation(() => {});
-    fetchProjectSpy.mockReturnValue(
-      mockHubSpotHttpResponse<Project>(exampleProject)
-    );
-    getBuildStatusSpy.mockReturnValue(
-      mockHubSpotHttpResponse<Build>({} as Build)
-    );
-    createReleaseSpy.mockReturnValue(
-      mockHubSpotHttpResponse<Release>(exampleRelease)
-    );
+    resolveBuildIdSpy.mockResolvedValue(EXAMPLE_BUILD_ID);
+    validateBuildForReleaseSpy.mockResolvedValue(true);
+    executeReleaseSpy.mockResolvedValue({
+      releaseTag: 'v1.0.0',
+      buildId: EXAMPLE_BUILD_ID,
+      createdAt: '2026-02-23T12:00:00.000Z',
+    } as Release);
+    handleProjectUploadSpy.mockResolvedValue({
+      result: {
+        succeeded: true,
+        buildId: 99,
+      } as ProjectPollResult,
+    });
     confirmPromptSpy.mockResolvedValue(true);
     // @ts-expect-error Mock implementation
     processExitSpy.mockImplementation(() => {});
@@ -146,151 +144,153 @@ describe('commands/project/release/create', () => {
       validateProjectConfigSpy.mockImplementation(() => {
         throw new Error('No project config found');
       });
-
       await projectReleaseCreateCommand.handler(args);
-
       expect(processExitSpy).toHaveBeenCalledWith(EXIT_CODES.ERROR);
     });
 
-    it('should always fetch the project', async () => {
+    it('should call resolveBuildId with account, project, buildOption, and force', async () => {
+      args.build = 5;
+      args.force = true;
       await projectReleaseCreateCommand.handler(args);
-      expect(fetchProjectSpy).toHaveBeenCalledTimes(1);
-      expect(fetchProjectSpy).toHaveBeenCalledWith(
+      expect(resolveBuildIdSpy).toHaveBeenCalledWith(
         args.derivedAccountId,
-        'my-project'
+        'my-project',
+        5,
+        true
       );
     });
 
-    it('should validate the build with getBuildStatus when --build is provided', async () => {
-      args.build = 5;
+    it('should handle PromptExitError from resolveBuildId', async () => {
+      resolveBuildIdSpy.mockRejectedValue(
+        new PromptExitError('User exited', EXIT_CODES.SUCCESS)
+      );
       await projectReleaseCreateCommand.handler(args);
-      expect(getBuildStatusSpy).toHaveBeenCalledTimes(1);
-      expect(getBuildStatusSpy).toHaveBeenCalledWith(
+      expect(processExitSpy).toHaveBeenCalledWith(EXIT_CODES.SUCCESS);
+    });
+
+    it('should exit with error when resolveBuildId throws a non-prompt error', async () => {
+      resolveBuildIdSpy.mockRejectedValue(
+        mockHubSpotHttpError('Server Error', {
+          status: HttpStatusCode.InternalServerError,
+          data: {},
+        })
+      );
+      await projectReleaseCreateCommand.handler(args);
+      expect(processExitSpy).toHaveBeenCalledWith(EXIT_CODES.ERROR);
+    });
+
+    it('should call validateBuild with the resolved build id', async () => {
+      args.build = 5;
+      resolveBuildIdSpy.mockResolvedValue(5);
+      await projectReleaseCreateCommand.handler(args);
+      expect(validateBuildForReleaseSpy).toHaveBeenCalledWith(
         args.derivedAccountId,
         'my-project',
         5
       );
     });
 
-    it('should not call getBuildStatus when --build is not provided', async () => {
+    it('should call validateBuild even when --build is not provided', async () => {
       await projectReleaseCreateCommand.handler(args);
-      expect(getBuildStatusSpy).not.toHaveBeenCalled();
+      expect(validateBuildForReleaseSpy).toHaveBeenCalledWith(
+        args.derivedAccountId,
+        'my-project',
+        EXAMPLE_BUILD_ID
+      );
     });
 
-    it('should error when no deployed build exists and --build is not provided', async () => {
-      fetchProjectSpy.mockReturnValue(
-        mockHubSpotHttpResponse<Project>({
-          ...exampleProject,
-          deployedBuildId: undefined,
+    it('should exit with error when validateBuild throws', async () => {
+      validateBuildForReleaseSpy.mockRejectedValue(
+        mockHubSpotHttpError('Not found', {
+          status: HttpStatusCode.NotFound,
+          data: {},
         })
       );
-
       await projectReleaseCreateCommand.handler(args);
-
-      expect(uiLogger.error).toHaveBeenCalledTimes(1);
-      expect(uiLogger.error).toHaveBeenCalledWith(
-        expect.stringContaining('No deployed build found for this project')
-      );
       expect(processExitSpy).toHaveBeenCalledWith(EXIT_CODES.ERROR);
     });
 
-    it('should show build not found when getBuildStatus returns 404', async () => {
-      processExitSpy.mockImplementation((code?: string | number | null) => {
-        throw new Error(`process.exit called with ${code}`);
-      });
-      args.build = 999;
-      getBuildStatusSpy.mockImplementation(() => {
-        throw mockHubSpotHttpError('Build does not exist', {
-          status: HttpStatusCode.NotFound,
-          data: {
-            message: 'Build `999` does not exist in `my-project`.',
-          },
-        });
-      });
-
-      await expect(projectReleaseCreateCommand.handler(args)).rejects.toThrow();
-
-      expect(uiLogger.error).toHaveBeenCalledTimes(1);
-      expect(uiLogger.error).toHaveBeenCalledWith(
-        expect.stringContaining('999')
-      );
-      expect(uiLogger.error).toHaveBeenCalledWith(
-        expect.stringContaining('was not found')
-      );
-      expect(confirmPromptSpy).not.toHaveBeenCalled();
-      expect(processExitSpy).toHaveBeenCalledWith(EXIT_CODES.ERROR);
-    });
-
-    it('should use generic error handler when getBuildStatus returns a non-404 error', async () => {
-      processExitSpy.mockImplementation((code?: string | number | null) => {
-        throw new Error(`process.exit called with ${code}`);
-      });
-      args.build = 5;
-      getBuildStatusSpy.mockImplementation(() => {
-        throw mockHubSpotHttpError('Server Error', {
-          status: HttpStatusCode.InternalServerError,
-          data: {},
-        });
-      });
-
-      await expect(projectReleaseCreateCommand.handler(args)).rejects.toThrow();
-
-      expect(uiLogger.error).toHaveBeenCalledTimes(1);
-      expect(confirmPromptSpy).not.toHaveBeenCalled();
-      expect(processExitSpy).toHaveBeenCalledWith(EXIT_CODES.ERROR);
-    });
-
-    it('should show project not found when fetchProject returns 404 even with --build', async () => {
-      processExitSpy.mockImplementation((code?: string | number | null) => {
-        throw new Error(`process.exit called with ${code}`);
-      });
-      args.build = 5;
-      fetchProjectSpy.mockImplementation(() => {
-        throw mockHubSpotHttpError('Not Found', {
-          status: HttpStatusCode.NotFound,
-          data: {},
-        });
-      });
-
-      await expect(projectReleaseCreateCommand.handler(args)).rejects.toThrow();
-
-      expect(uiLogger.error).toHaveBeenCalledTimes(1);
-      expect(uiLogger.error).toHaveBeenCalledWith(
-        expect.stringContaining('does not exist')
-      );
-      expect(getBuildStatusSpy).not.toHaveBeenCalled();
-      expect(processExitSpy).toHaveBeenCalledWith(EXIT_CODES.ERROR);
-    });
-
-    it('should show project not found when fetchProject returns 404', async () => {
-      processExitSpy.mockImplementation((code?: string | number | null) => {
-        throw new Error(`process.exit called with ${code}`);
-      });
-      fetchProjectSpy.mockImplementation(() => {
-        throw mockHubSpotHttpError('Not Found', {
-          status: HttpStatusCode.NotFound,
-          data: {},
-        });
-      });
-
-      await expect(projectReleaseCreateCommand.handler(args)).rejects.toThrow();
-
-      expect(uiLogger.error).toHaveBeenCalledTimes(1);
-      expect(uiLogger.error).toHaveBeenCalledWith(
-        expect.stringContaining('does not exist')
-      );
-      expect(confirmPromptSpy).not.toHaveBeenCalled();
-      expect(processExitSpy).toHaveBeenCalledWith(EXIT_CODES.ERROR);
-    });
-
-    it('should prompt for confirmation after validation and before creating release', async () => {
+    it('should exit with error when build platform version does not support releases', async () => {
+      validateBuildForReleaseSpy.mockResolvedValue(false);
       await projectReleaseCreateCommand.handler(args);
-      expect(fetchProjectSpy).toHaveBeenCalledTimes(1);
+      expect(uiLogger.error).toHaveBeenCalledWith(
+        expect.stringContaining('not support releases')
+      );
+      expect(executeReleaseSpy).not.toHaveBeenCalled();
+      expect(processExitSpy).toHaveBeenCalledWith(EXIT_CODES.ERROR);
+    });
+
+    it('should exit with error when resolveBuildId returns null (no successful builds)', async () => {
+      resolveBuildIdSpy.mockResolvedValue(null);
+      await projectReleaseCreateCommand.handler(args);
+      expect(confirmPromptSpy).not.toHaveBeenCalled();
+      expect(handleProjectUploadSpy).not.toHaveBeenCalled();
+      expect(processExitSpy).toHaveBeenCalledWith(EXIT_CODES.ERROR);
+    });
+
+    it('should prompt user to upload when resolveBuildId returns undefined', async () => {
+      resolveBuildIdSpy.mockResolvedValue(undefined);
+      confirmPromptSpy.mockResolvedValueOnce(false);
+      await projectReleaseCreateCommand.handler(args);
+      expect(confirmPromptSpy).toHaveBeenCalledWith(
+        expect.stringContaining('No successful builds')
+      );
+      expect(handleProjectUploadSpy).not.toHaveBeenCalled();
+      expect(processExitSpy).toHaveBeenCalledWith(EXIT_CODES.SUCCESS);
+    });
+
+    it('should run upload and create release when user confirms upload prompt', async () => {
+      resolveBuildIdSpy.mockResolvedValue(undefined);
+      await projectReleaseCreateCommand.handler(args);
+      expect(handleProjectUploadSpy).toHaveBeenCalledTimes(1);
+      expect(executeReleaseSpy).toHaveBeenCalledWith(
+        args.derivedAccountId,
+        'my-project',
+        99
+      );
+      expect(processExitSpy).toHaveBeenCalledWith(EXIT_CODES.SUCCESS);
+    });
+
+    it('should exit cleanly when user declines upload prompt', async () => {
+      resolveBuildIdSpy.mockResolvedValue(undefined);
+      confirmPromptSpy.mockResolvedValue(false);
+      await projectReleaseCreateCommand.handler(args);
+      expect(handleProjectUploadSpy).not.toHaveBeenCalled();
+      expect(executeReleaseSpy).not.toHaveBeenCalled();
+      expect(processExitSpy).toHaveBeenCalledWith(EXIT_CODES.SUCCESS);
+    });
+
+    it('should upload directly when --force is set and resolveBuildId returns undefined', async () => {
+      resolveBuildIdSpy.mockResolvedValue(undefined);
+      args.force = true;
+      await projectReleaseCreateCommand.handler(args);
+      expect(confirmPromptSpy).not.toHaveBeenCalled();
+      expect(handleProjectUploadSpy).toHaveBeenCalledTimes(1);
+      expect(executeReleaseSpy).toHaveBeenCalledWith(
+        args.derivedAccountId,
+        'my-project',
+        99
+      );
+      expect(processExitSpy).toHaveBeenCalledWith(EXIT_CODES.SUCCESS);
+    });
+
+    it('should handle PromptExitError from upload prompt', async () => {
+      resolveBuildIdSpy.mockResolvedValue(undefined);
+      confirmPromptSpy.mockRejectedValue(
+        new PromptExitError('User exited', EXIT_CODES.SUCCESS)
+      );
+      await projectReleaseCreateCommand.handler(args);
+      expect(handleProjectUploadSpy).not.toHaveBeenCalled();
+      expect(processExitSpy).toHaveBeenCalledWith(EXIT_CODES.SUCCESS);
+    });
+
+    it('should prompt for confirmation before creating release', async () => {
+      await projectReleaseCreateCommand.handler(args);
       expect(confirmPromptSpy).toHaveBeenCalledTimes(1);
       expect(confirmPromptSpy).toHaveBeenCalledWith(
         expect.stringContaining('my-project')
       );
-      expect(createReleaseSpy).toHaveBeenCalledTimes(1);
+      expect(executeReleaseSpy).toHaveBeenCalledTimes(1);
     });
 
     it('should exit cleanly when user declines confirmation', async () => {
@@ -298,13 +298,11 @@ describe('commands/project/release/create', () => {
         throw new Error(`process.exit called with ${code}`);
       });
       confirmPromptSpy.mockResolvedValue(false);
-
       await expect(projectReleaseCreateCommand.handler(args)).rejects.toThrow();
-
       expect(uiLogger.log).toHaveBeenCalledWith(
         expect.stringContaining('cancelled')
       );
-      expect(createReleaseSpy).not.toHaveBeenCalled();
+      expect(executeReleaseSpy).not.toHaveBeenCalled();
       expect(processExitSpy).toHaveBeenCalledWith(EXIT_CODES.SUCCESS);
     });
 
@@ -312,80 +310,36 @@ describe('commands/project/release/create', () => {
       args.json = true;
       await projectReleaseCreateCommand.handler(args);
       expect(confirmPromptSpy).not.toHaveBeenCalled();
-      expect(createReleaseSpy).toHaveBeenCalledTimes(1);
+      expect(executeReleaseSpy).toHaveBeenCalledTimes(1);
     });
 
     it('should skip confirmation when --force is provided', async () => {
       args.force = true;
       await projectReleaseCreateCommand.handler(args);
       expect(confirmPromptSpy).not.toHaveBeenCalled();
-      expect(createReleaseSpy).toHaveBeenCalledTimes(1);
+      expect(executeReleaseSpy).toHaveBeenCalledTimes(1);
     });
 
-    it('should create the release with the deployed build id', async () => {
+    it('should call executeRelease with the resolved build id', async () => {
       await projectReleaseCreateCommand.handler(args);
-      expect(createReleaseSpy).toHaveBeenCalledTimes(1);
-      expect(createReleaseSpy).toHaveBeenCalledWith(
+      expect(executeReleaseSpy).toHaveBeenCalledWith(
         args.derivedAccountId,
         'my-project',
-        exampleProject.deployedBuildId
+        EXAMPLE_BUILD_ID
       );
+      expect(processExitSpy).toHaveBeenCalledWith(EXIT_CODES.SUCCESS);
     });
 
-    it('should create the release with the provided --build', async () => {
-      args.build = 42;
+    it('should log success message after creating release', async () => {
       await projectReleaseCreateCommand.handler(args);
-      expect(createReleaseSpy).toHaveBeenCalledTimes(1);
-      expect(createReleaseSpy).toHaveBeenCalledWith(
-        args.derivedAccountId,
-        'my-project',
-        42
-      );
-    });
-
-    it('should log success message with release tag', async () => {
-      await projectReleaseCreateCommand.handler(args);
-      expect(uiLogger.success).toHaveBeenCalledTimes(1);
       expect(uiLogger.success).toHaveBeenCalledWith(
         expect.stringContaining('v1.0.0')
       );
     });
 
-    it('should output json when --json is provided', async () => {
-      args.json = true;
+    it('should exit with error when executeRelease throws', async () => {
+      executeReleaseSpy.mockRejectedValue(new Error('API error'));
       await projectReleaseCreateCommand.handler(args);
-      expect(uiLogger.json).toHaveBeenCalledTimes(1);
-      expect(uiLogger.json).toHaveBeenCalledWith(exampleRelease);
-    });
-
-    it('should handle 422 error when build not deployed', async () => {
-      createReleaseSpy.mockImplementation(() => {
-        throw mockHubSpotHttpError('Build not deployed', {
-          status: HttpStatusCode.UnprocessableEntity,
-          data: {},
-        });
-      });
-
-      await projectReleaseCreateCommand.handler(args);
-
-      expect(uiLogger.error).toHaveBeenCalledTimes(1);
-      expect(uiLogger.error).toHaveBeenCalledWith(
-        expect.stringContaining('has not been deployed')
-      );
-      expect(processExitSpy).toHaveBeenCalledWith(EXIT_CODES.ERROR);
-    });
-
-    it('should handle unexpected errors', async () => {
-      createReleaseSpy.mockImplementation(() => {
-        throw mockHubSpotHttpError('Server Error', {
-          status: HttpStatusCode.InternalServerError,
-          data: {},
-        });
-      });
-
-      await projectReleaseCreateCommand.handler(args);
-
-      expect(uiLogger.error).toHaveBeenCalledTimes(1);
       expect(processExitSpy).toHaveBeenCalledWith(EXIT_CODES.ERROR);
     });
   });

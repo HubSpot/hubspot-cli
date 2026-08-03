@@ -78,7 +78,7 @@ const builder = makeYargsBuilder<AccountRenameArgs>(
 const accountRenameCommand: YargsCommandModule<unknown, AccountRenameArgs> = {
   command,
   describe,
-  handler: makeWrappedYargsHandler('accounts-rename', handler),
+  handler: makeWrappedYargsHandler('account-rename', handler),
   builder,
 };
 

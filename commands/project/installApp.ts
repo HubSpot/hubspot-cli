@@ -11,6 +11,10 @@ import {
   YargsCommandModule,
 } from '../../types/Yargs.js';
 import { makeWrappedYargsHandler } from '../../lib/yargs/makeWrappedYargsHandler.js';
+import {
+  InstallAppJsonOutput,
+  InstallAppSchema,
+} from '../../lib/jsonOutput.js';
 import { makeYargsBuilder } from '../../lib/yargsUtils.js';
 import { uiLogger } from '../../lib/ui/logger.js';
 import { EXIT_CODES } from '../../lib/enums/exitCodes.js';
@@ -33,11 +37,11 @@ const command = 'install-app';
 const describe = commands.project.installApp.describe;
 const verboseDescribe = commands.project.installApp.verboseDescribe;
 
-type ProjectInstallAppArgs = CommonArgs &
+export type ProjectInstallAppArgs = CommonArgs &
   ConfigArgs &
   AccountArgs &
   EnvironmentArgs &
-  JSONOutputArgs & {
+  JSONOutputArgs<InstallAppJsonOutput> & {
     force: boolean;
     profile?: string;
   };
@@ -52,6 +56,7 @@ async function handler(
     profile: profileOption,
     useEnv: useEnvOption,
     exit,
+    addJsonOutput,
   } = args;
 
   const { projectConfig, projectDir } = await getProjectConfig();
@@ -142,17 +147,16 @@ async function handler(
   );
 
   if (isInstalledWithScopeGroups) {
-    if (formatOutputAsJson) {
-      uiLogger.json({
-        appId,
-        appUid: appNode.uid,
-        accountId: installAccountId,
-        projectId,
-        installationState,
-        installed: true,
-        reinstalled: false,
-      });
-    } else {
+    addJsonOutput({
+      appId,
+      appUid: appNode.uid,
+      accountId: installAccountId,
+      projectId,
+      installationState,
+      installed: true,
+      reinstalled: false,
+    });
+    if (!formatOutputAsJson) {
       uiLogger.success(
         commands.project.installApp.alreadyInstalled(
           appNode.config.name,
@@ -207,17 +211,16 @@ async function handler(
     return exit(EXIT_CODES.ERROR);
   }
 
-  if (formatOutputAsJson) {
-    uiLogger.json({
-      appId,
-      appUid: appNode.uid,
-      accountId: installAccountId,
-      projectId,
-      installationState: APP_INSTALLATION_STATES.INSTALLED,
-      installed: true,
-      reinstalled: needsReinstall,
-    });
-  } else {
+  addJsonOutput({
+    appId,
+    appUid: appNode.uid,
+    accountId: installAccountId,
+    projectId,
+    installationState: APP_INSTALLATION_STATES.INSTALLED,
+    installed: true,
+    reinstalled: needsReinstall,
+  });
+  if (!formatOutputAsJson) {
     uiLogger.success(
       commands.project.installApp.success(appNode.config.name, installAccountId)
     );
@@ -279,7 +282,9 @@ const projectInstallAppCommand: YargsCommandModule<
 > = {
   command,
   describe,
-  handler: makeWrappedYargsHandler('project-install-app', handler),
+  handler: makeWrappedYargsHandler('project-install-app', handler, {
+    jsonOutputSchema: InstallAppSchema,
+  }),
   builder,
 };
 

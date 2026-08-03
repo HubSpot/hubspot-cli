@@ -88,7 +88,7 @@ const builder = makeYargsBuilder<ProjectListArgs>(
 const projectListCommand: YargsCommandModule<unknown, ProjectListArgs> = {
   command,
   describe,
-  handler: makeWrappedYargsHandler('projects-list', handler),
+  handler: makeWrappedYargsHandler('project-list', handler),
   builder,
 };
 

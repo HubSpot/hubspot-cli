@@ -18,6 +18,10 @@ import {
   YargsCommandModule,
 } from '../../types/Yargs.js';
 import { makeWrappedYargsHandler } from '../../lib/yargs/makeWrappedYargsHandler.js';
+import {
+  CreateTestAccountJsonOutput,
+  CreateTestAccountSchema,
+} from '../../lib/jsonOutput.js';
 import { makeYargsBuilder } from '../../lib/yargsUtils.js';
 import { promptUser, listPrompt } from '../../lib/prompts/promptUtils.js';
 import { EXIT_CODES } from '../../lib/enums/exitCodes.js';
@@ -42,7 +46,7 @@ type CreateTestAccountArgs = CommonArgs &
   ConfigArgs &
   TestingArgs &
   EnvironmentArgs &
-  JSONOutputArgs & {
+  JSONOutputArgs<CreateTestAccountJsonOutput> & {
     configPath?: string;
     name?: string;
     description?: string;
@@ -170,7 +174,7 @@ async function buildTestAccountConfig(
 async function handler(
   args: ArgumentsCamelCase<CreateTestAccountArgs>
 ): Promise<void> {
-  const { derivedAccountId, formatOutputAsJson, exit } = args;
+  const { derivedAccountId, formatOutputAsJson, exit, addJsonOutput } = args;
 
   const env = getValidEnv(getConfigAccountEnvironment(derivedAccountId));
 
@@ -223,10 +227,9 @@ async function handler(
     ),
   });
 
-  if (formatOutputAsJson) {
-    uiLogger.json(resultJson);
-  } else {
-    // Only save to config if not using json output
+  addJsonOutput(resultJson);
+
+  if (!formatOutputAsJson) {
     try {
       const savedAccountName = await saveAccountToConfig(
         resultJson.accountId,
@@ -369,7 +372,9 @@ const createTestAccountCommand: YargsCommandModule<
 > = {
   command,
   describe,
-  handler: makeWrappedYargsHandler('test-account-create', handler),
+  handler: makeWrappedYargsHandler('test-account-create', handler, {
+    jsonOutputSchema: CreateTestAccountSchema,
+  }),
   builder,
 };
 

@@ -1,252 +1,225 @@
 import fs from 'fs';
 import path from 'path';
-import type { CommandResults } from '../command.js';
-
-const mockExecAsync = vi.fn();
+import { spawn } from 'node:child_process';
+import { EventEmitter } from 'node:events';
 
 vi.mock('node:child_process');
-vi.mock('util', () => ({
-  default: {
-    promisify: () => mockExecAsync,
-  },
-  promisify: () => mockExecAsync,
-}));
 vi.mock('fs');
 vi.mock('path');
 
 // Import after mocks are set up
-const { addFlag, runCommandInDir } = await import('../command.js');
+const { HubSpotCommand, runCommandInDir } = await import('../command.js');
 
+const mockSpawn = vi.mocked(spawn);
 const mockExistsSync = vi.mocked(fs.existsSync);
 const mockMkdirSync = vi.mocked(fs.mkdirSync);
 const mockResolve = vi.mocked(path.resolve);
 
+function createMockProcess(
+  stdout = '',
+  stderr = '',
+  exitCode = 0,
+  spawnError?: Error
+) {
+  const proc = new EventEmitter() as NodeJS.EventEmitter & {
+    stdout: EventEmitter;
+    stderr: EventEmitter;
+  };
+  proc.stdout = new EventEmitter();
+  proc.stderr = new EventEmitter();
+
+  mockSpawn.mockImplementation(() => {
+    setTimeout(() => {
+      if (spawnError) {
+        proc.emit('error', spawnError);
+        return;
+      }
+      if (stdout) proc.stdout.emit('data', Buffer.from(stdout));
+      if (stderr) proc.stderr.emit('data', Buffer.from(stderr));
+      proc.emit('close', exitCode);
+    }, 0);
+    return proc as ReturnType<typeof spawn>;
+  });
+
+  return proc;
+}
+
 describe('mcp-server/utils/command', () => {
-  describe('addFlag', () => {
-    it('should add string flag to command', () => {
-      const result = addFlag('hs project create', 'name', 'test-project');
-      expect(result).toBe('hs project create --name "test-project"');
+  describe('HubSpotCommand', () => {
+    it('should set executable to "hs" and split subcommand into args', () => {
+      const cmd = new HubSpotCommand('project create');
+      expect(cmd.executable).toBe('hs');
+      expect(cmd.args).toEqual(['project', 'create']);
     });
 
-    it('should add number flag to command', () => {
-      const result = addFlag('hs project deploy', 'build', 123);
-      expect(result).toBe('hs project deploy --build "123"');
+    it('should include initial flags in args', () => {
+      const cmd = new HubSpotCommand('project create', [
+        { name: 'platform-version', value: '2026.03' },
+      ]);
+      expect(cmd.args).toEqual([
+        'project',
+        'create',
+        '--platform-version',
+        '2026.03',
+      ]);
     });
 
-    it('should add boolean flag to command', () => {
-      const result = addFlag('hs project upload', 'watch', true);
-      expect(result).toBe('hs project upload --watch "true"');
+    it('should append a flag and return this for chaining', () => {
+      const cmd = new HubSpotCommand('project upload');
+      const returned = cmd.addFlag('force', true);
+      expect(returned).toBe(cmd);
+      expect(cmd.args).toEqual(['project', 'upload', '--force', 'true']);
     });
 
-    it('should add array flag to command', () => {
-      const result = addFlag('hs project create', 'features', [
+    it('should support chaining multiple addFlag calls', () => {
+      const cmd = new HubSpotCommand('project upload');
+      cmd.addFlag('force', true).addFlag('message', 'my message');
+      expect(cmd.args).toEqual([
+        'project',
+        'upload',
+        '--force',
+        'true',
+        '--message',
+        'my message',
+      ]);
+    });
+
+    it('should expand array flag values to multiple args', () => {
+      const cmd = new HubSpotCommand('project create');
+      cmd.addFlag('features', ['card', 'settings']);
+      expect(cmd.args).toEqual([
+        'project',
+        'create',
+        '--features',
         'card',
         'settings',
       ]);
-      expect(result).toBe('hs project create --features "card" "settings"');
     });
 
-    it('should handle empty array', () => {
-      const result = addFlag('hs project create', 'features', []);
-      expect(result).toBe('hs project create --features ');
+    it('should stringify number flag values', () => {
+      const cmd = new HubSpotCommand('project deploy');
+      cmd.addFlag('build', 123);
+      expect(cmd.args).toEqual(['project', 'deploy', '--build', '123']);
     });
 
-    it('should handle array with one item', () => {
-      const result = addFlag('hs project create', 'features', ['card']);
-      expect(result).toBe('hs project create --features "card"');
+    it('should stringify boolean flag values', () => {
+      const cmd = new HubSpotCommand('project upload');
+      cmd.addFlag('watch', false);
+      expect(cmd.args).toEqual(['project', 'upload', '--watch', 'false']);
     });
 
-    it('should handle special characters in string values', () => {
-      const result = addFlag(
-        'hs project create',
-        'name',
-        'my-project with spaces'
-      );
-      expect(result).toBe('hs project create --name "my-project with spaces"');
-    });
-
-    it('should handle special characters in array values', () => {
-      const result = addFlag('hs project create', 'features', [
-        'card with spaces',
-        'settings',
+    it('should handle values with spaces as a single arg entry', () => {
+      const cmd = new HubSpotCommand('project create');
+      cmd.addFlag('name', 'my project with spaces');
+      expect(cmd.args).toEqual([
+        'project',
+        'create',
+        '--name',
+        'my project with spaces',
       ]);
-      expect(result).toBe(
-        'hs project create --features "card with spaces" "settings"'
-      );
+    });
+
+    it('should handle empty array flag values', () => {
+      const cmd = new HubSpotCommand('project add');
+      cmd.addFlag('features', []);
+      expect(cmd.args).toEqual(['project', 'add', '--features']);
+    });
+
+    it('should reflect all flags on each args access (getter is computed)', () => {
+      const cmd = new HubSpotCommand('project upload');
+      expect(cmd.args).toEqual(['project', 'upload']);
+      cmd.addFlag('force', true);
+      expect(cmd.args).toEqual(['project', 'upload', '--force', 'true']);
     });
   });
 
   describe('runCommandInDir', () => {
     const mockDirectory = '/test/directory';
-    const mockCommand = 'npm install';
+    const mockCommand = { executable: 'npm', args: ['install'] };
     const mockResolvedPath = '/resolved/test/directory';
 
     beforeEach(() => {
       mockResolve.mockReturnValue(mockResolvedPath);
     });
 
-    it('should run command in existing directory', async () => {
-      const expectedResult: CommandResults = {
-        stdout: 'command output',
-        stderr: '',
-      };
-
-      mockExistsSync.mockReturnValue(true);
-      mockExecAsync.mockResolvedValue(expectedResult);
-
-      const result = await runCommandInDir(mockDirectory, mockCommand);
-
-      expect(mockExistsSync).toHaveBeenCalledWith(mockDirectory);
-      expect(mockMkdirSync).not.toHaveBeenCalled();
-      expect(mockResolve).toHaveBeenCalledWith(mockDirectory);
-      expect(mockExecAsync).toHaveBeenCalledWith(
-        mockCommand,
-        expect.objectContaining({
-          cwd: mockResolvedPath,
-          env: expect.any(Object),
-        })
-      );
-      expect(result).toEqual(expectedResult);
-    });
-
     it('should create directory if it does not exist', async () => {
-      const expectedResult: CommandResults = {
-        stdout: 'command output',
-        stderr: '',
-      };
-
       mockExistsSync.mockReturnValue(false);
-      mockExecAsync.mockResolvedValue(expectedResult);
+      createMockProcess('command output');
 
       const result = await runCommandInDir(mockDirectory, mockCommand);
 
       expect(mockExistsSync).toHaveBeenCalledWith(mockDirectory);
       expect(mockMkdirSync).toHaveBeenCalledWith(mockDirectory);
+      expect(result.stdout).toBe('command output');
+    });
+
+    it('should not create directory if it already exists', async () => {
+      mockExistsSync.mockReturnValue(true);
+      createMockProcess('command output');
+
+      await runCommandInDir(mockDirectory, mockCommand);
+
+      expect(mockExistsSync).toHaveBeenCalledWith(mockDirectory);
+      expect(mockMkdirSync).not.toHaveBeenCalled();
+    });
+
+    it('should run command in resolved directory', async () => {
+      mockExistsSync.mockReturnValue(true);
+      createMockProcess('output');
+
+      await runCommandInDir(mockDirectory, mockCommand);
+
       expect(mockResolve).toHaveBeenCalledWith(mockDirectory);
-      expect(mockExecAsync).toHaveBeenCalledWith(
-        mockCommand,
-        expect.objectContaining({
-          cwd: mockResolvedPath,
-          env: expect.any(Object),
-        })
+      expect(mockSpawn).toHaveBeenCalledWith(
+        'npm',
+        ['install'],
+        expect.objectContaining({ cwd: mockResolvedPath })
       );
-      expect(result).toEqual(expectedResult);
-    });
-
-    it('should propagate execAsync errors', async () => {
-      const error = new Error('Command failed');
-
-      mockExistsSync.mockReturnValue(true);
-      mockExecAsync.mockRejectedValue(error);
-
-      await expect(runCommandInDir(mockDirectory, mockCommand)).rejects.toThrow(
-        'Command failed'
-      );
-
-      expect(mockExecAsync).toHaveBeenCalledWith(
-        mockCommand,
-        expect.objectContaining({
-          cwd: mockResolvedPath,
-          env: expect.any(Object),
-        })
-      );
-    });
-
-    it('should handle stderr in results', async () => {
-      const expectedResult: CommandResults = {
-        stdout: 'some output',
-        stderr: 'warning message',
-      };
-
-      mockExistsSync.mockReturnValue(true);
-      mockExecAsync.mockResolvedValue(expectedResult);
-
-      const result = await runCommandInDir(mockDirectory, mockCommand);
-
-      expect(result.stdout).toBe('some output');
-      expect(result.stderr).toBe('warning message');
     });
 
     it('should add --disable-usage-tracking flag to hs commands', async () => {
-      const hsCommand = 'hs project upload';
-      const expectedResult: CommandResults = {
-        stdout: 'success',
-        stderr: '',
-      };
-
       mockExistsSync.mockReturnValue(true);
-      mockExecAsync.mockResolvedValue(expectedResult);
+      createMockProcess('success');
 
-      await runCommandInDir(mockDirectory, hsCommand);
+      await runCommandInDir(
+        mockDirectory,
+        new HubSpotCommand('project upload')
+      );
 
-      expect(mockExecAsync).toHaveBeenCalledWith(
-        'hs project upload --disable-usage-tracking "true"',
-        expect.objectContaining({
-          cwd: mockResolvedPath,
-          env: expect.any(Object),
-        })
+      expect(mockSpawn).toHaveBeenCalledWith(
+        'hs',
+        ['project', 'upload', '--disable-usage-tracking', 'true'],
+        expect.any(Object)
       );
     });
 
     it('should not add --disable-usage-tracking flag to non-hs commands', async () => {
-      const nonHsCommand = 'npm install';
-      const expectedResult: CommandResults = {
-        stdout: 'success',
-        stderr: '',
-      };
-
       mockExistsSync.mockReturnValue(true);
-      mockExecAsync.mockResolvedValue(expectedResult);
+      createMockProcess('success');
 
-      await runCommandInDir(mockDirectory, nonHsCommand);
+      await runCommandInDir(mockDirectory, {
+        executable: 'npm',
+        args: ['install'],
+      });
 
-      expect(mockExecAsync).toHaveBeenCalledWith(
-        'npm install',
-        expect.objectContaining({
-          cwd: mockResolvedPath,
-          env: expect.any(Object),
-        })
+      expect(mockSpawn).toHaveBeenCalledWith(
+        'npm',
+        ['install'],
+        expect.any(Object)
       );
     });
 
-    it('should add --disable-usage-tracking flag to hs commands with existing flags', async () => {
-      const hsCommand = 'hs project upload --profile prod';
-      const expectedResult: CommandResults = {
-        stdout: 'success',
-        stderr: '',
-      };
-
+    it('should set INIT_CWD env var to resolved directory', async () => {
       mockExistsSync.mockReturnValue(true);
-      mockExecAsync.mockResolvedValue(expectedResult);
+      createMockProcess('success');
 
-      await runCommandInDir(mockDirectory, hsCommand);
+      await runCommandInDir(mockDirectory, mockCommand);
 
-      expect(mockExecAsync).toHaveBeenCalledWith(
-        'hs project upload --profile prod --disable-usage-tracking "true"',
+      expect(mockSpawn).toHaveBeenCalledWith(
+        'npm',
+        ['install'],
         expect.objectContaining({
-          cwd: mockResolvedPath,
-          env: expect.any(Object),
-        })
-      );
-    });
-
-    it('should handle hs commands that start with whitespace', async () => {
-      const hsCommand = 'hs init';
-      const expectedResult: CommandResults = {
-        stdout: 'success',
-        stderr: '',
-      };
-
-      mockExistsSync.mockReturnValue(true);
-      mockExecAsync.mockResolvedValue(expectedResult);
-
-      await runCommandInDir(mockDirectory, hsCommand);
-
-      expect(mockExecAsync).toHaveBeenCalledWith(
-        'hs init --disable-usage-tracking "true"',
-        expect.objectContaining({
-          cwd: mockResolvedPath,
-          env: expect.any(Object),
+          env: expect.objectContaining({ INIT_CWD: mockResolvedPath }),
         })
       );
     });
@@ -255,113 +228,34 @@ describe('mcp-server/utils/command', () => {
       const originalEnv = process.env.HUBSPOT_MCP_STANDALONE;
       process.env.HUBSPOT_MCP_STANDALONE = 'true';
 
-      const hsCommand = 'hs project upload';
-      const expectedResult: CommandResults = {
-        stdout: 'success',
-        stderr: '',
-      };
-
       mockExistsSync.mockReturnValue(true);
-      mockExecAsync.mockResolvedValue(expectedResult);
+      createMockProcess('success');
 
-      await runCommandInDir(mockDirectory, hsCommand);
-
-      expect(mockExecAsync).toHaveBeenCalledWith(
-        'npx -y -p @hubspot/cli hs project upload --disable-usage-tracking "true"',
-        expect.objectContaining({
-          cwd: mockResolvedPath,
-          env: expect.any(Object),
-        })
+      await runCommandInDir(
+        mockDirectory,
+        new HubSpotCommand('project upload')
       );
 
-      // Restore original env
+      expect(mockSpawn).toHaveBeenCalledWith(
+        'npx',
+        [
+          '-y',
+          '-p',
+          '@hubspot/cli',
+          'hs',
+          'project',
+          'upload',
+          '--disable-usage-tracking',
+          'true',
+        ],
+        expect.any(Object)
+      );
+
       if (originalEnv === undefined) {
         delete process.env.HUBSPOT_MCP_STANDALONE;
       } else {
         process.env.HUBSPOT_MCP_STANDALONE = originalEnv;
       }
-    });
-
-    it('should use regular hs command when HUBSPOT_MCP_STANDALONE is not set', async () => {
-      const originalEnv = process.env.HUBSPOT_MCP_STANDALONE;
-      delete process.env.HUBSPOT_MCP_STANDALONE;
-
-      const hsCommand = 'hs project upload';
-      const expectedResult: CommandResults = {
-        stdout: 'success',
-        stderr: '',
-      };
-
-      mockExistsSync.mockReturnValue(true);
-      mockExecAsync.mockResolvedValue(expectedResult);
-
-      await runCommandInDir(mockDirectory, hsCommand);
-
-      expect(mockExecAsync).toHaveBeenCalledWith(
-        'hs project upload --disable-usage-tracking "true"',
-        expect.objectContaining({
-          cwd: mockResolvedPath,
-          env: expect.any(Object),
-        })
-      );
-
-      // Restore original env
-      if (originalEnv !== undefined) {
-        process.env.HUBSPOT_MCP_STANDALONE = originalEnv;
-      }
-    });
-
-    it('should use npx -p @hubspot/cli for hs commands with flags in standalone mode', async () => {
-      const originalEnv = process.env.HUBSPOT_MCP_STANDALONE;
-      process.env.HUBSPOT_MCP_STANDALONE = 'true';
-
-      const hsCommand = 'hs project upload --profile prod';
-      const expectedResult: CommandResults = {
-        stdout: 'success',
-        stderr: '',
-      };
-
-      mockExistsSync.mockReturnValue(true);
-      mockExecAsync.mockResolvedValue(expectedResult);
-
-      await runCommandInDir(mockDirectory, hsCommand);
-
-      expect(mockExecAsync).toHaveBeenCalledWith(
-        'npx -y -p @hubspot/cli hs project upload --profile prod --disable-usage-tracking "true"',
-        expect.objectContaining({
-          cwd: mockResolvedPath,
-          env: expect.any(Object),
-        })
-      );
-
-      // Restore original env
-      if (originalEnv === undefined) {
-        delete process.env.HUBSPOT_MCP_STANDALONE;
-      } else {
-        process.env.HUBSPOT_MCP_STANDALONE = originalEnv;
-      }
-    });
-
-    it('should set INIT_CWD to the resolved directory', async () => {
-      const expectedResult: CommandResults = {
-        stdout: 'success',
-        stderr: '',
-      };
-
-      mockExistsSync.mockReturnValue(true);
-      mockExecAsync.mockResolvedValue(expectedResult);
-
-      await runCommandInDir(mockDirectory, mockCommand);
-
-      expect(mockExecAsync).toHaveBeenCalledWith(
-        mockCommand,
-        expect.objectContaining({
-          cwd: mockResolvedPath,
-          env: expect.objectContaining({
-            INIT_CWD: mockResolvedPath,
-          }),
-        })
-      );
     });
 
     it('should use pinned CLI version when HUBSPOT_CLI_VERSION is set in standalone mode', async () => {
@@ -370,26 +264,29 @@ describe('mcp-server/utils/command', () => {
       process.env.HUBSPOT_MCP_STANDALONE = 'true';
       process.env.HUBSPOT_CLI_VERSION = '8.1.0';
 
-      const hsCommand = 'hs project upload';
-      const expectedResult: CommandResults = {
-        stdout: 'success',
-        stderr: '',
-      };
-
       mockExistsSync.mockReturnValue(true);
-      mockExecAsync.mockResolvedValue(expectedResult);
+      createMockProcess('success');
 
-      await runCommandInDir(mockDirectory, hsCommand);
-
-      expect(mockExecAsync).toHaveBeenCalledWith(
-        'npx -y -p @hubspot/cli@8.1.0 hs project upload --disable-usage-tracking "true"',
-        expect.objectContaining({
-          cwd: mockResolvedPath,
-          env: expect.any(Object),
-        })
+      await runCommandInDir(
+        mockDirectory,
+        new HubSpotCommand('project upload')
       );
 
-      // Restore original env
+      expect(mockSpawn).toHaveBeenCalledWith(
+        'npx',
+        [
+          '-y',
+          '-p',
+          '@hubspot/cli@8.1.0',
+          'hs',
+          'project',
+          'upload',
+          '--disable-usage-tracking',
+          'true',
+        ],
+        expect.any(Object)
+      );
+
       if (originalStandaloneEnv === undefined) {
         delete process.env.HUBSPOT_MCP_STANDALONE;
       } else {
@@ -400,6 +297,50 @@ describe('mcp-server/utils/command', () => {
       } else {
         process.env.HUBSPOT_CLI_VERSION = originalVersionEnv;
       }
+    });
+
+    it('should propagate spawn errors via the error event', async () => {
+      mockExistsSync.mockReturnValue(true);
+      const spawnError = new Error('spawn ENOENT');
+      createMockProcess('', '', 0, spawnError);
+
+      await expect(runCommandInDir(mockDirectory, mockCommand)).rejects.toThrow(
+        'spawn ENOENT'
+      );
+    });
+
+    it('should reject with stdout and stderr attached on non-zero exit', async () => {
+      mockExistsSync.mockReturnValue(true);
+      createMockProcess('some output', 'some error', 1);
+
+      await expect(
+        runCommandInDir(mockDirectory, mockCommand)
+      ).rejects.toMatchObject({
+        code: 1,
+        stdout: 'some output',
+        stderr: 'some error',
+      });
+    });
+
+    it('should return accumulated stdout and stderr in result', async () => {
+      mockExistsSync.mockReturnValue(true);
+      createMockProcess('hello stdout', 'hello stderr');
+
+      const result = await runCommandInDir(mockDirectory, mockCommand);
+
+      expect(result.stdout).toBe('hello stdout');
+      expect(result.stderr).toBe('hello stderr');
+    });
+
+    it('should call onData callback with streaming chunks', async () => {
+      mockExistsSync.mockReturnValue(true);
+      createMockProcess('chunk output', 'chunk error');
+
+      const onData = vi.fn();
+      await runCommandInDir(mockDirectory, mockCommand, onData);
+
+      expect(onData).toHaveBeenCalledWith('chunk output', 'stdout');
+      expect(onData).toHaveBeenCalledWith('chunk error', 'stderr');
     });
   });
 });

@@ -11,7 +11,7 @@ import { makeWrappedYargsHandler } from '../../yargs/makeWrappedYargsHandler.js'
 import { uiLogger } from '../../ui/logger.js';
 import { pkg } from '../../jsonLoader.js';
 import { lib } from '../../../lang/en.js';
-import { CommonArgs } from '../../../types/Yargs.js';
+import { CommonArgs, JSONOutputArgs } from '../../../types/Yargs.js';
 import { EXIT_CODES } from '../../enums/exitCodes.js';
 import { PromptExitError } from '../../errors/PromptExitError.js';
 import { Mock, Mocked } from 'vitest';
@@ -367,13 +367,18 @@ describe('makeWrappedYargsHandler', () => {
     );
   });
 
-  it('should not write a log file when handler completes successfully', async () => {
+  it('should write a log file silently when handler completes successfully', async () => {
     const handler = vi.fn().mockResolvedValue(undefined);
     const wrapped = makeWrappedYargsHandler('test-command', handler);
 
     await wrapped(makeArgs());
 
-    expect(writeBufferedLogsToFileSpy).not.toHaveBeenCalled();
+    expect(writeBufferedLogsToFileSpy).toHaveBeenCalledWith(
+      expect.objectContaining({ filenamePrefix: 'test-command' })
+    );
+    expect(mockedUiLogger.error).not.toHaveBeenCalledWith(
+      expect.stringContaining('Debug logs')
+    );
   });
 
   it('should write a log file when the handler calls exit with ERROR', async () => {
@@ -396,7 +401,7 @@ describe('makeWrappedYargsHandler', () => {
     );
   });
 
-  it('should not write a log file when exit is called with SUCCESS', async () => {
+  it('should write a log file silently when exit is called with SUCCESS', async () => {
     const handler = vi
       .fn()
       .mockImplementation(async (args: ArgumentsCamelCase<CommonArgs>) => {
@@ -406,10 +411,15 @@ describe('makeWrappedYargsHandler', () => {
 
     await wrapped(makeArgs());
 
-    expect(writeBufferedLogsToFileSpy).not.toHaveBeenCalled();
+    expect(writeBufferedLogsToFileSpy).toHaveBeenCalledWith(
+      expect.objectContaining({ filenamePrefix: 'test-command' })
+    );
+    expect(mockedUiLogger.error).not.toHaveBeenCalledWith(
+      expect.stringContaining('Debug logs')
+    );
   });
 
-  it('should not write a log file for a successful PromptExitError', async () => {
+  it('should write a log file silently for a successful PromptExitError', async () => {
     const handler = vi
       .fn()
       .mockRejectedValue(
@@ -419,7 +429,12 @@ describe('makeWrappedYargsHandler', () => {
 
     await wrapped(makeArgs());
 
-    expect(writeBufferedLogsToFileSpy).not.toHaveBeenCalled();
+    expect(writeBufferedLogsToFileSpy).toHaveBeenCalledWith(
+      expect.objectContaining({ filenamePrefix: 'test-command' })
+    );
+    expect(mockedUiLogger.error).not.toHaveBeenCalledWith(
+      expect.stringContaining('Debug logs')
+    );
   });
 
   it('should not write a log file when --json is set', async () => {
@@ -466,6 +481,282 @@ describe('makeWrappedYargsHandler', () => {
     await sigintHandler();
 
     expect(processExitSpy).toHaveBeenCalledWith(EXIT_CODES.SUCCESS);
+  });
+});
+
+describe('addJsonOutput / emitJsonOutput', () => {
+  type JsonArgs = CommonArgs & JSONOutputArgs;
+
+  beforeEach(() => {
+    trackCommandUsageSpy.mockResolvedValue(undefined);
+    processExitSpy.mockImplementation(() => undefined as never);
+  });
+
+  it('should emit accumulated JSON data when exit is called with --json', async () => {
+    const handler = vi
+      .fn()
+      .mockImplementation(async (args: ArgumentsCamelCase<JsonArgs>) => {
+        args.addJsonOutput({ buildId: 42 });
+        await args.exit(EXIT_CODES.SUCCESS);
+      });
+    const wrapped = makeWrappedYargsHandler('test-command', handler);
+
+    await wrapped(
+      makeArgs({ json: true } as Partial<ArgumentsCamelCase<CommonArgs>>)
+    );
+
+    expect(mockedUiLogger.json).toHaveBeenCalledWith({ buildId: 42 });
+  });
+
+  it('should emit accumulated JSON data on normal handler completion with --json', async () => {
+    const handler = vi
+      .fn()
+      .mockImplementation(async (args: ArgumentsCamelCase<JsonArgs>) => {
+        args.addJsonOutput({ projectName: 'my-project' });
+      });
+    const wrapped = makeWrappedYargsHandler('test-command', handler);
+
+    await wrapped(
+      makeArgs({ json: true } as Partial<ArgumentsCamelCase<CommonArgs>>)
+    );
+
+    expect(mockedUiLogger.json).toHaveBeenCalledWith({
+      projectName: 'my-project',
+    });
+  });
+
+  it('should merge multiple addJsonOutput calls', async () => {
+    const handler = vi
+      .fn()
+      .mockImplementation(async (args: ArgumentsCamelCase<JsonArgs>) => {
+        args.addJsonOutput({ buildId: 1 });
+        args.addJsonOutput({ deployId: 2 });
+        await args.exit(EXIT_CODES.SUCCESS);
+      });
+    const wrapped = makeWrappedYargsHandler('test-command', handler);
+
+    await wrapped(
+      makeArgs({ json: true } as Partial<ArgumentsCamelCase<CommonArgs>>)
+    );
+
+    expect(mockedUiLogger.json).toHaveBeenCalledWith({
+      buildId: 1,
+      deployId: 2,
+    });
+  });
+
+  it('should not emit JSON when --json is not set', async () => {
+    const handler = vi
+      .fn()
+      .mockImplementation(async (args: ArgumentsCamelCase<JsonArgs>) => {
+        args.addJsonOutput({ buildId: 42 });
+      });
+    const wrapped = makeWrappedYargsHandler('test-command', handler);
+
+    await wrapped(makeArgs());
+
+    expect(mockedUiLogger.json).not.toHaveBeenCalled();
+  });
+
+  it('should not emit JSON when no data was accumulated', async () => {
+    const handler = vi.fn().mockResolvedValue(undefined);
+    const wrapped = makeWrappedYargsHandler('test-command', handler);
+
+    await wrapped(
+      makeArgs({ json: true } as Partial<ArgumentsCamelCase<CommonArgs>>)
+    );
+
+    expect(mockedUiLogger.json).not.toHaveBeenCalled();
+  });
+
+  it('should not emit JSON twice when exit is called and handler completes', async () => {
+    const handler = vi
+      .fn()
+      .mockImplementation(async (args: ArgumentsCamelCase<JsonArgs>) => {
+        args.addJsonOutput({ buildId: 42 });
+        await args.exit(EXIT_CODES.SUCCESS);
+      });
+    const wrapped = makeWrappedYargsHandler('test-command', handler);
+
+    await wrapped(
+      makeArgs({ json: true } as Partial<ArgumentsCamelCase<CommonArgs>>)
+    );
+
+    expect(mockedUiLogger.json).toHaveBeenCalledTimes(1);
+  });
+
+  it('should emit JSON with --formatOutputAsJson alias', async () => {
+    const handler = vi
+      .fn()
+      .mockImplementation(async (args: ArgumentsCamelCase<JsonArgs>) => {
+        args.addJsonOutput({ status: 'ok' });
+      });
+    const wrapped = makeWrappedYargsHandler('test-command', handler);
+
+    await wrapped(
+      makeArgs({ formatOutputAsJson: true } as Partial<
+        ArgumentsCamelCase<CommonArgs>
+      >)
+    );
+
+    expect(mockedUiLogger.json).toHaveBeenCalledWith({ status: 'ok' });
+  });
+});
+
+describe('--json-schema flag', () => {
+  beforeEach(() => {
+    trackCommandUsageSpy.mockResolvedValue(undefined);
+    processExitSpy.mockImplementation(() => undefined as never);
+  });
+
+  it('should emit JSON Schema and exit when schema is defined', async () => {
+    const { z } = await import('zod');
+    const schema = z.object({ name: z.string(), count: z.number() });
+
+    const handler = vi.fn().mockResolvedValue(undefined);
+    const wrapped = makeWrappedYargsHandler('test-command', handler, {
+      jsonOutputSchema: schema,
+    });
+
+    await wrapped(
+      makeArgs({ jsonSchema: true } as Partial<ArgumentsCamelCase<CommonArgs>>)
+    );
+
+    expect(handler).not.toHaveBeenCalled();
+    expect(mockedUiLogger.json).toHaveBeenCalledWith(
+      expect.objectContaining({
+        type: 'object',
+        properties: expect.objectContaining({
+          name: { type: 'string' },
+          count: { type: 'number' },
+        }),
+      })
+    );
+    expect(processExitSpy).toHaveBeenCalledWith(EXIT_CODES.SUCCESS);
+  });
+
+  it('should emit error object when no schema is defined', async () => {
+    const handler = vi.fn().mockResolvedValue(undefined);
+    const wrapped = makeWrappedYargsHandler('test-command', handler);
+
+    await wrapped(
+      makeArgs({ jsonSchema: true } as Partial<ArgumentsCamelCase<CommonArgs>>)
+    );
+
+    expect(handler).not.toHaveBeenCalled();
+    expect(mockedUiLogger.json).toHaveBeenCalledWith(
+      expect.objectContaining({ error: expect.any(String) })
+    );
+    expect(processExitSpy).toHaveBeenCalledWith(EXIT_CODES.SUCCESS);
+  });
+
+  it('should fire usage tracking for --json-schema requests', async () => {
+    const handler = vi.fn().mockResolvedValue(undefined);
+    const wrapped = makeWrappedYargsHandler('test-command', handler);
+
+    await wrapped(
+      makeArgs({ jsonSchema: true } as Partial<ArgumentsCamelCase<CommonArgs>>)
+    );
+
+    expect(trackCommandUsageSpy).toHaveBeenCalledWith(
+      'test-command',
+      expect.objectContaining({ successful: true }),
+      12345
+    );
+  });
+});
+
+describe('schema validation on emit', () => {
+  type JsonArgs = CommonArgs & JSONOutputArgs;
+
+  beforeEach(() => {
+    trackCommandUsageSpy.mockResolvedValue(undefined);
+    processExitSpy.mockImplementation(() => undefined as never);
+  });
+
+  it('should emit JSON when data passes schema validation', async () => {
+    const { z } = await import('zod');
+    const schema = z.object({ name: z.string() });
+
+    const handler = vi
+      .fn()
+      .mockImplementation(async (args: ArgumentsCamelCase<JsonArgs>) => {
+        args.addJsonOutput({ name: 'test' });
+      });
+    const wrapped = makeWrappedYargsHandler('test-command', handler, {
+      jsonOutputSchema: schema,
+    });
+
+    await wrapped(
+      makeArgs({ json: true } as Partial<ArgumentsCamelCase<CommonArgs>>)
+    );
+
+    expect(mockedUiLogger.json).toHaveBeenCalledWith({ name: 'test' });
+  });
+
+  it('should emit data with warning and exit WARNING when schema validation fails', async () => {
+    const { z } = await import('zod');
+    const schema = z.object({ name: z.string(), required: z.number() });
+
+    const handler = vi
+      .fn()
+      .mockImplementation(async (args: ArgumentsCamelCase<JsonArgs>) => {
+        args.addJsonOutput({ name: 'test' });
+      });
+    const wrapped = makeWrappedYargsHandler('test-command', handler, {
+      jsonOutputSchema: schema,
+    });
+
+    await wrapped(
+      makeArgs({ json: true } as Partial<ArgumentsCamelCase<CommonArgs>>)
+    );
+
+    expect(mockedUiLogger.json).toHaveBeenCalledWith({ name: 'test' });
+    expect(mockedUiLogger.warn).toHaveBeenCalled();
+    expect(processExitSpy).toHaveBeenCalledWith(EXIT_CODES.WARNING);
+  });
+
+  it('should upgrade exit(SUCCESS) to WARNING when schema validation fails', async () => {
+    const { z } = await import('zod');
+    const schema = z.object({ name: z.string(), required: z.number() });
+
+    const handler = vi
+      .fn()
+      .mockImplementation(async (args: ArgumentsCamelCase<JsonArgs>) => {
+        args.addJsonOutput({ name: 'test' });
+        await args.exit(EXIT_CODES.SUCCESS);
+      });
+    const wrapped = makeWrappedYargsHandler('test-command', handler, {
+      jsonOutputSchema: schema,
+    });
+
+    await wrapped(
+      makeArgs({ json: true } as Partial<ArgumentsCamelCase<CommonArgs>>)
+    );
+
+    expect(mockedUiLogger.json).toHaveBeenCalledWith({ name: 'test' });
+    expect(processExitSpy).toHaveBeenCalledWith(EXIT_CODES.WARNING);
+  });
+
+  it('should not downgrade exit(ERROR) to WARNING when schema validation fails', async () => {
+    const { z } = await import('zod');
+    const schema = z.object({ name: z.string(), required: z.number() });
+
+    const handler = vi
+      .fn()
+      .mockImplementation(async (args: ArgumentsCamelCase<JsonArgs>) => {
+        args.addJsonOutput({ name: 'test' });
+        await args.exit(EXIT_CODES.ERROR);
+      });
+    const wrapped = makeWrappedYargsHandler('test-command', handler, {
+      jsonOutputSchema: schema,
+    });
+
+    await wrapped(
+      makeArgs({ json: true } as Partial<ArgumentsCamelCase<CommonArgs>>)
+    );
+
+    expect(processExitSpy).toHaveBeenCalledWith(EXIT_CODES.ERROR);
   });
 });
 

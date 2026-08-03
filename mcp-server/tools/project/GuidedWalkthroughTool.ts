@@ -67,7 +67,7 @@ export class GuidedWalkthroughTool extends Tool<InputSchemaType> {
           openWorldHint: false,
         },
       },
-      input => this.wrappedHandler(input)
+      (input, extra) => this.wrappedHandler(input, extra)
     );
   }
 }

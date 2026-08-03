@@ -123,7 +123,7 @@ describe('commands/account/list', () => {
       await accountListCommand.handler(args);
 
       expect(trackCommandUsageSpy).toHaveBeenCalledWith(
-        'accounts-list',
+        'account-list',
         expect.objectContaining({ successful: true }),
         123456
       );

@@ -45,11 +45,15 @@ export class GetApplicationInfoTool extends Tool<GetApplicationInfoInputSchema> 
     setupHubSpotConfig(absoluteCurrentWorkingDirectory);
 
     try {
-      // Get account ID from CLI config
-      const accountId = getConfigDefaultAccountIfExists()?.accountId;
+      let accountId: number | undefined;
+      try {
+        accountId = getConfigDefaultAccountIfExists()?.accountId;
+      } catch {
+        // Config file does not exist
+      }
 
       if (!accountId) {
-        const authErrorMessage = `No account ID found. Please run \`hs account auth\` to configure an account, or set a default account with \`hs account use <account>\``;
+        const authErrorMessage = `No account ID found. Call the auth-account tool to authenticate a HubSpot account.`;
         return formatTextContents(authErrorMessage);
       }
 
@@ -88,7 +92,7 @@ export class GetApplicationInfoTool extends Tool<GetApplicationInfoInputSchema> 
           openWorldHint: true,
         },
       },
-      input => this.wrappedHandler(input)
+      (input, extra) => this.wrappedHandler(input, extra)
     );
   }
 }

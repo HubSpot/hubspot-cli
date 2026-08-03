@@ -1,14 +1,13 @@
 import { TextContentResponse } from '../../types.js';
-import { Tool } from '../../Tool.js';
+import { Tool, ToolExtra } from '../../Tool.js';
 import {
   McpServer,
   RegisteredTool,
 } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { McpLogger } from '../../utils/logger.js';
 import { z } from 'zod';
-import { addFlag } from '../../utils/command.js';
+import { HubSpotCommand } from '../../utils/command.js';
 import { absoluteCurrentWorkingDirectory } from '../project/constants.js';
-import { runCommandInDir } from '../../utils/command.js';
 import { formatTextContents } from '../../utils/content.js';
 import { setupHubSpotConfig } from '../../utils/config.js';
 import { getErrorMessage } from '../../../lib/errorHandlers/index.js';
@@ -41,27 +40,23 @@ export class HsListTool extends Tool<HsListInputSchema> {
     super(mcpServer, logger, toolName);
   }
 
-  async handler({
-    path,
-    account,
-    absoluteCurrentWorkingDirectory,
-  }: HsListInputSchema): Promise<TextContentResponse> {
+  async handler(
+    { path, account, absoluteCurrentWorkingDirectory }: HsListInputSchema,
+    extra?: ToolExtra
+  ): Promise<TextContentResponse> {
     setupHubSpotConfig(absoluteCurrentWorkingDirectory);
 
-    let command = 'hs cms list';
-
-    if (path) {
-      command += ` ${path}`;
-    }
+    const command = new HubSpotCommand(path ? `cms list ${path}` : 'cms list');
 
     if (account) {
-      command = addFlag(command, 'account', account);
+      command.addFlag('account', account);
     }
 
     try {
-      const { stdout, stderr } = await runCommandInDir(
+      const { stdout, stderr } = await this.runCommand(
         absoluteCurrentWorkingDirectory,
-        command
+        command,
+        extra
       );
 
       return formatTextContents(stdout, stderr);
@@ -93,7 +88,7 @@ export class HsListTool extends Tool<HsListInputSchema> {
           openWorldHint: true,
         },
       },
-      input => this.wrappedHandler(input)
+      (input, extra) => this.wrappedHandler(input, extra)
     );
   }
 }

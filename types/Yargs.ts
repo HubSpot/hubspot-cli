@@ -52,9 +52,13 @@ export type StringArgType = Options & {
   type: 'string';
 };
 
-export type JSONOutputArgs = Options & {
+export type JSONOutputArgs<
+  J extends Record<string, unknown> = Record<string, unknown>,
+> = Options & {
   json?: boolean;
+  jsonSchema?: boolean;
   formatOutputAsJson?: boolean;
+  addJsonOutput: (data: Partial<J>) => void;
 };
 
 export type ProjectDevArgs = CommonArgs &

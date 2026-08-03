@@ -6,13 +6,16 @@ import {
 } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { McpLogger } from '../../../utils/logger.js';
 import { runCommandInDir } from '../../../utils/command.js';
-import { addFlag } from '../../../utils/command.js';
 import { MockedFunction, Mocked } from 'vitest';
 import { mcpFeedbackRequest } from '../../../utils/feedbackTracking.js';
 
 vi.mock('@modelcontextprotocol/sdk/server/mcp.js');
 vi.mock('../../../utils/logger.js');
-vi.mock('../../../utils/command');
+vi.mock('../../../utils/command', async importOriginal => {
+  const mod =
+    await importOriginal<typeof import('../../../utils/command.js')>();
+  return { ...mod, runCommandInDir: vi.fn() };
+});
 vi.mock('../../../utils/feedbackTracking');
 vi.mock('@hubspot/local-dev-lib/config');
 
@@ -23,7 +26,6 @@ const mockMcpFeedbackRequest = mcpFeedbackRequest as MockedFunction<
 const mockRunCommandInDir = runCommandInDir as MockedFunction<
   typeof runCommandInDir
 >;
-const mockAddFlag = addFlag as MockedFunction<typeof addFlag>;
 
 describe('HsCreateFunctionTool', () => {
   let mockMcpServer: Mocked<McpServer>;
@@ -90,18 +92,6 @@ describe('HsCreateFunctionTool', () => {
     });
 
     it('should not prompt when all required params provided', async () => {
-      mockAddFlag
-        .mockReturnValueOnce('hs cms function create --functions-folder api')
-        .mockReturnValueOnce(
-          'hs cms function create --functions-folder api --filename test-function'
-        )
-        .mockReturnValueOnce(
-          'hs cms function create --functions-folder api --filename test-function --endpoint-method GET'
-        )
-        .mockReturnValueOnce(
-          'hs cms function create --functions-folder api --filename test-function --endpoint-method GET --endpoint-path /api/test'
-        );
-
       mockRunCommandInDir.mockResolvedValue({
         stdout: 'Function created successfully',
         stderr: '',
@@ -158,18 +148,6 @@ describe('HsCreateFunctionTool', () => {
     });
 
     it('should execute command with all required parameters (default GET method)', async () => {
-      mockAddFlag
-        .mockReturnValueOnce('hs cms function create --functions-folder api')
-        .mockReturnValueOnce(
-          'hs cms function create --functions-folder api --filename test-function'
-        )
-        .mockReturnValueOnce(
-          'hs cms function create --functions-folder api --filename test-function --endpoint-method GET'
-        )
-        .mockReturnValueOnce(
-          'hs cms function create --functions-folder api --filename test-function --endpoint-method GET --endpoint-path /api/test'
-        );
-
       mockRunCommandInDir.mockResolvedValue({
         stdout: 'Function created successfully',
         stderr: '',
@@ -182,47 +160,31 @@ describe('HsCreateFunctionTool', () => {
         endpointPath: '/api/test',
       });
 
-      expect(mockAddFlag).toHaveBeenCalledWith(
-        'hs cms function create',
-        'functions-folder',
-        'api'
-      );
-      expect(mockAddFlag).toHaveBeenCalledWith(
-        expect.stringContaining('functions-folder'),
-        'filename',
-        'test-function'
-      );
-      expect(mockAddFlag).toHaveBeenCalledWith(
-        expect.stringContaining('filename'),
-        'endpoint-method',
-        'GET'
-      );
-      expect(mockAddFlag).toHaveBeenCalledWith(
-        expect.stringContaining('endpoint-method'),
-        'endpoint-path',
-        '/api/test'
-      );
       expect(mockRunCommandInDir).toHaveBeenCalledWith(
         '/test/dir',
-        expect.stringContaining('hs cms function create')
+        expect.objectContaining({
+          executable: 'hs',
+          args: expect.arrayContaining([
+            'cms',
+            'function',
+            'create',
+            '--functions-folder',
+            'api',
+            '--filename',
+            'test-function',
+            '--endpoint-method',
+            'GET',
+            '--endpoint-path',
+            '/api/test',
+          ]),
+        }),
+        expect.any(Function)
       );
       expect(result.content).toHaveLength(2);
       expect(result.content[0].text).toContain('Function created successfully');
     });
 
     it('should execute command with POST method', async () => {
-      mockAddFlag
-        .mockReturnValueOnce('hs cms function create --functions-folder api')
-        .mockReturnValueOnce(
-          'hs cms function create --functions-folder api --filename post-function'
-        )
-        .mockReturnValueOnce(
-          'hs cms function create "POST Function" --functions-folder api --filename post-function --endpoint-method POST'
-        )
-        .mockReturnValueOnce(
-          'hs cms function create "POST Function" --functions-folder api --filename post-function --endpoint-method POST --endpoint-path /api/create'
-        );
-
       mockRunCommandInDir.mockResolvedValue({
         stdout: 'POST function created successfully',
         stderr: '',
@@ -236,10 +198,12 @@ describe('HsCreateFunctionTool', () => {
         endpointPath: '/api/create',
       });
 
-      expect(mockAddFlag).toHaveBeenCalledWith(
-        expect.stringContaining('filename'),
-        'endpoint-method',
-        'POST'
+      expect(mockRunCommandInDir).toHaveBeenCalledWith(
+        '/test/dir',
+        expect.objectContaining({
+          args: expect.arrayContaining(['--endpoint-method', 'POST']),
+        }),
+        expect.any(Function)
       );
       expect(result.content[0].text).toContain(
         'POST function created successfully'
@@ -247,24 +211,12 @@ describe('HsCreateFunctionTool', () => {
     });
 
     it('should execute command with PUT method', async () => {
-      mockAddFlag
-        .mockReturnValueOnce('hs cms function create --functions-folder api')
-        .mockReturnValueOnce(
-          'hs cms function create "PUT Function" --functions-folder api --filename put-function'
-        )
-        .mockReturnValueOnce(
-          'hs cms function create "PUT Function" --functions-folder api --filename put-function --endpoint-method PUT'
-        )
-        .mockReturnValueOnce(
-          'hs cms function create "PUT Function" --functions-folder api --filename put-function --endpoint-method PUT --endpoint-path /api/update'
-        );
-
       mockRunCommandInDir.mockResolvedValue({
         stdout: 'PUT function created successfully',
         stderr: '',
       });
 
-      const result = await tool.handler({
+      await tool.handler({
         absoluteCurrentWorkingDirectory: '/test/dir',
         functionsFolder: 'api',
         filename: 'put-function',
@@ -272,35 +224,22 @@ describe('HsCreateFunctionTool', () => {
         endpointPath: '/api/update',
       });
 
-      expect(mockAddFlag).toHaveBeenCalledWith(
-        expect.stringContaining('filename'),
-        'endpoint-method',
-        'PUT'
-      );
-      expect(result.content[0].text).toContain(
-        'PUT function created successfully'
+      expect(mockRunCommandInDir).toHaveBeenCalledWith(
+        '/test/dir',
+        expect.objectContaining({
+          args: expect.arrayContaining(['--endpoint-method', 'PUT']),
+        }),
+        expect.any(Function)
       );
     });
 
     it('should execute command with DELETE method', async () => {
-      mockAddFlag
-        .mockReturnValueOnce('hs cms function create --functions-folder api')
-        .mockReturnValueOnce(
-          'hs cms function create "DELETE Function" --functions-folder api --filename delete-function'
-        )
-        .mockReturnValueOnce(
-          'hs cms function create "DELETE Function" --functions-folder api --filename delete-function --endpoint-method DELETE'
-        )
-        .mockReturnValueOnce(
-          'hs cms function create "DELETE Function" --functions-folder api --filename delete-function --endpoint-method DELETE --endpoint-path /api/delete'
-        );
-
       mockRunCommandInDir.mockResolvedValue({
         stdout: 'DELETE function created successfully',
         stderr: '',
       });
 
-      const result = await tool.handler({
+      await tool.handler({
         absoluteCurrentWorkingDirectory: '/test/dir',
         functionsFolder: 'api',
         filename: 'delete-function',
@@ -308,35 +247,22 @@ describe('HsCreateFunctionTool', () => {
         endpointPath: '/api/delete',
       });
 
-      expect(mockAddFlag).toHaveBeenCalledWith(
-        expect.stringContaining('filename'),
-        'endpoint-method',
-        'DELETE'
-      );
-      expect(result.content[0].text).toContain(
-        'DELETE function created successfully'
+      expect(mockRunCommandInDir).toHaveBeenCalledWith(
+        '/test/dir',
+        expect.objectContaining({
+          args: expect.arrayContaining(['--endpoint-method', 'DELETE']),
+        }),
+        expect.any(Function)
       );
     });
 
     it('should execute command with PATCH method', async () => {
-      mockAddFlag
-        .mockReturnValueOnce('hs cms function create --functions-folder api')
-        .mockReturnValueOnce(
-          'hs cms function create "PATCH Function" --functions-folder api --filename patch-function'
-        )
-        .mockReturnValueOnce(
-          'hs cms function create "PATCH Function" --functions-folder api --filename patch-function --endpoint-method PATCH'
-        )
-        .mockReturnValueOnce(
-          'hs cms function create "PATCH Function" --functions-folder api --filename patch-function --endpoint-method PATCH --endpoint-path /api/patch'
-        );
-
       mockRunCommandInDir.mockResolvedValue({
         stdout: 'PATCH function created successfully',
         stderr: '',
       });
 
-      const result = await tool.handler({
+      await tool.handler({
         absoluteCurrentWorkingDirectory: '/test/dir',
         functionsFolder: 'api',
         filename: 'patch-function',
@@ -344,13 +270,12 @@ describe('HsCreateFunctionTool', () => {
         endpointPath: '/api/patch',
       });
 
-      expect(mockAddFlag).toHaveBeenCalledWith(
-        expect.stringContaining('filename'),
-        'endpoint-method',
-        'PATCH'
-      );
-      expect(result.content[0].text).toContain(
-        'PATCH function created successfully'
+      expect(mockRunCommandInDir).toHaveBeenCalledWith(
+        '/test/dir',
+        expect.objectContaining({
+          args: expect.arrayContaining(['--endpoint-method', 'PATCH']),
+        }),
+        expect.any(Function)
       );
     });
 
@@ -371,20 +296,6 @@ describe('HsCreateFunctionTool', () => {
     });
 
     it('should handle stderr output', async () => {
-      mockAddFlag
-        .mockReturnValueOnce(
-          'hs cms function create "Test Function" --functions-folder api'
-        )
-        .mockReturnValueOnce(
-          'hs cms function create "Test Function" --functions-folder api --filename test-function'
-        )
-        .mockReturnValueOnce(
-          'hs cms function create "Test Function" --functions-folder api --filename test-function --endpoint-method GET'
-        )
-        .mockReturnValueOnce(
-          'hs cms function create "Test Function" --functions-folder api --filename test-function --endpoint-method GET --endpoint-path /api/test'
-        );
-
       mockRunCommandInDir.mockResolvedValue({
         stdout: 'Function created successfully',
         stderr: 'Warning: Using deprecated function syntax',
@@ -405,20 +316,6 @@ describe('HsCreateFunctionTool', () => {
     });
 
     it('should execute command with destination path', async () => {
-      mockAddFlag
-        .mockReturnValueOnce(
-          'hs cms function create "functions/custom" --functions-folder api'
-        )
-        .mockReturnValueOnce(
-          'hs cms function create "functions/custom" --functions-folder api --filename test-function'
-        )
-        .mockReturnValueOnce(
-          'hs cms function create "functions/custom" --functions-folder api --filename test-function --endpoint-method GET'
-        )
-        .mockReturnValueOnce(
-          'hs cms function create "functions/custom" --functions-folder api --filename test-function --endpoint-method GET --endpoint-path /api/test'
-        );
-
       mockRunCommandInDir.mockResolvedValue({
         stdout: 'Function created at custom path',
         stderr: '',
@@ -434,7 +331,10 @@ describe('HsCreateFunctionTool', () => {
 
       expect(mockRunCommandInDir).toHaveBeenCalledWith(
         '/test/dir',
-        expect.stringContaining('"functions/custom"')
+        expect.objectContaining({
+          args: expect.arrayContaining(['functions/custom']),
+        }),
+        expect.any(Function)
       );
       expect(result.content[0].text).toContain(
         'Function created at custom path'

@@ -41,7 +41,7 @@ export type ApiArgs = CommonArgs &
   ConfigArgs &
   EnvironmentArgs &
   AccountArgs &
-  JSONOutputArgs & {
+  JSONOutputArgs<Record<string, JSONValue>> & {
     endpoint: string;
     method?: HttpMethod;
     data?: string;
@@ -74,6 +74,7 @@ async function handler(args: ArgumentsCamelCase<ApiArgs>): Promise<void> {
     json: formatOutputAsJson,
     exit,
     addUsageMetadata,
+    addJsonOutput,
   } = args;
   const method = resolveMethod(args);
 
@@ -132,9 +133,8 @@ async function handler(args: ArgumentsCamelCase<ApiArgs>): Promise<void> {
 
     if (response !== undefined) {
       const responseData = response.data as Record<string, JSONValue>;
-      if (formatOutputAsJson) {
-        uiLogger.json(responseData);
-      } else {
+      addJsonOutput(responseData);
+      if (!formatOutputAsJson) {
         uiLogger.log(commands.api.responseLog);
         uiLogger.log(JSON.stringify(responseData, null, 2));
       }
@@ -153,22 +153,20 @@ async function handler(args: ArgumentsCamelCase<ApiArgs>): Promise<void> {
     debugError(error, errorContext);
 
     const errorData = error.data as Record<string, JSONValue> | undefined;
-    if (formatOutputAsJson && errorData) {
-      uiLogger.json(errorData);
-    } else if (errorData) {
+    if (errorData) {
+      addJsonOutput(errorData);
+    }
+    if (!formatOutputAsJson) {
       if (error.status && error.statusText) {
         uiLogger.error(
           commands.api.errors.statusLine(error.status, error.statusText)
         );
       }
-      uiLogger.log(JSON.stringify(errorData, null, 2));
-    } else {
-      if (error.status && error.statusText) {
-        uiLogger.error(
-          commands.api.errors.statusLine(error.status, error.statusText)
-        );
+      if (errorData) {
+        uiLogger.log(JSON.stringify(errorData, null, 2));
+      } else {
+        uiLogger.error(error.message);
       }
-      uiLogger.error(error.message);
     }
 
     return exit(EXIT_CODES.ERROR);

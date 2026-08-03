@@ -62,9 +62,9 @@ const demandCommandSpy = vi
   .mockReturnValue(yargs as Argv);
 
 const getProjectConfigSpy = vi.spyOn(projectConfigLib, 'getProjectConfig');
-const isSupportedPlatformVersionSpy = vi.spyOn(
+const isKnownPlatformVersionSpy = vi.spyOn(
   platformVersionLib,
-  'isSupportedPlatformVersion'
+  'isKnownPlatformVersion'
 );
 const processExitSpy = vi.spyOn(process, 'exit');
 const uiLoggerErrorSpy = vi.spyOn(uiLogger, 'error');
@@ -137,7 +137,7 @@ describe('commands/project', () => {
     it('should have platform version validation functions available', () => {
       // Verify the necessary functions are available for middleware
       expect(getProjectConfigSpy).toBeDefined();
-      expect(isSupportedPlatformVersionSpy).toBeDefined();
+      expect(isKnownPlatformVersionSpy).toBeDefined();
       expect(uiLoggerErrorSpy).toBeDefined();
       expect(processExitSpy).toBeDefined();
     });

@@ -87,7 +87,7 @@ export class FindProjectsTool extends Tool<FindProjectsInputSchema> {
           idempotentHint: true,
         },
       },
-      input => this.wrappedHandler(input)
+      (input, extra) => this.wrappedHandler(input, extra)
     );
   }
 }

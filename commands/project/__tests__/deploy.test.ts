@@ -19,6 +19,7 @@ import * as promptUtils from '../../../lib/prompts/promptUtils.js';
 import * as projectProfilePrompt from '../../../lib/prompts/projectProfilePrompt.js';
 import * as projectProfiles from '../../../lib/projects/projectProfiles.js';
 import * as platformVersionLib from '@hubspot/project-parsing-lib/projects';
+import { PLATFORM_VERSIONS } from '@hubspot/project-parsing-lib/constants';
 import { trackCommandUsage } from '../../../lib/usageTracking.js';
 import { EXIT_CODES } from '../../../lib/enums/exitCodes.js';
 import { ProjectConfig } from '../../../types/Projects.js';
@@ -57,6 +58,7 @@ const getProjectConfigSpy = vi.spyOn(projectUtils, 'getProjectConfig');
 const projectNamePromptSpy = vi.spyOn(projectNamePrompt, 'projectNamePrompt');
 const getProjectDetailUrlSpy = vi.spyOn(projectUrlUtils, 'getProjectDetailUrl');
 const fetchProjectSpy = vi.spyOn(projectApiUtils, 'fetchProject');
+const fetchProjectBuildsSpy = vi.spyOn(projectApiUtils, 'fetchProjectBuilds');
 const deployProjectV1Spy = vi.spyOn(projectApiUtils, 'deployProjectV1');
 const getConfigAccountByIdSpy = vi.spyOn(configUtils, 'getConfigAccountById');
 const promptUserSpy = vi.spyOn(promptUtils, 'promptUser');
@@ -67,6 +69,11 @@ const projectProfilePromptSpy = vi.spyOn(
 );
 const loadProfileSpy = vi.spyOn(projectProfiles, 'loadProfile');
 const isLegacyProjectSpy = vi.spyOn(platformVersionLib, 'isLegacyProject');
+const meetsMinimumPlatformVersionSpy = vi.spyOn(
+  platformVersionLib,
+  'meetsMinimumPlatformVersion'
+);
+const getBuildStatusSpy = vi.spyOn(projectApiUtils, 'getBuildStatus');
 
 const optionsSpy = vi
   .spyOn(yargs as Argv, 'options')
@@ -191,6 +198,13 @@ describe('commands/project/deploy', () => {
         mockHubSpotHttpResponse(deployDetails)
       );
       isLegacyProjectSpy.mockReturnValue(true);
+      meetsMinimumPlatformVersionSpy.mockReturnValue(false);
+      getBuildStatusSpy.mockReturnValue(
+        mockHubSpotHttpResponse({
+          buildId: args.buildId,
+          platformVersion: PLATFORM_VERSIONS.v2026_03,
+        })
+      );
 
       // Spy on process.exit so our tests don't close when it's called
       // @ts-expect-error Doesn't match the actual signature because then the linter complains about unused variables
@@ -284,6 +298,55 @@ describe('commands/project/deploy', () => {
       expect(processExitSpy).toHaveBeenCalledWith(EXIT_CODES.ERROR);
     });
 
+    it('should log an error and exit when there are no successful builds', async () => {
+      delete args.buildId;
+      fetchProjectSpy.mockReturnValue(
+        mockHubSpotHttpResponse<Project>({
+          ...exampleProject,
+          latestBuild: { ...exampleProject.latestBuild!, status: 'FAILURE' },
+        })
+      );
+      fetchProjectBuildsSpy.mockReturnValue(
+        mockHubSpotHttpResponse({ results: [], paging: null })
+      );
+
+      await projectDeployCommand.handler(args);
+
+      expect(uiLogger.error).toHaveBeenCalledTimes(1);
+      expect(uiLogger.error).toHaveBeenCalledWith(
+        'Deploy error: no successful builds for this project were found.'
+      );
+      expect(processExitSpy).toHaveBeenCalledWith(EXIT_CODES.ERROR);
+    });
+
+    it('should use the last successful build when the latest build failed', async () => {
+      delete args.buildId;
+      const successfulBuild = {
+        ...exampleProject.latestBuild!,
+        buildId: 5,
+        status: 'SUCCESS',
+      };
+      fetchProjectSpy.mockReturnValue(
+        mockHubSpotHttpResponse<Project>({
+          ...exampleProject,
+          latestBuild: { ...exampleProject.latestBuild!, status: 'FAILURE' },
+        })
+      );
+      fetchProjectBuildsSpy.mockReturnValue(
+        mockHubSpotHttpResponse({
+          results: [successfulBuild],
+          paging: null,
+        })
+      );
+      promptUserSpy.mockResolvedValue({ buildId: successfulBuild.buildId });
+
+      await projectDeployCommand.handler(args);
+
+      expect(promptUserSpy).toHaveBeenCalledWith(
+        expect.objectContaining({ default: successfulBuild.buildId })
+      );
+    });
+
     it('should log an error and exit when buildId option is not a valid build', async () => {
       args.buildId = (exampleProject.latestBuild?.buildId ?? 0) + 1;
       await projectDeployCommand.handler(args);
@@ -330,6 +393,23 @@ describe('commands/project/deploy', () => {
         'You must specify a build to deploy'
       );
       expect(processExitSpy).toHaveBeenCalledTimes(1);
+      expect(processExitSpy).toHaveBeenCalledWith(EXIT_CODES.ERROR);
+    });
+
+    it('should log an error and exit when build platform version does not support deploy', async () => {
+      meetsMinimumPlatformVersionSpy.mockReturnValue(true);
+      getBuildStatusSpy.mockReturnValue(
+        mockHubSpotHttpResponse({
+          buildId: args.buildId,
+          platformVersion: PLATFORM_VERSIONS.UNSTABLE,
+        })
+      );
+      await projectDeployCommand.handler(args);
+      expect(uiLogger.error).toHaveBeenCalledTimes(1);
+      expect(uiLogger.error).toHaveBeenCalledWith(
+        expect.stringContaining('release create')
+      );
+      expect(deployProjectV1Spy).not.toHaveBeenCalled();
       expect(processExitSpy).toHaveBeenCalledWith(EXIT_CODES.ERROR);
     });
 

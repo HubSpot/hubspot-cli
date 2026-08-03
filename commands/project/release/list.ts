@@ -22,6 +22,11 @@ import { makeYargsBuilder } from '../../../lib/yargsUtils.js';
 import { commands } from '../../../lang/en.js';
 import { renderTable } from '../../../ui/render.js';
 import { makeWrappedYargsHandler } from '../../../lib/yargs/makeWrappedYargsHandler.js';
+import {
+  ReleaseListJsonOutput,
+  ReleaseListSchema,
+  mapReleaseToJsonOutput,
+} from '../../../lib/jsonOutput.js';
 
 const command = 'list';
 // const describe = commands.project.release.list.describe;
@@ -33,7 +38,7 @@ export type ProjectReleaseListArgs = CommonArgs &
   ConfigArgs &
   AccountArgs &
   EnvironmentArgs &
-  JSONOutputArgs & {
+  JSONOutputArgs<ReleaseListJsonOutput> & {
     limit?: number;
   };
 
@@ -77,7 +82,13 @@ async function fetchAndDisplayReleases(
 async function handler(
   args: ArgumentsCamelCase<ProjectReleaseListArgs>
 ): Promise<void> {
-  const { derivedAccountId, limit, json: formatOutputAsJson } = args;
+  const {
+    derivedAccountId,
+    limit,
+    json: formatOutputAsJson,
+    exit,
+    addJsonOutput,
+  } = args;
 
   const { projectConfig, projectDir } = await getProjectConfig();
 
@@ -85,7 +96,7 @@ async function handler(
     validateProjectConfig(projectConfig, projectDir);
   } catch (error) {
     logError(error);
-    process.exit(EXIT_CODES.ERROR);
+    return exit(EXIT_CODES.ERROR);
   }
 
   const projectName = projectConfig.name;
@@ -95,7 +106,12 @@ async function handler(
       const { data } = await listReleases(derivedAccountId, projectName, {
         limit,
       });
-      uiLogger.json(data);
+      addJsonOutput({
+        results: data.results.map(mapReleaseToJsonOutput),
+        paging: data.paging
+          ? { next: { after: data.paging.next.after } }
+          : undefined,
+      });
     } else {
       await fetchAndDisplayReleases(derivedAccountId, projectName, { limit });
     }
@@ -119,10 +135,10 @@ async function handler(
         })
       );
     }
-    process.exit(EXIT_CODES.ERROR);
+    return exit(EXIT_CODES.ERROR);
   }
 
-  process.exit(EXIT_CODES.SUCCESS);
+  return exit(EXIT_CODES.SUCCESS);
 }
 
 function projectReleaseListBuilder(yargs: Argv): Argv<ProjectReleaseListArgs> {
@@ -164,7 +180,9 @@ const projectReleaseListCommand: YargsCommandModule<
   command,
   describe,
   builder,
-  handler: makeWrappedYargsHandler('project-release-list', handler),
+  handler: makeWrappedYargsHandler('project-release-list', handler, {
+    jsonOutputSchema: ReleaseListSchema,
+  }),
 };
 
 export default projectReleaseListCommand;

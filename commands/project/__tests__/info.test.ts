@@ -1,5 +1,5 @@
 import yargs, { ArgumentsCamelCase, Argv } from 'yargs';
-import projectInfoCommand from '../info.js';
+import projectInfoCommand, { type ProjectInfoArgs } from '../info.js';
 import { getProjectConfig } from '../../../lib/projects/config.js';
 import { isLegacyProject } from '@hubspot/project-parsing-lib/projects';
 import { fetchProject } from '@hubspot/local-dev-lib/api/projects';
@@ -9,14 +9,6 @@ import {
 } from '../../../lib/projects/projectInfo.js';
 import { uiLogger } from '../../../lib/ui/logger.js';
 import { EXIT_CODES } from '../../../lib/enums/exitCodes.js';
-import {
-  AccountArgs,
-  CommonArgs,
-  ConfigArgs,
-  EnvironmentArgs,
-  JSONOutputArgs,
-  UsageTrackingArgs,
-} from '../../../types/Yargs.js';
 
 vi.mock('../../../lib/commonOpts');
 vi.mock('../../../lib/errorHandlers/index.js');
@@ -38,13 +30,6 @@ vi.mock('@hubspot/local-dev-lib/config', async importOriginal => {
     getConfigAccountIfExists: vi.fn().mockReturnValue(undefined),
   };
 });
-
-type ProjectInfoArgs = CommonArgs &
-  ConfigArgs &
-  AccountArgs &
-  EnvironmentArgs &
-  JSONOutputArgs &
-  UsageTrackingArgs;
 
 const mockedGetProjectConfig = vi.mocked(getProjectConfig);
 const mockedIsLegacyProject = vi.mocked(isLegacyProject);
@@ -121,6 +106,7 @@ describe('commands/project/info', () => {
       formatOutputAsJson: false,
       exit: mockExit,
       addUsageMetadata: vi.fn(),
+      addJsonOutput: vi.fn(),
     } as unknown as ArgumentsCamelCase<ProjectInfoArgs>;
 
     beforeEach(() => {
@@ -202,7 +188,7 @@ describe('commands/project/info', () => {
 
       await projectInfoCommand.handler(jsonArgs);
 
-      expect(mockedUiLogger.json).toHaveBeenCalledWith(mockProjectInfo);
+      expect(mockArgs.addJsonOutput).toHaveBeenCalledWith(mockProjectInfo);
       expect(mockedLogProjectInfo).not.toHaveBeenCalled();
     });
 
