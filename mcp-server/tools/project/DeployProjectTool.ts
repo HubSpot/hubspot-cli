@@ -1,18 +1,17 @@
 import { TextContent, TextContentResponse } from '../../types.js';
-import { Tool } from '../../Tool.js';
+import { Tool, ToolExtra } from '../../Tool.js';
 import {
   McpServer,
   RegisteredTool,
 } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { McpLogger } from '../../utils/logger.js';
 import { z } from 'zod';
-import { addFlag } from '../../utils/command.js';
+import { HubSpotCommand } from '../../utils/command.js';
 
 import {
   absoluteCurrentWorkingDirectory,
   absoluteProjectPath,
 } from './constants.js';
-import { runCommandInDir } from '../../utils/command.js';
 import { formatTextContents, formatTextContent } from '../../utils/content.js';
 import { setupHubSpotConfig } from '../../utils/config.js';
 
@@ -39,27 +38,30 @@ export class DeployProjectTool extends Tool<InputSchemaType> {
   constructor(mcpServer: McpServer, logger: McpLogger) {
     super(mcpServer, logger, toolName);
   }
-  async handler({
-    absoluteProjectPath,
-    absoluteCurrentWorkingDirectory,
-    buildNumber,
-  }: InputSchemaType): Promise<TextContentResponse> {
+  async handler(
+    {
+      absoluteProjectPath,
+      absoluteCurrentWorkingDirectory,
+      buildNumber,
+    }: InputSchemaType,
+    extra?: ToolExtra
+  ): Promise<TextContentResponse> {
     setupHubSpotConfig(absoluteCurrentWorkingDirectory);
-    let command = `hs project deploy`;
     const content: TextContent[] = [];
 
     if (!buildNumber) {
-      const { stdout } = await runCommandInDir(
+      const { stdout } = await this.runCommand(
         absoluteProjectPath,
-        `hs project list-builds --limit 100`
+        new HubSpotCommand('project list-builds', [
+          { name: 'limit', value: 100 },
+        ]),
+        extra
       );
       content.push(
         formatTextContent(
           `Ask the user which build number they would like to deploy?  Build information: ${stdout}`
         )
       );
-    } else {
-      command = addFlag(command, 'build', buildNumber);
     }
 
     if (content.length) {
@@ -68,9 +70,14 @@ export class DeployProjectTool extends Tool<InputSchemaType> {
       };
     }
 
-    const { stdout, stderr } = await runCommandInDir(
+    const command = new HubSpotCommand('project deploy', [
+      { name: 'build', value: buildNumber! },
+    ]);
+
+    const { stdout, stderr } = await this.runCommand(
       absoluteProjectPath,
-      command
+      command,
+      extra
     );
 
     return formatTextContents(stdout, stderr);
@@ -91,7 +98,7 @@ export class DeployProjectTool extends Tool<InputSchemaType> {
           openWorldHint: true,
         },
       },
-      input => this.wrappedHandler(input)
+      (input, extra) => this.wrappedHandler(input, extra)
     );
   }
 }

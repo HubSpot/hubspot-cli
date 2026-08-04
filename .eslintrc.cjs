@@ -22,6 +22,7 @@ module.exports = {
       'error',
       {
         caughtErrors: 'none',
+        argsIgnorePattern: '^_',
       },
     ],
   },

@@ -6,13 +6,16 @@ import {
 } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { McpLogger } from '../../../utils/logger.js';
 import { runCommandInDir } from '../../../utils/command.js';
-import { addFlag } from '../../../utils/command.js';
 import { MockedFunction, Mocked } from 'vitest';
 import { mcpFeedbackRequest } from '../../../utils/feedbackTracking.js';
 
 vi.mock('@modelcontextprotocol/sdk/server/mcp.js');
 vi.mock('../../../utils/logger.js');
-vi.mock('../../../utils/command');
+vi.mock('../../../utils/command', async importOriginal => {
+  const mod =
+    await importOriginal<typeof import('../../../utils/command.js')>();
+  return { ...mod, runCommandInDir: vi.fn() };
+});
 vi.mock('../../../utils/feedbackTracking');
 
 const mockMcpFeedbackRequest = mcpFeedbackRequest as MockedFunction<
@@ -22,7 +25,6 @@ const mockMcpFeedbackRequest = mcpFeedbackRequest as MockedFunction<
 const mockRunCommandInDir = runCommandInDir as MockedFunction<
   typeof runCommandInDir
 >;
-const mockAddFlag = addFlag as MockedFunction<typeof addFlag>;
 
 describe('HsListTool', () => {
   let mockMcpServer: Mocked<McpServer>;
@@ -55,7 +57,6 @@ describe('HsListTool', () => {
     it('should register the tool with the MCP server', () => {
       const result = tool.register();
 
-      // First assertion - verify original description
       expect(mockMcpServer.registerTool).toHaveBeenCalledWith(
         'list-cms-remote-contents',
         expect.objectContaining({
@@ -84,7 +85,11 @@ describe('HsListTool', () => {
 
       expect(mockRunCommandInDir).toHaveBeenCalledWith(
         '/test/dir',
-        'hs cms list'
+        expect.objectContaining({
+          executable: 'hs',
+          args: expect.arrayContaining(['cms', 'list']),
+        }),
+        expect.any(Function)
       );
       expect(result.content).toHaveLength(2);
       expect(result.content[0].text).toContain('file1.html\nfile2.js\nfolder/');
@@ -104,7 +109,11 @@ describe('HsListTool', () => {
 
       expect(mockRunCommandInDir).toHaveBeenCalledWith(
         '/test/dir',
-        'hs cms list /my-modules'
+        expect.objectContaining({
+          executable: 'hs',
+          args: expect.arrayContaining(['cms', 'list', '/my-modules']),
+        }),
+        expect.any(Function)
       );
       expect(result.content).toHaveLength(2);
       expect(result.content[0].text).toContain('nested-file.html');
@@ -112,7 +121,6 @@ describe('HsListTool', () => {
     });
 
     it('should execute hs cms list command with account parameter', async () => {
-      mockAddFlag.mockReturnValue('hs cms list --account test-account');
       mockRunCommandInDir.mockResolvedValue({
         stdout: 'account-specific-files.html',
         stderr: '',
@@ -123,14 +131,18 @@ describe('HsListTool', () => {
         account: 'test-account',
       });
 
-      expect(mockAddFlag).toHaveBeenCalledWith(
-        'hs cms list',
-        'account',
-        'test-account'
-      );
       expect(mockRunCommandInDir).toHaveBeenCalledWith(
         '/test/dir',
-        'hs cms list --account test-account'
+        expect.objectContaining({
+          executable: 'hs',
+          args: expect.arrayContaining([
+            'cms',
+            'list',
+            '--account',
+            'test-account',
+          ]),
+        }),
+        expect.any(Function)
       );
       expect(result.content).toHaveLength(2);
       expect(result.content[0].text).toContain('account-specific-files.html');
@@ -138,9 +150,6 @@ describe('HsListTool', () => {
     });
 
     it('should execute hs cms list command with both path and account parameters', async () => {
-      mockAddFlag.mockReturnValue(
-        'hs cms list /my-path --account test-account'
-      );
       mockRunCommandInDir.mockResolvedValue({
         stdout: 'path-and-account-files.html',
         stderr: '',
@@ -152,14 +161,19 @@ describe('HsListTool', () => {
         account: 'test-account',
       });
 
-      expect(mockAddFlag).toHaveBeenCalledWith(
-        'hs cms list /my-path',
-        'account',
-        'test-account'
-      );
       expect(mockRunCommandInDir).toHaveBeenCalledWith(
         '/test/dir',
-        'hs cms list /my-path --account test-account'
+        expect.objectContaining({
+          executable: 'hs',
+          args: expect.arrayContaining([
+            'cms',
+            'list',
+            '/my-path',
+            '--account',
+            'test-account',
+          ]),
+        }),
+        expect.any(Function)
       );
       expect(result.content).toHaveLength(2);
       expect(result.content[0].text).toContain('path-and-account-files.html');

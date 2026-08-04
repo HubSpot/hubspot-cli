@@ -14,21 +14,11 @@ vi.mock('@modelcontextprotocol/sdk/server/mcp.js');
 vi.mock('../../../utils/logger.js');
 vi.mock('@hubspot/project-parsing-lib/profiles');
 vi.mock('../../../../lib/projects/config.js');
-vi.mock('../../../utils/command', () => ({
-  runCommandInDir: vi.fn(),
-  addFlag: vi.fn(
-    (
-      command: string,
-      flagName: string,
-      value: string | number | boolean | string[]
-    ) => {
-      if (Array.isArray(value)) {
-        return `${command} --${flagName} ${value.map(item => `"${item}"`).join(' ')}`;
-      }
-      return `${command} --${flagName} "${value}"`;
-    }
-  ),
-}));
+vi.mock('../../../utils/command', async importOriginal => {
+  const mod =
+    await importOriginal<typeof import('../../../utils/command.js')>();
+  return { ...mod, runCommandInDir: vi.fn() };
+});
 vi.mock('../../../utils/feedbackTracking');
 
 const mockMcpFeedbackRequest = mcpFeedbackRequest as MockedFunction<
@@ -119,15 +109,18 @@ describe('mcp-server/tools/project/UploadProjectTools', () => {
 
       expect(mockRunCommandInDir).toHaveBeenCalledWith(
         '/test/project',
-        expect.stringContaining('hs project upload')
-      );
-      expect(mockRunCommandInDir).toHaveBeenCalledWith(
-        '/test/project',
-        expect.stringContaining('--force')
-      );
-      expect(mockRunCommandInDir).toHaveBeenCalledWith(
-        '/test/project',
-        expect.stringContaining('--message "Test upload message"')
+        expect.objectContaining({
+          executable: 'hs',
+          args: expect.arrayContaining([
+            'project',
+            'upload',
+            '--force',
+            'true',
+            '--message',
+            'Test upload message',
+          ]),
+        }),
+        expect.any(Function)
       );
 
       expect(result).toEqual({
@@ -177,15 +170,18 @@ describe('mcp-server/tools/project/UploadProjectTools', () => {
 
       expect(mockRunCommandInDir).toHaveBeenCalledWith(
         '/test/project',
-        expect.stringContaining('hs project upload')
-      );
-      expect(mockRunCommandInDir).toHaveBeenCalledWith(
-        '/test/project',
-        expect.stringContaining('--force')
-      );
-      expect(mockRunCommandInDir).toHaveBeenCalledWith(
-        '/test/project',
-        expect.stringContaining('--message "Test upload message"')
+        expect.objectContaining({
+          executable: 'hs',
+          args: expect.arrayContaining([
+            'project',
+            'upload',
+            '--force',
+            'true',
+            '--message',
+            'Test upload message',
+          ]),
+        }),
+        expect.any(Function)
       );
     });
 
@@ -202,19 +198,20 @@ describe('mcp-server/tools/project/UploadProjectTools', () => {
 
       expect(mockRunCommandInDir).toHaveBeenCalledWith(
         '/test/project',
-        expect.stringContaining('hs project upload')
-      );
-      expect(mockRunCommandInDir).toHaveBeenCalledWith(
-        '/test/project',
-        expect.stringContaining('--force')
-      );
-      expect(mockRunCommandInDir).toHaveBeenCalledWith(
-        '/test/project',
-        expect.stringContaining('--message "Test upload message"')
-      );
-      expect(mockRunCommandInDir).toHaveBeenCalledWith(
-        '/test/project',
-        expect.stringContaining('--profile "dev"')
+        expect.objectContaining({
+          executable: 'hs',
+          args: expect.arrayContaining([
+            'project',
+            'upload',
+            '--force',
+            'true',
+            '--message',
+            'Test upload message',
+            '--profile',
+            'dev',
+          ]),
+        }),
+        expect.any(Function)
       );
     });
 
@@ -271,15 +268,18 @@ describe('mcp-server/tools/project/UploadProjectTools', () => {
 
       expect(mockRunCommandInDir).toHaveBeenCalledWith(
         '/different/path/to/project',
-        expect.stringContaining('hs project upload')
-      );
-      expect(mockRunCommandInDir).toHaveBeenCalledWith(
-        '/different/path/to/project',
-        expect.stringContaining('--force')
-      );
-      expect(mockRunCommandInDir).toHaveBeenCalledWith(
-        '/different/path/to/project',
-        expect.stringContaining('--message "Different test upload message"')
+        expect.objectContaining({
+          executable: 'hs',
+          args: expect.arrayContaining([
+            'project',
+            'upload',
+            '--force',
+            'true',
+            '--message',
+            'Different test upload message',
+          ]),
+        }),
+        expect.any(Function)
       );
     });
 

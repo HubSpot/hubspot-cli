@@ -6,14 +6,13 @@ import {
 } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { McpLogger } from '../../utils/logger.js';
 import { formatTextContents, formatTextContent } from '../../utils/content.js';
-import { addFlag } from '../../utils/command.js';
-import { runCommandInDir } from '../../utils/command.js';
+import { HubSpotCommand } from '../../utils/command.js';
 import {
   ACCOUNT_LEVELS,
   ACCOUNT_LEVEL_CHOICES,
 } from '../../../lib/constants.js';
 import { TextContent, TextContentResponse } from '../../types.js';
-import { Tool } from '../../Tool.js';
+import { Tool, ToolExtra } from '../../Tool.js';
 import { absoluteCurrentWorkingDirectory } from './constants.js';
 import { DeveloperTestAccountConfig } from '@hubspot/local-dev-lib/types/developerTestAccounts.js';
 import { getConfigAccountByName } from '@hubspot/local-dev-lib/config';
@@ -105,21 +104,24 @@ export class CreateTestAccountTool extends Tool<CreateTestAccountInputSchema> {
     super(mcpServer, logger, toolName);
   }
 
-  async handler({
-    absoluteCurrentWorkingDirectory,
-    name,
-    description,
-    marketingLevel,
-    opsLevel,
-    serviceLevel,
-    salesLevel,
-    contentLevel,
-    commerceLevel,
-    configPath,
-  }: CreateTestAccountInputSchema): Promise<TextContentResponse> {
+  async handler(
+    {
+      absoluteCurrentWorkingDirectory,
+      name,
+      description,
+      marketingLevel,
+      opsLevel,
+      serviceLevel,
+      salesLevel,
+      contentLevel,
+      commerceLevel,
+      configPath,
+    }: CreateTestAccountInputSchema,
+    extra?: ToolExtra
+  ): Promise<TextContentResponse> {
     setupHubSpotConfig(absoluteCurrentWorkingDirectory);
 
-    let command = 'hs test-account create';
+    const command = new HubSpotCommand('test-account create');
 
     const content: TextContent[] = [];
 
@@ -160,7 +162,7 @@ export class CreateTestAccountTool extends Tool<CreateTestAccountInputSchema> {
         }
       }
 
-      command = addFlag(command, 'config-path', configPath);
+      command.addFlag('config-path', configPath);
     }
     // Use flags if name is provided (when no config used)
     else if (name) {
@@ -179,22 +181,14 @@ export class CreateTestAccountTool extends Tool<CreateTestAccountInputSchema> {
         });
       }
 
-      command = addFlag(command, 'name', name);
-      command = addFlag(command, 'description', description || name);
-      command = addFlag(
-        command,
-        'marketing-level',
-        marketingLevel || 'ENTERPRISE'
-      );
-      command = addFlag(command, 'ops-level', opsLevel || 'ENTERPRISE');
-      command = addFlag(command, 'service-level', serviceLevel || 'ENTERPRISE');
-      command = addFlag(command, 'sales-level', salesLevel || 'ENTERPRISE');
-      command = addFlag(command, 'content-level', contentLevel || 'ENTERPRISE');
-      command = addFlag(
-        command,
-        'commerce-level',
-        commerceLevel || 'ENTERPRISE'
-      );
+      command.addFlag('name', name);
+      command.addFlag('description', description || name);
+      command.addFlag('marketing-level', marketingLevel || 'ENTERPRISE');
+      command.addFlag('ops-level', opsLevel || 'ENTERPRISE');
+      command.addFlag('service-level', serviceLevel || 'ENTERPRISE');
+      command.addFlag('sales-level', salesLevel || 'ENTERPRISE');
+      command.addFlag('content-level', contentLevel || 'ENTERPRISE');
+      command.addFlag('commerce-level', commerceLevel || 'ENTERPRISE');
     } else {
       content.push(
         formatTextContent(
@@ -212,9 +206,10 @@ export class CreateTestAccountTool extends Tool<CreateTestAccountInputSchema> {
     // No flags or config - command will prompt user interactively
 
     try {
-      const { stdout, stderr } = await runCommandInDir(
+      const { stdout, stderr } = await this.runCommand(
         absoluteCurrentWorkingDirectory,
-        command
+        command,
+        extra
       );
 
       return formatTextContents(
@@ -265,7 +260,7 @@ export class CreateTestAccountTool extends Tool<CreateTestAccountInputSchema> {
           openWorldHint: true,
         },
       },
-      input => this.wrappedHandler(input)
+      (input, extra) => this.wrappedHandler(input, extra)
     );
   }
 }

@@ -11,13 +11,19 @@ const describe = commands.mcp.setup.describe;
 
 interface MCPSetupArgs extends CommonArgs {
   client?: string[];
+  standalone?: boolean;
+  cliVersion?: string;
 }
 
 async function handler(args: ArgumentsCamelCase<MCPSetupArgs>): Promise<void> {
   const { exit } = args;
 
   try {
-    await configureMcpServer(args.client);
+    await configureMcpServer({
+      targets: args.client,
+      standalone: args.standalone,
+      cliVersion: args.cliVersion,
+    });
   } catch (e) {
     return exit(EXIT_CODES.ERROR);
   }
@@ -31,6 +37,32 @@ function setupBuilder(yargs: Argv): Argv<MCPSetupArgs> {
     type: 'array',
     choices: [...supportedTools.map(tool => tool.value)],
   });
+  yargs.option('standalone', {
+    describe: commands.mcp.setup.args.standalone,
+    type: 'boolean',
+  });
+  yargs.option('cli-version', {
+    describe: commands.mcp.setup.args.cliVersion,
+    type: 'string',
+  });
+
+  yargs.check(argv => {
+    if (argv.cliVersion !== undefined && argv.standalone !== true) {
+      throw new Error(commands.mcp.setup.errors.cliVersionRequiresStandalone);
+    }
+    return true;
+  });
+
+  yargs.example([
+    [
+      '$0 mcp setup --client claude --no-standalone',
+      commands.mcp.setup.examples.nonInteractive,
+    ],
+    [
+      '$0 mcp setup --client cursor --standalone --cli-version 8.0.1',
+      commands.mcp.setup.examples.standalone,
+    ],
+  ]);
 
   return yargs as Argv<MCPSetupArgs>;
 }

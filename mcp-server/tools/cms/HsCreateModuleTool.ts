@@ -1,5 +1,5 @@
 import { TextContent, TextContentResponse } from '../../types.js';
-import { Tool } from '../../Tool.js';
+import { Tool, ToolExtra } from '../../Tool.js';
 import {
   McpServer,
   RegisteredTool,
@@ -7,9 +7,9 @@ import {
 import { McpLogger } from '../../utils/logger.js';
 import { z } from 'zod';
 import { absoluteCurrentWorkingDirectory } from '../project/constants.js';
-import { addFlag, runCommandInDir } from '../../utils/command.js';
 import { formatTextContent, formatTextContents } from '../../utils/content.js';
 import { CONTENT_TYPES } from '../../../types/Cms.js';
+import { HubSpotCommand } from '../../utils/command.js';
 import { setupHubSpotConfig } from '../../utils/config.js';
 import { getErrorMessage } from '../../../lib/errorHandlers/index.js';
 
@@ -81,16 +81,19 @@ export class HsCreateModuleTool extends Tool<HsCreateModuleInputSchema> {
     super(mcpServer, logger, toolName);
   }
 
-  async handler({
-    userSuppliedName,
-    dest,
-    moduleLabel,
-    reactType,
-    contentTypes,
-    global,
-    availableForNewContent,
-    absoluteCurrentWorkingDirectory,
-  }: HsCreateModuleInputSchema): Promise<TextContentResponse> {
+  async handler(
+    {
+      userSuppliedName,
+      dest,
+      moduleLabel,
+      reactType,
+      contentTypes,
+      global,
+      availableForNewContent,
+      absoluteCurrentWorkingDirectory,
+    }: HsCreateModuleInputSchema,
+    extra?: ToolExtra
+  ): Promise<TextContentResponse> {
     setupHubSpotConfig(absoluteCurrentWorkingDirectory);
 
     const content: TextContent[] = [];
@@ -128,47 +131,32 @@ export class HsCreateModuleTool extends Tool<HsCreateModuleInputSchema> {
     }
 
     // Build the command
-    let command = 'hs cms module create';
-
+    const command = new HubSpotCommand('cms module create');
     if (userSuppliedName) {
-      command += ` "${userSuppliedName}"`;
+      command.addArg(userSuppliedName);
     }
-
     if (dest) {
-      command += ` "${dest}"`;
+      command.addArg(dest);
     }
-
-    // Add module-specific flags
     if (moduleLabel) {
-      command = addFlag(command, 'module-label', moduleLabel);
+      command.addFlag('module-label', moduleLabel);
     }
-
     if (reactType !== undefined) {
-      command = addFlag(command, 'react-type', reactType);
+      command.addFlag('react-type', reactType);
     }
-
-    if (contentTypes) {
-      command = addFlag(command, 'content-types', contentTypes);
-    } else {
-      command = addFlag(command, 'content-types', 'ANY');
-    }
-
+    command.addFlag('content-types', contentTypes ?? 'ANY');
     if (global !== undefined) {
-      command = addFlag(command, 'global', global);
+      command.addFlag('global', global);
     }
-
     if (availableForNewContent !== undefined) {
-      command = addFlag(
-        command,
-        'available-for-new-content',
-        availableForNewContent
-      );
+      command.addFlag('available-for-new-content', availableForNewContent);
     }
 
     try {
-      const { stdout, stderr } = await runCommandInDir(
+      const { stdout, stderr } = await this.runCommand(
         absoluteCurrentWorkingDirectory,
-        command
+        command,
+        extra
       );
 
       return formatTextContents(stdout, stderr);
@@ -196,7 +184,7 @@ export class HsCreateModuleTool extends Tool<HsCreateModuleInputSchema> {
           openWorldHint: false,
         },
       },
-      input => this.wrappedHandler(input)
+      (input, extra) => this.wrappedHandler(input, extra)
     );
   }
 }

@@ -5,13 +5,16 @@ import {
 } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { McpLogger } from '../../../utils/logger.js';
 import { runCommandInDir } from '../../../utils/command.js';
-import { addFlag } from '../../../utils/command.js';
 import { MockedFunction, Mocked } from 'vitest';
 import { mcpFeedbackRequest } from '../../../utils/feedbackTracking.js';
 
 vi.mock('@modelcontextprotocol/sdk/server/mcp.js');
 vi.mock('../../../utils/logger.js');
-vi.mock('../../../utils/command');
+vi.mock('../../../utils/command', async importOriginal => {
+  const mod =
+    await importOriginal<typeof import('../../../utils/command.js')>();
+  return { ...mod, runCommandInDir: vi.fn() };
+});
 vi.mock('../../../utils/feedbackTracking');
 
 const mockMcpFeedbackRequest = mcpFeedbackRequest as MockedFunction<
@@ -21,7 +24,6 @@ const mockMcpFeedbackRequest = mcpFeedbackRequest as MockedFunction<
 const mockRunCommandInDir = runCommandInDir as MockedFunction<
   typeof runCommandInDir
 >;
-const mockAddFlag = addFlag as MockedFunction<typeof addFlag>;
 
 describe('mcp-server/tools/project/DeployProject', () => {
   let mockMcpServer: Mocked<McpServer>;
@@ -48,11 +50,6 @@ describe('mcp-server/tools/project/DeployProject', () => {
     mockMcpFeedbackRequest.mockResolvedValue('');
 
     tool = new DeployProjectTool(mockMcpServer, mockLogger);
-
-    // Mock addFlag to simulate command building
-    mockAddFlag.mockImplementation(
-      (command, flag, value) => `${command} --${flag} "${value}"`
-    );
   });
 
   describe('register', () => {
@@ -93,14 +90,13 @@ describe('mcp-server/tools/project/DeployProject', () => {
 
       const result = await tool.handler(input);
 
-      expect(mockAddFlag).toHaveBeenCalledWith(
-        'hs project deploy',
-        'build',
-        123
-      );
       expect(mockRunCommandInDir).toHaveBeenCalledWith(
         '/test/project',
-        expect.stringContaining('--build "123"')
+        expect.objectContaining({
+          executable: 'hs',
+          args: expect.arrayContaining(['project', 'deploy', '--build', '123']),
+        }),
+        expect.any(Function)
       );
 
       expect(result).toEqual({
@@ -121,7 +117,16 @@ describe('mcp-server/tools/project/DeployProject', () => {
 
       expect(mockRunCommandInDir).toHaveBeenCalledWith(
         '/test/project',
-        'hs project list-builds --limit 100'
+        expect.objectContaining({
+          executable: 'hs',
+          args: expect.arrayContaining([
+            'project',
+            'list-builds',
+            '--limit',
+            '100',
+          ]),
+        }),
+        expect.any(Function)
       );
 
       expect(result.content).toEqual([
@@ -192,7 +197,16 @@ describe('mcp-server/tools/project/DeployProject', () => {
 
       expect(mockRunCommandInDir).toHaveBeenCalledWith(
         '/test/project',
-        'hs project list-builds --limit 100'
+        expect.objectContaining({
+          executable: 'hs',
+          args: expect.arrayContaining([
+            'project',
+            'list-builds',
+            '--limit',
+            '100',
+          ]),
+        }),
+        expect.any(Function)
       );
 
       expect(result.content[0].text).toContain(

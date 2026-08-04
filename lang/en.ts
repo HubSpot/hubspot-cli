@@ -1655,13 +1655,23 @@ export const commands = {
       vsCode: 'VSCode',
       args: {
         client: 'Target apps to configure',
+        standalone:
+          'Use npx for all of the hs commands run by the MCP server. This allows you to use the MCP server without having the CLI globally installed.',
+        cliVersion: 'Pin a specific CLI version for standalone mode',
         docsSearch: 'Should the docs search mcp server be installed',
+      },
+      examples: {
+        nonInteractive: 'Configure Claude Code without prompts',
+        standalone:
+          'Configure Cursor in standalone mode with a pinned CLI version',
       },
       success: (derivedTargets: string[]) =>
         `You can now use the HubSpot CLI MCP Server in ${derivedTargets.join(', ')}.  ${chalk.bold('You may need to restart these tools to apply the changes')}.`,
       errors: {
         errorParsingJsonFIle: (filename: string, errorMessage: string) =>
           `Unable to update ${chalk.bold(filename)} due to invalid JSON: ${errorMessage}`,
+        cliVersionRequiresStandalone:
+          '`--cli-version` requires `--standalone`. Pass `--standalone` to use a specific CLI version.',
       },
       spinners: {
         failedToConfigure: 'Failed to configure the HubSpot mcp server.',
@@ -1778,6 +1788,8 @@ export const commands = {
         describe: 'Add a new project profile',
         verboseDescribe: `Add a new project profile\n\nProfiles enable you to reference variables in your component configuration files. Use the syntax ${chalk.bold('\${VARIABLE_NAME}')} to reference profile variables in your component configuration files. Then target the profile using the ${uiCommandReference('--profile')} flag when you upload your project.`,
         example: 'Add a new project profile named hsprofile.qa.json',
+        exampleCopyFrom:
+          'Add a profile and copy variables from the staging profile',
         logs: {
           copyExistingProfile: (profileName: string) =>
             `Found an existing profile. We can copy the variables from ${chalk.bold(
@@ -1813,6 +1825,8 @@ export const commands = {
           noAccountsConfigured: 'No accounts configured in the CLI',
           failedToLoadProfile: (profileName: string) =>
             `Unable to copy variables. Failed to load profile ${chalk.bold(profileName)}`,
+          copyFromProfileNotFound: (profileName: string) =>
+            `Profile ${chalk.bold(profileName)} does not exist. Available profiles can be found in your project source directory.`,
           failedToCreateProfile: 'Failed to create profile',
         },
         positionals: {
@@ -1820,6 +1834,7 @@ export const commands = {
         },
         options: {
           targetAccount: 'The target account ID for this profile',
+          copyFrom: 'Copy variables from an existing profile',
         },
       },
       delete: {
@@ -1872,18 +1887,10 @@ export const commands = {
       describe: 'Start local dev for the current project.',
       logs: {
         header: 'HubSpot projects local development',
-        placeholderAccountSelection:
-          'Using default account as target account (for now)',
-        accountTypeInformation:
-          'Testing in a developer test account is strongly recommended, but you can use a sandbox account if your plan allows you to create one.',
         learnMoreMessageV2: `Learn more about ${uiLink(
           'HubSpot projects local dev',
           'https://developers.hubspot.com/docs/developer-tooling/local-development/hubspot-cli/project-commands#start-a-local-development-server'
         )} | ${uiLink('HubSpot account types', 'https://developers.hubspot.com/docs/getting-started/account-types')}`,
-        learnMoreMessageLegacy: uiLink(
-          'Learn more about the projects local dev server',
-          'https://developers.hubspot.com/docs/developer-tooling/local-development/hubspot-cli/project-commands#start-a-local-development-server'
-        ),
         profileProjectAccountExplanation: (
           accountId: number,
           profileName: string
@@ -1893,8 +1900,6 @@ export const commands = {
           `Using default account ${uiAccountDescription(accountId)} for project upload`,
         projectAccountFlagExplanation: (accountId: number) =>
           `Using account ${uiAccountDescription(accountId)} provided by the --project-account flag for project upload`,
-        accountFlagExplanation: (accountId: number) =>
-          `Using account ${uiAccountDescription(accountId)} provided by the --account flag for project upload`,
         defaultSandboxOrDevTestTestingAccountExplanation: (accountId: number) =>
           `Using default account ${uiAccountDescription(accountId)} for testing`,
         testingAccountFlagExplanation: (accountId: number) =>
@@ -1905,15 +1910,10 @@ export const commands = {
           'No project detected. Please run this command again from a project directory.',
         noAccount: (accountId: number) =>
           `An error occurred while reading account ${uiAccountDescription(accountId)} from your config. Run ${uiAuthCommandReference()} to re-auth this account.`,
-        noAccountsInConfig: `No accounts found in your config. Run ${uiAuthCommandReference()} to configure a HubSpot account with the CLI.`,
-        invalidProjectComponents:
-          'Projects cannot contain both private and public apps. Move your apps to separate projects before attempting local development.',
+        unsupportedPlatformVersion: (platformVersion: string) =>
+          `Local development is not supported for platform version ${chalk.bold(platformVersion)}. Please upgrade to 2025.2 or later.`,
         noRunnableComponents: `No supported components were found in this project. Run ${uiCommandReference('hs project add')} to see a list of available components and add one to your project.`,
         accountNotCombined: `\nLocal development of unified apps is currently only compatible with accounts that are opted into the unified apps beta. Make sure that this account is opted in or switch accounts using ${uiCommandReference('hs account use')}.`,
-        unsupportedAccountFlagLegacy:
-          'The --project-account and --testing-account flags are not supported for projects with platform versions earlier than 2025.2.',
-        unsupportedAccountFlagV2:
-          'The --account flag is not supported for projects with platform versions 2025.2 and newer. Use --testing-account and --project-account flags to specify accounts to use for local dev',
         localDevAlreadyRunning: `Another ${uiCommandReference('hs project dev')} process is already running. To proceed with local development of this project, stop the existing process and re-run ${uiCommandReference('hs project dev')}.`,
       },
       examples: {
@@ -1926,11 +1926,9 @@ export const commands = {
       options: {
         profile: 'The profile to target during local dev',
         projectAccount:
-          'The id of the account to upload your project to. Must be used with --testing-account. Supported on platform versions 2025.2 and newer.',
+          'The id of the account to upload your project to. Must be used with --testing-account.',
         testingAccount:
-          'The id of the account to install apps and test on. Must be used with --project-account. Supported on platform versions 2025.2 and newer.',
-        account:
-          'The id of the account to upload your project to. Unsupported on platform versions 2025.2 and newer.',
+          'The id of the account to install apps and test on. Must be used with --project-account.',
         port: `The port for the local dev server. Defaults to ${LOCAL_DEV_DEFAULT_PORT}.`,
       },
     },
@@ -2170,7 +2168,10 @@ export const commands = {
       errors: {
         deploy: 'Deploy error: an unknown error occurred.',
         noBuilds: 'Deploy error: no builds for this project were found.',
+        noSuccessfulBuilds:
+          'Deploy error: no successful builds for this project were found.',
         noBuildId: 'You must specify a build to deploy',
+        notSupportedForBuildVersion: `This build's platform version does not support deploy. Run ${uiCommandReference('hs project release create')} to create a release instead.`,
         projectNotFound: (accountId: number, projectName: string) =>
           `The project ${chalk.bold(projectName)} does not exist in account ${uiAccountDescription(accountId)}. Run ${uiCommandReference('hs project upload')} to upload your project files to HubSpot.`,
         buildIdDoesNotExist: (
@@ -2203,7 +2204,7 @@ export const commands = {
           `- [${mapToUserFriendlyName(componentTypeName)}] ${chalk.bold('(' + uid + ')')} ${message}`,
       },
       examples: {
-        default: 'Deploy the latest build of the current project',
+        default: 'Deploy the last successful build of the current project',
         withOptions: 'Deploy build 5 of the project my-project',
         withProfile: 'Deploy using the provided profile',
       },
@@ -2213,34 +2214,46 @@ export const commands = {
         profile: 'The profile to target with this deploy',
         force:
           'Skip warnings and force deploy. Use this carefully as it will bypass warnings for destructive actions.',
-        deployLatestBuild: 'Deploy the latest build of the current project',
+        deployLatestBuild:
+          'Deploy the last successful build of the current project',
       },
     },
     release: {
       describe: 'Manage project releases.',
       create: {
         describe: 'Create a release for a project build.',
-        verboseDescribe: `Create a release for a project build\n\nReleases mark a deployed build with an auto-generated semantic version tag (e.g. v1.0.0). The build must have been successfully deployed before it can be released.\n\nBy default, the latest deployed build is used. Use ${uiCommandReference('--build')} to specify a different build ID.`,
+        verboseDescribe: `Create a release for a project build\n\nReleases mark an uploaded build with an auto-generated semantic version tag (e.g. v1.0.0).\n\nBy default, the latest build is used. Use ${uiCommandReference('--build')} to specify a different build ID.`,
         confirmPrompt: (projectName: string, buildId: number) =>
           `Create a release for project ${chalk.bold(projectName)} using build ${chalk.bold(String(buildId))}?`,
         success: (releaseTag: string, buildId: number) =>
           `Release ${chalk.bold(releaseTag)} created for build ${chalk.bold(String(buildId))}.`,
         cancelled: 'Release creation cancelled.',
+        buildIdPrompt: '[--build] Select a successful build to release:',
+        noUploadMessage: 'No upload message',
+        buildStatus: {
+          BUILDING: 'Build in progress',
+          FAILURE: 'Build failed',
+          PENDING: 'Pending',
+          PREPARING: 'Preparing',
+        },
+        uploadPrompt: (projectName: string) =>
+          `No successful builds for project ${chalk.bold(projectName)}. Would you like to upload it?`,
         errors: {
           projectNotFound: (accountId: number, projectName: string) =>
             `The project ${chalk.bold(projectName)} does not exist in account ${uiAccountDescription(accountId)}. Run ${uiCommandReference('hs project upload')} to upload your project files to HubSpot.`,
-          noDeployedBuild: `No deployed build found for this project. Run ${uiCommandReference('hs project deploy')} first.`,
           buildNotFound: (buildId: number, projectName: string) =>
-            `Build ${chalk.bold(String(buildId))} was not found for project ${chalk.bold(projectName)}. Run ${uiCommandReference('hs project list-builds')} to view existing builds or ${uiCommandReference('hs project deploy')} to deploy a build first.`,
-          buildNotDeployed: (buildId: number) =>
-            `Build ${chalk.bold(String(buildId))} has not been deployed. Run ${uiCommandReference('hs project deploy')} first.`,
+            `Build ${chalk.bold(String(buildId))} was not found for project ${chalk.bold(projectName)}. Run ${uiCommandReference('hs project list-builds')} to view existing builds or ${uiCommandReference('hs project upload')} to upload a build first.`,
+          noSuccessfulBuilds: (projectName: string) =>
+            `No successful builds found for project ${chalk.bold(projectName)}. Run ${uiCommandReference('hs project upload')} to create a new build.`,
+          incompatibleBuildVersion: `This build's platform version does not support releases. Upgrade your project to a newer platform version to use releases.`,
         },
         options: {
-          build: 'Build ID to release. Defaults to the latest deployed build.',
-          force: 'Skip confirmation prompt.',
+          build: 'Build ID to release. Defaults to the latest build.',
+          force:
+            'Skip all confirmation prompts, including automatic upload when no build exists.',
         },
         examples: {
-          default: 'Create a release for the latest deployed build',
+          default: 'Create a release for the latest build',
           withBuild: 'Create a release for a specific build',
         },
       },
@@ -2392,6 +2405,10 @@ export const commands = {
           `Run \`${uiCommandReference(command)}\``,
         autoDeployDisabled: (deployCommand: string) =>
           `Automatic deploys are disabled for this project. Run ${uiCommandReference(deployCommand)} to deploy this build.`,
+        autoDeploySkipped: (deployCommand: string) =>
+          `Auto-deploy was skipped for this build. Run ${uiCommandReference(deployCommand)} to deploy this build.`,
+        releaseManagementRequired: (releaseCommand: string) =>
+          `Run ${uiCommandReference(releaseCommand)} to create a release for this build.`,
       },
       errors: {
         noProjectConfig:
@@ -4310,6 +4327,11 @@ export const lib = {
   handlerLogFile: {
     saved: (filePath: string) => `Debug logs can be viewed at ${filePath}`,
   },
+  jsonSchema: {
+    noSchemaForCommand: 'No schema defined for this command',
+    validationFailed:
+      'JSON output may be missing or malformed fields. The output schema may be out of date.',
+  },
   DevServerManager: {
     portConflict: (port: string) => `The port ${port} is already in use.`,
     notInitialized:
@@ -4562,23 +4584,6 @@ export const lib = {
       },
     },
     account: {
-      checkIfDefaultAccountIsSupported: {
-        publicApp: `This project contains a public app. Local development of public apps is only supported on developer accounts and developer test accounts. Change your default account using ${uiCommandReference('hs account use')}, or link a new account with ${uiAuthCommandReference()}.`,
-        privateApp: `This project contains a private app. Local development of private apps is not supported in developer accounts. Change your default account using ${uiCommandReference('hs account use')}, or link a new account with ${uiAuthCommandReference()}.`,
-      },
-      validateAccountOption: {
-        invalidPublicAppAccount: `This project contains a public app. The "--account" flag must point to a developer test account to develop this project locally. Alternatively, change your default account to an app developer account using ${uiCommandReference('hs account use')} and run ${uiCommandReference('hs project dev')} to set up a new developer test account.`,
-        invalidPrivateAppAccount: `This project contains a private app. The account specified with the "--account" flag points to a developer account, which do not support the local development of private apps. Update the "--account" flag to point to a standard, sandbox, or developer test account, or change your default account by running ${uiCommandReference('hs account use')}.`,
-        nonSandboxWarning: `Testing in a sandbox is strongly recommended. To switch the target account, select an option below or run ${uiCommandReference('hs account use')} before running the command again.`,
-        publicAppNonDeveloperTestAccountWarning: `Local development of public apps is only supported in ${chalk.bold('developer test accounts')}.`,
-      },
-      checkIfParentAccountIsAuthed: {
-        notAuthedError: (
-          parentAccountId: number | string,
-          accountIdentifier: string
-        ) =>
-          `To develop this project locally, run ${uiAuthCommandReference({ accountId: parentAccountId })} to authenticate the App Developer Account ${parentAccountId} associated with ${accountIdentifier}.`,
-      },
       selectAccountTypePrompt: {
         message: 'Choose the type of account to test on',
         developerTestAccountOption:
@@ -4592,10 +4597,7 @@ export const lib = {
             false
           )} ${chalk.red('!')}>`,
       },
-      confirmDefaultAccountIsTarget: {
-        configError: `An error occurred while reading the default account from your config. Run ${uiAuthCommandReference()} to re-auth this account`,
-        declineDefaultAccountExplanation: `To develop on a different account, run ${uiCommandReference('hs account use')} to change your default account, then re-run ${uiCommandReference('hs project dev')}.`,
-      },
+      declineDefaultAccountExplanation: `To develop on a different account, run ${uiCommandReference('hs account use')} to change your default account, then re-run ${uiCommandReference('hs project dev')}.`,
     },
   },
   middleware: {
@@ -5059,6 +5061,7 @@ export const lib = {
       qa: 'Run command in QA mode',
       useEnv: 'Use environment variable config',
       jsonOutput: 'Format output as JSON',
+      jsonSchema: 'Print the JSON output schema and exit',
       debug: 'Set log level to debug',
     },
   },

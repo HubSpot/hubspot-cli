@@ -24,7 +24,7 @@ import { commands } from '../../lang/en.js';
 export const command = 'import-data';
 export const describe = commands.testAccount.subcommands.importData.describe;
 
-type CrmImportDataArgs = CommonArgs &
+export type CrmImportDataArgs = CommonArgs &
   ConfigArgs &
   AccountArgs &
   EnvironmentArgs & {

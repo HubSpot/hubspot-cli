@@ -93,6 +93,7 @@ When creating or modifying commands:
 - Use `makeYargsBuilder()` from `lib/yargsUtils.ts`.
 - Use the `exit()` function passed to command args. Do not call `process.exit()` directly.
 - Keep `exit()` calls in command handlers. Utilities should throw or return useful data.
+- For `--json` output, use `addJsonOutput()` from args. Do not call `uiLogger.json()` directly.
 - Add or update co-located tests in `__tests__/`.
 
 For detailed command guidance, read `.claude/rules/COMMANDS.md` before editing files under `commands/`.
@@ -161,7 +162,7 @@ Project skills are in `.claude/skills/`. When a task matches one of these workfl
 
 - `cli-implement`: **Start here** for implementing new CLI features. Orchestrates the full workflow and references other skills as needed.
 - `cli-design-check`: validate CLI UX decisions (commands, flags, errors, prompts). Called by cli-implement for user-facing changes.
-- `cli-code-check`: code quality and pattern compliance check. Checks all 8 architecture patterns + code quality + linting. Run before PR for early feedback, or runs automatically in cli-review.
+- `cli-code-check`: code quality and pattern compliance check. Checks all 10 architecture patterns + code quality + linting. Run before PR for early feedback, or runs automatically in cli-review.
 - `cli-review`: PR review with confidence-based posting. Runs cli-code-check, calculates confidence, posts approval or change requests.
 - `cli-create-changelog`: generate an npm release changelog from commits.
 

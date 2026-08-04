@@ -13,16 +13,13 @@ import { validateProjectForProfile } from '../../../lib/projects/projectProfiles
 import { trackCommandUsage } from '../../../lib/usageTracking.js';
 import { getConfigAccountById } from '@hubspot/local-dev-lib/config';
 import { handleTranslate } from '../../../lib/projects/upload.js';
-import { CommonArgs } from '../../../types/Yargs.js';
 import { HubSpotConfigAccount } from '@hubspot/local-dev-lib/types/Accounts';
-import projectValidateCommand from '../validate.js';
+import projectValidateCommand, {
+  type ProjectValidateArgs,
+} from '../validate.js';
 import { getAllHsProfiles } from '@hubspot/project-parsing-lib/profiles';
 import SpinniesManager from '../../../lib/ui/SpinniesManager.js';
 import { logError } from '../../../lib/errorHandlers/index.js';
-
-type ProjectValidateArgs = CommonArgs & {
-  profile?: string;
-};
 
 // Mock dependencies
 vi.mock('../../../lib/projects/upload.js');

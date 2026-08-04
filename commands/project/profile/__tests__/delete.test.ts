@@ -1,10 +1,11 @@
 import yargs, { ArgumentsCamelCase, Argv } from 'yargs';
-import profileDeleteCommand from '../delete.js';
+import profileDeleteCommand, {
+  type ProjectProfileDeleteArgs,
+} from '../delete.js';
 import { getProjectConfig } from '../../../../lib/projects/config.js';
 import { isLegacyProject } from '@hubspot/project-parsing-lib/projects';
 import { uiLogger } from '../../../../lib/ui/logger.js';
 import { EXIT_CODES } from '../../../../lib/enums/exitCodes.js';
-import { CommonArgs } from '../../../../types/Yargs.js';
 import { getAllHsProfiles } from '@hubspot/project-parsing-lib/profiles';
 import * as promptUtils from '../../../../lib/prompts/promptUtils.js';
 
@@ -42,10 +43,6 @@ vi.mock('fs', async importOriginal => {
     unlinkSync: vi.fn(),
   };
 });
-
-type ProjectProfileDeleteArgs = CommonArgs & {
-  name?: string;
-};
 
 const mockedGetProjectConfig = vi.mocked(getProjectConfig);
 const mockedIsLegacyProject = vi.mocked(isLegacyProject);

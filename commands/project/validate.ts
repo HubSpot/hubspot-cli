@@ -25,7 +25,7 @@ import SpinniesManager from '../../lib/ui/SpinniesManager.js';
 const command = 'validate';
 const describe = commands.project.validate.describe;
 
-type ProjectValidateArgs = CommonArgs & {
+export type ProjectValidateArgs = CommonArgs & {
   profile?: string;
 };
 

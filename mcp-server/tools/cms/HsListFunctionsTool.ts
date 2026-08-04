@@ -1,12 +1,12 @@
 import { TextContentResponse } from '../../types.js';
-import { Tool } from '../../Tool.js';
+import { Tool, ToolExtra } from '../../Tool.js';
 import {
   McpServer,
   RegisteredTool,
 } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { McpLogger } from '../../utils/logger.js';
 import { z } from 'zod';
-import { addFlag, runCommandInDir } from '../../utils/command.js';
+import { HubSpotCommand } from '../../utils/command.js';
 import { absoluteCurrentWorkingDirectory } from '../project/constants.js';
 import { formatTextContents } from '../../utils/content.js';
 import { setupHubSpotConfig } from '../../utils/config.js';
@@ -40,27 +40,31 @@ export class HsListFunctionsTool extends Tool<HsListFunctionsInputSchema> {
     super(mcpServer, logger, toolName);
   }
 
-  async handler({
-    account,
-    json,
-    absoluteCurrentWorkingDirectory,
-  }: HsListFunctionsInputSchema): Promise<TextContentResponse> {
+  async handler(
+    {
+      account,
+      json,
+      absoluteCurrentWorkingDirectory,
+    }: HsListFunctionsInputSchema,
+    extra?: ToolExtra
+  ): Promise<TextContentResponse> {
     setupHubSpotConfig(absoluteCurrentWorkingDirectory);
 
-    let command = 'hs cms function list';
+    const command = new HubSpotCommand('cms function list');
 
     if (json) {
-      command += ' --json';
+      command.addFlag('json', true);
     }
 
     if (account) {
-      command = addFlag(command, 'account', account);
+      command.addFlag('account', account);
     }
 
     try {
-      const { stdout, stderr } = await runCommandInDir(
+      const { stdout, stderr } = await this.runCommand(
         absoluteCurrentWorkingDirectory,
-        command
+        command,
+        extra
       );
 
       return formatTextContents(stdout, stderr);
@@ -93,7 +97,7 @@ export class HsListFunctionsTool extends Tool<HsListFunctionsInputSchema> {
           openWorldHint: true,
         },
       },
-      input => this.wrappedHandler(input)
+      (input, extra) => this.wrappedHandler(input, extra)
     );
   }
 }

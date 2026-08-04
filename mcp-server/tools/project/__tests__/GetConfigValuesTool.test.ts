@@ -213,7 +213,7 @@ describe('mcp-server/tools/project/GetConfigValuesTool', () => {
         content: [
           {
             type: 'text',
-            text: 'No account ID found. Please run `hs account auth` to configure an account, or set a default account with `hs account use <account>`',
+            text: 'No account ID found. Call the auth-account tool to authenticate a HubSpot account.',
           },
         ],
       });

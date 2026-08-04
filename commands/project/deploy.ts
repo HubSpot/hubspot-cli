@@ -1,7 +1,7 @@
 import { Argv, ArgumentsCamelCase } from 'yargs';
 import { fetchProject } from '@hubspot/local-dev-lib/api/projects';
 import { getConfigAccountById } from '@hubspot/local-dev-lib/config';
-import { isHubSpotHttpError } from '@hubspot/local-dev-lib/errors/index';
+import { isSpecifiedError } from '@hubspot/local-dev-lib/errors/index';
 import { isLegacyProject } from '@hubspot/project-parsing-lib/projects';
 import { logError, ApiErrorContext } from '../../lib/errorHandlers/index.js';
 import {
@@ -22,6 +22,7 @@ import {
   YargsCommandModule,
 } from '../../types/Yargs.js';
 import { makeWrappedYargsHandler } from '../../lib/yargs/makeWrappedYargsHandler.js';
+import { DeployJsonOutput, DeploySchema } from '../../lib/jsonOutput.js';
 import { makeYargsBuilder } from '../../lib/yargsUtils.js';
 import { loadProfile } from '../../lib/projects/projectProfiles.js';
 import { PROJECT_DEPLOY_TEXT } from '../../lib/constants.js';
@@ -31,6 +32,8 @@ import {
   validateBuildIdForDeploy,
   logDeployErrors,
 } from '../../lib/projects/deploy.js';
+import { validateBuildForRelease } from '../../lib/projects/release.js';
+import { getLastSuccessfulBuild } from '../../lib/projects/builds.js';
 
 const command = 'deploy';
 const describe = commands.project.deploy.describe;
@@ -39,7 +42,7 @@ export type ProjectDeployArgs = CommonArgs &
   ConfigArgs &
   AccountArgs &
   EnvironmentArgs &
-  JSONOutputArgs & {
+  JSONOutputArgs<DeployJsonOutput> & {
     project?: string;
     build?: number;
     buildId?: number;
@@ -57,16 +60,15 @@ async function handler(
     buildId: buildIdOption,
     force: forceOption,
     deployLatestBuild: deployLatestBuildOption,
-    json: formatOutputAsJson,
     profile: profileOption,
     useEnv: useEnvOption,
     exit,
     addUsageMetadata,
+    addJsonOutput,
   } = args;
   const accountConfig = getConfigAccountById(derivedAccountId);
   const accountType = accountConfig && accountConfig.accountType;
   let targetAccountId: number | undefined;
-  const jsonOutput: { deployId?: number } = {};
 
   const { projectConfig, projectDir } = await getProjectConfig();
 
@@ -152,16 +154,27 @@ async function handler(
         return exit(EXIT_CODES.ERROR);
       }
     } else {
+      const lastSuccessfulBuild = await getLastSuccessfulBuild(
+        targetAccountId,
+        projectName,
+        latestBuild
+      );
+
+      if (!lastSuccessfulBuild) {
+        uiLogger.error(commands.project.deploy.errors.noSuccessfulBuilds);
+        return exit(EXIT_CODES.ERROR);
+      }
+
       if (deployLatestBuildOption) {
-        buildIdToDeploy = latestBuild.buildId;
+        buildIdToDeploy = lastSuccessfulBuild.buildId;
       } else {
         const deployBuildIdPromptResponse = await promptUser({
           name: 'buildId',
           message: commands.project.deploy.deployBuildIdPrompt,
           default:
-            latestBuild.buildId === deployedBuildId
+            lastSuccessfulBuild.buildId === deployedBuildId
               ? undefined
-              : latestBuild.buildId,
+              : lastSuccessfulBuild.buildId,
           validate: buildId =>
             validateBuildIdForDeploy(
               buildId,
@@ -180,6 +193,24 @@ async function handler(
       return exit(EXIT_CODES.ERROR);
     }
 
+    try {
+      const supportsReleases = await validateBuildForRelease(
+        targetAccountId,
+        projectName,
+        buildIdToDeploy
+      );
+
+      // The deploy verb is not compatible with builds that leverage releases. Use release create instead.
+      if (supportsReleases) {
+        uiLogger.error(
+          commands.project.deploy.errors.notSupportedForBuildVersion
+        );
+        return exit(EXIT_CODES.ERROR);
+      }
+    } catch {
+      return exit(EXIT_CODES.ERROR);
+    }
+
     const deployResult = await handleProjectDeploy(
       targetAccountId,
       projectName,
@@ -190,22 +221,22 @@ async function handler(
 
     if (!deployResult) {
       return exit(EXIT_CODES.ERROR);
-    } else if (formatOutputAsJson) {
-      jsonOutput.deployId = deployResult.deployId;
+    } else {
+      addJsonOutput({ deployId: deployResult.deployId });
     }
 
     if (deployResult.status === PROJECT_DEPLOY_TEXT.STATES.SUCCESS) {
       deploySuccess = true;
     }
   } catch (e) {
-    if (isHubSpotHttpError(e) && e.status === 404) {
+    if (isSpecifiedError(e, { statusCode: 404 })) {
       uiLogger.error(
         commands.project.deploy.errors.projectNotFound(
           targetAccountId,
           projectName
         )
       );
-    } else if (isHubSpotHttpError(e) && e.status === 400) {
+    } else if (isSpecifiedError(e, { statusCode: 400 })) {
       if (e.data?.message && e.data?.errors) {
         logDeployErrors(e.data);
       } else {
@@ -221,10 +252,6 @@ async function handler(
       );
     }
     return exit(EXIT_CODES.ERROR);
-  }
-
-  if (formatOutputAsJson) {
-    uiLogger.json(jsonOutput);
   }
 
   if (deploySuccess) {
@@ -299,7 +326,9 @@ const projectDeployCommand: YargsCommandModule<unknown, ProjectDeployArgs> = {
   command,
   describe,
   builder,
-  handler: makeWrappedYargsHandler('project-deploy', handler),
+  handler: makeWrappedYargsHandler('project-deploy', handler, {
+    jsonOutputSchema: DeploySchema,
+  }),
 };
 
 export default projectDeployCommand;

@@ -32,9 +32,10 @@ const command = 'add [name]';
 const describe = commands.project.profile.add.describe;
 const verboseDescribe = commands.project.profile.add.verboseDescribe;
 
-type ProjectProfileAddArgs = CommonArgs & {
+export type ProjectProfileAddArgs = CommonArgs & {
   name?: string;
   targetAccount?: number;
+  copyFrom?: string;
 };
 
 async function selectProfileToCopyVariablesFrom(
@@ -228,8 +229,23 @@ async function handler(
     variables: {},
   };
 
-  const profileToCopyVariablesFrom =
-    await selectProfileToCopyVariablesFrom(existingProfiles);
+  let profileToCopyVariablesFrom: string | undefined;
+
+  if (args.copyFrom) {
+    if (existingProfiles.includes(args.copyFrom)) {
+      profileToCopyVariablesFrom = args.copyFrom;
+    } else {
+      uiLogger.error(
+        commands.project.profile.add.errors.copyFromProfileNotFound(
+          args.copyFrom
+        )
+      );
+      return exit(EXIT_CODES.ERROR);
+    }
+  } else {
+    profileToCopyVariablesFrom =
+      await selectProfileToCopyVariablesFrom(existingProfiles);
+  }
 
   if (profileToCopyVariablesFrom) {
     try {
@@ -277,9 +293,17 @@ function projectProfileAddBuilder(yargs: Argv): Argv<ProjectProfileAddArgs> {
     describe: commands.project.profile.add.options.targetAccount,
     type: 'number',
   });
+  yargs.option('copy-from', {
+    describe: commands.project.profile.add.options.copyFrom,
+    type: 'string',
+  });
 
   yargs.example([
     ['$0 project profile add qa', commands.project.profile.add.example],
+    [
+      '$0 project profile add qa --target-account 123 --copy-from staging',
+      commands.project.profile.add.exampleCopyFrom,
+    ],
   ]);
 
   return yargs as Argv<ProjectProfileAddArgs>;

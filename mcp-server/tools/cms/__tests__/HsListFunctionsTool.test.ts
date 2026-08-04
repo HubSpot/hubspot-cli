@@ -6,13 +6,16 @@ import {
 } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { McpLogger } from '../../../utils/logger.js';
 import { runCommandInDir } from '../../../utils/command.js';
-import { addFlag } from '../../../utils/command.js';
 import { MockedFunction, Mocked } from 'vitest';
 import { mcpFeedbackRequest } from '../../../utils/feedbackTracking.js';
 
 vi.mock('@modelcontextprotocol/sdk/server/mcp.js');
 vi.mock('../../../utils/logger.js');
-vi.mock('../../../utils/command');
+vi.mock('../../../utils/command', async importOriginal => {
+  const mod =
+    await importOriginal<typeof import('../../../utils/command.js')>();
+  return { ...mod, runCommandInDir: vi.fn() };
+});
 vi.mock('../../../utils/feedbackTracking');
 
 const mockMcpFeedbackRequest = mcpFeedbackRequest as MockedFunction<
@@ -22,7 +25,6 @@ const mockMcpFeedbackRequest = mcpFeedbackRequest as MockedFunction<
 const mockRunCommandInDir = runCommandInDir as MockedFunction<
   typeof runCommandInDir
 >;
-const mockAddFlag = addFlag as MockedFunction<typeof addFlag>;
 
 describe('HsListFunctionsTool', () => {
   let mockMcpServer: Mocked<McpServer>;
@@ -55,7 +57,6 @@ describe('HsListFunctionsTool', () => {
     it('should register the tool with the MCP server', () => {
       const result = tool.register();
 
-      // First assertion - verify original description
       expect(mockMcpServer.registerTool).toHaveBeenCalledWith(
         'list-cms-serverless-functions',
         expect.objectContaining({
@@ -85,7 +86,11 @@ describe('HsListFunctionsTool', () => {
 
       expect(mockRunCommandInDir).toHaveBeenCalledWith(
         '/test/dir',
-        'hs cms function list'
+        expect.objectContaining({
+          executable: 'hs',
+          args: expect.arrayContaining(['cms', 'function', 'list']),
+        }),
+        expect.any(Function)
       );
       expect(result.content).toHaveLength(2);
       expect(result.content[0].text).toContain('Route | Method | Secrets');
@@ -105,7 +110,17 @@ describe('HsListFunctionsTool', () => {
 
       expect(mockRunCommandInDir).toHaveBeenCalledWith(
         '/test/dir',
-        'hs cms function list --json'
+        expect.objectContaining({
+          executable: 'hs',
+          args: expect.arrayContaining([
+            'cms',
+            'function',
+            'list',
+            '--json',
+            'true',
+          ]),
+        }),
+        expect.any(Function)
       );
       expect(result.content).toHaveLength(2);
       expect(result.content[0].text).toContain('[{"route": "/api/test"');
@@ -113,9 +128,6 @@ describe('HsListFunctionsTool', () => {
     });
 
     it('should execute hs function list command with account parameter', async () => {
-      mockAddFlag.mockReturnValue(
-        'hs cms function list --account test-account'
-      );
       mockRunCommandInDir.mockResolvedValue({
         stdout: 'account-specific-functions',
         stderr: '',
@@ -126,14 +138,19 @@ describe('HsListFunctionsTool', () => {
         account: 'test-account',
       });
 
-      expect(mockAddFlag).toHaveBeenCalledWith(
-        'hs cms function list',
-        'account',
-        'test-account'
-      );
       expect(mockRunCommandInDir).toHaveBeenCalledWith(
         '/test/dir',
-        'hs cms function list --account test-account'
+        expect.objectContaining({
+          executable: 'hs',
+          args: expect.arrayContaining([
+            'cms',
+            'function',
+            'list',
+            '--account',
+            'test-account',
+          ]),
+        }),
+        expect.any(Function)
       );
       expect(result.content).toHaveLength(2);
       expect(result.content[0].text).toContain('account-specific-functions');
@@ -141,9 +158,6 @@ describe('HsListFunctionsTool', () => {
     });
 
     it('should execute hs function list command with both json and account parameters', async () => {
-      mockAddFlag.mockReturnValue(
-        'hs cms function list --json --account test-account'
-      );
       mockRunCommandInDir.mockResolvedValue({
         stdout: '[{"route": "/api/test"}]',
         stderr: '',
@@ -155,14 +169,21 @@ describe('HsListFunctionsTool', () => {
         account: 'test-account',
       });
 
-      expect(mockAddFlag).toHaveBeenCalledWith(
-        'hs cms function list --json',
-        'account',
-        'test-account'
-      );
       expect(mockRunCommandInDir).toHaveBeenCalledWith(
         '/test/dir',
-        'hs cms function list --json --account test-account'
+        expect.objectContaining({
+          executable: 'hs',
+          args: expect.arrayContaining([
+            'cms',
+            'function',
+            'list',
+            '--json',
+            'true',
+            '--account',
+            'test-account',
+          ]),
+        }),
+        expect.any(Function)
       );
       expect(result.content).toHaveLength(2);
       expect(result.content[0].text).toContain('[{"route": "/api/test"}]');

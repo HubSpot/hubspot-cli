@@ -50,10 +50,18 @@ const defaultMcpCommand: McpCommand = {
   args: ['mcp', 'start'],
 };
 
+interface ConfigureMcpServerOptions {
+  targets?: string[];
+  standalone?: boolean;
+  cliVersion?: string;
+}
+
 export async function configureMcpServer(
-  targets: string[] | undefined
+  options: ConfigureMcpServerOptions
 ): Promise<string[]> {
   try {
+    const { targets, standalone, cliVersion: cliVersionFlag } = options;
+
     let derivedTargets: string[] = [];
     if (!targets || targets.length === 0) {
       const { selectedTargets } = await promptUser({
@@ -72,16 +80,24 @@ export async function configureMcpServer(
       derivedTargets = targets;
     }
 
-    // Prompt for standalone mode
-    const { useStandaloneMode } = await promptUser({
-      name: 'useStandaloneMode',
-      type: 'confirm',
-      message: commands.mcp.setup.prompts.standaloneMode,
-      default: false,
-    });
+    let useStandaloneMode = standalone;
 
-    const { cliVersion } = useStandaloneMode
-      ? await promptUser<{ cliVersion: string }>({
+    if (useStandaloneMode === undefined) {
+      const response = await promptUser<{ useStandaloneMode: boolean }>({
+        name: 'useStandaloneMode',
+        type: 'confirm',
+        message: commands.mcp.setup.prompts.standaloneMode,
+        default: false,
+      });
+      useStandaloneMode = response.useStandaloneMode;
+    }
+
+    let cliVersion = '';
+    if (useStandaloneMode) {
+      if (cliVersionFlag !== undefined) {
+        cliVersion = cliVersionFlag;
+      } else {
+        const response = await promptUser<{ cliVersion: string }>({
           name: 'cliVersion',
           type: 'input',
           message: commands.mcp.setup.prompts.cliVersion,
@@ -89,8 +105,10 @@ export async function configureMcpServer(
             !v || /^[\d]+\.[\d]+\.[\d]+([-+][\w.]+)?$/.test(v.trim())
               ? true
               : 'Please enter a valid semver version (e.g. 8.0.1) or leave blank for latest.',
-        })
-      : { cliVersion: '' };
+        });
+        cliVersion = response.cliVersion;
+      }
+    }
 
     const cliPackage = cliVersion
       ? `@hubspot/cli@${cliVersion}`

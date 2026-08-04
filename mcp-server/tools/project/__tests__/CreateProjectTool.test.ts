@@ -8,7 +8,6 @@ import {
 } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { McpLogger } from '../../../utils/logger.js';
 import { runCommandInDir } from '../../../utils/command.js';
-import { addFlag } from '../../../utils/command.js';
 import {
   APP_DISTRIBUTION_TYPES,
   EMPTY_PROJECT,
@@ -19,7 +18,11 @@ import { mcpFeedbackRequest } from '../../../utils/feedbackTracking.js';
 
 vi.mock('@modelcontextprotocol/sdk/server/mcp.js');
 vi.mock('../../../utils/logger.js');
-vi.mock('../../../utils/command');
+vi.mock('../../../utils/command', async importOriginal => {
+  const mod =
+    await importOriginal<typeof import('../../../utils/command.js')>();
+  return { ...mod, runCommandInDir: vi.fn() };
+});
 vi.mock('../../../../lib/constants');
 vi.mock('../../../../lib/projects/create/v2');
 vi.mock('../../../utils/feedbackTracking');
@@ -31,7 +34,6 @@ const mockMcpFeedbackRequest = mcpFeedbackRequest as MockedFunction<
 const mockRunCommandInDir = runCommandInDir as MockedFunction<
   typeof runCommandInDir
 >;
-const mockAddFlag = addFlag as MockedFunction<typeof addFlag>;
 
 describe('mcp-server/tools/project/CreateProjectTool', () => {
   let mockMcpServer: Mocked<McpServer>;
@@ -58,11 +60,6 @@ describe('mcp-server/tools/project/CreateProjectTool', () => {
     mockMcpFeedbackRequest.mockResolvedValue('');
 
     tool = new CreateProjectTool(mockMcpServer, mockLogger);
-
-    // Mock addFlag to simulate command building
-    mockAddFlag.mockImplementation(
-      (command, flag, value) => `${command} --${flag} "${value}"`
-    );
   });
 
   describe('register', () => {
@@ -100,25 +97,22 @@ describe('mcp-server/tools/project/CreateProjectTool', () => {
 
       const result = await tool.handler(baseInput);
 
-      expect(mockAddFlag).toHaveBeenCalledWith(
-        expect.any(String),
-        'name',
-        'test-project'
-      );
-      expect(mockAddFlag).toHaveBeenCalledWith(
-        expect.any(String),
-        'dest',
-        './test-dest'
-      );
-      expect(mockAddFlag).toHaveBeenCalledWith(
-        expect.any(String),
-        'project-base',
-        EMPTY_PROJECT
-      );
-
       expect(mockRunCommandInDir).toHaveBeenCalledWith(
         '/test/workspace',
-        expect.any(String)
+        expect.objectContaining({
+          executable: 'hs',
+          args: expect.arrayContaining([
+            'project',
+            'create',
+            '--name',
+            'test-project',
+            '--dest',
+            './test-dest',
+            '--project-base',
+            EMPTY_PROJECT,
+          ]),
+        }),
+        expect.any(Function)
       );
 
       expect(result).toEqual({
@@ -196,10 +190,14 @@ describe('mcp-server/tools/project/CreateProjectTool', () => {
 
       await tool.handler(input);
 
-      expect(mockAddFlag).toHaveBeenCalledWith(expect.any(String), 'features', [
-        'card',
-        'settings',
-      ]);
+      expect(mockRunCommandInDir).toHaveBeenCalledWith(
+        '/test/workspace',
+        expect.objectContaining({
+          executable: 'hs',
+          args: expect.arrayContaining(['--features', 'card', 'settings']),
+        }),
+        expect.any(Function)
+      );
     });
 
     it('should handle non-Error rejection', async () => {

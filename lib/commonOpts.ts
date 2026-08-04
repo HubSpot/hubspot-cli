@@ -93,11 +93,16 @@ export function addUseEnvironmentOptions(yargs: Argv): Argv {
 }
 
 export function addJSONOutputOptions(yargs: Argv): Argv {
-  return yargs.option('json', {
+  yargs.option('json', {
     alias: 'format-output-as-json',
     describe: lib.commonOpts.options.jsonOutput,
     type: 'boolean',
   });
+  yargs.option('json-schema', {
+    describe: lib.commonOpts.options.jsonSchema,
+    type: 'boolean',
+  });
+  return yargs;
 }
 
 // Remove this once we've upgraded to yargs 18.0.0

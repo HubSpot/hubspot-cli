@@ -6,19 +6,17 @@ import {
   deleteDevSession,
 } from './helpers/devSessionsApi.js';
 import { EXIT_CODES } from '../../enums/exitCodes.js';
-import { uiLogger } from '../../ui/logger.js';
 import { lib } from '../../../lang/en.js';
-import { getErrorMessage } from '../../errorHandlers/index.js';
 import { ExitFunction } from '../../../types/Yargs.js';
 
 type DevSessionManagerConstructorOptions = {
   targetTestingAccountId: number;
-  localDevLogger?: LocalDevLogger;
+  localDevLogger: LocalDevLogger;
   exit: ExitFunction;
 };
 
 class DevSessionManager {
-  localDevLogger?: LocalDevLogger;
+  localDevLogger: LocalDevLogger;
   targetTestingAccountId: number;
   protected devSessionId: number | undefined;
   private heartbeatInterval: NodeJS.Timeout | undefined;
@@ -38,12 +36,7 @@ class DevSessionManager {
     devSessionId: number;
   } {
     if (!this.devSessionId) {
-      if (this.localDevLogger) {
-        this.localDevLogger.devSessionMissingSessionIdError();
-      } else {
-        // Fallback for deprecated local dev manager
-        uiLogger.error(lib.LocalDevManager.devSession.missingSessionIdError);
-      }
+      this.localDevLogger.devSessionMissingSessionIdError();
       throw new Error(lib.LocalDevManager.devSession.missingSessionIdError);
     }
   }
@@ -62,14 +55,7 @@ class DevSessionManager {
       );
       this.devSessionId = registerDevSessionResponse.data.sessionId;
     } catch (e) {
-      if (this.localDevLogger) {
-        this.localDevLogger.devSessionRegistrationError(e);
-      } else {
-        // Fallback for deprecated local dev manager
-        uiLogger.error(
-          lib.LocalDevManager.devSession.registrationError(getErrorMessage(e))
-        );
-      }
+      this.localDevLogger.devSessionRegistrationError(e);
       return false;
     }
 
@@ -102,14 +88,7 @@ class DevSessionManager {
           return;
         }
 
-        if (this.localDevLogger) {
-          this.localDevLogger.devSessionHeartbeatError(e);
-        } else {
-          // Fallback for deprecated local dev manager
-          uiLogger.error(
-            lib.LocalDevManager.devSession.heartbeatError(getErrorMessage(e))
-          );
-        }
+        this.localDevLogger.devSessionHeartbeatError(e);
         return this.exit(EXIT_CODES.ERROR);
       }
     }, 30000);
@@ -122,14 +101,7 @@ class DevSessionManager {
       try {
         await deleteDevSession(this.targetTestingAccountId, this.devSessionId);
       } catch (e) {
-        if (this.localDevLogger) {
-          this.localDevLogger.devSessionDeletionError(e);
-        } else {
-          // Fallback for deprecated local dev manager
-          uiLogger.error(
-            lib.LocalDevManager.devSession.deletionError(getErrorMessage(e))
-          );
-        }
+        this.localDevLogger.devSessionDeletionError(e);
         return false;
       }
     }

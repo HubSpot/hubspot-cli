@@ -14,7 +14,13 @@ export async function trackToolUsage(
     [key: string]: string;
   }
 ): Promise<void> {
-  const config = getConfig();
+  let config;
+  try {
+    config = getConfig();
+  } catch {
+    // No config file exists yet; skip tracking
+    return;
+  }
   if (config?.allowUsageTracking === false) {
     return;
   }

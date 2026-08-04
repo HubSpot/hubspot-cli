@@ -60,7 +60,7 @@ describe('commands/account/rename', () => {
         'process.exit called'
       );
       expect(trackCommandUsageSpy).toHaveBeenCalledWith(
-        'accounts-rename',
+        'account-rename',
         expect.objectContaining({ successful: true }),
         undefined
       );
@@ -82,7 +82,7 @@ describe('commands/account/rename', () => {
       );
 
       expect(trackCommandUsageSpy).toHaveBeenCalledWith(
-        'accounts-rename',
+        'account-rename',
         expect.objectContaining({ successful: false }),
         undefined
       );

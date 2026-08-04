@@ -181,7 +181,7 @@ const builder = makeYargsBuilder<AccountCleanArgs>(
 const accountCleanCommand: YargsCommandModule<unknown, AccountCleanArgs> = {
   command,
   describe,
-  handler: makeWrappedYargsHandler('accounts-clean', handler),
+  handler: makeWrappedYargsHandler('account-clean', handler),
   builder,
 };
 

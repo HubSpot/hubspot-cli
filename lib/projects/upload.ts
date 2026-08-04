@@ -44,7 +44,8 @@ async function uploadProjectFiles(
   filePath: string,
   uploadMessage: string,
   platformVersion: string,
-  intermediateRepresentation?: unknown
+  intermediateRepresentation?: unknown,
+  skipAutoDeploy?: boolean
 ): Promise<{ buildId?: number; error: unknown }> {
   const accountIdentifier = uiAccountDescription(accountId) || `${accountId}`;
 
@@ -60,14 +61,14 @@ async function uploadProjectFiles(
   let error: unknown;
 
   try {
-    // TODO(skip-auto-deploy): Pass skipAutoDeploy once local-dev-lib is bumped
     const { data: upload } = await uploadProject(
       accountId,
       projectName,
       filePath,
       uploadMessage,
       platformVersion,
-      intermediateRepresentation
+      intermediateRepresentation,
+      skipAutoDeploy
     );
 
     buildId = upload.buildId;
@@ -129,7 +130,6 @@ type HandleProjectUploadArg<T> = {
   force?: boolean;
 };
 
-// TODO(skip-auto-deploy): Use skipAutoDeploy once local-dev-lib is bumped to support it
 export async function handleProjectUpload<T>({
   accountId,
   projectConfig,
@@ -142,8 +142,7 @@ export async function handleProjectUpload<T>({
   sendIR = false,
   skipValidation = false,
   skipNpmAudit = false,
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  skipAutoDeploy: _skipAutoDeploy = false,
+  skipAutoDeploy = false,
   force = false,
 }: HandleProjectUploadArg<T>): Promise<ProjectUploadResult<T>> {
   const srcDir = path.resolve(projectDir, projectConfig.srcDir);
@@ -251,7 +250,8 @@ export async function handleProjectUpload<T>({
           tempFile.name,
           uploadMessage,
           projectConfig.platformVersion,
-          intermediateRepresentation
+          intermediateRepresentation,
+          skipAutoDeploy
         );
 
         if (error) {

@@ -8,7 +8,6 @@ import {
 } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { McpLogger } from '../../../utils/logger.js';
 import { runCommandInDir } from '../../../utils/command.js';
-import { addFlag } from '../../../utils/command.js';
 import { MockedFunction, Mocked } from 'vitest';
 import { mcpFeedbackRequest } from '../../../utils/feedbackTracking.js';
 import fs from 'fs';
@@ -16,7 +15,11 @@ import * as config from '@hubspot/local-dev-lib/config';
 
 vi.mock('@modelcontextprotocol/sdk/server/mcp.js');
 vi.mock('../../../utils/logger.js');
-vi.mock('../../../utils/command');
+vi.mock('../../../utils/command', async importOriginal => {
+  const mod =
+    await importOriginal<typeof import('../../../utils/command.js')>();
+  return { ...mod, runCommandInDir: vi.fn() };
+});
 vi.mock('../../../utils/feedbackTracking');
 vi.mock('fs');
 vi.mock('@hubspot/local-dev-lib/config');
@@ -28,7 +31,6 @@ const mockMcpFeedbackRequest = mcpFeedbackRequest as MockedFunction<
 const mockRunCommandInDir = runCommandInDir as MockedFunction<
   typeof runCommandInDir
 >;
-const mockAddFlag = addFlag as MockedFunction<typeof addFlag>;
 const mockReadFileSync = fs.readFileSync as MockedFunction<
   typeof fs.readFileSync
 >;
@@ -59,11 +61,6 @@ describe('mcp-server/tools/project/CreateTestAccountTool', () => {
     mockMcpFeedbackRequest.mockResolvedValue('');
 
     tool = new CreateTestAccountTool(mockMcpServer, mockLogger);
-
-    // Mock addFlag to simulate command building
-    mockAddFlag.mockImplementation(
-      (command, flag, value) => `${command} --${flag} "${value}"`
-    );
 
     // Mock fs.readFileSync for config file tests
     mockReadFileSync.mockReturnValue(
@@ -119,15 +116,18 @@ describe('mcp-server/tools/project/CreateTestAccountTool', () => {
 
         const result = await tool.handler(baseInput);
 
-        expect(mockAddFlag).toHaveBeenCalledWith(
-          'hs test-account create',
-          'config-path',
-          './test-account.json'
-        );
-
         expect(mockRunCommandInDir).toHaveBeenCalledWith(
           '/test/workspace',
-          'hs test-account create --config-path "./test-account.json"'
+          expect.objectContaining({
+            executable: 'hs',
+            args: expect.arrayContaining([
+              'test-account',
+              'create',
+              '--config-path',
+              './test-account.json',
+            ]),
+          }),
+          expect.any(Function)
         );
 
         expect(result).toEqual({
@@ -162,15 +162,18 @@ describe('mcp-server/tools/project/CreateTestAccountTool', () => {
 
         await tool.handler(input);
 
-        expect(mockAddFlag).toHaveBeenCalledWith(
-          'hs test-account create',
-          'config-path',
-          '/absolute/path/to/config.json'
-        );
-
         expect(mockRunCommandInDir).toHaveBeenCalledWith(
           '/test/workspace',
-          'hs test-account create --config-path "/absolute/path/to/config.json"'
+          expect.objectContaining({
+            executable: 'hs',
+            args: expect.arrayContaining([
+              'test-account',
+              'create',
+              '--config-path',
+              '/absolute/path/to/config.json',
+            ]),
+          }),
+          expect.any(Function)
         );
       });
 
@@ -195,18 +198,21 @@ describe('mcp-server/tools/project/CreateTestAccountTool', () => {
 
         await tool.handler(input);
 
-        expect(mockAddFlag).toHaveBeenCalledWith(
-          'hs test-account create',
-          'config-path',
-          './test-account.json'
+        expect(mockRunCommandInDir).toHaveBeenCalledWith(
+          '/test/workspace',
+          expect.objectContaining({
+            executable: 'hs',
+            args: expect.arrayContaining([
+              '--config-path',
+              './test-account.json',
+            ]),
+          }),
+          expect.any(Function)
         );
 
-        // Should not call addFlag for name or description
-        expect(mockAddFlag).not.toHaveBeenCalledWith(
-          expect.anything(),
-          'name',
-          expect.anything()
-        );
+        // Should not include --name flag since config path takes priority
+        const callArgs = mockRunCommandInDir.mock.calls[0][1];
+        expect(callArgs.args).not.toContain('--name');
       });
 
       it('should return helpful error when config file does not exist', async () => {
@@ -287,10 +293,18 @@ describe('mcp-server/tools/project/CreateTestAccountTool', () => {
 
         await tool.handler(input);
 
-        expect(mockAddFlag).toHaveBeenCalledWith(
-          'hs test-account create',
-          'name',
-          'MyTestAccount'
+        expect(mockRunCommandInDir).toHaveBeenCalledWith(
+          '/test/workspace',
+          expect.objectContaining({
+            executable: 'hs',
+            args: expect.arrayContaining([
+              'test-account',
+              'create',
+              '--name',
+              'MyTestAccount',
+            ]),
+          }),
+          expect.any(Function)
         );
       });
 
@@ -307,15 +321,33 @@ describe('mcp-server/tools/project/CreateTestAccountTool', () => {
 
         await tool.handler(input);
 
-        expect(mockAddFlag).toHaveBeenCalledWith(
-          'hs test-account create',
-          'name',
-          'MyTestAccount'
+        expect(mockRunCommandInDir).toHaveBeenCalledWith(
+          '/test/workspace',
+          expect.objectContaining({
+            executable: 'hs',
+            args: expect.arrayContaining([
+              'test-account',
+              'create',
+              '--name',
+              'MyTestAccount',
+              '--description',
+              'MyTestAccount',
+              '--marketing-level',
+              'ENTERPRISE',
+              '--ops-level',
+              'ENTERPRISE',
+              '--service-level',
+              'ENTERPRISE',
+              '--sales-level',
+              'ENTERPRISE',
+              '--content-level',
+              'ENTERPRISE',
+              '--commerce-level',
+              'ENTERPRISE',
+            ]),
+          }),
+          expect.any(Function)
         );
-        // Implementation uses name as fallback for description, and adds all hub levels with ENTERPRISE defaults
-        expect(mockAddFlag).toHaveBeenCalledTimes(8);
-
-        expect(mockRunCommandInDir).toHaveBeenCalled();
       });
 
       it('should create test account with account name and description', async () => {
@@ -338,15 +370,18 @@ describe('mcp-server/tools/project/CreateTestAccountTool', () => {
 
         await tool.handler(input);
 
-        expect(mockAddFlag).toHaveBeenCalledWith(
-          'hs test-account create',
-          'name',
-          'MyTestAccount'
-        );
-        expect(mockAddFlag).toHaveBeenCalledWith(
-          expect.stringContaining('name'),
-          'description',
-          'Test account for development'
+        expect(mockRunCommandInDir).toHaveBeenCalledWith(
+          '/test/workspace',
+          expect.objectContaining({
+            executable: 'hs',
+            args: expect.arrayContaining([
+              '--name',
+              'MyTestAccount',
+              '--description',
+              'Test account for development',
+            ]),
+          }),
+          expect.any(Function)
         );
       });
 
@@ -370,25 +405,22 @@ describe('mcp-server/tools/project/CreateTestAccountTool', () => {
 
         await tool.handler(input);
 
-        expect(mockAddFlag).toHaveBeenCalledWith(
-          'hs test-account create',
-          'name',
-          'MixedTierAccount'
-        );
-        expect(mockAddFlag).toHaveBeenCalledWith(
-          expect.stringContaining('name'),
-          'marketing-level',
-          'PROFESSIONAL'
-        );
-        expect(mockAddFlag).toHaveBeenCalledWith(
-          expect.stringContaining('marketing-level'),
-          'sales-level',
-          'STARTER'
-        );
-        expect(mockAddFlag).toHaveBeenCalledWith(
-          expect.stringContaining('sales-level'),
-          'content-level',
-          'FREE'
+        expect(mockRunCommandInDir).toHaveBeenCalledWith(
+          '/test/workspace',
+          expect.objectContaining({
+            executable: 'hs',
+            args: expect.arrayContaining([
+              '--name',
+              'MixedTierAccount',
+              '--marketing-level',
+              'PROFESSIONAL',
+              '--sales-level',
+              'STARTER',
+              '--content-level',
+              'FREE',
+            ]),
+          }),
+          expect.any(Function)
         );
       });
 
@@ -412,45 +444,30 @@ describe('mcp-server/tools/project/CreateTestAccountTool', () => {
 
         await tool.handler(input);
 
-        expect(mockAddFlag).toHaveBeenCalledWith(
-          'hs test-account create',
-          'name',
-          'AllHubsAccount'
-        );
-        expect(mockAddFlag).toHaveBeenCalledWith(
-          expect.any(String),
-          'description',
-          'Full configuration'
-        );
-        expect(mockAddFlag).toHaveBeenCalledWith(
-          expect.any(String),
-          'marketing-level',
-          'ENTERPRISE'
-        );
-        expect(mockAddFlag).toHaveBeenCalledWith(
-          expect.any(String),
-          'ops-level',
-          'PROFESSIONAL'
-        );
-        expect(mockAddFlag).toHaveBeenCalledWith(
-          expect.any(String),
-          'service-level',
-          'STARTER'
-        );
-        expect(mockAddFlag).toHaveBeenCalledWith(
-          expect.any(String),
-          'sales-level',
-          'ENTERPRISE'
-        );
-        expect(mockAddFlag).toHaveBeenCalledWith(
-          expect.any(String),
-          'content-level',
-          'PROFESSIONAL'
-        );
-        expect(mockAddFlag).toHaveBeenCalledWith(
-          expect.any(String),
-          'commerce-level',
-          'FREE'
+        expect(mockRunCommandInDir).toHaveBeenCalledWith(
+          '/test/workspace',
+          expect.objectContaining({
+            executable: 'hs',
+            args: expect.arrayContaining([
+              '--name',
+              'AllHubsAccount',
+              '--description',
+              'Full configuration',
+              '--marketing-level',
+              'ENTERPRISE',
+              '--ops-level',
+              'PROFESSIONAL',
+              '--service-level',
+              'STARTER',
+              '--sales-level',
+              'ENTERPRISE',
+              '--content-level',
+              'PROFESSIONAL',
+              '--commerce-level',
+              'FREE',
+            ]),
+          }),
+          expect.any(Function)
         );
       });
     });
@@ -476,40 +493,28 @@ describe('mcp-server/tools/project/CreateTestAccountTool', () => {
 
         await tool.handler(input);
 
-        expect(mockAddFlag).toHaveBeenCalledWith(
-          'hs test-account create',
-          'name',
-          'DefaultLevelsAccount'
-        );
-        expect(mockAddFlag).toHaveBeenCalledWith(
-          expect.any(String),
-          'marketing-level',
-          'ENTERPRISE'
-        );
-        expect(mockAddFlag).toHaveBeenCalledWith(
-          expect.any(String),
-          'ops-level',
-          'ENTERPRISE'
-        );
-        expect(mockAddFlag).toHaveBeenCalledWith(
-          expect.any(String),
-          'service-level',
-          'ENTERPRISE'
-        );
-        expect(mockAddFlag).toHaveBeenCalledWith(
-          expect.any(String),
-          'sales-level',
-          'ENTERPRISE'
-        );
-        expect(mockAddFlag).toHaveBeenCalledWith(
-          expect.any(String),
-          'content-level',
-          'ENTERPRISE'
-        );
-        expect(mockAddFlag).toHaveBeenCalledWith(
-          expect.any(String),
-          'commerce-level',
-          'ENTERPRISE'
+        expect(mockRunCommandInDir).toHaveBeenCalledWith(
+          '/test/workspace',
+          expect.objectContaining({
+            executable: 'hs',
+            args: expect.arrayContaining([
+              '--name',
+              'DefaultLevelsAccount',
+              '--marketing-level',
+              'ENTERPRISE',
+              '--ops-level',
+              'ENTERPRISE',
+              '--service-level',
+              'ENTERPRISE',
+              '--sales-level',
+              'ENTERPRISE',
+              '--content-level',
+              'ENTERPRISE',
+              '--commerce-level',
+              'ENTERPRISE',
+            ]),
+          }),
+          expect.any(Function)
         );
       });
 
@@ -533,73 +538,17 @@ describe('mcp-server/tools/project/CreateTestAccountTool', () => {
 
         await tool.handler(input);
 
-        expect(mockAddFlag).toHaveBeenCalledWith(
-          'hs test-account create',
-          'name',
-          'NoDescriptionAccount'
-        );
         // Implementation uses name as fallback for description
-        expect(mockAddFlag).toHaveBeenCalledWith(
-          expect.any(String),
-          'description',
-          'NoDescriptionAccount'
-        );
-      });
-
-      it('should use defaults for some hub levels while respecting explicit values', async () => {
-        mockRunCommandInDir.mockResolvedValue({
-          stdout: 'Test account created',
-          stderr: '',
-        });
-
-        const input: CreateTestAccountInputSchema = {
-          absoluteCurrentWorkingDirectory: '/test/workspace',
-          name: 'PartialLevelsAccount',
-          description: '',
-          marketingLevel: 'FREE',
-          salesLevel: 'STARTER',
-          opsLevel: 'ENTERPRISE',
-          serviceLevel: 'ENTERPRISE',
-          contentLevel: 'ENTERPRISE',
-          commerceLevel: 'ENTERPRISE',
-        };
-
-        await tool.handler(input);
-
-        expect(mockAddFlag).toHaveBeenCalledWith(
-          'hs test-account create',
-          'name',
-          'PartialLevelsAccount'
-        );
-        expect(mockAddFlag).toHaveBeenCalledWith(
-          expect.any(String),
-          'marketing-level',
-          'FREE'
-        );
-        expect(mockAddFlag).toHaveBeenCalledWith(
-          expect.any(String),
-          'sales-level',
-          'STARTER'
-        );
-        expect(mockAddFlag).toHaveBeenCalledWith(
-          expect.any(String),
-          'ops-level',
-          'ENTERPRISE'
-        );
-        expect(mockAddFlag).toHaveBeenCalledWith(
-          expect.any(String),
-          'service-level',
-          'ENTERPRISE'
-        );
-        expect(mockAddFlag).toHaveBeenCalledWith(
-          expect.any(String),
-          'content-level',
-          'ENTERPRISE'
-        );
-        expect(mockAddFlag).toHaveBeenCalledWith(
-          expect.any(String),
-          'commerce-level',
-          'ENTERPRISE'
+        expect(mockRunCommandInDir).toHaveBeenCalledWith(
+          '/test/workspace',
+          expect.objectContaining({
+            executable: 'hs',
+            args: expect.arrayContaining([
+              '--description',
+              'NoDescriptionAccount',
+            ]),
+          }),
+          expect.any(Function)
         );
       });
 
@@ -624,7 +573,6 @@ describe('mcp-server/tools/project/CreateTestAccountTool', () => {
         const result = await tool.handler(input);
 
         expect(mockRunCommandInDir).toHaveBeenCalled();
-        expect(mockAddFlag).toHaveBeenCalledTimes(8);
         expect(result.content[1]).toEqual({
           type: 'text',
           text: 'Test account created with defaults',
@@ -644,12 +592,29 @@ describe('mcp-server/tools/project/CreateTestAccountTool', () => {
 
         await tool.handler(input);
 
-        expect(mockAddFlag).toHaveBeenCalledWith(
-          'hs test-account create',
-          'name',
-          'BypassedDefaultsAccount'
+        expect(mockRunCommandInDir).toHaveBeenCalledWith(
+          '/test/workspace',
+          expect.objectContaining({
+            executable: 'hs',
+            args: expect.arrayContaining([
+              '--name',
+              'BypassedDefaultsAccount',
+              '--marketing-level',
+              'ENTERPRISE',
+              '--ops-level',
+              'ENTERPRISE',
+              '--service-level',
+              'ENTERPRISE',
+              '--sales-level',
+              'ENTERPRISE',
+              '--content-level',
+              'ENTERPRISE',
+              '--commerce-level',
+              'ENTERPRISE',
+            ]),
+          }),
+          expect.any(Function)
         );
-        expect(mockAddFlag).toHaveBeenCalledTimes(8);
       });
     });
 

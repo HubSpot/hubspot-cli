@@ -1,11 +1,15 @@
+import fs from 'fs';
 import yargs, { ArgumentsCamelCase, Argv } from 'yargs';
-import profileAddCommand from '../add.js';
+import profileAddCommand, { type ProjectProfileAddArgs } from '../add.js';
 import { getProjectConfig } from '../../../../lib/projects/config.js';
 import { isLegacyProject } from '@hubspot/project-parsing-lib/projects';
 import { uiLogger } from '../../../../lib/ui/logger.js';
 import { EXIT_CODES } from '../../../../lib/enums/exitCodes.js';
-import { CommonArgs } from '../../../../types/Yargs.js';
-import { getAllHsProfiles } from '@hubspot/project-parsing-lib/profiles';
+import {
+  getAllHsProfiles,
+  getHsProfileFilename,
+  loadHsProfileFile,
+} from '@hubspot/project-parsing-lib/profiles';
 import {
   getConfigAccountIfExists,
   getAllConfigAccounts,
@@ -43,15 +47,12 @@ vi.mock('fs', async importOriginal => {
   };
 });
 
-type ProjectProfileAddArgs = CommonArgs & {
-  name?: string;
-  targetAccount?: number;
-};
-
 const mockedGetProjectConfig = vi.mocked(getProjectConfig);
 const mockedIsLegacyProject = vi.mocked(isLegacyProject);
 const mockedUiLogger = vi.mocked(uiLogger);
 const mockedGetAllHsProfiles = vi.mocked(getAllHsProfiles);
+const mockedGetHsProfileFilename = vi.mocked(getHsProfileFilename);
+const mockedLoadHsProfileFile = vi.mocked(loadHsProfileFile);
 const mockedGetAllConfigAccounts = vi.mocked(getAllConfigAccounts);
 const mockedGetConfigAccountIfExists = vi.mocked(getConfigAccountIfExists);
 const mockedPromptUser = vi.mocked(promptUtils.promptUser);
@@ -105,6 +106,9 @@ describe('commands/project/profile/add', () => {
       });
       mockedIsLegacyProject.mockReturnValue(false);
       mockedGetAllHsProfiles.mockResolvedValue([]);
+      mockedGetHsProfileFilename.mockImplementation(
+        (name: string) => `hsprofile.${name}.json`
+      );
       mockedGetAllConfigAccounts.mockReturnValue([
         {
           accountId: 100,
@@ -142,6 +146,42 @@ describe('commands/project/profile/add', () => {
       expect(mockedUiLogger.error).toHaveBeenCalled();
       expect(mockExit).toHaveBeenCalledWith(EXIT_CODES.ERROR);
       expect(mockedGetAllConfigAccounts).not.toHaveBeenCalled();
+    });
+
+    it('should copy variables from specified profile when --copy-from is provided', async () => {
+      vi.spyOn(fs, 'writeFileSync').mockReturnValue(undefined);
+      mockedGetAllHsProfiles.mockResolvedValue(['staging']);
+      mockedLoadHsProfileFile.mockReturnValue({
+        accountId: 200,
+        variables: { API_KEY: 'test-key' },
+      });
+
+      const argsWithCopyFrom = {
+        ...mockArgs,
+        copyFrom: 'staging',
+      } as unknown as ArgumentsCamelCase<ProjectProfileAddArgs>;
+
+      await profileAddCommand.handler(argsWithCopyFrom);
+
+      expect(mockedLoadHsProfileFile).toHaveBeenCalledWith(
+        expect.stringContaining('src'),
+        'staging'
+      );
+      expect(mockExit).toHaveBeenCalledWith(EXIT_CODES.SUCCESS);
+    });
+
+    it('should exit with error when --copy-from profile does not exist', async () => {
+      mockedGetAllHsProfiles.mockResolvedValue(['staging']);
+
+      const argsWithCopyFrom = {
+        ...mockArgs,
+        copyFrom: 'nonexistent',
+      } as unknown as ArgumentsCamelCase<ProjectProfileAddArgs>;
+
+      await profileAddCommand.handler(argsWithCopyFrom);
+
+      expect(mockedUiLogger.error).toHaveBeenCalled();
+      expect(mockExit).toHaveBeenCalledWith(EXIT_CODES.ERROR);
     });
   });
 });

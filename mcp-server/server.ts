@@ -18,22 +18,26 @@ WHEN TO USE THIS SERVER
   via \`search-docs\` + \`fetch-doc\` rather than from prior knowledge.
 
 REQUIRED WORKFLOWS
-1. Documentation lookup: always call \`search-docs\` first, then
+1. Authentication: call \`auth-account\` when the user wants to connect a
+   HubSpot account, when any tool reports "No account ID found", or when
+   there are no authenticated accounts. The tool opens a browser tab for
+   the user to authorize — no Personal Access Key is required up front.
+2. Documentation lookup: always call \`search-docs\` first, then
    \`fetch-doc\` on the most relevant result(s) before planning, writing
    code, or answering platform/API questions. Do not answer from memory.
-2. Locating a HubSpot project: when the current working directory is not
+3. Locating a HubSpot project: when the current working directory is not
    a HubSpot project (no \`hsproject.json\`) or you need to determine
    whether a directory contains one, call \`find-projects\` before
    running any tool that requires a project path.
-3. Editing \`*-hsmeta.json\`: call \`get-feature-config-schema\` for that
+4. Editing \`*-hsmeta.json\`: call \`get-feature-config-schema\` for that
    feature type first to learn the allowed fields and values.
-4. Debugging a failed build: start with \`get-build-status\` to surface
+5. Debugging a failed build: start with \`get-build-status\` to surface
    error messages, and only reach for \`get-build-logs\` for deeper
    troubleshooting or warnings.
-5. Reading serverless function logs: call \`list-cms-serverless-functions\`
+6. Reading serverless function logs: call \`list-cms-serverless-functions\`
    first to discover the endpoint path, then
    \`get-cms-serverless-function-logs\`.
-6. App analytics: call \`get-apps-info\` to discover \`appId\` values
+7. App analytics: call \`get-apps-info\` to discover \`appId\` values
    before \`get-api-usage-patterns-by-app-id\`.
 
 OUTPUT

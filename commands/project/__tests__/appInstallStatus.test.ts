@@ -4,19 +4,13 @@ import { translateForLocalDev } from '@hubspot/project-parsing-lib/translate';
 import { fetchProject } from '@hubspot/local-dev-lib/api/projects';
 import { fetchAppInstallationData } from '@hubspot/local-dev-lib/api/localDevAuth';
 
-import projectInstallStatusCommand from '../appInstallStatus.js';
+import projectInstallStatusCommand, {
+  type ProjectInstallStatusArgs,
+} from '../appInstallStatus.js';
 import { getProjectConfig } from '../../../lib/projects/config.js';
 import { uiLogger } from '../../../lib/ui/logger.js';
 import { EXIT_CODES } from '../../../lib/enums/exitCodes.js';
 import { mockHubSpotHttpError } from '../../../lib/testUtils.js';
-import {
-  AccountArgs,
-  CommonArgs,
-  ConfigArgs,
-  EnvironmentArgs,
-  JSONOutputArgs,
-  UsageTrackingArgs,
-} from '../../../types/Yargs.js';
 
 vi.mock('../../../lib/commonOpts');
 vi.mock('../../../lib/errorHandlers/index.js');
@@ -39,13 +33,6 @@ vi.mock('@hubspot/local-dev-lib/config', async importOriginal => {
     getConfigAccountIfExists: vi.fn().mockReturnValue(undefined),
   };
 });
-
-type ProjectInstallStatusArgs = CommonArgs &
-  ConfigArgs &
-  AccountArgs &
-  EnvironmentArgs &
-  JSONOutputArgs &
-  UsageTrackingArgs;
 
 const mockedGetProjectConfig = vi.mocked(getProjectConfig);
 const mockedIsLegacyProject = vi.mocked(isLegacyProject);
@@ -130,6 +117,7 @@ describe('commands/project/appInstallStatus', () => {
       formatOutputAsJson: false,
       exit: mockExit,
       addUsageMetadata: vi.fn(),
+      addJsonOutput: vi.fn(),
     } as unknown as ArgumentsCamelCase<ProjectInstallStatusArgs>;
 
     beforeEach(() => {
@@ -276,11 +264,11 @@ describe('commands/project/appInstallStatus', () => {
       const jsonArgs = {
         ...mockArgs,
         formatOutputAsJson: true,
-      } as ArgumentsCamelCase<ProjectInstallStatusArgs>;
+      } as unknown as ArgumentsCamelCase<ProjectInstallStatusArgs>;
 
       await projectInstallStatusCommand.handler(jsonArgs);
 
-      expect(mockedUiLogger.json).toHaveBeenCalledWith({
+      expect(mockArgs.addJsonOutput).toHaveBeenCalledWith({
         appId: 99,
         appUid: 'my-app-uid',
         accountId: 100,
@@ -299,11 +287,11 @@ describe('commands/project/appInstallStatus', () => {
       const jsonArgs = {
         ...mockArgs,
         formatOutputAsJson: true,
-      } as ArgumentsCamelCase<ProjectInstallStatusArgs>;
+      } as unknown as ArgumentsCamelCase<ProjectInstallStatusArgs>;
 
       await projectInstallStatusCommand.handler(jsonArgs);
 
-      expect(mockedUiLogger.json).toHaveBeenCalledWith(
+      expect(mockArgs.addJsonOutput).toHaveBeenCalledWith(
         expect.objectContaining({
           isInstalled: false,
           isInstalledWithCurrentScopes: false,

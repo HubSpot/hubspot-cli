@@ -147,7 +147,7 @@ const builder = makeYargsBuilder<AccountRemoveArgs>(
 const accountRemoveCommand: YargsCommandModule<unknown, AccountRemoveArgs> = {
   command,
   describe,
-  handler: makeWrappedYargsHandler('accounts-remove', handler),
+  handler: makeWrappedYargsHandler('account-remove', handler),
   builder,
 };
 

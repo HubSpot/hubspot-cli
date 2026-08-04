@@ -6,13 +6,16 @@ import {
 } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { McpLogger } from '../../../utils/logger.js';
 import { runCommandInDir } from '../../../utils/command.js';
-import { addFlag } from '../../../utils/command.js';
 import { MockedFunction, Mocked } from 'vitest';
 import { mcpFeedbackRequest } from '../../../utils/feedbackTracking.js';
 
 vi.mock('@modelcontextprotocol/sdk/server/mcp.js');
 vi.mock('../../../utils/logger.js');
-vi.mock('../../../utils/command');
+vi.mock('../../../utils/command', async importOriginal => {
+  const mod =
+    await importOriginal<typeof import('../../../utils/command.js')>();
+  return { ...mod, runCommandInDir: vi.fn() };
+});
 vi.mock('../../../utils/feedbackTracking');
 
 const mockMcpFeedbackRequest = mcpFeedbackRequest as MockedFunction<
@@ -22,7 +25,6 @@ const mockMcpFeedbackRequest = mcpFeedbackRequest as MockedFunction<
 const mockRunCommandInDir = runCommandInDir as MockedFunction<
   typeof runCommandInDir
 >;
-const mockAddFlag = addFlag as MockedFunction<typeof addFlag>;
 
 describe('HsCreateTemplateTool', () => {
   let mockMcpServer: Mocked<McpServer>;
@@ -113,10 +115,6 @@ describe('HsCreateTemplateTool', () => {
     });
 
     it('should execute command with all required parameters (page template)', async () => {
-      mockAddFlag.mockReturnValueOnce(
-        'hs cms template create "Page Template" --template-type page-template'
-      );
-
       mockRunCommandInDir.mockResolvedValue({
         stdout: 'Page template created successfully',
         stderr: '',
@@ -128,14 +126,20 @@ describe('HsCreateTemplateTool', () => {
         templateType: 'page-template',
       });
 
-      expect(mockAddFlag).toHaveBeenCalledWith(
-        'hs cms template create "Page Template"',
-        'template-type',
-        'page-template'
-      );
       expect(mockRunCommandInDir).toHaveBeenCalledWith(
         '/test/dir',
-        'hs cms template create "Page Template" --template-type page-template'
+        expect.objectContaining({
+          executable: 'hs',
+          args: expect.arrayContaining([
+            'cms',
+            'template',
+            'create',
+            'Page Template',
+            '--template-type',
+            'page-template',
+          ]),
+        }),
+        expect.any(Function)
       );
       expect(result.content).toHaveLength(2);
       expect(result.content[0].text).toContain(
@@ -144,10 +148,6 @@ describe('HsCreateTemplateTool', () => {
     });
 
     it('should execute command with email template', async () => {
-      mockAddFlag.mockReturnValueOnce(
-        'hs cms template create "Email Template" --template-type email-template'
-      );
-
       mockRunCommandInDir.mockResolvedValue({
         stdout: 'Email template created successfully',
         stderr: '',
@@ -159,10 +159,20 @@ describe('HsCreateTemplateTool', () => {
         templateType: 'email-template',
       });
 
-      expect(mockAddFlag).toHaveBeenCalledWith(
-        'hs cms template create "Email Template"',
-        'template-type',
-        'email-template'
+      expect(mockRunCommandInDir).toHaveBeenCalledWith(
+        '/test/dir',
+        expect.objectContaining({
+          executable: 'hs',
+          args: expect.arrayContaining([
+            'cms',
+            'template',
+            'create',
+            'Email Template',
+            '--template-type',
+            'email-template',
+          ]),
+        }),
+        expect.any(Function)
       );
       expect(result.content[0].text).toContain(
         'Email template created successfully'
@@ -170,10 +180,6 @@ describe('HsCreateTemplateTool', () => {
     });
 
     it('should execute command with partial template', async () => {
-      mockAddFlag.mockReturnValueOnce(
-        'hs cms template create "Header Partial" --template-type partial'
-      );
-
       mockRunCommandInDir.mockResolvedValue({
         stdout: 'Partial template created successfully',
         stderr: '',
@@ -185,10 +191,20 @@ describe('HsCreateTemplateTool', () => {
         templateType: 'partial',
       });
 
-      expect(mockAddFlag).toHaveBeenCalledWith(
-        'hs cms template create "Header Partial"',
-        'template-type',
-        'partial'
+      expect(mockRunCommandInDir).toHaveBeenCalledWith(
+        '/test/dir',
+        expect.objectContaining({
+          executable: 'hs',
+          args: expect.arrayContaining([
+            'cms',
+            'template',
+            'create',
+            'Header Partial',
+            '--template-type',
+            'partial',
+          ]),
+        }),
+        expect.any(Function)
       );
       expect(result.content[0].text).toContain(
         'Partial template created successfully'
@@ -196,10 +212,6 @@ describe('HsCreateTemplateTool', () => {
     });
 
     it('should execute command with blog-listing-template', async () => {
-      mockAddFlag.mockReturnValueOnce(
-        'hs cms template create "Blog Listing" --template-type blog-listing-template'
-      );
-
       mockRunCommandInDir.mockResolvedValue({
         stdout: 'Blog listing template created successfully',
         stderr: '',
@@ -211,10 +223,20 @@ describe('HsCreateTemplateTool', () => {
         templateType: 'blog-listing-template',
       });
 
-      expect(mockAddFlag).toHaveBeenCalledWith(
-        'hs cms template create "Blog Listing"',
-        'template-type',
-        'blog-listing-template'
+      expect(mockRunCommandInDir).toHaveBeenCalledWith(
+        '/test/dir',
+        expect.objectContaining({
+          executable: 'hs',
+          args: expect.arrayContaining([
+            'cms',
+            'template',
+            'create',
+            'Blog Listing',
+            '--template-type',
+            'blog-listing-template',
+          ]),
+        }),
+        expect.any(Function)
       );
       expect(result.content[0].text).toContain(
         'Blog listing template created successfully'
@@ -222,10 +244,6 @@ describe('HsCreateTemplateTool', () => {
     });
 
     it('should execute command with destination path', async () => {
-      mockAddFlag.mockReturnValueOnce(
-        'hs cms template create "Test Template" "templates/custom" --template-type page-template'
-      );
-
       mockRunCommandInDir.mockResolvedValue({
         stdout: 'Template created at custom path',
         stderr: '',
@@ -240,7 +258,11 @@ describe('HsCreateTemplateTool', () => {
 
       expect(mockRunCommandInDir).toHaveBeenCalledWith(
         '/test/dir',
-        expect.stringContaining('"templates/custom"')
+        expect.objectContaining({
+          executable: 'hs',
+          args: expect.arrayContaining(['templates/custom']),
+        }),
+        expect.any(Function)
       );
       expect(result.content[0].text).toContain(
         'Template created at custom path'
@@ -248,10 +270,6 @@ describe('HsCreateTemplateTool', () => {
     });
 
     it('should execute command with section template', async () => {
-      mockAddFlag.mockReturnValueOnce(
-        'hs cms template create "Hero Section" --template-type section'
-      );
-
       mockRunCommandInDir.mockResolvedValue({
         stdout: 'Section template created successfully',
         stderr: '',
@@ -263,10 +281,13 @@ describe('HsCreateTemplateTool', () => {
         templateType: 'section',
       });
 
-      expect(mockAddFlag).toHaveBeenCalledWith(
-        'hs cms template create "Hero Section"',
-        'template-type',
-        'section'
+      expect(mockRunCommandInDir).toHaveBeenCalledWith(
+        '/test/dir',
+        expect.objectContaining({
+          executable: 'hs',
+          args: expect.arrayContaining(['--template-type', 'section']),
+        }),
+        expect.any(Function)
       );
       expect(result.content[0].text).toContain(
         'Section template created successfully'
@@ -274,10 +295,6 @@ describe('HsCreateTemplateTool', () => {
     });
 
     it('should execute command with search template', async () => {
-      mockAddFlag.mockReturnValueOnce(
-        'hs cms template create "Search Results" --template-type search-template'
-      );
-
       mockRunCommandInDir.mockResolvedValue({
         stdout: 'Search template created successfully',
         stderr: '',
@@ -289,10 +306,13 @@ describe('HsCreateTemplateTool', () => {
         templateType: 'search-template',
       });
 
-      expect(mockAddFlag).toHaveBeenCalledWith(
-        'hs cms template create "Search Results"',
-        'template-type',
-        'search-template'
+      expect(mockRunCommandInDir).toHaveBeenCalledWith(
+        '/test/dir',
+        expect.objectContaining({
+          executable: 'hs',
+          args: expect.arrayContaining(['--template-type', 'search-template']),
+        }),
+        expect.any(Function)
       );
       expect(result.content[0].text).toContain(
         'Search template created successfully'
@@ -300,10 +320,6 @@ describe('HsCreateTemplateTool', () => {
     });
 
     it('should execute command with blog-post-template', async () => {
-      mockAddFlag.mockReturnValueOnce(
-        'hs cms template create "Custom Blog Post" --template-type blog-post-template'
-      );
-
       mockRunCommandInDir.mockResolvedValue({
         stdout: 'Blog post template created successfully',
         stderr: '',
@@ -315,10 +331,16 @@ describe('HsCreateTemplateTool', () => {
         templateType: 'blog-post-template',
       });
 
-      expect(mockAddFlag).toHaveBeenCalledWith(
-        'hs cms template create "Custom Blog Post"',
-        'template-type',
-        'blog-post-template'
+      expect(mockRunCommandInDir).toHaveBeenCalledWith(
+        '/test/dir',
+        expect.objectContaining({
+          executable: 'hs',
+          args: expect.arrayContaining([
+            '--template-type',
+            'blog-post-template',
+          ]),
+        }),
+        expect.any(Function)
       );
       expect(result.content[0].text).toContain(
         'Blog post template created successfully'
@@ -341,10 +363,6 @@ describe('HsCreateTemplateTool', () => {
     });
 
     it('should handle stderr output', async () => {
-      mockAddFlag.mockReturnValueOnce(
-        'hs cms template create "Test Template" --template-type page-template'
-      );
-
       mockRunCommandInDir.mockResolvedValue({
         stdout: 'Template created successfully',
         stderr: 'Warning: Using deprecated template syntax',

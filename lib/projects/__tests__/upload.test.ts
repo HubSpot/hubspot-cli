@@ -524,7 +524,15 @@ describe('lib/projects/upload', () => {
       mockArchive.finalize();
       const result = await uploadPromise;
 
-      expect(uploadProject).toHaveBeenCalled();
+      expect(uploadProject).toHaveBeenCalledWith(
+        123,
+        projectConfig.name,
+        expect.any(String),
+        '',
+        projectConfig.platformVersion,
+        undefined,
+        true
+      );
       expect(callbackFunc).toHaveBeenCalled();
       expect(result.result).toEqual({ success: true });
     });

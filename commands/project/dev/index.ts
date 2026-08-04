@@ -9,7 +9,6 @@ import { EXIT_CODES } from '../../../lib/enums/exitCodes.js';
 import { uiLine } from '../../../lib/ui/index.js';
 import { ProjectDevArgs, YargsCommandModule } from '../../../types/Yargs.js';
 import { makeWrappedYargsHandler } from '../../../lib/yargs/makeWrappedYargsHandler.js';
-import { deprecatedProjectDevFlow } from './deprecatedFlow.js';
 import { unifiedProjectDevFlow } from './unifiedFlow.js';
 import { isLegacyProject } from '@hubspot/project-parsing-lib/projects';
 import { makeYargsBuilder } from '../../../lib/yargsUtils.js';
@@ -24,28 +23,11 @@ import { LOCAL_DEV_DEFAULT_PORT } from '../../../lib/constants.js';
 const command = 'dev';
 const describe = commands.project.dev.describe;
 
-function validateAccountFlags(
-  testingAccount: string | number | undefined,
-  projectAccount: string | number | undefined,
-  userProvidedAccount: string | number | undefined,
-  useV2: boolean
-) {
-  // Legacy projects do not support targetTestingAccount and targetProjectAccount
-  if (testingAccount && projectAccount && !useV2) {
-    throw new Error(commands.project.dev.errors.unsupportedAccountFlagLegacy);
-  }
-
-  if (userProvidedAccount && useV2) {
-    throw new Error(commands.project.dev.errors.unsupportedAccountFlagV2);
-  }
-}
-
 async function handler(
   args: ArgumentsCamelCase<ProjectDevArgs>
 ): Promise<void> {
   const {
     derivedAccountId,
-    userProvidedAccount,
     testingAccount,
     projectAccount,
     profile: profileOption,
@@ -62,36 +44,26 @@ async function handler(
     return exit(EXIT_CODES.ERROR);
   }
 
-  const useV2Projects = !isLegacyProject(projectConfig.platformVersion);
-
   if (!projectDir) {
     uiLogger.error(commands.project.dev.errors.noProjectConfig);
     return exit(EXIT_CODES.ERROR);
   }
 
-  try {
-    validateAccountFlags(
-      testingAccount,
-      projectAccount,
-      userProvidedAccount,
-      useV2Projects
+  if (isLegacyProject(projectConfig.platformVersion)) {
+    uiLogger.error(
+      commands.project.dev.errors.unsupportedPlatformVersion(
+        projectConfig.platformVersion
+      )
     );
-  } catch (error) {
-    logError(error);
     return exit(EXIT_CODES.ERROR);
   }
 
   uiLogger.log(commands.project.dev.logs.header);
-  if (useV2Projects) {
-    uiLogger.log(commands.project.dev.logs.learnMoreMessageV2);
-  } else {
-    uiLogger.log(commands.project.dev.logs.learnMoreMessageLegacy);
-  }
+  uiLogger.log(commands.project.dev.logs.learnMoreMessageV2);
 
   let targetProjectAccountId: number | undefined | null;
   let profile: HsProfileFile | undefined;
 
-  // Using the new --projectAccount flag
   if (projectAccount) {
     targetProjectAccountId =
       getConfigAccountIfExists(projectAccount)?.accountId;
@@ -103,16 +75,9 @@ async function handler(
         )
       );
     }
-    // Using the legacy --account flag
-  } else if (userProvidedAccount && derivedAccountId) {
-    targetProjectAccountId = derivedAccountId;
   }
 
-  // Determine profile name: from flag or prompt
-  if (
-    !targetProjectAccountId &&
-    !isLegacyProject(projectConfig.platformVersion)
-  ) {
+  if (!targetProjectAccountId) {
     const profileName = await projectProfilePrompt(
       projectDir,
       projectConfig,
@@ -144,43 +109,31 @@ async function handler(
   }
 
   if (!targetProjectAccountId) {
-    // The user is not using profile or account flags, so we can use the derived accountId
     targetProjectAccountId = derivedAccountId;
 
-    if (useV2Projects) {
-      uiLogger.log('');
-      uiLogger.log(
-        commands.project.dev.logs.defaultProjectAccountExplanation(
-          targetProjectAccountId
-        )
-      );
-    }
+    uiLogger.log('');
+    uiLogger.log(
+      commands.project.dev.logs.defaultProjectAccountExplanation(
+        targetProjectAccountId
+      )
+    );
   }
 
   addUsageMetadata({ accountId: targetProjectAccountId ?? undefined });
 
   try {
-    if (!isLegacyProject(projectConfig.platformVersion)) {
-      const targetTestingAccountId = testingAccount
-        ? getConfigAccountIfExists(testingAccount)?.accountId
-        : undefined;
+    const targetTestingAccountId = testingAccount
+      ? getConfigAccountIfExists(testingAccount)?.accountId
+      : undefined;
 
-      await unifiedProjectDevFlow({
-        args,
-        targetProjectAccountId,
-        providedTargetTestingAccountId: targetTestingAccountId,
-        projectConfig,
-        projectDir,
-        profileConfig: profile,
-      });
-    } else {
-      await deprecatedProjectDevFlow({
-        args,
-        accountId: targetProjectAccountId,
-        projectConfig,
-        projectDir,
-      });
-    }
+    await unifiedProjectDevFlow({
+      args,
+      targetProjectAccountId,
+      providedTargetTestingAccountId: targetTestingAccountId,
+      projectConfig,
+      projectDir,
+      profileConfig: profile,
+    });
   } catch (e) {
     if (isPromptExitError(e)) {
       throw e;
@@ -210,13 +163,6 @@ function projectDevBuilder(yargs: Argv): Argv<ProjectDevArgs> {
     implies: ['testingAccount'],
   });
 
-  yargs.option('account', {
-    alias: 'a',
-    describe: '',
-    type: 'string',
-    description: commands.project.dev.options.account,
-  });
-
   yargs.option('port', {
     type: 'number',
     description: commands.project.dev.options.port,
@@ -225,7 +171,6 @@ function projectDevBuilder(yargs: Argv): Argv<ProjectDevArgs> {
 
   yargs.example([['$0 project dev', commands.project.dev.examples.default]]);
 
-  yargs.conflicts('profile', 'account');
   yargs.conflicts('profile', 'testing-account');
   yargs.conflicts('profile', 'project-account');
 

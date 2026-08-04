@@ -1,5 +1,5 @@
 import { TextContent, TextContentResponse } from '../../types.js';
-import { Tool } from '../../Tool.js';
+import { Tool, ToolExtra } from '../../Tool.js';
 import {
   McpServer,
   RegisteredTool,
@@ -10,13 +10,12 @@ import {
   APP_AUTH_TYPES,
   APP_DISTRIBUTION_TYPES,
 } from '../../../lib/constants.js';
-import { addFlag } from '../../utils/command.js';
+import { HubSpotCommand } from '../../utils/command.js';
 import {
   absoluteCurrentWorkingDirectory,
   absoluteProjectPath,
   features,
 } from './constants.js';
-import { runCommandInDir } from '../../utils/command.js';
 import { formatTextContents, formatTextContent } from '../../utils/content.js';
 import { setupHubSpotConfig } from '../../utils/config.js';
 import { getErrorMessage } from '../../../lib/errorHandlers/index.js';
@@ -57,22 +56,25 @@ export class AddFeatureToProjectTool extends Tool<AddFeatureInputSchema> {
     super(mcpServer, logger, toolName);
   }
 
-  async handler({
-    absoluteProjectPath,
-    absoluteCurrentWorkingDirectory,
-    distribution,
-    auth,
-    features,
-    addApp,
-  }: AddFeatureInputSchema): Promise<TextContentResponse> {
+  async handler(
+    {
+      absoluteProjectPath,
+      absoluteCurrentWorkingDirectory,
+      distribution,
+      auth,
+      features,
+      addApp,
+    }: AddFeatureInputSchema,
+    extra?: ToolExtra
+  ): Promise<TextContentResponse> {
     setupHubSpotConfig(absoluteCurrentWorkingDirectory);
     try {
-      let command = `hs project add`;
+      const command = new HubSpotCommand('project add');
 
       const content: TextContent[] = [];
 
       if (distribution) {
-        command = addFlag(command, 'distribution', distribution);
+        command.addFlag('distribution', distribution);
       } else if (addApp) {
         content.push(
           formatTextContent(
@@ -82,7 +84,7 @@ export class AddFeatureToProjectTool extends Tool<AddFeatureInputSchema> {
       }
 
       if (auth) {
-        command = addFlag(command, 'auth', auth);
+        command.addFlag('auth', auth);
       } else if (addApp) {
         content.push(
           formatTextContent(
@@ -98,11 +100,12 @@ export class AddFeatureToProjectTool extends Tool<AddFeatureInputSchema> {
       }
 
       // If features isn't provided, pass an empty array to bypass the prompt
-      command = addFlag(command, 'features', features || []);
+      command.addFlag('features', features || []);
 
-      const { stdout, stderr } = await runCommandInDir(
+      const { stdout, stderr } = await this.runCommand(
         absoluteProjectPath,
-        command
+        command,
+        extra
       );
 
       return formatTextContents(stdout, stderr);
@@ -130,7 +133,7 @@ export class AddFeatureToProjectTool extends Tool<AddFeatureInputSchema> {
           openWorldHint: false,
         },
       },
-      input => this.wrappedHandler(input)
+      (input, extra) => this.wrappedHandler(input, extra)
     );
   }
 }

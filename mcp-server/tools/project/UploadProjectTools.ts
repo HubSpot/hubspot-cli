@@ -8,14 +8,13 @@ import { McpLogger } from '../../utils/logger.js';
 import { getAllHsProfiles } from '@hubspot/project-parsing-lib/profiles';
 import { getProjectConfig } from '../../../lib/projects/config.js';
 import { TextContent, TextContentResponse } from '../../types.js';
-import { Tool } from '../../Tool.js';
-import { runCommandInDir } from '../../utils/command.js';
+import { Tool, ToolExtra } from '../../Tool.js';
 import {
   absoluteCurrentWorkingDirectory,
   absoluteProjectPath,
 } from './constants.js';
 import { formatTextContent, formatTextContents } from '../../utils/content.js';
-import { addFlag } from '../../utils/command.js';
+import { HubSpotCommand } from '../../utils/command.js';
 import { setupHubSpotConfig } from '../../utils/config.js';
 
 const inputSchema = {
@@ -45,24 +44,29 @@ export class UploadProjectTools extends Tool<InputSchemaType> {
   constructor(mcpServer: McpServer, logger: McpLogger) {
     super(mcpServer, logger, toolName);
   }
-  async handler({
-    absoluteProjectPath,
-    absoluteCurrentWorkingDirectory,
-    profile,
-    uploadMessage,
-  }: InputSchemaType): Promise<TextContentResponse> {
+  async handler(
+    {
+      absoluteProjectPath,
+      absoluteCurrentWorkingDirectory,
+      profile,
+      uploadMessage,
+    }: InputSchemaType,
+    extra?: ToolExtra
+  ): Promise<TextContentResponse> {
     setupHubSpotConfig(absoluteCurrentWorkingDirectory);
 
-    let command = addFlag('hs project upload', 'force', true);
+    const command = new HubSpotCommand('project upload', [
+      { name: 'force', value: true },
+    ]);
 
     const content: TextContent[] = [];
 
     if (uploadMessage) {
-      command = addFlag(command, 'message', uploadMessage);
+      command.addFlag('message', uploadMessage);
     }
 
     if (profile) {
-      command = addFlag(command, 'profile', profile);
+      command.addFlag('profile', profile);
     } else {
       let hasProfiles = false;
 
@@ -98,9 +102,10 @@ export class UploadProjectTools extends Tool<InputSchemaType> {
       };
     }
 
-    const { stdout, stderr } = await runCommandInDir(
+    const { stdout, stderr } = await this.runCommand(
       absoluteProjectPath,
-      command
+      command,
+      extra
     );
 
     const response = await formatTextContents(stdout, stderr);
@@ -129,7 +134,7 @@ export class UploadProjectTools extends Tool<InputSchemaType> {
           openWorldHint: true,
         },
       },
-      input => this.wrappedHandler(input)
+      (input, extra) => this.wrappedHandler(input, extra)
     );
   }
 }

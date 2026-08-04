@@ -21,7 +21,10 @@ import { getBaseHubSpotUrlForAccount } from '../../lib/projects/urls.js';
 const command = ['list', 'ls'];
 const describe = commands.hubdb.subcommands.list.describe;
 
-type HubdbListArgs = CommonArgs & ConfigArgs & AccountArgs & EnvironmentArgs;
+export type HubdbListArgs = CommonArgs &
+  ConfigArgs &
+  AccountArgs &
+  EnvironmentArgs;
 
 async function getTableData(accountId: number): Promise<FetchTablesResponse> {
   const response = await fetchTables(accountId);

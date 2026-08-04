@@ -9,14 +9,7 @@ import {
 } from '../../../lib/commonOpts.js';
 import { uiLogger } from '../../../lib/ui/logger.js';
 import { mockHubSpotHttpResponse } from '../../../lib/testUtils.js';
-import hubdbListCommand from '../list.js';
-import {
-  AccountArgs,
-  CommonArgs,
-  ConfigArgs,
-  EnvironmentArgs,
-} from '../../../types/Yargs.js';
-import type { UsageTrackingArgs } from '../../../types/Yargs.js';
+import hubdbListCommand, { type HubdbListArgs } from '../list.js';
 
 vi.mock('../../../lib/commonOpts');
 vi.mock('@hubspot/local-dev-lib/api/hubdb');
@@ -64,12 +57,6 @@ describe('commands/hubdb/list', () => {
       expect(addUseEnvironmentOptions).toHaveBeenCalledWith(yargsMock);
     });
   });
-
-  type HubdbListArgs = CommonArgs &
-    ConfigArgs &
-    AccountArgs &
-    EnvironmentArgs &
-    UsageTrackingArgs;
 
   describe('handler', () => {
     const mockArgs: ArgumentsCamelCase<HubdbListArgs> = {

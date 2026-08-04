@@ -1,5 +1,5 @@
 import { TextContent, TextContentResponse } from '../../types.js';
-import { Tool } from '../../Tool.js';
+import { Tool, ToolExtra } from '../../Tool.js';
 import {
   McpServer,
   RegisteredTool,
@@ -12,9 +12,8 @@ import {
   EMPTY_PROJECT,
   PROJECT_WITH_APP,
 } from '../../../lib/constants.js';
-import { addFlag } from '../../utils/command.js';
+import { HubSpotCommand } from '../../utils/command.js';
 import { absoluteCurrentWorkingDirectory, features } from './constants.js';
-import { runCommandInDir } from '../../utils/command.js';
 import { formatTextContents, formatTextContent } from '../../utils/content.js';
 import { setupHubSpotConfig } from '../../utils/config.js';
 import { getErrorMessage } from '../../../lib/errorHandlers/index.js';
@@ -63,26 +62,27 @@ export class CreateProjectTool extends Tool<CreateProjectInputSchema> {
   constructor(mcpServer: McpServer, logger: McpLogger) {
     super(mcpServer, logger, toolName);
   }
-  async handler({
-    name,
-    destination,
-    projectBase,
-    distribution,
-    auth,
-    features,
-    absoluteCurrentWorkingDirectory,
-  }: CreateProjectInputSchema): Promise<TextContentResponse> {
+  async handler(
+    {
+      name,
+      destination,
+      projectBase,
+      distribution,
+      auth,
+      features,
+      absoluteCurrentWorkingDirectory,
+    }: CreateProjectInputSchema,
+    extra?: ToolExtra
+  ): Promise<TextContentResponse> {
     setupHubSpotConfig(absoluteCurrentWorkingDirectory);
-    let command = addFlag(
-      'hs project create',
-      'platform-version',
-      PLATFORM_VERSIONS.v2026_03
-    );
+    const command = new HubSpotCommand('project create', [
+      { name: 'platform-version', value: PLATFORM_VERSIONS.v2026_03 },
+    ]);
 
     const content: TextContent[] = [];
 
     if (name) {
-      command = addFlag(command, 'name', name);
+      command.addFlag('name', name);
     } else {
       content.push(
         formatTextContent(
@@ -91,14 +91,14 @@ export class CreateProjectTool extends Tool<CreateProjectInputSchema> {
       );
     }
     if (destination) {
-      command = addFlag(command, 'dest', destination);
+      command.addFlag('dest', destination);
     }
     if (projectBase) {
-      command = addFlag(command, 'project-base', projectBase);
+      command.addFlag('project-base', projectBase);
     }
 
     if (distribution) {
-      command = addFlag(command, 'distribution', distribution);
+      command.addFlag('distribution', distribution);
     } else if (projectBase === PROJECT_WITH_APP) {
       content.push(
         formatTextContent(
@@ -108,7 +108,7 @@ export class CreateProjectTool extends Tool<CreateProjectInputSchema> {
     }
 
     if (auth) {
-      command = addFlag(command, 'auth', auth);
+      command.addFlag('auth', auth);
     } else if (projectBase === PROJECT_WITH_APP) {
       content.push(
         formatTextContent(
@@ -124,12 +124,13 @@ export class CreateProjectTool extends Tool<CreateProjectInputSchema> {
     }
 
     // Always pass features, even if it is an empty array to bypass the prompts
-    command = addFlag(command, 'features', features || []);
+    command.addFlag('features', features || []);
 
     try {
-      const { stdout, stderr } = await runCommandInDir(
+      const { stdout, stderr } = await this.runCommand(
         absoluteCurrentWorkingDirectory,
-        command
+        command,
+        extra
       );
 
       return formatTextContents(stdout, stderr);
@@ -156,7 +157,7 @@ export class CreateProjectTool extends Tool<CreateProjectInputSchema> {
           openWorldHint: false,
         },
       },
-      input => this.wrappedHandler(input)
+      (input, extra) => this.wrappedHandler(input, extra)
     );
   }
 }

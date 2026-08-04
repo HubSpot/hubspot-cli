@@ -9,7 +9,6 @@ import {
 import { McpLogger } from '../../../utils/logger.js';
 import { MockedFunction, Mocked } from 'vitest';
 import { runCommandInDir } from '../../../utils/command.js';
-import { addFlag } from '../../../utils/command.js';
 import {
   APP_AUTH_TYPES,
   APP_DISTRIBUTION_TYPES,
@@ -18,7 +17,11 @@ import { mcpFeedbackRequest } from '../../../utils/feedbackTracking.js';
 
 vi.mock('@modelcontextprotocol/sdk/server/mcp.js');
 vi.mock('../../../utils/logger.js');
-vi.mock('../../../utils/command');
+vi.mock('../../../utils/command', async importOriginal => {
+  const mod =
+    await importOriginal<typeof import('../../../utils/command.js')>();
+  return { ...mod, runCommandInDir: vi.fn() };
+});
 vi.mock('../../../../lib/constants');
 vi.mock('../../../utils/feedbackTracking');
 
@@ -29,7 +32,6 @@ const mockMcpFeedbackRequest = mcpFeedbackRequest as MockedFunction<
 const mockRunCommandInDir = runCommandInDir as MockedFunction<
   typeof runCommandInDir
 >;
-const mockAddFlag = addFlag as MockedFunction<typeof addFlag>;
 
 describe('mcp-server/tools/project/AddFeatureToProject', () => {
   let mockMcpServer: Mocked<McpServer>;
@@ -56,11 +58,6 @@ describe('mcp-server/tools/project/AddFeatureToProject', () => {
     mockMcpFeedbackRequest.mockResolvedValue('');
 
     tool = new AddFeatureToProjectTool(mockMcpServer, mockLogger);
-
-    // Mock addFlag to simulate command building
-    mockAddFlag.mockImplementation(
-      (command, flag, value) => `${command} --${flag} "${value}"`
-    );
   });
 
   describe('register', () => {
@@ -97,14 +94,13 @@ describe('mcp-server/tools/project/AddFeatureToProject', () => {
 
       const result = await tool.handler(baseInput);
 
-      expect(mockAddFlag).toHaveBeenCalledWith(
-        'hs project add',
-        'features',
-        []
-      );
       expect(mockRunCommandInDir).toHaveBeenCalledWith(
         '/test/project',
-        expect.any(String)
+        expect.objectContaining({
+          executable: 'hs',
+          args: expect.arrayContaining(['project', 'add', '--features']),
+        }),
+        expect.any(Function)
       );
 
       expect(result).toEqual({
@@ -128,10 +124,20 @@ describe('mcp-server/tools/project/AddFeatureToProject', () => {
 
       await tool.handler(input);
 
-      expect(mockAddFlag).toHaveBeenCalledWith('hs project add', 'features', [
-        'card',
-        'settings',
-      ]);
+      expect(mockRunCommandInDir).toHaveBeenCalledWith(
+        '/test/project',
+        expect.objectContaining({
+          executable: 'hs',
+          args: expect.arrayContaining([
+            'project',
+            'add',
+            '--features',
+            'card',
+            'settings',
+          ]),
+        }),
+        expect.any(Function)
+      );
     });
 
     it('should prompt for distribution and auth when adding app without both', async () => {
@@ -193,19 +199,23 @@ describe('mcp-server/tools/project/AddFeatureToProject', () => {
 
       await tool.handler(input);
 
-      expect(mockAddFlag).toHaveBeenCalledWith(
-        'hs project add',
-        'distribution',
-        APP_DISTRIBUTION_TYPES.MARKETPLACE
+      expect(mockRunCommandInDir).toHaveBeenCalledWith(
+        '/test/project',
+        expect.objectContaining({
+          executable: 'hs',
+          args: expect.arrayContaining([
+            'project',
+            'add',
+            '--distribution',
+            APP_DISTRIBUTION_TYPES.MARKETPLACE,
+            '--auth',
+            APP_AUTH_TYPES.OAUTH,
+            '--features',
+            'webhooks',
+          ]),
+        }),
+        expect.any(Function)
       );
-      expect(mockAddFlag).toHaveBeenCalledWith(
-        expect.any(String),
-        'auth',
-        APP_AUTH_TYPES.OAUTH
-      );
-      expect(mockAddFlag).toHaveBeenCalledWith(expect.any(String), 'features', [
-        'webhooks',
-      ]);
     });
 
     it('should handle command execution error', async () => {

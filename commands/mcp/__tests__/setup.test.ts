@@ -1,5 +1,7 @@
+import { Argv } from 'yargs';
 import setupCommand from '../setup.js';
 import { configureMcpServer } from '../../../lib/mcp/setup.js';
+import { commands } from '../../../lang/en.js';
 
 vi.mock('../../../lib/commonOpts');
 vi.mock('../../../lib/yargs/makeWrappedYargsHandler.js', () => ({
@@ -26,9 +28,33 @@ describe('commands/mcp/setup', () => {
   });
 
   describe('builder', () => {
+    let checkFn: (argv: Record<string, unknown>) => boolean;
+
+    beforeEach(() => {
+      mockYargs.check.mockClear();
+      setupCommand.builder(mockYargs as unknown as Argv);
+      checkFn = mockYargs.check.mock.calls[0][0];
+    });
+
     it('should be defined as a function', () => {
       expect(setupCommand.builder).toBeDefined();
       expect(typeof setupCommand.builder).toBe('function');
+    });
+
+    it('should reject --cli-version without --standalone', () => {
+      expect(() => checkFn({ cliVersion: '8.0.1' })).toThrow(
+        commands.mcp.setup.errors.cliVersionRequiresStandalone
+      );
+    });
+
+    it('should reject --cli-version with --no-standalone', () => {
+      expect(() => checkFn({ cliVersion: '8.0.1', standalone: false })).toThrow(
+        commands.mcp.setup.errors.cliVersionRequiresStandalone
+      );
+    });
+
+    it('should allow --cli-version with --standalone', () => {
+      expect(checkFn({ cliVersion: '8.0.1', standalone: true })).toBe(true);
     });
   });
 
@@ -53,7 +79,36 @@ describe('commands/mcp/setup', () => {
         addUsageMetadata: vi.fn(),
       });
 
-      expect(mockedConfigureMcpServer).toHaveBeenCalledWith(['cursor']);
+      expect(mockedConfigureMcpServer).toHaveBeenCalledWith({
+        targets: ['cursor'],
+        standalone: undefined,
+        cliVersion: undefined,
+      });
+      expect(exit).toHaveBeenCalledWith(0);
+    });
+
+    it('passes standalone and cliVersion flags to configureMcpServer', async () => {
+      mockedConfigureMcpServer.mockResolvedValueOnce(['cursor']);
+      const exit = vi.fn().mockResolvedValue(undefined);
+
+      await setupCommand.handler({
+        _: ['mcp', 'setup'],
+        $0: 'hs',
+        client: ['cursor'],
+        standalone: true,
+        cliVersion: '8.0.1',
+        derivedAccountId: 123,
+        d: false,
+        debug: false,
+        exit,
+        addUsageMetadata: vi.fn(),
+      });
+
+      expect(mockedConfigureMcpServer).toHaveBeenCalledWith({
+        targets: ['cursor'],
+        standalone: true,
+        cliVersion: '8.0.1',
+      });
       expect(exit).toHaveBeenCalledWith(0);
     });
 

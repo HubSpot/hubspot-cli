@@ -1,6 +1,4 @@
 import { HubSpotConfigAccount } from '@hubspot/local-dev-lib/types/Accounts';
-import { HUBSPOT_ACCOUNT_TYPE_STRINGS } from '@hubspot/local-dev-lib/constants/config';
-import { getConfigAccountIfExists } from '@hubspot/local-dev-lib/config';
 import { HUBSPOT_ACCOUNT_TYPES } from '@hubspot/local-dev-lib/constants/config';
 import { getHubSpotWebsiteOrigin } from '@hubspot/local-dev-lib/urls';
 import { Environment } from '@hubspot/local-dev-lib/types/Accounts';
@@ -11,16 +9,6 @@ import { getSandboxUsageLimits } from '@hubspot/local-dev-lib/api/sandboxHubs';
 
 import { uiLogger } from '../../../ui/logger.js';
 import { lib } from '../../../../lang/en.js';
-import { EXIT_CODES } from '../../../enums/exitCodes.js';
-import { confirmDefaultAccountPrompt } from '../../../prompts/projectDevTargetAccountPrompt.js';
-import { isUnifiedAccount } from '../../../accountTypes.js';
-import { isAppDeveloperAccount } from '../../../accountTypes.js';
-import { isDeveloperTestAccount } from '../../../accountTypes.js';
-import { uiAccountDescription } from '../../../ui/index.js';
-import { uiLine } from '../../../ui/index.js';
-import { selectDeveloperTestTargetAccountPrompt } from '../../../prompts/projectDevTargetAccountPrompt.js';
-import { selectSandboxTargetAccountPrompt } from '../../../prompts/projectDevTargetAccountPrompt.js';
-import { ProjectDevTargetAccountPromptResponse } from '../../../prompts/projectDevTargetAccountPrompt.js';
 import { validateSandboxUsageLimits } from '../../../sandboxes.js';
 import { logError } from '../../../errorHandlers/index.js';
 import { hubspotAccountNamePrompt } from '../../../prompts/accountNamePrompt.js';
@@ -34,127 +22,6 @@ import {
 import { debugError } from '../../../errorHandlers/index.js';
 import { listPrompt } from '../../../prompts/promptUtils.js';
 import { confirmUseExistingDeveloperTestAccountPrompt } from '../../../prompts/projectDevTargetAccountPrompt.js';
-import { ExitFunction } from '../../../../types/Yargs.js';
-
-// If the user passed in the --account flag, confirm they want to use that account as
-// their target account, otherwise exit
-export async function confirmDefaultAccountIsTarget(
-  accountConfig: HubSpotConfigAccount,
-  exit: ExitFunction
-): Promise<void> {
-  if (!accountConfig.name || !accountConfig.accountType) {
-    uiLogger.error(
-      lib.localDevHelpers.account.confirmDefaultAccountIsTarget.configError
-    );
-    return exit(EXIT_CODES.ERROR);
-  }
-
-  uiLogger.log('');
-  const useDefaultAccount = await confirmDefaultAccountPrompt(
-    accountConfig.name,
-    HUBSPOT_ACCOUNT_TYPE_STRINGS[accountConfig.accountType]
-  );
-
-  if (!useDefaultAccount) {
-    uiLogger.log(
-      lib.localDevHelpers.account.confirmDefaultAccountIsTarget
-        .declineDefaultAccountExplanation
-    );
-    return exit(EXIT_CODES.SUCCESS);
-  }
-}
-
-// Confirm the default account is supported for the type of apps being developed
-export async function checkIfDefaultAccountIsSupported(
-  accountConfig: HubSpotConfigAccount,
-  hasPublicApps: boolean,
-  exit: ExitFunction
-): Promise<void> {
-  const defaultAccountIsUnified = await isUnifiedAccount(accountConfig);
-
-  if (
-    hasPublicApps &&
-    !(
-      isAppDeveloperAccount(accountConfig) ||
-      isDeveloperTestAccount(accountConfig) ||
-      defaultAccountIsUnified
-    )
-  ) {
-    uiLogger.error(
-      lib.localDevHelpers.account.checkIfDefaultAccountIsSupported.publicApp
-    );
-    return exit(EXIT_CODES.SUCCESS);
-  } else if (!hasPublicApps && isAppDeveloperAccount(accountConfig)) {
-    uiLogger.error(
-      lib.localDevHelpers.account.checkIfDefaultAccountIsSupported.privateApp
-    );
-    return exit(EXIT_CODES.SUCCESS);
-  }
-}
-
-export function checkIfParentAccountIsAuthed(
-  accountConfig: HubSpotConfigAccount
-): void {
-  if (
-    !accountConfig.parentAccountId ||
-    !getConfigAccountIfExists(accountConfig.parentAccountId)?.accountId
-  ) {
-    throw new Error(
-      lib.localDevHelpers.account.checkIfParentAccountIsAuthed.notAuthedError(
-        accountConfig.parentAccountId || '',
-        uiAccountDescription(accountConfig.accountId)
-      )
-    );
-  }
-}
-
-// Confirm the default account is a developer account if developing public apps
-export function checkIfAccountFlagIsSupported(
-  accountConfig: HubSpotConfigAccount,
-  hasPublicApps: boolean
-): void {
-  if (hasPublicApps) {
-    if (!isDeveloperTestAccount(accountConfig)) {
-      throw new Error(
-        lib.localDevHelpers.account.validateAccountOption
-          .invalidPublicAppAccount
-      );
-    }
-    checkIfParentAccountIsAuthed(accountConfig);
-  } else if (isAppDeveloperAccount(accountConfig)) {
-    throw new Error(
-      lib.localDevHelpers.account.validateAccountOption.invalidPrivateAppAccount
-    );
-  }
-}
-
-// If the user isn't using the recommended account type, prompt them to use or create one
-export async function suggestRecommendedNestedAccount(
-  accounts: HubSpotConfigAccount[],
-  accountConfig: HubSpotConfigAccount,
-  hasPublicApps: boolean
-): Promise<ProjectDevTargetAccountPromptResponse> {
-  uiLogger.log('');
-  uiLine();
-  if (hasPublicApps) {
-    uiLogger.log(
-      lib.localDevHelpers.account.validateAccountOption
-        .publicAppNonDeveloperTestAccountWarning
-    );
-  } else {
-    uiLogger.log(
-      lib.localDevHelpers.account.validateAccountOption.nonSandboxWarning
-    );
-  }
-  uiLine();
-  uiLogger.log('');
-
-  const targetAccountPrompt = hasPublicApps
-    ? selectDeveloperTestTargetAccountPrompt
-    : selectSandboxTargetAccountPrompt;
-
-  return targetAccountPrompt(accounts, accountConfig);
-}
 
 // Create a new sandbox and return its accountId
 export async function createSandboxForLocalDev(
@@ -278,10 +145,7 @@ export async function useExistingDevTestAccount(
     await confirmUseExistingDeveloperTestAccountPrompt(account);
   if (!useExistingDevTestAcct) {
     uiLogger.log('');
-    uiLogger.log(
-      lib.localDevHelpers.account.confirmDefaultAccountIsTarget
-        .declineDefaultAccountExplanation
-    );
+    uiLogger.log(lib.localDevHelpers.account.declineDefaultAccountExplanation);
     uiLogger.log('');
     return false;
   }

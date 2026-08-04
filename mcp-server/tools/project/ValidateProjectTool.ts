@@ -1,5 +1,5 @@
 import { TextContentResponse } from '../../types.js';
-import { Tool } from '../../Tool.js';
+import { Tool, ToolExtra } from '../../Tool.js';
 import {
   McpServer,
   RegisteredTool,
@@ -10,10 +10,10 @@ import {
   absoluteCurrentWorkingDirectory,
   absoluteProjectPath,
 } from './constants.js';
-import { runCommandInDir } from '../../utils/command.js';
 import { formatTextContents } from '../../utils/content.js';
 import { setupHubSpotConfig } from '../../utils/config.js';
 import { getErrorMessage } from '../../../lib/errorHandlers/index.js';
+import { HubSpotCommand } from '../../utils/command.js';
 
 const inputSchema = {
   absoluteProjectPath,
@@ -31,15 +31,20 @@ export class ValidateProjectTool extends Tool<CreateProjectInputSchema> {
     super(mcpServer, logger, toolName);
   }
 
-  async handler({
-    absoluteProjectPath,
-    absoluteCurrentWorkingDirectory,
-  }: CreateProjectInputSchema): Promise<TextContentResponse> {
+  async handler(
+    {
+      absoluteProjectPath,
+      absoluteCurrentWorkingDirectory,
+    }: CreateProjectInputSchema,
+    extra?: ToolExtra
+  ): Promise<TextContentResponse> {
     setupHubSpotConfig(absoluteCurrentWorkingDirectory);
     try {
-      const { stdout, stderr } = await runCommandInDir(
+      const command = new HubSpotCommand('project validate');
+      const { stdout, stderr } = await this.runCommand(
         absoluteProjectPath,
-        'hs project validate'
+        command,
+        extra
       );
 
       return formatTextContents(stdout, stderr);
@@ -64,7 +69,7 @@ export class ValidateProjectTool extends Tool<CreateProjectInputSchema> {
           openWorldHint: false,
         },
       },
-      input => this.wrappedHandler(input)
+      (input, extra) => this.wrappedHandler(input, extra)
     );
   }
 }

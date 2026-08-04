@@ -1,5 +1,5 @@
 import { TextContent, TextContentResponse } from '../../types.js';
-import { Tool } from '../../Tool.js';
+import { Tool, ToolExtra } from '../../Tool.js';
 import {
   McpServer,
   RegisteredTool,
@@ -7,10 +7,9 @@ import {
 import { McpLogger } from '../../utils/logger.js';
 import { z } from 'zod';
 import { absoluteCurrentWorkingDirectory } from '../project/constants.js';
-import { runCommandInDir } from '../../utils/command.js';
 import { formatTextContents, formatTextContent } from '../../utils/content.js';
-import { addFlag } from '../../utils/command.js';
 import { TEMPLATE_TYPES } from '../../../types/Cms.js';
+import { HubSpotCommand } from '../../utils/command.js';
 import { setupHubSpotConfig } from '../../utils/config.js';
 import { getErrorMessage } from '../../../lib/errorHandlers/index.js';
 
@@ -48,12 +47,15 @@ export class HsCreateTemplateTool extends Tool<HsCreateTemplateInputSchema> {
     super(mcpServer, logger, toolName);
   }
 
-  async handler({
-    userSuppliedName,
-    dest,
-    templateType,
-    absoluteCurrentWorkingDirectory,
-  }: HsCreateTemplateInputSchema): Promise<TextContentResponse> {
+  async handler(
+    {
+      userSuppliedName,
+      dest,
+      templateType,
+      absoluteCurrentWorkingDirectory,
+    }: HsCreateTemplateInputSchema,
+    extra?: ToolExtra
+  ): Promise<TextContentResponse> {
     setupHubSpotConfig(absoluteCurrentWorkingDirectory);
 
     const content: TextContent[] = [];
@@ -84,25 +86,22 @@ export class HsCreateTemplateTool extends Tool<HsCreateTemplateInputSchema> {
     }
 
     // Build the command
-    let command = 'hs cms template create';
-
+    const command = new HubSpotCommand('cms template create');
     if (userSuppliedName) {
-      command += ` "${userSuppliedName}"`;
+      command.addArg(userSuppliedName);
     }
-
     if (dest) {
-      command += ` "${dest}"`;
+      command.addArg(dest);
     }
-
-    // Add template type flag
     if (templateType) {
-      command = addFlag(command, 'template-type', templateType);
+      command.addFlag('template-type', templateType);
     }
 
     try {
-      const { stdout, stderr } = await runCommandInDir(
+      const { stdout, stderr } = await this.runCommand(
         absoluteCurrentWorkingDirectory,
-        command
+        command,
+        extra
       );
 
       return formatTextContents(stdout, stderr);
@@ -129,7 +128,7 @@ export class HsCreateTemplateTool extends Tool<HsCreateTemplateInputSchema> {
           openWorldHint: false,
         },
       },
-      input => this.wrappedHandler(input)
+      (input, extra) => this.wrappedHandler(input, extra)
     );
   }
 }

@@ -13,7 +13,11 @@ import { mcpFeedbackRequest } from '../../../utils/feedbackTracking.js';
 
 vi.mock('@modelcontextprotocol/sdk/server/mcp.js');
 vi.mock('../../../utils/logger.js');
-vi.mock('../../../utils/command');
+vi.mock('../../../utils/command', async importOriginal => {
+  const mod =
+    await importOriginal<typeof import('../../../utils/command.js')>();
+  return { ...mod, runCommandInDir: vi.fn() };
+});
 vi.mock('../../../utils/feedbackTracking');
 
 const mockMcpFeedbackRequest = mcpFeedbackRequest as MockedFunction<
@@ -86,7 +90,11 @@ describe('mcp-server/tools/project/ValidateProjectTool', () => {
 
       expect(mockRunCommandInDir).toHaveBeenCalledWith(
         '/test/project',
-        'hs project validate'
+        expect.objectContaining({
+          executable: 'hs',
+          args: ['project', 'validate'],
+        }),
+        expect.any(Function)
       );
 
       expect(result).toEqual({
@@ -161,7 +169,11 @@ describe('mcp-server/tools/project/ValidateProjectTool', () => {
 
       expect(mockRunCommandInDir).toHaveBeenCalledWith(
         '/different/path/to/project',
-        'hs project validate'
+        expect.objectContaining({
+          executable: 'hs',
+          args: ['project', 'validate'],
+        }),
+        expect.any(Function)
       );
     });
 
