@@ -1650,9 +1650,11 @@ export const commands = {
       codex: 'Codex CLI',
       claudeCode: 'Claude Code',
       cursor: 'Cursor',
+      devin: 'Devin',
       gemini: 'Gemini CLI',
-      windsurf: 'Windsurf',
+      opencode: 'OpenCode',
       vsCode: 'VSCode',
+      other: 'Other (manual setup)',
       args: {
         client: 'Target apps to configure',
         standalone:
@@ -1702,18 +1704,32 @@ export const commands = {
         geminiInstallFailed: 'Failed to configure Gemini CLI',
         alreadyInstalled:
           'HubSpot CLI mcp server already installed, reinstalling',
-        // Windsurf
-        configuringWindsurf: 'Configuring Windsurf...',
-        windsurfNotFound:
-          'Windsurf is not installed. Install it and re-run hs mcp setup.',
-        failedToConfigureWindsurf: 'Failed to configure Windsurf',
-        configuredWindsurf: 'Configured Windsurf',
+        // Devin
+        configuringDevin: 'Configuring Devin...',
+        devinNotFound:
+          'Devin is not installed. Install it and re-run hs mcp setup.',
+        failedToConfigureDevin: 'Failed to configure Devin',
+        configuredDevin: 'Configured Devin',
+        // OpenCode
+        configuringOpenCode: 'Configuring OpenCode...',
+        openCodeNotFound:
+          "OpenCode is not installed (missing 'opencode' command). Install it and re-run hs mcp setup.",
+        openCodeInstallFailed: 'Failed to configure OpenCode',
+        configuredOpenCode: 'Configured OpenCode',
         // VS Code
         configuringVsCode: 'Configuring VSCode...',
         failedToConfigureVsCode: 'Failed to configure VSCode',
         configuredVsCode: 'Configured VSCode',
         vsCodeNotFound:
           "VSCode CLI is not installed (missing 'code' command). Install it and re-run hs mcp setup.",
+      },
+      otherInstructions: {
+        header:
+          'To connect the HubSpot MCP server to another tool, add the following MCP server configuration.',
+        docsNote:
+          "Each tool handles MCP setup differently. Check your tool's documentation for how to add an MCP server using a command or JSON config.",
+        commandLabel: 'Command:',
+        jsonLabel: 'JSON configuration (for tools that use a config file):',
       },
       prompts: {
         targets:

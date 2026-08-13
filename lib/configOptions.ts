@@ -8,7 +8,6 @@ import {
 import { CmsPublishMode } from '@hubspot/local-dev-lib/types/Files';
 import { CMS_PUBLISH_MODE } from '@hubspot/local-dev-lib/constants/files';
 import { commaSeparatedValues } from '@hubspot/local-dev-lib/text';
-import { trackCommandUsage } from './usageTracking.js';
 import { promptUser, listPrompt } from './prompts/promptUtils.js';
 import { lib } from '../lang/en.js';
 import { uiLogger } from './ui/logger.js';
@@ -39,14 +38,11 @@ async function enableOrDisableBooleanFieldPrompt(
 }
 
 export async function setAllowUsageTracking({
-  accountId,
   allowUsageTracking,
 }: {
   accountId: number;
   allowUsageTracking?: boolean;
-}): Promise<void> {
-  trackCommandUsage('config-set-allow-usage-tracking', undefined, accountId);
-
+}): Promise<boolean> {
   let isEnabled: boolean;
 
   if (typeof allowUsageTracking === 'boolean') {
@@ -62,17 +58,16 @@ export async function setAllowUsageTracking({
   uiLogger.success(
     lib.configOptions.setAllowUsageTracking.success(isEnabled.toString())
   );
+
+  return isEnabled;
 }
 
 export async function setAllowAutoUpdates({
-  accountId,
   allowAutoUpdates,
 }: {
   accountId: number;
   allowAutoUpdates?: boolean;
-}): Promise<void> {
-  trackCommandUsage('config-set-allow-auto-updates', undefined, accountId);
-
+}): Promise<boolean> {
   let isEnabled: boolean;
 
   if (typeof allowAutoUpdates === 'boolean') {
@@ -88,6 +83,8 @@ export async function setAllowAutoUpdates({
   uiLogger.success(
     lib.configOptions.setAllowAutoUpdates.success(isEnabled.toString())
   );
+
+  return isEnabled;
 }
 
 const ALL_CMS_PUBLISH_MODES = Object.values(CMS_PUBLISH_MODE);
@@ -105,14 +102,11 @@ async function selectCmsPublishMode(): Promise<CmsPublishMode> {
 }
 
 export async function setDefaultCmsPublishMode({
-  accountId,
   defaultCmsPublishMode,
 }: {
   accountId: number;
   defaultCmsPublishMode?: CmsPublishMode;
-}): Promise<void> {
-  trackCommandUsage('config-set-default-mode', undefined, accountId);
-
+}): Promise<CmsPublishMode> {
   let newDefault: CmsPublishMode;
 
   if (!defaultCmsPublishMode) {
@@ -136,6 +130,8 @@ export async function setDefaultCmsPublishMode({
   uiLogger.success(
     lib.configOptions.setDefaultCmsPublishMode.success(newDefault)
   );
+
+  return newDefault;
 }
 
 async function enterTimeout(): Promise<string> {
@@ -159,14 +155,11 @@ async function enterTimeout(): Promise<string> {
 }
 
 export async function setHttpTimeout({
-  accountId,
   httpTimeout,
 }: {
   accountId: number;
   httpTimeout?: string;
-}): Promise<void> {
-  trackCommandUsage('config-set-http-timeout', undefined, accountId);
-
+}): Promise<string> {
   let newHttpTimeout: string;
 
   if (!httpTimeout) {
@@ -178,17 +171,16 @@ export async function setHttpTimeout({
   updateHttpTimeout(newHttpTimeout);
 
   uiLogger.success(lib.configOptions.setHttpTimeout.success(newHttpTimeout));
+
+  return newHttpTimeout;
 }
 
 export async function setAutoOpenBrowser({
-  accountId,
   autoOpenBrowser,
 }: {
   accountId: number;
   autoOpenBrowser: boolean;
-}): Promise<void> {
-  trackCommandUsage('config-set-auto-open-browser', undefined, accountId);
-
+}): Promise<boolean> {
   updateAutoOpenBrowser(autoOpenBrowser);
 
   uiLogger.success(
@@ -196,4 +188,6 @@ export async function setAutoOpenBrowser({
       ? lib.configOptions.setAutoOpenBrowser.enabled
       : lib.configOptions.setAutoOpenBrowser.disabled
   );
+
+  return autoOpenBrowser;
 }

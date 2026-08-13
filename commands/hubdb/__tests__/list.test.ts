@@ -14,6 +14,9 @@ import hubdbListCommand, { type HubdbListArgs } from '../list.js';
 vi.mock('../../../lib/commonOpts');
 vi.mock('@hubspot/local-dev-lib/api/hubdb');
 vi.mock('@hubspot/local-dev-lib/config');
+vi.mock('@hubspot/local-dev-lib/urls', () => ({
+  getHubSpotWebsiteOriginByAccountId: () => 'https://app.hubspot.com',
+}));
 vi.mock('../../../lib/errorHandlers');
 
 const processExitSpy = vi.spyOn(process, 'exit');

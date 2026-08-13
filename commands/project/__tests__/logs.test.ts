@@ -8,8 +8,6 @@ import * as render from '../../../ui/render.js';
 import { EXIT_CODES } from '../../../lib/enums/exitCodes.js';
 import { logError } from '../../../lib/errorHandlers/index.js';
 import projectLogsCommand, { ProjectLogsArgs } from '../logs.js';
-import { getConfigAccountEnvironment } from '@hubspot/local-dev-lib/config';
-import { ENVIRONMENTS } from '@hubspot/local-dev-lib/constants/environments';
 
 vi.mock('../../../lib/commonOpts');
 vi.mock('../../../lib/validation');
@@ -17,14 +15,10 @@ vi.mock('../../../lib/projects/ProjectLogsManager');
 vi.mock('../../../lib/prompts/projectsLogsPrompt');
 vi.mock('../../../ui/render.js');
 vi.mock('../../../lib/errorHandlers');
-vi.mock('@hubspot/local-dev-lib/config', async importOriginal => {
-  const actual =
-    await importOriginal<typeof import('@hubspot/local-dev-lib/config')>();
-  return {
-    ...actual,
-    getConfigAccountEnvironment: vi.fn(),
-  };
-});
+vi.mock('@hubspot/local-dev-lib/config');
+vi.mock('@hubspot/local-dev-lib/urls', () => ({
+  getHubSpotWebsiteOriginByAccountId: () => 'https://app.hubspot.com',
+}));
 
 const uiLinkSpy = vi.spyOn(ui, 'uiLink');
 const uiLineSpy = vi.spyOn(ui, 'uiLine');
@@ -42,8 +36,6 @@ const projectLogsManagerInitSpy = vi.spyOn(ProjectLogsManager, 'init');
 
 const renderTableSpy = vi.spyOn(render, 'renderTable');
 
-const getConfigAccountEnvironmentMock = vi.mocked(getConfigAccountEnvironment);
-
 const optionsSpy = vi
   .spyOn(yargs as Argv, 'options')
   .mockReturnValue(yargs as Argv);
@@ -55,8 +47,6 @@ const conflictsSpy = vi
 const exampleSpy = vi
   .spyOn(yargs as Argv, 'example')
   .mockReturnValue(yargs as Argv);
-
-getConfigAccountEnvironmentMock.mockReturnValue(ENVIRONMENTS.PROD);
 
 describe('commands/project/logs', () => {
   beforeEach(() => {

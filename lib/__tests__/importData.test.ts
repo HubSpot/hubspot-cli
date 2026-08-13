@@ -21,6 +21,9 @@ import { importDataTestAccountSelectPrompt } from '../prompts/importDataTestAcco
 
 vi.mock('@hubspot/local-dev-lib/api/crm');
 vi.mock('@hubspot/local-dev-lib/config');
+vi.mock('@hubspot/local-dev-lib/urls', () => ({
+  getHubSpotWebsiteOriginByAccountId: () => 'https://app.hubspot.com',
+}));
 vi.mock('../accountTypes');
 vi.mock('../prompts/importDataTestAccountSelectPrompt');
 

@@ -1,6 +1,6 @@
 {
   "name": "@hubspot/cli",
-  "version": "8.12.0",
+  "version": "8.13.0",
   "description": "The official CLI for developing on HubSpot",
   "license": "Apache-2.0",
   "repository": "https://github.com/HubSpot/hubspot-cli",
@@ -10,10 +10,10 @@
     "!**/__tests__/**"
   ],
   "dependencies": {
-    "@hubspot/local-dev-lib": "5.10.1",
+    "@hubspot/local-dev-lib": "5.10.2",
     "@hubspot/project-parsing-lib": "0.21.0",
     "@hubspot/serverless-dev-runtime": "7.0.7",
-    "@hubspot/ui-extensions-dev-server": "2.0.13",
+    "@hubspot/ui-extensions-dev-server": "2.1.0",
     "@inquirer/prompts": "7.1.0",
     "@modelcontextprotocol/sdk": "1.29.0",
     "archiver": "7.0.1",
@@ -44,7 +44,7 @@
     "zod": "^4.4.3"
   },
   "devDependencies": {
-    "@hubspot/npm-scripts": "0.3.1",
+    "@hubspot/npm-scripts": "^0.3.3",
     "@types/archiver": "^6.0.3",
     "@types/cli-progress": "^3.11.6",
     "@types/express": "^5.0.0",

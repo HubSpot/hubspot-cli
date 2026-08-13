@@ -1,6 +1,8 @@
 import open from 'open';
-import { getConfigAccountEnvironment } from '@hubspot/local-dev-lib/config';
-import { getHubSpotWebsiteOrigin } from '@hubspot/local-dev-lib/urls';
+import {
+  getHubSpotWebsiteOrigin,
+  getHubSpotWebsiteOriginByAccountId,
+} from '@hubspot/local-dev-lib/urls';
 import { ENVIRONMENTS } from '@hubspot/local-dev-lib/constants/environments';
 import { uiLogger } from './ui/logger.js';
 import { renderTable } from '../ui/render.js';
@@ -96,9 +98,7 @@ const COMMON_SITE_LINKS: { [key: string]: SiteLink } = {
 };
 
 export function getSiteLinksAsArray(accountId: number): SiteLink[] {
-  const baseUrl = getHubSpotWebsiteOrigin(
-    getConfigAccountEnvironment(accountId)
-  );
+  const baseUrl = getHubSpotWebsiteOriginByAccountId(accountId);
 
   return Object.values(COMMON_SITE_LINKS)
     .sort((a, b) => (a.shortcut < b.shortcut ? -1 : 1))
@@ -127,9 +127,7 @@ export function openLink(accountId: number, shortcut: string): void {
     return;
   }
 
-  const baseUrl = getHubSpotWebsiteOrigin(
-    getConfigAccountEnvironment(accountId)
-  );
+  const baseUrl = getHubSpotWebsiteOriginByAccountId(accountId);
 
   open(match.getUrl(accountId, baseUrl), { url: true });
   uiLogger.success(
@@ -141,9 +139,9 @@ export function getProductUpdatesUrl(
   rolloutId: string,
   accountId?: number
 ): string {
-  const baseUrl = getHubSpotWebsiteOrigin(
-    accountId ? getConfigAccountEnvironment(accountId) : ENVIRONMENTS.PROD
-  );
+  const baseUrl = accountId
+    ? getHubSpotWebsiteOriginByAccountId(accountId)
+    : getHubSpotWebsiteOrigin(ENVIRONMENTS.PROD);
 
   if (accountId) {
     return `${baseUrl}/product-updates/${accountId}/in-beta?rollout=${rolloutId}`;

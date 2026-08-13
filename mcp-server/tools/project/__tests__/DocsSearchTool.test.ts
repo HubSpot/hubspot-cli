@@ -6,32 +6,26 @@ import {
 import { McpLogger } from '../../../utils/logger.js';
 import { http } from '@hubspot/local-dev-lib/http';
 import { isHubSpotHttpError } from '@hubspot/local-dev-lib/errors/index';
-import { MockedFunction, Mocked } from 'vitest';
-import { getConfigDefaultAccountIfExists } from '@hubspot/local-dev-lib/config';
-import { HubSpotConfigAccount } from '@hubspot/local-dev-lib/types/Accounts';
+import { MockedFunction } from 'vitest';
 import { mcpFeedbackRequest } from '../../../utils/feedbackTracking.js';
+import { discoverAccountTargets } from '../../../../lib/accountTargetDiscovery.js';
+import type { AccountTargetCandidate } from '../../../../types/AccountTargets.js';
 
 vi.mock('@modelcontextprotocol/sdk/server/mcp.js');
 vi.mock('../../../utils/logger.js');
 vi.mock('@hubspot/local-dev-lib/http');
 vi.mock('@hubspot/local-dev-lib/errors/index');
-vi.mock('@hubspot/local-dev-lib/config');
 vi.mock('../../../utils/feedbackTracking');
+vi.mock('../../../../lib/accountTargetDiscovery.js');
 
-const mockMcpFeedbackRequest = mcpFeedbackRequest as MockedFunction<
-  typeof mcpFeedbackRequest
->;
-
+const mockMcpFeedbackRequest = vi.mocked(mcpFeedbackRequest);
+const mockedDiscoverAccountTargets = vi.mocked(discoverAccountTargets);
 const mockHttp = http as unknown as { post: MockedFunction<typeof http.post> };
 const mockIsHubSpotHttpError = vi.mocked(isHubSpotHttpError);
-const mockGetConfigDefaultAccountIfExists =
-  getConfigDefaultAccountIfExists as MockedFunction<
-    typeof getConfigDefaultAccountIfExists
-  >;
 
 describe('mcp-server/tools/project/DocsSearchTool', () => {
-  let mockMcpServer: Mocked<McpServer>;
-  let mockLogger: Mocked<McpLogger>;
+  let mockMcpServer: ReturnType<typeof vi.mocked<McpServer>>;
+  let mockLogger: ReturnType<typeof vi.mocked<McpLogger>>;
   let tool: DocsSearchTool;
   let mockRegisteredTool: RegisteredTool;
 
@@ -83,8 +77,18 @@ describe('mcp-server/tools/project/DocsSearchTool', () => {
       absoluteCurrentWorkingDirectory: '/foo',
     };
 
+    beforeEach(() => {
+      mockedDiscoverAccountTargets.mockResolvedValue({
+        candidates: [],
+        recommended: { accountId: 12345 } as AccountTargetCandidate,
+      });
+    });
+
     it('should return auth error message when no account ID is found', async () => {
-      mockGetConfigDefaultAccountIfExists.mockReturnValue(undefined);
+      mockedDiscoverAccountTargets.mockResolvedValue({
+        candidates: [],
+        recommended: undefined,
+      });
 
       const result = await tool.handler(mockInput);
 
@@ -99,10 +103,6 @@ describe('mcp-server/tools/project/DocsSearchTool', () => {
     });
 
     it('should return successful results when docs are found', async () => {
-      mockGetConfigDefaultAccountIfExists.mockReturnValue({
-        accountId: 12345,
-      } as HubSpotConfigAccount);
-
       const mockResponse: DocsSearchResponse = {
         results: [
           {
@@ -129,7 +129,7 @@ describe('mcp-server/tools/project/DocsSearchTool', () => {
 
       const result = await tool.handler(mockInput);
 
-      expect(mockGetConfigDefaultAccountIfExists).toHaveBeenCalled();
+      expect(mockedDiscoverAccountTargets).toHaveBeenCalledWith();
       expect(mockHttp.post).toHaveBeenCalledWith(12345, {
         url: 'dev/docs/llms/v1/docs-search',
         data: {
@@ -152,10 +152,6 @@ describe('mcp-server/tools/project/DocsSearchTool', () => {
     });
 
     it('should dedupe results by URL before applying limit', async () => {
-      mockGetConfigDefaultAccountIfExists.mockReturnValue({
-        accountId: 12345,
-      } as HubSpotConfigAccount);
-
       const mockResponse: DocsSearchResponse = {
         results: [
           {
@@ -197,10 +193,6 @@ describe('mcp-server/tools/project/DocsSearchTool', () => {
     });
 
     it('should limit results to the specified docsSearchLimit', async () => {
-      mockGetConfigDefaultAccountIfExists.mockReturnValue({
-        accountId: 12345,
-      } as HubSpotConfigAccount);
-
       const mockResponse: DocsSearchResponse = {
         results: Array.from({ length: 10 }, (_, i) => ({
           title: `Doc ${i + 1}`,
@@ -230,10 +222,6 @@ describe('mcp-server/tools/project/DocsSearchTool', () => {
     });
 
     it('should return no results message when no documentation is found', async () => {
-      mockGetConfigDefaultAccountIfExists.mockReturnValue({
-        accountId: 12345,
-      } as HubSpotConfigAccount);
-
       const mockResponse: DocsSearchResponse = {
         results: [],
       };
@@ -256,10 +244,6 @@ describe('mcp-server/tools/project/DocsSearchTool', () => {
     });
 
     it('should return no results message when results is null', async () => {
-      mockGetConfigDefaultAccountIfExists.mockReturnValue({
-        accountId: 12345,
-      } as HubSpotConfigAccount);
-
       const mockResponse = {
         results: null,
       };
@@ -282,10 +266,6 @@ describe('mcp-server/tools/project/DocsSearchTool', () => {
     });
 
     it('should handle HubSpot HTTP errors', async () => {
-      mockGetConfigDefaultAccountIfExists.mockReturnValue({
-        accountId: 12345,
-      } as HubSpotConfigAccount);
-
       const mockError = {
         toString: () => 'HubSpot API Error: 404 Not Found',
       };
@@ -306,10 +286,6 @@ describe('mcp-server/tools/project/DocsSearchTool', () => {
     });
 
     it('should handle generic errors', async () => {
-      mockGetConfigDefaultAccountIfExists.mockReturnValue({
-        accountId: 12345,
-      } as HubSpotConfigAccount);
-
       const mockError = new Error('Network error');
 
       mockHttp.post.mockRejectedValue(mockError);
@@ -328,10 +304,6 @@ describe('mcp-server/tools/project/DocsSearchTool', () => {
     });
 
     it('should handle non-Error rejections', async () => {
-      mockGetConfigDefaultAccountIfExists.mockReturnValue({
-        accountId: 12345,
-      } as HubSpotConfigAccount);
-
       mockHttp.post.mockRejectedValue('String error');
       mockIsHubSpotHttpError.mockReturnValue(false);
 

@@ -15,5 +15,9 @@ export function setupHubSpotConfig(
 
   if (configPath) {
     process.env.HUBSPOT_CONFIG_PATH = configPath;
+  } else {
+    // Clear any value set by a previous tool call so this call doesn't
+    // inherit a stale config path from a different project.
+    delete process.env.HUBSPOT_CONFIG_PATH;
   }
 }

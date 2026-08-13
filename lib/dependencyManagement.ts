@@ -9,6 +9,7 @@ import {
   isGloballyInstalled,
   executeInstall,
   executeUpdate,
+  getNpmExecErrorOutput,
   DEFAULT_PACKAGE_MANAGER,
 } from './npm/npmCli.js';
 import {
@@ -173,11 +174,11 @@ async function installPackagesInDirectory({
         relativeDir
       ),
     });
+    const npmErrorOutput = getNpmExecErrorOutput(e);
     throw new Error(
-      commands.project.installDeps.installingDependenciesFailed(relativeDir),
-      {
-        cause: e,
-      }
+      npmErrorOutput ||
+        commands.project.installDeps.installingDependenciesFailed(relativeDir),
+      npmErrorOutput ? undefined : { cause: e }
     );
   }
 }
@@ -296,11 +297,11 @@ async function updatePackagesInDirectory({
     SpinniesManager.fail(spinner, {
       text: commands.project.updateDeps.updatingDependenciesFailed(relativeDir),
     });
+    const npmErrorOutput = getNpmExecErrorOutput(e);
     throw new Error(
-      commands.project.updateDeps.updatingDependenciesFailed(relativeDir),
-      {
-        cause: e,
-      }
+      npmErrorOutput ||
+        commands.project.updateDeps.updatingDependenciesFailed(relativeDir),
+      npmErrorOutput ? undefined : { cause: e }
     );
   }
 }

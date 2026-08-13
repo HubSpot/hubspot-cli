@@ -1,4 +1,4 @@
-import { exec as execAsync } from 'node:child_process';
+import { exec as execAsync, type ExecException } from 'node:child_process';
 import util from 'util';
 import { uiLogger } from '../ui/logger.js';
 
@@ -28,6 +28,25 @@ export async function getLatestPackageVersion(packageName: string): Promise<{
   } catch (e) {
     return { latest: null, next: null };
   }
+}
+
+function isNpmExecError(error: unknown): error is ExecException {
+  return (
+    typeof error === 'object' &&
+    error !== null &&
+    ('stderr' in error || 'stdout' in error)
+  );
+}
+
+export function getNpmExecErrorOutput(error: unknown): string | null {
+  if (!isNpmExecError(error)) {
+    return null;
+  }
+
+  const stderr = error.stderr?.trim();
+  const stdout = error.stdout?.trim();
+
+  return stderr || stdout || null;
 }
 
 export async function executeInstall(

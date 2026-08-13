@@ -43,6 +43,16 @@ describe('mcp-server/utils/config', () => {
       expect(process.env.HUBSPOT_CONFIG_PATH).toBeUndefined();
     });
 
+    it('should clear HUBSPOT_CONFIG_PATH when no local config exists and a previous value was set', () => {
+      process.env.HUBSPOT_CONFIG_PATH =
+        '/projects/other-app/.hubspot/config.yml';
+      mockGetLocalConfigFilePathIfExists.mockReturnValue(null);
+
+      setupHubSpotConfig('/projects/my-app');
+
+      expect(process.env.HUBSPOT_CONFIG_PATH).toBeUndefined();
+    });
+
     it('should not modify env when directory is empty', () => {
       process.env.INIT_CWD = '/some/previous/path';
       mockGetLocalConfigFilePathIfExists.mockReturnValue(null);

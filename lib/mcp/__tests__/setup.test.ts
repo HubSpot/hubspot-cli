@@ -4,7 +4,8 @@ import {
   setupGemini,
   setupClaudeCode,
   setupCursor,
-  setupWindsurf,
+  setupDevin,
+  setupOpenCode,
   setupVsCode,
   configureMcpServer,
   supportedTools,
@@ -56,9 +57,11 @@ describe('lib/mcp/setup', () => {
       expect(toolValues).toContain('codex');
       expect(toolValues).toContain('claude');
       expect(toolValues).toContain('cursor');
+      expect(toolValues).toContain('devin');
       expect(toolValues).toContain('gemini');
+      expect(toolValues).toContain('opencode');
       expect(toolValues).toContain('vscode');
-      expect(toolValues).toContain('windsurf');
+      expect(toolValues).toContain('other');
     });
 
     it('should include Gemini in the supported tools list', () => {
@@ -460,7 +463,7 @@ describe('lib/mcp/setup', () => {
     });
   });
 
-  describe('setupWindsurf', () => {
+  describe('setupDevin', () => {
     const mockedFs = vi.mocked(fs);
     const mockedExistsSync = vi.mocked(existsSync);
     const mockMcpCommand = {
@@ -473,22 +476,22 @@ describe('lib/mcp/setup', () => {
       vi.mocked(path.join).mockImplementation((...parts) => parts.join('/'));
     });
 
-    it('should successfully configure Windsurf', () => {
+    it('should successfully configure Devin', () => {
       mockedExistsSync.mockReturnValue(true);
       mockedFs.readFileSync.mockReturnValue('{}');
 
-      const result = setupWindsurf(mockMcpCommand);
+      const result = setupDevin(mockMcpCommand);
 
       expect(result).toBe(true);
       expect(mockedSpinniesManager.add).toHaveBeenCalledWith('spinner', {
-        text: commands.mcp.setup.spinners.configuringWindsurf,
+        text: commands.mcp.setup.spinners.configuringDevin,
       });
       expect(mockedFs.writeFileSync).toHaveBeenCalledWith(
         expect.stringContaining('.codeium/windsurf/mcp_config.json'),
         expect.stringContaining('HubSpotDev')
       );
       expect(mockedSpinniesManager.succeed).toHaveBeenCalledWith('spinner', {
-        text: commands.mcp.setup.spinners.configuredWindsurf,
+        text: commands.mcp.setup.spinners.configuredDevin,
       });
     });
 
@@ -496,7 +499,7 @@ describe('lib/mcp/setup', () => {
       mockedExistsSync.mockReturnValue(false);
       mockedFs.readFileSync.mockReturnValue('{}');
 
-      const result = setupWindsurf(mockMcpCommand);
+      const result = setupDevin(mockMcpCommand);
 
       expect(result).toBe(true);
       expect(mockedFs.writeFileSync).toHaveBeenCalledWith(
@@ -509,11 +512,11 @@ describe('lib/mcp/setup', () => {
       mockedExistsSync.mockReturnValue(true);
       mockedFs.readFileSync.mockReturnValue('{ invalid json');
 
-      const result = setupWindsurf(mockMcpCommand);
+      const result = setupDevin(mockMcpCommand);
 
       expect(result).toBe(false);
       expect(mockedSpinniesManager.fail).toHaveBeenCalledWith('spinner', {
-        text: commands.mcp.setup.spinners.failedToConfigureWindsurf,
+        text: commands.mcp.setup.spinners.failedToConfigureDevin,
       });
     });
 
@@ -521,7 +524,7 @@ describe('lib/mcp/setup', () => {
       mockedExistsSync.mockReturnValue(true);
       mockedFs.readFileSync.mockReturnValue('{}');
 
-      const result = setupWindsurf();
+      const result = setupDevin();
 
       expect(result).toBe(true);
       const writeCall = mockedFs.writeFileSync.mock.calls.find(c =>
@@ -529,6 +532,111 @@ describe('lib/mcp/setup', () => {
       );
       const written = JSON.parse(writeCall![1] as string);
       expect(written.mcpServers.HubSpotDev.command).toBe('hs');
+    });
+  });
+
+  describe('setupOpenCode', () => {
+    const mockMcpCommand = {
+      command: 'test-command',
+      args: ['--arg1', '--arg2'],
+    };
+
+    it('should successfully configure OpenCode when command is available', async () => {
+      mockedExecAsync.mockResolvedValueOnce({
+        stdout: 'opencode version 1.0.0',
+        stderr: '',
+      });
+      mockedExecAsync.mockResolvedValueOnce({ stdout: '', stderr: '' });
+
+      const result = await setupOpenCode(mockMcpCommand);
+
+      expect(result).toBe(true);
+      expect(mockedSpinniesManager.add).toHaveBeenCalledWith(
+        'openCodeSpinner',
+        {
+          text: commands.mcp.setup.spinners.configuringOpenCode,
+        }
+      );
+      expect(mockedExecAsync).toHaveBeenCalledWith('opencode --version');
+      expect(mockedExecAsync).toHaveBeenCalledWith(
+        'opencode mcp add "HubSpotDev" -- test-command --arg1 --arg2 --ai-agent opencode'
+      );
+      expect(mockedSpinniesManager.succeed).toHaveBeenCalledWith(
+        'openCodeSpinner',
+        {
+          text: commands.mcp.setup.spinners.configuredOpenCode,
+        }
+      );
+    });
+
+    it('should use default mcp command when none provided', async () => {
+      mockedExecAsync.mockResolvedValueOnce({
+        stdout: 'opencode version 1.0.0',
+        stderr: '',
+      });
+      mockedExecAsync.mockResolvedValueOnce({ stdout: '', stderr: '' });
+
+      const result = await setupOpenCode();
+
+      expect(result).toBe(true);
+      expect(mockedExecAsync).toHaveBeenCalledWith(
+        'opencode mcp add "HubSpotDev" -- hs mcp start --ai-agent opencode'
+      );
+    });
+
+    it('should handle opencode command not found', async () => {
+      const error = new Error('Command not found: opencode');
+      mockedExecAsync.mockRejectedValueOnce(error);
+
+      const result = await setupOpenCode(mockMcpCommand);
+
+      expect(result).toBe(false);
+      expect(mockedSpinniesManager.fail).toHaveBeenCalledWith(
+        'openCodeSpinner',
+        {
+          text: commands.mcp.setup.spinners.openCodeNotFound,
+        }
+      );
+    });
+
+    it('should pass through environment variables in command', async () => {
+      const mockMcpCommandWithEnv = {
+        command: 'test-command',
+        args: ['--arg1'],
+        env: { HUBSPOT_MCP_STANDALONE: 'true' },
+      };
+      mockedExecAsync.mockResolvedValueOnce({
+        stdout: 'opencode version 1.0.0',
+        stderr: '',
+      });
+      mockedExecAsync.mockResolvedValueOnce({ stdout: '', stderr: '' });
+
+      const result = await setupOpenCode(mockMcpCommandWithEnv);
+
+      expect(result).toBe(true);
+      expect(mockedExecAsync).toHaveBeenCalledWith(
+        'opencode mcp add "HubSpotDev" --env HUBSPOT_MCP_STANDALONE="true" -- test-command --arg1 --ai-agent opencode'
+      );
+    });
+
+    it('should handle opencode installation failure', async () => {
+      const error = new Error('Some other error');
+      mockedExecAsync.mockResolvedValueOnce({
+        stdout: 'opencode version 1.0.0',
+        stderr: '',
+      });
+      mockedExecAsync.mockRejectedValueOnce(error);
+
+      const result = await setupOpenCode(mockMcpCommand);
+
+      expect(result).toBe(false);
+      expect(mockedSpinniesManager.fail).toHaveBeenCalledWith(
+        'openCodeSpinner',
+        {
+          text: commands.mcp.setup.spinners.openCodeInstallFailed,
+        }
+      );
+      expect(mockedLogError).toHaveBeenCalledWith(error);
     });
   });
 
@@ -637,14 +745,14 @@ describe('lib/mcp/setup', () => {
 
     it('should prompt for targets when empty array provided', async () => {
       mockedPromptUser
-        .mockResolvedValueOnce({ selectedTargets: ['windsurf'] })
+        .mockResolvedValueOnce({ selectedTargets: ['devin'] })
         .mockResolvedValueOnce({ useStandaloneMode: false });
       mockedExistsSync.mockReturnValue(true);
       mockedFs.readFileSync.mockReturnValue('{}');
 
       const result = await configureMcpServer({ targets: [] });
 
-      expect(result).toEqual(['windsurf']);
+      expect(result).toEqual(['devin']);
       expect(mockedPromptUser).toHaveBeenCalledWith(
         expect.objectContaining({ name: 'selectedTargets' })
       );
@@ -760,10 +868,10 @@ describe('lib/mcp/setup', () => {
       mockedExistsSync.mockReturnValue(true);
       mockedFs.readFileSync.mockReturnValue('{}');
 
-      await configureMcpServer({ targets: ['cursor', 'windsurf'] });
+      await configureMcpServer({ targets: ['cursor', 'devin'] });
 
       expect(mockedUiLogger.info).toHaveBeenCalledWith(
-        commands.mcp.setup.success(['cursor', 'windsurf'])
+        commands.mcp.setup.success(['cursor', 'devin'])
       );
     });
 
@@ -788,10 +896,35 @@ describe('lib/mcp/setup', () => {
       mockedFs.readFileSync.mockReturnValue('{}');
 
       const result = await configureMcpServer({
-        targets: ['cursor', 'windsurf'],
+        targets: ['cursor', 'devin'],
       });
 
-      expect(result).toEqual(['cursor', 'windsurf']);
+      expect(result).toEqual(['cursor', 'devin']);
+    });
+
+    it('should return empty array, skip standalone prompt, and skip success message for other-only target', async () => {
+      const result = await configureMcpServer({ targets: ['other'] });
+
+      expect(result).toEqual([]);
+      expect(mockedPromptUser).not.toHaveBeenCalled();
+      expect(mockedUiLogger.info).not.toHaveBeenCalled();
+      expect(mockedUiLogger.log).toHaveBeenCalled();
+    });
+
+    it('should exclude other from return value when mixed with real targets', async () => {
+      mockedPromptUser.mockResolvedValueOnce({ useStandaloneMode: false });
+      mockedExistsSync.mockReturnValue(true);
+      mockedFs.readFileSync.mockReturnValue('{}');
+
+      const result = await configureMcpServer({
+        targets: ['cursor', 'other'],
+      });
+
+      expect(result).toEqual(['cursor']);
+      expect(mockedUiLogger.info).toHaveBeenCalledWith(
+        commands.mcp.setup.success(['cursor'])
+      );
+      expect(mockedUiLogger.log).toHaveBeenCalled();
     });
   });
 });

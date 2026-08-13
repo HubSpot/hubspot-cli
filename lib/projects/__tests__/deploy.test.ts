@@ -21,6 +21,9 @@ import {
 // Mock external dependencies
 vi.mock('@hubspot/local-dev-lib/api/projects');
 vi.mock('@hubspot/local-dev-lib/config');
+vi.mock('@hubspot/local-dev-lib/urls', () => ({
+  getHubSpotWebsiteOriginByAccountId: () => 'https://app.hubspot.com',
+}));
 vi.mock('../pollProjectBuildAndDeploy.js');
 
 const mockUiLogger = vi.mocked(uiLogger);

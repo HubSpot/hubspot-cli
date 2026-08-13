@@ -5,8 +5,7 @@ import {
 } from '@hubspot/local-dev-lib/api/customObjects';
 import { uiLogger } from '../../lib/ui/logger.js';
 import { getAbsoluteFilePath } from '@hubspot/local-dev-lib/path';
-import { getConfigAccountEnvironment } from '@hubspot/local-dev-lib/config';
-import { getHubSpotWebsiteOrigin } from '@hubspot/local-dev-lib/urls';
+import { getHubSpotWebsiteOriginByAccountId } from '@hubspot/local-dev-lib/urls';
 
 import { listPrompt } from '../../lib/prompts/promptUtils.js';
 import { logError } from '../../lib/errorHandlers/index.js';
@@ -72,8 +71,8 @@ async function handler(
     );
     uiLogger.success(
       commands.customObject.subcommands.updateSchema.success.viewAtUrl(
-        `${getHubSpotWebsiteOrigin(
-          getConfigAccountEnvironment(derivedAccountId)
+        `${getHubSpotWebsiteOriginByAccountId(
+          derivedAccountId
         )}/contacts/${derivedAccountId}/objects/${data.objectTypeId}`
       )
     );

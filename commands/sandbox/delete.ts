@@ -10,8 +10,7 @@ import {
   getConfigAccountIfExists,
   getConfigDefaultAccountIfExists,
 } from '@hubspot/local-dev-lib/config';
-import { getHubSpotWebsiteOrigin } from '@hubspot/local-dev-lib/urls';
-import { getValidEnv } from '@hubspot/local-dev-lib/environment';
+import { getHubSpotWebsiteOriginByAccountId } from '@hubspot/local-dev-lib/urls';
 import { logError, debugError } from '../../lib/errorHandlers/index.js';
 import { commands } from '../../lang/en.js';
 import { deleteSandboxPrompt } from '../../lib/prompts/sandboxesPrompt.js';
@@ -77,9 +76,7 @@ async function handler(
   const defaultAccount = getConfigDefaultAccountIfExists();
   const isDefaultAccount = sandboxAccountId === defaultAccount?.accountId;
 
-  const baseUrl = getHubSpotWebsiteOrigin(
-    getValidEnv(getConfigAccountEnvironment(sandboxAccountId))
-  );
+  const baseUrl = getHubSpotWebsiteOriginByAccountId(sandboxAccountId);
 
   let parentAccountId;
   const accountsList = getAllConfigAccounts() || [];

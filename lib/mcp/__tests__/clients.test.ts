@@ -33,7 +33,8 @@ describe('lib/mcp/clients', () => {
       'cursor',
       'gemini',
       'vscode',
-      'windsurf',
+      'devin',
+      'opencode',
     ]);
   });
 
@@ -41,10 +42,15 @@ describe('lib/mcp/clients', () => {
     const { getMcpClientPathSegments } = await importClientsForPlatform();
 
     expect(getMcpClientPathSegments('cursor')).toEqual(['.cursor', 'mcp.json']);
-    expect(getMcpClientPathSegments('windsurf')).toEqual([
+    expect(getMcpClientPathSegments('devin')).toEqual([
       '.codeium',
       'windsurf',
       'mcp_config.json',
+    ]);
+    expect(getMcpClientPathSegments('opencode')).toEqual([
+      '.config',
+      'opencode',
+      'config.json',
     ]);
   });
 

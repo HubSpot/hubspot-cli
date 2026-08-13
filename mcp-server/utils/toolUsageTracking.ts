@@ -2,10 +2,8 @@ import {
   EventClass,
   getExecutionEnvironmentMeta,
 } from '../../lib/usageTracking.js';
-import {
-  getConfig,
-  getConfigDefaultAccountIfExists,
-} from '@hubspot/local-dev-lib/config';
+import { getConfig } from '@hubspot/local-dev-lib/config';
+import { discoverAccountTargets } from '../../lib/accountTargetDiscovery.js';
 import { sendUsageEvent } from '../../lib/api/usageTracking.js';
 
 export async function trackToolUsage(
@@ -33,7 +31,13 @@ export async function trackToolUsage(
     ...meta,
   };
 
-  const accountId = getConfigDefaultAccountIfExists()?.accountId || undefined;
+  let accountId: number | undefined;
+  try {
+    const { recommended } = await discoverAccountTargets();
+    accountId = recommended?.accountId;
+  } catch {
+    // Account discovery failed; continue without account ID
+  }
   try {
     await sendUsageEvent({
       eventName: 'cli-interaction',

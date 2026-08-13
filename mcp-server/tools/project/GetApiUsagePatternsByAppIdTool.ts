@@ -9,13 +9,17 @@ import { z } from 'zod';
 import { http } from '@hubspot/local-dev-lib/http';
 import { formatTextContents } from '../../utils/content.js';
 import { isHubSpotHttpError } from '@hubspot/local-dev-lib/errors/index';
-import { getConfigDefaultAccountIfExists } from '@hubspot/local-dev-lib/config';
-import { absoluteCurrentWorkingDirectory } from './constants.js';
+import {
+  absoluteCurrentWorkingDirectory,
+  absoluteProjectPath,
+} from './constants.js';
 import { setupHubSpotConfig } from '../../utils/config.js';
+import { discoverAccountTargets } from '../../../lib/accountTargetDiscovery.js';
 import { getErrorMessage } from '../../../lib/errorHandlers/index.js';
 
 const inputSchema = {
   absoluteCurrentWorkingDirectory,
+  absoluteProjectPath: absoluteProjectPath.optional(),
   appId: z
     .string()
     .describe(
@@ -63,17 +67,13 @@ export class GetApiUsagePatternsByAppIdTool extends Tool<GetApiUsagePatternsByAp
     startDate,
     endDate,
     absoluteCurrentWorkingDirectory,
+    absoluteProjectPath,
   }: GetApiUsagePatternsByAppIdInputSchema): Promise<TextContentResponse> {
-    setupHubSpotConfig(absoluteCurrentWorkingDirectory);
+    setupHubSpotConfig(absoluteProjectPath ?? absoluteCurrentWorkingDirectory);
 
     try {
-      let accountId: number | undefined;
-      try {
-        accountId = getConfigDefaultAccountIfExists()?.accountId;
-      } catch {
-        // Config file does not exist
-      }
-
+      const { recommended } = await discoverAccountTargets();
+      const accountId = recommended?.accountId;
       if (!accountId) {
         const authErrorMessage = `No account ID found. Call the auth-account tool to authenticate a HubSpot account.`;
         return formatTextContents(authErrorMessage);

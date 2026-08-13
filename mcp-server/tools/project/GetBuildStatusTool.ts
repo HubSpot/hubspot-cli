@@ -22,8 +22,8 @@ import {
   absoluteCurrentWorkingDirectory,
   absoluteProjectPath,
 } from './constants.js';
-import { getConfigDefaultAccountIfExists } from '@hubspot/local-dev-lib/config';
 import { setupHubSpotConfig } from '../../utils/config.js';
+import { discoverAccountTargets } from '../../../lib/accountTargetDiscovery.js';
 
 const TOOL_NAME = 'get-build-status';
 
@@ -164,15 +164,18 @@ export class GetBuildStatusTool extends Tool<GetBuildStatusInputSchema> {
     buildId,
     limit,
   }: GetBuildStatusInputSchema): Promise<TextContentResponse> {
-    setupHubSpotConfig(absoluteCurrentWorkingDirectory);
+    setupHubSpotConfig(absoluteProjectPath);
 
     try {
-      let accountId: number | undefined;
-      try {
-        accountId = getConfigDefaultAccountIfExists()?.accountId;
-      } catch {
-        // Config file does not exist
-      }
+      const { projectConfig, projectDir } =
+        await getProjectConfig(absoluteProjectPath);
+      validateProjectConfig(projectConfig, projectDir);
+
+      const { recommended } = await discoverAccountTargets({
+        projectDir,
+        projectConfig,
+      });
+      const accountId = recommended?.accountId;
       if (!accountId) {
         return formatTextContents(
           absoluteCurrentWorkingDirectory,
@@ -180,9 +183,6 @@ export class GetBuildStatusTool extends Tool<GetBuildStatusInputSchema> {
         );
       }
 
-      const { projectConfig, projectDir } =
-        await getProjectConfig(absoluteProjectPath);
-      validateProjectConfig(projectConfig, projectDir);
       const projectName = projectConfig.name;
 
       let output: string;

@@ -4,28 +4,25 @@ import {
   RegisteredTool,
 } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { McpLogger } from '../../../utils/logger.js';
-import { getConfigDefaultAccountIfExists } from '@hubspot/local-dev-lib/config';
 import { http } from '@hubspot/local-dev-lib/http';
 import { isHubSpotHttpError } from '@hubspot/local-dev-lib/errors/index';
 import { MockedFunction, Mocked } from 'vitest';
-import { HubSpotConfigAccount } from '@hubspot/local-dev-lib/types/Accounts';
 import { mcpFeedbackRequest } from '../../../utils/feedbackTracking.js';
+import { discoverAccountTargets } from '../../../../lib/accountTargetDiscovery.js';
+import type { AccountTargetCandidate } from '../../../../types/AccountTargets.js';
+import { setupHubSpotConfig } from '../../../utils/config.js';
 
 vi.mock('@modelcontextprotocol/sdk/server/mcp.js');
 vi.mock('../../../utils/logger.js');
 vi.mock('@hubspot/local-dev-lib/http');
 vi.mock('@hubspot/local-dev-lib/errors/index');
-vi.mock('@hubspot/local-dev-lib/config');
 vi.mock('../../../utils/feedbackTracking');
+vi.mock('../../../../lib/accountTargetDiscovery.js');
+vi.mock('../../../utils/config.js');
 
-const mockMcpFeedbackRequest = mcpFeedbackRequest as MockedFunction<
-  typeof mcpFeedbackRequest
->;
-
-const mockGetConfigDefaultAccountIfExists =
-  getConfigDefaultAccountIfExists as MockedFunction<
-    typeof getConfigDefaultAccountIfExists
-  >;
+const mockMcpFeedbackRequest = vi.mocked(mcpFeedbackRequest);
+const mockedDiscoverAccountTargets = vi.mocked(discoverAccountTargets);
+const mockedSetupHubSpotConfig = vi.mocked(setupHubSpotConfig);
 const mockHttp = http as Mocked<typeof http>;
 const mockIsHubSpotHttpError = isHubSpotHttpError as unknown as MockedFunction<
   typeof isHubSpotHttpError
@@ -96,10 +93,34 @@ describe('mcp-server/tools/project/GetApiUsagePatternsByAppIdTool', () => {
     };
 
     beforeEach(() => {
-      mockGetConfigDefaultAccountIfExists.mockReturnValue({
-        accountId: 123456789,
-      } as HubSpotConfigAccount);
+      mockedDiscoverAccountTargets.mockResolvedValue({
+        candidates: [],
+        recommended: { accountId: 123456789 } as AccountTargetCandidate,
+      });
       mockIsHubSpotHttpError.mockReturnValue(false);
+    });
+
+    it('should use absoluteProjectPath for account resolution when provided', async () => {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      mockHttp.get.mockResolvedValue({ data: { patternSummaries: {} } } as any);
+
+      await tool.handler({
+        ...input,
+        absoluteProjectPath: '/test/dir/my-project',
+      });
+
+      expect(mockedSetupHubSpotConfig).toHaveBeenCalledWith(
+        '/test/dir/my-project'
+      );
+    });
+
+    it('should fall back to absoluteCurrentWorkingDirectory when absoluteProjectPath is not provided', async () => {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      mockHttp.get.mockResolvedValue({ data: { patternSummaries: {} } } as any);
+
+      await tool.handler(input);
+
+      expect(mockedSetupHubSpotConfig).toHaveBeenCalledWith('/test/dir');
     });
 
     it('should return API usage patterns successfully', async () => {
@@ -131,7 +152,7 @@ describe('mcp-server/tools/project/GetApiUsagePatternsByAppIdTool', () => {
 
       const result = await tool.handler(input);
 
-      expect(mockGetConfigDefaultAccountIfExists).toHaveBeenCalledWith();
+      expect(mockedDiscoverAccountTargets).toHaveBeenCalledWith();
       expect(mockHttp.get).toHaveBeenCalledWith(123456789, {
         url: 'app/feature/utilization/public/v3/insights/app/12345/usage-patterns',
         params: {
@@ -151,7 +172,10 @@ describe('mcp-server/tools/project/GetApiUsagePatternsByAppIdTool', () => {
     });
 
     it('should return error when account ID cannot be determined', async () => {
-      mockGetConfigDefaultAccountIfExists.mockReturnValue(undefined);
+      mockedDiscoverAccountTargets.mockResolvedValue({
+        candidates: [],
+        recommended: undefined,
+      });
 
       const result = await tool.handler(input);
 

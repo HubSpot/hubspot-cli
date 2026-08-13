@@ -1,12 +1,7 @@
-import { getHubSpotWebsiteOrigin } from '@hubspot/local-dev-lib/urls';
-import { getConfigAccountEnvironment } from '@hubspot/local-dev-lib/config';
-
-export function getBaseHubSpotUrlForAccount(accountId: number): string {
-  return getHubSpotWebsiteOrigin(getConfigAccountEnvironment(accountId));
-}
+import { getHubSpotWebsiteOriginByAccountId } from '@hubspot/local-dev-lib/urls';
 
 function getProjectHomeUrl(accountId: number): string {
-  return `${getBaseHubSpotUrlForAccount(accountId)}/developer-projects/${accountId}`;
+  return `${getHubSpotWebsiteOriginByAccountId(accountId)}/developer-projects/${accountId}`;
 }
 
 export function getProjectComponentDistributionUrl(
@@ -14,17 +9,11 @@ export function getProjectComponentDistributionUrl(
   componentName: string,
   accountId: number
 ): string {
-  const baseUrl = getHubSpotWebsiteOrigin(
-    getConfigAccountEnvironment(accountId)
-  );
-  return `${baseUrl}/developer-projects/${accountId}/project/${projectName}/component/${componentName}/distribution`;
+  return `${getHubSpotWebsiteOriginByAccountId(accountId)}/developer-projects/${accountId}/project/${projectName}/component/${componentName}/distribution`;
 }
 
 export function getDeveloperOverviewUrl(accountId: number): string {
-  const baseUrl = getHubSpotWebsiteOrigin(
-    getConfigAccountEnvironment(accountId)
-  );
-  return `${baseUrl}/developer-overview/${accountId}`;
+  return `${getHubSpotWebsiteOriginByAccountId(accountId)}/developer-overview/${accountId}`;
 }
 
 export function getProjectDetailUrl(
@@ -70,12 +59,9 @@ export function getLocalDevUiUrl(
   accountId: number,
   showWelcomeScreen?: boolean
 ): string {
-  return `${getBaseHubSpotUrlForAccount(accountId)}/developer-projects-local-dev/${accountId}${showWelcomeScreen ? '?welcome' : ''}`;
+  return `${getHubSpotWebsiteOriginByAccountId(accountId)}/developer-projects-local-dev/${accountId}${showWelcomeScreen ? '?welcome' : ''}`;
 }
 
 export function getAccountHomeUrl(accountId: number): string {
-  const baseUrl = getHubSpotWebsiteOrigin(
-    getConfigAccountEnvironment(accountId)
-  );
-  return `${baseUrl}/home?portalId=${accountId}`;
+  return `${getHubSpotWebsiteOriginByAccountId(accountId)}/home?portalId=${accountId}`;
 }

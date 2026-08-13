@@ -15,8 +15,9 @@ import {
 } from '../../../../lib/projects/config.js';
 import { MockedFunction, Mocked } from 'vitest';
 import { mcpFeedbackRequest } from '../../../utils/feedbackTracking.js';
-import { getConfigDefaultAccountIfExists } from '@hubspot/local-dev-lib/config';
-import { HubSpotConfigAccount } from '@hubspot/local-dev-lib/types/Accounts';
+import { discoverAccountTargets } from '../../../../lib/accountTargetDiscovery.js';
+import type { AccountTargetCandidate } from '../../../../types/AccountTargets.js';
+import { ACCOUNT_TARGET_SELECTION_SOURCES } from '../../../../types/AccountTargets.js';
 
 vi.mock('@modelcontextprotocol/sdk/server/mcp.js');
 vi.mock('../../../utils/logger.js');
@@ -25,6 +26,7 @@ vi.mock('@hubspot/local-dev-lib/errors/index');
 vi.mock('../../../../lib/projects/config.js');
 vi.mock('../../../utils/feedbackTracking');
 vi.mock('@hubspot/local-dev-lib/config');
+vi.mock('../../../../lib/accountTargetDiscovery.js');
 
 const mockMcpFeedbackRequest = mcpFeedbackRequest as MockedFunction<
   typeof mcpFeedbackRequest
@@ -44,10 +46,7 @@ const mockGetProjectConfig = getProjectConfig as MockedFunction<
 const mockValidateProjectConfig = validateProjectConfig as MockedFunction<
   typeof validateProjectConfig
 >;
-const mockGetConfigDefaultAccountIfExists =
-  getConfigDefaultAccountIfExists as MockedFunction<
-    typeof getConfigDefaultAccountIfExists
-  >;
+const mockedDiscoverAccountTargets = vi.mocked(discoverAccountTargets);
 
 const TEST_ACCOUNT_ID = 123456789;
 const TEST_PROJECT_NAME = 'test-project';
@@ -153,9 +152,10 @@ describe('mcp-server/tools/project/GetBuildStatusTool', () => {
       projectDir: TEST_PROJECT_PATH,
     });
     mockValidateProjectConfig.mockImplementation(() => {});
-    mockGetConfigDefaultAccountIfExists.mockReturnValue({
-      accountId: TEST_ACCOUNT_ID,
-    } as HubSpotConfigAccount);
+    mockedDiscoverAccountTargets.mockResolvedValue({
+      candidates: [],
+      recommended: { accountId: TEST_ACCOUNT_ID } as AccountTargetCandidate,
+    });
   });
 
   describe('register', () => {
@@ -185,9 +185,56 @@ describe('mcp-server/tools/project/GetBuildStatusTool', () => {
       limit: 5,
     };
 
+    describe('account resolution', () => {
+      it('should pass project config to discoverAccountTargets for profile resolution', async () => {
+        mockFetchProjectBuilds.mockResolvedValue(
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          createBuildListResponse([createMockBuild()]) as any
+        );
+
+        await tool.handler(baseInput);
+
+        expect(mockedDiscoverAccountTargets).toHaveBeenCalledWith({
+          projectDir: TEST_PROJECT_PATH,
+          projectConfig: createMockProjectConfig(),
+        });
+      });
+
+      it('should use the account from a linked directory over the global default', async () => {
+        const LINKED_ACCOUNT_ID = 987654321;
+        mockedDiscoverAccountTargets.mockResolvedValue({
+          candidates: [
+            {
+              accountId: LINKED_ACCOUNT_ID,
+              source: ACCOUNT_TARGET_SELECTION_SOURCES.LINKED_DIRECTORY,
+            } as AccountTargetCandidate,
+          ],
+          recommended: {
+            accountId: LINKED_ACCOUNT_ID,
+            source: ACCOUNT_TARGET_SELECTION_SOURCES.LINKED_DIRECTORY,
+          } as AccountTargetCandidate,
+        });
+        mockFetchProjectBuilds.mockResolvedValue(
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          createBuildListResponse([createMockBuild()]) as any
+        );
+
+        await tool.handler(baseInput);
+
+        expect(mockFetchProjectBuilds).toHaveBeenCalledWith(
+          LINKED_ACCOUNT_ID,
+          TEST_PROJECT_NAME,
+          expect.any(Object)
+        );
+      });
+    });
+
     describe('error handling', () => {
       it('should return error when account ID cannot be determined', async () => {
-        mockGetConfigDefaultAccountIfExists.mockReturnValue(undefined);
+        mockedDiscoverAccountTargets.mockResolvedValue({
+          candidates: [],
+          recommended: undefined,
+        });
 
         const result = await tool.handler(baseInput);
 
