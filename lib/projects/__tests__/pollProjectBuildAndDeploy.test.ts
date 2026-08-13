@@ -18,6 +18,9 @@ import { Deploy } from '@hubspot/local-dev-lib/types/Deploy';
 // Mock external dependencies
 vi.mock('@hubspot/local-dev-lib/api/projects');
 vi.mock('@hubspot/local-dev-lib/config');
+vi.mock('@hubspot/local-dev-lib/urls', () => ({
+  getHubSpotWebsiteOriginByAccountId: () => 'https://app.hubspot.com',
+}));
 vi.mock('../../ui/SpinniesManager.js');
 vi.mock('../../ui/index.js', async importOriginal => {
   const actual = (await importOriginal()) as Record<string, unknown>;

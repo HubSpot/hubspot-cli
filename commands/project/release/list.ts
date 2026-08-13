@@ -51,10 +51,6 @@ async function fetchAndDisplayReleases(
     data: { results, paging },
   } = await listReleases(accountId, projectName, options);
 
-  uiLogger.log(
-    commands.project.release.list.showingReleases(results.length, projectName)
-  );
-
   if (results.length === 0) {
     uiLogger.log(commands.project.release.list.noReleases);
   } else {
@@ -65,6 +61,9 @@ async function fetchAndDisplayReleases(
     ]);
 
     renderTable(['Release', 'Build', 'Created'], rows);
+    uiLogger.log(
+      commands.project.release.list.showingReleases(results.length, projectName)
+    );
   }
 
   if (paging?.next?.after) {

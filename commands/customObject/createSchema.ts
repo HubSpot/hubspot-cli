@@ -1,9 +1,8 @@
 import { Argv, ArgumentsCamelCase } from 'yargs';
 import { uiLogger } from '../../lib/ui/logger.js';
-import { getConfigAccountEnvironment } from '@hubspot/local-dev-lib/config';
 import { getAbsoluteFilePath } from '@hubspot/local-dev-lib/path';
 import { createObjectSchema } from '@hubspot/local-dev-lib/api/customObjects';
-import { getHubSpotWebsiteOrigin } from '@hubspot/local-dev-lib/urls';
+import { getHubSpotWebsiteOriginByAccountId } from '@hubspot/local-dev-lib/urls';
 import { logError } from '../../lib/errorHandlers/index.js';
 import { checkAndConvertToJson } from '../../lib/validation.js';
 import { commands } from '../../lang/en.js';
@@ -48,8 +47,8 @@ async function handler(
     const { data } = await createObjectSchema(derivedAccountId, schemaJson);
     uiLogger.success(
       commands.customObject.subcommands.createSchema.success.schemaViewable(
-        `${getHubSpotWebsiteOrigin(
-          getConfigAccountEnvironment(derivedAccountId)
+        `${getHubSpotWebsiteOriginByAccountId(
+          derivedAccountId
         )}/contacts/${derivedAccountId}/objects/${data.objectTypeId}`
       )
     );

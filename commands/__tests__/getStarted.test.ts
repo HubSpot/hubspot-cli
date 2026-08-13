@@ -34,6 +34,9 @@ vi.mock('../../lib/projects/upload.js');
 vi.mock('../../lib/projects/pollProjectBuildAndDeploy.js');
 vi.mock('@hubspot/local-dev-lib/api/appsDev');
 vi.mock('@hubspot/local-dev-lib/config');
+vi.mock('@hubspot/local-dev-lib/urls', () => ({
+  getHubSpotWebsiteOriginByAccountId: () => 'https://app.hubspot.com',
+}));
 vi.mock('../../ui/render');
 vi.mock('../../ui/components/getStarted/GetStartedFlow');
 

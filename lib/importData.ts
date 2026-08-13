@@ -1,11 +1,10 @@
 import {
   getConfigAccountById,
-  getConfigAccountEnvironment,
   getConfigAccountIfExists,
 } from '@hubspot/local-dev-lib/config';
 import { createImport } from '@hubspot/local-dev-lib/api/crm';
 import { ImportRequest } from '@hubspot/local-dev-lib/types/Crm';
-import { getHubSpotWebsiteOrigin } from '@hubspot/local-dev-lib/urls';
+import { getHubSpotWebsiteOriginByAccountId } from '@hubspot/local-dev-lib/urls';
 
 import { importDataTestAccountSelectPrompt } from './prompts/importDataTestAccountSelectPrompt.js';
 import { lib } from '../lang/en.js';
@@ -23,9 +22,6 @@ export async function handleImportData(
   importRequest: ImportRequest
 ) {
   try {
-    const baseUrl = getHubSpotWebsiteOrigin(
-      getConfigAccountEnvironment(targetAccountId)
-    );
     const response = await createImport(
       targetAccountId,
       importRequest,
@@ -33,7 +29,11 @@ export async function handleImportData(
     );
     const importId = response.data.id;
     uiLogger.info(
-      lib.importData.viewImportLink(baseUrl, targetAccountId, importId)
+      lib.importData.viewImportLink(
+        getHubSpotWebsiteOriginByAccountId(targetAccountId),
+        targetAccountId,
+        importId
+      )
     );
   } catch (error) {
     uiLogger.error(lib.importData.errors.failedToImportData);

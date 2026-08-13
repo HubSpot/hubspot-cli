@@ -1,7 +1,7 @@
 export const MCP_SERVER_NAME = 'HubSpotDev';
 
 export type McpClientId =
-  'codex' | 'claude' | 'cursor' | 'gemini' | 'vscode' | 'windsurf';
+  'codex' | 'claude' | 'cursor' | 'devin' | 'gemini' | 'opencode' | 'vscode';
 
 type McpClientDetection = {
   type: 'json' | 'text';
@@ -56,10 +56,17 @@ export const MCP_CLIENTS: McpClient[] = [
     },
   },
   {
-    id: 'windsurf',
+    id: 'devin',
     detection: {
       type: 'json',
       pathSegments: ['.codeium', 'windsurf', 'mcp_config.json'],
+    },
+  },
+  {
+    id: 'opencode',
+    detection: {
+      type: 'json',
+      pathSegments: ['.config', 'opencode', 'config.json'],
     },
   },
 ];

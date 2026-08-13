@@ -1,6 +1,8 @@
-import { getHubSpotWebsiteOrigin } from '@hubspot/local-dev-lib/urls';
+import {
+  getHubSpotWebsiteOrigin,
+  getHubSpotWebsiteOriginByAccountId,
+} from '@hubspot/local-dev-lib/urls';
 import { Environment } from '@hubspot/local-dev-lib/types/Accounts';
-import { getBaseHubSpotUrlForAccount } from '../projects/urls.js';
 
 type PrivateAppInstallUrlArgs = {
   targetAccountId: number;
@@ -55,7 +57,7 @@ export function getAppLogsUrl(
   appId: number,
   systemType: string
 ): string {
-  return `${getBaseHubSpotUrlForAccount(accountId)}/developer-monitoring/${accountId}/?logType=${systemType}&appId=${appId}`;
+  return `${getHubSpotWebsiteOriginByAccountId(accountId)}/developer-monitoring/${accountId}/?logType=${systemType}&appId=${appId}`;
 }
 
 export function getAppLogDetailsUrl(

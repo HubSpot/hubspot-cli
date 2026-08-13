@@ -7,21 +7,21 @@ import { McpLogger } from '../../../utils/logger.js';
 import { getIntermediateRepresentationSchema } from '@hubspot/project-parsing-lib/schema';
 import { mapToInternalType } from '@hubspot/project-parsing-lib/transform';
 import { MockedFunction, Mocked } from 'vitest';
-import { getConfigDefaultAccountIfExists } from '@hubspot/local-dev-lib/config';
 import { mcpFeedbackRequest } from '../../../utils/feedbackTracking.js';
-import { HubSpotConfigAccount } from '@hubspot/local-dev-lib/types/Accounts';
+import { discoverAccountTargets } from '../../../../lib/accountTargetDiscovery.js';
+import type { AccountTargetCandidate } from '../../../../types/AccountTargets.js';
+import { setupHubSpotConfig } from '../../../utils/config.js';
 
 vi.mock('@modelcontextprotocol/sdk/server/mcp.js');
 vi.mock('../../../utils/logger.js');
 vi.mock('@hubspot/project-parsing-lib/schema');
 vi.mock('@hubspot/project-parsing-lib/transform');
-vi.mock('@hubspot/local-dev-lib/config');
 vi.mock('../../../utils/feedbackTracking');
+vi.mock('../../../../lib/accountTargetDiscovery.js');
+vi.mock('../../../utils/config.js');
 
-const mockMcpFeedbackRequest = mcpFeedbackRequest as MockedFunction<
-  typeof mcpFeedbackRequest
->;
-
+const mockMcpFeedbackRequest = vi.mocked(mcpFeedbackRequest);
+const mockedSetupHubSpotConfig = vi.mocked(setupHubSpotConfig);
 const mockGetIntermediateRepresentationSchema =
   getIntermediateRepresentationSchema as MockedFunction<
     typeof getIntermediateRepresentationSchema
@@ -29,10 +29,7 @@ const mockGetIntermediateRepresentationSchema =
 const mockMapToInternalType = mapToInternalType as MockedFunction<
   typeof mapToInternalType
 >;
-const mockGetConfigDefaultAccountIfExists =
-  getConfigDefaultAccountIfExists as MockedFunction<
-    typeof getConfigDefaultAccountIfExists
-  >;
+const mockedDiscoverAccountTargets = vi.mocked(discoverAccountTargets);
 
 describe('mcp-server/tools/project/GetConfigValuesTool', () => {
   let mockMcpServer: Mocked<McpServer>;
@@ -96,9 +93,31 @@ describe('mcp-server/tools/project/GetConfigValuesTool', () => {
     };
 
     beforeEach(() => {
-      mockGetConfigDefaultAccountIfExists.mockReturnValue({
-        accountId: 123456789,
-      } as HubSpotConfigAccount);
+      mockedDiscoverAccountTargets.mockResolvedValue({
+        candidates: [],
+        recommended: { accountId: 123456789 } as AccountTargetCandidate,
+      });
+    });
+
+    it('should use absoluteProjectPath for account resolution when provided', async () => {
+      mockGetIntermediateRepresentationSchema.mockResolvedValue({});
+      mockMapToInternalType.mockReturnValue('internal-card-type');
+
+      await tool.handler({
+        ...input,
+        absoluteProjectPath: '/foo/my-project',
+      });
+
+      expect(mockedSetupHubSpotConfig).toHaveBeenCalledWith('/foo/my-project');
+    });
+
+    it('should fall back to absoluteCurrentWorkingDirectory when absoluteProjectPath is not provided', async () => {
+      mockGetIntermediateRepresentationSchema.mockResolvedValue({});
+      mockMapToInternalType.mockReturnValue('internal-card-type');
+
+      await tool.handler(input);
+
+      expect(mockedSetupHubSpotConfig).toHaveBeenCalledWith('/foo');
     });
 
     it('should return config schema when component type exists', async () => {
@@ -117,7 +136,7 @@ describe('mcp-server/tools/project/GetConfigValuesTool', () => {
 
       const result = await tool.handler(input);
 
-      expect(mockGetConfigDefaultAccountIfExists).toHaveBeenCalled();
+      expect(mockedDiscoverAccountTargets).toHaveBeenCalled();
       expect(mockGetIntermediateRepresentationSchema).toHaveBeenCalledWith({
         platformVersion: '2025.2',
         projectSourceDir: '',
@@ -205,7 +224,10 @@ describe('mcp-server/tools/project/GetConfigValuesTool', () => {
     });
 
     it('should handle null account id', async () => {
-      mockGetConfigDefaultAccountIfExists.mockReturnValue(undefined);
+      mockedDiscoverAccountTargets.mockResolvedValue({
+        candidates: [],
+        recommended: undefined,
+      });
 
       const result = await tool.handler(input);
 

@@ -19,25 +19,32 @@ import { existsSync } from 'fs';
 const mcpServerName = MCP_SERVER_NAME;
 
 const claudeCode: McpClientId = 'claude';
-const windsurf: McpClientId = 'windsurf';
 const cursor: McpClientId = 'cursor';
+const devin: McpClientId = 'devin';
 const vscode: McpClientId = 'vscode';
 const codex: McpClientId = 'codex';
 const gemini: McpClientId = 'gemini';
+const opencode: McpClientId = 'opencode';
+
+const OTHER_TOOL = 'other';
 
 const clientLabels: Record<McpClientId, string> = {
   codex: commands.mcp.setup.codex,
   claude: commands.mcp.setup.claudeCode,
   cursor: commands.mcp.setup.cursor,
+  devin: commands.mcp.setup.devin,
   gemini: commands.mcp.setup.gemini,
+  opencode: commands.mcp.setup.opencode,
   vscode: commands.mcp.setup.vsCode,
-  windsurf: commands.mcp.setup.windsurf,
 };
 
-export const supportedTools = MCP_CLIENTS.map(client => ({
-  name: clientLabels[client.id],
-  value: client.id,
-}));
+export const supportedTools = [
+  ...MCP_CLIENTS.map(client => ({
+    name: clientLabels[client.id],
+    value: client.id,
+  })),
+  { name: commands.mcp.setup.other, value: OTHER_TOOL },
+];
 
 interface McpCommand {
   command: string;
@@ -69,6 +76,7 @@ export async function configureMcpServer(
         type: 'checkbox',
         message: commands.mcp.setup.prompts.targets,
         choices: supportedTools,
+        pageSize: supportedTools.length,
         validate: (choices: string[]) => {
           return choices.length === 0
             ? commands.mcp.setup.prompts.targetsRequired
@@ -80,7 +88,10 @@ export async function configureMcpServer(
       derivedTargets = targets;
     }
 
-    let useStandaloneMode = standalone;
+    const onlyOther =
+      derivedTargets.length === 1 && derivedTargets[0] === OTHER_TOOL;
+
+    let useStandaloneMode = onlyOther ? false : standalone;
 
     if (useStandaloneMode === undefined) {
       const response = await promptUser<{ useStandaloneMode: boolean }>({
@@ -137,8 +148,8 @@ export async function configureMcpServer(
       await runSetupFunction(() => setupCursor(mcpCommand));
     }
 
-    if (derivedTargets.includes(windsurf)) {
-      await runSetupFunction(() => setupWindsurf(mcpCommand));
+    if (derivedTargets.includes(devin)) {
+      await runSetupFunction(() => setupDevin(mcpCommand));
     }
 
     if (derivedTargets.includes(vscode)) {
@@ -153,9 +164,20 @@ export async function configureMcpServer(
       await runSetupFunction(() => setupGemini(mcpCommand));
     }
 
-    uiLogger.info(commands.mcp.setup.success(derivedTargets));
+    if (derivedTargets.includes(opencode)) {
+      await runSetupFunction(() => setupOpenCode(mcpCommand));
+    }
 
-    return derivedTargets;
+    if (derivedTargets.includes(OTHER_TOOL)) {
+      logOtherToolInstructions(mcpCommand);
+    }
+
+    const configuredTargets = derivedTargets.filter(t => t !== OTHER_TOOL);
+    if (configuredTargets.length > 0) {
+      uiLogger.info(commands.mcp.setup.success(configuredTargets));
+    }
+
+    return configuredTargets;
   } catch (error) {
     SpinniesManager.fail('mcpSetup', {
       text: commands.mcp.setup.spinners.failedToConfigure,
@@ -362,20 +384,20 @@ export function setupCursor(
   });
 }
 
-export function setupWindsurf(
+export function setupDevin(
   mcpCommand: McpCommand = defaultMcpCommand
 ): boolean {
-  const windsurfConfigPath = path.join(
+  const devinConfigPath = path.join(
     os.homedir(),
-    ...getMcpClientPathSegments(windsurf)
+    ...getMcpClientPathSegments(devin)
   );
 
   return setupMcpConfigFile({
-    configPath: windsurfConfigPath,
-    configuringMessage: commands.mcp.setup.spinners.configuringWindsurf,
-    configuredMessage: commands.mcp.setup.spinners.configuredWindsurf,
-    failedMessage: commands.mcp.setup.spinners.failedToConfigureWindsurf,
-    mcpCommand: buildCommandWithAgentString(mcpCommand, windsurf),
+    configPath: devinConfigPath,
+    configuringMessage: commands.mcp.setup.spinners.configuringDevin,
+    configuredMessage: commands.mcp.setup.spinners.configuredDevin,
+    failedMessage: commands.mcp.setup.spinners.failedToConfigureDevin,
+    mcpCommand: buildCommandWithAgentString(mcpCommand, devin),
   });
 }
 
@@ -451,6 +473,71 @@ export async function setupGemini(
 
     return false;
   }
+}
+
+export async function setupOpenCode(
+  mcpCommand: McpCommand = defaultMcpCommand
+): Promise<boolean> {
+  try {
+    SpinniesManager.add('openCodeSpinner', {
+      text: commands.mcp.setup.spinners.configuringOpenCode,
+    });
+
+    try {
+      await execAsync('opencode --version');
+    } catch (error) {
+      SpinniesManager.fail('openCodeSpinner', {
+        text: commands.mcp.setup.spinners.openCodeNotFound,
+      });
+      return false;
+    }
+
+    const mcpCommandWithAgent = buildCommandWithAgentString(
+      mcpCommand,
+      opencode
+    );
+
+    await execAsync(
+      `opencode mcp add "${mcpServerName}"${buildEnvFlagString(mcpCommand)} -- ${mcpCommandWithAgent.command} ${mcpCommandWithAgent.args.join(' ')}`
+    );
+
+    SpinniesManager.succeed('openCodeSpinner', {
+      text: commands.mcp.setup.spinners.configuredOpenCode,
+    });
+    return true;
+  } catch (error) {
+    SpinniesManager.fail('openCodeSpinner', {
+      text: commands.mcp.setup.spinners.openCodeInstallFailed,
+    });
+    logError(error);
+    return false;
+  }
+}
+
+function logOtherToolInstructions(mcpCommand: McpCommand): void {
+  const { otherInstructions } = commands.mcp.setup;
+
+  uiLogger.log('');
+  uiLogger.log(otherInstructions.header);
+  uiLogger.log(otherInstructions.docsNote);
+  uiLogger.log('');
+  uiLogger.log(`  ${otherInstructions.commandLabel}`);
+  uiLogger.log(`    ${mcpCommand.command} ${mcpCommand.args.join(' ')}`);
+  uiLogger.log('');
+  uiLogger.log(`  ${otherInstructions.jsonLabel}`);
+  uiLogger.log('');
+
+  const jsonConfig = {
+    mcpServers: {
+      [mcpServerName]: mcpCommand,
+    },
+  };
+  const indented = JSON.stringify(jsonConfig, null, 2)
+    .split('\n')
+    .map(line => `    ${line}`)
+    .join('\n');
+  uiLogger.log(indented);
+  uiLogger.log('');
 }
 
 function buildCommandWithAgentString(

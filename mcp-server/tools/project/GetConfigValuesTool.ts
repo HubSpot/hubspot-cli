@@ -7,15 +7,19 @@ import {
 import { McpLogger } from '../../utils/logger.js';
 import { z } from 'zod';
 import { formatTextContents } from '../../utils/content.js';
-import { absoluteCurrentWorkingDirectory } from './constants.js';
+import {
+  absoluteCurrentWorkingDirectory,
+  absoluteProjectPath,
+} from './constants.js';
 import { getIntermediateRepresentationSchema } from '@hubspot/project-parsing-lib/schema';
 import { mapToInternalType } from '@hubspot/project-parsing-lib/transform';
 import { isLegacyProject } from '@hubspot/project-parsing-lib/projects';
-import { getConfigDefaultAccountIfExists } from '@hubspot/local-dev-lib/config';
 import { setupHubSpotConfig } from '../../utils/config.js';
+import { discoverAccountTargets } from '../../../lib/accountTargetDiscovery.js';
 
 const inputSchema = {
   absoluteCurrentWorkingDirectory,
+  absoluteProjectPath: absoluteProjectPath.optional(),
   platformVersion: z
     .string()
     .describe(
@@ -45,8 +49,9 @@ export class GetConfigValuesTool extends Tool<InputSchemaType> {
     platformVersion,
     featureType,
     absoluteCurrentWorkingDirectory,
+    absoluteProjectPath,
   }: InputSchemaType): Promise<TextContentResponse> {
-    setupHubSpotConfig(absoluteCurrentWorkingDirectory);
+    setupHubSpotConfig(absoluteProjectPath ?? absoluteCurrentWorkingDirectory);
     try {
       if (isLegacyProject(platformVersion)) {
         return formatTextContents(
@@ -54,13 +59,8 @@ export class GetConfigValuesTool extends Tool<InputSchemaType> {
         );
       }
 
-      let accountId: number | undefined;
-      try {
-        accountId = getConfigDefaultAccountIfExists()?.accountId;
-      } catch {
-        // Config file does not exist
-      }
-
+      const { recommended } = await discoverAccountTargets();
+      const accountId = recommended?.accountId;
       if (!accountId) {
         const authErrorMessage = `No account ID found. Call the auth-account tool to authenticate a HubSpot account.`;
         return formatTextContents(authErrorMessage);

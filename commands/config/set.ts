@@ -15,6 +15,7 @@ import {
   YargsCommandModule,
 } from '../../types/Yargs.js';
 import { makeWrappedYargsHandler } from '../../lib/yargs/makeWrappedYargsHandler.js';
+import { trackCommandMetadataUsage } from '../../lib/usageTracking.js';
 import { commands } from '../../lang/en.js';
 import {
   makeYargsBuilder,
@@ -71,25 +72,47 @@ async function handleConfigUpdate(
     autoOpenBrowser,
   } = args;
 
+  // Emit one metadata event per setting so each field:value pair surfaces as its
+  // own entry in Amplitude instead of a combined string that fragments the charts.
+  const trackingRequests: Promise<void>[] = [];
+  const trackAction = (action: string) => {
+    trackingRequests.push(
+      trackCommandMetadataUsage('config-set', { action }, accountId)
+    );
+  };
+
   if (allowAutoUpdates !== undefined) {
-    await setAllowAutoUpdates({ allowAutoUpdates, accountId });
+    const value = await setAllowAutoUpdates({ allowAutoUpdates, accountId });
+    trackAction(`allowAutoUpdates:${value}`);
   }
 
   if (allowUsageTracking !== undefined) {
-    await setAllowUsageTracking({ allowUsageTracking, accountId });
+    const value = await setAllowUsageTracking({
+      allowUsageTracking,
+      accountId,
+    });
+    trackAction(`allowUsageTracking:${value}`);
   }
 
   if (autoOpenBrowser !== undefined) {
-    await setAutoOpenBrowser({ autoOpenBrowser, accountId });
+    const value = await setAutoOpenBrowser({ autoOpenBrowser, accountId });
+    trackAction(`autoOpenBrowser:${value}`);
   }
 
   if (defaultCmsPublishMode !== undefined) {
-    await setDefaultCmsPublishMode({ defaultCmsPublishMode, accountId });
+    const value = await setDefaultCmsPublishMode({
+      defaultCmsPublishMode,
+      accountId,
+    });
+    trackAction(`defaultCmsPublishMode:${value}`);
   }
 
   if (httpTimeout !== undefined) {
-    await setHttpTimeout({ httpTimeout, accountId });
+    const value = await setHttpTimeout({ httpTimeout, accountId });
+    trackAction(`httpTimeout:${value}`);
   }
+
+  await Promise.all(trackingRequests);
 }
 
 async function handler(args: ArgumentsCamelCase<ConfigSetArgs>): Promise<void> {

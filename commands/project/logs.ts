@@ -1,6 +1,5 @@
 import { Argv, ArgumentsCamelCase } from 'yargs';
-import { getConfigAccountEnvironment } from '@hubspot/local-dev-lib/config';
-import { getHubSpotWebsiteOrigin } from '@hubspot/local-dev-lib/urls';
+import { getHubSpotWebsiteOriginByAccountId } from '@hubspot/local-dev-lib/urls';
 import { logError } from '../../lib/errorHandlers/index.js';
 import { uiLine } from '../../lib/ui/index.js';
 import { projectLogsPrompt } from '../../lib/prompts/projectsLogsPrompt.js';
@@ -14,11 +13,7 @@ import { makeYargsBuilder } from '../../lib/yargsUtils.js';
 import { renderTable } from '../../ui/render.js';
 
 function getPrivateAppsUrl(accountId: number): string {
-  const baseUrl = getHubSpotWebsiteOrigin(
-    getConfigAccountEnvironment(accountId)
-  );
-
-  return `${baseUrl}/private-apps/${accountId}`;
+  return `${getHubSpotWebsiteOriginByAccountId(accountId)}/private-apps/${accountId}`;
 }
 
 function logPreamble(): void {

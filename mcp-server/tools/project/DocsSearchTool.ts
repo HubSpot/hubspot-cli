@@ -13,8 +13,8 @@ import {
   docsSearchQuery,
 } from './constants.js';
 import { isHubSpotHttpError } from '@hubspot/local-dev-lib/errors/index';
-import { getConfigDefaultAccountIfExists } from '@hubspot/local-dev-lib/config';
 import { setupHubSpotConfig } from '../../utils/config.js';
+import { discoverAccountTargets } from '../../../lib/accountTargetDiscovery.js';
 import { getErrorMessage } from '../../../lib/errorHandlers/index.js';
 
 const docsSearchLimit = z
@@ -67,19 +67,14 @@ export class DocsSearchTool extends Tool<InputSchemaType> {
   }: InputSchemaType): Promise<TextContentResponse> {
     setupHubSpotConfig(absoluteCurrentWorkingDirectory);
 
-    let accountId: number | undefined;
     try {
-      accountId = getConfigDefaultAccountIfExists()?.accountId;
-    } catch {
-      // Config file does not exist
-    }
+      const { recommended } = await discoverAccountTargets();
+      const accountId = recommended?.accountId;
+      if (!accountId) {
+        const authErrorMessage = `No account ID found. Call the auth-account tool to authenticate a HubSpot account.`;
+        return formatTextContents(authErrorMessage);
+      }
 
-    if (!accountId) {
-      const authErrorMessage = `No account ID found. Call the auth-account tool to authenticate a HubSpot account.`;
-      return formatTextContents(authErrorMessage);
-    }
-
-    try {
       const response = await http.post<DocsSearchResponse>(accountId, {
         url: 'dev/docs/llms/v1/docs-search',
         data: {

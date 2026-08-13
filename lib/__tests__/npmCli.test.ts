@@ -3,6 +3,7 @@ import {
   isGloballyInstalled,
   getLatestPackageVersion,
   isInstalledGloballyWithNPM,
+  getNpmExecErrorOutput,
   DEFAULT_PACKAGE_MANAGER,
 } from '../npm/npmCli.js';
 import { pkg } from '../jsonLoader.js';
@@ -122,6 +123,45 @@ describe('lib/npm', () => {
         2,
         'npm list -g @hubspot/cli --depth=0'
       );
+    });
+  });
+
+  describe('getNpmExecErrorOutput()', () => {
+    it('should return the trimmed stderr when present', () => {
+      const error = Object.assign(new Error('Command failed: npm install'), {
+        stderr: '  npm error code EJSONPARSE\n',
+        stdout: '',
+      });
+
+      expect(getNpmExecErrorOutput(error)).toBe('npm error code EJSONPARSE');
+    });
+
+    it('should fall back to stdout when stderr is empty', () => {
+      const error = Object.assign(new Error('Command failed: npm install'), {
+        stderr: '   ',
+        stdout: 'npm warn output\n',
+      });
+
+      expect(getNpmExecErrorOutput(error)).toBe('npm warn output');
+    });
+
+    it('should return null when there is no output', () => {
+      const error = Object.assign(new Error('Command failed: npm install'), {
+        stderr: '',
+        stdout: '',
+      });
+
+      expect(getNpmExecErrorOutput(error)).toBeNull();
+    });
+
+    it('should return null for errors without stdout or stderr', () => {
+      expect(getNpmExecErrorOutput(new Error('boom'))).toBeNull();
+    });
+
+    it('should return null for non-object values', () => {
+      expect(getNpmExecErrorOutput('nope')).toBeNull();
+      expect(getNpmExecErrorOutput(null)).toBeNull();
+      expect(getNpmExecErrorOutput(undefined)).toBeNull();
     });
   });
 });

@@ -18,8 +18,8 @@ import {
   absoluteCurrentWorkingDirectory,
   absoluteProjectPath,
 } from './constants.js';
-import { getConfigDefaultAccountIfExists } from '@hubspot/local-dev-lib/config';
 import { setupHubSpotConfig } from '../../utils/config.js';
+import { discoverAccountTargets } from '../../../lib/accountTargetDiscovery.js';
 
 const TOOL_NAME = 'get-build-logs';
 const PROJECTS_LOGS_API_PATH = 'dfs/logging/v1';
@@ -117,15 +117,18 @@ export class GetBuildLogsTool extends Tool<GetBuildLogsInputSchema> {
     buildId,
     logLevel,
   }: GetBuildLogsInputSchema): Promise<TextContentResponse> {
-    setupHubSpotConfig(absoluteCurrentWorkingDirectory);
+    setupHubSpotConfig(absoluteProjectPath);
 
     try {
-      let accountId: number | undefined;
-      try {
-        accountId = getConfigDefaultAccountIfExists()?.accountId;
-      } catch {
-        // Config file does not exist
-      }
+      const { projectConfig, projectDir } =
+        await getProjectConfig(absoluteProjectPath);
+      validateProjectConfig(projectConfig, projectDir);
+
+      const { recommended } = await discoverAccountTargets({
+        projectDir,
+        projectConfig,
+      });
+      const accountId = recommended?.accountId;
       if (!accountId) {
         return formatTextContents(
           absoluteCurrentWorkingDirectory,
@@ -133,9 +136,6 @@ export class GetBuildLogsTool extends Tool<GetBuildLogsInputSchema> {
         );
       }
 
-      const { projectConfig, projectDir } =
-        await getProjectConfig(absoluteProjectPath);
-      validateProjectConfig(projectConfig, projectDir);
       const projectName = projectConfig.name;
 
       const response = await http.get<BuildLogsResponse>(accountId, {

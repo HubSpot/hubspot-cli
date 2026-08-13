@@ -267,6 +267,33 @@ describe('lib/dependencyManagement', () => {
         }
       );
     });
+
+    it('should surface the npm error output in the thrown error when installing dependencies fails', async () => {
+      const npmErrorOutput =
+        'npm error code EJSONPARSE\nnpm error JSON.parse Failed to parse JSON data.';
+      execMock = vi.fn().mockImplementation(command => {
+        if (command === 'npm --version') {
+          return;
+        }
+        throw Object.assign(new Error('Command failed: npm install'), {
+          stderr: npmErrorOutput,
+          stdout: '',
+        });
+      });
+
+      util.promisify = mockedPromisify(execMock);
+
+      await expect(() =>
+        installPackages({ installLocations: [appFunctionsDir] })
+      ).rejects.toThrowError(npmErrorOutput);
+
+      expect(SpinniesManager.fail).toHaveBeenCalledWith(
+        `installingDependencies-${appFunctionsDir}`,
+        {
+          text: `Installing dependencies for ${appFunctionsDir} failed`,
+        }
+      );
+    });
   });
 
   describe('updatePackages()', () => {
@@ -395,6 +422,33 @@ describe('lib/dependencyManagement', () => {
         `updatingDependencies-${extensionsDir}`,
         {
           text: `Updating dependencies for ${extensionsDir} failed`,
+        }
+      );
+    });
+
+    it('should surface the npm error output in the thrown error when updating dependencies fails', async () => {
+      const npmErrorOutput =
+        'npm error code EDUPLICATEWORKSPACE\nnpm error workspace name must be unique.';
+      execMock = vi.fn().mockImplementation(command => {
+        if (command === 'npm --version') {
+          return;
+        }
+        throw Object.assign(new Error('Command failed: npm update'), {
+          stderr: npmErrorOutput,
+          stdout: '',
+        });
+      });
+
+      util.promisify = mockedPromisify(execMock);
+
+      await expect(() =>
+        updatePackages({ installLocations: [appFunctionsDir] })
+      ).rejects.toThrowError(npmErrorOutput);
+
+      expect(SpinniesManager.fail).toHaveBeenCalledWith(
+        `updatingDependencies-${appFunctionsDir}`,
+        {
+          text: `Updating dependencies for ${appFunctionsDir} failed`,
         }
       );
     });

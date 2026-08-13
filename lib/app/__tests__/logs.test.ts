@@ -15,8 +15,8 @@ import SpinniesManager from '../../ui/SpinniesManager.js';
 
 vi.mock('@hubspot/local-dev-lib/api/appLogs');
 vi.mock('../../ui/appLogs.js');
-vi.mock('../../projects/urls.js', () => ({
-  getBaseHubSpotUrlForAccount: (accountId: number) =>
+vi.mock('@hubspot/local-dev-lib/urls', () => ({
+  getHubSpotWebsiteOriginByAccountId: (accountId: number) =>
     `https://app.hubspot.com/portal/${accountId}`,
 }));
 vi.mock('../../ui/SpinniesManager.js', () => ({

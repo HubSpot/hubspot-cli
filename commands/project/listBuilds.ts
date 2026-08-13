@@ -31,7 +31,7 @@ import { renderTable } from '../../ui/render.js';
 const command = 'list-builds';
 const describe = commands.project.listBuilds.describe;
 
-type ProjectListBuildsArgs = CommonArgs &
+export type ProjectListBuildsArgs = CommonArgs &
   ConfigArgs &
   AccountArgs &
   EnvironmentArgs & { project?: string; limit?: number };
@@ -45,25 +45,6 @@ async function fetchAndDisplayBuilds(
     data: { results, paging },
   } = await fetchProjectBuilds(accountId, project.name, options);
   const currentDeploy = project.deployedBuildId;
-  if (options && options.after) {
-    uiLogger.log(
-      commands.project.listBuilds.showingNextBuilds(
-        results.length,
-        project.name
-      )
-    );
-  } else {
-    uiLogger.log(
-      commands.project.listBuilds.showingRecentBuilds(
-        results.length,
-        project.name,
-        uiLink(
-          commands.project.listBuilds.viewAllBuildsLink,
-          getProjectDetailUrl(project.name, accountId)!
-        )
-      )
-    );
-  }
 
   if (results.length === 0) {
     uiLogger.log(commands.project.listBuilds.errors.noBuilds);
@@ -93,6 +74,29 @@ async function fetchAndDisplayBuilds(
       builds
     );
   }
+
+  if (options && options.after) {
+    if (results.length > 0) {
+      uiLogger.log(
+        commands.project.listBuilds.showingNextBuilds(
+          results.length,
+          project.name
+        )
+      );
+    }
+  } else {
+    uiLogger.log(
+      commands.project.listBuilds.showingRecentBuilds(
+        results.length,
+        project.name,
+        uiLink(
+          commands.project.listBuilds.viewAllBuildsLink,
+          getProjectDetailUrl(project.name, accountId)!
+        )
+      )
+    );
+  }
+
   if (paging && paging.next) {
     await promptUser({
       name: 'more',

@@ -13,8 +13,8 @@ import {
 import { MockedFunction, Mocked } from 'vitest';
 import { mcpFeedbackRequest } from '../../../utils/feedbackTracking.js';
 import { ProjectLog } from '@hubspot/local-dev-lib/types/ProjectLog';
-import { getConfigDefaultAccountIfExists } from '@hubspot/local-dev-lib/config';
-import { HubSpotConfigAccount } from '@hubspot/local-dev-lib/types/Accounts';
+import { discoverAccountTargets } from '../../../../lib/accountTargetDiscovery.js';
+import type { AccountTargetCandidate } from '../../../../types/AccountTargets.js';
 
 vi.mock('@modelcontextprotocol/sdk/server/mcp.js');
 vi.mock('../../../utils/logger.js');
@@ -24,15 +24,13 @@ vi.mock('@hubspot/local-dev-lib/errors/index');
 vi.mock('../../../../lib/projects/config.js');
 vi.mock('../../../utils/feedbackTracking');
 vi.mock('@hubspot/local-dev-lib/config');
+vi.mock('../../../../lib/accountTargetDiscovery.js');
 
 const mockMcpFeedbackRequest = mcpFeedbackRequest as MockedFunction<
   typeof mcpFeedbackRequest
 >;
 
-const mockGetConfigDefaultAccountIfExists =
-  getConfigDefaultAccountIfExists as MockedFunction<
-    typeof getConfigDefaultAccountIfExists
-  >;
+const mockedDiscoverAccountTargets = vi.mocked(discoverAccountTargets);
 const mockHttpGet = http.get as MockedFunction<typeof http.get>;
 const mockIsHubSpotHttpError = isHubSpotHttpError as unknown as MockedFunction<
   typeof isHubSpotHttpError
@@ -192,9 +190,10 @@ describe('mcp-server/tools/project/GetBuildLogsTool', () => {
     tool = new GetBuildLogsTool(mockMcpServer, mockLogger);
 
     // Default mock implementations
-    mockGetConfigDefaultAccountIfExists.mockReturnValue({
-      accountId: TEST_ACCOUNT_ID,
-    } as HubSpotConfigAccount);
+    mockedDiscoverAccountTargets.mockResolvedValue({
+      candidates: [],
+      recommended: { accountId: TEST_ACCOUNT_ID } as AccountTargetCandidate,
+    });
     mockIsHubSpotHttpError.mockReturnValue(false);
     mockGetProjectConfig.mockResolvedValue({
       projectConfig: createMockProjectConfig(),
@@ -230,9 +229,28 @@ describe('mcp-server/tools/project/GetBuildLogsTool', () => {
       logLevel: 'ALL' as const,
     };
 
+    describe('account resolution', () => {
+      it('should pass project config to discoverAccountTargets for profile resolution', async () => {
+        mockHttpGet.mockResolvedValue({
+          data: createMockLogs(),
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        } as any);
+
+        await tool.handler(baseInput);
+
+        expect(mockedDiscoverAccountTargets).toHaveBeenCalledWith({
+          projectDir: TEST_PROJECT_PATH,
+          projectConfig: createMockProjectConfig(),
+        });
+      });
+    });
+
     describe('error handling', () => {
       it('should return error when account ID cannot be determined', async () => {
-        mockGetConfigDefaultAccountIfExists.mockReturnValue(undefined);
+        mockedDiscoverAccountTargets.mockResolvedValue({
+          candidates: [],
+          recommended: undefined,
+        });
 
         const result = await tool.handler(baseInput);
 

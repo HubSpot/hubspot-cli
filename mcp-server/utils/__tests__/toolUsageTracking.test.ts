@@ -1,23 +1,23 @@
 import {
   getConfig,
-  getConfigDefaultAccountIfExists,
   getConfigFilePath,
   getGlobalConfigFilePath,
 } from '@hubspot/local-dev-lib/config';
 import { sendUsageEvent } from '../../../lib/api/usageTracking.js';
 import { trackToolUsage } from '../toolUsageTracking.js';
+import { discoverAccountTargets } from '../../../lib/accountTargetDiscovery.js';
+import type { AccountTargetCandidate } from '../../../types/AccountTargets.js';
 import { Mock } from 'vitest';
 
-// Unmock the modules under test
 vi.unmock('../toolUsageTracking.js');
 vi.unmock('../../../lib/usageTracking.js');
 
 vi.mock('../../../lib/api/usageTracking.js');
 vi.mock('@hubspot/local-dev-lib/config');
+vi.mock('../../../lib/accountTargetDiscovery.js');
 
 const mockedGetConfig = getConfig as Mock;
-const mockedGetConfigDefaultAccountIfExists =
-  getConfigDefaultAccountIfExists as Mock;
+const mockedDiscoverAccountTargets = vi.mocked(discoverAccountTargets);
 const mockedGetConfigFilePath = getConfigFilePath as Mock;
 const mockedGetGlobalConfigFilePath = getGlobalConfigFilePath as Mock;
 const mockedSendUsageEvent = sendUsageEvent as Mock;
@@ -25,7 +25,10 @@ const mockedSendUsageEvent = sendUsageEvent as Mock;
 describe('mcp-server/utils/toolUsageTracking', () => {
   beforeEach(() => {
     mockedGetConfig.mockReturnValue({ allowUsageTracking: true });
-    mockedGetConfigDefaultAccountIfExists.mockReturnValue({ accountId: 456 });
+    mockedDiscoverAccountTargets.mockResolvedValue({
+      candidates: [],
+      recommended: { accountId: 456 } as AccountTargetCandidate,
+    });
     mockedGetConfigFilePath.mockReturnValue('/some/local/hubspot.config.yml');
     mockedGetGlobalConfigFilePath.mockReturnValue(
       '/Users/test/.hubspot/config.yml'
@@ -78,7 +81,10 @@ describe('mcp-server/utils/toolUsageTracking', () => {
   });
 
   it('should use undefined accountId when no default account exists', async () => {
-    mockedGetConfigDefaultAccountIfExists.mockReturnValue(undefined);
+    mockedDiscoverAccountTargets.mockResolvedValue({
+      candidates: [],
+      recommended: undefined,
+    });
 
     await trackToolUsage('test-tool');
 

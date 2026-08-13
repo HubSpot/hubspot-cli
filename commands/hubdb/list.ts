@@ -12,11 +12,12 @@ import {
 import { makeWrappedYargsHandler } from '../../lib/yargs/makeWrappedYargsHandler.js';
 import { EXIT_CODES } from '../../lib/enums/exitCodes.js';
 import { uiLogger } from '../../lib/ui/logger.js';
+import { uiLine } from '../../lib/ui/index.js';
 import { logError } from '../../lib/errorHandlers/index.js';
 import { commands } from '../../lang/en.js';
 import { makeYargsBuilder } from '../../lib/yargsUtils.js';
 import { renderTable } from '../../ui/render.js';
-import { getBaseHubSpotUrlForAccount } from '../../lib/projects/urls.js';
+import { getHubSpotWebsiteOriginByAccountId } from '@hubspot/local-dev-lib/urls';
 
 const command = ['list', 'ls'];
 const describe = commands.hubdb.subcommands.list.describe;
@@ -66,18 +67,15 @@ async function handler(args: ArgumentsCamelCase<HubdbListArgs>): Promise<void> {
   ];
 
   uiLogger.success(commands.hubdb.subcommands.list.success(derivedAccountId));
-  uiLogger.log(' ');
-  // link devs to the hubdb page in hubspot for easy access
-  const baseUrl = getBaseHubSpotUrlForAccount(derivedAccountId);
-
-  uiLogger.log(
-    commands.hubdb.subcommands.list.viewTablesLink(baseUrl, derivedAccountId)
-  );
 
   // don't bother showing an empty list of tables
   if (tables.length > 0) {
+    uiLogger.log(commands.hubdb.subcommands.list.tables);
+    renderTable(tableHeader, tableUIData);
+
     // if truncated is 0, it will be interpreted as falsy
     const truncated = total - tables.length;
+    uiLine();
     uiLogger.log(
       commands.hubdb.subcommands.list.tablesDisplayed(
         tables.length,
@@ -85,12 +83,17 @@ async function handler(args: ArgumentsCamelCase<HubdbListArgs>): Promise<void> {
         truncated
       )
     );
-    uiLogger.log('--------------------------------');
-    uiLogger.log(commands.hubdb.subcommands.list.tables);
-    renderTable(tableHeader, tableUIData);
   } else {
     uiLogger.log(commands.hubdb.subcommands.list.noTables(derivedAccountId));
   }
+
+  // link devs to the hubdb page in hubspot for easy access
+  uiLogger.log(
+    commands.hubdb.subcommands.list.viewTablesLink(
+      getHubSpotWebsiteOriginByAccountId(derivedAccountId),
+      derivedAccountId
+    )
+  );
   return exit(EXIT_CODES.SUCCESS);
 }
 
