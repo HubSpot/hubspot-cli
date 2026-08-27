@@ -26,7 +26,7 @@ class LocalDevWatcher {
     configPaths: string[]
   ): Promise<void> {
     if (configPaths.includes(filePath)) {
-      return this.localDevProcess.handleConfigFileChange();
+      return this.localDevProcess.handleConfigFileChange(filePath);
     }
     return this.localDevProcess.handleFileChange(filePath, event);
   }

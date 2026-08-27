@@ -68,6 +68,7 @@ export type ProjectDevArgs = CommonArgs &
     testingAccount?: string | number;
     projectAccount?: string | number;
     port?: number;
+    autoUpload?: boolean;
   };
 
 export type TestingArgs = {

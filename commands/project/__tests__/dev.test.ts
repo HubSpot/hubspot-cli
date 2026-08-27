@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { ArgumentsCamelCase } from 'yargs';
+import yargs, { ArgumentsCamelCase, Argv } from 'yargs';
 import * as configLib from '@hubspot/local-dev-lib/config';
 import * as projectConfigLib from '../../../lib/projects/config.js';
 import * as platformVersionLib from '@hubspot/project-parsing-lib/projects';
@@ -91,6 +91,15 @@ describe('commands/project/dev', () => {
   describe('builder', () => {
     it('should be a function', () => {
       expect(typeof projectDevCommand.builder).toBe('function');
+    });
+
+    it('should define the auto-upload option', async () => {
+      const yargsMock = yargs as unknown as Argv;
+      const optionSpy = vi.spyOn(yargsMock, 'option');
+
+      await projectDevCommand.builder(yargsMock);
+
+      expect(optionSpy).toHaveBeenCalledWith('auto-upload', expect.any(Object));
     });
   });
 

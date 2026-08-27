@@ -32,10 +32,16 @@ import {
 } from '../../types/Yargs.js';
 import { makeWrappedYargsHandler } from '../../lib/yargs/makeWrappedYargsHandler.js';
 import { makeYargsBuilder } from '../../lib/yargsUtils.js';
-import { uiDeprecatedTag } from '../../lib/ui/index.js';
+import {
+  uiCommandRelocatedMessage,
+  uiCommandRenamedDescription,
+} from '../../lib/ui/index.js';
 
 const command = 'watch';
-const describe = uiDeprecatedTag(commands.project.watch.describe, false);
+const describe = uiCommandRenamedDescription(
+  commands.project.watch.describe,
+  'hs project dev'
+);
 
 type ProjectWatchArgs = CommonArgs &
   ConfigArgs &
@@ -106,6 +112,8 @@ async function handler(
   args: ArgumentsCamelCase<ProjectWatchArgs>
 ): Promise<void> {
   const { initialUpload, derivedAccountId, exit } = args;
+
+  uiCommandRelocatedMessage('hs project dev');
 
   const { projectConfig, projectDir } = await getProjectConfig();
 

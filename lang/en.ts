@@ -1931,6 +1931,7 @@ export const commands = {
         noRunnableComponents: `No supported components were found in this project. Run ${uiCommandReference('hs project add')} to see a list of available components and add one to your project.`,
         accountNotCombined: `\nLocal development of unified apps is currently only compatible with accounts that are opted into the unified apps beta. Make sure that this account is opted in or switch accounts using ${uiCommandReference('hs account use')}.`,
         localDevAlreadyRunning: `Another ${uiCommandReference('hs project dev')} process is already running. To proceed with local development of this project, stop the existing process and re-run ${uiCommandReference('hs project dev')}.`,
+        autoUploadRequiresAutoDeploy: `${uiCommandReference('hs project dev --auto-upload')} requires auto-deploy to be enabled for this project, since auto-upload deploys every change. Enable auto-deploy in your project settings, or run ${uiCommandReference('hs project dev')} without it.`,
       },
       examples: {
         default: 'Start local dev for the current project',
@@ -1946,6 +1947,8 @@ export const commands = {
         testingAccount:
           'The id of the account to install apps and test on. Must be used with --project-account.',
         port: `The port for the local dev server. Defaults to ${LOCAL_DEV_DEFAULT_PORT}.`,
+        autoUpload:
+          'Automatically upload local changes to HubSpot as you edit files, instead of uploading manually from the Local Dev Panel.',
       },
     },
     create: {
@@ -2343,6 +2346,8 @@ export const commands = {
       },
       examples: {
         default: 'List the builds for the current project',
+        withLimit: 'List the five most recent builds for the current project',
+        json: 'Output the builds for the current project as JSON',
       },
     },
     logs: {
@@ -2415,6 +2420,7 @@ export const commands = {
         withPreview: 'Upload and preview the build on a target portal',
       },
       logs: {
+        forceCreateDeprecated: `The ${uiCommandReference('--force-create')} flag is deprecated. Use ${uiCommandReference('--force')} instead.`,
         buildSucceeded: (buildId: number) => `Build #${buildId} succeeded\n`,
         readyToGoLive: '🚀 Ready to take your project live?',
         runCommand: (command: string) =>
@@ -4376,6 +4382,7 @@ export const lib = {
         `Running ${chalk.bold(projectName)} locally on ${accountIdentifier}, waiting for changes ...`
       ),
     quitHelper: `Press ${chalk.bold('q')} to stop the local dev server`,
+    autoUploadEnabled: `${chalk.bold('Auto-upload is on.')} Changes you make locally will be uploaded to HubSpot automatically.`,
     viewProjectLink: (name: string, accountId: number) =>
       uiLink(
         'View project in HubSpot',
@@ -4519,8 +4526,17 @@ export const lib = {
   },
   LocalDevProcess: {
     projectConfigMismatch: `Unable to upload project. The project config has been modified since starting ${uiCommandReference('hs project dev')}.`,
-    uploadInitiated: 'Project upload initiated from Local Dev UI.',
-    deployInitiated: 'Project deploy initiated from Local Dev UI.',
+    uploadInitiated: 'Project upload initiated.',
+    autoUploadScheduled: (filePath: string) =>
+      `Auto-upload: detected change to ${filePath}, upload scheduled.`,
+    autoUploadTriggered: 'Auto-upload: debounce elapsed, uploading now.',
+    autoUploadInProgress:
+      'Auto-upload: an upload is already running, will re-run after it finishes.',
+    autoUploadToggled: (enabled: boolean) =>
+      enabled
+        ? `${chalk.bold('Auto-upload turned on')} from the Local Dev Panel. Changes you make locally will be uploaded to HubSpot automatically.`
+        : `${chalk.bold('Auto-upload turned off')} from the Local Dev Panel. Upload manually from the Local Dev Panel to push your changes.`,
+    deployInitiated: 'Project deploy initiated from the Local Dev Panel.',
     uploadFailed:
       'Project upload failed. To proceed with local development, fix any necessary errors, then re-upload your project.',
     deployFailed:
@@ -5963,6 +5979,14 @@ export const lib = {
       copyingProjectFiles: 'Copying migrated project files',
       copyingProjectFilesComplete: 'Migrated project files copied',
       copyingProjectFilesFailed: 'Unable to copy migrated project files',
+    },
+  },
+  cms: {
+    serverlessDevRuntime: {
+      installStarted: (targetVersion: string) =>
+        `Installing serverless-dev-runtime ${targetVersion}...`,
+      installSucceeded: 'serverless-dev-runtime setup complete',
+      installFailed: 'Failed to install serverless-dev-runtime',
     },
   },
   theme: {

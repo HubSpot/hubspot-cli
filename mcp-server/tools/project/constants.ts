@@ -22,10 +22,11 @@ export const features = z
       'app-event',
       'scim',
       'page',
+      'crm-bulk-action',
     ])
   )
   .describe(
-    'The features to include in the project, multiple options can be selected. "app-function" is also known as a private serverless function. "app-function-endpoint" is a serverless functions that is publicly accessible via endpoint. "workflow-action" is also known as a custom workflow action. "workflow-action-tool" is also known as agent tools.'
+    'The features to include in the project, multiple options can be selected. "app-function" is also known as a private serverless function. "app-function-endpoint" is a serverless functions that is publicly accessible via endpoint. "workflow-action" is also known as a custom workflow action. "workflow-action-tool" is also known as agent tools. "crm-bulk-action" is an app actions extension that lets users act on multiple CRM records at once.'
   )
   .optional();
 

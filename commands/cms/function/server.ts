@@ -1,7 +1,8 @@
 import { uiLogger } from '../../../lib/ui/logger.js';
-// This package is not typed, so we need to use require
-import { start as startTestServer } from '@hubspot/serverless-dev-runtime';
 import { commands } from '../../../lang/en.js';
+import { EXIT_CODES } from '../../../lib/enums/exitCodes.js';
+import { startServerlessDevRuntime } from '../../../lib/cms/serverlessDevRuntime.js';
+import { logError } from '../../../lib/errorHandlers/index.js';
 import { Argv, ArgumentsCamelCase } from 'yargs';
 import {
   CommonArgs,
@@ -30,7 +31,7 @@ export type FunctionServerArgs = CommonArgs &
 async function handler(
   args: ArgumentsCamelCase<FunctionServerArgs>
 ): Promise<void> {
-  const { path: functionPath, derivedAccountId } = args;
+  const { path: functionPath, derivedAccountId, exit } = args;
 
   uiLogger.debug(
     commands.cms.subcommands.function.subcommands.server.debug.startingServer(
@@ -38,10 +39,15 @@ async function handler(
     )
   );
 
-  startTestServer({
-    accountId: derivedAccountId,
-    ...args,
-  });
+  try {
+    await startServerlessDevRuntime({
+      accountId: derivedAccountId,
+      ...args,
+    });
+  } catch (e) {
+    logError(e);
+    return exit(EXIT_CODES.ERROR);
+  }
 }
 
 function functionServerBuilder(yargs: Argv): Argv<FunctionServerArgs> {

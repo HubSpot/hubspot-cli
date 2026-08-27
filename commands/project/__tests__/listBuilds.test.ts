@@ -7,12 +7,14 @@ import {
 import {
   addAccountOptions,
   addConfigOptions,
+  addJSONOutputOptions,
   addUseEnvironmentOptions,
 } from '../../../lib/commonOpts.js';
 import * as projectConfigUtils from '../../../lib/projects/config.js';
 import { getProjectDetailUrl } from '../../../lib/projects/urls.js';
 import { renderTable } from '../../../ui/render.js';
 import { promptUser } from '../../../lib/prompts/promptUtils.js';
+import { PromptExitError } from '../../../lib/errors/PromptExitError.js';
 import { uiLogger } from '../../../lib/ui/logger.js';
 import { EXIT_CODES } from '../../../lib/enums/exitCodes.js';
 import {
@@ -48,6 +50,32 @@ const build = {
   finishedAt: '2026-02-20T15:30:10.000Z',
   enqueuedAt: '2026-02-20T15:30:00.000Z',
   subbuildStatuses: [],
+};
+
+const detailedBuild = {
+  buildId: 2,
+  status: 'SUCCESS',
+  createdAt: '2026-02-20T15:29:59.000Z',
+  enqueuedAt: '2026-02-20T15:30:00.000Z',
+  startedAt: '2026-02-20T15:30:01.000Z',
+  finishedAt: '2026-02-20T15:30:10.000Z',
+  isAutoDeployEnabled: true,
+  deployableState: 'DEPLOYABLE',
+  platformVersion: '2025.2',
+  uploadMessage: 'Initial upload',
+  subbuildStatuses: [
+    {
+      buildName: 'app',
+      buildType: 'APP',
+      status: 'FAILURE',
+      errorMessage: 'Build failed',
+      startedAt: '2026-02-20T15:30:02.000Z',
+      finishedAt: '2026-02-20T15:30:05.000Z',
+      rootPath: 'src/app',
+      id: 'sub-1',
+      visible: true,
+    },
+  ],
 };
 
 function buildsResponse(
@@ -87,9 +115,12 @@ describe('commands/project/listBuilds', () => {
 
       expect(addUseEnvironmentOptions).toHaveBeenCalledTimes(1);
       expect(addUseEnvironmentOptions).toHaveBeenCalledWith(yargsMock);
+
+      expect(addJSONOutputOptions).toHaveBeenCalledTimes(1);
+      expect(addJSONOutputOptions).toHaveBeenCalledWith(yargsMock);
     });
 
-    it('should define project and limit options', () => {
+    it('should define project and a numeric limit option', () => {
       const optionsSpy = vi.spyOn(yargsMock, 'options');
       const exampleSpy = vi.spyOn(yargsMock, 'example');
 
@@ -98,7 +129,7 @@ describe('commands/project/listBuilds', () => {
       expect(optionsSpy).toHaveBeenCalledWith(
         expect.objectContaining({
           project: expect.any(Object),
-          limit: expect.any(Object),
+          limit: expect.objectContaining({ type: 'number' }),
         })
       );
 
@@ -108,6 +139,7 @@ describe('commands/project/listBuilds', () => {
 
   describe('handler', () => {
     let args: ArgumentsCamelCase<ProjectListBuildsArgs>;
+    const originalIsTTY = process.stdin.isTTY;
 
     beforeEach(() => {
       args = {
@@ -118,6 +150,10 @@ describe('commands/project/listBuilds', () => {
       mockedFetchProject.mockReset();
       mockedFetchProjectBuilds.mockReset();
       mockedRenderTable.mockReset();
+      vi.mocked(promptUser).mockReset();
+
+      // Default to an interactive terminal so pagination prompts are exercised.
+      process.stdin.isTTY = true;
 
       vi.mocked(getProjectDetailUrl).mockReturnValue(
         'https://app.hubspot.com/project'
@@ -129,6 +165,10 @@ describe('commands/project/listBuilds', () => {
 
       // @ts-expect-error Mock implementation
       processExitSpy.mockImplementation(() => {});
+    });
+
+    afterEach(() => {
+      process.stdin.isTTY = originalIsTTY;
     });
 
     it('should render a table of builds when builds exist', async () => {
@@ -183,6 +223,35 @@ describe('commands/project/listBuilds', () => {
       );
     });
 
+    it('should not prompt for more builds when a limit is provided', async () => {
+      args.limit = 5;
+      mockedFetchProjectBuilds.mockReturnValue(
+        buildsResponse([build], 'CURSOR')
+      );
+
+      await projectListBuildsCommand.handler(args);
+
+      expect(mockedFetchProjectBuilds).toHaveBeenCalledTimes(1);
+      expect(mockedFetchProjectBuilds).toHaveBeenCalledWith(
+        args.derivedAccountId,
+        'my-project',
+        { limit: 5 }
+      );
+      expect(promptUser).not.toHaveBeenCalled();
+    });
+
+    it('should not prompt for more builds when output is non-interactive', async () => {
+      process.stdin.isTTY = false;
+      mockedFetchProjectBuilds.mockReturnValue(
+        buildsResponse([build], 'CURSOR')
+      );
+
+      await projectListBuildsCommand.handler(args);
+
+      expect(mockedFetchProjectBuilds).toHaveBeenCalledTimes(1);
+      expect(promptUser).not.toHaveBeenCalled();
+    });
+
     it('should read the project config when no project flag is provided', async () => {
       delete args.project;
       getProjectConfigSpy.mockResolvedValue({
@@ -204,19 +273,141 @@ describe('commands/project/listBuilds', () => {
       );
     });
 
-    it('should show a not-found error when the project does not exist', async () => {
-      mockedFetchProject.mockImplementation(() => {
-        throw mockHubSpotHttpError('Not Found', {
-          status: HttpStatusCode.NotFound,
-          data: {},
-        });
+    describe('--json output', () => {
+      beforeEach(() => {
+        args.json = true;
       });
 
-      await projectListBuildsCommand.handler(args);
+      it('should output schema-valid JSON and exit successfully', async () => {
+        mockedFetchProjectBuilds.mockReturnValue(
+          buildsResponse([detailedBuild])
+        );
 
-      expect(uiLogger.error).toHaveBeenCalledWith(
-        expect.stringContaining('not found')
-      );
+        await projectListBuildsCommand.handler(args);
+
+        expect(uiLogger.json).toHaveBeenCalledTimes(1);
+        expect(uiLogger.json).toHaveBeenCalledWith({
+          projectName: 'my-project',
+          deployedBuildId: 2,
+          results: [
+            {
+              buildId: 2,
+              status: 'SUCCESS',
+              isDeployed: true,
+              isAutoDeployEnabled: true,
+              deployableState: 'DEPLOYABLE',
+              platformVersion: '2025.2',
+              uploadMessage: 'Initial upload',
+              enqueuedAt: '2026-02-20T15:30:00.000Z',
+              startedAt: '2026-02-20T15:30:01.000Z',
+              finishedAt: '2026-02-20T15:30:10.000Z',
+              createdAt: '2026-02-20T15:29:59.000Z',
+              subbuildStatuses: [
+                {
+                  buildName: 'app',
+                  buildType: 'APP',
+                  status: 'FAILURE',
+                  errorMessage: 'Build failed',
+                  startedAt: '2026-02-20T15:30:02.000Z',
+                  finishedAt: '2026-02-20T15:30:05.000Z',
+                  rootPath: 'src/app',
+                  id: 'sub-1',
+                  visible: true,
+                },
+              ],
+            },
+          ],
+        });
+        expect(processExitSpy).toHaveBeenCalledWith(EXIT_CODES.SUCCESS);
+      });
+
+      it('should include the paging cursor when more builds exist', async () => {
+        mockedFetchProjectBuilds.mockReturnValue(
+          buildsResponse([detailedBuild], 'NEXT_CURSOR')
+        );
+
+        await projectListBuildsCommand.handler(args);
+
+        expect(uiLogger.json).toHaveBeenCalledWith(
+          expect.objectContaining({
+            paging: { next: { after: 'NEXT_CURSOR' } },
+          })
+        );
+      });
+
+      it('should not prompt for pagination or render a table', async () => {
+        mockedFetchProjectBuilds.mockReturnValue(
+          buildsResponse([detailedBuild], 'NEXT_CURSOR')
+        );
+
+        await projectListBuildsCommand.handler(args);
+
+        expect(promptUser).not.toHaveBeenCalled();
+        expect(mockedRenderTable).not.toHaveBeenCalled();
+      });
+
+      it('should omit paging and stay schema-valid when next has no after cursor', async () => {
+        mockedFetchProjectBuilds.mockReturnValue(
+          mockHubSpotHttpResponse({
+            results: [detailedBuild],
+            paging: { next: {} },
+          })
+        );
+
+        await projectListBuildsCommand.handler(args);
+
+        expect(uiLogger.json).toHaveBeenCalledTimes(1);
+        expect(uiLogger.json).toHaveBeenCalledWith(
+          expect.not.objectContaining({ paging: expect.anything() })
+        );
+        expect(processExitSpy).toHaveBeenCalledWith(EXIT_CODES.SUCCESS);
+      });
+    });
+
+    describe('error behavior', () => {
+      it('should exit with an error for a not-found project', async () => {
+        mockedFetchProject.mockImplementation(() => {
+          throw mockHubSpotHttpError('Not Found', {
+            status: HttpStatusCode.NotFound,
+            data: {},
+          });
+        });
+
+        await projectListBuildsCommand.handler(args);
+
+        expect(uiLogger.error).toHaveBeenCalledWith(
+          expect.stringContaining('not found')
+        );
+        expect(processExitSpy).toHaveBeenCalledWith(EXIT_CODES.ERROR);
+      });
+
+      it('should exit with an error after a caught API error', async () => {
+        mockedFetchProjectBuilds.mockImplementation(() => {
+          throw mockHubSpotHttpError('Server Error', {
+            status: HttpStatusCode.InternalServerError,
+            data: {},
+          });
+        });
+
+        await projectListBuildsCommand.handler(args);
+
+        expect(processExitSpy).toHaveBeenCalledWith(EXIT_CODES.ERROR);
+        expect(processExitSpy).not.toHaveBeenCalledWith(EXIT_CODES.SUCCESS);
+      });
+
+      it('should exit cleanly on a prompt cancellation instead of logging an error', async () => {
+        mockedFetchProjectBuilds.mockReturnValue(
+          buildsResponse([build], 'CURSOR')
+        );
+        vi.mocked(promptUser).mockImplementation(() => {
+          throw new PromptExitError('User exited', EXIT_CODES.SUCCESS);
+        });
+
+        await projectListBuildsCommand.handler(args);
+
+        expect(processExitSpy).toHaveBeenCalledWith(EXIT_CODES.SUCCESS);
+        expect(uiLogger.error).not.toHaveBeenCalled();
+      });
     });
   });
 });

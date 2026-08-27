@@ -341,6 +341,81 @@ describe('lib/projects/create/v2', () => {
       expect(mockHasFeature).toHaveBeenCalledWith(123, expect.any(String));
     });
 
+    it('disables crm-bulk-action when hasFeature returns false', async () => {
+      mockHasFeature.mockResolvedValue(false);
+
+      const gatedComponent: ComponentTemplate[] = [
+        {
+          label: 'Bulk Actions',
+          path: 'components/actions',
+          type: 'crm-bulk-action',
+          supportedAuthTypes: ['oauth', 'static'],
+          supportedDistributions: ['private', 'marketplace'],
+        },
+      ];
+
+      const projectMetadataWithBulkAction = {
+        hsMetaFiles: [],
+        components: {
+          'crm-bulk-action': { count: 0, maxCount: Infinity, hsMetaFiles: [] },
+        },
+      };
+
+      const choices = await calculateComponentTemplateChoices(
+        gatedComponent,
+        'oauth',
+        'private',
+        123,
+        projectMetadataWithBulkAction
+      );
+
+      expect(choices).toHaveLength(1);
+      expect(choices[0]).toEqual({
+        name: expect.stringContaining('Bulk Actions'),
+        value: gatedComponent[0],
+        disabled: expect.stringContaining(
+          "doesn't have access to this feature"
+        ),
+      });
+      expect(mockHasFeature).toHaveBeenCalledWith(123, 'Developers:AppActions');
+    });
+
+    it('enables crm-bulk-action when hasFeature returns true', async () => {
+      mockHasFeature.mockResolvedValue(true);
+
+      const gatedComponent: ComponentTemplate[] = [
+        {
+          label: 'Bulk Actions',
+          path: 'components/actions',
+          type: 'crm-bulk-action',
+          supportedAuthTypes: ['oauth', 'static'],
+          supportedDistributions: ['private', 'marketplace'],
+        },
+      ];
+
+      const projectMetadataWithBulkAction = {
+        hsMetaFiles: [],
+        components: {
+          'crm-bulk-action': { count: 0, maxCount: Infinity, hsMetaFiles: [] },
+        },
+      };
+
+      const choices = await calculateComponentTemplateChoices(
+        gatedComponent,
+        'oauth',
+        'private',
+        123,
+        projectMetadataWithBulkAction
+      );
+
+      expect(choices).toHaveLength(1);
+      expect(choices[0]).toEqual({
+        name: 'Bulk Actions [crm-bulk-action]',
+        value: gatedComponent[0],
+      });
+      expect(mockHasFeature).toHaveBeenCalledWith(123, 'Developers:AppActions');
+    });
+
     it('handles non-gated components without calling hasFeature', async () => {
       const nonGatedComponent: ComponentTemplate[] = [
         {

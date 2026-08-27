@@ -48,6 +48,9 @@ describe('LocalDevWebsocketServer', () => {
       },
       targetProjectAccountId: 456,
       targetTestingAccountId: 789,
+      autoUploadAvailable: true,
+      autoUploadEnabled: false,
+      setAutoUploadEnabled: vi.fn(),
     } as unknown as Mocked<LocalDevProcess>;
 
     (WebSocketServer as unknown as Mock).mockImplementation(
@@ -97,6 +100,7 @@ describe('LocalDevWebsocketServer', () => {
             deployedBuild: { id: 'build-1', status: 'SUCCESS' },
             targetProjectAccountId: 456,
             targetTestingAccountId: 789,
+            autoUploadEnabled: false,
           },
         })
       );
@@ -121,6 +125,28 @@ describe('LocalDevWebsocketServer', () => {
         'devServersStarted',
         expect.any(Function)
       );
+      expect(mockLocalDevProcess.addStateListener).toHaveBeenCalledWith(
+        'uploadInProgress',
+        expect.any(Function)
+      );
+    });
+
+    it('should broadcast uploadInProgress changes to the UI', () => {
+      startServerAndConnect();
+
+      const uploadInProgressListener =
+        mockLocalDevProcess.addStateListener.mock.calls.find(
+          call => call[0] === 'uploadInProgress'
+        )![1] as (inProgress: boolean) => void;
+
+      uploadInProgressListener(true);
+
+      expect(mockWebSocket.send).toHaveBeenCalledWith(
+        JSON.stringify({
+          type: LOCAL_DEV_UI_MESSAGE_SEND_TYPES.UPLOAD_IN_PROGRESS,
+          data: { uploadInProgress: true },
+        })
+      );
     });
   });
 
@@ -144,6 +170,23 @@ describe('LocalDevWebsocketServer', () => {
       );
 
       expect(mockLocalDevProcess.uploadProject).toHaveBeenCalled();
+    });
+
+    it('should handle SET_AUTO_UPLOAD message type', () => {
+      const messageCallback = mockWebSocket.on.mock.calls.find(
+        call => call[0] === 'message'
+      )![1] as (data: string) => void;
+
+      messageCallback(
+        JSON.stringify({
+          type: LOCAL_DEV_UI_MESSAGE_RECEIVE_TYPES.SET_AUTO_UPLOAD,
+          data: { enabled: true },
+        })
+      );
+
+      expect(mockLocalDevProcess.setAutoUploadEnabled).toHaveBeenCalledWith(
+        true
+      );
     });
   });
 
@@ -225,7 +268,7 @@ describe('LocalDevWebsocketServer', () => {
         expect.any(Function)
       );
 
-      expect(mockLocalDevProcess.addStateListener).toHaveBeenCalledTimes(12);
+      expect(mockLocalDevProcess.addStateListener).toHaveBeenCalledTimes(15);
       expect(mockLocalDevProcess.sendDevServerMessage).toHaveBeenCalledTimes(3);
       expect(mockLocalDevProcess.sendDevServerMessage).toHaveBeenCalledWith(
         LOCAL_DEV_SERVER_MESSAGE_TYPES.WEBSOCKET_SERVER_CONNECTED
@@ -253,6 +296,7 @@ describe('LocalDevWebsocketServer', () => {
           deployedBuild: { id: 'build-1', status: 'SUCCESS' },
           targetProjectAccountId: 456,
           targetTestingAccountId: 789,
+          autoUploadEnabled: false,
         },
       });
 
@@ -275,14 +319,14 @@ describe('LocalDevWebsocketServer', () => {
         .filter(call => call[0] === 'close')
         .map(call => call[1] as () => void);
 
-      expect(closeCallbacks1).toHaveLength(4);
-      expect(closeCallbacks2).toHaveLength(4);
+      expect(closeCallbacks1).toHaveLength(5);
+      expect(closeCallbacks2).toHaveLength(5);
 
       closeCallbacks1.forEach(callback => callback());
-      expect(mockLocalDevProcess.removeStateListener).toHaveBeenCalledTimes(4);
+      expect(mockLocalDevProcess.removeStateListener).toHaveBeenCalledTimes(5);
 
       closeCallbacks2.forEach(callback => callback());
-      expect(mockLocalDevProcess.removeStateListener).toHaveBeenCalledTimes(8);
+      expect(mockLocalDevProcess.removeStateListener).toHaveBeenCalledTimes(10);
     });
 
     it('should broadcast state changes to all connected clients', () => {

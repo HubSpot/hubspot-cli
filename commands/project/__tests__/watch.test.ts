@@ -4,9 +4,16 @@ import {
   addConfigOptions,
   addUseEnvironmentOptions,
 } from '../../../lib/commonOpts.js';
+import * as projectConfigLib from '../../../lib/projects/config.js';
+import { uiLogger } from '../../../lib/ui/logger.js';
+import { EXIT_CODES } from '../../../lib/enums/exitCodes.js';
 import projectWatchCommand from '../watch.js';
 
 vi.mock('../../../lib/commonOpts');
+vi.mock('../../../lib/projects/config.js');
+
+const getProjectConfigSpy = vi.spyOn(projectConfigLib, 'getProjectConfig');
+const processExitSpy = vi.spyOn(process, 'exit');
 
 describe('commands/project/watch', () => {
   const yargsMock = yargs as Argv;
@@ -20,6 +27,11 @@ describe('commands/project/watch', () => {
   describe('describe', () => {
     it('should provide a description', () => {
       expect(projectWatchCommand.describe).toBeDefined();
+    });
+
+    it('should mark the command as deprecated and point to hs project dev', () => {
+      expect(projectWatchCommand.describe).toContain('[DEPRECATED]');
+      expect(projectWatchCommand.describe).toContain('hs project dev');
     });
   });
 
@@ -49,6 +61,33 @@ describe('commands/project/watch', () => {
       );
 
       expect(exampleSpy).toHaveBeenCalled();
+    });
+  });
+
+  describe('handler', () => {
+    beforeEach(() => {
+      // @ts-expect-error Mock implementation
+      processExitSpy.mockImplementation(() => {});
+      getProjectConfigSpy.mockResolvedValue({
+        projectConfig: null,
+        projectDir: null,
+      });
+    });
+
+    it('should log a runtime notice pointing users to hs project dev', async () => {
+      await projectWatchCommand.handler({
+        _: ['project', 'watch'],
+        derivedAccountId: 123456,
+      } as unknown as Parameters<typeof projectWatchCommand.handler>[0]);
+
+      const loggedMessages = vi
+        .mocked(uiLogger.log)
+        .mock.calls.map(call => String(call[0]))
+        .join('\n');
+
+      expect(loggedMessages).toContain('hs project dev');
+      expect(loggedMessages).toContain('deprecated');
+      expect(processExitSpy).toHaveBeenCalledWith(EXIT_CODES.ERROR);
     });
   });
 });

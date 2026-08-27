@@ -30,12 +30,20 @@ export type LocalDevStateConstructorOptions = {
   initialProjectProfileData: HSProfileVariables;
   env: Environment;
   actions: LocalDevActions;
+  autoUploadEnabled?: boolean;
 };
 
 export type LocalDevDeployWebsocketMessage = {
   type: typeof LOCAL_DEV_UI_MESSAGE_RECEIVE_TYPES.DEPLOY;
   data: {
     force: boolean;
+  };
+};
+
+export type LocalDevSetAutoUploadWebsocketMessage = {
+  type: typeof LOCAL_DEV_UI_MESSAGE_RECEIVE_TYPES.SET_AUTO_UPLOAD;
+  data: {
+    enabled: boolean;
   };
 };
 

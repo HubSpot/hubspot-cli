@@ -281,6 +281,16 @@ export async function unifiedProjectDevFlow({
 
   let project = uploadedProject;
 
+  // Fail fast before the slower project checks below.
+  const autoDeployEnabled =
+    (project?.deployedBuild ?? project?.latestBuild)?.isAutoDeployEnabled ??
+    true;
+
+  if (args.autoUpload && !autoDeployEnabled) {
+    uiLogger.error(commands.project.dev.errors.autoUploadRequiresAutoDeploy);
+    return exit(EXIT_CODES.ERROR);
+  }
+
   if (projectExists && project) {
     await compareLocalProjectToDeployed(
       projectConfig,
@@ -336,6 +346,7 @@ export async function unifiedProjectDevFlow({
     projectData: project,
     env,
     actions: { exit },
+    autoUploadEnabled: Boolean(args.autoUpload) && autoDeployEnabled,
   });
 
   const websocketServer = new LocalDevWebsocketServer(
