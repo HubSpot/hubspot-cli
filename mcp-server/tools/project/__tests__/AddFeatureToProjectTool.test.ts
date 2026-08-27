@@ -140,6 +140,34 @@ describe('mcp-server/tools/project/AddFeatureToProject', () => {
       );
     });
 
+    it('should handle crm-bulk-action as a valid feature', async () => {
+      mockRunCommandInDir.mockResolvedValue({
+        stdout: 'Bulk action added successfully',
+        stderr: '',
+      });
+
+      const input: AddFeatureInputSchema = {
+        ...baseInput,
+        features: ['crm-bulk-action'],
+      };
+
+      await tool.handler(input);
+
+      expect(mockRunCommandInDir).toHaveBeenCalledWith(
+        '/test/project',
+        expect.objectContaining({
+          executable: 'hs',
+          args: expect.arrayContaining([
+            'project',
+            'add',
+            '--features',
+            'crm-bulk-action',
+          ]),
+        }),
+        expect.any(Function)
+      );
+    });
+
     it('should prompt for distribution and auth when adding app without both', async () => {
       const input = {
         ...baseInput,

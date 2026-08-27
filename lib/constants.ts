@@ -97,6 +97,7 @@ export const FEATURES = {
   APP_EVENTS: 'Developers:UnifiedApps:AppEventsAccess',
   THEME_MIGRATION_2025_2: 'Developers:ProjectThemeMigrations:2025.2',
   AGENT_TOOLS: 'ThirdPartyAgentTools',
+  APP_ACTIONS: 'Developers:AppActions',
 } as const;
 
 export const LOCAL_DEV_UI_MESSAGE_SEND_TYPES = {
@@ -109,6 +110,7 @@ export const LOCAL_DEV_UI_MESSAGE_SEND_TYPES = {
   UPDATE_PROJECT_DATA: 'server:updateProjectData',
   UPDATE_UPLOAD_WARNINGS: 'server:updateUploadWarnings',
   DEV_SERVERS_STARTED: 'server:devServersStarted',
+  UPLOAD_IN_PROGRESS: 'server:uploadInProgress',
 };
 
 export const LOCAL_DEV_UI_MESSAGE_RECEIVE_TYPES = {
@@ -118,6 +120,7 @@ export const LOCAL_DEV_UI_MESSAGE_RECEIVE_TYPES = {
   APP_INSTALL_SUCCESS: 'client:installSuccess',
   APP_INSTALL_INITIATED: 'client:installInitiated',
   APP_INSTALL_FAILURE: 'client:installFailure',
+  SET_AUTO_UPLOAD: 'client:setAutoUpload',
 };
 
 export const APP_INSTALLATION_STATES = {

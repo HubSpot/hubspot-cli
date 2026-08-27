@@ -1,4 +1,7 @@
-import { LocalDevDeployWebsocketMessage } from '../../../types/LocalDev.js';
+import {
+  LocalDevDeployWebsocketMessage,
+  LocalDevSetAutoUploadWebsocketMessage,
+} from '../../../types/LocalDev.js';
 import { LOCAL_DEV_UI_MESSAGE_RECEIVE_TYPES } from '../../constants.js';
 import { CLIWebSocketMessage } from '../../CLIWebSocketServer.js';
 
@@ -10,6 +13,12 @@ export function isDeployWebsocketMessage(
   message: CLIWebSocketMessage
 ): message is LocalDevDeployWebsocketMessage {
   return message.type === LOCAL_DEV_UI_MESSAGE_RECEIVE_TYPES.DEPLOY;
+}
+
+export function isSetAutoUploadWebsocketMessage(
+  message: CLIWebSocketMessage
+): message is LocalDevSetAutoUploadWebsocketMessage {
+  return message.type === LOCAL_DEV_UI_MESSAGE_RECEIVE_TYPES.SET_AUTO_UPLOAD;
 }
 
 export function isViewedWelcomeScreenWebsocketMessage(

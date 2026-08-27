@@ -582,7 +582,49 @@ describe('unifiedProjectDevFlow', () => {
         projectData: mockProject,
         env: ENVIRONMENTS.PROD,
         actions: { exit: mockArgs.exit },
+        autoUploadEnabled: false,
       });
+    });
+
+    it('should pass the autoUpload flag to LocalDevProcess', async () => {
+      await unifiedProjectDevFlow({
+        args: { ...mockArgs, autoUpload: true },
+        targetProjectAccountId: mockTargetProjectAccountId,
+        providedTargetTestingAccountId: mockProvidedTargetTestingAccountId,
+        projectConfig: mockProjectConfig,
+        projectDir: mockProjectDir,
+      });
+
+      expect(LocalDevProcess).toHaveBeenCalledWith(
+        expect.objectContaining({ autoUploadEnabled: true })
+      );
+    });
+
+    it('should error if --auto-upload is used when auto-deploy is disabled', async () => {
+      (ensureProjectExists as Mock).mockResolvedValue({
+        projectExists: true,
+        project: {
+          ...mockProject,
+          deployedBuild: {
+            ...mockProject.deployedBuild,
+            isAutoDeployEnabled: false,
+          },
+        },
+      });
+
+      await unifiedProjectDevFlow({
+        args: { ...mockArgs, autoUpload: true },
+        targetProjectAccountId: mockTargetProjectAccountId,
+        providedTargetTestingAccountId: mockProvidedTargetTestingAccountId,
+        projectConfig: mockProjectConfig,
+        projectDir: mockProjectDir,
+      });
+
+      expect(uiLogger.error).toHaveBeenCalledWith(
+        commands.project.dev.errors.autoUploadRequiresAutoDeploy
+      );
+      expect(mockArgs.exit).toHaveBeenCalledWith(1);
+      expect(LocalDevProcess).not.toHaveBeenCalled();
     });
 
     it('should set up keypress and exit handlers', async () => {

@@ -84,6 +84,7 @@ export async function createV2App(
 const componentTypeToGateMap: Record<string, ValueOf<typeof FEATURES>> = {
   [AppEventsKey]: FEATURES.APP_EVENTS,
   'workflow-action-tool': FEATURES.AGENT_TOOLS,
+  'crm-bulk-action': FEATURES.APP_ACTIONS,
 };
 
 export async function calculateComponentTemplateChoices(

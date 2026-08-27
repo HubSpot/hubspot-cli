@@ -72,7 +72,7 @@ describe('LocalDevProcess', () => {
         deployStatusTaskLocator: { id: 'task-123', links: [] },
         enqueuedAt: '2023-01-01T00:00:00Z',
         finishedAt: '2023-01-01T00:05:00Z',
-        isAutoDeployEnabled: false,
+        isAutoDeployEnabled: true,
         portalId: 123,
         projectName: 'test-project',
         startedAt: '2023-01-01T00:01:00Z',
@@ -102,6 +102,10 @@ describe('LocalDevProcess', () => {
       cleanupError: vi.fn(),
       cleanupSuccess: vi.fn(),
       uploadInitiated: vi.fn(),
+      autoUploadScheduled: vi.fn(),
+      autoUploadTriggered: vi.fn(),
+      autoUploadInProgress: vi.fn(),
+      autoUploadToggled: vi.fn(),
       projectConfigMismatch: vi.fn(),
       uploadError: vi.fn(),
       uploadSuccess: vi.fn(),
@@ -260,7 +264,7 @@ describe('LocalDevProcess', () => {
     });
 
     it('should handle successful upload', async () => {
-      await process.handleConfigFileChange();
+      await process.handleConfigFileChange('src/app/app-hsmeta.json');
 
       (getProjectConfig as Mock).mockResolvedValue({
         projectConfig: mockOptions.projectConfig,
@@ -442,7 +446,7 @@ describe('LocalDevProcess', () => {
     });
 
     it('should update project nodes and show upload warning', async () => {
-      await process.handleConfigFileChange();
+      await process.handleConfigFileChange('src/app/app-hsmeta.json');
 
       expect(translateForLocalDev).toHaveBeenCalledWith(
         {
@@ -456,6 +460,179 @@ describe('LocalDevProcess', () => {
         { projectNodesAtLastUpload: {} }
       );
       expect(mockLocalDevLogger.uploadWarning).toHaveBeenCalled();
+    });
+  });
+
+  describe('auto-upload', () => {
+    let autoUploadProcess: LocalDevProcess;
+
+    beforeEach(() => {
+      vi.useFakeTimers();
+      (translateForLocalDev as Mock).mockResolvedValue({
+        intermediateRepresentation: {
+          intermediateNodesIndexedByUid: {},
+          profileData: undefined,
+        },
+        skippedHsMetaFiles: [],
+      });
+      (getProjectConfig as Mock).mockResolvedValue({
+        projectConfig: mockOptions.projectConfig,
+      });
+      (handleProjectUpload as Mock).mockResolvedValue({
+        uploadError: null,
+        result: { deployResult: { deployId: 9, status: 'SUCCESS' } },
+      });
+      (fetchProject as Mock).mockResolvedValue({
+        data: mockOptions.projectData,
+      });
+      autoUploadProcess = new LocalDevProcess({
+        ...mockOptions,
+        autoUploadEnabled: true,
+      });
+    });
+
+    afterEach(() => {
+      vi.useRealTimers();
+    });
+
+    it('uploads after a debounced file change when enabled', async () => {
+      await autoUploadProcess.handleFileChange('src/a.ts', 'change');
+      expect(handleProjectUpload).not.toHaveBeenCalled();
+
+      await vi.advanceTimersByTimeAsync(2000);
+      expect(handleProjectUpload).toHaveBeenCalledTimes(1);
+    });
+
+    it('does not upload on file change when disabled', async () => {
+      await process.handleFileChange('src/a.ts', 'change');
+      await vi.advanceTimersByTimeAsync(2000);
+
+      expect(handleProjectUpload).not.toHaveBeenCalled();
+    });
+
+    it('coalesces rapid file changes into a single upload', async () => {
+      await autoUploadProcess.handleFileChange('src/a.ts', 'change');
+      await vi.advanceTimersByTimeAsync(1000);
+      await autoUploadProcess.handleFileChange('src/b.ts', 'change');
+      await vi.advanceTimersByTimeAsync(2000);
+
+      expect(handleProjectUpload).toHaveBeenCalledTimes(1);
+    });
+
+    it('auto-uploads on a config file change when enabled', async () => {
+      await autoUploadProcess.handleConfigFileChange('src/app/app-hsmeta.json');
+      await vi.advanceTimersByTimeAsync(2000);
+
+      expect(handleProjectUpload).toHaveBeenCalledTimes(1);
+    });
+
+    it('recovers from an unexpected upload error and can upload again', async () => {
+      (getProjectConfig as Mock).mockRejectedValueOnce(new Error('boom'));
+
+      await autoUploadProcess.handleFileChange('src/a.ts', 'change');
+      await vi.advanceTimersByTimeAsync(2000);
+      expect(handleProjectUpload).not.toHaveBeenCalled();
+
+      await autoUploadProcess.handleFileChange('src/b.ts', 'change');
+      await vi.advanceTimersByTimeAsync(2000);
+      expect(handleProjectUpload).toHaveBeenCalledTimes(1);
+    });
+
+    it('queues a follow-up upload for changes during an in-progress upload', async () => {
+      let resolveFirstUpload: (value: unknown) => void = () => {};
+      (handleProjectUpload as Mock).mockImplementationOnce(
+        () =>
+          new Promise(resolve => {
+            resolveFirstUpload = resolve;
+          })
+      );
+
+      await autoUploadProcess.handleFileChange('src/a.ts', 'change');
+      await vi.advanceTimersByTimeAsync(2000);
+      expect(handleProjectUpload).toHaveBeenCalledTimes(1);
+
+      await autoUploadProcess.handleFileChange('src/b.ts', 'change');
+      await vi.advanceTimersByTimeAsync(2000);
+      expect(handleProjectUpload).toHaveBeenCalledTimes(1);
+
+      resolveFirstUpload({
+        uploadError: null,
+        result: { deployResult: { deployId: 10, status: 'SUCCESS' } },
+      });
+      await vi.advanceTimersByTimeAsync(2000);
+      expect(handleProjectUpload).toHaveBeenCalledTimes(2);
+    });
+
+    it('does not run a queued follow-up upload after stop()', async () => {
+      let resolveFirstUpload: (value: unknown) => void = () => {};
+      (handleProjectUpload as Mock).mockImplementationOnce(
+        () =>
+          new Promise(resolve => {
+            resolveFirstUpload = resolve;
+          })
+      );
+
+      await autoUploadProcess.handleFileChange('src/a.ts', 'change');
+      await vi.advanceTimersByTimeAsync(2000);
+      expect(handleProjectUpload).toHaveBeenCalledTimes(1);
+
+      await autoUploadProcess.handleFileChange('src/b.ts', 'change');
+      await vi.advanceTimersByTimeAsync(2000);
+      expect(handleProjectUpload).toHaveBeenCalledTimes(1);
+
+      const stopPromise = autoUploadProcess.stop(false);
+      resolveFirstUpload({
+        uploadError: null,
+        result: { deployResult: { deployId: 11, status: 'SUCCESS' } },
+      });
+      await vi.advanceTimersByTimeAsync(2000);
+      await stopPromise;
+
+      expect(handleProjectUpload).toHaveBeenCalledTimes(1);
+    });
+
+    it('starts auto-uploading after setAutoUploadEnabled(true)', async () => {
+      process.setAutoUploadEnabled(true);
+
+      await process.handleFileChange('src/a.ts', 'change');
+      await vi.advanceTimersByTimeAsync(2000);
+
+      expect(handleProjectUpload).toHaveBeenCalledTimes(1);
+    });
+
+    it('cancels a pending upload when setAutoUploadEnabled(false) is called', async () => {
+      await autoUploadProcess.handleFileChange('src/a.ts', 'change');
+      autoUploadProcess.setAutoUploadEnabled(false);
+      await vi.advanceTimersByTimeAsync(2000);
+
+      expect(handleProjectUpload).not.toHaveBeenCalled();
+    });
+
+    it('logs when auto-upload is toggled from the local dev UI', () => {
+      process.setAutoUploadEnabled(true);
+      expect(mockLocalDevLogger.autoUploadToggled).toHaveBeenCalledWith(true);
+
+      process.setAutoUploadEnabled(false);
+      expect(mockLocalDevLogger.autoUploadToggled).toHaveBeenCalledWith(false);
+    });
+
+    it('reports autoUploadAvailable based on auto-deploy', () => {
+      expect(autoUploadProcess.autoUploadAvailable).toBe(true);
+    });
+
+    it('reports autoUploadAvailable false when auto-deploy is disabled', () => {
+      const unavailableProcess = new LocalDevProcess({
+        ...mockOptions,
+        projectData: {
+          ...mockOptions.projectData,
+          latestBuild: {
+            ...mockOptions.projectData.latestBuild!,
+            isAutoDeployEnabled: false,
+          },
+        },
+      });
+
+      expect(unavailableProcess.autoUploadAvailable).toBe(false);
     });
   });
 

@@ -35,6 +35,8 @@ class LocalDevState {
   private _devServerMessage: LocalDevServerMessage;
   private _uploadWarnings: Set<string>;
   private _devServersStarted: boolean;
+  private _autoUploadEnabled: boolean;
+  private _uploadInProgress: boolean;
   actions: LocalDevActions;
 
   constructor({
@@ -49,6 +51,7 @@ class LocalDevState {
     profile,
     env,
     actions,
+    autoUploadEnabled,
   }: LocalDevStateConstructorOptions) {
     this._targetProjectAccountId = targetProjectAccountId;
     this._targetTestingAccountId = targetTestingAccountId;
@@ -65,6 +68,8 @@ class LocalDevState {
     this._devServerMessage = LOCAL_DEV_SERVER_MESSAGE_TYPES.INITIAL;
     this._uploadWarnings = new Set();
     this._devServersStarted = false;
+    this._autoUploadEnabled = autoUploadEnabled || false;
+    this._uploadInProgress = false;
     this.actions = actions;
 
     this._listeners = {};
@@ -182,6 +187,24 @@ class LocalDevState {
   set devServersStarted(started: boolean) {
     this._devServersStarted = started;
     this.runListeners('devServersStarted');
+  }
+
+  get autoUploadEnabled(): boolean {
+    return this._autoUploadEnabled;
+  }
+
+  set autoUploadEnabled(autoUploadEnabled: boolean) {
+    this._autoUploadEnabled = autoUploadEnabled;
+    this.runListeners('autoUploadEnabled');
+  }
+
+  get uploadInProgress(): boolean {
+    return this._uploadInProgress;
+  }
+
+  set uploadInProgress(inProgress: boolean) {
+    this._uploadInProgress = inProgress;
+    this.runListeners('uploadInProgress');
   }
 
   addUploadWarning(warning: string): void {

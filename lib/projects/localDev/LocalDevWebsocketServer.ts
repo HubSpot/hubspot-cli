@@ -17,6 +17,7 @@ import {
   isAppInstallFailureWebsocketMessage,
   isAppInstallSuccessWebsocketMessage,
   isAppInstallInitiatedWebsocketMessage,
+  isSetAutoUploadWebsocketMessage,
 } from './localDevWebsocketServerUtils.js';
 import CLIWebSocketServer, {
   CLIWebSocketMessage,
@@ -115,6 +116,11 @@ class LocalDevWebsocketServer {
     } else if (isAppInstallInitiatedWebsocketMessage(message)) {
       this.handleAppInstallInitiated();
       return true;
+    } else if (isSetAutoUploadWebsocketMessage(message)) {
+      if (this.localDevProcess.autoUploadAvailable) {
+        this.localDevProcess.setAutoUploadEnabled(message.data.enabled);
+      }
+      return true;
     }
 
     return false;
@@ -130,6 +136,9 @@ class LocalDevWebsocketServer {
         deployedBuild: this.localDevProcess.projectData.deployedBuild,
         targetProjectAccountId: this.localDevProcess.targetProjectAccountId,
         targetTestingAccountId: this.localDevProcess.targetTestingAccountId,
+        autoUploadEnabled: this.localDevProcess.autoUploadAvailable
+          ? this.localDevProcess.autoUploadEnabled
+          : undefined,
       },
     });
   }
@@ -200,11 +209,27 @@ class LocalDevWebsocketServer {
     });
   }
 
+  private setupUploadInProgressListener(websocket: WebSocket) {
+    const listener = (uploadInProgress: boolean) => {
+      this.cliWebSocketServer.sendMessage(websocket, {
+        type: LOCAL_DEV_UI_MESSAGE_SEND_TYPES.UPLOAD_IN_PROGRESS,
+        data: { uploadInProgress },
+      });
+    };
+
+    this.localDevProcess.addStateListener('uploadInProgress', listener);
+
+    websocket.on('close', () => {
+      this.localDevProcess.removeStateListener('uploadInProgress', listener);
+    });
+  }
+
   private setupStateListeners(websocket: WebSocket) {
     this.setupProjectNodesListener(websocket);
     this.setupAppDataListener(websocket);
     this.setupUploadWarningsListener(websocket);
     this.setupDevServersStartedListener(websocket);
+    this.setupUploadInProgressListener(websocket);
   }
 
   async start(): Promise<void> {

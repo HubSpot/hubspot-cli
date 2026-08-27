@@ -13,6 +13,7 @@ import {
 import { getProjectDetailUrl } from '../../lib/projects/urls.js';
 import moment from 'moment';
 import { promptUser } from '../../lib/prompts/promptUtils.js';
+import { isPromptExitError } from '../../lib/errors/PromptExitError.js';
 import { uiLogger } from '../../lib/ui/logger.js';
 import { logError, ApiErrorContext } from '../../lib/errorHandlers/index.js';
 import {
@@ -20,6 +21,7 @@ import {
   ConfigArgs,
   AccountArgs,
   EnvironmentArgs,
+  JSONOutputArgs,
   YargsCommandModule,
 } from '../../types/Yargs.js';
 import { makeWrappedYargsHandler } from '../../lib/yargs/makeWrappedYargsHandler.js';
@@ -27,6 +29,11 @@ import { EXIT_CODES } from '../../lib/enums/exitCodes.js';
 import { makeYargsBuilder } from '../../lib/yargsUtils.js';
 import { commands } from '../../lang/en.js';
 import { renderTable } from '../../ui/render.js';
+import {
+  ProjectBuildsListJsonOutput,
+  ProjectBuildsListSchema,
+  mapBuildToJsonOutput,
+} from '../../lib/jsonOutput.js';
 
 const command = 'list-builds';
 const describe = commands.project.listBuilds.describe;
@@ -34,7 +41,11 @@ const describe = commands.project.listBuilds.describe;
 export type ProjectListBuildsArgs = CommonArgs &
   ConfigArgs &
   AccountArgs &
-  EnvironmentArgs & { project?: string; limit?: number };
+  EnvironmentArgs &
+  JSONOutputArgs<ProjectBuildsListJsonOutput> & {
+    project?: string;
+    limit?: number;
+  };
 
 async function fetchAndDisplayBuilds(
   accountId: number,
@@ -75,7 +86,7 @@ async function fetchAndDisplayBuilds(
     );
   }
 
-  if (options && options.after) {
+  if (options.after) {
     if (results.length > 0) {
       uiLogger.log(
         commands.project.listBuilds.showingNextBuilds(
@@ -97,7 +108,10 @@ async function fetchAndDisplayBuilds(
     );
   }
 
-  if (paging && paging.next) {
+  const canPromptForMore =
+    options.limit === undefined && Boolean(process.stdin.isTTY);
+
+  if (paging?.next?.after && canPromptForMore) {
     await promptUser({
       name: 'more',
       message: commands.project.listBuilds.continueOrExitPrompt,
@@ -112,7 +126,14 @@ async function fetchAndDisplayBuilds(
 async function handler(
   args: ArgumentsCamelCase<ProjectListBuildsArgs>
 ): Promise<void> {
-  const { project: projectFlagValue, limit, derivedAccountId, exit } = args;
+  const {
+    project: projectFlagValue,
+    limit,
+    derivedAccountId,
+    exit,
+    json: formatOutputAsJson,
+    addJsonOutput,
+  } = args;
 
   let projectName = projectFlagValue;
 
@@ -134,8 +155,29 @@ async function handler(
 
   try {
     const { data: project } = await fetchProject(derivedAccountId, projectName);
-    await fetchAndDisplayBuilds(derivedAccountId, project, { limit });
+
+    if (formatOutputAsJson) {
+      const {
+        data: { results, paging },
+      } = await fetchProjectBuilds(derivedAccountId, project.name, { limit });
+
+      addJsonOutput({
+        projectName: project.name,
+        deployedBuildId: project.deployedBuildId,
+        results: results.map(build =>
+          mapBuildToJsonOutput(build, project.deployedBuildId)
+        ),
+        paging: paging?.next?.after
+          ? { next: { after: paging.next.after } }
+          : undefined,
+      });
+    } else {
+      await fetchAndDisplayBuilds(derivedAccountId, project, { limit });
+    }
   } catch (e) {
+    if (isPromptExitError(e)) {
+      return exit(e.exitCode);
+    }
     if (isHubSpotHttpError(e) && e.status === 404) {
       uiLogger.error(
         commands.project.listBuilds.errors.projectNotFound(projectName)
@@ -149,7 +191,9 @@ async function handler(
         })
       );
     }
+    return exit(EXIT_CODES.ERROR);
   }
+
   return exit(EXIT_CODES.SUCCESS);
 }
 
@@ -161,12 +205,20 @@ function projectListBuildsBuilder(yargs: Argv): Argv<ProjectListBuildsArgs> {
     },
     limit: {
       describe: commands.project.listBuilds.options.limit.describe,
-      type: 'string',
+      type: 'number',
     },
   });
 
   yargs.example([
     ['$0 project list-builds', commands.project.listBuilds.examples.default],
+    [
+      '$0 project list-builds --limit=5',
+      commands.project.listBuilds.examples.withLimit,
+    ],
+    [
+      '$0 project list-builds --json',
+      commands.project.listBuilds.examples.json,
+    ],
   ]);
 
   return yargs as Argv<ProjectListBuildsArgs>;
@@ -181,6 +233,7 @@ const builder = makeYargsBuilder<ProjectListBuildsArgs>(
     useConfigOptions: true,
     useAccountOptions: true,
     useEnvironmentOptions: true,
+    useJSONOutputOptions: true,
   }
 );
 
@@ -190,7 +243,9 @@ const projectListBuildsCommand: YargsCommandModule<
 > = {
   command,
   describe,
-  handler: makeWrappedYargsHandler('project-list-builds', handler),
+  handler: makeWrappedYargsHandler('project-list-builds', handler, {
+    jsonOutputSchema: ProjectBuildsListSchema,
+  }),
   builder,
 };
 

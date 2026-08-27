@@ -21,6 +21,7 @@ import * as errorHandlers from '../../../lib/errorHandlers/index.js';
 import { showMcpPromotionNudge } from '../../../lib/mcp/promotion.js';
 import { EXIT_CODES } from '../../../lib/enums/exitCodes.js';
 import { PROJECT_ERROR_TYPES } from '../../../lib/constants.js';
+import { commands } from '../../../lang/en.js';
 import projectUploadCommand, { ProjectUploadArgs } from '../upload.js';
 
 vi.mock('../../../lib/commonOpts');
@@ -166,6 +167,26 @@ describe('commands/project/upload', () => {
         skipNpmAudit: false,
         formatOutputAsJson: false,
       } as ArgumentsCamelCase<ProjectUploadArgs>;
+    });
+
+    it('should log a deprecation notice when --force-create is used', async () => {
+      await projectUploadCommand.handler({ ...args, forceCreate: true });
+
+      expect(uiLogger.log).toHaveBeenCalledWith(
+        expect.stringContaining(
+          commands.project.upload.logs.forceCreateDeprecated
+        )
+      );
+    });
+
+    it('should not log the --force-create deprecation notice by default', async () => {
+      await projectUploadCommand.handler(args);
+
+      expect(uiLogger.log).not.toHaveBeenCalledWith(
+        expect.stringContaining(
+          commands.project.upload.logs.forceCreateDeprecated
+        )
+      );
     });
 
     it('should get and validate project config', async () => {
@@ -323,7 +344,7 @@ describe('commands/project/upload', () => {
           buildId: 456,
           buildResult: {
             isAutoDeployEnabled: false,
-            platformVersion: '2026.09',
+            platformVersion: '2027.03-beta',
           },
         },
         uploadError: null,

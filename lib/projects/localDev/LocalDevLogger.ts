@@ -169,6 +169,11 @@ class LocalDevLogger {
       );
     }
 
+    if (this.state.autoUploadEnabled) {
+      uiLogger.log('');
+      uiLogger.log(lib.LocalDevManager.autoUploadEnabled);
+    }
+
     uiLogger.log('');
     uiLogger.log(lib.LocalDevManager.quitHelper);
     uiLine();
@@ -195,6 +200,24 @@ class LocalDevLogger {
 
   uploadInitiated(): void {
     uiLogger.log(lib.LocalDevProcess.uploadInitiated);
+  }
+
+  autoUploadScheduled(filePath: string): void {
+    uiLogger.debug(lib.LocalDevProcess.autoUploadScheduled(filePath));
+  }
+
+  autoUploadTriggered(): void {
+    uiLogger.debug(lib.LocalDevProcess.autoUploadTriggered);
+  }
+
+  autoUploadInProgress(): void {
+    uiLogger.debug(lib.LocalDevProcess.autoUploadInProgress);
+  }
+
+  autoUploadToggled(enabled: boolean): void {
+    uiLogger.log('');
+    uiLogger.log(lib.LocalDevProcess.autoUploadToggled(enabled));
+    uiLogger.log('');
   }
 
   deployInitiated(): void {

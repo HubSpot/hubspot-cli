@@ -296,11 +296,44 @@ describe('lib/projects/release', () => {
       getBuildStatusSpy.mockReturnValue(
         mockHubSpotHttpResponse({
           buildId: 8,
-          platformVersion: PLATFORM_VERSIONS.v2026_09_BETA,
+          platformVersion: PLATFORM_VERSIONS.v2027_03_BETA,
         })
       );
       const result = await validateBuildForRelease(accountId, projectName, 8);
       expect(result).toBe(true);
+    });
+
+    it('returns true for unstable', async () => {
+      getBuildStatusSpy.mockReturnValue(
+        mockHubSpotHttpResponse({
+          buildId: 8,
+          platformVersion: PLATFORM_VERSIONS.UNSTABLE,
+        })
+      );
+      const result = await validateBuildForRelease(accountId, projectName, 8);
+      expect(result).toBe(true);
+    });
+
+    it('returns false for the 2026.09 versions, which carry component permissions but not release management', async () => {
+      getBuildStatusSpy.mockReturnValue(
+        mockHubSpotHttpResponse({
+          buildId: 8,
+          platformVersion: PLATFORM_VERSIONS.v2026_09_BETA,
+        })
+      );
+      expect(await validateBuildForRelease(accountId, projectName, 8)).toBe(
+        false
+      );
+
+      getBuildStatusSpy.mockReturnValue(
+        mockHubSpotHttpResponse({
+          buildId: 9,
+          platformVersion: PLATFORM_VERSIONS.v2026_09,
+        })
+      );
+      expect(await validateBuildForRelease(accountId, projectName, 9)).toBe(
+        false
+      );
     });
 
     it('returns false when the build does not meet the minimum platform version', async () => {

@@ -169,6 +169,12 @@ function projectDevBuilder(yargs: Argv): Argv<ProjectDevArgs> {
     default: LOCAL_DEV_DEFAULT_PORT,
   });
 
+  yargs.option('auto-upload', {
+    type: 'boolean',
+    description: commands.project.dev.options.autoUpload,
+    default: false,
+  });
+
   yargs.example([['$0 project dev', commands.project.dev.examples.default]]);
 
   yargs.conflicts('profile', 'testing-account');

@@ -37,6 +37,7 @@ import {
 import { ProjectPollResult } from '../../types/Projects.js';
 import { makeYargsBuilder } from '../../lib/yargsUtils.js';
 import { projectProfilePrompt } from '../../lib/prompts/projectProfilePrompt.js';
+import { uiDeprecatedTag } from '../../lib/ui/index.js';
 import { showMcpPromotionNudge } from '../../lib/mcp/promotion.js';
 import { PLATFORM_VERSIONS } from '@hubspot/project-parsing-lib/constants';
 
@@ -105,6 +106,10 @@ async function handler(
     addUsageMetadata,
     addJsonOutput,
   } = args;
+
+  if (forceCreate) {
+    uiDeprecatedTag(commands.project.upload.logs.forceCreateDeprecated);
+  }
 
   const { projectConfig, projectDir } = await getProjectConfig();
 
@@ -217,7 +222,7 @@ async function handler(
         if (
           meetsMinimumPlatformVersion(
             result.buildResult.platformVersion,
-            PLATFORM_VERSIONS.v2026_09_BETA
+            PLATFORM_VERSIONS.v2027_03_BETA
           )
         ) {
           const releaseCommand = `hs project release create --build=${result.buildId}`;

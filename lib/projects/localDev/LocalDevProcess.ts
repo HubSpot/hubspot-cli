@@ -39,11 +39,16 @@ import {
 import { lib } from '../../../lang/en.js';
 import { debugError } from '../../errorHandlers/index.js';
 
+const AUTO_UPLOAD_DEBOUNCE_MS = 2000;
+
 class LocalDevProcess {
   private state: LocalDevState;
   private _logger: LocalDevLogger;
   private devServerManager: DevServerManager;
   private devSessionManager: DevSessionManager;
+  private autoUploadTimeout: NodeJS.Timeout | null = null;
+  private pendingAutoUpload = false;
+  private autoUploadStopped = false;
 
   constructor(options: LocalDevStateConstructorOptions) {
     this.state = new LocalDevState(options);
@@ -84,6 +89,31 @@ class LocalDevProcess {
 
   get logger(): LocalDevLogger {
     return this._logger;
+  }
+
+  get autoUploadEnabled(): boolean {
+    return this.state.autoUploadEnabled;
+  }
+
+  setAutoUploadEnabled(enabled: boolean): void {
+    this.state.autoUploadEnabled = enabled;
+    this.logger.autoUploadToggled(enabled);
+    if (!enabled) {
+      if (this.autoUploadTimeout) {
+        clearTimeout(this.autoUploadTimeout);
+        this.autoUploadTimeout = null;
+      }
+      this.pendingAutoUpload = false;
+    }
+  }
+
+  get autoUploadAvailable(): boolean {
+    return this.isAutoDeployEnabled();
+  }
+
+  private isAutoDeployEnabled(): boolean {
+    const { deployedBuild, latestBuild } = this.state.projectData;
+    return (deployedBuild ?? latestBuild)?.isAutoDeployEnabled ?? true;
   }
 
   private async setupDevServers(): Promise<boolean> {
@@ -200,11 +230,52 @@ class LocalDevProcess {
     } catch (e) {
       this.logger.fileChangeError(e);
     }
+    this.scheduleAutoUpload(filePath);
   }
 
-  async handleConfigFileChange(): Promise<void> {
+  async handleConfigFileChange(configFilePath: string): Promise<void> {
     await this.updateProjectNodes();
-    this.logger.uploadWarning();
+    if (this.state.autoUploadEnabled) {
+      this.scheduleAutoUpload(configFilePath);
+    } else {
+      this.logger.uploadWarning();
+    }
+  }
+
+  private scheduleAutoUpload(changedPath?: string): void {
+    if (!this.state.autoUploadEnabled || this.autoUploadStopped) {
+      return;
+    }
+    this.logger.autoUploadScheduled(changedPath ?? 'project files');
+    if (this.autoUploadTimeout) {
+      clearTimeout(this.autoUploadTimeout);
+    }
+    this.autoUploadTimeout = setTimeout(() => {
+      this.autoUploadTimeout = null;
+      void this.runAutoUpload();
+    }, AUTO_UPLOAD_DEBOUNCE_MS);
+  }
+
+  private async runAutoUpload(): Promise<void> {
+    if (this.autoUploadStopped) {
+      return;
+    }
+    if (this.state.uploadInProgress) {
+      this.logger.autoUploadInProgress();
+      this.pendingAutoUpload = true;
+      return;
+    }
+    this.logger.autoUploadTriggered();
+    try {
+      await this.uploadProject();
+    } catch (e) {
+      this.logger.uploadError(e);
+    } finally {
+      if (this.pendingAutoUpload) {
+        this.pendingAutoUpload = false;
+        this.scheduleAutoUpload();
+      }
+    }
   }
 
   async start(): Promise<void> {
@@ -218,10 +289,6 @@ class LocalDevProcess {
 
     this.logger.startupMessage();
 
-    if (isConfigFlagEnabled(CONFIG_FLAGS.AUTO_OPEN_BROWSER, true)) {
-      this.openLocalDevUi();
-    }
-
     await this.startDevServers();
 
     const devSessionRegistered = await this.devSessionManager.registerSession();
@@ -230,11 +297,22 @@ class LocalDevProcess {
       return this.state.actions.exit(EXIT_CODES.ERROR);
     }
 
+    if (isConfigFlagEnabled(CONFIG_FLAGS.AUTO_OPEN_BROWSER, true)) {
+      this.openLocalDevUi();
+    }
+
     this.state.devServersStarted = true;
     this.logger.monitorConsoleOutput();
   }
 
   async stop(showProgress = true): Promise<void> {
+    this.autoUploadStopped = true;
+    this.pendingAutoUpload = false;
+    if (this.autoUploadTimeout) {
+      clearTimeout(this.autoUploadTimeout);
+      this.autoUploadTimeout = null;
+    }
+
     if (showProgress) {
       this.logger.cleanupStart();
     }
@@ -257,6 +335,15 @@ class LocalDevProcess {
   }
 
   async uploadProject(): Promise<LocalDevProjectUploadResult> {
+    this.state.uploadInProgress = true;
+    try {
+      return await this.performUpload();
+    } finally {
+      this.state.uploadInProgress = false;
+    }
+  }
+
+  private async performUpload(): Promise<LocalDevProjectUploadResult> {
     this.logger.uploadInitiated();
     const isUploadable = await this.projectConfigValidForUpload();
 
