@@ -4,6 +4,7 @@ import {
   CommonArgs,
   ConfigArgs,
   EnvironmentArgs,
+  JSONOutputArgs,
   YargsCommandModule,
 } from '../../types/Yargs.js';
 import { makeWrappedYargsHandler } from '../../lib/yargs/makeWrappedYargsHandler.js';
@@ -15,11 +16,20 @@ import { EXIT_CODES } from '../../lib/enums/exitCodes.js';
 import { uiLogger } from '../../lib/ui/logger.js';
 import { commands } from '../../lang/en.js';
 import { renderTable } from '../../ui/render.js';
+import {
+  ProjectListJsonOutput,
+  ProjectListSchema,
+  mapProjectToListItem,
+} from '../../lib/jsonOutput/projectList.js';
 
 const command = ['list', 'ls'];
 const describe = commands.project.list.describe;
 
-type ProjectListArgs = CommonArgs & ConfigArgs & AccountArgs & EnvironmentArgs;
+export type ProjectListArgs = CommonArgs &
+  ConfigArgs &
+  AccountArgs &
+  EnvironmentArgs &
+  JSONOutputArgs<ProjectListJsonOutput>;
 
 async function getProjectData(accountId: number): Promise<Project[]> {
   const { data: projects } = await fetchProjects(accountId);
@@ -40,7 +50,7 @@ function formatProjectsAsTableRows(projects: Project[]): string[][] {
 async function handler(
   args: ArgumentsCamelCase<ProjectListArgs>
 ): Promise<void> {
-  const { derivedAccountId, exit } = args;
+  const { derivedAccountId, formatOutputAsJson, exit, addJsonOutput } = args;
 
   let projectData: Project[];
   try {
@@ -51,11 +61,24 @@ async function handler(
   }
 
   if (projectData.length === 0) {
+    if (formatOutputAsJson) {
+      addJsonOutput({ accountId: derivedAccountId, results: [] });
+      return exit(EXIT_CODES.SUCCESS);
+    }
     uiLogger.error(
       commands.project.list.errors.noProjectsFound(derivedAccountId)
     );
     return exit(EXIT_CODES.ERROR);
   }
+
+  if (formatOutputAsJson) {
+    addJsonOutput({
+      accountId: derivedAccountId,
+      results: projectData.map(mapProjectToListItem),
+    });
+    return exit(EXIT_CODES.SUCCESS);
+  }
+
   const projectListData = formatProjectsAsTableRows(projectData);
 
   const tableHeader = [
@@ -68,7 +91,10 @@ async function handler(
 }
 
 function projectListBuilder(yargs: Argv): Argv<ProjectListArgs> {
-  yargs.example([['$0 project list']]);
+  yargs.example([
+    ['$0 project list', commands.project.list.examples.default],
+    ['$0 project list --json', commands.project.list.examples.json],
+  ]);
 
   return yargs as Argv<ProjectListArgs>;
 }
@@ -82,13 +108,16 @@ const builder = makeYargsBuilder<ProjectListArgs>(
     useConfigOptions: true,
     useAccountOptions: true,
     useEnvironmentOptions: true,
+    useJSONOutputOptions: true,
   }
 );
 
 const projectListCommand: YargsCommandModule<unknown, ProjectListArgs> = {
   command,
   describe,
-  handler: makeWrappedYargsHandler('project-list', handler),
+  handler: makeWrappedYargsHandler('project-list', handler, {
+    jsonOutputSchema: ProjectListSchema,
+  }),
   builder,
 };
 

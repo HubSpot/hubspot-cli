@@ -1,4 +1,4 @@
-import { TextContentResponse } from '../../types.js';
+import { McpToolResponse } from '../../types.js';
 import { Tool } from '../../Tool.js';
 import {
   McpServer,
@@ -50,7 +50,7 @@ export class GetConfigValuesTool extends Tool<InputSchemaType> {
     featureType,
     absoluteCurrentWorkingDirectory,
     absoluteProjectPath,
-  }: InputSchemaType): Promise<TextContentResponse> {
+  }: InputSchemaType): Promise<McpToolResponse> {
     setupHubSpotConfig(absoluteProjectPath ?? absoluteCurrentWorkingDirectory);
     try {
       if (isLegacyProject(platformVersion)) {

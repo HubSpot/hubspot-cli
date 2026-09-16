@@ -1,4 +1,4 @@
-import { TextContentResponse } from '../../types.js';
+import { McpToolResponse } from '../../types.js';
 import { Tool } from '../../Tool.js';
 import {
   McpServer,
@@ -10,10 +10,7 @@ import { formatTextContents } from '../../utils/content.js';
 import { isHubSpotHttpError } from '@hubspot/local-dev-lib/errors/index';
 import { http } from '@hubspot/local-dev-lib/http';
 import { ProjectLog } from '@hubspot/local-dev-lib/types/ProjectLog';
-import {
-  getProjectConfig,
-  validateProjectConfig,
-} from '../../../lib/projects/config.js';
+import { getProjectConfig } from '../../../lib/projects/config.js';
 import {
   absoluteCurrentWorkingDirectory,
   absoluteProjectPath,
@@ -116,13 +113,12 @@ export class GetBuildLogsTool extends Tool<GetBuildLogsInputSchema> {
     absoluteCurrentWorkingDirectory,
     buildId,
     logLevel,
-  }: GetBuildLogsInputSchema): Promise<TextContentResponse> {
+  }: GetBuildLogsInputSchema): Promise<McpToolResponse> {
     setupHubSpotConfig(absoluteProjectPath);
 
     try {
       const { projectConfig, projectDir } =
-        await getProjectConfig(absoluteProjectPath);
-      validateProjectConfig(projectConfig, projectDir);
+        getProjectConfig(absoluteProjectPath);
 
       const { recommended } = await discoverAccountTargets({
         projectDir,

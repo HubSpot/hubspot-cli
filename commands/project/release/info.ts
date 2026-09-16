@@ -2,10 +2,7 @@ import { Argv, ArgumentsCamelCase } from 'yargs';
 import { getReleaseInfo, listReleases } from '../../../api/releases.js';
 import { isHubSpotHttpError } from '@hubspot/local-dev-lib/errors/index';
 import { logError, ApiErrorContext } from '../../../lib/errorHandlers/index.js';
-import {
-  getProjectConfig,
-  validateProjectConfig,
-} from '../../../lib/projects/config.js';
+import { getProjectConfig } from '../../../lib/projects/config.js';
 import { listPrompt } from '../../../lib/prompts/promptUtils.js';
 import { EXIT_CODES } from '../../../lib/enums/exitCodes.js';
 import { uiLogger } from '../../../lib/ui/logger.js';
@@ -29,7 +26,7 @@ import {
   ReleaseJsonOutput,
   ReleaseSchema,
   mapReleaseToJsonOutput,
-} from '../../../lib/jsonOutput.js';
+} from '../../../lib/jsonOutput/release.js';
 
 const command = 'info';
 // const describe = commands.project.release.info.describe;
@@ -87,10 +84,10 @@ async function handler(
     addJsonOutput,
   } = args;
 
-  const { projectConfig, projectDir } = await getProjectConfig();
+  let projectConfig;
 
   try {
-    validateProjectConfig(projectConfig, projectDir);
+    ({ projectConfig } = getProjectConfig());
   } catch (error) {
     logError(error);
     return exit(EXIT_CODES.ERROR);

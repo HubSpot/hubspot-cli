@@ -5,7 +5,7 @@ import {
 } from '@hubspot/local-dev-lib/config';
 import { uiLogger } from './logger.js';
 import { supportsHyperlinkModule } from './supportHyperlinks.js';
-import { supportsColor } from './supportsColor.js';
+import { isColorEnabled } from './supportsColor.js';
 import { uiMessages } from './uiMessages.js';
 
 import { HUBSPOT_ACCOUNT_TYPE_STRINGS } from '@hubspot/local-dev-lib/constants/config';
@@ -28,7 +28,7 @@ export function uiLine(): void {
 export function getTerminalUISupport(): TerminalSupport {
   return {
     hyperlinks: supportsHyperlinkModule.stdout,
-    color: supportsColor.stdout.hasBasic,
+    color: isColorEnabled(),
   };
 }
 

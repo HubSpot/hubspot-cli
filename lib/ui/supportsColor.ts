@@ -32,6 +32,23 @@ function translateLevel(level: number): ColorSupportLevel {
   };
 }
 
+function resolveColorPreference(): 'always' | 'never' | 'auto' {
+  const { NO_COLOR, COLOR, FORCE_COLOR, TERM } = env;
+
+  if (hasFlag('no-color') || hasFlag('noColor')) return 'never';
+  if (NO_COLOR) return 'never';
+  if (COLOR === 'false' || COLOR === '0') return 'never';
+  if (FORCE_COLOR !== undefined) {
+    return FORCE_COLOR === '0' || FORCE_COLOR === 'false' ? 'never' : 'always';
+  }
+  if (TERM === 'dumb') return 'never';
+  return 'auto';
+}
+
+export function hasColorDisableSignal(): boolean {
+  return resolveColorPreference() === 'never';
+}
+
 function _supportsColor(
   haveStream: { isTTY?: boolean } | null,
   { streamIsTTY }: { streamIsTTY?: boolean } = {}
@@ -41,14 +58,6 @@ function _supportsColor(
   }
 
   const min = 0;
-
-  if (env.TERM === 'dumb') {
-    return min;
-  }
-
-  if (hasFlag('noColor')) {
-    return 0;
-  }
 
   if (process.platform === 'win32') {
     // Windows 10 build 10586 is the first Windows release that supports 256 colors.
@@ -139,3 +148,13 @@ export const supportsColor = {
   stdout: createSupportsColor({ isTTY: tty.isatty(1) }),
   stderr: createSupportsColor({ isTTY: tty.isatty(2) }),
 };
+
+export function isColorEnabled(
+  stream: { isTTY?: boolean } | null = process.stdout
+): boolean {
+  const preference = resolveColorPreference();
+  if (preference !== 'auto') {
+    return preference === 'always';
+  }
+  return createSupportsColor(stream, { streamIsTTY: stream?.isTTY }).hasBasic;
+}

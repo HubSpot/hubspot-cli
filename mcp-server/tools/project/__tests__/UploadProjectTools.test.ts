@@ -60,7 +60,7 @@ describe('mcp-server/tools/project/UploadProjectTools', () => {
     mockRegisteredTool = {} as RegisteredTool;
     mockMcpServer.registerTool.mockReturnValue(mockRegisteredTool);
     mockMcpFeedbackRequest.mockResolvedValue('');
-    mockGetProjectConfig.mockResolvedValue({
+    mockGetProjectConfig.mockReturnValue({
       projectConfig: {
         srcDir: 'src',
         name: 'test-project',
@@ -85,6 +85,7 @@ describe('mcp-server/tools/project/UploadProjectTools', () => {
             'Uploads the HubSpot project in current working directory.'
           ),
           inputSchema: expect.any(Object),
+          outputSchema: expect.any(Object),
         }),
         expect.any(Function)
       );
@@ -116,6 +117,8 @@ describe('mcp-server/tools/project/UploadProjectTools', () => {
             'upload',
             '--force',
             'true',
+            '--json',
+            'true',
             '--message',
             'Test upload message',
           ]),
@@ -126,13 +129,44 @@ describe('mcp-server/tools/project/UploadProjectTools', () => {
       expect(result).toEqual({
         content: [
           { type: 'text', text: 'Project uploaded successfully' },
-          { type: 'text', text: '' },
           {
             type: 'text',
             text: '\nIMPORTANT: If this project contains cards, remember that uploading does NOT make them live automatically. Cards must be manually added to a view in HubSpot to become visible to users.',
           },
         ],
+        structuredContent: {},
       });
+    });
+
+    it('should return parsed JSON output as structuredContent', async () => {
+      const uploadOutput = {
+        targetAccount: {
+          accountId: 12345,
+          accountName: 'Test Account',
+          accountType: 'STANDARD',
+        },
+        buildId: 42,
+        deployId: 7,
+      };
+      mockRunCommandInDir.mockResolvedValue({
+        stdout: JSON.stringify(uploadOutput, null, 2),
+        stderr: '',
+      });
+
+      const result = await tool.handler(input);
+
+      expect(result.structuredContent).toEqual(uploadOutput);
+    });
+
+    it('should fall back to empty structuredContent when output is not valid schema JSON', async () => {
+      mockRunCommandInDir.mockResolvedValue({
+        stdout: JSON.stringify({ buildId: 'not-a-number' }),
+        stderr: '',
+      });
+
+      const result = await tool.handler(input);
+
+      expect(result.structuredContent).toEqual({});
     });
 
     it('should handle upload with warnings', async () => {
@@ -232,6 +266,7 @@ describe('mcp-server/tools/project/UploadProjectTools', () => {
           text: 'Ask the user which profile they would like to use for the upload.',
         },
       ]);
+      expect(result.structuredContent).toEqual({});
     });
 
     it('should handle empty stdout and stderr', async () => {
@@ -243,8 +278,6 @@ describe('mcp-server/tools/project/UploadProjectTools', () => {
       const result = await tool.handler(input);
 
       expect(result.content).toEqual([
-        { type: 'text', text: '' },
-        { type: 'text', text: '' },
         {
           type: 'text',
           text: '\nIMPORTANT: If this project contains cards, remember that uploading does NOT make them live automatically. Cards must be manually added to a view in HubSpot to become visible to users.',

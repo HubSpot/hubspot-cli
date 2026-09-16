@@ -97,9 +97,13 @@ describe('commands/project/lint', () => {
     });
 
     it('should track the command usage', async () => {
-      getProjectConfigSpy.mockResolvedValue({
+      getProjectConfigSpy.mockReturnValue({
         projectDir: '/test/project',
-        projectConfig: null,
+        projectConfig: {
+          name: 'test',
+          srcDir: 'src',
+          platformVersion: '2025.2',
+        },
       });
       getUieLintablePackageJsonLocationsSpy.mockResolvedValue([]);
 
@@ -122,38 +126,16 @@ describe('commands/project/lint', () => {
       await projectLintCommand.handler(args);
 
       expect(uiLogger.error).toHaveBeenCalledTimes(1);
-      expect(uiLogger.error).toHaveBeenCalledWith(error.message);
-
       expect(processExitSpy).toHaveBeenCalledTimes(1);
       expect(processExitSpy).toHaveBeenCalledWith(EXIT_CODES.ERROR);
     });
 
-    it('should log an error and exit when the project config is not defined', async () => {
-      getProjectConfigSpy.mockResolvedValueOnce({
-        projectDir: null,
-        projectConfig: null,
+    it('should log an error and exit when not in a project directory', async () => {
+      getProjectConfigSpy.mockImplementationOnce(() => {
+        throw new Error('No project config found');
       });
       await projectLintCommand.handler(args);
 
-      expect(uiLogger.error).toHaveBeenCalledTimes(1);
-      expect(uiLogger.error).toHaveBeenCalledWith(
-        'No project detected. Run this command from a project directory.'
-      );
-      expect(processExitSpy).toHaveBeenCalledTimes(1);
-      expect(processExitSpy).toHaveBeenCalledWith(EXIT_CODES.ERROR);
-    });
-
-    it('should log an error and exit when the project config has no projectDir', async () => {
-      getProjectConfigSpy.mockResolvedValueOnce({
-        projectDir: null,
-        projectConfig: null,
-      });
-      await projectLintCommand.handler(args);
-
-      expect(uiLogger.error).toHaveBeenCalledTimes(1);
-      expect(uiLogger.error).toHaveBeenCalledWith(
-        'No project detected. Run this command from a project directory.'
-      );
       expect(processExitSpy).toHaveBeenCalledTimes(1);
       expect(processExitSpy).toHaveBeenCalledWith(EXIT_CODES.ERROR);
     });
@@ -162,9 +144,13 @@ describe('commands/project/lint', () => {
       const projectDir = '/test/project';
       const lintLocation = path.join(projectDir, 'component1');
 
-      getProjectConfigSpy.mockResolvedValue({
+      getProjectConfigSpy.mockReturnValue({
         projectDir,
-        projectConfig: null,
+        projectConfig: {
+          name: 'test',
+          srcDir: 'src',
+          platformVersion: '2025.2',
+        },
       });
       getUieLintablePackageJsonLocationsSpy.mockResolvedValue([lintLocation]);
       areAllLintPackagesInstalledSpy.mockReturnValueOnce(true);
@@ -180,9 +166,13 @@ describe('commands/project/lint', () => {
       const projectDir = '/test/project';
       const lintLocation = path.join(projectDir, 'component1');
 
-      getProjectConfigSpy.mockResolvedValue({
+      getProjectConfigSpy.mockReturnValue({
         projectDir,
-        projectConfig: null,
+        projectConfig: {
+          name: 'test',
+          srcDir: 'src',
+          platformVersion: '2025.2',
+        },
       });
       getUieLintablePackageJsonLocationsSpy.mockResolvedValue([lintLocation]);
       areAllLintPackagesInstalledSpy
@@ -219,9 +209,13 @@ describe('commands/project/lint', () => {
       const projectDir = '/test/project';
       const lintLocation = path.join(projectDir, 'component1');
 
-      getProjectConfigSpy.mockResolvedValue({
+      getProjectConfigSpy.mockReturnValue({
         projectDir,
-        projectConfig: null,
+        projectConfig: {
+          name: 'test',
+          srcDir: 'src',
+          platformVersion: '2025.2',
+        },
       });
       getUieLintablePackageJsonLocationsSpy.mockResolvedValue([lintLocation]);
       areAllLintPackagesInstalledSpy.mockReturnValue(false);
@@ -256,9 +250,13 @@ describe('commands/project/lint', () => {
       const projectDir = '/test/project';
       const lintLocation = path.join(projectDir, 'component1');
 
-      getProjectConfigSpy.mockResolvedValue({
+      getProjectConfigSpy.mockReturnValue({
         projectDir,
-        projectConfig: null,
+        projectConfig: {
+          name: 'test',
+          srcDir: 'src',
+          platformVersion: '2025.2',
+        },
       });
       getUieLintablePackageJsonLocationsSpy.mockResolvedValue([lintLocation]);
       areAllLintPackagesInstalledSpy
@@ -287,9 +285,13 @@ describe('commands/project/lint', () => {
       const projectDir = '/test/project';
       const lintLocation = path.join(projectDir, 'component1');
 
-      getProjectConfigSpy.mockResolvedValue({
+      getProjectConfigSpy.mockReturnValue({
         projectDir,
-        projectConfig: null,
+        projectConfig: {
+          name: 'test',
+          srcDir: 'src',
+          platformVersion: '2025.2',
+        },
       });
       getUieLintablePackageJsonLocationsSpy.mockResolvedValue([lintLocation]);
       areAllLintPackagesInstalledSpy
@@ -315,9 +317,13 @@ describe('commands/project/lint', () => {
       const lintLocation2 = path.join(projectDir, 'component2'); // Needs packages
       const lintLocation3 = path.join(projectDir, 'component3'); // Needs packages
 
-      getProjectConfigSpy.mockResolvedValue({
+      getProjectConfigSpy.mockReturnValue({
         projectDir,
-        projectConfig: null,
+        projectConfig: {
+          name: 'test',
+          srcDir: 'src',
+          platformVersion: '2025.2',
+        },
       });
       getUieLintablePackageJsonLocationsSpy.mockResolvedValue([
         lintLocation1,
@@ -362,9 +368,13 @@ describe('commands/project/lint', () => {
       const projectDir = '/test/project';
       const lintLocation = path.join(projectDir, 'component1');
 
-      getProjectConfigSpy.mockResolvedValue({
+      getProjectConfigSpy.mockReturnValue({
         projectDir,
-        projectConfig: null,
+        projectConfig: {
+          name: 'test',
+          srcDir: 'src',
+          platformVersion: '2025.2',
+        },
       });
       getUieLintablePackageJsonLocationsSpy.mockResolvedValue([lintLocation]);
       areAllLintPackagesInstalledSpy.mockReturnValue(false);
@@ -392,9 +402,13 @@ describe('commands/project/lint', () => {
       const lintLocation1 = path.join(projectDir, 'component1');
       const lintLocation2 = path.join(projectDir, 'component2');
 
-      getProjectConfigSpy.mockResolvedValue({
+      getProjectConfigSpy.mockReturnValue({
         projectDir,
-        projectConfig: null,
+        projectConfig: {
+          name: 'test',
+          srcDir: 'src',
+          platformVersion: '2025.2',
+        },
       });
       getUieLintablePackageJsonLocationsSpy.mockResolvedValue([
         lintLocation1,
@@ -429,9 +443,13 @@ describe('commands/project/lint', () => {
       const lintLocation1 = path.join(projectDir, 'component1');
       const lintLocation2 = path.join(projectDir, 'component2');
 
-      getProjectConfigSpy.mockResolvedValue({
+      getProjectConfigSpy.mockReturnValue({
         projectDir,
-        projectConfig: null,
+        projectConfig: {
+          name: 'test',
+          srcDir: 'src',
+          platformVersion: '2025.2',
+        },
       });
       getUieLintablePackageJsonLocationsSpy.mockResolvedValue([
         lintLocation1,
@@ -467,9 +485,13 @@ describe('commands/project/lint', () => {
       const lintLocation1 = path.join(projectDir, 'component1');
       const lintLocation2 = path.join(projectDir, 'component2');
 
-      getProjectConfigSpy.mockResolvedValue({
+      getProjectConfigSpy.mockReturnValue({
         projectDir,
-        projectConfig: null,
+        projectConfig: {
+          name: 'test',
+          srcDir: 'src',
+          platformVersion: '2025.2',
+        },
       });
       getUieLintablePackageJsonLocationsSpy.mockResolvedValue([
         lintLocation1,
@@ -492,9 +514,13 @@ describe('commands/project/lint', () => {
     it('should handle empty project (no packages)', async () => {
       const projectDir = '/test/project';
 
-      getProjectConfigSpy.mockResolvedValue({
+      getProjectConfigSpy.mockReturnValue({
         projectDir,
-        projectConfig: null,
+        projectConfig: {
+          name: 'test',
+          srcDir: 'src',
+          platformVersion: '2025.2',
+        },
       });
       getUieLintablePackageJsonLocationsSpy.mockResolvedValue([]);
 
@@ -509,9 +535,13 @@ describe('commands/project/lint', () => {
       const projectDir = '/test/project';
       const lintLocation = path.join(projectDir, 'src', 'app', 'component1');
 
-      getProjectConfigSpy.mockResolvedValue({
+      getProjectConfigSpy.mockReturnValue({
         projectDir,
-        projectConfig: null,
+        projectConfig: {
+          name: 'test',
+          srcDir: 'src',
+          platformVersion: '2025.2',
+        },
       });
       getUieLintablePackageJsonLocationsSpy.mockResolvedValue([lintLocation]);
       areAllLintPackagesInstalledSpy.mockReturnValue(false);
@@ -538,9 +568,13 @@ describe('commands/project/lint', () => {
       const projectDir = '/test/project';
       const lintLocation = path.join(projectDir, 'component1');
 
-      getProjectConfigSpy.mockResolvedValue({
+      getProjectConfigSpy.mockReturnValue({
         projectDir,
-        projectConfig: null,
+        projectConfig: {
+          name: 'test',
+          srcDir: 'src',
+          platformVersion: '2025.2',
+        },
       });
       getUieLintablePackageJsonLocationsSpy.mockResolvedValue([lintLocation]);
       areAllLintPackagesInstalledSpy.mockReturnValue(true);
@@ -562,7 +596,10 @@ describe('commands/project/lint', () => {
           default: true,
         },
       ]);
-      expect(createEslintConfigSpy).toHaveBeenCalledWith(lintLocation, null);
+      expect(createEslintConfigSpy).toHaveBeenCalledWith(
+        lintLocation,
+        '2025.2'
+      );
       expect(lintPackagesSpy).toHaveBeenCalledWith([lintLocation], projectDir);
     });
 
@@ -570,7 +607,7 @@ describe('commands/project/lint', () => {
       const projectDir = '/test/project';
       const lintLocation = path.join(projectDir, 'component1');
 
-      getProjectConfigSpy.mockResolvedValue({
+      getProjectConfigSpy.mockReturnValue({
         projectDir,
         projectConfig: {
           name: 'p',
@@ -597,9 +634,13 @@ describe('commands/project/lint', () => {
       const projectDir = '/test/project';
       const lintLocation = path.join(projectDir, 'component1');
 
-      getProjectConfigSpy.mockResolvedValue({
+      getProjectConfigSpy.mockReturnValue({
         projectDir,
-        projectConfig: null,
+        projectConfig: {
+          name: 'test',
+          srcDir: 'src',
+          platformVersion: '2025.2',
+        },
       });
       getUieLintablePackageJsonLocationsSpy.mockResolvedValue([lintLocation]);
       areAllLintPackagesInstalledSpy.mockReturnValue(true);
@@ -622,9 +663,13 @@ describe('commands/project/lint', () => {
       const projectDir = '/test/project';
       const lintLocation = path.join(projectDir, 'component1');
 
-      getProjectConfigSpy.mockResolvedValue({
+      getProjectConfigSpy.mockReturnValue({
         projectDir,
-        projectConfig: null,
+        projectConfig: {
+          name: 'test',
+          srcDir: 'src',
+          platformVersion: '2025.2',
+        },
       });
       getUieLintablePackageJsonLocationsSpy.mockResolvedValue([lintLocation]);
       areAllLintPackagesInstalledSpy.mockReturnValue(true);
@@ -642,9 +687,13 @@ describe('commands/project/lint', () => {
       const lintLocation1 = path.join(projectDir, 'component1');
       const lintLocation2 = path.join(projectDir, 'component2');
 
-      getProjectConfigSpy.mockResolvedValue({
+      getProjectConfigSpy.mockReturnValue({
         projectDir,
-        projectConfig: null,
+        projectConfig: {
+          name: 'test',
+          srcDir: 'src',
+          platformVersion: '2025.2',
+        },
       });
       getUieLintablePackageJsonLocationsSpy.mockResolvedValue([
         lintLocation1,
@@ -659,17 +708,27 @@ describe('commands/project/lint', () => {
       await projectLintCommand.handler(args);
 
       expect(createEslintConfigSpy).toHaveBeenCalledTimes(2);
-      expect(createEslintConfigSpy).toHaveBeenCalledWith(lintLocation1, null);
-      expect(createEslintConfigSpy).toHaveBeenCalledWith(lintLocation2, null);
+      expect(createEslintConfigSpy).toHaveBeenCalledWith(
+        lintLocation1,
+        '2025.2'
+      );
+      expect(createEslintConfigSpy).toHaveBeenCalledWith(
+        lintLocation2,
+        '2025.2'
+      );
     });
 
     it('should warn and create new config if deprecated config exists', async () => {
       const projectDir = '/test/project';
       const lintLocation = path.join(projectDir, 'component1');
 
-      getProjectConfigSpy.mockResolvedValue({
+      getProjectConfigSpy.mockReturnValue({
         projectDir,
-        projectConfig: null,
+        projectConfig: {
+          name: 'test',
+          srcDir: 'src',
+          platformVersion: '2025.2',
+        },
       });
       getUieLintablePackageJsonLocationsSpy.mockResolvedValue([lintLocation]);
       areAllLintPackagesInstalledSpy.mockReturnValue(true);
@@ -703,7 +762,10 @@ describe('commands/project/lint', () => {
         },
       ]);
       // Creates config once from prompt
-      expect(createEslintConfigSpy).toHaveBeenCalledWith(lintLocation, null);
+      expect(createEslintConfigSpy).toHaveBeenCalledWith(
+        lintLocation,
+        '2025.2'
+      );
       expect(createEslintConfigSpy).toHaveBeenCalledTimes(1);
       expect(lintPackagesSpy).toHaveBeenCalledWith([lintLocation], projectDir);
     });
@@ -713,9 +775,13 @@ describe('commands/project/lint', () => {
       const lintLocation1 = path.join(projectDir, 'component1');
       const lintLocation2 = path.join(projectDir, 'component2');
 
-      getProjectConfigSpy.mockResolvedValue({
+      getProjectConfigSpy.mockReturnValue({
         projectDir,
-        projectConfig: null,
+        projectConfig: {
+          name: 'test',
+          srcDir: 'src',
+          platformVersion: '2025.2',
+        },
       });
       getUieLintablePackageJsonLocationsSpy.mockResolvedValue([
         lintLocation1,
@@ -749,17 +815,27 @@ describe('commands/project/lint', () => {
       ]);
       // Creates configs from prompt
       expect(createEslintConfigSpy).toHaveBeenCalledTimes(2);
-      expect(createEslintConfigSpy).toHaveBeenCalledWith(lintLocation1, null);
-      expect(createEslintConfigSpy).toHaveBeenCalledWith(lintLocation2, null);
+      expect(createEslintConfigSpy).toHaveBeenCalledWith(
+        lintLocation1,
+        '2025.2'
+      );
+      expect(createEslintConfigSpy).toHaveBeenCalledWith(
+        lintLocation2,
+        '2025.2'
+      );
     });
 
     it('should not warn about deprecated configs if none exist', async () => {
       const projectDir = '/test/project';
       const lintLocation = path.join(projectDir, 'component1');
 
-      getProjectConfigSpy.mockResolvedValue({
+      getProjectConfigSpy.mockReturnValue({
         projectDir,
-        projectConfig: null,
+        projectConfig: {
+          name: 'test',
+          srcDir: 'src',
+          platformVersion: '2025.2',
+        },
       });
       getUieLintablePackageJsonLocationsSpy.mockResolvedValue([lintLocation]);
       areAllLintPackagesInstalledSpy.mockReturnValue(true);
@@ -777,9 +853,13 @@ describe('commands/project/lint', () => {
       const lintLocation1 = path.join(projectDir, 'component1'); // Has deprecated config
       const lintLocation2 = path.join(projectDir, 'component2'); // Has no config
 
-      getProjectConfigSpy.mockResolvedValue({
+      getProjectConfigSpy.mockReturnValue({
         projectDir,
-        projectConfig: null,
+        projectConfig: {
+          name: 'test',
+          srcDir: 'src',
+          platformVersion: '2025.2',
+        },
       });
       getUieLintablePackageJsonLocationsSpy.mockResolvedValue([
         lintLocation1,
@@ -814,8 +894,14 @@ describe('commands/project/lint', () => {
         },
       ]);
       // Should create configs for both from prompt
-      expect(createEslintConfigSpy).toHaveBeenCalledWith(lintLocation1, null);
-      expect(createEslintConfigSpy).toHaveBeenCalledWith(lintLocation2, null);
+      expect(createEslintConfigSpy).toHaveBeenCalledWith(
+        lintLocation1,
+        '2025.2'
+      );
+      expect(createEslintConfigSpy).toHaveBeenCalledWith(
+        lintLocation2,
+        '2025.2'
+      );
       expect(createEslintConfigSpy).toHaveBeenCalledTimes(2);
       expect(lintPackagesSpy).toHaveBeenCalledWith(
         [lintLocation1, lintLocation2],
@@ -829,9 +915,13 @@ describe('commands/project/lint', () => {
 
       args.installMissingDeps = true;
 
-      getProjectConfigSpy.mockResolvedValue({
+      getProjectConfigSpy.mockReturnValue({
         projectDir,
-        projectConfig: null,
+        projectConfig: {
+          name: 'test',
+          srcDir: 'src',
+          platformVersion: '2025.2',
+        },
       });
       getUieLintablePackageJsonLocationsSpy.mockResolvedValue([lintLocation]);
       areAllLintPackagesInstalledSpy
@@ -860,9 +950,13 @@ describe('commands/project/lint', () => {
 
       args.installMissingDeps = false;
 
-      getProjectConfigSpy.mockResolvedValue({
+      getProjectConfigSpy.mockReturnValue({
         projectDir,
-        projectConfig: null,
+        projectConfig: {
+          name: 'test',
+          srcDir: 'src',
+          platformVersion: '2025.2',
+        },
       });
       getUieLintablePackageJsonLocationsSpy.mockResolvedValue([lintLocation]);
       areAllLintPackagesInstalledSpy.mockReturnValueOnce(false);
@@ -886,9 +980,13 @@ describe('commands/project/lint', () => {
 
       args.installMissingDeps = false;
 
-      getProjectConfigSpy.mockResolvedValue({
+      getProjectConfigSpy.mockReturnValue({
         projectDir,
-        projectConfig: null,
+        projectConfig: {
+          name: 'test',
+          srcDir: 'src',
+          platformVersion: '2025.2',
+        },
       });
       getUieLintablePackageJsonLocationsSpy.mockResolvedValue([lintLocation]);
       areAllLintPackagesInstalledSpy.mockReturnValueOnce(false);
@@ -909,9 +1007,13 @@ describe('commands/project/lint', () => {
 
       // installMissingDeps is undefined, so the user is prompted
 
-      getProjectConfigSpy.mockResolvedValue({
+      getProjectConfigSpy.mockReturnValue({
         projectDir,
-        projectConfig: null,
+        projectConfig: {
+          name: 'test',
+          srcDir: 'src',
+          platformVersion: '2025.2',
+        },
       });
       getUieLintablePackageJsonLocationsSpy.mockResolvedValue([lintLocation]);
       areAllLintPackagesInstalledSpy.mockReturnValueOnce(false);
@@ -935,9 +1037,13 @@ describe('commands/project/lint', () => {
 
       // installMissingDeps is undefined
 
-      getProjectConfigSpy.mockResolvedValue({
+      getProjectConfigSpy.mockReturnValue({
         projectDir,
-        projectConfig: null,
+        projectConfig: {
+          name: 'test',
+          srcDir: 'src',
+          platformVersion: '2025.2',
+        },
       });
       getUieLintablePackageJsonLocationsSpy.mockResolvedValue([lintLocation]);
       areAllLintPackagesInstalledSpy
@@ -974,9 +1080,13 @@ describe('commands/project/lint', () => {
       const projectDir = '/test/project';
       const lintLocation = path.join(projectDir, 'component1');
 
-      getProjectConfigSpy.mockResolvedValue({
+      getProjectConfigSpy.mockReturnValue({
         projectDir,
-        projectConfig: null,
+        projectConfig: {
+          name: 'test',
+          srcDir: 'src',
+          platformVersion: '2025.2',
+        },
       });
       getUieLintablePackageJsonLocationsSpy.mockResolvedValue([lintLocation]);
       areAllLintPackagesInstalledSpy.mockReturnValue(true);

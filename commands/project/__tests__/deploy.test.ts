@@ -177,7 +177,7 @@ describe('commands/project/deploy', () => {
         srcDir: 'src',
         platformVersion: '2025',
       };
-      getProjectConfigSpy.mockResolvedValue({
+      getProjectConfigSpy.mockReturnValue({
         projectConfig,
         projectDir: 'projectDir',
       });
@@ -269,9 +269,8 @@ describe('commands/project/deploy', () => {
       projectNamePromptSpy.mockResolvedValue({
         projectName: promptProjectName,
       });
-      getProjectConfigSpy.mockResolvedValue({
-        projectConfig: null,
-        projectDir: '/path/to/project',
+      getProjectConfigSpy.mockImplementation(() => {
+        throw new Error('Not in a project directory');
       });
 
       await projectDeployCommand.handler(argsWithoutProject);

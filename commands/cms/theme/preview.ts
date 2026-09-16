@@ -63,7 +63,14 @@ async function determineSrcAndDest(args: ThemePreviewArgs): Promise<{
 }> {
   let absoluteSrc;
   let dest;
-  const { projectDir, projectConfig } = await getProjectConfig();
+  let projectDir;
+  let projectConfig;
+  try {
+    ({ projectDir, projectConfig } = getProjectConfig());
+  } catch {
+    // Not in a project (handled below)
+  }
+
   if (!(projectDir && projectConfig)) {
     // Not in a project, prompt for src and dest of traditional theme
     const previewPromptAnswers = await previewPrompt(args);

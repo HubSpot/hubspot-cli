@@ -1,8 +1,10 @@
 import fs from 'fs';
 import os from 'os';
 import path from 'path';
-import { validateProjectConfig } from '../../projects/config.js';
-import ProjectValidationError from '../../errors/ProjectValidationError.js';
+import {
+  validateProjectConfig,
+  ProjectConfigValidationError,
+} from '@hubspot/project-parsing-lib/projects';
 
 describe('lib/projects', () => {
   describe('validateProjectConfig()', () => {
@@ -16,14 +18,14 @@ describe('lib/projects', () => {
     it('rejects undefined configuration', () => {
       // @ts-ignore Testing invalid input
       expect(() => validateProjectConfig(null, projectDir)).toThrow(
-        /.*Unable to locate a project configuration file. Try running again from a project directory, or run*/
+        ProjectConfigValidationError
       );
     });
 
     it('rejects configuration with missing name', () => {
       // @ts-ignore Testing invalid input
       expect(() => validateProjectConfig({ srcDir: '.' }, projectDir)).toThrow(
-        /missing required field.*name/
+        /missing required field/
       );
     });
 
@@ -31,13 +33,13 @@ describe('lib/projects', () => {
       expect(() =>
         // @ts-ignore Testing invalid input
         validateProjectConfig({ name: 'hello' }, projectDir)
-      ).toThrow(/missing required field.*srcDir/);
+      ).toThrow(/missing required field/);
     });
 
     it('rejects configuration with both name and srcDir missing', () => {
       // @ts-ignore Testing invalid input
       expect(() => validateProjectConfig({}, projectDir)).toThrow(
-        /missing required fields:.*name.*srcDir/
+        /missing required field/
       );
     });
 
@@ -45,19 +47,19 @@ describe('lib/projects', () => {
       it('for parent directory', () => {
         expect(() =>
           validateProjectConfig(
-            { name: 'hello', srcDir: '..', platformVersion: '' },
+            { name: 'hello', srcDir: '..', platformVersion: '2025.2' },
             projectDir
           )
-        ).toThrow(/srcDir: "\.\."/);
+        ).toThrow(ProjectConfigValidationError);
       });
 
       it('for root directory', () => {
         expect(() =>
           validateProjectConfig(
-            { name: 'hello', srcDir: '/', platformVersion: '' },
+            { name: 'hello', srcDir: '/', platformVersion: '2025.2' },
             projectDir
           )
-        ).toThrow(/srcDir: "\/"/);
+        ).toThrow(ProjectConfigValidationError);
       });
 
       it('for complicated directory', () => {
@@ -65,33 +67,27 @@ describe('lib/projects', () => {
 
         expect(() =>
           validateProjectConfig(
-            { name: 'hello', srcDir, platformVersion: '' },
+            { name: 'hello', srcDir, platformVersion: '2025.2' },
             projectDir
           )
-        ).toThrow(ProjectValidationError);
-        expect(() =>
-          validateProjectConfig(
-            { name: 'hello', srcDir, platformVersion: '' },
-            projectDir
-          )
-        ).toThrow(/srcDir:/);
+        ).toThrow(ProjectConfigValidationError);
       });
     });
 
     it('rejects configuration with srcDir that does not exist', () => {
       expect(() =>
         validateProjectConfig(
-          { name: 'hello', srcDir: 'foo', platformVersion: '' },
+          { name: 'hello', srcDir: 'foo', platformVersion: '2025.2' },
           projectDir
         )
-      ).toThrow(/.*could not be found in.*/);
+      ).toThrow(ProjectConfigValidationError);
     });
 
     describe('accepts configuration with valid srcDir', () => {
       it('for current directory', () => {
         expect(() =>
           validateProjectConfig(
-            { name: 'hello', srcDir: '.', platformVersion: '' },
+            { name: 'hello', srcDir: '.', platformVersion: '2025.2' },
             projectDir
           )
         ).not.toThrow();
@@ -100,7 +96,7 @@ describe('lib/projects', () => {
       it('for relative directory', () => {
         expect(() =>
           validateProjectConfig(
-            { name: 'hello', srcDir: './src', platformVersion: '' },
+            { name: 'hello', srcDir: './src', platformVersion: '2025.2' },
             projectDir
           )
         ).not.toThrow();
@@ -109,7 +105,7 @@ describe('lib/projects', () => {
       it('for implied relative directory', () => {
         expect(() =>
           validateProjectConfig(
-            { name: 'hello', srcDir: 'src', platformVersion: '' },
+            { name: 'hello', srcDir: 'src', platformVersion: '2025.2' },
             projectDir
           )
         ).not.toThrow();

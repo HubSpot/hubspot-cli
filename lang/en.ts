@@ -1722,6 +1722,8 @@ export const commands = {
         configuredVsCode: 'Configured VSCode',
         vsCodeNotFound:
           "VSCode CLI is not installed (missing 'code' command). Install it and re-run hs mcp setup.",
+        vsCodeVersionUnsupported:
+          'VSCode 1.99 or later is required for MCP server support. Please update VSCode and try again.',
       },
       otherInstructions: {
         header:
@@ -1831,8 +1833,6 @@ export const commands = {
             `The account ${uiAccountDescription(targetAccountId)} is being used in an existing profile. Make sure to edit your project's name between uploads if you do not want to overwrite the existing project in this account.`,
         },
         errors: {
-          noProjectConfig:
-            'No project config found. Please run this command from a project directory.',
           unsupportedPlatformVersion:
             'This command is only available for projects 2025.2 and later.',
           profileExists: (profileName: string) =>
@@ -1880,8 +1880,6 @@ export const commands = {
             )}?`,
         },
         errors: {
-          noProjectConfig:
-            'No project config found. Please run this command from a project directory.',
           unsupportedPlatformVersion:
             'This command is only available for projects 2025.2 and later.',
           noProfileFound: (profileName: string) =>
@@ -1922,8 +1920,6 @@ export const commands = {
           `Using account ${uiAccountDescription(accountId)} provided by the --testing-account flag for testing`,
       },
       errors: {
-        noProjectConfig:
-          'No project detected. Please run this command again from a project directory.',
         noAccount: (accountId: number) =>
           `An error occurred while reading account ${uiAccountDescription(accountId)} from your config. Run ${uiAuthCommandReference()} to re-auth this account.`,
         unsupportedPlatformVersion: (platformVersion: string) =>
@@ -2084,8 +2080,6 @@ export const commands = {
       errors: {
         noProjectConfig: (command: string) =>
           `No project detected. Please run this command again from a project directory.  If you are trying to migrate an app, run ${command}`,
-        noThemeMigrationAccess: (accountId?: number) =>
-          `This project contains a CMS theme. You must opt in to theme migration beta to continue updating it on ${uiAccountDescription(accountId)}. Try again with a different account or ${uiLink('join the beta now', getProductUpdatesUrl('253920', accountId))}`,
       },
       examples: {
         default:
@@ -2431,10 +2425,14 @@ export const commands = {
           `Auto-deploy was skipped for this build. Run ${uiCommandReference(deployCommand)} to deploy this build.`,
         releaseManagementRequired: (releaseCommand: string) =>
           `Run ${uiCommandReference(releaseCommand)} to create a release for this build.`,
+        uploadingWithProfile: (profileName: string, accountId: number) =>
+          `Initializing project upload with ${chalk.bold(profileName)} profile: ${uiAccountDescription(accountId)}`,
+        uploadingToAccount: (accountId: number) =>
+          `Initializing project upload to account ${uiAccountDescription(accountId)}`,
+        uploadedToAccount: (accountId: number) =>
+          `Project uploaded to ${uiAccountDescription(accountId)}`,
       },
       errors: {
-        noProjectConfig:
-          'No project detected. Run this command from a project directory.',
         projectLockedError: `Your project is locked. This may mean that another user is running the ${uiCommandReference('hs project dev')} command for this project. If this is you, unlock the project in Projects UI.`,
         previewRequiresTarget: `${uiCommandReference('--preview')} requires ${uiCommandReference('--target=<portalId>')} to specify the portal to preview on.`,
         targetRequiresPreview: `${uiCommandReference('--target')} can only be used with ${uiCommandReference('--preview')}.`,
@@ -2511,8 +2509,6 @@ export const commands = {
           `File "${filePath}" is already queued for upload`,
       },
       errors: {
-        projectConfigNotFound:
-          'No project config found. Please ensure that you are in a project directory.',
         projectLockedError: `Your project is locked. This may mean that another user is running the ${chalk.bold(`hs project dev`)} command for this project. If this is you, unlock the project in Projects UI.`,
         uploadFailed: (remotePath: string, filePath: string) =>
           `Failed to upload file "${filePath}" to "${remotePath}"`,
@@ -2528,6 +2524,7 @@ export const commands = {
       describe: 'Download your project files from HubSpot.',
       examples: {
         default: 'Download the project myProject into myProjectFolder folder',
+        json: 'Output the download result as JSON for scripting',
       },
       logs: {
         downloadCancelled: 'Cancelling project download',
@@ -2596,8 +2593,6 @@ export const commands = {
         `Installing ${dependencies} in ${directory}`,
       installingDependenciesFailed: (directory: string) =>
         `Installing dependencies for ${directory} failed`,
-      noProjectConfig:
-        'No project detected. Run this command from a project directory.',
       noPackageJsonInProject: (projectName: string) =>
         `No dependencies to install. The project ${projectName} folder might be missing component or subcomponent files. ${uiLink('Learn how to create a project from scratch', 'https://developers.hubspot.com/docs/apps/developer-platform/build-apps/create-an-app#customize-a-new-project-using-the-cli')}`,
       packageManagerNotInstalled: (packageManager: string) =>
@@ -2621,8 +2616,6 @@ export const commands = {
         addingLintScripts: 'Adding lint scripts to package.json files…',
         linting: 'Linting…',
       },
-      noProjectConfig:
-        'No project detected. Run this command from a project directory.',
       failedToReadPackageJson: (packageJsonPath: string) =>
         `Failed to read package.json at ${packageJsonPath}`,
       installLintPackagesPrompt: (
@@ -2691,8 +2684,6 @@ export const commands = {
       ) => `Updating ${dependencies} in ${directory}`,
       updatingDependenciesFailed: (directory: string) =>
         `Updating dependencies for ${directory} failed`,
-      noProjectConfig:
-        'No project detected. Run this command from a project directory.',
       noPackageJsonInProject: (projectName: string) =>
         `No dependencies to update. The project ${projectName} folder might be missing component or subcomponent files. ${uiLink('Learn how to create a project from scratch', 'https://developers.hubspot.com/docs/apps/developer-platform/build-apps/create-an-app#customize-a-new-project-using-the-cli')}`,
       packageManagerNotInstalled: (packageManager: string) =>
@@ -2707,6 +2698,7 @@ export const commands = {
       examples: {
         default: 'Validate the project before uploading',
         withProfile: 'Validate the project with a profile before uploading.',
+        json: 'Output validation results as JSON for scripting',
       },
       success: (projectName: string) =>
         `Project ${projectName} is valid and ready to upload`,
@@ -2741,6 +2733,10 @@ export const commands = {
       labels: {
         name: 'Name',
         platformVersion: 'Platform Version',
+      },
+      examples: {
+        default: 'List projects in the target account',
+        json: 'Output as JSON for scripting',
       },
       errors: {
         noProjectsFound: (accountId: number) =>
@@ -2779,7 +2775,6 @@ export const commands = {
         uid: 'UID',
       },
       errors: {
-        noProjectConfig: `No project found in this directory.\n\nRun ${uiCommandReference('hs project create')} to start a new project, or change to a directory containing hsproject.json.`,
         projectNotFound: (projectName: string, accountId: number) =>
           `Project "${projectName}" was not found in account ${uiAccountDescription(accountId)}. Make sure the project has been uploaded at least once.`,
         noDeployedBuild: `This project has not been deployed yet.\n\nRun ${uiCommandReference('hs project deploy')} to deploy your project.`,
@@ -2860,7 +2855,6 @@ export const commands = {
         profile: 'The profile to target with this install',
       },
       errors: {
-        noProjectConfig: `No project config found. Run this command from within a HubSpot project directory, or use ${uiCommandReference('hs project create')} to create a new one.`,
         unsupportedPlatformVersion: (platformVersion: string) =>
           `This command is only supported for projects on platform version 2025.2 or later (detected: ${platformVersion}).`,
         failedToParseProject:
@@ -2916,7 +2910,6 @@ export const commands = {
         json: 'Output install status as JSON',
       },
       errors: {
-        noProjectConfig: `No project config found. Run this command from within a HubSpot project directory, or use ${uiCommandReference('hs project create')} to create a new one.`,
         unsupportedPlatformVersion: (platformVersion: string) =>
           `This command is only supported for projects on platform version 2025.2 or later (detected: ${platformVersion}).`,
         failedToParseProject:
@@ -4666,8 +4659,6 @@ export const lib = {
     },
     loadProfile: {
       errors: {
-        noProjectConfig:
-          'No project config found. Please run this command from a project directory.',
         profileNotFound: (profileName: string) =>
           `Profile ${chalk.bold(profileName)} not found.`,
         missingAccountId: (profileName: string) =>
@@ -4725,15 +4716,6 @@ export const lib = {
     },
     validateProjectConfig: {
       configNotFound: `Unable to locate a project configuration file. Try running again from a project directory, or run ${uiCommandReference('hs project create')} to create a new project.`,
-      configMissingFields: (missingFields: string[]) =>
-        `The project configuration file is missing required field${missingFields.length > 1 ? 's' : ''}: ${missingFields.map(f => chalk.bold(f)).join(', ')}`,
-      srcDirNotFound: (srcDir: string, projectDir: string) =>
-        `Project source directory ${chalk.bold(srcDir)} could not be found in ${chalk.bold(projectDir)}.`,
-      srcOutsideProjectDir: (projectConfig: string, srcDir: string) =>
-        `Invalid value for 'srcDir' in ${projectConfig}: ${chalk.bold(`srcDir: "${srcDir}"`)}\n\t'srcDir' must be a relative path to a folder under the project root, such as "." or "./src"`,
-    },
-    getProjectConfig: {
-      error: 'Could not read from project config',
     },
     platformVersion: {
       unsupported: (
@@ -5095,6 +5077,7 @@ export const lib = {
       jsonOutput: 'Format output as JSON',
       jsonSchema: 'Print the JSON output schema and exit',
       debug: 'Set log level to debug',
+      color: 'Enable colored output (use --no-color to disable)',
     },
   },
   configMigrate: {

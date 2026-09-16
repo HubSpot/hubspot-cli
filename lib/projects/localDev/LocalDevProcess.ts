@@ -146,20 +146,18 @@ class LocalDevProcess {
   }
 
   private async projectConfigValidForUpload(): Promise<boolean> {
-    const { projectConfig } = await getProjectConfig();
+    let projectConfig;
 
-    if (!projectConfig) {
+    try {
+      ({ projectConfig } = getProjectConfig());
+    } catch {
       return false;
     }
 
-    Object.keys(projectConfig).forEach(key => {
+    return Object.keys(projectConfig).every(key => {
       const field = key as keyof ProjectConfig;
-      if (projectConfig[field] !== this.state.projectConfig[field]) {
-        return false;
-      }
+      return projectConfig[field] === this.state.projectConfig[field];
     });
-
-    return true;
   }
 
   private async getIntermediateRepresentation(projectNodesAtLastDeploy?: {

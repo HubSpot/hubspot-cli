@@ -14,9 +14,10 @@ import { makeWrappedYargsHandler } from '../../lib/yargs/makeWrappedYargsHandler
 import {
   InstallAppJsonOutput,
   InstallAppSchema,
-} from '../../lib/jsonOutput.js';
+} from '../../lib/jsonOutput/installApp.js';
 import { makeYargsBuilder } from '../../lib/yargsUtils.js';
 import { uiLogger } from '../../lib/ui/logger.js';
+import { logError } from '../../lib/errorHandlers/index.js';
 import { EXIT_CODES } from '../../lib/enums/exitCodes.js';
 import { commands } from '../../lang/en.js';
 import { getProjectConfig } from '../../lib/projects/config.js';
@@ -59,10 +60,13 @@ async function handler(
     addJsonOutput,
   } = args;
 
-  const { projectConfig, projectDir } = await getProjectConfig();
+  let projectConfig;
+  let projectDir;
 
-  if (!projectConfig || !projectDir) {
-    uiLogger.error(commands.project.installApp.errors.noProjectConfig);
+  try {
+    ({ projectConfig, projectDir } = getProjectConfig());
+  } catch (error) {
+    logError(error);
     return exit(EXIT_CODES.ERROR);
   }
 

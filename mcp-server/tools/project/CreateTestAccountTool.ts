@@ -11,7 +11,7 @@ import {
   ACCOUNT_LEVELS,
   ACCOUNT_LEVEL_CHOICES,
 } from '../../../lib/constants.js';
-import { TextContent, TextContentResponse } from '../../types.js';
+import { TextContent, McpToolResponse } from '../../types.js';
 import { Tool, ToolExtra } from '../../Tool.js';
 import { absoluteCurrentWorkingDirectory } from './constants.js';
 import { DeveloperTestAccountConfig } from '@hubspot/local-dev-lib/types/developerTestAccounts.js';
@@ -118,7 +118,7 @@ export class CreateTestAccountTool extends Tool<CreateTestAccountInputSchema> {
       configPath,
     }: CreateTestAccountInputSchema,
     extra?: ToolExtra
-  ): Promise<TextContentResponse> {
+  ): Promise<McpToolResponse> {
     setupHubSpotConfig(absoluteCurrentWorkingDirectory);
 
     const command = new HubSpotCommand('test-account create');

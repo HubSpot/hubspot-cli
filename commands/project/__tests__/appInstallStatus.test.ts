@@ -8,6 +8,7 @@ import projectInstallStatusCommand, {
   type ProjectInstallStatusArgs,
 } from '../appInstallStatus.js';
 import { getProjectConfig } from '../../../lib/projects/config.js';
+import { logError } from '../../../lib/errorHandlers/index.js';
 import { uiLogger } from '../../../lib/ui/logger.js';
 import { EXIT_CODES } from '../../../lib/enums/exitCodes.js';
 import { mockHubSpotHttpError } from '../../../lib/testUtils.js';
@@ -121,7 +122,7 @@ describe('commands/project/appInstallStatus', () => {
     } as unknown as ArgumentsCamelCase<ProjectInstallStatusArgs>;
 
     beforeEach(() => {
-      mockedGetProjectConfig.mockResolvedValue({
+      mockedGetProjectConfig.mockReturnValue({
         projectConfig: mockProjectConfig,
         projectDir: '/path/to/project',
       });
@@ -144,14 +145,14 @@ describe('commands/project/appInstallStatus', () => {
     });
 
     it('should exit with error when no project config is found', async () => {
-      mockedGetProjectConfig.mockResolvedValue({
-        projectConfig: null,
-        projectDir: null,
+      const error = new Error('No project config found');
+      mockedGetProjectConfig.mockImplementation(() => {
+        throw error;
       });
 
       await projectInstallStatusCommand.handler(mockArgs);
 
-      expect(mockedUiLogger.error).toHaveBeenCalled();
+      expect(logError).toHaveBeenCalledWith(error);
       expect(mockExit).toHaveBeenCalledWith(EXIT_CODES.ERROR);
       expect(mockedTranslate).not.toHaveBeenCalled();
     });

@@ -23,8 +23,10 @@ import {
   ScopeAuthorizationResponse,
   ScopeGroupAuthorization,
 } from '@hubspot/local-dev-lib/types/Accounts';
-import { validateProjectConfig as _validateProjectConfig } from '../../projects/config.js';
-import { isLegacyProject as _isLegacyProject } from '@hubspot/project-parsing-lib/projects';
+import {
+  validateProjectConfig as _validateProjectConfig,
+  isLegacyProject as _isLegacyProject,
+} from '@hubspot/project-parsing-lib/projects';
 import {
   validateSourceDirectory as _validateSourceDirectory,
   handleTranslate as _handleTranslate,
@@ -697,7 +699,7 @@ describe('lib/doctor/Doctor', () => {
     it('should validate V2 projects with profiles', async () => {
       validateProjectConfig.mockReturnValue(undefined);
       isLegacyProject.mockReturnValue(false);
-      validateSourceDirectory.mockResolvedValue(undefined);
+      validateSourceDirectory.mockResolvedValue([]);
       getAllHsProfiles.mockResolvedValue(['dev', 'prod']);
       validateProjectForProfile.mockResolvedValue([]);
 
@@ -714,7 +716,7 @@ describe('lib/doctor/Doctor', () => {
     it('should report profile validation errors', async () => {
       validateProjectConfig.mockReturnValue(undefined);
       isLegacyProject.mockReturnValue(false);
-      validateSourceDirectory.mockResolvedValue(undefined);
+      validateSourceDirectory.mockResolvedValue([]);
       getAllHsProfiles.mockResolvedValue(['dev']);
       validateProjectForProfile.mockResolvedValue([
         new Error('Validation error'),
@@ -733,7 +735,7 @@ describe('lib/doctor/Doctor', () => {
     it('should validate V2 projects without profiles', async () => {
       validateProjectConfig.mockReturnValue(undefined);
       isLegacyProject.mockReturnValue(false);
-      validateSourceDirectory.mockResolvedValue(undefined);
+      validateSourceDirectory.mockResolvedValue([]);
       getAllHsProfiles.mockResolvedValue([]);
       handleTranslate.mockResolvedValue({
         intermediateRepresentation: { intermediateNodesIndexedByUid: {} },
@@ -753,7 +755,7 @@ describe('lib/doctor/Doctor', () => {
     it('should handle translation failures', async () => {
       validateProjectConfig.mockReturnValue(undefined);
       isLegacyProject.mockReturnValue(false);
-      validateSourceDirectory.mockResolvedValue(undefined);
+      validateSourceDirectory.mockResolvedValue([]);
       getAllHsProfiles.mockResolvedValue([]);
       handleTranslate.mockRejectedValue(new Error('Translation failed'));
 

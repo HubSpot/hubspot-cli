@@ -43,6 +43,7 @@ import mcpCommand from '../commands/mcp.js';
 import upgradeCommand from '../commands/upgrade.js';
 import apiCommand from '../commands/api.js';
 import { uiLogger } from '../lib/ui/logger.js';
+import { lib } from '../lang/en.js';
 import { initializeSpinniesManager } from '../lib/middleware/spinniesMiddleware.js';
 import { addCommandSuggestions } from '../lib/commandSuggestion.js';
 import { pkg } from '../lib/jsonLoader.js';
@@ -94,9 +95,13 @@ const argv = yargs(process.argv.slice(2))
     hidden: true,
     type: 'boolean',
   })
+  .option('color', {
+    default: true,
+    describe: lib.commonOpts.options.color,
+    type: 'boolean',
+  })
   .option('noColor', {
     default: false,
-    describe: 'prevent color from displaying in the ui',
     hidden: true,
     type: 'boolean',
   })

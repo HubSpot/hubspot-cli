@@ -30,12 +30,12 @@ export type MigrateThemesArgs = CommonArgs &
 export async function getHasMigratableThemes(
   projectConfig?: LoadedProjectConfig
 ): Promise<{ hasMigratableThemes: boolean; migratableThemesCount: number }> {
-  if (!projectConfig?.projectConfig?.name || !projectConfig?.projectDir) {
+  if (!projectConfig) {
     return { hasMigratableThemes: false, migratableThemesCount: 0 };
   }
 
   const projectSrcDir = path.resolve(
-    projectConfig.projectDir!,
+    projectConfig.projectDir,
     projectConfig.projectConfig.srcDir
   );
 
@@ -66,10 +66,6 @@ export async function handleThemesMigration(
   projectConfig: LoadedProjectConfig,
   platformVersion: string
 ): Promise<void> {
-  if (!projectConfig?.projectDir || !projectConfig?.projectConfig?.srcDir) {
-    throw new Error(lib.migrate.errors.project.invalidConfig);
-  }
-
   const projectSrcDir = path.resolve(
     projectConfig.projectDir,
     projectConfig.projectConfig.srcDir

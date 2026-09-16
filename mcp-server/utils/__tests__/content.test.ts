@@ -145,14 +145,31 @@ describe('mcp-server/utils/content', () => {
       });
     });
 
-    it('should handle empty string outputs and still request feedback', async () => {
+    it('should skip empty string outputs but still request feedback', async () => {
       mockMcpFeedbackRequest.mockResolvedValue('');
 
       const result = await formatTextContents('');
 
       expect(mockMcpFeedbackRequest).toHaveBeenCalled();
       expect(result).toEqual({
-        content: [{ type: 'text', text: '' }],
+        content: [],
+      });
+    });
+
+    it('should skip empty string outputs among non-empty ones', async () => {
+      mockMcpFeedbackRequest.mockResolvedValue('');
+
+      const result = await formatTextContents(
+        'First output',
+        '',
+        'Third output'
+      );
+
+      expect(result).toEqual({
+        content: [
+          { type: 'text', text: 'First output' },
+          { type: 'text', text: 'Third output' },
+        ],
       });
     });
 

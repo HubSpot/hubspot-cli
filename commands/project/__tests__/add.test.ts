@@ -8,7 +8,10 @@ import {
 } from '../../../lib/constants.js';
 import { v2AddComponent } from '../../../lib/projects/add/v2AddComponent.js';
 import { legacyAddComponent } from '../../../lib/projects/add/legacyAddComponent.js';
-import { getProjectConfig } from '../../../lib/projects/config.js';
+import {
+  getProjectConfig,
+  getIsInProject,
+} from '../../../lib/projects/config.js';
 import { isLegacyProject } from '@hubspot/project-parsing-lib/projects';
 import { trackCommandUsage } from '../../../lib/usageTracking.js';
 
@@ -22,6 +25,7 @@ vi.mock('@hubspot/project-parsing-lib/projects');
 const mockedV2AddComponent = vi.mocked(v2AddComponent);
 const mockedLegacyAddComponent = vi.mocked(legacyAddComponent);
 const mockedGetProjectConfig = vi.mocked(getProjectConfig);
+const mockedGetIsInProject = vi.mocked(getIsInProject);
 const mockedUseV2Api = vi.mocked(isLegacyProject);
 const mockedTrackCommandUsage = vi.mocked(trackCommandUsage);
 
@@ -82,7 +86,8 @@ describe('commands/project/add', () => {
     } as ArgumentsCamelCase<ProjectAddArgs>;
 
     beforeEach(() => {
-      mockedGetProjectConfig.mockResolvedValue({
+      mockedGetIsInProject.mockReturnValue(true);
+      mockedGetProjectConfig.mockReturnValue({
         projectConfig: mockProjectConfig,
         projectDir: mockProjectDir,
       });
@@ -127,9 +132,8 @@ describe('commands/project/add', () => {
     });
 
     it('should exit with error when project config is not found', async () => {
-      mockedGetProjectConfig.mockResolvedValue({
-        projectConfig: null,
-        projectDir: null,
+      mockedGetProjectConfig.mockImplementation(() => {
+        throw new Error('No project config found');
       });
 
       const mockExit = vi.spyOn(process, 'exit').mockImplementation(() => {

@@ -15,6 +15,7 @@ import {
   safeGetPackageJsonCached,
 } from '../npm/packageJson.js';
 import { debugError } from '../errorHandlers/index.js';
+import { isPathInsideDirectory } from '../filesystem.js';
 import { isLegacyProject } from '@hubspot/project-parsing-lib/projects';
 import { LoadedProjectConfig } from './config.js';
 import {
@@ -22,6 +23,7 @@ import {
   HUBSPOT_PROJECT_COMPONENTS_GITHUB_PATH,
 } from '../constants.js';
 import {
+  ACTIONS_KEY,
   CARDS_KEY,
   Components,
   PAGES_KEY,
@@ -63,6 +65,7 @@ const DEPRECATED_ESLINT_CONFIG_FILES = [
 ] as const;
 
 const UIE_COMPONENTS = [
+  Components[ACTIONS_KEY],
   Components[CARDS_KEY],
   Components[SETTINGS_KEY],
   Components[PAGES_KEY],
@@ -238,18 +241,9 @@ export async function createEslintConfig(
   }
 }
 
-export async function getUieLintablePackageJsonLocations(
-  projectConfig: LoadedProjectConfig
-): Promise<string[]> {
-  if (!projectConfig.projectDir || !projectConfig.projectConfig?.srcDir) {
-    return [];
-  }
-
-  const srcDirAbsolute = path.resolve(
-    projectConfig.projectDir,
-    projectConfig.projectConfig.srcDir
-  );
-  const uiePackageDirPrefixes = UIE_COMPONENTS.map(component =>
+export function getUieComponentDirPrefixes(srcDir: string): string[] {
+  const srcDirAbsolute = path.resolve(srcDir);
+  return UIE_COMPONENTS.map(component =>
     path.join(
       srcDirAbsolute,
       component.parentComponent
@@ -258,17 +252,32 @@ export async function getUieLintablePackageJsonLocations(
       component.dir
     )
   );
+}
+
+export function isUieComponentDirectory(
+  directory: string,
+  srcDir: string
+): boolean {
+  return getUieComponentDirPrefixes(srcDir).some(componentDir =>
+    isPathInsideDirectory(directory, componentDir)
+  );
+}
+
+export async function getUieLintablePackageJsonLocations(
+  projectConfig: LoadedProjectConfig
+): Promise<string[]> {
+  const srcDirAbsolute = path.resolve(
+    projectConfig.projectDir,
+    projectConfig.projectConfig.srcDir
+  );
 
   const allLocations = await getProjectPackageJsonLocations(
     projectConfig.projectDir
   );
 
-  return allLocations.filter(location => {
-    const resolvedLocation = path.resolve(location);
-    return uiePackageDirPrefixes.some(prefix =>
-      resolvedLocation.startsWith(prefix)
-    );
-  });
+  return allLocations.filter(location =>
+    isUieComponentDirectory(location, srcDirAbsolute)
+  );
 }
 
 export const HUBSPOT_UI_EXTENSIONS_RULE_PREFIX = '@hubspot/ui-extensions/';

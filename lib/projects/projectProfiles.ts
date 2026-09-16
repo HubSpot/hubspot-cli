@@ -41,14 +41,10 @@ export function logProfileFooter(
 }
 
 export function loadProfile(
-  projectConfig: ProjectConfig | null,
-  projectDir: string | null,
+  projectConfig: ProjectConfig,
+  projectDir: string,
   profileName: string
 ): HsProfileFile | never {
-  if (!projectConfig || !projectDir) {
-    throw new Error(lib.projectProfiles.loadProfile.errors.noProjectConfig);
-  }
-
   const projectSourceDir = path.join(projectDir, projectConfig.srcDir);
   const profileFilename = getHsProfileFilename(profileName);
 
@@ -89,9 +85,21 @@ export function loadProfile(
   return profile;
 }
 
+export function getProfileAccountId(
+  projectConfig: ProjectConfig,
+  projectDir: string,
+  profileName: string
+): number | undefined {
+  try {
+    return loadProfile(projectConfig, projectDir, profileName).accountId;
+  } catch (_e) {
+    return undefined;
+  }
+}
+
 export async function loadAndValidateProfile(
-  projectConfig: ProjectConfig | null,
-  projectDir: string | null,
+  projectConfig: ProjectConfig,
+  projectDir: string,
   profileName: string,
   silent = false
 ): Promise<HsProfileFile | never> {

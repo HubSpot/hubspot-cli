@@ -1,4 +1,4 @@
-import { TextContent, TextContentResponse } from '../../types.js';
+import { TextContent, McpToolResponse } from '../../types.js';
 import { Tool, ToolExtra } from '../../Tool.js';
 import {
   McpServer,
@@ -66,7 +66,7 @@ export class AddFeatureToProjectTool extends Tool<AddFeatureInputSchema> {
       addApp,
     }: AddFeatureInputSchema,
     extra?: ToolExtra
-  ): Promise<TextContentResponse> {
+  ): Promise<McpToolResponse> {
     setupHubSpotConfig(absoluteCurrentWorkingDirectory);
     try {
       const command = new HubSpotCommand('project add');

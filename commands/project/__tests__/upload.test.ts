@@ -9,6 +9,7 @@ import * as configUtils from '@hubspot/local-dev-lib/config';
 import * as errorsLib from '@hubspot/local-dev-lib/errors/index';
 import { uiLogger } from '../../../lib/ui/logger.js';
 import * as platformVersionLib from '@hubspot/project-parsing-lib/projects';
+import { PLATFORM_VERSIONS } from '@hubspot/project-parsing-lib/constants';
 import * as usageTrackingLib from '../../../lib/usageTracking.js';
 import * as projectConfigLib from '../../../lib/projects/config.js';
 import * as projectProfilesLib from '../../../lib/projects/projectProfiles.js';
@@ -43,10 +44,6 @@ const exampleSpy = vi.spyOn(yargs as Argv, 'example');
 const conflictsSpy = vi.spyOn(yargs as Argv, 'conflicts');
 const triggerAndPollPreviewSpy = vi.spyOn(previewLib, 'triggerAndPollPreview');
 const getProjectConfigSpy = vi.spyOn(projectConfigLib, 'getProjectConfig');
-const validateProjectConfigSpy = vi.spyOn(
-  projectConfigLib,
-  'validateProjectConfig'
-);
 const isLegacyProjectSpy = vi.spyOn(platformVersionLib, 'isLegacyProject');
 const meetsMinimumPlatformVersionSpy = vi.spyOn(
   platformVersionLib,
@@ -78,7 +75,7 @@ describe('commands/project/upload', () => {
   beforeEach(() => {
     // @ts-expect-error Mock implementation
     processExitSpy.mockImplementation(() => {});
-    getProjectConfigSpy.mockResolvedValue({
+    getProjectConfigSpy.mockReturnValue({
       projectConfig: {
         name: 'test-project',
         srcDir: 'src',
@@ -86,7 +83,6 @@ describe('commands/project/upload', () => {
       },
       projectDir: '/test/project',
     });
-    validateProjectConfigSpy.mockImplementation(() => {});
     isLegacyProjectSpy.mockReturnValue(true);
     // @ts-expect-error Mock config account doesn't need full type implementation
     getConfigAccountByIdSpy.mockReturnValue({
@@ -189,19 +185,15 @@ describe('commands/project/upload', () => {
       );
     });
 
-    it('should get and validate project config', async () => {
+    it('should get project config', async () => {
       await projectUploadCommand.handler(args);
 
       expect(getProjectConfigSpy).toHaveBeenCalled();
-      expect(validateProjectConfigSpy).toHaveBeenCalledWith(
-        expect.objectContaining({ name: 'test-project' }),
-        '/test/project'
-      );
     });
 
-    it('should exit if project config validation fails', async () => {
-      const error = new Error('Invalid config');
-      validateProjectConfigSpy.mockImplementation(() => {
+    it('should exit if project config is not found', async () => {
+      const error = new Error('No project config');
+      getProjectConfigSpy.mockImplementation(() => {
         throw error;
       });
 
@@ -344,7 +336,7 @@ describe('commands/project/upload', () => {
           buildId: 456,
           buildResult: {
             isAutoDeployEnabled: false,
-            platformVersion: '2027.03-beta',
+            platformVersion: '2027.03',
           },
         },
         uploadError: null,
@@ -352,6 +344,10 @@ describe('commands/project/upload', () => {
 
       await projectUploadCommand.handler(args);
 
+      expect(meetsMinimumPlatformVersionSpy).toHaveBeenCalledWith(
+        '2027.03',
+        PLATFORM_VERSIONS.v2027_03
+      );
       expect(uiLogger.log).toHaveBeenCalledWith(
         expect.stringContaining('release create')
       );
@@ -375,9 +371,54 @@ describe('commands/project/upload', () => {
       await projectUploadCommand.handler(args);
 
       expect(uiLogger.json).toHaveBeenCalledWith({
+        targetAccount: { accountId: 123456, accountType: 'STANDARD' },
         buildId: 789,
         deployId: 101112,
       });
+      expect(processExitSpy).toHaveBeenCalledWith(EXIT_CODES.SUCCESS);
+    });
+
+    it('should log the target account before upload', async () => {
+      await projectUploadCommand.handler(args);
+
+      expect(uiLogger.log).toHaveBeenCalledWith(
+        commands.project.upload.logs.uploadingToAccount(123456)
+      );
+    });
+
+    it('should log the target account after a successful upload', async () => {
+      await projectUploadCommand.handler(args);
+
+      expect(uiLogger.log).toHaveBeenCalledWith(
+        commands.project.upload.logs.uploadedToAccount(123456)
+      );
+    });
+
+    it('should log the profile target before upload when a profile is used', async () => {
+      isLegacyProjectSpy.mockReturnValue(false);
+      projectProfilePromptSpy.mockResolvedValue('test-profile');
+      loadAndValidateProfileSpy.mockResolvedValue({ accountId: 998877 });
+
+      await projectUploadCommand.handler({ ...args, profile: 'test-profile' });
+
+      expect(uiLogger.log).toHaveBeenCalledWith(
+        commands.project.upload.logs.uploadingWithProfile(
+          'test-profile',
+          998877
+        )
+      );
+    });
+
+    it('should include targetAccount in JSON output', async () => {
+      args.formatOutputAsJson = true;
+
+      await projectUploadCommand.handler(args);
+
+      expect(uiLogger.json).toHaveBeenCalledWith(
+        expect.objectContaining({
+          targetAccount: { accountId: 123456, accountType: 'STANDARD' },
+        })
+      );
     });
 
     it('should exit with SUCCESS code when complete', async () => {
@@ -433,7 +474,10 @@ describe('commands/project/upload', () => {
 
       await projectUploadCommand.handler(args);
 
-      expect(uiLogger.json).toHaveBeenCalledWith({ buildId: 123 });
+      expect(uiLogger.json).toHaveBeenCalledWith({
+        targetAccount: { accountId: 123456, accountType: 'STANDARD' },
+        buildId: 123,
+      });
       expect(processExitSpy).toHaveBeenCalledWith(EXIT_CODES.ERROR);
     });
 
@@ -453,6 +497,7 @@ describe('commands/project/upload', () => {
       await projectUploadCommand.handler(args);
 
       expect(uiLogger.json).toHaveBeenCalledWith({
+        targetAccount: { accountId: 123456, accountType: 'STANDARD' },
         buildId: 456,
         deployId: 789,
       });
@@ -593,6 +638,7 @@ describe('commands/project/upload', () => {
 
         expect(uiLogger.json).toHaveBeenCalledWith(
           expect.objectContaining({
+            targetAccount: { accountId: 123456, accountType: 'STANDARD' },
             buildId: 123,
             preview: {
               releaseTag: 'v1.0.0',
@@ -600,6 +646,13 @@ describe('commands/project/upload', () => {
             },
           })
         );
+
+        const emitted = vi.mocked(uiLogger.json).mock.calls.at(-1)?.[0];
+        expect(Object.keys(emitted!)).toEqual([
+          'targetAccount',
+          'buildId',
+          'preview',
+        ]);
       });
 
       it('should skip deploy and show build success when auto-deploy is enabled', async () => {
@@ -679,7 +732,7 @@ describe('commands/project/upload', () => {
           srcDir: 'src',
           platformVersion: '2025.2',
         };
-        getProjectConfigSpy.mockResolvedValue({
+        getProjectConfigSpy.mockReturnValue({
           projectConfig: testConfig,
           projectDir: testProjectDir,
         });
@@ -715,7 +768,7 @@ describe('commands/project/upload', () => {
         const mockProfile = {
           accountId: 999888777,
         };
-        getProjectConfigSpy.mockResolvedValue({
+        getProjectConfigSpy.mockReturnValue({
           projectConfig: testConfig,
           projectDir: testProjectDir,
         });

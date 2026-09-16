@@ -92,7 +92,7 @@ export async function validateBuildForRelease(
     );
     return meetsMinimumPlatformVersion(
       build.platformVersion,
-      PLATFORM_VERSIONS.v2027_03_BETA
+      PLATFORM_VERSIONS.v2027_03
     );
   } catch (e) {
     if (isSpecifiedError(e, { statusCode: 404 })) {

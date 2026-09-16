@@ -98,11 +98,10 @@ describe('HsFunctionLogsTool', () => {
         }),
         expect.any(Function)
       );
-      expect(result.content).toHaveLength(2);
+      expect(result.content).toHaveLength(1);
       expect(result.content[0].text).toContain(
         'Function executed successfully'
       );
-      expect(result.content[1].text).toBe('');
     });
 
     it('should strip leading slash from endpoint', async () => {
@@ -129,11 +128,10 @@ describe('HsFunctionLogsTool', () => {
         }),
         expect.any(Function)
       );
-      expect(result.content).toHaveLength(2);
+      expect(result.content).toHaveLength(1);
       expect(result.content[0].text).toContain(
         'Function executed successfully'
       );
-      expect(result.content[1].text).toBe('');
     });
 
     it('should execute hs logs command with latest flag', async () => {
@@ -163,9 +161,8 @@ describe('HsFunctionLogsTool', () => {
         }),
         expect.any(Function)
       );
-      expect(result.content).toHaveLength(2);
+      expect(result.content).toHaveLength(1);
       expect(result.content[0].text).toContain('Latest log entry');
-      expect(result.content[1].text).toBe('');
     });
 
     it('should execute hs logs command with compact flag', async () => {
@@ -195,9 +192,8 @@ describe('HsFunctionLogsTool', () => {
         }),
         expect.any(Function)
       );
-      expect(result.content).toHaveLength(2);
+      expect(result.content).toHaveLength(1);
       expect(result.content[0].text).toContain('compact log output');
-      expect(result.content[1].text).toBe('');
     });
 
     it('should execute hs logs command with limit parameter', async () => {
@@ -227,9 +223,8 @@ describe('HsFunctionLogsTool', () => {
         }),
         expect.any(Function)
       );
-      expect(result.content).toHaveLength(2);
+      expect(result.content).toHaveLength(1);
       expect(result.content[0].text).toContain('limited log entries');
-      expect(result.content[1].text).toBe('');
     });
 
     it('should execute hs logs command with account parameter', async () => {
@@ -259,9 +254,8 @@ describe('HsFunctionLogsTool', () => {
         }),
         expect.any(Function)
       );
-      expect(result.content).toHaveLength(2);
+      expect(result.content).toHaveLength(1);
       expect(result.content[0].text).toContain('account-specific logs');
-      expect(result.content[1].text).toBe('');
     });
 
     it('should execute hs logs command with multiple parameters', async () => {
@@ -297,9 +291,8 @@ describe('HsFunctionLogsTool', () => {
         }),
         expect.any(Function)
       );
-      expect(result.content).toHaveLength(2);
+      expect(result.content).toHaveLength(1);
       expect(result.content[0].text).toContain('latest compact logs');
-      expect(result.content[1].text).toBe('');
     });
 
     it('should handle command execution errors', async () => {

@@ -7,7 +7,7 @@ import {
 import { McpLogger } from '../../utils/logger.js';
 import { getAllHsProfiles } from '@hubspot/project-parsing-lib/profiles';
 import { getProjectConfig } from '../../../lib/projects/config.js';
-import { TextContent, TextContentResponse } from '../../types.js';
+import { TextContent, McpToolResponse } from '../../types.js';
 import { Tool, ToolExtra } from '../../Tool.js';
 import {
   absoluteCurrentWorkingDirectory,
@@ -16,6 +16,8 @@ import {
 import { formatTextContent, formatTextContents } from '../../utils/content.js';
 import { HubSpotCommand } from '../../utils/command.js';
 import { setupHubSpotConfig } from '../../utils/config.js';
+import { parseCommandJsonOutput } from '../../utils/json.js';
+import { UploadSchema } from '../../../lib/jsonOutput/upload.js';
 
 const inputSchema = {
   absoluteProjectPath,
@@ -52,11 +54,12 @@ export class UploadProjectTools extends Tool<InputSchemaType> {
       uploadMessage,
     }: InputSchemaType,
     extra?: ToolExtra
-  ): Promise<TextContentResponse> {
+  ): Promise<McpToolResponse> {
     setupHubSpotConfig(absoluteCurrentWorkingDirectory);
 
     const command = new HubSpotCommand('project upload', [
       { name: 'force', value: true },
+      { name: 'json', value: true },
     ]);
 
     const content: TextContent[] = [];
@@ -71,13 +74,11 @@ export class UploadProjectTools extends Tool<InputSchemaType> {
       let hasProfiles = false;
 
       try {
-        const { projectConfig } = await getProjectConfig(absoluteProjectPath);
-        if (projectConfig) {
-          const profiles = await getAllHsProfiles(
-            path.join(absoluteProjectPath, projectConfig.srcDir)
-          );
-          hasProfiles = profiles.length > 0;
-        }
+        const { projectConfig } = getProjectConfig(absoluteProjectPath);
+        const profiles = await getAllHsProfiles(
+          path.join(absoluteProjectPath, projectConfig.srcDir)
+        );
+        hasProfiles = profiles.length > 0;
       } catch (e) {
         this.logger.debug(toolName, {
           message: 'Handler caught error checking for profiles',
@@ -99,6 +100,7 @@ export class UploadProjectTools extends Tool<InputSchemaType> {
     if (content.length > 0) {
       return {
         content,
+        structuredContent: {},
       };
     }
 
@@ -117,6 +119,9 @@ export class UploadProjectTools extends Tool<InputSchemaType> {
       )
     );
 
+    response.structuredContent =
+      parseCommandJsonOutput(stdout, UploadSchema, this.logger, toolName) ?? {};
+
     return response;
   }
   register(): RegisteredTool {
@@ -127,6 +132,7 @@ export class UploadProjectTools extends Tool<InputSchemaType> {
         description:
           'DO NOT run this tool unless the user specifies they would like to upload the project, it is potentially destructive. Uploads the HubSpot project in current working directory.  If the project does not exist, it will be created. MUST be ran from within the project directory. IMPORTANT: Uploading a project does NOT automatically make cards live or visible to users. Cards must be manually added to a view in HubSpot after upload to become visible. If you do not know the project path, use the find-projects tool first to locate HubSpot projects in the workspace.',
         inputSchema,
+        outputSchema: UploadSchema.shape,
         annotations: {
           readOnlyHint: false,
           destructiveHint: true,

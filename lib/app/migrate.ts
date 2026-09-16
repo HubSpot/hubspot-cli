@@ -97,7 +97,7 @@ export function generateFilterAppsByProjectNameFunction(
 ): (app: MigrationApp) => boolean {
   return (app: MigrationApp) => {
     if (projectConfig) {
-      return app.projectName === projectConfig?.projectConfig?.name;
+      return app.projectName === projectConfig.projectConfig.name;
     }
     return true;
   };
@@ -171,7 +171,7 @@ export async function validateMigrationApps(
     throw new Error(lib.migrate.errors.project.multipleApps);
   }
 
-  if (!projectConfig?.projectConfig) {
+  if (!projectConfig) {
     allApps.forEach(app => {
       if (app.projectName) {
         app.isMigratable = false;
@@ -183,9 +183,7 @@ export async function validateMigrationApps(
 
   if (allApps.length === 0 && projectConfig) {
     throw new Error(
-      lib.migrate.errors.noAppsForProject(
-        projectConfig?.projectConfig?.name || ''
-      )
+      lib.migrate.errors.noAppsForProject(projectConfig.projectConfig.name)
     );
   }
 
@@ -367,11 +365,7 @@ export async function handleMigrationSetup(
   }
 
   // If it's a project we don't want to prompt for dest and name, so just return early
-  if (
-    projectConfig &&
-    projectConfig?.projectConfig &&
-    projectConfig?.projectDir
-  ) {
+  if (projectConfig) {
     return {
       appIdToMigrate,
       projectName: projectConfig.projectConfig.name,
@@ -590,7 +584,7 @@ export async function downloadProjectFiles(
 
     let absoluteDestPath;
 
-    if (projectConfig?.projectConfig && projectConfig?.projectDir) {
+    if (projectConfig) {
       const { projectDir } = projectConfig;
       absoluteDestPath = projectDir;
       const { srcDir } = projectConfig.projectConfig;

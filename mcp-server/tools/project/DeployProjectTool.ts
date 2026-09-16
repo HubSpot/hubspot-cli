@@ -1,4 +1,4 @@
-import { TextContent, TextContentResponse } from '../../types.js';
+import { TextContent, McpToolResponse } from '../../types.js';
 import { Tool, ToolExtra } from '../../Tool.js';
 import {
   McpServer,
@@ -45,7 +45,7 @@ export class DeployProjectTool extends Tool<InputSchemaType> {
       buildNumber,
     }: InputSchemaType,
     extra?: ToolExtra
-  ): Promise<TextContentResponse> {
+  ): Promise<McpToolResponse> {
     setupHubSpotConfig(absoluteCurrentWorkingDirectory);
     const content: TextContent[] = [];
 

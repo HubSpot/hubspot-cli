@@ -96,19 +96,6 @@ describe('lib/theme/migrate', () => {
       });
     });
 
-    it('should return false when projectConfig is missing required properties', async () => {
-      const invalidProjectConfig = {
-        projectConfig: { name: undefined, srcDir: 'src' },
-        projectDir: undefined,
-      } as unknown as LoadedProjectConfig;
-
-      const result = await getHasMigratableThemes(invalidProjectConfig);
-      expect(result).toEqual({
-        hasMigratableThemes: false,
-        migratableThemesCount: 0,
-      });
-    });
-
     it('should return true when there are legacy themes', async () => {
       mockedGetProjectThemeDetails.mockResolvedValue({
         legacyThemeDetails: [
@@ -216,17 +203,6 @@ describe('lib/theme/migrate', () => {
         legacyReactThemeDetails: [],
       });
       mockedWriteProjectConfig.mockReturnValue(true);
-    });
-
-    it('should throw an error when project config is invalid', async () => {
-      const invalidProjectConfig = {
-        projectConfig: { name: PROJECT_NAME, srcDir: undefined },
-        projectDir: undefined,
-      } as unknown as LoadedProjectConfig;
-
-      await expect(
-        handleThemesMigration(invalidProjectConfig, PLATFORM_VERSION)
-      ).rejects.toThrow(lib.migrate.errors.project.invalidConfig);
     });
 
     it('should successfully migrate themes and update project config', async () => {

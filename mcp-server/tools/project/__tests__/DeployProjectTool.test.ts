@@ -100,10 +100,7 @@ describe('mcp-server/tools/project/DeployProject', () => {
       );
 
       expect(result).toEqual({
-        content: [
-          { type: 'text', text: 'Project deployed successfully' },
-          { type: 'text', text: '' },
-        ],
+        content: [{ type: 'text', text: 'Project deployed successfully' }],
       });
     });
 

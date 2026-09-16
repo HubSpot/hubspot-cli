@@ -4,10 +4,7 @@ import { getConfigAccountById } from '@hubspot/local-dev-lib/config';
 import { isSpecifiedError } from '@hubspot/local-dev-lib/errors/index';
 import { isLegacyProject } from '@hubspot/project-parsing-lib/projects';
 import { logError, ApiErrorContext } from '../../lib/errorHandlers/index.js';
-import {
-  getProjectConfig,
-  validateProjectConfig,
-} from '../../lib/projects/config.js';
+import { getProjectConfig } from '../../lib/projects/config.js';
 import { projectNamePrompt } from '../../lib/prompts/projectNamePrompt.js';
 import { projectProfilePrompt } from '../../lib/prompts/projectProfilePrompt.js';
 import { promptUser } from '../../lib/prompts/promptUtils.js';
@@ -22,7 +19,7 @@ import {
   YargsCommandModule,
 } from '../../types/Yargs.js';
 import { makeWrappedYargsHandler } from '../../lib/yargs/makeWrappedYargsHandler.js';
-import { DeployJsonOutput, DeploySchema } from '../../lib/jsonOutput.js';
+import { DeployJsonOutput, DeploySchema } from '../../lib/jsonOutput/deploy.js';
 import { makeYargsBuilder } from '../../lib/yargsUtils.js';
 import { loadProfile } from '../../lib/projects/projectProfiles.js';
 import { PROJECT_DEPLOY_TEXT } from '../../lib/constants.js';
@@ -70,24 +67,25 @@ async function handler(
   const accountType = accountConfig && accountConfig.accountType;
   let targetAccountId: number | undefined;
 
-  const { projectConfig, projectDir } = await getProjectConfig();
-
+  let loadedConfig;
   let isInProjectDirectory = false;
 
-  // Validate project config, but it's valid to run this command from outside a project dir
   try {
-    validateProjectConfig(projectConfig, projectDir);
+    loadedConfig = getProjectConfig();
     isInProjectDirectory = true;
-  } catch (e) {}
+  } catch (e) {
+    // Do nothing, it's valid to run this command from outside a project dir
+  }
 
   if (
     isInProjectDirectory &&
-    !isLegacyProject(projectConfig?.platformVersion)
+    loadedConfig &&
+    !isLegacyProject(loadedConfig.projectConfig.platformVersion)
   ) {
     try {
       const profileName = await projectProfilePrompt(
-        projectDir!,
-        projectConfig!,
+        loadedConfig.projectDir,
+        loadedConfig.projectConfig,
         profileOption,
         !!useEnvOption
       );
@@ -95,7 +93,11 @@ async function handler(
       if (profileName) {
         // Use loadProfile instead of loadAndValidateProfile because the local
         // profile does not need to be valid to successfully deploy
-        const profile = loadProfile(projectConfig, projectDir, profileName);
+        const profile = loadProfile(
+          loadedConfig.projectConfig,
+          loadedConfig.projectDir,
+          profileName
+        );
         targetAccountId = profile.accountId;
 
         uiLogger.log(
@@ -119,8 +121,8 @@ async function handler(
 
   let projectName = projectOption;
 
-  if (!projectOption && projectConfig) {
-    projectName = projectConfig.name;
+  if (!projectOption && loadedConfig) {
+    projectName = loadedConfig.projectConfig.name;
   }
 
   const namePromptResponse = await projectNamePrompt(targetAccountId, {
@@ -215,7 +217,7 @@ async function handler(
       targetAccountId,
       projectName,
       buildIdToDeploy,
-      isLegacyProject(projectConfig?.platformVersion),
+      isLegacyProject(loadedConfig?.projectConfig.platformVersion),
       forceOption
     );
 

@@ -7,6 +7,7 @@ import {
   getProjectInfo,
   logProjectInfo,
 } from '../../../lib/projects/projectInfo.js';
+import { logError } from '../../../lib/errorHandlers/index.js';
 import { uiLogger } from '../../../lib/ui/logger.js';
 import { EXIT_CODES } from '../../../lib/enums/exitCodes.js';
 
@@ -110,7 +111,7 @@ describe('commands/project/info', () => {
     } as unknown as ArgumentsCamelCase<ProjectInfoArgs>;
 
     beforeEach(() => {
-      mockedGetProjectConfig.mockResolvedValue({
+      mockedGetProjectConfig.mockReturnValue({
         projectConfig: mockProjectConfig,
         projectDir: '/path/to/project',
       });
@@ -123,14 +124,14 @@ describe('commands/project/info', () => {
     });
 
     it('should exit with error when no project config is found', async () => {
-      mockedGetProjectConfig.mockResolvedValue({
-        projectConfig: null,
-        projectDir: null,
+      const error = new Error('No project config found');
+      mockedGetProjectConfig.mockImplementation(() => {
+        throw error;
       });
 
       await projectInfoCommand.handler(mockArgs);
 
-      expect(mockedUiLogger.error).toHaveBeenCalled();
+      expect(logError).toHaveBeenCalledWith(error);
       expect(mockExit).toHaveBeenCalledWith(EXIT_CODES.ERROR);
       expect(mockedFetchProject).not.toHaveBeenCalled();
     });

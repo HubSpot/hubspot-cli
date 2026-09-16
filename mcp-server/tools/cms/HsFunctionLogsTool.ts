@@ -1,4 +1,4 @@
-import { TextContentResponse } from '../../types.js';
+import { McpToolResponse } from '../../types.js';
 import { Tool, ToolExtra } from '../../Tool.js';
 import {
   McpServer,
@@ -58,7 +58,7 @@ export class HsFunctionLogsTool extends Tool<HsFunctionLogsInputSchema> {
       absoluteCurrentWorkingDirectory,
     }: HsFunctionLogsInputSchema,
     extra?: ToolExtra
-  ): Promise<TextContentResponse> {
+  ): Promise<McpToolResponse> {
     setupHubSpotConfig(absoluteCurrentWorkingDirectory);
 
     // Ensure endpoint doesn't start with '/'

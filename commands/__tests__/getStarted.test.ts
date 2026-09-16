@@ -122,12 +122,18 @@ describe('commands/get-started', () => {
       (
         cloneGithubRepo as MockedFunction<typeof cloneGithubRepo>
       ).mockResolvedValue(true);
-      (
-        getProjectConfig as MockedFunction<typeof getProjectConfig>
-      ).mockResolvedValue({
-        projectConfig: null,
-        projectDir: null,
-      });
+      (getProjectConfig as MockedFunction<typeof getProjectConfig>)
+        .mockImplementationOnce(() => {
+          throw new Error('Not in a project');
+        })
+        .mockReturnValue({
+          projectConfig: {
+            name: 'test-project',
+            srcDir: 'src',
+            platformVersion: '2026.03',
+          },
+          projectDir: '/path/to/project',
+        });
       (
         writeProjectConfig as MockedFunction<typeof writeProjectConfig>
       ).mockResolvedValue(true);
@@ -206,22 +212,6 @@ describe('commands/get-started', () => {
           .mockResolvedValueOnce({ default: GET_STARTED_OPTIONS.APP })
           .mockResolvedValueOnce({ shouldUpload: true });
 
-        const mockProjectConfig = {
-          name: 'test-project',
-          srcDir: 'src',
-          platformVersion: '1.0.0',
-        };
-        (getProjectConfig as MockedFunction<typeof getProjectConfig>)
-
-          .mockResolvedValueOnce({
-            projectConfig: null,
-            projectDir: null,
-          })
-          .mockResolvedValueOnce({
-            projectConfig: mockProjectConfig,
-            projectDir: '/path/to/project',
-          });
-
         await getStartedCommand.handler(mockArgs);
 
         expect(promptUser).toHaveBeenCalledWith([
@@ -265,20 +255,6 @@ describe('commands/get-started', () => {
         (promptUser as MockedFunction<typeof promptUser>)
           .mockResolvedValueOnce({ default: GET_STARTED_OPTIONS.APP })
           .mockResolvedValueOnce({ shouldUpload: true });
-
-        (getProjectConfig as MockedFunction<typeof getProjectConfig>)
-          .mockResolvedValueOnce({
-            projectConfig: null,
-            projectDir: null,
-          })
-          .mockResolvedValueOnce({
-            projectConfig: {
-              name: 'test-project',
-              srcDir: 'src',
-              platformVersion: '2026.03',
-            },
-            projectDir: '/path/to/project',
-          });
 
         mockedHandleProjectUpload.mockResolvedValueOnce({
           result: { isAutoDeployEnabled: false },

@@ -32,7 +32,9 @@ import {
 } from '../constants.js';
 import { METAFILE_EXTENSION } from '@hubspot/project-parsing-lib/constants';
 
-export type ProjectConfig = Awaited<ReturnType<typeof getProjectConfig>>;
+import type { LoadedProjectConfig } from '../projects/config.js';
+
+export type ProjectConfig = LoadedProjectConfig | undefined;
 
 // This needs to be hardcoded since we are using it in the TS type
 const hubspotCli = '@hubspot/cli';
@@ -111,14 +113,15 @@ export class DiagnosticInfoBuilder {
   }
 
   async generateDiagnosticInfo(): Promise<DiagnosticInfo> {
-    this._projectConfig = await getProjectConfig();
-
-    if (this._projectConfig?.projectConfig) {
-      await this.fetchProjectDetails();
-      await this.fetchAccessToken();
+    try {
+      this._projectConfig = getProjectConfig();
+    } catch {
+      this._projectConfig = undefined;
     }
 
-    if (this._projectConfig?.projectDir) {
+    if (this._projectConfig) {
+      await this.fetchProjectDetails();
+      await this.fetchAccessToken();
       await this.fetchProjectFilenames();
     }
 
@@ -162,8 +165,7 @@ export class DiagnosticInfoBuilder {
     try {
       const { data } = await fetchProject(
         this.accountId!,
-        // We check that config exists before running this function
-        this._projectConfig!.projectConfig!.name
+        this._projectConfig!.projectConfig.name
       );
       this.projectDetails = data;
     } catch (e) {
@@ -187,11 +189,10 @@ export class DiagnosticInfoBuilder {
 
   private async fetchProjectFilenames(): Promise<void> {
     try {
-      // We check that projectDir exists before running this function
       this.files = (
-        await walk(this._projectConfig!.projectDir!, ['node_modules'])
+        await walk(this._projectConfig!.projectDir, ['node_modules'])
       ).map(filename =>
-        path.relative(this._projectConfig!.projectDir!, filename)
+        path.relative(this._projectConfig!.projectDir, filename)
       );
     } catch (e) {
       uiLogger.debug(e);

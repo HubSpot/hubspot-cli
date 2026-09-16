@@ -131,7 +131,21 @@ export async function checkDeployedComponents(
     projectData.latestBuild?.platformVersion;
 
   if (!platformVersion) {
-    throw new Error(commands.project.delete.errors.noPlatformVersion);
+    // A build exists but carries no platform version. That is inconsistent data rather than an
+    // empty project, and the build may have deployed components, so keep failing loudly instead of
+    // silently skipping cleanup.
+    if (projectData.deployedBuild || projectData.latestBuild) {
+      throw new Error(commands.project.delete.errors.noPlatformVersion);
+    }
+
+    // No builds at all, so nothing is deployed and there is no platform version to branch on. This
+    // happens whenever a project's very first upload fails, for example on a platform version that
+    // is not active, and previously left the project impossible to delete.
+    return {
+      platformVersion: '',
+      hasUnifiedComponents: false,
+      projectId: projectData.id,
+    };
   }
 
   if (isLegacyProject(platformVersion)) {

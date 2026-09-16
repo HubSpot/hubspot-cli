@@ -1,10 +1,7 @@
 import { Argv, ArgumentsCamelCase } from 'yargs';
 import { getConfigAccountIfExists } from '@hubspot/local-dev-lib/config';
 import { HsProfileFile } from '@hubspot/project-parsing-lib/profiles';
-import {
-  getProjectConfig,
-  validateProjectConfig,
-} from '../../../lib/projects/config.js';
+import { getProjectConfig } from '../../../lib/projects/config.js';
 import { EXIT_CODES } from '../../../lib/enums/exitCodes.js';
 import { uiLine } from '../../../lib/ui/index.js';
 import { ProjectDevArgs, YargsCommandModule } from '../../../types/Yargs.js';
@@ -35,17 +32,13 @@ async function handler(
     addUsageMetadata,
   } = args;
 
-  const { projectConfig, projectDir } = await getProjectConfig();
+  let projectConfig;
+  let projectDir;
 
   try {
-    validateProjectConfig(projectConfig, projectDir);
+    ({ projectConfig, projectDir } = getProjectConfig());
   } catch (error) {
     logError(error);
-    return exit(EXIT_CODES.ERROR);
-  }
-
-  if (!projectDir) {
-    uiLogger.error(commands.project.dev.errors.noProjectConfig);
     return exit(EXIT_CODES.ERROR);
   }
 

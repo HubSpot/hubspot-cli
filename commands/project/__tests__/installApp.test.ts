@@ -22,6 +22,7 @@ import { getProjectConfig } from '../../../lib/projects/config.js';
 import { handleProjectUpload } from '../../../lib/projects/upload.js';
 import { loadProfile } from '../../../lib/projects/projectProfiles.js';
 import { projectProfilePrompt } from '../../../lib/prompts/projectProfilePrompt.js';
+import { logError } from '../../../lib/errorHandlers/index.js';
 import { uiLogger } from '../../../lib/ui/logger.js';
 import { EXIT_CODES } from '../../../lib/enums/exitCodes.js';
 import { confirmPrompt, listPrompt } from '../../../lib/prompts/promptUtils.js';
@@ -181,7 +182,7 @@ describe('commands/project/installApp', () => {
     } as unknown as ArgumentsCamelCase<ProjectInstallAppArgs>;
 
     beforeEach(() => {
-      mockedGetProjectConfig.mockResolvedValue({
+      mockedGetProjectConfig.mockReturnValue({
         projectConfig: mockProjectConfig,
         projectDir: '/path/to/project',
       });
@@ -233,14 +234,14 @@ describe('commands/project/installApp', () => {
     });
 
     it('should exit with error when no project config is found', async () => {
-      mockedGetProjectConfig.mockResolvedValue({
-        projectConfig: null,
-        projectDir: null,
+      const error = new Error('No project config found');
+      mockedGetProjectConfig.mockImplementation(() => {
+        throw error;
       });
 
       await projectInstallAppCommand.handler(mockArgs);
 
-      expect(mockedUiLogger.error).toHaveBeenCalled();
+      expect(logError).toHaveBeenCalledWith(error);
       expect(mockExit).toHaveBeenCalledWith(EXIT_CODES.ERROR);
     });
 

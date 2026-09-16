@@ -325,11 +325,16 @@ export async function handleProjectUpload<T>({
   return result;
 }
 
+export type SourceDirectoryWarning = {
+  message: string;
+  file: string;
+};
+
 export async function validateSourceDirectory(
   srcDir: string,
   projectConfig: ProjectConfig,
   projectDir: string
-) {
+): Promise<SourceDirectoryWarning[]> {
   const projectFilePaths = await walk(srcDir, ['node_modules']);
   if (!projectFilePaths || projectFilePaths.length === 0) {
     throw new ProjectValidationError(
@@ -337,19 +342,23 @@ export async function validateSourceDirectory(
     );
   }
 
+  const warnings: SourceDirectoryWarning[] = [];
   if (!isLegacyProject(projectConfig.platformVersion)) {
     projectFilePaths.forEach(filePath => {
       const filename = path.basename(filePath);
       if (LEGACY_CONFIG_FILES.includes(filename)) {
-        uiLogger.warn(
+        const relativePath = path.relative(projectDir, filePath);
+        const message =
           lib.projectUpload.handleProjectUpload.legacyFileDetected(
-            path.relative(projectDir, filePath),
+            relativePath,
             projectConfig.platformVersion
-          )
-        );
+          );
+        warnings.push({ message, file: relativePath });
+        uiLogger.warn(message);
       }
     });
   }
+  return warnings;
 }
 
 export async function validateNoHSMetaMismatch(

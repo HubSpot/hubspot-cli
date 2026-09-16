@@ -11,7 +11,7 @@ import { makeWrappedYargsHandler } from '../../lib/yargs/makeWrappedYargsHandler
 import { makeYargsBuilder } from '../../lib/yargsUtils.js';
 import { fetchProject } from '@hubspot/local-dev-lib/api/projects';
 import { Project } from '@hubspot/local-dev-lib/types/Project';
-import { debugError } from '../../lib/errorHandlers/index.js';
+import { debugError, logError } from '../../lib/errorHandlers/index.js';
 import { EXIT_CODES } from '../../lib/enums/exitCodes.js';
 import { uiLogger } from '../../lib/ui/logger.js';
 import { commands } from '../../lang/en.js';
@@ -24,7 +24,7 @@ import {
 import {
   ProjectInfoJsonOutput,
   ProjectInfoSchema,
-} from '../../lib/jsonOutput.js';
+} from '../../lib/jsonOutput/info.js';
 
 const command = 'info';
 const describe = commands.project.info.describe;
@@ -41,10 +41,12 @@ async function handler(
 ): Promise<void> {
   const { derivedAccountId, formatOutputAsJson, exit, addJsonOutput } = args;
 
-  const { projectConfig } = await getProjectConfig();
+  let projectConfig;
 
-  if (!projectConfig) {
-    uiLogger.error(commands.project.info.errors.noProjectConfig);
+  try {
+    ({ projectConfig } = getProjectConfig());
+  } catch (error) {
+    logError(error);
     return exit(EXIT_CODES.ERROR);
   }
 

@@ -1,7 +1,7 @@
 import { Tool, ToolExtra } from '../Tool.js';
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { McpLogger } from '../utils/logger.js';
-import { TextContentResponse } from '../types.js';
+import { McpToolResponse } from '../types.js';
 import { trackToolUsage } from '../utils/toolUsageTracking.js';
 import { mcpFeedbackRequest } from '../utils/feedbackTracking.js';
 import { runCommandInDir, HubSpotCommand } from '../utils/command.js';
@@ -38,7 +38,7 @@ class TestTool extends Tool<TestInput> {
   public invokeWrapped(
     input: TestInput,
     extra?: ToolExtra
-  ): Promise<TextContentResponse> {
+  ): Promise<McpToolResponse> {
     return this.wrappedHandler(input, extra);
   }
 
@@ -52,25 +52,25 @@ class TestTool extends Tool<TestInput> {
 }
 
 class SuccessTool extends TestTool {
-  handler(input: TestInput): TextContentResponse {
+  handler(input: TestInput): McpToolResponse {
     return { content: [{ type: 'text', text: `handled:${input.value}` }] };
   }
 }
 
 class AsyncSuccessTool extends TestTool {
-  async handler(input: TestInput): Promise<TextContentResponse> {
+  async handler(input: TestInput): Promise<McpToolResponse> {
     return { content: [{ type: 'text', text: `async:${input.value}` }] };
   }
 }
 
 class ThrowingTool extends TestTool {
-  handler(): TextContentResponse {
+  handler(): McpToolResponse {
     throw new Error('Handler exploded');
   }
 }
 
 class NonErrorThrowingTool extends TestTool {
-  handler(): TextContentResponse {
+  handler(): McpToolResponse {
     throw 'string failure';
   }
 }
@@ -80,7 +80,7 @@ class MetaTool extends TestTool {
     return { mode: input.value };
   }
 
-  handler(): TextContentResponse {
+  handler(): McpToolResponse {
     return { content: [{ type: 'text', text: 'ok' }] };
   }
 }
@@ -205,6 +205,7 @@ describe('mcp-server/Tool', () => {
       );
       expect(result).toEqual({
         content: [{ type: 'text', text: 'Handler exploded' }],
+        isError: true,
       });
     });
 
@@ -222,6 +223,7 @@ describe('mcp-server/Tool', () => {
       );
       expect(result).toEqual({
         content: [{ type: 'text', text: 'string failure' }],
+        isError: true,
       });
     });
 
@@ -248,6 +250,7 @@ describe('mcp-server/Tool', () => {
       );
       expect(result).toEqual({
         content: [{ type: 'text', text: 'tracking failed' }],
+        isError: true,
       });
     });
 

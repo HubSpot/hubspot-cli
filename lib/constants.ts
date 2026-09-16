@@ -95,7 +95,6 @@ export const APP_AUTH_TYPES = {
 export const FEATURES = {
   UNIFIED_APPS: 'Developers:UnifiedApps:PrivateBeta',
   APP_EVENTS: 'Developers:UnifiedApps:AppEventsAccess',
-  THEME_MIGRATION_2025_2: 'Developers:ProjectThemeMigrations:2025.2',
   AGENT_TOOLS: 'ThirdPartyAgentTools',
   APP_ACTIONS: 'Developers:AppActions',
 } as const;

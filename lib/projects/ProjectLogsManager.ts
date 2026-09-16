@@ -46,11 +46,7 @@ class _ProjectLogsManager {
   }
 
   async init(accountId: number): Promise<void> {
-    const { projectConfig } = await getProjectConfig();
-
-    if (!projectConfig || !projectConfig.name) {
-      throw new Error(commands.project.logs.errors.noProjectConfig);
-    }
+    const { projectConfig } = getProjectConfig();
 
     this.projectConfig = projectConfig;
     this.projectName = projectConfig.name;

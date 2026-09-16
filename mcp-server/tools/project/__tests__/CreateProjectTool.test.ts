@@ -116,10 +116,7 @@ describe('mcp-server/tools/project/CreateProjectTool', () => {
       );
 
       expect(result).toEqual({
-        content: [
-          { type: 'text', text: 'Project created successfully' },
-          { type: 'text', text: '' },
-        ],
+        content: [{ type: 'text', text: 'Project created successfully' }],
       });
     });
 

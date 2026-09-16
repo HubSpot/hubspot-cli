@@ -92,9 +92,8 @@ describe('HsListFunctionsTool', () => {
         }),
         expect.any(Function)
       );
-      expect(result.content).toHaveLength(2);
+      expect(result.content).toHaveLength(1);
       expect(result.content[0].text).toContain('Route | Method | Secrets');
-      expect(result.content[1].text).toBe('');
     });
 
     it('should execute hs function list command with json flag', async () => {
@@ -122,9 +121,8 @@ describe('HsListFunctionsTool', () => {
         }),
         expect.any(Function)
       );
-      expect(result.content).toHaveLength(2);
+      expect(result.content).toHaveLength(1);
       expect(result.content[0].text).toContain('[{"route": "/api/test"');
-      expect(result.content[1].text).toBe('');
     });
 
     it('should execute hs function list command with account parameter', async () => {
@@ -152,9 +150,8 @@ describe('HsListFunctionsTool', () => {
         }),
         expect.any(Function)
       );
-      expect(result.content).toHaveLength(2);
+      expect(result.content).toHaveLength(1);
       expect(result.content[0].text).toContain('account-specific-functions');
-      expect(result.content[1].text).toBe('');
     });
 
     it('should execute hs function list command with both json and account parameters', async () => {
@@ -185,9 +182,8 @@ describe('HsListFunctionsTool', () => {
         }),
         expect.any(Function)
       );
-      expect(result.content).toHaveLength(2);
+      expect(result.content).toHaveLength(1);
       expect(result.content[0].text).toContain('[{"route": "/api/test"}]');
-      expect(result.content[1].text).toBe('');
     });
 
     it('should handle command execution errors', async () => {

@@ -21,7 +21,7 @@ import { makeWrappedYargsHandler } from '../../lib/yargs/makeWrappedYargsHandler
 import {
   CreateTestAccountJsonOutput,
   CreateTestAccountSchema,
-} from '../../lib/jsonOutput.js';
+} from '../../lib/jsonOutput/createTestAccount.js';
 import { makeYargsBuilder } from '../../lib/yargsUtils.js';
 import { promptUser, listPrompt } from '../../lib/prompts/promptUtils.js';
 import { EXIT_CODES } from '../../lib/enums/exitCodes.js';

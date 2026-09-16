@@ -5,20 +5,6 @@ export class ProjectNestingError extends Error {
   }
 }
 
-export class ProjectConfigNotFoundError extends Error {
-  constructor(message: string) {
-    super(message);
-    this.name = 'ProjectConfigNotFoundError';
-  }
-}
-
-export class ProjectValidationError extends Error {
-  constructor(message: string) {
-    super(message);
-    this.name = 'ProjectValidationError';
-  }
-}
-
 export class ProjectUploadError extends Error {
   constructor(message: string, cause?: unknown) {
     super(message, { cause });

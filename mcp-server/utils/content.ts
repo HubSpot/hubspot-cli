@@ -1,12 +1,12 @@
-import { TextContent, TextContentResponse } from '../types.js';
+import { TextContent, McpToolResponse } from '../types.js';
 import { mcpFeedbackRequest } from './feedbackTracking.js';
 
 export async function formatTextContents(
   ...outputs: (string | undefined)[]
-): Promise<TextContentResponse> {
+): Promise<McpToolResponse> {
   const content: TextContent[] = [];
   outputs.forEach(output => {
-    if (output !== undefined) {
+    if (output) {
       content.push(formatTextContent(output));
     }
   });

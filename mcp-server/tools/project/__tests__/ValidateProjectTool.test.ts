@@ -98,10 +98,7 @@ describe('mcp-server/tools/project/ValidateProjectTool', () => {
       );
 
       expect(result).toEqual({
-        content: [
-          { type: 'text', text: 'Project validation successful' },
-          { type: 'text', text: '' },
-        ],
+        content: [{ type: 'text', text: 'Project validation successful' }],
       });
     });
 
@@ -186,7 +183,6 @@ describe('mcp-server/tools/project/ValidateProjectTool', () => {
       const result = await tool.handler(input);
 
       expect(result.content).toEqual([
-        { type: 'text', text: '' },
         { type: 'text', text: 'Error: Missing required configuration file' },
       ]);
     });

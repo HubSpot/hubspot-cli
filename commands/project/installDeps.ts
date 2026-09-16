@@ -9,7 +9,6 @@ import { getProjectConfig } from '../../lib/projects/config.js';
 import { promptUser } from '../../lib/prompts/promptUtils.js';
 import path from 'path';
 import { commands } from '../../lang/en.js';
-import { uiLogger } from '../../lib/ui/logger.js';
 import {
   CommonArgs,
   ConfigArgs,
@@ -33,13 +32,14 @@ async function handler(
 ): Promise<void> {
   const { packages, exit } = args;
   try {
-    const projectConfig = await getProjectConfig();
-    if (!projectConfig || !projectConfig.projectDir) {
-      uiLogger.error(commands.project.installDeps.noProjectConfig);
+    let projectDir;
+
+    try {
+      ({ projectDir } = getProjectConfig());
+    } catch (error) {
+      logError(error);
       return exit(EXIT_CODES.ERROR);
     }
-
-    const { projectDir } = projectConfig;
 
     let installLocations = await getProjectPackageJsonLocations();
     if (packages) {

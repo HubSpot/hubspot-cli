@@ -1,4 +1,4 @@
-import { TextContentResponse } from '../../types.js';
+import { McpToolResponse } from '../../types.js';
 import { Tool, ToolExtra } from '../../Tool.js';
 import {
   McpServer,
@@ -37,7 +37,7 @@ export class ValidateProjectTool extends Tool<CreateProjectInputSchema> {
       absoluteCurrentWorkingDirectory,
     }: CreateProjectInputSchema,
     extra?: ToolExtra
-  ): Promise<TextContentResponse> {
+  ): Promise<McpToolResponse> {
     setupHubSpotConfig(absoluteCurrentWorkingDirectory);
     try {
       const command = new HubSpotCommand('project validate');

@@ -32,8 +32,6 @@ async function handler(
 ): Promise<void> {
   const { project, derivedAccountId, exit } = args;
 
-  const { projectConfig } = await getProjectConfig();
-
   let projectName = project;
 
   if (projectName) {
@@ -48,11 +46,20 @@ async function handler(
     if (!projectExists) {
       return exit(EXIT_CODES.ERROR);
     }
-  } else if (!projectName && projectConfig) {
-    projectName = projectConfig.name;
-  } else if (!projectName && !projectConfig) {
-    const namePromptResponse = await projectNamePrompt(derivedAccountId);
-    projectName = namePromptResponse.projectName;
+  } else if (!projectName) {
+    let projectConfig;
+    try {
+      ({ projectConfig } = getProjectConfig());
+    } catch {
+      // Not in a project directory, fall through to prompt
+    }
+
+    if (projectConfig) {
+      projectName = projectConfig.name;
+    } else {
+      const namePromptResponse = await projectNamePrompt(derivedAccountId);
+      projectName = namePromptResponse.projectName;
+    }
   }
 
   const url = getProjectDetailUrl(projectName!, derivedAccountId)!;

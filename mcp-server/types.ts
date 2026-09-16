@@ -3,4 +3,8 @@ export type TextContent = {
   text: string;
 };
 
-export type TextContentResponse = { content: TextContent[] };
+export type McpToolResponse = {
+  content: TextContent[];
+  structuredContent?: Record<string, unknown>;
+  isError?: boolean;
+};

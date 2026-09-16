@@ -1,4 +1,4 @@
-import { TextContentResponse } from '../../types.js';
+import { McpToolResponse } from '../../types.js';
 import { Tool } from '../../Tool.js';
 import {
   McpServer,
@@ -35,7 +35,7 @@ export class FindProjectsTool extends Tool<FindProjectsInputSchema> {
 
   async handler({
     absoluteDirectory,
-  }: FindProjectsInputSchema): Promise<TextContentResponse> {
+  }: FindProjectsInputSchema): Promise<McpToolResponse> {
     try {
       const allFiles = await walk(absoluteDirectory, IGNORE_DIRS);
       const projectFiles = allFiles.filter(

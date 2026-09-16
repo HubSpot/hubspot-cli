@@ -104,10 +104,7 @@ describe('mcp-server/tools/project/AddFeatureToProject', () => {
       );
 
       expect(result).toEqual({
-        content: [
-          { type: 'text', text: 'Feature added successfully' },
-          { type: 'text', text: '' },
-        ],
+        content: [{ type: 'text', text: 'Feature added successfully' }],
       });
     });
 

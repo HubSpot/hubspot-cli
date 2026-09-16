@@ -2,12 +2,18 @@ import fs from 'fs-extra';
 import path from 'path';
 import findup from 'findup-sync';
 import { getAbsoluteFilePath, getCwd } from '@hubspot/local-dev-lib/path';
+import {
+  parseProjectConfig,
+  ProjectConfigValidationError,
+} from '@hubspot/project-parsing-lib/projects';
+import type { ProjectConfig } from '@hubspot/project-parsing-lib/projects';
 
-import { ProjectConfig } from '../../types/Projects.js';
 import { PROJECT_CONFIG_FILE } from '../constants.js';
 import { lib } from '../../lang/en.js';
 import { uiLogger } from '../ui/logger.js';
-import ProjectValidationError from '../errors/ProjectValidationError.js';
+
+export { ProjectConfigValidationError } from '@hubspot/project-parsing-lib/projects';
+export type { ProjectConfig } from '@hubspot/project-parsing-lib/projects';
 
 export function writeProjectConfig(
   configPath: string,
@@ -41,75 +47,20 @@ function getProjectConfigPath(dir?: string): string | null {
 }
 
 export interface LoadedProjectConfig {
-  projectDir: string | null;
-  projectConfig: ProjectConfig | null;
+  projectDir: string;
+  projectConfig: ProjectConfig;
 }
 
-export async function getProjectConfig(
-  dir?: string
-): Promise<LoadedProjectConfig> {
+export function getProjectConfig(dir?: string): LoadedProjectConfig {
   const configPath = getProjectConfigPath(dir);
   if (!configPath) {
-    return { projectConfig: null, projectDir: null };
-  }
-
-  try {
-    const config = fs.readFileSync(configPath);
-    const projectConfig: ProjectConfig = JSON.parse(config.toString());
-    return {
-      projectDir: path.dirname(configPath),
-      projectConfig,
-    };
-  } catch (e) {
-    uiLogger.error(lib.projects.getProjectConfig.error);
-    return { projectConfig: null, projectDir: null };
-  }
-}
-
-export function validateProjectConfig(
-  projectConfig: ProjectConfig | null,
-  projectDir: string | null
-): asserts projectConfig is ProjectConfig {
-  if (!projectConfig || !projectDir) {
-    throw new ProjectValidationError(
+    throw new ProjectConfigValidationError(
       lib.projects.validateProjectConfig.configNotFound
     );
   }
 
-  const missingFields: string[] = [];
-  if (!projectConfig.name) {
-    missingFields.push('name');
-  }
-  if (!projectConfig.srcDir) {
-    missingFields.push('srcDir');
-  }
+  const projectDir = path.dirname(configPath);
+  const projectConfig = parseProjectConfig(projectDir);
 
-  if (missingFields.length > 0) {
-    throw new ProjectValidationError(
-      lib.projects.validateProjectConfig.configMissingFields(missingFields)
-    );
-  }
-
-  const resolvedPath = path.resolve(projectDir, projectConfig.srcDir);
-  if (!resolvedPath.startsWith(projectDir)) {
-    const projectConfigFile = path.relative(
-      '.',
-      path.join(projectDir, PROJECT_CONFIG_FILE)
-    );
-    throw new ProjectValidationError(
-      lib.projects.validateProjectConfig.srcOutsideProjectDir(
-        projectConfigFile,
-        projectConfig.srcDir
-      )
-    );
-  }
-
-  if (!fs.existsSync(resolvedPath)) {
-    throw new ProjectValidationError(
-      lib.projects.validateProjectConfig.srcDirNotFound(
-        projectConfig.srcDir,
-        projectDir
-      )
-    );
-  }
+  return { projectDir, projectConfig };
 }

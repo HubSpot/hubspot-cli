@@ -8,7 +8,7 @@ import {
 } from '@hubspot/local-dev-lib/api/projects';
 import { logError, ApiErrorContext } from '../../lib/errorHandlers/index.js';
 import { isPromptExitError } from '../../lib/errors/PromptExitError.js';
-import { getProjectConfig } from '../../lib/projects/config.js';
+import { getIsInProject } from '../../lib/projects/config.js';
 import { downloadProjectPrompt } from '../../lib/prompts/downloadProjectPrompt.js';
 import { commands } from '../../lang/en.js';
 import { uiLogger } from '../../lib/ui/logger.js';
@@ -18,26 +18,37 @@ import {
   ConfigArgs,
   AccountArgs,
   EnvironmentArgs,
+  JSONOutputArgs,
   YargsCommandModule,
 } from '../../types/Yargs.js';
 import { makeWrappedYargsHandler } from '../../lib/yargs/makeWrappedYargsHandler.js';
 import { makeYargsBuilder } from '../../lib/yargsUtils.js';
+import {
+  DownloadJsonOutput,
+  DownloadSchema,
+} from '../../lib/jsonOutput/download.js';
 
 const command = 'download';
 const describe = commands.project.download.describe;
 
-type ProjectDownloadArgs = CommonArgs &
+export type ProjectDownloadArgs = CommonArgs &
   ConfigArgs &
   AccountArgs &
-  EnvironmentArgs & { project?: string; dest?: string; build?: number };
+  EnvironmentArgs &
+  JSONOutputArgs<DownloadJsonOutput> & {
+    project?: string;
+    dest?: string;
+    build?: number;
+  };
 
 async function handler(
   args: ArgumentsCamelCase<ProjectDownloadArgs>
 ): Promise<void> {
-  const { dest, build, derivedAccountId, exit } = args;
-  const { projectConfig } = await getProjectConfig();
+  const { dest, build, derivedAccountId, exit, addJsonOutput } = args;
 
-  if (projectConfig) {
+  const isInProjectDir = getIsInProject();
+
+  if (isInProjectDir) {
     uiLogger.error(
       commands.project.download.warnings.cannotDownloadWithinProject
     );
@@ -84,6 +95,12 @@ async function handler(
       path.resolve(absoluteDestPath)
     );
 
+    addJsonOutput({
+      projectName,
+      buildId: buildNumberToDownload,
+      dest: absoluteDestPath,
+    });
+
     uiLogger.log(
       commands.project.download.logs.downloadSucceeded(
         buildNumberToDownload,
@@ -128,6 +145,10 @@ function projectDownloadBuilder(yargs: Argv): Argv<ProjectDownloadArgs> {
       '$0 project download --project=myProject --dest=myProjectFolder',
       commands.project.download.examples.default,
     ],
+    [
+      '$0 project download --project=myProject --json',
+      commands.project.download.examples.json,
+    ],
   ]);
 
   return yargs as Argv<ProjectDownloadArgs>;
@@ -142,6 +163,7 @@ const builder = makeYargsBuilder<ProjectDownloadArgs>(
     useConfigOptions: true,
     useAccountOptions: true,
     useEnvironmentOptions: true,
+    useJSONOutputOptions: true,
   }
 );
 
@@ -149,7 +171,9 @@ const projectDownloadCommand: YargsCommandModule<unknown, ProjectDownloadArgs> =
   {
     command,
     describe,
-    handler: makeWrappedYargsHandler('project-download', handler),
+    handler: makeWrappedYargsHandler('project-download', handler, {
+      jsonOutputSchema: DownloadSchema,
+    }),
     builder,
   };
 

@@ -18,7 +18,7 @@ import { makeWrappedYargsHandler } from '../../lib/yargs/makeWrappedYargsHandler
 import {
   InstallStatusJsonOutput,
   InstallStatusSchema,
-} from '../../lib/jsonOutput.js';
+} from '../../lib/jsonOutput/appInstallStatus.js';
 import { makeYargsBuilder } from '../../lib/yargsUtils.js';
 import { uiLogger } from '../../lib/ui/logger.js';
 import {
@@ -47,10 +47,13 @@ async function handler(
 ): Promise<void> {
   const { derivedAccountId, formatOutputAsJson, exit, addJsonOutput } = args;
 
-  const { projectConfig, projectDir } = await getProjectConfig();
+  let projectConfig;
+  let projectDir;
 
-  if (!projectConfig || !projectDir) {
-    uiLogger.error(commands.project.installStatus.errors.noProjectConfig);
+  try {
+    ({ projectConfig, projectDir } = getProjectConfig());
+  } catch (error) {
+    logError(error);
     return exit(EXIT_CODES.ERROR);
   }
 
