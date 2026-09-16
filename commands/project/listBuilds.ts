@@ -6,10 +6,7 @@ import {
   fetchProjectBuilds,
 } from '@hubspot/local-dev-lib/api/projects';
 import { uiLink } from '../../lib/ui/index.js';
-import {
-  getProjectConfig,
-  validateProjectConfig,
-} from '../../lib/projects/config.js';
+import { getProjectConfig } from '../../lib/projects/config.js';
 import { getProjectDetailUrl } from '../../lib/projects/urls.js';
 import moment from 'moment';
 import { promptUser } from '../../lib/prompts/promptUtils.js';
@@ -33,7 +30,7 @@ import {
   ProjectBuildsListJsonOutput,
   ProjectBuildsListSchema,
   mapBuildToJsonOutput,
-} from '../../lib/jsonOutput.js';
+} from '../../lib/jsonOutput/listBuilds.js';
 
 const command = 'list-builds';
 const describe = commands.project.listBuilds.describe;
@@ -138,19 +135,13 @@ async function handler(
   let projectName = projectFlagValue;
 
   if (!projectName) {
-    const { projectConfig, projectDir } = await getProjectConfig();
-
     try {
-      validateProjectConfig(projectConfig, projectDir);
+      const { projectConfig } = getProjectConfig();
+      projectName = projectConfig.name;
     } catch (error) {
       logError(error);
       return exit(EXIT_CODES.ERROR);
     }
-
-    if (!projectConfig) {
-      return exit(EXIT_CODES.ERROR);
-    }
-    projectName = projectConfig.name;
   }
 
   try {

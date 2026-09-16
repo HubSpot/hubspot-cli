@@ -30,10 +30,7 @@ const getConfigAccountIfExistsSpy = vi.spyOn(
 );
 const getProjectConfigSpy = vi.spyOn(projectConfigLib, 'getProjectConfig');
 const isLegacyProjectSpy = vi.spyOn(platformVersionLib, 'isLegacyProject');
-const validateProjectConfigSpy = vi.spyOn(
-  projectConfigLib,
-  'validateProjectConfig'
-);
+
 const loadAndValidateProfileSpy = vi.spyOn(
   projectProfilesLib,
   'loadAndValidateProfile'
@@ -56,7 +53,7 @@ describe('commands/project/dev', () => {
   beforeEach(() => {
     // @ts-expect-error Mock implementation
     processExitSpy.mockImplementation(() => {});
-    getProjectConfigSpy.mockResolvedValue({
+    getProjectConfigSpy.mockReturnValue({
       projectConfig: {
         name: 'test-project',
         srcDir: 'src',
@@ -64,7 +61,6 @@ describe('commands/project/dev', () => {
       },
       projectDir: '/test/project',
     });
-    validateProjectConfigSpy.mockImplementation(() => {});
     isLegacyProjectSpy.mockReturnValue(false);
     trackCommandUsageSpy.mockImplementation(async () => {});
     unifiedProjectDevFlowSpy.mockResolvedValue(undefined);
@@ -113,22 +109,15 @@ describe('commands/project/dev', () => {
     });
 
     describe('validation', () => {
-      it('should validate project config', async () => {
+      it('should get project config', async () => {
         await projectDevCommand.handler(args);
 
-        expect(validateProjectConfigSpy).toHaveBeenCalledWith(
-          {
-            name: 'test-project',
-            srcDir: 'src',
-            platformVersion: 'v2',
-          },
-          '/test/project'
-        );
+        expect(getProjectConfigSpy).toHaveBeenCalled();
       });
 
-      it('should exit if project config validation fails', async () => {
-        const error = new Error('Invalid config');
-        validateProjectConfigSpy.mockImplementation(() => {
+      it('should exit if project config is not found', async () => {
+        const error = new Error('No project config');
+        getProjectConfigSpy.mockImplementation(() => {
           throw error;
         });
 
@@ -140,7 +129,7 @@ describe('commands/project/dev', () => {
 
       it('should exit with error for legacy platform versions', async () => {
         isLegacyProjectSpy.mockReturnValue(true);
-        getProjectConfigSpy.mockResolvedValue({
+        getProjectConfigSpy.mockReturnValue({
           projectConfig: {
             name: 'test-project',
             srcDir: 'src',
@@ -156,31 +145,6 @@ describe('commands/project/dev', () => {
         );
         expect(processExitSpy).toHaveBeenCalledWith(EXIT_CODES.ERROR);
         expect(unifiedProjectDevFlowSpy).not.toHaveBeenCalled();
-      });
-
-      it('should exit if no project directory', async () => {
-        getProjectConfigSpy.mockResolvedValue({
-          projectConfig: {
-            name: 'test-project',
-            srcDir: 'src',
-            platformVersion: 'v2',
-          },
-          projectDir: null,
-        });
-
-        // Make process.exit actually throw to stop execution
-        processExitSpy.mockImplementation((code?: string | number | null) => {
-          throw new Error(`process.exit called with ${code}`);
-        });
-
-        await expect(projectDevCommand.handler(args)).rejects.toThrow(
-          'process.exit called'
-        );
-
-        expect(uiLogger.error).toHaveBeenCalledWith(
-          expect.stringContaining('project')
-        );
-        expect(processExitSpy).toHaveBeenCalledWith(EXIT_CODES.ERROR);
       });
     });
 

@@ -15,6 +15,7 @@ import {
   logProfileHeader,
   logProfileFooter,
   loadProfile,
+  getProfileAccountId,
   loadAndValidateProfile,
   validateProjectForProfile,
 } from '../projectProfiles.js';
@@ -113,18 +114,6 @@ describe('lib/projectProfiles', () => {
       accountId: 123,
     };
 
-    it('should throw error when project config is missing', () => {
-      expect(() => loadProfile(null, mockProjectDir, mockProfileName)).toThrow(
-        lib.projectProfiles.loadProfile.errors.noProjectConfig
-      );
-    });
-
-    it('should throw error when project dir is missing', () => {
-      expect(() =>
-        loadProfile(mockProjectConfig, null, mockProfileName)
-      ).toThrow(lib.projectProfiles.loadProfile.errors.noProjectConfig);
-    });
-
     it('should throw error when profile is not found', () => {
       mockedLoadHsProfileFile.mockReturnValue(null);
       const filename = 'test-profile.hsprofile';
@@ -201,6 +190,43 @@ describe('lib/projectProfiles', () => {
       expect(mockedGetConfigAccountById).toHaveBeenCalledWith(
         mockProfile.accountId
       );
+    });
+  });
+
+  describe('getProfileAccountId()', () => {
+    const mockProjectConfig: ProjectConfig = {
+      srcDir: 'src',
+      name: 'test-project',
+      platformVersion: '1.0.0',
+    };
+    const mockProjectDir = '/test/project';
+    const mockProfileName = 'test-profile';
+
+    it('should return the account ID when the profile loads', () => {
+      mockedLoadHsProfileFile.mockReturnValue({ accountId: 456 });
+      mockedGetConfigAccountById.mockReturnValue({ accountId: 456 });
+      mockedGetHsProfileFilename.mockReturnValue('test-profile.hsprofile');
+
+      const result = getProfileAccountId(
+        mockProjectConfig,
+        mockProjectDir,
+        mockProfileName
+      );
+
+      expect(result).toBe(456);
+    });
+
+    it('should return undefined when the profile cannot be loaded', () => {
+      mockedLoadHsProfileFile.mockReturnValue(null);
+      mockedGetHsProfileFilename.mockReturnValue('test-profile.hsprofile');
+
+      const result = getProfileAccountId(
+        mockProjectConfig,
+        mockProjectDir,
+        mockProfileName
+      );
+
+      expect(result).toBeUndefined();
     });
   });
 

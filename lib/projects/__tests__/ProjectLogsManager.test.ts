@@ -38,6 +38,7 @@ describe('lib/projects/ProjectLogsManager', () => {
       srcDir: 'src',
       platformVersion: '2024.1',
     },
+    projectDir: '/test/project',
   };
   const projectId = 987654321;
   const projectDetails = {
@@ -88,7 +89,7 @@ describe('lib/projects/ProjectLogsManager', () => {
     ProjectLogsManager.reset();
 
     (isLegacyProject as Mock).mockReturnValue(true);
-    (getProjectConfig as Mock).mockResolvedValue(projectConfig);
+    (getProjectConfig as Mock).mockReturnValue(projectConfig);
     (ensureProjectExists as Mock).mockResolvedValue(projectDetails);
     (fetchProjectComponentsMetadata as Mock).mockResolvedValue({
       data: {
@@ -121,7 +122,11 @@ describe('lib/projects/ProjectLogsManager', () => {
     });
 
     it('should throw an error if there is a problem with the config', async () => {
-      (getProjectConfig as Mock).mockResolvedValue({});
+      (getProjectConfig as Mock).mockImplementation(() => {
+        throw new Error(
+          'No project detected. Run this command again from a project directory.'
+        );
+      });
       await expect(async () =>
         ProjectLogsManager.init(accountId)
       ).rejects.toThrow(
@@ -189,6 +194,7 @@ describe('lib/projects/ProjectLogsManager', () => {
         srcDir: 'src',
         platformVersion: '2025.2',
       },
+      projectDir: '/test/project',
     };
     const deployedBuildId = 555;
     const v2ProjectDetails = {
@@ -233,7 +239,7 @@ describe('lib/projects/ProjectLogsManager', () => {
     };
 
     beforeEach(() => {
-      (getProjectConfig as Mock).mockResolvedValue(v2ProjectConfig);
+      (getProjectConfig as Mock).mockReturnValue(v2ProjectConfig);
       (ensureProjectExists as Mock).mockResolvedValue(v2ProjectDetails);
       (isLegacyProject as Mock).mockReturnValue(false);
       (getDeployedProjectNodes as Mock).mockResolvedValue(deployedNodes);

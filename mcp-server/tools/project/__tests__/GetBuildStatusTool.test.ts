@@ -9,10 +9,7 @@ import {
   getBuildStatus,
 } from '@hubspot/local-dev-lib/api/projects';
 import { isHubSpotHttpError } from '@hubspot/local-dev-lib/errors/index';
-import {
-  getProjectConfig,
-  validateProjectConfig,
-} from '../../../../lib/projects/config.js';
+import { getProjectConfig } from '../../../../lib/projects/config.js';
 import { MockedFunction, Mocked } from 'vitest';
 import { mcpFeedbackRequest } from '../../../utils/feedbackTracking.js';
 import { discoverAccountTargets } from '../../../../lib/accountTargetDiscovery.js';
@@ -42,9 +39,6 @@ const mockIsHubSpotHttpError = isHubSpotHttpError as unknown as MockedFunction<
 >;
 const mockGetProjectConfig = getProjectConfig as MockedFunction<
   typeof getProjectConfig
->;
-const mockValidateProjectConfig = validateProjectConfig as MockedFunction<
-  typeof validateProjectConfig
 >;
 const mockedDiscoverAccountTargets = vi.mocked(discoverAccountTargets);
 
@@ -147,11 +141,10 @@ describe('mcp-server/tools/project/GetBuildStatusTool', () => {
 
     // Default mock implementations
     mockIsHubSpotHttpError.mockReturnValue(false);
-    mockGetProjectConfig.mockResolvedValue({
+    mockGetProjectConfig.mockReturnValue({
       projectConfig: createMockProjectConfig(),
       projectDir: TEST_PROJECT_PATH,
     });
-    mockValidateProjectConfig.mockImplementation(() => {});
     mockedDiscoverAccountTargets.mockResolvedValue({
       candidates: [],
       recommended: { accountId: TEST_ACCOUNT_ID } as AccountTargetCandidate,

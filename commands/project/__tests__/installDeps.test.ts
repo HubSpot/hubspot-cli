@@ -78,7 +78,7 @@ describe('commands/project/installDeps', () => {
       );
     });
 
-    it('should handle exceptions', async () => {
+    it('should handle exceptions from getProjectConfig', async () => {
       const error = new Error('Something went super wrong');
       getProjectConfigSpy.mockImplementationOnce(() => {
         throw error;
@@ -87,49 +87,31 @@ describe('commands/project/installDeps', () => {
       await projectInstallDepsCommand.handler(args);
 
       expect(uiLogger.error).toHaveBeenCalledTimes(1);
-      expect(uiLogger.error).toHaveBeenCalledWith(error.message);
-
       expect(processExitSpy).toHaveBeenCalledTimes(1);
       expect(processExitSpy).toHaveBeenCalledWith(EXIT_CODES.ERROR);
       expect(mockedShowMcpPromotionNudge).not.toHaveBeenCalled();
     });
 
-    it('should log an error and exit when the project config is not defined', async () => {
-      getProjectConfigSpy.mockResolvedValueOnce({
-        projectDir: null,
-        projectConfig: null,
+    it('should log an error and exit when not in a project directory', async () => {
+      getProjectConfigSpy.mockImplementationOnce(() => {
+        throw new Error('No project config found');
       });
       await projectInstallDepsCommand.handler(args);
 
-      expect(uiLogger.error).toHaveBeenCalledTimes(1);
-      expect(uiLogger.error).toHaveBeenCalledWith(
-        'No project detected. Run this command from a project directory.'
-      );
       expect(processExitSpy).toHaveBeenCalledTimes(1);
       expect(processExitSpy).toHaveBeenCalledWith(EXIT_CODES.ERROR);
       expect(mockedShowMcpPromotionNudge).not.toHaveBeenCalled();
-    });
-
-    it('should log an error and exit when the project config has no projectDir', async () => {
-      getProjectConfigSpy.mockResolvedValueOnce({
-        projectDir: null,
-        projectConfig: null,
-      });
-      await projectInstallDepsCommand.handler(args);
-
-      expect(uiLogger.error).toHaveBeenCalledTimes(1);
-      expect(uiLogger.error).toHaveBeenCalledWith(
-        'No project detected. Run this command from a project directory.'
-      );
-      expect(processExitSpy).toHaveBeenCalledTimes(1);
-      expect(processExitSpy).toHaveBeenCalledWith(EXIT_CODES.ERROR);
     });
 
     it('should prompt for input when packages is defined', async () => {
       const projectDir = 'src';
-      getProjectConfigSpy.mockResolvedValue({
+      getProjectConfigSpy.mockReturnValue({
         projectDir,
-        projectConfig: null,
+        projectConfig: {
+          name: 'test',
+          srcDir: 'src',
+          platformVersion: '2025.2',
+        },
       });
       const packageJsonLocation = path.join(projectDir, 'directory1');
       promptUserSpy.mockResolvedValueOnce({
@@ -168,9 +150,13 @@ describe('commands/project/installDeps', () => {
       const installLocations = [packageJsonLocation];
       const packages = ['@hubspot/local-dev-lib'];
 
-      getProjectConfigSpy.mockResolvedValue({
+      getProjectConfigSpy.mockReturnValue({
         projectDir,
-        projectConfig: null,
+        projectConfig: {
+          name: 'test',
+          srcDir: 'src',
+          platformVersion: '2025.2',
+        },
       });
       promptUserSpy.mockResolvedValueOnce({
         selectedInstallLocations: packageJsonLocation,
@@ -190,9 +176,13 @@ describe('commands/project/installDeps', () => {
       const projectDir = 'src';
       const packageJsonLocation = path.join(projectDir, 'directory1');
 
-      getProjectConfigSpy.mockResolvedValue({
+      getProjectConfigSpy.mockReturnValue({
         projectDir,
-        projectConfig: null,
+        projectConfig: {
+          name: 'test',
+          srcDir: 'src',
+          platformVersion: '2025.2',
+        },
       });
       getProjectPackageJsonLocationsSpy.mockResolvedValue([
         packageJsonLocation,
@@ -209,9 +199,13 @@ describe('commands/project/installDeps', () => {
       const projectDir = 'src';
       const packageJsonLocation = path.join(projectDir, 'directory1');
 
-      getProjectConfigSpy.mockResolvedValue({
+      getProjectConfigSpy.mockReturnValue({
         projectDir,
-        projectConfig: null,
+        projectConfig: {
+          name: 'test',
+          srcDir: 'src',
+          platformVersion: '2025.2',
+        },
       });
       getProjectPackageJsonLocationsSpy.mockResolvedValue([
         packageJsonLocation,

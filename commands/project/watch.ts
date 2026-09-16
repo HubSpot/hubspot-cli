@@ -10,10 +10,7 @@ import { createWatcher } from '../../lib/projects/watch.js';
 import { logError, ApiErrorContext } from '../../lib/errorHandlers/index.js';
 import { uiLogger } from '../../lib/ui/logger.js';
 import { PROJECT_ERROR_TYPES } from '../../lib/constants.js';
-import {
-  getProjectConfig,
-  validateProjectConfig,
-} from '../../lib/projects/config.js';
+import { getProjectConfig } from '../../lib/projects/config.js';
 import { logFeedbackMessage } from '../../lib/projects/ui.js';
 import { handleProjectUpload } from '../../lib/projects/upload.js';
 import {
@@ -115,10 +112,13 @@ async function handler(
 
   uiCommandRelocatedMessage('hs project dev');
 
-  const { projectConfig, projectDir } = await getProjectConfig();
+  let projectConfig;
+  let projectDir;
 
-  if (!projectConfig || !projectDir) {
-    uiLogger.error(commands.project.watch.errors.projectConfigNotFound);
+  try {
+    ({ projectConfig, projectDir } = getProjectConfig());
+  } catch (error) {
+    logError(error);
     return exit(EXIT_CODES.ERROR);
   }
 
@@ -126,13 +126,6 @@ async function handler(
     uiLogger.error(
       commands.project.watch.errors.v2ApiError(projectConfig.platformVersion)
     );
-    return exit(EXIT_CODES.ERROR);
-  }
-
-  try {
-    validateProjectConfig(projectConfig, projectDir);
-  } catch (error) {
-    logError(error);
     return exit(EXIT_CODES.ERROR);
   }
 

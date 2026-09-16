@@ -192,7 +192,7 @@ describe('lib/doctor/DiagnosticInfo', () => {
         enabledFeatures: {},
       };
 
-      getProjectConfig.mockResolvedValue(projectConfig);
+      getProjectConfig.mockReturnValue(projectConfig);
       fetchProject.mockResolvedValue({
         data: projectDetails,
       } as unknown as AxiosResponse<Project>);

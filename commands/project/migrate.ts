@@ -22,8 +22,6 @@ import {
   getHasMigratableThemes,
   migrateThemesV2,
 } from '../../lib/theme/migrate.js';
-import { hasFeature } from '../../lib/hasFeature.js';
-import { FEATURES } from '../../lib/constants.js';
 import { trackCommandMetadataUsage } from '../../lib/usageTracking.js';
 
 export type ProjectMigrateArgs = CommonArgs &
@@ -43,9 +41,13 @@ async function handler(
   args: ArgumentsCamelCase<ProjectMigrateArgs>
 ): Promise<void> {
   const { platformVersion, unstable, derivedAccountId, exit } = args;
-  const projectConfig = await getProjectConfig();
 
-  if (!projectConfig.projectConfig) {
+  let projectConfig;
+  let projectDir;
+
+  try {
+    ({ projectConfig, projectDir } = getProjectConfig());
+  } catch {
     uiLogger.error(
       commands.project.migrate.errors.noProjectConfig(
         uiCommandReference('hs app migrate')
@@ -54,33 +56,18 @@ async function handler(
     return exit(EXIT_CODES.ERROR);
   }
 
-  if (projectConfig?.projectConfig) {
-    await renderInline(
-      getWarningBox({
-        title: lib.migrate.projectMigrationWarningTitle(platformVersion),
-        message: lib.migrate.projectMigrationWarning(platformVersion),
-      })
-    );
-  }
+  await renderInline(
+    getWarningBox({
+      title: lib.migrate.projectMigrationWarningTitle(platformVersion),
+      message: lib.migrate.projectMigrationWarning(platformVersion),
+    })
+  );
 
   try {
     const { hasMigratableThemes, migratableThemesCount } =
-      await getHasMigratableThemes(projectConfig);
+      await getHasMigratableThemes({ projectConfig, projectDir });
 
     if (hasMigratableThemes) {
-      const hasThemeMigrationAccess = await hasFeature(
-        derivedAccountId,
-        FEATURES.THEME_MIGRATION_2025_2
-      );
-
-      if (!hasThemeMigrationAccess) {
-        uiLogger.error(
-          commands.project.migrate.errors.noThemeMigrationAccess(
-            derivedAccountId
-          )
-        );
-        return exit(EXIT_CODES.ERROR);
-      }
       await migrateThemesV2(
         derivedAccountId,
         {
@@ -90,19 +77,19 @@ async function handler(
             : platformVersion,
         },
         migratableThemesCount,
-        projectConfig
+        { projectConfig, projectDir }
       );
     } else {
       await migrateApp(
         derivedAccountId,
         {
           ...args,
-          name: projectConfig?.projectConfig?.name,
+          name: projectConfig.name,
           platformVersion: unstable
             ? PLATFORM_VERSIONS.UNSTABLE
             : platformVersion,
         },
-        projectConfig
+        { projectConfig, projectDir }
       );
     }
   } catch (error) {

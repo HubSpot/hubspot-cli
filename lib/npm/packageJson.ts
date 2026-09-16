@@ -140,7 +140,7 @@ const findAllPackageJsonFilesInDirectoryCached = async (
 export async function findAllPackageJsonFilesInProjectCached(): Promise<
   string[]
 > {
-  const projectConfig = await getProjectConfig();
+  const projectConfig = getProjectConfig();
   const { projectDir } = projectConfig;
   if (!projectDir) {
     return [];

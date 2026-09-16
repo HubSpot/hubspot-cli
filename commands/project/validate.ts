@@ -1,138 +1,140 @@
 import { Argv, ArgumentsCamelCase } from 'yargs';
-import path from 'path';
 import { getConfigAccountById } from '@hubspot/local-dev-lib/config';
 import { isLegacyProject } from '@hubspot/project-parsing-lib/projects';
 import { uiLogger } from '../../lib/ui/logger.js';
-import {
-  getProjectConfig,
-  validateProjectConfig,
-} from '../../lib/projects/config.js';
+import { getProjectConfig } from '../../lib/projects/config.js';
 import { EXIT_CODES } from '../../lib/enums/exitCodes.js';
-import { CommonArgs, YargsCommandModule } from '../../types/Yargs.js';
+import {
+  CommonArgs,
+  JSONOutputArgs,
+  YargsCommandModule,
+} from '../../types/Yargs.js';
 import { makeWrappedYargsHandler } from '../../lib/yargs/makeWrappedYargsHandler.js';
 import { makeYargsBuilder } from '../../lib/yargsUtils.js';
-import {
-  validateSourceDirectory,
-  handleTranslate,
-} from '../../lib/projects/upload.js';
-
 import { commands } from '../../lang/en.js';
-import { validateProjectForProfile } from '../../lib/projects/projectProfiles.js';
 import { logError } from '../../lib/errorHandlers/index.js';
-import { getAllHsProfiles } from '@hubspot/project-parsing-lib/profiles';
-import SpinniesManager from '../../lib/ui/SpinniesManager.js';
+import {
+  validateProject,
+  toIssue,
+  ProjectValidationResult,
+} from '../../lib/projects/validate.js';
+import { ProjectConfig } from '../../types/Projects.js';
+import {
+  ValidateJsonOutput,
+  ValidateSchema,
+} from '../../lib/jsonOutput/validate.js';
 
 const command = 'validate';
 const describe = commands.project.validate.describe;
 
-export type ProjectValidateArgs = CommonArgs & {
+export type ProjectValidateArgs = CommonArgs &
+  JSONOutputArgs<ValidateJsonOutput> & {
+    profile?: string;
+  };
+
+type GenerateJsonArgs = {
+  result: ProjectValidationResult;
+  projectConfig?: ProjectConfig;
   profile?: string;
 };
+
+function generateJson({
+  result,
+  projectConfig,
+  profile,
+}: GenerateJsonArgs): ValidateJsonOutput {
+  const { valid, errors, warnings, profiles } = result;
+  const output: ValidateJsonOutput = { valid, errors, warnings };
+  if (projectConfig) {
+    output.projectName = projectConfig.name;
+    output.platformVersion = projectConfig.platformVersion;
+  }
+  if (profile) {
+    output.profile = profile;
+  }
+  if (profiles.length > 0) {
+    output.profiles = profiles;
+  }
+  return output;
+}
 
 async function handler(
   args: ArgumentsCamelCase<ProjectValidateArgs>
 ): Promise<void> {
-  const { derivedAccountId, profile, exit, addUsageMetadata } = args;
+  const {
+    derivedAccountId,
+    profile,
+    exit,
+    addUsageMetadata,
+    formatOutputAsJson,
+    addJsonOutput,
+  } = args;
 
-  const { projectConfig, projectDir } = await getProjectConfig();
+  let projectConfig: ProjectConfig | undefined;
+  let projectDir: string | undefined;
 
-  const accountConfig = getConfigAccountById(derivedAccountId!);
-  const accountType = accountConfig && accountConfig.accountType;
-  addUsageMetadata({ type: accountType! });
+  function outputError(error: unknown): void {
+    logError(error);
+    addJsonOutput(
+      generateJson({
+        result: {
+          valid: false,
+          errors: [toIssue(error)],
+          warnings: [],
+          profiles: [],
+        },
+        projectConfig,
+        profile,
+      })
+    );
+  }
 
-  if (!projectConfig || !projectDir) {
-    uiLogger.error(commands.project.validate.mustBeRanWithinAProject);
+  try {
+    const accountConfig = getConfigAccountById(derivedAccountId!);
+    const accountType = accountConfig && accountConfig.accountType;
+    addUsageMetadata({ type: accountType! });
+
+    ({ projectConfig, projectDir } = getProjectConfig());
+  } catch (error) {
+    outputError(error);
     return exit(EXIT_CODES.ERROR);
   }
 
   if (isLegacyProject(projectConfig.platformVersion)) {
-    uiLogger.error(commands.project.validate.badVersion);
+    const message = commands.project.validate.badVersion;
+    uiLogger.error(message);
+    addJsonOutput(
+      generateJson({
+        result: {
+          valid: false,
+          errors: [{ message }],
+          warnings: [],
+          profiles: [],
+        },
+        projectConfig,
+        profile,
+      })
+    );
     return exit(EXIT_CODES.ERROR);
   }
 
+  let result: ProjectValidationResult;
   try {
-    validateProjectConfig(projectConfig, projectDir);
-  } catch (error) {
-    logError(error);
-    return exit(EXIT_CODES.ERROR);
-  }
-
-  let validationSucceeded = true;
-  const srcDir = path.resolve(projectDir!, projectConfig.srcDir);
-
-  const profiles = await getAllHsProfiles(
-    path.join(projectDir, projectConfig.srcDir)
-  );
-
-  // If a profile is specified, only validate that profile
-  if (profile) {
-    const validationErrors = await validateProjectForProfile({
+    result = await validateProject({
       projectConfig,
       projectDir,
-      profileName: profile,
       derivedAccountId,
+      profile,
+      formatOutputAsJson,
     });
-    if (validationErrors.length) {
-      logValidationErrors(validationErrors);
-      validationSucceeded = false;
-    }
-  } else if (profiles.length > 0) {
-    // If no profile was specified and the project has profiles, validate all of them
-    SpinniesManager.add('validatingAllProfiles', {
-      text: commands.project.validate.spinners.validatingAllProfiles,
-    });
-    const errors: (string | Error)[] = [];
-
-    for (const profileName of profiles) {
-      const validationErrors = await validateProjectForProfile({
-        projectConfig,
-        projectDir,
-        profileName,
-        derivedAccountId,
-        indentSpinners: true,
-      });
-      if (validationErrors.length) {
-        errors.push(...validationErrors);
-        validationSucceeded = false;
-      }
-    }
-
-    if (validationSucceeded) {
-      SpinniesManager.succeed('validatingAllProfiles', {
-        text: commands.project.validate.spinners.allProfilesValidationSucceeded,
-      });
-    } else {
-      SpinniesManager.fail('validatingAllProfiles', {
-        text: commands.project.validate.spinners.allProfilesValidationFailed,
-      });
-    }
-
-    logValidationErrors(errors);
-  } else if (profiles.length === 0) {
-    // If the project has no profiles, validate the project without a profile
-    try {
-      await handleTranslate({
-        projectDir: projectDir!,
-        projectConfig,
-        accountId: derivedAccountId,
-        skipValidation: false,
-      });
-    } catch (e) {
-      uiLogger.error(commands.project.validate.failure(projectConfig.name));
-      logError(e);
-      validationSucceeded = false;
-      uiLogger.log('');
-    }
-  }
-
-  if (!validationSucceeded) {
+  } catch (error) {
+    outputError(error);
     return exit(EXIT_CODES.ERROR);
   }
 
-  try {
-    await validateSourceDirectory(srcDir, projectConfig, projectDir);
-  } catch (e) {
-    logError(e);
+  addJsonOutput(generateJson({ result, projectConfig, profile }));
+
+  if (!result.valid) {
     return exit(EXIT_CODES.ERROR);
   }
 
@@ -157,19 +159,9 @@ function projectValidateBuilder(yargs: Argv): Argv<ProjectValidateArgs> {
       '$0 project validate --profile=profileName',
       commands.project.validate.examples.withProfile,
     ],
+    ['$0 project validate --json', commands.project.validate.examples.json],
   ]);
   return yargs as Argv<ProjectValidateArgs>;
-}
-
-function logValidationErrors(validationErrors: (string | Error)[]) {
-  uiLogger.log('');
-  validationErrors.forEach(error => {
-    if (error instanceof Error) {
-      logError(error);
-    } else {
-      uiLogger.log(error);
-    }
-  });
 }
 
 const builder = makeYargsBuilder<ProjectValidateArgs>(
@@ -181,6 +173,7 @@ const builder = makeYargsBuilder<ProjectValidateArgs>(
     useConfigOptions: true,
     useAccountOptions: true,
     useEnvironmentOptions: true,
+    useJSONOutputOptions: true,
   }
 );
 
@@ -188,7 +181,9 @@ const projectValidateCommand: YargsCommandModule<unknown, ProjectValidateArgs> =
   {
     command,
     describe,
-    handler: makeWrappedYargsHandler('project-validate', handler),
+    handler: makeWrappedYargsHandler('project-validate', handler, {
+      jsonOutputSchema: ValidateSchema,
+    }),
     builder,
   };
 

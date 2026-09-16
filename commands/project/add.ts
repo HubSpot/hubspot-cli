@@ -1,7 +1,7 @@
 import { Argv, ArgumentsCamelCase } from 'yargs';
 
 import { logError } from '../../lib/errorHandlers/index.js';
-import { getProjectConfig } from '../../lib/projects/config.js';
+import { getIsInProject, getProjectConfig } from '../../lib/projects/config.js';
 import { EXIT_CODES } from '../../lib/enums/exitCodes.js';
 import { isPromptExitError } from '../../lib/errors/PromptExitError.js';
 import {
@@ -39,13 +39,16 @@ async function handler(
   args: ArgumentsCamelCase<ProjectAddArgs>
 ): Promise<void> {
   const { derivedAccountId, exit } = args;
-  try {
-    const { projectConfig, projectDir } = await getProjectConfig();
 
-    if (!projectDir || !projectConfig) {
-      uiLogger.error(commands.project.add.error.locationInProject);
-      return exit(EXIT_CODES.ERROR);
-    }
+  const isInProjectDir = getIsInProject();
+
+  if (!isInProjectDir) {
+    uiLogger.error(commands.project.add.error.locationInProject);
+    return exit(EXIT_CODES.ERROR);
+  }
+
+  try {
+    const { projectConfig, projectDir } = getProjectConfig();
 
     const isLegacyProjectCreate = isLegacyProject(
       projectConfig.platformVersion

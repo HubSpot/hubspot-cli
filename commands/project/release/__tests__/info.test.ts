@@ -30,10 +30,6 @@ vi.mock('../../../../lib/prompts/promptUtils');
 vi.mock('../../../../ui/render.js');
 
 const getProjectConfigSpy = vi.spyOn(projectUtils, 'getProjectConfig');
-const validateProjectConfigSpy = vi.spyOn(
-  projectUtils,
-  'validateProjectConfig'
-);
 const getReleaseInfoSpy = vi.spyOn(releaseApiUtils, 'getReleaseInfo');
 const listReleasesSpy = vi.spyOn(releaseApiUtils, 'listReleases');
 const listPromptSpy = vi.spyOn(promptUtils, 'listPrompt');
@@ -99,7 +95,7 @@ describe('commands/project/release/info', () => {
       tag: 'v1.0.0',
     } as ArgumentsCamelCase<ProjectReleaseInfoArgs>;
 
-    getProjectConfigSpy.mockResolvedValue({
+    getProjectConfigSpy.mockReturnValue({
       projectConfig: {
         name: 'my-project',
         srcDir: 'src',
@@ -107,7 +103,6 @@ describe('commands/project/release/info', () => {
       },
       projectDir: '/path/to/project',
     });
-    validateProjectConfigSpy.mockImplementation(() => {});
     getReleaseInfoSpy.mockReturnValue(
       mockHubSpotHttpResponse<Release>(releaseResponse)
     );
@@ -153,14 +148,13 @@ describe('commands/project/release/info', () => {
   });
 
   describe('handler', () => {
-    it('should validate the project config', async () => {
+    it('should get the project config', async () => {
       await projectReleaseInfoCommand.handler(args);
       expect(getProjectConfigSpy).toHaveBeenCalledTimes(1);
-      expect(validateProjectConfigSpy).toHaveBeenCalledTimes(1);
     });
 
-    it('should exit with error if project config is invalid', async () => {
-      validateProjectConfigSpy.mockImplementation(() => {
+    it('should exit with error if project config is not found', async () => {
+      getProjectConfigSpy.mockImplementation(() => {
         throw new Error('No project config found');
       });
 

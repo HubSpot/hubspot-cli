@@ -21,7 +21,7 @@ import { makeYargsBuilder } from '../../../lib/yargsUtils.js';
 import { commands } from '../../../lang/en.js';
 import { confirmPrompt, listPrompt } from '../../../lib/prompts/promptUtils.js';
 import { fileExists } from '../../../lib/validation.js';
-import { debugError } from '../../../lib/errorHandlers/index.js';
+import { debugError, logError } from '../../../lib/errorHandlers/index.js';
 import {
   isDeveloperTestAccount,
   isSandbox,
@@ -39,10 +39,13 @@ async function handler(
 ): Promise<void> {
   const { exit } = args;
 
-  const { projectConfig, projectDir } = await getProjectConfig();
+  let projectConfig;
+  let projectDir;
 
-  if (!projectConfig || !projectDir) {
-    uiLogger.error(commands.project.profile.delete.errors.noProjectConfig);
+  try {
+    ({ projectConfig, projectDir } = getProjectConfig());
+  } catch (error) {
+    logError(error);
     return exit(EXIT_CODES.ERROR);
   }
 

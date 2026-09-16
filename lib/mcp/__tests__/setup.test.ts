@@ -646,8 +646,10 @@ describe('lib/mcp/setup', () => {
       args: ['--arg1'],
     };
 
-    it('should successfully configure VS Code', async () => {
-      mockedExecAsync.mockResolvedValueOnce({ stdout: '', stderr: '' });
+    it('should successfully configure VS Code 1.99 or later', async () => {
+      mockedExecAsync
+        .mockResolvedValueOnce({ stdout: '1.99.0\ncommit\nx64', stderr: '' })
+        .mockResolvedValueOnce({ stdout: '', stderr: '' });
 
       const result = await setupVsCode(mockMcpCommand);
 
@@ -655,7 +657,9 @@ describe('lib/mcp/setup', () => {
       expect(mockedSpinniesManager.add).toHaveBeenCalledWith('vsCode', {
         text: commands.mcp.setup.spinners.configuringVsCode,
       });
-      expect(mockedExecAsync).toHaveBeenCalledWith(
+      expect(mockedExecAsync).toHaveBeenNthCalledWith(1, 'code --version');
+      expect(mockedExecAsync).toHaveBeenNthCalledWith(
+        2,
         expect.stringContaining('code --add-mcp')
       );
       expect(mockedSpinniesManager.succeed).toHaveBeenCalledWith('vsCode', {
@@ -664,7 +668,9 @@ describe('lib/mcp/setup', () => {
     });
 
     it('should use default mcp command when none provided', async () => {
-      mockedExecAsync.mockResolvedValueOnce({ stdout: '', stderr: '' });
+      mockedExecAsync
+        .mockResolvedValueOnce({ stdout: '1.99.0', stderr: '' })
+        .mockResolvedValueOnce({ stdout: '', stderr: '' });
 
       const result = await setupVsCode();
 
@@ -688,9 +694,38 @@ describe('lib/mcp/setup', () => {
       expect(mockedLogError).not.toHaveBeenCalled();
     });
 
+    it('should return false when VS Code is below 1.99', async () => {
+      mockedExecAsync.mockResolvedValueOnce({ stdout: '1.98.2', stderr: '' });
+
+      const result = await setupVsCode(mockMcpCommand);
+
+      expect(result).toBe(false);
+      expect(mockedSpinniesManager.fail).toHaveBeenCalledWith('vsCode', {
+        text: commands.mcp.setup.spinners.vsCodeVersionUnsupported,
+      });
+      expect(mockedExecAsync).toHaveBeenCalledTimes(1);
+      expect(mockedLogError).not.toHaveBeenCalled();
+    });
+
     it('should return false and log error on other failures', async () => {
       const error = new Error('Unexpected failure');
       mockedExecAsync.mockRejectedValueOnce(error);
+
+      const result = await setupVsCode(mockMcpCommand);
+
+      expect(result).toBe(false);
+      expect(mockedSpinniesManager.fail).toHaveBeenCalledWith('vsCode', {
+        text: commands.mcp.setup.spinners.failedToConfigureVsCode,
+      });
+      expect(mockedLogError).toHaveBeenCalledWith(error);
+      expect(mockedExecAsync).toHaveBeenCalledTimes(1);
+    });
+
+    it('should return false and log error when adding MCP server fails', async () => {
+      const error = new Error('Unexpected failure');
+      mockedExecAsync
+        .mockResolvedValueOnce({ stdout: '1.99.0', stderr: '' })
+        .mockRejectedValueOnce(error);
 
       const result = await setupVsCode(mockMcpCommand);
 

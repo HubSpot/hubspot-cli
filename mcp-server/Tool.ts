@@ -8,7 +8,7 @@ import {
   ServerRequest,
 } from '@modelcontextprotocol/sdk/types.js';
 import { McpLogger } from './utils/logger.js';
-import { TextContentResponse } from './types.js';
+import { McpToolResponse } from './types.js';
 import { formatTextContents } from './utils/content.js';
 import { getErrorMessage } from '../lib/errorHandlers/index.js';
 import { trackToolUsage } from './utils/toolUsageTracking.js';
@@ -30,9 +30,7 @@ export class Tool<InputSchema> {
     throw new Error('Must implement register');
   }
 
-  handler(
-    _input: InputSchema
-  ): TextContentResponse | Promise<TextContentResponse> {
+  handler(_input: InputSchema): McpToolResponse | Promise<McpToolResponse> {
     throw new Error('Must implement handler');
   }
 
@@ -78,7 +76,7 @@ export class Tool<InputSchema> {
   protected wrappedHandler(
     input: InputSchema,
     extra?: ToolExtra
-  ): Promise<TextContentResponse> {
+  ): Promise<McpToolResponse> {
     return this.logger.runWithBuffer(async () => {
       const startTime = Date.now();
 
@@ -97,7 +95,7 @@ export class Tool<InputSchema> {
           this.handler as (
             input: InputSchema,
             extra?: ToolExtra
-          ) => Promise<TextContentResponse>
+          ) => Promise<McpToolResponse>
         )(input, extra);
 
         this.logger.debug(this.toolName, {
@@ -113,7 +111,9 @@ export class Tool<InputSchema> {
           durationMs: Date.now() - startTime,
         });
 
-        return formatTextContents(getErrorMessage(error));
+        const errorResponse = await formatTextContents(getErrorMessage(error));
+        errorResponse.isError = true;
+        return errorResponse;
       } finally {
         this.logger.flushLogsToFile(this.toolName);
       }

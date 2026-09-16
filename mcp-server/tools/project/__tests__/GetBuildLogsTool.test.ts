@@ -6,10 +6,7 @@ import {
 import { McpLogger } from '../../../utils/logger.js';
 import { http } from '@hubspot/local-dev-lib/http';
 import { isHubSpotHttpError } from '@hubspot/local-dev-lib/errors/index';
-import {
-  getProjectConfig,
-  validateProjectConfig,
-} from '../../../../lib/projects/config.js';
+import { getProjectConfig } from '../../../../lib/projects/config.js';
 import { MockedFunction, Mocked } from 'vitest';
 import { mcpFeedbackRequest } from '../../../utils/feedbackTracking.js';
 import { ProjectLog } from '@hubspot/local-dev-lib/types/ProjectLog';
@@ -37,9 +34,6 @@ const mockIsHubSpotHttpError = isHubSpotHttpError as unknown as MockedFunction<
 >;
 const mockGetProjectConfig = getProjectConfig as MockedFunction<
   typeof getProjectConfig
->;
-const mockValidateProjectConfig = validateProjectConfig as MockedFunction<
-  typeof validateProjectConfig
 >;
 
 const TEST_ACCOUNT_ID = 123456789;
@@ -195,11 +189,10 @@ describe('mcp-server/tools/project/GetBuildLogsTool', () => {
       recommended: { accountId: TEST_ACCOUNT_ID } as AccountTargetCandidate,
     });
     mockIsHubSpotHttpError.mockReturnValue(false);
-    mockGetProjectConfig.mockResolvedValue({
+    mockGetProjectConfig.mockReturnValue({
       projectConfig: createMockProjectConfig(),
       projectDir: TEST_PROJECT_PATH,
     });
-    mockValidateProjectConfig.mockImplementation(() => {});
   });
 
   describe('register', () => {

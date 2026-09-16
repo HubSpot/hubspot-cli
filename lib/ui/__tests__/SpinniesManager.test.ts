@@ -1,6 +1,7 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import SpinniesManager from '../SpinniesManager.js';
 import type { uiLogger } from '../logger.js';
+import { stubColorEnv } from '../../testUtils.js';
 
 // Mock dependencies
 vi.mock('readline', () => ({
@@ -46,13 +47,13 @@ describe('SpinniesManager', () => {
       writable: true,
     });
 
-    // Mock process.env
-    delete process.env.CI;
+    stubColorEnv();
 
     spinniesManager = SpinniesManager;
   });
 
   afterEach(() => {
+    vi.unstubAllEnvs();
     vi.restoreAllMocks();
   });
 
@@ -77,7 +78,7 @@ describe('SpinniesManager', () => {
     });
 
     it('should set disableSpins to true in CI environment', () => {
-      process.env.CI = 'true';
+      vi.stubEnv('CI', 'true');
       spinniesManager.init();
 
       spinniesManager.add('test', { text: 'Test spinner' });
@@ -448,6 +449,118 @@ describe('SpinniesManager', () => {
 
       // In non-TTY mode, it should write with raw output
       expect(mockWrite).toHaveBeenCalledWith('- Test\n');
+    });
+  });
+
+  describe('non-animated raw output', () => {
+    let mockWrite: ReturnType<typeof vi.fn>;
+
+    beforeEach(() => {
+      mockWrite = vi.fn();
+      Object.defineProperty(process.stderr, 'write', {
+        value: mockWrite,
+        writable: true,
+      });
+      Object.defineProperty(process.stderr, 'isTTY', {
+        value: false,
+        writable: true,
+      });
+      // @ts-expect-error resetting private singleton state between tests
+      spinniesManager.spinners = {};
+      // @ts-expect-error resetting private singleton state between tests
+      spinniesManager.rawOutputCache = {};
+      spinniesManager.init();
+    });
+
+    it('should not repeat a stale line when nothing changes', () => {
+      spinniesManager.add('upload', { text: 'Uploading' });
+      spinniesManager.update('upload', { text: 'Uploading' });
+      spinniesManager.update('upload', { text: 'Uploading' });
+
+      const uploadingCalls = mockWrite.mock.calls.filter(
+        call => call[0] === '- Uploading\n'
+      );
+      expect(uploadingCalls).toHaveLength(1);
+    });
+
+    it('should write a new line when the text changes', () => {
+      spinniesManager.add('upload', { text: 'Uploading' });
+      spinniesManager.update('upload', { text: 'Uploading 50%' });
+
+      expect(mockWrite).toHaveBeenCalledWith('- Uploading\n');
+      expect(mockWrite).toHaveBeenCalledWith('- Uploading 50%\n');
+    });
+
+    it('should not re-dump unrelated spinners when one updates', () => {
+      spinniesManager.add('build', { text: 'Building' });
+      spinniesManager.add('deploy', { text: 'Deploying' });
+      mockWrite.mockClear();
+
+      spinniesManager.update('deploy', { text: 'Deploying app' });
+
+      const buildCalls = mockWrite.mock.calls.filter(
+        call => call[0] === '- Building\n'
+      );
+      expect(buildCalls).toHaveLength(0);
+      expect(mockWrite).toHaveBeenCalledWith('- Deploying app\n');
+    });
+
+    it('should emit a new line when a spinner succeeds with updated text', () => {
+      spinniesManager.add('deploy', { text: 'Deploying' });
+      spinniesManager.succeed('deploy', { text: 'Deployed' });
+
+      expect(mockWrite).toHaveBeenCalledWith('- Deploying\n');
+      expect(mockWrite).toHaveBeenCalledWith('- Deployed\n');
+    });
+
+    it('should not repeat the line when a spinner succeeds without new text', () => {
+      spinniesManager.add('deploy', { text: 'Deploying' });
+      spinniesManager.succeed('deploy');
+
+      const deployingCalls = mockWrite.mock.calls.filter(
+        call => call[0] === '- Deploying\n'
+      );
+      expect(deployingCalls).toHaveLength(1);
+    });
+  });
+
+  describe('no-color / no-styling mode', () => {
+    it('falls back to plain line output on a TTY when NO_COLOR is set', () => {
+      const mockWrite = vi.fn();
+      Object.defineProperty(process.stderr, 'write', {
+        value: mockWrite,
+        writable: true,
+      });
+      Object.defineProperty(process.stderr, 'isTTY', {
+        value: true,
+        writable: true,
+      });
+      vi.stubEnv('NO_COLOR', '1');
+
+      spinniesManager.init();
+      spinniesManager.add('build', { text: 'Building' });
+
+      expect(mockWrite).toHaveBeenCalledWith('- Building\n');
+    });
+
+    it('still logs succeed output as plain lines in no-color mode', () => {
+      const mockWrite = vi.fn();
+      Object.defineProperty(process.stderr, 'write', {
+        value: mockWrite,
+        writable: true,
+      });
+      Object.defineProperty(process.stderr, 'isTTY', {
+        value: true,
+        writable: true,
+      });
+      vi.stubEnv('NO_COLOR', '1');
+
+      spinniesManager.init();
+      spinniesManager.add('build', { text: 'Building' });
+      mockWrite.mockClear();
+      spinniesManager.succeed('build', { text: 'Built' });
+
+      expect(mockWrite).toHaveBeenCalledWith('- Built\n');
     });
   });
 

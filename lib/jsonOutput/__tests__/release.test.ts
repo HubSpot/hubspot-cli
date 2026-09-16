@@ -1,7 +1,7 @@
-import { mapReleaseToJsonOutput } from '../jsonOutput.js';
-import { Release } from '../../api/releases.js';
+import { mapReleaseToJsonOutput } from '../release.js';
+import { Release } from '../../../api/releases.js';
 
-describe('lib/jsonOutput', () => {
+describe('lib/jsonOutput/release', () => {
   describe('mapReleaseToJsonOutput()', () => {
     it('should map release fields', () => {
       const release: Release = {

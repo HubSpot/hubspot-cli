@@ -11,6 +11,7 @@ import {
   LocalDependencyProtocol,
 } from '@hubspot/project-parsing-lib/workspaces';
 import { uiLogger } from '../ui/logger.js';
+import { isPathInsideDirectory } from '../filesystem.js';
 import { lib } from '../../lang/en.js';
 
 const FILE_PROTOCOL_PREFIX = 'file:';
@@ -98,15 +99,6 @@ export function computeExternalArchivePath(
 }
 
 /**
- * Returns true if dir is inside srcDir (i.e. it will already be included
- * in the archive from the srcDir walk and must not be copied again).
- */
-function isInsideSrcDir(dir: string, srcDir: string): boolean {
-  const rel = path.relative(path.resolve(srcDir), path.resolve(dir));
-  return !rel.startsWith('..') && !path.isAbsolute(rel);
-}
-
-/**
  * Creates a file filter function for workspace archiving.
  * Filters files based on packable files list and ignore rules.
  */
@@ -161,7 +153,7 @@ async function archiveWorkspaceDirectories(
       packageWorkspaceEntries.set(sourcePackageJsonPath, []);
     }
 
-    if (isInsideSrcDir(workspaceDir, srcDir)) {
+    if (isPathInsideDirectory(workspaceDir, srcDir)) {
       // Internal: already in archive from srcDir walk.
       // Store the relative path from the package.json directory so npm can resolve it.
       const relPath = toPosixPath(
@@ -257,7 +249,7 @@ async function archiveFileDependencies(
     const { packageName, localPath, sourcePackageJsonPath, kind, protocol } =
       mapping;
 
-    if (isInsideSrcDir(localPath, srcDir)) {
+    if (isPathInsideDirectory(localPath, srcDir)) {
       continue;
     }
 
@@ -519,7 +511,7 @@ export function getPackageJsonPathsToUpdate(
   }
 
   for (const { localPath, sourcePackageJsonPath } of fileDependencyMappings) {
-    if (!isInsideSrcDir(localPath, srcDir)) {
+    if (!isPathInsideDirectory(localPath, srcDir)) {
       paths.add(toPosixPath(path.relative(srcDir, sourcePackageJsonPath)));
     }
   }
@@ -534,12 +526,12 @@ function getDirsWithExternalDeps(
 ): Set<string> {
   const dirs = new Set<string>();
   for (const { workspaceDir, sourcePackageJsonPath } of workspaceMappings) {
-    if (!isInsideSrcDir(workspaceDir, srcDir)) {
+    if (!isPathInsideDirectory(workspaceDir, srcDir)) {
       dirs.add(path.dirname(sourcePackageJsonPath));
     }
   }
   for (const { localPath, sourcePackageJsonPath } of fileDependencyMappings) {
-    if (!isInsideSrcDir(localPath, srcDir)) {
+    if (!isPathInsideDirectory(localPath, srcDir)) {
       dirs.add(path.dirname(sourcePackageJsonPath));
     }
   }

@@ -296,7 +296,7 @@ describe('lib/projects/release', () => {
       getBuildStatusSpy.mockReturnValue(
         mockHubSpotHttpResponse({
           buildId: 8,
-          platformVersion: PLATFORM_VERSIONS.v2027_03_BETA,
+          platformVersion: PLATFORM_VERSIONS.v2027_03,
         })
       );
       const result = await validateBuildForRelease(accountId, projectName, 8);
@@ -314,7 +314,18 @@ describe('lib/projects/release', () => {
       expect(result).toBe(true);
     });
 
-    it('returns false for the 2026.09 versions, which carry component permissions but not release management', async () => {
+    it('returns false for 2027.03-beta, where release management is not enabled yet', async () => {
+      getBuildStatusSpy.mockReturnValue(
+        mockHubSpotHttpResponse({
+          buildId: 8,
+          platformVersion: PLATFORM_VERSIONS.v2027_03_BETA,
+        })
+      );
+      const result = await validateBuildForRelease(accountId, projectName, 8);
+      expect(result).toBe(false);
+    });
+
+    it('returns false for the 2026.09 versions, which carry neither release management nor component permissions', async () => {
       getBuildStatusSpy.mockReturnValue(
         mockHubSpotHttpResponse({
           buildId: 8,

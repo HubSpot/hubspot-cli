@@ -4,6 +4,7 @@ import profileDeleteCommand, {
 } from '../delete.js';
 import { getProjectConfig } from '../../../../lib/projects/config.js';
 import { isLegacyProject } from '@hubspot/project-parsing-lib/projects';
+import { logError } from '../../../../lib/errorHandlers/index.js';
 import { uiLogger } from '../../../../lib/ui/logger.js';
 import { EXIT_CODES } from '../../../../lib/enums/exitCodes.js';
 import { getAllHsProfiles } from '@hubspot/project-parsing-lib/profiles';
@@ -90,7 +91,7 @@ describe('commands/project/profile/delete', () => {
 
     beforeEach(() => {
       vi.clearAllMocks();
-      mockedGetProjectConfig.mockResolvedValue({
+      mockedGetProjectConfig.mockReturnValue({
         projectConfig: mockProjectConfig,
         projectDir: '/path/to/project',
       });
@@ -100,14 +101,14 @@ describe('commands/project/profile/delete', () => {
     });
 
     it('should exit with error when no project config is found', async () => {
-      mockedGetProjectConfig.mockResolvedValue({
-        projectConfig: null,
-        projectDir: null,
+      const error = new Error('No project config found');
+      mockedGetProjectConfig.mockImplementation(() => {
+        throw error;
       });
 
       await profileDeleteCommand.handler(mockArgs);
 
-      expect(mockedUiLogger.error).toHaveBeenCalled();
+      expect(logError).toHaveBeenCalledWith(error);
       expect(mockExit).toHaveBeenCalledWith(EXIT_CODES.ERROR);
     });
 

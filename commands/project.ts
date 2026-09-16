@@ -40,7 +40,7 @@ const describe = commands.project.describe;
 // the CLI is not officially compatible with
 async function validatePlatformVersion() {
   try {
-    const { projectConfig } = await getProjectConfig();
+    const { projectConfig } = getProjectConfig();
 
     // Only warn if a platform version is explicitly set but not supported
     // Don't warn if the platform version is missing/undefined

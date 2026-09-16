@@ -38,10 +38,6 @@ const mockedFetchProject = vi.mocked(fetchProject);
 const mockedFetchProjectBuilds = vi.mocked(fetchProjectBuilds);
 const mockedRenderTable = vi.mocked(renderTable);
 const getProjectConfigSpy = vi.spyOn(projectConfigUtils, 'getProjectConfig');
-const validateProjectConfigSpy = vi.spyOn(
-  projectConfigUtils,
-  'validateProjectConfig'
-);
 const processExitSpy = vi.spyOn(process, 'exit');
 
 const build = {
@@ -254,7 +250,7 @@ describe('commands/project/listBuilds', () => {
 
     it('should read the project config when no project flag is provided', async () => {
       delete args.project;
-      getProjectConfigSpy.mockResolvedValue({
+      getProjectConfigSpy.mockReturnValue({
         projectConfig: {
           name: 'config-project',
           srcDir: 'src',
@@ -262,7 +258,6 @@ describe('commands/project/listBuilds', () => {
         },
         projectDir: '/path/to/project',
       });
-      validateProjectConfigSpy.mockImplementation(() => {});
 
       await projectListBuildsCommand.handler(args);
 

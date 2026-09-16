@@ -3,6 +3,7 @@ import yargs, { ArgumentsCamelCase, Argv } from 'yargs';
 import profileAddCommand, { type ProjectProfileAddArgs } from '../add.js';
 import { getProjectConfig } from '../../../../lib/projects/config.js';
 import { isLegacyProject } from '@hubspot/project-parsing-lib/projects';
+import { logError } from '../../../../lib/errorHandlers/index.js';
 import { uiLogger } from '../../../../lib/ui/logger.js';
 import { EXIT_CODES } from '../../../../lib/enums/exitCodes.js';
 import {
@@ -100,7 +101,7 @@ describe('commands/project/profile/add', () => {
 
     beforeEach(() => {
       vi.clearAllMocks();
-      mockedGetProjectConfig.mockResolvedValue({
+      mockedGetProjectConfig.mockReturnValue({
         projectConfig: mockProjectConfig,
         projectDir: '/path/to/project',
       });
@@ -127,14 +128,14 @@ describe('commands/project/profile/add', () => {
     });
 
     it('should exit with error when no project config is found', async () => {
-      mockedGetProjectConfig.mockResolvedValue({
-        projectConfig: null,
-        projectDir: null,
+      const error = new Error('No project config found');
+      mockedGetProjectConfig.mockImplementation(() => {
+        throw error;
       });
 
       await profileAddCommand.handler(mockArgs);
 
-      expect(mockedUiLogger.error).toHaveBeenCalled();
+      expect(logError).toHaveBeenCalledWith(error);
       expect(mockExit).toHaveBeenCalledWith(EXIT_CODES.ERROR);
     });
 

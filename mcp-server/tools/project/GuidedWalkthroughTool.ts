@@ -1,4 +1,4 @@
-import { TextContentResponse } from '../../types.js';
+import { McpToolResponse } from '../../types.js';
 import { Tool } from '../../Tool.js';
 import {
   McpServer,
@@ -42,7 +42,7 @@ export class GuidedWalkthroughTool extends Tool<InputSchemaType> {
   async handler({
     command,
     absoluteCurrentWorkingDirectory,
-  }: InputSchemaType): Promise<TextContentResponse> {
+  }: InputSchemaType): Promise<McpToolResponse> {
     setupHubSpotConfig(absoluteCurrentWorkingDirectory);
     if (command) {
       const { stdout } = await execAsync(`${command} --help`);

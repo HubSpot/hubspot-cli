@@ -26,6 +26,7 @@ import {
 } from './spinniesUtils.js';
 import { isUnicodeSupported } from '@hubspot/local-dev-lib/isUnicodeSupported';
 
+import { hasColorDisableSignal } from './supportsColor.js';
 import { uiLogger } from './logger.js';
 
 interface SpinnerState extends BaseSpinnerOptions {
@@ -52,6 +53,7 @@ class SpinniesManager {
   private currentFrameIndex = 0;
   private spin!: boolean;
   private sigintHandler: (() => void) | null = null;
+  private rawOutputCache: { [key: string]: string } = {};
 
   constructor() {
     this.resetState();
@@ -69,8 +71,8 @@ class SpinniesManager {
     this.spin =
       !this.options.disableSpins &&
       !process.env.CI &&
-      process.stderr &&
-      process.stderr.isTTY;
+      !hasColorDisableSignal() &&
+      Boolean(process.stderr?.isTTY);
 
     if (!this.hasAnySpinners()) {
       this.resetState();
@@ -89,6 +91,7 @@ class SpinniesManager {
     this.stream = process.stderr;
     this.lineCount = 0;
     this.currentFrameIndex = 0;
+    this.rawOutputCache = {};
   }
 
   setDisableOutput(disableOutput: boolean) {
@@ -141,6 +144,7 @@ class SpinniesManager {
     }
 
     delete this.spinners[name];
+    delete this.rawOutputCache[name];
 
     // Update the spinner state to clean up the deleted spinner
     this.updateSpinnerState();
@@ -300,8 +304,13 @@ class SpinniesManager {
   }
 
   private setRawStreamOutput(): void {
-    Object.values(this.spinners).forEach(i => {
-      process.stderr.write(`- ${i.text}\n`);
+    Object.entries(this.spinners).forEach(([name, spinner]) => {
+      const line = `- ${spinner.text ?? ''}\n`;
+      if (this.rawOutputCache[name] === line) {
+        return;
+      }
+      this.rawOutputCache[name] = line;
+      process.stderr.write(line);
     });
   }
 
@@ -317,6 +326,7 @@ class SpinniesManager {
         cliCursor.show();
       }
       this.spinners = {};
+      this.rawOutputCache = {};
     }
   }
 

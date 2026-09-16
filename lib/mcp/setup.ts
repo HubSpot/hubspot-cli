@@ -15,6 +15,7 @@ import path from 'path';
 import os from 'os';
 import fs from 'fs-extra';
 import { existsSync } from 'fs';
+import semver from 'semver';
 
 const mcpServerName = MCP_SERVER_NAME;
 
@@ -27,6 +28,7 @@ const gemini: McpClientId = 'gemini';
 const opencode: McpClientId = 'opencode';
 
 const OTHER_TOOL = 'other';
+const MINIMUM_VSCODE_VERSION = '1.99.0';
 
 const clientLabels: Record<McpClientId, string> = {
   codex: commands.mcp.setup.codex,
@@ -273,11 +275,21 @@ function setupMcpConfigFile(config: SetupConfig): boolean {
 export async function setupVsCode(
   mcpCommand: McpCommand = defaultMcpCommand
 ): Promise<boolean> {
+  const commandWithAgent = buildCommandWithAgentString(mcpCommand, vscode);
+
   try {
     SpinniesManager.add('vsCode', {
       text: commands.mcp.setup.spinners.configuringVsCode,
     });
-    const commandWithAgent = buildCommandWithAgentString(mcpCommand, vscode);
+
+    const { stdout } = await execAsync('code --version');
+    const version = stdout.trim().split('\n')[0];
+    if (!semver.gte(version, MINIMUM_VSCODE_VERSION)) {
+      SpinniesManager.fail('vsCode', {
+        text: commands.mcp.setup.spinners.vsCodeVersionUnsupported,
+      });
+      return false;
+    }
 
     const configObject: Record<string, unknown> = {
       name: mcpServerName,

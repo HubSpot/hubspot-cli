@@ -38,7 +38,7 @@ import { isServerRunningAtUrl } from '../http.js';
 import { detectConfiguredMcpClients } from '../mcp/promotion.js';
 import { MCP_CLIENTS } from '../mcp/clients.js';
 import { WEBHOOKS_KEY, APP_KEY } from '@hubspot/project-parsing-lib/constants';
-import { validateProjectConfig } from '../projects/config.js';
+import { validateProjectConfig } from '@hubspot/project-parsing-lib/projects';
 import { ProjectConfig as ProjectConfigType } from '../../types/Projects.js';
 import {
   validateSourceDirectory,
@@ -85,7 +85,7 @@ export class Doctor {
       ...this.performCliChecks(),
       ...this.performCliConfigChecks(),
       ...this.performNetworkingChecks(),
-      ...(this.projectConfig?.projectConfig ? this.performProjectChecks() : []),
+      ...(this.projectConfig ? this.performProjectChecks() : []),
     ]);
 
     this.performDefaultAccountOverrideFileChecks();
@@ -365,7 +365,7 @@ export class Doctor {
       const packageDirName = path.dirname(packageFile);
       try {
         const needsInstall = await hasMissingPackages(
-          path.join(this.projectConfig?.projectDir || '', packageDirName)
+          path.join(this.projectConfig?.projectDir ?? '', packageDirName)
         );
 
         if (needsInstall) {
@@ -428,7 +428,7 @@ export class Doctor {
     let foundError = false;
     for (const jsonFile of this.diagnosticInfo?.jsonFiles || []) {
       const fileToCheck = path.join(
-        this.projectConfig?.projectDir || '',
+        this.projectConfig?.projectDir ?? '',
         jsonFile
       );
       if (!(await this.isValidJsonFile(fileToCheck))) {
@@ -563,7 +563,7 @@ export class Doctor {
       for (const metaFiles of hsMetaFiles) {
         try {
           const content = await fs.promises.readFile(
-            path.join(this.projectConfig?.projectDir || '', metaFiles),
+            path.join(this.projectConfig?.projectDir ?? '', metaFiles),
             'utf8'
           );
           const contents = JSON.parse(content);
@@ -611,7 +611,7 @@ export class Doctor {
       for (const metaFile of hsMetaFiles) {
         try {
           const content = await fs.promises.readFile(
-            path.join(this.projectConfig?.projectDir || '', metaFile),
+            path.join(this.projectConfig?.projectDir ?? '', metaFile),
             'utf8'
           );
           const contents = JSON.parse(content);
@@ -725,11 +725,7 @@ export class Doctor {
   }
 
   private async checkProjectValidation(): Promise<void> {
-    if (
-      !this.projectConfig?.projectConfig ||
-      !this.projectConfig?.projectDir ||
-      !this.accountId
-    ) {
+    if (!this.projectConfig || !this.accountId) {
       return;
     }
 

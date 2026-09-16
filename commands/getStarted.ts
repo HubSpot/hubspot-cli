@@ -15,8 +15,8 @@ import { EXIT_CODES } from '../lib/enums/exitCodes.js';
 import { debugError, logError } from '../lib/errorHandlers/index.js';
 import {
   getProjectConfig,
-  validateProjectConfig,
   writeProjectConfig,
+  ProjectConfigValidationError,
 } from '../lib/projects/config.js';
 import { handleProjectUpload } from '../lib/projects/upload.js';
 import { projectNameAndDestPrompt } from '../lib/prompts/projectNameAndDestPrompt.js';
@@ -42,7 +42,7 @@ import { pollProjectBuildAndDeploy } from '../lib/projects/pollProjectBuildAndDe
 import { fetchPublicAppsForPortal } from '@hubspot/local-dev-lib/api/appsDev';
 import { getConfigAccountEnvironment } from '@hubspot/local-dev-lib/config';
 import { getStaticAuthAppInstallUrl } from '../lib/app/urls.js';
-import ProjectValidationError from '../lib/errors/ProjectValidationError.js';
+
 import { openLink } from '../lib/links.js';
 import { runGetStartedV2 } from '../lib/getStarted/getStartedV2.js';
 import { isLegacyProject } from '@hubspot/project-parsing-lib/projects';
@@ -150,16 +150,14 @@ async function handler(
 
     const projectDest = path.resolve(getCwd(), dest);
 
-    const {
-      projectConfig: existingProjectConfig,
-      projectDir: existingProjectDir,
-    } = await getProjectConfig(projectDest);
+    let existingProjectDir: string | undefined;
+    try {
+      existingProjectDir = getProjectConfig(projectDest).projectDir;
+    } catch {
+      // Not in a project directory
+    }
 
-    if (
-      existingProjectConfig &&
-      existingProjectDir &&
-      projectDest.startsWith(existingProjectDir)
-    ) {
+    if (existingProjectDir && projectDest.startsWith(existingProjectDir)) {
       // Track nested project error
       await trackCommandMetadataUsage(
         'get-started',
@@ -183,7 +181,7 @@ async function handler(
         HUBSPOT_PROJECT_COMPONENTS_GITHUB_PATH,
         projectDest,
         {
-          sourceDir: '2026.03/private-app-get-started-template',
+          sourceDir: '2026.09/private-app-get-started-template',
           hideLogs: true,
         }
       );
@@ -263,29 +261,14 @@ async function handler(
     if (shouldUpload) {
       try {
         // Get the project config for the newly created project
-        const { projectConfig: newProjectConfig, projectDir: newProjectDir } =
-          await getProjectConfig(projectDest);
-
-        if (!newProjectConfig || !newProjectDir) {
-          // Track config file not found error
-          await trackCommandMetadataUsage(
-            'get-started',
-            {
-              successful: false,
-              step: 'config-file-not-found',
-            },
-            derivedAccountId
-          );
-
-          uiLogger.log(' ');
-          uiLogger.error(commands.getStarted.errors.configFileNotFound);
-          return exit(EXIT_CODES.ERROR);
-        }
+        let newProjectConfig;
+        let newProjectDir;
 
         try {
-          validateProjectConfig(newProjectConfig, newProjectDir);
+          ({ projectConfig: newProjectConfig, projectDir: newProjectDir } =
+            getProjectConfig(projectDest));
         } catch (error) {
-          if (error instanceof ProjectValidationError) {
+          if (error instanceof ProjectConfigValidationError) {
             // Track validation error
             await trackCommandMetadataUsage(
               'get-started',
@@ -297,7 +280,9 @@ async function handler(
             );
 
             uiLogger.log(' ');
-            uiLogger.error(error.message);
+            uiLogger.error(
+              error.message || commands.getStarted.errors.configFileNotFound
+            );
             return exit(EXIT_CODES.ERROR);
           }
           throw error;

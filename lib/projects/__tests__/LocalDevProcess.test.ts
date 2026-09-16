@@ -232,8 +232,8 @@ describe('LocalDevProcess', () => {
 
   describe('uploadProject()', () => {
     it('should not upload if project config is invalid', async () => {
-      (getProjectConfig as Mock).mockResolvedValue({
-        projectConfig: null,
+      (getProjectConfig as Mock).mockImplementation(() => {
+        throw new Error('No project config found');
       });
 
       await process.uploadProject();
@@ -243,8 +243,9 @@ describe('LocalDevProcess', () => {
     });
 
     it('should handle upload error', async () => {
-      (getProjectConfig as Mock).mockResolvedValue({
+      (getProjectConfig as Mock).mockReturnValue({
         projectConfig: mockOptions.projectConfig,
+        projectDir: '/test/project',
       });
       (handleProjectUpload as Mock).mockResolvedValue({
         uploadError: new Error('Upload failed'),
@@ -266,8 +267,9 @@ describe('LocalDevProcess', () => {
     it('should handle successful upload', async () => {
       await process.handleConfigFileChange('src/app/app-hsmeta.json');
 
-      (getProjectConfig as Mock).mockResolvedValue({
+      (getProjectConfig as Mock).mockReturnValue({
         projectConfig: mockOptions.projectConfig,
+        projectDir: '/test/project',
       });
       (handleProjectUpload as Mock).mockResolvedValue({
         uploadError: null,
@@ -345,8 +347,9 @@ describe('LocalDevProcess', () => {
       // @ts-expect-error accessing private property for testing
       process.state.projectNodesAtLastDeploy = mockInitialNodes;
 
-      (getProjectConfig as Mock).mockResolvedValue({
+      (getProjectConfig as Mock).mockReturnValue({
         projectConfig: mockOptions.projectConfig,
+        projectDir: '/test/project',
       });
       (handleProjectUpload as Mock).mockResolvedValue({
         uploadError: null,
@@ -475,8 +478,9 @@ describe('LocalDevProcess', () => {
         },
         skippedHsMetaFiles: [],
       });
-      (getProjectConfig as Mock).mockResolvedValue({
+      (getProjectConfig as Mock).mockReturnValue({
         projectConfig: mockOptions.projectConfig,
+        projectDir: '/test/project',
       });
       (handleProjectUpload as Mock).mockResolvedValue({
         uploadError: null,
@@ -527,7 +531,9 @@ describe('LocalDevProcess', () => {
     });
 
     it('recovers from an unexpected upload error and can upload again', async () => {
-      (getProjectConfig as Mock).mockRejectedValueOnce(new Error('boom'));
+      (getProjectConfig as Mock).mockImplementationOnce(() => {
+        throw new Error('boom');
+      });
 
       await autoUploadProcess.handleFileChange('src/a.ts', 'change');
       await vi.advanceTimersByTimeAsync(2000);

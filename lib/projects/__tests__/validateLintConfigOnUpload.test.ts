@@ -10,14 +10,19 @@ const lintingMocks = vi.hoisted(() => ({
   isHubSpotEslintConfigActive: vi.fn(),
 }));
 
-vi.mock('../uieLinting.js', () => ({
-  areAllLintPackagesInstalled: lintingMocks.areAllLintPackagesInstalled,
-  hasEslintConfig: lintingMocks.hasEslintConfig,
-  isHubSpotEslintConfigActive: lintingMocks.isHubSpotEslintConfigActive,
-}));
+vi.mock('../uieLinting.js', async importOriginal => {
+  const actual = await importOriginal<typeof import('../uieLinting.js')>();
+  return {
+    isUieComponentDirectory: actual.isUieComponentDirectory,
+    areAllLintPackagesInstalled: lintingMocks.areAllLintPackagesInstalled,
+    hasEslintConfig: lintingMocks.hasEslintConfig,
+    isHubSpotEslintConfigActive: lintingMocks.isHubSpotEslintConfigActive,
+  };
+});
 
-const projectDir = '/project';
-const srcDir = '/project/src';
+const projectDir = path.resolve('/project');
+const srcDir = path.join(projectDir, 'src');
+const appDir = path.join(srcDir, 'app');
 
 describe('validateLintConfigOnUpload', () => {
   beforeEach(() => {
@@ -39,8 +44,8 @@ describe('validateLintConfigOnUpload', () => {
     );
   });
 
-  it('uses parsedPackageJsons dirs when isLegacyPlatform is false', async () => {
-    const pkgDir = '/project/src/app/cards';
+  it('uses UIE component parsedPackageJsons dirs when isLegacyPlatform is false', async () => {
+    const pkgDir = path.join(appDir, 'cards');
     await validateLintConfigOnUpload({
       srcDir,
       projectDir,
@@ -56,7 +61,52 @@ describe('validateLintConfigOnUpload', () => {
     );
   });
 
-  it('falls back to srcDir when isLegacyPlatform is false and parsedPackageJsons is empty', async () => {
+  it('checks every UIE component directory when isLegacyPlatform is false', async () => {
+    const uieDirs = [
+      path.join(appDir, 'cards', 'example-card'),
+      path.join(appDir, 'settings'),
+      path.join(appDir, 'pages', 'example-page'),
+      path.join(appDir, 'actions'),
+    ];
+
+    await validateLintConfigOnUpload({
+      srcDir,
+      projectDir,
+      parsedPackageJsons: uieDirs.map(dir => ({ dir }) as never),
+      isLegacyPlatform: false,
+    });
+
+    for (const dir of uieDirs) {
+      expect(lintingMocks.areAllLintPackagesInstalled).toHaveBeenCalledWith(
+        dir
+      );
+    }
+  });
+
+  it('ignores non-UIE package.json locations when isLegacyPlatform is false', async () => {
+    lintingMocks.areAllLintPackagesInstalled.mockReturnValue(false);
+    const themeDir = path.join(srcDir, 'my-theme');
+    const functionsDir = path.join(appDir, 'functions', 'my-function');
+
+    await validateLintConfigOnUpload({
+      srcDir,
+      projectDir,
+      parsedPackageJsons: [
+        { dir: themeDir } as never,
+        { dir: functionsDir } as never,
+        { dir: srcDir } as never,
+        { dir: projectDir } as never,
+      ],
+      isLegacyPlatform: false,
+    });
+
+    expect(lintingMocks.areAllLintPackagesInstalled).not.toHaveBeenCalled();
+    expect(uiLogger.warn).not.toHaveBeenCalled();
+  });
+
+  it('does not warn for a theme-only project with no UIE components', async () => {
+    lintingMocks.areAllLintPackagesInstalled.mockReturnValue(false);
+
     await validateLintConfigOnUpload({
       srcDir,
       projectDir,
@@ -64,9 +114,8 @@ describe('validateLintConfigOnUpload', () => {
       isLegacyPlatform: false,
     });
 
-    expect(lintingMocks.areAllLintPackagesInstalled).toHaveBeenCalledWith(
-      srcDir
-    );
+    expect(lintingMocks.areAllLintPackagesInstalled).not.toHaveBeenCalled();
+    expect(uiLogger.warn).not.toHaveBeenCalled();
   });
 
   it('warns lintPackagesNotConfigured and skips remaining checks when packages not installed', async () => {

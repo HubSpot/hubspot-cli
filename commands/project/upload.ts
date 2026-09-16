@@ -7,10 +7,7 @@ import {
   isLegacyProject,
   meetsMinimumPlatformVersion,
 } from '@hubspot/project-parsing-lib/projects';
-import {
-  getProjectConfig,
-  validateProjectConfig,
-} from '../../lib/projects/config.js';
+import { getProjectConfig } from '../../lib/projects/config.js';
 import { logFeedbackMessage } from '../../lib/projects/ui.js';
 import { handleProjectUpload } from '../../lib/projects/upload.js';
 import { loadAndValidateProfile } from '../../lib/projects/projectProfiles.js';
@@ -30,10 +27,11 @@ import {
 } from '../../types/Yargs.js';
 import { makeWrappedYargsHandler } from '../../lib/yargs/makeWrappedYargsHandler.js';
 import {
+  mapAccountToTargetAccount,
   PreviewJsonOutput,
   UploadJsonOutput,
   UploadSchema,
-} from '../../lib/jsonOutput.js';
+} from '../../lib/jsonOutput/upload.js';
 import { ProjectPollResult } from '../../types/Projects.js';
 import { makeYargsBuilder } from '../../lib/yargsUtils.js';
 import { projectProfilePrompt } from '../../lib/prompts/projectProfilePrompt.js';
@@ -111,24 +109,21 @@ async function handler(
     uiDeprecatedTag(commands.project.upload.logs.forceCreateDeprecated);
   }
 
-  const { projectConfig, projectDir } = await getProjectConfig();
+  let projectConfig;
+  let projectDir;
 
   try {
-    validateProjectConfig(projectConfig, projectDir);
+    ({ projectConfig, projectDir } = getProjectConfig());
   } catch (error) {
     logError(error);
     return exit(EXIT_CODES.ERROR);
   }
 
-  if (!projectDir) {
-    uiLogger.error(commands.project.upload.errors.noProjectConfig);
-    return exit(EXIT_CODES.ERROR);
-  }
-
   let targetAccountId;
   let profileName = args.profile;
+  let resolvedViaProfile = false;
 
-  if (!isLegacyProject(projectConfig?.platformVersion)) {
+  if (!isLegacyProject(projectConfig.platformVersion)) {
     try {
       const profileNamePromptResult = await projectProfilePrompt(
         projectDir,
@@ -146,6 +141,15 @@ async function handler(
           profileName
         );
         targetAccountId = profile.accountId;
+        resolvedViaProfile = true;
+
+        uiLogger.log(
+          commands.project.upload.logs.uploadingWithProfile(
+            profileName,
+            targetAccountId
+          )
+        );
+        uiLogger.log('');
       }
     } catch (error) {
       logError(error);
@@ -162,6 +166,13 @@ async function handler(
     type: accountType!,
     assetType: projectConfig.platformVersion,
   });
+
+  if (!resolvedViaProfile) {
+    uiLogger.log(
+      commands.project.upload.logs.uploadingToAccount(targetAccountId!)
+    );
+    uiLogger.log('');
+  }
 
   try {
     const { result, uploadError, projectId, userDeclined } =
@@ -222,7 +233,7 @@ async function handler(
         if (
           meetsMinimumPlatformVersion(
             result.buildResult.platformVersion,
-            PLATFORM_VERSIONS.v2027_03_BETA
+            PLATFORM_VERSIONS.v2027_03
           )
         ) {
           const releaseCommand = `hs project release create --build=${result.buildId}`;
@@ -249,6 +260,19 @@ async function handler(
       );
     }
 
+    if (result) {
+      addJsonOutput({
+        targetAccount: mapAccountToTargetAccount(
+          targetAccountId!,
+          accountConfig
+        ),
+        buildId: result.buildId,
+      });
+      if (result.deployResult) {
+        addJsonOutput({ deployId: result.deployResult.deployId });
+      }
+    }
+
     if (result && result.succeeded && preview && targetPortalId) {
       const previewJson = await handlePreview(
         targetAccountId!,
@@ -262,11 +286,10 @@ async function handler(
       }
     }
 
-    if (result) {
-      addJsonOutput({ buildId: result.buildId });
-      if (result.deployResult) {
-        addJsonOutput({ deployId: result.deployResult.deployId });
-      }
+    if (result && result.succeeded) {
+      uiLogger.log(
+        commands.project.upload.logs.uploadedToAccount(targetAccountId!)
+      );
     }
 
     if (result && !result.succeeded) {

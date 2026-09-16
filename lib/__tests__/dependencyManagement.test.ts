@@ -50,7 +50,7 @@ describe('lib/dependencyManagement', () => {
   beforeEach(() => {
     execMock = vi.fn();
     util.promisify = mockedPromisify(execMock);
-    mockedGetProjectConfig.mockResolvedValue({
+    mockedGetProjectConfig.mockReturnValue({
       projectDir,
       projectConfig: {
         srcDir,
@@ -126,7 +126,7 @@ describe('lib/dependencyManagement', () => {
 
       mockedWalk.mockResolvedValue(installLocations);
 
-      mockedGetProjectConfig.mockResolvedValue({
+      mockedGetProjectConfig.mockReturnValue({
         projectDir,
         projectConfig: {
           srcDir,
@@ -360,7 +360,7 @@ describe('lib/dependencyManagement', () => {
 
       mockedWalk.mockResolvedValue(installLocations);
 
-      mockedGetProjectConfig.mockResolvedValue({
+      mockedGetProjectConfig.mockReturnValue({
         projectDir,
         projectConfig: {
           srcDir,
@@ -456,7 +456,11 @@ describe('lib/dependencyManagement', () => {
 
   describe('getProjectPackageJsonFiles()', () => {
     it('should throw an error when ran outside the boundary of a project', async () => {
-      mockedGetProjectConfig.mockResolvedValue({});
+      mockedGetProjectConfig.mockImplementation(() => {
+        throw new Error(
+          'No project detected. Run this command from a project directory.'
+        );
+      });
       await expect(() => getProjectPackageJsonLocations()).rejects.toThrowError(
         'No project detected. Run this command from a project directory.'
       );

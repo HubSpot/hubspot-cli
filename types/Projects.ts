@@ -7,6 +7,7 @@ import {
   privateDistribution,
   staticAuth,
 } from '../lib/constants.js';
+export type { ProjectConfig } from '@hubspot/project-parsing-lib/projects';
 
 export type ProjectTemplate = {
   name: string;
@@ -28,12 +29,6 @@ export type ComponentTemplateChoice = {
   name: string;
   value: ComponentTemplate;
   disabled?: string | boolean;
-};
-
-export type ProjectConfig = {
-  name: string;
-  srcDir: string;
-  platformVersion: string;
 };
 
 export type ProjectTaskStates = {

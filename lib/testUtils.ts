@@ -1,3 +1,4 @@
+import { vi } from 'vitest';
 import { HubSpotPromise } from '@hubspot/local-dev-lib/types/Http';
 import { HubSpotHttpError } from '@hubspot/local-dev-lib/models/HubSpotHttpError';
 type MockErrorResponse = {
@@ -30,4 +31,18 @@ export function mockHubSpotHttpError(
   return new HubSpotHttpError(message, {
     cause: { isAxiosError: true, response },
   });
+}
+
+// Stubs the color-detection env to a color-capable interactive baseline.
+// Call vi.unstubAllEnvs() in afterEach to restore.
+export function stubColorEnv(): void {
+  [
+    'CI',
+    'NO_COLOR',
+    'COLOR',
+    'FORCE_COLOR',
+    'COLORTERM',
+    'TERM_PROGRAM',
+  ].forEach(key => vi.stubEnv(key, undefined));
+  vi.stubEnv('TERM', 'xterm-256color');
 }

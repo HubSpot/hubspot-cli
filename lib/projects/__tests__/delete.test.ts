@@ -296,11 +296,33 @@ describe('lib/projects/delete', () => {
       });
     });
 
-    it('throws when platform version cannot be determined', async () => {
+    it('allows deleting a project with no builds at all', async () => {
+      // A project whose very first upload failed has no deployedBuild and no latestBuild, so there
+      // is no platform version. It also has nothing deployed, so deletion should proceed rather
+      // than throw and leave the project permanently undeletable.
       mockFetchProject.mockReturnValue(
         mockHubSpotHttpResponse<Project>({
           id: PROJECT_ID,
           name: PROJECT_NAME,
+        } as unknown as Project)
+      );
+
+      const result = await checkDeployedComponents(ACCOUNT_ID, PROJECT_NAME);
+
+      expect(result.hasUnifiedComponents).toBe(false);
+      expect(result.platformVersion).toBe('');
+      expect(result.projectId).toBe(PROJECT_ID);
+      expect(mockStageProjectForDeletion).not.toHaveBeenCalled();
+    });
+
+    it('still throws when a build exists but has no platform version', async () => {
+      // Inconsistent data rather than an empty project: the build may have deployed components, so
+      // skipping cleanup here could orphan them.
+      mockFetchProject.mockReturnValue(
+        mockHubSpotHttpResponse<Project>({
+          id: PROJECT_ID,
+          name: PROJECT_NAME,
+          latestBuild: { buildId: 1 },
         } as unknown as Project)
       );
 

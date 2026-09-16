@@ -68,9 +68,9 @@ describe('commands/project/watch', () => {
     beforeEach(() => {
       // @ts-expect-error Mock implementation
       processExitSpy.mockImplementation(() => {});
-      getProjectConfigSpy.mockResolvedValue({
-        projectConfig: null,
-        projectDir: null,
+      getProjectConfigSpy.mockReturnValue({
+        projectConfig: {} as projectConfigLib.ProjectConfig,
+        projectDir: '',
       });
     });
 

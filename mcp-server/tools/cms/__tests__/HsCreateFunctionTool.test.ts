@@ -104,7 +104,7 @@ describe('HsCreateFunctionTool', () => {
         endpointPath: '/api/test',
       });
 
-      expect(result.content).toHaveLength(2);
+      expect(result.content).toHaveLength(1);
       expect(result.content[0].text).toContain('Function created successfully');
     });
 
@@ -180,7 +180,7 @@ describe('HsCreateFunctionTool', () => {
         }),
         expect.any(Function)
       );
-      expect(result.content).toHaveLength(2);
+      expect(result.content).toHaveLength(1);
       expect(result.content[0].text).toContain('Function created successfully');
     });
 

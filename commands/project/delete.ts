@@ -58,7 +58,7 @@ async function handler(
       await confirmDeletion(projectName, derivedAccountId, projectId);
     }
 
-    if (!isLegacyProject(platformVersion) && hasUnifiedComponents) {
+    if (hasUnifiedComponents && !isLegacyProject(platformVersion)) {
       await deleteDeployedComponents(derivedAccountId, projectName);
     }
 

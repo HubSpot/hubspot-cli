@@ -5,7 +5,7 @@ import {
 } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { McpLogger } from '../../utils/logger.js';
 import { Tool, ToolExtra } from '../../Tool.js';
-import { TextContentResponse } from '../../types.js';
+import { McpToolResponse } from '../../types.js';
 import { formatTextContents } from '../../utils/content.js';
 import { HubSpotCommand } from '../../utils/command.js';
 import { setupHubSpotConfig } from '../../utils/config.js';
@@ -52,7 +52,7 @@ export class AuthAccountTool extends Tool<AuthAccountInputSchema> {
       setAsDefault,
     }: AuthAccountInputSchema,
     extra?: ToolExtra
-  ): Promise<TextContentResponse> {
+  ): Promise<McpToolResponse> {
     setupHubSpotConfig(absoluteCurrentWorkingDirectory);
 
     const command = new HubSpotCommand('account auth');

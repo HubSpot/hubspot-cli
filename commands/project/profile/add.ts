@@ -26,7 +26,7 @@ import {
   confirmPrompt,
 } from '../../../lib/prompts/promptUtils.js';
 import { fileExists } from '../../../lib/validation.js';
-import { debugError } from '../../../lib/errorHandlers/index.js';
+import { debugError, logError } from '../../../lib/errorHandlers/index.js';
 
 const command = 'add [name]';
 const describe = commands.project.profile.add.describe;
@@ -91,10 +91,13 @@ async function handler(
 ): Promise<void> {
   const { exit } = args;
 
-  const { projectConfig, projectDir } = await getProjectConfig();
+  let projectConfig;
+  let projectDir;
 
-  if (!projectConfig || !projectDir) {
-    uiLogger.error(commands.project.profile.add.errors.noProjectConfig);
+  try {
+    ({ projectConfig, projectDir } = getProjectConfig());
+  } catch (error) {
+    logError(error);
     return exit(EXIT_CODES.ERROR);
   }
 

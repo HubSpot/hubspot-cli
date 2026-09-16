@@ -1,4 +1,4 @@
-import { TextContentResponse } from '../../types.js';
+import { McpToolResponse } from '../../types.js';
 import { Tool } from '../../Tool.js';
 import {
   McpServer,
@@ -13,10 +13,7 @@ import {
   getBuildStatus,
 } from '@hubspot/local-dev-lib/api/projects';
 import type { Build, SubbuildStatus } from '@hubspot/local-dev-lib/types/Build';
-import {
-  getProjectConfig,
-  validateProjectConfig,
-} from '../../../lib/projects/config.js';
+import { getProjectConfig } from '../../../lib/projects/config.js';
 import moment from 'moment';
 import {
   absoluteCurrentWorkingDirectory,
@@ -163,13 +160,12 @@ export class GetBuildStatusTool extends Tool<GetBuildStatusInputSchema> {
     absoluteCurrentWorkingDirectory,
     buildId,
     limit,
-  }: GetBuildStatusInputSchema): Promise<TextContentResponse> {
+  }: GetBuildStatusInputSchema): Promise<McpToolResponse> {
     setupHubSpotConfig(absoluteProjectPath);
 
     try {
       const { projectConfig, projectDir } =
-        await getProjectConfig(absoluteProjectPath);
-      validateProjectConfig(projectConfig, projectDir);
+        getProjectConfig(absoluteProjectPath);
 
       const { recommended } = await discoverAccountTargets({
         projectDir,

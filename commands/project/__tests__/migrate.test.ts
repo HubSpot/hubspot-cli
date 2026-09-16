@@ -7,11 +7,15 @@ import { migrateApp } from '../../../lib/app/migrate.js';
 import { getProjectConfig } from '../../../lib/projects/config.js';
 import { commands } from '../../../lang/en.js';
 import { uiBetaTag, uiCommandReference } from '../../../lib/ui/index.js';
+import { getHasMigratableThemes } from '../../../lib/theme/migrate.js';
 import { Mock } from 'vitest';
 
 vi.mock('../../../lib/app/migrate');
 vi.mock('../../../lib/projects/config');
 vi.mock('../../../lib/ui');
+vi.mock('../../../ui/render.js');
+vi.mock('../../../ui/components/StatusMessageBoxes.js');
+vi.mock('../../../lib/theme/migrate.js');
 
 const { v2025_2, v2026_03_BETA, v2026_03 } = PLATFORM_VERSIONS;
 
@@ -24,6 +28,7 @@ describe('commands/project/migrate', () => {
   const getProjectConfigMock = getProjectConfig as Mock;
   const uiBetaTagMock = uiBetaTag as Mock;
   const uiCommandReferenceMock = uiCommandReference as Mock;
+  const getHasMigratableThemesMock = getHasMigratableThemes as Mock;
   const mockExit = vi
     .spyOn(process, 'exit')
     .mockImplementation(() => undefined as never);
@@ -33,8 +38,17 @@ describe('commands/project/migrate', () => {
     vi.spyOn(uiLogger, 'log').mockImplementation(() => {});
     vi.spyOn(uiLogger, 'error').mockImplementation(() => {});
     migrateAppMock.mockResolvedValue(undefined);
-    getProjectConfigMock.mockResolvedValue({
-      projectConfig: { name: 'test-project' },
+    getHasMigratableThemesMock.mockResolvedValue({
+      hasMigratableThemes: false,
+      migratableThemesCount: 0,
+    });
+    getProjectConfigMock.mockReturnValue({
+      projectConfig: {
+        name: 'test-project',
+        srcDir: 'src',
+        platformVersion: '2025.2',
+      },
+      projectDir: '/test/project',
     });
     uiBetaTagMock.mockReturnValue('beta test description');
     uiCommandReferenceMock.mockReturnValue('command reference');
@@ -83,7 +97,9 @@ describe('commands/project/migrate', () => {
     });
 
     it('should exit with error if no project config exists', async () => {
-      getProjectConfigMock.mockResolvedValue({ projectConfig: null });
+      getProjectConfigMock.mockImplementation(() => {
+        throw new Error('No project config found');
+      });
 
       await migrateCommand.handler(options);
 
@@ -104,7 +120,14 @@ describe('commands/project/migrate', () => {
           name: 'test-project',
           platformVersion: v2025_2,
         },
-        { projectConfig: { name: 'test-project' } }
+        {
+          projectConfig: {
+            name: 'test-project',
+            srcDir: 'src',
+            platformVersion: '2025.2',
+          },
+          projectDir: '/test/project',
+        }
       );
       expect(mockExit).toHaveBeenCalledWith(0);
       expect(mockExit).toHaveBeenCalledTimes(1);
@@ -122,7 +145,14 @@ describe('commands/project/migrate', () => {
           name: 'test-project',
           platformVersion: PLATFORM_VERSIONS.UNSTABLE,
         },
-        { projectConfig: { name: 'test-project' } }
+        {
+          projectConfig: {
+            name: 'test-project',
+            srcDir: 'src',
+            platformVersion: '2025.2',
+          },
+          projectDir: '/test/project',
+        }
       );
       expect(mockExit).toHaveBeenCalledWith(0);
       expect(mockExit).toHaveBeenCalledTimes(1);

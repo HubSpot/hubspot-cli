@@ -40,9 +40,13 @@ async function handler(
 ): Promise<void> {
   const { installMissingDeps, exit } = args;
   try {
-    const projectConfig = await getProjectConfig();
-    if (!projectConfig || !projectConfig.projectDir) {
-      uiLogger.error(commands.project.lint.noProjectConfig);
+    let projectConfig;
+    let projectDir;
+
+    try {
+      ({ projectConfig, projectDir } = getProjectConfig());
+    } catch (error) {
+      logError(error);
       return exit(EXIT_CODES.ERROR);
     }
 
@@ -51,8 +55,10 @@ async function handler(
       text: commands.project.lint.loading.checking,
     });
 
-    const lintLocations =
-      await getUieLintablePackageJsonLocations(projectConfig);
+    const lintLocations = await getUieLintablePackageJsonLocations({
+      projectConfig,
+      projectDir,
+    });
     const locationsReadyToLint: string[] = [];
     const locationsNeedingPackages = new Map<string, string[]>();
     let skippedDirectoryCount = 0;
@@ -74,7 +80,7 @@ async function handler(
     if (locationsNeedingPackages.size > 0) {
       const locationsArray = Array.from(locationsNeedingPackages.keys());
       const relativeLocations = locationsArray.map(loc =>
-        path.relative(projectConfig.projectDir!, loc)
+        path.relative(projectDir, loc)
       );
 
       const allMissingPackages: string[] = [];
@@ -140,10 +146,7 @@ async function handler(
         const hasDeprecatedConfig = hasDeprecatedEslintConfig(location);
 
         if (hasDeprecatedConfig) {
-          const relativePath = path.relative(
-            projectConfig.projectDir!,
-            location
-          );
+          const relativePath = path.relative(projectDir, location);
           const deprecatedFiles = getDeprecatedEslintConfigFiles(location);
           deprecatedConfigDetails.push({
             path: relativePath,
@@ -167,7 +170,7 @@ async function handler(
 
       if (locationsNeedingConfig.length > 0) {
         const relativeLocations = locationsNeedingConfig.map(loc =>
-          path.relative(projectConfig.projectDir!, loc)
+          path.relative(projectDir, loc)
         );
 
         const { shouldCreateConfig } = await promptUser([
@@ -185,8 +188,7 @@ async function handler(
             text: commands.project.lint.loading.creatingConfig,
           });
 
-          const platformVersion =
-            projectConfig.projectConfig?.platformVersion ?? null;
+          const platformVersion = projectConfig.platformVersion ?? null;
 
           const createdConfigs: string[] = [];
           for (const location of locationsNeedingConfig) {
@@ -242,7 +244,7 @@ async function handler(
 
       const { success, results } = await lintPackages(
         locationsReadyToLint,
-        projectConfig.projectDir!
+        projectDir
       );
 
       SpinniesManager.succeed('lintRun');

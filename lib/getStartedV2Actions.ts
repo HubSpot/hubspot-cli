@@ -25,14 +25,11 @@ import {
 } from '../lib/constants.js';
 import {
   ProjectNestingError,
-  ProjectConfigNotFoundError,
-  ProjectValidationError,
   ProjectUploadError,
   ProjectBuildDeployError,
 } from './errors/ProjectErrors.js';
 import {
   getProjectConfig,
-  validateProjectConfig,
   writeProjectConfig,
 } from '../lib/projects/config.js';
 import { isLegacyProject } from '@hubspot/project-parsing-lib/projects';
@@ -84,19 +81,19 @@ export async function createProjectAction({
 
   const projectDestAbsolute = path.resolve(getCwd(), projectDest);
 
-  const {
-    projectConfig: existingProjectConfig,
-    projectDir: existingProjectDir,
-  } = await getProjectConfig(projectDestAbsolute);
-
-  if (
-    existingProjectConfig &&
-    existingProjectDir &&
-    projectDestAbsolute.startsWith(existingProjectDir)
-  ) {
-    throw new ProjectNestingError(
-      commands.project.create.errors.cannotNestProjects(existingProjectDir)
-    );
+  try {
+    const { projectDir: existingProjectDir } =
+      getProjectConfig(projectDestAbsolute);
+    if (projectDestAbsolute.startsWith(existingProjectDir)) {
+      throw new ProjectNestingError(
+        commands.project.create.errors.cannotNestProjects(existingProjectDir)
+      );
+    }
+  } catch (error) {
+    if (error instanceof ProjectNestingError) {
+      throw error;
+    }
+    // Not in a project directory, which is the expected case
   }
 
   try {
@@ -213,20 +210,7 @@ export async function uploadAndDeployAction({
   accountId: number;
   projectDest: string;
 }): Promise<UploadAndDeployResult> {
-  const { projectConfig, projectDir } = await getProjectConfig(projectDest);
-
-  if (!projectConfig || !projectDir) {
-    throw new ProjectConfigNotFoundError(
-      commands.getStarted.errors.configFileNotFound
-    );
-  }
-
-  try {
-    validateProjectConfig(projectConfig, projectDir);
-  } catch (error) {
-    const message = error instanceof Error ? error.message : String(error);
-    throw new ProjectValidationError(message);
-  }
+  const { projectConfig, projectDir } = getProjectConfig(projectDest);
 
   const env = getConfigAccountEnvironment(accountId);
 

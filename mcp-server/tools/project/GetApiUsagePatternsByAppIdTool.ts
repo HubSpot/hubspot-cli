@@ -1,4 +1,4 @@
-import { TextContentResponse } from '../../types.js';
+import { McpToolResponse } from '../../types.js';
 import { Tool } from '../../Tool.js';
 import {
   McpServer,
@@ -68,7 +68,7 @@ export class GetApiUsagePatternsByAppIdTool extends Tool<GetApiUsagePatternsByAp
     endDate,
     absoluteCurrentWorkingDirectory,
     absoluteProjectPath,
-  }: GetApiUsagePatternsByAppIdInputSchema): Promise<TextContentResponse> {
+  }: GetApiUsagePatternsByAppIdInputSchema): Promise<McpToolResponse> {
     setupHubSpotConfig(absoluteProjectPath ?? absoluteCurrentWorkingDirectory);
 
     try {

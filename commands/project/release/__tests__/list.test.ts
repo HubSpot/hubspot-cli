@@ -26,10 +26,6 @@ vi.mock('../../../../lib/prompts/promptUtils');
 vi.mock('../../../../ui/render.js');
 
 const getProjectConfigSpy = vi.spyOn(projectUtils, 'getProjectConfig');
-const validateProjectConfigSpy = vi.spyOn(
-  projectUtils,
-  'validateProjectConfig'
-);
 const listReleasesSpy = vi.spyOn(releaseApiUtils, 'listReleases');
 const processExitSpy = vi.spyOn(process, 'exit');
 
@@ -71,7 +67,7 @@ describe('commands/project/release/list', () => {
       derivedAccountId: 1234567890,
     } as ArgumentsCamelCase<ProjectReleaseListArgs>;
 
-    getProjectConfigSpy.mockResolvedValue({
+    getProjectConfigSpy.mockReturnValue({
       projectConfig: {
         name: 'my-project',
         srcDir: 'src',
@@ -79,7 +75,6 @@ describe('commands/project/release/list', () => {
       },
       projectDir: '/path/to/project',
     });
-    validateProjectConfigSpy.mockImplementation(() => {});
     listReleasesSpy.mockReturnValue(
       mockHubSpotHttpResponse<FetchListReleasesResponse>(releasesResponse)
     );
@@ -123,14 +118,13 @@ describe('commands/project/release/list', () => {
   });
 
   describe('handler', () => {
-    it('should validate the project config', async () => {
+    it('should get the project config', async () => {
       await projectReleaseListCommand.handler(args);
       expect(getProjectConfigSpy).toHaveBeenCalledTimes(1);
-      expect(validateProjectConfigSpy).toHaveBeenCalledTimes(1);
     });
 
-    it('should exit with error if project config is invalid', async () => {
-      validateProjectConfigSpy.mockImplementation(() => {
+    it('should exit with error if project config is not found', async () => {
+      getProjectConfigSpy.mockImplementation(() => {
         throw new Error('No project config found');
       });
 

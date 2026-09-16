@@ -310,24 +310,8 @@ export async function getProjectPackageJsonLocations(
   dir?: string,
   isUpdate = false
 ): Promise<string[]> {
-  const projectConfig = await getProjectConfig(dir);
-
-  if (
-    !projectConfig ||
-    !projectConfig.projectDir ||
-    !projectConfig.projectConfig
-  ) {
-    throw new Error(
-      isUpdate
-        ? commands.project.updateDeps.noProjectConfig
-        : commands.project.installDeps.noProjectConfig
-    );
-  }
-
-  const {
-    projectDir,
-    projectConfig: { srcDir, name },
-  } = projectConfig;
+  const { projectConfig, projectDir } = getProjectConfig(dir);
+  const { srcDir, name } = projectConfig;
 
   if (!(await isGloballyInstalled(DEFAULT_PACKAGE_MANAGER))) {
     throw new Error(
@@ -342,7 +326,7 @@ export async function getProjectPackageJsonLocations(
   }
 
   if (
-    !fs.existsSync(projectConfig.projectDir) ||
+    !fs.existsSync(projectDir) ||
     !fs.existsSync(path.join(projectDir, srcDir))
   ) {
     throw new NoPackageJsonFilesError(name, isUpdate);

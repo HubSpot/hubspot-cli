@@ -4,7 +4,7 @@ import {
 } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { McpLogger } from '../../utils/logger.js';
 import z from 'zod';
-import { TextContentResponse } from '../../types.js';
+import { McpToolResponse } from '../../types.js';
 import { Tool } from '../../Tool.js';
 import { formatTextContents } from '../../utils/content.js';
 import { absoluteCurrentWorkingDirectory, docUrl } from './constants.js';
@@ -35,7 +35,7 @@ export class DocFetchTool extends Tool<InputSchemaType> {
   async handler({
     docUrl,
     absoluteCurrentWorkingDirectory,
-  }: InputSchemaType): Promise<TextContentResponse> {
+  }: InputSchemaType): Promise<McpToolResponse> {
     setupHubSpotConfig(absoluteCurrentWorkingDirectory);
 
     try {

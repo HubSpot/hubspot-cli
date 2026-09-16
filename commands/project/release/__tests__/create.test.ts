@@ -31,10 +31,6 @@ vi.mock('../../../../lib/projects/upload.js');
 vi.mock('../../../../lib/projects/release.js');
 
 const getProjectConfigSpy = vi.spyOn(projectUtils, 'getProjectConfig');
-const validateProjectConfigSpy = vi.spyOn(
-  projectUtils,
-  'validateProjectConfig'
-);
 const resolveBuildIdSpy = vi.spyOn(releaseLib, 'resolveBuildId');
 const validateBuildForReleaseSpy = vi.spyOn(
   releaseLib,
@@ -65,7 +61,7 @@ describe('commands/project/release/create', () => {
       addJsonOutput: vi.fn(),
     } as unknown as ArgumentsCamelCase<ProjectReleaseCreateArgs>;
 
-    getProjectConfigSpy.mockResolvedValue({
+    getProjectConfigSpy.mockReturnValue({
       projectConfig: {
         name: 'my-project',
         srcDir: 'src',
@@ -73,7 +69,6 @@ describe('commands/project/release/create', () => {
       },
       projectDir: '/path/to/project',
     });
-    validateProjectConfigSpy.mockImplementation(() => {});
     resolveBuildIdSpy.mockResolvedValue(EXAMPLE_BUILD_ID);
     validateBuildForReleaseSpy.mockResolvedValue(true);
     executeReleaseSpy.mockResolvedValue({
@@ -134,14 +129,13 @@ describe('commands/project/release/create', () => {
   });
 
   describe('handler', () => {
-    it('should validate the project config', async () => {
+    it('should get the project config', async () => {
       await projectReleaseCreateCommand.handler(args);
       expect(getProjectConfigSpy).toHaveBeenCalledTimes(1);
-      expect(validateProjectConfigSpy).toHaveBeenCalledTimes(1);
     });
 
-    it('should exit with error if project config is invalid', async () => {
-      validateProjectConfigSpy.mockImplementation(() => {
+    it('should exit with error if project config is not found', async () => {
+      getProjectConfigSpy.mockImplementation(() => {
         throw new Error('No project config found');
       });
       await projectReleaseCreateCommand.handler(args);

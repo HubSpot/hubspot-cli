@@ -91,9 +91,8 @@ describe('HsListTool', () => {
         }),
         expect.any(Function)
       );
-      expect(result.content).toHaveLength(2);
+      expect(result.content).toHaveLength(1);
       expect(result.content[0].text).toContain('file1.html\nfile2.js\nfolder/');
-      expect(result.content[1].text).toBe('');
     });
 
     it('should execute hs cms list command with path parameter', async () => {
@@ -115,9 +114,8 @@ describe('HsListTool', () => {
         }),
         expect.any(Function)
       );
-      expect(result.content).toHaveLength(2);
+      expect(result.content).toHaveLength(1);
       expect(result.content[0].text).toContain('nested-file.html');
-      expect(result.content[1].text).toBe('');
     });
 
     it('should execute hs cms list command with account parameter', async () => {
@@ -144,9 +142,8 @@ describe('HsListTool', () => {
         }),
         expect.any(Function)
       );
-      expect(result.content).toHaveLength(2);
+      expect(result.content).toHaveLength(1);
       expect(result.content[0].text).toContain('account-specific-files.html');
-      expect(result.content[1].text).toBe('');
     });
 
     it('should execute hs cms list command with both path and account parameters', async () => {
@@ -175,9 +172,8 @@ describe('HsListTool', () => {
         }),
         expect.any(Function)
       );
-      expect(result.content).toHaveLength(2);
+      expect(result.content).toHaveLength(1);
       expect(result.content[0].text).toContain('path-and-account-files.html');
-      expect(result.content[1].text).toBe('');
     });
 
     it('should handle command execution errors', async () => {

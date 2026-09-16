@@ -1,4 +1,4 @@
-import { TextContentResponse } from '../../types.js';
+import { McpToolResponse } from '../../types.js';
 import { Tool, ToolExtra } from '../../Tool.js';
 import {
   McpServer,
@@ -47,7 +47,7 @@ export class HsListFunctionsTool extends Tool<HsListFunctionsInputSchema> {
       absoluteCurrentWorkingDirectory,
     }: HsListFunctionsInputSchema,
     extra?: ToolExtra
-  ): Promise<TextContentResponse> {
+  ): Promise<McpToolResponse> {
     setupHubSpotConfig(absoluteCurrentWorkingDirectory);
 
     const command = new HubSpotCommand('cms function list');

@@ -1,510 +1,270 @@
-import path from 'path';
-import { MockInstance, vi } from 'vitest';
-import { ArgumentsCamelCase } from 'yargs';
-import { validateSourceDirectory } from '../../../lib/projects/upload.js';
+import yargs, { Argv, ArgumentsCamelCase } from 'yargs';
 import {
-  getProjectConfig,
-  validateProjectConfig,
-} from '../../../lib/projects/config.js';
-import { uiLogger } from '../../../lib/ui/logger.js';
-import { commands } from '../../../lang/en.js';
+  addAccountOptions,
+  addConfigOptions,
+  addJSONOutputOptions,
+  addUseEnvironmentOptions,
+} from '../../../lib/commonOpts.js';
+import { getProjectConfig } from '../../../lib/projects/config.js';
 import { isLegacyProject } from '@hubspot/project-parsing-lib/projects';
-import { validateProjectForProfile } from '../../../lib/projects/projectProfiles.js';
-import { trackCommandUsage } from '../../../lib/usageTracking.js';
 import { getConfigAccountById } from '@hubspot/local-dev-lib/config';
-import { handleTranslate } from '../../../lib/projects/upload.js';
-import { HubSpotConfigAccount } from '@hubspot/local-dev-lib/types/Accounts';
-import projectValidateCommand, {
-  type ProjectValidateArgs,
-} from '../validate.js';
-import { getAllHsProfiles } from '@hubspot/project-parsing-lib/profiles';
-import SpinniesManager from '../../../lib/ui/SpinniesManager.js';
+import { validateProject, toIssue } from '../../../lib/projects/validate.js';
+import { uiLogger } from '../../../lib/ui/logger.js';
 import { logError } from '../../../lib/errorHandlers/index.js';
+import { trackCommandUsage } from '../../../lib/usageTracking.js';
+import { EXIT_CODES } from '../../../lib/enums/exitCodes.js';
+import { commands } from '../../../lang/en.js';
+import { HubSpotConfigAccount } from '@hubspot/local-dev-lib/types/Accounts';
+import projectValidateCommand, { ProjectValidateArgs } from '../validate.js';
 
-// Mock dependencies
-vi.mock('../../../lib/projects/upload.js');
-vi.mock('../../../lib/projects/config.js');
-vi.mock('../../../lib/projects/projectProfiles.js');
-vi.mock('../../../lib/errorHandlers/index.js');
-vi.mock('@hubspot/local-dev-lib/config');
+vi.mock('../../../lib/commonOpts');
+vi.mock('../../../lib/projects/config');
+vi.mock('../../../lib/projects/validate');
+vi.mock('../../../lib/errorHandlers');
 vi.mock('@hubspot/project-parsing-lib/projects');
-vi.mock('@hubspot/project-parsing-lib/profiles');
-vi.mock('../../../lib/ui/SpinniesManager.js');
+vi.mock('@hubspot/local-dev-lib/config');
+
+const mockedGetProjectConfig = vi.mocked(getProjectConfig);
+const mockedIsLegacyProject = vi.mocked(isLegacyProject);
+const mockedGetConfigAccountById = vi.mocked(getConfigAccountById);
+const mockedValidateProject = vi.mocked(validateProject);
+const mockedToIssue = vi.mocked(toIssue);
+const processExitSpy = vi.spyOn(process, 'exit');
+
+const projectDir = '/path/to/project';
+
+const mockProjectConfig = {
+  name: 'my-project',
+  srcDir: 'src',
+  platformVersion: '2025.2',
+};
+
+const mockAccountConfig = {
+  accountType: 'STANDARD',
+  accountId: 123,
+} as HubSpotConfigAccount;
 
 describe('commands/project/validate', () => {
-  const projectDir = '/test/project';
-  let exitSpy: MockInstance;
+  const yargsMock = yargs as Argv;
 
-  const mockProjectConfig = {
-    name: 'test-project',
-    srcDir: 'src',
-    platformVersion: '2025.2',
-  };
-
-  const mockAccountConfig = {
-    accountType: 'STANDARD',
-    accountId: 123,
-    env: 'prod',
-  } as HubSpotConfigAccount;
-
-  beforeEach(() => {
-    // Mock process.exit to throw to stop execution
-    exitSpy = vi.spyOn(process, 'exit').mockImplementation(code => {
-      throw new Error(`Process exited with code ${code}`);
+  describe('command', () => {
+    it('should have the correct command structure', () => {
+      expect(projectValidateCommand.command).toEqual('validate');
     });
-
-    // Set up default mocks
-    vi.mocked(getConfigAccountById).mockReturnValue(mockAccountConfig);
-    vi.mocked(trackCommandUsage);
-    vi.mocked(SpinniesManager.init);
-    vi.mocked(SpinniesManager.add);
-    vi.mocked(SpinniesManager.succeed);
-    vi.mocked(SpinniesManager.fail);
-    vi.mocked(validateProjectForProfile).mockResolvedValue([]);
   });
 
-  afterEach(() => {
-    exitSpy.mockRestore();
+  describe('describe', () => {
+    it('should provide a description', () => {
+      expect(projectValidateCommand.describe).toBeDefined();
+    });
   });
 
-  describe('project configuration validation', () => {
-    it('should exit with error when project config is null', async () => {
-      vi.mocked(getProjectConfig).mockResolvedValue({
-        projectConfig: null,
-        projectDir: null,
-      });
+  describe('builder', () => {
+    it('should support the correct options', () => {
+      projectValidateCommand.builder(yargsMock);
 
-      await expect(
-        // @ts-expect-error partial mock
-        projectValidateCommand.handler({
-          derivedAccountId: 123,
-          d: false,
-          debug: false,
-        })
-      ).rejects.toThrow('Process exited with code 1');
-
-      expect(uiLogger.error).toHaveBeenCalledWith(
-        commands.project.validate.mustBeRanWithinAProject
-      );
+      expect(addAccountOptions).toHaveBeenCalledWith(yargsMock);
+      expect(addConfigOptions).toHaveBeenCalledWith(yargsMock);
+      expect(addUseEnvironmentOptions).toHaveBeenCalledWith(yargsMock);
+      expect(addJSONOutputOptions).toHaveBeenCalledWith(yargsMock);
     });
 
-    it('should exit with error when project directory is null', async () => {
-      vi.mocked(getProjectConfig).mockResolvedValue({
-        projectConfig: {
-          name: 'test',
-          srcDir: 'src',
-          platformVersion: '2025.2',
-        },
-        projectDir: null,
-      });
+    it('should define a profile option and examples', () => {
+      const optionsSpy = vi.spyOn(yargsMock, 'options');
+      const exampleSpy = vi.spyOn(yargsMock, 'example');
 
-      await expect(
-        // @ts-expect-error partial mock
-        projectValidateCommand.handler({
-          derivedAccountId: 123,
-          d: false,
-          debug: false,
-        })
-      ).rejects.toThrow('Process exited with code 1');
+      projectValidateCommand.builder(yargsMock);
 
-      expect(uiLogger.error).toHaveBeenCalledWith(
-        commands.project.validate.mustBeRanWithinAProject
+      expect(optionsSpy).toHaveBeenCalledWith(
+        expect.objectContaining({ profile: expect.any(Object) })
       );
+      expect(exampleSpy).toHaveBeenCalled();
     });
+  });
 
-    it('should exit with error for non-V2 projects', async () => {
-      vi.mocked(getProjectConfig).mockResolvedValue({
-        projectConfig: {
-          name: 'test',
-          srcDir: 'src',
-          platformVersion: '2024.1',
-        },
+  describe('handler', () => {
+    let args: ArgumentsCamelCase<ProjectValidateArgs>;
+
+    beforeEach(() => {
+      args = {
+        derivedAccountId: 123,
+      } as ArgumentsCamelCase<ProjectValidateArgs>;
+
+      mockedGetConfigAccountById.mockReturnValue(mockAccountConfig);
+      mockedGetProjectConfig.mockReturnValue({
+        projectConfig: mockProjectConfig,
         projectDir,
       });
-      vi.mocked(isLegacyProject).mockReturnValue(true);
+      mockedIsLegacyProject.mockReturnValue(false);
+      mockedValidateProject.mockResolvedValue({
+        valid: true,
+        errors: [],
+        warnings: [],
+        profiles: [],
+      });
+      mockedToIssue.mockImplementation((error: unknown, profile?: string) =>
+        profile
+          ? {
+              message: error instanceof Error ? error.message : String(error),
+              profile,
+            }
+          : { message: error instanceof Error ? error.message : String(error) }
+      );
 
-      await expect(
-        // @ts-expect-error partial mock
-        projectValidateCommand.handler({
-          derivedAccountId: 123,
-          d: false,
-          debug: false,
-        })
-      ).rejects.toThrow('Process exited with code 1');
+      // @ts-expect-error Mock implementation
+      processExitSpy.mockImplementation(() => {});
+    });
+
+    it('should exit with an error when the project config cannot be loaded', async () => {
+      const error = new Error('No project config found');
+      mockedGetProjectConfig.mockImplementation(() => {
+        throw error;
+      });
+
+      await projectValidateCommand.handler(args);
+
+      expect(logError).toHaveBeenCalledWith(error);
+      expect(processExitSpy).toHaveBeenCalledWith(EXIT_CODES.ERROR);
+      expect(mockedValidateProject).not.toHaveBeenCalled();
+    });
+
+    it('should exit with an error for legacy projects', async () => {
+      mockedIsLegacyProject.mockReturnValue(true);
+
+      await projectValidateCommand.handler(args);
 
       expect(uiLogger.error).toHaveBeenCalledWith(
         commands.project.validate.badVersion
       );
+      expect(processExitSpy).toHaveBeenCalledWith(EXIT_CODES.ERROR);
+      expect(mockedValidateProject).not.toHaveBeenCalled();
     });
 
-    it('should exit with error when validateProjectConfig throws', async () => {
-      vi.mocked(getProjectConfig).mockResolvedValue({
+    it('should delegate to validateProject with the project and flags', async () => {
+      args.profile = 'dev';
+      args.formatOutputAsJson = true;
+
+      await projectValidateCommand.handler(args);
+
+      expect(mockedValidateProject).toHaveBeenCalledWith({
         projectConfig: mockProjectConfig,
         projectDir,
-      });
-      vi.mocked(isLegacyProject).mockReturnValue(false);
-      const error = new Error('Invalid project config');
-      vi.mocked(validateProjectConfig).mockImplementation(() => {
-        throw error;
-      });
-
-      await expect(
-        // @ts-expect-error partial mock
-        projectValidateCommand.handler({
-          derivedAccountId: 123,
-          d: false,
-          debug: false,
-        })
-      ).rejects.toThrow('Process exited with code 1');
-
-      expect(logError).toHaveBeenCalledWith(error);
-    });
-  });
-
-  describe('profile validation', () => {
-    describe('when a specific profile is provided', () => {
-      it('should validate only the specified profile', async () => {
-        vi.mocked(getProjectConfig).mockResolvedValue({
-          projectConfig: mockProjectConfig,
-          projectDir,
-        });
-        vi.mocked(isLegacyProject).mockReturnValue(false);
-        vi.mocked(validateProjectConfig).mockReturnValue(undefined);
-        vi.mocked(getAllHsProfiles).mockResolvedValue(['dev', 'prod', 'qa']);
-        vi.mocked(validateProjectForProfile).mockResolvedValue([]);
-        vi.mocked(validateSourceDirectory).mockResolvedValue(undefined);
-
-        await expect(
-          projectValidateCommand.handler({
-            derivedAccountId: 123,
-            profile: 'dev',
-            d: false,
-            debug: false,
-          } as ArgumentsCamelCase<ProjectValidateArgs>)
-        ).rejects.toThrow('Process exited with code 1');
-
-        // Should call validateProjectForProfile for the specified profile
-        expect(validateProjectForProfile).toHaveBeenCalledWith({
-          projectConfig: mockProjectConfig,
-          projectDir,
-          profileName: 'dev',
-          derivedAccountId: 123,
-        });
-
-        expect(uiLogger.success).toHaveBeenCalledWith(
-          commands.project.validate.success(mockProjectConfig.name)
-        );
-      });
-
-      it('should handle profile validation failure', async () => {
-        vi.mocked(getProjectConfig).mockResolvedValue({
-          projectConfig: mockProjectConfig,
-          projectDir,
-        });
-        vi.mocked(isLegacyProject).mockReturnValue(false);
-        vi.mocked(validateProjectConfig).mockReturnValue(undefined);
-        vi.mocked(getAllHsProfiles).mockResolvedValue(['dev', 'prod']);
-        const errorMessage = 'Profile not found';
-        vi.mocked(validateProjectForProfile).mockResolvedValue([errorMessage]);
-
-        await expect(
-          projectValidateCommand.handler({
-            derivedAccountId: 123,
-            profile: 'dev',
-            d: false,
-            debug: false,
-          } as ArgumentsCamelCase<ProjectValidateArgs>)
-        ).rejects.toThrow('Process exited with code 1');
-
-        // The error message is logged as a string
-        expect(uiLogger.log).toHaveBeenCalledWith(errorMessage);
-      });
-
-      it('should handle translate failure for a profile', async () => {
-        vi.mocked(getProjectConfig).mockResolvedValue({
-          projectConfig: mockProjectConfig,
-          projectDir,
-        });
-        vi.mocked(isLegacyProject).mockReturnValue(false);
-        vi.mocked(validateProjectConfig).mockReturnValue(undefined);
-        vi.mocked(getAllHsProfiles).mockResolvedValue(['dev', 'prod']);
-        const error = new Error('Translation failed');
-        vi.mocked(validateProjectForProfile).mockResolvedValue([
-          commands.project.validate.failure('prod'),
-          error,
-        ]);
-
-        await expect(
-          projectValidateCommand.handler({
-            derivedAccountId: 123,
-            profile: 'dev',
-            d: false,
-            debug: false,
-          } as ArgumentsCamelCase<ProjectValidateArgs>)
-        ).rejects.toThrow('Process exited with code 1');
-
-        // The error object is logged via logError
-        expect(logError).toHaveBeenCalledWith(error);
+        derivedAccountId: 123,
+        profile: 'dev',
+        formatOutputAsJson: true,
       });
     });
 
-    describe('when no profile is provided and project has profiles', () => {
-      it('should validate all profiles', async () => {
-        vi.mocked(getProjectConfig).mockResolvedValue({
-          projectConfig: mockProjectConfig,
-          projectDir,
-        });
-        vi.mocked(isLegacyProject).mockReturnValue(false);
-        vi.mocked(validateProjectConfig).mockReturnValue(undefined);
-        vi.mocked(getAllHsProfiles).mockResolvedValue(['dev', 'prod', 'qa']);
-        vi.mocked(validateProjectForProfile).mockResolvedValue([]);
-        vi.mocked(validateSourceDirectory).mockResolvedValue(undefined);
+    it('should log success and exit successfully when valid', async () => {
+      await projectValidateCommand.handler(args);
 
-        await expect(
-          projectValidateCommand.handler({
-            derivedAccountId: 123,
-            d: false,
-            debug: false,
-          } as ArgumentsCamelCase<ProjectValidateArgs>)
-        ).rejects.toThrow('Process exited with code 1');
-
-        // Should validate all three profiles
-        expect(validateProjectForProfile).toHaveBeenCalledTimes(3);
-        expect(validateProjectForProfile).toHaveBeenCalledWith({
-          projectConfig: mockProjectConfig,
-          projectDir,
-          profileName: 'dev',
-          derivedAccountId: 123,
-          indentSpinners: true,
-        });
-        expect(validateProjectForProfile).toHaveBeenCalledWith({
-          projectConfig: mockProjectConfig,
-          projectDir,
-          profileName: 'prod',
-          derivedAccountId: 123,
-          indentSpinners: true,
-        });
-        expect(validateProjectForProfile).toHaveBeenCalledWith({
-          projectConfig: mockProjectConfig,
-          projectDir,
-          profileName: 'qa',
-          derivedAccountId: 123,
-          indentSpinners: true,
-        });
-
-        // Should show success for all profiles
-        expect(SpinniesManager.succeed).toHaveBeenCalledWith(
-          'validatingAllProfiles',
-          expect.any(Object)
-        );
-
-        expect(uiLogger.success).toHaveBeenCalledWith(
-          commands.project.validate.success(mockProjectConfig.name)
-        );
-      });
-
-      it('should handle failure when validating multiple profiles', async () => {
-        vi.mocked(getProjectConfig).mockResolvedValue({
-          projectConfig: mockProjectConfig,
-          projectDir,
-        });
-        vi.mocked(isLegacyProject).mockReturnValue(false);
-        vi.mocked(validateProjectConfig).mockReturnValue(undefined);
-        vi.mocked(getAllHsProfiles).mockResolvedValue(['dev', 'prod']);
-        vi.mocked(validateProjectForProfile)
-          .mockResolvedValueOnce([]) // dev succeeds
-          .mockResolvedValueOnce(['Profile not found']); // prod fails
-
-        await expect(
-          projectValidateCommand.handler({
-            derivedAccountId: 123,
-            d: false,
-            debug: false,
-          } as ArgumentsCamelCase<ProjectValidateArgs>)
-        ).rejects.toThrow('Process exited with code 1');
-
-        expect(SpinniesManager.fail).toHaveBeenCalledWith(
-          'validatingAllProfiles',
-          expect.any(Object)
-        );
-      });
-
-      it('should continue validating remaining profiles after one fails', async () => {
-        vi.mocked(getProjectConfig).mockResolvedValue({
-          projectConfig: mockProjectConfig,
-          projectDir,
-        });
-        vi.mocked(isLegacyProject).mockReturnValue(false);
-        vi.mocked(validateProjectConfig).mockReturnValue(undefined);
-        vi.mocked(getAllHsProfiles).mockResolvedValue(['dev', 'prod', 'qa']);
-        vi.mocked(validateProjectForProfile)
-          .mockResolvedValueOnce([]) // dev succeeds
-          .mockResolvedValueOnce(['Profile not found']) // prod fails
-          .mockResolvedValueOnce([]); // qa succeeds
-        vi.mocked(validateSourceDirectory).mockResolvedValue(undefined);
-
-        await expect(
-          projectValidateCommand.handler({
-            derivedAccountId: 123,
-            d: false,
-            debug: false,
-          } as ArgumentsCamelCase<ProjectValidateArgs>)
-        ).rejects.toThrow('Process exited with code 1');
-
-        // All three profiles should be attempted
-        expect(validateProjectForProfile).toHaveBeenCalledTimes(3);
-      });
-    });
-
-    describe('when no profile is provided and project has no profiles', () => {
-      it('should validate without a profile', async () => {
-        vi.mocked(getProjectConfig).mockResolvedValue({
-          projectConfig: mockProjectConfig,
-          projectDir,
-        });
-        vi.mocked(isLegacyProject).mockReturnValue(false);
-        vi.mocked(validateProjectConfig).mockReturnValue(undefined);
-        vi.mocked(getAllHsProfiles).mockResolvedValue([]);
-        vi.mocked(handleTranslate).mockResolvedValue({
-          intermediateRepresentation: { intermediateNodesIndexedByUid: {} },
-          skippedHsMetaFiles: [],
-        });
-        vi.mocked(validateSourceDirectory).mockResolvedValue(undefined);
-
-        await expect(
-          projectValidateCommand.handler({
-            derivedAccountId: 123,
-            d: false,
-            debug: false,
-          } as ArgumentsCamelCase<ProjectValidateArgs>)
-        ).rejects.toThrow('Process exited with code 1');
-
-        // Should call handleTranslate without a profile
-        expect(handleTranslate).toHaveBeenCalledWith({
-          projectDir,
-          projectConfig: mockProjectConfig,
-          accountId: 123,
-          skipValidation: false,
-        });
-
-        expect(uiLogger.success).toHaveBeenCalledWith(
-          commands.project.validate.success(mockProjectConfig.name)
-        );
-      });
-
-      it('should handle validation failure when no profiles exist', async () => {
-        vi.mocked(getProjectConfig).mockResolvedValue({
-          projectConfig: mockProjectConfig,
-          projectDir,
-        });
-        vi.mocked(isLegacyProject).mockReturnValue(false);
-        vi.mocked(validateProjectConfig).mockReturnValue(undefined);
-        vi.mocked(getAllHsProfiles).mockResolvedValue([]);
-        const error = new Error('Translation failed');
-        vi.mocked(handleTranslate).mockRejectedValue(error);
-
-        await expect(
-          projectValidateCommand.handler({
-            derivedAccountId: 123,
-            d: false,
-            debug: false,
-          } as ArgumentsCamelCase<ProjectValidateArgs>)
-        ).rejects.toThrow('Process exited with code 1');
-
-        expect(uiLogger.error).toHaveBeenCalledWith(
-          commands.project.validate.failure(mockProjectConfig.name)
-        );
-        expect(logError).toHaveBeenCalledWith(error);
-      });
-    });
-  });
-
-  describe('source directory validation', () => {
-    it('should call validateSourceDirectory with correct parameters', async () => {
-      vi.mocked(getProjectConfig).mockResolvedValue({
-        projectConfig: mockProjectConfig,
-        projectDir,
-      });
-      vi.mocked(isLegacyProject).mockReturnValue(false);
-      vi.mocked(validateProjectConfig).mockReturnValue(undefined);
-      vi.mocked(getAllHsProfiles).mockResolvedValue([]);
-      vi.mocked(handleTranslate).mockResolvedValue({
-        intermediateRepresentation: { intermediateNodesIndexedByUid: {} },
-        skippedHsMetaFiles: [],
-      });
-      vi.mocked(validateSourceDirectory).mockResolvedValue(undefined);
-
-      await expect(
-        projectValidateCommand.handler({
-          derivedAccountId: 123,
-          d: false,
-          debug: false,
-        } as ArgumentsCamelCase<ProjectValidateArgs>)
-      ).rejects.toThrow('Process exited with code 1');
-
-      const expectedSrcDir = path.resolve(projectDir, mockProjectConfig.srcDir);
-      expect(validateSourceDirectory).toHaveBeenCalledWith(
-        expectedSrcDir,
-        mockProjectConfig,
-        projectDir
+      expect(uiLogger.success).toHaveBeenCalledWith(
+        commands.project.validate.success(mockProjectConfig.name)
       );
+      expect(processExitSpy).toHaveBeenCalledWith(EXIT_CODES.SUCCESS);
     });
 
-    it('should exit with error when validateSourceDirectory throws', async () => {
-      vi.mocked(getProjectConfig).mockResolvedValue({
-        projectConfig: mockProjectConfig,
-        projectDir,
+    it('should exit with an error and skip success output when invalid', async () => {
+      mockedValidateProject.mockResolvedValue({
+        valid: false,
+        errors: [{ message: 'bad' }],
+        warnings: [],
+        profiles: [],
       });
-      vi.mocked(isLegacyProject).mockReturnValue(false);
-      vi.mocked(validateProjectConfig).mockReturnValue(undefined);
-      vi.mocked(getAllHsProfiles).mockResolvedValue([]);
-      vi.mocked(handleTranslate).mockResolvedValue({
-        intermediateRepresentation: { intermediateNodesIndexedByUid: {} },
-        skippedHsMetaFiles: [],
-      });
-      const error = new Error('Invalid source directory');
-      vi.mocked(validateSourceDirectory).mockRejectedValue(error);
 
-      await expect(
-        projectValidateCommand.handler({
-          derivedAccountId: 123,
-          d: false,
-          debug: false,
-        } as ArgumentsCamelCase<ProjectValidateArgs>)
-      ).rejects.toThrow('Process exited with code 1');
+      await projectValidateCommand.handler(args);
 
-      expect(logError).toHaveBeenCalledWith(error);
+      expect(uiLogger.success).not.toHaveBeenCalled();
+      expect(processExitSpy).toHaveBeenCalledWith(EXIT_CODES.ERROR);
     });
-  });
 
-  describe('command usage tracking', () => {
-    it('should track command usage with account type', async () => {
-      vi.mocked(getProjectConfig).mockResolvedValue({
-        projectConfig: mockProjectConfig,
-        projectDir,
-      });
-      vi.mocked(isLegacyProject).mockReturnValue(false);
-      vi.mocked(validateProjectConfig).mockReturnValue(undefined);
-      vi.mocked(getAllHsProfiles).mockResolvedValue([]);
-      vi.mocked(handleTranslate).mockResolvedValue({
-        intermediateRepresentation: { intermediateNodesIndexedByUid: {} },
-        skippedHsMetaFiles: [],
-      });
-      vi.mocked(validateSourceDirectory).mockResolvedValue(undefined);
-
-      await expect(
-        projectValidateCommand.handler({
-          derivedAccountId: 123,
-          d: false,
-          debug: false,
-        } as ArgumentsCamelCase<ProjectValidateArgs>)
-      ).rejects.toThrow('Process exited with code 1');
+    it('should track command usage with the account type', async () => {
+      await projectValidateCommand.handler(args);
 
       expect(trackCommandUsage).toHaveBeenCalledWith(
         'project-validate',
-        expect.objectContaining({ type: 'STANDARD', successful: true }),
+        expect.objectContaining({ type: 'STANDARD' }),
         123
       );
+    });
+
+    describe('--json output', () => {
+      beforeEach(() => {
+        args.formatOutputAsJson = true;
+      });
+
+      it('should output schema-valid JSON with the validation result', async () => {
+        mockedValidateProject.mockResolvedValue({
+          valid: true,
+          errors: [],
+          warnings: [
+            { message: 'Legacy config file', file: 'src/serverless.json' },
+          ],
+          profiles: [{ name: 'dev', accountId: 456, valid: true }],
+        });
+
+        await projectValidateCommand.handler(args);
+
+        expect(uiLogger.json).toHaveBeenCalledTimes(1);
+        expect(uiLogger.json).toHaveBeenCalledWith({
+          valid: true,
+          projectName: mockProjectConfig.name,
+          platformVersion: mockProjectConfig.platformVersion,
+          errors: [],
+          warnings: [
+            { message: 'Legacy config file', file: 'src/serverless.json' },
+          ],
+          profiles: [{ name: 'dev', accountId: 456, valid: true }],
+        });
+        expect(processExitSpy).toHaveBeenCalledWith(EXIT_CODES.SUCCESS);
+      });
+
+      it('should still emit JSON when the project config cannot be loaded', async () => {
+        mockedGetProjectConfig.mockImplementation(() => {
+          throw new Error('No project config found');
+        });
+
+        await projectValidateCommand.handler(args);
+
+        expect(uiLogger.json).toHaveBeenCalledWith({
+          valid: false,
+          errors: [{ message: 'No project config found' }],
+          warnings: [],
+        });
+        expect(uiLogger.error).not.toHaveBeenCalled();
+        expect(processExitSpy).toHaveBeenCalledWith(EXIT_CODES.ERROR);
+      });
+
+      it('should still emit JSON when the account lookup throws', async () => {
+        mockedGetConfigAccountById.mockImplementation(() => {
+          throw new Error('Stale configured account');
+        });
+
+        await projectValidateCommand.handler(args);
+
+        expect(uiLogger.json).toHaveBeenCalledWith({
+          valid: false,
+          errors: [{ message: 'Stale configured account' }],
+          warnings: [],
+        });
+        expect(mockedValidateProject).not.toHaveBeenCalled();
+        expect(processExitSpy).toHaveBeenCalledWith(EXIT_CODES.ERROR);
+      });
+
+      it('should still emit JSON when validateProject throws unexpectedly', async () => {
+        mockedValidateProject.mockRejectedValue(new Error('unexpected boom'));
+
+        await projectValidateCommand.handler(args);
+
+        expect(uiLogger.json).toHaveBeenCalledWith({
+          valid: false,
+          projectName: mockProjectConfig.name,
+          platformVersion: mockProjectConfig.platformVersion,
+          errors: [{ message: 'unexpected boom' }],
+          warnings: [],
+        });
+        expect(processExitSpy).toHaveBeenCalledWith(EXIT_CODES.ERROR);
+      });
     });
   });
 });

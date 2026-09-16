@@ -17,6 +17,7 @@ import {
   getMissingLintPackages,
   getMissingLintScripts,
   getUieLintablePackageJsonLocations,
+  isUieComponentDirectory,
   hasDeprecatedEslintConfig,
   hasEslintConfig,
   isEslintInstalled,
@@ -1137,6 +1138,7 @@ export default defineConfig([]);`;
     const projectDir = '/test/project';
     const srcDir = 'src';
     const srcDirAbsolute = path.join(projectDir, srcDir);
+    const actionsDir = path.join(srcDirAbsolute, 'app', 'actions');
     const cardsDir = path.join(srcDirAbsolute, 'app', 'cards');
     const pagesDir = path.join(srcDirAbsolute, 'app', 'pages');
     const settingsDir = path.join(srcDirAbsolute, 'app', 'settings');
@@ -1148,6 +1150,16 @@ export default defineConfig([]);`;
         platformVersion: '2026.03',
       },
     };
+
+    it('should include package.json locations inside app/actions', async () => {
+      const actionLocation = path.join(actionsDir, 'my-action');
+      getProjectPackageJsonLocationsSpy.mockResolvedValueOnce([actionLocation]);
+
+      const result =
+        await getUieLintablePackageJsonLocations(loadedProjectConfig);
+
+      expect(result).toEqual([actionLocation]);
+    });
 
     it('should include package.json locations inside app/cards', async () => {
       const cardLocation = path.join(cardsDir, 'my-card');
@@ -1250,31 +1262,8 @@ export default defineConfig([]);`;
       expect(result).toEqual([]);
     });
 
-    it('should return an empty array when there is no project config', async () => {
-      const result = await getUieLintablePackageJsonLocations({
-        projectDir: null,
-        projectConfig: null,
-      });
-
-      expect(result).toEqual([]);
-      expect(getProjectPackageJsonLocationsSpy).not.toHaveBeenCalled();
-    });
-
-    it('should return an empty array when srcDir is missing', async () => {
-      const result = await getUieLintablePackageJsonLocations({
-        projectDir,
-        projectConfig: {
-          name: 'test-project',
-          srcDir: '',
-          platformVersion: '2026.03',
-        },
-      });
-
-      expect(result).toEqual([]);
-      expect(getProjectPackageJsonLocationsSpy).not.toHaveBeenCalled();
-    });
-
     it('should handle a mix of UIE and non-UIE locations', async () => {
+      const actionLocation = path.join(actionsDir, 'my-action');
       const cardLocation = path.join(cardsDir, 'my-card');
       const pageLocation = path.join(pagesDir, 'my-page');
       const settingsLocation = path.join(settingsDir, 'my-settings');
@@ -1283,6 +1272,7 @@ export default defineConfig([]);`;
         projectDir,
         srcDirAbsolute,
         extensionsLocation,
+        actionLocation,
         cardLocation,
         pageLocation,
         settingsLocation,
@@ -1291,7 +1281,47 @@ export default defineConfig([]);`;
       const result =
         await getUieLintablePackageJsonLocations(loadedProjectConfig);
 
-      expect(result).toEqual([cardLocation, pageLocation, settingsLocation]);
+      expect(result).toEqual([
+        actionLocation,
+        cardLocation,
+        pageLocation,
+        settingsLocation,
+      ]);
+    });
+  });
+
+  describe('isUieComponentDirectory', () => {
+    const projectDir = '/test/project';
+    const srcDirAbsolute = path.join(projectDir, 'src');
+    const appDir = path.join(srcDirAbsolute, 'app');
+
+    it.each([
+      ['app/actions', path.join(appDir, 'actions', 'my-action')],
+      ['app/cards', path.join(appDir, 'cards', 'my-card')],
+      ['app/pages', path.join(appDir, 'pages', 'my-page')],
+      ['app/settings', path.join(appDir, 'settings')],
+      [
+        'nested under app/cards',
+        path.join(appDir, 'cards', 'my-card', 'inner'),
+      ],
+    ])('should return true for %s', (_label, directory) => {
+      expect(isUieComponentDirectory(directory, srcDirAbsolute)).toBe(true);
+    });
+
+    it.each([
+      ['the project root', projectDir],
+      ['the srcDir', srcDirAbsolute],
+      ['a theme directory', path.join(srcDirAbsolute, 'my-theme')],
+      ['app/functions', path.join(appDir, 'functions', 'my-function')],
+      ['app/extensions', path.join(appDir, 'extensions')],
+      ['cards outside of srcDir', path.join(projectDir, 'cards', 'my-card')],
+      [
+        'a sibling directory sharing a component name prefix',
+        path.join(appDir, 'cards-backup', 'my-card'),
+      ],
+      ['a component name with a suffix', path.join(appDir, 'cards2')],
+    ])('should return false for %s', (_label, directory) => {
+      expect(isUieComponentDirectory(directory, srcDirAbsolute)).toBe(false);
     });
   });
 });

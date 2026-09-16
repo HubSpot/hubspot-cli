@@ -5,7 +5,7 @@ import {
 } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { McpLogger } from '../../utils/logger.js';
 import z from 'zod';
-import { TextContentResponse } from '../../types.js';
+import { McpToolResponse } from '../../types.js';
 import { Tool } from '../../Tool.js';
 import { formatTextContents } from '../../utils/content.js';
 import {
@@ -64,7 +64,7 @@ export class DocsSearchTool extends Tool<InputSchemaType> {
     docsSearchQuery,
     docsSearchLimit,
     absoluteCurrentWorkingDirectory,
-  }: InputSchemaType): Promise<TextContentResponse> {
+  }: InputSchemaType): Promise<McpToolResponse> {
     setupHubSpotConfig(absoluteCurrentWorkingDirectory);
 
     try {

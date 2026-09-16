@@ -6,6 +6,7 @@ import {
   areAllLintPackagesInstalled,
   hasEslintConfig,
   isHubSpotEslintConfigActive,
+  isUieComponentDirectory,
 } from './uieLinting.js';
 
 type ValidateLintConfigOnUploadArgs = {
@@ -25,11 +26,12 @@ export async function validateLintConfigOnUpload({
   if (isLegacyPlatform) {
     lintRoots.add(srcDir);
   } else {
+    // Only check the directories that `hs project lint` actually covers,
+    // otherwise these warnings can never be resolved.
     for (const { dir } of parsedPackageJsons) {
-      lintRoots.add(dir);
-    }
-    if (lintRoots.size === 0) {
-      lintRoots.add(srcDir);
+      if (isUieComponentDirectory(dir, srcDir)) {
+        lintRoots.add(dir);
+      }
     }
   }
 

@@ -137,7 +137,6 @@ describe('mcp-server/tools/project/CreateTestAccountTool', () => {
               type: 'text',
               text: 'Test account created successfully\nAccount ID: 12345678',
             },
-            { type: 'text', text: '' },
           ],
         });
       });

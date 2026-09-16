@@ -1,4 +1,4 @@
-import { TextContent, TextContentResponse } from '../../types.js';
+import { TextContent, McpToolResponse } from '../../types.js';
 import { Tool, ToolExtra } from '../../Tool.js';
 import {
   McpServer,
@@ -69,7 +69,7 @@ export class HsCreateFunctionTool extends Tool<HsCreateFunctionInputSchema> {
       absoluteCurrentWorkingDirectory,
     }: HsCreateFunctionInputSchema,
     extra?: ToolExtra
-  ): Promise<TextContentResponse> {
+  ): Promise<McpToolResponse> {
     setupHubSpotConfig(absoluteCurrentWorkingDirectory);
 
     const content: TextContent[] = [];
