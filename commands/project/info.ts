@@ -24,7 +24,7 @@ import {
 import {
   ProjectInfoJsonOutput,
   ProjectInfoSchema,
-} from '../../lib/jsonOutput/info.js';
+} from '../../lib/jsonOutput/projectInfo.js';
 
 const command = 'info';
 const describe = commands.project.info.describe;

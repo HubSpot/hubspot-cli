@@ -34,10 +34,12 @@ describe('mcp-server/utils/toolUsageTracking', () => {
       '/Users/test/.hubspot/config.yml'
     );
     delete process.env.HUBSPOT_MCP_AI_AGENT;
+    delete process.env.CI;
   });
 
   afterEach(() => {
     delete process.env.HUBSPOT_MCP_AI_AGENT;
+    delete process.env.CI;
   });
 
   it('should not track when tracking is disabled via config', async () => {

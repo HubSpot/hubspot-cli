@@ -132,13 +132,14 @@ describe('lib/projects/add/v2AddComponent', () => {
         undefined
       );
 
-      await v2AddComponent(
+      const result = await v2AddComponent(
         mockArgs,
         projectDir,
         mockProjectConfig,
         mockAccountId
       );
 
+      expect(result).toEqual({ addedFeatures: ['module'] });
       expect(mockedGetConfigForPlatformVersion).toHaveBeenCalledWith('2025.2');
       expect(mockedGetProjectMetadata).toHaveBeenCalledWith(
         '/path/to/project/src'
@@ -195,13 +196,17 @@ describe('lib/projects/add/v2AddComponent', () => {
       mockedProjectAddPromptV2.mockResolvedValue(mockPromptResponse);
       mockedCloneGithubRepo.mockResolvedValue(true);
 
-      await v2AddComponent(
+      const result = await v2AddComponent(
         mockArgs,
         projectDir,
         mockProjectConfig,
         mockAccountId
       );
 
+      expect(result).toEqual({
+        addedFeatures: ['module'],
+        app: { distribution: 'private', auth: 'oauth' },
+      });
       expect(mockedCreateV2App).toHaveBeenCalled();
       expect(mockedTrackCommandUsage).toHaveBeenCalledWith(
         'project-add',
@@ -243,13 +248,14 @@ describe('lib/projects/add/v2AddComponent', () => {
       mockedProjectAddPromptV2.mockResolvedValue(mockPromptResponse);
       mockedCloneGithubRepo.mockResolvedValue(true);
 
-      await v2AddComponent(
+      const result = await v2AddComponent(
         mockArgs,
         projectDir,
         mockProjectConfig,
         mockAccountId
       );
 
+      expect(result).toEqual({ addedFeatures: [] });
       expect(mockedCreateV2App).not.toHaveBeenCalled();
       expect(mockedTrackCommandUsage).toHaveBeenCalledWith(
         'project-add',

@@ -19,6 +19,7 @@ import { checkAndWarnGitInclusionMiddleware } from '../lib/middleware/gitMiddlew
 import { performChecks } from '../lib/middleware/yargsChecksMiddleware.js';
 import { setRequestHeaders } from '../lib/middleware/requestMiddleware.js';
 import { checkFireAlarms } from '../lib/middleware/fireAlarmMiddleware.js';
+import { checkDeprecationWarning } from '../lib/middleware/deprecationWarningMiddleware.js';
 import { handleDisableUsageTracking } from '../lib/middleware/usageTrackingMiddleware.js';
 
 import initCommand from '../commands/init.js';
@@ -83,6 +84,7 @@ const argv = yargs(process.argv.slice(2))
     injectAccountIdMiddleware,
     validateConfigMiddleware,
     autoUpdateCLI,
+    checkDeprecationWarning,
     checkAndWarnGitInclusionMiddleware,
     validateAccountOptions,
     checkFireAlarms,

@@ -32,7 +32,7 @@ export type ProjectMigrateArgs = CommonArgs &
     unstable: boolean;
   };
 
-const { v2025_2, v2026_03_BETA, v2026_03 } = PLATFORM_VERSIONS;
+const { v2025_2, v2026_03_BETA, v2026_03, v2026_09 } = PLATFORM_VERSIONS;
 
 const command = 'migrate';
 const describe = commands.project.migrate.describe;
@@ -113,8 +113,8 @@ function projectMigrateBuilder(yargs: Argv): Argv<ProjectMigrateArgs> {
   yargs
     .option('platform-version', {
       type: 'string',
-      choices: [v2025_2, v2026_03_BETA, v2026_03],
-      default: v2026_03,
+      choices: [v2025_2, v2026_03_BETA, v2026_03, v2026_09],
+      default: v2026_09,
     })
     .option('unstable', {
       type: 'boolean',
@@ -128,7 +128,7 @@ function projectMigrateBuilder(yargs: Argv): Argv<ProjectMigrateArgs> {
 const builder = makeYargsBuilder<ProjectMigrateArgs>(
   projectMigrateBuilder,
   command,
-  commands.project.migrate.describe,
+  commands.project.migrate.verboseDescribe,
   {
     useGlobalOptions: true,
     useConfigOptions: true,

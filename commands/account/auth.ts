@@ -10,6 +10,7 @@ import { parseStringToNumber } from '../../lib/parsing.js';
 import {
   CommonArgs,
   ConfigArgs,
+  JSONOutputArgs,
   YargsCommandModule,
 } from '../../types/Yargs.js';
 import { makeWrappedYargsHandler } from '../../lib/yargs/makeWrappedYargsHandler.js';
@@ -18,6 +19,10 @@ import { commands } from '../../lang/en.js';
 import { uiLogger } from '../../lib/ui/logger.js';
 import { authenticateNewAccount } from '../../lib/accountAuth.js';
 import { showMcpPromotionNudge } from '../../lib/mcp/promotion.js';
+import {
+  AccountAuthJsonOutput,
+  AccountAuthSchema,
+} from '../../lib/jsonOutput/accountAuth.js';
 
 const TRACKING_STATUS = {
   STARTED: 'started',
@@ -30,7 +35,8 @@ const describe = commands.account.subcommands.auth.describe;
 const command = 'auth';
 
 type AccountAuthArgs = CommonArgs &
-  ConfigArgs & {
+  ConfigArgs &
+  JSONOutputArgs<AccountAuthJsonOutput> & {
     disableTracking?: boolean;
     personalAccessKey?: string;
     default?: boolean;
@@ -48,6 +54,8 @@ async function handler(
     default: setAsDefaultAccount,
     name: accountName,
     useDefaultName: useDefaultAccountName,
+    formatOutputAsJson,
+    addJsonOutput,
     exit,
   } = args;
 
@@ -87,16 +95,24 @@ async function handler(
     return exit(EXIT_CODES.ERROR);
   }
 
-  const { accountId } = updatedConfig;
+  const { accountId, name, authType: accountAuthType } = updatedConfig;
 
-  uiFeatureHighlight([
-    'getStartedCommand',
-    'helpCommand',
-    'accountAuthCommand',
-    'accountsListCommand',
-  ]);
+  addJsonOutput({
+    accountId,
+    accountName: name,
+    authType: accountAuthType,
+  });
 
-  await showMcpPromotionNudge(args._.join(' '));
+  if (!formatOutputAsJson) {
+    uiFeatureHighlight([
+      'getStartedCommand',
+      'helpCommand',
+      'accountAuthCommand',
+      'accountsListCommand',
+    ]);
+
+    await showMcpPromotionNudge(args._.join(' '));
+  }
 
   if (!disableTracking) {
     await trackAuthAction(
@@ -154,13 +170,16 @@ const builder = makeYargsBuilder<AccountAuthArgs>(
   {
     useGlobalOptions: true,
     useTestingOptions: true,
+    useJSONOutputOptions: true,
   }
 );
 
 const accountAuthCommand: YargsCommandModule<unknown, AccountAuthArgs> = {
   command,
   describe,
-  handler: makeWrappedYargsHandler('account-auth', handler),
+  handler: makeWrappedYargsHandler('account-auth', handler, {
+    jsonOutputSchema: AccountAuthSchema,
+  }),
   builder,
 };
 

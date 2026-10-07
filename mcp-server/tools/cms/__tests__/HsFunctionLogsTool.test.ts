@@ -8,6 +8,9 @@ import { McpLogger } from '../../../utils/logger.js';
 import { runCommandInDir } from '../../../utils/command.js';
 import { MockedFunction, Mocked } from 'vitest';
 import { mcpFeedbackRequest } from '../../../utils/feedbackTracking.js';
+import { getRoutes } from '@hubspot/local-dev-lib/api/functions';
+import { discoverAccountTargets } from '../../../../lib/accountTargetDiscovery.js';
+import type { AccountTargetCandidate } from '../../../../types/AccountTargets.js';
 
 vi.mock('@modelcontextprotocol/sdk/server/mcp.js');
 vi.mock('../../../utils/logger.js');
@@ -17,6 +20,8 @@ vi.mock('../../../utils/command', async importOriginal => {
   return { ...mod, runCommandInDir: vi.fn() };
 });
 vi.mock('../../../utils/feedbackTracking');
+vi.mock('@hubspot/local-dev-lib/api/functions');
+vi.mock('../../../../lib/accountTargetDiscovery.js');
 
 const mockMcpFeedbackRequest = mcpFeedbackRequest as MockedFunction<
   typeof mcpFeedbackRequest
@@ -26,6 +31,9 @@ const mockRunCommandInDir = runCommandInDir as MockedFunction<
   typeof runCommandInDir
 >;
 
+const mockGetRoutes = vi.mocked(getRoutes);
+const mockedDiscoverAccountTargets = vi.mocked(discoverAccountTargets);
+
 describe('HsFunctionLogsTool', () => {
   let mockMcpServer: Mocked<McpServer>;
   let mockLogger: Mocked<McpLogger>;
@@ -33,18 +41,20 @@ describe('HsFunctionLogsTool', () => {
   let mockRegisteredTool: RegisteredTool;
 
   beforeEach(() => {
-    // @ts-expect-error Not mocking the whole server
     mockMcpServer = {
       registerTool: vi.fn(),
-    };
+      server: {
+        getClientCapabilities: vi.fn(),
+        elicitInput: vi.fn(),
+      },
+    } as unknown as Mocked<McpServer>;
 
-    // @ts-expect-error Not mocking the whole thing
     mockLogger = {
       debug: vi.fn(),
       info: vi.fn(),
       warn: vi.fn(),
       error: vi.fn(),
-    };
+    } as unknown as Mocked<McpLogger>;
 
     mockRegisteredTool = {} as RegisteredTool;
     mockMcpServer.registerTool.mockReturnValue(mockRegisteredTool);
@@ -325,6 +335,66 @@ describe('HsFunctionLogsTool', () => {
       expect(result.content[1].text).toContain(
         'Warning: Function may be slow to respond'
       );
+    });
+
+    it('should elicit which function when endpoint is omitted', async () => {
+      mockedDiscoverAccountTargets.mockResolvedValue({
+        candidates: [],
+        recommended: { accountId: 123 } as AccountTargetCandidate,
+      });
+      mockGetRoutes.mockResolvedValue({
+        data: {
+          objects: [
+            { route: 'alpha', method: 'GET' },
+            { route: 'beta', method: 'POST' },
+          ],
+        },
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      } as any);
+      vi.mocked(mockMcpServer.server.getClientCapabilities).mockReturnValue({
+        elicitation: { form: {} },
+      });
+      vi.mocked(mockMcpServer.server.elicitInput).mockResolvedValue({
+        action: 'accept',
+        content: { selection: 'beta' },
+      });
+      mockRunCommandInDir.mockResolvedValue({ stdout: 'logs', stderr: '' });
+
+      await tool.handler({ absoluteCurrentWorkingDirectory: '/test/dir' });
+
+      expect(mockRunCommandInDir).toHaveBeenCalledWith(
+        '/test/dir',
+        expect.objectContaining({
+          args: expect.arrayContaining(['cms', 'function', 'logs', 'beta']),
+        }),
+        expect.any(Function)
+      );
+    });
+
+    it('should list functions when endpoint is omitted and the client cannot elicit', async () => {
+      mockedDiscoverAccountTargets.mockResolvedValue({
+        candidates: [],
+        recommended: { accountId: 123 } as AccountTargetCandidate,
+      });
+      mockGetRoutes.mockResolvedValue({
+        data: {
+          objects: [
+            { route: 'alpha', method: 'GET' },
+            { route: 'beta', method: 'POST' },
+          ],
+        },
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      } as any);
+      vi.mocked(mockMcpServer.server.getClientCapabilities).mockReturnValue({});
+
+      const result = await tool.handler({
+        absoluteCurrentWorkingDirectory: '/test/dir',
+      });
+
+      expect(result.content[0].text).toContain(
+        'Several functions are available'
+      );
+      expect(mockRunCommandInDir).not.toHaveBeenCalled();
     });
   });
 });

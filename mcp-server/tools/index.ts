@@ -12,6 +12,7 @@ import { ValidateProjectTool } from './project/ValidateProjectTool.js';
 import { GetConfigValuesTool } from './project/GetConfigValuesTool.js';
 import { DocsSearchTool } from './project/DocsSearchTool.js';
 import { DocFetchTool } from './project/DocFetchTool.js';
+import { KnowledgeSearchTool } from './project/KnowledgeSearchTool.js';
 import { GetApiUsagePatternsByAppIdTool } from './project/GetApiUsagePatternsByAppIdTool.js';
 import { GetApplicationInfoTool } from './project/GetApplicationInfoTool.js';
 import { GetBuildLogsTool } from './project/GetBuildLogsTool.js';
@@ -41,6 +42,7 @@ export function registerProjectTools(
     new GetConfigValuesTool(mcpServer, logger).register(),
     new DocsSearchTool(mcpServer, logger).register(),
     new DocFetchTool(mcpServer, logger).register(),
+    new KnowledgeSearchTool(mcpServer, logger).register(),
     new GetApiUsagePatternsByAppIdTool(mcpServer, logger).register(),
     new GetApplicationInfoTool(mcpServer, logger).register(),
     new GetBuildLogsTool(mcpServer, logger).register(),

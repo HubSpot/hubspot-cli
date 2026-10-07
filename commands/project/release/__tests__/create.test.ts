@@ -18,7 +18,7 @@ import projectReleaseCreateCommand, {
   ProjectReleaseCreateArgs,
 } from '../create.js';
 import { uiLogger } from '../../../../lib/ui/logger.js';
-import { Release } from '../../../../api/releases.js';
+import { CreatedRelease, Release } from '../../../../api/releases.js';
 import { expect } from 'vitest';
 
 vi.mock('@hubspot/local-dev-lib/config');
@@ -268,6 +268,15 @@ describe('commands/project/release/create', () => {
       expect(processExitSpy).toHaveBeenCalledWith(EXIT_CODES.SUCCESS);
     });
 
+    it('should forward force to handleProjectUpload so translation prompts are skipped', async () => {
+      resolveBuildIdSpy.mockResolvedValue(undefined);
+      args.force = true;
+      await projectReleaseCreateCommand.handler(args);
+      expect(handleProjectUploadSpy).toHaveBeenCalledWith(
+        expect.objectContaining({ force: true, forceCreate: true })
+      );
+    });
+
     it('should handle PromptExitError from upload prompt', async () => {
       resolveBuildIdSpy.mockResolvedValue(undefined);
       confirmPromptSpy.mockRejectedValue(
@@ -327,6 +336,20 @@ describe('commands/project/release/create', () => {
     it('should log success message after creating release', async () => {
       await projectReleaseCreateCommand.handler(args);
       expect(uiLogger.success).toHaveBeenCalledWith(
+        expect.stringContaining('v1.0.0')
+      );
+    });
+
+    it('should log a tag-free success message when the release has no tag', async () => {
+      executeReleaseSpy.mockResolvedValue({
+        buildId: EXAMPLE_BUILD_ID,
+        createdAt: '2026-02-23T12:00:00.000Z',
+      } as CreatedRelease);
+      await projectReleaseCreateCommand.handler(args);
+      expect(uiLogger.success).toHaveBeenCalledWith(
+        expect.stringContaining('live')
+      );
+      expect(uiLogger.success).not.toHaveBeenCalledWith(
         expect.stringContaining('v1.0.0')
       );
     });

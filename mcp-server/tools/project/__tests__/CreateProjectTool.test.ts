@@ -74,6 +74,7 @@ describe('mcp-server/tools/project/CreateProjectTool', () => {
             'Creates a HubSpot project with the provided name'
           ),
           inputSchema: expect.any(Object),
+          outputSchema: expect.any(Object),
         }),
         expect.any(Function)
       );
@@ -104,6 +105,8 @@ describe('mcp-server/tools/project/CreateProjectTool', () => {
           args: expect.arrayContaining([
             'project',
             'create',
+            '--json',
+            'true',
             '--name',
             'test-project',
             '--dest',
@@ -117,7 +120,25 @@ describe('mcp-server/tools/project/CreateProjectTool', () => {
 
       expect(result).toEqual({
         content: [{ type: 'text', text: 'Project created successfully' }],
+        structuredContent: {},
       });
+    });
+
+    it('should return parsed JSON output as structuredContent', async () => {
+      const createOutput = {
+        name: 'test-project',
+        location: '/test/workspace/test-dest',
+        platformVersion: '2026.09',
+        projectBase: EMPTY_PROJECT,
+      };
+      mockRunCommandInDir.mockResolvedValue({
+        stdout: JSON.stringify(createOutput, null, 2),
+        stderr: '',
+      });
+
+      const result = await tool.handler(baseInput);
+
+      expect(result.structuredContent).toEqual(createOutput);
     });
 
     it('should handle command execution error', async () => {
@@ -128,6 +149,7 @@ describe('mcp-server/tools/project/CreateProjectTool', () => {
 
       expect(result).toEqual({
         content: [{ type: 'text', text: 'Command failed' }],
+        isError: true,
       });
     });
 
@@ -204,6 +226,7 @@ describe('mcp-server/tools/project/CreateProjectTool', () => {
 
       expect(result).toEqual({
         content: [{ type: 'text', text: 'String error' }],
+        isError: true,
       });
     });
   });

@@ -8,10 +8,15 @@ import {
   YargsCommandModule,
   CommonArgs,
   ConfigArgs,
+  JSONOutputArgs,
 } from '../../types/Yargs.js';
 import { makeWrappedYargsHandler } from '../../lib/yargs/makeWrappedYargsHandler.js';
 import { makeYargsBuilder } from '../../lib/yargsUtils.js';
 import { commands } from '../../lang/en.js';
+import {
+  ProjectAddJsonOutput,
+  ProjectAddSchema,
+} from '../../lib/jsonOutput/projectAdd.js';
 import { isLegacyProject } from '@hubspot/project-parsing-lib/projects';
 import { legacyAddComponent } from '../../lib/projects/add/legacyAddComponent.js';
 import { v2AddComponent } from '../../lib/projects/add/v2AddComponent.js';
@@ -27,7 +32,8 @@ const command = 'add';
 const describe = commands.project.add.describe;
 
 export type ProjectAddArgs = CommonArgs &
-  ConfigArgs & {
+  ConfigArgs &
+  JSONOutputArgs<ProjectAddJsonOutput> & {
     type?: string;
     name?: string;
     features?: string[];
@@ -38,7 +44,7 @@ export type ProjectAddArgs = CommonArgs &
 async function handler(
   args: ArgumentsCamelCase<ProjectAddArgs>
 ): Promise<void> {
-  const { derivedAccountId, exit } = args;
+  const { derivedAccountId, exit, addJsonOutput } = args;
 
   const isInProjectDir = getIsInProject();
 
@@ -54,16 +60,16 @@ async function handler(
       projectConfig.platformVersion
     );
 
-    if (!isLegacyProjectCreate) {
-      await v2AddComponent(args, projectDir, projectConfig, derivedAccountId);
-    } else {
-      await legacyAddComponent(
-        args,
-        projectDir,
-        projectConfig,
-        derivedAccountId
-      );
-    }
+    const result: ProjectAddJsonOutput = isLegacyProjectCreate
+      ? await legacyAddComponent(
+          args,
+          projectDir,
+          projectConfig,
+          derivedAccountId
+        )
+      : await v2AddComponent(args, projectDir, projectConfig, derivedAccountId);
+
+    addJsonOutput(result);
   } catch (e) {
     if (isPromptExitError(e)) {
       throw e;
@@ -118,13 +124,16 @@ const builder = makeYargsBuilder<ProjectAddArgs>(
   {
     useGlobalOptions: true,
     useConfigOptions: true,
+    useJSONOutputOptions: true,
   }
 );
 
 const projectAddCommand: YargsCommandModule<unknown, ProjectAddArgs> = {
   command,
   describe,
-  handler: makeWrappedYargsHandler('project-add', handler),
+  handler: makeWrappedYargsHandler('project-add', handler, {
+    jsonOutputSchema: ProjectAddSchema,
+  }),
   builder,
 };
 

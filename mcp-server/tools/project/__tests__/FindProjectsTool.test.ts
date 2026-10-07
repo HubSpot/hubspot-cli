@@ -25,18 +25,20 @@ describe('mcp-server/tools/project/FindProjectsTool', () => {
   let mockRegisteredTool: RegisteredTool;
 
   beforeEach(() => {
-    // @ts-expect-error Not mocking the whole thing
     mockMcpServer = {
       registerTool: vi.fn(),
-    };
+      server: {
+        getClientCapabilities: vi.fn(),
+        elicitInput: vi.fn(),
+      },
+    } as unknown as Mocked<McpServer>;
 
-    // @ts-expect-error Not mocking the whole thing
     mockLogger = {
       debug: vi.fn(),
       info: vi.fn(),
       warn: vi.fn(),
       error: vi.fn(),
-    };
+    } as unknown as Mocked<McpLogger>;
 
     mockRegisteredTool = {} as RegisteredTool;
     mockMcpServer.registerTool.mockReturnValue(mockRegisteredTool);
@@ -71,7 +73,7 @@ describe('mcp-server/tools/project/FindProjectsTool', () => {
       absoluteDirectory: '/test/workspace',
     };
 
-    it('should return project paths when projects are found', async () => {
+    it('should prompt to narrow down when several projects are found and the client cannot elicit', async () => {
       mockWalk.mockResolvedValue([
         '/test/workspace/project-a/hsproject.json',
         '/test/workspace/project-b/src/hsproject.json',
@@ -84,9 +86,31 @@ describe('mcp-server/tools/project/FindProjectsTool', () => {
         '.git',
         '.vite',
       ]);
-      expect(result.content[0].text).toContain('Found 2 project(s):');
+      expect(result.content[0].text).toContain(
+        'Several projects are available'
+      );
       expect(result.content[0].text).toContain('/test/workspace/project-a');
       expect(result.content[0].text).toContain('/test/workspace/project-b/src');
+    });
+
+    it('should elicit which project when several are found', async () => {
+      mockWalk.mockResolvedValue([
+        '/test/workspace/project-a/hsproject.json',
+        '/test/workspace/project-b/hsproject.json',
+      ]);
+      vi.mocked(mockMcpServer.server.getClientCapabilities).mockReturnValue({
+        elicitation: { form: {} },
+      });
+      vi.mocked(mockMcpServer.server.elicitInput).mockResolvedValue({
+        action: 'accept',
+        content: { selection: '/test/workspace/project-b' },
+      });
+
+      const result = await tool.handler(baseInput);
+
+      expect(result.content[0].text).toContain(
+        'Selected project: /test/workspace/project-b'
+      );
     });
 
     it('should return a message when no projects are found', async () => {

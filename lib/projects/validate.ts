@@ -9,7 +9,7 @@ import { commands } from '../../lang/en.js';
 import {
   ProfileValidationJsonOutput,
   ValidationIssueJsonOutput,
-} from '../jsonOutput/validate.js';
+} from '../jsonOutput/projectValidate.js';
 import {
   getProfileAccountId,
   validateProjectForProfile,

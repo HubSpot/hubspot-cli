@@ -14,7 +14,6 @@ vi.mock('@hubspot/local-dev-lib/path');
 vi.mock('@hubspot/local-dev-lib/config/state');
 vi.mock('fs');
 
-// @ts-expect-error Doesn't match the actual signature because then the linter complains about unused variables
 const DoctorMock = Doctor as Mock<typeof Doctor>;
 const mockedFs = vi.mocked(fs);
 const getCwd = __getCwd as Mock<typeof __getCwd>;
@@ -66,7 +65,7 @@ describe('doctor', () => {
 
     beforeEach(() => {
       diagnosis = 'Yooooooooooooooo';
-      DoctorMock.mockImplementation(() => {
+      DoctorMock.mockImplementation(function () {
         return {
           diagnose: vi.fn().mockResolvedValue({ diagnosis }),
           accountId,
@@ -96,7 +95,7 @@ describe('doctor', () => {
     });
 
     it('should log an error if the diagnosis is undefined', async () => {
-      DoctorMock.mockImplementationOnce(() => {
+      DoctorMock.mockImplementationOnce(function () {
         return {
           diagnose: vi.fn().mockResolvedValue(undefined),
           accountId,

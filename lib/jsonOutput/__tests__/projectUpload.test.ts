@@ -1,5 +1,8 @@
 import { HubSpotConfigAccount } from '@hubspot/local-dev-lib/types/Accounts';
-import { mapAccountToTargetAccount, UploadSchema } from '../upload.js';
+import {
+  mapAccountToTargetAccount,
+  ProjectUploadSchema,
+} from '../projectUpload.js';
 
 describe('lib/jsonOutput/upload', () => {
   describe('mapAccountToTargetAccount()', () => {
@@ -43,7 +46,7 @@ describe('lib/jsonOutput/upload', () => {
       });
     });
 
-    it('should produce output that satisfies UploadSchema as a targetAccount', () => {
+    it('should produce output that satisfies ProjectUploadSchema as a targetAccount', () => {
       const account = {
         accountId: 12345678,
         name: 'My Test Portal',
@@ -52,11 +55,13 @@ describe('lib/jsonOutput/upload', () => {
 
       const targetAccount = mapAccountToTargetAccount(12345678, account);
 
-      expect(UploadSchema.safeParse({ targetAccount }).success).toBe(true);
+      expect(ProjectUploadSchema.safeParse({ targetAccount }).success).toBe(
+        true
+      );
     });
   });
 
-  describe('UploadSchema', () => {
+  describe('ProjectUploadSchema', () => {
     it.each([
       [
         'direct CLI success',
@@ -83,16 +88,17 @@ describe('lib/jsonOutput/upload', () => {
         },
       ],
     ])('should validate representative %s output', (_label, output) => {
-      expect(UploadSchema.safeParse(output).success).toBe(true);
+      expect(ProjectUploadSchema.safeParse(output).success).toBe(true);
     });
 
     it('should accept a minimal success output with only a buildId', () => {
-      expect(UploadSchema.safeParse({ buildId: 5 }).success).toBe(true);
+      expect(ProjectUploadSchema.safeParse({ buildId: 5 }).success).toBe(true);
     });
 
     it('should reject a targetAccount without an accountId', () => {
       expect(
-        UploadSchema.safeParse({ targetAccount: { accountName: 'x' } }).success
+        ProjectUploadSchema.safeParse({ targetAccount: { accountName: 'x' } })
+          .success
       ).toBe(false);
     });
   });

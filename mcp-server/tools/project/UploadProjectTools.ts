@@ -7,21 +7,28 @@ import {
 import { McpLogger } from '../../utils/logger.js';
 import { getAllHsProfiles } from '@hubspot/project-parsing-lib/profiles';
 import { getProjectConfig } from '../../../lib/projects/config.js';
-import { TextContent, McpToolResponse } from '../../types.js';
+import { McpToolResponse } from '../../types.js';
 import { Tool, ToolExtra } from '../../Tool.js';
+import { absoluteProjectPath, confirmProductionAccount } from './constants.js';
 import {
-  absoluteCurrentWorkingDirectory,
-  absoluteProjectPath,
-} from './constants.js';
-import { formatTextContent, formatTextContents } from '../../utils/content.js';
+  formatErrorTextContents,
+  formatTextContent,
+  formatTextContents,
+} from '../../utils/content.js';
 import { HubSpotCommand } from '../../utils/command.js';
 import { setupHubSpotConfig } from '../../utils/config.js';
 import { parseCommandJsonOutput } from '../../utils/json.js';
-import { UploadSchema } from '../../../lib/jsonOutput/upload.js';
+import { ProjectUploadSchema } from '../../../lib/jsonOutput/projectUpload.js';
+import { discoverAccountTargets } from '../../../lib/accountTargetDiscovery.js';
+import { generateProfilePromptOption } from '../../../lib/prompts/projectProfilePrompt.js';
+import { elicitSelection } from '../../utils/elicitSelection.js';
+import {
+  confirmProductionTargets,
+  setTargetAccount,
+} from './productionConfirmation.js';
 
 const inputSchema = {
   absoluteProjectPath,
-  absoluteCurrentWorkingDirectory,
   uploadMessage: z
     .string()
     .describe(
@@ -30,8 +37,9 @@ const inputSchema = {
   profile: z
     .optional(z.string())
     .describe(
-      'The profile to use for the upload. Only required for projects configured with profiles. If the project uses profiles and the user has not specified one, ask them rather than inferring from filenames in the directory. NEVER automatically choose a profile based on files you see. Profile files have the format: "hsprofile.<profile>.json".'
+      'The profile to use for the upload. Only set this when the user names a profile. If it is omitted and the project uses profiles, the tool asks the user to choose one. NEVER automatically choose a profile based on files you see. Profile files have the format: "hsprofile.<profile>.json".'
     ),
+  confirmProductionAccount,
 };
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -49,60 +57,82 @@ export class UploadProjectTools extends Tool<InputSchemaType> {
   async handler(
     {
       absoluteProjectPath,
-      absoluteCurrentWorkingDirectory,
       profile,
       uploadMessage,
+      confirmProductionAccount,
     }: InputSchemaType,
     extra?: ToolExtra
   ): Promise<McpToolResponse> {
-    setupHubSpotConfig(absoluteCurrentWorkingDirectory);
+    setupHubSpotConfig(absoluteProjectPath);
+
+    const { projectDir, projectConfig } = getProjectConfig(absoluteProjectPath);
+
+    let selectedProfile = profile;
+
+    if (!selectedProfile) {
+      const profiles = await getAllHsProfiles(
+        path.join(projectDir, projectConfig.srcDir)
+      );
+
+      if (profiles.length > 0) {
+        const options = profiles.map(profileName => ({
+          value: profileName,
+          label: generateProfilePromptOption(
+            projectDir,
+            projectConfig,
+            profileName
+          ).name,
+        }));
+
+        selectedProfile = await elicitSelection(this.mcpServer, this.logger, {
+          message: 'Select the profile to use for the upload.',
+          title: 'Project profile',
+          options,
+        });
+
+        if (!selectedProfile) {
+          return formatErrorTextContents(
+            `Several profiles are available. Ask the user which to use, then call ${toolName} again with the profile argument set to one of these profile names: ${options
+              .map(option => option.value)
+              .join(', ')}. The profiles target these accounts: ${options
+              .map(option => option.label)
+              .join(', ')}.`
+          );
+        }
+      }
+    }
+
+    const targets = await discoverAccountTargets({
+      projectDir,
+      projectConfig,
+      profileName: selectedProfile,
+    });
+
+    const blockedResponse = await confirmProductionTargets(
+      this.mcpServer,
+      this.logger,
+      {
+        targets,
+        action: `Upload ${projectConfig.name}`,
+        toolName,
+        confirmedInConversation: confirmProductionAccount,
+      }
+    );
+
+    if (blockedResponse) {
+      return blockedResponse;
+    }
 
     const command = new HubSpotCommand('project upload', [
       { name: 'force', value: true },
       { name: 'json', value: true },
     ]);
 
-    const content: TextContent[] = [];
-
     if (uploadMessage) {
       command.addFlag('message', uploadMessage);
     }
 
-    if (profile) {
-      command.addFlag('profile', profile);
-    } else {
-      let hasProfiles = false;
-
-      try {
-        const { projectConfig } = getProjectConfig(absoluteProjectPath);
-        const profiles = await getAllHsProfiles(
-          path.join(absoluteProjectPath, projectConfig.srcDir)
-        );
-        hasProfiles = profiles.length > 0;
-      } catch (e) {
-        this.logger.debug(toolName, {
-          message: 'Handler caught error checking for profiles',
-          error: e instanceof Error ? e.message : String(e),
-        });
-        // If any of these checks fail, the safest thing to do is to assume there are no profiles.
-        hasProfiles = false;
-      }
-
-      if (hasProfiles) {
-        content.push(
-          formatTextContent(
-            `Ask the user which profile they would like to use for the upload.`
-          )
-        );
-      }
-    }
-
-    if (content.length > 0) {
-      return {
-        content,
-        structuredContent: {},
-      };
-    }
+    setTargetAccount(command, targets, selectedProfile);
 
     const { stdout, stderr } = await this.runCommand(
       absoluteProjectPath,
@@ -120,7 +150,12 @@ export class UploadProjectTools extends Tool<InputSchemaType> {
     );
 
     response.structuredContent =
-      parseCommandJsonOutput(stdout, UploadSchema, this.logger, toolName) ?? {};
+      parseCommandJsonOutput(
+        stdout,
+        ProjectUploadSchema,
+        this.logger,
+        toolName
+      ) ?? {};
 
     return response;
   }
@@ -130,9 +165,9 @@ export class UploadProjectTools extends Tool<InputSchemaType> {
       {
         title: 'Upload HubSpot Project',
         description:
-          'DO NOT run this tool unless the user specifies they would like to upload the project, it is potentially destructive. Uploads the HubSpot project in current working directory.  If the project does not exist, it will be created. MUST be ran from within the project directory. IMPORTANT: Uploading a project does NOT automatically make cards live or visible to users. Cards must be manually added to a view in HubSpot after upload to become visible. If you do not know the project path, use the find-projects tool first to locate HubSpot projects in the workspace.',
+          'DO NOT run this tool unless the user specifies they would like to upload the project, it is potentially destructive. Uploads the HubSpot project in current working directory.  If the project does not exist, it will be created. MUST be ran from within the project directory. IMPORTANT: Uploading a project does NOT automatically make cards live or visible to users. Cards must be manually added to a view in HubSpot after upload to become visible. Uploads to production accounts require confirmation from the user. If you do not know the project path, use the find-projects tool first to locate HubSpot projects in the workspace.',
         inputSchema,
-        outputSchema: UploadSchema.shape,
+        outputSchema: ProjectUploadSchema.shape,
         annotations: {
           readOnlyHint: false,
           destructiveHint: true,

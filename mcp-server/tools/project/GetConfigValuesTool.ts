@@ -10,16 +10,18 @@ import { formatTextContents } from '../../utils/content.js';
 import {
   absoluteCurrentWorkingDirectory,
   absoluteProjectPath,
+  account,
 } from './constants.js';
 import { getIntermediateRepresentationSchema } from '@hubspot/project-parsing-lib/schema';
 import { mapToInternalType } from '@hubspot/project-parsing-lib/transform';
 import { isLegacyProject } from '@hubspot/project-parsing-lib/projects';
 import { setupHubSpotConfig } from '../../utils/config.js';
-import { discoverAccountTargets } from '../../../lib/accountTargetDiscovery.js';
+import { resolveAccountId } from './resolveAccount.js';
 
 const inputSchema = {
   absoluteCurrentWorkingDirectory,
   absoluteProjectPath: absoluteProjectPath.optional(),
+  account,
   platformVersion: z
     .string()
     .describe(
@@ -48,6 +50,7 @@ export class GetConfigValuesTool extends Tool<InputSchemaType> {
   async handler({
     platformVersion,
     featureType,
+    account,
     absoluteCurrentWorkingDirectory,
     absoluteProjectPath,
   }: InputSchemaType): Promise<McpToolResponse> {
@@ -59,12 +62,14 @@ export class GetConfigValuesTool extends Tool<InputSchemaType> {
         );
       }
 
-      const { recommended } = await discoverAccountTargets();
-      const accountId = recommended?.accountId;
-      if (!accountId) {
-        const authErrorMessage = `No account ID found. Call the auth-account tool to authenticate a HubSpot account.`;
-        return formatTextContents(authErrorMessage);
+      const resolved = await resolveAccountId(this.mcpServer, this.logger, {
+        toolName,
+        account,
+      });
+      if ('response' in resolved) {
+        return resolved.response;
       }
+      const { accountId } = resolved;
 
       const schema = await getIntermediateRepresentationSchema({
         platformVersion,

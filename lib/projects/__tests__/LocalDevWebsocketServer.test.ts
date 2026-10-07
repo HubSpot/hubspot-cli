@@ -53,9 +53,9 @@ describe('LocalDevWebsocketServer', () => {
       setAutoUploadEnabled: vi.fn(),
     } as unknown as Mocked<LocalDevProcess>;
 
-    (WebSocketServer as unknown as Mock).mockImplementation(
-      () => mockWebSocketServer
-    );
+    (WebSocketServer as unknown as Mock).mockImplementation(function () {
+      return mockWebSocketServer;
+    });
 
     server = new LocalDevWebsocketServer(mockLocalDevProcess, true);
   });

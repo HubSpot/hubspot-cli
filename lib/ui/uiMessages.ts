@@ -13,6 +13,8 @@ export const uiMessages = {
   disabledUrlText: 'See all HubSpot CLI commands here.',
   commandRenamedMessage: (newCommand: string) =>
     `This command has been deprecated. Please use ${uiCommandReference(newCommand)} instead.`,
+  commandRenamedPlainMessage: (newCommand: string) =>
+    `This command has been deprecated. Please use \`${newCommand}\` instead.`,
   featureHighlight: {
     defaultTitle: "What's next?",
     featureKeys: {

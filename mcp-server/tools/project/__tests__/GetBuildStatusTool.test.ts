@@ -120,18 +120,20 @@ describe('mcp-server/tools/project/GetBuildStatusTool', () => {
   let mockRegisteredTool: RegisteredTool;
 
   beforeEach(() => {
-    // @ts-expect-error Not mocking the whole thing
     mockMcpServer = {
       registerTool: vi.fn(),
-    };
+      server: {
+        getClientCapabilities: vi.fn(),
+        elicitInput: vi.fn(),
+      },
+    } as unknown as Mocked<McpServer>;
 
-    // @ts-expect-error Not mocking the whole thing
     mockLogger = {
       debug: vi.fn(),
       info: vi.fn(),
       warn: vi.fn(),
       error: vi.fn(),
-    };
+    } as unknown as Mocked<McpLogger>;
 
     mockRegisteredTool = {} as RegisteredTool;
     mockMcpServer.registerTool.mockReturnValue(mockRegisteredTool);
@@ -190,7 +192,156 @@ describe('mcp-server/tools/project/GetBuildStatusTool', () => {
         expect(mockedDiscoverAccountTargets).toHaveBeenCalledWith({
           projectDir: TEST_PROJECT_PATH,
           projectConfig: createMockProjectConfig(),
+          explicitAccount: undefined,
         });
+      });
+
+      it('should pass an explicit account through to discoverAccountTargets', async () => {
+        mockFetchProjectBuilds.mockResolvedValue(
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          createBuildListResponse([createMockBuild()]) as any
+        );
+
+        await tool.handler({ ...baseInput, account: '55555' });
+
+        expect(mockedDiscoverAccountTargets).toHaveBeenCalledWith({
+          projectDir: TEST_PROJECT_PATH,
+          projectConfig: createMockProjectConfig(),
+          explicitAccount: '55555',
+        });
+        expect(mockMcpServer.server.elicitInput).not.toHaveBeenCalled();
+      });
+
+      it('should resolve a re-supplied account by name against the candidates', async () => {
+        mockedDiscoverAccountTargets.mockResolvedValue({
+          candidates: [
+            { accountId: 111, accountName: 'test' } as AccountTargetCandidate,
+            {
+              accountId: 222,
+              accountName: 'prod-acct',
+            } as AccountTargetCandidate,
+          ],
+          recommended: undefined,
+        });
+        mockFetchProjectBuilds.mockResolvedValue(
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          createBuildListResponse([createMockBuild()]) as any
+        );
+
+        await tool.handler({ ...baseInput, account: 'test' });
+
+        expect(mockMcpServer.server.elicitInput).not.toHaveBeenCalled();
+        expect(mockFetchProjectBuilds).toHaveBeenCalledWith(
+          111,
+          TEST_PROJECT_NAME,
+          expect.any(Object)
+        );
+      });
+
+      it('should resolve a re-supplied account by id against the candidates', async () => {
+        mockedDiscoverAccountTargets.mockResolvedValue({
+          candidates: [
+            { accountId: 111, accountName: 'test' } as AccountTargetCandidate,
+            {
+              accountId: 222,
+              accountName: 'prod-acct',
+            } as AccountTargetCandidate,
+          ],
+          recommended: undefined,
+        });
+        mockFetchProjectBuilds.mockResolvedValue(
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          createBuildListResponse([createMockBuild()]) as any
+        );
+
+        await tool.handler({ ...baseInput, account: '222' });
+
+        expect(mockMcpServer.server.elicitInput).not.toHaveBeenCalled();
+        expect(mockFetchProjectBuilds).toHaveBeenCalledWith(
+          222,
+          TEST_PROJECT_NAME,
+          expect.any(Object)
+        );
+      });
+
+      it('should elicit an account when several are available and none is recommended', async () => {
+        const ACCOUNT_A = 111;
+        const ACCOUNT_B = 222;
+        mockedDiscoverAccountTargets.mockResolvedValue({
+          candidates: [
+            { accountId: ACCOUNT_A } as AccountTargetCandidate,
+            { accountId: ACCOUNT_B } as AccountTargetCandidate,
+          ],
+          recommended: undefined,
+        });
+        vi.mocked(mockMcpServer.server.getClientCapabilities).mockReturnValue({
+          elicitation: { form: {} },
+        });
+        vi.mocked(mockMcpServer.server.elicitInput).mockResolvedValue({
+          action: 'accept',
+          content: { account: String(ACCOUNT_B) },
+        });
+        mockFetchProjectBuilds.mockResolvedValue(
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          createBuildListResponse([createMockBuild()]) as any
+        );
+
+        await tool.handler(baseInput);
+
+        expect(mockMcpServer.server.elicitInput).toHaveBeenCalled();
+        expect(mockFetchProjectBuilds).toHaveBeenCalledWith(
+          ACCOUNT_B,
+          TEST_PROJECT_NAME,
+          expect.any(Object)
+        );
+      });
+
+      it('should fall back to text listing candidates when the client cannot elicit', async () => {
+        mockedDiscoverAccountTargets.mockResolvedValue({
+          candidates: [
+            { accountId: 111 } as AccountTargetCandidate,
+            { accountId: 222 } as AccountTargetCandidate,
+          ],
+          recommended: undefined,
+        });
+        vi.mocked(mockMcpServer.server.getClientCapabilities).mockReturnValue(
+          {}
+        );
+
+        const result = await tool.handler(baseInput);
+
+        expect(mockMcpServer.server.elicitInput).not.toHaveBeenCalled();
+        expect(mockFetchProjectBuilds).not.toHaveBeenCalled();
+        expectTextContent(
+          result,
+          'Several HubSpot accounts are available',
+          'call get-build-status again with the account argument'
+        );
+      });
+
+      it('should fall back to text when the user declines elicitation', async () => {
+        mockedDiscoverAccountTargets.mockResolvedValue({
+          candidates: [
+            { accountId: 111 } as AccountTargetCandidate,
+            { accountId: 222 } as AccountTargetCandidate,
+          ],
+          recommended: undefined,
+        });
+        vi.mocked(mockMcpServer.server.getClientCapabilities).mockReturnValue({
+          elicitation: { form: {} },
+        });
+        vi.mocked(mockMcpServer.server.elicitInput).mockResolvedValue({
+          action: 'decline',
+        });
+
+        const result = await tool.handler(baseInput);
+
+        expect(mockFetchProjectBuilds).not.toHaveBeenCalled();
+        expectTextContent(
+          result,
+          'Several HubSpot accounts are available',
+          'call get-build-status again with the account argument'
+        );
       });
 
       it('should use the account from a linked directory over the global default', async () => {

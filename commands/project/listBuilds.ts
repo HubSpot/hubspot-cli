@@ -27,10 +27,10 @@ import { makeYargsBuilder } from '../../lib/yargsUtils.js';
 import { commands } from '../../lang/en.js';
 import { renderTable } from '../../ui/render.js';
 import {
-  ProjectBuildsListJsonOutput,
-  ProjectBuildsListSchema,
+  ProjectListBuildsJsonOutput,
+  ProjectListBuildsSchema,
   mapBuildToJsonOutput,
-} from '../../lib/jsonOutput/listBuilds.js';
+} from '../../lib/jsonOutput/projectListBuilds.js';
 
 const command = 'list-builds';
 const describe = commands.project.listBuilds.describe;
@@ -39,7 +39,7 @@ export type ProjectListBuildsArgs = CommonArgs &
   ConfigArgs &
   AccountArgs &
   EnvironmentArgs &
-  JSONOutputArgs<ProjectBuildsListJsonOutput> & {
+  JSONOutputArgs<ProjectListBuildsJsonOutput> & {
     project?: string;
     limit?: number;
   };
@@ -235,7 +235,7 @@ const projectListBuildsCommand: YargsCommandModule<
   command,
   describe,
   handler: makeWrappedYargsHandler('project-list-builds', handler, {
-    jsonOutputSchema: ProjectBuildsListSchema,
+    jsonOutputSchema: ProjectListBuildsSchema,
   }),
   builder,
 };

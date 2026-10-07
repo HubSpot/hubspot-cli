@@ -59,7 +59,7 @@ describe('mcp-server/tools/project/DocFetchTool', () => {
         expect.objectContaining({
           title: 'Fetch HubSpot Developer Documentation (single file)',
           description: expect.stringContaining(
-            'Always use this immediately after `search-docs`'
+            'stated plainly (for example "requires Content Hub Enterprise") rather than by quoting raw spec fields.'
           ),
           inputSchema: expect.any(Object),
         }),
@@ -98,6 +98,18 @@ describe('mcp-server/tools/project/DocFetchTool', () => {
           },
         ],
       });
+    });
+
+    it('should return content that includes a Supported products block unchanged', async () => {
+      const mockContent =
+        '# CMS content audit API\n\n<SupportedProducts cms={true} cmsLevel="enterprise" />\n\nThe CMS content audit API allows you to query audit logs.';
+
+      // @ts-expect-error - Mocking axios response structure
+      mockHttp.get.mockResolvedValue({ data: mockContent });
+
+      const result = await tool.handler(mockInput);
+
+      expect(result.content[0].text).toBe(mockContent);
     });
 
     it('should handle HubSpot HTTP errors', async () => {

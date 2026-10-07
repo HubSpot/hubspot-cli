@@ -20,10 +20,10 @@ import { commands } from '../../../lang/en.js';
 import { renderTable } from '../../../ui/render.js';
 import { makeWrappedYargsHandler } from '../../../lib/yargs/makeWrappedYargsHandler.js';
 import {
-  ReleaseListJsonOutput,
-  ReleaseListSchema,
+  ProjectReleaseListJsonOutput,
+  ProjectReleaseListSchema,
   mapReleaseToJsonOutput,
-} from '../../../lib/jsonOutput/release.js';
+} from '../../../lib/jsonOutput/projectRelease.js';
 
 const command = 'list';
 // const describe = commands.project.release.list.describe;
@@ -35,7 +35,7 @@ export type ProjectReleaseListArgs = CommonArgs &
   ConfigArgs &
   AccountArgs &
   EnvironmentArgs &
-  JSONOutputArgs<ReleaseListJsonOutput> & {
+  JSONOutputArgs<ProjectReleaseListJsonOutput> & {
     limit?: number;
   };
 
@@ -177,7 +177,7 @@ const projectReleaseListCommand: YargsCommandModule<
   describe,
   builder,
   handler: makeWrappedYargsHandler('project-release-list', handler, {
-    jsonOutputSchema: ReleaseListSchema,
+    jsonOutputSchema: ProjectReleaseListSchema,
   }),
 };
 

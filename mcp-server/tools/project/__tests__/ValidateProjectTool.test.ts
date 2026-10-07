@@ -67,6 +67,7 @@ describe('mcp-server/tools/project/ValidateProjectTool', () => {
             'Validates the HubSpot project and its configuration files.'
           ),
           inputSchema: expect.any(Object),
+          outputSchema: expect.any(Object),
         }),
         expect.any(Function)
       );
@@ -80,9 +81,17 @@ describe('mcp-server/tools/project/ValidateProjectTool', () => {
       absoluteProjectPath: '/test/project',
     };
 
+    const validOutput = {
+      valid: true,
+      projectName: 'test-project',
+      platformVersion: '2025.2',
+      errors: [],
+      warnings: [],
+    };
+
     it('should validate project successfully', async () => {
       mockRunCommandInDir.mockResolvedValue({
-        stdout: 'Project validation successful',
+        stdout: JSON.stringify(validOutput),
         stderr: '',
       });
 
@@ -92,38 +101,78 @@ describe('mcp-server/tools/project/ValidateProjectTool', () => {
         '/test/project',
         expect.objectContaining({
           executable: 'hs',
-          args: ['project', 'validate'],
+          args: ['project', 'validate', '--json', 'true'],
         }),
         expect.any(Function)
       );
 
       expect(result).toEqual({
-        content: [{ type: 'text', text: 'Project validation successful' }],
+        content: [{ type: 'text', text: JSON.stringify(validOutput) }],
+        structuredContent: validOutput,
       });
     });
 
-    it('should handle validation with warnings', async () => {
+    it('should return parsed JSON output as structuredContent', async () => {
+      const output = {
+        valid: false,
+        errors: [{ message: 'Missing required field', file: 'app.json' }],
+        warnings: [{ message: 'Deprecated field' }],
+      };
       mockRunCommandInDir.mockResolvedValue({
-        stdout: 'Project is valid',
-        stderr: 'Warning: some files may need updates',
+        stdout: JSON.stringify(output, null, 2),
+        stderr: '',
       });
 
       const result = await tool.handler(input);
 
+      expect(result.structuredContent).toEqual(output);
+      expect(result.isError).toBeUndefined();
+    });
+
+    it('should recover structuredContent from stdout when the command exits non-zero', async () => {
+      const output = {
+        valid: false,
+        errors: [{ message: 'Invalid project' }],
+        warnings: [],
+      };
+      mockRunCommandInDir.mockRejectedValue(
+        Object.assign(new Error('Command failed'), {
+          code: 1,
+          stdout: JSON.stringify(output),
+          stderr: 'Error: project is invalid',
+        })
+      );
+
+      const result = await tool.handler(input);
+
+      expect(result.structuredContent).toEqual(output);
+      expect(result.isError).toBeUndefined();
       expect(result.content).toEqual([
-        { type: 'text', text: 'Project is valid' },
-        { type: 'text', text: 'Warning: some files may need updates' },
+        { type: 'text', text: JSON.stringify(output) },
+        { type: 'text', text: 'Error: project is invalid' },
       ]);
     });
 
-    it('should handle validation errors', async () => {
-      const error = new Error('Validation failed');
-      mockRunCommandInDir.mockRejectedValue(error);
+    it('should mark the response as an error when stdout is not valid schema JSON', async () => {
+      mockRunCommandInDir.mockResolvedValue({
+        stdout: JSON.stringify({ valid: 'not-a-boolean' }),
+        stderr: '',
+      });
+
+      const result = await tool.handler(input);
+
+      expect(result.structuredContent).toBeUndefined();
+      expect(result.isError).toBe(true);
+    });
+
+    it('should handle a rejection with no stdout as an error', async () => {
+      mockRunCommandInDir.mockRejectedValue(new Error('Validation failed'));
 
       const result = await tool.handler(input);
 
       expect(result).toEqual({
         content: [{ type: 'text', text: 'Validation failed' }],
+        isError: true,
       });
     });
 
@@ -134,26 +183,13 @@ describe('mcp-server/tools/project/ValidateProjectTool', () => {
 
       expect(result).toEqual({
         content: [{ type: 'text', text: 'String error' }],
+        isError: true,
       });
-    });
-
-    it('should handle empty stdout and stderr', async () => {
-      mockRunCommandInDir.mockResolvedValue({
-        stdout: 'stdout',
-        stderr: 'stderr',
-      });
-
-      const result = await tool.handler(input);
-
-      expect(result.content).toEqual([
-        { type: 'text', text: 'stdout' },
-        { type: 'text', text: 'stderr' },
-      ]);
     });
 
     it('should work with different project paths', async () => {
       mockRunCommandInDir.mockResolvedValue({
-        stdout: 'Validation complete',
+        stdout: JSON.stringify(validOutput),
         stderr: '',
       });
 
@@ -168,23 +204,10 @@ describe('mcp-server/tools/project/ValidateProjectTool', () => {
         '/different/path/to/project',
         expect.objectContaining({
           executable: 'hs',
-          args: ['project', 'validate'],
+          args: ['project', 'validate', '--json', 'true'],
         }),
         expect.any(Function)
       );
-    });
-
-    it('should handle validation errors with stderr', async () => {
-      mockRunCommandInDir.mockResolvedValue({
-        stdout: '',
-        stderr: 'Error: Missing required configuration file',
-      });
-
-      const result = await tool.handler(input);
-
-      expect(result.content).toEqual([
-        { type: 'text', text: 'Error: Missing required configuration file' },
-      ]);
     });
   });
 });

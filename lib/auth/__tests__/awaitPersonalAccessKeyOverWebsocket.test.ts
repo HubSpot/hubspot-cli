@@ -61,9 +61,9 @@ beforeEach(async () => {
     sendMessage: vi.fn(),
   };
 
-  (CLIWebSocketServer as unknown as Mock).mockImplementation(
-    () => serverInstance
-  );
+  (CLIWebSocketServer as unknown as Mock).mockImplementation(function () {
+    return serverInstance;
+  });
 
   Object.defineProperty(process.stdin, 'isTTY', {
     value: false,

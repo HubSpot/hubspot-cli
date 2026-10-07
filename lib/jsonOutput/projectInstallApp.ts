@@ -1,6 +1,6 @@
 import { z } from 'zod';
 
-export const InstallAppSchema = z.object({
+export const ProjectInstallAppSchema = z.object({
   appId: z.number(),
   appUid: z.string(),
   accountId: z.number(),
@@ -10,4 +10,6 @@ export const InstallAppSchema = z.object({
   reinstalled: z.boolean(),
 });
 
-export type InstallAppJsonOutput = z.infer<typeof InstallAppSchema>;
+export type ProjectInstallAppJsonOutput = z.infer<
+  typeof ProjectInstallAppSchema
+>;

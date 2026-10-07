@@ -33,9 +33,9 @@ describe('CLIWebSocketServer', () => {
       close: vi.fn(),
     } as unknown as Mocked<WebSocketServer>;
 
-    (WebSocketServer as unknown as Mock).mockImplementation(
-      () => mockWebSocketServer
-    );
+    (WebSocketServer as unknown as Mock).mockImplementation(function () {
+      return mockWebSocketServer;
+    });
 
     server = new CLIWebSocketServer({
       instanceId: INSTANCE_ID,
@@ -100,9 +100,9 @@ describe('CLIWebSocketServer', () => {
           close: vi.fn(),
         } as unknown as Mocked<WebSocketServer>;
 
-        (WebSocketServer as unknown as Mock).mockImplementation(
-          () => mockWebSocketServer
-        );
+        (WebSocketServer as unknown as Mock).mockImplementation(function () {
+          return mockWebSocketServer;
+        });
 
         ephemeralServer = new CLIWebSocketServer({
           logPrefix: LOG_PREFIX,

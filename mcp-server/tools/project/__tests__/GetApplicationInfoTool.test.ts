@@ -135,7 +135,7 @@ describe('mcp-server/tools/project/GetApplicationInfoTool', () => {
 
       const result = await tool.handler(input);
 
-      expect(mockedDiscoverAccountTargets).toHaveBeenCalledWith();
+      expect(mockedDiscoverAccountTargets).toHaveBeenCalled();
       expect(mockHttp.get).toHaveBeenCalledWith(123456789, {
         url: 'app/feature/utilization/public/v3/insights/apps',
       });

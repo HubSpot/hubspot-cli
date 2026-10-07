@@ -18,6 +18,8 @@ import { formatTextContents, formatTextContent } from '../../utils/content.js';
 import { setupHubSpotConfig } from '../../utils/config.js';
 import { getErrorMessage } from '../../../lib/errorHandlers/index.js';
 import { PLATFORM_VERSIONS } from '@hubspot/project-parsing-lib/constants';
+import { parseCommandJsonOutput } from '../../utils/json.js';
+import { ProjectCreateSchema } from '../../../lib/jsonOutput/projectCreate.js';
 
 const inputSchema = {
   absoluteCurrentWorkingDirectory,
@@ -76,7 +78,8 @@ export class CreateProjectTool extends Tool<CreateProjectInputSchema> {
   ): Promise<McpToolResponse> {
     setupHubSpotConfig(absoluteCurrentWorkingDirectory);
     const command = new HubSpotCommand('project create', [
-      { name: 'platform-version', value: PLATFORM_VERSIONS.v2026_03 },
+      { name: 'platform-version', value: PLATFORM_VERSIONS.v2026_09 },
+      { name: 'json', value: true },
     ]);
 
     const content: TextContent[] = [];
@@ -120,6 +123,7 @@ export class CreateProjectTool extends Tool<CreateProjectInputSchema> {
     if (content.length > 0) {
       return {
         content,
+        structuredContent: {},
       };
     }
 
@@ -133,13 +137,23 @@ export class CreateProjectTool extends Tool<CreateProjectInputSchema> {
         extra
       );
 
-      return formatTextContents(stdout, stderr);
+      const response = await formatTextContents(stdout, stderr);
+      response.structuredContent =
+        parseCommandJsonOutput(
+          stdout,
+          ProjectCreateSchema,
+          this.logger,
+          toolName
+        ) ?? {};
+      return response;
     } catch (error) {
       this.logger.debug(toolName, {
         message: 'Handler caught error',
-        error: error instanceof Error ? error.message : String(error),
+        error: getErrorMessage(error),
       });
-      return formatTextContents(getErrorMessage(error));
+      const errorResponse = await formatTextContents(getErrorMessage(error));
+      errorResponse.isError = true;
+      return errorResponse;
     }
   }
   register(): RegisteredTool {
@@ -150,6 +164,7 @@ export class CreateProjectTool extends Tool<CreateProjectInputSchema> {
         description:
           'Creates a HubSpot project with the provided name and outputs it in the provided destination',
         inputSchema,
+        outputSchema: ProjectCreateSchema.shape,
         annotations: {
           readOnlyHint: false,
           destructiveHint: false,

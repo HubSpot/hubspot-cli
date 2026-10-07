@@ -4,15 +4,18 @@ import {
 } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { RequestHandlerExtra } from '@modelcontextprotocol/sdk/shared/protocol.js';
 import {
+  ElicitResult,
+  PrimitiveSchemaDefinition,
   ServerNotification,
   ServerRequest,
 } from '@modelcontextprotocol/sdk/types.js';
 import { McpLogger } from './utils/logger.js';
 import { McpToolResponse } from './types.js';
-import { formatTextContents } from './utils/content.js';
+import { formatErrorTextContents } from './utils/content.js';
 import { getErrorMessage } from '../lib/errorHandlers/index.js';
 import { trackToolUsage } from './utils/toolUsageTracking.js';
 import { CommandResults, Command, runCommandInDir } from './utils/command.js';
+import { requestElicitation } from './utils/elicitation.js';
 
 export type ToolExtra = RequestHandlerExtra<ServerRequest, ServerNotification>;
 
@@ -73,6 +76,14 @@ export class Tool<InputSchema> {
     return undefined;
   }
 
+  protected elicit(params: {
+    message: string;
+    fields: Record<string, PrimitiveSchemaDefinition>;
+    required?: string[];
+  }): Promise<ElicitResult | undefined> {
+    return requestElicitation(this.mcpServer, params, this.logger);
+  }
+
   protected wrappedHandler(
     input: InputSchema,
     extra?: ToolExtra
@@ -111,9 +122,7 @@ export class Tool<InputSchema> {
           durationMs: Date.now() - startTime,
         });
 
-        const errorResponse = await formatTextContents(getErrorMessage(error));
-        errorResponse.isError = true;
-        return errorResponse;
+        return formatErrorTextContents(getErrorMessage(error));
       } finally {
         this.logger.flushLogsToFile(this.toolName);
       }

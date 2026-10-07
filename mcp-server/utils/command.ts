@@ -66,6 +66,17 @@ export interface CommandResults {
   stdout: string;
 }
 
+export function getCommandResultsFromError(error: unknown): CommandResults {
+  if (typeof error !== 'object' || error === null) {
+    return { stdout: '', stderr: '' };
+  }
+  const stdout =
+    'stdout' in error && typeof error.stdout === 'string' ? error.stdout : '';
+  const stderr =
+    'stderr' in error && typeof error.stderr === 'string' ? error.stderr : '';
+  return { stdout, stderr };
+}
+
 export async function runCommandInDir(
   directory: string,
   command: Command,

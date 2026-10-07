@@ -23,7 +23,10 @@ import { legacyPersonalAccessKeyPrompt as personalAccessKeyPrompt } from '../pro
 import { cliAccountNamePrompt } from '../prompts/accountNamePrompt.js';
 import { setAsDefaultAccountPrompt } from '../prompts/setAsDefaultAccountPrompt.js';
 import { awaitPersonalAccessKeyOverWebsocket } from '../auth/awaitPersonalAccessKeyOverWebsocket.js';
-import { authenticateNewAccount } from '../accountAuth.js';
+import {
+  authenticateNewAccount,
+  getCurrentDefaultAccount,
+} from '../accountAuth.js';
 import { Mock } from 'vitest';
 
 vi.mock('@hubspot/local-dev-lib/config');
@@ -63,6 +66,32 @@ const mockedAwaitPersonalAccessKeyOverWebsocket =
   awaitPersonalAccessKeyOverWebsocket as Mock;
 
 describe('lib/accountAuth', () => {
+  describe('getCurrentDefaultAccount()', () => {
+    it('returns the default account from the config', () => {
+      const defaultAccount = {
+        name: 'default-account',
+        accountId: 123456,
+      } as PersonalAccessKeyConfigAccount;
+      mockedGetConfigDefaultAccountIfExists.mockReturnValueOnce(defaultAccount);
+
+      expect(getCurrentDefaultAccount()).toBe(defaultAccount);
+    });
+
+    it('returns undefined when there is no default account', () => {
+      mockedGetConfigDefaultAccountIfExists.mockReturnValueOnce(undefined);
+
+      expect(getCurrentDefaultAccount()).toBeUndefined();
+    });
+
+    it('returns undefined when the config cannot be read', () => {
+      mockedGetConfigDefaultAccountIfExists.mockImplementationOnce(() => {
+        throw new Error('Config not found');
+      });
+
+      expect(getCurrentDefaultAccount()).toBeUndefined();
+    });
+  });
+
   describe('authenticateNewAccount()', () => {
     const mockAccessToken: AccessToken = {
       portalId: 123456,

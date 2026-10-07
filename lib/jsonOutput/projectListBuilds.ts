@@ -28,7 +28,7 @@ export const BuildSchema = z.object({
   subbuildStatuses: z.array(BuildSubbuildStatusSchema),
 });
 
-export const ProjectBuildsListSchema = z.object({
+export const ProjectListBuildsSchema = z.object({
   projectName: z.string(),
   deployedBuildId: z.number().optional(),
   results: z.array(BuildSchema),
@@ -45,8 +45,8 @@ export type BuildSubbuildStatusJsonOutput = z.infer<
   typeof BuildSubbuildStatusSchema
 >;
 export type BuildJsonOutput = z.infer<typeof BuildSchema>;
-export type ProjectBuildsListJsonOutput = z.infer<
-  typeof ProjectBuildsListSchema
+export type ProjectListBuildsJsonOutput = z.infer<
+  typeof ProjectListBuildsSchema
 >;
 
 export function mapBuildToJsonOutput(

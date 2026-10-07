@@ -1,4 +1,8 @@
-import { formatTextContents, formatTextContent } from '../content.js';
+import {
+  formatTextContents,
+  formatTextContent,
+  formatErrorTextContents,
+} from '../content.js';
 import { mcpFeedbackRequest } from '../feedbackTracking.js';
 import { MockedFunction } from 'vitest';
 
@@ -233,6 +237,29 @@ describe('mcp-server/utils/content', () => {
 
       expect(result.content).toHaveLength(2);
       expect(result.content[1].text).toBe('Async feedback message');
+    });
+  });
+
+  describe('formatErrorTextContents', () => {
+    it('should format outputs and set isError to true', async () => {
+      mockMcpFeedbackRequest.mockResolvedValue('');
+
+      const result = await formatErrorTextContents('Something went wrong');
+
+      expect(result).toEqual({
+        content: [{ type: 'text', text: 'Something went wrong' }],
+        isError: true,
+      });
+    });
+
+    it('should set isError even when there are no outputs', async () => {
+      const result = await formatErrorTextContents();
+
+      expect(mockMcpFeedbackRequest).not.toHaveBeenCalled();
+      expect(result).toEqual({
+        content: [],
+        isError: true,
+      });
     });
   });
 });

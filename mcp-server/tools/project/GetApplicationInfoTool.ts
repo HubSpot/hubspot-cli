@@ -6,20 +6,22 @@ import {
 } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { McpLogger } from '../../utils/logger.js';
 import { z } from 'zod';
-import { http } from '@hubspot/local-dev-lib/http';
 import { formatTextContents } from '../../utils/content.js';
 import { isHubSpotHttpError } from '@hubspot/local-dev-lib/errors/index';
 import {
   absoluteCurrentWorkingDirectory,
   absoluteProjectPath,
+  account,
 } from './constants.js';
 import { setupHubSpotConfig } from '../../utils/config.js';
-import { discoverAccountTargets } from '../../../lib/accountTargetDiscovery.js';
+import { resolveAccountId } from './resolveAccount.js';
 import { getErrorMessage } from '../../../lib/errorHandlers/index.js';
+import { getApps } from './apps.js';
 
 const inputSchema = {
   absoluteCurrentWorkingDirectory,
   absoluteProjectPath: absoluteProjectPath.optional(),
+  account,
 };
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -31,40 +33,29 @@ export type GetApplicationInfoInputSchema = z.infer<
 
 const toolName: string = 'get-apps-info';
 
-interface ApplicationInfo {
-  appId: number;
-  appName: string;
-}
-
-interface GetApplicationInfoResponse {
-  applications: ApplicationInfo[];
-}
-
 export class GetApplicationInfoTool extends Tool<GetApplicationInfoInputSchema> {
   constructor(mcpServer: McpServer, logger: McpLogger) {
     super(mcpServer, logger, toolName);
   }
 
   async handler({
+    account,
     absoluteCurrentWorkingDirectory,
     absoluteProjectPath,
   }: GetApplicationInfoInputSchema): Promise<McpToolResponse> {
     setupHubSpotConfig(absoluteProjectPath ?? absoluteCurrentWorkingDirectory);
 
     try {
-      const { recommended } = await discoverAccountTargets();
-      const accountId = recommended?.accountId;
-      if (!accountId) {
-        const authErrorMessage = `No account ID found. Call the auth-account tool to authenticate a HubSpot account.`;
-        return formatTextContents(authErrorMessage);
-      }
-
-      const response = await http.get<GetApplicationInfoResponse>(accountId, {
-        url: `app/feature/utilization/public/v3/insights/apps`,
+      const resolved = await resolveAccountId(this.mcpServer, this.logger, {
+        toolName,
+        account,
       });
+      if ('response' in resolved) {
+        return resolved.response;
+      }
+      const { accountId } = resolved;
 
-      // Format the response for display
-      const { data } = response;
+      const data = await getApps(accountId);
       const formattedResult = JSON.stringify(data, null, 2);
       return formatTextContents(formattedResult);
     } catch (error) {

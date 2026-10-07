@@ -19,9 +19,9 @@ import {
 } from '../../types/Yargs.js';
 import { makeWrappedYargsHandler } from '../../lib/yargs/makeWrappedYargsHandler.js';
 import {
-  CreateTestAccountJsonOutput,
-  CreateTestAccountSchema,
-} from '../../lib/jsonOutput/createTestAccount.js';
+  TestAccountCreateJsonOutput,
+  TestAccountCreateSchema,
+} from '../../lib/jsonOutput/testAccountCreate.js';
 import { makeYargsBuilder } from '../../lib/yargsUtils.js';
 import { promptUser, listPrompt } from '../../lib/prompts/promptUtils.js';
 import { EXIT_CODES } from '../../lib/enums/exitCodes.js';
@@ -46,7 +46,7 @@ type CreateTestAccountArgs = CommonArgs &
   ConfigArgs &
   TestingArgs &
   EnvironmentArgs &
-  JSONOutputArgs<CreateTestAccountJsonOutput> & {
+  JSONOutputArgs<TestAccountCreateJsonOutput> & {
     configPath?: string;
     name?: string;
     description?: string;
@@ -373,7 +373,7 @@ const createTestAccountCommand: YargsCommandModule<
   command,
   describe,
   handler: makeWrappedYargsHandler('test-account-create', handler, {
-    jsonOutputSchema: CreateTestAccountSchema,
+    jsonOutputSchema: TestAccountCreateSchema,
   }),
   builder,
 };

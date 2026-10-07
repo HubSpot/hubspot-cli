@@ -23,15 +23,15 @@ describe('lib/ui/index deprecation helpers', () => {
   });
 
   describe('uiCommandRenamedDescription', () => {
-    it('tags the describe and references the replacement command', () => {
+    it('should not include ANSI escape codes so yargs can wrap the describe safely', () => {
       const result = uiCommandRenamedDescription(
         'Original describe.',
         'hs project dev'
       );
 
-      expect(result).toContain('[DEPRECATED]');
-      expect(result).toContain('Original describe.');
-      expect(result).toContain('hs project dev');
+      expect(result).toBe(
+        '[DEPRECATED] Original describe. This command has been deprecated. Please use `hs project dev` instead.'
+      );
     });
   });
 

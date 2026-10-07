@@ -23,10 +23,10 @@ import { mapToUserFacingType } from '@hubspot/project-parsing-lib/transform';
 import { AUTO_GENERATED_COMPONENT_TYPES } from '@hubspot/project-parsing-lib/constants';
 
 import {
-  ReleaseJsonOutput,
-  ReleaseSchema,
+  ProjectReleaseJsonOutput,
+  ProjectReleaseSchema,
   mapReleaseToJsonOutput,
-} from '../../../lib/jsonOutput/release.js';
+} from '../../../lib/jsonOutput/projectRelease.js';
 
 const command = 'info';
 // const describe = commands.project.release.info.describe;
@@ -38,7 +38,7 @@ export type ProjectReleaseInfoArgs = CommonArgs &
   ConfigArgs &
   AccountArgs &
   EnvironmentArgs &
-  JSONOutputArgs<ReleaseJsonOutput> & {
+  JSONOutputArgs<ProjectReleaseJsonOutput> & {
     tag?: string;
   };
 
@@ -227,7 +227,7 @@ const projectReleaseInfoCommand: YargsCommandModule<
   describe,
   builder,
   handler: makeWrappedYargsHandler('project-release-info', handler, {
-    jsonOutputSchema: ReleaseSchema,
+    jsonOutputSchema: ProjectReleaseSchema,
   }),
 };
 

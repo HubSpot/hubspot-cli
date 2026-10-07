@@ -179,11 +179,15 @@ describe('unifiedProjectDevFlow', () => {
       project: mockProject,
     });
     (SpinniesManager.init as Mock).mockImplementation(() => {});
-    (LocalDevProcess as Mock).mockImplementation(() => mockLocalDevProcess);
-    (LocalDevWatcher as Mock).mockImplementation(() => mockLocalDevWatcher);
-    (LocalDevWebsocketServer as Mock).mockImplementation(
-      () => mockWebsocketServer
-    );
+    (LocalDevProcess as Mock).mockImplementation(function () {
+      return mockLocalDevProcess;
+    });
+    (LocalDevWatcher as Mock).mockImplementation(function () {
+      return mockLocalDevWatcher;
+    });
+    (LocalDevWebsocketServer as Mock).mockImplementation(function () {
+      return mockWebsocketServer;
+    });
     (handleKeypress as Mock).mockImplementation(() => {});
     (handleExit as Mock).mockImplementation(() => {});
     (uiLogger.debug as Mock).mockImplementation(() => {});

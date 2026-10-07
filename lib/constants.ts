@@ -10,9 +10,27 @@ export const FEEDBACK_INTERVAL = 10 as const;
 export const HUBSPOT_FOLDER = '@hubspot' as const;
 export const MARKETPLACE_FOLDER = '@marketplace' as const;
 
+export const ONE_DAY_IN_MILLISECONDS = 24 * 60 * 60 * 1000;
+
+// The previous major CLI version, per the CLI Version Support &
+// Deprecation Policy. Only 1 previous major version is supported at a time.
+export const CLI_DEPRECATED_MAJOR_VERSION = 7;
+
+// The date CLI_DEPRECATED_MAJOR_VERSION enters its Deprecation Phase
+export const CLI_DEPRECATED_MAJOR_VERSION_DEPRECATION_DATE = '2026-09-02';
+
+// The date CLI_DEPRECATED_MAJOR_VERSION reaches end of life
+export const CLI_DEPRECATED_MAJOR_VERSION_EOL_DATE = '2027-03-01';
+
+export const CLI_SUPPORT_GUIDELINES_URL =
+  'https://developers.hubspot.com/docs/developer-tooling/local-development/hubspot-cli/version-support' as const;
+
 export const DEFAULT_POLLING_DELAY = 2000;
 
 export const PREVIEW_POLL_TIMEOUT = 5 * 60 * 1000;
+
+// MCP forms wait on a person, so they need longer than the SDK default of 60s.
+export const MCP_ELICITATION_TIMEOUT = 5 * 60 * 1000;
 
 export const PROJECT_CONFIG_FILE = 'hsproject.json' as const;
 

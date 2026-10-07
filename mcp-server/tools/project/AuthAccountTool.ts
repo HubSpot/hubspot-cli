@@ -9,8 +9,12 @@ import { McpToolResponse } from '../../types.js';
 import { formatTextContents } from '../../utils/content.js';
 import { HubSpotCommand } from '../../utils/command.js';
 import { setupHubSpotConfig } from '../../utils/config.js';
+import { parseCommandJsonOutput } from '../../utils/json.js';
+import { booleanField } from '../../utils/elicitation.js';
 import { absoluteCurrentWorkingDirectory } from './constants.js';
 import { getErrorMessage } from '../../../lib/errorHandlers/index.js';
+import { getCurrentDefaultAccount } from '../../../lib/accountAuth.js';
+import { AccountAuthSchema } from '../../../lib/jsonOutput/accountAuth.js';
 
 const inputSchema = {
   absoluteCurrentWorkingDirectory,
@@ -28,7 +32,7 @@ const inputSchema = {
     .boolean()
     .optional()
     .describe(
-      'Set this account as the default for CLI operations. Defaults to true when not specified.'
+      'Optional: set this account as the default for CLI operations. Omit unless the user stated a preference. If omitted and another account is already the default, the user is asked whether to replace it.'
     ),
 };
 
@@ -55,7 +59,9 @@ export class AuthAccountTool extends Tool<AuthAccountInputSchema> {
   ): Promise<McpToolResponse> {
     setupHubSpotConfig(absoluteCurrentWorkingDirectory);
 
-    const command = new HubSpotCommand('account auth');
+    const command = new HubSpotCommand('account auth', [
+      { name: 'json', value: true },
+    ]);
 
     if (name) {
       command.addFlag('name', name);
@@ -67,7 +73,10 @@ export class AuthAccountTool extends Tool<AuthAccountInputSchema> {
       command.addFlag('account', accountId);
     }
 
-    command.addFlag('default', setAsDefault === false ? 'false' : 'true');
+    const resolvedSetAsDefault =
+      setAsDefault ?? (await this.resolveSetAsDefault(accountId));
+
+    command.addFlag('default', resolvedSetAsDefault ? 'true' : 'false');
 
     try {
       const { stdout, stderr } = await this.runCommand(
@@ -75,7 +84,20 @@ export class AuthAccountTool extends Tool<AuthAccountInputSchema> {
         command,
         extra
       );
-      return formatTextContents(stdout, stderr);
+
+      const structuredContent = parseCommandJsonOutput(
+        stdout,
+        AccountAuthSchema,
+        this.logger,
+        toolName
+      );
+
+      const response = await formatTextContents(stdout, stderr);
+      if (structuredContent) {
+        response.structuredContent = structuredContent;
+      }
+
+      return response;
     } catch (error) {
       this.logger.debug(toolName, {
         message: 'Handler caught error running hs account auth',
@@ -83,6 +105,35 @@ export class AuthAccountTool extends Tool<AuthAccountInputSchema> {
       });
       return formatTextContents(getErrorMessage(error));
     }
+  }
+
+  private async resolveSetAsDefault(accountId?: number): Promise<boolean> {
+    const currentDefault = getCurrentDefaultAccount();
+
+    if (!currentDefault || currentDefault.accountId === accountId) {
+      return true;
+    }
+
+    const elicitation = await this.elicit({
+      message: `${currentDefault.name} is the default HubSpot account. Set the account you authenticate now as the new default?`,
+      fields: {
+        setAsDefault: booleanField(
+          'Set as default account',
+          `Other CLI commands will use the new account instead of ${currentDefault.name}.`,
+          true
+        ),
+      },
+      required: ['setAsDefault'],
+    });
+
+    if (!elicitation) {
+      return true;
+    }
+
+    return (
+      elicitation.action === 'accept' &&
+      elicitation.content?.setAsDefault === true
+    );
   }
 
   register(): RegisteredTool {
@@ -101,8 +152,9 @@ export class AuthAccountTool extends Tool<AuthAccountInputSchema> {
           '2. The user clicks "Connect to CLI" in the browser\n' +
           '3. Auth completes automatically via WebSocket\n' +
           '4. Retry any operation that was blocked by missing auth\n\n' +
-          'setAsDefault defaults to true. Pass setAsDefault: false to keep an existing default account.',
+          'If another account is already the default and setAsDefault is omitted, the tool asks the user whether to replace it. If the client cannot ask the user, the new account becomes the default.',
         inputSchema,
+        outputSchema: AccountAuthSchema.shape,
         annotations: {
           readOnlyHint: false,
           destructiveHint: false,

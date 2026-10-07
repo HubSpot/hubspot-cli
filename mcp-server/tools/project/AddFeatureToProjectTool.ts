@@ -18,7 +18,8 @@ import {
 } from './constants.js';
 import { formatTextContents, formatTextContent } from '../../utils/content.js';
 import { setupHubSpotConfig } from '../../utils/config.js';
-import { getErrorMessage } from '../../../lib/errorHandlers/index.js';
+import { parseCommandJsonOutput } from '../../utils/json.js';
+import { ProjectAddSchema } from '../../../lib/jsonOutput/projectAdd.js';
 
 const inputSchema = {
   absoluteProjectPath,
@@ -68,54 +69,55 @@ export class AddFeatureToProjectTool extends Tool<AddFeatureInputSchema> {
     extra?: ToolExtra
   ): Promise<McpToolResponse> {
     setupHubSpotConfig(absoluteCurrentWorkingDirectory);
-    try {
-      const command = new HubSpotCommand('project add');
 
-      const content: TextContent[] = [];
+    const command = new HubSpotCommand('project add', [
+      { name: 'json', value: true },
+    ]);
 
-      if (distribution) {
-        command.addFlag('distribution', distribution);
-      } else if (addApp) {
-        content.push(
-          formatTextContent(
-            `Ask the user how they would you like to distribute the app. Options are ${APP_DISTRIBUTION_TYPES.MARKETPLACE} and ${APP_DISTRIBUTION_TYPES.PRIVATE}`
-          )
-        );
-      }
+    const content: TextContent[] = [];
 
-      if (auth) {
-        command.addFlag('auth', auth);
-      } else if (addApp) {
-        content.push(
-          formatTextContent(
-            `Ask the user which auth type they would like to use. Options are ${APP_AUTH_TYPES.STATIC} and ${APP_AUTH_TYPES.OAUTH}`
-          )
-        );
-      }
-
-      if (content.length > 0) {
-        return {
-          content,
-        };
-      }
-
-      // If features isn't provided, pass an empty array to bypass the prompt
-      command.addFlag('features', features || []);
-
-      const { stdout, stderr } = await this.runCommand(
-        absoluteProjectPath,
-        command,
-        extra
+    if (distribution) {
+      command.addFlag('distribution', distribution);
+    } else if (addApp) {
+      content.push(
+        formatTextContent(
+          `Ask the user how they would you like to distribute the app. Options are ${APP_DISTRIBUTION_TYPES.MARKETPLACE} and ${APP_DISTRIBUTION_TYPES.PRIVATE}`
+        )
       );
-
-      return formatTextContents(stdout, stderr);
-    } catch (error) {
-      this.logger.debug(toolName, {
-        message: 'Handler caught error',
-        error: error instanceof Error ? error.message : String(error),
-      });
-      return formatTextContents(getErrorMessage(error));
     }
+
+    if (auth) {
+      command.addFlag('auth', auth);
+    } else if (addApp) {
+      content.push(
+        formatTextContent(
+          `Ask the user which auth type they would like to use. Options are ${APP_AUTH_TYPES.STATIC} and ${APP_AUTH_TYPES.OAUTH}`
+        )
+      );
+    }
+
+    if (content.length > 0) {
+      return {
+        content,
+        structuredContent: {},
+      };
+    }
+
+    // If features isn't provided, pass an empty array to bypass the prompt
+    command.addFlag('features', features || []);
+
+    const { stdout, stderr } = await this.runCommand(
+      absoluteProjectPath,
+      command,
+      extra
+    );
+
+    const response = await formatTextContents(stdout, stderr);
+    response.structuredContent =
+      parseCommandJsonOutput(stdout, ProjectAddSchema, this.logger, toolName) ??
+      {};
+
+    return response;
   }
 
   register(): RegisteredTool {
@@ -126,6 +128,7 @@ export class AddFeatureToProjectTool extends Tool<AddFeatureInputSchema> {
         description: `Adds a feature to an existing HubSpot project.
           Only works for projects with platformVersion '2025.2' and beyond. If you do not know the project path, use the find-projects tool first to locate HubSpot projects in the workspace.`,
         inputSchema,
+        outputSchema: ProjectAddSchema.shape,
         annotations: {
           readOnlyHint: false,
           destructiveHint: false,
