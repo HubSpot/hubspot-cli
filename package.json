@@ -12,7 +12,7 @@
   "dependencies": {
     "@hubspot/local-dev-lib": "5.12.0",
     "@hubspot/project-parsing-lib": "0.23.4",
-    "@hubspot/ui-extensions-dev-server": "2.2.2",
+    "@hubspot/ui-extensions-dev-server": "2.2.3",
     "@inquirer/prompts": "7.10.1",
     "@modelcontextprotocol/sdk": "1.30.0",
     "archiver": "7.0.1",
