@@ -140,6 +140,14 @@ async function handleConfigMigration(): Promise<boolean> {
   }
 }
 
+export function getCurrentDefaultAccount(): HubSpotConfigAccount | undefined {
+  try {
+    return getConfigDefaultAccountIfExists();
+  } catch {
+    return undefined;
+  }
+}
+
 type AuthenticateNewAccountOptions = {
   env: Environment;
   providedPersonalAccessKey?: string;

@@ -12,7 +12,7 @@ import { migrateApp, MigrateAppArgs } from '../../lib/app/migrate.js';
 import { getIsInProject } from '../../lib/projects/config.js';
 import { makeYargsBuilder } from '../../lib/yargsUtils.js';
 
-const { v2025_2, v2026_03_BETA, v2026_03 } = PLATFORM_VERSIONS;
+const { v2025_2, v2026_03_BETA, v2026_03, v2026_09 } = PLATFORM_VERSIONS;
 
 const command = 'migrate';
 const describe = commands.project.migrateApp.describe;
@@ -94,7 +94,7 @@ function appMigrateBuilder(yargs: Argv): Argv<MigrateAppArgs> {
     },
     'platform-version': {
       type: 'string',
-      choices: [v2025_2, v2026_03_BETA, v2026_03],
+      choices: [v2025_2, v2026_03_BETA, v2026_03, v2026_09],
       default: v2026_03,
     },
     unstable: {
@@ -114,7 +114,7 @@ function appMigrateBuilder(yargs: Argv): Argv<MigrateAppArgs> {
 const builder = makeYargsBuilder<MigrateAppArgs>(
   appMigrateBuilder,
   command,
-  commands.project.migrateApp.describe,
+  commands.project.migrateApp.verboseDescribe,
   {
     useGlobalOptions: true,
     useConfigOptions: true,

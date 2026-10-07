@@ -79,13 +79,14 @@ describe('lib/projects/add/legacyAddComponent', () => {
       mockedProjectAddPrompt.mockResolvedValue(mockPromptResponse);
       mockedCloneGithubRepo.mockResolvedValue(true);
 
-      await legacyAddComponent(
+      const result = await legacyAddComponent(
         mockArgs,
         projectDir,
         mockProjectConfig,
         accountId
       );
 
+      expect(result).toEqual({ addedFeatures: ['module'] });
       expect(mockedFindProjectComponents).toHaveBeenCalledWith(projectDir);
       expect(mockedGetProjectComponentListFromRepo).toHaveBeenCalledWith('v1');
       expect(mockedProjectAddPrompt).toHaveBeenCalledWith(

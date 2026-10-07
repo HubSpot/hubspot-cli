@@ -7,6 +7,7 @@ import {
 import { McpLogger } from '../../utils/logger.js';
 import { formatTextContents, formatTextContent } from '../../utils/content.js';
 import { HubSpotCommand } from '../../utils/command.js';
+import { parseCommandJsonOutput } from '../../utils/json.js';
 import {
   ACCOUNT_LEVELS,
   ACCOUNT_LEVEL_CHOICES,
@@ -18,6 +19,7 @@ import { DeveloperTestAccountConfig } from '@hubspot/local-dev-lib/types/develop
 import { getConfigAccountByName } from '@hubspot/local-dev-lib/config';
 import { setupHubSpotConfig } from '../../utils/config.js';
 import { getErrorMessage } from '../../../lib/errorHandlers/index.js';
+import { TestAccountCreateSchema } from '../../../lib/jsonOutput/testAccountCreate.js';
 
 const ACCOUNT_LEVEL_CHOICES_WITHOUT_STARTER = [
   ACCOUNT_LEVELS.FREE,
@@ -121,7 +123,9 @@ export class CreateTestAccountTool extends Tool<CreateTestAccountInputSchema> {
   ): Promise<McpToolResponse> {
     setupHubSpotConfig(absoluteCurrentWorkingDirectory);
 
-    const command = new HubSpotCommand('test-account create');
+    const command = new HubSpotCommand('test-account create', [
+      { name: 'json', value: true },
+    ]);
 
     const content: TextContent[] = [];
 
@@ -142,6 +146,7 @@ export class CreateTestAccountTool extends Tool<CreateTestAccountInputSchema> {
               `Failed to read or parse config file at "${configPath}": ${getErrorMessage(error)}. Please ensure the file exists and contains valid JSON.`
             ),
           ],
+          structuredContent: {},
         };
       }
 
@@ -200,33 +205,26 @@ export class CreateTestAccountTool extends Tool<CreateTestAccountInputSchema> {
     if (content.length > 0) {
       return {
         content,
+        structuredContent: {},
       };
     }
 
-    // No flags or config - command will prompt user interactively
+    const { stdout, stderr } = await this.runCommand(
+      absoluteCurrentWorkingDirectory,
+      command,
+      extra
+    );
 
-    try {
-      const { stdout, stderr } = await this.runCommand(
-        absoluteCurrentWorkingDirectory,
-        command,
-        extra
-      );
-
-      return formatTextContents(
-        absoluteCurrentWorkingDirectory,
+    const response = await formatTextContents(stdout, stderr);
+    response.structuredContent =
+      parseCommandJsonOutput(
         stdout,
-        stderr
-      );
-    } catch (error) {
-      this.logger.debug(toolName, {
-        message: 'Handler caught error',
-        error: error instanceof Error ? error.message : String(error),
-      });
-      return formatTextContents(
-        absoluteCurrentWorkingDirectory,
-        getErrorMessage(error)
-      );
-    }
+        TestAccountCreateSchema,
+        this.logger,
+        toolName
+      ) ?? {};
+
+    return response;
   }
 
   register(): RegisteredTool {
@@ -253,6 +251,7 @@ export class CreateTestAccountTool extends Tool<CreateTestAccountInputSchema> {
           'Available Hub Tier Levels: FREE, STARTER, PROFESSIONAL, ENTERPRISE\n' +
           'Available Hubs: Marketing (marketingLevel), Sales (salesLevel), Service (serviceLevel), Operations (opsLevel), CMS (contentLevel), Commerce (commerceLevel)',
         inputSchema,
+        outputSchema: TestAccountCreateSchema.shape,
         annotations: {
           readOnlyHint: false,
           destructiveHint: false,

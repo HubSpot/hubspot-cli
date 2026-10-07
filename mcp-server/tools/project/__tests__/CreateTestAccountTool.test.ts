@@ -36,6 +36,12 @@ const mockReadFileSync = fs.readFileSync as MockedFunction<
 >;
 const mockGetConfigAccountByName = vi.spyOn(config, 'getConfigAccountByName');
 
+const validOutput = {
+  accountName: 'MyTestAccount',
+  accountId: 12345678,
+  personalAccessKey: 'pak-test-key',
+};
+
 describe('mcp-server/tools/project/CreateTestAccountTool', () => {
   let mockMcpServer: Mocked<McpServer>;
   let mockLogger: Mocked<McpLogger>;
@@ -87,6 +93,7 @@ describe('mcp-server/tools/project/CreateTestAccountTool', () => {
             'Creates a HubSpot developer test account'
           ),
           inputSchema: expect.any(Object),
+          outputSchema: expect.any(Object),
         }),
         expect.any(Function)
       );
@@ -110,7 +117,7 @@ describe('mcp-server/tools/project/CreateTestAccountTool', () => {
 
       it('should create test account with config path', async () => {
         mockRunCommandInDir.mockResolvedValue({
-          stdout: 'Test account created successfully\nAccount ID: 12345678',
+          stdout: JSON.stringify(validOutput),
           stderr: '',
         });
 
@@ -125,25 +132,22 @@ describe('mcp-server/tools/project/CreateTestAccountTool', () => {
               'create',
               '--config-path',
               './test-account.json',
+              '--json',
+              'true',
             ]),
           }),
           expect.any(Function)
         );
 
         expect(result).toEqual({
-          content: [
-            { type: 'text', text: '/test/workspace' },
-            {
-              type: 'text',
-              text: 'Test account created successfully\nAccount ID: 12345678',
-            },
-          ],
+          content: [{ type: 'text', text: JSON.stringify(validOutput) }],
+          structuredContent: validOutput,
         });
       });
 
       it('should handle absolute config path', async () => {
         mockRunCommandInDir.mockResolvedValue({
-          stdout: 'Account created',
+          stdout: JSON.stringify(validOutput),
           stderr: '',
         });
 
@@ -178,7 +182,7 @@ describe('mcp-server/tools/project/CreateTestAccountTool', () => {
 
       it('should prioritize config path over flags', async () => {
         mockRunCommandInDir.mockResolvedValue({
-          stdout: 'Account created',
+          stdout: JSON.stringify(validOutput),
           stderr: '',
         });
 
@@ -238,6 +242,7 @@ describe('mcp-server/tools/project/CreateTestAccountTool', () => {
               ),
             },
           ],
+          structuredContent: {},
         });
         expect(result.content[0]).toHaveProperty(
           'text',
@@ -267,6 +272,7 @@ describe('mcp-server/tools/project/CreateTestAccountTool', () => {
               ),
             },
           ],
+          structuredContent: {},
         });
       });
     });
@@ -274,7 +280,7 @@ describe('mcp-server/tools/project/CreateTestAccountTool', () => {
     describe('flag-based approach', () => {
       it('should create test account with name and all defaults', async () => {
         mockRunCommandInDir.mockResolvedValue({
-          stdout: 'Test account created successfully',
+          stdout: JSON.stringify(validOutput),
           stderr: '',
         });
 
@@ -309,7 +315,7 @@ describe('mcp-server/tools/project/CreateTestAccountTool', () => {
 
       it('should add all flags with defaults when only name is provided', async () => {
         mockRunCommandInDir.mockResolvedValue({
-          stdout: 'Test account created successfully',
+          stdout: JSON.stringify(validOutput),
           stderr: '',
         });
 
@@ -351,7 +357,7 @@ describe('mcp-server/tools/project/CreateTestAccountTool', () => {
 
       it('should create test account with account name and description', async () => {
         mockRunCommandInDir.mockResolvedValue({
-          stdout: 'Test account created',
+          stdout: JSON.stringify(validOutput),
           stderr: '',
         });
 
@@ -386,7 +392,7 @@ describe('mcp-server/tools/project/CreateTestAccountTool', () => {
 
       it('should create test account with specific hub levels', async () => {
         mockRunCommandInDir.mockResolvedValue({
-          stdout: 'Test account created',
+          stdout: JSON.stringify(validOutput),
           stderr: '',
         });
 
@@ -425,7 +431,7 @@ describe('mcp-server/tools/project/CreateTestAccountTool', () => {
 
       it('should create test account with all hub levels specified', async () => {
         mockRunCommandInDir.mockResolvedValue({
-          stdout: 'Test account created',
+          stdout: JSON.stringify(validOutput),
           stderr: '',
         });
 
@@ -474,7 +480,7 @@ describe('mcp-server/tools/project/CreateTestAccountTool', () => {
     describe('handler defaults', () => {
       it('should use ENTERPRISE defaults for all hub levels when not specified', async () => {
         mockRunCommandInDir.mockResolvedValue({
-          stdout: 'Test account created',
+          stdout: JSON.stringify(validOutput),
           stderr: '',
         });
 
@@ -519,7 +525,7 @@ describe('mcp-server/tools/project/CreateTestAccountTool', () => {
 
       it('should use name as fallback for description when description is empty', async () => {
         mockRunCommandInDir.mockResolvedValue({
-          stdout: 'Test account created',
+          stdout: JSON.stringify(validOutput),
           stderr: '',
         });
 
@@ -553,7 +559,7 @@ describe('mcp-server/tools/project/CreateTestAccountTool', () => {
 
       it('should add all hub level flags when defaults are applied', async () => {
         mockRunCommandInDir.mockResolvedValue({
-          stdout: 'Test account created with defaults',
+          stdout: JSON.stringify(validOutput),
           stderr: '',
         });
 
@@ -572,15 +578,16 @@ describe('mcp-server/tools/project/CreateTestAccountTool', () => {
         const result = await tool.handler(input);
 
         expect(mockRunCommandInDir).toHaveBeenCalled();
-        expect(result.content[1]).toEqual({
+        expect(result.structuredContent).toEqual(validOutput);
+        expect(result.content[0]).toEqual({
           type: 'text',
-          text: 'Test account created with defaults',
+          text: JSON.stringify(validOutput),
         });
       });
 
       it('should use ENTERPRISE defaults when values are undefined', async () => {
         mockRunCommandInDir.mockResolvedValue({
-          stdout: 'Test account created',
+          stdout: JSON.stringify(validOutput),
           stderr: '',
         });
 
@@ -643,14 +650,65 @@ describe('mcp-server/tools/project/CreateTestAccountTool', () => {
               text: 'Ask the user for the account config JSON path or the name of the test account to create.',
             },
           ],
+          structuredContent: {},
         });
+      });
+    });
+
+    describe('JSON output', () => {
+      const jsonInput: CreateTestAccountInputSchema = {
+        absoluteCurrentWorkingDirectory: '/test/workspace',
+        name: 'MyTestAccount',
+        description: 'Test account',
+        marketingLevel: 'ENTERPRISE',
+        opsLevel: 'ENTERPRISE',
+        serviceLevel: 'ENTERPRISE',
+        salesLevel: 'ENTERPRISE',
+        contentLevel: 'ENTERPRISE',
+        commerceLevel: 'ENTERPRISE',
+      };
+
+      it('should request JSON output from the command', async () => {
+        mockRunCommandInDir.mockResolvedValue({
+          stdout: JSON.stringify(validOutput),
+          stderr: '',
+        });
+
+        await tool.handler(jsonInput);
+
+        const callArgs = mockRunCommandInDir.mock.calls[0][1];
+        expect(callArgs.args).toContain('--json');
+      });
+
+      it('should return parsed JSON output as structuredContent', async () => {
+        mockRunCommandInDir.mockResolvedValue({
+          stdout: JSON.stringify(validOutput, null, 2),
+          stderr: '',
+        });
+
+        const result = await tool.handler(jsonInput);
+
+        expect(result.structuredContent).toEqual(validOutput);
+        expect(result.isError).toBeUndefined();
+      });
+
+      it('should fall back to empty structuredContent when output is not valid schema JSON', async () => {
+        mockRunCommandInDir.mockResolvedValue({
+          stdout: JSON.stringify({ accountId: 'not-a-number' }),
+          stderr: '',
+        });
+
+        const result = await tool.handler(jsonInput);
+
+        expect(result.structuredContent).toEqual({});
+        expect(result.isError).toBeUndefined();
       });
     });
 
     describe('error handling', () => {
       it('should handle command output with stderr warnings', async () => {
         mockRunCommandInDir.mockResolvedValue({
-          stdout: 'Test account created successfully',
+          stdout: JSON.stringify(validOutput),
           stderr: 'Warning: Some non-critical warning message',
         });
 
@@ -670,13 +728,13 @@ describe('mcp-server/tools/project/CreateTestAccountTool', () => {
 
         expect(result).toEqual({
           content: [
-            { type: 'text', text: '/test/workspace' },
-            { type: 'text', text: 'Test account created successfully' },
+            { type: 'text', text: JSON.stringify(validOutput) },
             {
               type: 'text',
               text: 'Warning: Some non-critical warning message',
             },
           ],
+          structuredContent: validOutput,
         });
       });
 
@@ -696,14 +754,9 @@ describe('mcp-server/tools/project/CreateTestAccountTool', () => {
           commerceLevel: 'ENTERPRISE',
         };
 
-        const result = await tool.handler(input);
-
-        expect(result).toEqual({
-          content: [
-            { type: 'text', text: '/test/workspace' },
-            { type: 'text', text: 'Failed to create test account' },
-          ],
-        });
+        await expect(tool.handler(input)).rejects.toThrow(
+          'Failed to create test account'
+        );
       });
     });
   });

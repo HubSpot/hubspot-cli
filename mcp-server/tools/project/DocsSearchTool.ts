@@ -10,11 +10,12 @@ import { Tool } from '../../Tool.js';
 import { formatTextContents } from '../../utils/content.js';
 import {
   absoluteCurrentWorkingDirectory,
+  account,
   docsSearchQuery,
 } from './constants.js';
 import { isHubSpotHttpError } from '@hubspot/local-dev-lib/errors/index';
 import { setupHubSpotConfig } from '../../utils/config.js';
-import { discoverAccountTargets } from '../../../lib/accountTargetDiscovery.js';
+import { resolveAccountId } from './resolveAccount.js';
 import { getErrorMessage } from '../../../lib/errorHandlers/index.js';
 
 const docsSearchLimit = z
@@ -25,10 +26,19 @@ const docsSearchLimit = z
   .default(5)
   .describe('Maximum number of results to return.');
 
+const docsSearchVersion = z
+  .string()
+  .default('latest')
+  .describe(
+    'API documentation version to search. Defaults to "latest" for current docs, which is almost always what you want. Only override when the user explicitly asks about a specific or legacy version, using a date-based version like "2026-03" or "legacy". Versionless docs such as guides and CMS pages are always included regardless of this value.'
+  );
+
 const inputSchema = {
   absoluteCurrentWorkingDirectory,
+  account,
   docsSearchQuery,
   docsSearchLimit,
+  docsSearchVersion,
 };
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -43,6 +53,7 @@ export interface DocsSearchResponse {
     description: string;
     url: string;
     score: number;
+    version?: string;
   }[];
 }
 type InputSchemaType = z.infer<typeof inputSchemaZodObject>;
@@ -63,22 +74,27 @@ export class DocsSearchTool extends Tool<InputSchemaType> {
   async handler({
     docsSearchQuery,
     docsSearchLimit,
+    docsSearchVersion,
+    account,
     absoluteCurrentWorkingDirectory,
   }: InputSchemaType): Promise<McpToolResponse> {
     setupHubSpotConfig(absoluteCurrentWorkingDirectory);
 
     try {
-      const { recommended } = await discoverAccountTargets();
-      const accountId = recommended?.accountId;
-      if (!accountId) {
-        const authErrorMessage = `No account ID found. Call the auth-account tool to authenticate a HubSpot account.`;
-        return formatTextContents(authErrorMessage);
+      const resolved = await resolveAccountId(this.mcpServer, this.logger, {
+        toolName,
+        account,
+      });
+      if ('response' in resolved) {
+        return resolved.response;
       }
+      const { accountId } = resolved;
 
       const response = await http.post<DocsSearchResponse>(accountId, {
         url: 'dev/docs/llms/v1/docs-search',
         data: {
           query: docsSearchQuery,
+          version: docsSearchVersion,
         },
       });
 
@@ -129,7 +145,7 @@ export class DocsSearchTool extends Tool<InputSchemaType> {
       {
         title: 'Search HubSpot Developer Documentation',
         description:
-          'Use this first whenever you need details about HubSpot APIs, SDKs, integrations, or developer platform features. This searches the official HubSpot Developer Documentation and returns the most relevant pages, each with a URL for use in `fetch-doc`. Always follow this with a fetch to get the full, authoritative content before making plans or writing answers.',
+          'Use this first for any HubSpot developer question, including whether an API or feature is available on a subscription tier or plan (for example "is the content audit API available on Content Hub Professional"). The doc you fetch next states the required product and tier; report it in plain terms (for example "requires Content Hub Enterprise") rather than quoting raw spec fields. This searches the official HubSpot Developer Documentation and returns the most relevant pages, each with a URL for use in `fetch-doc`. Always follow this with a fetch to get the full, authoritative content before making plans or writing answers.',
         inputSchema,
         annotations: {
           readOnlyHint: true,

@@ -5,12 +5,16 @@ import {
 } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { McpLogger } from '../../../utils/logger.js';
 import { MockedFunction, Mocked } from 'vitest';
+import { getCurrentDefaultAccount } from '../../../../lib/accountAuth.js';
+import { HubSpotConfigAccount } from '@hubspot/local-dev-lib/types/Accounts';
 import { mcpFeedbackRequest } from '../../../utils/feedbackTracking.js';
 import { runCommandInDir, HubSpotCommand } from '../../../utils/command.js';
 import * as configUtils from '../../../utils/config.js';
 import * as toolUsageTracking from '../../../utils/toolUsageTracking.js';
+import { MCP_ELICITATION_TIMEOUT } from '../../../../lib/constants.js';
 
 vi.mock('@modelcontextprotocol/sdk/server/mcp.js');
+vi.mock('../../../../lib/accountAuth.js');
 vi.mock('../../../utils/logger.js');
 vi.mock('../../../utils/feedbackTracking');
 vi.mock('../../../utils/config');
@@ -28,6 +32,7 @@ const mockMcpFeedbackRequest = mcpFeedbackRequest as MockedFunction<
 const mockRunCommandInDir = runCommandInDir as MockedFunction<
   typeof runCommandInDir
 >;
+const mockGetCurrentDefaultAccount = vi.mocked(getCurrentDefaultAccount);
 const mockSetupHubSpotConfig = vi.spyOn(configUtils, 'setupHubSpotConfig');
 const mockTrackToolUsage = vi.spyOn(toolUsageTracking, 'trackToolUsage');
 
@@ -42,10 +47,13 @@ describe('mcp-server/tools/project/AuthAccountTool', () => {
   let mockRegisteredTool: RegisteredTool;
 
   beforeEach(() => {
-    // @ts-expect-error Not mocking the whole server
     mockMcpServer = {
       registerTool: vi.fn(),
-    };
+      server: {
+        getClientCapabilities: vi.fn(),
+        elicitInput: vi.fn(),
+      },
+    } as unknown as Mocked<McpServer>;
 
     // @ts-expect-error Not mocking the whole thing
     mockLogger = {
@@ -64,6 +72,7 @@ describe('mcp-server/tools/project/AuthAccountTool', () => {
       stderr: '',
     });
     mockTrackToolUsage.mockResolvedValue(undefined);
+    mockGetCurrentDefaultAccount.mockReturnValue(undefined);
 
     tool = new AuthAccountTool(mockMcpServer, mockLogger);
   });
@@ -78,6 +87,7 @@ describe('mcp-server/tools/project/AuthAccountTool', () => {
           title: 'Authenticate a HubSpot Account',
           description: expect.stringContaining('hs account auth'),
           inputSchema: expect.any(Object),
+          outputSchema: expect.any(Object),
         }),
         expect.any(Function)
       );
@@ -86,9 +96,26 @@ describe('mcp-server/tools/project/AuthAccountTool', () => {
   });
 
   describe('handler', () => {
+    const existingDefault = {
+      accountId: 12345,
+      name: 'current-default',
+    } as HubSpotConfigAccount;
+
     function getCommandArgs(): string[] {
       const commandArg = mockRunCommandInDir.mock.calls[0][1] as HubSpotCommand;
       return commandArg.args;
+    }
+
+    function getDefaultFlagValue(): string {
+      const args = getCommandArgs();
+      return args[args.indexOf('--default') + 1];
+    }
+
+    function enableElicitation(): void {
+      mockGetCurrentDefaultAccount.mockReturnValue(existingDefault);
+      vi.mocked(mockMcpServer.server.getClientCapabilities).mockReturnValue({
+        elicitation: { form: {} },
+      });
     }
 
     it('runs hs account auth', async () => {
@@ -98,6 +125,12 @@ describe('mcp-server/tools/project/AuthAccountTool', () => {
       const args = getCommandArgs();
       expect(args).toContain('account');
       expect(args).toContain('auth');
+    });
+
+    it('runs the command with --json', async () => {
+      await tool.handler(baseInput);
+
+      expect(getCommandArgs()).toContain('--json');
     });
 
     it('adds --use-default-name when no name is provided', async () => {
@@ -123,12 +156,112 @@ describe('mcp-server/tools/project/AuthAccountTool', () => {
       expect(args).toContain('true');
     });
 
+    it('adds --default true without eliciting when setAsDefault is true', async () => {
+      mockGetCurrentDefaultAccount.mockReturnValue(existingDefault);
+      vi.mocked(mockMcpServer.server.getClientCapabilities).mockReturnValue({
+        elicitation: { form: {} },
+      });
+
+      await tool.handler({ ...baseInput, setAsDefault: true });
+
+      expect(mockMcpServer.server.elicitInput).not.toHaveBeenCalled();
+      expect(getDefaultFlagValue()).toBe('true');
+    });
+
     it('adds --default false when setAsDefault is false', async () => {
       await tool.handler({ ...baseInput, setAsDefault: false });
 
       const args = getCommandArgs();
       expect(args).toContain('--default');
       expect(args).toContain('false');
+    });
+
+    describe('when another account is already the default', () => {
+      it('elicits whether to replace the default account', async () => {
+        enableElicitation();
+        vi.mocked(mockMcpServer.server.elicitInput).mockResolvedValue({
+          action: 'accept',
+          content: { setAsDefault: true },
+        });
+
+        await tool.handler(baseInput);
+
+        expect(mockMcpServer.server.elicitInput).toHaveBeenCalledWith(
+          expect.objectContaining({
+            message: expect.stringContaining('current-default'),
+            requestedSchema: expect.objectContaining({
+              properties: {
+                setAsDefault: expect.objectContaining({ type: 'boolean' }),
+              },
+              required: ['setAsDefault'],
+            }),
+          }),
+          { timeout: MCP_ELICITATION_TIMEOUT }
+        );
+        expect(getDefaultFlagValue()).toBe('true');
+      });
+
+      it('adds --default false when the user unchecks set as default', async () => {
+        enableElicitation();
+        vi.mocked(mockMcpServer.server.elicitInput).mockResolvedValue({
+          action: 'accept',
+          content: { setAsDefault: false },
+        });
+
+        await tool.handler(baseInput);
+
+        expect(getDefaultFlagValue()).toBe('false');
+      });
+
+      it.each(['decline', 'cancel'] as const)(
+        'keeps the current default when the user chooses %s',
+        async action => {
+          enableElicitation();
+          vi.mocked(mockMcpServer.server.elicitInput).mockResolvedValue({
+            action,
+          });
+
+          await tool.handler(baseInput);
+
+          expect(mockRunCommandInDir).toHaveBeenCalled();
+          expect(getDefaultFlagValue()).toBe('false');
+        }
+      );
+
+      it('adds --default true when the client cannot elicit', async () => {
+        mockGetCurrentDefaultAccount.mockReturnValue(existingDefault);
+        vi.mocked(mockMcpServer.server.getClientCapabilities).mockReturnValue(
+          {}
+        );
+
+        await tool.handler(baseInput);
+
+        expect(mockMcpServer.server.elicitInput).not.toHaveBeenCalled();
+        expect(getDefaultFlagValue()).toBe('true');
+      });
+
+      it('does not elicit when re-authenticating the default account', async () => {
+        enableElicitation();
+
+        await tool.handler({
+          ...baseInput,
+          accountId: existingDefault.accountId,
+        });
+
+        expect(mockMcpServer.server.elicitInput).not.toHaveBeenCalled();
+        expect(getDefaultFlagValue()).toBe('true');
+      });
+    });
+
+    it('does not elicit when no default account exists', async () => {
+      vi.mocked(mockMcpServer.server.getClientCapabilities).mockReturnValue({
+        elicitation: { form: {} },
+      });
+
+      await tool.handler(baseInput);
+
+      expect(mockMcpServer.server.elicitInput).not.toHaveBeenCalled();
+      expect(getDefaultFlagValue()).toBe('true');
     });
 
     it('adds --account when accountId is provided', async () => {
@@ -149,6 +282,37 @@ describe('mcp-server/tools/project/AuthAccountTool', () => {
 
       expect(result.content[0].text).toBe('Success!');
       expect(result.content[1].text).toBe('Warning: something minor');
+    });
+
+    it('parses JSON stdout into structuredContent', async () => {
+      mockRunCommandInDir.mockResolvedValue({
+        stdout: JSON.stringify({
+          accountId: 456789,
+          accountName: 'test-account',
+          authType: 'personalaccesskey',
+        }),
+        stderr: '',
+      });
+
+      const result = await tool.handler(baseInput);
+
+      expect(result.structuredContent).toEqual({
+        accountId: 456789,
+        accountName: 'test-account',
+        authType: 'personalaccesskey',
+      });
+    });
+
+    it('omits structuredContent when stdout is not valid JSON', async () => {
+      mockRunCommandInDir.mockResolvedValue({
+        stdout: 'Account authenticated.',
+        stderr: '',
+      });
+
+      const result = await tool.handler(baseInput);
+
+      expect(result.structuredContent).toBeUndefined();
+      expect(result.content[0].text).toBe('Account authenticated.');
     });
 
     it('returns error message when runCommandInDir throws', async () => {

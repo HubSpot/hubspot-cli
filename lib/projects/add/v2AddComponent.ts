@@ -30,6 +30,7 @@ import { debugError } from '../../errorHandlers/index.js';
 import { uiLogger } from '../../ui/logger.js';
 import { trackCommandUsage } from '../../usageTracking.js';
 import SpinniesManager from '../../ui/SpinniesManager.js';
+import { ProjectAddJsonOutput } from '../../jsonOutput/projectAdd.js';
 
 export async function v2AddComponent(
   args: {
@@ -43,7 +44,7 @@ export async function v2AddComponent(
   projectDir: string,
   projectConfig: ProjectConfig,
   accountId: number
-): Promise<void> {
+): Promise<ProjectAddJsonOutput> {
   const config = await getConfigForPlatformVersion(
     projectConfig.platformVersion
   );
@@ -149,7 +150,7 @@ export async function v2AddComponent(
 
     if (components.length === 0) {
       uiLogger.log(lib.projects.add.nothingAdded);
-      return;
+      return { addedFeatures: [] };
     }
 
     await cloneGithubRepo(HUBSPOT_PROJECT_COMPONENTS_GITHUB_PATH, projectDir, {
@@ -191,6 +192,14 @@ export async function v2AddComponent(
         showSuccessMessage: true,
       }
     );
+
+    return {
+      addedFeatures: componentTypes ?? [],
+      app:
+        shouldCreateApp && derivedDistribution && derivedAuthType
+          ? { distribution: derivedDistribution, auth: derivedAuthType }
+          : undefined,
+    };
   } catch (error) {
     SpinniesManager.fail('project-add', {
       text: commands.project.add.failure(projectConfig.name),

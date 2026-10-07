@@ -12,7 +12,7 @@ const TargetAccountSchema = z.object({
   accountType: z.string().optional(),
 });
 
-export const UploadSchema = z.object({
+export const ProjectUploadSchema = z.object({
   targetAccount: TargetAccountSchema.optional(),
   buildId: z.number().optional(),
   deployId: z.number().optional(),
@@ -21,7 +21,7 @@ export const UploadSchema = z.object({
 
 export type PreviewJsonOutput = z.infer<typeof PreviewSchema>;
 export type TargetAccountJsonOutput = z.infer<typeof TargetAccountSchema>;
-export type UploadJsonOutput = z.infer<typeof UploadSchema>;
+export type ProjectUploadJsonOutput = z.infer<typeof ProjectUploadSchema>;
 
 export function mapAccountToTargetAccount(
   accountId: number,

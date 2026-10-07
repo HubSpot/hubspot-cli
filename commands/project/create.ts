@@ -27,9 +27,13 @@ import {
   PROJECT_WITH_APP,
   EMPTY_PROJECT,
 } from '../../lib/constants.js';
-import { YargsCommandModule } from '../../types/Yargs.js';
+import { JSONOutputArgs, YargsCommandModule } from '../../types/Yargs.js';
 import { makeWrappedYargsHandler } from '../../lib/yargs/makeWrappedYargsHandler.js';
 import { makeYargsBuilder } from '../../lib/yargsUtils.js';
+import {
+  ProjectCreateJsonOutput,
+  ProjectCreateSchema,
+} from '../../lib/jsonOutput/projectCreate.js';
 import { ProjectConfig } from '../../types/Projects.js';
 import { commands } from '../../lang/en.js';
 import { uiLogger } from '../../lib/ui/logger.js';
@@ -56,10 +60,20 @@ const TRACKING_STEP = {
   DOWNLOAD: 'download-project',
 };
 
+export type ProjectCreateJsonArgs = ProjectCreateArgs &
+  JSONOutputArgs<ProjectCreateJsonOutput>;
+
 async function handler(
-  args: ArgumentsCamelCase<ProjectCreateArgs>
+  args: ArgumentsCamelCase<ProjectCreateJsonArgs>
 ): Promise<void> {
-  const { platformVersion, templateSource, exit, addUsageMetadata } = args;
+  const {
+    platformVersion,
+    templateSource,
+    exit,
+    addUsageMetadata,
+    addJsonOutput,
+    formatOutputAsJson,
+  } = args;
   if (BETA_VERSIONS.includes(platformVersion)) {
     uiLogger.warn(
       commands.project.create.warnings.betaPlatformVersion(platformVersion)
@@ -189,7 +203,7 @@ async function handler(
     [],
     {
       updatedProjectMetadata: projectMetadata,
-      showSuccessMessage: true,
+      showSuccessMessage: !formatOutputAsJson,
       isProjectEmpty,
       projectDest,
     }
@@ -200,12 +214,21 @@ async function handler(
     fs.ensureDirSync(path.join(projectDest, 'src'));
   }
 
-  await showMcpPromotionNudge(args._.join(' '));
+  addJsonOutput({
+    name: projectName,
+    location: projectDest,
+    platformVersion,
+    projectBase: isProjectEmpty ? EMPTY_PROJECT : PROJECT_WITH_APP,
+  });
+
+  if (!formatOutputAsJson) {
+    await showMcpPromotionNudge(args._.join(' '));
+  }
 
   return exit(EXIT_CODES.SUCCESS);
 }
 
-function projectCreateBuilder(yargs: Argv): Argv<ProjectCreateArgs> {
+function projectCreateBuilder(yargs: Argv): Argv<ProjectCreateJsonArgs> {
   yargs.options({
     name: {
       describe: commands.project.create.options.name.describe,
@@ -269,10 +292,10 @@ function projectCreateBuilder(yargs: Argv): Argv<ProjectCreateArgs> {
     ],
   ]);
 
-  return yargs as Argv<ProjectCreateArgs>;
+  return yargs as Argv<ProjectCreateJsonArgs>;
 }
 
-const builder = makeYargsBuilder<ProjectCreateArgs>(
+const builder = makeYargsBuilder<ProjectCreateJsonArgs>(
   projectCreateBuilder,
   command,
   describe,
@@ -281,14 +304,18 @@ const builder = makeYargsBuilder<ProjectCreateArgs>(
     useAccountOptions: true,
     useConfigOptions: true,
     useEnvironmentOptions: true,
+    useJSONOutputOptions: true,
   }
 );
 
-const projectCreateCommand: YargsCommandModule<unknown, ProjectCreateArgs> = {
-  command,
-  describe,
-  handler: makeWrappedYargsHandler('project-create', handler),
-  builder,
-};
+const projectCreateCommand: YargsCommandModule<unknown, ProjectCreateJsonArgs> =
+  {
+    command,
+    describe,
+    handler: makeWrappedYargsHandler('project-create', handler, {
+      jsonOutputSchema: ProjectCreateSchema,
+    }),
+    builder,
+  };
 
 export default projectCreateCommand;

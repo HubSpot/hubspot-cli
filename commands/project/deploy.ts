@@ -19,7 +19,10 @@ import {
   YargsCommandModule,
 } from '../../types/Yargs.js';
 import { makeWrappedYargsHandler } from '../../lib/yargs/makeWrappedYargsHandler.js';
-import { DeployJsonOutput, DeploySchema } from '../../lib/jsonOutput/deploy.js';
+import {
+  ProjectDeployJsonOutput,
+  ProjectDeploySchema,
+} from '../../lib/jsonOutput/projectDeploy.js';
 import { makeYargsBuilder } from '../../lib/yargsUtils.js';
 import { loadProfile } from '../../lib/projects/projectProfiles.js';
 import { PROJECT_DEPLOY_TEXT } from '../../lib/constants.js';
@@ -39,7 +42,7 @@ export type ProjectDeployArgs = CommonArgs &
   ConfigArgs &
   AccountArgs &
   EnvironmentArgs &
-  JSONOutputArgs<DeployJsonOutput> & {
+  JSONOutputArgs<ProjectDeployJsonOutput> & {
     project?: string;
     build?: number;
     buildId?: number;
@@ -329,7 +332,7 @@ const projectDeployCommand: YargsCommandModule<unknown, ProjectDeployArgs> = {
   describe,
   builder,
   handler: makeWrappedYargsHandler('project-deploy', handler, {
-    jsonOutputSchema: DeploySchema,
+    jsonOutputSchema: ProjectDeploySchema,
   }),
 };
 

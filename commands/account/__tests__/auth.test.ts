@@ -145,14 +145,14 @@ describe('commands/account/auth', () => {
         userProvidedAccount?: string;
         d: boolean;
         debug: boolean;
-        c?: string;
-        config?: string;
         disableTracking?: boolean;
         personalAccessKey?: string;
         default?: boolean;
         name?: string;
         useDefaultName?: boolean;
         qa?: boolean;
+        formatOutputAsJson?: boolean;
+        addJsonOutput: (data: unknown) => void;
       } & UsageTrackingArgs
     >;
 
@@ -164,6 +164,7 @@ describe('commands/account/auth', () => {
         _: ['account', 'auth'],
         $0: '',
         addUsageMetadata: vi.fn(),
+        addJsonOutput: vi.fn(),
         exit: vi.fn(),
       } as ArgumentsCamelCase<
         {
@@ -171,11 +172,10 @@ describe('commands/account/auth', () => {
           userProvidedAccount?: string;
           d: boolean;
           debug: boolean;
-          c?: string;
-          config?: string;
           disableTracking?: boolean;
           personalAccessKey?: string;
           qa?: boolean;
+          addJsonOutput: (data: unknown) => void;
         } & UsageTrackingArgs
       >;
     });
@@ -431,6 +431,27 @@ describe('commands/account/auth', () => {
 
     it('should not show MCP promotion nudge when auth fails', async () => {
       getAccessTokenSpy.mockRejectedValue(new Error('Invalid key'));
+
+      await accountAuthCommand.handler(args);
+
+      expect(mockedShowMcpPromotionNudge).not.toHaveBeenCalled();
+    });
+
+    it('should output JSON when formatOutputAsJson is true', async () => {
+      args.formatOutputAsJson = true;
+
+      await accountAuthCommand.handler(args);
+
+      expect(uiLogger.json).toHaveBeenCalledWith({
+        accountId: 456789,
+        accountName: 'test-account',
+        authType: 'personalaccesskey',
+      });
+      expect(processExitSpy).toHaveBeenCalledWith(EXIT_CODES.SUCCESS);
+    });
+
+    it('should not show the MCP promotion nudge in JSON mode', async () => {
+      args.formatOutputAsJson = true;
 
       await accountAuthCommand.handler(args);
 

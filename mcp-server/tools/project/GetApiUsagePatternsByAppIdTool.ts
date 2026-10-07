@@ -12,19 +12,24 @@ import { isHubSpotHttpError } from '@hubspot/local-dev-lib/errors/index';
 import {
   absoluteCurrentWorkingDirectory,
   absoluteProjectPath,
+  account,
 } from './constants.js';
 import { setupHubSpotConfig } from '../../utils/config.js';
-import { discoverAccountTargets } from '../../../lib/accountTargetDiscovery.js';
+import { resolveAccountId } from './resolveAccount.js';
 import { getErrorMessage } from '../../../lib/errorHandlers/index.js';
+import { elicitSelection } from '../../utils/elicitSelection.js';
+import { getApps } from './apps.js';
 
 const inputSchema = {
   absoluteCurrentWorkingDirectory,
   absoluteProjectPath: absoluteProjectPath.optional(),
+  account,
   appId: z
     .string()
     .describe(
-      'The numeric app ID as a string (e.g., "3003909"). Must contain only digits. Use get-apps-info to find available app IDs.'
-    ),
+      'The numeric app ID as a string (e.g., "3003909"). Must contain only digits. If omitted and the account has several apps, you will be asked to choose one.'
+    )
+    .optional(),
   startDate: z
     .string()
     .describe(
@@ -66,23 +71,53 @@ export class GetApiUsagePatternsByAppIdTool extends Tool<GetApiUsagePatternsByAp
     appId,
     startDate,
     endDate,
+    account,
     absoluteCurrentWorkingDirectory,
     absoluteProjectPath,
   }: GetApiUsagePatternsByAppIdInputSchema): Promise<McpToolResponse> {
     setupHubSpotConfig(absoluteProjectPath ?? absoluteCurrentWorkingDirectory);
 
     try {
-      const { recommended } = await discoverAccountTargets();
-      const accountId = recommended?.accountId;
-      if (!accountId) {
-        const authErrorMessage = `No account ID found. Call the auth-account tool to authenticate a HubSpot account.`;
-        return formatTextContents(authErrorMessage);
+      const resolved = await resolveAccountId(this.mcpServer, this.logger, {
+        toolName,
+        account,
+      });
+      if ('response' in resolved) {
+        return resolved.response;
+      }
+      const { accountId } = resolved;
+
+      let resolvedAppId = appId;
+      if (!resolvedAppId) {
+        const { applications } = await getApps(accountId);
+        const apps = applications ?? [];
+        if (apps.length === 0) {
+          return formatTextContents(
+            'No apps found for this account. Nothing to inspect.'
+          );
+        }
+        const selected = await elicitSelection(this.mcpServer, this.logger, {
+          message: 'Select the app to inspect usage patterns for.',
+          title: 'HubSpot app',
+          options: apps.map(app => ({
+            value: String(app.appId),
+            label: `${app.appName} (${app.appId})`,
+          })),
+        });
+        if (!selected) {
+          return formatTextContents(
+            `Several apps are available. Ask the user which to use, then call ${toolName} again with the appId argument set to one of: ${apps
+              .map(app => `${app.appName} (appId ${app.appId})`)
+              .join(', ')}.`
+          );
+        }
+        resolvedAppId = selected;
       }
 
       const response = await http.get<GetApiUsagePatternsByAppIdResponse>(
         accountId,
         {
-          url: `app/feature/utilization/public/v3/insights/app/${appId}/usage-patterns`,
+          url: `app/feature/utilization/public/v3/insights/app/${resolvedAppId}/usage-patterns`,
           params: {
             ...(startDate && { startDate }),
             ...(endDate && { endDate }),

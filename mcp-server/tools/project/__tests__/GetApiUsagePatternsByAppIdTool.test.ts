@@ -35,18 +35,20 @@ describe('mcp-server/tools/project/GetApiUsagePatternsByAppIdTool', () => {
   let mockRegisteredTool: RegisteredTool;
 
   beforeEach(() => {
-    // @ts-expect-error Not mocking the whole thing
     mockMcpServer = {
       registerTool: vi.fn(),
-    };
+      server: {
+        getClientCapabilities: vi.fn(),
+        elicitInput: vi.fn(),
+      },
+    } as unknown as Mocked<McpServer>;
 
-    // @ts-expect-error Not mocking the whole thing
     mockLogger = {
       debug: vi.fn(),
       info: vi.fn(),
       warn: vi.fn(),
       error: vi.fn(),
-    };
+    } as unknown as Mocked<McpLogger>;
 
     mockRegisteredTool = {} as RegisteredTool;
     mockMcpServer.registerTool.mockReturnValue(mockRegisteredTool);
@@ -152,7 +154,7 @@ describe('mcp-server/tools/project/GetApiUsagePatternsByAppIdTool', () => {
 
       const result = await tool.handler(input);
 
-      expect(mockedDiscoverAccountTargets).toHaveBeenCalledWith();
+      expect(mockedDiscoverAccountTargets).toHaveBeenCalled();
       expect(mockHttp.get).toHaveBeenCalledWith(123456789, {
         url: 'app/feature/utilization/public/v3/insights/app/12345/usage-patterns',
         params: {
@@ -215,6 +217,59 @@ describe('mcp-server/tools/project/GetApiUsagePatternsByAppIdTool', () => {
           },
         ],
       });
+    });
+
+    it('should elicit which app when appId is omitted', async () => {
+      mockHttp.get
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        .mockResolvedValueOnce({
+          data: {
+            applications: [
+              { appId: 111, appName: 'App One' },
+              { appId: 222, appName: 'App Two' },
+            ],
+          },
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        } as any)
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        .mockResolvedValueOnce({ data: { patternSummaries: {} } } as any);
+      vi.mocked(mockMcpServer.server.getClientCapabilities).mockReturnValue({
+        elicitation: { form: {} },
+      });
+      vi.mocked(mockMcpServer.server.elicitInput).mockResolvedValue({
+        action: 'accept',
+        content: { selection: '222' },
+      });
+
+      await tool.handler({ absoluteCurrentWorkingDirectory: '/test/dir' });
+
+      expect(mockHttp.get).toHaveBeenLastCalledWith(
+        123456789,
+        expect.objectContaining({
+          url: 'app/feature/utilization/public/v3/insights/app/222/usage-patterns',
+        })
+      );
+    });
+
+    it('should list apps when appId is omitted and the client cannot elicit', async () => {
+      mockHttp.get.mockResolvedValueOnce({
+        data: {
+          applications: [
+            { appId: 111, appName: 'App One' },
+            { appId: 222, appName: 'App Two' },
+          ],
+        },
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      } as any);
+      vi.mocked(mockMcpServer.server.getClientCapabilities).mockReturnValue({});
+
+      const result = await tool.handler({
+        absoluteCurrentWorkingDirectory: '/test/dir',
+      });
+
+      expect(result.content[0].text).toContain('Several apps are available');
+      expect(result.content[0].text).toContain('appId 222');
+      expect(mockHttp.get).toHaveBeenCalledTimes(1);
     });
   });
 });

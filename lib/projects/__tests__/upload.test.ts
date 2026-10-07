@@ -3,7 +3,7 @@ import os from 'os';
 import path from 'path';
 import archiver from 'archiver';
 import tmp from 'tmp';
-import { vi } from 'vitest';
+import { vi, Mock } from 'vitest';
 import { validateSourceDirectory, handleProjectUpload } from '../upload.js';
 import { uiLogger } from '../../ui/logger.js';
 import { lib } from '../../../lang/en.js';
@@ -182,13 +182,13 @@ describe('lib/projects/upload', () => {
   describe('handleProjectUpload', () => {
     let tempDir: string;
     let projectConfig: ProjectConfig;
-    let mockWriteStream: { on: ReturnType<typeof vi.fn> };
+    let mockWriteStream: { on: Mock };
     let mockArchive: {
-      pipe: ReturnType<typeof vi.fn>;
-      directory: ReturnType<typeof vi.fn>;
-      finalize: ReturnType<typeof vi.fn>;
-      pointer: ReturnType<typeof vi.fn>;
-      on: ReturnType<typeof vi.fn>;
+      pipe: Mock;
+      directory: Mock;
+      finalize: Mock;
+      pointer: Mock;
+      on: Mock;
     };
 
     beforeEach(() => {

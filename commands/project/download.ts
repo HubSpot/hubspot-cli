@@ -24,9 +24,9 @@ import {
 import { makeWrappedYargsHandler } from '../../lib/yargs/makeWrappedYargsHandler.js';
 import { makeYargsBuilder } from '../../lib/yargsUtils.js';
 import {
-  DownloadJsonOutput,
-  DownloadSchema,
-} from '../../lib/jsonOutput/download.js';
+  ProjectDownloadJsonOutput,
+  ProjectDownloadSchema,
+} from '../../lib/jsonOutput/projectDownload.js';
 
 const command = 'download';
 const describe = commands.project.download.describe;
@@ -35,7 +35,7 @@ export type ProjectDownloadArgs = CommonArgs &
   ConfigArgs &
   AccountArgs &
   EnvironmentArgs &
-  JSONOutputArgs<DownloadJsonOutput> & {
+  JSONOutputArgs<ProjectDownloadJsonOutput> & {
     project?: string;
     dest?: string;
     build?: number;
@@ -172,7 +172,7 @@ const projectDownloadCommand: YargsCommandModule<unknown, ProjectDownloadArgs> =
     command,
     describe,
     handler: makeWrappedYargsHandler('project-download', handler, {
-      jsonOutputSchema: DownloadSchema,
+      jsonOutputSchema: ProjectDownloadSchema,
     }),
     builder,
   };

@@ -57,7 +57,9 @@ describe('lib/oauth', () => {
         exchangeForTokens: vi.fn().mockResolvedValue({}),
       };
 
-      mockedOAuth2Manager.mockImplementation(() => mockOAuth2Manager);
+      mockedOAuth2Manager.mockImplementation(function () {
+        return mockOAuth2Manager;
+      });
       mockedGetConfigAccountById.mockReturnValue({
         env: ENVIRONMENTS.PROD,
       });
@@ -86,9 +88,9 @@ describe('lib/oauth', () => {
         },
       };
 
-      mockedOAuth2Manager.mockImplementation(() => ({
-        account: invalidConfig,
-      }));
+      mockedOAuth2Manager.mockImplementation(function () {
+        return { account: invalidConfig };
+      });
 
       // @ts-expect-error Testing invalid config
       await expect(authenticateWithOauth(invalidConfig)).rejects.toThrow();
@@ -108,7 +110,9 @@ describe('lib/oauth', () => {
         exchangeForTokens: vi.fn().mockResolvedValue({}),
       };
 
-      mockedOAuth2Manager.mockImplementation(() => mockOAuth2Manager);
+      mockedOAuth2Manager.mockImplementation(function () {
+        return mockOAuth2Manager;
+      });
 
       await authenticateWithOauth(configWithoutScopes);
 
@@ -129,7 +133,9 @@ describe('lib/oauth', () => {
           .mockRejectedValue(new Error('Exchange failed')),
       };
 
-      mockedOAuth2Manager.mockImplementation(() => mockOAuth2Manager);
+      mockedOAuth2Manager.mockImplementation(function () {
+        return mockOAuth2Manager;
+      });
 
       await authenticateWithOauth(mockAccountConfig);
 

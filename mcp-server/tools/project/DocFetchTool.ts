@@ -73,7 +73,7 @@ export class DocFetchTool extends Tool<InputSchemaType> {
       {
         title: 'Fetch HubSpot Developer Documentation (single file)',
         description:
-          'Always use this immediately after `search-docs` and before creating a plan, writing code, or answering technical questions. This tool retrieves the full, authoritative content of a HubSpot Developer Documentation page from its URL, ensuring responses are accurate, up-to-date, and grounded in the official docs.',
+          'Always use this immediately after `search-docs` and before creating a plan, writing code, or answering technical questions. This tool retrieves the full, authoritative content of a HubSpot Developer Documentation page from its URL, ensuring responses are accurate, up-to-date, and grounded in the official docs. Some pages include a "Supported products" section (a `<SupportedProducts .../>` tag) listing the products and subscription tiers a feature requires. Read it to tell the user whether a feature is available on their plan, stated plainly (for example "requires Content Hub Enterprise") rather than by quoting raw spec fields.',
         inputSchema,
         annotations: {
           readOnlyHint: true,

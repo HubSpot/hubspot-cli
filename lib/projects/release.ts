@@ -13,7 +13,7 @@ import { logError, ApiErrorContext } from '../errorHandlers/index.js';
 import { uiLogger } from '../ui/logger.js';
 import { listPrompt } from '../prompts/promptUtils.js';
 import { commands } from '../../lang/en.js';
-import { createRelease, type Release } from '../../api/releases.js';
+import { createRelease, type CreatedRelease } from '../../api/releases.js';
 
 function buildChoiceName(build: Build): string {
   const base = build.uploadMessage
@@ -119,7 +119,7 @@ export async function executeRelease(
   accountId: number,
   projectName: string,
   buildId: number
-): Promise<Release> {
+): Promise<CreatedRelease> {
   try {
     const { data: release } = await createRelease(
       accountId,

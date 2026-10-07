@@ -146,7 +146,7 @@ export class HsCreateFunctionTool extends Tool<HsCreateFunctionInputSchema> {
       toolName,
       {
         title: 'Create HubSpot CMS Serverless Function',
-        description: `Creates a new HubSpot CMS serverless function using the hs cms function create command. Functions can be created non-interactively by specifying functionsFolder, filename, and endpointPath. Supports all HTTP methods (${HTTP_METHODS.join(', ')}).`,
+        description: `Creates a new HubSpot CMS serverless function using the hs cms function create command. This is for CMS/website projects, served at /hs/serverless/<path>. Do NOT use this for developer-platform app functions (the private app-function feature or the public app-function-endpoint feature). For those, use add-feature-to-project. Functions can be created non-interactively by specifying functionsFolder, filename, and endpointPath. Supports all HTTP methods (${HTTP_METHODS.join(', ')}).`,
         inputSchema,
         annotations: {
           readOnlyHint: false,

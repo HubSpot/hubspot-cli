@@ -5,7 +5,7 @@ const ScopeGroupSchema = z.object({
   name: z.string(),
 });
 
-export const InstallStatusSchema = z.object({
+export const ProjectAppInstallStatusSchema = z.object({
   appId: z.number().optional(),
   appUid: z.string(),
   accountId: z.number(),
@@ -15,4 +15,6 @@ export const InstallStatusSchema = z.object({
   previouslyAuthorizedScopeGroups: z.array(ScopeGroupSchema),
 });
 
-export type InstallStatusJsonOutput = z.infer<typeof InstallStatusSchema>;
+export type ProjectAppInstallStatusJsonOutput = z.infer<
+  typeof ProjectAppInstallStatusSchema
+>;

@@ -10,10 +10,18 @@ import {
   absoluteCurrentWorkingDirectory,
   absoluteProjectPath,
 } from './constants.js';
-import { formatTextContents } from '../../utils/content.js';
+import {
+  formatTextContents,
+  formatErrorTextContents,
+} from '../../utils/content.js';
 import { setupHubSpotConfig } from '../../utils/config.js';
 import { getErrorMessage } from '../../../lib/errorHandlers/index.js';
-import { HubSpotCommand } from '../../utils/command.js';
+import {
+  HubSpotCommand,
+  getCommandResultsFromError,
+} from '../../utils/command.js';
+import { parseCommandJsonOutput } from '../../utils/json.js';
+import { ProjectValidateSchema } from '../../../lib/jsonOutput/projectValidate.js';
 
 const inputSchema = {
   absoluteProjectPath,
@@ -39,22 +47,46 @@ export class ValidateProjectTool extends Tool<CreateProjectInputSchema> {
     extra?: ToolExtra
   ): Promise<McpToolResponse> {
     setupHubSpotConfig(absoluteCurrentWorkingDirectory);
+
+    const command = new HubSpotCommand('project validate', [
+      { name: 'json', value: true },
+    ]);
+
+    let stdout = '';
+    let stderr = '';
+
     try {
-      const command = new HubSpotCommand('project validate');
-      const { stdout, stderr } = await this.runCommand(
+      ({ stdout, stderr } = await this.runCommand(
         absoluteProjectPath,
         command,
         extra
-      );
-
-      return formatTextContents(stdout, stderr);
+      ));
     } catch (error) {
       this.logger.debug(toolName, {
         message: 'Handler caught error',
-        error: error instanceof Error ? error.message : String(error),
+        error: getErrorMessage(error),
       });
-      return formatTextContents(getErrorMessage(error));
+      ({ stdout, stderr } = getCommandResultsFromError(error));
+
+      if (!stdout) {
+        return formatErrorTextContents(getErrorMessage(error));
+      }
     }
+
+    const structuredContent = parseCommandJsonOutput(
+      stdout,
+      ProjectValidateSchema,
+      this.logger,
+      toolName
+    );
+
+    if (!structuredContent) {
+      return formatErrorTextContents(stdout, stderr);
+    }
+
+    const response = await formatTextContents(stdout, stderr);
+    response.structuredContent = structuredContent;
+    return response;
   }
   register(): RegisteredTool {
     return this.mcpServer.registerTool(
@@ -64,6 +96,7 @@ export class ValidateProjectTool extends Tool<CreateProjectInputSchema> {
         description:
           'Validates the HubSpot project and its configuration files.  This tool does not need to be ran before uploading the project. If you do not know the project path, use the find-projects tool first to locate HubSpot projects in the workspace.',
         inputSchema,
+        outputSchema: ProjectValidateSchema.shape,
         annotations: {
           readOnlyHint: true,
           openWorldHint: false,

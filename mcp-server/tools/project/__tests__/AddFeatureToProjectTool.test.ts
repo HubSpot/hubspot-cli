@@ -33,6 +33,8 @@ const mockRunCommandInDir = runCommandInDir as MockedFunction<
   typeof runCommandInDir
 >;
 
+const validOutput = { addedFeatures: ['card'] };
+
 describe('mcp-server/tools/project/AddFeatureToProject', () => {
   let mockMcpServer: Mocked<McpServer>;
   let mockLogger: Mocked<McpLogger>;
@@ -72,6 +74,7 @@ describe('mcp-server/tools/project/AddFeatureToProject', () => {
             'Adds a feature to an existing HubSpot project'
           ),
           inputSchema: expect.any(Object),
+          outputSchema: expect.any(Object),
         }),
         expect.any(Function)
       );
@@ -88,7 +91,7 @@ describe('mcp-server/tools/project/AddFeatureToProject', () => {
 
     it('should handle successful command execution without app', async () => {
       mockRunCommandInDir.mockResolvedValue({
-        stdout: 'Feature added successfully',
+        stdout: JSON.stringify(validOutput),
         stderr: '',
       });
 
@@ -98,19 +101,26 @@ describe('mcp-server/tools/project/AddFeatureToProject', () => {
         '/test/project',
         expect.objectContaining({
           executable: 'hs',
-          args: expect.arrayContaining(['project', 'add', '--features']),
+          args: expect.arrayContaining([
+            'project',
+            'add',
+            '--json',
+            'true',
+            '--features',
+          ]),
         }),
         expect.any(Function)
       );
 
       expect(result).toEqual({
-        content: [{ type: 'text', text: 'Feature added successfully' }],
+        content: [{ type: 'text', text: JSON.stringify(validOutput) }],
+        structuredContent: validOutput,
       });
     });
 
     it('should handle successful command execution with features', async () => {
       mockRunCommandInDir.mockResolvedValue({
-        stdout: 'Features added successfully',
+        stdout: JSON.stringify(validOutput),
         stderr: '',
       });
 
@@ -139,7 +149,7 @@ describe('mcp-server/tools/project/AddFeatureToProject', () => {
 
     it('should handle crm-bulk-action as a valid feature', async () => {
       mockRunCommandInDir.mockResolvedValue({
-        stdout: 'Bulk action added successfully',
+        stdout: JSON.stringify(validOutput),
         stderr: '',
       });
 
@@ -173,6 +183,8 @@ describe('mcp-server/tools/project/AddFeatureToProject', () => {
 
       const result = await tool.handler(input);
 
+      expect(mockRunCommandInDir).not.toHaveBeenCalled();
+      expect(result.structuredContent).toEqual({});
       expect(result.content).toEqual([
         {
           type: 'text',
@@ -198,6 +210,7 @@ describe('mcp-server/tools/project/AddFeatureToProject', () => {
 
       const result = await tool.handler(input);
 
+      expect(result.structuredContent).toEqual({});
       expect(result.content).toEqual([
         {
           type: 'text',
@@ -210,7 +223,7 @@ describe('mcp-server/tools/project/AddFeatureToProject', () => {
 
     it('should add distribution and auth flags when provided', async () => {
       mockRunCommandInDir.mockResolvedValue({
-        stdout: 'App feature added',
+        stdout: JSON.stringify(validOutput),
         stderr: '',
       });
 
@@ -243,39 +256,54 @@ describe('mcp-server/tools/project/AddFeatureToProject', () => {
       );
     });
 
+    it('should return the parsed app output as structuredContent', async () => {
+      const appOutput = {
+        addedFeatures: ['webhooks'],
+        app: { distribution: 'marketplace', auth: 'oauth' },
+      };
+      mockRunCommandInDir.mockResolvedValue({
+        stdout: JSON.stringify(appOutput, null, 2),
+        stderr: '',
+      });
+
+      const result = await tool.handler(baseInput);
+
+      expect(result.structuredContent).toEqual(appOutput);
+      expect(result.isError).toBeUndefined();
+    });
+
+    it('should fall back to empty structuredContent when output is not valid schema JSON', async () => {
+      mockRunCommandInDir.mockResolvedValue({
+        stdout: JSON.stringify({ addedFeatures: 'not-an-array' }),
+        stderr: '',
+      });
+
+      const result = await tool.handler(baseInput);
+
+      expect(result.structuredContent).toEqual({});
+      expect(result.isError).toBeUndefined();
+    });
+
     it('should handle command execution error', async () => {
       const error = new Error('Command failed');
       mockRunCommandInDir.mockRejectedValue(error);
 
-      const result = await tool.handler(baseInput);
-
-      expect(result).toEqual({
-        content: [{ type: 'text', text: 'Command failed' }],
-      });
-    });
-
-    it('should handle non-Error rejection', async () => {
-      mockRunCommandInDir.mockRejectedValue('String error');
-
-      const result = await tool.handler(baseInput);
-
-      expect(result).toEqual({
-        content: [{ type: 'text', text: 'String error' }],
-      });
+      await expect(tool.handler(baseInput)).rejects.toThrow('Command failed');
     });
 
     it('should handle stderr in results', async () => {
       mockRunCommandInDir.mockResolvedValue({
-        stdout: 'Success with warnings',
+        stdout: JSON.stringify(validOutput),
         stderr: 'Warning: something happened',
       });
 
       const result = await tool.handler(baseInput);
 
       expect(result.content).toEqual([
-        { type: 'text', text: 'Success with warnings' },
+        { type: 'text', text: JSON.stringify(validOutput) },
         { type: 'text', text: 'Warning: something happened' },
       ]);
+      expect(result.structuredContent).toEqual(validOutput);
     });
   });
 });

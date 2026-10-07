@@ -12,12 +12,20 @@ import { Mock } from 'vitest';
 
 vi.mock('../../../lib/app/migrate');
 vi.mock('../../../lib/projects/config');
-vi.mock('../../../lib/ui');
+vi.mock('../../../lib/ui', async importOriginal => {
+  const actual =
+    await importOriginal<typeof import('../../../lib/ui/index.js')>();
+  return {
+    ...actual,
+    uiBetaTag: vi.fn(),
+    uiCommandReference: vi.fn(),
+  };
+});
 vi.mock('../../../ui/render.js');
 vi.mock('../../../ui/components/StatusMessageBoxes.js');
 vi.mock('../../../lib/theme/migrate.js');
 
-const { v2025_2, v2026_03_BETA, v2026_03 } = PLATFORM_VERSIONS;
+const { v2025_2, v2026_03_BETA, v2026_03, v2026_09 } = PLATFORM_VERSIONS;
 
 describe('commands/project/migrate', () => {
   const yargsMock = yargs as Argv;
@@ -65,6 +73,14 @@ describe('commands/project/migrate', () => {
     it('should provide a description', () => {
       expect(migrateCommand.describe).toBeDefined();
     });
+
+    it('should mark the command as deprecated and state the 2026.09 support cutoff', () => {
+      expect(migrateCommand.describe).toEqual(
+        commands.project.migrate.describe
+      );
+      expect(commands.project.migrate.describe).toContain('[DEPRECATED]');
+      expect(commands.project.migrate.describe).toContain('2026.09');
+    });
   });
 
   describe('builder', () => {
@@ -73,8 +89,8 @@ describe('commands/project/migrate', () => {
 
       expect(optionsSpy).toHaveBeenCalledWith('platform-version', {
         type: 'string',
-        choices: [v2025_2, v2026_03_BETA, v2026_03],
-        default: v2026_03,
+        choices: [v2025_2, v2026_03_BETA, v2026_03, v2026_09],
+        default: v2026_09,
       });
 
       expect(optionsSpy).toHaveBeenCalledWith('unstable', {

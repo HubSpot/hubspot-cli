@@ -12,9 +12,9 @@ import {
 } from '../../types/Yargs.js';
 import { makeWrappedYargsHandler } from '../../lib/yargs/makeWrappedYargsHandler.js';
 import {
-  InstallAppJsonOutput,
-  InstallAppSchema,
-} from '../../lib/jsonOutput/installApp.js';
+  ProjectInstallAppJsonOutput,
+  ProjectInstallAppSchema,
+} from '../../lib/jsonOutput/projectInstallApp.js';
 import { makeYargsBuilder } from '../../lib/yargsUtils.js';
 import { uiLogger } from '../../lib/ui/logger.js';
 import { logError } from '../../lib/errorHandlers/index.js';
@@ -42,7 +42,7 @@ export type ProjectInstallAppArgs = CommonArgs &
   ConfigArgs &
   AccountArgs &
   EnvironmentArgs &
-  JSONOutputArgs<InstallAppJsonOutput> & {
+  JSONOutputArgs<ProjectInstallAppJsonOutput> & {
     force: boolean;
     profile?: string;
   };
@@ -287,7 +287,7 @@ const projectInstallAppCommand: YargsCommandModule<
   command,
   describe,
   handler: makeWrappedYargsHandler('project-install-app', handler, {
-    jsonOutputSchema: InstallAppSchema,
+    jsonOutputSchema: ProjectInstallAppSchema,
   }),
   builder,
 };

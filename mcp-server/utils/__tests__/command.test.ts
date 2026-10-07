@@ -8,7 +8,8 @@ vi.mock('fs');
 vi.mock('path');
 
 // Import after mocks are set up
-const { HubSpotCommand, runCommandInDir } = await import('../command.js');
+const { HubSpotCommand, runCommandInDir, getCommandResultsFromError } =
+  await import('../command.js');
 
 const mockSpawn = vi.mocked(spawn);
 const mockExistsSync = vi.mocked(fs.existsSync);
@@ -341,6 +342,44 @@ describe('mcp-server/utils/command', () => {
 
       expect(onData).toHaveBeenCalledWith('chunk output', 'stdout');
       expect(onData).toHaveBeenCalledWith('chunk error', 'stderr');
+    });
+  });
+
+  describe('getCommandResultsFromError', () => {
+    it('should extract stdout and stderr attached to a rejected error', () => {
+      const error = Object.assign(new Error('Command failed'), {
+        code: 1,
+        stdout: '{"valid":false}',
+        stderr: 'some error',
+      });
+
+      expect(getCommandResultsFromError(error)).toEqual({
+        stdout: '{"valid":false}',
+        stderr: 'some error',
+      });
+    });
+
+    it('should return empty strings when stdout and stderr are missing', () => {
+      expect(getCommandResultsFromError(new Error('boom'))).toEqual({
+        stdout: '',
+        stderr: '',
+      });
+    });
+
+    it('should ignore non-string stdout and stderr values', () => {
+      const error = { stdout: 123, stderr: null };
+
+      expect(getCommandResultsFromError(error)).toEqual({
+        stdout: '',
+        stderr: '',
+      });
+    });
+
+    it('should return empty strings for non-object errors', () => {
+      expect(getCommandResultsFromError('string error')).toEqual({
+        stdout: '',
+        stderr: '',
+      });
     });
   });
 });

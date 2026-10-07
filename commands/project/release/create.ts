@@ -25,10 +25,10 @@ import { commands } from '../../../lang/en.js';
 import { makeWrappedYargsHandler } from '../../../lib/yargs/makeWrappedYargsHandler.js';
 import { ProjectPollResult } from '../../../types/Projects.js';
 import {
-  ReleaseJsonOutput,
-  ReleaseSchema,
+  ProjectReleaseJsonOutput,
+  ProjectReleaseSchema,
   mapReleaseToJsonOutput,
-} from '../../../lib/jsonOutput/release.js';
+} from '../../../lib/jsonOutput/projectRelease.js';
 
 const command = 'create';
 // const describe = commands.project.release.create.describe;
@@ -40,7 +40,7 @@ export type ProjectReleaseCreateArgs = CommonArgs &
   ConfigArgs &
   AccountArgs &
   EnvironmentArgs &
-  JSONOutputArgs<ReleaseJsonOutput> & {
+  JSONOutputArgs<ProjectReleaseJsonOutput> & {
     build?: number;
     force: boolean;
   };
@@ -135,6 +135,8 @@ async function handler(
       projectConfig,
       projectDir,
       sendIR: true,
+      forceCreate: force,
+      force,
       callbackFunc: (...args) =>
         pollProjectBuildAndDeploy(...args, { skipDeploy: true }),
     });
@@ -184,10 +186,12 @@ async function handler(
     addJsonOutput(mapReleaseToJsonOutput(release));
     if (!formatOutputAsJson) {
       uiLogger.success(
-        commands.project.release.create.success(
-          release.releaseTag,
-          release.buildId
-        )
+        release.releaseTag
+          ? commands.project.release.create.success(
+              release.releaseTag,
+              release.buildId
+            )
+          : commands.project.release.create.successNoTag(release.buildId)
       );
     }
   } catch {
@@ -249,7 +253,7 @@ const projectReleaseCreateCommand: YargsCommandModule<
   describe,
   builder,
   handler: makeWrappedYargsHandler('project-release-create', handler, {
-    jsonOutputSchema: ReleaseSchema,
+    jsonOutputSchema: ProjectReleaseSchema,
   }),
 };
 

@@ -18,9 +18,10 @@ import moment from 'moment';
 import {
   absoluteCurrentWorkingDirectory,
   absoluteProjectPath,
+  account,
 } from './constants.js';
 import { setupHubSpotConfig } from '../../utils/config.js';
-import { discoverAccountTargets } from '../../../lib/accountTargetDiscovery.js';
+import { resolveAccountId } from './resolveAccount.js';
 
 const TOOL_NAME = 'get-build-status';
 
@@ -31,6 +32,7 @@ interface BuildWithErrors extends Build {
 const inputSchema = {
   absoluteProjectPath,
   absoluteCurrentWorkingDirectory,
+  account,
   buildId: z
     .number()
     .optional()
@@ -158,6 +160,7 @@ export class GetBuildStatusTool extends Tool<GetBuildStatusInputSchema> {
   async handler({
     absoluteProjectPath,
     absoluteCurrentWorkingDirectory,
+    account,
     buildId,
     limit,
   }: GetBuildStatusInputSchema): Promise<McpToolResponse> {
@@ -167,17 +170,16 @@ export class GetBuildStatusTool extends Tool<GetBuildStatusInputSchema> {
       const { projectConfig, projectDir } =
         getProjectConfig(absoluteProjectPath);
 
-      const { recommended } = await discoverAccountTargets({
-        projectDir,
-        projectConfig,
+      const resolved = await resolveAccountId(this.mcpServer, this.logger, {
+        toolName: TOOL_NAME,
+        absoluteCurrentWorkingDirectory,
+        account,
+        discoverOptions: { projectDir, projectConfig },
       });
-      const accountId = recommended?.accountId;
-      if (!accountId) {
-        return formatTextContents(
-          absoluteCurrentWorkingDirectory,
-          'No account ID found. Call the auth-account tool to authenticate a HubSpot account.'
-        );
+      if ('response' in resolved) {
+        return resolved.response;
       }
+      const { accountId } = resolved;
 
       const projectName = projectConfig.name;
 

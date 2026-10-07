@@ -5,6 +5,7 @@ import { PERSONAL_ACCESS_KEY_AUTH_METHOD } from '@hubspot/local-dev-lib/constant
 import {
   APP_AUTH_TYPES,
   APP_DISTRIBUTION_TYPES,
+  CLI_SUPPORT_GUIDELINES_URL,
   LEGACY_PUBLIC_APP_FILE,
   LOCAL_DEV_DEFAULT_PORT,
   PROJECT_CONFIG_FILE,
@@ -33,6 +34,9 @@ import {
 import { getProductUpdatesUrl } from '../lib/links.js';
 import { HubSpotConfigAccount } from '@hubspot/local-dev-lib/types/Accounts';
 import { LocallyChangedComponents } from '../types/Projects.js';
+
+const MIGRATION_SUPPORT_CUTOFF_NOTICE =
+  'Automated platform version migrations beyond 2026.09 will not be supported.';
 
 export const commands = {
   generalErrors: {
@@ -2017,7 +2021,14 @@ export const commands = {
       },
     },
     migrateApp: {
-      describe: 'Migrate a public app to the projects framework.',
+      describe: uiDeprecatedTag(
+        `Migrate a public app to the projects framework. ${MIGRATION_SUPPORT_CUTOFF_NOTICE}`,
+        false
+      ),
+      verboseDescribe: uiDeprecatedTag(
+        `Migrate a public app to the projects framework. This command walks you through the fields required to complete the migration and downloads the project source code into a directory of your choosing.\n\n${chalk.bold.yellow(MIGRATION_SUPPORT_CUTOFF_NOTICE)}`,
+        false
+      ),
       examples: {
         default: 'Migrate a public app to the projects framework',
       },
@@ -2075,8 +2086,14 @@ export const commands = {
     migrate: {
       preamble: (platformVersion: string) =>
         `This command will migrate an existing project to platformVersion ${platformVersion}.  It will walk you through the fields required to complete the migration and download the new project source code into the project source directory.  It will also copy all of your existing files to a new directory (archive) in case you need access to your old files later.`,
-      describe:
-        'Migrate an existing project to the new version of the projects framework.',
+      describe: uiDeprecatedTag(
+        `Migrate an existing project to the new version of the projects framework. ${MIGRATION_SUPPORT_CUTOFF_NOTICE}`,
+        false
+      ),
+      verboseDescribe: uiDeprecatedTag(
+        `Migrate an existing project to a newer platform version. This command walks you through the fields required to complete the migration and downloads the new project source code into the project source directory. Your existing files are copied to a new directory (archive) in case you need access to them later.\n\n${chalk.bold.yellow(MIGRATION_SUPPORT_CUTOFF_NOTICE)}`,
+        false
+      ),
       errors: {
         noProjectConfig: (command: string) =>
           `No project detected. Please run this command again from a project directory.  If you are trying to migrate an app, run ${command}`,
@@ -2240,6 +2257,8 @@ export const commands = {
           `Create a release for project ${chalk.bold(projectName)} using build ${chalk.bold(String(buildId))}?`,
         success: (releaseTag: string, buildId: number) =>
           `Release ${chalk.bold(releaseTag)} created for build ${chalk.bold(String(buildId))}.`,
+        successNoTag: (buildId: number) =>
+          `Released build ${chalk.bold(String(buildId))}. Your project is now live.`,
         cancelled: 'Release creation cancelled.',
         buildIdPrompt: '[--build] Select a successful build to release:',
         noUploadMessage: 'No upload message',
@@ -2310,6 +2329,27 @@ export const commands = {
         examples: {
           default: 'Show details about a specific release',
           json: 'Output release details as JSON',
+        },
+      },
+      preview: {
+        describe: 'Build and preview a project on a target portal.',
+        verboseDescribe: `Build and preview a project on a target portal\n\nUploads the current project (unless ${uiCommandReference('--build')} is passed), then deploys that build to the target portal so you can try it before releasing it. Use ${uiCommandReference('--target')} to choose the portal.`,
+        uploadPrompt: (projectName: string) =>
+          `No successful builds for project ${chalk.bold(projectName)}. Would you like to upload it?`,
+        errors: {
+          targetRequired: `${uiCommandReference('--target=<portalId>')} is required to specify the portal to preview on.`,
+          previewFailed:
+            'The preview failed. You can try again or preview this build from the project UI.',
+        },
+        options: {
+          build: 'Build ID to preview. Defaults to the latest build.',
+          target: 'Portal ID to preview the build on.',
+          force:
+            'Skip all confirmation prompts, including automatic upload when no build exists.',
+        },
+        examples: {
+          default: 'Build and preview the current project on a target portal',
+          withBuild: 'Preview a specific build on a target portal',
         },
       },
     },
@@ -2424,7 +2464,7 @@ export const commands = {
         autoDeploySkipped: (deployCommand: string) =>
           `Auto-deploy was skipped for this build. Run ${uiCommandReference(deployCommand)} to deploy this build.`,
         releaseManagementRequired: (releaseCommand: string) =>
-          `Run ${uiCommandReference(releaseCommand)} to create a release for this build.`,
+          `This build is not live yet. Run ${uiCommandReference(releaseCommand)} to make it live.`,
         uploadingWithProfile: (profileName: string, accountId: number) =>
           `Initializing project upload with ${chalk.bold(profileName)} profile: ${uiAccountDescription(accountId)}`,
         uploadingToAccount: (accountId: number) =>
@@ -4647,6 +4687,14 @@ export const lib = {
       updateFailed: (latestVersion: string) =>
         `Failed to update HubSpot CLI to version ${chalk.bold(latestVersion)}`,
       enableAutoUpdatesMessage: `The HubSpot CLI can automatically keep itself up to date.\n\nThis helps ensure compatibility with the HubSpot platform. You can change this later at any time.\n\nRun ${uiCommandReference('hs config set --allow-auto-updates=true')}`,
+    },
+    deprecationWarning: {
+      deprecatedTitle: 'Deprecated',
+      deprecatedMessage: (currentVersion: string, eolDate: string) =>
+        `Version: HubSpot CLI v${currentVersion}\n\nStatus: Deprecated (End of Life: ${eolDate})\n\nAction Required: Upgrade to the latest major version to continue receiving new features\n\nReplacement: Run ${uiCommandReference('npm install -g @hubspot/cli@latest')} to upgrade\n\n${uiLink('CLI Support Guidelines', CLI_SUPPORT_GUIDELINES_URL)}`,
+      endOfLifeTitle: 'End of Life',
+      endOfLifeMessage: (currentVersion: string, eolDate: string) =>
+        `Version: HubSpot CLI v${currentVersion}\n\nStatus: End of Life (as of ${eolDate})\n\nAction Required: This version is no longer supported. Upgrade immediately to continue receiving updates\n\nReplacement: Run ${uiCommandReference('npm install -g @hubspot/cli@latest')} to upgrade\n\n${uiLink('CLI Support Guidelines', CLI_SUPPORT_GUIDELINES_URL)}`,
     },
   },
   projectProfiles: {

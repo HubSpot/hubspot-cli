@@ -16,9 +16,9 @@ import {
 } from '../../types/Yargs.js';
 import { makeWrappedYargsHandler } from '../../lib/yargs/makeWrappedYargsHandler.js';
 import {
-  InstallStatusJsonOutput,
-  InstallStatusSchema,
-} from '../../lib/jsonOutput/appInstallStatus.js';
+  ProjectAppInstallStatusJsonOutput,
+  ProjectAppInstallStatusSchema,
+} from '../../lib/jsonOutput/projectAppInstallStatus.js';
 import { makeYargsBuilder } from '../../lib/yargsUtils.js';
 import { uiLogger } from '../../lib/ui/logger.js';
 import {
@@ -40,7 +40,7 @@ export type ProjectInstallStatusArgs = CommonArgs &
   ConfigArgs &
   AccountArgs &
   EnvironmentArgs &
-  JSONOutputArgs<InstallStatusJsonOutput>;
+  JSONOutputArgs<ProjectAppInstallStatusJsonOutput>;
 
 async function handler(
   args: ArgumentsCamelCase<ProjectInstallStatusArgs>
@@ -224,7 +224,7 @@ const projectInstallStatusCommand: YargsCommandModule<
   command,
   describe,
   handler: makeWrappedYargsHandler('project-app-install-status', handler, {
-    jsonOutputSchema: InstallStatusSchema,
+    jsonOutputSchema: ProjectAppInstallStatusSchema,
   }),
   builder,
 };

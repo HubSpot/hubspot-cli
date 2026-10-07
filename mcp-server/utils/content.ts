@@ -22,6 +22,14 @@ export async function formatTextContents(
   };
 }
 
+export async function formatErrorTextContents(
+  ...outputs: (string | undefined)[]
+): Promise<McpToolResponse> {
+  const response = await formatTextContents(...outputs);
+  response.isError = true;
+  return response;
+}
+
 export function formatTextContent(text: string): TextContent {
   return {
     type: 'text',

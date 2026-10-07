@@ -4,6 +4,7 @@ import { uiLogger } from '../../../lib/ui/logger.js';
 import { getConfigAccountById } from '@hubspot/local-dev-lib/config';
 import { migrateApp, MigrateAppArgs } from '../../../lib/app/migrate.js';
 import { EXIT_CODES } from '../../../lib/enums/exitCodes.js';
+import { commands } from '../../../lang/en.js';
 import migrateCommand from '../migrate.js';
 import { Mock, Mocked } from 'vitest';
 
@@ -91,6 +92,16 @@ describe('commands/app/migrate', () => {
     });
   });
 
+  describe('describe', () => {
+    it('should mark the command as deprecated and state the 2026.09 support cutoff', () => {
+      expect(migrateCommand.describe).toEqual(
+        commands.project.migrateApp.describe
+      );
+      expect(commands.project.migrateApp.describe).toContain('[DEPRECATED]');
+      expect(commands.project.migrateApp.describe).toContain('2026.09');
+    });
+  });
+
   describe('builder', () => {
     it('should add required options', async () => {
       await migrateCommand.builder(mockYargs);
@@ -111,6 +122,12 @@ describe('commands/app/migrate', () => {
           }),
           'platform-version': expect.objectContaining({
             type: 'string',
+            choices: [
+              PLATFORM_VERSIONS.v2025_2,
+              PLATFORM_VERSIONS.v2026_03_BETA,
+              PLATFORM_VERSIONS.v2026_03,
+              PLATFORM_VERSIONS.v2026_09,
+            ],
             default: '2026.03',
           }),
         })

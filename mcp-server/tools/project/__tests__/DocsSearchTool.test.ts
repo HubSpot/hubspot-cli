@@ -60,7 +60,7 @@ describe('mcp-server/tools/project/DocsSearchTool', () => {
         expect.objectContaining({
           title: 'Search HubSpot Developer Documentation',
           description:
-            'Use this first whenever you need details about HubSpot APIs, SDKs, integrations, or developer platform features. This searches the official HubSpot Developer Documentation and returns the most relevant pages, each with a URL for use in `fetch-doc`. Always follow this with a fetch to get the full, authoritative content before making plans or writing answers.',
+            'Use this first for any HubSpot developer question, including whether an API or feature is available on a subscription tier or plan (for example "is the content audit API available on Content Hub Professional"). The doc you fetch next states the required product and tier; report it in plain terms (for example "requires Content Hub Enterprise") rather than quoting raw spec fields. This searches the official HubSpot Developer Documentation and returns the most relevant pages, each with a URL for use in `fetch-doc`. Always follow this with a fetch to get the full, authoritative content before making plans or writing answers.',
           inputSchema: expect.any(Object),
         }),
         expect.any(Function)
@@ -74,6 +74,7 @@ describe('mcp-server/tools/project/DocsSearchTool', () => {
     const mockInput = {
       docsSearchQuery: 'test query',
       docsSearchLimit: 5,
+      docsSearchVersion: 'latest',
       absoluteCurrentWorkingDirectory: '/foo',
     };
 
@@ -129,11 +130,12 @@ describe('mcp-server/tools/project/DocsSearchTool', () => {
 
       const result = await tool.handler(mockInput);
 
-      expect(mockedDiscoverAccountTargets).toHaveBeenCalledWith();
+      expect(mockedDiscoverAccountTargets).toHaveBeenCalledTimes(1);
       expect(mockHttp.post).toHaveBeenCalledWith(12345, {
         url: 'dev/docs/llms/v1/docs-search',
         data: {
           query: 'test query',
+          version: 'latest',
         },
       });
 
@@ -149,6 +151,33 @@ describe('mcp-server/tools/project/DocsSearchTool', () => {
       expect(resultText).toContain('https://example.com/doc2');
       expect(resultText).toContain('Score: 0.8');
       expect(resultText).toContain('Test content 2');
+    });
+
+    it('should pass through an explicit version override', async () => {
+      const mockResponse: DocsSearchResponse = {
+        results: [
+          {
+            title: 'Legacy Doc',
+            content: 'Legacy content',
+            description: 'Legacy description',
+            url: 'https://example.com/legacy-doc',
+            score: 0.9,
+          },
+        ],
+      };
+
+      // @ts-expect-error - Mocking axios response structure
+      mockHttp.post.mockResolvedValue({ data: mockResponse });
+
+      await tool.handler({ ...mockInput, docsSearchVersion: 'legacy' });
+
+      expect(mockHttp.post).toHaveBeenCalledWith(12345, {
+        url: 'dev/docs/llms/v1/docs-search',
+        data: {
+          query: 'test query',
+          version: 'legacy',
+        },
+      });
     });
 
     it('should dedupe results by URL before applying limit', async () => {

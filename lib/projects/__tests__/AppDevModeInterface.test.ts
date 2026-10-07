@@ -147,8 +147,12 @@ describe('AppDevModeInterface', () => {
     mockLocalDevLogger = {} as unknown as Mocked<LocalDevLogger>;
 
     // Mock constructors
-    (LocalDevState as Mock).mockImplementation(() => mockLocalDevState);
-    (LocalDevLogger as Mock).mockImplementation(() => mockLocalDevLogger);
+    (LocalDevState as Mock).mockImplementation(function () {
+      return mockLocalDevState;
+    });
+    (LocalDevLogger as Mock).mockImplementation(function () {
+      return mockLocalDevLogger;
+    });
 
     // Mock external dependencies
     (fetchAppMetadataBySourceId as Mock).mockResolvedValue({

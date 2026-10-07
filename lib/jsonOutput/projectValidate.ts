@@ -12,7 +12,7 @@ const ProfileValidationSchema = z.object({
   valid: z.boolean(),
 });
 
-export const ValidateSchema = z.object({
+export const ProjectValidateSchema = z.object({
   valid: z.boolean(),
   projectName: z.string().optional(),
   platformVersion: z.string().optional(),
@@ -26,4 +26,4 @@ export type ValidationIssueJsonOutput = z.infer<typeof ValidationIssueSchema>;
 export type ProfileValidationJsonOutput = z.infer<
   typeof ProfileValidationSchema
 >;
-export type ValidateJsonOutput = z.infer<typeof ValidateSchema>;
+export type ProjectValidateJsonOutput = z.infer<typeof ProjectValidateSchema>;

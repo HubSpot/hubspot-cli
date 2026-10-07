@@ -1,5 +1,8 @@
-import { mapReleaseToJsonOutput } from '../release.js';
-import { Release } from '../../../api/releases.js';
+import {
+  mapReleaseToJsonOutput,
+  ProjectReleaseSchema,
+} from '../projectRelease.js';
+import { CreatedRelease, Release } from '../../../api/releases.js';
 
 describe('lib/jsonOutput/release', () => {
   describe('mapReleaseToJsonOutput()', () => {
@@ -14,6 +17,20 @@ describe('lib/jsonOutput/release', () => {
         releaseTag: 'v1.0.0',
         buildId: 42,
         createdAt: '2026-01-01T00:00:00Z',
+        components: undefined,
+      });
+    });
+
+    it('should map a tag-free (standalone) release with releaseTag undefined', () => {
+      const release: CreatedRelease = {
+        buildId: 7,
+        createdAt: '2026-02-02T00:00:00Z',
+      };
+
+      expect(mapReleaseToJsonOutput(release)).toEqual({
+        releaseTag: undefined,
+        buildId: 7,
+        createdAt: '2026-02-02T00:00:00Z',
         components: undefined,
       });
     });
@@ -104,6 +121,35 @@ describe('lib/jsonOutput/release', () => {
         'rootPath',
         'id',
       ]);
+    });
+  });
+
+  describe('ProjectReleaseSchema', () => {
+    it('should accept a mapped tag-free (standalone) release', () => {
+      const release: CreatedRelease = {
+        buildId: 7,
+        createdAt: '2026-02-02T00:00:00Z',
+      };
+
+      const result = ProjectReleaseSchema.safeParse(
+        mapReleaseToJsonOutput(release)
+      );
+
+      expect(result.success).toBe(true);
+    });
+
+    it('should accept a mapped tagged release', () => {
+      const release: CreatedRelease = {
+        releaseTag: 'v1.0.0',
+        buildId: 42,
+        createdAt: '2026-01-01T00:00:00Z',
+      };
+
+      const result = ProjectReleaseSchema.safeParse(
+        mapReleaseToJsonOutput(release)
+      );
+
+      expect(result.success).toBe(true);
     });
   });
 });

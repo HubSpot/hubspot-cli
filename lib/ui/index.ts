@@ -250,12 +250,23 @@ export function uiDeprecatedDescription(
   return uiDeprecatedTag(tag);
 }
 
+// export function uiCommandRenamedDescription(
+//   describe: string | false | undefined,
+//   newCommand: string
+// ): string | undefined {
+//   return uiDeprecatedTag(
+//     `${describe} ${uiMessages.commandRenamedMessage(newCommand)}`,
+//     false
+//   );
+// }
+
+// Replace this with the above code once we've upgraded to yargs 18.0.0
 export function uiCommandRenamedDescription(
   describe: string | false | undefined,
   newCommand: string
 ): string | undefined {
   return uiDeprecatedTag(
-    `${describe} ${uiMessages.commandRenamedMessage(newCommand)}`,
+    `${describe} ${uiMessages.commandRenamedPlainMessage(newCommand)}`,
     false
   );
 }

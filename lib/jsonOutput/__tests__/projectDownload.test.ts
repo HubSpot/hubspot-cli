@@ -1,10 +1,10 @@
-import { DownloadSchema } from '../download.js';
+import { ProjectDownloadSchema } from '../projectDownload.js';
 
 describe('lib/jsonOutput/download', () => {
-  describe('DownloadSchema', () => {
+  describe('ProjectDownloadSchema', () => {
     it('should validate a download result', () => {
       expect(
-        DownloadSchema.safeParse({
+        ProjectDownloadSchema.safeParse({
           projectName: 'my-project',
           buildId: 7,
           dest: '/tmp/my-project',
@@ -14,8 +14,10 @@ describe('lib/jsonOutput/download', () => {
 
     it('should reject a result missing the destination', () => {
       expect(
-        DownloadSchema.safeParse({ projectName: 'my-project', buildId: 7 })
-          .success
+        ProjectDownloadSchema.safeParse({
+          projectName: 'my-project',
+          buildId: 7,
+        }).success
       ).toBe(false);
     });
   });

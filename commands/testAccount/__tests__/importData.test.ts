@@ -45,6 +45,7 @@ describe('commands/testAccount/importData', () => {
 
   beforeEach(() => {
     mockExit.mockReset();
+    mockExit.mockImplementation(() => undefined as never);
     mockHandleImportData.mockReset();
     mockHandleTargetTestAccountSelectionFlow.mockReset();
     mockTrackCommandUsage.mockReset();

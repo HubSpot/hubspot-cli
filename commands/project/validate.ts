@@ -20,15 +20,15 @@ import {
 } from '../../lib/projects/validate.js';
 import { ProjectConfig } from '../../types/Projects.js';
 import {
-  ValidateJsonOutput,
-  ValidateSchema,
-} from '../../lib/jsonOutput/validate.js';
+  ProjectValidateJsonOutput,
+  ProjectValidateSchema,
+} from '../../lib/jsonOutput/projectValidate.js';
 
 const command = 'validate';
 const describe = commands.project.validate.describe;
 
 export type ProjectValidateArgs = CommonArgs &
-  JSONOutputArgs<ValidateJsonOutput> & {
+  JSONOutputArgs<ProjectValidateJsonOutput> & {
     profile?: string;
   };
 
@@ -42,9 +42,9 @@ function generateJson({
   result,
   projectConfig,
   profile,
-}: GenerateJsonArgs): ValidateJsonOutput {
+}: GenerateJsonArgs): ProjectValidateJsonOutput {
   const { valid, errors, warnings, profiles } = result;
-  const output: ValidateJsonOutput = { valid, errors, warnings };
+  const output: ProjectValidateJsonOutput = { valid, errors, warnings };
   if (projectConfig) {
     output.projectName = projectConfig.name;
     output.platformVersion = projectConfig.platformVersion;
@@ -182,7 +182,7 @@ const projectValidateCommand: YargsCommandModule<unknown, ProjectValidateArgs> =
     command,
     describe,
     handler: makeWrappedYargsHandler('project-validate', handler, {
-      jsonOutputSchema: ValidateSchema,
+      jsonOutputSchema: ProjectValidateSchema,
     }),
     builder,
   };

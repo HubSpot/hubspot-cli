@@ -13,13 +13,14 @@ import {
 import { cloneGithubRepo } from '@hubspot/local-dev-lib/github';
 import { uiLogger } from '../../ui/logger.js';
 import { trackCommandUsage } from '../../usageTracking.js';
+import { ProjectAddJsonOutput } from '../../jsonOutput/projectAdd.js';
 
 export async function legacyAddComponent(
   args: { name?: string; type?: string },
   projectDir: string,
   projectConfig: ProjectConfig,
   derivedAccountId: number
-) {
+): Promise<ProjectAddJsonOutput> {
   // We currently only support adding private apps to projects
   let projectContainsPublicApp = false;
   try {
@@ -73,6 +74,10 @@ export async function legacyAddComponent(
     );
 
     uiLogger.success(commands.project.add.success(projectConfig.name));
+
+    return {
+      addedFeatures: [projectAddPromptResponse.componentTemplate.type],
+    };
   } catch (error) {
     throw new Error(commands.project.add.error.failedToDownloadComponent);
   }

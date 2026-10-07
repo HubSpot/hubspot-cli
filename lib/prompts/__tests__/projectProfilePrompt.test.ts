@@ -1,6 +1,9 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import * as profileParsing from '@hubspot/project-parsing-lib/profiles';
-import { projectProfilePrompt } from '../projectProfilePrompt.js';
+import {
+  generateProfilePromptOption,
+  projectProfilePrompt,
+} from '../projectProfilePrompt.js';
 import * as promptUtils from '../promptUtils.js';
 import * as projectProfiles from '../../projects/projectProfiles.js';
 import { lib } from '../../../lang/en.js';
@@ -133,6 +136,28 @@ describe('projectProfilePrompt', () => {
         { name: 'profile1 [123456]', value: 'profile1' },
         { name: 'profile2 [123456]', value: 'profile2' },
       ],
+    });
+  });
+
+  describe('generateProfilePromptOption', () => {
+    it('labels a valid profile with its account', () => {
+      expect(
+        generateProfilePromptOption(mockProjectDir, mockProjectConfig, 'prod')
+      ).toEqual({ name: 'prod [123456]', value: 'prod' });
+    });
+
+    it('labels and disables a profile that cannot be loaded', () => {
+      mockedLoadProfile.mockImplementation(() => {
+        throw new Error('bad profile');
+      });
+
+      expect(
+        generateProfilePromptOption(mockProjectDir, mockProjectConfig, 'prod')
+      ).toEqual({
+        name: 'prod [Invalid profile]',
+        value: 'prod',
+        disabled: true,
+      });
     });
   });
 });

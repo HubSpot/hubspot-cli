@@ -29,9 +29,9 @@ import { makeWrappedYargsHandler } from '../../lib/yargs/makeWrappedYargsHandler
 import {
   mapAccountToTargetAccount,
   PreviewJsonOutput,
-  UploadJsonOutput,
-  UploadSchema,
-} from '../../lib/jsonOutput/upload.js';
+  ProjectUploadJsonOutput,
+  ProjectUploadSchema,
+} from '../../lib/jsonOutput/projectUpload.js';
 import { ProjectPollResult } from '../../types/Projects.js';
 import { makeYargsBuilder } from '../../lib/yargsUtils.js';
 import { projectProfilePrompt } from '../../lib/prompts/projectProfilePrompt.js';
@@ -43,7 +43,7 @@ const command = 'upload';
 const describe = commands.project.upload.describe;
 
 export type ProjectUploadArgs = CommonArgs &
-  JSONOutputArgs<UploadJsonOutput> & {
+  JSONOutputArgs<ProjectUploadJsonOutput> & {
     force: boolean;
     forceCreate: boolean;
     message: string;
@@ -415,7 +415,7 @@ const projectUploadCommand: YargsCommandModule<unknown, ProjectUploadArgs> = {
   command,
   describe,
   handler: makeWrappedYargsHandler('project-upload', handler, {
-    jsonOutputSchema: UploadSchema,
+    jsonOutputSchema: ProjectUploadSchema,
   }),
   builder,
 };

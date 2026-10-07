@@ -10,6 +10,7 @@ import { formatTextContents } from '../../utils/content.js';
 import { walk } from '@hubspot/local-dev-lib/fs';
 import path from 'path';
 import { PROJECT_CONFIG_FILE } from '../../../lib/constants.js';
+import { elicitSelection } from '../../utils/elicitSelection.js';
 
 const TOOL_NAME = 'find-projects';
 
@@ -49,6 +50,21 @@ export class FindProjectsTool extends Tool<FindProjectsInputSchema> {
       }
 
       const projectDirs = projectFiles.map(file => path.dirname(file));
+
+      if (projectDirs.length > 1) {
+        const selected = await elicitSelection(this.mcpServer, this.logger, {
+          message: 'Select the HubSpot project to use.',
+          title: 'HubSpot project',
+          options: projectDirs.map(dir => ({ value: dir, label: dir })),
+        });
+        if (selected) {
+          return formatTextContents(`Selected project: ${selected}`);
+        }
+        return formatTextContents(
+          `Several projects are available. Ask the user which to use, then call ${TOOL_NAME} again with absoluteDirectory narrowed to one of: ${projectDirs.join(', ')}.`
+        );
+      }
+
       const output = [
         `Found ${projectFiles.length} project(s):`,
         '',

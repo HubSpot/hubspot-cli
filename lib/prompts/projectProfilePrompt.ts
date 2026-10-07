@@ -3,15 +3,20 @@ import { getAllHsProfiles } from '@hubspot/project-parsing-lib/profiles';
 import { listPrompt } from './promptUtils.js';
 import { loadProfile } from '../projects/projectProfiles.js';
 import { lib } from '../../lang/en.js';
-import { PromptChoices } from '../../types/Prompts.js';
 import { ProjectConfig } from '../../types/Projects.js';
 
-function generateProfilePromptOption(
+type ProfilePromptOption = {
+  name: string;
+  value: string;
+  disabled?: boolean;
+};
+
+export function generateProfilePromptOption(
   projectDir: string,
   projectConfig: ProjectConfig,
   profileName: string
-): PromptChoices[number] {
-  const choice: PromptChoices[number] = {
+): ProfilePromptOption {
+  const choice: ProfilePromptOption = {
     name: profileName,
     value: profileName,
   };

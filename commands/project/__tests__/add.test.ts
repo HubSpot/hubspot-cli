@@ -83,7 +83,8 @@ describe('commands/project/add', () => {
       derivedAccountId: 123,
       name: 'test-component',
       type: 'module',
-    } as ArgumentsCamelCase<ProjectAddArgs>;
+      addJsonOutput: vi.fn(),
+    } as unknown as ArgumentsCamelCase<ProjectAddArgs>;
 
     beforeEach(() => {
       mockedGetIsInProject.mockReturnValue(true);
@@ -92,8 +93,8 @@ describe('commands/project/add', () => {
         projectDir: mockProjectDir,
       });
       mockedTrackCommandUsage.mockResolvedValue();
-      mockedV2AddComponent.mockResolvedValue();
-      mockedLegacyAddComponent.mockResolvedValue();
+      mockedV2AddComponent.mockResolvedValue({ addedFeatures: ['module'] });
+      mockedLegacyAddComponent.mockResolvedValue({ addedFeatures: ['module'] });
       vi.spyOn(process, 'exit').mockImplementation(() => {
         throw new Error('process.exit called');
       });

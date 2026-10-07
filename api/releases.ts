@@ -18,6 +18,13 @@ export type Release = {
   }>;
 };
 
+// A newly created release can be tag-free. When a build contains only global
+// (standalone) components, for example a CMS theme, the platform deploys it
+// immediately and returns no version tag. Tagged releases still apply to apps.
+export type CreatedRelease = Omit<Release, 'releaseTag'> & {
+  releaseTag?: string;
+};
+
 export type FetchListReleasesResponse = {
   results: Array<Release>;
   paging: {
@@ -42,8 +49,8 @@ export function createRelease(
   accountId: number,
   projectName: string,
   buildId: number
-): HubSpotPromise<Release> {
-  return http.post<Release>(accountId, {
+): HubSpotPromise<CreatedRelease> {
+  return http.post<CreatedRelease>(accountId, {
     url: `${PROJECTS_API_PATH}/${encodeURIComponent(projectName)}/releases`,
     data: { buildId },
   });

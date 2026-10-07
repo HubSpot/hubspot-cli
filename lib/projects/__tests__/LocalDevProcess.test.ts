@@ -129,9 +129,15 @@ describe('LocalDevProcess', () => {
     } as unknown as Mocked<DevSessionManager>;
 
     // Mock constructors
-    (LocalDevLogger as Mock).mockImplementation(() => mockLocalDevLogger);
-    (DevServerManager as Mock).mockImplementation(() => mockDevServerManager);
-    (DevSessionManager as Mock).mockImplementation(() => mockDevSessionManager);
+    (LocalDevLogger as Mock).mockImplementation(function () {
+      return mockLocalDevLogger;
+    });
+    (DevServerManager as Mock).mockImplementation(function () {
+      return mockDevServerManager;
+    });
+    (DevSessionManager as Mock).mockImplementation(function () {
+      return mockDevSessionManager;
+    });
 
     // Mock external functions
     (isHubSpotHttpError as unknown as Mock).mockReturnValue(false);
