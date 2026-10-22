@@ -49,6 +49,8 @@ import { initializeSpinniesManager } from '../lib/middleware/spinniesMiddleware.
 import { addCommandSuggestions } from '../lib/commandSuggestion.js';
 import { pkg } from '../lib/jsonLoader.js';
 import { parseYargsOrExit } from '../lib/yargs/parseYargsOrExit.js';
+import { getRootAgentHelp, recordCommands } from '../lib/agentHelp.js';
+import { hasFlag } from '../lib/utils/hasFlag.js';
 
 function getTerminalWidth(): number {
   const width = yargs().terminalWidth();
@@ -74,7 +76,20 @@ function handleFailure(msg: string | null, err: unknown, yargs: Argv): never {
   }
 }
 
-const argv = yargs(process.argv.slice(2))
+const isAgentHelp = hasFlag('agent-help');
+const isRootAgentHelp =
+  isAgentHelp && process.argv.slice(2).every(arg => arg.startsWith('-'));
+
+// --agent-help shows the normal help, so the command never runs. Some
+// builders read process.argv directly, so --help goes there too.
+if (isAgentHelp) {
+  process.argv.splice(process.argv.indexOf('--agent-help') + 1, 0, '--help');
+}
+
+const rootYargs = yargs(process.argv.slice(2));
+const rootCommands = isRootAgentHelp ? recordCommands(rootYargs) : [];
+
+const argv = rootYargs
   .usage('The command line interface to interact with HubSpot.')
   .middleware([
     setCLILogLevel,
@@ -112,6 +127,10 @@ const argv = yargs(process.argv.slice(2))
     hidden: true,
     type: 'boolean',
   })
+  .option('agent-help', {
+    describe: lib.commonOpts.options.agentHelp,
+    type: 'boolean',
+  })
   .check(performChecks)
   // Getting started / important
   .command(getStartedCommand)
@@ -143,6 +162,10 @@ const argv = yargs(process.argv.slice(2))
   .command(doctorCommand)
   .command(mcpCommand)
   .command(upgradeCommand);
+
+if (isRootAgentHelp) {
+  argv.epilogue(await getRootAgentHelp(rootCommands));
+}
 
 const parser = addCommandSuggestions(argv)
   .help()

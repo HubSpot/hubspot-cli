@@ -25,6 +25,7 @@ import {
   uiLink,
 } from '../ui/index.js';
 import { LoadedProjectConfig } from '../projects/config.js';
+import { archiveProjectSource } from '../projects/archive.js';
 import { ensureProjectExists } from '../projects/ensureProjectExists.js';
 import SpinniesManager from '../ui/SpinniesManager.js';
 import { DEFAULT_POLLING_STATUS_LOOKUP, poll } from '../polling.js';
@@ -41,7 +42,6 @@ import {
   MigrationFailed,
   MigrationStatus,
 } from '../../api/migrate.js';
-import fs from 'fs';
 import { lib } from '../../lang/en.js';
 import {
   AccountArgs,
@@ -589,16 +589,8 @@ export async function downloadProjectFiles(
       absoluteDestPath = projectDir;
       const { srcDir } = projectConfig.projectConfig;
 
-      const archiveDest =
-        srcDir === '.'
-          ? path.join(
-              path.dirname(projectDir),
-              `${path.basename(projectDir)}-archive`
-            )
-          : path.join(projectDir, 'archive');
-
       // Move the existing source directory to archive
-      fs.renameSync(path.join(projectDir, srcDir), archiveDest);
+      const archiveDest = archiveProjectSource(projectDir, srcDir);
 
       uiLogger.info(lib.migrate.sourceContentsMoved(archiveDest));
     } else {

@@ -1,7 +1,7 @@
 export const MCP_SERVER_NAME = 'HubSpotDev';
 
 export type McpClientId =
-  'codex' | 'claude' | 'cursor' | 'devin' | 'gemini' | 'opencode' | 'vscode';
+  'codex' | 'claude' | 'cursor' | 'devin' | 'opencode' | 'vscode';
 
 type McpClientDetection = {
   type: 'json' | 'text';
@@ -11,7 +11,10 @@ type McpClientDetection = {
 export type McpClient = {
   id: McpClientId;
   detection: McpClientDetection;
+  skillsPathSegments: string[];
 };
+
+const SHARED_SKILLS_PATH_SEGMENTS = ['.agents', 'skills'];
 
 function getVsCodeMcpConfigPathSegments(): string[] {
   if (process.platform === 'darwin') {
@@ -32,21 +35,17 @@ export const MCP_CLIENTS: McpClient[] = [
       type: 'text',
       pathSegments: ['.codex', 'config.toml'],
     },
+    skillsPathSegments: SHARED_SKILLS_PATH_SEGMENTS,
   },
   {
     id: 'claude',
     detection: { type: 'json', pathSegments: ['.claude.json'] },
+    skillsPathSegments: ['.claude', 'skills'],
   },
   {
     id: 'cursor',
     detection: { type: 'json', pathSegments: ['.cursor', 'mcp.json'] },
-  },
-  {
-    id: 'gemini',
-    detection: {
-      type: 'json',
-      pathSegments: ['.gemini', 'settings.json'],
-    },
+    skillsPathSegments: SHARED_SKILLS_PATH_SEGMENTS,
   },
   {
     id: 'vscode',
@@ -54,6 +53,7 @@ export const MCP_CLIENTS: McpClient[] = [
       type: 'json',
       pathSegments: getVsCodeMcpConfigPathSegments(),
     },
+    skillsPathSegments: SHARED_SKILLS_PATH_SEGMENTS,
   },
   {
     id: 'devin',
@@ -61,6 +61,7 @@ export const MCP_CLIENTS: McpClient[] = [
       type: 'json',
       pathSegments: ['.codeium', 'windsurf', 'mcp_config.json'],
     },
+    skillsPathSegments: SHARED_SKILLS_PATH_SEGMENTS,
   },
   {
     id: 'opencode',
@@ -68,6 +69,7 @@ export const MCP_CLIENTS: McpClient[] = [
       type: 'json',
       pathSegments: ['.config', 'opencode', 'config.json'],
     },
+    skillsPathSegments: SHARED_SKILLS_PATH_SEGMENTS,
   },
 ];
 

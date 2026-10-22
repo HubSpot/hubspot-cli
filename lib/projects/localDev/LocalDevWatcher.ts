@@ -11,6 +11,8 @@ const WATCH_EVENTS = {
   unlinkDir: 'unlinkDir',
 };
 
+const IGNORED_DIRECTORIES = ['dist', 'node_modules'];
+
 class LocalDevWatcher {
   private localDevProcess: LocalDevProcess;
   private watcher: FSWatcher | null;
@@ -34,7 +36,8 @@ class LocalDevWatcher {
   start(): void {
     this.watcher = chokidar.watch(this.localDevProcess.projectDir, {
       ignoreInitial: true,
-      ignored: ['**/dist', '**/node_modules'],
+      ignored: filePath =>
+        IGNORED_DIRECTORIES.includes(path.basename(filePath)),
     });
 
     const configPaths = Object.values(this.localDevProcess.projectNodes).map(

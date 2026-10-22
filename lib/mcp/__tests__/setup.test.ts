@@ -1,7 +1,6 @@
 import { execAsync } from '../../../mcp-server/utils/command.js';
 import {
   setupCodex,
-  setupGemini,
   setupClaudeCode,
   setupCursor,
   setupDevin,
@@ -15,6 +14,7 @@ import { logError } from '../../errorHandlers/index.js';
 import { uiLogger } from '../../ui/logger.js';
 import { promptUser } from '../../prompts/promptUtils.js';
 import { commands } from '../../../lang/en.js';
+import { SKILLS_SOURCE_DIR, installSkills } from '../skills.js';
 import fs from 'fs-extra';
 import { existsSync } from 'fs';
 import os from 'os';
@@ -30,6 +30,14 @@ vi.mock('fs-extra');
 vi.mock('fs');
 vi.mock('os');
 vi.mock('path');
+vi.mock('../skills.js', () => ({
+  MCP_SKILLS: [
+    { name: 'hubspot-new-app', description: 'New app skill' },
+    { name: 'hubspot-fix-build', description: 'Fix build skill' },
+  ],
+  SKILLS_SOURCE_DIR: '/cli/mcp-server/skills',
+  installSkills: vi.fn(),
+}));
 
 const mockedExecAsync = vi.mocked(execAsync);
 const mockedSpinniesManager = vi.mocked(SpinniesManager);
@@ -58,17 +66,9 @@ describe('lib/mcp/setup', () => {
       expect(toolValues).toContain('claude');
       expect(toolValues).toContain('cursor');
       expect(toolValues).toContain('devin');
-      expect(toolValues).toContain('gemini');
       expect(toolValues).toContain('opencode');
       expect(toolValues).toContain('vscode');
       expect(toolValues).toContain('other');
-    });
-
-    it('should include Gemini in the supported tools list', () => {
-      const geminiTool = supportedTools.find(tool => tool.value === 'gemini');
-      expect(geminiTool).toBeDefined();
-      expect(geminiTool?.name).toBe(commands.mcp.setup.gemini);
-      expect(geminiTool?.value).toBe('gemini');
     });
   });
 
@@ -180,82 +180,6 @@ describe('lib/mcp/setup', () => {
       expect(mockedExecAsync).toHaveBeenCalledWith(
         'codex mcp add "HubSpotDev" --env HUBSPOT_MCP_STANDALONE="true" -- test-command --arg1 --ai-agent codex'
       );
-    });
-  });
-
-  describe('setupGemini', () => {
-    const mockMcpCommand = {
-      command: 'test-command',
-      args: ['--arg1', '--arg2'],
-    };
-
-    it('should successfully configure Gemini CLI when command is available', async () => {
-      mockedExecAsync.mockResolvedValueOnce({
-        stdout: 'gemini version 1.0.0',
-        stderr: '',
-      });
-      mockedExecAsync.mockResolvedValueOnce({ stdout: '', stderr: '' });
-
-      const result = await setupGemini(mockMcpCommand);
-
-      expect(result).toBe(true);
-      expect(mockedSpinniesManager.add).toHaveBeenCalledWith('geminiSpinner', {
-        text: commands.mcp.setup.spinners.configuringGemini,
-      });
-      expect(mockedExecAsync).toHaveBeenCalledWith('gemini --version');
-      expect(mockedExecAsync).toHaveBeenCalledWith(
-        'gemini mcp add -s user "HubSpotDev" test-command --arg1 --arg2 --ai-agent gemini'
-      );
-      expect(mockedSpinniesManager.succeed).toHaveBeenCalledWith(
-        'geminiSpinner',
-        {
-          text: commands.mcp.setup.spinners.configuredGemini,
-        }
-      );
-    });
-
-    it('should use default mcp command when none provided', async () => {
-      mockedExecAsync.mockResolvedValueOnce({
-        stdout: 'gemini version 1.0.0',
-        stderr: '',
-      });
-      mockedExecAsync.mockResolvedValueOnce({ stdout: '', stderr: '' });
-
-      const result = await setupGemini();
-
-      expect(result).toBe(true);
-      expect(mockedExecAsync).toHaveBeenCalledWith(
-        'gemini mcp add -s user "HubSpotDev" hs mcp start --ai-agent gemini'
-      );
-    });
-
-    it('should handle gemini command not found', async () => {
-      const error = new Error('Command not found: gemini');
-      mockedExecAsync.mockRejectedValueOnce(error);
-
-      const result = await setupGemini(mockMcpCommand);
-
-      expect(result).toBe(false);
-      expect(mockedSpinniesManager.fail).toHaveBeenCalledWith('geminiSpinner', {
-        text: commands.mcp.setup.spinners.geminiNotFound,
-      });
-    });
-
-    it('should handle gemini installation failure', async () => {
-      const error = new Error('Some other error');
-      mockedExecAsync.mockResolvedValueOnce({
-        stdout: 'gemini version 1.0.0',
-        stderr: '',
-      });
-      mockedExecAsync.mockRejectedValueOnce(error);
-
-      const result = await setupGemini(mockMcpCommand);
-
-      expect(result).toBe(false);
-      expect(mockedSpinniesManager.fail).toHaveBeenCalledWith('geminiSpinner', {
-        text: commands.mcp.setup.spinners.geminiInstallFailed,
-      });
-      expect(mockedLogError).toHaveBeenCalledWith(error);
     });
   });
 
@@ -742,8 +666,11 @@ describe('lib/mcp/setup', () => {
     const mockedExistsSync = vi.mocked(existsSync);
     const mockedFs = vi.mocked(fs);
     const mockedUiLogger = vi.mocked(uiLogger);
+    const mockedInstallSkills = vi.mocked(installSkills);
 
     beforeEach(() => {
+      mockedPromptUser.mockResolvedValue({ selectedSkills: [] });
+      mockedInstallSkills.mockReturnValue(true);
       vi.mocked(os.homedir).mockReturnValue('/home/user');
       vi.mocked(path.join).mockImplementation((...parts) => parts.join('/'));
       mockedExistsSync.mockReturnValue(true);
@@ -841,6 +768,7 @@ describe('lib/mcp/setup', () => {
       const result = await configureMcpServer({
         targets: ['cursor'],
         standalone: false,
+        skills: [],
       });
 
       expect(result).toEqual(['cursor']);
@@ -860,6 +788,7 @@ describe('lib/mcp/setup', () => {
         targets: ['cursor'],
         standalone: true,
         cliVersion: '8.5.0',
+        skills: [],
       });
 
       expect(result).toEqual(['cursor']);
@@ -937,13 +866,16 @@ describe('lib/mcp/setup', () => {
       expect(result).toEqual(['cursor', 'devin']);
     });
 
-    it('should return empty array, skip standalone prompt, and skip success message for other-only target', async () => {
+    it('should return empty array, skip prompts and skills, and skip success message for other-only target', async () => {
       const result = await configureMcpServer({ targets: ['other'] });
 
       expect(result).toEqual([]);
       expect(mockedPromptUser).not.toHaveBeenCalled();
+      expect(mockedInstallSkills).not.toHaveBeenCalled();
       expect(mockedUiLogger.info).not.toHaveBeenCalled();
-      expect(mockedUiLogger.log).toHaveBeenCalled();
+      expect(mockedUiLogger.log).toHaveBeenCalledWith(
+        commands.mcp.setup.otherInstructions.header
+      );
     });
 
     it('should exclude other from return value when mixed with real targets', async () => {
@@ -959,7 +891,130 @@ describe('lib/mcp/setup', () => {
       expect(mockedUiLogger.info).toHaveBeenCalledWith(
         commands.mcp.setup.success(['cursor'])
       );
-      expect(mockedUiLogger.log).toHaveBeenCalled();
+      expect(mockedUiLogger.log).toHaveBeenCalledWith(
+        commands.mcp.setup.otherInstructions.header
+      );
+    });
+
+    describe('skills', () => {
+      it('should ask which skills to install, with none selected, when --skills is not provided', async () => {
+        mockedPromptUser.mockResolvedValueOnce({
+          selectedSkills: ['hubspot-new-app'],
+        });
+
+        await configureMcpServer({ targets: ['cursor'], standalone: false });
+
+        expect(mockedPromptUser).toHaveBeenCalledTimes(1);
+        expect(mockedPromptUser).toHaveBeenCalledWith(
+          expect.objectContaining({
+            name: 'selectedSkills',
+            type: 'checkbox',
+            message: commands.mcp.setup.prompts.selectSkills,
+            choices: [
+              {
+                name: 'hubspot-new-app - New app skill',
+                value: 'hubspot-new-app',
+              },
+              {
+                name: 'hubspot-fix-build - Fix build skill',
+                value: 'hubspot-fix-build',
+              },
+            ],
+          })
+        );
+        expect(mockedInstallSkills).toHaveBeenCalledTimes(1);
+        expect(mockedInstallSkills).toHaveBeenCalledWith(
+          ['cursor'],
+          ['hubspot-new-app']
+        );
+      });
+
+      it('should not install skills when the user selects none', async () => {
+        mockedPromptUser.mockResolvedValueOnce({ selectedSkills: [] });
+
+        await configureMcpServer({ targets: ['cursor'], standalone: false });
+
+        expect(mockedInstallSkills).not.toHaveBeenCalled();
+      });
+
+      it('should install the named skills without asking when --skills is provided', async () => {
+        await configureMcpServer({
+          targets: ['cursor', 'devin'],
+          standalone: false,
+          skills: ['hubspot-fix-build'],
+        });
+
+        expect(mockedPromptUser).not.toHaveBeenCalled();
+        expect(mockedInstallSkills).toHaveBeenCalledTimes(1);
+        expect(mockedInstallSkills).toHaveBeenCalledWith(
+          ['cursor', 'devin'],
+          ['hubspot-fix-build']
+        );
+      });
+
+      it('should skip skills without asking when --skills has no names', async () => {
+        await configureMcpServer({
+          targets: ['cursor'],
+          standalone: false,
+          skills: [],
+        });
+
+        expect(mockedPromptUser).not.toHaveBeenCalled();
+        expect(mockedInstallSkills).not.toHaveBeenCalled();
+      });
+
+      it('should only install skills for real clients when other is selected', async () => {
+        await configureMcpServer({
+          targets: ['cursor', 'other'],
+          standalone: false,
+          skills: ['hubspot-new-app'],
+        });
+
+        expect(mockedInstallSkills).toHaveBeenCalledTimes(1);
+        expect(mockedInstallSkills).toHaveBeenCalledWith(
+          ['cursor'],
+          ['hubspot-new-app']
+        );
+      });
+
+      it('should tell other tools where the skills are', async () => {
+        await configureMcpServer({ targets: ['other'] });
+
+        expect(mockedUiLogger.log).toHaveBeenCalledWith(
+          commands.mcp.setup.otherInstructions.skillsNote(SKILLS_SOURCE_DIR)
+        );
+      });
+
+      it('should throw and fail spinner when installing skills fails', async () => {
+        mockedInstallSkills.mockReturnValue(false);
+
+        await expect(
+          configureMcpServer({
+            targets: ['cursor'],
+            standalone: false,
+            skills: ['hubspot-new-app'],
+          })
+        ).rejects.toThrow();
+        expect(mockedSpinniesManager.fail).toHaveBeenCalledTimes(1);
+        expect(mockedSpinniesManager.fail).toHaveBeenCalledWith('mcpSetup', {
+          text: commands.mcp.setup.spinners.failedToConfigure,
+        });
+      });
+
+      it('should not install skills when an MCP setup fails', async () => {
+        mockedFs.readFileSync.mockImplementation(() => {
+          throw new Error('Permission denied');
+        });
+
+        await expect(
+          configureMcpServer({
+            targets: ['cursor'],
+            standalone: false,
+            skills: ['hubspot-new-app'],
+          })
+        ).rejects.toThrow();
+        expect(mockedInstallSkills).not.toHaveBeenCalled();
+      });
     });
   });
 });
