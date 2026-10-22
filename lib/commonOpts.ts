@@ -16,6 +16,7 @@ import { uiCommandReference } from './ui/index.js';
 import { lib } from '../lang/en.js';
 import { getTerminalUISupport, UI_COLORS } from './ui/index.js';
 import SpinniesManager from './ui/SpinniesManager.js';
+import { getCommandAgentHelp } from './agentHelp.js';
 
 export function addGlobalOptions(yargs: Argv) {
   yargs.version(false);
@@ -172,6 +173,12 @@ export async function addCustomHelpOutput(
 
       // Format the original help output to be more readable
       let commandHelp = await yargs.getHelp();
+      if (parsedArgv.agentHelp) {
+        commandHelp = `${commandHelp}\n\n${getCommandAgentHelp(
+          `${commandBase.trim()} ${commandString.split(' ')[0]}`,
+          commandHelp
+        )}`;
+      }
       ['Options:', 'Commands:', 'Examples:', 'Positionals:'].forEach(header => {
         commandHelp = commandHelp.replace(header, chalk.bold(header));
       });

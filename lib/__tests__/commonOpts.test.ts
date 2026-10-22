@@ -3,9 +3,11 @@ import {
   DEFAULT_CMS_PUBLISH_MODE,
 } from '@hubspot/local-dev-lib/constants/files';
 import { getConfig, getConfigAccountById } from '@hubspot/local-dev-lib/config';
-import { getCmsPublishMode } from '../commonOpts.js';
+import { addCustomHelpOutput, getCmsPublishMode } from '../commonOpts.js';
+import { uiLogger } from '../ui/logger.js';
+import { lib } from '../../lang/en.js';
 import { CmsPublishMode } from '@hubspot/local-dev-lib/types/Files';
-import { Arguments } from 'yargs';
+import yargs, { Arguments } from 'yargs';
 import { Mock } from 'vitest';
 
 const mockedGetConfigAccountById = getConfigAccountById as Mock;
@@ -27,6 +29,7 @@ function buildArguments(
 }
 
 vi.mock('@hubspot/local-dev-lib/config');
+vi.unmock('yargs');
 
 describe('lib/commonOpts', () => {
   describe('getCmsPublishMode()', () => {
@@ -114,6 +117,51 @@ describe('lib/commonOpts', () => {
           ).toBe(DEFAULT_CMS_PUBLISH_MODE);
         });
       });
+    });
+  });
+
+  describe('addCustomHelpOutput()', () => {
+    const originalArgv = process.argv;
+    const processExitSpy = vi.spyOn(process, 'exit');
+    const yargsWithHelp = yargs([]).option('json', { type: 'boolean' });
+
+    beforeEach(() => {
+      processExitSpy.mockImplementation(() => {
+        throw new Error('process.exit');
+      });
+    });
+
+    afterEach(() => {
+      process.argv = originalArgv;
+    });
+
+    it('should add the agent sections when --agent-help is passed', async () => {
+      process.argv = [
+        'node',
+        'hs',
+        'project',
+        'upload',
+        '--agent-help',
+        '--help',
+      ];
+
+      await addCustomHelpOutput(yargsWithHelp, 'upload', 'Upload a project');
+
+      const output = vi.mocked(uiLogger.log).mock.calls[0][0];
+      expect(output).toContain('--json');
+      expect(output).toContain(lib.agentHelp.jsonOutput.noSchema);
+      expect(output).toContain(lib.agentHelp.exitCodes);
+      expect(processExitSpy).toHaveBeenCalled();
+    });
+
+    it('should not add the agent sections to --help', async () => {
+      process.argv = ['node', 'hs', 'project', 'upload', '--help'];
+
+      await addCustomHelpOutput(yargsWithHelp, 'upload', 'Upload a project');
+
+      expect(vi.mocked(uiLogger.log).mock.calls[0][0]).not.toContain(
+        lib.agentHelp.exitCodes
+      );
     });
   });
 });

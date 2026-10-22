@@ -39,7 +39,7 @@ export async function importDataTestAccountSelectPrompt(
   }>({
     type: 'list',
     name: 'selectedAccountId',
-    message: '[--account] Select a developer test account:',
+    message: lib.prompts.importDataTestAccountSelectPrompt.message,
     choices: childAccounts,
   });
 }

@@ -55,7 +55,10 @@ export class FindProjectsTool extends Tool<FindProjectsInputSchema> {
         const selected = await elicitSelection(this.mcpServer, this.logger, {
           message: 'Select the HubSpot project to use.',
           title: 'HubSpot project',
-          options: projectDirs.map(dir => ({ value: dir, label: dir })),
+          options: projectDirs.map(dir => ({
+            value: dir,
+            label: path.relative(absoluteDirectory, dir) || '.',
+          })),
         });
         if (selected) {
           return formatTextContents(`Selected project: ${selected}`);

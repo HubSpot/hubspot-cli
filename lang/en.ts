@@ -35,6 +35,9 @@ import { getProductUpdatesUrl } from '../lib/links.js';
 import { HubSpotConfigAccount } from '@hubspot/local-dev-lib/types/Accounts';
 import { LocallyChangedComponents } from '../types/Projects.js';
 
+const AGENT_HELP_EXIT_CODES =
+  '0 means success. 1 means an error. 2 means a warning, for example a validation issue or JSON output that does not match its schema.';
+
 const MIGRATION_SUPPORT_CUTOFF_NOTICE =
   'Automated platform version migrations beyond 2026.09 will not be supported.';
 
@@ -1655,7 +1658,6 @@ export const commands = {
       claudeCode: 'Claude Code',
       cursor: 'Cursor',
       devin: 'Devin',
-      gemini: 'Gemini CLI',
       opencode: 'OpenCode',
       vsCode: 'VSCode',
       other: 'Other (manual setup)',
@@ -1664,6 +1666,8 @@ export const commands = {
         standalone:
           'Use npx for all of the hs commands run by the MCP server. This allows you to use the MCP server without having the CLI globally installed.',
         cliVersion: 'Pin a specific CLI version for standalone mode',
+        skills:
+          'HubSpot skills to install for the selected tools. Pass --skills with no names to skip skills.',
         docsSearch: 'Should the docs search mcp server be installed',
       },
       examples: {
@@ -1700,12 +1704,6 @@ export const commands = {
           'Cursor is not installed. Install it and re-run hs mcp setup.',
         failedToConfigureCursor: 'Failed to configure Cursor',
         configuredCursor: 'Configured Cursor',
-        // Gemini
-        configuringGemini: 'Configuring Gemini CLI...',
-        configuredGemini: 'Configured Gemini CLI',
-        geminiNotFound:
-          "Gemini CLI is not installed (missing 'gemini' command). Install it and re-run hs mcp setup.",
-        geminiInstallFailed: 'Failed to configure Gemini CLI',
         alreadyInstalled:
           'HubSpot CLI mcp server already installed, reinstalling',
         // Devin
@@ -1728,6 +1726,11 @@ export const commands = {
           "VSCode CLI is not installed (missing 'code' command). Install it and re-run hs mcp setup.",
         vsCodeVersionUnsupported:
           'VSCode 1.99 or later is required for MCP server support. Please update VSCode and try again.',
+        // Skills
+        installingSkills: 'Installing HubSpot skills...',
+        installedSkills: (skillNames: string[], targetDirs: string[]) =>
+          `Installed ${skillNames.join(', ')} in ${targetDirs.join(', ')}`,
+        failedToInstallSkills: 'Failed to install HubSpot skills',
       },
       otherInstructions: {
         header:
@@ -1736,6 +1739,8 @@ export const commands = {
           "Each tool handles MCP setup differently. Check your tool's documentation for how to add an MCP server using a command or JSON config.",
         commandLabel: 'Command:',
         jsonLabel: 'JSON configuration (for tools that use a config file):',
+        skillsNote: (skillsDir: string) =>
+          `To add HubSpot skills, copy the folders in ${skillsDir} to your tool's skills folder.`,
       },
       prompts: {
         targets:
@@ -1744,6 +1749,12 @@ export const commands = {
         standaloneMode:
           'Do you want to run in standalone mode? (This will use npx @hubspot/cli instead of the installed hs command)',
         cliVersion: 'Specify a CLI version to pin (leave blank for latest):',
+        selectSkills:
+          '[--skills] Which HubSpot skills do you want to install? (optional)',
+      },
+      skillDescriptions: {
+        newApp: 'Plan and create a HubSpot app project',
+        fixBuild: 'Find and fix a failed project build',
       },
     },
     start: {
@@ -2564,29 +2575,74 @@ export const commands = {
       describe: 'Download your project files from HubSpot.',
       examples: {
         default: 'Download the project myProject into myProjectFolder folder',
+        currentProject:
+          'Download build 3 of the current project into the current project directory',
         json: 'Output the download result as JSON for scripting',
       },
       logs: {
         downloadCancelled: 'Cancelling project download',
         downloadSucceeded: (buildId: number, projectName: string) =>
           `Downloaded build "${buildId}" from project "${projectName}"`,
+        filesOnlyInArchive: (
+          files: string[],
+          hiddenCount: number,
+          diffFilePath?: string
+        ) =>
+          [
+            'These files existed locally but are not in the downloaded build. They are available in the archive directory:',
+            ...files.map(file => `${indent(2)}- ${file}`),
+            ...(hiddenCount > 0
+              ? [`${indent(2)}...and ${hiddenCount} more`]
+              : []),
+            ...(hiddenCount > 0 && diffFilePath
+              ? [`\nThe full list can be viewed in ${chalk.bold(diffFilePath)}`]
+              : []),
+          ].join('\n'),
+        filesCopiedBack: (copiedCount: number, srcPath: string) =>
+          `Copied ${copiedCount} ${copiedCount === 1 ? 'file' : 'files'} back to ${chalk.bold(srcPath)}`,
+        sourceContentsArchived: (archiveLocation: string) =>
+          `The previous contents of your project have been moved to ${archiveLocation}. Once you have reviewed them, you can safely delete that directory.`,
       },
       errors: {
         downloadFailed: 'Something went wrong downloading the project',
         projectNotFound: (projectName: string, accountId: string) =>
           `Your project ${chalk.bold(projectName)} could not be found in ${accountId}`,
         noBuildIdToDownload: 'No build ID available for download',
+        restoreFailed: (archiveDest: string) =>
+          `Extracting the downloaded build failed, and your original project files could not be restored automatically. They are in ${chalk.bold(archiveDest)}.`,
+        archiveAlreadyExists: (archiveDest: string) =>
+          `Cannot download into the current project because ${chalk.bold(archiveDest)} already exists. Delete or rename it and run the command again.`,
       },
       warnings: {
-        cannotDownloadWithinProject:
-          'Cancelling project download. Please run the command again outside the context of an existing project.',
+        filesNotCopiedBack: (failedCount: number) =>
+          `${failedCount} ${failedCount === 1 ? 'file' : 'files'} could not be copied back. ${failedCount === 1 ? 'It is' : 'They are'} still available in the archive directory.`,
+        sourceWillBeArchived: (archiveLocation: string) =>
+          `Your current project source files will be moved to ${archiveLocation}.\nBack up any local changes in this project before you continue.`,
+        sourceRestored:
+          'Extracting the downloaded build failed. Your original project files have been restored. The archive directory was left in place and can be deleted.',
+      },
+      archiveLocation: (archivePath: string) =>
+        `the archive directory in your project root (${chalk.bold(archivePath)})`,
+      prompts: {
+        confirmCopyFilesBack: (fileCount: number) =>
+          `[--keep-local-files] Copy ${fileCount === 1 ? 'this file' : `these ${fileCount} files`} back into your project source directory?`,
+        confirmDownload: (buildId: number, projectName: string) =>
+          `[--force] Download build "${buildId}" of project "${projectName}"?`,
       },
       options: {
         build: {
-          describe: 'The build to download',
+          describe: 'The build to download (defaults to the latest build)',
+        },
+        force: {
+          describe: 'Skip the confirmation prompt before archiving your source',
+        },
+        keepLocalFiles: {
+          describe:
+            'Copy local files missing from the build back into the source directory without prompting (--no-keep-local-files skips)',
         },
         project: {
-          describe: 'The name of the project to download',
+          describe:
+            'The name of the project to download (defaults to the current project)',
         },
         dest: {
           describe: 'Destination folder for the project',
@@ -4387,6 +4443,137 @@ export const lib = {
     validationFailed:
       'JSON output may be missing or malformed fields. The output schema may be out of date.',
   },
+  agentHelp: {
+    headings: {
+      conventions: chalk.bold('Conventions:'),
+      jsonOutput: chalk.bold('JSON output:'),
+      workflows: chalk.bold('Workflows:'),
+      exitCodes: chalk.bold('Exit codes:'),
+      commands: chalk.bold('All commands:'),
+    },
+    conventions: [
+      'More help: To see the workflows that use one command, run `hs <command> --agent-help`.',
+      'JSON output: Commands that support `--json` print one JSON object to stdout when they finish. Errors and warnings print to stderr.',
+      'JSON schemas: To print the JSON Schema for the output of a command, run the command with `--json-schema`.',
+      'Prompts: Commands prompt for values that you do not pass as flags. To run a command without prompts, pass each value as a flag.',
+      'Long-running commands: `hs project dev` runs until it is stopped and prompts for input. Ask the user to run it in their own terminal.',
+      'Accounts: Commands use the default account in the CLI config. To use a different account, pass `--account <name or ID>`. To see the configured accounts, run `hs account list`.',
+      'Environment variables: To read the account from `HUBSPOT_ACCOUNT_ID` and `HUBSPOT_PERSONAL_ACCESS_KEY` instead of the config file, pass `--use-env`.',
+      'Config file: The global config file is `~/.hscli/config.yml`. To use a different file, pass `--config <path>`.',
+      'Color: To remove color from the output, pass `--no-color` or set `NO_COLOR`.',
+      'Debug logs: To print debug logs, pass `--debug`.',
+      'MCP server: To connect the HubSpot Dev MCP server to an AI coding tool, run `hs mcp setup`.',
+    ],
+    jsonOutput: {
+      schema:
+        'With `--json`, the command prints one JSON object to stdout. The object matches this JSON Schema:',
+      noSchema:
+        'With `--json`, the command prints JSON to stdout. The CLI does not define a schema for this output.',
+    },
+    workflows: [
+      {
+        title: 'Authenticate an account',
+        steps: [
+          {
+            command: 'hs account auth',
+            description:
+              'Ask the user to run this command in their own terminal. It can open a browser page where the user creates a personal access key, and then it prompts for the key. Do not ask the user to paste the key into the conversation.',
+          },
+          {
+            command: 'hs account list',
+            description: 'List the accounts in the CLI config.',
+          },
+          {
+            command: 'hs account use <account>',
+            description:
+              'Set the default account. Commands use the default account unless you pass `--account`.',
+          },
+        ],
+      },
+      {
+        title: 'Create a project',
+        steps: [
+          {
+            command:
+              'hs project create --name <name> --dest <directory> --project-base app --distribution <private|marketplace> --auth <oauth|static> --features --json',
+            description:
+              'Create a project with an app in a new directory. Pass every flag to skip the prompts. A `--features` flag with no values adds no features.',
+          },
+          {
+            command: 'hs project validate --json',
+            description:
+              'Run this command in the project directory. It checks the project files before you upload them.',
+          },
+        ],
+      },
+      {
+        title: 'Generate test data',
+        steps: [
+          {
+            command:
+              'hs test-account create --name <name> --description <description> --marketing-level ENTERPRISE --ops-level ENTERPRISE --service-level ENTERPRISE --sales-level ENTERPRISE --content-level ENTERPRISE --commerce-level ENTERPRISE',
+            description:
+              'Create a developer test account and save it to the CLI config. Pass every flag to skip the prompts. Do not pass `--json`. With `--json`, the command does not save the account to the config, and the output includes the personal access key of the account.',
+          },
+          {
+            command:
+              'hs test-account import-data --account <test account> --file-path <import.json> --skip-confirm',
+            description:
+              'Import CRM records into the test account. The JSON file uses the request format of the CRM imports API: https://developers.hubspot.com/docs/guides/api/crm/imports. Each `fileName` in the file is a path relative to the current directory.',
+          },
+        ],
+      },
+      {
+        title: 'Develop a project',
+        steps: [
+          {
+            command: 'hs project create',
+            description:
+              'Create the project. The "Create a project" workflow shows the flags that skip the prompts.',
+          },
+          {
+            command: 'hs project upload --json',
+            description:
+              'Run this command in the project directory. It uploads the project and creates a build. If auto-deploy is on, it also deploys the build, and the output includes `deployId`.',
+          },
+          {
+            command: 'hs project deploy --build <buildId> --json',
+            description:
+              'Deploy the build. Use this command if the upload output has no `deployId`.',
+          },
+          {
+            command: 'hs project dev',
+            description:
+              'Ask the user to run this command in their own terminal. It starts local development and runs until it is stopped. Changes upload from the Local Dev Panel, or as you edit with `--auto-upload`. To test on a test account, also pass `--testing-account <test account ID>` and `--project-account <developer account ID>`.',
+          },
+          {
+            command: 'hs project list-builds --limit 1 --json',
+            description:
+              'Show the status of the latest build. `deployedBuildId` is the build that is deployed now.',
+          },
+        ],
+      },
+      {
+        title: 'Investigate a failed build',
+        steps: [
+          {
+            command: 'hs project list-builds --limit 1 --json',
+            description:
+              'Get the latest build. Each entry in `subbuildStatuses` has the status and error message of one component.',
+          },
+          {
+            command: 'hs project validate --json',
+            description: 'Validate the local project files.',
+          },
+          {
+            command: 'hs project upload --json',
+            description: 'Upload the project again after you fix the errors.',
+          },
+        ],
+      },
+    ],
+    exitCodes: AGENT_HELP_EXIT_CODES,
+  },
   DevServerManager: {
     portConflict: (port: string) => `The port ${port} is already in use.`,
     notInitialized:
@@ -4762,6 +4949,14 @@ export const lib = {
       failedToCheckFiles:
         'Failed to check files for filename differentiator. Falling back to timestamp.',
     },
+    archive: {
+      errors: {
+        archiveNotFound: (archiveDest: string) =>
+          `Archive directory not found: ${archiveDest}`,
+        srcDirInsideArchive: (srcDir: string) =>
+          `The source directory "${srcDir}" cannot be the archive directory or inside it`,
+      },
+    },
     validateProjectConfig: {
       configNotFound: `Unable to locate a project configuration file. Try running again from a project directory, or run ${uiCommandReference('hs project create')} to create a new project.`,
     },
@@ -5124,6 +5319,7 @@ export const lib = {
       useEnv: 'Use environment variable config',
       jsonOutput: 'Format output as JSON',
       jsonSchema: 'Print the JSON output schema and exit',
+      agentHelp: 'Show help with workflows and conventions for AI agents',
       debug: 'Set log level to debug',
       color: 'Enable colored output (use --no-color to disable)',
     },
@@ -5210,6 +5406,7 @@ export const lib = {
         `You are importing [${dataFileNames.join(', ')}] into ${uiAccountDescription(cliAccount?.accountId)}. Continue?`,
     },
     importDataTestAccountSelectPrompt: {
+      message: '[--account] Select a developer test account:',
       errors: {
         noAccountsFound: 'No accounts found.',
         noChildTestAccountsFound: (parentAccountId: number) =>
@@ -5419,10 +5616,10 @@ export const lib = {
       },
     },
     downloadProjectPrompt: {
-      selectProject: 'Select a project to download:',
+      selectProject: '[--project] Select a project to download:',
       errors: {
         projectNotFound: (projectName: string, accountId: number) =>
-          `Your project ${projectName} could not be found in ${accountId}. Please select a valid project:`,
+          `[--project] Your project ${projectName} could not be found in ${uiAccountDescription(accountId)}. Please select a valid project:`,
         accountIdRequired: 'An account ID is required to download a project.',
       },
     },
@@ -5902,6 +6099,8 @@ export const lib = {
       `The account "${uiAccountDescription(accountId)}" is configured to use a access key for authentication and is missing a "personalAccessKey" in the configuration file`,
     personalAccessKeyTokenRetrievalFailed: (accountId: number) =>
       `An OAuth2 access token for account "${uiAccountDescription(accountId)} could not be retrieved using the "personalAccessKey" provided`,
+    accessTokenMissing: (accountId: number) =>
+      `The account "${uiAccountDescription(accountId)}" is configured to use an access token for authentication and is missing an access token`,
     authConfigurationMissing: (accountId: number) =>
       `The accountId ${uiAccountDescription(accountId)} is missing authentication configuration`,
     availableCMSModes: (modes: string) =>

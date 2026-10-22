@@ -5,6 +5,7 @@ import { uiLogger } from '../lib/ui/logger.js';
 import { CMS_PUBLISH_MODE } from '@hubspot/local-dev-lib/constants/files';
 import { CmsPublishMode } from '@hubspot/local-dev-lib/types/Files';
 import {
+  ACCESS_TOKEN_AUTH_METHOD,
   API_KEY_AUTH_METHOD,
   OAUTH_AUTH_METHOD,
   PERSONAL_ACCESS_KEY_AUTH_METHOD,
@@ -16,6 +17,7 @@ import {
 } from '@hubspot/local-dev-lib/config';
 import { getOauthManager } from '@hubspot/local-dev-lib/oauth';
 import { accessTokenForPersonalAccessKey } from '@hubspot/local-dev-lib/personalAccessKey';
+import { accessTokenForInjectedAccessToken } from '@hubspot/local-dev-lib/accessToken';
 import {
   getAbsoluteFilePath,
   getCwd,
@@ -75,6 +77,7 @@ export async function validateAccount(
             PERSONAL_ACCESS_KEY_AUTH_METHOD,
             OAUTH_AUTH_METHOD,
             API_KEY_AUTH_METHOD,
+            ACCESS_TOKEN_AUTH_METHOD,
           ].map(method => method.value)
         )
       )
@@ -123,6 +126,18 @@ export async function validateAccount(
         );
         return false;
       }
+    } catch (e) {
+      logError(e);
+      return false;
+    }
+  } else if (authType === ACCESS_TOKEN_AUTH_METHOD.value) {
+    if (!accountConfig.auth.tokenInfo.accessToken) {
+      uiLogger.error(lib.validation.accessTokenMissing(accountId));
+      return false;
+    }
+
+    try {
+      accessTokenForInjectedAccessToken(accountId);
     } catch (e) {
       logError(e);
       return false;

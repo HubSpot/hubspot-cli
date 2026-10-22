@@ -5,6 +5,7 @@ import { commands } from '../../lang/en.js';
 import { CommonArgs, YargsCommandModule } from '../../types/Yargs.js';
 import { makeWrappedYargsHandler } from '../../lib/yargs/makeWrappedYargsHandler.js';
 import { configureMcpServer, supportedTools } from '../../lib/mcp/setup.js';
+import { MCP_SKILL_NAMES } from '../../lib/mcp/skills.js';
 
 const command = ['setup'];
 const describe = commands.mcp.setup.describe;
@@ -13,6 +14,7 @@ interface MCPSetupArgs extends CommonArgs {
   client?: string[];
   standalone?: boolean;
   cliVersion?: string;
+  skills?: string[];
 }
 
 async function handler(args: ArgumentsCamelCase<MCPSetupArgs>): Promise<void> {
@@ -23,6 +25,7 @@ async function handler(args: ArgumentsCamelCase<MCPSetupArgs>): Promise<void> {
       targets: args.client,
       standalone: args.standalone,
       cliVersion: args.cliVersion,
+      skills: args.skills,
     });
   } catch (e) {
     return exit(EXIT_CODES.ERROR);
@@ -45,6 +48,11 @@ function setupBuilder(yargs: Argv): Argv<MCPSetupArgs> {
     describe: commands.mcp.setup.args.cliVersion,
     type: 'string',
   });
+  yargs.option('skills', {
+    describe: commands.mcp.setup.args.skills,
+    type: 'array',
+    choices: MCP_SKILL_NAMES,
+  });
 
   yargs.check(argv => {
     if (argv.cliVersion !== undefined && argv.standalone !== true) {
@@ -55,7 +63,7 @@ function setupBuilder(yargs: Argv): Argv<MCPSetupArgs> {
 
   yargs.example([
     [
-      '$0 mcp setup --client claude --no-standalone',
+      '$0 mcp setup --client claude --no-standalone --skills hubspot-new-app hubspot-fix-build',
       commands.mcp.setup.examples.nonInteractive,
     ],
     [

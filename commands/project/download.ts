@@ -1,14 +1,23 @@
 import { Argv, ArgumentsCamelCase } from 'yargs';
-import path from 'path';
-import { getCwd, sanitizeFileName } from '@hubspot/local-dev-lib/path';
-import { extractZipArchive } from '@hubspot/local-dev-lib/archive';
 import {
   downloadProject,
   fetchProjectBuilds,
 } from '@hubspot/local-dev-lib/api/projects';
 import { logError, ApiErrorContext } from '../../lib/errorHandlers/index.js';
 import { isPromptExitError } from '../../lib/errors/PromptExitError.js';
-import { getIsInProject } from '../../lib/projects/config.js';
+import { confirmPrompt } from '../../lib/prompts/promptUtils.js';
+import {
+  archiveDestExists,
+  moveSourceToProjectArchive,
+} from '../../lib/projects/archive.js';
+import {
+  describeArchiveLocation,
+  extractBuild,
+  getDisplayPath,
+  getLocalProject,
+  handleArchivedSource,
+  resolveDownloadDestination,
+} from '../../lib/projects/download.js';
 import { downloadProjectPrompt } from '../../lib/prompts/downloadProjectPrompt.js';
 import { commands } from '../../lang/en.js';
 import { uiLogger } from '../../lib/ui/logger.js';
@@ -39,25 +48,34 @@ export type ProjectDownloadArgs = CommonArgs &
     project?: string;
     dest?: string;
     build?: number;
+    force?: boolean;
+    keepLocalFiles?: boolean;
   };
 
 async function handler(
   args: ArgumentsCamelCase<ProjectDownloadArgs>
 ): Promise<void> {
-  const { dest, build, derivedAccountId, exit, addJsonOutput } = args;
+  const {
+    project: projectArg,
+    dest,
+    build,
+    force,
+    keepLocalFiles,
+    derivedAccountId,
+    formatOutputAsJson,
+    exit,
+    addJsonOutput,
+  } = args;
 
-  const isInProjectDir = getIsInProject();
-
-  if (isInProjectDir) {
-    uiLogger.error(
-      commands.project.download.warnings.cannotDownloadWithinProject
-    );
-    return exit(EXIT_CODES.ERROR);
-  }
   let buildNumberToDownload = build;
 
   try {
-    const { project: projectName } = await downloadProjectPrompt(args);
+    const localProject = getLocalProject();
+    const { project: projectName } = await downloadProjectPrompt({
+      ...args,
+      project: projectArg || localProject?.projectName,
+    });
+
     if (!buildNumberToDownload) {
       const { data: projectBuildsResult } = await fetchProjectBuilds(
         derivedAccountId,
@@ -77,11 +95,41 @@ async function handler(
       return exit(EXIT_CODES.ERROR);
     }
 
-    const sanitizedProjectName = sanitizeFileName(projectName);
+    const { absoluteDestPath, archivePlan } = resolveDownloadDestination({
+      projectName,
+      dest,
+      localProject,
+    });
 
-    const absoluteDestPath = dest
-      ? path.resolve(getCwd(), dest, sanitizedProjectName)
-      : path.resolve(getCwd(), sanitizedProjectName);
+    if (archivePlan && archiveDestExists(archivePlan.archiveDest)) {
+      uiLogger.error(
+        commands.project.download.errors.archiveAlreadyExists(
+          getDisplayPath(archivePlan.archiveDest)
+        )
+      );
+      return exit(EXIT_CODES.ERROR);
+    }
+
+    if (archivePlan && !force && !formatOutputAsJson) {
+      uiLogger.warn(
+        commands.project.download.warnings.sourceWillBeArchived(
+          describeArchiveLocation(archivePlan)
+        )
+      );
+      uiLogger.log('');
+      const confirmed = await confirmPrompt(
+        commands.project.download.prompts.confirmDownload(
+          buildNumberToDownload,
+          projectName
+        ),
+        { defaultAnswer: false }
+      );
+
+      if (!confirmed) {
+        uiLogger.log(commands.project.download.logs.downloadCancelled);
+        return exit(EXIT_CODES.SUCCESS);
+      }
+    }
 
     const { data: zippedProject } = await downloadProject(
       derivedAccountId,
@@ -89,16 +137,30 @@ async function handler(
       buildNumberToDownload
     );
 
-    await extractZipArchive(
+    if (archivePlan) {
+      moveSourceToProjectArchive(archivePlan.projectDir, archivePlan.srcDir);
+    }
+
+    await extractBuild({
       zippedProject,
-      sanitizeFileName(projectName),
-      path.resolve(absoluteDestPath)
-    );
+      projectName,
+      absoluteDestPath,
+      archivePlan,
+    });
+
+    if (archivePlan) {
+      await handleArchivedSource({
+        archivePlan,
+        keepLocalFiles,
+        canPrompt: !force && !formatOutputAsJson,
+      });
+    }
 
     addJsonOutput({
       projectName,
       buildId: buildNumberToDownload,
       dest: absoluteDestPath,
+      archiveDest: archivePlan?.archiveDest,
     });
 
     uiLogger.log(
@@ -138,12 +200,24 @@ function projectDownloadBuilder(yargs: Argv): Argv<ProjectDownloadArgs> {
       alias: ['build-id'],
       type: 'number',
     },
+    force: {
+      describe: commands.project.download.options.force.describe,
+      type: 'boolean',
+    },
+    'keep-local-files': {
+      describe: commands.project.download.options.keepLocalFiles.describe,
+      type: 'boolean',
+    },
   });
 
   yargs.example([
     [
       '$0 project download --project=myProject --dest=myProjectFolder',
       commands.project.download.examples.default,
+    ],
+    [
+      '$0 project download --build=3',
+      commands.project.download.examples.currentProject,
     ],
     [
       '$0 project download --project=myProject --json',

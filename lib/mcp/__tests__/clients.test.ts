@@ -31,7 +31,6 @@ describe('lib/mcp/clients', () => {
       'codex',
       'claude',
       'cursor',
-      'gemini',
       'vscode',
       'devin',
       'opencode',

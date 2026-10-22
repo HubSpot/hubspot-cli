@@ -10,6 +10,7 @@ import {
   McpClientId,
   getMcpClientPathSegments,
 } from './clients.js';
+import { MCP_SKILLS, SKILLS_SOURCE_DIR, installSkills } from './skills.js';
 
 import path from 'path';
 import os from 'os';
@@ -24,7 +25,6 @@ const cursor: McpClientId = 'cursor';
 const devin: McpClientId = 'devin';
 const vscode: McpClientId = 'vscode';
 const codex: McpClientId = 'codex';
-const gemini: McpClientId = 'gemini';
 const opencode: McpClientId = 'opencode';
 
 const OTHER_TOOL = 'other';
@@ -35,7 +35,6 @@ const clientLabels: Record<McpClientId, string> = {
   claude: commands.mcp.setup.claudeCode,
   cursor: commands.mcp.setup.cursor,
   devin: commands.mcp.setup.devin,
-  gemini: commands.mcp.setup.gemini,
   opencode: commands.mcp.setup.opencode,
   vscode: commands.mcp.setup.vsCode,
 };
@@ -63,13 +62,14 @@ interface ConfigureMcpServerOptions {
   targets?: string[];
   standalone?: boolean;
   cliVersion?: string;
+  skills?: string[];
 }
 
 export async function configureMcpServer(
   options: ConfigureMcpServerOptions
 ): Promise<string[]> {
   try {
-    const { targets, standalone, cliVersion: cliVersionFlag } = options;
+    const { targets, standalone, cliVersion: cliVersionFlag, skills } = options;
 
     let derivedTargets: string[] = [];
     if (!targets || targets.length === 0) {
@@ -123,6 +123,25 @@ export async function configureMcpServer(
       }
     }
 
+    const configuredTargets = derivedTargets.filter(
+      (target): target is McpClientId => target !== OTHER_TOOL
+    );
+
+    let selectedSkills = configuredTargets.length > 0 ? skills : [];
+
+    if (selectedSkills === undefined) {
+      const response = await promptUser<{ selectedSkills: string[] }>({
+        name: 'selectedSkills',
+        type: 'checkbox',
+        message: commands.mcp.setup.prompts.selectSkills,
+        choices: MCP_SKILLS.map(skill => ({
+          name: `${skill.name} - ${skill.description}`,
+          value: skill.name,
+        })),
+      });
+      selectedSkills = response.selectedSkills;
+    }
+
     const cliPackage = cliVersion
       ? `@hubspot/cli@${cliVersion}`
       : '@hubspot/cli';
@@ -162,19 +181,20 @@ export async function configureMcpServer(
       await runSetupFunction(() => setupCodex(mcpCommand));
     }
 
-    if (derivedTargets.includes(gemini)) {
-      await runSetupFunction(() => setupGemini(mcpCommand));
-    }
-
     if (derivedTargets.includes(opencode)) {
       await runSetupFunction(() => setupOpenCode(mcpCommand));
+    }
+
+    if (selectedSkills.length > 0) {
+      await runSetupFunction(() =>
+        installSkills(configuredTargets, selectedSkills)
+      );
     }
 
     if (derivedTargets.includes(OTHER_TOOL)) {
       logOtherToolInstructions(mcpCommand);
     }
 
-    const configuredTargets = derivedTargets.filter(t => t !== OTHER_TOOL);
     if (configuredTargets.length > 0) {
       uiLogger.info(commands.mcp.setup.success(configuredTargets));
     }
@@ -450,43 +470,6 @@ export async function setupCodex(
   }
 }
 
-export async function setupGemini(
-  mcpCommand: McpCommand = defaultMcpCommand
-): Promise<boolean> {
-  try {
-    SpinniesManager.add('geminiSpinner', {
-      text: commands.mcp.setup.spinners.configuringGemini,
-    });
-
-    try {
-      await execAsync('gemini --version');
-    } catch (e) {
-      SpinniesManager.fail('geminiSpinner', {
-        text: commands.mcp.setup.spinners.geminiNotFound,
-      });
-      return false;
-    }
-
-    const mcpCommandWithAgent = buildCommandWithAgentString(mcpCommand, gemini);
-
-    await execAsync(
-      `gemini mcp add -s user${buildEnvFlagString(mcpCommand)} "${mcpServerName}" ${mcpCommandWithAgent.command} ${mcpCommandWithAgent.args.join(' ')}`
-    );
-
-    SpinniesManager.succeed('geminiSpinner', {
-      text: commands.mcp.setup.spinners.configuredGemini,
-    });
-    return true;
-  } catch (error) {
-    SpinniesManager.fail('geminiSpinner', {
-      text: commands.mcp.setup.spinners.geminiInstallFailed,
-    });
-    logError(error);
-
-    return false;
-  }
-}
-
 export async function setupOpenCode(
   mcpCommand: McpCommand = defaultMcpCommand
 ): Promise<boolean> {
@@ -549,6 +532,8 @@ function logOtherToolInstructions(mcpCommand: McpCommand): void {
     .map(line => `    ${line}`)
     .join('\n');
   uiLogger.log(indented);
+  uiLogger.log('');
+  uiLogger.log(otherInstructions.skillsNote(SKILLS_SOURCE_DIR));
   uiLogger.log('');
 }
 

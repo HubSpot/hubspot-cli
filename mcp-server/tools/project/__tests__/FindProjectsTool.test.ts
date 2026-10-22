@@ -108,6 +108,23 @@ describe('mcp-server/tools/project/FindProjectsTool', () => {
 
       const result = await tool.handler(baseInput);
 
+      expect(mockMcpServer.server.elicitInput).toHaveBeenCalledTimes(1);
+      expect(mockMcpServer.server.elicitInput).toHaveBeenCalledWith(
+        expect.objectContaining({
+          requestedSchema: expect.objectContaining({
+            properties: {
+              selection: expect.objectContaining({
+                enum: [
+                  '/test/workspace/project-a',
+                  '/test/workspace/project-b',
+                ],
+                enumNames: ['project-a', 'project-b'],
+              }),
+            },
+          }),
+        }),
+        expect.anything()
+      );
       expect(result.content[0].text).toContain(
         'Selected project: /test/workspace/project-b'
       );

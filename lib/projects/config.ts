@@ -1,6 +1,6 @@
 import fs from 'fs-extra';
 import path from 'path';
-import findup from 'findup-sync';
+import { findup } from '@hubspot/local-dev-lib/findup';
 import { getAbsoluteFilePath, getCwd } from '@hubspot/local-dev-lib/path';
 import {
   parseProjectConfig,

@@ -159,7 +159,7 @@ async function handler(args: ArgumentsCamelCase<LighthouseScoreArgs>) {
       }
 
       let mobileScoreStatus = 'COMPLETED';
-      if (includeDesktopScore) {
+      if (includeMobileScore) {
         const { data } = await getLighthouseScoreStatus(derivedAccountId, {
           themeId: requestResult!.mobileId,
         });

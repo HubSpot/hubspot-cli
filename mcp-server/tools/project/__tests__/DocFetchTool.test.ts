@@ -62,6 +62,7 @@ describe('mcp-server/tools/project/DocFetchTool', () => {
             'stated plainly (for example "requires Content Hub Enterprise") rather than by quoting raw spec fields.'
           ),
           inputSchema: expect.any(Object),
+          outputSchema: expect.any(Object),
         }),
         expect.any(Function)
       );
@@ -73,6 +74,9 @@ describe('mcp-server/tools/project/DocFetchTool', () => {
     const mockInput = {
       absoluteCurrentWorkingDirectory: '/test/dir',
       docUrl: 'https://example.com/docs/test-doc',
+      offset: 0,
+      maxCharacters: 20000,
+      fullDocument: false,
     };
 
     it('should successfully fetch and return markdown content', async () => {
@@ -97,6 +101,11 @@ describe('mcp-server/tools/project/DocFetchTool', () => {
             text: mockContent,
           },
         ],
+        structuredContent: {
+          text: mockContent,
+          offset: 0,
+          totalCharacters: mockContent.length,
+        },
       });
     });
 
@@ -130,6 +139,7 @@ describe('mcp-server/tools/project/DocFetchTool', () => {
             text: 'HubSpotHttpError: \n- message: The request was not found.\n- status: 404\n- statusText: Not Found\n- method: get\n- code: ERR_BAD_REQUEST\n- derivedContext: {\n  "request": "https://example.com/docs/test-doc.md"\n}',
           },
         ],
+        isError: true,
       });
     });
 
@@ -148,6 +158,7 @@ describe('mcp-server/tools/project/DocFetchTool', () => {
             text: 'Document is empty or contains no content.',
           },
         ],
+        isError: true,
       });
     });
 
@@ -166,6 +177,7 @@ describe('mcp-server/tools/project/DocFetchTool', () => {
             text: 'Error fetching documentation: Network error',
           },
         ],
+        isError: true,
       });
     });
 
@@ -182,6 +194,92 @@ describe('mcp-server/tools/project/DocFetchTool', () => {
             text: 'Error fetching documentation: String error',
           },
         ],
+        isError: true,
+      });
+    });
+
+    describe('bounded fetch', () => {
+      const longContent = Array.from({ length: 25 }, (_, index) =>
+        `Line ${index}.`.padEnd(99, '.')
+      ).join('\n');
+
+      const boundedInput = { ...mockInput, maxCharacters: 1050 };
+
+      it('should return maxCharacters from the start and give the offset for the next part', async () => {
+        // @ts-expect-error - Mocking axios response structure
+        mockHttp.get.mockResolvedValue({ data: longContent });
+
+        const result = await tool.handler(boundedInput);
+
+        const chunkEnd = boundedInput.maxCharacters;
+        expect(result).toEqual({
+          content: [
+            { type: 'text', text: longContent.slice(0, chunkEnd) },
+            {
+              type: 'text',
+              text: `This is part of the document (characters 0 to ${chunkEnd} of ${longContent.length}). More content is available. To read the next part, call fetch-doc again with the same arguments and offset set to ${chunkEnd}.`,
+            },
+          ],
+          structuredContent: {
+            text: longContent.slice(0, chunkEnd),
+            offset: 0,
+            nextOffset: chunkEnd,
+            totalCharacters: longContent.length,
+          },
+        });
+      });
+
+      it('should return the rest of the document from the offset without a note', async () => {
+        // @ts-expect-error - Mocking axios response structure
+        mockHttp.get.mockResolvedValue({ data: longContent });
+
+        const offset = longContent.indexOf('Line 20.');
+        const result = await tool.handler({ ...boundedInput, offset });
+
+        expect(result).toEqual({
+          content: [{ type: 'text', text: longContent.slice(offset) }],
+          structuredContent: {
+            text: longContent.slice(offset),
+            offset,
+            totalCharacters: longContent.length,
+          },
+        });
+      });
+
+      it('should return the whole document when fullDocument is true', async () => {
+        // @ts-expect-error - Mocking axios response structure
+        mockHttp.get.mockResolvedValue({ data: longContent });
+
+        const result = await tool.handler({
+          ...boundedInput,
+          fullDocument: true,
+        });
+
+        expect(result).toEqual({
+          content: [{ type: 'text', text: longContent }],
+          structuredContent: {
+            text: longContent,
+            offset: 0,
+            totalCharacters: longContent.length,
+          },
+        });
+      });
+
+      it('should return an error when the offset is past the end', async () => {
+        // @ts-expect-error - Mocking axios response structure
+        mockHttp.get.mockResolvedValue({ data: longContent });
+
+        const result = await tool.handler({ ...boundedInput, offset: 5000 });
+
+        expect(result).toEqual({
+          content: [
+            {
+              type: 'text',
+              text: `Offset 5000 is past the end of the document, which has ${longContent.length} characters.`,
+            },
+          ],
+          isError: true,
+        });
       });
     });
   });

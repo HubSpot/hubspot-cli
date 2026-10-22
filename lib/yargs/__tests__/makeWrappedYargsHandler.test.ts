@@ -7,7 +7,10 @@ import {
 import { STATE_FLAGS } from '@hubspot/local-dev-lib/constants/config';
 import { logger as ldlLogger } from '@hubspot/local-dev-lib/logger';
 import * as usageTrackingLib from '../../usageTracking.js';
-import { makeWrappedYargsHandler } from '../../yargs/makeWrappedYargsHandler.js';
+import {
+  getJsonOutputSchema,
+  makeWrappedYargsHandler,
+} from '../../yargs/makeWrappedYargsHandler.js';
 import { uiLogger } from '../../ui/logger.js';
 import { pkg } from '../../jsonLoader.js';
 import { lib } from '../../../lang/en.js';
@@ -15,6 +18,7 @@ import { CommonArgs, JSONOutputArgs } from '../../../types/Yargs.js';
 import { EXIT_CODES } from '../../enums/exitCodes.js';
 import { PromptExitError } from '../../errors/PromptExitError.js';
 import { Mock, Mocked } from 'vitest';
+import { z } from 'zod';
 
 vi.mock('@hubspot/local-dev-lib/config');
 vi.mock('@hubspot/local-dev-lib/config/state');
@@ -865,5 +869,17 @@ describe('logUsageTrackingMessage', () => {
     await wrapped(makeArgs());
 
     expect(mockedUiLogger.info).not.toHaveBeenCalled();
+  });
+});
+
+describe('getJsonOutputSchema', () => {
+  it('should return the schema registered under a tracking name', () => {
+    const schema = z.object({ buildId: z.number() });
+    makeWrappedYargsHandler('test-schema-command', vi.fn(), {
+      jsonOutputSchema: schema,
+    });
+
+    expect(getJsonOutputSchema('test-schema-command')).toBe(schema);
+    expect(getJsonOutputSchema('test-unknown-command')).toBeUndefined();
   });
 });

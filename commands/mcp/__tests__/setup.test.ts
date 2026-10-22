@@ -2,6 +2,7 @@ import { Argv } from 'yargs';
 import setupCommand from '../setup.js';
 import { configureMcpServer } from '../../../lib/mcp/setup.js';
 import { commands } from '../../../lang/en.js';
+import { MCP_SKILL_NAMES } from '../../../lib/mcp/skills.js';
 
 vi.mock('../../../lib/commonOpts');
 vi.mock('../../../lib/yargs/makeWrappedYargsHandler.js', () => ({
@@ -56,6 +57,14 @@ describe('commands/mcp/setup', () => {
     it('should allow --cli-version with --standalone', () => {
       expect(checkFn({ cliVersion: '8.0.1', standalone: true })).toBe(true);
     });
+
+    it('should add the skills option', () => {
+      expect(mockYargs.option).toHaveBeenCalledWith('skills', {
+        describe: commands.mcp.setup.args.skills,
+        type: 'array',
+        choices: MCP_SKILL_NAMES,
+      });
+    });
   });
 
   describe('handler', () => {
@@ -83,11 +92,12 @@ describe('commands/mcp/setup', () => {
         targets: ['cursor'],
         standalone: undefined,
         cliVersion: undefined,
+        skills: undefined,
       });
       expect(exit).toHaveBeenCalledWith(0);
     });
 
-    it('passes standalone and cliVersion flags to configureMcpServer', async () => {
+    it('passes standalone, cliVersion, and skills flags to configureMcpServer', async () => {
       mockedConfigureMcpServer.mockResolvedValueOnce(['cursor']);
       const exit = vi.fn().mockResolvedValue(undefined);
 
@@ -97,6 +107,7 @@ describe('commands/mcp/setup', () => {
         client: ['cursor'],
         standalone: true,
         cliVersion: '8.0.1',
+        skills: ['hubspot-new-app'],
         derivedAccountId: 123,
         d: false,
         debug: false,
@@ -108,6 +119,7 @@ describe('commands/mcp/setup', () => {
         targets: ['cursor'],
         standalone: true,
         cliVersion: '8.0.1',
+        skills: ['hubspot-new-app'],
       });
       expect(exit).toHaveBeenCalledWith(0);
     });

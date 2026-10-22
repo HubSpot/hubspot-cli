@@ -31,6 +31,14 @@ export type WrappedHandlerOptions = {
 
 const HANDLER_LOG_DIR = path.join(os.homedir(), '.hscli', 'logs', 'cli');
 
+const jsonOutputSchemas = new Map<string, z.ZodType>();
+
+export function getJsonOutputSchema(
+  trackingName: string
+): z.ZodType | undefined {
+  return jsonOutputSchemas.get(trackingName);
+}
+
 function logUsageTrackingMessage(isJsonOutput: boolean): void {
   if (isJsonOutput) {
     return;
@@ -170,6 +178,10 @@ export function makeWrappedYargsHandler<T extends CommonArgs>(
   handler: (args: ArgumentsCamelCase<T>) => Promise<void>,
   options?: WrappedHandlerOptions
 ): (args: ArgumentsCamelCase<T>) => Promise<void> {
+  if (options?.jsonOutputSchema) {
+    jsonOutputSchemas.set(trackingName, options.jsonOutputSchema);
+  }
+
   return async (args: ArgumentsCamelCase<T>) => {
     const wrappedHandlerArgs = args as ArgumentsCamelCase<T> &
       UsageTrackingArgs &
