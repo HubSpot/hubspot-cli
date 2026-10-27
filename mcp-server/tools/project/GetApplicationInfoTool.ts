@@ -7,7 +7,7 @@ import {
 import { McpLogger } from '../../utils/logger.js';
 import { z } from 'zod';
 import { formatTextContents } from '../../utils/content.js';
-import { isHubSpotHttpError } from '@hubspot/local-dev-lib/errors/index';
+import { getToolErrorMessage } from '../../utils/errors.js';
 import {
   absoluteCurrentWorkingDirectory,
   absoluteProjectPath,
@@ -15,7 +15,6 @@ import {
 } from './constants.js';
 import { setupHubSpotConfig } from '../../utils/config.js';
 import { resolveAccountId } from './resolveAccount.js';
-import { getErrorMessage } from '../../../lib/errorHandlers/index.js';
 import { getApps } from './apps.js';
 
 const inputSchema = {
@@ -63,12 +62,7 @@ export class GetApplicationInfoTool extends Tool<GetApplicationInfoInputSchema> 
         message: 'Handler caught error',
         error: error instanceof Error ? error.message : String(error),
       });
-      if (isHubSpotHttpError(error)) {
-        // Handle HubSpot-specific HTTP errors
-        return formatTextContents(error.toString());
-      }
-
-      return formatTextContents(getErrorMessage(error));
+      return formatTextContents(getToolErrorMessage(error));
     }
   }
 

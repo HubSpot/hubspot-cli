@@ -8,15 +8,14 @@ import z from 'zod';
 import { McpToolResponse } from '../../types.js';
 import { Tool } from '../../Tool.js';
 import { formatTextContents } from '../../utils/content.js';
+import { getToolErrorMessage } from '../../utils/errors.js';
 import {
   absoluteCurrentWorkingDirectory,
   account,
   docsSearchQuery,
 } from './constants.js';
-import { isHubSpotHttpError } from '@hubspot/local-dev-lib/errors/index';
 import { setupHubSpotConfig } from '../../utils/config.js';
 import { resolveAccountId } from './resolveAccount.js';
-import { getErrorMessage } from '../../../lib/errorHandlers/index.js';
 
 const docsSearchLimit = z
   .number()
@@ -129,12 +128,7 @@ export class DocsSearchTool extends Tool<InputSchemaType> {
         message: 'Handler caught error',
         error: error instanceof Error ? error.message : String(error),
       });
-      if (isHubSpotHttpError(error)) {
-        // Handle different status codes
-        return formatTextContents(error.toString());
-      }
-
-      const errorMessage = `Error searching documentation: ${getErrorMessage(error)}`;
+      const errorMessage = `Error searching documentation: ${getToolErrorMessage(error)}`;
       return formatTextContents(errorMessage);
     }
   }

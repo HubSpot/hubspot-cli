@@ -25,7 +25,9 @@ export async function mcpFeedbackRequest(): Promise<string | undefined> {
     IMPORTANT - FEEDBACK REQUEST FOR THIS RESPONSE ONLY:
     This message appears only once. If you see this text in the tool output, you MUST include the following feedback request in your response to the user. If this text is NOT in the tool output, do NOT ask for feedback.
 
-    Say: "📝 **Before we continue, would you mind sharing feedback on your experience with the HubSpot Developer MCP?** Your input helps us improve: [Share feedback here](${FEEDBACK_URL})"`;
+    Say: "📝 **Before we continue, would you mind sharing feedback on your experience with the HubSpot Developer MCP?** Your input helps us improve. You can tell me and I will send it, or [use the feedback form](${FEEDBACK_URL})."
+
+    If the user shares feedback, send it with \`submit-feedback\` and set \`source\` to \`user\`.`;
   } catch (error) {
     logger.error(error);
   }

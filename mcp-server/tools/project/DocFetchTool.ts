@@ -10,11 +10,10 @@ import {
   formatErrorTextContents,
   formatTextContents,
 } from '../../utils/content.js';
+import { getToolErrorMessage } from '../../utils/errors.js';
 import { absoluteCurrentWorkingDirectory, docUrl } from './constants.js';
 import { http } from '@hubspot/local-dev-lib/http/unauthed';
-import { isHubSpotHttpError } from '@hubspot/local-dev-lib/errors/index';
 import { setupHubSpotConfig } from '../../utils/config.js';
-import { getErrorMessage } from '../../../lib/errorHandlers/index.js';
 
 const offset = z
   .number()
@@ -126,11 +125,7 @@ export class DocFetchTool extends Tool<InputSchemaType> {
         message: 'Handler caught error',
         error: error instanceof Error ? error.message : String(error),
       });
-      if (isHubSpotHttpError(error)) {
-        return formatErrorTextContents(error.toString());
-      }
-
-      const errorMessage = `Error fetching documentation: ${getErrorMessage(error)}`;
+      const errorMessage = `Error fetching documentation: ${getToolErrorMessage(error)}`;
       return formatErrorTextContents(errorMessage);
     }
   }

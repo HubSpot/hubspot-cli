@@ -76,6 +76,10 @@ export class Tool<InputSchema> {
     return undefined;
   }
 
+  protected getLoggableInput(input: InputSchema): unknown {
+    return input;
+  }
+
   protected elicit(params: {
     message: string;
     fields: Record<string, PrimitiveSchemaDefinition>;
@@ -97,7 +101,7 @@ export class Tool<InputSchema> {
         // Desktop, Inspector, etc.) will display these logs.
         this.logger.debug(this.toolName, {
           message: 'Tool invoked',
-          args: input,
+          args: this.getLoggableInput(input),
         });
 
         await trackToolUsage(this.toolName, this.getTrackingMeta(input));

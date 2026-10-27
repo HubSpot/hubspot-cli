@@ -8,7 +8,7 @@ import { McpLogger } from '../../utils/logger.js';
 import { z } from 'zod';
 import { http } from '@hubspot/local-dev-lib/http';
 import { formatTextContents } from '../../utils/content.js';
-import { isHubSpotHttpError } from '@hubspot/local-dev-lib/errors/index';
+import { getToolErrorMessage } from '../../utils/errors.js';
 import {
   absoluteCurrentWorkingDirectory,
   absoluteProjectPath,
@@ -16,7 +16,6 @@ import {
 } from './constants.js';
 import { setupHubSpotConfig } from '../../utils/config.js';
 import { resolveAccountId } from './resolveAccount.js';
-import { getErrorMessage } from '../../../lib/errorHandlers/index.js';
 import { elicitSelection } from '../../utils/elicitSelection.js';
 import { getApps } from './apps.js';
 
@@ -134,12 +133,7 @@ export class GetApiUsagePatternsByAppIdTool extends Tool<GetApiUsagePatternsByAp
         message: 'Handler caught error',
         error: error instanceof Error ? error.message : String(error),
       });
-      if (isHubSpotHttpError(error)) {
-        // Handle HubSpot-specific HTTP errors
-        return formatTextContents(error.toString());
-      }
-
-      return formatTextContents(getErrorMessage(error));
+      return formatTextContents(getToolErrorMessage(error));
     }
   }
 

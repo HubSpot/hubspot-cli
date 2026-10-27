@@ -5,28 +5,26 @@ import {
 } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { McpLogger } from '../../../utils/logger.js';
 import { http } from '@hubspot/local-dev-lib/http';
-import { isHubSpotHttpError } from '@hubspot/local-dev-lib/errors/index';
-import { MockedFunction, Mocked } from 'vitest';
+import { Mocked } from 'vitest';
 import { mcpFeedbackRequest } from '../../../utils/feedbackTracking.js';
 import { discoverAccountTargets } from '../../../../lib/accountTargetDiscovery.js';
 import type { AccountTargetCandidate } from '../../../../types/AccountTargets.js';
 import { setupHubSpotConfig } from '../../../utils/config.js';
+import { getConfigCredentials } from '../../../../lib/accountCredentials.js';
 
 vi.mock('@modelcontextprotocol/sdk/server/mcp.js');
 vi.mock('../../../utils/logger.js');
 vi.mock('@hubspot/local-dev-lib/http');
-vi.mock('@hubspot/local-dev-lib/errors/index');
 vi.mock('../../../utils/feedbackTracking');
 vi.mock('../../../utils/config');
 vi.mock('../../../../lib/accountTargetDiscovery.js');
+vi.mock('../../../../lib/accountCredentials.js');
 
 const mockMcpFeedbackRequest = vi.mocked(mcpFeedbackRequest);
 const mockedDiscoverAccountTargets = vi.mocked(discoverAccountTargets);
 const mockedSetupHubSpotConfig = vi.mocked(setupHubSpotConfig);
 const mockHttp = http as Mocked<typeof http>;
-const mockIsHubSpotHttpError = isHubSpotHttpError as unknown as MockedFunction<
-  typeof isHubSpotHttpError
->;
+const mockGetConfigCredentials = vi.mocked(getConfigCredentials);
 
 describe('mcp-server/tools/project/GetApplicationInfoTool', () => {
   let mockMcpServer: Mocked<McpServer>;
@@ -35,6 +33,7 @@ describe('mcp-server/tools/project/GetApplicationInfoTool', () => {
   let mockRegisteredTool: RegisteredTool;
 
   beforeEach(() => {
+    mockGetConfigCredentials.mockReturnValue([]);
     // @ts-expect-error Not mocking the whole thing
     mockMcpServer = {
       registerTool: vi.fn(),
@@ -82,7 +81,6 @@ describe('mcp-server/tools/project/GetApplicationInfoTool', () => {
         candidates: [],
         recommended: { accountId: 123456789 } as AccountTargetCandidate,
       });
-      mockIsHubSpotHttpError.mockReturnValue(false);
     });
 
     it('should use absoluteProjectPath for account resolution when provided', async () => {

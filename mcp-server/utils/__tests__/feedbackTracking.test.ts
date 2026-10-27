@@ -31,6 +31,7 @@ describe('mcp-server/utils/feedbackTracking', () => {
       expect(mockSetStateValue).toHaveBeenCalledWith('mcpTotalToolCalls', 50);
       expect(result).toContain('FEEDBACK REQUEST');
       expect(result).toContain(FEEDBACK_URL);
+      expect(result).toContain('submit-feedback');
     });
 
     it('should return feedback message at threshold 250', async () => {
@@ -89,7 +90,7 @@ describe('mcp-server/utils/feedbackTracking', () => {
 
       expect(result).toContain('IMPORTANT - FEEDBACK REQUEST');
       expect(result).toContain('This message appears only once');
-      expect(result).toContain('Share feedback here');
+      expect(result).toContain('use the feedback form');
     });
 
     it('should handle errors gracefully and return undefined', async () => {
