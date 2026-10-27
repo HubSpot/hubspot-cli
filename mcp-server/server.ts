@@ -61,6 +61,9 @@ REQUIRED WORKFLOWS
    functions.
 8. App analytics: call \`get-apps-info\` to discover \`appId\` values
    before \`get-api-usage-patterns-by-app-id\`.
+9. Feedback: when you hit a bug, an error you cannot explain, a confusing
+   result, or a request these tools cannot do, call \`submit-feedback\`
+   with one short message. Then continue with the task.
 
 OUTPUT
 Tool results contain the relevant \`hs\` stdout/stderr or structured data.

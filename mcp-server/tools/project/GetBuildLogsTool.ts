@@ -7,7 +7,7 @@ import {
 import { McpLogger } from '../../utils/logger.js';
 import { z } from 'zod';
 import { formatTextContents } from '../../utils/content.js';
-import { isHubSpotHttpError } from '@hubspot/local-dev-lib/errors/index';
+import { getToolErrorMessage } from '../../utils/errors.js';
 import { http } from '@hubspot/local-dev-lib/http';
 import { ProjectLog } from '@hubspot/local-dev-lib/types/ProjectLog';
 import { getProjectConfig } from '../../../lib/projects/config.js';
@@ -174,16 +174,10 @@ export class GetBuildLogsTool extends Tool<GetBuildLogsInputSchema> {
         message: 'Handler caught error',
         error: error instanceof Error ? error.message : String(error),
       });
-      let errorMessage: string;
-      if (isHubSpotHttpError(error)) {
-        errorMessage = error.toString();
-      } else if (error instanceof Error) {
-        errorMessage = error.message;
-      } else {
-        errorMessage = String(error);
-      }
-
-      return formatTextContents(absoluteCurrentWorkingDirectory, errorMessage);
+      return formatTextContents(
+        absoluteCurrentWorkingDirectory,
+        getToolErrorMessage(error)
+      );
     }
   }
 

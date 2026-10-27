@@ -6,8 +6,10 @@ import {
   APP_AUTH_TYPES,
   APP_DISTRIBUTION_TYPES,
   CLI_SUPPORT_GUIDELINES_URL,
+  FEEDBACK_SOURCE_ENV_VAR,
   LEGACY_PUBLIC_APP_FILE,
   LOCAL_DEV_DEFAULT_PORT,
+  MAX_FEEDBACK_LENGTH,
   PROJECT_CONFIG_FILE,
   PROJECT_WITH_APP,
 } from '../lib/constants.js';
@@ -2475,7 +2477,7 @@ export const commands = {
         autoDeploySkipped: (deployCommand: string) =>
           `Auto-deploy was skipped for this build. Run ${uiCommandReference(deployCommand)} to deploy this build.`,
         releaseManagementRequired: (releaseCommand: string) =>
-          `This build is not live yet. Run ${uiCommandReference(releaseCommand)} to make it live.`,
+          `This build is not live yet. Run ${uiCommandReference(releaseCommand)} to release it. Apps then go live when you roll the release out in the projects UI.`,
         uploadingWithProfile: (profileName: string, accountId: number) =>
           `Initializing project upload with ${chalk.bold(profileName)} profile: ${uiAccountDescription(accountId)}`,
         uploadingToAccount: (accountId: number) =>
@@ -2663,11 +2665,40 @@ export const commands = {
     },
     feedback: {
       describe: 'Leave feedback or file a bug report.',
+      verboseDescribe: `Leave feedback or file a bug report.\n\nPass ${uiCommandReference('--message')} to send feedback from the terminal. Run ${uiCommandReference('hs feedback')} without it to open the feedback form in your browser instead.\n\nThe feedback includes your account ID, your user ID, and the CLI version.`,
+      options: {
+        message: {
+          describe:
+            'Feedback to send. If omitted, opens the feedback form in your browser.',
+        },
+        source: {
+          describe: `Who is sending the feedback. Required with ${uiCommandReference('--message')} unless the ${FEEDBACK_SOURCE_ENV_VAR} environment variable is set.`,
+        },
+      },
+      examples: {
+        openForm: 'Open the feedback form in your browser',
+        submit: 'Send feedback from the terminal',
+        submitAsAgent: 'Send feedback on behalf of an AI agent',
+      },
       openPrompt: 'Open the feedback form in your browser?',
       success: (url: string) =>
         `We opened ${uiLink('the developer feedback form', url)} in your browser.`,
       error: (url: string) =>
         `Navigate to ${uiLink('the developer feedback form', url)} to leave feedback.`,
+      nonInteractive: (url: string) =>
+        `To send feedback from the terminal, run ${uiCommandReference('hs feedback --message "<message>" --source <user|agent>')}. To use the browser instead, navigate to ${uiLink('the developer feedback form', url)}.`,
+      submitSuccess:
+        'Your feedback has been successfully submitted. Thank you.',
+      errors: {
+        blankMessage: `Feedback cannot be blank. Pass your feedback with ${uiCommandReference('hs feedback --message "<message>" --source <user|agent>')}.`,
+        messageTooLong: (length: number) =>
+          `Feedback must be ${MAX_FEEDBACK_LENGTH} characters or fewer. Your message has ${length} characters.`,
+        containsCredentials:
+          'Feedback cannot contain an access key, token, or secret from your HubSpot config. Remove it, then try again.',
+        sourceRequired: `${uiCommandReference('--message')} requires ${uiCommandReference('--source')}. Pass ${uiCommandReference('--source user')} if you are a person, or ${uiCommandReference('--source agent')} if you are an AI agent.`,
+        noAccount: `To send feedback from the terminal, authenticate an account with ${uiCommandReference('hs account auth')}. To use the feedback form instead, run ${uiCommandReference('hs feedback')} without ${uiCommandReference('--message')}.`,
+        submitFailed: `Could not send your feedback. To use the feedback form instead, run ${uiCommandReference('hs feedback')} without ${uiCommandReference('--message')}.`,
+      },
     },
     installDeps: {
       help: {
@@ -4463,6 +4494,7 @@ export const lib = {
       'Color: To remove color from the output, pass `--no-color` or set `NO_COLOR`.',
       'Debug logs: To print debug logs, pass `--debug`.',
       'MCP server: To connect the HubSpot Dev MCP server to an AI coding tool, run `hs mcp setup`.',
+      'Feedback: To send feedback about the CLI, run `hs feedback --message "<message>" --source agent`. Send one short line about a bug, a missing command or flag, or anything that confused the user. Keep it about the CLI. Do not include secrets, access keys, file contents, or personal data. Then continue with the task.',
     ],
     jsonOutput: {
       schema:

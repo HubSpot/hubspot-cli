@@ -30,12 +30,18 @@ export function mockHubSpotHttpResponse<T>(data?: any): HubSpotPromise<T> {
   }) as HubSpotPromise<T>;
 }
 
+type MockErrorRequestConfig = {
+  url?: string;
+  data?: string;
+};
+
 export function mockHubSpotHttpError(
   message: string,
-  response: MockErrorResponse
+  response: MockErrorResponse,
+  config?: MockErrorRequestConfig
 ): HubSpotHttpError {
   return new HubSpotHttpError(message, {
-    cause: { isAxiosError: true, response },
+    cause: { isAxiosError: true, response, config },
   });
 }
 

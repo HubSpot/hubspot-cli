@@ -5,23 +5,25 @@ import {
 } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { McpLogger } from '../../../utils/logger.js';
 import { http } from '@hubspot/local-dev-lib/http';
-import { isHubSpotHttpError } from '@hubspot/local-dev-lib/errors/index';
 import { MockedFunction } from 'vitest';
 import { mcpFeedbackRequest } from '../../../utils/feedbackTracking.js';
 import { discoverAccountTargets } from '../../../../lib/accountTargetDiscovery.js';
 import type { AccountTargetCandidate } from '../../../../types/AccountTargets.js';
+import { mockHubSpotHttpError } from '../../../../lib/testUtils.js';
+import { getToolErrorMessage } from '../../../utils/errors.js';
+import { getConfigCredentials } from '../../../../lib/accountCredentials.js';
 
 vi.mock('@modelcontextprotocol/sdk/server/mcp.js');
 vi.mock('../../../utils/logger.js');
 vi.mock('@hubspot/local-dev-lib/http');
-vi.mock('@hubspot/local-dev-lib/errors/index');
 vi.mock('../../../utils/feedbackTracking');
 vi.mock('../../../../lib/accountTargetDiscovery.js');
+vi.mock('../../../../lib/accountCredentials.js');
 
 const mockMcpFeedbackRequest = vi.mocked(mcpFeedbackRequest);
 const mockedDiscoverAccountTargets = vi.mocked(discoverAccountTargets);
 const mockHttp = http as unknown as { post: MockedFunction<typeof http.post> };
-const mockIsHubSpotHttpError = vi.mocked(isHubSpotHttpError);
+const mockGetConfigCredentials = vi.mocked(getConfigCredentials);
 
 describe('mcp-server/tools/project/DocsSearchTool', () => {
   let mockMcpServer: ReturnType<typeof vi.mocked<McpServer>>;
@@ -30,6 +32,7 @@ describe('mcp-server/tools/project/DocsSearchTool', () => {
   let mockRegisteredTool: RegisteredTool;
 
   beforeEach(() => {
+    mockGetConfigCredentials.mockReturnValue([]);
     // @ts-expect-error Not mocking whole server
     mockMcpServer = {
       registerTool: vi.fn(),
@@ -294,13 +297,18 @@ describe('mcp-server/tools/project/DocsSearchTool', () => {
       });
     });
 
-    it('should handle HubSpot HTTP errors', async () => {
-      const mockError = {
-        toString: () => 'HubSpot API Error: 404 Not Found',
-      };
+    it('should redact config credentials from HubSpot HTTP errors', async () => {
+      const mockError = mockHubSpotHttpError(
+        'Unauthorized',
+        { status: 401, data: { message: 'The access key is missing scopes.' } },
+        {
+          url: 'localdevauth/v1/auth/refresh',
+          data: '{"encodedOAuthRefreshToken":"pak-secret"}',
+        }
+      );
+      mockGetConfigCredentials.mockReturnValue(['pak-secret']);
 
       mockHttp.post.mockRejectedValue(mockError);
-      mockIsHubSpotHttpError.mockReturnValue(true);
 
       const result = await tool.handler(mockInput);
 
@@ -308,17 +316,17 @@ describe('mcp-server/tools/project/DocsSearchTool', () => {
         content: [
           {
             type: 'text',
-            text: 'HubSpot API Error: 404 Not Found',
+            text: `Error searching documentation: ${getToolErrorMessage(mockError)}`,
           },
         ],
       });
+      expect(JSON.stringify(result)).not.toContain('pak-secret');
     });
 
     it('should handle generic errors', async () => {
       const mockError = new Error('Network error');
 
       mockHttp.post.mockRejectedValue(mockError);
-      mockIsHubSpotHttpError.mockReturnValue(false);
 
       const result = await tool.handler(mockInput);
 
@@ -334,7 +342,6 @@ describe('mcp-server/tools/project/DocsSearchTool', () => {
 
     it('should handle non-Error rejections', async () => {
       mockHttp.post.mockRejectedValue('String error');
-      mockIsHubSpotHttpError.mockReturnValue(false);
 
       const result = await tool.handler(mockInput);
 

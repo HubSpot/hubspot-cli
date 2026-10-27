@@ -26,6 +26,7 @@ import { HsFunctionLogsTool } from './cms/HsFunctionLogsTool.js';
 import { CreateTestAccountTool } from './project/CreateTestAccountTool.js';
 import { FindProjectsTool } from './project/FindProjectsTool.js';
 import { AuthAccountTool } from './project/AuthAccountTool.js';
+import { SubmitFeedbackTool } from './project/SubmitFeedbackTool.js';
 
 export function registerProjectTools(
   mcpServer: McpServer,
@@ -49,6 +50,7 @@ export function registerProjectTools(
     new GetBuildStatusTool(mcpServer, logger).register(),
     new FindProjectsTool(mcpServer, logger).register(),
     new AuthAccountTool(mcpServer, logger).register(),
+    new SubmitFeedbackTool(mcpServer, logger).register(),
   ];
 }
 

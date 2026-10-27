@@ -8,11 +8,11 @@ import z from 'zod';
 import { McpToolResponse } from '../../types.js';
 import { Tool } from '../../Tool.js';
 import { formatTextContents } from '../../utils/content.js';
+import { getToolErrorMessage } from '../../utils/errors.js';
 import {
   absoluteCurrentWorkingDirectory,
   knowledgeSearchQuery,
 } from './constants.js';
-import { isHubSpotHttpError } from '@hubspot/local-dev-lib/errors/index';
 import { setupHubSpotConfig } from '../../utils/config.js';
 import { getErrorMessage } from '../../../lib/errorHandlers/index.js';
 
@@ -107,11 +107,7 @@ export class KnowledgeSearchTool extends Tool<InputSchemaType> {
         message: 'Handler caught error',
         error: getErrorMessage(error),
       });
-      if (isHubSpotHttpError(error)) {
-        return formatTextContents(error.toString());
-      }
-
-      const errorMessage = `Error searching the knowledge base: ${getErrorMessage(error)}`;
+      const errorMessage = `Error searching the knowledge base: ${getToolErrorMessage(error)}`;
       return formatTextContents(errorMessage);
     }
   }

@@ -214,6 +214,8 @@ export const ACCOUNT_LEVEL_CHOICES = [
 ] as const;
 
 export const FEEDBACK_URL = 'https://developers.hubspot.com/feedback';
+export const FEEDBACK_SOURCE_ENV_VAR = 'HUBSPOT_FEEDBACK_SOURCE';
+export const MAX_FEEDBACK_LENGTH = 5000;
 
 // TODO: remove this constant and use PORT_MANAGER_SERVER_PORT from
 // @hubspot/local-dev-lib once LDL changes its default to 4828.

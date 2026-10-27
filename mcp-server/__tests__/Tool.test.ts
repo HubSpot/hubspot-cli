@@ -85,6 +85,16 @@ class MetaTool extends TestTool {
   }
 }
 
+class LoggableInputTool extends TestTool {
+  protected getLoggableInput(): { value: string } {
+    return { value: 'redacted' };
+  }
+
+  handler(): McpToolResponse {
+    return { content: [{ type: 'text', text: 'ok' }] };
+  }
+}
+
 describe('mcp-server/Tool', () => {
   let mockMcpServer: Mocked<McpServer>;
   let mockLogger: Mocked<McpLogger>;
@@ -152,6 +162,17 @@ describe('mcp-server/Tool', () => {
 
       expect(mockTrackToolUsage).toHaveBeenCalledWith('test-tool', {
         mode: 'search-term',
+      });
+    });
+
+    it('should log the input from getLoggableInput override', async () => {
+      const tool = new LoggableInputTool(mockMcpServer, mockLogger);
+
+      await tool.invokeWrapped({ value: 'secret' });
+
+      expect(mockLogger.debug).toHaveBeenCalledWith('test-tool', {
+        message: 'Tool invoked',
+        args: { value: 'redacted' },
       });
     });
 

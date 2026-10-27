@@ -1,6 +1,6 @@
 {
   "name": "@hubspot/cli",
-  "version": "8.17.0",
+  "version": "8.18.0",
   "description": "The official CLI for developing on HubSpot",
   "license": "Apache-2.0",
   "repository": "https://github.com/HubSpot/hubspot-cli",
@@ -12,7 +12,7 @@
   "dependencies": {
     "@hubspot/local-dev-lib": "5.14.0",
     "@hubspot/project-parsing-lib": "0.23.7",
-    "@hubspot/ui-extensions-dev-server": "2.2.4",
+    "@hubspot/ui-extensions-dev-server": "2.2.5",
     "@inquirer/prompts": "7.10.1",
     "@modelcontextprotocol/sdk": "1.32.1",
     "archiver": "7.0.1",
