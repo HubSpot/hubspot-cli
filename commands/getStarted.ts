@@ -23,8 +23,8 @@ import { projectNameAndDestPrompt } from '../lib/prompts/projectNameAndDestPromp
 import { promptUser } from '../lib/prompts/promptUtils.js';
 import {
   uiAccountDescription,
-  uiFeatureHighlight,
-  uiInfoSection,
+  logUiFeatureHighlight,
+  logUiInfoSection,
 } from '../lib/ui/index.js';
 import { uiLogger } from '../lib/ui/logger.js';
 import { trackCommandMetadataUsage } from '../lib/usageTracking.js';
@@ -82,7 +82,7 @@ async function handler(
     }
   }
 
-  uiInfoSection(commands.getStarted.startTitle, () => {
+  logUiInfoSection(commands.getStarted.startTitle, () => {
     uiLogger.log(commands.getStarted.startDescription);
     uiLogger.log(commands.getStarted.guideOverview(accountName));
   });
@@ -381,7 +381,7 @@ async function handler(
           }
 
           uiLogger.log(' ');
-          uiFeatureHighlight(['projectDevCommand']);
+          logUiFeatureHighlight(['projectDevCommand']);
         }
       } catch (err) {
         // Track upload exception
@@ -401,7 +401,7 @@ async function handler(
       }
     } else {
       uiLogger.log(' ');
-      uiFeatureHighlight(['projectUploadCommand', 'projectDevCommand']);
+      logUiFeatureHighlight(['projectUploadCommand', 'projectDevCommand']);
       return exit(EXIT_CODES.SUCCESS);
     }
   }

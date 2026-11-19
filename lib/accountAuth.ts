@@ -24,6 +24,19 @@ import { awaitPersonalAccessKeyOverWebsocket } from './auth/awaitPersonalAccessK
 import { commands } from '../lang/en.js';
 import { uiLogger } from './ui/logger.js';
 
+const WHITESPACE_PATTERN = /\s/;
+
+function getAccountNameError(accountName?: string): string | undefined {
+  if (!accountName || !WHITESPACE_PATTERN.test(accountName)) {
+    return undefined;
+  }
+
+  return commands.account.subcommands.auth.errors.accountNameContainsSpaces(
+    accountName,
+    toKebabCase(accountName) || undefined
+  );
+}
+
 async function getPersonalAccessKey(
   env: Environment,
   accountId?: number
@@ -165,6 +178,13 @@ export async function authenticateNewAccount({
   accountName: providedAccountName,
   useDefaultAccountName,
 }: AuthenticateNewAccountOptions): Promise<HubSpotConfigAccount | null> {
+  const accountNameError = getAccountNameError(providedAccountName);
+
+  if (accountNameError) {
+    uiLogger.error(accountNameError);
+    return null;
+  }
+
   const configMigrationSuccess = await handleConfigMigration();
 
   if (!configMigrationSuccess) {

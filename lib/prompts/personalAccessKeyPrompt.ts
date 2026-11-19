@@ -11,7 +11,7 @@ import {
   AccountNamePromptResponse,
   getCliAccountNamePromptConfig,
 } from './accountNamePrompt.js';
-import { uiInfoSection } from '../ui/index.js';
+import { logUiInfoSection } from '../ui/index.js';
 import { PromptConfig } from '../../types/Prompts.js';
 import { lib } from '../../lang/en.js';
 import { PromptExitError } from '../errors/PromptExitError.js';
@@ -59,7 +59,7 @@ export async function legacyPersonalAccessKeyPrompt({
   const websiteOrigin = getHubSpotWebsiteOrigin(env);
   let url = `${websiteOrigin}/l/personal-access-key`;
   if (process.env.BROWSER !== 'none') {
-    uiInfoSection(
+    logUiInfoSection(
       lib.prompts.personalAccessKeyPrompt.personalAccessKeySetupTitle,
       () => {
         uiLogger.log(

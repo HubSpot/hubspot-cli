@@ -30,7 +30,7 @@ import {
 import { makeWrappedYargsHandler } from '../../lib/yargs/makeWrappedYargsHandler.js';
 import { makeYargsBuilder } from '../../lib/yargsUtils.js';
 import {
-  uiCommandRelocatedMessage,
+  logUiCommandRelocatedMessage,
   uiCommandRenamedDescription,
 } from '../../lib/ui/index.js';
 
@@ -110,7 +110,7 @@ async function handler(
 ): Promise<void> {
   const { initialUpload, derivedAccountId, exit } = args;
 
-  uiCommandRelocatedMessage('hs project dev');
+  logUiCommandRelocatedMessage('hs project dev');
 
   let projectConfig;
   let projectDir;

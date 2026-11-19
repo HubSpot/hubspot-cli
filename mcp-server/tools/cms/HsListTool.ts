@@ -46,7 +46,11 @@ export class HsListTool extends Tool<HsListInputSchema> {
   ): Promise<McpToolResponse> {
     setupHubSpotConfig(absoluteCurrentWorkingDirectory);
 
-    const command = new HubSpotCommand(path ? `cms list ${path}` : 'cms list');
+    const command = new HubSpotCommand('cms list');
+
+    if (path) {
+      command.addArg(path);
+    }
 
     if (account) {
       command.addFlag('account', account);

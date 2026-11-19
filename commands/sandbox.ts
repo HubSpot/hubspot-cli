@@ -7,7 +7,7 @@ import { makeYargsBuilder } from '../lib/yargsUtils.js';
 import { YargsCommandModuleBucket } from '../types/Yargs.js';
 
 const command = ['sandbox', 'sandboxes'];
-const describe = uiBetaTag(commands.sandbox.describe, false);
+const describe = uiBetaTag(commands.sandbox.describe);
 
 function sandboxBuilder(yargs: Argv): Argv {
   yargs.command(create).command(del).demandCommand(1, '');

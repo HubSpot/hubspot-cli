@@ -22,6 +22,13 @@ export const CLI_DEPRECATED_MAJOR_VERSION_DEPRECATION_DATE = '2026-09-02';
 // The date CLI_DEPRECATED_MAJOR_VERSION reaches end of life
 export const CLI_DEPRECATED_MAJOR_VERSION_EOL_DATE = '2027-03-01';
 
+// The date, in UTC, that editing CMS serverless functions stops. The commands
+// that deploy or serve functions are disabled on and after this date.
+export const SERVERLESS_SUNSET_EDITING_DISABLED_DATE = '2026-11-17';
+
+export const SERVERLESS_SUNSET_CHANGELOG_URL =
+  'https://developers.hubspot.com/changelog/sunsetting-design-manager-serverless-functions-and-older-node.js-runtimes-for-custom-code-actions' as const;
+
 export const CLI_SUPPORT_GUIDELINES_URL =
   'https://developers.hubspot.com/docs/developer-tooling/local-development/hubspot-cli/version-support' as const;
 

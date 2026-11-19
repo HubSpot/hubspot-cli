@@ -41,7 +41,11 @@ import {
 import { cliAccountNamePrompt } from '../lib/prompts/accountNamePrompt.js';
 import { authenticateWithOauth } from '../lib/oauth.js';
 import { EXIT_CODES } from '../lib/enums/exitCodes.js';
-import { uiCommandReference, uiFeatureHighlight } from '../lib/ui/index.js';
+import {
+  uiCommandReference,
+  uiDeprecatedTag,
+  logUiFeatureHighlight,
+} from '../lib/ui/index.js';
 import {
   ConfigArgs,
   CommonArgs,
@@ -178,6 +182,8 @@ async function handler(args: ArgumentsCamelCase<InitArgs>): Promise<void> {
     return exit(EXIT_CODES.ERROR);
   }
 
+  uiLogger.log(uiDeprecatedTag(commands.init.logs.deprecated));
+
   // Check if the specific config file path already exists
   if (existingConfigPath && existsSync(existingConfigPath)) {
     uiLogger.error(commands.init.errors.configFileExists(existingConfigPath));
@@ -230,7 +236,7 @@ async function handler(args: ArgumentsCamelCase<InitArgs>): Promise<void> {
         name || accountId!
       )
     );
-    uiFeatureHighlight([
+    logUiFeatureHighlight([
       'getStartedCommand',
       'helpCommand',
       'authCommand',

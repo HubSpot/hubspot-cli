@@ -72,8 +72,8 @@ describe('HsFunctionLogsTool', () => {
         'get-cms-serverless-function-logs',
         expect.objectContaining({
           title: 'Get HubSpot CMS serverless function logs for an endpoint',
-          description: expect.stringContaining(
-            'Retrieve logs for HubSpot CMS serverless functions'
+          description: expect.stringMatching(
+            /^DEPRECATED: CMS serverless functions are being sunset/
           ),
           inputSchema: expect.any(Object),
         }),

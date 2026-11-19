@@ -90,7 +90,7 @@ export class HsListFunctionsTool extends Tool<HsListFunctionsInputSchema> {
       {
         title: 'List HubSpot CMS Serverless Functions',
         description:
-          'Lists CMS serverless functions deployed in a HubSpot account. CMS serverless functions are website endpoints served at /hs/serverless/<path>. This does NOT list developer-platform app functions (the private app-function feature or the public app-function-endpoint feature). Shows function routes, HTTP methods, secrets, and timestamps.',
+          'DEPRECATED: CMS serverless functions are being sunset: creating them has ended, editing ends on November 17, 2026, and existing functions stop running on February 1, 2027. Lists CMS serverless functions deployed in a HubSpot account. CMS serverless functions are website endpoints served at /hs/serverless/<path>. This does NOT list developer-platform app functions (the private app-function feature or the public app-function-endpoint feature). Shows function routes, HTTP methods, secrets, and timestamps.',
         inputSchema,
         annotations: {
           readOnlyHint: true,

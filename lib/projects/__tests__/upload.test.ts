@@ -21,6 +21,8 @@ import {
 } from '@hubspot/project-parsing-lib/workspaces';
 import { shouldIgnoreFile } from '@hubspot/local-dev-lib/ignoreRules';
 import { getConfigAccountIfExists } from '@hubspot/local-dev-lib/config';
+import { translate } from '@hubspot/project-parsing-lib/translate';
+import { warnAboutSkippedHsMetaFiles } from '../ui.js';
 
 const validateLintConfigMocks = vi.hoisted(() => ({
   validateLintConfigOnUpload: vi.fn().mockResolvedValue(undefined),
@@ -49,6 +51,13 @@ vi.mock('@hubspot/project-parsing-lib/workspaces', () => ({
   collectWorkspaceDirectories: vi.fn(),
   collectFileDependencies: vi.fn(),
   getPackableFiles: vi.fn(),
+}));
+vi.mock('@hubspot/project-parsing-lib/translate', () => ({
+  translate: vi.fn(),
+  isTranslationError: vi.fn().mockReturnValue(false),
+}));
+vi.mock('../ui.js', () => ({
+  warnAboutSkippedHsMetaFiles: vi.fn(),
 }));
 vi.mock('@hubspot/local-dev-lib/ignoreRules');
 vi.mock('@hubspot/local-dev-lib/config');
@@ -88,6 +97,7 @@ describe('lib/projects/upload', () => {
 
       // Mock config to prevent reading actual config file
       vi.mocked(getConfigAccountIfExists).mockReturnValue(undefined);
+      vi.mocked(shouldIgnoreFile).mockReturnValue(false);
     });
 
     afterEach(() => {
@@ -102,6 +112,29 @@ describe('lib/projects/upload', () => {
       ).rejects.toThrow(ProjectValidationError);
 
       expect(walk).toHaveBeenCalledWith(srcDir, ['node_modules']);
+    });
+
+    it('should throw ProjectValidationError when every file in the source directory is ignored', async () => {
+      vi.mocked(walk).mockResolvedValue([path.join(srcDir, '.env')]);
+      vi.mocked(shouldIgnoreFile).mockReturnValue(true);
+
+      await expect(
+        validateSourceDirectory(srcDir, projectConfig, tempDir)
+      ).rejects.toThrow(
+        lib.projectUpload.handleProjectUpload.noFilesToUpload(
+          projectConfig.srcDir
+        )
+      );
+    });
+
+    it('should check ignore rules against the source directory', async () => {
+      const filePath = path.join(srcDir, 'app', 'app-logo.png');
+      vi.mocked(walk).mockResolvedValue([filePath]);
+      vi.mocked(shouldIgnoreFile).mockReturnValue(false);
+
+      await validateSourceDirectory(srcDir, projectConfig, tempDir);
+
+      expect(shouldIgnoreFile).toHaveBeenCalledWith(filePath, true, srcDir);
     });
 
     it('should warn about legacy files in V2 projects', async () => {
@@ -288,6 +321,227 @@ describe('lib/projects/upload', () => {
       expect(npmAuditBuildMocks.runNpmAuditJson).toHaveBeenCalledWith(
         path.join(tempDir, 'src')
       );
+    });
+
+    it('should pass the source directory as the ignore root when filtering archive entries', async () => {
+      vi.mocked(ensureProjectExists).mockResolvedValue({
+        projectExists: true,
+      });
+      vi.mocked(uploadProject).mockResolvedValue({
+        data: { buildId: 1 },
+      } as Awaited<ReturnType<typeof uploadProject>>);
+
+      const uploadPromise = handleProjectUpload({
+        accountId: 123,
+        projectConfig,
+        projectDir: tempDir,
+        callbackFunc: vi.fn().mockResolvedValue({}),
+        isUploadCommand: true,
+      });
+
+      mockArchive.finalize();
+      await uploadPromise;
+
+      const filterFn = mockArchive.directory.mock.calls[0][2];
+      filterFn({ name: 'app/app-logo.png' });
+
+      expect(shouldIgnoreFile).toHaveBeenCalledWith(
+        'app/app-logo.png',
+        true,
+        path.join(tempDir, 'src')
+      );
+    });
+
+    it('should reject before validating the lint config or running npm audit when every file is ignored', async () => {
+      vi.mocked(shouldIgnoreFile).mockReturnValue(true);
+
+      const uploadPromise = handleProjectUpload({
+        accountId: 123,
+        projectConfig,
+        projectDir: tempDir,
+        callbackFunc: vi.fn().mockResolvedValue({}),
+        isUploadCommand: true,
+      });
+
+      await expect(uploadPromise).rejects.toThrow(
+        lib.projectUpload.handleProjectUpload.noFilesToUpload(
+          projectConfig.srcDir
+        )
+      );
+      expect(
+        validateLintConfigMocks.validateLintConfigOnUpload
+      ).not.toHaveBeenCalled();
+      expect(npmAuditBuildMocks.runNpmAuditJson).not.toHaveBeenCalled();
+      expect(uploadProject).not.toHaveBeenCalled();
+    });
+
+    it('should return skippedHsMetaFiles from translation when sendIR is true', async () => {
+      const skippedHsMetaFiles = ['app/extensions/card-hsmeta.json'];
+      vi.mocked(translate).mockResolvedValue({
+        intermediateRepresentation: {},
+        skippedHsMetaFiles,
+      } as Awaited<ReturnType<typeof translate>>);
+      vi.mocked(warnAboutSkippedHsMetaFiles).mockResolvedValue(true);
+      vi.mocked(ensureProjectExists).mockResolvedValue({
+        projectExists: true,
+      });
+      vi.mocked(uploadProject).mockResolvedValue({
+        data: { buildId: 456 },
+      } as Awaited<ReturnType<typeof uploadProject>>);
+
+      const uploadPromise = handleProjectUpload({
+        accountId: 123,
+        projectConfig,
+        projectDir: tempDir,
+        callbackFunc: vi.fn().mockResolvedValue({ success: true }),
+        sendIR: true,
+      });
+
+      mockArchive.finalize();
+
+      const result = await uploadPromise;
+
+      expect(result.skippedHsMetaFiles).toEqual(skippedHsMetaFiles);
+    });
+
+    it('should resolve with userDeclined when the user declines to continue', async () => {
+      const skippedHsMetaFiles = ['app/extensions/card-hsmeta.json'];
+      vi.mocked(translate).mockResolvedValue({
+        intermediateRepresentation: {},
+        skippedHsMetaFiles,
+      } as Awaited<ReturnType<typeof translate>>);
+      vi.mocked(warnAboutSkippedHsMetaFiles).mockResolvedValue(false);
+
+      const uploadPromise = handleProjectUpload({
+        accountId: 123,
+        projectConfig,
+        projectDir: tempDir,
+        callbackFunc: vi.fn(),
+        sendIR: true,
+      });
+
+      mockArchive.finalize();
+
+      const result = await uploadPromise;
+
+      expect(result).toEqual({ userDeclined: true });
+      expect(uploadProject).not.toHaveBeenCalled();
+    });
+
+    it('should resolve with an uploadError and not prompt when formatOutputAsJson is true, files were skipped, and force is not set', async () => {
+      const skippedHsMetaFiles = ['app/extensions/card-hsmeta.json'];
+      vi.mocked(translate).mockResolvedValue({
+        intermediateRepresentation: {},
+        skippedHsMetaFiles,
+      } as Awaited<ReturnType<typeof translate>>);
+
+      const uploadPromise = handleProjectUpload({
+        accountId: 123,
+        projectConfig,
+        projectDir: tempDir,
+        callbackFunc: vi.fn(),
+        sendIR: true,
+        formatOutputAsJson: true,
+      });
+
+      mockArchive.finalize();
+
+      const result = await uploadPromise;
+
+      expect(result.uploadError).toBeInstanceOf(ProjectValidationError);
+      expect((result.uploadError as Error).message).toContain(
+        'app/extensions/card-hsmeta.json'
+      );
+      expect(result.skippedHsMetaFiles).toBeUndefined();
+      expect(warnAboutSkippedHsMetaFiles).not.toHaveBeenCalled();
+      expect(uploadProject).not.toHaveBeenCalled();
+    });
+
+    it('should continue the upload when formatOutputAsJson and force are both set', async () => {
+      const skippedHsMetaFiles = ['app/extensions/card-hsmeta.json'];
+      vi.mocked(translate).mockResolvedValue({
+        intermediateRepresentation: {},
+        skippedHsMetaFiles,
+      } as Awaited<ReturnType<typeof translate>>);
+      vi.mocked(warnAboutSkippedHsMetaFiles).mockResolvedValue(true);
+      vi.mocked(ensureProjectExists).mockResolvedValue({
+        projectExists: true,
+      });
+      vi.mocked(uploadProject).mockResolvedValue({
+        data: { buildId: 456 },
+      } as Awaited<ReturnType<typeof uploadProject>>);
+
+      const uploadPromise = handleProjectUpload({
+        accountId: 123,
+        projectConfig,
+        projectDir: tempDir,
+        callbackFunc: vi.fn().mockResolvedValue({ success: true }),
+        sendIR: true,
+        formatOutputAsJson: true,
+        force: true,
+      });
+
+      mockArchive.finalize();
+
+      const result = await uploadPromise;
+
+      expect(result.uploadError).toBeUndefined();
+      expect(result.skippedHsMetaFiles).toEqual(skippedHsMetaFiles);
+      expect(uploadProject).toHaveBeenCalled();
+    });
+
+    it('should continue the upload when formatOutputAsJson is true and no files were skipped', async () => {
+      const skippedHsMetaFiles: string[] = [];
+      vi.mocked(translate).mockResolvedValue({
+        intermediateRepresentation: {},
+        skippedHsMetaFiles,
+      } as Awaited<ReturnType<typeof translate>>);
+      vi.mocked(warnAboutSkippedHsMetaFiles).mockResolvedValue(true);
+      vi.mocked(ensureProjectExists).mockResolvedValue({
+        projectExists: true,
+      });
+      vi.mocked(uploadProject).mockResolvedValue({
+        data: { buildId: 456 },
+      } as Awaited<ReturnType<typeof uploadProject>>);
+
+      const uploadPromise = handleProjectUpload({
+        accountId: 123,
+        projectConfig,
+        projectDir: tempDir,
+        callbackFunc: vi.fn().mockResolvedValue({ success: true }),
+        sendIR: true,
+        formatOutputAsJson: true,
+      });
+
+      mockArchive.finalize();
+
+      const result = await uploadPromise;
+
+      expect(result.uploadError).toBeUndefined();
+      expect(uploadProject).toHaveBeenCalled();
+    });
+
+    it('should not return skippedHsMetaFiles when sendIR is false', async () => {
+      vi.mocked(ensureProjectExists).mockResolvedValue({
+        projectExists: true,
+      });
+      vi.mocked(uploadProject).mockResolvedValue({
+        data: { buildId: 456 },
+      } as Awaited<ReturnType<typeof uploadProject>>);
+
+      const uploadPromise = handleProjectUpload({
+        accountId: 123,
+        projectConfig,
+        projectDir: tempDir,
+        callbackFunc: vi.fn().mockResolvedValue({ success: true }),
+      });
+
+      mockArchive.finalize();
+
+      const result = await uploadPromise;
+
+      expect(result.skippedHsMetaFiles).toBeUndefined();
+      expect(translate).not.toHaveBeenCalled();
     });
 
     it('should not run npm audit when isUploadCommand is false', async () => {

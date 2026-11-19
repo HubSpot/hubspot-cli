@@ -341,6 +341,26 @@ describe('commands/cms/watch', () => {
         expect(uiLogger.error).toHaveBeenCalledWith(
           expect.stringContaining('test.js')
         );
+        expect(uiLogger.info).not.toHaveBeenCalledWith(
+          expect.stringContaining('Developer Changelog')
+        );
+      });
+
+      it('should hint that new serverless function folders cannot be uploaded when a function file fails', async () => {
+        await watchCommand.handler(args);
+
+        const fileErrorHandlerFactory = watchSpy.mock.calls[0][7];
+        const fileErrorHandler = fileErrorHandlerFactory?.(
+          'my-test.functions/index.js',
+          '/dest/my-test.functions/index.js',
+          123456
+        );
+
+        fileErrorHandler?.(new AxiosError('File error'));
+
+        expect(uiLogger.info).toHaveBeenCalledWith(
+          expect.stringContaining('can no longer be created')
+        );
       });
     });
   });

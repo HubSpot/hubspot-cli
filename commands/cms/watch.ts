@@ -24,6 +24,7 @@ import {
 import { makeWrappedYargsHandler } from '../../lib/yargs/makeWrappedYargsHandler.js';
 import { WatchErrorHandler } from '@hubspot/local-dev-lib/types/Files';
 import { uiLogger } from '../../lib/ui/logger.js';
+import { logServerlessUploadBlockedHint } from '../../lib/serverlessSunset.js';
 
 export type WatchCommandArgs = ConfigArgs &
   AccountArgs &
@@ -127,6 +128,7 @@ const handler = async (
           payload: file,
         })
       );
+      logServerlessUploadBlockedHint([file]);
     };
 
   watch(

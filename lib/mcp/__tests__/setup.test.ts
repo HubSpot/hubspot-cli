@@ -684,7 +684,7 @@ describe('lib/mcp/setup', () => {
 
       const result = await configureMcpServer({ targets: ['cursor'] });
 
-      expect(result).toEqual(['cursor']);
+      expect(result.configuredTargets).toEqual(['cursor']);
       expect(mockedPromptUser).not.toHaveBeenCalledWith(
         expect.objectContaining({ name: 'selectedTargets' })
       );
@@ -699,7 +699,7 @@ describe('lib/mcp/setup', () => {
 
       const result = await configureMcpServer({});
 
-      expect(result).toEqual(['cursor']);
+      expect(result.configuredTargets).toEqual(['cursor']);
       expect(mockedPromptUser).toHaveBeenCalledWith(
         expect.objectContaining({ name: 'selectedTargets' })
       );
@@ -714,7 +714,7 @@ describe('lib/mcp/setup', () => {
 
       const result = await configureMcpServer({ targets: [] });
 
-      expect(result).toEqual(['devin']);
+      expect(result.configuredTargets).toEqual(['devin']);
       expect(mockedPromptUser).toHaveBeenCalledWith(
         expect.objectContaining({ name: 'selectedTargets' })
       );
@@ -729,7 +729,7 @@ describe('lib/mcp/setup', () => {
 
       const result = await configureMcpServer({ targets: ['cursor'] });
 
-      expect(result).toEqual(['cursor']);
+      expect(result.configuredTargets).toEqual(['cursor']);
       const writeCall = mockedFs.writeFileSync.mock.calls.find(c =>
         (c[1] as string).includes('HubSpotDev')
       );
@@ -750,7 +750,7 @@ describe('lib/mcp/setup', () => {
         cliVersion: '',
       });
 
-      expect(result).toEqual(['cursor']);
+      expect(result.configuredTargets).toEqual(['cursor']);
       expect(mockedPromptUser).not.toHaveBeenCalledWith(
         expect.objectContaining({ name: 'useStandaloneMode' })
       );
@@ -771,7 +771,7 @@ describe('lib/mcp/setup', () => {
         skills: [],
       });
 
-      expect(result).toEqual(['cursor']);
+      expect(result.configuredTargets).toEqual(['cursor']);
       expect(mockedPromptUser).not.toHaveBeenCalled();
       const writeCall = mockedFs.writeFileSync.mock.calls.find(c =>
         (c[1] as string).includes('HubSpotDev')
@@ -791,7 +791,7 @@ describe('lib/mcp/setup', () => {
         skills: [],
       });
 
-      expect(result).toEqual(['cursor']);
+      expect(result.configuredTargets).toEqual(['cursor']);
       expect(mockedPromptUser).not.toHaveBeenCalled();
       const writeCall = mockedFs.writeFileSync.mock.calls.find(c =>
         (c[1] as string).includes('HubSpotDev')
@@ -814,7 +814,7 @@ describe('lib/mcp/setup', () => {
 
       const result = await configureMcpServer({ targets: ['cursor'] });
 
-      expect(result).toEqual(['cursor']);
+      expect(result.configuredTargets).toEqual(['cursor']);
       const writeCall = mockedFs.writeFileSync.mock.calls.find(c =>
         (c[1] as string).includes('HubSpotDev')
       );
@@ -863,13 +863,13 @@ describe('lib/mcp/setup', () => {
         targets: ['cursor', 'devin'],
       });
 
-      expect(result).toEqual(['cursor', 'devin']);
+      expect(result.configuredTargets).toEqual(['cursor', 'devin']);
     });
 
     it('should return empty array, skip prompts and skills, and skip success message for other-only target', async () => {
       const result = await configureMcpServer({ targets: ['other'] });
 
-      expect(result).toEqual([]);
+      expect(result.configuredTargets).toEqual([]);
       expect(mockedPromptUser).not.toHaveBeenCalled();
       expect(mockedInstallSkills).not.toHaveBeenCalled();
       expect(mockedUiLogger.info).not.toHaveBeenCalled();
@@ -887,7 +887,7 @@ describe('lib/mcp/setup', () => {
         targets: ['cursor', 'other'],
       });
 
-      expect(result).toEqual(['cursor']);
+      expect(result.configuredTargets).toEqual(['cursor']);
       expect(mockedUiLogger.info).toHaveBeenCalledWith(
         commands.mcp.setup.success(['cursor'])
       );
@@ -902,8 +902,12 @@ describe('lib/mcp/setup', () => {
           selectedSkills: ['hubspot-new-app'],
         });
 
-        await configureMcpServer({ targets: ['cursor'], standalone: false });
+        const result = await configureMcpServer({
+          targets: ['cursor'],
+          standalone: false,
+        });
 
+        expect(result.selectedSkills).toEqual(['hubspot-new-app']);
         expect(mockedPromptUser).toHaveBeenCalledTimes(1);
         expect(mockedPromptUser).toHaveBeenCalledWith(
           expect.objectContaining({

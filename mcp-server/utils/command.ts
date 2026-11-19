@@ -1,7 +1,9 @@
 import path from 'path';
 import fs from 'fs';
 import util from 'util';
-import { exec, spawn } from 'node:child_process';
+import { exec } from 'node:child_process';
+import { crossPlatformSpawn } from '../../lib/crossPlatformSpawn/index.js';
+import { lib } from '../../lang/en.js';
 
 export interface Command {
   executable: string;
@@ -13,6 +15,17 @@ export type FlagValue = string | number | boolean | string[];
 export interface Flag {
   name: string;
   value: FlagValue;
+}
+
+function formatFlag({ name, value }: Flag): string[] {
+  const flag = `--${name}`;
+  const values = (Array.isArray(value) ? value : [value]).map(String);
+
+  if (values.some(item => item.startsWith('-'))) {
+    return values.map(item => `${flag}=${item}`);
+  }
+
+  return [flag, ...values];
 }
 
 export class HubSpotCommand implements Command {
@@ -28,6 +41,9 @@ export class HubSpotCommand implements Command {
   }
 
   addArg(value: string): this {
+    if (value.startsWith('-')) {
+      throw new Error(lib.hubSpotCommand.argStartsWithDash(value));
+    }
     this.positionalArgs.push(value);
     return this;
   }
@@ -41,11 +57,7 @@ export class HubSpotCommand implements Command {
     return [
       ...this.subcommandArgs,
       ...this.positionalArgs,
-      ...this.flags.flatMap(({ name, value }) =>
-        Array.isArray(value)
-          ? [`--${name}`, ...value.map(String)]
-          : [`--${name}`, String(value)]
-      ),
+      ...this.flags.flatMap(formatFlag),
     ];
   }
 }
@@ -104,10 +116,14 @@ export async function runCommandInDir(
     const stdoutChunks: string[] = [];
     const stderrChunks: string[] = [];
 
-    const child = spawn(finalCommand.executable, finalCommand.args, {
-      cwd: resolvedDir,
-      env: { ...process.env, INIT_CWD: resolvedDir },
-    });
+    const child = crossPlatformSpawn(
+      finalCommand.executable,
+      finalCommand.args,
+      {
+        cwd: resolvedDir,
+        env: { ...process.env, INIT_CWD: resolvedDir },
+      }
+    );
 
     child.stdout.on('data', (chunk: Buffer) => {
       const text = chunk.toString();

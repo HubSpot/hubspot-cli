@@ -21,6 +21,12 @@ import {
 } from '../../../types/Yargs.js';
 import { makeWrappedYargsHandler } from '../../../lib/yargs/makeWrappedYargsHandler.js';
 import { makeYargsBuilder } from '../../../lib/yargsUtils.js';
+import { EXIT_CODES } from '../../../lib/enums/exitCodes.js';
+import {
+  isServerlessEditingDisabled,
+  logServerlessDeprecation,
+  logServerlessEditingDisabled,
+} from '../../../lib/serverlessSunset.js';
 
 type FunctionBuildError = {
   status: 'ERROR';
@@ -45,7 +51,15 @@ export type FunctionDeployArgs = CommonArgs &
 async function handler(
   args: ArgumentsCamelCase<FunctionDeployArgs>
 ): Promise<void> {
-  const { path: functionPath, derivedAccountId } = args;
+  const { path: functionPath, derivedAccountId, exit } = args;
+
+  if (isServerlessEditingDisabled()) {
+    logServerlessEditingDisabled('hs cms function deploy');
+    return exit(EXIT_CODES.ERROR);
+  }
+
+  logServerlessDeprecation('hs cms function deploy');
+
   const splitFunctionPath = functionPath.split('.');
 
   if (

@@ -18,15 +18,16 @@ interface MCPSetupArgs extends CommonArgs {
 }
 
 async function handler(args: ArgumentsCamelCase<MCPSetupArgs>): Promise<void> {
-  const { exit } = args;
+  const { exit, addUsageMetadata } = args;
 
   try {
-    await configureMcpServer({
+    const { selectedSkills } = await configureMcpServer({
       targets: args.client,
       standalone: args.standalone,
       cliVersion: args.cliVersion,
       skills: args.skills,
     });
+    addUsageMetadata({ assetType: selectedSkills.join(',') });
   } catch (e) {
     return exit(EXIT_CODES.ERROR);
   }

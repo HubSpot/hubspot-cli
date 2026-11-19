@@ -8,7 +8,7 @@ import { Project } from '@hubspot/local-dev-lib/types/Project';
 import { debugError } from '../errorHandlers/index.js';
 import { getProjectDetailUrl } from './urls.js';
 import { commands } from '../../lang/en.js';
-import { uiLine, uiLink } from '../ui/index.js';
+import { logUiLine, uiLink } from '../ui/index.js';
 import { uiLogger } from '../ui/logger.js';
 import { ProjectInfo } from '../../types/Projects.js';
 
@@ -73,7 +73,7 @@ export function logProjectInfo(projectInfo: ProjectInfo): void {
   uiLogger.log(
     chalk.bold(commands.project.info.project.title(projectInfo.projectName))
   );
-  uiLine();
+  logUiLine();
   uiLogger.log(
     commands.project.info.project.platformVersion(projectInfo.platformVersion)
   );
@@ -95,7 +95,7 @@ export function logProjectInfo(projectInfo: ProjectInfo): void {
   if (projectInfo.app) {
     uiLogger.log('');
     uiLogger.log(chalk.bold(commands.project.info.app.title));
-    uiLine();
+    logUiLine();
     uiLogger.log(commands.project.info.app.name(projectInfo.app.name));
     uiLogger.log(commands.project.info.app.id(projectInfo.app.id));
     uiLogger.log(commands.project.info.app.uid(projectInfo.app.uid));
@@ -116,7 +116,7 @@ export function logProjectInfo(projectInfo: ProjectInfo): void {
   if (projectInfo.components.length > 0) {
     uiLogger.log('');
     uiLogger.log(chalk.bold(commands.project.info.componentsHeader));
-    uiLine();
+    logUiLine();
 
     const typeColWidth = Math.max(
       commands.project.info.labels.type.length,

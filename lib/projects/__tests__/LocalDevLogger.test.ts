@@ -6,7 +6,7 @@ import {
 import { CONFIG_FLAGS } from '@hubspot/local-dev-lib/constants/config';
 import { HubSpotConfigAccount } from '@hubspot/local-dev-lib/types/Accounts';
 import { uiLogger } from '../../ui/logger.js';
-import { uiLine, uiCommandReference } from '../../ui/index.js';
+import { logUiLine, uiCommandReference } from '../../ui/index.js';
 import SpinniesManager from '../../ui/SpinniesManager.js';
 import { logError } from '../../errorHandlers/index.js';
 import { CONFIG_LOCAL_STATE_FLAGS } from '../../constants.js';
@@ -30,7 +30,7 @@ vi.mock('../../ui/index.js', async importOriginal => {
   const actual = await importOriginal<typeof import('../../ui/index.js')>();
   return {
     ...actual,
-    uiLine: vi.fn(),
+    logUiLine: vi.fn(),
     uiAccountDescription: vi.fn().mockReturnValue('mock-account (123)'),
   };
 });
@@ -46,7 +46,7 @@ const mockedGetConfigDefaultAccountIfExists = vi.mocked(
 );
 const mockedIsConfigFlagEnabled = vi.mocked(isConfigFlagEnabled);
 const mockedUiLogger = vi.mocked(uiLogger);
-const mockedUiLine = vi.mocked(uiLine);
+const mockedLogUiLine = vi.mocked(logUiLine);
 const mockedSpinniesManager = vi.mocked(SpinniesManager);
 const mockedLogError = vi.mocked(logError);
 
@@ -336,7 +336,7 @@ describe('lib/projects/localDev/LocalDevLogger', () => {
       expect(mockedUiLogger.log).toHaveBeenCalledWith(
         lib.LocalDevManager.quitHelper
       );
-      expect(mockedUiLine).toHaveBeenCalled();
+      expect(mockedLogUiLine).toHaveBeenCalled();
     });
 
     it('should log the project link for the target project account', () => {
@@ -531,7 +531,7 @@ describe('lib/projects/localDev/LocalDevLogger', () => {
       expect(mockedUiLogger.log).toHaveBeenCalledWith(
         lib.LocalDevProcess.uploadSuccess
       );
-      expect(mockedUiLine).toHaveBeenCalled();
+      expect(mockedLogUiLine).toHaveBeenCalled();
     });
 
     it('should warn and log a divider on uploadSuccessAutoDeployDisabled()', () => {
@@ -540,7 +540,7 @@ describe('lib/projects/localDev/LocalDevLogger', () => {
       expect(mockedUiLogger.warn).toHaveBeenCalledWith(
         lib.LocalDevProcess.uploadSuccessAutoDeployDisabled
       );
-      expect(mockedUiLine).toHaveBeenCalled();
+      expect(mockedLogUiLine).toHaveBeenCalled();
     });
 
     it('should log the error and the deploy failed message on deployError() with an error', () => {
@@ -569,7 +569,7 @@ describe('lib/projects/localDev/LocalDevLogger', () => {
       expect(mockedUiLogger.log).toHaveBeenCalledWith(
         lib.LocalDevProcess.deploySuccess
       );
-      expect(mockedUiLine).toHaveBeenCalled();
+      expect(mockedLogUiLine).toHaveBeenCalled();
     });
   });
 

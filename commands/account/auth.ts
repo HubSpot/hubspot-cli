@@ -5,7 +5,7 @@ import { deleteConfigFileIfEmpty } from '@hubspot/local-dev-lib/config';
 import { handleExit } from '../../lib/process.js';
 import { trackAuthAction } from '../../lib/usageTracking.js';
 import { EXIT_CODES } from '../../lib/enums/exitCodes.js';
-import { uiFeatureHighlight } from '../../lib/ui/index.js';
+import { logUiFeatureHighlight } from '../../lib/ui/index.js';
 import { parseStringToNumber } from '../../lib/parsing.js';
 import {
   CommonArgs,
@@ -104,7 +104,7 @@ async function handler(
   });
 
   if (!formatOutputAsJson) {
-    uiFeatureHighlight([
+    logUiFeatureHighlight([
       'getStartedCommand',
       'helpCommand',
       'accountAuthCommand',

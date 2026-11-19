@@ -39,6 +39,7 @@ const queue = new PQueue({
 });
 const standbyQueue: WatchEvent[] = [];
 let currentBuildId: number;
+let watchedSourceDir: string;
 let handleBuildStatus: ProjectWatchHandlerFunction;
 let handleUserInput: ProjectWatchHandlerFunction;
 let handleWatchTermination: WatchTerminationHandler = () => {};
@@ -146,7 +147,7 @@ async function queueFileOrFolder(
     uiLogger.debug(commands.project.watch.debug.extensionNotAllowed(filePath));
     return;
   }
-  if (shouldIgnoreFile(filePath, true)) {
+  if (shouldIgnoreFile(filePath, true, watchedSourceDir)) {
     uiLogger.debug(commands.project.watch.debug.ignored(filePath));
     return;
   }
@@ -240,6 +241,7 @@ export async function createWatcher(
 ) {
   const projectSourceDir = path.join(projectDir, projectConfig.srcDir);
 
+  watchedSourceDir = projectSourceDir;
   handleBuildStatus = handleBuildStatusFn;
   handleUserInput = handleUserInputFn;
   handleWatchTermination = handleWatchTerminationFn;
@@ -252,7 +254,7 @@ export async function createWatcher(
 
   const watcher = chokidar.watch(projectSourceDir, {
     ignoreInitial: true,
-    ignored: file => shouldIgnoreFile(file),
+    ignored: file => shouldIgnoreFile(file, false, projectSourceDir),
   });
   watcher.on('ready', async () => {
     uiLogger.log(commands.project.watch.logs.watching(projectDir));

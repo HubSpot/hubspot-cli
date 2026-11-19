@@ -1,4 +1,9 @@
-import { logger as _logger } from '@hubspot/local-dev-lib/logger';
+import {
+  logger as _logger,
+  getLabels,
+  stylize,
+  Styles,
+} from '@hubspot/local-dev-lib/logger';
 
 // Wrapper around LDL logger to provide type checking
 export const uiLogger = {
@@ -7,6 +12,8 @@ export const uiLogger = {
   warn: (message: string) => _logger.warn(message),
   success: (message: string) => _logger.success(message),
   info: (message: string) => _logger.info(message),
+  hint: (message: string) =>
+    console.error(...stylize(getLabels().info, Styles.info, [message])),
   debug: _logger.debug,
   group: (message: string) => _logger.group(message),
   groupEnd: () => _logger.groupEnd(),

@@ -106,7 +106,9 @@ async function handler(
   } = args;
 
   if (forceCreate) {
-    uiDeprecatedTag(commands.project.upload.logs.forceCreateDeprecated);
+    uiLogger.log(
+      uiDeprecatedTag(commands.project.upload.logs.forceCreateDeprecated)
+    );
   }
 
   let projectConfig;
@@ -175,7 +177,7 @@ async function handler(
   }
 
   try {
-    const { result, uploadError, projectId, userDeclined } =
+    const { result, uploadError, projectId, userDeclined, skippedHsMetaFiles } =
       await handleProjectUpload<ProjectPollResult>({
         accountId: targetAccountId!,
         projectConfig,
@@ -194,10 +196,15 @@ async function handler(
         skipAutoDeploy,
         profile: profileName,
         force,
+        formatOutputAsJson,
       });
 
     if (userDeclined) {
       return exit(EXIT_CODES.SUCCESS);
+    }
+
+    if (skippedHsMetaFiles) {
+      addJsonOutput({ skippedHsMetaFiles });
     }
 
     if (uploadError) {

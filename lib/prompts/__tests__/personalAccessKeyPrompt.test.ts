@@ -11,7 +11,7 @@ import {
   personalAccessKeyPrompt,
 } from '../personalAccessKeyPrompt.js';
 import { promptUser } from '../promptUtils.js';
-import { uiInfoSection } from '../../ui/index.js';
+import { logUiInfoSection } from '../../ui/index.js';
 import { uiLogger } from '../../ui/logger.js';
 import { PromptExitError } from '../../errors/PromptExitError.js';
 import { EXIT_CODES } from '../../enums/exitCodes.js';
@@ -27,7 +27,7 @@ const mockedOpen = vi.mocked(open);
 const mockedDeleteConfigFileIfEmpty = vi.mocked(deleteConfigFileIfEmpty);
 const mockedGetHubSpotWebsiteOrigin = vi.mocked(getHubSpotWebsiteOrigin);
 const mockedPromptUser = vi.mocked(promptUser);
-const mockedUiInfoSection = vi.mocked(uiInfoSection);
+const mockedLogUiInfoSection = vi.mocked(logUiInfoSection);
 
 const WEBSITE_ORIGIN = 'https://app.hubspot.com';
 const ENV = 'qa';
@@ -160,14 +160,16 @@ describe('lib/prompts/personalAccessKeyPrompt', () => {
     it('should show the setup info section', async () => {
       await legacyPersonalAccessKeyPrompt({ env: ENV });
 
-      expect(mockedUiInfoSection).toHaveBeenCalledWith(
+      expect(mockedLogUiInfoSection).toHaveBeenCalledWith(
         lib.prompts.personalAccessKeyPrompt.personalAccessKeySetupTitle,
         expect.any(Function)
       );
     });
 
     it('should log the browser open prep message inside the info section', async () => {
-      mockedUiInfoSection.mockImplementation((_title, callback) => callback());
+      mockedLogUiInfoSection.mockImplementation((_title, callback) =>
+        callback()
+      );
 
       await legacyPersonalAccessKeyPrompt({ env: ENV });
 
@@ -254,7 +256,7 @@ describe('lib/prompts/personalAccessKeyPrompt', () => {
 
         expect(result).toEqual({ personalAccessKey: 'pak-value', env: ENV });
         expect(mockedPromptUser).toHaveBeenCalledTimes(1);
-        expect(mockedUiInfoSection).not.toHaveBeenCalled();
+        expect(mockedLogUiInfoSection).not.toHaveBeenCalled();
         expect(mockedOpen).not.toHaveBeenCalled();
       });
     });

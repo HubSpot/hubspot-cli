@@ -1,9 +1,5 @@
-import fs from 'fs-extra';
 import { Argv, ArgumentsCamelCase } from 'yargs';
-import { logError } from '../../../lib/errorHandlers/index.js';
-import { resolveLocalPath } from '../../../lib/filesystem.js';
 import { commands } from '../../../lang/en.js';
-import { uiLogger } from '../../../lib/ui/logger.js';
 import { makeYargsBuilder } from '../../../lib/yargsUtils.js';
 import {
   CommonArgs,
@@ -12,7 +8,7 @@ import {
 } from '../../../types/Yargs.js';
 import { makeWrappedYargsHandler } from '../../../lib/yargs/makeWrappedYargsHandler.js';
 import { EXIT_CODES } from '../../../lib/enums/exitCodes.js';
-import assets from '../../../lib/cmsAssets/index.js';
+import { logServerlessCreationBlocked } from '../../../lib/serverlessSunset.js';
 
 const command = 'create [dest]';
 const describe = commands.cms.subcommands.webpack.subcommands.create.describe;
@@ -25,41 +21,13 @@ type WebpackCreateArgs = CommonArgs &
 async function handler(
   args: ArgumentsCamelCase<WebpackCreateArgs>
 ): Promise<void> {
-  const { dest, exit, addUsageMetadata } = args;
+  const { exit, addUsageMetadata } = args;
 
-  const assetType = 'webpack-serverless';
+  addUsageMetadata({ assetType: 'webpack-serverless' });
 
-  addUsageMetadata({ assetType });
+  logServerlessCreationBlocked('hs cms webpack create');
 
-  const asset = assets[assetType];
-  const argsToPass = {
-    commandArgs: args,
-    assetType,
-    dest,
-  };
-
-  if (!argsToPass.dest) {
-    argsToPass.dest = resolveLocalPath(asset.dest(argsToPass));
-  }
-
-  try {
-    await fs.ensureDir(argsToPass.dest);
-  } catch (e) {
-    uiLogger.error(
-      commands.cms.subcommands.webpack.subcommands.create.errors.unusablePath(
-        argsToPass.dest
-      )
-    );
-    logError(e);
-    return;
-  }
-
-  try {
-    await asset.execute(argsToPass);
-  } catch (e) {
-    logError(e);
-    return exit(EXIT_CODES.ERROR);
-  }
+  return exit(EXIT_CODES.ERROR);
 }
 
 function webpackCreateBuilder(yargs: Argv): Argv<WebpackCreateArgs> {

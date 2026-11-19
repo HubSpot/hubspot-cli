@@ -35,6 +35,10 @@ describe('commands/cms/function/logs', () => {
     it('should provide a description', () => {
       expect(logsCommand.describe).toBeDefined();
     });
+
+    it('should mark the command as deprecated', () => {
+      expect(logsCommand.describe).toContain('[DEPRECATED]');
+    });
   });
 
   describe('builder', () => {

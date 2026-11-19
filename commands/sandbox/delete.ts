@@ -30,7 +30,7 @@ import { makeWrappedYargsHandler } from '../../lib/yargs/makeWrappedYargsHandler
 import { makeYargsBuilder } from '../../lib/yargsUtils.js';
 
 const command = 'delete';
-const describe = uiBetaTag(commands.sandbox.subcommands.delete.describe, false);
+const describe = uiBetaTag(commands.sandbox.subcommands.delete.describe);
 
 type SandboxDeleteArgs = CommonArgs &
   ConfigArgs &

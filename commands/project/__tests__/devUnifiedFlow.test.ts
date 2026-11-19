@@ -45,7 +45,7 @@ import {
   isTestAccountOrSandbox,
   isUnifiedAccount,
 } from '../../../lib/accountTypes.js';
-import { uiLine } from '../../../lib/ui/index.js';
+import { logUiLine } from '../../../lib/ui/index.js';
 import { uiLogger } from '../../../lib/ui/logger.js';
 import { commands } from '../../../lang/en.js';
 import { unifiedProjectDevFlow } from '../dev/unifiedFlow.js';
@@ -193,7 +193,7 @@ describe('unifiedProjectDevFlow', () => {
     (uiLogger.debug as Mock).mockImplementation(() => {});
     (uiLogger.error as Mock).mockImplementation(() => {});
     (uiLogger.log as Mock).mockImplementation(() => {});
-    (uiLine as Mock).mockImplementation(() => {});
+    (logUiLine as Mock).mockImplementation(() => {});
     (getServerPortByInstanceId as Mock).mockRejectedValue(
       new Error('No server running')
     );

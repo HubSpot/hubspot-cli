@@ -13,10 +13,10 @@ import { makeYargsBuilder } from '../lib/yargsUtils.js';
 import { uiLogger } from '../lib/ui/logger.js';
 
 const command = ['custom-object', 'custom-objects', 'co'];
-const describe = uiBetaTag(commands.customObject.describe, false);
+const describe = uiBetaTag(commands.customObject.describe);
 
 function logBetaMessage() {
-  uiBetaTag(commands.customObject.betaMessage);
+  uiLogger.log(uiBetaTag(commands.customObject.betaMessage));
   uiLogger.log(commands.customObject.seeMoreLink);
 }
 

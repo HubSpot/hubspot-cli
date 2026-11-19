@@ -29,7 +29,7 @@ import {
 } from '../../../constants.js';
 import { lib } from '../../../../lang/en.js';
 import { uiLogger } from '../../../ui/logger.js';
-import { uiAccountDescription, uiLine } from '../../../ui/index.js';
+import { uiAccountDescription, logUiLine } from '../../../ui/index.js';
 import { confirmPrompt } from '../../../prompts/promptUtils.js';
 import SpinniesManager from '../../../ui/SpinniesManager.js';
 import { EXIT_CODES } from '../../../enums/exitCodes.js';
@@ -77,9 +77,9 @@ export async function createNewProjectForLocalDev(
     );
 
     uiLogger.log('');
-    uiLine();
+    logUiLine();
     uiLogger.log(explanationString);
-    uiLine();
+    logUiLine();
 
     shouldCreateProject = await confirmPrompt(
       lib.localDevHelpers.project.createNewProjectForLocalDev.createProject(

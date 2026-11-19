@@ -1,9 +1,5 @@
-import fs from 'fs-extra';
 import { Argv, ArgumentsCamelCase } from 'yargs';
-import { logError } from '../../../lib/errorHandlers/index.js';
-import { resolveLocalPath } from '../../../lib/filesystem.js';
 import { commands } from '../../../lang/en.js';
-import { uiLogger } from '../../../lib/ui/logger.js';
 import { HTTP_METHODS, HttpMethod } from '../../../types/Cms.js';
 import { makeYargsBuilder } from '../../../lib/yargsUtils.js';
 import {
@@ -13,8 +9,7 @@ import {
 } from '../../../types/Yargs.js';
 import { makeWrappedYargsHandler } from '../../../lib/yargs/makeWrappedYargsHandler.js';
 import { EXIT_CODES } from '../../../lib/enums/exitCodes.js';
-import { isPromptExitError } from '../../../lib/errors/PromptExitError.js';
-import assets from '../../../lib/cmsAssets/index.js';
+import { logServerlessCreationBlocked } from '../../../lib/serverlessSunset.js';
 
 const command = 'create [name] [dest]';
 const describe = commands.cms.subcommands.function.subcommands.create.describe;
@@ -32,45 +27,13 @@ type FunctionCreateArgs = CommonArgs &
 async function handler(
   args: ArgumentsCamelCase<FunctionCreateArgs>
 ): Promise<void> {
-  const { name, dest, exit, addUsageMetadata } = args;
+  const { exit, addUsageMetadata } = args;
 
-  const assetType = 'function';
+  addUsageMetadata({ assetType: 'function' });
 
-  addUsageMetadata({ assetType });
+  logServerlessCreationBlocked('hs cms function create');
 
-  const asset = assets[assetType];
-  const argsToPass = {
-    commandArgs: args,
-    assetType,
-    name,
-    dest,
-  };
-
-  if (!argsToPass.dest) {
-    argsToPass.dest = resolveLocalPath(asset.dest(argsToPass));
-  }
-
-  try {
-    await fs.ensureDir(argsToPass.dest);
-  } catch (e) {
-    uiLogger.error(
-      commands.cms.subcommands.function.subcommands.create.errors.unusablePath(
-        argsToPass.dest
-      )
-    );
-    logError(e);
-    return;
-  }
-
-  try {
-    await asset.execute(argsToPass);
-  } catch (e) {
-    if (isPromptExitError(e)) {
-      throw e;
-    }
-    logError(e);
-    return exit(EXIT_CODES.ERROR);
-  }
+  return exit(EXIT_CODES.ERROR);
 }
 
 function functionCreateBuilder(yargs: Argv): Argv<FunctionCreateArgs> {

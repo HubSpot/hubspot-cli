@@ -22,7 +22,8 @@ import * as errorHandlers from '../../../lib/errorHandlers/index.js';
 import { showMcpPromotionNudge } from '../../../lib/mcp/promotion.js';
 import { EXIT_CODES } from '../../../lib/enums/exitCodes.js';
 import { PROJECT_ERROR_TYPES } from '../../../lib/constants.js';
-import { commands } from '../../../lang/en.js';
+import { commands, lib } from '../../../lang/en.js';
+import ProjectValidationError from '../../../lib/errors/ProjectValidationError.js';
 import projectUploadCommand, { ProjectUploadArgs } from '../upload.js';
 
 vi.mock('../../../lib/commonOpts');
@@ -261,6 +262,7 @@ describe('commands/project/upload', () => {
         skipValidation: false,
         skipNpmAudit: false,
         profile: undefined,
+        formatOutputAsJson: false,
       });
     });
 
@@ -376,6 +378,80 @@ describe('commands/project/upload', () => {
         deployId: 101112,
       });
       expect(processExitSpy).toHaveBeenCalledWith(EXIT_CODES.SUCCESS);
+    });
+
+    it('should include skippedHsMetaFiles in JSON output when files were skipped', async () => {
+      args.formatOutputAsJson = true;
+      handleProjectUploadSpy.mockResolvedValue({
+        result: {
+          succeeded: true,
+          buildId: 789,
+          buildResult: { isAutoDeployEnabled: true },
+        },
+        skippedHsMetaFiles: ['app/extensions/card-hsmeta.json'],
+      });
+
+      await projectUploadCommand.handler(args);
+
+      expect(uiLogger.json).toHaveBeenCalledWith(
+        expect.objectContaining({
+          skippedHsMetaFiles: ['app/extensions/card-hsmeta.json'],
+        })
+      );
+    });
+
+    it('should not include skippedHsMetaFiles in JSON output when none were reported', async () => {
+      args.formatOutputAsJson = true;
+
+      await projectUploadCommand.handler(args);
+
+      expect(uiLogger.json).toHaveBeenCalledWith(
+        expect.not.objectContaining({
+          skippedHsMetaFiles: expect.anything(),
+        })
+      );
+    });
+
+    it('should not output skippedHsMetaFiles in JSON when the user declines to continue', async () => {
+      args.formatOutputAsJson = true;
+      handleProjectUploadSpy.mockResolvedValue({
+        userDeclined: true,
+      });
+
+      await projectUploadCommand.handler(args);
+
+      expect(uiLogger.json).not.toHaveBeenCalled();
+      expect(processExitSpy).toHaveBeenCalledWith(EXIT_CODES.SUCCESS);
+    });
+
+    it('should pass formatOutputAsJson to handleProjectUpload', async () => {
+      args.formatOutputAsJson = true;
+
+      await projectUploadCommand.handler(args);
+
+      expect(handleProjectUploadSpy).toHaveBeenCalledWith(
+        expect.objectContaining({ formatOutputAsJson: true })
+      );
+    });
+
+    it('should exit with ERROR and output no JSON when skipped files require --force with --json', async () => {
+      args.formatOutputAsJson = true;
+      isSpecifiedErrorSpy.mockReturnValue(false);
+      const error = new ProjectValidationError(
+        lib.projects.skippedHsMetaFiles.jsonRequiresForce([
+          'app/extensions/card-hsmeta.json',
+        ])
+      );
+      handleProjectUploadSpy.mockResolvedValue({ uploadError: error });
+
+      await projectUploadCommand.handler(args);
+
+      expect(logErrorSpy).toHaveBeenCalledWith(
+        error,
+        expect.any(errorHandlers.ApiErrorContext)
+      );
+      expect(uiLogger.json).not.toHaveBeenCalled();
+      expect(processExitSpy).toHaveBeenCalledWith(EXIT_CODES.ERROR);
     });
 
     it('should log the target account before upload', async () => {

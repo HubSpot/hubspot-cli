@@ -23,6 +23,7 @@ import { makeWrappedYargsHandler } from '../../lib/yargs/makeWrappedYargsHandler
 import { makeYargsBuilder } from '../../lib/yargsUtils.js';
 import { commands } from '../../lang/en.js';
 import { uiLogger } from '../../lib/ui/logger.js';
+import { uiDeprecatedTag } from '../../lib/ui/index.js';
 import { warnIfLinkedDirectory } from '../../lib/link/warnIfLinkedDirectory.js';
 
 const command = 'create-override [account]';
@@ -39,6 +40,10 @@ async function handler(
 ): Promise<void> {
   const { exit } = args;
   let overrideDefaultAccount = args.account;
+
+  uiLogger.log(
+    uiDeprecatedTag(commands.account.subcommands.createOverride.logs.deprecated)
+  );
 
   // TODO: Block this command when linked directory exists (next breaking change)
   warnIfLinkedDirectory(args._);

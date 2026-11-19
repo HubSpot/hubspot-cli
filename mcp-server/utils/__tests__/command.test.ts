@@ -1,8 +1,10 @@
 import fs from 'fs';
 import path from 'path';
-import { spawn } from 'node:child_process';
+import { lib } from '../../../lang/en.js';
+import { crossPlatformSpawn } from '../../../lib/crossPlatformSpawn/index.js';
 import { EventEmitter } from 'node:events';
 
+vi.mock('../../../lib/crossPlatformSpawn/index.js');
 vi.mock('node:child_process');
 vi.mock('fs');
 vi.mock('path');
@@ -11,7 +13,7 @@ vi.mock('path');
 const { HubSpotCommand, runCommandInDir, getCommandResultsFromError } =
   await import('../command.js');
 
-const mockSpawn = vi.mocked(spawn);
+const mockSpawn = vi.mocked(crossPlatformSpawn);
 const mockExistsSync = vi.mocked(fs.existsSync);
 const mockMkdirSync = vi.mocked(fs.mkdirSync);
 const mockResolve = vi.mocked(path.resolve);
@@ -39,7 +41,7 @@ function createMockProcess(
       if (stderr) proc.stderr.emit('data', Buffer.from(stderr));
       proc.emit('close', exitCode);
     }, 0);
-    return proc as ReturnType<typeof spawn>;
+    return proc as ReturnType<typeof crossPlatformSpawn>;
   });
 
   return proc;
@@ -126,6 +128,35 @@ describe('mcp-server/utils/command', () => {
       expect(cmd.args).toEqual(['project', 'add', '--features']);
     });
 
+    it('should attach a flag value that starts with a dash so it cannot be read as another flag', () => {
+      const cmd = new HubSpotCommand('project upload');
+      cmd.addFlag('message', '--account=999');
+      expect(cmd.args).toEqual([
+        'project',
+        'upload',
+        '--message=--account=999',
+      ]);
+    });
+
+    it('should attach every value of an array flag when one starts with a dash', () => {
+      const cmd = new HubSpotCommand('project add');
+      cmd.addFlag('features', ['card', '--force']);
+      expect(cmd.args).toEqual([
+        'project',
+        'add',
+        '--features=card',
+        '--features=--force',
+      ]);
+    });
+
+    it('should reject a positional arg that starts with a dash', () => {
+      const cmd = new HubSpotCommand('cms list');
+      expect(() => cmd.addArg('--account')).toThrow(
+        lib.hubSpotCommand.argStartsWithDash('--account')
+      );
+      expect(cmd.args).toEqual(['cms', 'list']);
+    });
+
     it('should reflect all flags on each args access (getter is computed)', () => {
       const cmd = new HubSpotCommand('project upload');
       expect(cmd.args).toEqual(['project', 'upload']);
@@ -141,6 +172,10 @@ describe('mcp-server/utils/command', () => {
 
     beforeEach(() => {
       mockResolve.mockReturnValue(mockResolvedPath);
+    });
+
+    afterEach(() => {
+      vi.unstubAllEnvs();
     });
 
     it('should create directory if it does not exist', async () => {

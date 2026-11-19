@@ -50,7 +50,7 @@ vi.mock('../../../lib/prompts/promptUtils');
 vi.mock('../../../lib/prompts/projectProfilePrompt');
 vi.mock('../../../lib/projects/projectProfiles');
 
-vi.spyOn(ui, 'uiLine');
+vi.spyOn(ui, 'logUiLine');
 
 const uiCommandReferenceSpy = vi.spyOn(ui, 'uiCommandReference');
 const uiAccountDescriptionSpy = vi.spyOn(ui, 'uiAccountDescription');

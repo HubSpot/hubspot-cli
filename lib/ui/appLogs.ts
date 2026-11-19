@@ -3,9 +3,12 @@ import chalk from 'chalk';
 import { Styles } from '@hubspot/local-dev-lib/logger';
 import { AppLogDetails } from '@hubspot/local-dev-lib/types/AppLogs';
 import { uiLogger } from './logger.js';
-import { indent, uiLine } from './index.js';
+import { indent, logUiLine } from './index.js';
 import { commands } from '../../lang/en.js';
-import { SYSTEM_TYPE_DISPLAY_NAMES, toTypeChoice } from '../app/logs.js';
+import {
+  SYSTEM_TYPE_DISPLAY_NAMES,
+  toTypeChoice,
+} from '../app/logSystemTypes.js';
 import { getAppLogDetailsUrl, getAppLogsUrl } from '../app/urls.js';
 import { renderTable } from '../../ui/render.js';
 
@@ -148,7 +151,7 @@ export async function outputAppLogs(
   });
 
   if (!options.compact && !options.tail) {
-    uiLine();
+    logUiLine();
     uiLogger.log('');
 
     const tableHeaders = [
@@ -330,7 +333,7 @@ export function outputAppLogDetails(
   }
 
   uiLogger.log('');
-  uiLine();
+  logUiLine();
   uiLogger.log('');
 
   const detailUrl = getAppLogDetailsUrl(

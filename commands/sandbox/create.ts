@@ -12,7 +12,7 @@ import {
 } from '@hubspot/local-dev-lib/constants/config';
 import { commands, lib } from '../../lang/en.js';
 import { EXIT_CODES } from '../../lib/enums/exitCodes.js';
-import { uiFeatureHighlight, uiBetaTag } from '../../lib/ui/index.js';
+import { logUiFeatureHighlight, uiBetaTag } from '../../lib/ui/index.js';
 import {
   SANDBOX_TYPE_MAP,
   validateSandboxUsageLimits,
@@ -34,7 +34,7 @@ import { makeWrappedYargsHandler } from '../../lib/yargs/makeWrappedYargsHandler
 import { makeYargsBuilder } from '../../lib/yargsUtils.js';
 
 const command = 'create';
-const describe = uiBetaTag(commands.sandbox.subcommands.create.describe, false);
+const describe = uiBetaTag(commands.sandbox.subcommands.create.describe);
 
 export type SandboxCreateArgs = CommonArgs &
   ConfigArgs &
@@ -196,7 +196,7 @@ async function handler(
       highlightItems.push('projectUploadCommand');
     }
 
-    uiFeatureHighlight(highlightItems);
+    logUiFeatureHighlight(highlightItems);
     return exit(EXIT_CODES.SUCCESS);
   } catch (error) {
     // Errors are logged in util functions

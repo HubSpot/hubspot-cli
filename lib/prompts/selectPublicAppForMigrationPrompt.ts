@@ -1,6 +1,6 @@
 import { promptUser } from './promptUtils.js';
 import { lib } from '../../lang/en.js';
-import { uiLine } from '../ui/index.js';
+import { logUiLine } from '../ui/index.js';
 import { logError } from '../errorHandlers/index.js';
 import { uiLogger } from '../ui/logger.js';
 import { fetchPublicAppsForPortal } from '@hubspot/local-dev-lib/api/appsDev';
@@ -46,7 +46,7 @@ async function fetchPublicAppOptions(
           app => !app.preventProjectMigrations || !app.listingInfo
         ))
     ) {
-      uiLine();
+      logUiLine();
       if (isMigratingApp) {
         uiLogger.error(
           `${lib.prompts.selectPublicAppForMigrationPrompt.errors.noAppsMigration}\n${lib.prompts.selectPublicAppForMigrationPrompt.errors.noAppsMigrationMessage(accountName)}`
@@ -56,7 +56,7 @@ async function fetchPublicAppOptions(
           `${lib.prompts.selectPublicAppForMigrationPrompt.errors.noAppsClone}\n${lib.prompts.selectPublicAppForMigrationPrompt.errors.noAppsCloneMessage(accountName)}`
         );
       }
-      uiLine();
+      logUiLine();
       throw new PromptExitError(
         isMigratingApp
           ? lib.prompts.selectPublicAppForMigrationPrompt.errors.noAppsMigration

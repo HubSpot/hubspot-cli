@@ -74,8 +74,12 @@ describe('commands/mcp/setup', () => {
     });
 
     it('exits successfully after setup completes', async () => {
-      mockedConfigureMcpServer.mockResolvedValueOnce(['cursor']);
+      mockedConfigureMcpServer.mockResolvedValueOnce({
+        configuredTargets: ['cursor'],
+        selectedSkills: [],
+      });
       const exit = vi.fn().mockResolvedValue(undefined);
+      const addUsageMetadata = vi.fn();
 
       await setupCommand.handler({
         _: ['mcp', 'setup'],
@@ -85,7 +89,7 @@ describe('commands/mcp/setup', () => {
         d: false,
         debug: false,
         exit,
-        addUsageMetadata: vi.fn(),
+        addUsageMetadata,
       });
 
       expect(mockedConfigureMcpServer).toHaveBeenCalledWith({
@@ -94,11 +98,39 @@ describe('commands/mcp/setup', () => {
         cliVersion: undefined,
         skills: undefined,
       });
+      expect(addUsageMetadata).toHaveBeenCalledWith({ assetType: '' });
       expect(exit).toHaveBeenCalledWith(0);
     });
 
+    it('records the installed skills in usage metadata', async () => {
+      mockedConfigureMcpServer.mockResolvedValueOnce({
+        configuredTargets: ['cursor'],
+        selectedSkills: ['hubspot-new-app', 'hubspot-fix-build'],
+      });
+      const exit = vi.fn().mockResolvedValue(undefined);
+      const addUsageMetadata = vi.fn();
+
+      await setupCommand.handler({
+        _: ['mcp', 'setup'],
+        $0: 'hs',
+        client: ['cursor'],
+        derivedAccountId: 123,
+        d: false,
+        debug: false,
+        exit,
+        addUsageMetadata,
+      });
+
+      expect(addUsageMetadata).toHaveBeenCalledWith({
+        assetType: 'hubspot-new-app,hubspot-fix-build',
+      });
+    });
+
     it('passes standalone, cliVersion, and skills flags to configureMcpServer', async () => {
-      mockedConfigureMcpServer.mockResolvedValueOnce(['cursor']);
+      mockedConfigureMcpServer.mockResolvedValueOnce({
+        configuredTargets: ['cursor'],
+        selectedSkills: [],
+      });
       const exit = vi.fn().mockResolvedValue(undefined);
 
       await setupCommand.handler({
@@ -127,6 +159,7 @@ describe('commands/mcp/setup', () => {
     it('exits with error when setup fails', async () => {
       mockedConfigureMcpServer.mockRejectedValueOnce(new Error('setup failed'));
       const exit = vi.fn().mockResolvedValue(undefined);
+      const addUsageMetadata = vi.fn();
 
       await setupCommand.handler({
         _: ['mcp', 'setup'],
@@ -136,9 +169,10 @@ describe('commands/mcp/setup', () => {
         d: false,
         debug: false,
         exit,
-        addUsageMetadata: vi.fn(),
+        addUsageMetadata,
       });
 
+      expect(addUsageMetadata).not.toHaveBeenCalled();
       expect(exit).toHaveBeenCalledWith(1);
     });
   });

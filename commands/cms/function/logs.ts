@@ -25,6 +25,7 @@ import {
 import { QueryParams } from '@hubspot/local-dev-lib/types/Http';
 import { uiLogger } from '../../../lib/ui/logger.js';
 import { commands } from '../../../lang/en.js';
+import { logServerlessDeprecation } from '../../../lib/serverlessSunset.js';
 
 export type LogsArgs = CommonArgs &
   ConfigArgs &
@@ -122,6 +123,8 @@ const handler = async (
   } = options;
 
   addUsageMetadata(latest ? { action: 'latest' } : {});
+
+  logServerlessDeprecation('hs cms function logs');
 
   const { endpointPromptValue } = await promptUser<{
     endpointPromptValue: string;

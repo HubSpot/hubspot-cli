@@ -5,6 +5,7 @@ import {
   getStateValue,
   setStateValue,
 } from '@hubspot/local-dev-lib/config/state';
+import { LOG_LEVEL, setLogLevel } from '@hubspot/local-dev-lib/logger';
 import { commands } from '../../../lang/en.js';
 import { debugError } from '../../errorHandlers/index.js';
 import { uiLogger } from '../../ui/logger.js';
@@ -35,10 +36,10 @@ const mockedUiLogger = vi.mocked(uiLogger);
 
 describe('lib/mcp/promotion', () => {
   const now = new Date('2026-06-16T21:00:00.000Z');
-  const originalStdoutIsTTY = process.stdout.isTTY;
+  const originalStderrIsTTY = process.stderr.isTTY;
 
-  function setStdoutIsTTY(isTTY: boolean): void {
-    Object.defineProperty(process.stdout, 'isTTY', {
+  function setStderrIsTTY(isTTY: boolean): void {
+    Object.defineProperty(process.stderr, 'isTTY', {
       configurable: true,
       value: isTTY,
     });
@@ -47,7 +48,8 @@ describe('lib/mcp/promotion', () => {
   beforeEach(() => {
     vi.useFakeTimers();
     vi.setSystemTime(now);
-    setStdoutIsTTY(true);
+    setStderrIsTTY(true);
+    setLogLevel(LOG_LEVEL.LOG);
     vi.mocked(os.homedir).mockReturnValue('/home/user');
     vi.mocked(path.join).mockImplementation((...parts) => parts.join('/'));
     mockedFs.existsSync.mockReturnValue(false);
@@ -70,9 +72,10 @@ describe('lib/mcp/promotion', () => {
     delete process.env.CI;
     delete process.env.HUBSPOT_MCP_AI_AGENT;
     vi.useRealTimers();
-    Object.defineProperty(process.stdout, 'isTTY', {
+    setLogLevel(LOG_LEVEL.ERROR);
+    Object.defineProperty(process.stderr, 'isTTY', {
       configurable: true,
-      value: originalStdoutIsTTY,
+      value: originalStderrIsTTY,
     });
   });
 
@@ -119,7 +122,13 @@ describe('lib/mcp/promotion', () => {
     await expect(shouldShowMcpPromotion()).resolves.toBe(false);
 
     delete process.env.CI;
-    setStdoutIsTTY(false);
+    setStderrIsTTY(false);
+    await expect(shouldShowMcpPromotion()).resolves.toBe(false);
+  });
+
+  it('suppresses when the log level hides log output', async () => {
+    setLogLevel(LOG_LEVEL.ERROR);
+
     await expect(shouldShowMcpPromotion()).resolves.toBe(false);
   });
 
@@ -140,7 +149,7 @@ describe('lib/mcp/promotion', () => {
     await expect(
       showMcpPromotionNudge('test-command')
     ).resolves.toBeUndefined();
-    expect(mockedUiLogger.info).not.toHaveBeenCalled();
+    expect(mockedUiLogger.hint).not.toHaveBeenCalled();
     expect(mockedTrackMcpPromotionShown).not.toHaveBeenCalled();
     expect(mockedDebugError).toHaveBeenCalledWith(error);
   });
@@ -180,9 +189,10 @@ describe('lib/mcp/promotion', () => {
       'mcpPromotionLastShownAt',
       now.toISOString()
     );
-    expect(mockedUiLogger.info).toHaveBeenCalledWith(
+    expect(mockedUiLogger.hint).toHaveBeenCalledWith(
       commands.mcp.promotion.activeNudge
     );
+    expect(mockedUiLogger.info).not.toHaveBeenCalled();
     expect(commands.mcp.promotion.activeNudge).toContain('hs mcp setup');
     expect(commands.mcp.promotion.activeNudge).not.toContain('mcp start');
     expect(mockedTrackMcpPromotionShown).toHaveBeenCalledWith('upgrade');

@@ -22,8 +22,7 @@ import { uiBetaTag } from '../../../lib/ui/index.js';
 
 const command = 'add [name]';
 const describe = uiBetaTag(
-  commands.app.subcommands.secret.subcommands.add.describe,
-  false
+  commands.app.subcommands.secret.subcommands.add.describe
 );
 
 type AddAppSecretArgs = CommonArgs &

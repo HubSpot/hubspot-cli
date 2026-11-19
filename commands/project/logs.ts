@@ -1,7 +1,7 @@
 import { Argv, ArgumentsCamelCase } from 'yargs';
 import { getHubSpotWebsiteOriginByAccountId } from '@hubspot/local-dev-lib/urls';
 import { logError } from '../../lib/errorHandlers/index.js';
-import { uiLine } from '../../lib/ui/index.js';
+import { logUiLine } from '../../lib/ui/index.js';
 import { projectLogsPrompt } from '../../lib/prompts/projectsLogsPrompt.js';
 import { commands } from '../../lang/en.js';
 import { uiLogger } from '../../lib/ui/logger.js';
@@ -67,7 +67,7 @@ function logPreamble(): void {
     );
   }
   uiLogger.log('');
-  uiLine();
+  logUiLine();
 }
 
 const command = 'logs';

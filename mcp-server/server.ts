@@ -46,13 +46,17 @@ REQUIRED WORKFLOWS
 5. Debugging a failed build: start with \`get-build-status\` to surface
    error messages, and only reach for \`get-build-logs\` for deeper
    troubleshooting or warnings.
-6. Reading serverless function logs: call \`list-cms-serverless-functions\`
-   first to discover the endpoint path, then
-   \`get-cms-serverless-function-logs\`.
+6. Reading serverless function logs (deprecated, CMS serverless functions
+   are being sunset: editing ends on November 17, 2026 and existing
+   functions stop running on February 1, 2027): call
+   \`list-cms-serverless-functions\` first to discover the endpoint path,
+   then \`get-cms-serverless-function-logs\`.
 7. Serverless functions come in two distinct kinds. CMS serverless
    functions are website endpoints served at \`/hs/serverless/<path>\`.
-   Create them with \`create-cms-function\`, and manage them with
-   \`list-cms-serverless-functions\` and
+   They can no longer be created and editing ends on November 17, 2026,
+   so build new serverless functions in a Developer Project instead with
+   \`add-feature-to-project\`.
+   Manage existing ones with \`list-cms-serverless-functions\` and
    \`get-cms-serverless-function-logs\`. App functions are serverless
    functions built inside a developer-platform app, either private
    (the \`app-function\` feature) or publicly accessible via an endpoint
@@ -64,6 +68,10 @@ REQUIRED WORKFLOWS
 9. Feedback: when you hit a bug, an error you cannot explain, a confusing
    result, or a request these tools cannot do, call \`submit-feedback\`
    with one short message. Then continue with the task.
+10. Long-running commands: never run \`hs project dev\`,
+    \`hs project watch\`, or \`hs cms watch\` from a shell, even if
+    asked. Ask the user to run it in a separate terminal window. To
+    watch a project, give them \`hs project dev --auto-upload\`.
 
 OUTPUT
 Tool results contain the relevant \`hs\` stdout/stderr or structured data.

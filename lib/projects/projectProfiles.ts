@@ -7,7 +7,7 @@ import {
 } from '@hubspot/project-parsing-lib/profiles';
 import { ProjectConfig } from '../../types/Projects.js';
 import { commands, lib } from '../../lang/en.js';
-import { indent, uiLine } from '../ui/index.js';
+import { indent, logUiLine } from '../ui/index.js';
 import { uiLogger } from '../ui/logger.js';
 import { getConfigAccountById } from '@hubspot/local-dev-lib/config';
 import SpinniesManager from '../ui/SpinniesManager.js';
@@ -15,7 +15,7 @@ import { handleTranslate } from './upload.js';
 import { getErrorMessage } from '../errorHandlers/index.js';
 
 export function logProfileHeader(profileName: string): void {
-  uiLine();
+  logUiLine();
   uiLogger.log(
     lib.projectProfiles.logs.usingProfile(getHsProfileFilename(profileName))
   );
@@ -36,7 +36,7 @@ export function logProfileFooter(
       uiLogger.log(`  ${key}: ${value}`);
     });
   }
-  uiLine();
+  logUiLine();
   uiLogger.log('');
 }
 

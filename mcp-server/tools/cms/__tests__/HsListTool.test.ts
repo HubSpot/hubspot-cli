@@ -8,6 +8,7 @@ import { McpLogger } from '../../../utils/logger.js';
 import { runCommandInDir } from '../../../utils/command.js';
 import { MockedFunction, Mocked } from 'vitest';
 import { mcpFeedbackRequest } from '../../../utils/feedbackTracking.js';
+import { lib } from '../../../../lang/en.js';
 
 vi.mock('@modelcontextprotocol/sdk/server/mcp.js');
 vi.mock('../../../utils/logger.js');
@@ -116,6 +117,32 @@ describe('HsListTool', () => {
       );
       expect(result.content).toHaveLength(1);
       expect(result.content[0].text).toContain('nested-file.html');
+    });
+
+    it('should pass a path with spaces as a single positional arg', async () => {
+      mockRunCommandInDir.mockResolvedValue({ stdout: '', stderr: '' });
+
+      await tool.handler({
+        absoluteCurrentWorkingDirectory: '/test/dir',
+        path: '/my modules',
+      });
+
+      expect(mockRunCommandInDir).toHaveBeenCalledWith(
+        '/test/dir',
+        expect.objectContaining({ args: ['cms', 'list', '/my modules'] }),
+        expect.any(Function)
+      );
+    });
+
+    it('should reject a path that starts with a dash without running the command', async () => {
+      await expect(
+        tool.handler({
+          absoluteCurrentWorkingDirectory: '/test/dir',
+          path: '--account=999',
+        })
+      ).rejects.toThrow(lib.hubSpotCommand.argStartsWithDash('--account=999'));
+
+      expect(mockRunCommandInDir).not.toHaveBeenCalled();
     });
 
     it('should execute hs cms list command with account parameter', async () => {

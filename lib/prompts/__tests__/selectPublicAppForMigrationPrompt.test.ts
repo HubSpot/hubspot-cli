@@ -3,7 +3,7 @@ import { PublicApp } from '@hubspot/local-dev-lib/types/Apps';
 import { selectPublicAppForMigrationPrompt } from '../selectPublicAppForMigrationPrompt.js';
 import { promptUser } from '../promptUtils.js';
 import { logError } from '../../errorHandlers/index.js';
-import { uiLine } from '../../ui/index.js';
+import { logUiLine } from '../../ui/index.js';
 import { uiLogger } from '../../ui/logger.js';
 import { PromptExitError } from '../../errors/PromptExitError.js';
 import { EXIT_CODES } from '../../enums/exitCodes.js';
@@ -17,7 +17,7 @@ vi.mock('../../ui/index');
 const mockedFetchPublicAppsForPortal = vi.mocked(fetchPublicAppsForPortal);
 const mockedPromptUser = vi.mocked(promptUser);
 const mockedLogError = vi.mocked(logError);
-const mockedUiLine = vi.mocked(uiLine);
+const mockedLogUiLine = vi.mocked(logUiLine);
 
 const ACCOUNT_ID = 123;
 const ACCOUNT_NAME = 'Dev Account';
@@ -213,7 +213,7 @@ describe('lib/prompts/selectPublicAppForMigrationPrompt', () => {
           `${lib.prompts.selectPublicAppForMigrationPrompt.errors.noAppsClone}
 ${lib.prompts.selectPublicAppForMigrationPrompt.errors.noAppsCloneMessage(ACCOUNT_NAME)}`
         );
-        expect(mockedUiLine).toHaveBeenCalledTimes(2);
+        expect(mockedLogUiLine).toHaveBeenCalledTimes(2);
         expect(mockedPromptUser).not.toHaveBeenCalled();
       });
     });

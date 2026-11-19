@@ -260,6 +260,29 @@ describe('archiveWorkspacesAndDependencies', () => {
   });
 
   describe('file dependency archiving', () => {
+    it('should pass the file dependency directory as the ignore root to shouldIgnoreFile', async () => {
+      const { archive, directoryCalls } = createMockArchive();
+      const fileDeps: FileDependencyMapping[] = [
+        {
+          packageName: '@company/logger',
+          localPath: '/external/logger',
+          sourcePackageJsonPath: '/project/src/app/package.json',
+          kind: 'directory',
+          protocol: 'file',
+        },
+      ];
+
+      await archiveWorkspacesAndDependencies(archive, srcDir, [], fileDeps);
+
+      directoryCalls[0].filter!({ name: 'index.js' } as EntryData);
+
+      expect(shouldIgnoreFile).toHaveBeenCalledWith(
+        'index.js',
+        true,
+        '/external/logger'
+      );
+    });
+
     it('archives external file dependency', async () => {
       const { archive, directoryCalls } = createMockArchive();
       const fileDeps: FileDependencyMapping[] = [
@@ -797,6 +820,26 @@ describe('archiveWorkspacesAndDependencies', () => {
       expect(filter({ name: 'index.js' } as EntryData)).toBeTruthy();
       expect(filter({ name: 'node_modules/dep/index.js' } as EntryData)).toBe(
         false
+      );
+    });
+
+    it('should pass the workspace directory as the ignore root to shouldIgnoreFile', async () => {
+      const { archive, directoryCalls } = createMockArchive();
+      const workspaces: WorkspaceMapping[] = [
+        {
+          workspaceDir: '/external/utils',
+          sourcePackageJsonPath: '/project/src/app/package.json',
+        },
+      ];
+
+      await archiveWorkspacesAndDependencies(archive, srcDir, workspaces, []);
+
+      directoryCalls[0].filter!({ name: 'index.js' } as EntryData);
+
+      expect(shouldIgnoreFile).toHaveBeenCalledWith(
+        'index.js',
+        true,
+        '/external/utils'
       );
     });
 

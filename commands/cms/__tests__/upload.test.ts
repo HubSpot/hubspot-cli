@@ -316,6 +316,33 @@ describe('commands/cms/upload', () => {
         vi.useRealTimers();
       });
 
+      it('should hint that new serverless function folders cannot be uploaded when a function file fails', async () => {
+        vi.useFakeTimers();
+        args.src = 'my-test.functions/index.js';
+        uploadSpy.mockRejectedValue(new Error('Upload failed'));
+
+        await uploadCommand.handler(args);
+        await vi.runAllTimersAsync();
+
+        expect(uiLogger.info).toHaveBeenCalledWith(
+          expect.stringContaining('can no longer be created')
+        );
+        vi.useRealTimers();
+      });
+
+      it('should not hint about serverless functions when another file fails', async () => {
+        vi.useFakeTimers();
+        uploadSpy.mockRejectedValue(new Error('Upload failed'));
+
+        await uploadCommand.handler(args);
+        await vi.runAllTimersAsync();
+
+        expect(uiLogger.info).not.toHaveBeenCalledWith(
+          expect.stringContaining('Developer Changelog')
+        );
+        vi.useRealTimers();
+      });
+
       it('should log theme preview URL if available', async () => {
         getThemePreviewUrlSpy.mockReturnValue('http://preview.url');
         // @ts-expect-error Mock return value doesn't need full type implementation
@@ -431,6 +458,26 @@ describe('commands/cms/upload', () => {
           expect.stringContaining('failed')
         );
         expect(processExitSpy).toHaveBeenCalledWith(EXIT_CODES.WARNING);
+      });
+
+      it('should hint that new serverless function folders cannot be uploaded when a function file fails', async () => {
+        vi.useFakeTimers();
+        hasUploadErrorsSpy.mockReturnValue(true);
+        uploadFolderSpy.mockResolvedValue([
+          {
+            resultType: 'FAILURE',
+            error: new Error('rejected'),
+            file: 'src/my-test.functions/index.js',
+          },
+        ]);
+
+        await uploadCommand.handler(args);
+        await vi.runAllTimersAsync();
+
+        expect(uiLogger.info).toHaveBeenCalledWith(
+          expect.stringContaining('can no longer be created')
+        );
+        vi.useRealTimers();
       });
 
       it('should handle folder upload errors', async () => {

@@ -65,9 +65,14 @@ interface ConfigureMcpServerOptions {
   skills?: string[];
 }
 
+interface ConfigureMcpServerResult {
+  configuredTargets: McpClientId[];
+  selectedSkills: string[];
+}
+
 export async function configureMcpServer(
   options: ConfigureMcpServerOptions
-): Promise<string[]> {
+): Promise<ConfigureMcpServerResult> {
   try {
     const { targets, standalone, cliVersion: cliVersionFlag, skills } = options;
 
@@ -199,7 +204,7 @@ export async function configureMcpServer(
       uiLogger.info(commands.mcp.setup.success(configuredTargets));
     }
 
-    return configuredTargets;
+    return { configuredTargets, selectedSkills };
   } catch (error) {
     SpinniesManager.fail('mcpSetup', {
       text: commands.mcp.setup.spinners.failedToConfigure,
