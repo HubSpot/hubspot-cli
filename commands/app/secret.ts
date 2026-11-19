@@ -9,7 +9,7 @@ import updateAppSecretCommand from './secret/update.js';
 import { uiBetaTag } from '../../lib/ui/index.js';
 
 const command = ['secret', 'secrets'];
-const describe = uiBetaTag(commands.app.subcommands.secret.describe, false);
+const describe = uiBetaTag(commands.app.subcommands.secret.describe);
 
 function appSecretBuilder(yargs: Argv): Argv {
   yargs

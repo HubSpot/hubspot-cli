@@ -5,6 +5,7 @@ import {
   uploadFolder,
   hasUploadErrors,
 } from '@hubspot/local-dev-lib/cms/uploadFolder';
+import { FILE_UPLOAD_RESULT_TYPES } from '@hubspot/local-dev-lib/constants/files';
 import { getFileMapperQueryValues } from '@hubspot/local-dev-lib/fileMapper';
 import { upload, deleteFile } from '@hubspot/local-dev-lib/api/fileMapper';
 import {
@@ -43,6 +44,7 @@ import {
 import { makeWrappedYargsHandler } from '../../lib/yargs/makeWrappedYargsHandler.js';
 import { makeYargsBuilder } from '../../lib/yargsUtils.js';
 import { uiLogger } from '../../lib/ui/logger.js';
+import { logServerlessUploadBlockedHint } from '../../lib/serverlessSunset.js';
 
 const command = 'upload [src] [dest]';
 const describe = commands.cms.subcommands.upload.describe;
@@ -176,6 +178,7 @@ async function handler(args: ArgumentsCamelCase<UploadArgs>): Promise<void> {
             payload: src,
           })
         );
+        logServerlessUploadBlockedHint([src]);
         return exit(EXIT_CODES.WARNING);
       })
       .finally(() => {
@@ -248,6 +251,13 @@ async function handler(args: ArgumentsCamelCase<UploadArgs>): Promise<void> {
         } else {
           uiLogger.error(
             commands.cms.subcommands.upload.errors.someFilesFailed(dest)
+          );
+          logServerlessUploadBlockedHint(
+            results
+              .filter(
+                result => result.resultType === FILE_UPLOAD_RESULT_TYPES.FAILURE
+              )
+              .map(result => result.file)
           );
           return exit(EXIT_CODES.WARNING);
         }

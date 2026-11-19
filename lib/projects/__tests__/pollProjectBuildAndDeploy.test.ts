@@ -26,7 +26,7 @@ vi.mock('../../ui/index.js', async importOriginal => {
   const actual = (await importOriginal()) as Record<string, unknown>;
   return {
     ...actual,
-    uiLine: vi.fn(),
+    logUiLine: vi.fn(),
     uiLink: vi.fn((text: string) => text),
     uiAccountDescription: vi.fn((accountId: number) => `account ${accountId}`),
   };

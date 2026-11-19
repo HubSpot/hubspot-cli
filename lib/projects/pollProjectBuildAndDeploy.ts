@@ -23,7 +23,7 @@ import {
 } from '../constants.js';
 import SpinniesManager from '../ui/SpinniesManager.js';
 import { logError, ApiErrorContext } from '../errorHandlers/index.js';
-import { uiLine, uiLink, uiAccountDescription } from '../ui/index.js';
+import { logUiLine, uiLink, uiAccountDescription } from '../ui/index.js';
 import {
   getProjectBuildDetailUrl,
   getProjectDeployDetailUrl,
@@ -324,7 +324,7 @@ function makePollTaskStatusFunc<T extends ProjectTask>({
                   subtask => subtask.status === 'FAILURE'
                 );
 
-                uiLine();
+                logUiLine();
                 uiLogger.log(
                   `${statusStrings.SUBTASK_FAIL(
                     failedSubtasks.length === 1
@@ -336,7 +336,7 @@ function makePollTaskStatusFunc<T extends ProjectTask>({
                 uiLogger.log(
                   lib.projectBuildAndDeploy.makePollTaskStatusFunc.errorSummary
                 );
-                uiLine();
+                logUiLine();
 
                 const displayErrors = failedSubtasks.filter(
                   subtask =>
@@ -530,7 +530,7 @@ export async function pollProjectBuildAndDeploy(
   );
 
   if (!silenceLogs) {
-    uiLine();
+    logUiLine();
   }
 
   const result: ProjectPollResult = {

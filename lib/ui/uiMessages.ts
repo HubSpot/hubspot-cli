@@ -1,7 +1,7 @@
 // UI messages for the UI module - separate file to avoid circular imports with lang/en.ts
 // This contains the same strings that would be in lib.ui.* from lang/en.ts
 
-import { uiCommandReference, uiLink } from './index.js';
+import { uiCommandReference, uiLink } from './formatting.js';
 
 export const uiMessages = {
   betaTag: '[BETA]',

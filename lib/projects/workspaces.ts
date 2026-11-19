@@ -103,7 +103,8 @@ export function computeExternalArchivePath(
  * Filters files based on packable files list and ignore rules.
  */
 function createWorkspaceFileFilter(
-  packableFiles: Set<string>
+  packableFiles: Set<string>,
+  rootDir: string
 ): (file: archiver.EntryData) => false | archiver.EntryData {
   return (file: archiver.EntryData) => {
     if (packableFiles.size > 0 && !packableFiles.has(file.name)) {
@@ -112,7 +113,7 @@ function createWorkspaceFileFilter(
       );
       return false;
     }
-    const ignored = shouldIgnoreFile(file.name, true);
+    const ignored = shouldIgnoreFile(file.name, true, rootDir);
     if (ignored) {
       uiLogger.debug(
         lib.projectUpload.handleProjectUpload.fileFiltered(file.name)
@@ -213,7 +214,7 @@ async function archiveWorkspaceDirectories(
     archive.directory(
       dir,
       archivePath,
-      createWorkspaceFileFilter(packableFiles)
+      createWorkspaceFileFilter(packableFiles, dir)
     );
   }
 
@@ -303,7 +304,7 @@ async function archiveFileDependencies(
     archive.directory(
       localPath,
       archivePath,
-      createWorkspaceFileFilter(packableFiles)
+      createWorkspaceFileFilter(packableFiles, localPath)
     );
   }
 

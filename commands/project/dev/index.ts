@@ -3,7 +3,7 @@ import { getConfigAccountIfExists } from '@hubspot/local-dev-lib/config';
 import { HsProfileFile } from '@hubspot/project-parsing-lib/profiles';
 import { getProjectConfig } from '../../../lib/projects/config.js';
 import { EXIT_CODES } from '../../../lib/enums/exitCodes.js';
-import { uiLine } from '../../../lib/ui/index.js';
+import { logUiLine } from '../../../lib/ui/index.js';
 import { ProjectDevArgs, YargsCommandModule } from '../../../types/Yargs.js';
 import { makeWrappedYargsHandler } from '../../../lib/yargs/makeWrappedYargsHandler.js';
 import { unifiedProjectDevFlow } from './unifiedFlow.js';
@@ -95,7 +95,7 @@ async function handler(
         );
       } catch (error) {
         logError(error);
-        uiLine();
+        logUiLine();
         return exit(EXIT_CODES.ERROR);
       }
     }

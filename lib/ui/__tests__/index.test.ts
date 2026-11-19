@@ -1,6 +1,12 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import chalk from 'chalk';
-import { getTerminalUISupport, uiCommandReference, uiLink } from '../index.js';
+import {
+  getTerminalUISupport,
+  uiBetaTag,
+  uiCommandReference,
+  uiLink,
+} from '../index.js';
+import { uiLogger } from '../logger.js';
 import { stubColorEnv } from '../../testUtils.js';
 
 const ESC = String.fromCharCode(27);
@@ -80,5 +86,14 @@ describe('ui color-aware output', () => {
       expect(hasAnsi(output)).toBe(false);
       expect(output).toBe('Docs: https://developers.hubspot.com');
     });
+  });
+});
+
+describe('uiBetaTag', () => {
+  it('should prepend the beta tag and return the string without logging', () => {
+    const result = uiBetaTag('A message');
+
+    expect(result).toBe('[BETA] A message');
+    expect(uiLogger.log).not.toHaveBeenCalled();
   });
 });

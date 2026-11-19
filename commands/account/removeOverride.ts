@@ -16,6 +16,7 @@ import { CommonArgs, YargsCommandModule } from '../../types/Yargs.js';
 import { makeWrappedYargsHandler } from '../../lib/yargs/makeWrappedYargsHandler.js';
 import { makeYargsBuilder } from '../../lib/yargsUtils.js';
 import { uiLogger } from '../../lib/ui/logger.js';
+import { uiDeprecatedTag } from '../../lib/ui/index.js';
 import { commands } from '../../lang/en.js';
 import { warnIfLinkedDirectory } from '../../lib/link/warnIfLinkedDirectory.js';
 
@@ -30,6 +31,10 @@ async function handler(
   args: ArgumentsCamelCase<RemoveOverrideArgs>
 ): Promise<void> {
   const { force, exit } = args;
+
+  uiLogger.log(
+    uiDeprecatedTag(commands.account.subcommands.removeOverride.logs.deprecated)
+  );
 
   // TODO: Block this command when linked directory exists (next breaking change)
   warnIfLinkedDirectory(args._);

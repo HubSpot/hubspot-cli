@@ -22,8 +22,7 @@ import { uiBetaTag } from '../../../lib/ui/index.js';
 
 const command = 'delete [name]';
 const describe = uiBetaTag(
-  commands.app.subcommands.secret.subcommands.delete.describe,
-  false
+  commands.app.subcommands.secret.subcommands.delete.describe
 );
 
 type DeleteAppSecretArgs = CommonArgs &

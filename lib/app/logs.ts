@@ -14,21 +14,9 @@ import { uiLogger } from '../ui/logger.js';
 import SpinniesManager from '../ui/SpinniesManager.js';
 import { handleExit, handleKeypress } from '../process.js';
 import { commands } from '../../lang/en.js';
+import { SYSTEM_TYPE_DISPLAY_NAMES, toTypeChoice } from './logSystemTypes.js';
 
-export const SYSTEM_TYPE_DISPLAY_NAMES: { [key: string]: string } = {
-  WEBHOOKS: 'Webhooks',
-  API_CALL: 'API Call',
-  SERVERLESS_EXECUTION: 'Serverless Function',
-  CRM_EXTENSIBILITY_CARD: 'CRM Card',
-  CRM_LEGACY_CARD: 'CRM Legacy Card',
-  EXTENSION_LOG: 'Extension Log',
-  EXTENSION_RENDER: 'Extension Render',
-  APP_SETTINGS: 'App Settings',
-  PROXY_EXECUTION: 'Proxy Execution',
-  SERVERLESS_GATEWAY_EXECUTION: 'Serverless Gateway Execution',
-  ACCEPTANCE_TEST: 'Acceptance Test',
-  OAUTH_AUTHORIZATION: 'OAuth Authorization',
-};
+export { SYSTEM_TYPE_DISPLAY_NAMES, toTypeChoice };
 
 export const SYSTEM_TYPE_CHOICES = Object.keys(SYSTEM_TYPE_DISPLAY_NAMES).map(
   toTypeChoice
@@ -109,10 +97,6 @@ export type AppLogsOptions = {
 };
 
 const TAIL_DELAY = 5000;
-
-export function toTypeChoice(systemType: string): string {
-  return systemType.toLowerCase().replaceAll('_', '-');
-}
 
 export function toSystemType(choice: string): string {
   return choice.toUpperCase().replaceAll('-', '_');

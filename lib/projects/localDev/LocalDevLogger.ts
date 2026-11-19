@@ -6,7 +6,7 @@ import {
 import { CONFIG_FLAGS } from '@hubspot/local-dev-lib/constants/config';
 import { uiLogger } from '../../ui/logger.js';
 import {
-  uiLine,
+  logUiLine,
   uiAccountDescription,
   uiCommandReference,
 } from '../../ui/index.js';
@@ -176,7 +176,7 @@ class LocalDevLogger {
 
     uiLogger.log('');
     uiLogger.log(lib.LocalDevManager.quitHelper);
-    uiLine();
+    logUiLine();
     uiLogger.log('');
   }
 
@@ -238,13 +238,13 @@ class LocalDevLogger {
   uploadSuccess(): void {
     uiLogger.log('');
     uiLogger.log(lib.LocalDevProcess.uploadSuccess);
-    uiLine();
+    logUiLine();
     uiLogger.log('');
   }
 
   uploadSuccessAutoDeployDisabled(): void {
     uiLogger.warn(lib.LocalDevProcess.uploadSuccessAutoDeployDisabled);
-    uiLine();
+    logUiLine();
     uiLogger.log('');
   }
 
@@ -262,7 +262,7 @@ class LocalDevLogger {
   deploySuccess(): void {
     uiLogger.log('');
     uiLogger.log(lib.LocalDevProcess.deploySuccess);
-    uiLine();
+    logUiLine();
     uiLogger.log('');
   }
 

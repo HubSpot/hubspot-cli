@@ -12,7 +12,7 @@ import {
 import { makeWrappedYargsHandler } from '../../lib/yargs/makeWrappedYargsHandler.js';
 import { EXIT_CODES } from '../../lib/enums/exitCodes.js';
 import { uiLogger } from '../../lib/ui/logger.js';
-import { uiLine } from '../../lib/ui/index.js';
+import { logUiLine } from '../../lib/ui/index.js';
 import { logError } from '../../lib/errorHandlers/index.js';
 import { commands } from '../../lang/en.js';
 import { makeYargsBuilder } from '../../lib/yargsUtils.js';
@@ -75,7 +75,7 @@ async function handler(args: ArgumentsCamelCase<HubdbListArgs>): Promise<void> {
 
     // if truncated is 0, it will be interpreted as falsy
     const truncated = total - tables.length;
-    uiLine();
+    logUiLine();
     uiLogger.log(
       commands.hubdb.subcommands.list.tablesDisplayed(
         tables.length,

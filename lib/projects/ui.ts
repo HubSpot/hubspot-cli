@@ -1,14 +1,14 @@
 import { uiLogger } from '../ui/logger.js';
 import { FEEDBACK_INTERVAL } from '../constants.js';
-import { uiLine } from '../ui/index.js';
+import { logUiLine } from '../ui/index.js';
 import { lib } from '../../lang/en.js';
 import { confirmPrompt } from '../prompts/promptUtils.js';
 
 export function logFeedbackMessage(buildId: number): void {
   if (buildId > 0 && buildId % FEEDBACK_INTERVAL === 0) {
-    uiLine();
+    logUiLine();
     uiLogger.log(lib.projects.logFeedbackMessage.feedbackHeader);
-    uiLine();
+    logUiLine();
     uiLogger.log(lib.projects.logFeedbackMessage.feedbackMessage);
   }
 }

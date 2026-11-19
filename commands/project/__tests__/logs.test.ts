@@ -21,7 +21,7 @@ vi.mock('@hubspot/local-dev-lib/urls', () => ({
 }));
 
 const uiLinkSpy = vi.spyOn(ui, 'uiLink');
-const uiLineSpy = vi.spyOn(ui, 'uiLine');
+const uiLineSpy = vi.spyOn(ui, 'logUiLine');
 const processExitSpy = vi.spyOn(process, 'exit');
 const projectLogsPromptSpy = vi.spyOn(projectLogsPrompt, 'projectLogsPrompt');
 const projectLogsManagerSetFunctionSpy = vi.spyOn(

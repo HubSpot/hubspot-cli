@@ -12,6 +12,7 @@ import {
   MAX_FEEDBACK_LENGTH,
   PROJECT_CONFIG_FILE,
   PROJECT_WITH_APP,
+  SERVERLESS_SUNSET_CHANGELOG_URL,
 } from '../lib/constants.js';
 import {
   ARCHIVED_HUBSPOT_CONFIG_YAML_FILE_NAME,
@@ -42,6 +43,32 @@ const AGENT_HELP_EXIT_CODES =
 
 const MIGRATION_SUPPORT_CUTOFF_NOTICE =
   'Automated platform version migrations beyond 2026.09 will not be supported.';
+
+const SERVERLESS_SUNSET_NOTICE =
+  'CMS serverless functions are being sunset. Creating them has ended, editing ends on November 17, 2026, and existing functions stop running on February 1, 2027.';
+const SERVERLESS_CREATION_BLOCKED_NOTICE =
+  'Serverless functions can no longer be created in the Design Manager. Build new serverless functions in Developer Projects instead.';
+const SERVERLESS_CREATION_ENDED_NOTICE =
+  'Creating serverless functions has ended.';
+const SERVERLESS_CHANGELOG_LINK_TEXT =
+  'Read more on the announcement and how to migrate your serverless functions to Developer Projects in the Developer Changelog.';
+
+const LEGACY_CONFIG_REPLACEMENTS: [string, string][] = [
+  ['hs account auth', 'Create the global config file and add accounts'],
+  ['hs account link', 'Link accounts to a project directory'],
+  ['hs config migrate', 'Migrate your existing config'],
+];
+
+function getLegacyConfigDeprecationMessage(command: string): string {
+  const columnWidth =
+    Math.max(...LEGACY_CONFIG_REPLACEMENTS.map(([name]) => name.length)) + 3;
+  const replacements = LEGACY_CONFIG_REPLACEMENTS.map(
+    ([name, description]) =>
+      `${indent(1)}${uiCommandReference(name, false)}${' '.repeat(columnWidth - name.length)}${description}`
+  );
+
+  return `${uiCommandReference(command)} is being replaced as we move to global config.\n\n${replacements.join('\n')}`;
+}
 
 export const commands = {
   generalErrors: {
@@ -185,12 +212,19 @@ export const commands = {
           account: 'HubSpot account to authenticate',
           personalAccessKey: 'Enter existing personal access key',
           default: 'Set the authenticated account as the default account',
-          name: 'Set a name for the account in the CLI config',
+          name: 'Set a name for the account in the CLI config (cannot contain spaces)',
           useDefaultName:
             'Use the account name derived from the HubSpot portal name',
         },
         errors: {
           invalidAccountIdProvided: `--account must be a number.`,
+          accountNameContainsSpaces: (
+            accountName: string,
+            suggestedName?: string
+          ) =>
+            suggestedName
+              ? `The account name "${accountName}" cannot contain spaces. Try ${uiCommandReference(`--name ${suggestedName}`)}.`
+              : `The account name "${accountName}" cannot contain spaces. Provide a name without spaces.`,
           failedToUpdateConfig:
             'Failed to update the configuration file. Please try again.',
           migrationNotConfirmed: `Did not migrate your configuration file. Run ${uiAuthCommandReference()} to update your existing config, or use ${uiCommandReference('hs config migrate')} to switch to the new global configuration.`,
@@ -386,7 +420,12 @@ export const commands = {
       },
       removeOverride: {
         describe: (overrideFile: string) =>
-          `Remove the default account override file (${overrideFile}) from the current working directory.`,
+          uiDeprecatedTag(
+            `Remove the default account override file (${overrideFile}) from the current working directory. Replaced by ${uiCommandReference('hs account unlink')}.`
+          ),
+        logs: {
+          deprecated: `${uiCommandReference('hs account remove-override')} is being replaced by ${uiCommandReference('hs account unlink')}.\nUse ${uiCommandReference('hs account unlink')} to unlink accounts from a project directory.`,
+        },
         accountOverride: (overrideFilePath: string, accountOverride: string) =>
           `There is an account override file at ${overrideFilePath} associated with account "${accountOverride}".`,
         prompts: {
@@ -463,7 +502,12 @@ export const commands = {
       },
       createOverride: {
         describe: (hsAccountFileName: string) =>
-          `Create a new default account override file (${hsAccountFileName}) in the current working directory.`,
+          uiDeprecatedTag(
+            `Create a new default account override file (${hsAccountFileName}) in the current working directory. Replaced by ${uiCommandReference('hs account link')}.`
+          ),
+        logs: {
+          deprecated: `${uiCommandReference('hs account create-override')} is being replaced by ${uiCommandReference('hs account link')}.\nUse ${uiCommandReference('hs account link')} to link accounts to a project directory.`,
+        },
         success: (overrideFilePath: string) =>
           `Default account override file created at ${overrideFilePath}`,
         accountOverride: (overrideFilePath: string, accountOverride: string) =>
@@ -494,9 +538,16 @@ export const commands = {
     },
   },
   auth: {
-    describe: 'Configure authentication for your HubSpot account.',
+    describe: uiDeprecatedTag(
+      `Configure authentication for your HubSpot account. Replaced by ${uiCommandReference('hs account auth')}.`
+    ),
     verboseDescribe: (configName: string, authMethod: string) =>
-      `Configure authentication for a HubSpot account. This will update the ${configName} file that stores your account information.\n\nThe recommended authentication method is ${chalk.bold(authMethod)}, which uses an access token tied to a specific user account.`,
+      uiDeprecatedTag(
+        `Configure authentication for a HubSpot account. This will update the ${configName} file that stores your account information.\n\nThe recommended authentication method is ${chalk.bold(authMethod)}, which uses an access token tied to a specific user account.\n\nThis command is deprecated because we are moving to global config, and the legacy config format will be replaced. Use ${uiCommandReference('hs account auth')} to create the global config file and add accounts to it, and ${uiCommandReference('hs account link')} to link accounts to a project directory. Run ${uiCommandReference('hs config migrate')} to migrate your existing config.`
+      ),
+    logs: {
+      deprecated: getLegacyConfigDeprecationMessage('hs auth'),
+    },
     errors: {
       invalidAccountIdProvided: `--account must be a number.`,
       globalConfigFileExists: (accountAuthCommand: string) =>
@@ -603,16 +654,20 @@ export const commands = {
         },
       },
       webpack: {
-        describe: 'Commands for managing webpack.',
+        describe: uiDeprecatedTag('Commands for managing webpack.'),
         subcommands: {
           create: {
-            describe: 'Create a new webpack bundle.',
+            describe: uiDeprecatedTag(
+              `Create a new webpack bundle. ${SERVERLESS_CREATION_ENDED_NOTICE}`
+            ),
             errors: {
               unusablePath: (path: string) =>
                 `The "${path}" is not a usable path to a directory.`,
             },
             positionals: {
-              dest: 'Destination folder for the new webpack bundle.',
+              dest: uiDeprecatedTag(
+                'Destination folder for the new webpack bundle.'
+              ),
             },
           },
         },
@@ -995,27 +1050,37 @@ export const commands = {
         },
       },
       function: {
-        describe: 'Commands for managing CMS serverless functions.',
+        describe: uiDeprecatedTag(
+          `Commands for managing CMS serverless functions. ${SERVERLESS_SUNSET_NOTICE}`
+        ),
         subcommands: {
           create: {
-            describe: 'Create a new CMS serverless function.',
+            describe: uiDeprecatedTag(
+              `Create a new CMS serverless function. ${SERVERLESS_CREATION_ENDED_NOTICE}`
+            ),
             errors: {
               unusablePath: (path: string) =>
                 `The "${path}" is not a usable path to a directory.`,
             },
             positionals: {
-              name: 'Name of the function',
-              dest: 'Destination folder for the function',
+              name: uiDeprecatedTag('Name of the function'),
+              dest: uiDeprecatedTag('Destination folder for the function'),
             },
             options: {
-              functionsFolder: 'Folder to create functions in',
-              filename: 'Filename for the function',
-              endpointMethod: 'HTTP method for the function endpoint',
-              endpointPath: 'API endpoint path for the function',
+              functionsFolder: uiDeprecatedTag('Folder to create functions in'),
+              filename: uiDeprecatedTag('Filename for the function'),
+              endpointMethod: uiDeprecatedTag(
+                'HTTP method for the function endpoint'
+              ),
+              endpointPath: uiDeprecatedTag(
+                'API endpoint path for the function'
+              ),
             },
           },
           logs: {
-            describe: 'View logs for a CMS serverless function.',
+            describe: uiDeprecatedTag(
+              'View logs for a CMS serverless function.'
+            ),
             errors: {
               noLogsFound: (functionPath: string, accountId: number) =>
                 `No logs were found for the function path "${functionPath}" in account "${accountId}".`,
@@ -1033,21 +1098,21 @@ export const commands = {
               `Getting ${latest ? 'latest ' : ''}logs for function with path: ${functionPath}.`,
             options: {
               compact: {
-                describe: 'output compact logs',
+                describe: uiDeprecatedTag('output compact logs'),
               },
               follow: {
-                describe: 'follow logs',
+                describe: uiDeprecatedTag('follow logs'),
               },
               latest: {
-                describe: 'retrieve most recent log only',
+                describe: uiDeprecatedTag('retrieve most recent log only'),
               },
               limit: {
-                describe: 'limit the number of logs to output',
+                describe: uiDeprecatedTag('limit the number of logs to output'),
               },
             },
             positionals: {
               endpoint: {
-                describe: 'Serverless function endpoint',
+                describe: uiDeprecatedTag('Serverless function endpoint'),
               },
             },
             tailLogs: (functionPath: string, accountId: string) =>
@@ -1075,7 +1140,7 @@ export const commands = {
               `Failed to build and deploy bundle for "${functionPath}" on ${account}`,
             positionals: {
               path: {
-                describe: 'Path to the ".functions" folder',
+                describe: uiDeprecatedTag('Path to the ".functions" folder'),
               },
             },
             success: {
@@ -1091,13 +1156,15 @@ export const commands = {
             debug: {
               gettingFunctions: 'Getting currently deployed functions',
             },
-            describe: 'List the currently deployed CMS serverless functions.',
+            describe: uiDeprecatedTag(
+              'List the currently deployed CMS serverless functions.'
+            ),
             info: {
               noFunctions: 'No functions found',
             },
             options: {
               json: {
-                describe: 'output raw json data',
+                describe: uiDeprecatedTag('output raw json data'),
               },
             },
           },
@@ -1111,23 +1178,27 @@ export const commands = {
             },
             options: {
               contact: {
-                describe: 'Pass contact data to the test function',
+                describe: uiDeprecatedTag(
+                  'Pass contact data to the test function'
+                ),
               },
               logOutput: {
-                describe:
-                  'Output the response body from the serverless function execution (It is suggested not to use this in production environments as it can reveal any secure data returned by the function in logs)',
+                describe: uiDeprecatedTag(
+                  'Output the response body from the serverless function execution (It is suggested not to use this in production environments as it can reveal any secure data returned by the function in logs)'
+                ),
               },
               port: {
-                describe: 'Port to run the test server on',
+                describe: uiDeprecatedTag('Port to run the test server on'),
               },
               watch: {
-                describe:
-                  'Watch the specified .functions folder for changes and restart the server',
+                describe: uiDeprecatedTag(
+                  'Watch the specified .functions folder for changes and restart the server'
+                ),
               },
             },
             positionals: {
               path: {
-                describe: 'Path to local .functions folder',
+                describe: uiDeprecatedTag('Path to local .functions folder'),
               },
             },
           },
@@ -1608,14 +1679,17 @@ export const commands = {
     },
   },
   init: {
-    describe:
-      'Create a CLI config file and configure authentication for your HubSpot account.',
+    describe: uiDeprecatedTag(
+      `Create a CLI config file and configure authentication for your HubSpot account. Replaced by ${uiCommandReference('hs account auth')}.`
+    ),
     verboseDescribe: (
       configName: string,
       command: string,
       authMethod: string
     ) =>
-      `Configure authentication for a HubSpot account. This will create a ${configName} file to store your account information. To configure authentication for additional accounts, run ${command}.\n\nThe recommended authentication method is ${chalk.bold(authMethod)}, which uses an access token tied to a specific user account.`,
+      uiDeprecatedTag(
+        `Configure authentication for a HubSpot account. This will create a ${configName} file to store your account information. To configure authentication for additional accounts, run ${command}.\n\nThe recommended authentication method is ${chalk.bold(authMethod)}, which uses an access token tied to a specific user account.\n\nThis command is deprecated because we are moving to global config, and the legacy config format will be replaced. Use ${uiCommandReference('hs account auth')} to create the global config file and add accounts to it, and ${uiCommandReference('hs account link')} to link accounts to a project directory. Run ${uiCommandReference('hs config migrate')} to migrate your existing config.`
+      ),
     options: {
       authType: {
         describe: 'Authentication mechanism',
@@ -1637,6 +1711,7 @@ export const commands = {
         `Connected account "${account}" using "${authType}" and set it as the default account`,
     },
     logs: {
+      deprecated: getLegacyConfigDeprecationMessage('hs init'),
       updateConfig: `To update an existing config file, use the ${uiAuthCommandReference()} command.`,
     },
     errors: {
@@ -2035,12 +2110,10 @@ export const commands = {
     },
     migrateApp: {
       describe: uiDeprecatedTag(
-        `Migrate a public app to the projects framework. ${MIGRATION_SUPPORT_CUTOFF_NOTICE}`,
-        false
+        `Migrate a public app to the projects framework. ${MIGRATION_SUPPORT_CUTOFF_NOTICE}`
       ),
       verboseDescribe: uiDeprecatedTag(
-        `Migrate a public app to the projects framework. This command walks you through the fields required to complete the migration and downloads the project source code into a directory of your choosing.\n\n${chalk.bold.yellow(MIGRATION_SUPPORT_CUTOFF_NOTICE)}`,
-        false
+        `Migrate a public app to the projects framework. This command walks you through the fields required to complete the migration and downloads the project source code into a directory of your choosing.\n\n${chalk.bold.yellow(MIGRATION_SUPPORT_CUTOFF_NOTICE)}`
       ),
       examples: {
         default: 'Migrate a public app to the projects framework',
@@ -2100,12 +2173,10 @@ export const commands = {
       preamble: (platformVersion: string) =>
         `This command will migrate an existing project to platformVersion ${platformVersion}.  It will walk you through the fields required to complete the migration and download the new project source code into the project source directory.  It will also copy all of your existing files to a new directory (archive) in case you need access to your old files later.`,
       describe: uiDeprecatedTag(
-        `Migrate an existing project to the new version of the projects framework. ${MIGRATION_SUPPORT_CUTOFF_NOTICE}`,
-        false
+        `Migrate an existing project to the new version of the projects framework. ${MIGRATION_SUPPORT_CUTOFF_NOTICE}`
       ),
       verboseDescribe: uiDeprecatedTag(
-        `Migrate an existing project to a newer platform version. This command walks you through the fields required to complete the migration and downloads the new project source code into the project source directory. Your existing files are copied to a new directory (archive) in case you need access to them later.\n\n${chalk.bold.yellow(MIGRATION_SUPPORT_CUTOFF_NOTICE)}`,
-        false
+        `Migrate an existing project to a newer platform version. This command walks you through the fields required to complete the migration and downloads the new project source code into the project source directory. Your existing files are copied to a new directory (archive) in case you need access to them later.\n\n${chalk.bold.yellow(MIGRATION_SUPPORT_CUTOFF_NOTICE)}`
       ),
       errors: {
         noProjectConfig: (command: string) =>
@@ -2351,8 +2422,7 @@ export const commands = {
           `No successful builds for project ${chalk.bold(projectName)}. Would you like to upload it?`,
         errors: {
           targetRequired: `${uiCommandReference('--target=<portalId>')} is required to specify the portal to preview on.`,
-          previewFailed:
-            'The preview failed. You can try again or preview this build from the project UI.',
+          previewFailed: 'The preview failed.',
         },
         options: {
           build: 'Build ID to preview. Defaults to the latest build.',
@@ -2496,8 +2566,7 @@ export const commands = {
         },
         forceCreate: {
           describe: uiDeprecatedTag(
-            `Automatically create project if it does not exist. Use ${uiCommandReference('--force')} instead.`,
-            false
+            `Automatically create project if it does not exist. Use ${uiCommandReference('--force')} instead.`
           ),
         },
         message: {
@@ -4466,6 +4535,14 @@ export const lib = {
     exitDebug: (signal: string) =>
       `Attempting to gracefully exit. Triggered by ${signal}`,
   },
+  hubSpotCommand: {
+    argStartsWithDash: (arg: string) =>
+      `Cannot pass ${JSON.stringify(arg)} as a positional argument because it starts with a dash and would be read as a flag. Remove the leading dash and try again.`,
+  },
+  crossPlatformSpawn: {
+    unsafeArg: (arg: string) =>
+      `Cannot run this command on Windows because an argument contains a line break, contains one of these characters: " % ^ & | < >, or ends with two or more backslashes. Remove or rephrase them and try again. Argument: ${JSON.stringify(arg)}`,
+  },
   handlerLogFile: {
     saved: (filePath: string) => `Debug logs can be viewed at ${filePath}`,
   },
@@ -4487,7 +4564,7 @@ export const lib = {
       'JSON output: Commands that support `--json` print one JSON object to stdout when they finish. Errors and warnings print to stderr.',
       'JSON schemas: To print the JSON Schema for the output of a command, run the command with `--json-schema`.',
       'Prompts: Commands prompt for values that you do not pass as flags. To run a command without prompts, pass each value as a flag.',
-      'Long-running commands: `hs project dev` runs until it is stopped and prompts for input. Ask the user to run it in their own terminal.',
+      'Long-running commands: `hs project dev`, `hs project watch`, `hs cms watch`, and `hs cms theme preview` run until they are stopped and can prompt for input. Do not run them from your shell, even in the background. Ask the user to run them in a separate terminal window.',
       'Accounts: Commands use the default account in the CLI config. To use a different account, pass `--account <name or ID>`. To see the configured accounts, run `hs account list`.',
       'Environment variables: To read the account from `HUBSPOT_ACCOUNT_ID` and `HUBSPOT_PERSONAL_ACCESS_KEY` instead of the config file, pass `--use-env`.',
       'Config file: The global config file is `~/.hscli/config.yml`. To use a different file, pass `--config <path>`.',
@@ -4576,7 +4653,7 @@ export const lib = {
           {
             command: 'hs project dev',
             description:
-              'Ask the user to run this command in their own terminal. It starts local development and runs until it is stopped. Changes upload from the Local Dev Panel, or as you edit with `--auto-upload`. To test on a test account, also pass `--testing-account <test account ID>` and `--project-account <developer account ID>`.',
+              'Ask the user to run this command in a separate terminal window. It starts local development and runs until it is stopped. Changes upload from the Local Dev Panel, or as you edit with `--auto-upload`. To test on a test account, also pass `--testing-account <test account ID>` and `--project-account <developer account ID>`.',
           },
           {
             command: 'hs project list-builds --limit 1 --json',
@@ -4884,6 +4961,16 @@ export const lib = {
       declineDefaultAccountExplanation: `To develop on a different account, run ${uiCommandReference('hs account use')} to change your default account, then re-run ${uiCommandReference('hs project dev')}.`,
     },
   },
+  serverlessSunset: {
+    deprecationNotice: (command: string) =>
+      `The ${uiCommandReference(command)} command is deprecated. ${SERVERLESS_SUNSET_NOTICE} ${uiLink(SERVERLESS_CHANGELOG_LINK_TEXT, SERVERLESS_SUNSET_CHANGELOG_URL)}`,
+    creationBlocked: (command: string) =>
+      `The ${uiCommandReference(command)} command is disabled. ${SERVERLESS_CREATION_BLOCKED_NOTICE} Existing functions can no longer be edited from November 17, 2026 and stop running on February 1, 2027. ${uiLink(SERVERLESS_CHANGELOG_LINK_TEXT, SERVERLESS_SUNSET_CHANGELOG_URL)}`,
+    editingDisabled: (command: string) =>
+      `The ${uiCommandReference(command)} command is disabled. Serverless functions can no longer be created or edited in the Design Manager. Existing functions stop running on February 1, 2027. Build your serverless functions in Developer Projects instead. ${uiLink(SERVERLESS_CHANGELOG_LINK_TEXT, SERVERLESS_SUNSET_CHANGELOG_URL)}`,
+    uploadEditingBlockedHint: `If this upload was rejected, it is because serverless functions can no longer be created or edited in the Design Manager. Build your serverless functions in Developer Projects instead. ${uiLink(SERVERLESS_CHANGELOG_LINK_TEXT, SERVERLESS_SUNSET_CHANGELOG_URL)}`,
+    uploadBlockedHint: `If this upload was rejected, it is because serverless functions can no longer be created in the Design Manager, so new function folders can't be uploaded. Build new serverless functions in Developer Projects instead. ${uiLink(SERVERLESS_CHANGELOG_LINK_TEXT, SERVERLESS_SUNSET_CHANGELOG_URL)}`,
+  },
   middleware: {
     updateNotification: {
       notifyTitle: chalk.bold('Update available'),
@@ -5024,6 +5111,8 @@ export const lib = {
       uploadWarning: (files: string[]) =>
         `The following *-hsmeta.json files will be skipped during upload.\nThis CLI version doesn't support the features they require:\n${files.map(f => `  ${chalk.bold(f)}`).join('\n')}\nRun ${uiCommandReference('hs upgrade')} to update the CLI, which may add support for these features.`,
       prompt: '[--force] Continue anyway?',
+      jsonRequiresForce: (files: string[]) =>
+        `The following *-hsmeta.json files would be skipped during upload:\n${files.map(f => `  ${chalk.bold(f)}`).join('\n')}\nRe-run with ${uiCommandReference('--force')} to upload anyway.`,
     },
     components: {
       unableToGetUidFromHsmeta: 'Unable to get UID from hsmeta',
@@ -5085,6 +5174,8 @@ export const lib = {
     handleProjectUpload: {
       emptySource: (srcDir: string) =>
         `Source directory "${srcDir}" is empty. Add files to your project and rerun ${uiCommandReference('hs project upload')} to upload them to HubSpot.`,
+      noFilesToUpload: (srcDir: string) =>
+        `No files in source directory "${srcDir}" were included in the upload because every file was ignored. Rerun ${uiCommandReference('hs project upload --debug')} to see which files were ignored and why.`,
       compressed: (byteCount: number) =>
         `Project files compressed: ${byteCount} bytes`,
       compressing: (path: string) => `Compressing build files to "${path}"`,
@@ -5149,8 +5240,7 @@ export const lib = {
       `Previewed ${chalk.bold(releaseTag)} on ${uiAccountDescription(targetPortalId)}`,
     triggerFailed: 'Failed to trigger preview',
     pollFailed: 'Failed to poll preview status',
-    warning:
-      'The build succeeded but the preview failed. You can manually preview this build from the project UI.',
+    warning: 'The build succeeded but the preview failed.',
     missingProjectId: 'Unable to preview: could not resolve the project ID.',
   },
 
@@ -6160,8 +6250,7 @@ export const lib = {
       `Important: Migrating to platformVersion ${platformVersion} is irreversible`,
     projectMigrationWarning: (platformVersion: string) =>
       uiBetaTag(
-        `Running the ${uiCommandReference('hs project migrate')} command will permanently upgrade your project to platformVersion ${platformVersion}. This action cannot be undone. To ensure you have access to your original files, they will be copied to a new directory (archive) for safekeeping.\n\nThis command will guide you through the process, prompting you to enter the required fields and will download the new project source code into your project source directory.`,
-        false
+        `Running the ${uiCommandReference('hs project migrate')} command will permanently upgrade your project to platformVersion ${platformVersion}. This action cannot be undone. To ensure you have access to your original files, they will be copied to a new directory (archive) for safekeeping.\n\nThis command will guide you through the process, prompting you to enter the required fields and will download the new project source code into your project source directory.`
       ),
     exitWithoutMigrating: 'Exiting without migrating',
     success: {

@@ -12,6 +12,7 @@ import { runCommandInDir, HubSpotCommand } from '../../../utils/command.js';
 import * as configUtils from '../../../utils/config.js';
 import * as toolUsageTracking from '../../../utils/toolUsageTracking.js';
 import { MCP_ELICITATION_TIMEOUT } from '../../../../lib/constants.js';
+import { commands } from '../../../../lang/en.js';
 
 vi.mock('@modelcontextprotocol/sdk/server/mcp.js');
 vi.mock('../../../../lib/accountAuth.js');
@@ -321,6 +322,24 @@ describe('mcp-server/tools/project/AuthAccountTool', () => {
       const result = await tool.handler(baseInput);
 
       expect(result.content[0].text).toContain('Auth failed');
+    });
+
+    it('returns the account name error when hs rejects a name with spaces', async () => {
+      const accountNameError =
+        commands.account.subcommands.auth.errors.accountNameContainsSpaces(
+          'Oxford Capital',
+          'oxford-capital'
+        );
+      mockRunCommandInDir.mockRejectedValue(
+        new Error(`Command failed: hs account auth\n${accountNameError}`)
+      );
+
+      const result = await tool.handler({
+        ...baseInput,
+        name: 'Oxford Capital',
+      });
+
+      expect(result.content[0].text).toContain(accountNameError);
     });
 
     it('calls setupHubSpotConfig with the provided working directory', async () => {

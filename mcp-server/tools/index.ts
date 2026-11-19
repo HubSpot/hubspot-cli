@@ -20,7 +20,6 @@ import { GetBuildStatusTool } from './project/GetBuildStatusTool.js';
 import { HsListTool } from './cms/HsListTool.js';
 import { HsCreateModuleTool } from './cms/HsCreateModuleTool.js';
 import { HsCreateTemplateTool } from './cms/HsCreateTemplateTool.js';
-import { HsCreateFunctionTool } from './cms/HsCreateFunctionTool.js';
 import { HsListFunctionsTool } from './cms/HsListFunctionsTool.js';
 import { HsFunctionLogsTool } from './cms/HsFunctionLogsTool.js';
 import { CreateTestAccountTool } from './project/CreateTestAccountTool.js';
@@ -62,7 +61,6 @@ export function registerCmsTools(
     new HsListTool(mcpServer, logger).register(),
     new HsCreateModuleTool(mcpServer, logger).register(),
     new HsCreateTemplateTool(mcpServer, logger).register(),
-    new HsCreateFunctionTool(mcpServer, logger).register(),
     new HsListFunctionsTool(mcpServer, logger).register(),
     new HsFunctionLogsTool(mcpServer, logger).register(),
   ];

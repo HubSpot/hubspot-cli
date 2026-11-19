@@ -16,6 +16,7 @@ import {
 import { makeWrappedYargsHandler } from '../../../lib/yargs/makeWrappedYargsHandler.js';
 import { makeYargsBuilder } from '../../../lib/yargsUtils.js';
 import { renderTable } from '../../../ui/render.js';
+import { logServerlessDeprecation } from '../../../lib/serverlessSunset.js';
 
 const command = ['list', 'ls'];
 const describe = commands.cms.subcommands.function.subcommands.list.describe;
@@ -29,6 +30,10 @@ async function handler(
   args: ArgumentsCamelCase<FunctionListArgs>
 ): Promise<void> {
   const { derivedAccountId, exit } = args;
+
+  if (!args.json) {
+    logServerlessDeprecation('hs cms function list');
+  }
 
   uiLogger.debug(
     commands.cms.subcommands.function.subcommands.list.debug.gettingFunctions

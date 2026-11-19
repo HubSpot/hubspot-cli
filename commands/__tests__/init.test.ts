@@ -9,6 +9,7 @@ import * as personalAccessKeyPromptLib from '../../lib/prompts/personalAccessKey
 import * as accountNamePromptLib from '../../lib/prompts/accountNamePrompt.js';
 import { showMcpPromotionNudge } from '../../lib/mcp/promotion.js';
 import { EXIT_CODES } from '../../lib/enums/exitCodes.js';
+import { commands } from '../../lang/en.js';
 import initCommand from '../init.js';
 
 vi.mock('../../lib/commonOpts');
@@ -98,6 +99,10 @@ describe('commands/init', () => {
     it('should provide a description', () => {
       expect(initCommand.describe).toBeDefined();
     });
+
+    it('should mark the description as deprecated', () => {
+      expect(initCommand.describe).toContain('[DEPRECATED]');
+    });
   });
 
   describe('builder', () => {
@@ -128,6 +133,45 @@ describe('commands/init', () => {
   });
 
   describe('handler', () => {
+    it('should log a deprecation warning when the handler runs', async () => {
+      const exit = vi.fn();
+
+      await initCommand.handler({
+        _: ['init'],
+        authType: 'personalaccesskey',
+        disableTracking: false,
+        qa: false,
+        userProvidedAccount: undefined,
+        addUsageMetadata: vi.fn(),
+        exit,
+      } as unknown as Parameters<typeof initCommand.handler>[0]);
+
+      expect(mockUiLogger.log).toHaveBeenCalledWith(
+        expect.stringContaining(commands.init.logs.deprecated)
+      );
+    });
+
+    it('should not log a deprecation warning when global config exists', async () => {
+      mockedGlobalConfigFileExists.mockReturnValue(true);
+
+      await initCommand.handler({
+        _: ['init'],
+        authType: 'personalaccesskey',
+        disableTracking: false,
+        qa: false,
+        userProvidedAccount: undefined,
+        addUsageMetadata: vi.fn(),
+        exit: vi.fn(),
+      } as unknown as Parameters<typeof initCommand.handler>[0]);
+
+      expect(mockUiLogger.log).not.toHaveBeenCalledWith(
+        expect.stringContaining(commands.init.logs.deprecated)
+      );
+      expect(mockUiLogger.error).toHaveBeenCalledWith(
+        commands.init.errors.globalConfigFileExists
+      );
+    });
+
     it('should show MCP promotion nudge after successful setup', async () => {
       const exit = vi.fn();
 

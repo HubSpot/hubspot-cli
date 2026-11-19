@@ -17,6 +17,7 @@ export const ProjectUploadSchema = z.object({
   buildId: z.number().optional(),
   deployId: z.number().optional(),
   preview: PreviewSchema.optional(),
+  skippedHsMetaFiles: z.array(z.string()).optional(),
 });
 
 export type PreviewJsonOutput = z.infer<typeof PreviewSchema>;

@@ -8,7 +8,7 @@ import {
 } from '@hubspot/project-parsing-lib/profiles';
 import { ProjectConfig } from '../../../types/Projects.js';
 import { lib } from '../../../lang/en.js';
-import { uiBetaTag, uiLine } from '../../ui/index.js';
+import { uiBetaTag, logUiLine } from '../../ui/index.js';
 import { uiLogger } from '../../ui/logger.js';
 import { getConfigAccountById } from '@hubspot/local-dev-lib/config';
 import {
@@ -32,7 +32,7 @@ vi.mock('../../ui', async importOriginal => {
   return {
     ...actual,
     uiBetaTag: vi.fn(),
-    uiLine: vi.fn(),
+    logUiLine: vi.fn(),
     indent: vi.fn((level: number) => '  '.repeat(level)),
   };
 });
@@ -46,7 +46,7 @@ const mockedGetAllHsProfiles = getAllHsProfiles as Mock;
 const mockedValidateProfileVariables = validateProfileVariables as Mock;
 const mockedGetConfigAccountById = getConfigAccountById as Mock;
 const mockedUiBetaTag = uiBetaTag as Mock;
-const mockedUiLine = uiLine as Mock;
+const mockedLogUiLine = logUiLine as Mock;
 const mockedUiLogger = uiLogger as Mocked<typeof uiLogger>;
 
 describe('lib/projectProfiles', () => {
@@ -58,7 +58,7 @@ describe('lib/projectProfiles', () => {
 
       logProfileHeader(profileName);
 
-      expect(mockedUiLine).toHaveBeenCalled();
+      expect(mockedLogUiLine).toHaveBeenCalled();
       expect(mockedUiLogger.log).toHaveBeenCalledWith(
         lib.projectProfiles.logs.usingProfile(filename)
       );
@@ -81,7 +81,7 @@ describe('lib/projectProfiles', () => {
       expect(mockedUiLogger.log).toHaveBeenCalledWith(
         lib.projectProfiles.logs.profileTargetAccount(mockProfile.accountId)
       );
-      expect(mockedUiLine).toHaveBeenCalled();
+      expect(mockedLogUiLine).toHaveBeenCalled();
       expect(mockedUiLogger.log).toHaveBeenCalledWith('');
     });
 
@@ -97,7 +97,7 @@ describe('lib/projectProfiles', () => {
       );
       expect(mockedUiLogger.log).toHaveBeenCalledWith('  key1: value1');
       expect(mockedUiLogger.log).toHaveBeenCalledWith('  key2: value2');
-      expect(mockedUiLine).toHaveBeenCalled();
+      expect(mockedLogUiLine).toHaveBeenCalled();
       expect(mockedUiLogger.log).toHaveBeenCalledWith('');
     });
   });
@@ -286,7 +286,7 @@ describe('lib/projectProfiles', () => {
         false
       );
 
-      expect(mockedUiLine).toHaveBeenCalled();
+      expect(mockedLogUiLine).toHaveBeenCalled();
       expect(mockedUiLogger.log).toHaveBeenCalled();
     });
 
@@ -305,7 +305,7 @@ describe('lib/projectProfiles', () => {
       );
 
       expect(mockedUiBetaTag).not.toHaveBeenCalled();
-      expect(mockedUiLine).not.toHaveBeenCalled();
+      expect(mockedLogUiLine).not.toHaveBeenCalled();
     });
 
     it('should throw error when profile variables are invalid', async () => {

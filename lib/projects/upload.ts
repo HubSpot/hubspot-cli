@@ -112,6 +112,7 @@ type ProjectUploadResult<T> = {
   projectNotFound?: boolean;
   projectId?: number;
   userDeclined?: boolean;
+  skippedHsMetaFiles?: string[];
 };
 
 type HandleProjectUploadArg<T> = {
@@ -128,7 +129,28 @@ type HandleProjectUploadArg<T> = {
   skipAutoDeploy?: boolean;
   profile?: string;
   force?: boolean;
+  formatOutputAsJson?: boolean;
 };
+
+type ValidateSkippedHsMetaFilesOptions = {
+  skippedHsMetaFiles: string[];
+  force: boolean;
+  formatOutputAsJson: boolean;
+};
+
+function validateSkippedHsMetaFilesCanBeConfirmed({
+  skippedHsMetaFiles,
+  force,
+  formatOutputAsJson,
+}: ValidateSkippedHsMetaFilesOptions): void {
+  if (skippedHsMetaFiles.length === 0 || force || !formatOutputAsJson) {
+    return;
+  }
+
+  throw new ProjectValidationError(
+    lib.projects.skippedHsMetaFiles.jsonRequiresForce(skippedHsMetaFiles)
+  );
+}
 
 export async function handleProjectUpload<T>({
   accountId,
@@ -144,6 +166,7 @@ export async function handleProjectUpload<T>({
   skipNpmAudit = false,
   skipAutoDeploy = false,
   force = false,
+  formatOutputAsJson = false,
 }: HandleProjectUploadArg<T>): Promise<ProjectUploadResult<T>> {
   const srcDir = path.resolve(projectDir, projectConfig.srcDir);
 
@@ -201,6 +224,7 @@ export async function handleProjectUpload<T>({
         );
 
         let intermediateRepresentation;
+        let skippedHsMetaFiles: string[] | undefined;
 
         if (sendIR) {
           try {
@@ -213,8 +237,14 @@ export async function handleProjectUpload<T>({
             });
             intermediateRepresentation =
               translateResult.intermediateRepresentation;
+            skippedHsMetaFiles = translateResult.skippedHsMetaFiles;
+            validateSkippedHsMetaFilesCanBeConfirmed({
+              skippedHsMetaFiles,
+              force,
+              formatOutputAsJson,
+            });
             const shouldContinue = await warnAboutSkippedHsMetaFiles(
-              translateResult.skippedHsMetaFiles,
+              skippedHsMetaFiles,
               force
             );
             if (!shouldContinue) {
@@ -239,7 +269,7 @@ export async function handleProjectUpload<T>({
           uiLogger.log(
             lib.projectUpload.handleProjectUpload.projectDoesNotExist(accountId)
           );
-          return resolve({ projectNotFound: true });
+          return resolve({ projectNotFound: true, skippedHsMetaFiles });
         }
 
         const projectId = project?.id;
@@ -255,7 +285,7 @@ export async function handleProjectUpload<T>({
         );
 
         if (error) {
-          resolve({ uploadError: error, projectId });
+          resolve({ uploadError: error, projectId, skippedHsMetaFiles });
         } else if (callbackFunc) {
           const uploadResult = await callbackFunc(
             accountId,
@@ -263,7 +293,7 @@ export async function handleProjectUpload<T>({
             tempFile,
             buildId!
           );
-          resolve({ result: uploadResult, projectId });
+          resolve({ result: uploadResult, projectId, skippedHsMetaFiles });
         }
       } catch (e) {
         reject(e);
@@ -295,7 +325,7 @@ export async function handleProjectUpload<T>({
       return false;
     }
 
-    const ignored = shouldIgnoreFile(file.name, true);
+    const ignored = shouldIgnoreFile(file.name, true, srcDir);
     if (ignored) {
       const isNodeModule = file.name.includes('node_modules');
 
@@ -339,6 +369,17 @@ export async function validateSourceDirectory(
   if (!projectFilePaths || projectFilePaths.length === 0) {
     throw new ProjectValidationError(
       lib.projectUpload.handleProjectUpload.emptySource(projectConfig.srcDir)
+    );
+  }
+
+  const hasUploadableFile = projectFilePaths.some(
+    filePath => !shouldIgnoreFile(filePath, true, srcDir)
+  );
+  if (!hasUploadableFile) {
+    throw new ProjectValidationError(
+      lib.projectUpload.handleProjectUpload.noFilesToUpload(
+        projectConfig.srcDir
+      )
     );
   }
 

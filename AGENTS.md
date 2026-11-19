@@ -144,6 +144,7 @@ Run broader checks when the change touches shared behavior or command framework 
 - When addressing review feedback on a PR, create a new follow-up commit by default.
 - For stacked PRs, prefer merging parent branch updates into the child branch over rebasing, because PRs are squash-merged into `master`.
 - Ask before committing, pushing, force-pushing, creating PRs, posting comments, merging, closing, or otherwise mutating GitHub state.
+- Before opening a PR, check your changes against the criteria in `.ai/REVIEWING.md`.
 
 ## Public Writing
 
@@ -162,8 +163,6 @@ Project skills are in `.claude/skills/`. When a task matches one of these workfl
 
 - `cli-implement`: **Start here** for implementing new CLI features. Orchestrates the full workflow and references other skills as needed.
 - `cli-design-check`: validate CLI UX decisions (commands, flags, errors, prompts). Called by cli-implement for user-facing changes.
-- `cli-code-check`: code quality and pattern compliance check. Checks all 10 architecture patterns + code quality + linting. Run before PR for early feedback, or runs automatically in cli-review.
-- `cli-review`: PR review with confidence-based posting. Runs cli-code-check, calculates confidence, posts approval or change requests.
 - `cli-create-changelog`: generate an npm release changelog from commits.
 
 ## Agent-Specific Config

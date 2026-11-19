@@ -27,6 +27,8 @@ import {
   authenticateNewAccount,
   getCurrentDefaultAccount,
 } from '../accountAuth.js';
+import { uiLogger } from '../ui/logger.js';
+import { commands } from '../../lang/en.js';
 import { Mock } from 'vitest';
 
 vi.mock('@hubspot/local-dev-lib/config');
@@ -64,6 +66,7 @@ const mockedCliAccountNamePrompt = cliAccountNamePrompt as Mock;
 const mockedSetAsDefaultAccountPrompt = setAsDefaultAccountPrompt as Mock;
 const mockedAwaitPersonalAccessKeyOverWebsocket =
   awaitPersonalAccessKeyOverWebsocket as Mock;
+const mockedUiLogger = vi.mocked(uiLogger);
 
 describe('lib/accountAuth', () => {
   describe('getCurrentDefaultAccount()', () => {
@@ -257,6 +260,62 @@ describe('lib/accountAuth', () => {
         'my-account',
         true
       );
+    });
+
+    it.each(['Oxford Capital', ' leading', 'trailing ', 'tab\tseparated'])(
+      'should return null and log an error when the provided account name is %j',
+      async accountName => {
+        mockedToKebabCase.mockReturnValue('oxford-capital');
+
+        const result = await authenticateNewAccount({
+          env: 'prod' as Environment,
+          providedPersonalAccessKey: 'test-key',
+          accountId: 123456,
+          accountName,
+        });
+
+        expect(result).toBeNull();
+        expect(mockedToKebabCase).toHaveBeenCalledWith(accountName);
+        expect(mockedUiLogger.error).toHaveBeenCalledWith(
+          commands.account.subcommands.auth.errors.accountNameContainsSpaces(
+            accountName,
+            'oxford-capital'
+          )
+        );
+      }
+    );
+
+    it('should log the error without a suggested name when none can be derived', async () => {
+      mockedToKebabCase.mockReturnValue('');
+
+      await authenticateNewAccount({
+        env: 'prod' as Environment,
+        providedPersonalAccessKey: 'test-key',
+        accountId: 123456,
+        accountName: '! ?',
+      });
+
+      expect(mockedUiLogger.error).toHaveBeenCalledWith(
+        commands.account.subcommands.auth.errors.accountNameContainsSpaces(
+          '! ?'
+        )
+      );
+    });
+
+    it('should reject a provided account name with spaces before authenticating or writing config', async () => {
+      mockedGlobalConfigFileExists.mockReturnValue(false);
+
+      await authenticateNewAccount({
+        env: 'prod' as Environment,
+        accountId: 123456,
+        accountName: 'Oxford Capital',
+      });
+
+      expect(mockedLocalConfigFileExists).not.toHaveBeenCalled();
+      expect(mockedCreateEmptyConfigFile).not.toHaveBeenCalled();
+      expect(mockedAwaitPersonalAccessKeyOverWebsocket).not.toHaveBeenCalled();
+      expect(mockedGetAccessToken).not.toHaveBeenCalled();
+      expect(mockedUpdateConfigWithAccessToken).not.toHaveBeenCalled();
     });
 
     it('should use the default name without prompting when useDefaultAccountName is true', async () => {

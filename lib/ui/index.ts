@@ -4,55 +4,20 @@ import {
   globalConfigFileExists,
 } from '@hubspot/local-dev-lib/config';
 import { uiLogger } from './logger.js';
-import { supportsHyperlinkModule } from './supportHyperlinks.js';
-import { isColorEnabled } from './supportsColor.js';
 import { uiMessages } from './uiMessages.js';
+import { uiCommandReference, uiLink } from './formatting.js';
 
 import { HUBSPOT_ACCOUNT_TYPE_STRINGS } from '@hubspot/local-dev-lib/constants/config';
 
-type TerminalSupport = {
-  hyperlinks: boolean;
-  color: boolean;
-};
+export {
+  getTerminalUISupport,
+  UI_COLORS,
+  uiCommandReference,
+  uiLink,
+} from './formatting.js';
 
-export const UI_COLORS = {
-  SORBET: '#FF8F59',
-  MARIGOLD: '#f5c26b',
-  MARIGOLD_DARK: '#dbae60',
-};
-
-export function uiLine(): void {
+export function logUiLine(): void {
   uiLogger.log('-'.repeat(50));
-}
-
-export function getTerminalUISupport(): TerminalSupport {
-  return {
-    hyperlinks: supportsHyperlinkModule.stdout,
-    color: isColorEnabled(),
-  };
-}
-
-export function uiLink(linkText: string, url: string): string {
-  const terminalUISupport = getTerminalUISupport();
-  const encodedUrl = encodeURI(url);
-
-  if (terminalUISupport.hyperlinks) {
-    const CLOSE_SEQUENCE = '\u001B]8;;\u0007';
-
-    const result = [
-      '\u001B]8;;',
-      encodedUrl,
-      '\u0007',
-      linkText,
-      CLOSE_SEQUENCE,
-    ].join('');
-
-    return terminalUISupport.color ? chalk.cyan(result) : result;
-  }
-
-  return terminalUISupport.color
-    ? `${linkText}: ${chalk.reset.cyan(encodedUrl)}`
-    : `${linkText}: ${encodedUrl}`;
 }
 
 export function uiAccountDescription(
@@ -76,25 +41,13 @@ export function uiAccountDescription(
   return bold ? chalk.bold(message) : message;
 }
 
-export function uiInfoSection(title: string, logContent: () => void): void {
-  uiLine();
+export function logUiInfoSection(title: string, logContent: () => void): void {
+  logUiLine();
   uiLogger.log(chalk.bold(title));
   uiLogger.log('');
   logContent();
   uiLogger.log('');
-  uiLine();
-}
-
-export function uiCommandReference(command: string, withQuotes = true): string {
-  const terminalUISupport = getTerminalUISupport();
-
-  const commandReference = withQuotes ? `\`${command}\`` : command;
-
-  return chalk.bold(
-    terminalUISupport.color
-      ? chalk.hex(UI_COLORS.MARIGOLD_DARK)(commandReference)
-      : commandReference
-  );
+  logUiLine();
 }
 
 export function uiAuthCommandReference({
@@ -117,8 +70,11 @@ export function uiAuthCommandReference({
   );
 }
 
-export function uiFeatureHighlight(features: string[], title?: string): void {
-  uiInfoSection(
+export function logUiFeatureHighlight(
+  features: string[],
+  title?: string
+): void {
+  logUiInfoSection(
     title ? title : uiMessages.featureHighlight.defaultTitle,
     () => {
       features.forEach(feature => {
@@ -154,74 +110,34 @@ export function uiFeatureHighlight(features: string[], title?: string): void {
   );
 }
 
-// export function uiBetaTag(message: string, log?: true): undefined;
-// export function uiBetaTag(message: string, log: false): string;
-// export function uiBetaTag(message: string, log = true): string | undefined {
+// export function uiBetaTag(message: string): string {
 //   const terminalUISupport = getTerminalUISupport();
 //   const tag = i18n(`lib.ui.betaTag`);
 
-//   const result = `${
+//   return `${
 //     terminalUISupport.color ? chalk.hex(UI_COLORS.SORBET)(tag) : tag
 //   } ${message}`;
-
-//   if (log) {
-//     logger.log(result);
-//     return;
-//   }
-//   return result;
 // }
 
 // Replace this with the above code once we've upgraded to yargs 18.0.0
-export function uiBetaTag(message: string, log?: true): undefined;
-export function uiBetaTag(message: string, log: false): string;
-export function uiBetaTag(message: string, log = true): string | undefined {
+export function uiBetaTag(message: string): string {
   const tag = uiMessages.betaTag;
 
-  const result = `${tag} ${message}`;
-
-  if (log) {
-    uiLogger.log(result);
-    return;
-  }
-  return result;
+  return `${tag} ${message}`;
 }
 
-// export function uiDeprecatedTag(message: string, log?: true): undefined;
-// export function uiDeprecatedTag(message: string, log: false): string;
-// export function uiDeprecatedTag(
-//   message: string,
-//   log = true
-// ): string | undefined {
+// export function uiDeprecatedTag(message: string): string {
 //   const terminalUISupport = getTerminalUISupport();
 //   const tag = i18n(`lib.ui.deprecatedTag`);
 
-//   const result = `${
-//     terminalUISupport.color ? chalk.yellow(tag) : tag
-//   } ${message}`;
-
-//   if (log) {
-//     logger.log(result);
-//     return;
-//   }
-//   return result;
+//   return `${terminalUISupport.color ? chalk.yellow(tag) : tag} ${message}`;
 // }
 
 // Replace this with the above code once we've upgraded to yargs 18.0.0
-export function uiDeprecatedTag(message: string, log?: true): undefined;
-export function uiDeprecatedTag(message: string, log: false): string;
-export function uiDeprecatedTag(
-  message: string,
-  log = true
-): string | undefined {
+export function uiDeprecatedTag(message: string): string {
   const tag = uiMessages.deprecatedTag;
 
-  const result = `${tag} ${message}`;
-
-  if (log) {
-    uiLogger.log(result);
-    return;
-  }
-  return result;
+  return `${tag} ${message}`;
 }
 
 export function uiCommandDisabledBanner(
@@ -234,20 +150,20 @@ export function uiCommandDisabledBanner(
     `The ${uiCommandReference(command)} command is disabled. Run ${uiCommandReference('npm i -g @hubspot/cli@latest')} to update to the latest HubSpot CLI version. ${url ? uiLink('See all HubSpot CLI commands here.', url) : ''}`;
 
   uiLogger.log('');
-  uiLine();
+  logUiLine();
   uiLogger.error(tag);
-  uiLine();
+  logUiLine();
   uiLogger.log('');
 }
 
-export function uiDeprecatedDescription(
+export function logUiDeprecatedDescription(
   message: string,
   command: string,
   url?: string
 ) {
   const tag = message || uiMessages.disabledMessage(command, url);
 
-  return uiDeprecatedTag(tag);
+  uiLogger.log(uiDeprecatedTag(tag));
 }
 
 // export function uiCommandRenamedDescription(
@@ -255,8 +171,7 @@ export function uiDeprecatedDescription(
 //   newCommand: string
 // ): string | undefined {
 //   return uiDeprecatedTag(
-//     `${describe} ${uiMessages.commandRenamedMessage(newCommand)}`,
-//     false
+//     `${describe} ${uiMessages.commandRenamedMessage(newCommand)}`
 //   );
 // }
 
@@ -266,12 +181,11 @@ export function uiCommandRenamedDescription(
   newCommand: string
 ): string | undefined {
   return uiDeprecatedTag(
-    `${describe} ${uiMessages.commandRenamedPlainMessage(newCommand)}`,
-    false
+    `${describe} ${uiMessages.commandRenamedPlainMessage(newCommand)}`
   );
 }
 
-export function uiDeprecatedMessage(
+export function logUiDeprecatedMessage(
   command: string,
   url?: string,
   message?: string
@@ -279,13 +193,13 @@ export function uiDeprecatedMessage(
   const tag = uiMessages.deprecatedDescription(message || '', command, url);
 
   uiLogger.log('');
-  uiDeprecatedTag(tag);
+  uiLogger.log(uiDeprecatedTag(tag));
   uiLogger.log('');
 }
 
-export function uiCommandRelocatedMessage(newCommand: string): void {
+export function logUiCommandRelocatedMessage(newCommand: string): void {
   uiLogger.log('');
-  uiDeprecatedTag(uiMessages.commandRenamedMessage(newCommand));
+  uiLogger.log(uiDeprecatedTag(uiMessages.commandRenamedMessage(newCommand)));
   uiLogger.log('');
 }
 

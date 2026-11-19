@@ -14,7 +14,7 @@ import {
   LOCAL_DEV_SERVER_MESSAGE_TYPES,
 } from '../../constants.js';
 import { EXIT_CODES } from '../../enums/exitCodes.js';
-import { uiLine } from '../../ui/index.js';
+import { logUiLine } from '../../ui/index.js';
 import { logError } from '../../errorHandlers/index.js';
 import { isPromptExitError } from '../../errors/PromptExitError.js';
 import {
@@ -190,9 +190,9 @@ class AppDevModeInterface {
       failColor: 'yellow',
     });
 
-    uiLine();
+    logUiLine();
     uiLogger.log(lib.LocalDevManager.activeInstallWarning.explanation);
-    uiLine();
+    logUiLine();
 
     const proceed = await confirmPrompt(
       lib.LocalDevManager.activeInstallWarning.confirmationPrompt,

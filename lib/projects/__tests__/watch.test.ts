@@ -175,7 +175,11 @@ describe('lib/projects/watch', () => {
       mockedShouldIgnoreFile.mockReturnValue(true);
 
       expect(ignored('some/file.js')).toBe(true);
-      expect(mockedShouldIgnoreFile).toHaveBeenCalledWith('some/file.js');
+      expect(mockedShouldIgnoreFile).toHaveBeenCalledWith(
+        'some/file.js',
+        false,
+        SOURCE_DIR
+      );
     });
 
     it('should reject and not start watching when the build cannot be provisioned', async () => {
@@ -296,6 +300,17 @@ describe('lib/projects/watch', () => {
       expect(mockedUploadFileToBuild).not.toHaveBeenCalled();
       expect(mockedUiLogger.debug).toHaveBeenCalledWith(
         commands.project.watch.debug.ignored(filePath)
+      );
+    });
+
+    it('should pass the project source directory as the ignore root when checking a file', async () => {
+      await watcherHandlers.add(filePath);
+      await vi.advanceTimersByTimeAsync(0);
+
+      expect(mockedShouldIgnoreFile).toHaveBeenCalledWith(
+        filePath,
+        true,
+        SOURCE_DIR
       );
     });
 

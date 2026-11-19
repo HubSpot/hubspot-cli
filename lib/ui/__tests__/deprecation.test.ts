@@ -2,23 +2,36 @@ import { uiLogger } from '../logger.js';
 import {
   uiDeprecatedTag,
   uiCommandRenamedDescription,
-  uiCommandRelocatedMessage,
+  logUiCommandRelocatedMessage,
+  logUiDeprecatedMessage,
 } from '../index.js';
 
 describe('lib/ui/index deprecation helpers', () => {
   describe('uiDeprecatedTag', () => {
-    it('prepends the deprecated tag and returns the string when not logging', () => {
-      const result = uiDeprecatedTag('A message', false);
+    it('should prepend the deprecated tag and return the string without logging', () => {
+      const result = uiDeprecatedTag('A message');
 
       expect(result).toEqual('[DEPRECATED] A message');
       expect(uiLogger.log).not.toHaveBeenCalled();
     });
+  });
 
-    it('logs the tagged message when logging is enabled', () => {
-      const result = uiDeprecatedTag('A message');
+  describe('logUiDeprecatedMessage', () => {
+    it('should log the tagged message wrapped in blank lines', () => {
+      logUiDeprecatedMessage(
+        'hs old-command',
+        undefined,
+        'Use something else.'
+      );
 
-      expect(result).toBeUndefined();
-      expect(uiLogger.log).toHaveBeenCalledWith('[DEPRECATED] A message');
+      const loggedMessages = vi
+        .mocked(uiLogger.log)
+        .mock.calls.map(call => String(call[0]));
+
+      expect(loggedMessages).toHaveLength(3);
+      expect(loggedMessages[0]).toBe('');
+      expect(loggedMessages[1]).toMatch(/^\[DEPRECATED\] /);
+      expect(loggedMessages[2]).toBe('');
     });
   });
 
@@ -35,9 +48,9 @@ describe('lib/ui/index deprecation helpers', () => {
     });
   });
 
-  describe('uiCommandRelocatedMessage', () => {
+  describe('logUiCommandRelocatedMessage', () => {
     it('logs a runtime notice referencing the replacement command', () => {
-      uiCommandRelocatedMessage('hs project dev');
+      logUiCommandRelocatedMessage('hs project dev');
 
       const loggedMessages = vi
         .mocked(uiLogger.log)

@@ -127,8 +127,8 @@ export class HsFunctionLogsTool extends Tool<HsFunctionLogsInputSchema> {
     const normalizedEndpoint = resolvedEndpoint.startsWith('/')
       ? resolvedEndpoint.slice(1)
       : resolvedEndpoint;
-    const command = new HubSpotCommand(
-      `cms function logs ${normalizedEndpoint}`
+    const command = new HubSpotCommand('cms function logs').addArg(
+      normalizedEndpoint
     );
 
     if (latest) {
@@ -172,7 +172,7 @@ export class HsFunctionLogsTool extends Tool<HsFunctionLogsInputSchema> {
       {
         title: 'Get HubSpot CMS serverless function logs for an endpoint',
         description:
-          'Retrieve logs for HubSpot CMS serverless functions. These are CMS/website functions, not developer-platform app functions (the private app-function feature or the public app-function-endpoint feature). Use this tool to help debug issues with serverless functions by reading the production logs. Supports various options like latest, compact, and limiting results. Use after listing functions with list-cms-serverless-functions to get the endpoint path.',
+          'DEPRECATED: CMS serverless functions are being sunset: creating them has ended, editing ends on November 17, 2026, and existing functions stop running on February 1, 2027. Retrieve logs for HubSpot CMS serverless functions. These are CMS/website functions, not developer-platform app functions (the private app-function feature or the public app-function-endpoint feature). Use this tool to help debug issues with serverless functions by reading the production logs. Supports various options like latest, compact, and limiting results. Use after listing functions with list-cms-serverless-functions to get the endpoint path.',
         inputSchema,
         annotations: {
           readOnlyHint: true,

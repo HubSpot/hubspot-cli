@@ -5,7 +5,7 @@ import {
 import { uiLogger } from '../ui/logger.js';
 import { PLATFORM_VERSION_ERROR_TYPES } from '../constants.js';
 import { lib } from '../../lang/en.js';
-import { uiAccountDescription, uiLine, uiLink } from '../ui/index.js';
+import { uiAccountDescription, logUiLine, uiLink } from '../ui/index.js';
 import { ApiErrorContext } from './index.js';
 import { HubSpotHttpError } from '@hubspot/local-dev-lib/models/HubSpotHttpError';
 import { isPromptExitError } from '../errors/PromptExitError.js';
@@ -29,7 +29,7 @@ function createPlatformVersionError(
     translationKey = 'nonExistentPlatformVersion';
   }
 
-  uiLine();
+  logUiLine();
   uiLogger.error(lib.errorHandlers.suppressErrors.platformVersionErrors.header);
   const errorMessage =
     lib.errorHandlers.suppressErrors.platformVersionErrors[
@@ -51,7 +51,7 @@ function createPlatformVersionError(
       )
     )
   );
-  uiLine();
+  logUiLine();
 }
 
 export function shouldSuppressError(

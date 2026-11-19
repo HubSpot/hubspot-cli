@@ -61,8 +61,8 @@ describe('HsListFunctionsTool', () => {
         'list-cms-serverless-functions',
         expect.objectContaining({
           title: 'List HubSpot CMS Serverless Functions',
-          description: expect.stringContaining(
-            'Lists CMS serverless functions deployed in a HubSpot account'
+          description: expect.stringMatching(
+            /^DEPRECATED: CMS serverless functions are being sunset/
           ),
           inputSchema: expect.any(Object),
         }),

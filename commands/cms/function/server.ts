@@ -13,6 +13,11 @@ import {
 } from '../../../types/Yargs.js';
 import { makeWrappedYargsHandler } from '../../../lib/yargs/makeWrappedYargsHandler.js';
 import { makeYargsBuilder } from '../../../lib/yargsUtils.js';
+import {
+  isServerlessEditingDisabled,
+  logServerlessDeprecation,
+  logServerlessEditingDisabled,
+} from '../../../lib/serverlessSunset.js';
 
 const command = 'server <path>';
 const describe = undefined;
@@ -32,6 +37,13 @@ async function handler(
   args: ArgumentsCamelCase<FunctionServerArgs>
 ): Promise<void> {
   const { path: functionPath, derivedAccountId, exit } = args;
+
+  if (isServerlessEditingDisabled()) {
+    logServerlessEditingDisabled('hs cms function server');
+    return exit(EXIT_CODES.ERROR);
+  }
+
+  logServerlessDeprecation('hs cms function server');
 
   uiLogger.debug(
     commands.cms.subcommands.function.subcommands.server.debug.startingServer(

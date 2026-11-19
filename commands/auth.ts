@@ -34,7 +34,7 @@ import { makeYargsBuilder } from '../lib/yargsUtils.js';
 import { trackAuthAction } from '../lib/usageTracking.js';
 import { authenticateWithOauth } from '../lib/oauth.js';
 import { EXIT_CODES } from '../lib/enums/exitCodes.js';
-import { uiFeatureHighlight } from '../lib/ui/index.js';
+import { uiDeprecatedTag, logUiFeatureHighlight } from '../lib/ui/index.js';
 import { logError } from '../lib/errorHandlers/index.js';
 import { isPromptExitError } from '../lib/errors/PromptExitError.js';
 import {
@@ -113,6 +113,8 @@ async function handler(args: ArgumentsCamelCase<AuthArgs>): Promise<void> {
     );
     return exit(EXIT_CODES.ERROR);
   }
+
+  uiLogger.log(uiDeprecatedTag(commands.auth.logs.deprecated));
 
   if (!disableTracking) {
     trackAuthAction(
@@ -233,7 +235,7 @@ async function handler(args: ArgumentsCamelCase<AuthArgs>): Promise<void> {
       successAuthMethod!
     )
   );
-  uiFeatureHighlight([
+  logUiFeatureHighlight([
     'getStartedCommand',
     'accountsUseCommand',
     'accountOption',

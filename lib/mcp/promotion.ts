@@ -1,14 +1,11 @@
 import fs from 'fs-extra';
 import os from 'os';
 import path from 'path';
-import {
-  getStateValue,
-  setStateValue,
-} from '@hubspot/local-dev-lib/config/state';
+import { getStateValue } from '@hubspot/local-dev-lib/config/state';
 import { STATE_FLAGS } from '@hubspot/local-dev-lib/constants/config';
 import { commands } from '../../lang/en.js';
 import { debugError } from '../errorHandlers/index.js';
-import { uiLogger } from '../ui/logger.js';
+import { shouldShowHint, showHint, type Hint } from '../hints/hints.js';
 import { trackMcpPromotionShown } from '../usageTracking.js';
 import { MCP_CLIENTS, MCP_SERVER_NAME } from './clients.js';
 
@@ -76,76 +73,43 @@ export function detectConfiguredMcpClients(): string[] {
   }, []);
 }
 
-function isScriptSafeSuppressed(): boolean {
-  return Boolean(
-    process.env.CI || process.env.HUBSPOT_MCP_AI_AGENT || !process.stdout.isTTY
-  );
-}
-
-function hasRecentPromotion(
-  lastShownAt: string | undefined,
-  now: Date,
-  cooldownMs: number
-): boolean {
-  if (!lastShownAt) {
+function isMcpPromotionApplicable(): boolean {
+  if (process.env.HUBSPOT_MCP_AI_AGENT) {
     return false;
   }
 
-  const lastShownTime = new Date(lastShownAt).getTime();
-  if (Number.isNaN(lastShownTime)) {
+  const mcpTotalToolCalls = getStateValue(STATE_FLAGS.MCP_TOTAL_TOOL_CALLS);
+  if (typeof mcpTotalToolCalls === 'number' && mcpTotalToolCalls > 0) {
     return false;
   }
 
-  return now.getTime() - lastShownTime < cooldownMs;
+  return detectConfiguredMcpClients().length === 0;
 }
 
-function getMcpPromotionLastShownAt(): string | undefined {
-  return getStateValue(STATE_FLAGS.MCP_PROMOTION_LAST_SHOWN_AT);
-}
+const MCP_PROMOTION_HINT: Hint = {
+  lastShownFlag: STATE_FLAGS.MCP_PROMOTION_LAST_SHOWN_AT,
+  cooldownMs: ONE_WEEK_IN_MS,
+  message: commands.mcp.promotion.activeNudge,
+  isApplicable: isMcpPromotionApplicable,
+};
 
 export async function shouldShowMcpPromotion(): Promise<boolean> {
-  if (isScriptSafeSuppressed()) {
-    return false;
-  }
-
   try {
-    const mcpTotalToolCalls = getStateValue(STATE_FLAGS.MCP_TOTAL_TOOL_CALLS);
-    if (typeof mcpTotalToolCalls === 'number' && mcpTotalToolCalls > 0) {
-      return false;
-    }
-
-    if (detectConfiguredMcpClients().length > 0) {
-      return false;
-    }
-
-    return !hasRecentPromotion(
-      getMcpPromotionLastShownAt(),
-      new Date(),
-      ONE_WEEK_IN_MS
-    );
+    return shouldShowHint(MCP_PROMOTION_HINT);
   } catch (e) {
     debugError(e);
     return false;
   }
 }
 
-function setMcpPromotionShownAt(): void {
-  setStateValue(
-    STATE_FLAGS.MCP_PROMOTION_LAST_SHOWN_AT,
-    new Date().toISOString()
-  );
-}
-
 export async function showMcpPromotionNudge(
   commandName: string
 ): Promise<void> {
   try {
-    if (!(await shouldShowMcpPromotion())) {
+    if (!showHint(MCP_PROMOTION_HINT)) {
       return;
     }
 
-    setMcpPromotionShownAt();
-    uiLogger.info(commands.mcp.promotion.activeNudge);
     await trackMcpPromotionShown(commandName || undefined);
   } catch (e) {
     debugError(e);

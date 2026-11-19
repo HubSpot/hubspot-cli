@@ -21,7 +21,7 @@ import {
 import {
   uiAccountDescription,
   uiCommandReference,
-  uiLine,
+  logUiLine,
   uiLink,
 } from '../ui/index.js';
 import { LoadedProjectConfig } from '../projects/config.js';
@@ -740,12 +740,12 @@ export async function migrateApp(
 }
 
 export function logInvalidAccountError(): void {
-  uiLine();
+  logUiLine();
   uiLogger.error(lib.migrate.errors.invalidAccountTypeTitle);
   uiLogger.log(
     lib.migrate.errors.invalidAccountTypeDescription(
       uiCommandReference('hs account use')
     )
   );
-  uiLine();
+  logUiLine();
 }
